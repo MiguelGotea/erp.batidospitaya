@@ -15,9 +15,7 @@ Características Principales
 
 🏗️ Arquitectura del Sistema
 
-
 subido desde vscode directo a hostinger a traves de actions
-
 
 Estructura de Carpetas
 text
