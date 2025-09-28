@@ -24,19 +24,19 @@ jobs:
         echo "🔄 Sincronizando modulos/mantenimiento/"
         
         # Crear la carpeta si no existe
-        ssh -o StrictHostKeyChecking=no ${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_HOST }} \
+        ssh -o StrictHostKeyChecking=no -p 65002 ${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_HOST }} \
           "mkdir -p ${{ secrets.HOSTINGER_PATH }}/modulos/mantenimiento"
         
         # Sincronizar la carpeta completa
         rsync -avz \
           --delete \
-          -e "ssh -o StrictHostKeyChecking=no" \
+          -e "ssh -o StrictHostKeyChecking=no -p 65002" \
           ./modulos/mantenimiento/ \
           ${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_HOST }}:${{ secrets.HOSTINGER_PATH }}/modulos/mantenimiento/
           
     - name: 🔧 Configurar permisos
       run: |
-        ssh -o StrictHostKeyChecking=no ${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_HOST }} \
+        ssh -o StrictHostKeyChecking=no -p 65002 ${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_HOST }} \
           "chmod -R 755 ${{ secrets.HOSTINGER_PATH }}/modulos/mantenimiento/ && \
            find ${{ secrets.HOSTINGER_PATH }}/modulos/mantenimiento/ -type f -exec chmod 644 {} \;"
         
@@ -45,3 +45,4 @@ jobs:
         echo "✅ Deploy completado"
         echo "🌐 Sitio: https://erp.batidospitaya.com"
         echo "📁 Carpeta: modulos/mantenimiento/"
+        echo "🖥️ Servidor: ${{ secrets.HOSTINGER_HOST }}:65002"
