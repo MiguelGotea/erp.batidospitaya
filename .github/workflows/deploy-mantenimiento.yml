@@ -14,56 +14,33 @@ jobs:
     - name: 📥 Checkout código
       uses: actions/checkout@v4
       
-    - name: 🔍 Verificar configuración SSH
-      run: |
-        echo "🔧 Verificando configuración..."
-        echo "Host: ${{ secrets.HOSTINGER_HOST }}"
-        echo "Usuario: ${{ secrets.HOSTINGER_USER }}"
-        echo "Path: ${{ secrets.HOSTINGER_PATH }}"
-        
     - name: 🔑 Configurar SSH
       uses: webfactory/ssh-agent@v0.8.0
       with:
         ssh-private-key: ${{ secrets.HOSTINGER_SSH_KEY }}
         
-    - name: 🧪 Test de conectividad SSH
-      run: |
-        echo "🧪 Probando conectividad..."
-        # Test básico de ping
-        ping -c 3 ${{ secrets.HOSTINGER_HOST }} || echo "⚠️ Ping falló"
-        
-        # Test de puerto SSH
-        nc -zv ${{ secrets.HOSTINGER_HOST }} 22 || echo "⚠️ Puerto 22 no accesible"
-        
     - name: 📤 Sincronizar carpeta mantenimiento
       run: |
         echo "🔄 Sincronizando modulos/mantenimiento/"
         
-        # Verificar que la clave SSH funciona
+        # Crear la carpeta si no existe (usando puerto 65002)
         ssh -o StrictHostKeyChecking=no \
-            -o ConnectTimeout=10 \
-            -o BatchMode=yes \
-            ${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_HOST }} \
-            "echo '✅ Conexión SSH exitosa'"
-        
-        # Crear la carpeta si no existe
-        ssh -o StrictHostKeyChecking=no \
-            -o ConnectTimeout=10 \
+            -p 65002 \
             ${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_HOST }} \
             "mkdir -p ${{ secrets.HOSTINGER_PATH }}/modulos/mantenimiento"
         
-        # Sincronizar la carpeta completa
+        # Sincronizar la carpeta completa (usando puerto 65002)
         rsync -avz \
           --delete \
           --progress \
-          -e "ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10" \
+          -e "ssh -o StrictHostKeyChecking=no -p 65002" \
           ./modulos/mantenimiento/ \
           ${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_HOST }}:${{ secrets.HOSTINGER_PATH }}/modulos/mantenimiento/
           
     - name: 🔧 Configurar permisos
       run: |
         ssh -o StrictHostKeyChecking=no \
-            -o ConnectTimeout=10 \
+            -p 65002 \
             ${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_HOST }} \
             "chmod -R 755 ${{ secrets.HOSTINGER_PATH }}/modulos/mantenimiento/ && \
              find ${{ secrets.HOSTINGER_PATH }}/modulos/mantenimiento/ -type f -exec chmod 644 {} \;"
