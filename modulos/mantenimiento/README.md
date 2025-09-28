@@ -1,19 +1,18 @@
 # 📋 **DOCUMENTACIÓN COMPLETA - Sistema de Sincronización Automática**
 
-Caso Mantenimiento:
-
-cron job
+## **🔧Caso Mantenimiento:**
+### **🔍 0. Herramientas**
+```bash
+# cron job
 - /bin/bash /home/u839374897/sync-to-github.sh\
 
-Manualmente desde hostinger terminal  /bin/bash ~/
+# Manualmente desde hostinger terminal  /bin/bash ~/
 - sync-to-github.sh 
 - deploy-erp.sh
 
-github action
+# github action
 - .github/workflows/deploy-mantenimiento.yml 
-
-
-## 📋 **Resumen: Procedimiento para extraer SSH Key en Hostinger**
+```
 
 ### **🔍 1. Exploración inicial del servidor**
 ```bash
@@ -68,66 +67,24 @@ echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAHWWJu9du9uzZKDP5ChDrpCef8QB4uvJMXZ58
 chmod 600 ~/.ssh/authorized_keys
 ```
 
-### **🌐 6. Identificar datos de conexión**
+### **✅ 6. Elementos clave del éxito**
 ```bash
-# Usuario actual
-whoami  # u839374897
-
-# Información de conexión SSH
-echo $SSH_CONNECTION  # 186.77.196.44 46184 145.223.105.42 65002
-hostname -f           # us-phx-web1059
-
-# Ruta del proyecto
-pwd  # /home/u839374897/domains/erp.batidospitaya.com/public_html
-```
-
-### **🔑 7. Extraer clave privada para GitHub**
-```bash
-# COMANDO CORRECTO (no ejecutar, sino leer contenido)
-cat ~/.ssh/erp-batidos-deploy
-
-# Resultado: Clave privada completa
-# -----BEGIN OPENSSH PRIVATE KEY-----
-# [contenido de la clave]
-# -----END OPENSSH PRIVATE KEY-----
-```
-
-### **📊 8. Datos finales para GitHub Secrets**
-| Secret | Valor |
-|--------|-------|
-| `HOSTINGER_USER` | `u839374897` |
-| `HOSTINGER_HOST` | `145.223.105.42` |
-| `HOSTINGER_PATH` | `/home/u839374897/domains/erp.batidospitaya.com/public_html` |
-| `HOSTINGER_SSH_KEY` | Contenido completo de `~/.ssh/erp-batidos-deploy` |
-
-### **⚠️ 9. Detalle crítico identificado**
-- **Puerto SSH de Hostinger**: `65002` (no el estándar 22)
-- **Esto causó el primer fallo del workflow** ❌
-- **Solución**: Agregar `-p 65002` a todos los comandos SSH
-
-### **✅ 10. Elementos clave del éxito**
 - ✅ Elegir clave Ed25519 (más segura que RSA)
 - ✅ Crear `authorized_keys` con la clave pública
 - ✅ Usar la ruta completa de dominios
 - ✅ Especificar puerto 65002 en todos los comandos
 - ✅ Permisos correctos en archivos SSH
+```
 
-### **🎯 Lección aprendida**
-El problema más común: **olvidar el puerto personalizado de Hostinger (65002)** y que sin `authorized_keys`, no hay acceso SSH entrante.
-
-
-Claves Privadas github
+### **✅ 7. Claves Privadas github**
+```bash
 - HOSTINGER_SSH_KEY: cat ~/.ssh/erp-batidos-deploy
 - HOSTINGER_USER: u838374897
 - HOSTINGER_HOST: 145.223.105.42 
 - HOSTINGER_PATH: /home/u839374897/domains/erp.batidospitaya.com/public_html
+```
 
-Hostname: us-phx-web1059
-IP del servidor: 145.223.105.42
-Puerto SSH: 65002
-Tu IP externa: 186.77.196.44
-
-## 🏗️ **ARQUITECTURA DEL SISTEMA**
+## 🏗️ **ARQUITECTURA DEL SISTEMA NUEVO**
 
 ### **Diagrama de Flujo**
 
