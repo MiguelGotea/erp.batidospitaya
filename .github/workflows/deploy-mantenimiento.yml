@@ -19,29 +19,58 @@ jobs:
       with:
         ssh-private-key: ${{ secrets.HOSTINGER_SSH_KEY }}
         
+    - name: 🔍 Verificar conexión SSH
+      run: |
+        echo "🔍 Probando conexión SSH..."
+        ssh -o StrictHostKeyChecking=no \
+            -o ConnectTimeout=10 \
+            -o BatchMode=yes \
+            ${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_HOST }} \
+            "echo '✅ Conexión SSH exitosa'"
+            
+    - name: 🔍 Verificar servidor y puerto
+      run: |
+        echo "🔍 Verificando accesibilidad del servidor..."
+        nc -zv ${{ secrets.HOSTINGER_HOST }} 22 -w 5
+        
     - name: 📤 Sincronizar carpeta mantenimiento
       run: |
         echo "🔄 Sincronizando modulos/mantenimiento/"
         
-        # Crear la carpeta si no existe
-        ssh -o StrictHostKeyChecking=no ${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_HOST }} \
-          "mkdir -p ${{ secrets.HOSTINGER_PATH }}/modulos/mantenimiento"
+        # Verificar que la carpeta local existe
+        if [ ! -d "./modulos/mantenimiento" ]; then
+          echo "❌ La carpeta local ./modulos/mantenimiento no existe"
+          exit 1
+        fi
         
-        # Sincronizar la carpeta completa
+        # Crear la carpeta remota si no existe
+        ssh -o StrictHostKeyChecking=no \
+            -o ConnectTimeout=10 \
+            ${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_HOST }} \
+            "mkdir -p ${{ secrets.HOSTINGER_PATH }}/modulos/mantenimiento"
+        
+        # Sincronizar la carpeta
         rsync -avz \
+          --progress \
           --delete \
-          -e "ssh -o StrictHostKeyChecking=no" \
+          -e "ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10" \
           ./modulos/mantenimiento/ \
           ${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_HOST }}:${{ secrets.HOSTINGER_PATH }}/modulos/mantenimiento/
           
     - name: 🔧 Configurar permisos
       run: |
-        ssh -o StrictHostKeyChecking=no ${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_HOST }} \
-          "chmod -R 755 ${{ secrets.HOSTINGER_PATH }}/modulos/mantenimiento/ && \
-           find ${{ secrets.HOSTINGER_PATH }}/modulos/mantenimiento/ -type f -exec chmod 644 {} \;"
+        ssh -o StrictHostKeyChecking=no \
+            -o ConnectTimeout=10 \
+            ${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_HOST }} \
+            "chmod -R 755 ${{ secrets.HOSTINGER_PATH }}/modulos/mantenimiento/ && \
+             find ${{ secrets.HOSTINGER_PATH }}/modulos/mantenimiento/ -type f -exec chmod 644 {} \;"
         
     - name: ✅ Verificar deploy
       run: |
-        echo "✅ Deploy completado"
+        echo "✅ Deploy completado exitosamente"
         echo "🌐 Sitio: https://erp.batidospitaya.com"
         echo "📁 Carpeta: modulos/mantenimiento/"
+        echo "📊 Verificando archivos desplegados..."
+        ssh -o StrictHostKeyChecking=no \
+            ${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_HOST }} \
+            "ls -la ${{ secrets.HOSTINGER_PATH }}/modulos/mantenimiento/"
