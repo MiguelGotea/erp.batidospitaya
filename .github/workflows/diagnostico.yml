@@ -1,9 +1,9 @@
-name: 🔍 Diagnóstico de Conexión Hostinger
+name: 🔍 Verificar Estado SSH Hostinger
 
 on: [workflow_dispatch]
 
 jobs:
-  diagnose:
+  check-ssh:
     runs-on: ubuntu-latest
     
     steps:
@@ -12,41 +12,10 @@ jobs:
       with:
         ssh-private-key: ${{ secrets.HOSTINGER_SSH_KEY }}
         
-    - name: 🩺 Diagnóstico de Red
+    - name: 🔍 Probar conexión con verbose
       run: |
-        echo "=== DIAGNÓSTICO DE CONEXIÓN HOSTINGER ==="
-        
-        # Información básica
-        echo "1. Información del servidor:"
-        echo "   Host: ${{ secrets.HOSTINGER_HOST }}"
-        echo "   Usuario: ${{ secrets.HOSTINGER_USER }}"
-        
-        # Verificar formato de la clave SSH
-        echo "2. Verificando clave SSH..."
-        if echo "${{ secrets.HOSTINGER_SSH_KEY }}" | grep -q "BEGIN OPENSSH PRIVATE KEY"; then
-          echo "   ✅ Formato de clave SSH correcto"
-          ssh-keygen -l -f <(echo "${{ secrets.HOSTINGER_SSH_KEY }}") | head -1
-        else
-          echo "   ❌ Formato de clave SSH incorrecto"
-        fi
-        
-        # Verificar DNS
-        echo "3. Verificando resolución DNS..."
-        nslookup ${{ secrets.HOSTINGER_HOST }} 8.8.8.8 || dig ${{ secrets.HOSTINGER_HOST }} @8.8.8.8
-        
-        # Verificar conectividad básica
-        echo "4. Verificando conectividad ICMP (ping)..."
-        ping -c 3 ${{ secrets.HOSTINGER_HOST }} || echo "   ❌ Ping fallido"
-        
-        # Verificar puertos comunes
-        echo "5. Escaneo de puertos..."
-        for port in 21 22 80 443 2222; do
-          echo "   Probando puerto $port..."
-          timeout 3 nc -zv ${{ secrets.HOSTINGER_HOST }} $port && echo "   ✅ Puerto $port abierto" || echo "   ❌ Puerto $port cerrado"
-        done
-        
-        # Verificar con herramientas de red
-        echo "6. Verificación con curl/wget..."
-        curl -I --connect-timeout 5 "https://${{ secrets.HOSTINGER_HOST }}" 2>/dev/null || wget --timeout=5 --spider "https://${{ secrets.HOSTINGER_HOST }}" 2>/dev/null && echo "   ✅ HTTPS accesible" || echo "   ❌ HTTPS no accesible"
-        
-        echo "=== DIAGNÓSTICO COMPLETADO ==="
+        echo "🔍 Probando conexión SSH con output detallado..."
+        ssh -vvv -o StrictHostKeyChecking=no \
+            -o ConnectTimeout=10 \
+            ${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_HOST }} \
+            "echo 'SSH funcionando'" || echo "SSH falló"
