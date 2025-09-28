@@ -238,44 +238,22 @@ EOF
 
 # Script Deploy GitHub → Hostinger
 cat > ~/deploy-${DOMINIO}.sh << 'EOF'
+
 #!/bin/bash
-# deploy-${DOMINIO}.sh - Deploy GitHub → Hostinger
+# deploy-mantenimiento-simple.sh
 
-mkdir -p /home/${USUARIO_HOSTINGER}/deploy-logs
-LOG_FILE="/home/${USUARIO_HOSTINGER}/deploy-logs/$(date +\%Y-\%m-\%d).log"
-DEPLOY_PATH="${RUTA_BASE}"
+mkdir -p /home/u839374897/deploy-logs
+LOG_FILE="/home/u839374897/deploy-logs/$(date +\%Y-\%m-\%d).log"
 
-echo "=== DEPLOY ${DOMINIO}: $(date) ===" >> $LOG_FILE
+echo "=== DEPLOY MANTENIMIENTO SIMPLE: $(date) ===" >> $LOG_FILE
 
-cd $DEPLOY_PATH
-
-if [ ! -d ".git" ]; then
-    echo "❌ ERROR: No es un repositorio Git" >> $LOG_FILE
-    exit 1
-fi
-
-git fetch origin
-if [ $(git rev-parse HEAD) != $(git rev-parse origin/main) ]; then
-    echo "📥 Cambios detectados, actualizando..." >> $LOG_FILE
-    git reset --hard origin/main
-    
-    chmod -R 755 ${CARPETA_EDITABLE#$RUTA_BASE/}/
-    find ${CARPETA_EDITABLE#$RUTA_BASE/}/ -type f -exec chmod 644 {} \;
-    
-    echo "✅ Deploy completado" >> $LOG_FILE
-else
-    echo "📭 No hay cambios para deploy" >> $LOG_FILE
-fi
-EOF
-
-chmod +x ~/sync-${DOMINIO}.sh ~/deploy-${DOMINIO}.sh
-
-echo "✅ Configuración completada para ${DOMINIO}"
-echo "📋 Pasos manuales restantes:"
-echo "1. Agregar clave pública a GitHub"
-echo "2. Configurar secrets en GitHub"
-echo "3. Crear workflow GitHub Actions"
-echo "4. Configurar cron job"
+cd /home/u839374897/domains/erp.batidospitaya.com/public_html && \
+git fetch origin && \
+git checkout origin/main -- modulos/mantenimiento/ && \
+find modulos/mantenimiento/ -type d -exec chmod 755 {} \; && \
+find modulos/mantenimiento/ -type f -exec chmod 644 {} \; && \
+echo "✅ Deploy MANTENIMIENTO exitoso: $(date)" >> $LOG_FILE || \
+echo "❌ Error en deploy: $(date)" >> $LOG_FILE
 ```
 
 ---
