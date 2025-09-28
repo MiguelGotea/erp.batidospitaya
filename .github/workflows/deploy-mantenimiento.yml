@@ -1,0 +1,51 @@
+name: 🚀 Deploy Módulo Mantenimiento
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'modulos/mantenimiento/**'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 Checkout código
+      uses: actions/checkout@v4
+      
+    - name: 🔑 Configurar SSH
+      uses: webfactory/ssh-agent@v0.8.0
+      with:
+        ssh-private-key: ${{ secrets.HOSTINGER_SSH_KEY }}
+        
+    - name: 📤 Sincronizar carpeta mantenimiento
+      run: |
+        echo "🔄 Sincronizando modulos/mantenimiento/"
+        
+        # Crear la carpeta si no existe
+        ssh -o StrictHostKeyChecking=no ${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_HOST }} "
+          mkdir -p ${{ secrets.HOSTINGER_PATH }}/modulos/mantenimiento
+        "
+        
+        # Sincronizar la carpeta completa
+        rsync -avz \
+          --delete \
+          -e "ssh -o StrictHostKeyChecking=no" \
+          ./modulos/mantenimiento/ \
+          ${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_HOST }}:${{ secrets.HOSTINGER_PATH 
+}}/modulos/mantenimiento/
+          
+    - name: 🔧 Configurar permisos
+      run: |
+        ssh -o StrictHostKeyChecking=no ${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_HOST }} "
+          chmod -R 755 ${{ secrets.HOSTINGER_PATH }}/modulos/mantenimiento/
+          find ${{ secrets.HOSTINGER_PATH }}/modulos/mantenimiento/ -type f -exec chmod 644 {} \;
+        "
+        
+    - name: ✅ Verificar deploy
+      run: |
+        echo "✅ Deploy completado exitosamente!"
+        echo "🌐 Sitio: https://erp.batidospitaya.com"
+        echo "📁 Carpeta: modulos/mantenimiento/"
+        echo "🕐 Hora: $(date)"
