@@ -16,16 +16,6 @@ Características Principales
 🏗️ Arquitectura del Sistema
 Flujo de Trabajo
 
-graph TB
-    A[Editor en Hostinger] --> B[Sync automático cada 30min]
-    C[Editor en GitHub] --> D[GitHub Actions Deploy]
-    B --> E[Repositorio GitHub]
-    D --> F[Hostinger Actualizado]
-    E --> D
-
-
-
-
 Estructura de Carpetas
 text
 erp.batidospitaya.com/
@@ -213,5 +203,6 @@ El sistema de sincronización está completamente operativo y permite:
 ✅ Deploy continuo y seguro
 
 ✅ Monitoreo detallado
+
 
 ¡Happy coding! 🚀
