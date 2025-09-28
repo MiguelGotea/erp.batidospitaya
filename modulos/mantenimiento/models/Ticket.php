@@ -1,5 +1,5 @@
 <?php
-require_once '../mantenimiento/config/database.php';
+require_once 'config/database.php';
 
 class Ticket {
     private $db;

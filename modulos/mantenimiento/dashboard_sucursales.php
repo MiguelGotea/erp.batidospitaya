@@ -62,6 +62,7 @@ $stats = [
             padding: 15px;
             text-align: center;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            color: #333; /* Asegura que el texto sea visible sobre el fondo blanco */
         }
         .status-badge {
             font-size: 0.8em;
@@ -201,6 +202,8 @@ $stats = [
                                         <div style="max-width: 200px;">
                                             <?= htmlspecialchars(substr($t['descripcion'], 0, 200)) ?>
                                             <?= strlen($t['descripcion']) > 200 ? '...' : '' ?>
+                                            <?= htmlspecialchars(mb_substr($t['descripcion'], 0, 100, 'UTF-8')) ?>
+                                            <?= mb_strlen($t['descripcion'], 'UTF-8') > 100 ? '...' : '' ?>
                                         </div>
                                     </td>
                                     <td>
@@ -303,6 +306,7 @@ $stats = [
             const url = `chat.php?ticket_id=${ticketId}&emisor=solicitante`;
             window.open(url, 'chat_' + ticketId, 'width=800,height=600,scrollbars=yes,resizable=yes');
         }
+        
         
         function viewTicket(id) {
             $.ajax({
