@@ -16,6 +16,7 @@ Características Principales
 🏗️ Arquitectura del Sistema
 Flujo de Trabajo
 
+
 Estructura de Carpetas
 text
 erp.batidospitaya.com/
