@@ -15,6 +15,7 @@ jobs:
       with:
         ssh-private-key: ${{ secrets.HOSTINGER_SSH_KEY }}
         
+        
     - name: 🧪 Test de puerto 65002
       run: |
         echo "🧪 Probando conectividad al puerto 65002..."
