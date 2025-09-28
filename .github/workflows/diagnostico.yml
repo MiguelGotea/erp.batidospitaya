@@ -1,57 +1,99 @@
-name: 🔍 Debug SSH Connection 2
+name: 🧪 Test Deploy Manual
 
-on: [workflow_dispatch]
+on:
+  workflow_dispatch:  # Permite ejecución manual
+  push:
+    branches: [ main ]
+    paths:
+      - '.github/workflows/test-deploy.yml'
 
 jobs:
-  deploy:
+  test-deploy:
     runs-on: ubuntu-latest
     
     steps:
     - name: 📥 Checkout código
       uses: actions/checkout@v4
-      
+      with:
+        fetch-depth: 0
+        
     - name: 🔑 Configurar SSH
       uses: webfactory/ssh-agent@v0.8.0
       with:
-        ssh-private-key: ${{ secrets.HOSTINGER_SSH_KEY }}
+        ssh-private-key: ${{ secrets.HOSTINGER_GIT_SSH_KEY }}
         
-        
-    - name: 🧪 Test de puerto 65002
+    - name: 🛠️ Configurar Git
       run: |
-        echo "🧪 Probando conectividad al puerto 65002..."
-        timeout 10 nc -zv ${{ secrets.HOSTINGER_HOST }} 65002 && echo "✅ Puerto 65002 accesible" || echo "❌ Puerto 65002 no accesible"
+        git config --global user.name "GitHub Actions"
+        git config --global user.email "actions@github.com"
         
-    - name: 📤 Sincronizar con múltiples intentos
+    - name: 🔍 Verificar configuración
       run: |
-        echo "🔄 Intentando conexión SSH..."
+        echo "=== CONFIGURACIÓN ==="
+        echo "🔑 Clave SSH cargada correctamente"
+        echo "📁 Directorio actual: $(pwd)"
+        echo "📦 Archivos en modulos/mantenimiento:"
+        ls -la modulos/mantenimiento/ || echo "No existe la carpeta"
         
-        # Intentar con diferentes configuraciones
-        for attempt in 1 2 3; do
-          echo "🔹 Intento $attempt..."
-          ssh -o StrictHostKeyChecking=no \
-              -o ConnectTimeout=10 \
-              -o BatchMode=yes \
-              -p 65002 \
-              ${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_HOST }} \
-              "echo '✅ Conexión SSH exitosa'" && break || echo "⚠️ Intento $attempt falló"
-          sleep 2
-        done
+    - name: 🧪 Test conexión Git Hostinger
+      run: |
+        echo "🧪 Probando conexión con Hostinger Git..."
         
-        # Crear carpeta
-        ssh -o StrictHostKeyChecking=no \
-            -o ConnectTimeout=15 \
-            -p 65002 \
-            ${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_HOST }} \
-            "mkdir -p ${{ secrets.HOSTINGER_PATH }}/modulos/mantenimiento"
+        # Agregar known hosts
+        mkdir -p ~/.ssh
+        ssh-keyscan -p 22 git-ssh.eu >> ~/.ssh/known_hosts 2>/dev/null
         
-        # Sincronizar
-        rsync -avz \
-          --delete \
-          --progress \
-          -e "ssh -o StrictHostKeyChecking=no -o ConnectTimeout=15 -p 65002" \
-          ./modulos/mantenimiento/ \
-          ${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_HOST }}:${{ secrets.HOSTINGER_PATH }}/modulos/mantenimiento/
+        # Test de conexión SSH
+        ssh -o StrictHostKeyChecking=no -T u838374897@git-ssh.eu && \
+          echo "✅ Conexión SSH exitosa" || \
+          echo "⚠️ Conexión SSH falló pero puede ser normal"
           
-    - name: ✅ Verificar deploy
+    - name: 🧪 Clonar repositorio Hostinger
       run: |
-        echo "✅ Deploy completado"
+        echo "🧪 Intentando clonar repositorio de Hostinger..."
+        
+        # Clonar en modo prueba
+        timeout 30 git clone u838374897@git-ssh.eu:main-hosting.eu.git hostinger-test 2>&1 | head -20
+        
+        if [ -d "hostinger-test" ]; then
+          echo "✅ Clonación exitosa"
+          echo "📁 Contenido del repositorio:"
+          ls -la hostinger-test/ | head -10
+        else
+          echo "❌ No se pudo clonar el repositorio"
+        fi
+        
+    - name: 🧪 Test push simple
+      if: always()  # Se ejecuta aunque falle el paso anterior
+      run: |
+        echo "🧪 Probando push simple..."
+        
+        if [ -d "hostinger-test" ]; then
+          cd hostinger-test
+          
+          # Crear archivo de prueba
+          echo "<!-- Test GitHub Actions -->" > test-deploy-$(date +%Y%m%d-%H%M%S).html
+          
+          # Configurar git
+          git config user.name "GitHub Actions Test"
+          git config user.email "test@github.com"
+          
+          # Intentar hacer push
+          git add .
+          git commit -m "Test deploy $(date)" || echo "No hay cambios"
+          git push origin main && echo "✅ Push exitoso" || echo "❌ Push falló"
+        else
+          echo "⚠️ No se puede probar push - repositorio no clonado"
+        fi
+        
+    - name: 📊 Resultados
+      if: always()
+      run: |
+        echo "=== RESULTADOS DE LA PRUEBA ==="
+        echo "🕐 Fecha: $(date)"
+        echo "📝 Revisa los pasos anteriores para ver el estado de cada prueba"
+        echo ""
+        echo "📋 Siguientes pasos:"
+        echo "1. Si la clonación funciona: Configurar deploy automático"
+        echo "2. Si falla la conexión: Verificar la clave SSH en secrets"
+        echo "3. Si falla el push: Verificar permisos en Hostinger"
