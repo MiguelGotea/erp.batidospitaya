@@ -15,6 +15,7 @@ Características Principales
 
 🏗️ Arquitectura del Sistema
 
+
 Estructura de Carpetas
 text
 erp.batidospitaya.com/
