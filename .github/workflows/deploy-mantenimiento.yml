@@ -24,9 +24,8 @@ jobs:
         echo "🔄 Sincronizando modulos/mantenimiento/"
         
         # Crear la carpeta si no existe
-        ssh -o StrictHostKeyChecking=no ${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_HOST }} "
-          mkdir -p ${{ secrets.HOSTINGER_PATH }}/modulos/mantenimiento
-        "
+        ssh -o StrictHostKeyChecking=no ${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_HOST }} \
+          "mkdir -p ${{ secrets.HOSTINGER_PATH }}/modulos/mantenimiento"
         
         # Sincronizar la carpeta completa
         rsync -avz \
@@ -35,7 +34,7 @@ jobs:
           ./modulos/mantenimiento/ \
           ${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_HOST }}:${{ secrets.HOSTINGER_PATH }}/modulos/mantenimiento/
           
-   - name: 🔧 Configurar permisos
+    - name: 🔧 Configurar permisos
       run: |
         ssh -o StrictHostKeyChecking=no ${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_HOST }} \
           "chmod -R 755 ${{ secrets.HOSTINGER_PATH }}/modulos/mantenimiento/ && \
