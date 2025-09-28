@@ -16,7 +16,7 @@ Características Principales
 🏗️ Arquitectura del Sistema
 
 
-test vscode
+subido desde vscode directo a hostinger a traves de actions
 
 Estructura de Carpetas
 text
