@@ -1,0 +1,6 @@
+# Excluir TODO excepto modulos/mantenimiento
+*
+!modulos/mantenimiento/
+!.gitignore
+!README.md
+
