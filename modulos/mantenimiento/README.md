@@ -188,53 +188,78 @@ EOF
 
 # Script Sync Hostinger → GitHub
 cat > ~/sync-${DOMINIO}.sh << 'EOF'
+
 #!/bin/bash
-# sync-${DOMINIO}.sh - Sincronización Hostinger → GitHub
+# sync-to-github-mantenimiento.sh - Sincronización SOLO carpeta mantenimiento
 
-mkdir -p /home/${USUARIO_HOSTINGER}/sync-logs
-LOG_FILE="/home/${USUARIO_HOSTINGER}/sync-logs/$(date +\%Y-\%m-\%d).log"
-REPO_PATH="${RUTA_BASE}"
+mkdir -p /home/u839374897/sync-logs
+LOG_FILE="/home/u839374897/sync-logs/$(date +\%Y-\%m-\%d).log"
+REPO_PATH="/home/u839374897/domains/erp.batidospitaya.com/public_html"
 
-echo "=== SYNC ${DOMINIO}: $(date) ===" >> $LOG_FILE
+echo "=== SYNC SOLO MANTENIMIENTO: $(date) ===" >> $LOG_FILE
 
-cd $REPO_PATH
+cd $REPO_PATH || exit
 
-if [ ! -d ".git" ]; then
-    echo "❌ ERROR: No es un repositorio Git" >> $LOG_FILE
-    exit 1
+# Verificar estado inicial
+echo "Estado inicial del repositorio:" >> $LOG_FILE
+git status modulos/mantenimiento/ --porcelain >> $LOG_FILE
+
+# 1. PRIMERO: Guardar SOLO cambios de mantenimiento si existen
+MAINT_CHANGES=$(git status modulos/mantenimiento/ --porcelain)
+if [ -n "$MAINT_CHANGES" ]; then
+    echo "📌 Cambios detectados en mantenimiento:" >> $LOG_FILE
+    echo "$MAINT_CHANGES" >> $LOG_FILE
+    
+    # Agregar y commit solo mantenimiento
+    git add modulos/mantenimiento/
+    git commit -m "Auto-sync mantenimiento: $(date +'%Y-%m-%d %H:%M:%S')"
+    echo "✅ Cambios de mantenimiento guardados en commit local" >> $LOG_FILE
+else
+    echo "📌 No hay cambios locales en mantenimiento" >> $LOG_FILE
 fi
 
-# Actualizar desde GitHub primero
+# 2. SEGUNDO: Sincronizar con GitHub
+echo "Sincronizando con GitHub..." >> $LOG_FILE
 git fetch origin
-if [ $(git rev-parse HEAD) != $(git rev-parse origin/main) ]; then
-    echo "📥 Hay cambios en GitHub, haciendo merge..." >> $LOG_FILE
-    git merge origin/main --no-edit
+
+# Verificar si hay cambios remotos
+LOCAL_COMMIT=$(git rev-parse HEAD)
+REMOTE_COMMIT=$(git rev-parse origin/main)
+
+if [ "$LOCAL_COMMIT" != "$REMOTE_COMMIT" ]; then
+    echo "🔄 Hay cambios en GitHub, actualizando..." >> $LOG_FILE
     
-    if [ $? -ne 0 ]; then
-        echo "⚠️ Conflictos detectados, resolviendo..." >> $LOG_FILE
-        git checkout --ours ${CARPETA_EDITABLE#$RUTA_BASE/}/
-        git add ${CARPETA_EDITABLE#$RUTA_BASE/}/
-        git commit -m "Resolución automática de conflictos"
+    # Hacer pull con estrategia de merge
+    if git pull origin main; then
+        echo "✅ Merge exitoso" >> $LOG_FILE
+    else
+        echo "⚠️ Conflictos detectados, resolviendo automáticamente..." >> $LOG_FILE
+        # En caso de conflicto, preferir versión LOCAL de mantenimiento
+        git checkout --ours modulos/mantenimiento/
+        git add modulos/mantenimiento/
+        git commit -m "Resolución automática de conflictos - preferir local"
+        echo "✅ Conflictos resueltos (versión local mantenida)" >> $LOG_FILE
     fi
+else
+    echo "📌 No hay cambios en GitHub" >> $LOG_FILE
 fi
 
-# Verificar cambios locales
-CHANGES=$(git status ${CARPETA_EDITABLE#$RUTA_BASE/}/ --porcelain)
-if [ -n "$CHANGES" ]; then
-    echo "📤 Cambios locales detectados" >> $LOG_FILE
-    git add ${CARPETA_EDITABLE#$RUTA_BASE/}/
-    git commit -m "Auto-sync: $(date +"%Y-%m-%d %H:%M:%S")"
-    
+# 3. TERCERO: Hacer push si tenemos commits locales nuevos
+if git log origin/main..HEAD --oneline | grep -q .; then
+    echo "Subiendo cambios a GitHub..." >> $LOG_FILE
     if git push origin main; then
-        echo "✅ Sync exitoso" >> $LOG_FILE
+        echo "✅ Push exitoso - Sync completado" >> $LOG_FILE
     else
+        echo "❌ Error en push, intentando con force..." >> $LOG_FILE
         git push origin main --force
         echo "⚠️ Push forzado completado" >> $LOG_FILE
     fi
 else
-    echo "📭 No hay cambios locales" >> $LOG_FILE
+    echo "📌 No hay cambios locales para subir" >> $LOG_FILE
 fi
-EOF
+
+echo "=== SYNC MANTENIMIENTO COMPLETADO: $(date) ===" >> $LOG_FILE
+echo "" >> $LOG_FILE
 
 # Script Deploy GitHub → Hostinger
 cat > ~/deploy-${DOMINIO}.sh << 'EOF'
