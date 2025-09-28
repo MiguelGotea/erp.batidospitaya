@@ -18,6 +18,7 @@ Características Principales
 
 subido desde vscode directo a hostinger a traves de actions
 
+
 Estructura de Carpetas
 text
 erp.batidospitaya.com/
