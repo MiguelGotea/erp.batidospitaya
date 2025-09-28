@@ -6,7 +6,7 @@
 # cron job
 - /bin/bash /home/u839374897/sync-to-github.sh\
 
-# Manualmente desde hostinger terminal  /bin/bash ~/
+# Manualmente desde hostinger terminal  ejecutar: /bin/bash ~/ , revisar: nano ~/
 - sync-to-github.sh 
 - deploy-erp.sh
 
