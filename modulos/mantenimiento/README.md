@@ -15,7 +15,7 @@ Características Principales
 
 🏗️ Arquitectura del Sistema
 
-actulizacion de orivados
+actulizacion de ultima ultima
 
 Estructura de Carpetas
 text
