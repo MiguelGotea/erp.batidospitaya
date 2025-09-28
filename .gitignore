@@ -1,6 +1,10 @@
-# Excluir TODO excepto modulos/mantenimiento
-*
-!modulos/mantenimiento/
-!.gitignore
-!README.md
 
+# Excluir TODO en la raíz EXCEPTO lo permitido
+/*
+!/.gitignore
+!/README.md
+!/modulos/
+
+# Excluir todo en modulos EXCEPTO mantenimiento
+/modulos/*
+!/modulos/mantenimiento/
