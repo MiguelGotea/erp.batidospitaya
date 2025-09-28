@@ -1,21 +1,38 @@
-name: 🔍 Verificar Estado SSH Hostinger
+name: 🔍 Debug SSH Connection
 
 on: [workflow_dispatch]
 
 jobs:
-  check-ssh:
+  debug:
     runs-on: ubuntu-latest
-    
     steps:
+    - uses: actions/checkout@v4
+      
     - name: 🔑 Configurar SSH
       uses: webfactory/ssh-agent@v0.8.0
       with:
         ssh-private-key: ${{ secrets.HOSTINGER_SSH_KEY }}
         
-    - name: 🔍 Probar conexión con verbose
+    - name: 🧪 Debug completo
       run: |
-        echo "🔍 Probando conexión SSH con output detallado..."
-        ssh -vvv -o StrictHostKeyChecking=no \
+        echo "=== INICIO DEBUG ==="
+        echo "Host: ${{ secrets.HOSTINGER_HOST }}"
+        echo "User: ${{ secrets.HOSTINGER_USER }}"
+        
+        echo "1. Probando resolución DNS..."
+        nslookup ${{ secrets.HOSTINGER_HOST }} || echo "❌ DNS Falló"
+        
+        echo "2. Probando ping..."
+        ping -c 2 ${{ secrets.HOSTINGER_HOST }} || echo "⚠️ Ping no disponible"
+        
+        echo "3. Probando puerto 22..."
+        timeout 10 nc -zv ${{ secrets.HOSTINGER_HOST }} 22 && echo "✅ Puerto 22 abierto" || echo "❌ Puerto 22 cerrado"
+        
+        echo "4. Probando conexión SSH..."
+        ssh -o StrictHostKeyChecking=no \
             -o ConnectTimeout=10 \
+            -o LogLevel=DEBUG \
             ${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_HOST }} \
-            "echo 'SSH funcionando'" || echo "SSH falló"
+            "echo '✅ SSH exitoso'" || echo "❌ SSH falló"
+        
+        echo "=== FIN DEBUG ==="
