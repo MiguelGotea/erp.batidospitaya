@@ -17,6 +17,7 @@ Características Principales
 
 subido desde vscode directo a hostinger a traves de actions
 subido con nuevo yml
+diagnostico yml
 
 Estructura de Carpetas
 text
