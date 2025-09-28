@@ -4,10 +4,10 @@
 ### **🔍 0. Herramientas**
 ```bash
 # cron job
-- /bin/bash /home/u839374897/sync-to-github.sh\
+- /bin/bash /home/u839374897/sync-mantenimiento-only.sh\
 
 # Manualmente desde hostinger terminal  ejecutar: /bin/bash ~/ , revisar: nano ~/
-- sync-to-github.sh 
+- sync-mantenimiento-only.sh
 - deploy-erp.sh
 
 # github action
