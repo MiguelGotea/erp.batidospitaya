@@ -14,8 +14,6 @@ Características Principales
 📊 Logs detallados para monitoreo
 
 🏗️ Arquitectura del Sistema
-Flujo de Trabajo
-
 
 Estructura de Carpetas
 text
@@ -207,3 +205,4 @@ El sistema de sincronización está completamente operativo y permite:
 
 
 ¡Happy coding! 🚀
+
