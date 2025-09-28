@@ -1,38 +1,56 @@
-name: 🔍 Debug SSH Connection
+name: 🔍 Debug SSH Connection 2
 
 on: [workflow_dispatch]
 
 jobs:
-  debug:
+  deploy:
     runs-on: ubuntu-latest
+    
     steps:
-    - uses: actions/checkout@v4
+    - name: 📥 Checkout código
+      uses: actions/checkout@v4
       
     - name: 🔑 Configurar SSH
       uses: webfactory/ssh-agent@v0.8.0
       with:
         ssh-private-key: ${{ secrets.HOSTINGER_SSH_KEY }}
         
-    - name: 🧪 Debug completo
+    - name: 🧪 Test de puerto 65002
       run: |
-        echo "=== INICIO DEBUG ==="
-        echo "Host: ${{ secrets.HOSTINGER_HOST }}"
-        echo "User: ${{ secrets.HOSTINGER_USER }}"
+        echo "🧪 Probando conectividad al puerto 65002..."
+        timeout 10 nc -zv ${{ secrets.HOSTINGER_HOST }} 65002 && echo "✅ Puerto 65002 accesible" || echo "❌ Puerto 65002 no accesible"
         
-        echo "1. Probando resolución DNS..."
-        nslookup ${{ secrets.HOSTINGER_HOST }} || echo "❌ DNS Falló"
+    - name: 📤 Sincronizar con múltiples intentos
+      run: |
+        echo "🔄 Intentando conexión SSH..."
         
-        echo "2. Probando ping..."
-        ping -c 2 ${{ secrets.HOSTINGER_HOST }} || echo "⚠️ Ping no disponible"
+        # Intentar con diferentes configuraciones
+        for attempt in 1 2 3; do
+          echo "🔹 Intento $attempt..."
+          ssh -o StrictHostKeyChecking=no \
+              -o ConnectTimeout=10 \
+              -o BatchMode=yes \
+              -p 65002 \
+              ${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_HOST }} \
+              "echo '✅ Conexión SSH exitosa'" && break || echo "⚠️ Intento $attempt falló"
+          sleep 2
+        done
         
-        echo "3. Probando puerto 22..."
-        timeout 10 nc -zv ${{ secrets.HOSTINGER_HOST }} 22 && echo "✅ Puerto 22 abierto" || echo "❌ Puerto 22 cerrado"
-        
-        echo "4. Probando conexión SSH..."
+        # Crear carpeta
         ssh -o StrictHostKeyChecking=no \
-            -o ConnectTimeout=10 \
-            -o LogLevel=DEBUG \
+            -o ConnectTimeout=15 \
+            -p 65002 \
             ${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_HOST }} \
-            "echo '✅ SSH exitoso'" || echo "❌ SSH falló"
+            "mkdir -p ${{ secrets.HOSTINGER_PATH }}/modulos/mantenimiento"
         
-        echo "=== FIN DEBUG ==="
+        # Sincronizar
+        rsync -avz \
+          --delete \
+          --progress \
+          -e "ssh -o StrictHostKeyChecking=no -o ConnectTimeout=15 -p 65002" \
+          ./modulos/mantenimiento/ \
+          ${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_HOST }}:${{ secrets.HOSTINGER_PATH }}/modulos/mantenimiento/
+          
+    - name: ✅ Verificar deploy
+      run: |
+        echo "✅ Deploy completado"
