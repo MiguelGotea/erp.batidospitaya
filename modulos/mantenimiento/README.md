@@ -15,7 +15,7 @@ Características Principales
 
 🏗️ Arquitectura del Sistema
 
-final final con yml corwegido
+actulizacion de orivados
 
 Estructura de Carpetas
 text
