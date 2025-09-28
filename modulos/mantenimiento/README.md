@@ -16,7 +16,7 @@ Características Principales
 🏗️ Arquitectura del Sistema
 
 
-
+test vscode
 
 Estructura de Carpetas
 text
