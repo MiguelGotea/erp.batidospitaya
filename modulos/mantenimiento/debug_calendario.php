@@ -50,7 +50,8 @@ try {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Test Calendario</title>
-    <link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css' rel='stylesheet' />
+    <!-- FullCalendar CSS -->
+    <link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css' rel='stylesheet' />
     <style>
         #calendar {
             max-width: 900px;
@@ -64,18 +65,47 @@ try {
             font-family: Arial, sans-serif;
             background: #f5f5f5;
         }
+        .status {
+            padding: 10px;
+            margin: 20px auto;
+            max-width: 900px;
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            border-radius: 4px;
+        }
     </style>
 </head>
 <body>
     <h2 style="text-align: center;">Test de Calendario FullCalendar</h2>
     
+    <div class="status" id="status">
+        ⏳ Cargando librerías...
+    </div>
+    
     <div id='calendar'></div>
 
-    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.js'></script>
-    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/locales/es.global.min.js'></script>
+    <!-- FullCalendar JS -->
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js'></script>
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/locales/es.js'></script>
     
     <script>
-        console.log('Iniciando test de calendario...');
+        const statusDiv = document.getElementById('status');
+        
+        // Verificar que FullCalendar está disponible
+        console.log('Verificando FullCalendar...');
+        console.log('FullCalendar disponible:', typeof FullCalendar !== 'undefined');
+        
+        if (typeof FullCalendar === 'undefined') {
+            statusDiv.innerHTML = '❌ Error: FullCalendar no se cargó correctamente';
+            statusDiv.style.background = '#ffebee';
+            statusDiv.style.borderColor = '#f44336';
+            console.error('FullCalendar no está definido');
+        } else {
+            statusDiv.innerHTML = '✅ FullCalendar cargado correctamente';
+            statusDiv.style.background = '#e8f5e9';
+            statusDiv.style.borderColor = '#4caf50';
+            console.log('✅ FullCalendar version:', FullCalendar.version);
+        }
         
         document.addEventListener('DOMContentLoaded', function() {
             console.log('DOM cargado');
@@ -86,6 +116,11 @@ try {
             if (!calendarEl) {
                 console.error('No se encontró el elemento con id="calendar"');
                 alert('Error: No se encontró el contenedor del calendario');
+                return;
+            }
+            
+            if (typeof FullCalendar === 'undefined') {
+                alert('Error: La librería FullCalendar no se cargó. Verifica tu conexión a internet.');
                 return;
             }
             
@@ -103,6 +138,9 @@ try {
                     eventClick: function(info) {
                         console.log('Clic en evento:', info.event);
                         alert('Evento: ' + info.event.title);
+                    },
+                    eventDidMount: function(info) {
+                        console.log('Evento renderizado:', info.event.title);
                     }
                 });
                 
@@ -110,16 +148,24 @@ try {
                 calendar.render();
                 console.log('✅ Calendario renderizado exitosamente');
                 
+                statusDiv.innerHTML = '✅ Calendario funcionando correctamente - Total eventos: <?= count($calendar_events) ?>';
+                
             } catch (error) {
                 console.error('❌ Error al crear calendario:', error);
-                alert('Error al crear calendario: ' + error.message);
+                statusDiv.innerHTML = '❌ Error al crear calendario: ' + error.message;
+                statusDiv.style.background = '#ffebee';
+                statusDiv.style.borderColor = '#f44336';
             }
         });
     </script>
     
-    <div style="text-align: center; margin-top: 20px;">
-        <p>Abre la consola del navegador (F12) para ver mensajes de debug</p>
-        <a href="calendario.php">Ir a Calendario Principal</a>
+    <div style="text-align: center; margin-top: 20px; padding: 20px;">
+        <p><strong>Debug Info:</strong></p>
+        <p>Tickets con fecha: <?= count($tickets_con_fecha) ?></p>
+        <p>Tickets sin fecha: <?= count($tickets_sin_fecha) ?></p>
+        <p>Eventos generados: <?= count($calendar_events) ?></p>
+        <hr>
+        <a href="calendario.php" class="btn btn-primary" style="display: inline-block; padding: 10px 20px; background: #51B8AC; color: white; text-decoration: none; border-radius: 5px;">Ir a Calendario Principal</a>
     </div>
 </body>
 </html>
