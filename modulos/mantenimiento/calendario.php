@@ -404,9 +404,90 @@ function getColorByUrgency($urgencia) {
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        if (typeof jQuery === 'undefined') {
+            document.write('<script src="js/jquery-3.6.0.min.js"><\/script>');
+        }
+    </script>
+
+    <!-- Bootstrap JS con fallback -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        if (typeof bootstrap === 'undefined') {
+            document.write('<script src="js/bootstrap.bundle.min.js"><\/script>');
+        }
+    </script>
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.js'></script>
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/locales/es.global.min.js'></script>
-    
+    <script>
+    // Verificar si FullCalendar se cargó
+    if (typeof FullCalendar === 'undefined') {
+        document.write('<script src="js/fullcalendar/main.min.js"><\/script>');
+        document.write('<script src="js/fullcalendar/locales/es.global.min.js"><\/script>');
+    }
+    </script>
+
+    <script>
+    // Función para verificar recursos
+    function checkResources() {
+        const resources = {
+            'jQuery': typeof jQuery !== 'undefined',
+            'Bootstrap': typeof bootstrap !== 'undefined',
+            'FullCalendar': typeof FullCalendar !== 'undefined'
+        };
+        
+        console.log('Recursos cargados:', resources);
+        
+        const missing = Object.keys(resources).filter(key => !resources[key]);
+        if (missing.length > 0) {
+            console.error('Recursos faltantes:', missing);
+            return false;
+        }
+        
+        return true;
+    }
+
+    // Inicialización mejorada
+    function initializeCalendarWithFallback() {
+        if (!checkResources()) {
+            // Si faltan recursos, intentar cargar versiones locales
+            loadLocalResources();
+            return;
+        }
+        
+        initializeCalendar();
+        initializeDragDrop();
+    }
+
+    // Cargar recursos locales si los CDN fallan
+    function loadLocalResources() {
+        console.log('Cargando recursos locales...');
+        
+        // Intentar inicializar después de un breve tiempo
+        setTimeout(function() {
+            if (typeof FullCalendar !== 'undefined') {
+                console.log('FullCalendar cargado localmente');
+                initializeCalendar();
+                initializeDragDrop();
+            } else {
+                console.error('No se pudo cargar FullCalendar');
+                showErrorMessage('No se pudo cargar el calendario. Por favor, verifica tu conexión a internet o contacta al administrador.');
+            }
+        }, 1000);
+    }
+
+    function showErrorMessage(message) {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = 'alert alert-danger m-3';
+        alertDiv.innerHTML = `
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            ${message}
+            <button class="btn btn-sm btn-outline-danger ms-2" onclick="location.reload()">
+                <i class="fas fa-sync-alt me-1"></i>Reintentar
+            </button>
+        `;
+        document.querySelector('.calendar-main').prepend(alertDiv);
+    }
     <script>
         let calendar;
         let draggedTicket = null;
@@ -427,62 +508,71 @@ function getColorByUrgency($urgencia) {
         
         function initializeCalendar() {
             const calendarEl = document.getElementById('calendar');
-
-    // Verificar que el elemento existe
-    if (!calendarEl) {
-        console.error('No se encontró el elemento #calendar');
-        return;
-    }
-    
-    console.log('Inicializando calendario...');
-    console.log('Eventos:', <?= json_encode($calendar_events) ?>);
             
-            calendar = new FullCalendar.Calendar(calendarEl, {
-                locale: 'es',
-                initialView: 'dayGridMonth',
-                headerToolbar: {
-                    left: 'prev,next today',
-                    center: 'title',
-                    right: 'dayGridMonth,timeGridWeek,listWeek'
-                },
-                height: 'auto',
-                contentHeight: 'auto',
-                events: <?= json_encode($calendar_events) ?>,
-                eventClick: function(info) {
-                    showTicketDetails(info.event);
-                },
-                dateClick: function(info) {
-                    showDayTickets(info.dateStr);
-                },
-                eventDidMount: function(info) {
-                    // Agregar tooltip
-                    info.el.title = `${info.event.extendedProps.codigo} - ${info.event.title} (${info.event.extendedProps.sucursal})`;
-                },
-                dayCellDidMount: function(info) {
-                    // Agregar resumen de sucursales por día
-                    const dateStr = info.date.toISOString().split('T')[0];
-                    if (sucursalesPorDia[dateStr]) {
-                        const sucursales = Object.keys(sucursalesPorDia[dateStr]);
-                        if (sucursales.length > 0) {
-                            const summary = document.createElement('div');
-                            summary.className = 'day-summary';
-                            summary.innerHTML = `<i class="fas fa-building"></i> ${sucursales.length} sucursal(es)`;
-                            info.el.appendChild(summary);
+            if (!calendarEl) {
+                console.error('No se encontró el elemento del calendario');
+                return;
+            }
+            
+            try {
+                calendar = new FullCalendar.Calendar(calendarEl, {
+                    locale: 'es',
+                    initialView: 'dayGridMonth',
+                    headerToolbar: {
+                        left: 'prev,next today',
+                        center: 'title',
+                        right: 'dayGridMonth,timeGridWeek,listWeek'
+                    },
+                    height: 'auto',
+                    events: <?= json_encode($calendar_events) ?>,
+                    eventClick: function(info) {
+                        showTicketDetails(info.event);
+                    },
+                    dateClick: function(info) {
+                        showDayTickets(info.dateStr);
+                    },
+                    eventDidMount: function(info) {
+                        info.el.title = `${info.event.extendedProps.codigo} - ${info.event.title} (${info.event.extendedProps.sucursal})`;
+                    },
+                    dayCellDidMount: function(info) {
+                        const dateStr = info.date.toISOString().split('T')[0];
+                        if (sucursalesPorDia[dateStr]) {
+                            const sucursales = Object.keys(sucursalesPorDia[dateStr]);
+                            if (sucursales.length > 0) {
+                                const summary = document.createElement('div');
+                                summary.className = 'day-summary';
+                                summary.innerHTML = `<i class="fas fa-building"></i> ${sucursales.length} sucursal(es)`;
+                                info.el.appendChild(summary);
+                            }
+                        }
+                    },
+                    droppable: true,
+                    drop: function(info) {
+                        if (draggedTicket) {
+                            scheduleTicket(draggedTicket, info.dateStr);
                         }
                     }
-                },
-                // Habilitar drop para programar tickets
-                droppable: true,
-                drop: function(info) {
-                    if (draggedTicket) {
-                        scheduleTicket(draggedTicket, info.dateStr);
-                    }
-                }
-            });
-            
-            calendar.render();
-            console.log('Calendario renderizado');
+                });
+                
+                calendar.render();
+                console.log('Calendario inicializado correctamente');
+                
+            } catch (error) {
+                console.error('Error al inicializar el calendario:', error);
+                showErrorMessage('Error técnico al cargar el calendario: ' + error.message);
+            }
         }
+
+        // Inicializar cuando el DOM esté listo
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM cargado, iniciando verificación de recursos...');
+            initializeCalendarWithFallback();
+        });
+
+        // Resto de tus funciones (initializeDragDrop, scheduleTicket, etc.)
+        let calendar;
+        let draggedTicket = null;
+        let sucursalesPorDia = <?= json_encode($sucursales_por_dia) ?>;
         
         function initializeDragDrop() {
             const ticketItems = document.querySelectorAll('.ticket-item');
