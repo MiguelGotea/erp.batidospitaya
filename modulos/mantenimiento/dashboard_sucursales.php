@@ -1,5 +1,9 @@
 <?php
-session_start();
+// Solo iniciar sesión si no está ya activa
+if (session_status() == PHP_SESSION_NONE) {
+    session_start();
+}
+
 require_once 'models/Ticket.php';
 
 // Validar parámetros
@@ -43,12 +47,35 @@ $stats = [
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css" rel="stylesheet">
     <style>
+        :root {
+            --pitaya-primary: #51B8AC;
+            --pitaya-secondary: #0E544C;
+            --pitaya-light: #F6F6F6;
+        }
+        
+        body {
+            font-family: 'Calibri', sans-serif;
+            background-color: var(--pitaya-light);
+        }
+        
+        .navbar {
+            background: linear-gradient(135deg, var(--pitaya-primary) 0%, var(--pitaya-secondary) 100%) !important;
+        }
+        
         .user-info {
-            background: linear-gradient(135deg, #20c997 0%, #0d6efd 100%);
+            background: linear-gradient(135deg, var(--pitaya-primary) 0%, var(--pitaya-secondary) 100%);
             color: white;
             padding: 20px;
             border-radius: 10px;
             margin-bottom: 20px;
+        }
+        
+        .fab-mantenimiento {
+            background: linear-gradient(135deg, var(--pitaya-primary) 0%, var(--pitaya-secondary) 100%);
+        }
+        
+        .fab-equipos {
+            background: linear-gradient(135deg, var(--pitaya-secondary) 0%, var(--pitaya-primary) 100%);
         }
         .stats-grid {
             display: grid;
@@ -62,7 +89,6 @@ $stats = [
             padding: 15px;
             text-align: center;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            color: #333; /* Asegura que el texto sea visible sobre el fondo blanco */
         }
         .status-badge {
             font-size: 0.8em;
@@ -202,8 +228,6 @@ $stats = [
                                         <div style="max-width: 200px;">
                                             <?= htmlspecialchars(substr($t['descripcion'], 0, 200)) ?>
                                             <?= strlen($t['descripcion']) > 200 ? '...' : '' ?>
-                                            <?= htmlspecialchars(mb_substr($t['descripcion'], 0, 100, 'UTF-8')) ?>
-                                            <?= mb_strlen($t['descripcion'], 'UTF-8') > 100 ? '...' : '' ?>
                                         </div>
                                     </td>
                                     <td>
@@ -228,12 +252,13 @@ $stats = [
                                         </span>
                                     </td>
                                     <td>
+                                        <button class="btn btn-sm btn-primary" onclick="viewTicket(<?= $t['id'] ?>)">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
                                         <button class="btn btn-sm btn-success" onclick="openChat(<?= $t['id'] ?>)" title="Chat de seguimiento">
                                             <i class="fas fa-comments"></i>
                                         </button>
-                                        <button class="btn btn-sm btn-info" onclick="viewTicket(<?= $t['id'] ?>)" title="Ver detalles">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
+
                                     </td>
                                 </tr>
                                 <?php endforeach; ?>
@@ -289,25 +314,34 @@ $stats = [
                 columnDefs: [
                     { orderable: false, targets: [7] }
                 ]
+            }).on('draw', function () {
+                // Volver a asignar el evento de clic a las filas después de que la tabla se redibuje
+                // (por paginación, búsqueda, etc.)
+                $('.ticket-row').off('click').on('click', function(e) {
+                    if (!$(e.target).closest('button').length) {
+                        const ticketId = $(this).find('button[onclick*="viewTicket"]').attr('onclick').match(/\d+/)[0];
+                        viewTicket(ticketId);
+                    }
+                });
             });
         });
         
         function openMaintenanceForm() {
             const url = `formulario_mantenimiento.php?cod_operario=${codOperario}&cod_sucursal=${codSucursal}`;
-            window.open(url, 'mantenimiento_form', 'width=900,height=700,scrollbars=yes,resizable=yes');
+            window.location.href = url;
         }
         
         function openEquipmentForm() {
             const url = `formulario_equipos.php?cod_operario=${codOperario}&cod_sucursal=${codSucursal}`;
-            window.open(url, 'equipos_form', 'width=900,height=700,scrollbars=yes,resizable=yes');
+            window.location.href = url;
         }
         
         function openChat(ticketId) {
             const url = `chat.php?ticket_id=${ticketId}&emisor=solicitante`;
-            window.open(url, 'chat_' + ticketId, 'width=800,height=600,scrollbars=yes,resizable=yes');
+            window.location.href = url;
         }
         
-        
+// SOLUCIÓN DE EMERGENCIA - Reemplaza toda la función viewTicket        
         function viewTicket(id) {
             $.ajax({
                 url: 'ajax/get_ticket_details_readonly.php',

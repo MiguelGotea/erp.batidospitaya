@@ -252,6 +252,6 @@ function showFullImage(src) {
 function openChatFromModal(ticketId) {
     $('#ticketModal').modal('hide');
     const url = `chat.php?ticket_id=${ticketId}&emisor=solicitante`;
-    window.open(url, 'chat_' + ticketId, 'width=800,height=600,scrollbars=yes,resizable=yes');
+    window.open(url, '_blank');
 }
 </script>

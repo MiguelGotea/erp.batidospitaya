@@ -418,9 +418,7 @@ $stats = [
         }
         
         function openChat(ticketId) {
-            window.open('chat.php?ticket_id=' + ticketId + '&emisor=mantenimiento', 
-                       'chat_' + ticketId, 
-                       'width=800,height=600,scrollbars=yes,resizable=yes');
+            window.open('chat.php?ticket_id=' + ticketId + '&emisor=mantenimiento', '_blank');
         }
         
         function showPhotoModal(photoSrc) {
