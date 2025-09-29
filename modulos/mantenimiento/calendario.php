@@ -45,15 +45,7 @@ foreach ($tickets_con_fecha as $t) {
     }
 }
 
-function getColorByUrgency($urgencia) {
-    switch ($urgencia) {
-        case 1: return '#28a745'; // Verde
-        case 2: return '#ffc107'; // Amarillo
-        case 3: return '#fd7e14'; // Naranja
-        case 4: return '#dc3545'; // Rojo
-        default: return '#6c757d'; // Gris
-    }
-}
+
 ?>
 
 <?php
