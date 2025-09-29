@@ -56,33 +56,362 @@ function getColorByUrgency($urgencia) {
 }
 ?>
 
+<?php
+if (session_status() == PHP_SESSION_NONE) {
+    session_start();
+}
+
+require_once 'models/Ticket.php';
+
+$ticket = new Ticket();
+$tickets_con_fecha = $ticket->getTicketsForCalendar();
+$tickets_sin_fecha = $ticket->getTicketsWithoutDates();
+
+// Procesar tickets para el calendario
+$calendar_events = [];
+
+foreach ($tickets_con_fecha as $t) {
+    $calendar_events[] = [
+        'id' => $t['id'],
+        'title' => $t['codigo'] . ' - ' . $t['titulo'],
+        'start' => $t['fecha_inicio'],
+        'end' => date('Y-m-d', strtotime($t['fecha_final'] . ' +1 day')),
+        'backgroundColor' => getColorByUrgency($t['nivel_urgencia']),
+        'borderColor' => getColorByUrgency($t['nivel_urgencia']),
+        'extendedProps' => [
+            'codigo' => $t['codigo'],
+            'sucursal' => $t['nombre_sucursal'],
+            'urgencia' => $t['nivel_urgencia'],
+            'status' => $t['status']
+        ]
+    ];
+}
+
+function getColorByUrgency($urgencia) {
+    switch ($urgencia) {
+        case 1: return '#28a745';
+        case 2: return '#ffc107';
+        case 3: return '#fd7e14';
+        case 4: return '#dc3545';
+        default: return '#6c757d';
+    }
+}
+?>
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Calendario de Mantenimiento</title>
-    
-    <!-- Bootstrap CSS con fallback -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script>
-        // Verificar si Bootstrap se cargó
-        if (typeof bootstrap === 'undefined') {
-            document.write('<link href="css/bootstrap.min.css" rel="stylesheet">');
-        }
-    </script>
-    
-    <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    
-    <!-- FullCalendar CSS con fallback -->
     <link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css' rel='stylesheet' />
-    <script>
-        // Verificar si FullCalendar CSS se cargó
-        if (!document.querySelector('link[href*="fullcalendar"]')) {
-            document.write('<link href="css/fullcalendar.min.css" rel="stylesheet">');
+    <style>
+        :root {
+            --pitaya-primary: #51B8AC;
+            --pitaya-secondary: #0E544C;
+            --pitaya-light: #F6F6F6;
         }
+        
+        body {
+            font-family: 'Calibri', sans-serif;
+            background-color: var(--pitaya-light);
+        }
+        
+        .navbar {
+            background: linear-gradient(135deg, var(--pitaya-primary) 0%, var(--pitaya-secondary) 100%) !important;
+        }
+        
+        .calendar-container {
+            display: flex;
+            gap: 20px;
+            padding: 20px;
+            min-height: calc(100vh - 100px);
+        }
+        
+        .calendar-main {
+            flex: 1;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 20px;
+            min-height: 600px;
+        }
+        
+        #calendar {
+            height: 100%;
+        }
+        
+        .fc {
+            font-family: 'Calibri', sans-serif;
+        }
+        
+        .fc-button-primary {
+            background-color: var(--pitaya-primary) !important;
+            border-color: var(--pitaya-primary) !important;
+        }
+        
+        .fc-button-primary:hover {
+            background-color: var(--pitaya-secondary) !important;
+            border-color: var(--pitaya-secondary) !important;
+        }
+        
+        .fc-button-primary:not(:disabled):active,
+        .fc-button-primary:not(:disabled).fc-button-active {
+            background-color: var(--pitaya-secondary) !important;
+            border-color: var(--pitaya-secondary) !important;
+        }
+        
+        .sidebar {
+            width: 350px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            max-height: calc(100vh - 140px);
+        }
+        
+        .sidebar-header {
+            background: linear-gradient(135deg, var(--pitaya-primary) 0%, var(--pitaya-secondary) 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px 10px 0 0;
+        }
+        
+        .unscheduled-tickets {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+        
+        .ticket-item {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            cursor: move;
+            transition: all 0.3s ease;
+        }
+        
+        .ticket-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .urgency-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .legend-color {
+            width: 15px;
+            height: 15px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-dark">
+        <div class="container-fluid">
+            <span class="navbar-brand mb-0 h1">
+                <i class="fas fa-calendar-alt me-2"></i>
+                Calendario de Mantenimiento
+            </span>
+            <div class="navbar-nav flex-row">
+                <a class="nav-link me-3" href="dashboard_mantenimiento.php">
+                    <i class="fas fa-arrow-left me-2"></i>Volver al Dashboard
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <!-- Leyenda -->
+        <div class="legend mt-3">
+            <div class="legend-item">
+                <div class="legend-color" style="background: #28a745;"></div>
+                <span>Urgencia 1 - Baja</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #ffc107;"></div>
+                <span>Urgencia 2 - Media</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #fd7e14;"></div>
+                <span>Urgencia 3 - Alta</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #dc3545;"></div>
+                <span>Urgencia 4 - Crítica</span>
+            </div>
+        </div>
+
+        <div class="calendar-container">
+            <!-- Calendario principal -->
+            <div class="calendar-main">
+                <div id='calendar'></div>
+            </div>
+
+            <!-- Sidebar con tickets sin programar -->
+            <div class="sidebar">
+                <div class="sidebar-header">
+                    <h5 class="mb-1">
+                        <i class="fas fa-clock me-2"></i>
+                        Tickets Sin Programar
+                    </h5>
+                    <small>Arrastra los tickets al calendario</small>
+                </div>
+                
+                <div class="unscheduled-tickets" id="unscheduledTickets">
+                    <?php if (empty($tickets_sin_fecha)): ?>
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-check-circle fa-3x mb-3"></i>
+                            <p>¡Todos los tickets están programados!</p>
+                        </div>
+                    <?php else: ?>
+                        <?php foreach ($tickets_sin_fecha as $ticket): ?>
+                            <div class="ticket-item" 
+                                 draggable="true" 
+                                 data-ticket-id="<?= $ticket['id'] ?>"
+                                 data-ticket-title="<?= htmlspecialchars($ticket['titulo']) ?>"
+                                 data-ticket-codigo="<?= htmlspecialchars($ticket['codigo']) ?>">
+                                
+                                <span class="urgency-indicator" 
+                                      style="background: <?= getColorByUrgency($ticket['nivel_urgencia']) ?>"></span>
+                                
+                                <div class="mb-2">
+                                    <strong><?= htmlspecialchars($ticket['codigo']) ?></strong>
+                                </div>
+                                
+                                <div class="mb-2">
+                                    <?= htmlspecialchars($ticket['titulo']) ?>
+                                </div>
+                                
+                                <div class="text-muted small">
+                                    <i class="fas fa-building me-1"></i>
+                                    <?= htmlspecialchars($ticket['nombre_sucursal']) ?>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.js'></script>
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/locales/es.global.min.js'></script>
+    
+    <script>
+        console.log('=== Iniciando Calendario ===');
+        console.log('Eventos disponibles:', <?= json_encode($calendar_events) ?>);
+        
+        let calendar;
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM cargado, inicializando calendario...');
+            
+            const calendarEl = document.getElementById('calendar');
+            
+            if (!calendarEl) {
+                console.error('❌ No se encontró el elemento #calendar');
+                return;
+            }
+            
+            console.log('✅ Elemento calendario encontrado');
+            
+            try {
+                calendar = new FullCalendar.Calendar(calendarEl, {
+                    locale: 'es',
+                    initialView: 'dayGridMonth',
+                    headerToolbar: {
+                        left: 'prev,next today',
+                        center: 'title',
+                        right: 'dayGridMonth,timeGridWeek,listWeek'
+                    },
+                    height: '100%',
+                    contentHeight: 'auto',
+                    events: <?= json_encode($calendar_events) ?>,
+                    eventClick: function(info) {
+                        console.log('Click en evento:', info.event);
+                        alert('Ticket: ' + info.event.title);
+                    },
+                    eventDidMount: function(info) {
+                        console.log('Evento montado:', info.event.title);
+                    },
+                    loading: function(isLoading) {
+                        console.log('Calendario cargando:', isLoading);
+                    }
+                });
+                
+                console.log('📅 Calendario creado, renderizando...');
+                calendar.render();
+                console.log('✅ Calendario renderizado exitosamente');
+                
+                // Verificar que se renderizó correctamente
+                setTimeout(() => {
+                    const fcContent = document.querySelector('.fc-view');
+                    if (fcContent) {
+                        console.log('✅ Contenido del calendario visible');
+                    } else {
+                        console.error('❌ El calendario no se renderizó correctamente');
+                    }
+                }, 1000);
+                
+            } catch (error) {
+                console.error('❌ Error al crear calendario:', error);
+                alert('Error al inicializar el calendario. Revisa la consola.');
+            }
+        });
     </script>
+</body>
+</html>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendario de Mantenimiento</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css' rel='stylesheet' />
+    <style>
+        :root {
+            --pitaya-primary: #51B8AC;
+            --pitaya-secondary: #0E544C;
+            --pitaya-light: #F6F6F6;
+        }
+        
+        body {
+            font-family: 'Calibri', sans-serif;
+            background-color: var(--pitaya-light);
+        }
+        
+        .navbar {
+            background: linear-gradient(135deg, var(--pitaya-primary) 0%, var(--pitaya-secondary) 100%) !important;
+        }
     <style>
         .calendar-container {
             height: calc(100vh - 100px);
@@ -96,17 +425,9 @@ function getColorByUrgency($urgencia) {
             margin-right: 20px;
             border-radius: 10px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            min-height: 600px; /* Altura mínima */
         }
-
-        #calendar {
-            height: 100% !important;
-            min-height: 500px;
-        }
-
+        
         .sidebar {
-            height: 100% !important;
-            min-height: 500px;
             width: 350px;
             background: white;
             border-radius: 10px;
@@ -115,23 +436,34 @@ function getColorByUrgency($urgencia) {
             flex-direction: column;
         }
         
-        .fc {
-        height: 100% !important;
-        }
-
-        /* Asegurar que el body tenga altura */
-        html, body {
-            height: 100%;
-        }
-        
-        .bg-light {
-            min-height: 100vh;
-        }
         .sidebar-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, var(--pitaya-primary) 0%, var(--pitaya-secondary) 100%);
             color: white;
             padding: 20px;
             border-radius: 10px 10px 0 0;
+        }
+        
+        .fc {
+            font-family: 'Calibri', sans-serif;
+        }
+        
+        .fc-toolbar {
+            margin-bottom: 1rem;
+        }
+        
+        .fc-button-primary {
+            background-color: var(--pitaya-primary) !important;
+            border-color: var(--pitaya-primary) !important;
+        }
+        
+        .fc-button-primary:hover {
+            background-color: var(--pitaya-secondary) !important;
+            border-color: var(--pitaya-secondary) !important;
+        }
+        
+        .fc-today-button, .fc-prev-button, .fc-next-button {
+            background-color: var(--pitaya-secondary) !important;
+            border-color: var(--pitaya-secondary) !important;
         }
         
         .unscheduled-tickets {
@@ -227,16 +559,16 @@ function getColorByUrgency($urgencia) {
         }
         
         .drop-zone {
-            border: 2px dashed #007bff;
+            border: 2px dashed var(--pitaya-primary);
             border-radius: 8px;
-            background: rgba(0, 123, 255, 0.1);
+            background: rgba(81, 184, 172, 0.1);
             animation: pulse 2s infinite;
         }
         
         @keyframes pulse {
-            0% { background-color: rgba(0, 123, 255, 0.1); }
-            50% { background-color: rgba(0, 123, 255, 0.2); }
-            100% { background-color: rgba(0, 123, 255, 0.1); }
+            0% { background-color: rgba(81, 184, 172, 0.1); }
+            50% { background-color: rgba(81, 184, 172, 0.2); }
+            100% { background-color: rgba(81, 184, 172, 0.1); }
         }
     </style>
 </head>
@@ -394,7 +726,7 @@ function getColorByUrgency($urgencia) {
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-primary" onclick="confirmSchedule()">
+                    <button type="button" class="btn" style="background-color: var(--pitaya-primary); color: white;" onclick="confirmSchedule()">
                         <i class="fas fa-calendar-check me-2"></i>Programar
                     </button>
                 </div>
@@ -404,104 +736,15 @@ function getColorByUrgency($urgencia) {
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script>
-        if (typeof jQuery === 'undefined') {
-            document.write('<script src="js/jquery-3.6.0.min.js"><\/script>');
-        }
-    </script>
-
-    <!-- Bootstrap JS con fallback -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        if (typeof bootstrap === 'undefined') {
-            document.write('<script src="js/bootstrap.bundle.min.js"><\/script>');
-        }
-    </script>
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.js'></script>
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/locales/es.global.min.js'></script>
-    <script>
-    // Verificar si FullCalendar se cargó
-    if (typeof FullCalendar === 'undefined') {
-        document.write('<script src="js/fullcalendar/main.min.js"><\/script>');
-        document.write('<script src="js/fullcalendar/locales/es.global.min.js"><\/script>');
-    }
-    </script>
-
-    <script>
-    // Función para verificar recursos
-    function checkResources() {
-        const resources = {
-            'jQuery': typeof jQuery !== 'undefined',
-            'Bootstrap': typeof bootstrap !== 'undefined',
-            'FullCalendar': typeof FullCalendar !== 'undefined'
-        };
-        
-        console.log('Recursos cargados:', resources);
-        
-        const missing = Object.keys(resources).filter(key => !resources[key]);
-        if (missing.length > 0) {
-            console.error('Recursos faltantes:', missing);
-            return false;
-        }
-        
-        return true;
-    }
-
-    // Inicialización mejorada
-    function initializeCalendarWithFallback() {
-        if (!checkResources()) {
-            // Si faltan recursos, intentar cargar versiones locales
-            loadLocalResources();
-            return;
-        }
-        
-        initializeCalendar();
-        initializeDragDrop();
-    }
-
-    // Cargar recursos locales si los CDN fallan
-    function loadLocalResources() {
-        console.log('Cargando recursos locales...');
-        
-        // Intentar inicializar después de un breve tiempo
-        setTimeout(function() {
-            if (typeof FullCalendar !== 'undefined') {
-                console.log('FullCalendar cargado localmente');
-                initializeCalendar();
-                initializeDragDrop();
-            } else {
-                console.error('No se pudo cargar FullCalendar');
-                showErrorMessage('No se pudo cargar el calendario. Por favor, verifica tu conexión a internet o contacta al administrador.');
-            }
-        }, 1000);
-    }
-
-    function showErrorMessage(message) {
-        const alertDiv = document.createElement('div');
-        alertDiv.className = 'alert alert-danger m-3';
-        alertDiv.innerHTML = `
-            <i class="fas fa-exclamation-triangle me-2"></i>
-            ${message}
-            <button class="btn btn-sm btn-outline-danger ms-2" onclick="location.reload()">
-                <i class="fas fa-sync-alt me-1"></i>Reintentar
-            </button>
-        `;
-        document.querySelector('.calendar-main').prepend(alertDiv);
-    }
+    
     <script>
         let calendar;
         let draggedTicket = null;
         let sucursalesPorDia = <?= json_encode($sucursales_por_dia) ?>;
         
         document.addEventListener('DOMContentLoaded', function() {
-            // Verificar que FullCalendar esté disponible
-            if (typeof FullCalendar === 'undefined') {
-                console.error('FullCalendar no se cargó correctamente');
-                alert('Error: No se pudo cargar el calendario. Verifica la conexión a internet.');
-                return;
-            }
-            
-            console.log('FullCalendar cargado:', typeof FullCalendar);  
             initializeCalendar();
             initializeDragDrop();
         });
@@ -509,70 +752,50 @@ function getColorByUrgency($urgencia) {
         function initializeCalendar() {
             const calendarEl = document.getElementById('calendar');
             
-            if (!calendarEl) {
-                console.error('No se encontró el elemento del calendario');
-                return;
-            }
-            
-            try {
-                calendar = new FullCalendar.Calendar(calendarEl, {
-                    locale: 'es',
-                    initialView: 'dayGridMonth',
-                    headerToolbar: {
-                        left: 'prev,next today',
-                        center: 'title',
-                        right: 'dayGridMonth,timeGridWeek,listWeek'
-                    },
-                    height: 'auto',
-                    events: <?= json_encode($calendar_events) ?>,
-                    eventClick: function(info) {
-                        showTicketDetails(info.event);
-                    },
-                    dateClick: function(info) {
-                        showDayTickets(info.dateStr);
-                    },
-                    eventDidMount: function(info) {
-                        info.el.title = `${info.event.extendedProps.codigo} - ${info.event.title} (${info.event.extendedProps.sucursal})`;
-                    },
-                    dayCellDidMount: function(info) {
-                        const dateStr = info.date.toISOString().split('T')[0];
-                        if (sucursalesPorDia[dateStr]) {
-                            const sucursales = Object.keys(sucursalesPorDia[dateStr]);
-                            if (sucursales.length > 0) {
-                                const summary = document.createElement('div');
-                                summary.className = 'day-summary';
-                                summary.innerHTML = `<i class="fas fa-building"></i> ${sucursales.length} sucursal(es)`;
-                                info.el.appendChild(summary);
-                            }
-                        }
-                    },
-                    droppable: true,
-                    drop: function(info) {
-                        if (draggedTicket) {
-                            scheduleTicket(draggedTicket, info.dateStr);
+            calendar = new FullCalendar.Calendar(calendarEl, {
+                locale: 'es',
+                initialView: 'dayGridMonth',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,listWeek'
+                },
+                height: 'auto',
+                events: <?= json_encode($calendar_events) ?>,
+                eventClick: function(info) {
+                    showTicketDetails(info.event);
+                },
+                dateClick: function(info) {
+                    showDayTickets(info.dateStr);
+                },
+                eventDidMount: function(info) {
+                    // Agregar tooltip
+                    info.el.title = `${info.event.extendedProps.codigo} - ${info.event.title} (${info.event.extendedProps.sucursal})`;
+                },
+                dayCellDidMount: function(info) {
+                    // Agregar resumen de sucursales por día
+                    const dateStr = info.date.toISOString().split('T')[0];
+                    if (sucursalesPorDia[dateStr]) {
+                        const sucursales = Object.keys(sucursalesPorDia[dateStr]);
+                        if (sucursales.length > 0) {
+                            const summary = document.createElement('div');
+                            summary.className = 'day-summary';
+                            summary.innerHTML = `<i class="fas fa-building"></i> ${sucursales.length} sucursal(es)`;
+                            info.el.appendChild(summary);
                         }
                     }
-                });
-                
-                calendar.render();
-                console.log('Calendario inicializado correctamente');
-                
-            } catch (error) {
-                console.error('Error al inicializar el calendario:', error);
-                showErrorMessage('Error técnico al cargar el calendario: ' + error.message);
-            }
+                },
+                // Habilitar drop para programar tickets
+                droppable: true,
+                drop: function(info) {
+                    if (draggedTicket) {
+                        scheduleTicket(draggedTicket, info.dateStr);
+                    }
+                }
+            });
+            
+            calendar.render();
         }
-
-        // Inicializar cuando el DOM esté listo
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('DOM cargado, iniciando verificación de recursos...');
-            initializeCalendarWithFallback();
-        });
-
-        // Resto de tus funciones (initializeDragDrop, scheduleTicket, etc.)
-        let calendar;
-        let draggedTicket = null;
-        let sucursalesPorDia = <?= json_encode($sucursales_por_dia) ?>;
         
         function initializeDragDrop() {
             const ticketItems = document.querySelectorAll('.ticket-item');
