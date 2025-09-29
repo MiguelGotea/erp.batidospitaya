@@ -87,7 +87,15 @@ foreach ($tickets_con_fecha as $t) {
     ];
 }
 
-
+function getColorByUrgency($urgencia) {
+    switch ($urgencia) {
+        case 1: return '#28a745';
+        case 2: return '#ffc107';
+        case 3: return '#fd7e14';
+        case 4: return '#dc3545';
+        default: return '#6c757d';
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -98,7 +106,7 @@ foreach ($tickets_con_fecha as $t) {
     <title>Calendario de Mantenimiento</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css' rel='stylesheet' />
+    <link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css' rel='stylesheet' />
     <style>
         :root {
             --pitaya-primary: #51B8AC;
@@ -316,12 +324,17 @@ foreach ($tickets_con_fecha as $t) {
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.js'></script>
-    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/locales/es.global.min.js'></script>
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js'></script>
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/locales/es.js'></script>
     
     <script>
         console.log('=== Iniciando Calendario ===');
+        console.log('FullCalendar disponible:', typeof FullCalendar !== 'undefined');
         console.log('Eventos disponibles:', <?= json_encode($calendar_events) ?>);
+        
+        if (typeof FullCalendar === 'undefined') {
+            alert('Error: FullCalendar no se cargó. Verifica tu conexión a internet.');
+        }
         
         let calendar;
         
@@ -332,10 +345,17 @@ foreach ($tickets_con_fecha as $t) {
             
             if (!calendarEl) {
                 console.error('❌ No se encontró el elemento #calendar');
+                alert('Error: No se encontró el contenedor del calendario');
                 return;
             }
             
             console.log('✅ Elemento calendario encontrado');
+            
+            if (typeof FullCalendar === 'undefined') {
+                console.error('❌ FullCalendar no está definido');
+                alert('Error: La librería FullCalendar no se cargó correctamente');
+                return;
+            }
             
             try {
                 calendar = new FullCalendar.Calendar(calendarEl, {
@@ -346,18 +366,20 @@ foreach ($tickets_con_fecha as $t) {
                         center: 'title',
                         right: 'dayGridMonth,timeGridWeek,listWeek'
                     },
-                    height: '100%',
-                    contentHeight: 'auto',
+                    height: 'auto',
                     events: <?= json_encode($calendar_events) ?>,
                     eventClick: function(info) {
                         console.log('Click en evento:', info.event);
-                        alert('Ticket: ' + info.event.title);
+                        showTicketDetails(info.event.id);
                     },
                     eventDidMount: function(info) {
                         console.log('Evento montado:', info.event.title);
+                        info.el.title = info.event.extendedProps.codigo + ' - ' + info.event.title;
                     },
-                    loading: function(isLoading) {
-                        console.log('Calendario cargando:', isLoading);
+                    eventContent: function(arg) {
+                        return {
+                            html: '<div style="padding: 2px 4px; font-size: 0.85em;">' + arg.event.title + '</div>'
+                        };
                     }
                 });
                 
@@ -373,13 +395,18 @@ foreach ($tickets_con_fecha as $t) {
                     } else {
                         console.error('❌ El calendario no se renderizó correctamente');
                     }
-                }, 1000);
+                }, 500);
                 
             } catch (error) {
                 console.error('❌ Error al crear calendario:', error);
-                alert('Error al inicializar el calendario. Revisa la consola.');
+                alert('Error al inicializar el calendario: ' + error.message);
             }
         });
+        
+        function showTicketDetails(ticketId) {
+            console.log('Ver detalles del ticket:', ticketId);
+            window.location.href = 'dashboard_mantenimiento.php?ticket_id=' + ticketId;
+        }
     </script>
 </body>
 </html>
