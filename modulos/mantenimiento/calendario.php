@@ -62,9 +62,27 @@ function getColorByUrgency($urgencia) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Calendario de Mantenimiento</title>
+    
+    <!-- Bootstrap CSS con fallback -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script>
+        // Verificar si Bootstrap se cargó
+        if (typeof bootstrap === 'undefined') {
+            document.write('<link href="css/bootstrap.min.css" rel="stylesheet">');
+        }
+    </script>
+    
+    <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- FullCalendar CSS con fallback -->
     <link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css' rel='stylesheet' />
+    <script>
+        // Verificar si FullCalendar CSS se cargó
+        if (!document.querySelector('link[href*="fullcalendar"]')) {
+            document.write('<link href="css/fullcalendar.min.css" rel="stylesheet">');
+        }
+    </script>
     <style>
         .calendar-container {
             height: calc(100vh - 100px);
@@ -78,9 +96,17 @@ function getColorByUrgency($urgencia) {
             margin-right: 20px;
             border-radius: 10px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            min-height: 600px; /* Altura mínima */
         }
-        
+
+        #calendar {
+            height: 100% !important;
+            min-height: 500px;
+        }
+
         .sidebar {
+            height: 100% !important;
+            min-height: 500px;
             width: 350px;
             background: white;
             border-radius: 10px;
@@ -89,6 +115,18 @@ function getColorByUrgency($urgencia) {
             flex-direction: column;
         }
         
+        .fc {
+        height: 100% !important;
+        }
+
+        /* Asegurar que el body tenga altura */
+        html, body {
+            height: 100%;
+        }
+        
+        .bg-light {
+            min-height: 100vh;
+        }
         .sidebar-header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
@@ -375,12 +413,29 @@ function getColorByUrgency($urgencia) {
         let sucursalesPorDia = <?= json_encode($sucursales_por_dia) ?>;
         
         document.addEventListener('DOMContentLoaded', function() {
+            // Verificar que FullCalendar esté disponible
+            if (typeof FullCalendar === 'undefined') {
+                console.error('FullCalendar no se cargó correctamente');
+                alert('Error: No se pudo cargar el calendario. Verifica la conexión a internet.');
+                return;
+            }
+            
+            console.log('FullCalendar cargado:', typeof FullCalendar);  
             initializeCalendar();
             initializeDragDrop();
         });
         
         function initializeCalendar() {
             const calendarEl = document.getElementById('calendar');
+
+    // Verificar que el elemento existe
+    if (!calendarEl) {
+        console.error('No se encontró el elemento #calendar');
+        return;
+    }
+    
+    console.log('Inicializando calendario...');
+    console.log('Eventos:', <?= json_encode($calendar_events) ?>);
             
             calendar = new FullCalendar.Calendar(calendarEl, {
                 locale: 'es',
@@ -391,6 +446,7 @@ function getColorByUrgency($urgencia) {
                     right: 'dayGridMonth,timeGridWeek,listWeek'
                 },
                 height: 'auto',
+                contentHeight: 'auto',
                 events: <?= json_encode($calendar_events) ?>,
                 eventClick: function(info) {
                     showTicketDetails(info.event);
@@ -425,6 +481,7 @@ function getColorByUrgency($urgencia) {
             });
             
             calendar.render();
+            console.log('Calendario renderizado');
         }
         
         function initializeDragDrop() {
