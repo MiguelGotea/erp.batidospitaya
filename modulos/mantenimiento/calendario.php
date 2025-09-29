@@ -87,7 +87,15 @@ foreach ($tickets_con_fecha as $t) {
     ];
 }
 
-
+function getColorByUrgency($urgencia) {
+    switch ($urgencia) {
+        case 1: return '#28a745';
+        case 2: return '#ffc107';
+        case 3: return '#fd7e14';
+        case 4: return '#dc3545';
+        default: return '#6c757d';
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -223,6 +231,46 @@ foreach ($tickets_con_fecha as $t) {
             height: 15px;
             border-radius: 3px;
         }
+        
+        /* Estilos para las sucursales en el día */
+        .sucursales-dia {
+            font-size: 0.7em;
+            color: var(--pitaya-secondary);
+            background: rgba(81, 184, 172, 0.15);
+            padding: 3px 5px;
+            border-radius: 4px;
+            margin-top: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            cursor: help;
+        }
+        
+        .sucursales-dia:hover {
+            background: rgba(81, 184, 172, 0.3);
+        }
+        
+        /* Mejorar visibilidad de eventos */
+        .fc-event {
+            margin-bottom: 2px;
+            border-left: 3px solid;
+            font-size: 0.85em;
+        }
+        
+        .fc-daygrid-day-top {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        
+        /* Resaltar cuando se arrastra */
+        .calendar-main.dragging {
+            background: rgba(81, 184, 172, 0.1) !important;
+            border: 2px dashed var(--pitaya-primary);
+        }
+        
+        .fc-day:hover {
+            background: rgba(81, 184, 172, 0.05);
+        }
     </style>
 </head>
 <body>
@@ -316,36 +364,43 @@ foreach ($tickets_con_fecha as $t) {
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/core@5.11.3/main.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/interaction@5.11.3/main.min.js"></script>
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js'></script>
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/locales/es.js'></script>
     
     <script>
-        console.log('=== Iniciando Calendario ===');
-        console.log('FullCalendar disponible:', typeof FullCalendar !== 'undefined');
-        console.log('Eventos disponibles:', <?= json_encode($calendar_events) ?>);
+        console.log('=== Iniciando Calendario con Drag & Drop ===');
+        
+        let calendar;
+        let draggedTicket = null;
+        const sucursalesPorDia = {};
+        
+        // Procesar tickets para agrupar por día y sucursal
+        const eventos = <?= json_encode($calendar_events) ?>;
+        eventos.forEach(evento => {
+            const fecha = evento.start;
+            if (!sucursalesPorDia[fecha]) {
+                sucursalesPorDia[fecha] = new Set();
+            }
+            if (evento.extendedProps && evento.extendedProps.sucursal) {
+                sucursalesPorDia[fecha].add(evento.extendedProps.sucursal);
+            }
+        });
+        
+        console.log('Sucursales por día:', sucursalesPorDia);
         
         if (typeof FullCalendar === 'undefined') {
             alert('Error: FullCalendar no se cargó. Verifica tu conexión a internet.');
         }
         
-        let calendar;
-        
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('DOM cargado, inicializando calendario...');
+            console.log('DOM cargado, inicializando calendario con drag & drop...');
             
             const calendarEl = document.getElementById('calendar');
             
             if (!calendarEl) {
                 console.error('❌ No se encontró el elemento #calendar');
-                alert('Error: No se encontró el contenedor del calendario');
-                return;
-            }
-            
-            console.log('✅ Elemento calendario encontrado');
-            
-            if (typeof FullCalendar === 'undefined') {
-                console.error('❌ FullCalendar no está definido');
-                alert('Error: La librería FullCalendar no se cargó correctamente');
                 return;
             }
             
@@ -359,19 +414,65 @@ foreach ($tickets_con_fecha as $t) {
                         right: 'dayGridMonth,timeGridWeek,listWeek'
                     },
                     height: 'auto',
-                    events: <?= json_encode($calendar_events) ?>,
+                    editable: true,
+                    droppable: true,
+                    events: eventos,
+                    
+                    // Drag & Drop de tickets externos
+                    drop: function(info) {
+                        console.log('Drop detectado:', info);
+                        if (draggedTicket) {
+                            const fechaInicio = info.dateStr;
+                            const fechaFinal = info.dateStr;
+                            programarTicket(draggedTicket, fechaInicio, fechaFinal);
+                        }
+                    },
+                    
+                    // Click en evento
                     eventClick: function(info) {
                         console.log('Click en evento:', info.event);
-                        showTicketDetails(info.event.id);
+                        mostrarDetallesTicket(info.event.id);
                     },
-                    eventDidMount: function(info) {
-                        console.log('Evento montado:', info.event.title);
-                        info.el.title = info.event.extendedProps.codigo + ' - ' + info.event.title;
+                    
+                    // Click en día
+                    dateClick: function(info) {
+                        console.log('Click en día:', info.dateStr);
+                        mostrarTicketsDelDia(info.dateStr);
                     },
+                    
+                    // Personalizar renderizado de eventos
                     eventContent: function(arg) {
+                        const urgencia = arg.event.extendedProps.urgencia || 0;
+                        const urgenciaIcon = urgencia >= 3 ? '⚠️ ' : '';
                         return {
-                            html: '<div style="padding: 2px 4px; font-size: 0.85em;">' + arg.event.title + '</div>'
+                            html: '<div style="padding: 2px 4px; font-size: 0.8em; overflow: hidden; text-overflow: ellipsis;">' + 
+                                  urgenciaIcon + arg.event.title + '</div>'
                         };
+                    },
+                    
+                    // Agregar sucursales al día
+                    dayCellDidMount: function(info) {
+                        const fecha = info.date.toISOString().split('T')[0];
+                        
+                        // Agregar sucursales del día
+                        if (sucursalesPorDia[fecha]) {
+                            const sucursales = Array.from(sucursalesPorDia[fecha]);
+                            if (sucursales.length > 0) {
+                                const sucursalesDiv = document.createElement('div');
+                                sucursalesDiv.className = 'sucursales-dia';
+                                sucursalesDiv.style.cssText = 'font-size: 0.7em; color: #0E544C; margin-top: 2px; padding: 2px; background: rgba(81, 184, 172, 0.1); border-radius: 3px;';
+                                sucursalesDiv.innerHTML = '<i class="fas fa-building" style="font-size: 0.8em;"></i> ' + 
+                                                          sucursales.slice(0, 2).join(', ') + 
+                                                          (sucursales.length > 2 ? '...' : '');
+                                sucursalesDiv.title = 'Sucursales: ' + sucursales.join(', ');
+                                
+                                // Agregar al final de la celda del día
+                                const dayTop = info.el.querySelector('.fc-daygrid-day-top');
+                                if (dayTop) {
+                                    dayTop.appendChild(sucursalesDiv);
+                                }
+                            }
+                        }
                     }
                 });
                 
@@ -379,15 +480,8 @@ foreach ($tickets_con_fecha as $t) {
                 calendar.render();
                 console.log('✅ Calendario renderizado exitosamente');
                 
-                // Verificar que se renderizó correctamente
-                setTimeout(() => {
-                    const fcContent = document.querySelector('.fc-view');
-                    if (fcContent) {
-                        console.log('✅ Contenido del calendario visible');
-                    } else {
-                        console.error('❌ El calendario no se renderizó correctamente');
-                    }
-                }, 500);
+                // Inicializar drag de tickets
+                inicializarDragTickets();
                 
             } catch (error) {
                 console.error('❌ Error al crear calendario:', error);
@@ -395,9 +489,137 @@ foreach ($tickets_con_fecha as $t) {
             }
         });
         
-        function showTicketDetails(ticketId) {
-            console.log('Ver detalles del ticket:', ticketId);
-            window.location.href = 'dashboard_mantenimiento.php?ticket_id=' + ticketId;
+        // Inicializar drag & drop de tickets
+        function inicializarDragTickets() {
+            console.log('Inicializando drag & drop de tickets...');
+            
+            const ticketItems = document.querySelectorAll('.ticket-item');
+            console.log('Tickets encontrados:', ticketItems.length);
+            
+            ticketItems.forEach(item => {
+                item.addEventListener('dragstart', function(e) {
+                    console.log('Drag start:', this.dataset.ticketId);
+                    
+                    draggedTicket = {
+                        id: this.dataset.ticketId,
+                        title: this.dataset.ticketTitle,
+                        codigo: this.dataset.ticketCodigo
+                    };
+                    
+                    this.style.opacity = '0.5';
+                    this.style.transform = 'scale(0.95)';
+                    
+                    // Resaltar calendario
+                    document.querySelector('.calendar-main').classList.add('dragging');
+                });
+                
+                item.addEventListener('dragend', function(e) {
+                    console.log('Drag end');
+                    this.style.opacity = '1';
+                    this.style.transform = 'scale(1)';
+                    draggedTicket = null;
+                    
+                    // Quitar resaltado
+                    document.querySelector('.calendar-main').classList.remove('dragging');
+                });
+            });
+        }
+        
+        // Programar ticket
+        function programarTicket(ticket, fechaInicio, fechaFinal) {
+            console.log('Programando ticket:', ticket, fechaInicio, fechaFinal);
+            
+            if (!confirm('¿Programar el ticket ' + ticket.codigo + ' para el ' + fechaInicio + '?')) {
+                return;
+            }
+            
+            $.ajax({
+                url: 'ajax/schedule_ticket.php',
+                method: 'POST',
+                data: {
+                    ticket_id: ticket.id,
+                    fecha_inicio: fechaInicio,
+                    fecha_final: fechaFinal
+                },
+                dataType: 'json',
+                success: function(response) {
+                    console.log('Respuesta:', response);
+                    if (response.success) {
+                        alert('✅ Ticket programado exitosamente');
+                        location.reload();
+                    } else {
+                        alert('❌ Error: ' + response.message);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error AJAX:', xhr.responseText);
+                    alert('❌ Error en la comunicación: ' + error);
+                }
+            });
+        }
+        
+        // Mostrar detalles del ticket
+        function mostrarDetallesTicket(ticketId) {
+            console.log('Mostrar detalles del ticket:', ticketId);
+            
+            $.ajax({
+                url: 'ajax/get_ticket_details.php',
+                method: 'GET',
+                data: { id: ticketId },
+                success: function(response) {
+                    const modal = $('<div class="modal fade" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Detalles del Ticket</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body">' + response + '</div></div></div></div>');
+                    $('body').append(modal);
+                    modal.modal('show');
+                    modal.on('hidden.bs.modal', function() {
+                        modal.remove();
+                    });
+                },
+                error: function() {
+                    alert('Error al cargar los detalles del ticket');
+                }
+            });
+        }
+        
+        // Mostrar tickets del día
+        function mostrarTicketsDelDia(fecha) {
+            console.log('Mostrar tickets del día:', fecha);
+            
+            const ticketsDelDia = eventos.filter(e => e.start === fecha);
+            
+            if (ticketsDelDia.length === 0) {
+                return;
+            }
+            
+            let html = '<h5>Tickets programados para ' + fecha + '</h5>';
+            
+            // Agrupar por sucursal
+            const porSucursal = {};
+            ticketsDelDia.forEach(ticket => {
+                const sucursal = ticket.extendedProps.sucursal || 'Sin sucursal';
+                if (!porSucursal[sucursal]) {
+                    porSucursal[sucursal] = [];
+                }
+                porSucursal[sucursal].push(ticket);
+            });
+            
+            // Renderizar por sucursal
+            for (const sucursal in porSucursal) {
+                html += '<div class="card mb-3"><div class="card-header" style="background: var(--pitaya-primary); color: white;"><i class="fas fa-building me-2"></i>' + sucursal + '</div><div class="card-body"><ul class="list-unstyled">';
+                
+                porSucursal[sucursal].forEach(ticket => {
+                    html += '<li class="mb-2"><strong>' + ticket.extendedProps.codigo + '</strong>: ' + ticket.title + 
+                            ' <span class="badge" style="background: ' + ticket.backgroundColor + '">Urgencia ' + (ticket.extendedProps.urgencia || 'N/A') + '</span></li>';
+                });
+                
+                html += '</ul></div></div>';
+            }
+            
+            const modal = $('<div class="modal fade" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Tickets del Día</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body">' + html + '</div></div></div></div>');
+            $('body').append(modal);
+            modal.modal('show');
+            modal.on('hidden.bs.modal', function() {
+                modal.remove();
+            });
         }
     </script>
 </body>

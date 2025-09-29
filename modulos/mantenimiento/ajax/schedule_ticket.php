@@ -44,7 +44,9 @@ try {
     echo json_encode([
         'success' => true, 
         'message' => 'Ticket programado exitosamente',
-        'ticket_codigo' => $ticket_data['codigo']
+        'ticket_codigo' => $ticket_data['codigo'],
+        'fecha_inicio' => $fecha_inicio,
+        'fecha_final' => $fecha_final
     ]);
     
 } catch (Exception $e) {
