@@ -45,47 +45,13 @@ foreach ($tickets_con_fecha as $t) {
     }
 }
 
-
-?>
-
-<?php
-if (session_status() == PHP_SESSION_NONE) {
-    session_start();
-}
-
-require_once 'models/Ticket.php';
-
-$ticket = new Ticket();
-$tickets_con_fecha = $ticket->getTicketsForCalendar();
-$tickets_sin_fecha = $ticket->getTicketsWithoutDates();
-
-// Procesar tickets para el calendario
-$calendar_events = [];
-
-foreach ($tickets_con_fecha as $t) {
-    $calendar_events[] = [
-        'id' => $t['id'],
-        'title' => $t['codigo'] . ' - ' . $t['titulo'],
-        'start' => $t['fecha_inicio'],
-        'end' => date('Y-m-d', strtotime($t['fecha_final'] . ' +1 day')),
-        'backgroundColor' => getColorByUrgency($t['nivel_urgencia']),
-        'borderColor' => getColorByUrgency($t['nivel_urgencia']),
-        'extendedProps' => [
-            'codigo' => $t['codigo'],
-            'sucursal' => $t['nombre_sucursal'],
-            'urgencia' => $t['nivel_urgencia'],
-            'status' => $t['status']
-        ]
-    ];
-}
-
 function getColorByUrgency($urgencia) {
     switch ($urgencia) {
-        case 1: return '#28a745';
-        case 2: return '#ffc107';
-        case 3: return '#fd7e14';
-        case 4: return '#dc3545';
-        default: return '#6c757d';
+        case 1: return '#28a745'; // Verde
+        case 2: return '#ffc107'; // Amarillo
+        case 3: return '#fd7e14'; // Naranja
+        case 4: return '#dc3545'; // Rojo
+        default: return '#6c757d'; // Gris
     }
 }
 ?>
@@ -263,6 +229,55 @@ function getColorByUrgency($urgencia) {
         .fc-day:hover {
             background: rgba(81, 184, 172, 0.05);
         }
+        
+        /* Loading overlay */
+        #loadingOverlay .spinner-border {
+            width: 3rem;
+            height: 3rem;
+            border-width: 0.3rem;
+        }
+        
+        /* Modal personalizado */
+        .modal-content {
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        /* Alert de éxito flotante */
+        .alert-success.position-fixed {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            border-radius: 8px;
+            animation: slideInRight 0.3s ease-out;
+        }
+        
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        /* Mejorar contraste de fechas */
+        .fc-daygrid-day-number {
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .fc-day-today .fc-daygrid-day-number {
+            background: var(--pitaya-primary);
+            color: white;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 2px;
+        }
     </style>
 </head>
 <body>
@@ -408,28 +423,36 @@ function getColorByUrgency($urgencia) {
                     height: 'auto',
                     editable: true,
                     droppable: true,
+                    
+                    // IMPORTANTE: Hacer las celdas receptivas para drop
+                    eventReceive: function(info) {
+                        console.log('Evento recibido:', info);
+                    },
+                    
                     events: eventos,
                     
-                    // Drag & Drop de tickets externos
-                    drop: function(info) {
-                        console.log('Drop detectado:', info);
+                    // Click en celda vacía del día
+                    dateClick: function(info) {
+                        console.log('Click en día:', info.dateStr);
+                        
+                        // Si hay un ticket siendo arrastrado
                         if (draggedTicket) {
+                            console.log('Soltando ticket en:', info.dateStr);
                             const fechaInicio = info.dateStr;
                             const fechaFinal = info.dateStr;
                             programarTicket(draggedTicket, fechaInicio, fechaFinal);
+                            draggedTicket = null;
+                        } else {
+                            // Si no hay drag, mostrar tickets del día
+                            mostrarTicketsDelDia(info.dateStr);
                         }
                     },
                     
-                    // Click en evento
+                    // Click en evento existente
                     eventClick: function(info) {
                         console.log('Click en evento:', info.event);
+                        info.jsEvent.stopPropagation(); // Evitar que se active dateClick
                         mostrarDetallesTicket(info.event.id);
-                    },
-                    
-                    // Click en día
-                    dateClick: function(info) {
-                        console.log('Click en día:', info.dateStr);
-                        mostrarTicketsDelDia(info.dateStr);
                     },
                     
                     // Personalizar renderizado de eventos
@@ -486,6 +509,8 @@ function getColorByUrgency($urgencia) {
             console.log('Inicializando drag & drop de tickets...');
             
             const ticketItems = document.querySelectorAll('.ticket-item');
+            const calendarMain = document.querySelector('.calendar-main');
+            
             console.log('Tickets encontrados:', ticketItems.length);
             
             ticketItems.forEach(item => {
@@ -498,22 +523,57 @@ function getColorByUrgency($urgencia) {
                         codigo: this.dataset.ticketCodigo
                     };
                     
+                    e.dataTransfer.effectAllowed = 'move';
+                    e.dataTransfer.setData('text/html', this.innerHTML);
+                    
                     this.style.opacity = '0.5';
                     this.style.transform = 'scale(0.95)';
                     
                     // Resaltar calendario
-                    document.querySelector('.calendar-main').classList.add('dragging');
+                    calendarMain.classList.add('dragging');
                 });
                 
                 item.addEventListener('dragend', function(e) {
                     console.log('Drag end');
                     this.style.opacity = '1';
                     this.style.transform = 'scale(1)';
-                    draggedTicket = null;
                     
                     // Quitar resaltado
-                    document.querySelector('.calendar-main').classList.remove('dragging');
+                    calendarMain.classList.remove('dragging');
+                    
+                    // NO limpiar draggedTicket aquí, se limpia después de programar
                 });
+            });
+            
+            // Prevenir comportamiento por defecto en el calendario
+            calendarMain.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+            });
+            
+            calendarMain.addEventListener('drop', function(e) {
+                e.preventDefault();
+                console.log('Drop en calendario detectado');
+                
+                if (!draggedTicket) {
+                    console.log('No hay ticket siendo arrastrado');
+                    return;
+                }
+                
+                // Obtener la celda del día donde se soltó
+                const target = e.target.closest('.fc-daygrid-day');
+                if (target) {
+                    const dateStr = target.getAttribute('data-date');
+                    console.log('Fecha destino:', dateStr);
+                    
+                    if (dateStr) {
+                        programarTicket(draggedTicket, dateStr, dateStr);
+                    }
+                } else {
+                    console.log('No se detectó una celda válida del calendario');
+                }
+                
+                draggedTicket = null;
             });
         }
         
@@ -521,9 +581,100 @@ function getColorByUrgency($urgencia) {
         function programarTicket(ticket, fechaInicio, fechaFinal) {
             console.log('Programando ticket:', ticket, fechaInicio, fechaFinal);
             
-            if (!confirm('¿Programar el ticket ' + ticket.codigo + ' para el ' + fechaInicio + '?')) {
+            // Crear modal de confirmación con opciones
+            const modalHtml = `
+                <div class="modal fade" id="modalProgramar" tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header" style="background: var(--pitaya-primary); color: white;">
+                                <h5 class="modal-title">
+                                    <i class="fas fa-calendar-plus me-2"></i>
+                                    Programar Ticket
+                                </h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="alert alert-info">
+                                    <strong>Ticket:</strong> ${ticket.codigo}<br>
+                                    <strong>Título:</strong> ${ticket.title}
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="fecha_inicio_modal" class="form-label">
+                                        <i class="fas fa-calendar-day me-2"></i>Fecha de Inicio:
+                                    </label>
+                                    <input type="date" class="form-control" id="fecha_inicio_modal" value="${fechaInicio}" required>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="fecha_final_modal" class="form-label">
+                                        <i class="fas fa-calendar-check me-2"></i>Fecha Final:
+                                    </label>
+                                    <input type="date" class="form-control" id="fecha_final_modal" value="${fechaFinal}" required>
+                                </div>
+                                
+                                <div class="form-text">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    El ticket se programará para estas fechas y cambiará a estado "Agendado"
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                    <i class="fas fa-times me-2"></i>Cancelar
+                                </button>
+                                <button type="button" class="btn btn-primary" onclick="confirmarProgramacion()" style="background: var(--pitaya-primary); border: none;">
+                                    <i class="fas fa-check me-2"></i>Programar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Remover modal existente si hay
+            const existingModal = document.getElementById('modalProgramar');
+            if (existingModal) {
+                existingModal.remove();
+            }
+            
+            // Agregar modal al body
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            
+            // Mostrar modal
+            const modal = new bootstrap.Modal(document.getElementById('modalProgramar'));
+            modal.show();
+            
+            // Guardar datos del ticket en variable global para la confirmación
+            window.currentTicketToProgramar = ticket;
+        }
+        
+        // Confirmar programación
+        function confirmarProgramacion() {
+            const ticket = window.currentTicketToProgramar;
+            const fechaInicio = document.getElementById('fecha_inicio_modal').value;
+            const fechaFinal = document.getElementById('fecha_final_modal').value;
+            
+            if (!fechaInicio || !fechaFinal) {
+                alert('❌ Debes seleccionar ambas fechas');
                 return;
             }
+            
+            if (fechaInicio > fechaFinal) {
+                alert('❌ La fecha de inicio no puede ser mayor a la fecha final');
+                return;
+            }
+            
+            // Cerrar modal
+            bootstrap.Modal.getInstance(document.getElementById('modalProgramar')).hide();
+            
+            // Mostrar loading
+            const loading = document.createElement('div');
+            loading.id = 'loadingOverlay';
+            loading.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 9999;';
+            loading.innerHTML = '<div style="background: white; padding: 30px; border-radius: 10px; text-align: center;"><div class="spinner-border text-primary mb-3" role="status"></div><div>Programando ticket...</div></div>';
+            document.body.appendChild(loading);
+            
+            console.log('Enviando petición AJAX para programar ticket:', ticket.id, fechaInicio, fechaFinal);
             
             $.ajax({
                 url: 'ajax/schedule_ticket.php',
@@ -535,17 +686,34 @@ function getColorByUrgency($urgencia) {
                 },
                 dataType: 'json',
                 success: function(response) {
-                    console.log('Respuesta:', response);
+                    console.log('Respuesta del servidor:', response);
+                    loading.remove();
+                    
                     if (response.success) {
-                        alert('✅ Ticket programado exitosamente');
-                        location.reload();
+                        // Mostrar mensaje de éxito
+                        const successAlert = document.createElement('div');
+                        successAlert.className = 'alert alert-success position-fixed';
+                        successAlert.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+                        successAlert.innerHTML = `
+                            <i class="fas fa-check-circle me-2"></i>
+                            <strong>¡Éxito!</strong><br>
+                            Ticket ${ticket.codigo} programado para ${fechaInicio}
+                            <button type="button" class="btn-close" onclick="this.parentElement.remove()"></button>
+                        `;
+                        document.body.appendChild(successAlert);
+                        
+                        // Recargar después de 2 segundos
+                        setTimeout(() => {
+                            location.reload();
+                        }, 2000);
                     } else {
                         alert('❌ Error: ' + response.message);
                     }
                 },
                 error: function(xhr, status, error) {
+                    loading.remove();
                     console.error('Error AJAX:', xhr.responseText);
-                    alert('❌ Error en la comunicación: ' + error);
+                    alert('❌ Error en la comunicación con el servidor:\n' + error + '\n\nRevisa la consola para más detalles.');
                 }
             });
         }
