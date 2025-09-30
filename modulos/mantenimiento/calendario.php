@@ -1,5 +1,8 @@
 <?php
-session_start();
+if (session_status() == PHP_SESSION_NONE) {
+    session_start();
+}
+
 require_once 'models/Ticket.php';
 
 $ticket = new Ticket();
@@ -8,21 +11,15 @@ $tickets_sin_fecha = $ticket->getTicketsWithoutDates();
 
 // Procesar tickets para el calendario
 $calendar_events = [];
-$sucursales_por_dia = [];
 
 foreach ($tickets_con_fecha as $t) {
-    $start_date = $t['fecha_inicio'];
-    $end_date = $t['fecha_final'];
-    
-    // Crear evento para el calendario
     $calendar_events[] = [
         'id' => $t['id'],
-        'title' => $t['titulo'],
-        'start' => $start_date,
-        'end' => date('Y-m-d', strtotime($end_date . ' +1 day')), // FullCalendar necesita +1 día para eventos de múltiples días
+        'title' => $t['codigo'] . ' - ' . $t['titulo'],
+        'start' => $t['fecha_inicio'],
+        'end' => date('Y-m-d', strtotime($t['fecha_final'] . ' +1 day')),
         'backgroundColor' => getColorByUrgency($t['nivel_urgencia']),
         'borderColor' => getColorByUrgency($t['nivel_urgencia']),
-        'textColor' => '#000',
         'extendedProps' => [
             'codigo' => $t['codigo'],
             'sucursal' => $t['nombre_sucursal'],
@@ -30,32 +27,18 @@ foreach ($tickets_con_fecha as $t) {
             'status' => $t['status']
         ]
     ];
-    
-    // Agrupar por sucursal y día
-    $current_date = $start_date;
-    while ($current_date <= $end_date) {
-        if (!isset($sucursales_por_dia[$current_date])) {
-            $sucursales_por_dia[$current_date] = [];
-        }
-        if (!isset($sucursales_por_dia[$current_date][$t['nombre_sucursal']])) {
-            $sucursales_por_dia[$current_date][$t['nombre_sucursal']] = [];
-        }
-        $sucursales_por_dia[$current_date][$t['nombre_sucursal']][] = $t;
-        $current_date = date('Y-m-d', strtotime($current_date . ' +1 day'));
-    }
 }
 
 function getColorByUrgency($urgencia) {
     switch ($urgencia) {
-        case 1: return '#28a745'; // Verde
-        case 2: return '#ffc107'; // Amarillo
-        case 3: return '#fd7e14'; // Naranja
-        case 4: return '#dc3545'; // Rojo
-        default: return '#6c757d'; // Gris
+        case 1: return '#28a745';
+        case 2: return '#ffc107';
+        case 3: return '#fd7e14';
+        case 4: return '#dc3545';
+        default: return '#6c757d';
     }
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -190,7 +173,6 @@ function getColorByUrgency($urgencia) {
             border-radius: 3px;
         }
         
-        /* Estilos para las sucursales en el día */
         .sucursales-dia {
             font-size: 0.7em;
             color: var(--pitaya-secondary);
@@ -208,7 +190,6 @@ function getColorByUrgency($urgencia) {
             background: rgba(81, 184, 172, 0.3);
         }
         
-        /* Mejorar visibilidad de eventos */
         .fc-event {
             margin-bottom: 2px;
             border-left: 3px solid;
@@ -220,7 +201,6 @@ function getColorByUrgency($urgencia) {
             align-items: stretch;
         }
         
-        /* Resaltar cuando se arrastra */
         .calendar-main.dragging {
             background: rgba(81, 184, 172, 0.1) !important;
             border: 2px dashed var(--pitaya-primary);
@@ -230,20 +210,17 @@ function getColorByUrgency($urgencia) {
             background: rgba(81, 184, 172, 0.05);
         }
         
-        /* Loading overlay */
         #loadingOverlay .spinner-border {
             width: 3rem;
             height: 3rem;
             border-width: 0.3rem;
         }
         
-        /* Modal personalizado */
         .modal-content {
             border-radius: 10px;
             overflow: hidden;
         }
         
-        /* Alert de éxito flotante */
         .alert-success.position-fixed {
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
             border-radius: 8px;
@@ -261,7 +238,6 @@ function getColorByUrgency($urgencia) {
             }
         }
         
-        /* Mejorar contraste de fechas */
         .fc-daygrid-day-number {
             font-weight: 600;
             color: #333;
@@ -371,8 +347,6 @@ function getColorByUrgency($urgencia) {
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/core@5.11.3/main.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/interaction@5.11.3/main.min.js"></script>
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js'></script>
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/locales/es.js'></script>
     
@@ -397,12 +371,8 @@ function getColorByUrgency($urgencia) {
         
         console.log('Sucursales por día:', sucursalesPorDia);
         
-        if (typeof FullCalendar === 'undefined') {
-            alert('Error: FullCalendar no se cargó. Verifica tu conexión a internet.');
-        }
-        
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('DOM cargado, inicializando calendario con drag & drop...');
+            console.log('DOM cargado, inicializando calendario...');
             
             const calendarEl = document.getElementById('calendar');
             
@@ -423,27 +393,14 @@ function getColorByUrgency($urgencia) {
                     height: 'auto',
                     editable: true,
                     droppable: true,
-                    
-                    // IMPORTANTE: Hacer las celdas receptivas para drop
-                    eventReceive: function(info) {
-                        console.log('Evento recibido:', info);
-                    },
-                    
                     events: eventos,
                     
                     // Click en celda vacía del día
                     dateClick: function(info) {
                         console.log('Click en día:', info.dateStr);
                         
-                        // Si hay un ticket siendo arrastrado
-                        if (draggedTicket) {
-                            console.log('Soltando ticket en:', info.dateStr);
-                            const fechaInicio = info.dateStr;
-                            const fechaFinal = info.dateStr;
-                            programarTicket(draggedTicket, fechaInicio, fechaFinal);
-                            draggedTicket = null;
-                        } else {
-                            // Si no hay drag, mostrar tickets del día
+                        // Si hay un ticket siendo arrastrado, no hacer nada (se maneja en drop)
+                        if (!draggedTicket) {
                             mostrarTicketsDelDia(info.dateStr);
                         }
                     },
@@ -451,7 +408,7 @@ function getColorByUrgency($urgencia) {
                     // Click en evento existente
                     eventClick: function(info) {
                         console.log('Click en evento:', info.event);
-                        info.jsEvent.stopPropagation(); // Evitar que se active dateClick
+                        info.jsEvent.stopPropagation();
                         mostrarDetallesTicket(info.event.id);
                     },
                     
@@ -469,19 +426,16 @@ function getColorByUrgency($urgencia) {
                     dayCellDidMount: function(info) {
                         const fecha = info.date.toISOString().split('T')[0];
                         
-                        // Agregar sucursales del día
                         if (sucursalesPorDia[fecha]) {
                             const sucursales = Array.from(sucursalesPorDia[fecha]);
                             if (sucursales.length > 0) {
                                 const sucursalesDiv = document.createElement('div');
                                 sucursalesDiv.className = 'sucursales-dia';
-                                sucursalesDiv.style.cssText = 'font-size: 0.7em; color: #0E544C; margin-top: 2px; padding: 2px; background: rgba(81, 184, 172, 0.1); border-radius: 3px;';
                                 sucursalesDiv.innerHTML = '<i class="fas fa-building" style="font-size: 0.8em;"></i> ' + 
                                                           sucursales.slice(0, 2).join(', ') + 
                                                           (sucursales.length > 2 ? '...' : '');
                                 sucursalesDiv.title = 'Sucursales: ' + sucursales.join(', ');
                                 
-                                // Agregar al final de la celda del día
                                 const dayTop = info.el.querySelector('.fc-daygrid-day-top');
                                 if (dayTop) {
                                     dayTop.appendChild(sucursalesDiv);
@@ -529,7 +483,6 @@ function getColorByUrgency($urgencia) {
                     this.style.opacity = '0.5';
                     this.style.transform = 'scale(0.95)';
                     
-                    // Resaltar calendario
                     calendarMain.classList.add('dragging');
                 });
                 
@@ -538,10 +491,7 @@ function getColorByUrgency($urgencia) {
                     this.style.opacity = '1';
                     this.style.transform = 'scale(1)';
                     
-                    // Quitar resaltado
                     calendarMain.classList.remove('dragging');
-                    
-                    // NO limpiar draggedTicket aquí, se limpia después de programar
                 });
             });
             
@@ -568,12 +518,11 @@ function getColorByUrgency($urgencia) {
                     
                     if (dateStr) {
                         programarTicket(draggedTicket, dateStr, dateStr);
+                        draggedTicket = null;
                     }
                 } else {
                     console.log('No se detectó una celda válida del calendario');
                 }
-                
-                draggedTicket = null;
             });
         }
         
@@ -581,7 +530,7 @@ function getColorByUrgency($urgencia) {
         function programarTicket(ticket, fechaInicio, fechaFinal) {
             console.log('Programando ticket:', ticket, fechaInicio, fechaFinal);
             
-            // Crear modal de confirmación con opciones
+            // Crear modal de confirmación
             const modalHtml = `
                 <div class="modal fade" id="modalProgramar" tabindex="-1">
                     <div class="modal-dialog">
@@ -631,20 +580,16 @@ function getColorByUrgency($urgencia) {
                 </div>
             `;
             
-            // Remover modal existente si hay
             const existingModal = document.getElementById('modalProgramar');
             if (existingModal) {
                 existingModal.remove();
             }
             
-            // Agregar modal al body
             document.body.insertAdjacentHTML('beforeend', modalHtml);
             
-            // Mostrar modal
             const modal = new bootstrap.Modal(document.getElementById('modalProgramar'));
             modal.show();
             
-            // Guardar datos del ticket en variable global para la confirmación
             window.currentTicketToProgramar = ticket;
         }
         
@@ -664,17 +609,15 @@ function getColorByUrgency($urgencia) {
                 return;
             }
             
-            // Cerrar modal
             bootstrap.Modal.getInstance(document.getElementById('modalProgramar')).hide();
             
-            // Mostrar loading
             const loading = document.createElement('div');
             loading.id = 'loadingOverlay';
             loading.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 9999;';
             loading.innerHTML = '<div style="background: white; padding: 30px; border-radius: 10px; text-align: center;"><div class="spinner-border text-primary mb-3" role="status"></div><div>Programando ticket...</div></div>';
             document.body.appendChild(loading);
             
-            console.log('Enviando petición AJAX para programar ticket:', ticket.id, fechaInicio, fechaFinal);
+            console.log('Enviando petición AJAX:', ticket.id, fechaInicio, fechaFinal);
             
             $.ajax({
                 url: 'ajax/schedule_ticket.php',
@@ -686,23 +629,20 @@ function getColorByUrgency($urgencia) {
                 },
                 dataType: 'json',
                 success: function(response) {
-                    console.log('Respuesta del servidor:', response);
+                    console.log('Respuesta:', response);
                     loading.remove();
                     
                     if (response.success) {
-                        // Mostrar mensaje de éxito
                         const successAlert = document.createElement('div');
                         successAlert.className = 'alert alert-success position-fixed';
                         successAlert.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
                         successAlert.innerHTML = `
                             <i class="fas fa-check-circle me-2"></i>
                             <strong>¡Éxito!</strong><br>
-                            Ticket ${ticket.codigo} programado para ${fechaInicio}
-                            <button type="button" class="btn-close" onclick="this.parentElement.remove()"></button>
+                            Ticket ${ticket.codigo} programado
                         `;
                         document.body.appendChild(successAlert);
                         
-                        // Recargar después de 2 segundos
                         setTimeout(() => {
                             location.reload();
                         }, 2000);
@@ -713,75 +653,55 @@ function getColorByUrgency($urgencia) {
                 error: function(xhr, status, error) {
                     loading.remove();
                     console.error('Error AJAX:', xhr.responseText);
-                    alert('❌ Error en la comunicación con el servidor:\n' + error + '\n\nRevisa la consola para más detalles.');
+                    alert('❌ Error: ' + error);
                 }
             });
         }
         
         // Mostrar detalles del ticket
         function mostrarDetallesTicket(ticketId) {
-            console.log('Mostrar detalles del ticket:', ticketId);
-            
+            console.log('Mostrar detalles:', ticketId);
             $.ajax({
                 url: 'ajax/get_ticket_details.php',
                 method: 'GET',
                 data: { id: ticketId },
                 success: function(response) {
-                    const modal = $('<div class="modal fade" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Detalles del Ticket</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body">' + response + '</div></div></div></div>');
+                    const modal = $('<div class="modal fade"><div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header"><h5>Detalles</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body">' + response + '</div></div></div></div>');
                     $('body').append(modal);
                     modal.modal('show');
-                    modal.on('hidden.bs.modal', function() {
-                        modal.remove();
-                    });
-                },
-                error: function() {
-                    alert('Error al cargar los detalles del ticket');
+                    modal.on('hidden.bs.modal', function() { modal.remove(); });
                 }
             });
         }
         
         // Mostrar tickets del día
         function mostrarTicketsDelDia(fecha) {
-            console.log('Mostrar tickets del día:', fecha);
-            
             const ticketsDelDia = eventos.filter(e => e.start === fecha);
             
-            if (ticketsDelDia.length === 0) {
-                return;
-            }
+            if (ticketsDelDia.length === 0) return;
             
-            let html = '<h5>Tickets programados para ' + fecha + '</h5>';
+            let html = '<h5>Tickets del ' + fecha + '</h5>';
             
-            // Agrupar por sucursal
             const porSucursal = {};
-            ticketsDelDia.forEach(ticket => {
-                const sucursal = ticket.extendedProps.sucursal || 'Sin sucursal';
-                if (!porSucursal[sucursal]) {
-                    porSucursal[sucursal] = [];
-                }
-                porSucursal[sucursal].push(ticket);
+            ticketsDelDia.forEach(t => {
+                const suc = t.extendedProps.sucursal || 'Sin sucursal';
+                if (!porSucursal[suc]) porSucursal[suc] = [];
+                porSucursal[suc].push(t);
             });
             
-            // Renderizar por sucursal
-            for (const sucursal in porSucursal) {
-                html += '<div class="card mb-3"><div class="card-header" style="background: var(--pitaya-primary); color: white;"><i class="fas fa-building me-2"></i>' + sucursal + '</div><div class="card-body"><ul class="list-unstyled">';
-                
-                porSucursal[sucursal].forEach(ticket => {
-                    html += '<li class="mb-2"><strong>' + ticket.extendedProps.codigo + '</strong>: ' + ticket.title + 
-                            ' <span class="badge" style="background: ' + ticket.backgroundColor + '">Urgencia ' + (ticket.extendedProps.urgencia || 'N/A') + '</span></li>';
+            for (const suc in porSucursal) {
+                html += '<div class="card mb-3"><div class="card-header" style="background: var(--pitaya-primary); color: white;"><i class="fas fa-building me-2"></i>' + suc + '</div><div class="card-body"><ul class="list-unstyled">';
+                porSucursal[suc].forEach(t => {
+                    html += '<li class="mb-2"><strong>' + t.extendedProps.codigo + '</strong>: ' + t.title + '</li>';
                 });
-                
                 html += '</ul></div></div>';
             }
             
-            const modal = $('<div class="modal fade" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Tickets del Día</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body">' + html + '</div></div></div></div>');
+            const modal = $('<div class="modal fade"><div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header"><h5>Tickets del Día</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body">' + html + '</div></div></div></div>');
             $('body').append(modal);
             modal.modal('show');
-            modal.on('hidden.bs.modal', function() {
-                modal.remove();
-            });
+            modal.on('hidden.bs.modal', function() { modal.remove(); });
         }
     </script>
 </body>
-
 </html>
