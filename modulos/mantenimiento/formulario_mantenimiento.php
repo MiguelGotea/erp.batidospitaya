@@ -1,5 +1,9 @@
 <?php
-session_start();
+// Solo iniciar sesión si no está ya activa
+if (session_status() == PHP_SESSION_NONE) {
+    session_start();
+}
+
 require_once 'models/Ticket.php';
 
 // Validar que vengan los parámetros necesarios
@@ -78,14 +82,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
+        :root {
+            --pitaya-primary: #51B8AC;
+            --pitaya-secondary: #0E544C;
+            --pitaya-light: #F6F6F6;
+        }
+        
+        body {
+            font-family: 'Calibri', sans-serif;
+            background-color: var(--pitaya-light);
+        }
+        
         .form-container {
             max-width: 800px;
             margin: 0 auto;
             padding: 20px;
         }
         .card-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, var(--pitaya-primary) 0%, var(--pitaya-secondary) 100%);
             color: white;
+        }
+        .btn-primary {
+            background-color: var(--pitaya-primary);
+            border-color: var(--pitaya-primary);
+        }
+        .btn-primary:hover {
+            background-color: var(--pitaya-secondary);
+            border-color: var(--pitaya-secondary);
+        }
+        .btn-success {
+            background-color: var(--pitaya-secondary);
+            border-color: var(--pitaya-secondary);
         }
         .camera-preview {
             width: 100%;

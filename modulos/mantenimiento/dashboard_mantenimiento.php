@@ -1,5 +1,9 @@
 <?php
-session_start();
+// Solo iniciar sesión si no está ya activa
+if (session_status() == PHP_SESSION_NONE) {
+    session_start();
+}
+
 require_once 'models/Ticket.php';
 
 $ticket = new Ticket();
@@ -26,12 +30,36 @@ $stats = [
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css" rel="stylesheet">
     <style>
+        :root {
+            --pitaya-primary: #51B8AC;
+            --pitaya-secondary: #0E544C;
+            --pitaya-light: #F6F6F6;
+        }
+        
+        body {
+            font-family: 'Calibri', sans-serif;
+            background-color: var(--pitaya-light);
+        }
+        
+        .navbar {
+            background: linear-gradient(135deg, var(--pitaya-primary) 0%, var(--pitaya-secondary) 100%) !important;
+        }
+        
         .stats-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, var(--pitaya-primary) 0%, var(--pitaya-secondary) 100%);
             color: white;
             border-radius: 10px;
             padding: 20px;
             margin-bottom: 20px;
+        }
+        
+        .btn-primary {
+            background-color: var(--pitaya-primary);
+            border-color: var(--pitaya-primary);
+        }
+        .btn-primary:hover {
+            background-color: var(--pitaya-secondary);
+            border-color: var(--pitaya-secondary);
         }
         .stats-grid {
             display: grid;
@@ -418,7 +446,8 @@ $stats = [
         }
         
         function openChat(ticketId) {
-            window.open('chat.php?ticket_id=' + ticketId + '&emisor=mantenimiento', '_blank');
+            const url = `chat.php?ticket_id=${ticketId}&emisor=mantenimiento`;
+            window.location.href = url;
         }
         
         function showPhotoModal(photoSrc) {

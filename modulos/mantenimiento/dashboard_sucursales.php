@@ -252,13 +252,12 @@ $stats = [
                                         </span>
                                     </td>
                                     <td>
-                                        <button class="btn btn-sm btn-primary" onclick="viewTicket(<?= $t['id'] ?>)">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
                                         <button class="btn btn-sm btn-success" onclick="openChat(<?= $t['id'] ?>)" title="Chat de seguimiento">
                                             <i class="fas fa-comments"></i>
                                         </button>
-
+                                        <button class="btn btn-sm btn-info" onclick="viewTicket(<?= $t['id'] ?>)" title="Ver detalles">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
                                     </td>
                                 </tr>
                                 <?php endforeach; ?>
@@ -314,15 +313,6 @@ $stats = [
                 columnDefs: [
                     { orderable: false, targets: [7] }
                 ]
-            }).on('draw', function () {
-                // Volver a asignar el evento de clic a las filas después de que la tabla se redibuje
-                // (por paginación, búsqueda, etc.)
-                $('.ticket-row').off('click').on('click', function(e) {
-                    if (!$(e.target).closest('button').length) {
-                        const ticketId = $(this).find('button[onclick*="viewTicket"]').attr('onclick').match(/\d+/)[0];
-                        viewTicket(ticketId);
-                    }
-                });
             });
         });
         
@@ -341,7 +331,6 @@ $stats = [
             window.location.href = url;
         }
         
-// SOLUCIÓN DE EMERGENCIA - Reemplaza toda la función viewTicket        
         function viewTicket(id) {
             $.ajax({
                 url: 'ajax/get_ticket_details_readonly.php',
