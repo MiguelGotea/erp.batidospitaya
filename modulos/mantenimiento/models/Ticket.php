@@ -1,5 +1,5 @@
 <?php
-require_once '../mantenimiento/config/database.php';
+require_once __DIR__ . '/../config/database.php';
 
 class Ticket {
     private $db;
@@ -113,7 +113,8 @@ class Ticket {
                 FROM mtto_tickets t 
                 LEFT JOIN sucursales s ON t.cod_sucursal = s.codigo 
                 WHERE (t.fecha_inicio IS NULL OR t.fecha_final IS NULL)
-                ORDER BY t.nivel_urgencia DESC, t.created_at";
+                AND t.status != 'finalizado'
+                ORDER BY COALESCE(t.nivel_urgencia, 0) DESC, t.created_at";
         
         return $this->db->fetchAll($sql);
     }

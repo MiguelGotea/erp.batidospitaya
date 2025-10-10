@@ -1,6 +1,33 @@
 <?php
-session_start();
+// Solo iniciar sesión si no está ya activa
+if (session_status() == PHP_SESSION_NONE) {
+    session_start();
+}
+
 require_once 'models/Ticket.php';
+require_once '../../includes/auth.php';
+require_once '../../includes/funciones.php';
+
+//******************************Estándar para header******************************
+verificarAutenticacion();
+
+$usuario = obtenerUsuarioActual();
+$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
+
+// Verificar acceso al módulo Mantenimiento (Código 14)
+//verificarAccesoCargo(14, 16, 35);
+
+// Verificar acceso al módulo
+// FORMA CORRECTA - pasar como array
+if (!verificarAccesoCargo([14, 16, 35]) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
+    header('Location: ../index.php');
+    exit();
+}
+
+// Obtenemos el cargo principal usando la función de funciones.php
+$cargoUsuario = obtenerCargoPrincipalUsuario($_SESSION['usuario_id']);
+
+//******************************Estándar para header, termina******************************
 
 $ticket = new Ticket();
 $tickets = $ticket->getAll();
@@ -10,7 +37,7 @@ $tipos_casos = $ticket->getTiposCasos();
 $stats = [
     'total' => count($tickets),
     'solicitado' => count(array_filter($tickets, fn($t) => $t['status'] === 'solicitado')),
-    'clasificado' => count(array_filter($tickets, fn($t) => $t['status'] === 'clasificado')),
+    // 'clasificado' => count(array_filter($tickets, fn($t) => $t['status'] === 'clasificado')),
     'agendado' => count(array_filter($tickets, fn($t) => $t['status'] === 'agendado')),
     'finalizado' => count(array_filter($tickets, fn($t) => $t['status'] === 'finalizado'))
 ];
@@ -22,29 +49,174 @@ $stats = [
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard de Mantenimiento</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="icon" href="../../assets/img/icon12.png" type="image/png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css" rel="stylesheet">
     <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Calibri', sans-serif;
+            font-size: clamp(11px, 2vw, 16px) !important;
+        }
+        
+        body {
+            background-color: #F6F6F6;
+            color: #333;
+            padding: 5px;
+        }
+        
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 10px;
+        }
+        
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            padding: 0 5px;
+            box-sizing: border-box;
+            margin: 1px auto;
+            flex-wrap: wrap;
+        }
+
+        .logo {
+            height: 50px;
+        }
+
+        .logo-container {
+            flex-shrink: 0;
+            margin-right: auto;
+        }
+
+        .buttons-container {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            flex-grow: 1;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-left: auto;
+        }
+
+        .btn-agregar {
+            background-color: transparent;
+            color: #51B8AC;
+            border: 1px solid #51B8AC;
+            text-decoration: none;
+            padding: 6px 10px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+            white-space: nowrap;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .btn-agregar.activo {
+            background-color: #51B8AC;
+            color: white;
+            font-weight: normal;
+        }
+
+        .btn-agregar:hover {
+            background-color: #0E544C;
+            color: white;
+            border-color: #0E544C;
+        }
+
+        .user-avatar {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background-color: #51B8AC;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .btn-logout {
+            background: #51B8AC;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .btn-logout:hover {
+            background: #0E544C;
+        }
+        
+        .title {
+            color: #0E544C;
+            font-size: 1.5rem !important;
+            margin-bottom: 20px;
+        }
+        
         .stats-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #51B8AC 0%, #0E544C 100%);
             color: white;
             border-radius: 10px;
             padding: 20px;
             margin-bottom: 20px;
         }
+        
+        .btn-primary {
+            background-color: #51B8AC;
+            border-color: #51B8AC;
+        }
+        .btn-primary:hover {
+            background-color: #0E544C;
+            border-color: #0E544C;
+        }
+        
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 15px;
             margin-bottom: 30px;
         }
+        
         .stat-item {
             background: rgba(255, 255, 255, 0.1);
             border-radius: 8px;
             padding: 15px;
             text-align: center;
         }
+        
         .urgency-bar {
             width: 100%;
             height: 20px;
@@ -53,30 +225,36 @@ $stats = [
             position: relative;
             overflow: hidden;
         }
+        
         .urgency-fill {
             height: 100%;
             border-radius: 10px;
             transition: width 0.3s ease;
         }
+        
         .urgency-1 { background: #28a745; }
         .urgency-2 { background: #ffc107; }
         .urgency-3 { background: #fd7e14; }
         .urgency-4 { background: #dc3545; }
+        
         .status-badge {
             font-size: 0.8em;
             padding: 0.4em 0.8em;
             border-radius: 20px;
         }
+        
         .status-solicitado { background: #6c757d; color: white; }
         .status-clasificado { background: #0dcaf0; color: white; }
         .status-agendado { background: #fd7e14; color: white; }
         .status-finalizado { background: #198754; color: white; }
+        
         .ticket-photo {
             width: 40px;
             height: 40px;
             object-fit: cover;
             border-radius: 5px;
         }
+        
         .bulk-actions {
             background: #f8f9fa;
             padding: 15px;
@@ -84,30 +262,180 @@ $stats = [
             margin-bottom: 20px;
             display: none;
         }
+        
+        .table-container {
+            overflow-x: auto;
+            margin-top: 20px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border: 1px solid #ddd;
+            vertical-align: middle;
+        }
+
+        th {
+            background-color: #0E544C;
+            color: white;
+            text-align: center;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        
+        .alert {
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+        }
+        
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .alert-danger {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .modal-title {
+            color: #0E544C;
+            font-size: 1.2rem !important;
+            font-weight: bold;
+        }
+        
+        @media (max-width: 768px) {
+            .header-container {
+                flex-direction: row;
+                align-items: center;
+                gap: 10px;
+            }
+            
+            .buttons-container {
+                position: static;
+                transform: none;
+                order: 3;
+                width: 100%;
+                justify-content: center;
+                margin-top: 10px;
+            }
+            
+            .logo-container {
+                order: 1;
+                margin-right: 0;
+            }
+            
+            .user-info {
+                order: 2;
+                margin-left: auto;
+            }
+            
+            .btn-agregar {
+                padding: 6px 10px;
+                font-size: 13px;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .btn-agregar {
+                flex-grow: 1;
+                justify-content: center;
+                white-space: normal;
+                text-align: center;
+                padding: 8px 5px;
+            }
+            
+            .user-info {
+                flex-direction: column;
+                align-items: flex-end;
+            }
+        }
+        
+        a.btn{
+            text-decoration: none;
+        }
     </style>
 </head>
-<body class="bg-light">
-    <nav class="navbar navbar-dark bg-dark">
-        <div class="container-fluid">
-            <span class="navbar-brand mb-0 h1">
-                <i class="fas fa-tools me-2"></i>
-                Sistema de Mantenimiento - Dashboard Principal
-            </span>
-            <div class="navbar-nav flex-row">
-                <a class="nav-link me-3" href="calendario.php">
-                    <i class="fas fa-calendar-alt me-2"></i>Calendario
-                </a>
-                <a class="nav-link" href="#" onclick="refreshData()">
-                    <i class="fas fa-sync-alt me-2"></i>Actualizar
-                </a>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-container">
+                <div class="logo-container">
+                    <img src="../../assets/img/Logo.svg" alt="Batidos Pitaya" class="logo">
+                </div>
+                
+                <div class="buttons-container">
+                    <?php if ($esAdmin || verificarAccesoCargo([14, 16, 35])): ?>
+                        <a href="calendario.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'calendario.php' ? 'activo' : '' ?>">
+                            <i class="fas fa-calendar-alt"></i> <span class="btn-text">Calendario</span>
+                        </a>
+                    <?php endif; ?>
+                    
+                    <a href="formulario_equipos.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'formulario_equipos.php' ? 'activo' : '' ?>">
+                        <i class="fas fa-tools"></i> <span class="btn-text">Mantenimiento General</span>
+                    </a>
+                    
+                    <a href="formulario_mantenimiento.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'formulario_mantenimiento.php' ? 'activo' : '' ?>">
+                        <i class="fas fa-laptop"></i> <span class="btn-text">Cambio de Equipos</span>
+                    </a>
+                    
+                    <?php if ($esAdmin || verificarAccesoCargo([14, 16, 35])): ?>
+                        <a href="dashboard_mantenimiento.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'dashboard_mantenimiento.php' ? 'activo' : '' ?>">
+                            <i class="fas fa-sync-alt"></i> <span class="btn-text">Solicitudes</span>
+                        </a>
+                    <?php endif; ?>
+                    
+                    <a href="#" onclick="refreshData()" class="btn-agregar" style="display:none;">
+                        <i class="fas fa-sync-alt"></i> <span class="btn-text">Solicitudes</span>
+                    </a>
+                </div>
+                
+                <div class="user-info">
+                    <div class="user-avatar">
+                        <?= $esAdmin ? 
+                            strtoupper(substr($usuario['nombre'], 0, 1)) : 
+                            strtoupper(substr($usuario['Nombre'], 0, 1)) ?>
+                    </div>
+                    <div>
+                        <div>
+                            <?= $esAdmin ? 
+                                htmlspecialchars($usuario['nombre']) : 
+                                htmlspecialchars($usuario['Nombre'].' '.$usuario['Apellido']) ?>
+                        </div>
+                        <small>
+                            <?= htmlspecialchars($cargoUsuario) ?>
+                        </small>
+                    </div>
+                    <a href="../index.php" class="btn-logout">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </a>
+                </div>
             </div>
-        </div>
-    </nav>
+        </header>
 
-    <div class="container-fluid mt-4">
         <!-- Estadísticas -->
         <div class="stats-card">
-            <h5><i class="fas fa-chart-bar me-2"></i>Estadísticas del Sistema</h5>
             <div class="stats-grid">
                 <div class="stat-item">
                     <h3><?= $stats['total'] ?></h3>
@@ -116,10 +444,6 @@ $stats = [
                 <div class="stat-item">
                     <h3><?= $stats['solicitado'] ?></h3>
                     <p>Solicitados</p>
-                </div>
-                <div class="stat-item">
-                    <h3><?= $stats['clasificado'] ?></h3>
-                    <p>Clasificados</p>
                 </div>
                 <div class="stat-item">
                     <h3><?= $stats['agendado'] ?></h3>
@@ -160,103 +484,99 @@ $stats = [
         </div>
 
         <!-- Tabla de tickets -->
-        <div class="card shadow">
-            <div class="card-header bg-white">
-                <h5 class="mb-0">
-                    <i class="fas fa-list me-2"></i>
-                    Lista de Tickets de Mantenimiento
-                </h5>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table id="ticketsTable" class="table table-striped table-hover">
-                        <thead class="table-dark">
-                            <tr>
-                                <th>
-                                    <input type="checkbox" id="selectAll" class="form-check-input">
-                                </th>
-                                <th>Código</th>
-                                <th>Título</th>
-                                <th>Sucursal</th>
-                                <th>Solicitante</th>
-                                <th>Tipo</th>
-                                <th>Urgencia</th>
-                                <th>Estado</th>
-                                <th>Categoría</th>
-                                <th>F. Inicio</th>
-                                <th>F. Final</th>
-                                <th>Foto</th>
-                                <th>Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($tickets as $t): ?>
-                            <tr>
-                                <td>
-                                    <input type="checkbox" class="form-check-input ticket-checkbox" value="<?= $t['id'] ?>">
-                                </td>
-                                <td>
-                                    <strong><?= htmlspecialchars($t['codigo']) ?></strong>
-                                    <br><small class="text-muted"><?= date('d/m/Y', strtotime($t['created_at'])) ?></small>
-                                </td>
-                                <td>
-                                    <div style="max-width: 200px;">
-                                        <?= htmlspecialchars($t['titulo']) ?>
-                                        <br><small class="text-muted"><?= htmlspecialchars(substr($t['descripcion'], 0, 50)) ?>...</small>
-                                    </div>
-                                </td>
-                                <td><?= htmlspecialchars($t['nombre_sucursal'] ?? 'N/A') ?></td>
-                                <td><?= htmlspecialchars($t['nombre_operario'] ?? 'N/A') ?></td>
-                                <td>
-                                    <span class="badge bg-info">
-                                        <?= $t['tipo_formulario'] === 'mantenimiento_general' ? 'Mantenimiento' : 'Equipos' ?>
-                                    </span>
-                                </td>
-                                <td>
-                                    <?php if ($t['nivel_urgencia']): ?>
-                                        <div class="urgency-bar">
-                                            <div class="urgency-fill urgency-<?= $t['nivel_urgencia'] ?>" 
-                                                 style="width: <?= $t['nivel_urgencia'] * 25 ?>%"></div>
+        <div class="table-container">
+            <div class="card shadow">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table id="ticketsTable" class="table table-striped table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>
+                                        <input type="checkbox" id="selectAll" class="form-check-input">
+                                    </th>
+                                    <th>Código</th>
+                                    <th>Título</th>
+                                    <th>Sucursal</th>
+                                    <th>Solicitante</th>
+                                    <th>Tipo</th>
+                                    <th>Urgencia</th>
+                                    <th>Estado</th>
+                                    <th>Categoría</th>
+                                    <th>F. Inicio</th>
+                                    <th>F. Final</th>
+                                    <th>Foto</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($tickets as $t): ?>
+                                <tr>
+                                    <td>
+                                        <input type="checkbox" class="form-check-input ticket-checkbox" value="<?= $t['id'] ?>">
+                                    </td>
+                                    <td>
+                                        <strong><?= htmlspecialchars($t['codigo']) ?></strong>
+                                        <br><small class="text-muted"><?= date('d/m/Y', strtotime($t['created_at'])) ?></small>
+                                    </td>
+                                    <td>
+                                        <div style="max-width: 200px;">
+                                            <?= htmlspecialchars($t['titulo']) ?>
+                                            <br><small class="text-muted"><?= htmlspecialchars(substr($t['descripcion'], 0, 50)) ?>...</small>
                                         </div>
-                                        <small>Nivel <?= $t['nivel_urgencia'] ?></small>
-                                    <?php else: ?>
-                                        <small class="text-muted">Sin clasificar</small>
-                                    <?php endif; ?>
-                                </td>
-                                <td>
-                                    <span class="status-badge status-<?= $t['status'] ?>">
-                                        <?= ucfirst($t['status']) ?>
-                                    </span>
-                                </td>
-                                <td><?= htmlspecialchars($t['tipo_caso_nombre'] ?? 'Sin asignar') ?></td>
-                                <td>
-                                    <?= $t['fecha_inicio'] ? date('d/m/Y', strtotime($t['fecha_inicio'])) : '-' ?>
-                                </td>
-                                <td>
-                                    <?= $t['fecha_final'] ? date('d/m/Y', strtotime($t['fecha_final'])) : '-' ?>
-                                </td>
-                                <td>
-                                    <?php if ($t['foto']): ?>
-                                        <img src="uploads/tickets/<?= $t['foto'] ?>" alt="Foto" class="ticket-photo" 
-                                             onclick="showPhotoModal('uploads/tickets/<?= $t['foto'] ?>')">
-                                    <?php else: ?>
-                                        <small class="text-muted">Sin foto</small>
-                                    <?php endif; ?>
-                                </td>
-                                <td>
-                                    <div class="btn-group-vertical" role="group">
-                                        <button class="btn btn-sm btn-primary" onclick="viewTicket(<?= $t['id'] ?>)">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-success" onclick="openChat(<?= $t['id'] ?>)">
-                                            <i class="fas fa-comments"></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
+                                    </td>
+                                    <td><?= htmlspecialchars($t['nombre_sucursal'] ?? 'N/A') ?></td>
+                                    <td><?= htmlspecialchars($t['nombre_operario'] ?? 'N/A') ?></td>
+                                    <td>
+                                        <span class="badge bg-info">
+                                            <?= $t['tipo_formulario'] === 'mantenimiento_general' ? 'Mantenimiento' : 'Equipos' ?>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <?php if ($t['nivel_urgencia']): ?>
+                                            <div class="urgency-bar">
+                                                <div class="urgency-fill urgency-<?= $t['nivel_urgencia'] ?>" 
+                                                     style="width: <?= $t['nivel_urgencia'] * 25 ?>%"></div>
+                                            </div>
+                                            <small>Nivel <?= $t['nivel_urgencia'] ?></small>
+                                        <?php else: ?>
+                                            <small class="text-muted">Sin clasificar</small>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td>
+                                        <span class="status-badge status-<?= $t['status'] ?>">
+                                            <?= ucfirst($t['status']) ?>
+                                        </span>
+                                    </td>
+                                    <td><?= htmlspecialchars($t['tipo_caso_nombre'] ?? 'Sin asignar') ?></td>
+                                    <td>
+                                        <?= $t['fecha_inicio'] ? date('d/m/Y', strtotime($t['fecha_inicio'])) : '-' ?>
+                                    </td>
+                                    <td>
+                                        <?= $t['fecha_final'] ? date('d/m/Y', strtotime($t['fecha_final'])) : '-' ?>
+                                    </td>
+                                    <td>
+                                        <?php if ($t['foto']): ?>
+                                            <img src="uploads/tickets/<?= $t['foto'] ?>" alt="Foto" class="ticket-photo" 
+                                                 onclick="showPhotoModal('uploads/tickets/<?= $t['foto'] ?>')">
+                                        <?php else: ?>
+                                            <small class="text-muted">Sin foto</small>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group-vertical" role="group">
+                                            <button class="btn btn-sm btn-primary" onclick="viewTicket(<?= $t['id'] ?>)">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-success" onclick="openChat(<?= $t['id'] ?>)">
+                                                <i class="fas fa-comments"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -418,9 +738,8 @@ $stats = [
         }
         
         function openChat(ticketId) {
-            window.open('chat.php?ticket_id=' + ticketId + '&emisor=mantenimiento', 
-                       'chat_' + ticketId, 
-                       'width=800,height=600,scrollbars=yes,resizable=yes');
+            const url = `chat.php?ticket_id=${ticketId}&emisor=mantenimiento`;
+            window.location.href = url;
         }
         
         function showPhotoModal(photoSrc) {
@@ -433,12 +752,29 @@ $stats = [
         }
         
         // Actualizar cada 30 segundos
-        setInterval(function() {
+        //setInterval(function() {
             // Solo actualizar si no hay modales abiertos
-            if (!$('.modal.show').length) {
-                refreshData();
-            }
-        }, 30000);
+        //    if (!$('.modal.show').length) {
+        //        refreshData();
+        //    }
+        //}, 30000);
+        
+        // Manejar cambio de sucursal
+        document.getElementById('selectSucursal')?.addEventListener('change', function() {
+            const nuevaSucursal = this.value;
+            const url = `formulario_equipos.php?cod_operario=<?= $cod_operario ?>&cod_sucursal=${nuevaSucursal}`;
+            window.location.href = url;
+        });
+        
+        function goToDashboard() {
+            const url = `dashboard_sucursales.php?cod_operario=<?= $cod_operario ?>&cod_sucursal=<?= $cod_sucursal ?>`;
+            window.location.href = url;
+        }
+        
+        function openMaintenanceForm() {
+            const url = `formulario_mantenimiento.php?cod_operario=<?= $cod_operario ?>&cod_sucursal=<?= $cod_sucursal ?>`;
+            window.location.href = url;
+        }
     </script>
 </body>
 </html>

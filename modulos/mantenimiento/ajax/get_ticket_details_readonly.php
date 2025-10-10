@@ -43,7 +43,7 @@ if (!$ticket) {
             <label class="form-label"><strong>Estado Actual:</strong></label>
             <p class="form-control-plaintext">
                 <span class="status-badge status-<?= $ticket['status'] ?>">
-                    <?= ucfirst($ticket['status']) ?>
+                    <?= ucfirst(str_replace('_', ' ', $ticket['status'])) ?>
                 </span>
             </p>
         </div>
@@ -252,6 +252,6 @@ function showFullImage(src) {
 function openChatFromModal(ticketId) {
     $('#ticketModal').modal('hide');
     const url = `chat.php?ticket_id=${ticketId}&emisor=solicitante`;
-    window.open(url, 'chat_' + ticketId, 'width=800,height=600,scrollbars=yes,resizable=yes');
+    window.location.href = url;
 }
 </script>

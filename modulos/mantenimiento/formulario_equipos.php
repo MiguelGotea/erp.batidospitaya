@@ -1,17 +1,53 @@
 <?php
-session_start();
-require_once 'models/Ticket.php';
-
-// Validar que vengan los parámetros necesarios
-if (!isset($_GET['cod_operario']) || !isset($_GET['cod_sucursal'])) {
-    die("Acceso no autorizado");
+// Solo iniciar sesión si no está ya activa
+if (session_status() == PHP_SESSION_NONE) {
+    session_start();
 }
 
-$cod_operario = $_GET['cod_operario'];
-$cod_sucursal = $_GET['cod_sucursal'];
+require_once 'models/Ticket.php';
+require_once '../../includes/auth.php';
+require_once '../../includes/funciones.php';
+
+//******************************Estándar para header******************************
+verificarAutenticacion();
+
+$usuario = obtenerUsuarioActual();
+$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
+
+// Verificar acceso a formularios de mantenimiento (Código 14 y 19)
+if (!verificarAccesoFormulariosMantenimiento($_SESSION['usuario_id'])) {
+    header('Location: ../index.php');
+    exit();
+}
+
+// Obtenemos el cargo principal usando la función de funciones.php
+$cargoUsuario = obtenerCargoPrincipalUsuario($_SESSION['usuario_id']);
+//******************************Estándar para header, termina******************************
+
+// Obtener sucursales permitidas para el usuario (nueva función)
+$sucursalesPermitidas = obtenerSucursalesPermitidasMantenimiento($_SESSION['usuario_id']);
+
+if (empty($sucursalesPermitidas)) {
+    die("No tienes sucursales asignadas. Contacta al administrador.");
+}
+
+// Validar parámetros y determinar sucursal actual (usar nueva función)
+if (!isset($_GET['cod_sucursal']) || !verificarAccesoSucursalMantenimiento($_SESSION['usuario_id'], $_GET['cod_sucursal'])) {
+    $cod_sucursal = $sucursalesPermitidas[0]['codigo'];
+} else {
+    $cod_sucursal = $_GET['cod_sucursal'];
+}
+
+// El código de operario siempre debe ser el del usuario logueado
+$cod_operario = $_SESSION['usuario_id'];
+
+// Verificar que el usuario tenga acceso a esta sucursal (usar nueva función)
+if (!verificarAccesoSucursalMantenimiento($cod_operario, $cod_sucursal)) {
+    die("No tienes acceso a esta sucursal.");
+}
 
 $ticket = new Ticket();
-$sucursales = $ticket->getSucursales();
+$sucursales = $sucursalesPermitidas; // Usar solo las sucursales permitidas
 $equipos = $ticket->getEquipos();
 
 // Procesar formulario
@@ -76,18 +112,191 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Solicitud de Cambio de Equipos</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="icon" href="../../assets/img/icon12.png" type="image/png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Calibri', sans-serif;
+            font-size: clamp(11px, 2vw, 16px) !important;
+        }
+        
+        body {
+            background-color: #F6F6F6;
+            color: #333;
+            padding: 5px;
+        }
+        
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 10px;
+        }
+        
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            padding: 0 5px;
+            box-sizing: border-box;
+            margin: 1px auto;
+            flex-wrap: wrap;
+        }
+
+        .logo {
+            height: 50px;
+        }
+
+        .logo-container {
+            flex-shrink: 0;
+            margin-right: auto;
+        }
+
+        .buttons-container {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            flex-grow: 1;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-left: auto;
+        }
+
+        .btn-agregar {
+            background-color: transparent;
+            color: #51B8AC;
+            border: 1px solid #51B8AC;
+            text-decoration: none;
+            padding: 6px 10px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+            white-space: nowrap;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .btn-agregar.activo {
+            background-color: #51B8AC;
+            color: white;
+            font-weight: normal;
+        }
+
+        .btn-agregar:hover {
+            background-color: #0E544C;
+            color: white;
+            border-color: #0E544C;
+        }
+
+        .user-avatar {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background-color: #51B8AC;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .btn-logout {
+            background: #51B8AC;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .btn-logout:hover {
+            background: #0E544C;
+        }
+        
+        .title {
+            color: #0E544C;
+            font-size: 1.5rem !important;
+            margin-bottom: 20px;
+        }
+        
         .form-container {
             max-width: 800px;
             margin: 0 auto;
             padding: 20px;
         }
+        
         .card-header {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            background: linear-gradient(135deg, #51B8AC 0%, #0E544C 100%);
+            color: white;
+            border-radius: 8px 8px 0 0 !important;
+        }
+        
+        .btn-primary {
+            background-color: #51B8AC;
+            border-color: #51B8AC;
+        }
+        
+        .btn-primary:hover {
+            background-color: #0E544C;
+            border-color: #0E544C;
+        }
+        
+        .btn-success {
+            background-color: #28a745;
+            border-color: #28a745;
+        }
+        
+        .btn-outline-primary {
+            color: #51B8AC;
+            border-color: #51B8AC;
+        }
+        
+        .btn-outline-primary:hover {
+            background-color: #51B8AC;
+            border-color: #51B8AC;
             color: white;
         }
+        
+        .btn-outline-success {
+            color: #28a745;
+            border-color: #28a745;
+        }
+        
+        .btn-outline-success:hover {
+            background-color: #28a745;
+            border-color: #28a745;
+            color: white;
+        }
+        
         .camera-preview {
             width: 100%;
             max-width: 300px;
@@ -98,33 +307,247 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             align-items: center;
             justify-content: center;
             margin: 10px 0;
+            border-radius: 8px;
         }
+        
         #video, #canvas {
             max-width: 100%;
             height: auto;
+            border-radius: 6px;
         }
+        
         .photo-options {
             display: flex;
             gap: 10px;
             flex-wrap: wrap;
             margin: 10px 0;
         }
+        
         .equipment-info {
             background: #f8f9fa;
             border-radius: 8px;
             padding: 15px;
             margin: 10px 0;
+            border-left: 4px solid #51B8AC;
         }
+        
+        .alert {
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+        }
+        
+        .alert-danger {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .form-label {
+            font-weight: bold;
+            color: #0E544C;
+            margin-bottom: 5px;
+        }
+        
+        .form-control, .form-select {
+            border-radius: 6px;
+            border: 1px solid #ddd;
+            padding: 8px 12px;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: #51B8AC;
+            box-shadow: 0 0 0 0.2rem rgba(81, 184, 172, 0.25);
+        }
+        
+        .form-text {
+            color: #6c757d;
+            font-size: 0.875em;
+            margin-top: 0.25rem;
+        }
+        
+        @media (max-width: 768px) {
+            .header-container {
+                flex-direction: row;
+                align-items: center;
+                gap: 10px;
+            }
+            
+            .buttons-container {
+                position: static;
+                transform: none;
+                order: 3;
+                width: 100%;
+                justify-content: center;
+                margin-top: 10px;
+            }
+            
+            .logo-container {
+                order: 1;
+                margin-right: 0;
+            }
+            
+            .user-info {
+                order: 2;
+                margin-left: auto;
+            }
+            
+            .btn-agregar {
+                padding: 6px 10px;
+                font-size: 13px;
+            }
+            
+            .form-container {
+                padding: 10px;
+            }
+            
+            .photo-options {
+                flex-direction: column;
+            }
+            
+            .photo-options .btn {
+                width: 100%;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .btn-agregar {
+                flex-grow: 1;
+                justify-content: center;
+                white-space: normal;
+                text-align: center;
+                padding: 8px 5px;
+            }
+            
+            .user-info {
+                flex-direction: column;
+                align-items: flex-end;
+            }
+        }
+        
+        a.btn{
+            text-decoration: none;
+        }
+        
+        .img-thumbnail {
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
+        
+.sucursal-selector {
+    margin-right: 15px;
+}
+
+.sucursal-selector .form-select {
+    border-color: #51B8AC;
+    color: #0E544C;
+    font-weight: bold;
+}
+
+@media (max-width: 768px) {
+    .sucursal-selector {
+        order: 1;
+        width: 100%;
+        margin-bottom: 10px;
+    }
+    
+    .sucursal-selector .form-select {
+        max-width: 100% !important;
+    }
+}
     </style>
 </head>
-<body class="bg-light">
-    <div class="container-fluid">
+<body>
+    <div class="container">
+        <header>
+            <div class="header-container">
+                <div class="logo-container">
+                    <img src="../../assets/img/Logo.svg" alt="Batidos Pitaya" class="logo">
+                </div>
+                
+                <div class="buttons-container">
+                    <!-- Selector de Sucursal (solo mostrar si tiene más de una sucursal) -->
+                    <?php if (count($sucursalesPermitidas) > 1): ?>
+                    <div class="sucursal-selector">
+                        <select id="selectSucursal" class="form-select form-select-sm" style="max-width: 200px;">
+                            <?php foreach ($sucursalesPermitidas as $suc): ?>
+                                <option value="<?= $suc['codigo'] ?>" <?= $suc['codigo'] == $cod_sucursal ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars($suc['nombre']) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <?php endif; ?>
+                    
+                    <a href="dashboard_sucursales.php?cod_operario=<?= $cod_operario ?>&cod_sucursal=<?= $cod_sucursal ?>" class="btn-agregar" style="display:none;">
+                        <i class="fas fa-arrow-left"></i> <span class="btn-text">Volver al Panel</span>
+                    </a>
+                    
+                    <a href="#" onclick="openMaintenanceForm()" class="btn-agregar">
+                        <i class="fas fa-tools"></i> <span class="btn-text">Mantenimiento General</span>
+                    </a>
+                    
+                    <a href="#" onclick="openEquipmentForm()" class="btn-agregar activo">
+                        <i class="fas fa-laptop"></i> <span class="btn-text">Cambio de Equipos</span>
+                    </a>
+                    
+                    <a href="#" onclick="location.reload()" class="btn-agregar" style="display:none;">
+                        <i class="fas fa-sync-alt"></i> <span class="btn-text">Actualizar</span>
+                    </a>
+                    
+                    <?php if ($esAdmin || verificarAccesoCargo([16, 5])): ?>
+                        <a href="dashboard_sucursales.php?cod_operario=<?= $cod_operario ?>&cod_sucursal=<?= $cod_sucursal ?>" class="btn-agregar">
+                            <i class="fas fa-sync-alt"></i> <span class="btn-text">Solicitudes</span>
+                        </a>
+                    <?php endif; ?>
+                    
+                    <?php if ($esAdmin || verificarAccesoCargo([16, 35])): ?>
+                        <a href="dashboard_mantenimiento.php?cod_operario=<?= $cod_operario ?>&cod_sucursal=<?= $cod_sucursal ?>" class="btn-agregar">
+                            <i class="fas fa-sync-alt"></i> <span class="btn-text">Solicitudes</span>
+                        </a>
+                    <?php endif; ?>
+                </div>
+                
+                <div class="user-info">
+                    <div class="user-avatar">
+                        <?= $esAdmin ? 
+                            strtoupper(substr($usuario['nombre'], 0, 1)) : 
+                            strtoupper(substr($usuario['Nombre'], 0, 1)) ?>
+                    </div>
+                    <div>
+                        <div>
+                            <?= $esAdmin ? 
+                                htmlspecialchars($usuario['nombre']) : 
+                                htmlspecialchars($usuario['Nombre'].' '.$usuario['Apellido']) ?>
+                        </div>
+                        <small>
+                            <?= htmlspecialchars($cargoUsuario) ?>
+                        </small>
+                    </div>
+                    <a href="../index.php" class="btn-logout">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <h1 class="title" style="display:none;">
+            <i class="fas fa-laptop me-2"></i>
+            Solicitud de Cambio de Equipos
+        </h1>
+
         <div class="form-container">
             <div class="card shadow">
                 <div class="card-header">
                     <h4 class="mb-0">
                         <i class="fas fa-laptop me-2"></i>
-                        Solicitud de Cambio de Equipos
+                        Nueva Solicitud de Cambio de Equipos
                     </h4>
                 </div>
                 <div class="card-body">
@@ -137,26 +560,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     
                     <div class="equipment-info">
                         <h6><i class="fas fa-info-circle me-2"></i>Información Importante</h6>
-                        <p class="mb-0">Esta solicitud es para cambio, reparación o mantenimiento de equipos tecnológicos. 
+                        <p class="mb-0">Esta solicitud es para cambio, reparación o mantenimiento unicamente de los equipos que se encuentren codificados. 
                         Selecciona el equipo específico y describe detalladamente el problema.</p>
                     </div>
                     
                     <form method="POST" enctype="multipart/form-data" id="equipmentForm">
                         <div class="row">
-                            <div class="col-md-6 mb-3">
+                            <div class="mb-3">
                                 <label for="sucursal" class="form-label">Sucursal *</label>
-                                <select class="form-select" id="sucursal" name="sucursal" required>
-                                    <option value="">Seleccionar sucursal</option>
-                                    <?php foreach ($sucursales as $sucursal): ?>
-                                        <option value="<?= $sucursal['cod_sucursal'] ?>" 
-                                                <?= ($sucursal['cod_sucursal'] == $cod_sucursal) ? 'selected' : '' ?>>
-                                            <?= htmlspecialchars($sucursal['nombre_sucursal']) ?>
+                                <select class="form-select" id="sucursal" name="sucursal" required 
+                                        <?= count($sucursales) == 1 ? 'disabled' : '' ?>>
+                                    <?php foreach ($sucursales as $sucursalItem): ?>
+                                        <option value="<?= $sucursalItem['codigo'] ?>" 
+                                                <?= ($sucursalItem['codigo'] == $cod_sucursal) ? 'selected' : '' ?>>
+                                            <?= htmlspecialchars($sucursalItem['nombre']) ?>
                                         </option>
                                     <?php endforeach; ?>
                                 </select>
+                                <?php if (count($sucursales) == 1): ?>
+                                    <input type="hidden" name="sucursal" value="<?= $sucursales[0]['codigo'] ?>">
+                                <?php endif; ?>
                             </div>
                             
-                            <div class="col-md-6 mb-3">
+                            <div class="mb-3">
                                 <label for="equipo" class="form-label">Tipo de Equipo *</label>
                                 <select class="form-select" id="equipo" name="equipo" required>
                                     <option value="">Seleccionar equipo</option>
@@ -182,6 +608,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <textarea class="form-control" id="descripcion" name="descripcion" rows="4" 
                                       placeholder="Describe el problema específico del equipo, síntomas, mensajes de error, etc..." required></textarea>
                             <div class="form-text">
+                                <i class="fas fa-lightbulb me-1"></i>
                                 Incluye detalles como: ¿Cuándo comenzó el problema? ¿Qué mensajes de error aparecen? 
                                 ¿El equipo funciona parcialmente o no funciona en absoluto?
                             </div>
@@ -215,7 +642,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </div>
                         
                         <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                            <button type="button" class="btn btn-secondary me-md-2" onclick="window.close()">
+                            <button type="button" class="btn btn-secondary me-md-2" onclick="goToDashboard()">
                                 <i class="fas fa-times me-2"></i>Cancelar
                             </button>
                             <button type="submit" class="btn btn-primary">
@@ -239,9 +666,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             document.getElementById('equipoDescripcion').textContent = descripcion || '';
             
             // Auto-llenar título si está vacío
-            if (this.value && !document.getElementById('titulo').value) {
-                document.getElementById('titulo').value = 'Solicitud para ' + this.value;
-            }
+            //if (this.value && !document.getElementById('titulo').value) {
+            //    document.getElementById('titulo').value = 'Solicitud para ' + this.value;
+            //}
         });
         
         // Manejar carga de archivo
@@ -356,6 +783,76 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 e.preventDefault();
                 alert('La descripción debe ser más detallada (al menos 15 caracteres)');
                 return;
+            }
+        });
+        
+        // Manejar cambio de sucursal
+        document.getElementById('selectSucursal')?.addEventListener('change', function() {
+            const nuevaSucursal = this.value;
+            const url = `formulario_equipos.php?cod_operario=<?= $cod_operario ?>&cod_sucursal=${nuevaSucursal}`;
+            window.location.href = url;
+        });
+        
+        function goToDashboard() {
+            const url = `dashboard_sucursales.php?cod_operario=<?= $cod_operario ?>&cod_sucursal=<?= $cod_sucursal ?>`;
+            window.location.href = url;
+        }
+        
+        function openMaintenanceForm() {
+            const url = `formulario_mantenimiento.php?cod_operario=<?= $cod_operario ?>&cod_sucursal=<?= $cod_sucursal ?>`;
+            window.location.href = url;
+        }
+        
+        // Prevenir envío del formulario con Enter
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('equipmentForm'); // Para equipos
+            
+            if (form) {
+                let isSubmitting = false;
+                
+                form.addEventListener('submit', function(e) {
+                    if (isSubmitting) {
+                        e.preventDefault();
+                        return false;
+                    }
+                    
+                    const submitBtn = form.querySelector('button[type="submit"]');
+                    const originalText = submitBtn.innerHTML;
+                    
+                    // Deshabilitar botón y mostrar estado de carga
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Guardando...';
+                    isSubmitting = true;
+                    
+                    // Re-habilitar después de 5 segundos por si hay error (seguridad)
+                    setTimeout(() => {
+                        if (isSubmitting) {
+                            submitBtn.disabled = false;
+                            submitBtn.innerHTML = originalText;
+                            isSubmitting = false;
+                            alert('El proceso está tomando más tiempo de lo esperado. Por favor verifica tu conexión.');
+                        }
+                    }, 10000);
+                });
+                
+                // También prevenir envío con Enter
+                form.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        return false;
+                    }
+                });
+                
+                // Prevenir Enter en campos específicos
+                const textInputs = form.querySelectorAll('input[type="text"], textarea, select');
+                textInputs.forEach(input => {
+                    input.addEventListener('keydown', function(e) {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            return false;
+                        }
+                    });
+                });
             }
         });
     </script>

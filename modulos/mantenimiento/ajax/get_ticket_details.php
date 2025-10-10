@@ -78,9 +78,9 @@ if (!$ticket) {
             
             <div class="mb-3">
                 <label for="edit_status" class="form-label"><strong>Estado:</strong></label>
-                <select class="form-select" id="edit_status" name="status">
+                <select class="form-select" id="edit_status" name="status" disabled>
                     <option value="solicitado" <?= $ticket['status'] === 'solicitado' ? 'selected' : '' ?>>Solicitado</option>
-                    <option value="clasificado" <?= $ticket['status'] === 'clasificado' ? 'selected' : '' ?>>Clasificado</option>
+                    <!-- <option value="clasificado" <?= $ticket['status'] === 'clasificado' ? 'selected' : '' ?>>Clasificado</option> -->
                     <option value="agendado" <?= $ticket['status'] === 'agendado' ? 'selected' : '' ?>>Agendado</option>
                     <option value="finalizado" <?= $ticket['status'] === 'finalizado' ? 'selected' : '' ?>>Finalizado</option>
                 </select>
@@ -142,11 +142,19 @@ if (!$ticket) {
     
     <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+        
+        <!-- ✅ NUEVO BOTÓN: Finalizar Rápido -->
+        <?php if ($ticket['status'] !== 'finalizado'): ?>
+        <button type="button" class="btn btn-success" onclick="finalizarTicketRapido(<?= $ticket['id'] ?>)">
+            <i class="fas fa-check-circle me-2"></i>Finalizar Ticket
+        </button>
+        <?php endif; ?>
+        
+        <button type="button" class="btn btn-info" onclick="openChatFromModal(<?= $ticket['id'] ?>)">
+            <i class="fas fa-comments me-2"></i>Abrir Chat
+        </button>
         <button type="submit" class="btn btn-primary">
             <i class="fas fa-save me-2"></i>Guardar Cambios
-        </button>
-        <button type="button" class="btn btn-success" onclick="openChatFromModal(<?= $ticket['id'] ?>)">
-            <i class="fas fa-comments me-2"></i>Abrir Chat
         </button>
     </div>
 </form>
@@ -228,8 +236,46 @@ function updateTicket(event) {
 
 function openChatFromModal(ticketId) {
     $('#ticketModal').modal('hide');
-    window.open('chat.php?ticket_id=' + ticketId + '&emisor=mantenimiento', 
-               'chat_' + ticketId, 
-               'width=800,height=600,scrollbars=yes,resizable=yes');
+    window.open('chat.php?ticket_id=' + ticketId + '&emisor=mantenimiento', '_blank');
+}
+
+function finalizarTicketRapido(ticketId) {
+    if (!confirm('¿Estás seguro de que deseas finalizar este ticket?\n\nSe establecerá:\n• Estado: Finalizado\n• Fecha final: Hoy\n• Se recargará la página')) {
+        return;
+    }
+    
+    // Obtener fecha actual en formato YYYY-MM-DD
+    const hoy = new Date().toISOString().split('T')[0];
+    
+    // Obtener fecha de inicio actual (si existe)
+    const fechaInicio = document.getElementById('edit_fecha_inicio').value || hoy;
+    
+    $.ajax({
+        url: 'ajax/finalizar_ticket.php', // Crearemos este archivo
+        method: 'POST',
+        data: {
+            id: ticketId,
+            status: 'finalizado',
+            fecha_inicio: fechaInicio,
+            fecha_final: hoy
+        },
+        dataType: 'json',
+        success: function(response) {
+            if (response.success) {
+                alert('✅ Ticket finalizado exitosamente');
+                // Cerrar modal y recargar página
+                $('.modal').modal('hide');
+                setTimeout(() => {
+                    location.reload();
+                }, 500);
+            } else {
+                alert('❌ Error: ' + response.message);
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error('Error AJAX:', xhr.responseText);
+            alert('❌ Error en la comunicación con el servidor');
+        }
+    });
 }
 </script>
