@@ -457,17 +457,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
                 
                 <div class="buttons-container">
-                    <!-- Selector de Sucursal (solo mostrar si tiene más de una sucursal) -->
-                    <?php if (count($sucursalesPermitidas) > 1): ?>
-                    <div class="sucursal-selector">
-                        <select id="selectSucursal" class="form-select form-select-sm" style="max-width: 200px;">
-                            <?php foreach ($sucursalesPermitidas as $suc): ?>
-                                <option value="<?= $suc['codigo'] ?>" <?= $suc['codigo'] == $cod_sucursal ? 'selected' : '' ?>>
-                                    <?= htmlspecialchars($suc['nombre']) ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
+                    <?php if ($esAdmin || verificarAccesoCargo([5, 14, 16, 35])): ?>
+                        <a href="calendario.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'calendario.php' ? 'activo' : '' ?>">
+                            <i class="fas fa-calendar-alt"></i> <span class="btn-text">Calendario</span>
+                        </a>
                     <?php endif; ?>
                     
                     <a href="#" onclick="openMaintenanceForm()" class="btn-agregar activo">
@@ -488,7 +481,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </a>
                     <?php endif; ?>
                     
-                    <?php if ($esAdmin || verificarAccesoCargo([16, 35])): ?>
+                    <?php if ($esAdmin || verificarAccesoCargo([14, 16, 35])): ?>
                         <a href="dashboard_mantenimiento.php?cod_operario=<?= $cod_operario ?>&cod_sucursal=<?= $cod_sucursal ?>" class="btn-agregar">
                             <i class="fas fa-sync-alt"></i> <span class="btn-text">Solicitudes</span>
                         </a>
@@ -541,7 +534,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     
                     <form method="POST" enctype="multipart/form-data" id="maintenanceForm">
                         <div class="row">
-                            <div class="mb-3">
+                            <div class="mb-3" style="display:none;">
                                 <label for="sucursal" class="form-label">Sucursal *</label>
                                 <select class="form-select" id="sucursal" name="sucursal" required 
                                         <?= count($sucursales) == 1 ? 'disabled' : '' ?>>
@@ -556,6 +549,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <input type="hidden" name="sucursal" value="<?= $sucursales[0]['codigo'] ?>">
                                 <?php endif; ?>
                             </div>
+                            
+                            <!-- Selector de Sucursal (solo mostrar si tiene más de una sucursal) -->
+                            <?php if (count($sucursalesPermitidas) > 1): ?>
+                            <div class="mb-3">
+                                <label for="sucursal" class="form-label">Sucursal *</label>
+                                <select id="selectSucursal" class="form-select form-select-sm">
+                                    <?php foreach ($sucursalesPermitidas as $suc): ?>
+                                        <option value="<?= $suc['codigo'] ?>" <?= $suc['codigo'] == $cod_sucursal ? 'selected' : '' ?>>
+                                            <?= htmlspecialchars($suc['nombre']) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <?php endif; ?>
                             
                             <div class="mb-3">
                                 <label for="area" class="form-label">Área Física *</label>

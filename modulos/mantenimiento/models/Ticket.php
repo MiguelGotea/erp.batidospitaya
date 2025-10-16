@@ -108,13 +108,37 @@ class Ticket {
         return $this->db->fetchAll($sql);
     }
     
-    public function getTicketsWithoutDates() {
+    public function getTicketsForCalendarBySucursales($sucursales) {
+        if (empty($sucursales)) {
+            return [];
+        }
+        
+        $placeholders = str_repeat('?,', count($sucursales) - 1) . '?';
+        
         $sql = "SELECT t.*, s.nombre as nombre_sucursal 
+                FROM mtto_tickets t 
+                LEFT JOIN sucursales s ON t.cod_sucursal = s.codigo 
+                WHERE t.fecha_inicio IS NOT NULL 
+                AND t.fecha_final IS NOT NULL 
+                AND t.cod_sucursal IN ({$placeholders})
+                ORDER BY t.fecha_inicio";
+        
+        return $this->db->fetchAll($sql, $sucursales);
+    }
+
+    public function getTicketsWithoutDates() {
+        $sql = "SELECT t.*, s.nombre as nombre_sucursal
                 FROM mtto_tickets t 
                 LEFT JOIN sucursales s ON t.cod_sucursal = s.codigo 
                 WHERE (t.fecha_inicio IS NULL OR t.fecha_final IS NULL)
                 AND t.status != 'finalizado'
-                ORDER BY COALESCE(t.nivel_urgencia, 0) DESC, t.created_at";
+                ORDER BY 
+                    CASE 
+                        WHEN t.tipo_formulario = 'cambio_equipos' THEN 1
+                        WHEN t.tipo_formulario = 'mantenimiento_general' THEN 2
+                        ELSE 3
+                    END,
+                    COALESCE(t.nivel_urgencia, 0) DESC, t.created_at";
         
         return $this->db->fetchAll($sql);
     }

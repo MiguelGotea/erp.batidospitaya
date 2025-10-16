@@ -14,10 +14,10 @@ $usuario = obtenerUsuarioActual();
 $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
 
 // Verificar acceso al módulo Mantenimiento (Código 14)
-verificarAccesoCargo([14, 16, 35]);
+verificarAccesoCargo([5, 11, 14, 16, 35]);
 
 // Verificar acceso al módulo
-if (!verificarAccesoCargo([14, 16, 35]) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
+if (!verificarAccesoCargo([5, 11, 14, 16, 35]) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
     header('Location: ../index.php');
     exit();
 }
@@ -28,8 +28,24 @@ $cargoUsuario = obtenerCargoPrincipalUsuario($_SESSION['usuario_id']);
 //******************************Estándar para header, termina******************************
 
 $ticket = new Ticket();
-$tickets_con_fecha = $ticket->getTicketsForCalendar();
-$tickets_sin_fecha = $ticket->getTicketsWithoutDates();
+
+// Filtrar tickets según el cargo del usuario
+if ($esAdmin || verificarAccesoCargo([11, 14, 16, 35])) {
+    // Admin y cargos enlistados ven todos los tickets
+    $tickets_con_fecha = $ticket->getTicketsForCalendar();
+    $tickets_sin_fecha = $ticket->getTicketsWithoutDates();
+} elseif (verificarAccesoCargo([5])) {
+    // Cargo 5 (Líder) solo ve tickets de sus sucursales
+    $sucursalesLider = obtenerSucursalesLider($_SESSION['usuario_id']);
+    $codigosSucursales = array_column($sucursalesLider, 'codigo');
+    
+    $tickets_con_fecha = $ticket->getTicketsForCalendarBySucursales($codigosSucursales);
+    $tickets_sin_fecha = []; // Los líderes no ven tickets sin programar
+} else {
+    // Otros usuarios no tienen acceso
+    header('Location: ../index.php');
+    exit();
+}
 
 // Procesar tickets para el calendario
 $calendar_events = [];
@@ -37,29 +53,36 @@ $calendar_events = [];
 foreach ($tickets_con_fecha as $t) {
     $calendar_events[] = [
         'id' => $t['id'],
-        'title' => $t['codigo'] . ' - ' . $t['titulo'],
+        'title' => $t['titulo'],
         'start' => $t['fecha_inicio'],
         'end' => date('Y-m-d', strtotime($t['fecha_final'] . ' +1 day')),
-        'backgroundColor' => getColorByUrgency($t['nivel_urgencia']),
-        'borderColor' => getColorByUrgency($t['nivel_urgencia']),
+        'backgroundColor' => getColorByUrgency($t['nivel_urgencia'], $t['tipo_formulario']),
+        'borderColor' => getColorByUrgency($t['nivel_urgencia'], $t['tipo_formulario']),
         'extendedProps' => [
             'codigo' => $t['codigo'],
             'sucursal' => $t['nombre_sucursal'],
             'urgencia' => $t['nivel_urgencia'],
-            'status' => $t['status']
+            'status' => $t['status'],
+            'descripcion' => $t['descripcion'],
+            'tipo_formulario' => $t['tipo_formulario'],
         ]
     ];
 }
 
-function getColorByUrgency($urgencia) {
-    switch ($urgencia) {
-        case 1: return '#28a745';
-        case 2: return '#ffc107';
-        case 3: return '#fd7e14';
-        case 4: return '#dc3545';
-        default: return '#6c757d';
+function getColorByUrgency($urgencia, $tipo_formulario) {
+    if ($tipo_formulario === 'cambio_equipos') {
+        return '#dc3545';
+    } else {
+        switch ($urgencia) {
+            case 1: return '#28a745';
+            case 2: return '#ffc107';
+            case 3: return '#fd7e14';
+            case 4: return '#dc3545';
+            default: return '#8b8b8bff';
+        }
     }
 }
+
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -218,6 +241,7 @@ function getColorByUrgency($urgencia) {
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             padding: 20px;
             min-height: 600px;
+            transition: all 0.3s ease;
         }
         
         #calendar {
@@ -252,10 +276,19 @@ function getColorByUrgency($urgencia) {
             display: flex;
             flex-direction: column;
             max-height: calc(100vh - 140px);
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar.hidden {
+            display: none;
+        }
+        
+        .calendar-main.full-width {
+            flex: 1 0 100%;
         }
         
         .sidebar-header {
-            background: linear-gradient(135deg, #51B8AC 0%, #0E544C 100%);
+            background: #0E544C;
             color: white;
             padding: 20px;
             border-radius: 10px 10px 0 0;
@@ -394,6 +427,27 @@ function getColorByUrgency($urgencia) {
             justify-content: center;
             margin: 2px;
         }
+
+        /* ✅ NUEVO: Estilos para drag & drop bidireccional */
+        .sidebar.accepting-drop {
+            background: rgba(81, 184, 172, 0.1);
+            border: 3px dashed #51B8AC;
+            box-shadow: 0 4px 20px rgba(81, 184, 172, 0.3);
+        }
+        
+        .sidebar.drag-over {
+            background: rgba(81, 184, 172, 0.2);
+            border: 3px solid #51B8AC;
+        }
+        
+        .fc-event.fc-draggable {
+            cursor: move;
+        }
+        
+        .fc-event[data-status="finalizado"] {
+            cursor: not-allowed !important;
+            opacity: 0.7;
+        }
         
         .btn-primary {
             background-color: #51B8AC;
@@ -407,24 +461,17 @@ function getColorByUrgency($urgencia) {
         
         /* Aumentar altura de las celdas del calendario */
         .fc .fc-daygrid-day {
-            min-height: 180px !important;
+            min-height: 80px !important;
         }
         
         .fc .fc-daygrid-day-frame {
-            min-height: 180px !important;
+            min-height: 80px !important;
         }
         
         .fc .fc-scrollgrid-sync-table {
             height: auto !important;
         }
-        
-        /* Ajustar contenedor de eventos para mostrar más */
-        .fc .fc-daygrid-day-events {
-            margin-top: 2px !important;
-            max-height: 150px !important;
-            overflow-y: auto !important;
-        }
-        
+
         /* Reducir padding de eventos para que quepan más */
         .fc-event {
             margin-bottom: 1px !important;
@@ -520,6 +567,131 @@ function getColorByUrgency($urgencia) {
         a.btn{
             text-decoration: none;
         }
+
+        /* Lista de sucursales en vista mes */
+        .sucursales-lista-dia {
+            font-size: 0.7em;
+            color: #0E544C;
+            margin-top: 4px;
+            padding: 4px;
+            max-height: 140px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+        }
+
+        .sucursales-lista-dia::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .sucursales-lista-dia::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        .sucursales-lista-dia::-webkit-scrollbar-thumb {
+            background: #51B8AC;
+            border-radius: 2px;
+        }
+
+        .sucursales-lista-dia::-webkit-scrollbar-thumb:hover {
+            background: #0E544C;
+        }
+
+        /* Ocultar eventos en vista mes */
+        .fc-dayGridMonth-view .fc-event,
+        .fc-dayGridMonth-view .fc-daygrid-day-events,
+        .fc-dayGridMonth-view .fc-daygrid-event-harness {
+            display: none !important;
+        }
+
+        /* Vista semana: Mantener estructura pero ocultar horas si es necesario */
+        .fc-timeGridWeek-view .fc-timegrid-slot-label {
+            display: none !important;
+        }
+
+        .fc-timeGridWeek-view .fc-timegrid-slot,
+        .fc-timeGridWeek-view .fc-timegrid-axis {
+            /* En lugar de ocultar, hacerlos mínimos */
+            min-width: 0 !important;
+            width: 0 !important;
+        }
+
+        .fc-timeGridWeek-view .fc-timegrid-axis-frame {
+            display: none !important;
+        }
+
+        .fc-timeGridWeek-view .fc-col-header {
+            width: 100% !important;
+        }
+
+        .fc-timeGridWeek-view .fc-col-header-cell {
+            padding: 10px 0 !important;
+        }
+
+
+        .fc-timeGridWeek-view .fc-timegrid-cols {
+            display: table-row !important;
+        }
+
+        .fc-timeGridWeek-view .fc-timegrid-col {
+            display: table-cell !important;
+            width: 14.28% !important; /* Distribución equitativa para 7 días */
+        }
+
+        /* Vista lista: Hover */
+        .fc-listWeek-view .fc-list-event:hover {
+            background-color: rgba(81, 184, 172, 0.1) !important;
+        }
+
+        /* Mostrar eventos de múltiples días en vista semana */
+        .fc-timeGridWeek-view .fc-daygrid-event,
+        .fc-timeGridWeek-view .fc-daygrid-event-harness {
+            display: block !important;
+        }
+
+        .fc-timeGridWeek-view .fc-daygrid-body {
+            display: table-row-group !important;
+        }
+
+        .fc-timeGridWeek-view .fc-scrollgrid-section-header {
+            display: table-row-group !important;
+        }
+
+        .fc-timeGridWeek-view .fc-timegrid-body {
+            height: auto !important;
+            display: table-row-group !important;
+        }
+        /* Eventos que abarcan múltiples días */
+        .fc-timeGridWeek-view .fc-h-event {
+            border-radius: 4px;
+            padding: 4px 6px;
+            font-size: 0.85em;
+        }
+
+        /* Permitir que los eventos se expandan según su contenido */
+        .fc-timeGridWeek-view .fc-event {
+            position: relative !important;
+            min-height: auto !important;
+            height: auto !important;
+            white-space: normal !important;
+            line-height: 1.3 !important;
+            padding: 6px 8px !important;
+        }
+
+        /* Vista lista: Mejor formato */
+        .fc-listWeek-view .fc-list-event-title {
+            font-weight: normal !important;
+        }
+
+        .fc-listWeek-view .fc-list-event {
+            cursor: pointer;
+        }
+
+        .fc-listWeek-view .fc-list-event:hover {
+            background-color: rgba(81, 184, 172, 0.1) !important;
+        }
+
+
+        
     </style>
 </head>
 <body>
@@ -531,13 +703,35 @@ function getColorByUrgency($urgencia) {
                 </div>
                 
                 <div class="buttons-container">
-                    <a href="#" onclick="refreshData()" class="btn-agregar activo">
+                    <a href="#" onclick="refreshData()" class="btn-agregar activo" style="display:none;">
                         <i class="fas fa-calendar-alt"></i> <span class="btn-text">Calendario</span>
                     </a>
                     
-                    <a href="dashboard_mantenimiento.php" class="btn-agregar">
-                        <i class="fas fa-sync-alt"></i> <span class="btn-text">Solicitudes</span>
+                    <?php if ($esAdmin || verificarAccesoCargo([5, 11, 14, 16, 35])): ?>
+                        <a href="calendario.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'calendario.php' ? 'activo' : '' ?>">
+                            <i class="fas fa-calendar-alt"></i> <span class="btn-text">Calendario</span>
+                        </a>
+                    <?php endif; ?>
+                    
+                    <a href="formulario_mantenimiento.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'formulario_mantenimiento.php' ? 'activo' : '' ?>">
+                        <i class="fas fa-tools"></i> <span class="btn-text">Mantenimiento General</span>
                     </a>
+                    
+                    <a href="formulario_equipos.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'formulario_equipos.php' ? 'activo' : '' ?>">
+                        <i class="fas fa-laptop"></i> <span class="btn-text">Cambio de Equipos</span>
+                    </a>
+                    
+                    <?php if ($esAdmin || verificarAccesoCargo([16, 5])): ?>
+                        <a href="dashboard_sucursales.php?cod_operario=<?= $cod_operario ?>&cod_sucursal=<?= $cod_sucursal ?>" class="btn-agregar">
+                            <i class="fas fa-sync-alt"></i> <span class="btn-text">Solicitudes</span>
+                        </a>
+                    <?php endif; ?>
+                    
+                    <?php if ($esAdmin || verificarAccesoCargo([11, 14, 16, 35])): ?>
+                        <a href="dashboard_mantenimiento.php?cod_operario=<?= $cod_operario ?>&cod_sucursal=<?= $cod_sucursal ?>" class="btn-agregar">
+                            <i class="fas fa-sync-alt"></i> <span class="btn-text">Solicitudes</span>
+                        </a>
+                    <?php endif; ?>
                 </div>
                 
                 <div class="user-info">
@@ -563,40 +757,39 @@ function getColorByUrgency($urgencia) {
             </div>
         </header>
 
-        <!-- Leyenda -->
-        <div class="legend">
-            <div class="legend-item">
-                <div class="legend-color" style="background: #28a745;"></div>
-                <span>Urgencia 1 - Baja</span>
-            </div>
-            <div class="legend-item">
-                <div class="legend-color" style="background: #ffc107;"></div>
-                <span>Urgencia 2 - Media</span>
-            </div>
-            <div class="legend-item">
-                <div class="legend-color" style="background: #fd7e14;"></div>
-                <span>Urgencia 3 - Alta</span>
-            </div>
-            <div class="legend-item">
-                <div class="legend-color" style="background: #dc3545;"></div>
-                <span>Urgencia 4 - Crítica</span>
-            </div>
-        </div>
-
         <div class="calendar-container">
             <!-- Calendario principal -->
-            <div class="calendar-main">
+            <div class="calendar-main" id="calendarMain">
                 <div id='calendar'></div>
             </div>
 
             <!-- Sidebar con tickets sin programar -->
-            <div class="sidebar">
+            <div class="sidebar" id="ticketsSidebar">
                 <div class="sidebar-header">
                     <h5 class="mb-1">
                         <i class="fas fa-clock me-2"></i>
-                        Tickets Sin Programar
+                        Solicitudes pendientes por programar
                     </h5>
-                    <small>Arrastra los tickets al calendario</small>
+                </div>
+                
+                <!-- Filtro por sucursal -->
+                <div class="sidebar-filter p-3 border-bottom">
+                    <select class="form-select form-select-sm" id="filterSucursal">
+                        <option value="">Todas las sucursales</option>
+                        <?php 
+                        // Obtener sucursales únicas
+                        $sucursales = [];
+                        foreach ($tickets_sin_fecha as $ticket) {
+                            if (!empty($ticket['nombre_sucursal'])) {
+                                $sucursales[$ticket['nombre_sucursal']] = $ticket['nombre_sucursal'];
+                            }
+                        }
+                        sort($sucursales);
+                        ?>
+                        <?php foreach ($sucursales as $sucursal): ?>
+                            <option value="<?= htmlspecialchars($sucursal) ?>"><?= htmlspecialchars($sucursal) ?></option>
+                        <?php endforeach; ?>
+                    </select>
                 </div>
                 
                 <div class="unscheduled-tickets" id="unscheduledTickets">
@@ -608,33 +801,72 @@ function getColorByUrgency($urgencia) {
                     <?php else: ?>
                         <?php foreach ($tickets_sin_fecha as $ticket): ?>
                             <div class="ticket-item" 
-                                 draggable="true" 
-                                 data-ticket-id="<?= $ticket['id'] ?>"
-                                 data-ticket-title="<?= htmlspecialchars($ticket['titulo']) ?>"
-                                 data-ticket-codigo="<?= htmlspecialchars($ticket['codigo']) ?>">
+                                draggable="true" 
+                                data-ticket-id="<?= $ticket['id'] ?>"
+                                data-ticket-title="<?= htmlspecialchars($ticket['titulo']) ?>"
+                                data-ticket-codigo="<?= htmlspecialchars($ticket['codigo']) ?>"
+                                data-sucursal="<?= htmlspecialchars($ticket['nombre_sucursal']) ?>"
+                                style="background: <?= getColorByUrgency($ticket['nivel_urgencia'], $ticket['tipo_formulario']) ?>; color: white;">
                                 
-                                <span class="urgency-indicator" 
-                                      style="display:none; background: <?= getColorByUrgency($ticket['nivel_urgencia']) ?>"></span>
-                                
-                                <div class="mb-2" style="display:none;">
-                                    <strong><?= htmlspecialchars($ticket['codigo']) ?></strong>
+                                <div class="small" style="opacity: 0.9;">
+                                    <span style="background: #51B8AC; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.8em;">
+                                        <?php if ($ticket['tipo_formulario'] === 'cambio_equipos'): ?>
+                                            <i class="fas fa-exclamation-triangle me-1"></i>
+                                        <?php endif; ?>
+                                        <?= htmlspecialchars($ticket['nombre_sucursal']) ?>
+                                    </span>
                                 </div>
-                                
+
                                 <div class="mb-2">
-                                    <span class="urgency-indicator" 
-                                      style="background: <?= getColorByUrgency($ticket['nivel_urgencia']) ?>"></span>
                                     <?= htmlspecialchars($ticket['titulo']) ?>
                                 </div>
                                 
-                                <div class="text-muted small">
-                                    <i class="fas fa-building me-1"></i>
-                                    <?= htmlspecialchars($ticket['nombre_sucursal']) ?>
-                                </div>
                             </div>
                         <?php endforeach; ?>
                     <?php endif; ?>
                 </div>
             </div>
+
+            <script>
+                // Variable global para controlar el drag
+                let isDraggingTicket = false;
+                
+                document.addEventListener('DOMContentLoaded', function() {
+                    
+                    const filterSucursal = document.getElementById('filterSucursal');
+                    const ticketItems = document.querySelectorAll('.ticket-item');
+                    
+                    filterSucursal.addEventListener('change', function() {
+                        const selectedSucursal = this.value;
+                        
+                        ticketItems.forEach(function(item) {
+                            const itemSucursal = item.getAttribute('data-sucursal');
+                            
+                            if (selectedSucursal === '' || itemSucursal === selectedSucursal) {
+                                item.style.display = 'block';
+                            } else {
+                                item.style.display = 'none';
+                            }
+                        });
+                    });
+                
+
+                    // Eventos para los tickets
+                    ticketItems.forEach(function(item) {
+                        // Evento click
+                        item.addEventListener('click', function(e) {
+                            // Solo abrir modal si no hay un drag en curso
+                            if (!isDraggingTicket) {
+                                const ticketId = this.getAttribute('data-ticket-id');
+                                mostrarDetallesTicket(ticketId);
+                            }
+                        });
+                    });
+                });
+            
+            </script>
+
+
         </div>
     </div>
 
@@ -668,6 +900,8 @@ function getColorByUrgency($urgencia) {
             console.log('DOM cargado, inicializando calendario...');
             
             const calendarEl = document.getElementById('calendar');
+            const sidebar = document.getElementById('ticketsSidebar');
+            const calendarMain = document.getElementById('calendarMain');
             
             if (!calendarEl) {
                 console.error('❌ No se encontró el elemento #calendar');
@@ -677,23 +911,112 @@ function getColorByUrgency($urgencia) {
             try {
                 calendar = new FullCalendar.Calendar(calendarEl, {
                     locale: 'es',
-                    initialView: 'dayGridMonth',
+                    initialView: 'timeGridWeek',
                     headerToolbar: {
                         left: 'prev,next today',
                         center: 'title',
                         right: 'dayGridMonth,timeGridWeek,listWeek'
                     },
                     height: 'auto',
-                    editable: true,
-                    droppable: true,
-                    eventStartEditable: true, // Permitir mover eventos
-                    eventDurationEditable: true, // Permitir cambiar duración
+                    editable: <?= verificarAccesoCargo([14, 16, 35]) || $esAdmin ? 'true' : 'false' ?>, // Solo editables para mantenimiento
+                    droppable: <?= verificarAccesoCargo([14, 16, 35]) || $esAdmin ? 'true' : 'false' ?>, // Solo arrastrables para mantenimiento
+                    eventStartEditable: <?= verificarAccesoCargo([14, 16, 35]) || $esAdmin ? 'true' : 'false' ?>,
+                    eventDurationEditable: <?= verificarAccesoCargo([14, 16, 35]) || $esAdmin ? 'true' : 'false' ?>,
                     events: eventos,
+
+                    views: {
+                        dayGridMonth: {
+                            // Vista mes: Ocultar eventos
+                            eventDisplay: 'none'
+                        },
+                        timeGridWeek: {
+                            // Vista semana: Configuración sin horas
+                            allDaySlot: true,
+                            slotMinTime: '00:00:00',
+                            slotMaxTime: '24:00:00',
+                            slotLabelInterval: '24:00', // Mostrar solo un slot para todo el día
+                            slotDuration: '24:00'
+                        }
+                    },
+                    displayEventTime: false,  // ✅ No mostrar hora
+                    displayEventEnd: false,   // ✅ No mostrar hora final
+
+                    // ✅ NUEVO: Configuración para bloquear eventos finalizados
+                    eventAllow: function(dropInfo, draggedEvent) {
+                        const status = draggedEvent.extendedProps.status || '';
+                        if (status === 'finalizado') {
+                            console.log('❌ EventAllow: Ticket finalizado bloqueado');
+                            return false;
+                        }
+                        return true;
+                    },
+
+                    // ✅ NUEVO: Configurar drag desde eventos del calendario
+                    eventDragStart: function(info) {
+                        console.log('Evento drag start desde calendario:', info.event);
+                        
+                        const status = info.event.extendedProps.status || '';
+                        
+                        if (status === 'finalizado') {
+                            console.log('❌ Ticket finalizado, no se puede mover');
+                            return false;
+                        }
+                        
+                        draggedTicket = {
+                            id: info.event.id,
+                            title: info.event.title,
+                            codigo: info.event.extendedProps.codigo,
+                            fromCalendar: true,
+                            status: status
+                        };
+                        
+                        console.log('✅ draggedTicket configurado:', draggedTicket);
+                        
+                        const sidebar = document.getElementById('ticketsSidebar');
+                        sidebar.classList.add('accepting-drop');
+                    },
+                                                            
+
+                    eventDragStop: function(info) {
+                        console.log('Evento drag stop');
+                        
+                        const sidebar = document.getElementById('ticketsSidebar');
+                        sidebar.classList.remove('accepting-drop');
+                        
+                        // ✅ NUEVO: Obtener posición del mouse del evento original
+                        const mouseEvent = info.jsEvent;
+                        const mouseX = mouseEvent.clientX;
+                        const mouseY = mouseEvent.clientY;
+                        
+                        console.log('🖱️ Posición del mouse al soltar:', mouseX, mouseY);
+                        
+                        // Verificar si el mouse está sobre el sidebar
+                        const sidebarRect = sidebar.getBoundingClientRect();
+                        console.log('📦 Rectángulo del sidebar:', sidebarRect);
+                        
+                        const dentroDeSidebar = (
+                            mouseX >= sidebarRect.left &&
+                            mouseX <= sidebarRect.right &&
+                            mouseY >= sidebarRect.top &&
+                            mouseY <= sidebarRect.bottom
+                        );
+                        
+                        console.log('✅ ¿Dentro del sidebar?', dentroDeSidebar);
+                        
+                        if (dentroDeSidebar && draggedTicket && draggedTicket.fromCalendar) {
+                            console.log('🎯 Evento soltado en sidebar, desprogramando...');
+                            // Remover el evento del calendario visualmente
+                            info.event.remove();
+                            // Desprogramar en backend
+                            desprogramarTicket(draggedTicket);
+                            draggedTicket = null;
+                        }
+                    },
                     
                     // Cuando se mueve un evento existente
                     eventDrop: function(info) {
-                        console.log('Evento movido:', info.event);
-                        
+                        console.log('📍 Evento movido dentro del calendario - eventDrop');
+
                         const ticketId = info.event.id;
                         const nuevaFechaInicio = info.event.start.toISOString().split('T')[0];
                         const nuevaFechaFinal = info.event.end ? 
@@ -702,11 +1025,6 @@ function getColorByUrgency($urgencia) {
                         
                         console.log('Nueva fecha inicio:', nuevaFechaInicio);
                         console.log('Nueva fecha final:', nuevaFechaFinal);
-                        
-                        if (!confirm(`¿Reprogramar este ticket para ${nuevaFechaInicio}?`)) {
-                            info.revert(); // Revertir el cambio
-                            return;
-                        }
                         
                         actualizarFechasTicket(ticketId, nuevaFechaInicio, nuevaFechaFinal, info);
                     },
@@ -743,31 +1061,122 @@ function getColorByUrgency($urgencia) {
                     
                     // Personalizar renderizado de eventos
                     eventContent: function(arg) {
+                        const view = calendar.view.type;
                         const urgencia = arg.event.extendedProps.urgencia || 0;
-                        const urgenciaIcon = urgencia >= 3 ? '⚠️ ' : '';
+                        const titulo = arg.event.title;
+                        const sucursal = arg.event.extendedProps.sucursal || '';
+                        const descripcion = arg.event.extendedProps.descripcion;
+                        const status = arg.event.extendedProps.status || '';
+                        const tipo_formulario = arg.event.extendedProps.tipo_formulario || '';
+                        const id = arg.event.id;
+                        
+                        // Vista Mes: Ocultar (se maneja con CSS)
+                        if (view === 'dayGridMonth') {
+                            return { html: '<div style="display: none;"></div>' };
+                        }
+                        
+                        // Vista Semana: Sello como encabezado compacto - Texto completo
+                        if (view === 'timeGridWeek') {
+                            // Determinar el icono según el tipo de formulario
+                            let icono = ''; // Por defecto
+                            
+                            if (tipo_formulario === 'cambio_equipos') {
+                                icono = 'fas fa-exclamation-triangle';
+                            } else {
+                                icono = '   ';
+                            }
+                            
+                            return {
+                                html: '<div style="font-size: 0.75em; line-height: 1.2; padding: 2px;">' + 
+                                    
+                                    '<div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 3px; margin-bottom: 2px;">' +
+                                        '<div style="background: #51B8AC; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.5em; white-space: normal; word-wrap: break-word; border: 0.5px solid rgba(255,255,255,0.3);">' + 
+                                            '<i class="' + icono + '" style="font-size: 0.6em;"></i> ' + sucursal + 
+                                        '</div>' +
+                                    '</div>' +
+                                    
+                                    '<div style="font-size: 0.7em; line-height: 1.1; white-space: normal; word-wrap: break-word; padding: 1px 0px; border-radius: 2px;">' + 
+                                        titulo + 
+                                    '</div>' +
+                                    
+                                    '</div>'
+                            };
+                        }
+
+                        // Vista Lista: Mostrar solo título (sin código)
+                        if (view === 'listWeek') {
+                            let botonFinalizar = '';
+                            if (status !== 'finalizado') {
+                                botonFinalizar = '<button type="button" class="btn btn-success btn-sm" onclick="finalizarTicketRapido(' + id + ', this)" title="Finalizar ticket">' +
+                                                '<i class="fas fa-check-circle me-1"></i>Finalizar' +
+                                                '</button>';
+                            }
+                            
+                            return {
+                                html: '<div style="display: grid; grid-template-columns: 100px 1fr auto; gap: 8px; align-items: center; padding: 2px 4px;">' +
+                                    '<div style="font-weight: bold; text-align: left;">' + sucursal + '</div>' +
+                                    '<div>' + titulo + ': <span style="font-style: italic;">' + descripcion + '</span></div>' +
+                                    '<div style="text-align: right;">' + botonFinalizar + '</div>' +
+                                    '</div>'
+                            };
+                        }
+                        
+                        // Default
                         return {
                             html: '<div style="padding: 2px 4px; font-size: 0.8em; overflow: hidden; text-overflow: ellipsis;">' + 
-                                  urgenciaIcon + arg.event.title + '</div>'
+                                arg.event.title + '</div>'
                         };
                     },
                     
+                    //cambio de vista
+                    viewDidMount: function(viewInfo) {
+                        console.log('Vista cambiada:', viewInfo.view.type);
+                        
+                        // Mostrar sidebar solo en vista timeGridWeek
+                        if (viewInfo.view.type === 'timeGridWeek') {
+                            sidebar.classList.remove('hidden');
+                            calendarMain.classList.remove('full-width');
+
+                            // ✅ FORZAR REFLOW después de un pequeño delay
+                            setTimeout(() => {
+                                if (calendar) {
+                                    calendar.updateSize();
+                                }
+                            }, 100);
+                        } else {
+                            sidebar.classList.add('hidden');
+                            calendarMain.classList.add('full-width');
+                        }
+                    },
+
                     // Agregar sucursales al día
                     dayCellDidMount: function(info) {
+                        const view = calendar.view.type;
                         const fecha = info.date.toISOString().split('T')[0];
                         
-                        if (sucursalesPorDia[fecha]) {
+                        // Solo en vista mes
+                        if (view === 'dayGridMonth' && sucursalesPorDia[fecha]) {
                             const sucursales = Array.from(sucursalesPorDia[fecha]);
                             if (sucursales.length > 0) {
                                 const sucursalesDiv = document.createElement('div');
-                                sucursalesDiv.className = 'sucursales-dia';
-                                sucursalesDiv.innerHTML = '<i class="fas fa-building" style="font-size: 0.8em;"></i> ' + 
-                                                          sucursales.slice(0, 2).join(', ') + 
-                                                          (sucursales.length > 2 ? '...' : '');
-                                sucursalesDiv.title = 'Sucursales: ' + sucursales.join(', ');
+                                sucursalesDiv.className = 'sucursales-lista-dia';
                                 
-                                const dayTop = info.el.querySelector('.fc-daygrid-day-top');
-                                if (dayTop) {
-                                    dayTop.appendChild(sucursalesDiv);
+                                // Crear lista de sucursales (una por línea)
+                                let listaHtml = '<div style="display: flex; flex-direction: column; gap: 2px;">';
+                                sucursales.forEach(suc => {
+                                    listaHtml += '<div style="background: rgba(81, 184, 172, 0.15); padding: 2px 6px; border-radius: 3px; display: flex; align-items: center; gap: 4px;">' +
+                                                '<span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">' + suc + '</span>' +
+                                                '</div>';
+                                });
+                                listaHtml += '</div>';
+                                
+                                sucursalesDiv.innerHTML = listaHtml;
+                                sucursalesDiv.title = 'Sucursales programadas: ' + sucursales.join(', ');
+                                
+                                // Agregar después del número del día
+                                const dayFrame = info.el.querySelector('.fc-daygrid-day-frame');
+                                if (dayFrame) {
+                                    dayFrame.appendChild(sucursalesDiv);
                                 }
                             }
                         }
@@ -780,6 +1189,7 @@ function getColorByUrgency($urgencia) {
                 
                 // Inicializar drag de tickets
                 inicializarDragTickets();
+                inicializarDropZoneSidebar();
                 
             } catch (error) {
                 console.error('❌ Error al crear calendario:', error);
@@ -787,6 +1197,7 @@ function getColorByUrgency($urgencia) {
             }
         });
         
+
         // Inicializar drag & drop de tickets
         function inicializarDragTickets() {
             console.log('Inicializando drag & drop de tickets...');
@@ -803,7 +1214,8 @@ function getColorByUrgency($urgencia) {
                     draggedTicket = {
                         id: this.dataset.ticketId,
                         title: this.dataset.ticketTitle,
-                        codigo: this.dataset.ticketCodigo
+                        codigo: this.dataset.ticketCodigo,
+                        fromSidebar: true
                     };
                     
                     e.dataTransfer.effectAllowed = 'move';
@@ -855,6 +1267,106 @@ function getColorByUrgency($urgencia) {
             });
         }
         
+        // ✅ FUNCIÓN: Refrescar calendario y sidebar sin recargar página
+        function refrescarCalendarioYSidebar() {
+            console.log('Refrescando calendario y sidebar...');
+            
+            if (!calendar) {
+                console.error('Calendar no está inicializado');
+                location.reload();
+                return;
+            }
+            
+            // Guardar estado actual del calendario
+            const vistaActual = calendar.view.type;
+            const fechaActual = calendar.getDate();
+            const filtroSucursal = document.getElementById('filterSucursal') ? document.getElementById('filterSucursal').value : '';
+            
+            // ⭐ AQUÍ SE LLAMA A get_calendar_data.php ⭐
+            $.ajax({
+                url: 'ajax/get_calendar_data.php',  // 👈 AQUÍ
+                method: 'GET',
+                dataType: 'json',
+                success: function(data) {
+                    console.log('Datos actualizados recibidos:', data);
+                    
+                    if (!data.success) {
+                        console.error('Error en respuesta:', data.message);
+                        alert('Error al actualizar: ' + data.message);
+                        return;
+                    }
+                    
+                    // Actualizar eventos del calendario
+                    calendar.removeAllEvents();
+                    calendar.addEventSource(data.eventos);
+                    
+                    // Restaurar vista y fecha
+                    calendar.changeView(vistaActual, fechaActual);
+                    
+                    // Actualizar sidebar
+                    actualizarSidebar(data.tickets_sin_fecha);
+                    
+                    // Restaurar filtro
+                    if (document.getElementById('filterSucursal')) {
+                        document.getElementById('filterSucursal').value = filtroSucursal;
+                        if (filtroSucursal) {
+                            $('#filterSucursal').trigger('change');
+                        }
+                    }
+                    
+                    console.log('✅ Calendario y sidebar actualizados');
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error al obtener datos:', error);
+                    console.error('Respuesta:', xhr.responseText);
+                    alert('Error al actualizar el calendario. Se recargará la página.');
+                    location.reload();
+                }
+            });
+        }
+        
+        function inicializarDropZoneSidebar() {
+            console.log('Inicializando drop zone en sidebar...');
+            
+            const sidebar = document.getElementById('ticketsSidebar');
+            const unscheduledArea = document.getElementById('unscheduledTickets');
+            
+            if (!sidebar || !unscheduledArea) {
+                console.error('No se encontró el sidebar o el área de tickets');
+                return;
+            }
+            
+            sidebar.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                sidebar.classList.add('drag-over');
+            });
+            
+            sidebar.addEventListener('dragleave', function(e) {
+                if (e.target === sidebar) {
+                    sidebar.classList.remove('drag-over');
+                }
+            });
+            
+            sidebar.addEventListener('drop', function(e) {
+                e.preventDefault();
+                sidebar.classList.remove('drag-over');
+                
+                console.log('Drop en sidebar detectado');
+                
+                if (draggedTicket && draggedTicket.fromSidebar) {
+                    console.log('Ticket viene del sidebar, ignorando');
+                    draggedTicket = null;
+                    return;
+                }
+                
+                if (draggedTicket && draggedTicket.fromCalendar) {
+                    desprogramarTicket(draggedTicket);
+                    draggedTicket = null;
+                }
+            });
+        }
+
         // Actualizar fechas de ticket movido
         function actualizarFechasTicket(ticketId, fechaInicio, fechaFinal, eventInfo) {
             console.log('Actualizando fechas del ticket:', ticketId, fechaInicio, fechaFinal);
@@ -890,7 +1402,8 @@ function getColorByUrgency($urgencia) {
                         // ✅ AQUÍ ESTÁ EL CAMBIO: Recargar después de éxito
                         setTimeout(() => {
                             successAlert.remove();
-                            location.reload(); // Recargar la página
+                            
+                            //location.reload(); // Recargar la página
                         }, 1500);
                         
                     } else {
@@ -911,91 +1424,11 @@ function getColorByUrgency($urgencia) {
             });
         }
         
-        // Programar ticket
+        // Programar ticket automáticamente (reutilizando la lógica existente)
         function programarTicket(ticket, fechaInicio, fechaFinal) {
-            console.log('Programando ticket:', ticket, fechaInicio, fechaFinal);
+            console.log('Programando ticket automáticamente:', ticket, fechaInicio, fechaFinal);
             
-            // Crear modal de confirmación
-            const modalHtml = `
-                <div class="modal fade" id="modalProgramar" tabindex="-1">
-                    <div class="modal-dialog">
-                        <div class="modal-content">
-                            <div class="modal-header" style="background: #51B8AC; color: white;">
-                                <h5 class="modal-title">
-                                    <i class="fas fa-calendar-plus me-2"></i>
-                                    Programar Ticket
-                                </h5>
-                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                            </div>
-                            <div class="modal-body">
-                                <div class="alert alert-info">
-                                    <strong>Ticket:</strong> ${ticket.codigo}<br>
-                                    <strong>Título:</strong> ${ticket.title}
-                                </div>
-                                
-                                <div class="mb-3">
-                                    <label for="fecha_inicio_modal" class="form-label">
-                                        <i class="fas fa-calendar-day me-2"></i>Fecha de Inicio:
-                                    </label>
-                                    <input type="date" class="form-control" id="fecha_inicio_modal" value="${fechaInicio}" required>
-                                </div>
-                                
-                                <div class="mb-3">
-                                    <label for="fecha_final_modal" class="form-label">
-                                        <i class="fas fa-calendar-check me-2"></i>Fecha Final:
-                                    </label>
-                                    <input type="date" class="form-control" id="fecha_final_modal" value="${fechaFinal}" required>
-                                </div>
-                                
-                                <div class="form-text">
-                                    <i class="fas fa-info-circle me-1"></i>
-                                    El ticket se programará para estas fechas y cambiará a estado "Agendado"
-                                </div>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                                    <i class="fas fa-times me-2"></i>Cancelar
-                                </button>
-                                <button type="button" class="btn btn-primary" onclick="confirmarProgramacion()">
-                                    <i class="fas fa-check me-2"></i>Programar
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            const existingModal = document.getElementById('modalProgramar');
-            if (existingModal) {
-                existingModal.remove();
-            }
-            
-            document.body.insertAdjacentHTML('beforeend', modalHtml);
-            
-            const modal = new bootstrap.Modal(document.getElementById('modalProgramar'));
-            modal.show();
-            
-            window.currentTicketToProgramar = ticket;
-        }
-        
-        // Confirmar programación
-        function confirmarProgramacion() {
-            const ticket = window.currentTicketToProgramar;
-            const fechaInicio = document.getElementById('fecha_inicio_modal').value;
-            const fechaFinal = document.getElementById('fecha_final_modal').value;
-            
-            if (!fechaInicio || !fechaFinal) {
-                alert('❌ Debes seleccionar ambas fechas');
-                return;
-            }
-            
-            if (fechaInicio > fechaFinal) {
-                alert('❌ La fecha de inicio no puede ser mayor a la fecha final');
-                return;
-            }
-            
-            bootstrap.Modal.getInstance(document.getElementById('modalProgramar')).hide();
-            
+            // Mostrar loading (igual que en confirmarProgramacion)
             const loading = document.createElement('div');
             loading.id = 'loadingOverlay';
             loading.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 9999;';
@@ -1004,6 +1437,7 @@ function getColorByUrgency($urgencia) {
             
             console.log('Enviando petición AJAX:', ticket.id, fechaInicio, fechaFinal);
             
+            // Llamada AJAX (igual que en confirmarProgramacion)
             $.ajax({
                 url: 'ajax/schedule_ticket.php',
                 method: 'POST',
@@ -1027,11 +1461,13 @@ function getColorByUrgency($urgencia) {
                             Ticket ${ticket.codigo} programado
                         `;
                         document.body.appendChild(successAlert);
-                        
-                        // ✅ AQUÍ TAMBIÉN: Recargar después de éxito
+                
+                        // ✅ Recargar después de éxito (igual que en confirmarProgramacion)
                         setTimeout(() => {
-                            location.reload(); // Recargar la página
-                        }, 1500);
+                            successAlert.remove();
+                            refrescarCalendarioYSidebar()
+                            //location.reload(); // Recargar la página
+                        }, 500);
                     } else {
                         alert('❌ Error: ' + response.message);
                     }
@@ -1052,7 +1488,7 @@ function getColorByUrgency($urgencia) {
                 method: 'GET',
                 data: { id: ticketId },
                 success: function(response) {
-                    const modal = $('<div class="modal fade"><div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header"><h5>Detalles</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body">' + response + '</div></div></div></div>');
+                    const modal = $('<div class="modal fade"><div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header"><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body">' + response + '</div></div></div></div>');
                     $('body').append(modal);
                     modal.modal('show');
                     modal.on('hidden.bs.modal', function() { modal.remove(); });
@@ -1066,7 +1502,7 @@ function getColorByUrgency($urgencia) {
             
             if (ticketsDelDia.length === 0) return;
             
-            let html = '<h5>Tickets del ' + fecha + '</h5>';
+            let html = '';
             
             const porSucursal = {};
             ticketsDelDia.forEach(t => {
@@ -1076,14 +1512,14 @@ function getColorByUrgency($urgencia) {
             });
             
             for (const suc in porSucursal) {
-                html += '<div class="card mb-3"><div class="card-header" style="background: #51B8AC; color: white;"><i class="fas fa-building me-2"></i>' + suc + '</div><div class="card-body"><ul class="list-unstyled">';
+                html += '<div class="card mb-3"><div class="card-header" style="background: #51B8AC; color: white;">' + suc + '</div><div class="card-body"><ul class="list-unstyled">';
                 porSucursal[suc].forEach(t => {
-                    html += '<li class="mb-2"><strong>' + t.extendedProps.codigo + '</strong>: ' + t.title + '</li>';
+                    html += '<li class="mb-2">- ' + t.title + '</li>';
                 });
                 html += '</ul></div></div>';
             }
             
-            const modal = $('<div class="modal fade"><div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header"><h5>Tickets del Día</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body">' + html + '</div></div></div></div>');
+            const modal = $('<div class="modal fade"><div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header"><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body">' + html + '</div></div></div></div>');
             $('body').append(modal);
             modal.modal('show');
             modal.on('hidden.bs.modal', function() { modal.remove(); });
@@ -1091,6 +1527,91 @@ function getColorByUrgency($urgencia) {
         
         function refreshData() {
             location.reload();
+        }
+        
+        function desprogramarTicket(ticket) {
+            console.log('Desprogramando ticket:', ticket);
+            
+            const loading = document.createElement('div');
+            loading.id = 'loadingOverlay';
+            loading.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 9999; background: white; padding: 15px 25px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);';
+            loading.innerHTML = '<div class="spinner-border spinner-border-sm me-2" role="status"></div>Desprogramando...';
+            document.body.appendChild(loading);
+            
+            $.ajax({
+                url: 'ajax/unschedule_ticket.php',
+                method: 'POST',
+                data: {
+                    ticket_id: ticket.id
+                },
+                dataType: 'json',
+                success: function(response) {
+                    loading.remove();
+                    
+                    if (response.success) {
+                        const successAlert = document.createElement('div');
+                        successAlert.className = 'alert alert-success position-fixed';
+                        successAlert.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+                        successAlert.innerHTML = `
+                            <i class="fas fa-undo me-2"></i>
+                            <strong>¡Ticket desprogramado!</strong><br>
+                            Regresó a la lista de pendientes
+                        `;
+                        document.body.appendChild(successAlert);
+                        
+                        setTimeout(() => {
+                            refrescarCalendarioYSidebar()
+                            //location.reload();
+                        }, 500);
+                    } else {
+                        alert('❌ Error: ' + response.message);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    loading.remove();
+                    console.error('Error AJAX:', xhr.responseText);
+                    alert('❌ Error: ' + error);
+                }
+            });
+        }
+
+        function finalizarTicketRapido(ticketId, buttonElement) {
+            // Detener la propagación del evento inmediatamente
+            event.stopPropagation();
+            event.preventDefault();
+            
+            if (!confirm('¿Estás seguro de que deseas finalizar este ticket?\n\nSe establecerá:\n• Estado: Finalizado')) {
+                return;
+            }
+            
+            $.ajax({
+                url: 'ajax/finalizar_ticket.php',
+                method: 'POST',
+                data: {
+                    id: ticketId,
+                    status: 'finalizado',
+                },
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        // Ocultar solo el botón que se clickeó
+                        if (buttonElement) {
+                            buttonElement.style.display = 'none';
+                        } else {
+                            // Fallback: buscar el botón por el ticketId
+                            const buttons = document.querySelectorAll(`button[onclick*="${ticketId}"]`);
+                            buttons.forEach(btn => btn.style.display = 'none');
+                        }
+                        
+                    } else {
+                        alert('❌ Error: ' + response.message);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error AJAX:', xhr.responseText);
+                    alert('❌ Error en la comunicación con el servidor');
+                }
+            });
         }
     </script>
 </body>

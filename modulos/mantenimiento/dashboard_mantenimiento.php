@@ -19,7 +19,7 @@ $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admi
 
 // Verificar acceso al módulo
 // FORMA CORRECTA - pasar como array
-if (!verificarAccesoCargo([14, 16, 35]) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
+if (!verificarAccesoCargo([11, 14, 16, 35]) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
     header('Location: ../index.php');
     exit();
 }
@@ -386,21 +386,25 @@ $stats = [
                 </div>
                 
                 <div class="buttons-container">
-                    <?php if ($esAdmin || verificarAccesoCargo([14, 16, 35])): ?>
+                    <?php if ($esAdmin || verificarAccesoCargo([5, 11, 14, 16, 35])): ?>
                         <a href="calendario.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'calendario.php' ? 'activo' : '' ?>">
                             <i class="fas fa-calendar-alt"></i> <span class="btn-text">Calendario</span>
                         </a>
                     <?php endif; ?>
                     
-                    <a href="formulario_equipos.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'formulario_equipos.php' ? 'activo' : '' ?>">
-                        <i class="fas fa-tools"></i> <span class="btn-text">Mantenimiento General</span>
-                    </a>
+                    <?php if ($esAdmin || verificarAccesoCargo([5, 14, 16, 35])): ?>
+                        <a href="formulario_mantenimiento.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'formulario_mantenimiento.php' ? 'activo' : '' ?>">
+                            <i class="fas fa-tools"></i> <span class="btn-text">Mantenimiento General</span>
+                        </a>
+                    <?php endif; ?>
                     
-                    <a href="formulario_mantenimiento.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'formulario_mantenimiento.php' ? 'activo' : '' ?>">
-                        <i class="fas fa-laptop"></i> <span class="btn-text">Cambio de Equipos</span>
-                    </a>
+                    <?php if ($esAdmin || verificarAccesoCargo([5, 14, 16, 35])): ?>
+                        <a href="formulario_equipos.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'formulario_equipos.php' ? 'activo' : '' ?>">
+                            <i class="fas fa-laptop"></i> <span class="btn-text">Cambio de Equipos</span>
+                        </a>
+                    <?php endif; ?>
                     
-                    <?php if ($esAdmin || verificarAccesoCargo([14, 16, 35])): ?>
+                    <?php if ($esAdmin || verificarAccesoCargo([11, 14, 16, 35])): ?>
                         <a href="dashboard_mantenimiento.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'dashboard_mantenimiento.php' ? 'activo' : '' ?>">
                             <i class="fas fa-sync-alt"></i> <span class="btn-text">Solicitudes</span>
                         </a>
@@ -494,7 +498,7 @@ $stats = [
                                     <th>
                                         <input type="checkbox" id="selectAll" class="form-check-input">
                                     </th>
-                                    <th>Código</th>
+                                    <th>Solicitado</th>
                                     <th>Título</th>
                                     <th>Sucursal</th>
                                     <th>Solicitante</th>
@@ -515,8 +519,8 @@ $stats = [
                                         <input type="checkbox" class="form-check-input ticket-checkbox" value="<?= $t['id'] ?>">
                                     </td>
                                     <td>
-                                        <strong><?= htmlspecialchars($t['codigo']) ?></strong>
-                                        <br><small class="text-muted"><?= date('d/m/Y', strtotime($t['created_at'])) ?></small>
+                                        <strong><?= date('d/m/Y', strtotime($t['created_at'])) ?></strong>
+
                                     </td>
                                     <td>
                                         <div style="max-width: 200px;">

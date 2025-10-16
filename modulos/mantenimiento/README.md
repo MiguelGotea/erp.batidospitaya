@@ -7,7 +7,9 @@
 - /bin/bash /home/u839374897/sync-mantenimiento-only.sh\
 
 # Manualmente desde hostinger terminal  ejecutar: /bin/bash ~/ , revisar: nano ~/
+#Hostinger -> Github
 - sync-mantenimiento-only.sh
+#Github -> Hostinger
 - deploy-erp.sh
 
 # github action

@@ -20,6 +20,14 @@ try {
         $data['titulo'] = trim($_POST['titulo']);
     }
     
+    if (isset($_POST['descripcion']) && !empty(trim($_POST['descripcion']))) {
+        $data['descripcion'] = trim($_POST['descripcion']);
+    }
+
+    if (isset($_POST['area_equipo']) && !empty(trim($_POST['area_equipo']))) {
+        $data['area_equipo'] = trim($_POST['area_equipo']);
+    }
+
     if (isset($_POST['nivel_urgencia']) && is_numeric($_POST['nivel_urgencia'])) {
         $urgencia = intval($_POST['nivel_urgencia']);
         if ($urgencia >= 1 && $urgencia <= 4) {

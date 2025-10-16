@@ -1,5 +1,7 @@
 <?php
 require_once '../models/Ticket.php';
+require_once '../../../includes/auth.php';
+require_once '../../../includes/funciones.php';
 
 if (!isset($_GET['id'])) {
     die('ID de ticket requerido');
@@ -9,196 +11,261 @@ $ticket_model = new Ticket();
 $ticket = $ticket_model->getById($_GET['id']);
 $tipos_casos = $ticket_model->getTiposCasos();
 
+// Verificar permisos del usuario
+session_start();
+$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
+$puedeEditar = $esAdmin || verificarAccesoCargo([14, 16, 35]);
+$esLider = verificarAccesoCargo([5]);
+
+// Si es líder, verificar que el ticket sea de su sucursal
+if ($esLider && !$esAdmin && !verificarAccesoCargo([14, 16, 35])) {
+    require_once '../../../includes/funciones.php';
+    $sucursalesLider = obtenerSucursalesLider($_SESSION['usuario_id']);
+    $codigosSucursales = array_column($sucursalesLider, 'codigo');
+    
+    if (!in_array($ticket['cod_sucursal'], $codigosSucursales)) {
+        die('No tienes permiso para ver este ticket');
+    }
+}
+
 if (!$ticket) {
     die('Ticket no encontrado');
 }
+
+// Determinar el encabezado según el tipo de formulario
+$encabezado = '';
+if ($ticket['tipo_formulario'] === 'mantenimiento_general') {
+    $encabezado = 'Mantenimiento General';
+} elseif ($ticket['tipo_formulario'] === 'cambio_equipos') {
+    $encabezado = 'Solicitud de Equipos';
+} else {
+    $encabezado = 'Otras Solicitudes';
+}
+
 ?>
 
 <form id="editTicketForm" onsubmit="updateTicket(event)">
     <input type="hidden" id="ticket_id" value="<?= $ticket['id'] ?>">
     
+    <!-- Encabezado del formulario -->
+    <div class="form-header bg-primary text-white p-3 rounded mb-4" style="background-color: #0E544C !important;">
+        <h4 class="text-center fw-bold mb-0">
+            <?= $encabezado ?>
+        </h4>
+    </div>
+
     <div class="row">
         <div class="col-md-6">
+                    
             <div class="mb-3">
-                <label class="form-label"><strong>Código:</strong></label>
-                <p class="form-control-plaintext"><?= htmlspecialchars($ticket['codigo']) ?></p>
+                <label class="form-label"><strong>Sucursal:</strong></label>
+                <p class="form-control-plaintext"><?= htmlspecialchars($ticket['nombre_sucursal'] ?? 'N/A') ?></p>
             </div>
-            
+
             <div class="mb-3">
                 <label for="edit_titulo" class="form-label"><strong>Título:</strong></label>
                 <input type="text" class="form-control" id="edit_titulo" name="titulo" 
-                       value="<?= htmlspecialchars($ticket['titulo']) ?>" required>
+                        value="<?= htmlspecialchars($ticket['titulo']) ?>" 
+                   <?= !$puedeEditar ? 'readonly' : '' ?> required>
             </div>
-            
+
             <div class="mb-3">
-                <label class="form-label"><strong>Tipo:</strong></label>
-                <p class="form-control-plaintext">
-                    <span class="badge bg-info">
-                        <?= $ticket['tipo_formulario'] === 'mantenimiento_general' ? 'Mantenimiento General' : 'Cambio de Equipos' ?>
-                    </span>
-                </p>
+                <label class="form-label"><strong>Creado:</strong></label>
+                <p class="form-control-plaintext"><?= date('d/m/Y H:i', strtotime($ticket['created_at'])) ?></p>
             </div>
+
+        </div>
+        
+        <div class="col-md-6">
             
             <div class="mb-3">
                 <label class="form-label"><strong>Solicitante:</strong></label>
                 <p class="form-control-plaintext"><?= htmlspecialchars($ticket['nombre_operario'] ?? 'N/A') ?></p>
             </div>
-            
+
             <div class="mb-3">
-                <label class="form-label"><strong>Sucursal:</strong></label>
-                <p class="form-control-plaintext"><?= htmlspecialchars($ticket['nombre_sucursal'] ?? 'N/A') ?></p>
+                <label for="edit_areaequipo" class="form-label"><strong>Área/Equipo:</strong></label>
+                <input type="text" class="form-control" id="edit_areaequipo" name="area_equipo" 
+                       value="<?= htmlspecialchars($ticket['area_equipo']) ?>" 
+                       <?= !$puedeEditar ? 'readonly' : '' ?> required>
             </div>
-            
+
+            <!-- SELECTOR COMPACTO DE URGENCIA EN UNA LÍNEA -->
             <div class="mb-3">
-                <label class="form-label"><strong>Área/Equipo:</strong></label>
-                <p class="form-control-plaintext"><?= htmlspecialchars($ticket['area_equipo']) ?></p>
-            </div>
-        </div>
-        
-        <div class="col-md-6">
-            <div class="mb-3">
-                <label for="edit_nivel_urgencia" class="form-label"><strong>Nivel de Urgencia:</strong></label>
-                <div class="row align-items-center">
-                    <div class="col-8">
-                        <input type="range" class="form-range" id="edit_nivel_urgencia" name="nivel_urgencia" 
-                               min="1" max="4" value="<?= $ticket['nivel_urgencia'] ?? 1 ?>" 
-                               oninput="updateUrgencyDisplay(this.value)">
+                <label class="form-label"><strong>Nivel de Urgencia:</strong></label>
+                <div class="d-flex align-items-center gap-2">
+                    <!-- Botones compactos de urgencia -->
+                    <div class="d-flex flex-grow-1 urgency-compact-buttons">
+                        <button type="button" class="btn btn-sm urgency-compact urgency-level-1 <?= ($ticket['nivel_urgencia'] == 1) ? 'selected' : '' ?>" 
+                                data-level="1" onclick="selectUrgency(1)" title="Baja">
+                            <small>1</small>
+                        </button>
+                        <button type="button" class="btn btn-sm urgency-compact urgency-level-2 <?= ($ticket['nivel_urgencia'] == 2) ? 'selected' : '' ?>" 
+                                data-level="2" onclick="selectUrgency(2)" title="Media">
+                            <small>2</small>
+                        </button>
+                        <button type="button" class="btn btn-sm urgency-compact urgency-level-3 <?= ($ticket['nivel_urgencia'] == 3) ? 'selected' : '' ?>" 
+                                data-level="3" onclick="selectUrgency(3)" title="Alta">
+                            <small>3</small>
+                        </button>
+                        <button type="button" class="btn btn-sm urgency-compact urgency-level-4 <?= ($ticket['nivel_urgencia'] == 4) ? 'selected' : '' ?>" 
+                                data-level="4" onclick="selectUrgency(4)" title="Crítica">
+                            <small>4</small>
+                        </button>
                     </div>
-                    <div class="col-4">
-                        <span id="urgency_display" class="badge fs-6">Nivel <?= $ticket['nivel_urgencia'] ?? 1 ?></span>
-                    </div>
+                    
+                    <!-- Display y botón clear -->
+                    <span id="urgency_display" class="badge fs-6 ms-2 flex-shrink-0">
+                        <?= $ticket['nivel_urgencia'] ? 'Nivel ' . $ticket['nivel_urgencia'] : 'No seleccionado' ?>
+                    </span>
+                    <button type="button" class="btn btn-outline-secondary btn-sm flex-shrink-0" onclick="clearUrgency()" title="Limpiar">
+                        <i class="fas fa-times"></i>
+                    </button>
                 </div>
-                <div class="mt-2">
-                    <div class="urgency-bar">
-                        <div class="urgency-fill urgency-<?= $ticket['nivel_urgencia'] ?? 1 ?>" id="urgency_bar_fill"
-                             style="width: <?= ($ticket['nivel_urgencia'] ?? 1) * 25 ?>%"></div>
-                    </div>
-                </div>
+                
+                <!-- Slider oculto para el formulario -->
+                <input type="hidden" id="edit_nivel_urgencia" name="nivel_urgencia" value="<?= $ticket['nivel_urgencia'] ?? '' ?>">
             </div>
             
-            <div class="mb-3">
-                <label for="edit_status" class="form-label"><strong>Estado:</strong></label>
-                <select class="form-select" id="edit_status" name="status" disabled>
-                    <option value="solicitado" <?= $ticket['status'] === 'solicitado' ? 'selected' : '' ?>>Solicitado</option>
-                    <!-- <option value="clasificado" <?= $ticket['status'] === 'clasificado' ? 'selected' : '' ?>>Clasificado</option> -->
-                    <option value="agendado" <?= $ticket['status'] === 'agendado' ? 'selected' : '' ?>>Agendado</option>
-                    <option value="finalizado" <?= $ticket['status'] === 'finalizado' ? 'selected' : '' ?>>Finalizado</option>
-                </select>
-            </div>
-            
-            <div class="mb-3">
-                <label for="edit_tipo_caso" class="form-label"><strong>Tipo de Caso:</strong></label>
-                <select class="form-select" id="edit_tipo_caso" name="tipo_caso_id">
-                    <option value="">Sin asignar</option>
-                    <?php foreach ($tipos_casos as $tipo): ?>
-                        <option value="<?= $tipo['id'] ?>" 
-                                <?= $ticket['tipo_caso_id'] == $tipo['id'] ? 'selected' : '' ?>>
-                            <?= htmlspecialchars($tipo['nombre']) ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-            
-            <div class="row">
-                <div class="col-6">
-                    <div class="mb-3">
-                        <label for="edit_fecha_inicio" class="form-label"><strong>Fecha Inicio:</strong></label>
-                        <input type="date" class="form-control" id="edit_fecha_inicio" name="fecha_inicio" 
-                               value="<?= $ticket['fecha_inicio'] ?>">
-                    </div>
-                </div>
-                <div class="col-6">
-                    <div class="mb-3">
-                        <label for="edit_fecha_final" class="form-label"><strong>Fecha Final:</strong></label>
-                        <input type="date" class="form-control" id="edit_fecha_final" name="fecha_final" 
-                               value="<?= $ticket['fecha_final'] ?>">
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
-    
+ 
     <div class="mb-3">
-        <label class="form-label"><strong>Descripción:</strong></label>
-        <div class="form-control" style="min-height: 100px; max-height: 150px; overflow-y: auto;">
-            <?= nl2br(htmlspecialchars($ticket['descripcion'])) ?>
-        </div>
+        <label for="edit_descripcion" class="form-label"><strong>Descripción:</strong></label>
+        <textarea class="form-control" style="min-height: 100px; max-height: 150px; overflow-y: auto;" 
+                id="edit_descripcion" name="descripcion" required><?= htmlspecialchars($ticket['descripcion']) ?> <?= !$puedeEditar ? 'readonly' : '' ?> </textarea>
     </div>
     
     <?php if ($ticket['foto']): ?>
         <div class="mb-3">
-            <label class="form-label"><strong>Fotografía:</strong></label>
+            <label class="form-label"><strong>Evidencias:</strong></label>
             <div>
                 <img src="uploads/tickets/<?= $ticket['foto'] ?>" alt="Foto del ticket" 
                      class="img-thumbnail" style="max-width: 300px; max-height: 200px;">
             </div>
         </div>
     <?php endif; ?>
-    
-    <div class="mb-3">
-        <label class="form-label"><strong>Creado:</strong></label>
-        <p class="form-control-plaintext"><?= date('d/m/Y H:i', strtotime($ticket['created_at'])) ?></p>
-    </div>
+
     
     <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-        
-        <!-- ✅ NUEVO BOTÓN: Finalizar Rápido -->
-        <?php if ($ticket['status'] !== 'finalizado'): ?>
-        <button type="button" class="btn btn-success" onclick="finalizarTicketRapido(<?= $ticket['id'] ?>)">
-            <i class="fas fa-check-circle me-2"></i>Finalizar Ticket
-        </button>
-        <?php endif; ?>
-        
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>        
         <button type="button" class="btn btn-info" onclick="openChatFromModal(<?= $ticket['id'] ?>)">
             <i class="fas fa-comments me-2"></i>Abrir Chat
         </button>
+        <?php if ($puedeEditar): ?>
         <button type="submit" class="btn btn-primary">
             <i class="fas fa-save me-2"></i>Guardar Cambios
         </button>
+        <?php endif; ?>
     </div>
 </form>
 
 <style>
-.urgency-bar {
-    width: 100%;
-    height: 20px;
-    background: #e9ecef;
-    border-radius: 10px;
-    position: relative;
-    overflow: hidden;
+.urgency-compact {
+    flex: 1;
+    padding: 4px 8px;
+    border: 2px solid transparent;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    min-width: 35px;
+    color: white;
+    font-weight: 500;
 }
-.urgency-fill {
-    height: 100%;
-    border-radius: 10px;
-    transition: width 0.3s ease;
+.urgency-compact:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    filter: brightness(1.1);
 }
-.urgency-1 { background: #28a745; }
-.urgency-2 { background: #ffc107; }
-.urgency-3 { background: #fd7e14; }
-.urgency-4 { background: #dc3545; }
+.urgency-compact.selected {
+    border-color: #ffffff;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.8);
+}
+.urgency-compact-buttons {
+    gap: 2px;
+}
+.urgency-level-1 {
+    background-color: #28a745;
+    border: 1px solid #218838;
+}
+.urgency-level-2 {
+    background-color: #ffc107;
+    border: 1px solid #e0a800;
+    color: #000;
+}
+.urgency-level-3 {
+    background-color: #fd7e14;
+    border: 1px solid #e56a00;
+}
+.urgency-level-4 {
+    background-color: #dc3545;
+    border: 1px solid #c82333;
+    font-weight: bold;
+}
+
+/* Estilos para el badge de display */
+.badge.bg-success { background-color: #28a745 !important; }
+.badge.bg-warning { background-color: #ffc107 !important; color: #000 !important; }
+.badge.bg-orange { background-color: #fd7e14 !important; }
+.badge.bg-danger { background-color: #dc3545 !important; }
 </style>
 
 <script>
-function updateUrgencyDisplay(value) {
-    const display = document.getElementById('urgency_display');
-    const fill = document.getElementById('urgency_bar_fill');
-    
-    display.textContent = 'Nivel ' + value;
-    display.className = 'badge fs-6 bg-' + getUrgencyColor(value);
-    
-    fill.style.width = (value * 25) + '%';
-    fill.className = 'urgency-fill urgency-' + value;
+// Variables globales para el control de urgencia
+let currentUrgency = <?= $ticket['nivel_urgencia'] ? $ticket['nivel_urgencia'] : 'null' ?>;
+
+// Inicializar al cargar la página
+document.addEventListener('DOMContentLoaded', function() {
+    updateUrgencyDisplay();
+});
+
+function selectUrgency(level) {
+    currentUrgency = level;
+    updateUrgencyDisplay();
+    updateOptions(level);
 }
 
-function getUrgencyColor(level) {
-    switch(parseInt(level)) {
-        case 1: return 'success';
-        case 2: return 'warning';
-        case 3: return 'warning';
-        case 4: return 'danger';
-        default: return 'secondary';
+function updateUrgencyDisplay() {
+    const display = document.getElementById('urgency_display');
+    const hiddenInput = document.getElementById('edit_nivel_urgencia');
+    
+    if (currentUrgency) {
+        const levels = {
+            1: { text: 'Baja', badgeClass: 'bg-success' },
+            2: { text: 'Media', badgeClass: 'bg-warning' },
+            3: { text: 'Alta', badgeClass: 'bg-orange' },
+            4: { text: 'Crítica', badgeClass: 'bg-danger' }
+        };
+        
+        display.textContent = `Nivel ${currentUrgency}`;
+        display.className = `badge fs-6 ms-2 flex-shrink-0 ${levels[currentUrgency].badgeClass}`;
+        
+        hiddenInput.value = currentUrgency;
+    } else {
+        display.textContent = 'No seleccionado';
+        display.className = 'badge fs-6 ms-2 flex-shrink-0 bg-secondary';
+        hiddenInput.value = '';
     }
+}
+
+function updateOptions(level) {
+    // Remover selección de todas las opciones
+    document.querySelectorAll('.urgency-compact').forEach(option => {
+        option.classList.remove('selected');
+    });
+    
+    // Agregar selección a la opción actual
+    if (level) {
+        const selectedOption = document.querySelector(`.urgency-compact[data-level="${level}"]`);
+        if (selectedOption) {
+            selectedOption.classList.add('selected');
+        }
+    }
+}
+
+function clearUrgency() {
+    currentUrgency = null;
+    updateUrgencyDisplay();
+    updateOptions(null);
 }
 
 function updateTicket(event) {
@@ -207,21 +274,21 @@ function updateTicket(event) {
     const formData = new FormData(event.target);
     const ticketId = formData.get('ticket_id') || document.getElementById('ticket_id').value;
     
+    // Asegurarnos de incluir el nivel de urgencia actual
+    const data = {
+        id: ticketId,
+        titulo: formData.get('titulo'),
+        descripcion: formData.get('descripcion'),
+        area_equipo: formData.get('area_equipo'),
+        nivel_urgencia: currentUrgency, // Usamos la variable global actualizada
+    };
+    
     $.ajax({
         url: 'ajax/update_ticket.php',
         method: 'POST',
-        data: {
-            id: ticketId,
-            titulo: formData.get('titulo'),
-            nivel_urgencia: formData.get('nivel_urgencia'),
-            status: formData.get('status'),
-            tipo_caso_id: formData.get('tipo_caso_id'),
-            fecha_inicio: formData.get('fecha_inicio'),
-            fecha_final: formData.get('fecha_final')
-        },
+        data: data,
         success: function(response) {
             if (response.success) {
-                alert('Ticket actualizado exitosamente');
                 $('#ticketModal').modal('hide');
                 location.reload();
             } else {
@@ -237,45 +304,5 @@ function updateTicket(event) {
 function openChatFromModal(ticketId) {
     $('#ticketModal').modal('hide');
     window.open('chat.php?ticket_id=' + ticketId + '&emisor=mantenimiento', '_blank');
-}
-
-function finalizarTicketRapido(ticketId) {
-    if (!confirm('¿Estás seguro de que deseas finalizar este ticket?\n\nSe establecerá:\n• Estado: Finalizado\n• Fecha final: Hoy\n• Se recargará la página')) {
-        return;
-    }
-    
-    // Obtener fecha actual en formato YYYY-MM-DD
-    const hoy = new Date().toISOString().split('T')[0];
-    
-    // Obtener fecha de inicio actual (si existe)
-    const fechaInicio = document.getElementById('edit_fecha_inicio').value || hoy;
-    
-    $.ajax({
-        url: 'ajax/finalizar_ticket.php', // Crearemos este archivo
-        method: 'POST',
-        data: {
-            id: ticketId,
-            status: 'finalizado',
-            fecha_inicio: fechaInicio,
-            fecha_final: hoy
-        },
-        dataType: 'json',
-        success: function(response) {
-            if (response.success) {
-                alert('✅ Ticket finalizado exitosamente');
-                // Cerrar modal y recargar página
-                $('.modal').modal('hide');
-                setTimeout(() => {
-                    location.reload();
-                }, 500);
-            } else {
-                alert('❌ Error: ' + response.message);
-            }
-        },
-        error: function(xhr, status, error) {
-            console.error('Error AJAX:', xhr.responseText);
-            alert('❌ Error en la comunicación con el servidor');
-        }
-    });
 }
 </script>

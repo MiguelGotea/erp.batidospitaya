@@ -482,6 +482,12 @@ if ($accesoCompleto) {
                     </div>
                     <?php endif; ?>
                     
+                    <?php if ($esAdmin || verificarAccesoCargo([5, 14, 16, 35])): ?>
+                        <a href="calendario.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'calendario.php' ? 'activo' : '' ?>">
+                            <i class="fas fa-calendar-alt"></i> <span class="btn-text">Calendario</span>
+                        </a>
+                    <?php endif; ?>
+                    
                     <a href="#" onclick="openMaintenanceForm()" class="btn-agregar">
                         <i class="fas fa-tools"></i> <span class="btn-text">Mantenimiento General</span>
                     </a>
