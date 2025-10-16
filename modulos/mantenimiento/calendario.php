@@ -917,6 +917,7 @@ function getColorByUrgency($urgencia, $tipo_formulario) {
                         center: 'title',
                         right: 'dayGridMonth,timeGridWeek,listWeek'
                     },
+                    
                     height: 'auto',
                     editable: <?= verificarAccesoCargo([14, 16, 35]) || $esAdmin ? 'true' : 'false' ?>, // Solo editables para mantenimiento
                     droppable: <?= verificarAccesoCargo([14, 16, 35]) || $esAdmin ? 'true' : 'false' ?>, // Solo arrastrables para mantenimiento
@@ -1197,6 +1198,98 @@ function getColorByUrgency($urgencia, $tipo_formulario) {
             }
         });
         
+
+        // ✅ FUNCIÓN: Escapar HTML
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return String(text).replace(/[&<>"']/g, m => map[m]);
+        }
+
+        // ✅ FUNCIÓN: Obtener color por urgencia (versión JS)
+        function getColorByJS(urgencia) {
+            switch (parseInt(urgencia)) {
+                case 1: return '#28a745';
+                case 2: return '#ffc107';
+                case 3: return '#fd7e14';
+                case 4: return '#dc3545';
+                default: return '#8b8b8bff';
+            }
+        }
+        
+
+        // ✅ FUNCIÓN: Actualizar filtro de sucursales
+        function actualizarFiltroSucursales(ticketsSinFecha) {
+            const filterSelect = document.getElementById('filterSucursal');
+            const valorActual = filterSelect.value;
+            
+            // Obtener sucursales únicas
+            const sucursales = [...new Set(ticketsSinFecha.map(t => t.nombre_sucursal).filter(Boolean))].sort();
+            
+            let options = '<option value="">Todas las sucursales</option>';
+            sucursales.forEach(suc => {
+                options += `<option value="${escapeHtml(suc)}">${escapeHtml(suc)}</option>`;
+            });
+            
+            filterSelect.innerHTML = options;
+            filterSelect.value = valorActual;
+        }
+
+        // ✅ FUNCIÓN: Actualizar sidebar con nuevos tickets
+        function actualizarSidebar(ticketsSinFecha) {
+            const unscheduledContainer = document.getElementById('unscheduledTickets');
+            
+            if (ticketsSinFecha.length === 0) {
+                unscheduledContainer.innerHTML = `
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-check-circle fa-3x mb-3"></i>
+                        <p>¡Todos los tickets están programados!</p>
+                    </div>
+                `;
+            } else {
+                let html = '';
+                ticketsSinFecha.forEach(ticket => {
+                    const color = ticket.tipo_formulario === 'cambio_equipos' ? '#dc3545' : getColorByJS(ticket.nivel_urgencia);
+                    const icono = ticket.tipo_formulario === 'cambio_equipos' ? '<i class="fas fa-exclamation-triangle me-1"></i>' : '';
+                    
+                    html += `
+                        <div class="ticket-item" 
+                            draggable="true" 
+                            data-ticket-id="${ticket.id}"
+                            data-ticket-title="${escapeHtml(ticket.titulo)}"
+                            data-ticket-codigo="${escapeHtml(ticket.codigo)}"
+                            data-sucursal="${escapeHtml(ticket.nombre_sucursal)}"
+                            style="background: ${color}; color: white;">
+                            
+                            <div class="small" style="opacity: 0.9;">
+                                <span style="background: #51B8AC; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.8em;">
+                                    ${icono}
+                                    ${escapeHtml(ticket.nombre_sucursal)}
+                                </span>
+                            </div>
+
+                            <div class="mb-2">
+                                ${escapeHtml(ticket.titulo)}
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                unscheduledContainer.innerHTML = html;
+                
+                // Reinicializar eventos de drag
+                inicializarDragTickets();
+            }
+            
+            // Actualizar opciones del filtro
+            actualizarFiltroSucursales(ticketsSinFecha);
+        }
+
 
         // Inicializar drag & drop de tickets
         function inicializarDragTickets() {
@@ -1560,6 +1653,7 @@ function getColorByUrgency($urgencia, $tipo_formulario) {
                         document.body.appendChild(successAlert);
                         
                         setTimeout(() => {
+                            successAlert.remove();
                             refrescarCalendarioYSidebar()
                             //location.reload();
                         }, 500);
