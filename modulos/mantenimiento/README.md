@@ -1,5 +1,14 @@
 # 📋 **DOCUMENTACIÓN COMPLETA - Sistema de Sincronización Automática**
 
+
+**PROCEDIMIENTO MOVER DE HOST A GITHUB A FUERZA**
+ssh -p 65002 u839374897@145.223.105.42
+ERpPitHay2025$
+
+cd ~/domains/erp.batidospitaya.com/public_html/
+
+/bin/bash ~/sync-mantenimiento-only.sh
+
 ## **🔧Caso Mantenimiento:**
 ### **🔍 0. Herramientas**
 ```bash
