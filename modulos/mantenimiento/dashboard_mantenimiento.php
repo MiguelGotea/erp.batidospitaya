@@ -852,9 +852,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticket_id_chat'])) {
                                                 </td>
                                                 <td>
                                                     <div class="btn-group-vertical" role="group">
-                                                        <button class="btn btn-sm btn-primary" onclick="viewTicket(<?= $t['id'] ?>)">
-                                                            <i class="fas fa-eye"></i>
-                                                        </button>
                                                         <button class="btn btn-sm btn-success" onclick="openChatSidebar(<?= $t['id'] ?>)">
                                                             <i class="fas fa-comments"></i>
                                                         </button>
@@ -1334,21 +1331,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticket_id_chat'])) {
                 },
                 error: function() {
                     alert('Error en la comunicación con el servidor');
-                }
-            });
-        }
-        
-        function viewTicket(id) {
-            $.ajax({
-                url: 'ajax/get_ticket_details.php',
-                method: 'GET',
-                data: { id: id },
-                success: function(response) {
-                    $('#ticketModalBody').html(response);
-                    new bootstrap.Modal(document.getElementById('ticketModal')).show();
-                },
-                error: function() {
-                    alert('Error al cargar los detalles del ticket');
                 }
             });
         }
