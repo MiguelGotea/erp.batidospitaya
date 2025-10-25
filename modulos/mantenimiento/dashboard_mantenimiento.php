@@ -1502,7 +1502,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticket_id_chat'])) {
         
         // Función para establecer nivel de urgencia desde la tabla
         function setUrgencyLevel(ticketId, level) {
-            
+            // Guardar referencia al botón clickeado
+            const clickedButton = event.target;
+            const container = clickedButton.closest('.urgency-selector');
+                        
             $.ajax({
                 url: 'ajax/update_urgency.php',
                 method: 'POST',
@@ -1513,12 +1516,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticket_id_chat'])) {
                 dataType: 'json',
                 success: function(response) {
                     if (response.success) {
-                        // Actualizar visualmente los botones
-                        const container = event.target.closest('.urgency-selector');
+                        // Actualizar visualmente los botones - PRIMERO remover selección de todos
                         container.querySelectorAll('.btn-urgency').forEach(btn => {
                             btn.classList.remove('selected');
                         });
-                        event.target.classList.add('selected');
+                        
+                        // LUEGO agregar selección solo al botón clickeado
+                        clickedButton.classList.add('selected');
                         
                         // Mostrar notificación
                         showNotification('Nivel de urgencia actualizado correctamente', 'success');
