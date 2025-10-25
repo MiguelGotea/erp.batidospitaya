@@ -137,10 +137,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticket_id_chat'])) {
             margin-right: 400px;
         }
         
-        .bulk-actions.chat-open {
-            margin-right: 400px;
-        }
-        
         /* Chat Sidebar */
         .chat-sidebar {
             position: fixed;
@@ -547,14 +543,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticket_id_chat'])) {
             border-radius: 5px;
         }
         
-        .bulk-actions {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            display: none;
-        }
-        
         .table-container {
             overflow-x: auto;
             margin-top: 20px;
@@ -636,8 +624,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticket_id_chat'])) {
                 right: -100%;
             }
             
-            .table-section.chat-open,
-            .bulk-actions.chat-open {
+            .table-section.chat-open{
                 margin-right: 0;
             }
 
@@ -779,33 +766,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticket_id_chat'])) {
                     </div>
                 </div>
 
-                <!-- Acciones masivas -->
-                <div class="bulk-actions" id="bulkActions">
-                    <div class="row align-items-center">
-                        <div class="col-md-3">
-                            <span id="selectedCount">0 tickets seleccionados</span>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="row">
-                                <div class="col">
-                                    <input type="date" class="form-control form-control-sm" id="bulkFechaInicio" placeholder="Fecha Inicio">
-                                </div>
-                                <div class="col">
-                                    <input type="date" class="form-control form-control-sm" id="bulkFechaFinal" placeholder="Fecha Final">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <button class="btn btn-primary btn-sm" onclick="bulkAssignDates()">
-                                <i class="fas fa-calendar-plus me-2"></i>Asignar Fechas
-                            </button>
-                            <button class="btn btn-secondary btn-sm ms-2" onclick="clearSelection()">
-                                Cancelar
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
                 <!-- Tabla de tickets -->
                 <div class="table-section" id="tableSection">
                     <div class="table-container">
@@ -815,9 +775,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticket_id_chat'])) {
                                     <table id="ticketsTable" class="table table-striped table-hover">
                                         <thead class="table-dark">
                                             <tr>
-                                                <th>
-                                                    <input type="checkbox" id="selectAll" class="form-check-input">
-                                                </th>
                                                 <th>Solicitado</th>
                                                 <th>Título</th>
                                                 <th>Sucursal</th>
@@ -831,9 +788,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticket_id_chat'])) {
                                         <tbody>
                                             <?php foreach ($tickets as $t): ?>
                                             <tr>
-                                                <td>
-                                                    <input type="checkbox" class="form-check-input ticket-checkbox" value="<?= $t['id'] ?>">
-                                                </td>
                                                 <td>
                                                     <strong><?= date('d/m/Y', strtotime($t['created_at'])) ?></strong>
 
@@ -1021,35 +975,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticket_id_chat'])) {
                 language: {
                     url: 'https://cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json'
                 },
-                order: [[1, 'desc']],
+                order: [[0, 'desc']],
                 pageLength: 25,
                 columnDefs: [
-                    { orderable: false, targets: [0, 8] }
+                    { orderable: false, targets: [7] }
                 ]
-            });
-            
-            // Manejar selección de checkboxes
-            $('#selectAll').change(function() {
-                $('.ticket-checkbox').prop('checked', $(this).is(':checked'));
-                updateBulkActions();
-            });
-            
-            $('.ticket-checkbox').change(function() {
-                updateBulkActions();
-                
-                // Actualizar checkbox principal
-                const totalCheckboxes = $('.ticket-checkbox').length;
-                const checkedCheckboxes = $('.ticket-checkbox:checked').length;
-                
-                if (checkedCheckboxes === 0) {
-                    $('#selectAll').prop('indeterminate', false);
-                    $('#selectAll').prop('checked', false);
-                } else if (checkedCheckboxes === totalCheckboxes) {
-                    $('#selectAll').prop('indeterminate', false);
-                    $('#selectAll').prop('checked', true);
-                } else {
-                    $('#selectAll').prop('indeterminate', true);
-                }
             });
             
             // Manejar archivo de imagen en sidebar
@@ -1081,7 +1011,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticket_id_chat'])) {
             // Abrir sidebar
             $('#chatSidebar').addClass('open');
             $('#tableSection').addClass('chat-open');
-            $('#bulkActions').addClass('chat-open');
             
             // Cargar mensajes del ticket
             loadChatMessages(ticketId);
@@ -1102,7 +1031,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticket_id_chat'])) {
         function closeChatSidebar() {
             $('#chatSidebar').removeClass('open');
             $('#tableSection').removeClass('chat-open');
-            $('#bulkActions').removeClass('chat-open');
             currentTicketId = null;
             
             // Detener actualización automática
@@ -1387,72 +1315,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticket_id_chat'])) {
                 success: function(response) {
                     if (response.success) {
                         loadChatMessages(currentTicketId);
-                    } else {
-                        alert('Error: ' + response.message);
-                    }
-                },
-                error: function() {
-                    alert('Error en la comunicación con el servidor');
-                }
-            });
-        }
-        
-        function updateBulkActions() {
-            const checkedBoxes = $('.ticket-checkbox:checked');
-            const count = checkedBoxes.length;
-            
-            if (count > 0) {
-                $('#bulkActions').show();
-                $('#selectedCount').text(count + ' tickets seleccionados');
-            } else {
-                $('#bulkActions').hide();
-            }
-        }
-        
-        function clearSelection() {
-            $('.ticket-checkbox').prop('checked', false);
-            $('#selectAll').prop('checked', false);
-            $('#selectAll').prop('indeterminate', false);
-            updateBulkActions();
-        }
-        
-        function bulkAssignDates() {
-            const selectedIds = [];
-            $('.ticket-checkbox:checked').each(function() {
-                selectedIds.push($(this).val());
-            });
-            
-            const fechaInicio = $('#bulkFechaInicio').val();
-            const fechaFinal = $('#bulkFechaFinal').val();
-            
-            if (!fechaInicio || !fechaFinal) {
-                alert('Debe seleccionar ambas fechas');
-                return;
-            }
-            
-            if (fechaInicio > fechaFinal) {
-                alert('La fecha de inicio no puede ser mayor a la fecha final');
-                return;
-            }
-            
-            if (selectedIds.length === 0) {
-                alert('Debe seleccionar al menos un ticket');
-                return;
-            }
-            
-            // Enviar solicitud AJAX
-            $.ajax({
-                url: 'ajax/bulk_assign_dates.php',
-                method: 'POST',
-                data: {
-                    ticket_ids: selectedIds,
-                    fecha_inicio: fechaInicio,
-                    fecha_final: fechaFinal
-                },
-                success: function(response) {
-                    if (response.success) {
-                        alert('Fechas asignadas exitosamente');
-                        location.reload();
                     } else {
                         alert('Error: ' + response.message);
                     }
