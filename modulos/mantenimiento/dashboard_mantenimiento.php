@@ -777,6 +777,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticket_id_chat'])) {
                                             <tr>
                                                 <th>Solicitado</th>
                                                 <th>Título</th>
+                                                <th>Descripcion</th>
                                                 <th>Sucursal</th>
                                                 <th>Tipo</th>
                                                 <th>Urgencia</th>
@@ -794,7 +795,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticket_id_chat'])) {
                                                 <td>
                                                     <div style="max-width: 200px;">
                                                         <?= htmlspecialchars($t['titulo']) ?>
-                                                        <br><small class="text-muted"><?= htmlspecialchars(substr($t['descripcion'], 0, 50)) ?>...</small>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div style="max-width: 200px;">
+                                                        <?= htmlspecialchars($t['descripcion']) ?>
                                                     </div>
                                                 </td>
                                                 <td><?= htmlspecialchars($t['nombre_sucursal'] ?? 'N/A') ?></td>
