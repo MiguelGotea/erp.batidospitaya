@@ -825,7 +825,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticket_id_chat'])) {
                                                 <th>Urgencia</th>
                                                 <th>Estado</th>
                                                 <th>Foto</th>
-                                                <th>Acciones</th>
+                                                <th></th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -1024,7 +1024,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticket_id_chat'])) {
                 order: [[1, 'desc']],
                 pageLength: 25,
                 columnDefs: [
-                    { orderable: false, targets: [0, 11, 12] }
+                    { orderable: false, targets: [0, 8] }
                 ]
             });
             
