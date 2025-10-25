@@ -230,31 +230,31 @@ if ($ticket['tipo_formulario'] === 'mantenimiento_general') {
 </style>
 
 <script>
-// Variables globales para el control de urgencia
-let currentUrgency = <?= $ticket['nivel_urgencia'] ? $ticket['nivel_urgencia'] : 'null' ?>;
+// ✅ Hacer la variable accesible globalmente usando window
+window.currentUrgency = <?= $ticket['nivel_urgencia'] ? $ticket['nivel_urgencia'] : 'null' ?>;
 
 console.log('Script cargado para ticket:', <?= $ticket['id'] ?>);
-console.log('Urgencia inicial:', currentUrgency);
+console.log('Urgencia inicial:', window.currentUrgency);
 
-// ✅ SOLUCIÓN: Inicializar después de que el modal esté completamente cargado
+// Función de inicialización disponible globalmente
 function initUrgencyControls() {
-    console.log('Inicializando controles de urgencia...');
+    console.log('🎯 Inicializando controles de urgencia...');
+    console.log('Urgencia actual:', window.currentUrgency);
     updateUrgencyDisplay();
-    updateOptions(currentUrgency);
-    console.log('Urgencia configurada:', currentUrgency);
+    updateOptions(window.currentUrgency);
+    console.log('✅ Urgencia configurada:', window.currentUrgency);
 }
 
 // Ejecutar cuando el DOM del modal esté listo
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initUrgencyControls);
 } else {
-    // El DOM ya está listo, ejecutar inmediatamente
     initUrgencyControls();
 }
 
 function selectUrgency(level) {
     console.log('Seleccionando urgencia:', level);
-    currentUrgency = level;
+    window.currentUrgency = level;
     updateUrgencyDisplay();
     updateOptions(level);
 }
@@ -264,11 +264,11 @@ function updateUrgencyDisplay() {
     const hiddenInput = document.getElementById('edit_nivel_urgencia');
     
     if (!display || !hiddenInput) {
-        console.error('Elementos no encontrados. Display:', display, 'Input:', hiddenInput);
+        console.error('❌ Elementos no encontrados. Display:', display, 'Input:', hiddenInput);
         return;
     }
     
-    if (currentUrgency) {
+    if (window.currentUrgency) {
         const levels = {
             1: { text: 'Baja', badgeClass: 'bg-success' },
             2: { text: 'Media', badgeClass: 'bg-warning' },
@@ -276,17 +276,17 @@ function updateUrgencyDisplay() {
             4: { text: 'Crítica', badgeClass: 'bg-danger' }
         };
         
-        const levelInfo = levels[currentUrgency];
-        display.textContent = `Nivel ${currentUrgency}`;
+        const levelInfo = levels[window.currentUrgency];
+        display.textContent = `Nivel ${window.currentUrgency}`;
         display.className = `badge fs-6 ms-2 flex-shrink-0 ${levelInfo.badgeClass}`;
         
-        hiddenInput.value = currentUrgency;
-        console.log('Display actualizado a:', currentUrgency);
+        hiddenInput.value = window.currentUrgency;
+        console.log('📊 Display actualizado a nivel:', window.currentUrgency);
     } else {
         display.textContent = 'No seleccionado';
         display.className = 'badge fs-6 ms-2 flex-shrink-0 bg-secondary';
         hiddenInput.value = '';
-        console.log('Display limpiado');
+        console.log('🔄 Display limpiado');
     }
 }
 
@@ -296,21 +296,20 @@ function updateOptions(level) {
         option.classList.remove('selected');
     });
     
-    // Agregar selección a la opción actual
     if (level) {
         const selectedOption = document.querySelector(`.urgency-compact[data-level="${level}"]`);
         if (selectedOption) {
             selectedOption.classList.add('selected');
-            console.log('Opción marcada como seleccionada:', level);
+            console.log('✅ Opción marcada como seleccionada:', level);
         } else {
-            console.error('No se encontró el botón para nivel:', level);
+            console.error('❌ No se encontró el botón para nivel:', level);
         }
     }
 }
 
 function clearUrgency() {
-    console.log('Limpiando urgencia');
-    currentUrgency = null;
+    console.log('🧹 Limpiando urgencia');
+    window.currentUrgency = null;
     updateUrgencyDisplay();
     updateOptions(null);
 }
@@ -321,16 +320,15 @@ function updateTicket(event) {
     const formData = new FormData(event.target);
     const ticketId = formData.get('ticket_id') || document.getElementById('ticket_id').value;
     
-    // Asegurarnos de incluir el nivel de urgencia actual
     const data = {
         id: ticketId,
         titulo: formData.get('titulo'),
         descripcion: formData.get('descripcion'),
         area_equipo: formData.get('area_equipo'),
-        nivel_urgencia: currentUrgency, // Usamos la variable global actualizada
+        nivel_urgencia: window.currentUrgency,
     };
     
-    console.log('Guardando ticket con datos:', data);
+    console.log('💾 Guardando ticket con datos:', data);
     
     $.ajax({
         url: 'ajax/update_ticket.php',
@@ -339,7 +337,6 @@ function updateTicket(event) {
         dataType: 'json',
         success: function(response) {
             if (response.success) {
-                // Cerrar el modal
                 const modalElement = document.querySelector('.modal.show');
                 if (modalElement) {
                     const modal = bootstrap.Modal.getInstance(modalElement);
@@ -348,7 +345,6 @@ function updateTicket(event) {
                     }
                 }
                 
-                // Refrescar calendario sin recargar página
                 if (typeof refrescarCalendarioYSidebar === 'function') {
                     refrescarCalendarioYSidebar();
                 } else {
