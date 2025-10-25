@@ -454,7 +454,81 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticket_id_chat'])) {
         .urgency-2 { background: #ffc107; }
         .urgency-3 { background: #fd7e14; }
         .urgency-4 { background: #dc3545; }
+
+        /* Botones de urgencia en la tabla */
+        .urgency-selector {
+            min-width: 140px;
+        }
         
+        .btn-urgency {
+            width: 28px;
+            height: 28px;
+            padding: 0;
+            border: 2px solid transparent;
+            border-radius: 4px;
+            font-size: 0.85rem !important;
+            font-weight: 600;
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background-color: #dee2e6;
+            color: #6c757d;
+        }
+        
+        .btn-urgency:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+            filter: brightness(1.1);
+        }
+        
+        .btn-urgency.urgency-btn-1 {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .btn-urgency.urgency-btn-1.selected {
+            background-color: #28a745;
+            color: white;
+            border-color: #ffffff;
+            box-shadow: 0 0 0 2px rgba(40, 167, 69, 0.3);
+        }
+        
+        .btn-urgency.urgency-btn-2 {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        
+        .btn-urgency.urgency-btn-2.selected {
+            background-color: #ffc107;
+            color: #000;
+            border-color: #ffffff;
+            box-shadow: 0 0 0 2px rgba(255, 193, 7, 0.3);
+        }
+        
+        .btn-urgency.urgency-btn-3 {
+            background-color: #ffe5d0;
+            color: #8a3a00;
+        }
+        
+        .btn-urgency.urgency-btn-3.selected {
+            background-color: #fd7e14;
+            color: white;
+            border-color: #ffffff;
+            box-shadow: 0 0 0 2px rgba(253, 126, 20, 0.3);
+        }
+        
+        .btn-urgency.urgency-btn-4 {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        
+        .btn-urgency.urgency-btn-4.selected {
+            background-color: #dc3545;
+            color: white;
+            border-color: #ffffff;
+            box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.3);
+        }
+
         .status-badge {
             font-size: 0.8em;
             padding: 0.4em 0.8em;
@@ -782,15 +856,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticket_id_chat'])) {
                                                     </span>
                                                 </td>
                                                 <td>
-                                                    <?php if ($t['nivel_urgencia']): ?>
-                                                        <div class="urgency-bar">
-                                                            <div class="urgency-fill urgency-<?= $t['nivel_urgencia'] ?>" 
-                                                                style="width: <?= $t['nivel_urgencia'] * 25 ?>%"></div>
-                                                        </div>
-                                                        <small>Nivel <?= $t['nivel_urgencia'] ?></small>
-                                                    <?php else: ?>
-                                                        <small class="text-muted">Sin clasificar</small>
-                                                    <?php endif; ?>
+                                                    <div class="d-flex gap-1 justify-content-center align-items-center urgency-selector">
+                                                        <button type="button" class="btn-urgency urgency-btn-1 <?= ($t['nivel_urgencia'] == 1) ? 'selected' : '' ?>" 
+                                                                onclick="setUrgencyLevel(<?= $t['id'] ?>, 1)" title="Baja">
+                                                            1
+                                                        </button>
+                                                        <button type="button" class="btn-urgency urgency-btn-2 <?= ($t['nivel_urgencia'] == 2) ? 'selected' : '' ?>" 
+                                                                onclick="setUrgencyLevel(<?= $t['id'] ?>, 2)" title="Media">
+                                                            2
+                                                        </button>
+                                                        <button type="button" class="btn-urgency urgency-btn-3 <?= ($t['nivel_urgencia'] == 3) ? 'selected' : '' ?>" 
+                                                                onclick="setUrgencyLevel(<?= $t['id'] ?>, 3)" title="Alta">
+                                                            3
+                                                        </button>
+                                                        <button type="button" class="btn-urgency urgency-btn-4 <?= ($t['nivel_urgencia'] == 4) ? 'selected' : '' ?>" 
+                                                                onclick="setUrgencyLevel(<?= $t['id'] ?>, 4)" title="Crítica">
+                                                            4
+                                                        </button>
+                                                    </div>
                                                 </td>
                                                 <td>
                                                     <span class="status-badge status-<?= $t['status'] ?>">
@@ -1417,7 +1500,59 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticket_id_chat'])) {
             location.reload();
         }
         
-
+        // Función para establecer nivel de urgencia desde la tabla
+        function setUrgencyLevel(ticketId, level) {
+            // Confirmar acción
+            if (!confirm('¿Desea asignar el nivel de urgencia ' + level + ' a este ticket?')) {
+                return;
+            }
+            
+            $.ajax({
+                url: 'ajax/update_urgency.php',
+                method: 'POST',
+                data: {
+                    ticket_id: ticketId,
+                    nivel_urgencia: level
+                },
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        // Actualizar visualmente los botones
+                        const container = event.target.closest('.urgency-selector');
+                        container.querySelectorAll('.btn-urgency').forEach(btn => {
+                            btn.classList.remove('selected');
+                        });
+                        event.target.classList.add('selected');
+                        
+                        // Mostrar notificación
+                        showNotification('Nivel de urgencia actualizado correctamente', 'success');
+                    } else {
+                        alert('Error: ' + response.message);
+                    }
+                },
+                error: function() {
+                    alert('Error en la comunicación con el servidor');
+                }
+            });
+        }
+        
+        // Función para mostrar notificaciones
+        function showNotification(message, type = 'info') {
+            const alertClass = type === 'success' ? 'alert-success' : 'alert-info';
+            const notification = $('<div class="alert ' + alertClass + ' alert-dismissible fade show position-fixed" role="alert" style="top: 20px; right: 20px; z-index: 9999; min-width: 300px;">' +
+                message +
+                '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>' +
+                '</div>');
+            
+            $('body').append(notification);
+            
+            setTimeout(function() {
+                notification.fadeOut(function() {
+                    $(this).remove();
+                });
+            }, 3000);
+        }
+        
     </script>
 </body>
 </html>
