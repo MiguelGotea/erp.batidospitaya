@@ -1558,9 +1558,8 @@ function getColorByUrgency($urgencia, $tipo_formulario) {
                         // ✅ Recargar después de éxito (igual que en confirmarProgramacion)
                         setTimeout(() => {
                             successAlert.remove();
-                            refrescarCalendarioYSidebar()
-                            //location.reload(); // Recargar la página
-                        }, 500);
+                            refrescarCalendarioYSidebar();
+                        }, 1500);
                     } else {
                         alert('❌ Error: ' + response.message);
                     }
