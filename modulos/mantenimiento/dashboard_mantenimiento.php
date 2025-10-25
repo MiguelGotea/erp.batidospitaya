@@ -1502,10 +1502,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticket_id_chat'])) {
         
         // Función para establecer nivel de urgencia desde la tabla
         function setUrgencyLevel(ticketId, level) {
-            // Confirmar acción
-            if (!confirm('¿Desea asignar el nivel de urgencia ' + level + ' a este ticket?')) {
-                return;
-            }
             
             $.ajax({
                 url: 'ajax/update_urgency.php',
@@ -1552,7 +1548,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticket_id_chat'])) {
                 });
             }, 3000);
         }
-        
+
     </script>
 </body>
 </html>
