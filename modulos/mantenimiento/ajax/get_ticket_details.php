@@ -97,33 +97,40 @@ if ($ticket['tipo_formulario'] === 'mantenimiento_general') {
                     <!-- Botones compactos de urgencia -->
                     <div class="d-flex flex-grow-1 urgency-compact-buttons">
                         <button type="button" class="btn btn-sm urgency-compact urgency-level-1 <?= ($ticket['nivel_urgencia'] == 1) ? 'selected' : '' ?>" 
-                                data-level="1" onclick="selectUrgency(1)" title="Baja">
+                                data-level="1" onclick="selectUrgency(1)" title="Baja" <?= !$puedeEditar ? 'disabled' : '' ?>>
                             <small>1</small>
                         </button>
                         <button type="button" class="btn btn-sm urgency-compact urgency-level-2 <?= ($ticket['nivel_urgencia'] == 2) ? 'selected' : '' ?>" 
-                                data-level="2" onclick="selectUrgency(2)" title="Media">
+                                data-level="2" onclick="selectUrgency(2)" title="Media" <?= !$puedeEditar ? 'disabled' : '' ?>>
                             <small>2</small>
                         </button>
                         <button type="button" class="btn btn-sm urgency-compact urgency-level-3 <?= ($ticket['nivel_urgencia'] == 3) ? 'selected' : '' ?>" 
-                                data-level="3" onclick="selectUrgency(3)" title="Alta">
+                                data-level="3" onclick="selectUrgency(3)" title="Alta" <?= !$puedeEditar ? 'disabled' : '' ?>>
                             <small>3</small>
                         </button>
                         <button type="button" class="btn btn-sm urgency-compact urgency-level-4 <?= ($ticket['nivel_urgencia'] == 4) ? 'selected' : '' ?>" 
-                                data-level="4" onclick="selectUrgency(4)" title="Crítica">
+                                data-level="4" onclick="selectUrgency(4)" title="Crítica" <?= !$puedeEditar ? 'disabled' : '' ?>>
                             <small>4</small>
                         </button>
                     </div>
                     
                     <!-- Display y botón clear -->
                     <span id="urgency_display" class="badge fs-6 ms-2 flex-shrink-0">
-                        <?= $ticket['nivel_urgencia'] ? 'Nivel ' . $ticket['nivel_urgencia'] : 'No seleccionado' ?>
+                        <?php 
+                        if ($ticket['nivel_urgencia']) {
+                            echo 'Nivel ' . $ticket['nivel_urgencia'];
+                        } else {
+                            echo 'No seleccionado';
+                        }
+                        ?>
                     </span>
-                    <button type="button" class="btn btn-outline-secondary btn-sm flex-shrink-0" onclick="clearUrgency()" title="Limpiar">
+                    <button type="button" class="btn btn-outline-secondary btn-sm flex-shrink-0" 
+                            onclick="clearUrgency()" title="Limpiar" <?= !$puedeEditar ? 'disabled' : '' ?>>
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
                 
-                <!-- Slider oculto para el formulario -->
+                <!-- Input oculto para el formulario -->
                 <input type="hidden" id="edit_nivel_urgencia" name="nivel_urgencia" value="<?= $ticket['nivel_urgencia'] ?? '' ?>">
             </div>
             
@@ -133,7 +140,8 @@ if ($ticket['tipo_formulario'] === 'mantenimiento_general') {
     <div class="mb-3">
         <label for="edit_descripcion" class="form-label"><strong>Descripción:</strong></label>
         <textarea class="form-control" style="min-height: 100px; max-height: 150px; overflow-y: auto;" 
-                id="edit_descripcion" name="descripcion" required><?= htmlspecialchars($ticket['descripcion']) ?> <?= !$puedeEditar ? 'readonly' : '' ?> </textarea>
+                id="edit_descripcion" name="descripcion" 
+                <?= !$puedeEditar ? 'readonly' : '' ?> required><?= htmlspecialchars($ticket['descripcion']) ?></textarea>
     </div>
     
     <?php if ($ticket['foto']): ?>
@@ -171,14 +179,19 @@ if ($ticket['tipo_formulario'] === 'mantenimiento_general') {
     color: white;
     font-weight: 500;
 }
-.urgency-compact:hover {
+.urgency-compact:hover:not(:disabled) {
     transform: translateY(-1px);
     box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     filter: brightness(1.1);
 }
 .urgency-compact.selected {
-    border-color: #ffffff;
-    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.8);
+    border-color: #ffffff !important;
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.5) !important;
+    font-weight: bold;
+}
+.urgency-compact:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
 }
 .urgency-compact-buttons {
     gap: 2px;
@@ -207,16 +220,21 @@ if ($ticket['tipo_formulario'] === 'mantenimiento_general') {
 .badge.bg-warning { background-color: #ffc107 !important; color: #000 !important; }
 .badge.bg-orange { background-color: #fd7e14 !important; }
 .badge.bg-danger { background-color: #dc3545 !important; }
+.badge.bg-secondary { background-color: #6c757d !important; }
 </style>
 
 <script>
 // Variables globales para el control de urgencia
 let currentUrgency = <?= $ticket['nivel_urgencia'] ? $ticket['nivel_urgencia'] : 'null' ?>;
 
-// Inicializar al cargar la página
-document.addEventListener('DOMContentLoaded', function() {
-    updateUrgencyDisplay();
-});
+// ✅ Inicializar inmediatamente (sin esperar DOMContentLoaded)
+(function() {
+    // Pequeño delay para asegurar que el modal se haya renderizado
+    setTimeout(function() {
+        updateUrgencyDisplay();
+        updateOptions(currentUrgency);
+    }, 100);
+})();
 
 function selectUrgency(level) {
     currentUrgency = level;
@@ -227,6 +245,11 @@ function selectUrgency(level) {
 function updateUrgencyDisplay() {
     const display = document.getElementById('urgency_display');
     const hiddenInput = document.getElementById('edit_nivel_urgencia');
+    
+    if (!display || !hiddenInput) {
+        console.error('Elementos no encontrados');
+        return;
+    }
     
     if (currentUrgency) {
         const levels = {
@@ -287,22 +310,43 @@ function updateTicket(event) {
         url: 'ajax/update_ticket.php',
         method: 'POST',
         data: data,
+        dataType: 'json',
         success: function(response) {
             if (response.success) {
-                $('#ticketModal').modal('hide');
-                location.reload();
+                // Cerrar el modal
+                const modalElement = document.querySelector('.modal.show');
+                if (modalElement) {
+                    const modal = bootstrap.Modal.getInstance(modalElement);
+                    if (modal) {
+                        modal.hide();
+                    }
+                }
+                
+                // Refrescar calendario sin recargar página
+                if (typeof refrescarCalendarioYSidebar === 'function') {
+                    refrescarCalendarioYSidebar();
+                } else {
+                    location.reload();
+                }
             } else {
                 alert('Error: ' + response.message);
             }
         },
-        error: function() {
+        error: function(xhr, status, error) {
+            console.error('Error AJAX:', xhr.responseText);
             alert('Error en la comunicación con el servidor');
         }
     });
 }
 
 function openChatFromModal(ticketId) {
-    $('#ticketModal').modal('hide');
+    const modalElement = document.querySelector('.modal.show');
+    if (modalElement) {
+        const modal = bootstrap.Modal.getInstance(modalElement);
+        if (modal) {
+            modal.hide();
+        }
+    }
     window.open('chat.php?ticket_id=' + ticketId + '&emisor=mantenimiento', '_blank');
 }
 </script>
