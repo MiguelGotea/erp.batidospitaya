@@ -45,6 +45,7 @@ $response = [
         'id' => $ticket['id'],
         'codigo' => htmlspecialchars($ticket['codigo']),
         'titulo' => htmlspecialchars($ticket['titulo']),
+        'area_equipo' => htmlspecialchars($ticket['area_equipo']),
         'status' => $ticket['status']
     ],
     'messages' => $messages_formatted,

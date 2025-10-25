@@ -1078,8 +1078,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticket_id_chat'])) {
                     if (response.success) {
                         // Actualizar título
                         if (!isUpdate) {
-                            $('#chatTitle').html('<i class="fas fa-comments me-2"></i>' + response.ticket.codigo);
-                            $('#chatSubtitle').text(response.ticket.titulo);
+                            $('#chatTitle').html('<i class="fas fa-comments me-2"></i>' + response.ticket.titulo);
+                            $('#chatSubtitle').text(response.ticket.area_equipo);
                         }
                         
                         // Actualizar mensaje pinned
