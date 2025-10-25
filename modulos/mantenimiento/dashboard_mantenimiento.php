@@ -825,7 +825,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticket_id_chat'])) {
                                                 <th>Urgencia</th>
                                                 <th>Estado</th>
                                                 <th>Foto</th>
-                                                <th></th>
+                                                <th>Acciones</th>
                                             </tr>
                                         </thead>
                                         <tbody>
