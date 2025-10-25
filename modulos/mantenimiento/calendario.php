@@ -1582,15 +1582,15 @@ function getColorByUrgency($urgencia, $tipo_formulario) {
                 success: function(response) {
                     const modal = $('<div class="modal fade"><div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header"><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body">' + response + '</div></div></div></div>');
                     $('body').append(modal);
-                    modal.modal('show');
                     
-                    // ✅ AGREGAR ESTE LISTENER
-                    modal.on('shown.bs.modal', function() {
-                        // Asegurar que los controles se inicialicen cuando el modal esté visible
+                    // ✅ INICIALIZAR INMEDIATAMENTE después de agregar al DOM
+                    setTimeout(function() {
                         if (typeof initUrgencyControls === 'function') {
                             initUrgencyControls();
                         }
-                    });
+                    }, 0);
+                    
+                    modal.modal('show');
                     
                     modal.on('hidden.bs.modal', function() { 
                         modal.remove(); 
