@@ -116,31 +116,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticket_id_chat'])) {
             background-color: #F6F6F6;
             color: #333;
             padding: 5px;
+            overflow-x: hidden;
         }
         
-        .container {
-            max-width: 100%;
-            margin: 0 auto;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            padding: 10px;
-        }
-        
-        /* Layout principal con sidebar */
+        /* Layout principal sin afectar header */
         .main-layout {
-            display: flex;
-            height: calc(100vh - 10px);
-            gap: 0;
+            position: relative;
         }
         
         .main-content {
-            flex: 1;
-            overflow-y: auto;
+            width: 100%;
+        }
+        
+        /* Solo afectar la sección de tabla */
+        .table-section {
             transition: margin-right 0.3s ease;
         }
         
-        .main-content.chat-open {
+        .table-section.chat-open {
+            margin-right: 400px;
+        }
+        
+        .bulk-actions.chat-open {
             margin-right: 400px;
         }
         
@@ -163,6 +160,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticket_id_chat'])) {
             right: 0;
         }
         
+        /* Ajustar sidebar para que comience desde donde termina el header/stats */
+        .chat-sidebar.positioned {
+            top: auto;
+            bottom: 0;
+        }
+
         .chat-header {
             background: linear-gradient(135deg, #51B8AC 0%, #0E544C 100%);
             color: white;
@@ -280,6 +283,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticket_id_chat'])) {
         
         .chat-input-sidebar textarea {
             font-size: 0.9rem !important;
+        }
+
+        /* Container principal */
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 10px;
         }
 
         header {
@@ -549,7 +562,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticket_id_chat'])) {
                 right: -100%;
             }
             
-            .main-content.chat-open {
+            .table-section.chat-open,
+            .bulk-actions.chat-open {
                 margin-right: 0;
             }
 
@@ -644,9 +658,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticket_id_chat'])) {
                                 </a>
                             <?php endif; ?>
                             
-                            <a href="#" onclick="refreshData()" class="btn-agregar" style="display:none;">
-                                <i class="fas fa-sync-alt"></i> <span class="btn-text">Solicitudes</span>
-                            </a>
                         </div>
                         
                         <div class="user-info">
@@ -722,102 +733,105 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticket_id_chat'])) {
                 </div>
 
                 <!-- Tabla de tickets -->
-                <div class="table-container">
-                    <div class="card shadow">
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                <table id="ticketsTable" class="table table-striped table-hover">
-                                    <thead class="table-dark">
-                                        <tr>
-                                            <th>
-                                                <input type="checkbox" id="selectAll" class="form-check-input">
-                                            </th>
-                                            <th>Solicitado</th>
-                                            <th>Título</th>
-                                            <th>Sucursal</th>
-                                            <th>Solicitante</th>
-                                            <th>Tipo</th>
-                                            <th>Urgencia</th>
-                                            <th>Estado</th>
-                                            <th>Categoría</th>
-                                            <th>F. Inicio</th>
-                                            <th>F. Final</th>
-                                            <th>Foto</th>
-                                            <th></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <?php foreach ($tickets as $t): ?>
-                                        <tr>
-                                            <td>
-                                                <input type="checkbox" class="form-check-input ticket-checkbox" value="<?= $t['id'] ?>">
-                                            </td>
-                                            <td>
-                                                <strong><?= date('d/m/Y', strtotime($t['created_at'])) ?></strong>
+                <div class="table-section" id="tableSection">
+                    <div class="table-container">
+                        <div class="card shadow">
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table id="ticketsTable" class="table table-striped table-hover">
+                                        <thead class="table-dark">
+                                            <tr>
+                                                <th>
+                                                    <input type="checkbox" id="selectAll" class="form-check-input">
+                                                </th>
+                                                <th>Solicitado</th>
+                                                <th>Título</th>
+                                                <th>Sucursal</th>
+                                                <th>Solicitante</th>
+                                                <th>Tipo</th>
+                                                <th>Urgencia</th>
+                                                <th>Estado</th>
+                                                <th>Categoría</th>
+                                                <th>F. Inicio</th>
+                                                <th>F. Final</th>
+                                                <th>Foto</th>
+                                                <th></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <?php foreach ($tickets as $t): ?>
+                                            <tr>
+                                                <td>
+                                                    <input type="checkbox" class="form-check-input ticket-checkbox" value="<?= $t['id'] ?>">
+                                                </td>
+                                                <td>
+                                                    <strong><?= date('d/m/Y', strtotime($t['created_at'])) ?></strong>
 
-                                            </td>
-                                            <td>
-                                                <div style="max-width: 200px;">
-                                                    <?= htmlspecialchars($t['titulo']) ?>
-                                                    <br><small class="text-muted"><?= htmlspecialchars(substr($t['descripcion'], 0, 50)) ?>...</small>
-                                                </div>
-                                            </td>
-                                            <td><?= htmlspecialchars($t['nombre_sucursal'] ?? 'N/A') ?></td>
-                                            <td><?= htmlspecialchars($t['nombre_operario'] ?? 'N/A') ?></td>
-                                            <td>
-                                                <span class="badge bg-info">
-                                                    <?= $t['tipo_formulario'] === 'mantenimiento_general' ? 'Mantenimiento' : 'Equipos' ?>
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <?php if ($t['nivel_urgencia']): ?>
-                                                    <div class="urgency-bar">
-                                                        <div class="urgency-fill urgency-<?= $t['nivel_urgencia'] ?>" 
-                                                            style="width: <?= $t['nivel_urgencia'] * 25 ?>%"></div>
+                                                </td>
+                                                <td>
+                                                    <div style="max-width: 200px;">
+                                                        <?= htmlspecialchars($t['titulo']) ?>
+                                                        <br><small class="text-muted"><?= htmlspecialchars(substr($t['descripcion'], 0, 50)) ?>...</small>
                                                     </div>
-                                                    <small>Nivel <?= $t['nivel_urgencia'] ?></small>
-                                                <?php else: ?>
-                                                    <small class="text-muted">Sin clasificar</small>
-                                                <?php endif; ?>
-                                            </td>
-                                            <td>
-                                                <span class="status-badge status-<?= $t['status'] ?>">
-                                                    <?= ucfirst($t['status']) ?>
-                                                </span>
-                                            </td>
-                                            <td><?= htmlspecialchars($t['tipo_caso_nombre'] ?? 'Sin asignar') ?></td>
-                                            <td>
-                                                <?= $t['fecha_inicio'] ? date('d/m/Y', strtotime($t['fecha_inicio'])) : '-' ?>
-                                            </td>
-                                            <td>
-                                                <?= $t['fecha_final'] ? date('d/m/Y', strtotime($t['fecha_final'])) : '-' ?>
-                                            </td>
-                                            <td>
-                                                <?php if ($t['foto']): ?>
-                                                    <img src="uploads/tickets/<?= $t['foto'] ?>" alt="Foto" class="ticket-photo" 
-                                                        onclick="showPhotoModal('uploads/tickets/<?= $t['foto'] ?>')">
-                                                <?php else: ?>
-                                                    <small class="text-muted">Sin foto</small>
-                                                <?php endif; ?>
-                                            </td>
-                                            <td>
-                                                <div class="btn-group-vertical" role="group">
-                                                    <button class="btn btn-sm btn-primary" onclick="viewTicket(<?= $t['id'] ?>)">
-                                                        <i class="fas fa-eye"></i>
-                                                    </button>
-                                                    <button class="btn btn-sm btn-success" onclick="openChatSidebar(<?= $t['id'] ?>)">
-                                                        <i class="fas fa-comments"></i>
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        <?php endforeach; ?>
-                                    </tbody>
-                                </table>
-                              </div>
+                                                </td>
+                                                <td><?= htmlspecialchars($t['nombre_sucursal'] ?? 'N/A') ?></td>
+                                                <td><?= htmlspecialchars($t['nombre_operario'] ?? 'N/A') ?></td>
+                                                <td>
+                                                    <span class="badge bg-info">
+                                                        <?= $t['tipo_formulario'] === 'mantenimiento_general' ? 'Mantenimiento' : 'Equipos' ?>
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <?php if ($t['nivel_urgencia']): ?>
+                                                        <div class="urgency-bar">
+                                                            <div class="urgency-fill urgency-<?= $t['nivel_urgencia'] ?>" 
+                                                                style="width: <?= $t['nivel_urgencia'] * 25 ?>%"></div>
+                                                        </div>
+                                                        <small>Nivel <?= $t['nivel_urgencia'] ?></small>
+                                                    <?php else: ?>
+                                                        <small class="text-muted">Sin clasificar</small>
+                                                    <?php endif; ?>
+                                                </td>
+                                                <td>
+                                                    <span class="status-badge status-<?= $t['status'] ?>">
+                                                        <?= ucfirst($t['status']) ?>
+                                                    </span>
+                                                </td>
+                                                <td><?= htmlspecialchars($t['tipo_caso_nombre'] ?? 'Sin asignar') ?></td>
+                                                <td>
+                                                    <?= $t['fecha_inicio'] ? date('d/m/Y', strtotime($t['fecha_inicio'])) : '-' ?>
+                                                </td>
+                                                <td>
+                                                    <?= $t['fecha_final'] ? date('d/m/Y', strtotime($t['fecha_final'])) : '-' ?>
+                                                </td>
+                                                <td>
+                                                    <?php if ($t['foto']): ?>
+                                                        <img src="uploads/tickets/<?= $t['foto'] ?>" alt="Foto" class="ticket-photo" 
+                                                            onclick="showPhotoModal('uploads/tickets/<?= $t['foto'] ?>')">
+                                                    <?php else: ?>
+                                                        <small class="text-muted">Sin foto</small>
+                                                    <?php endif; ?>
+                                                </td>
+                                                <td>
+                                                    <div class="btn-group-vertical" role="group">
+                                                        <button class="btn btn-sm btn-primary" onclick="viewTicket(<?= $t['id'] ?>)">
+                                                            <i class="fas fa-eye"></i>
+                                                        </button>
+                                                        <button class="btn btn-sm btn-success" onclick="openChatSidebar(<?= $t['id'] ?>)">
+                                                            <i class="fas fa-comments"></i>
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <?php endforeach; ?>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
+                <!-- Fin table-section -->
             </div>
         </div>
         
@@ -984,9 +998,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticket_id_chat'])) {
         function openChatSidebar(ticketId) {
             currentTicketId = ticketId;
             
+            // Calcular posición del sidebar (desde donde termina el header/stats)
+            const tableSection = document.getElementById('tableSection');
+            const rect = tableSection.getBoundingClientRect();
+            const sidebar = document.getElementById('chatSidebar');
+            
+            // Posicionar sidebar desde donde comienza la tabla
+            sidebar.style.top = rect.top + 'px';
+            sidebar.style.height = 'calc(100vh - ' + rect.top + 'px)';
+
             // Abrir sidebar
             $('#chatSidebar').addClass('open');
-            $('#mainContent').addClass('chat-open');
+            $('#tableSection').addClass('chat-open');
+            $('#bulkActions').addClass('chat-open');
             
             // Cargar mensajes del ticket
             loadChatMessages(ticketId);
@@ -1006,7 +1030,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticket_id_chat'])) {
         
         function closeChatSidebar() {
             $('#chatSidebar').removeClass('open');
-            $('#mainContent').removeClass('chat-open');
+            $('#tableSection').removeClass('chat-open');
+            $('#bulkActions').removeClass('chat-open');
             currentTicketId = null;
             
             // Detener actualización automática
@@ -1020,6 +1045,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticket_id_chat'])) {
             removePhotoSidebar();
             stopCameraSidebar();
         }
+
+        // Reposicionar sidebar al hacer scroll o resize
+        window.addEventListener('scroll', function() {
+            if (currentTicketId && $('#chatSidebar').hasClass('open')) {
+                const tableSection = document.getElementById('tableSection');
+                const rect = tableSection.getBoundingClientRect();
+                const sidebar = document.getElementById('chatSidebar');
+                
+                const topPosition = Math.max(0, rect.top);
+                sidebar.style.top = topPosition + 'px';
+                sidebar.style.height = 'calc(100vh - ' + topPosition + 'px)';
+            }
+        });
+        
+        window.addEventListener('resize', function() {
+            if (currentTicketId && $('#chatSidebar').hasClass('open')) {
+                const tableSection = document.getElementById('tableSection');
+                const rect = tableSection.getBoundingClientRect();
+                const sidebar = document.getElementById('chatSidebar');
+                
+                sidebar.style.top = rect.top + 'px';
+                sidebar.style.height = 'calc(100vh - ' + rect.top + 'px)';
+            }
+        });
         
         function loadChatMessages(ticketId, isUpdate = false) {
             $.ajax({
