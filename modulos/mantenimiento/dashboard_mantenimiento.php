@@ -245,11 +245,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticket_id_chat'])) {
             padding: 8px 12px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             font-size: 0.9rem !important;
+            position: relative;
         }
         
         .message.own .message-content {
             background: #51B8AC;
             color: white;
+        }
+        
+        .message-pin-btn {
+            position: absolute;
+            top: -25px;
+            right: 5px;
+            display: none;
+            z-index: 10;
+        }
+        
+        .message:hover .message-pin-btn {
+            display: block;
         }
         
         .message-time {
@@ -1115,7 +1128,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticket_id_chat'])) {
                             
                             // Botón para fijar
                             if (isOwn) {
-                                messagesHtml += '<div style="position: absolute; top: -20px; right: 5px; display: none;" class="message-pin-btn">';
+                                messagesHtml += '<div class="message-pin-btn">';
                                 messagesHtml += '<button class="btn btn-sm btn-outline-warning" onclick="pinMessageSidebar(' + msg.id + ')" title="Fijar mensaje">';
                                 messagesHtml += '<i class="fas fa-thumbtack"></i></button></div>';
                             }
