@@ -821,13 +821,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticket_id_chat'])) {
                                                 <th>Solicitado</th>
                                                 <th>Título</th>
                                                 <th>Sucursal</th>
-                                                <th>Solicitante</th>
                                                 <th>Tipo</th>
                                                 <th>Urgencia</th>
                                                 <th>Estado</th>
-                                                <th>Categoría</th>
-                                                <th>F. Inicio</th>
-                                                <th>F. Final</th>
                                                 <th>Foto</th>
                                                 <th></th>
                                             </tr>
@@ -849,7 +845,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticket_id_chat'])) {
                                                     </div>
                                                 </td>
                                                 <td><?= htmlspecialchars($t['nombre_sucursal'] ?? 'N/A') ?></td>
-                                                <td><?= htmlspecialchars($t['nombre_operario'] ?? 'N/A') ?></td>
                                                 <td>
                                                     <span class="badge bg-info">
                                                         <?= $t['tipo_formulario'] === 'mantenimiento_general' ? 'Mantenimiento' : 'Equipos' ?>
@@ -879,13 +874,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticket_id_chat'])) {
                                                     <span class="status-badge status-<?= $t['status'] ?>">
                                                         <?= ucfirst($t['status']) ?>
                                                     </span>
-                                                </td>
-                                                <td><?= htmlspecialchars($t['tipo_caso_nombre'] ?? 'Sin asignar') ?></td>
-                                                <td>
-                                                    <?= $t['fecha_inicio'] ? date('d/m/Y', strtotime($t['fecha_inicio'])) : '-' ?>
-                                                </td>
-                                                <td>
-                                                    <?= $t['fecha_final'] ? date('d/m/Y', strtotime($t['fecha_final'])) : '-' ?>
                                                 </td>
                                                 <td>
                                                     <?php if ($t['foto']): ?>
@@ -1524,8 +1512,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticket_id_chat'])) {
                         // LUEGO agregar selección solo al botón clickeado
                         clickedButton.classList.add('selected');
                         
-                        // Mostrar notificación
-                        showNotification('Nivel de urgencia actualizado correctamente', 'success');
                     } else {
                         alert('Error: ' + response.message);
                     }
