@@ -133,7 +133,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticket_id_chat'])) {
             transition: margin-right 0.3s ease;
         }
         
-        .table-section.chat-open {
+        .table-section.chat-open{
             margin-right: 400px;
         }
         
@@ -790,7 +790,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticket_id_chat'])) {
                                             <tr>
                                                 <td>
                                                     <strong><?= date('d/m/Y', strtotime($t['created_at'])) ?></strong>
-
                                                 </td>
                                                 <td>
                                                     <div style="max-width: 200px;">
