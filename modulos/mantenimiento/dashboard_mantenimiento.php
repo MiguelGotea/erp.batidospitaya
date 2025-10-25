@@ -1154,11 +1154,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticket_id_chat'])) {
                             chatContainer.scrollTop(chatContainer[0].scrollHeight);
                         }
                         
-                        // Mostrar botón de pin al hover
-                        $('.message.own').hover(
-                            function() { $(this).find('.message-pin-btn').show(); },
-                            function() { $(this).find('.message-pin-btn').hide(); }
-                        );
                     }
                 },
                 error: function() {
