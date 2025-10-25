@@ -803,11 +803,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticket_id_chat'])) {
                                                     </div>
                                                 </td>
                                                 <td><?= htmlspecialchars($t['nombre_sucursal'] ?? 'N/A') ?></td>
-                                                <td>
-                                                    <span class="badge bg-info">
-                                                        <?= $t['tipo_formulario'] === 'mantenimiento_general' ? 'Mantenimiento' : 'Equipos' ?>
-                                                    </span>
-                                                </td>
+                                                <td><?= $t['tipo_formulario'] === 'mantenimiento_general' ? 'Mantenimiento' : 'Equipos' ?></td>
                                                 <td>
                                                     <div class="d-flex gap-1 justify-content-center align-items-center urgency-selector">
                                                         <button type="button" class="btn-urgency urgency-btn-1 <?= ($t['nivel_urgencia'] == 1) ? 'selected' : '' ?>" 
