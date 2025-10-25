@@ -236,20 +236,21 @@ let currentUrgency = <?= $ticket['nivel_urgencia'] ? $ticket['nivel_urgencia'] :
 console.log('Script cargado para ticket:', <?= $ticket['id'] ?>);
 console.log('Urgencia inicial:', currentUrgency);
 
-// ✅ Inicializar inmediatamente
-(function initUrgency() {
-    console.log('Inicializando urgencia...');
-    
-    // Ejecutar inmediatamente y con un pequeño delay de respaldo
+// ✅ SOLUCIÓN: Inicializar después de que el modal esté completamente cargado
+function initUrgencyControls() {
+    console.log('Inicializando controles de urgencia...');
     updateUrgencyDisplay();
     updateOptions(currentUrgency);
-    
-    setTimeout(function() {
-        updateUrgencyDisplay();
-        updateOptions(currentUrgency);
-        console.log('Urgencia inicializada:', currentUrgency);
-    }, 50);
-})();
+    console.log('Urgencia configurada:', currentUrgency);
+}
+
+// Ejecutar cuando el DOM del modal esté listo
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initUrgencyControls);
+} else {
+    // El DOM ya está listo, ejecutar inmediatamente
+    initUrgencyControls();
+}
 
 function selectUrgency(level) {
     console.log('Seleccionando urgencia:', level);
@@ -263,7 +264,7 @@ function updateUrgencyDisplay() {
     const hiddenInput = document.getElementById('edit_nivel_urgencia');
     
     if (!display || !hiddenInput) {
-        console.error('Elementos no encontrados');
+        console.error('Elementos no encontrados. Display:', display, 'Input:', hiddenInput);
         return;
     }
     
@@ -275,18 +276,19 @@ function updateUrgencyDisplay() {
             4: { text: 'Crítica', badgeClass: 'bg-danger' }
         };
         
+        const levelInfo = levels[currentUrgency];
         display.textContent = `Nivel ${currentUrgency}`;
-        display.className = `badge fs-6 ms-2 flex-shrink-0 ${levels[currentUrgency].badgeClass}`;
+        display.className = `badge fs-6 ms-2 flex-shrink-0 ${levelInfo.badgeClass}`;
         
         hiddenInput.value = currentUrgency;
+        console.log('Display actualizado a:', currentUrgency);
     } else {
         display.textContent = 'No seleccionado';
         display.className = 'badge fs-6 ms-2 flex-shrink-0 bg-secondary';
         hiddenInput.value = '';
+        console.log('Display limpiado');
     }
 }
-
-console.log('Display actualizado a:', currentUrgency);
 
 function updateOptions(level) {
     // Remover selección de todas las opciones
@@ -300,11 +302,14 @@ function updateOptions(level) {
         if (selectedOption) {
             selectedOption.classList.add('selected');
             console.log('Opción marcada como seleccionada:', level);
+        } else {
+            console.error('No se encontró el botón para nivel:', level);
         }
     }
 }
 
 function clearUrgency() {
+    console.log('Limpiando urgencia');
     currentUrgency = null;
     updateUrgencyDisplay();
     updateOptions(null);
