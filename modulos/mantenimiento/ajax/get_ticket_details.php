@@ -1,4 +1,10 @@
 <?php
+
+// ✅ Evitar caché del navegador
+header('Cache-Control: no-cache, no-store, must-revalidate');
+header('Pragma: no-cache');
+header('Expires: 0');
+
 require_once '../models/Ticket.php';
 require_once '../../../includes/auth.php';
 require_once '../../../includes/funciones.php';
@@ -227,16 +233,26 @@ if ($ticket['tipo_formulario'] === 'mantenimiento_general') {
 // Variables globales para el control de urgencia
 let currentUrgency = <?= $ticket['nivel_urgencia'] ? $ticket['nivel_urgencia'] : 'null' ?>;
 
-// ✅ Inicializar inmediatamente (sin esperar DOMContentLoaded)
-(function() {
-    // Pequeño delay para asegurar que el modal se haya renderizado
+console.log('Script cargado para ticket:', <?= $ticket['id'] ?>);
+console.log('Urgencia inicial:', currentUrgency);
+
+// ✅ Inicializar inmediatamente
+(function initUrgency() {
+    console.log('Inicializando urgencia...');
+    
+    // Ejecutar inmediatamente y con un pequeño delay de respaldo
+    updateUrgencyDisplay();
+    updateOptions(currentUrgency);
+    
     setTimeout(function() {
         updateUrgencyDisplay();
         updateOptions(currentUrgency);
-    }, 100);
+        console.log('Urgencia inicializada:', currentUrgency);
+    }, 50);
 })();
 
 function selectUrgency(level) {
+    console.log('Seleccionando urgencia:', level);
     currentUrgency = level;
     updateUrgencyDisplay();
     updateOptions(level);
@@ -270,6 +286,8 @@ function updateUrgencyDisplay() {
     }
 }
 
+console.log('Display actualizado a:', currentUrgency);
+
 function updateOptions(level) {
     // Remover selección de todas las opciones
     document.querySelectorAll('.urgency-compact').forEach(option => {
@@ -281,6 +299,7 @@ function updateOptions(level) {
         const selectedOption = document.querySelector(`.urgency-compact[data-level="${level}"]`);
         if (selectedOption) {
             selectedOption.classList.add('selected');
+            console.log('Opción marcada como seleccionada:', level);
         }
     }
 }
@@ -305,6 +324,8 @@ function updateTicket(event) {
         area_equipo: formData.get('area_equipo'),
         nivel_urgencia: currentUrgency, // Usamos la variable global actualizada
     };
+    
+    console.log('Guardando ticket con datos:', data);
     
     $.ajax({
         url: 'ajax/update_ticket.php',
