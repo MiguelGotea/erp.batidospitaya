@@ -1240,7 +1240,7 @@ function getColorByUrgency($urgencia, $tipo_formulario) {
             filterSelect.value = valorActual;
         }
 
-        // ✅ FUNCIÓN: Actualizar sidebar con nuevos tickets
+        // ✅ FUNCIÓN: Actualizar sidebar con nuevos tickets (MEJORADA)
         function actualizarSidebar(ticketsSinFecha) {
             const unscheduledContainer = document.getElementById('unscheduledTickets');
             
@@ -1286,10 +1286,34 @@ function getColorByUrgency($urgencia, $tipo_formulario) {
                 inicializarDragTickets();
             }
             
-            // Actualizar opciones del filtro
+            // Actualizar opciones del filtro (pero NO cambiar la selección actual)
             actualizarFiltroSucursales(ticketsSinFecha);
         }
 
+        // ✅ FUNCIÓN: Actualizar filtro sin resetear selección (MEJORADA)
+        function actualizarFiltroSucursales(ticketsSinFecha) {
+            const filterSelect = document.getElementById('filterSucursal');
+            if (!filterSelect) return;
+            
+            const valorActual = filterSelect.value;
+            
+            // Obtener sucursales únicas
+            const sucursales = [...new Set(ticketsSinFecha.map(t => t.nombre_sucursal).filter(Boolean))].sort();
+            
+            let options = '<option value="">Todas las sucursales</option>';
+            sucursales.forEach(suc => {
+                options += `<option value="${escapeHtml(suc)}">${escapeHtml(suc)}</option>`;
+            });
+            
+            filterSelect.innerHTML = options;
+            
+            // ✅ PRESERVAR la selección anterior si existe en las nuevas opciones
+            if (valorActual && sucursales.includes(valorActual)) {
+                filterSelect.value = valorActual;
+            } else {
+                filterSelect.value = ''; // Resetear si la sucursal anterior ya no existe
+            }
+        }
 
         // Inicializar drag & drop de tickets
         function inicializarDragTickets() {
@@ -1360,7 +1384,33 @@ function getColorByUrgency($urgencia, $tipo_formulario) {
             });
         }
         
-        // ✅ FUNCIÓN: Refrescar calendario y sidebar sin recargar página
+        // ✅ FUNCIÓN: Obtener y aplicar filtro actual
+        function obtenerFiltroActual() {
+            const filterSelect = document.getElementById('filterSucursal');
+            return filterSelect ? filterSelect.value : '';
+        }
+
+        // ✅ FUNCIÓN: Aplicar filtro después de actualizar datos
+        function aplicarFiltro(sucursal) {
+            const filterSelect = document.getElementById('filterSucursal');
+            const ticketItems = document.querySelectorAll('.ticket-item');
+            
+            if (filterSelect) {
+                filterSelect.value = sucursal;
+            }
+            
+            ticketItems.forEach(function(item) {
+                const itemSucursal = item.getAttribute('data-sucursal');
+                
+                if (!sucursal || sucursal === '' || itemSucursal === sucursal) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        // ✅ FUNCIÓN: Refrescar calendario y sidebar preservando filtro (CORREGIDA)
         function refrescarCalendarioYSidebar() {
             console.log('Refrescando calendario y sidebar...');
             
@@ -1370,14 +1420,15 @@ function getColorByUrgency($urgencia, $tipo_formulario) {
                 return;
             }
             
-            // Guardar estado actual del calendario
+            // Guardar estado actual
             const vistaActual = calendar.view.type;
             const fechaActual = calendar.getDate();
-            const filtroSucursal = document.getElementById('filterSucursal') ? document.getElementById('filterSucursal').value : '';
+            const filtroActual = obtenerFiltroActual(); // 👈 Obtener filtro antes del refresh
             
-            // ⭐ AQUÍ SE LLAMA A get_calendar_data.php ⭐
+            console.log('Filtro actual a preservar:', filtroActual);
+            
             $.ajax({
-                url: 'ajax/get_calendar_data.php',  // 👈 AQUÍ
+                url: 'ajax/get_calendar_data.php',
                 method: 'GET',
                 dataType: 'json',
                 success: function(data) {
@@ -1396,18 +1447,16 @@ function getColorByUrgency($urgencia, $tipo_formulario) {
                     // Restaurar vista y fecha
                     calendar.changeView(vistaActual, fechaActual);
                     
-                    // Actualizar sidebar
+                    // Actualizar sidebar con los nuevos datos
                     actualizarSidebar(data.tickets_sin_fecha);
                     
-                    // Restaurar filtro
-                    if (document.getElementById('filterSucursal')) {
-                        document.getElementById('filterSucursal').value = filtroSucursal;
-                        if (filtroSucursal) {
-                            $('#filterSucursal').trigger('change');
-                        }
-                    }
+                    // ✅ APLICAR FILTRO DESPUÉS DE ACTUALIZAR (NUEVO)
+                    setTimeout(() => {
+                        aplicarFiltro(filtroActual);
+                        console.log('✅ Filtro aplicado después del refresh:', filtroActual);
+                    }, 100);
                     
-                    console.log('✅ Calendario y sidebar actualizados');
+                    console.log('✅ Calendario y sidebar actualizados con filtro preservado');
                 },
                 error: function(xhr, status, error) {
                     console.error('Error al obtener datos:', error);
@@ -1672,8 +1721,7 @@ function getColorByUrgency($urgencia, $tipo_formulario) {
                         
                         setTimeout(() => {
                             successAlert.remove();
-                            refrescarCalendarioYSidebar()
-                            //location.reload();
+                            refrescarCalendarioYSidebar(); // ✅ Usar la función corregida
                         }, 500);
                     } else {
                         alert('❌ Error: ' + response.message);
