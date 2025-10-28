@@ -1191,6 +1191,9 @@ function getColorByUrgency($urgencia, $tipo_formulario) {
                 // Inicializar drag de tickets
                 inicializarDragTickets();
                 inicializarDropZoneSidebar();
+                // INICIALIZAR FILTRO AL CARGAR LA PÁGINA
+                inicializarFiltroSucursal();
+                console.log('✅ Inicialización completa');
                 
             } catch (error) {
                 console.error('❌ Error al crear calendario:', error);
@@ -1243,6 +1246,7 @@ function getColorByUrgency($urgencia, $tipo_formulario) {
         // ✅ FUNCIÓN: Actualizar sidebar con nuevos tickets (MEJORADA)
         function actualizarSidebar(ticketsSinFecha) {
             const unscheduledContainer = document.getElementById('unscheduledTickets');
+            const filtroActual = obtenerFiltroActual();
             
             if (ticketsSinFecha.length === 0) {
                 unscheduledContainer.innerHTML = `
@@ -1286,8 +1290,59 @@ function getColorByUrgency($urgencia, $tipo_formulario) {
                 inicializarDragTickets();
             }
             
-            // Actualizar opciones del filtro (pero NO cambiar la selección actual)
-            actualizarFiltroSucursales(ticketsSinFecha);
+            // Actualizar opciones del filtro
+            actualizarOpcionesFiltro(ticketsSinFecha, filtroActual);
+            
+            // Re-inicializar el event listener del filtro
+            inicializarFiltroSucursal();
+            
+            // Aplicar el filtro que estaba activo
+            aplicarFiltroDespuesDeRefresh(filtroActual, ticketsSinFecha);
+        }
+
+        // ✅ FUNCIÓN: Actualizar opciones del filtro (MEJORADA)
+        function actualizarOpcionesFiltro(ticketsSinFecha, filtroActual) {
+            const filterSelect = document.getElementById('filterSucursal');
+            if (!filterSelect) return;
+            
+            // Obtener sucursales únicas
+            const sucursales = [...new Set(ticketsSinFecha.map(t => t.nombre_sucursal).filter(Boolean))].sort();
+            
+            let options = '<option value="">Todas las sucursales</option>';
+            sucursales.forEach(suc => {
+                const selected = suc === filtroActual ? 'selected' : '';
+                options += `<option value="${escapeHtml(suc)}" ${selected}>${escapeHtml(suc)}</option>`;
+            });
+            
+            filterSelect.innerHTML = options;
+        }
+
+        // ✅ FUNCIÓN: Aplicar filtro después del refresh (NUEVA)
+        function aplicarFiltroDespuesDeRefresh(filtroAnterior, ticketsSinFecha) {
+            const filterSelect = document.getElementById('filterSucursal');
+            if (!filterSelect) return;
+            
+            // Si no hay tickets, forzar "Todas las sucursales"
+            if (ticketsSinFecha.length === 0) {
+                filterSelect.value = '';
+                aplicarFiltro('');
+                return;
+            }
+            
+            // Verificar si la sucursal del filtro anterior existe en los nuevos tickets
+            const sucursalesDisponibles = [...new Set(ticketsSinFecha.map(t => t.nombre_sucursal))];
+            const filtroValido = filtroAnterior && sucursalesDisponibles.includes(filtroAnterior);
+            
+            if (filtroValido) {
+                // Mantener el filtro anterior si es válido
+                filterSelect.value = filtroAnterior;
+                aplicarFiltro(filtroAnterior);
+            } else {
+                // Si no hay tickets para el filtro anterior, cambiar a "Todas las sucursales"
+                filterSelect.value = '';
+                aplicarFiltro('');
+                console.log('🔄 Filtro cambiado a "Todas las sucursales" - No hay tickets para:', filtroAnterior);
+            }
         }
 
         // ✅ FUNCIÓN: Actualizar filtro sin resetear selección (MEJORADA)
@@ -1384,33 +1439,50 @@ function getColorByUrgency($urgencia, $tipo_formulario) {
             });
         }
         
-        // ✅ FUNCIÓN: Obtener y aplicar filtro actual
+        // ✅ FUNCIÓN: Obtener filtro actual (MEJORADA)
         function obtenerFiltroActual() {
             const filterSelect = document.getElementById('filterSucursal');
             return filterSelect ? filterSelect.value : '';
         }
 
-        // ✅ FUNCIÓN: Aplicar filtro después de actualizar datos
-        function aplicarFiltro(sucursal) {
-            const filterSelect = document.getElementById('filterSucursal');
-            const ticketItems = document.querySelectorAll('.ticket-item');
+        // ✅ FUNCIÓN: Inicializar event listener del filtro (NUEVA)
+        function inicializarFiltroSucursal() {
+            const filterSucursal = document.getElementById('filterSucursal');
+            if (!filterSucursal) return;
             
-            if (filterSelect) {
-                filterSelect.value = sucursal;
-            }
+            // Remover event listeners anteriores para evitar duplicados
+            const newFilter = filterSucursal.cloneNode(true);
+            filterSucursal.parentNode.replaceChild(newFilter, filterSucursal);
+            
+            // Agregar nuevo event listener
+            newFilter.addEventListener('change', function() {
+                const selectedSucursal = this.value;
+                aplicarFiltro(selectedSucursal);
+            });
+            
+            console.log('✅ Filtro de sucursal inicializado');
+        }
+
+        // ✅ FUNCIÓN: Aplicar filtro (MEJORADA)
+        function aplicarFiltro(sucursal) {
+            const ticketItems = document.querySelectorAll('.ticket-item');
+            let ticketsVisibles = 0;
             
             ticketItems.forEach(function(item) {
                 const itemSucursal = item.getAttribute('data-sucursal');
                 
                 if (!sucursal || sucursal === '' || itemSucursal === sucursal) {
                     item.style.display = 'block';
+                    ticketsVisibles++;
                 } else {
                     item.style.display = 'none';
                 }
             });
+            
+            console.log(`✅ Filtro aplicado: "${sucursal}" - Tickets visibles: ${ticketsVisibles}`);
         }
 
-        // ✅ FUNCIÓN: Refrescar calendario y sidebar preservando filtro (CORREGIDA)
+        // ✅ FUNCIÓN: Refrescar calendario y sidebar (MEJORADA)
         function refrescarCalendarioYSidebar() {
             console.log('Refrescando calendario y sidebar...');
             
@@ -1423,7 +1495,7 @@ function getColorByUrgency($urgencia, $tipo_formulario) {
             // Guardar estado actual
             const vistaActual = calendar.view.type;
             const fechaActual = calendar.getDate();
-            const filtroActual = obtenerFiltroActual(); // 👈 Obtener filtro antes del refresh
+            const filtroActual = obtenerFiltroActual();
             
             console.log('Filtro actual a preservar:', filtroActual);
             
@@ -1449,12 +1521,6 @@ function getColorByUrgency($urgencia, $tipo_formulario) {
                     
                     // Actualizar sidebar con los nuevos datos
                     actualizarSidebar(data.tickets_sin_fecha);
-                    
-                    // ✅ APLICAR FILTRO DESPUÉS DE ACTUALIZAR (NUEVO)
-                    setTimeout(() => {
-                        aplicarFiltro(filtroActual);
-                        console.log('✅ Filtro aplicado después del refresh:', filtroActual);
-                    }, 100);
                     
                     console.log('✅ Calendario y sidebar actualizados con filtro preservado');
                 },
@@ -1566,11 +1632,9 @@ function getColorByUrgency($urgencia, $tipo_formulario) {
             });
         }
         
-        // Programar ticket automáticamente (reutilizando la lógica existente)
-        function programarTicket(ticket, fechaInicio, fechaFinal) {
+       function programarTicket(ticket, fechaInicio, fechaFinal) {
             console.log('Programando ticket automáticamente:', ticket, fechaInicio, fechaFinal);
             
-            // Mostrar loading (igual que en confirmarProgramacion)
             const loading = document.createElement('div');
             loading.id = 'loadingOverlay';
             loading.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 9999;';
@@ -1579,7 +1643,6 @@ function getColorByUrgency($urgencia, $tipo_formulario) {
             
             console.log('Enviando petición AJAX:', ticket.id, fechaInicio, fechaFinal);
             
-            // Llamada AJAX (igual que en confirmarProgramacion)
             $.ajax({
                 url: 'ajax/schedule_ticket.php',
                 method: 'POST',
@@ -1604,7 +1667,6 @@ function getColorByUrgency($urgencia, $tipo_formulario) {
                         `;
                         document.body.appendChild(successAlert);
                 
-                        // ✅ Recargar después de éxito (igual que en confirmarProgramacion)
                         setTimeout(() => {
                             successAlert.remove();
                             refrescarCalendarioYSidebar();
@@ -1619,8 +1681,7 @@ function getColorByUrgency($urgencia, $tipo_formulario) {
                     alert('❌ Error: ' + error);
                 }
             });
-        }
-        
+        } 
         // Mostrar detalles del ticket
         function mostrarDetallesTicket(ticketId) {
             console.log('Mostrar detalles:', ticketId);
