@@ -824,19 +824,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 return;
             }
         });
-
-
-        // Manejar cambio de sucursal - Versión corregida
-        function setupSucursalSelector() {
-            const sucursalSelector = document.getElementById('selectSucursal');
-            if (sucursalSelector) {
-                sucursalSelector.addEventListener('change', function() {
-                    const nuevaSucursal = this.value;
-                    const url = `formulario_mantenimiento.php?cod_operario=<?= $cod_operario ?>&cod_sucursal=${nuevaSucursal}`;
-                    window.location.href = url;
-                });
-            }
-        }
         
         function goToDashboard() {
             const url = `dashboard_sucursales.php?cod_operario=<?= $cod_operario ?>&cod_sucursal=<?= $cod_sucursal ?>`;
@@ -847,9 +834,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             const url = `formulario_equipos.php?cod_operario=<?= $cod_operario ?>&cod_sucursal=<?= $cod_sucursal ?>`;
             window.location.href = url;
         }
-        
+
+        // Manejar cambio de sucursal - SOLUCIÓN CORREGIDA
+        function setupSucursalSelector() {
+            const sucursalSelector = document.getElementById('selectSucursal');
+            if (sucursalSelector) {
+                console.log('Selector de sucursal encontrado, agregando listener...');
+                sucursalSelector.addEventListener('change', function() {
+                    const nuevaSucursal = this.value;
+                    console.log('Sucursal cambiada a:', nuevaSucursal);
+                    const url = `formulario_mantenimiento.php?cod_operario=<?= $cod_operario ?>&cod_sucursal=${nuevaSucursal}`;
+                    console.log('Redirigiendo a:', url);
+                    window.location.href = url;
+                });
+            } else {
+                console.log('Selector de sucursal no encontrado (probablemente solo hay una sucursal)');
+            }
+        }
+
         // Prevenir envío múltiple del formulario
         document.addEventListener('DOMContentLoaded', function() {
+            setupSucursalSelector();
             const form = document.getElementById('maintenanceForm'); // Para mantenimiento
             
             if (form) {
@@ -900,6 +905,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 });
             }
         });
+
+
     </script>
 </body>
 </html>
