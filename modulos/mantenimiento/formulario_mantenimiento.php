@@ -85,17 +85,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $data = [
             'titulo' => $_POST['titulo'],
             'descripcion' => $_POST['descripcion'],
-            'tipo_formulario' => 'cambio_equipos',
+            'tipo_formulario' => 'mantenimiento_general',
             'cod_operario' => $cod_operario,
             'cod_sucursal' => $cod_sucursal,
-            'area_equipo' => $_POST['equipo'],
+            'area_equipo' => $_POST['area']
             'foto' => $foto
         ];
         
         $ticket_id = $ticket->create($data);
         
         echo "<script>
-            alert('Solicitud de cambio de equipo creada exitosamente.');
+            alert('Ticket creado exitosamente. Código: TKT" . date('Ym') . str_pad($ticket_id, 4, '0', STR_PAD_LEFT) . "');
             window.close();
         </script>";
         
@@ -633,32 +633,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         let fotosSeleccionadas = []; // Array para almacenar fotos (files o base64)
         const MAX_FOTOS = 5;
         
-        // Manejar carga de archivos
+        // Manejar carga de archivo
         document.getElementById('btnFile').addEventListener('click', function() {
-            document.getElementById('fotos').click();
+            document.getElementById('foto').click();
         });
-
         
-        document.getElementById('fotos').addEventListener('change', function(e) {
-            const files = Array.from(e.target.files);
-            
-            if (fotosSeleccionadas.length + files.length > MAX_FOTOS) {
-                alert(`Solo puedes agregar hasta ${MAX_FOTOS} fotos en total`);
-                return;
-            }
-            
-            files.forEach(file => {
+        document.getElementById('foto').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    fotosSeleccionadas.push({
-                        tipo: 'file',
-                        data: e.target.result,
-                        file: file
-                    });
-                    updatePhotosPreview();
+                    showPreview(e.target.result);
                 };
                 reader.readAsDataURL(file);
-            });
+            }
         });
         
         // Manejar cámara
