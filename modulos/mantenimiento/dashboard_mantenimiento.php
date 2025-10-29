@@ -577,6 +577,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticket_id_chat'])) {
             background-color: #0E544C;
             color: white;
             text-align: center;
+            padding: 12px 8px;
         }
         
         tr:nth-child(even) {
@@ -629,6 +630,223 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticket_id_chat'])) {
         #videoSidebar, #canvasSidebar {
             max-width: 100%;
             height: auto;
+        }
+
+        /* Estilos para los filtros tipo Excel */
+        .filter-dropdown {
+            position: absolute;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1050;
+            min-width: 250px;
+            max-width: 350px;
+            display: none;
+        }
+        
+        .filter-dropdown.show {
+            display: block;
+        }
+        
+        .filter-header {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e9ecef;
+            background: #f8f9fa;
+            border-radius: 8px 8px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .filter-header h6 {
+            margin: 0;
+            font-size: 0.95rem !important;
+            font-weight: 600;
+            color: #0E544C;
+        }
+        
+        .filter-search {
+            padding: 10px 15px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .filter-search input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            font-size: 0.9rem !important;
+        }
+        
+        .filter-search input:focus {
+            outline: none;
+            border-color: #51B8AC;
+            box-shadow: 0 0 0 0.2rem rgba(81, 184, 172, 0.25);
+        }
+        
+        .filter-options {
+            max-height: 300px;
+            overflow-y: auto;
+            padding: 8px 0;
+        }
+        
+        .filter-option {
+            padding: 8px 15px;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .filter-option:hover {
+            background: #f8f9fa;
+        }
+        
+        .filter-option input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: #51B8AC;
+        }
+        
+        .filter-option label {
+            margin: 0;
+            cursor: pointer;
+            flex: 1;
+            font-size: 0.9rem !important;
+        }
+        
+        .filter-actions {
+            padding: 10px 15px;
+            border-top: 1px solid #e9ecef;
+            display: flex;
+            gap: 8px;
+            background: #f8f9fa;
+            border-radius: 0 0 8px 8px;
+        }
+        
+        .filter-actions button {
+            flex: 1;
+            padding: 6px 12px;
+            border: none;
+            border-radius: 5px;
+            font-size: 0.85rem !important;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .filter-actions .btn-apply {
+            background: #51B8AC;
+            color: white;
+        }
+        
+        .filter-actions .btn-apply:hover {
+            background: #0E544C;
+        }
+        
+        .filter-actions .btn-clear {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .filter-actions .btn-clear:hover {
+            background: #5a6268;
+        }
+        
+        .filter-icon {
+            cursor: pointer;
+            margin-left: 8px;
+            color: #6c757d;
+            font-size: 0.9rem !important;
+            transition: color 0.2s;
+        }
+        
+        .filter-icon:hover {
+            color: #51B8AC;
+        }
+        
+        .filter-icon.active {
+            color: #51B8AC;
+            font-weight: bold;
+        }
+        
+        .filter-count {
+            display: inline-block;
+            background: #51B8AC;
+            color: white;
+            border-radius: 10px;
+            padding: 2px 8px;
+            font-size: 0.75rem !important;
+            margin-left: 5px;
+            font-weight: 600;
+        }
+        
+        /* Badge para filtros activos */
+        .active-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .filter-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #51B8AC;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem !important;
+        }
+        
+        .filter-badge .remove-filter {
+            cursor: pointer;
+            margin-left: 4px;
+            font-weight: bold;
+        }
+        
+        .filter-badge .remove-filter:hover {
+            color: #ffcccc;
+        }
+        
+        th {
+            position: relative;
+            white-space: nowrap;
+        }
+        
+        /* Estilos existentes del documento original */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Calibri', sans-serif;
+            font-size: clamp(11px, 2vw, 16px) !important;
+        }
+        
+        body {
+            background-color: #F6F6F6;
+            color: #333;
+            padding: 5px;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 10px;
+        }
+
+        .table-responsive {
+            margin-top: 20px;
         }
 
         @media (max-width: 768px) {
@@ -779,6 +997,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticket_id_chat'])) {
                     </div>
                 </div>
 
+                <!-- Filtros Activos -->
+                <div id="activeFiltersContainer" style="display: none;">
+                    <div class="active-filters" id="activeFilters"></div>
+                </div>
+
                 <!-- Tabla de tickets -->
                 <div class="table-section" id="tableSection">
                     <div class="table-container">
@@ -790,11 +1013,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticket_id_chat'])) {
                                             <tr>
                                                 <th>Solicitado</th>
                                                 <th>Título</th>
-                                                <th>Descripcion</th>
-                                                <th>Sucursal</th>
-                                                <th>Tipo</th>
-                                                <th>Urgencia</th>
-                                                <th>Estado</th>
+                                                <th>Descripción</th>
+                                                <th>
+                                                    Sucursal
+                                                    <i class="fas fa-filter filter-icon" data-column="sucursal"></i>
+                                                </th>
+                                                <th>
+                                                    Tipo
+                                                    <i class="fas fa-filter filter-icon" data-column="tipo"></i>
+                                                </th>
+                                                <th>
+                                                    Urgencia
+                                                    <i class="fas fa-filter filter-icon" data-column="urgencia"></i>
+                                                </th>
+                                                <th>
+                                                    Estado
+                                                    <i class="fas fa-filter filter-icon" data-column="estado"></i>
+                                                </th>
                                                 <th>Foto</th>
                                                 <th></th>
                                             </tr>
@@ -968,6 +1203,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticket_id_chat'])) {
         </div>
     </div>
 
+
+    <!-- Dropdown de filtros (se clonará para cada columna) -->
+    <div id="filterDropdownTemplate" class="filter-dropdown">
+        <div class="filter-header">
+            <h6></h6>
+            <i class="fas fa-times" style="cursor: pointer; color: #6c757d;"></i>
+        </div>
+        <div class="filter-search">
+            <input type="text" placeholder="Buscar...">
+        </div>
+        <div class="filter-options"></div>
+        <div class="filter-actions">
+            <button class="btn-apply">Aplicar</button>
+            <button class="btn-clear">Limpiar</button>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
@@ -978,19 +1230,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticket_id_chat'])) {
         let currentTicketId = null;
         let streamSidebar = null;
         let chatUpdateInterval = null;
+        let table;
+        let activeFilters = {
+            sucursal: [],
+            tipo: [],
+            urgencia: [],
+            estado: []
+        };
 
         $(document).ready(function() {
             // Inicializar DataTable
-            $('#ticketsTable').DataTable({
+            table =$('#ticketsTable').DataTable({
                 language: {
                     url: 'https://cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json'
                 },
                 order: [[0, 'desc']],
                 pageLength: 25,
                 columnDefs: [
-                    { orderable: false, targets: [7] }
+                    { orderable: false, targets: [7,8] }
                 ]
             });
+
+           // Leer filtros de la URL
+            readFiltersFromURL();
+            
+            // Event listeners para los iconos de filtro
+            $('.filter-icon').on('click', function(e) {
+                e.stopPropagation();
+                const column = $(this).data('column');
+                const rect = this.getBoundingClientRect();
+                showFilterDropdown(column, rect);
+            });
+
+            // Cerrar dropdown al hacer click fuera
+            $(document).on('click', function(e) {
+                if (!$(e.target).closest('.filter-dropdown, .filter-icon').length) {
+                    $('.filter-dropdown').removeClass('show');
+                }
+            });
+            
+            // Actualizar badges de filtros activos
+            updateActiveFiltersBadges();
             
             // Manejar archivo de imagen en sidebar
             $('#fotoSidebar').on('change', function(e) {
@@ -1004,6 +1284,258 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticket_id_chat'])) {
                 }
             });
         });
+
+
+        function showFilterDropdown(column, rect) {
+            // Cerrar otros dropdowns
+            $('.filter-dropdown').removeClass('show');
+            
+            // Crear nuevo dropdown
+            const dropdown = $('#filterDropdownTemplate').clone();
+            dropdown.attr('id', 'filterDropdown_' + column);
+            dropdown.removeClass('filter-dropdown');
+            dropdown.addClass('filter-dropdown show');
+            
+            // Posicionar dropdown
+            dropdown.css({
+                top: rect.bottom + window.scrollY + 5 + 'px',
+                left: rect.left + window.scrollX - 100 + 'px'
+            });
+            
+            // Configurar header
+            dropdown.find('.filter-header h6').text('Filtrar ' + column.charAt(0).toUpperCase() + column.slice(1));
+            
+            // Obtener valores únicos de la columna
+            const columnIndex = getColumnIndex(column);
+            const uniqueValues = getUniqueColumnValues(columnIndex);
+            
+            // Poblar opciones
+            const optionsContainer = dropdown.find('.filter-options');
+            optionsContainer.empty();
+            
+            uniqueValues.forEach(value => {
+                const isChecked = activeFilters[column].includes(value);
+                const option = $(`
+                    <div class="filter-option">
+                        <input type="checkbox" id="filter_${column}_${value}" ${isChecked ? 'checked' : ''}>
+                        <label for="filter_${column}_${value}">${value}</label>
+                    </div>
+                `);
+                optionsContainer.append(option);
+            });
+            
+            // Event listener para búsqueda
+            dropdown.find('.filter-search input').on('input', function() {
+                const searchTerm = $(this).val().toLowerCase();
+                dropdown.find('.filter-option').each(function() {
+                    const text = $(this).find('label').text().toLowerCase();
+                    $(this).toggle(text.includes(searchTerm));
+                });
+            });
+            
+            // Event listener para cerrar
+            dropdown.find('.filter-header .fa-times').on('click', function() {
+                dropdown.remove();
+            });
+            
+            // Event listener para aplicar
+            dropdown.find('.btn-apply').on('click', function() {
+                applyFilter(column, dropdown);
+                dropdown.remove();
+            });
+            
+            // Event listener para limpiar
+            dropdown.find('.btn-clear').on('click', function() {
+                clearFilter(column);
+                dropdown.remove();
+            });
+            
+            // Event listener para checkboxes
+            dropdown.find('.filter-option').on('click', function(e) {
+                if (e.target.tagName !== 'INPUT') {
+                    const checkbox = $(this).find('input[type="checkbox"]');
+                    checkbox.prop('checked', !checkbox.prop('checked'));
+                }
+            });
+            
+            // Agregar al body
+            $('body').append(dropdown);
+        }
+        
+        function getColumnIndex(column) {
+            const columns = {
+                'sucursal': 3,
+                'tipo': 4,
+                'urgencia': 5,
+                'estado': 6
+            };
+            return columns[column];
+        }
+        
+        function getUniqueColumnValues(columnIndex) {
+            const values = new Set();
+            table.column(columnIndex).data().each(function(value) {
+                const cleanValue = value.toString().trim();
+                if (cleanValue) {
+                    values.add(cleanValue);
+                }
+            });
+            return Array.from(values).sort();
+        }
+        
+        function applyFilter(column, dropdown) {
+            const selectedValues = [];
+            dropdown.find('.filter-option input:checked').each(function() {
+                selectedValues.push($(this).next('label').text());
+            });
+            
+            activeFilters[column] = selectedValues;
+            applyAllFilters();
+            updateFilterIcons();
+            updateActiveFiltersBadges();
+        }
+        
+        function clearFilter(column) {
+            activeFilters[column] = [];
+            applyAllFilters();
+            updateFilterIcons();
+            updateActiveFiltersBadges();
+        }
+        
+        function applyAllFilters() {
+            $.fn.dataTable.ext.search.pop(); // Remover filtro anterior
+            
+            $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
+                // Verificar cada filtro activo
+                for (let column in activeFilters) {
+                    if (activeFilters[column].length > 0) {
+                        const columnIndex = getColumnIndex(column);
+                        const cellValue = data[columnIndex].trim();
+                        
+                        if (!activeFilters[column].includes(cellValue)) {
+                            return false;
+                        }
+                    }
+                }
+                return true;
+            });
+            
+            table.draw();
+        }
+        
+        function updateFilterIcons() {
+            $('.filter-icon').each(function() {
+                const column = $(this).data('column');
+                const hasActiveFilter = activeFilters[column].length > 0;
+                
+                $(this).toggleClass('active', hasActiveFilter);
+                
+                // Remover contador previo
+                $(this).next('.filter-count').remove();
+                
+                // Agregar contador si hay filtros
+                if (hasActiveFilter) {
+                    $(this).after(`<span class="filter-count">${activeFilters[column].length}</span>`);
+                }
+            });
+        }
+        
+        function updateActiveFiltersBadges() {
+            const container = $('#activeFilters');
+            container.empty();
+            
+            let hasFilters = false;
+            
+            for (let column in activeFilters) {
+                if (activeFilters[column].length > 0) {
+                    hasFilters = true;
+                    activeFilters[column].forEach(value => {
+                        const badge = $(`
+                            <div class="filter-badge">
+                                <span>${column.charAt(0).toUpperCase() + column.slice(1)}: ${value}</span>
+                                <span class="remove-filter" data-column="${column}" data-value="${value}">×</span>
+                            </div>
+                        `);
+                        container.append(badge);
+                    });
+                }
+            }
+            
+            // Agregar botón para limpiar todos
+            if (hasFilters) {
+                const clearAllBtn = $(`
+                    <div class="filter-badge" style="background: #6c757d; cursor: pointer;" id="clearAllFilters">
+                        <i class="fas fa-times-circle"></i>
+                        <span>Limpiar todos</span>
+                    </div>
+                `);
+                container.append(clearAllBtn);
+            }
+            
+            $('#activeFiltersContainer').toggle(hasFilters);
+            
+            // Event listener para remover filtros individuales
+            $('.remove-filter').on('click', function() {
+                const column = $(this).data('column');
+                const value = $(this).data('value');
+                activeFilters[column] = activeFilters[column].filter(v => v !== value);
+                applyAllFilters();
+                updateFilterIcons();
+                updateActiveFiltersBadges();
+            });
+            
+            // Event listener para limpiar todos
+            $('#clearAllFilters').on('click', function() {
+                activeFilters = {
+                    sucursal: [],
+                    tipo: [],
+                    urgencia: [],
+                    estado: []
+                };
+                applyAllFilters();
+                updateFilterIcons();
+                updateActiveFiltersBadges();
+            });
+        }
+        
+        // ========== FUNCIONES PARA FILTROS EXTERNOS ==========
+        
+        function readFiltersFromURL() {
+            const urlParams = new URLSearchParams(window.location.search);
+            
+            // Leer cada parámetro de filtro
+            ['sucursal', 'tipo', 'urgencia', 'estado'].forEach(column => {
+                const values = urlParams.getAll(column);
+                if (values.length > 0) {
+                    activeFilters[column] = values;
+                }
+            });
+            
+            // Aplicar filtros si hay alguno
+            if (Object.values(activeFilters).some(arr => arr.length > 0)) {
+                applyAllFilters();
+                updateFilterIcons();
+                updateActiveFiltersBadges();
+            }
+        }
+        
+        // Función para generar URL con filtros (útil para otros indicadores)
+        function generateFilterURL(filters) {
+            const baseURL = window.location.pathname;
+            const params = new URLSearchParams();
+            
+            for (let column in filters) {
+                if (Array.isArray(filters[column])) {
+                    filters[column].forEach(value => {
+                        params.append(column, value);
+                    });
+                } else if (filters[column]) {
+                    params.append(column, filters[column]);
+                }
+            }
+            
+            return baseURL + '?' + params.toString();
+        }
         
         // Funciones del Chat Sidebar
         function openChatSidebar(ticketId) {
