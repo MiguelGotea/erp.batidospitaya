@@ -551,21 +551,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     
                     <form method="POST" enctype="multipart/form-data" id="maintenanceForm">
                         <div class="row">
-                            <div class="mb-3" style="display:none;">
-                                <label for="sucursal" class="form-label">Sucursal *</label>
-                                <select class="form-select" id="sucursal" name="sucursal" required 
-                                        <?= count($sucursales) == 1 ? 'disabled' : '' ?>>
-                                    <?php foreach ($sucursales as $sucursalItem): ?>
-                                        <option value="<?= $sucursalItem['codigo'] ?>" 
-                                                <?= ($sucursalItem['codigo'] == $cod_sucursal) ? 'selected' : '' ?>>
-                                            <?= htmlspecialchars($sucursalItem['nombre']) ?>
-                                        </option>
-                                    <?php endforeach; ?>
-                                </select>
-                                <?php if (count($sucursales) == 1): ?>
-                                    <input type="hidden" name="sucursal" value="<?= $sucursales[0]['codigo'] ?>">
-                                <?php endif; ?>
-                            </div>
                             
                             <!-- Selector de Sucursal (solo mostrar si tiene más de una sucursal) -->
                             <?php if (count($sucursalesPermitidas) > 1):?>
