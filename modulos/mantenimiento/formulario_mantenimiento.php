@@ -52,34 +52,47 @@ $sucursales = $sucursalesPermitidas; // Usar solo las sucursales permitidas
 // Procesar formulario
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
-        $foto = null;
+        $fotos = [];
         
-        // Manejar subida de archivo
-        if (isset($_FILES['foto']) && $_FILES['foto']['error'] === UPLOAD_ERR_OK) {
+        // Manejar múltiples archivos subidos
+        if (isset($_FILES['fotos']) && !empty($_FILES['fotos']['name'][0])) {
             $uploadDir = 'uploads/tickets/';
             if (!is_dir($uploadDir)) {
                 mkdir($uploadDir, 0777, true);
             }
             
-            $extension = pathinfo($_FILES['foto']['name'], PATHINFO_EXTENSION);
-            $foto = 'ticket_' . time() . '.' . $extension;
-            move_uploaded_file($_FILES['foto']['tmp_name'], $uploadDir . $foto);
+            $totalFiles = count($_FILES['fotos']['name']);
+            for ($i = 0; $i < $totalFiles; $i++) {
+                if ($_FILES['fotos']['error'][$i] === UPLOAD_ERR_OK) {
+                    $extension = pathinfo($_FILES['fotos']['name'][$i], PATHINFO_EXTENSION);
+                    $foto = 'ticket_' . time() . '_' . $i . '.' . $extension;
+                    if (move_uploaded_file($_FILES['fotos']['tmp_name'][$i], $uploadDir . $foto)) {
+                        $fotos[] = $foto;
+                    }
+                }
+            }
         }
         
-        // Manejar foto desde cámara (base64)
-        if (!empty($_POST['foto_camera'])) {
+        // Manejar fotos desde cámara (base64)
+        if (!empty($_POST['fotos_camera'])) {
             $uploadDir = 'uploads/tickets/';
             if (!is_dir($uploadDir)) {
                 mkdir($uploadDir, 0777, true);
             }
             
-            $img_data = $_POST['foto_camera'];
-            $img_data = str_replace('data:image/jpeg;base64,', '', $img_data);
-            $img_data = str_replace(' ', '+', $img_data);
-            $data = base64_decode($img_data);
-            
-            $foto = 'camera_' . time() . '.jpg';
-            file_put_contents($uploadDir . $foto, $data);
+            $fotosCamera = json_decode($_POST['fotos_camera'], true);
+            if (is_array($fotosCamera)) {
+                foreach ($fotosCamera as $index => $img_data) {
+                    $img_data = str_replace('data:image/jpeg;base64,', '', $img_data);
+                    $img_data = str_replace(' ', '+', $img_data);
+                    $data = base64_decode($img_data);
+                    
+                    $foto = 'camera_' . time() . '_' . $index . '.jpg';
+                    if (file_put_contents($uploadDir . $foto, $data)) {
+                        $fotos[] = $foto;
+                    }
+                }
+            }
         }
         
         $data = [
@@ -88,19 +101,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'tipo_formulario' => 'mantenimiento_general',
             'cod_operario' => $cod_operario,
             'cod_sucursal' => $cod_sucursal,
-            'area_equipo' => $_POST['area'],
-            'foto' => $foto
+            'area_equipo' => $_POST['area']
         ];
         
         $ticket_id = $ticket->create($data);
         
+        // Guardar las fotos asociadas al ticket
+        if (!empty($fotos)) {
+            $ticket->addFotos($ticket_id, $fotos);
+        }
+        
         echo "<script>
-            alert('Solicitud de cambio de equipo creada exitosamente.');
+            alert('Ticket creado exitosamente. Código: TKT" . date('Ym') . str_pad($ticket_id, 4, '0', STR_PAD_LEFT) . "');
             window.close();
         </script>";
         
     } catch (Exception $e) {
-        $error = "Error al crear la solicitud: " . $e->getMessage();
+        $error = "Error al crear el ticket: " . $e->getMessage();
     }
 }
 ?>
