@@ -832,6 +832,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             window.location.href = url;
         }
 
+        
+        function openMaintenanceForm() {
+            const url = `formulario_mantenimiento.php?cod_operario=<?= $cod_operario ?>&cod_sucursal=<?= $cod_sucursal ?>`;
+            window.location.href = url;
+        }
+
+        function openEquipmentForm() {
+            const url = `formulario_equipos.php?cod_operario=<?= $cod_operario ?>&cod_sucursal=<?= $cod_sucursal ?>`;
+            window.location.href = url;
+        }
+
+        function goToDashboard() {
+            const url = `dashboard_sucursales.php?cod_operario=<?= $cod_operario ?>&cod_sucursal=<?= $cod_sucursal ?>`;
+            window.location.href = url;
+        }
+
         // Manejar cambio de sucursal - SOLUCIÓN DEFINITIVA
         function setupSucursalSelector() {
             const sucursalSelector = document.getElementById('selectSucursal');
@@ -859,21 +875,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } else {
                 console.log('Selector de sucursal no encontrado (probablemente solo hay una sucursal)');
             }
-        }
-
-        function openMaintenanceForm() {
-            const url = `formulario_mantenimiento.php?cod_operario=<?= $cod_operario ?>&cod_sucursal=<?= $cod_sucursal ?>`;
-            window.location.href = url;
-        }
-
-        function openEquipmentForm() {
-            const url = `formulario_equipos.php?cod_operario=<?= $cod_operario ?>&cod_sucursal=<?= $cod_sucursal ?>`;
-            window.location.href = url;
-        }
-
-        function goToDashboard() {
-            const url = `dashboard_sucursales.php?cod_operario=<?= $cod_operario ?>&cod_sucursal=<?= $cod_sucursal ?>`;
-            window.location.href = url;
         }
 
         // Prevenir envío múltiple del formulario
