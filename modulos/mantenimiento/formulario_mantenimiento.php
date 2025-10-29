@@ -571,7 +571,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <?php if (count($sucursalesPermitidas) > 1): ?>
                             <div class="mb-3">
                                 <label for="sucursal" class="form-label">Sucursal *</label>
-                                <select id="selectSucursal" class="form-select form-select-sm">
+                                <select id="selectSucursal" class="form-select form-select-sm" title="Seleccionar sucursal">
                                     <?php foreach ($sucursalesPermitidas as $suc): ?>
                                         <option value="<?= $suc['codigo'] ?>" <?= $suc['codigo'] == $cod_sucursal ? 'selected' : '' ?>>
                                             <?= htmlspecialchars($suc['nombre']) ?>
