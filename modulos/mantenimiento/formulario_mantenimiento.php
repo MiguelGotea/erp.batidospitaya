@@ -52,34 +52,49 @@ $sucursales = $sucursalesPermitidas; // Usar solo las sucursales permitidas
 // Procesar formulario
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
-        $foto = null;
+        $fotos = [];
         
-        // Manejar subida de archivo
-        if (isset($_FILES['foto']) && $_FILES['foto']['error'] === UPLOAD_ERR_OK) {
+        // Manejar múltiples archivos subidos
+        if (isset($_FILES['fotos']) && is_array($_FILES['fotos']['error'])) {
             $uploadDir = 'uploads/tickets/';
             if (!is_dir($uploadDir)) {
                 mkdir($uploadDir, 0777, true);
             }
             
-            $extension = pathinfo($_FILES['foto']['name'], PATHINFO_EXTENSION);
-            $foto = 'ticket_' . time() . '.' . $extension;
-            move_uploaded_file($_FILES['foto']['tmp_name'], $uploadDir . $foto);
+            foreach ($_FILES['fotos']['error'] as $key => $error) {
+                if ($error === UPLOAD_ERR_OK) {
+                    $extension = pathinfo($_FILES['fotos']['name'][$key], PATHINFO_EXTENSION);
+                    $filename = 'ticket_' . time() . '_' . $key . '.' . $extension;
+                    
+                    if (move_uploaded_file($_FILES['fotos']['tmp_name'][$key], $uploadDir . $filename)) {
+                        $fotos[] = $filename;
+                    }
+                }
+            }
         }
         
-        // Manejar foto desde cámara (base64)
-        if (!empty($_POST['foto_camera'])) {
+        // Manejar fotos desde cámara (base64) - múltiples
+        if (!empty($_POST['fotos_camera'])) {
             $uploadDir = 'uploads/tickets/';
             if (!is_dir($uploadDir)) {
                 mkdir($uploadDir, 0777, true);
             }
             
-            $img_data = $_POST['foto_camera'];
-            $img_data = str_replace('data:image/jpeg;base64,', '', $img_data);
-            $img_data = str_replace(' ', '+', $img_data);
-            $data = base64_decode($img_data);
+            $fotos_camera = json_decode($_POST['fotos_camera'], true);
             
-            $foto = 'camera_' . time() . '.jpg';
-            file_put_contents($uploadDir . $foto, $data);
+            if (is_array($fotos_camera)) {
+                foreach ($fotos_camera as $index => $img_data) {
+                    $img_data = str_replace('data:image/jpeg;base64,', '', $img_data);
+                    $img_data = str_replace(' ', '+', $img_data);
+                    $data = base64_decode($img_data);
+                    
+                    $filename = 'camera_' . time() . '_' . $index . '.jpg';
+                    
+                    if (file_put_contents($uploadDir . $filename, $data)) {
+                        $fotos[] = $filename;
+                    }
+                }
+            }
         }
         
         $data = [
@@ -89,13 +104,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'cod_operario' => $cod_operario,
             'cod_sucursal' => $cod_sucursal,
             'area_equipo' => $_POST['area'],
-            'foto' => $foto
+            'fotos' => $fotos
         ];
         
         $ticket_id = $ticket->create($data);
         
         echo "<script>
-            alert('Ticket creado exitosamente. Código: TKT" . date('Ym') . str_pad($ticket_id, 4, '0', STR_PAD_LEFT) . "');
+            alert('Ticket creado exitosamente. Código: TKT" . date('Ym') . str_pad($ticket_id, 4, '0', STR_PAD_LEFT) . "\\n" . count($fotos) . " foto(s) adjunta(s)');
             window.close();
         </script>";
         
@@ -357,6 +372,60 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             box-shadow: 0 0 0 0.2rem rgba(81, 184, 172, 0.25);
         }
         
+        /* Estilos para galería de fotos */
+        .photos-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .photo-item {
+            position: relative;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            overflow: hidden;
+            aspect-ratio: 1;
+        }
+        
+        .photo-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .photo-item .remove-photo {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(220, 53, 69, 0.9);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .photo-item .remove-photo:hover {
+            background: rgba(220, 53, 69, 1);
+            transform: scale(1.1);
+        }
+        
+        .photo-counter {
+            display: inline-block;
+            background: #51B8AC;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            margin-left: 10px;
+        }
+        
         @media (max-width: 768px) {
             .header-container {
                 flex-direction: row;
@@ -398,6 +467,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             .photo-options .btn {
                 width: 100%;
+            }
+            
+            .photos-gallery {
+                grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+                gap: 10px;
             }
         }
         
@@ -471,10 +545,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <i class="fas fa-laptop"></i> <span class="btn-text">Cambio de Equipos</span>
                     </a>
                     
-                    <a href="#" onclick="location.reload()" class="btn-agregar" style="display:none;">
-                        <i class="fas fa-sync-alt"></i> <span class="btn-text">Actualizar</span>
-                    </a>
-                    
                     <?php if ($esAdmin || verificarAccesoCargo([16, 5])): ?>
                         <a href="dashboard_sucursales.php?cod_operario=<?= $cod_operario ?>&cod_sucursal=<?= $cod_sucursal ?>" class="btn-agregar">
                             <i class="fas fa-sync-alt"></i> <span class="btn-text">Solicitudes</span>
@@ -511,11 +581,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
         </header>
 
-        <h1 style="display:none;" class="title">
-            <i class="fas fa-tools me-2"></i>
-            Solicitud de Mantenimiento General
-        </h1>
-
         <div class="form-container">
             <div class="card shadow">
                 <div class="card-header">
@@ -533,42 +598,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <?php endif; ?>
                     
                     <form method="POST" enctype="multipart/form-data" id="maintenanceForm">
-                        <div class="row">
-                            <div class="mb-3" style="display:none;">
-                                <label for="sucursal" class="form-label">Sucursal *</label>
-                                <select class="form-select" id="sucursal" name="sucursal" required 
-                                        <?= count($sucursales) == 1 ? 'disabled' : '' ?>>
-                                    <?php foreach ($sucursales as $sucursalItem): ?>
-                                        <option value="<?= $sucursalItem['codigo'] ?>" 
-                                                <?= ($sucursalItem['codigo'] == $cod_sucursal) ? 'selected' : '' ?>>
-                                            <?= htmlspecialchars($sucursalItem['nombre']) ?>
-                                        </option>
-                                    <?php endforeach; ?>
-                                </select>
-                                <?php if (count($sucursales) == 1): ?>
-                                    <input type="hidden" name="sucursal" value="<?= $sucursales[0]['codigo'] ?>">
-                                <?php endif; ?>
-                            </div>
-                            
-                            <!-- Selector de Sucursal (solo mostrar si tiene más de una sucursal) -->
-                            <?php if (count($sucursalesPermitidas) > 1): ?>
-                            <div class="mb-3">
-                                <label for="sucursal" class="form-label">Sucursal *</label>
-                                <select id="selectSucursal" class="form-select form-select-sm">
-                                    <?php foreach ($sucursalesPermitidas as $suc): ?>
-                                        <option value="<?= $suc['codigo'] ?>" <?= $suc['codigo'] == $cod_sucursal ? 'selected' : '' ?>>
-                                            <?= htmlspecialchars($suc['nombre']) ?>
-                                        </option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
-                            <?php endif; ?>
-                            
-                            <div class="mb-3">
-                                <label for="area" class="form-label">Área Física *</label>
-                                <input type="text" class="form-control" id="area" name="area" 
-                                       placeholder="Ej: Area de preparacion, Almacén, Mueble de caja..." required>
-                            </div>
+                        <!-- Selector de Sucursal (solo mostrar si tiene más de una sucursal) -->
+                        <?php if (count($sucursalesPermitidas) > 1): ?>
+                        <div class="mb-3">
+                            <label for="sucursal" class="form-label">Sucursal *</label>
+                            <select id="selectSucursal" class="form-select form-select-sm">
+                                <?php foreach ($sucursalesPermitidas as $suc): ?>
+                                    <option value="<?= $suc['codigo'] ?>" <?= $suc['codigo'] == $cod_sucursal ? 'selected' : '' ?>>
+                                        <?= htmlspecialchars($suc['nombre']) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <?php endif; ?>
+                        
+                        <div class="mb-3">
+                            <label for="area" class="form-label">Área Física *</label>
+                            <input type="text" class="form-control" id="area" name="area" 
+                                   placeholder="Ej: Area de preparacion, Almacén, Mueble de caja..." required>
                         </div>
                         
                         <div class="mb-3">
@@ -584,30 +631,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </div>
                         
                         <div class="mb-3">
-                            <label class="form-label">Fotografía (Opcional)</label>
+                            <label class="form-label">
+                                Fotografías (Opcional)
+                                <span class="photo-counter" id="photoCounter">0 fotos</span>
+                            </label>
                             <div class="photo-options">
                                 <button type="button" class="btn btn-outline-primary" id="btnFile">
-                                    <i class="fas fa-upload me-2"></i>Subir Archivo
+                                    <i class="fas fa-upload me-2"></i>Subir Archivo(s)
                                 </button>
                                 <button type="button" class="btn btn-outline-success" id="btnCamera">
                                     <i class="fas fa-camera me-2"></i>Tomar Foto
                                 </button>
                             </div>
                             
-                            <input type="file" id="foto" name="foto" accept="image/*" style="display: none;">
-                            <input type="hidden" id="foto_camera" name="foto_camera">
+                            <input type="file" id="fotos" name="fotos[]" accept="image/*" multiple style="display: none;">
+                            <input type="hidden" id="fotos_camera" name="fotos_camera">
                             
                             <div class="camera-preview" id="cameraPreview" style="display: none;">
                                 <video id="video" autoplay></video>
                                 <canvas id="canvas" style="display: none;"></canvas>
                             </div>
                             
-                            <div id="photoPreview" style="display: none;">
-                                <img id="previewImg" src="" alt="Preview" class="img-thumbnail" style="max-width: 300px;">
-                                <button type="button" class="btn btn-sm btn-danger ms-2" id="removePhoto">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                            </div>
+                            <div class="photos-gallery" id="photosGallery"></div>
                         </div>
                         
                         <div class="d-grid gap-2 d-md-flex justify-content-md-end">
@@ -627,21 +672,99 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         let stream = null;
+        let uploadedPhotos = []; // URLs de fotos subidas
+        let cameraPhotos = []; // Base64 de fotos desde cámara
         
-        // Manejar carga de archivo
+        // Actualizar contador de fotos
+        function updatePhotoCounter() {
+            const total = uploadedPhotos.length + cameraPhotos.length;
+            document.getElementById('photoCounter').textContent = total + ' foto' + (total !== 1 ? 's' : '');
+        }
+        
+        // Renderizar galería de fotos
+        function renderGallery() {
+            const gallery = document.getElementById('photosGallery');
+            gallery.innerHTML = '';
+            
+            // Mostrar fotos subidas
+            uploadedPhotos.forEach((photo, index) => {
+                const photoItem = createPhotoItem(photo.url, 'upload', index);
+                gallery.appendChild(photoItem);
+            });
+            
+            // Mostrar fotos de cámara
+            cameraPhotos.forEach((photo, index) => {
+                const photoItem = createPhotoItem(photo, 'camera', index);
+                gallery.appendChild(photoItem);
+            });
+            
+            updatePhotoCounter();
+        }
+        
+        // Crear elemento de foto
+        function createPhotoItem(src, type, index) {
+            const div = document.createElement('div');
+            div.className = 'photo-item';
+            
+            const img = document.createElement('img');
+            img.src = src;
+            img.alt = 'Foto ' + (index + 1);
+            
+            const removeBtn = document.createElement('button');
+            removeBtn.className = 'remove-photo';
+            removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+            removeBtn.onclick = () => removePhoto(type, index);
+            
+            div.appendChild(img);
+            div.appendChild(removeBtn);
+            
+            return div;
+        }
+        
+        // Eliminar foto
+        function removePhoto(type, index) {
+            if (type === 'upload') {
+                uploadedPhotos.splice(index, 1);
+                // Actualizar input file
+                updateFileInput();
+            } else if (type === 'camera') {
+                cameraPhotos.splice(index, 1);
+                // Actualizar input hidden
+                document.getElementById('fotos_camera').value = JSON.stringify(cameraPhotos);
+            }
+            renderGallery();
+        }
+        
+        // Actualizar input file después de eliminar
+        function updateFileInput() {
+            const dataTransfer = new DataTransfer();
+            uploadedPhotos.forEach(photo => {
+                dataTransfer.items.add(photo.file);
+            });
+            document.getElementById('fotos').files = dataTransfer.files;
+        }
+        
+        // Manejar carga de archivos
         document.getElementById('btnFile').addEventListener('click', function() {
-            document.getElementById('foto').click();
+            document.getElementById('fotos').click();
         });
         
-        document.getElementById('foto').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    showPreview(e.target.result);
-                };
-                reader.readAsDataURL(file);
-            }
+        document.getElementById('fotos').addEventListener('change', function(e) {
+            const files = Array.from(e.target.files);
+            
+            files.forEach(file => {
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        uploadedPhotos.push({
+                            file: file,
+                            url: e.target.result
+                        });
+                        renderGallery();
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
         });
         
         // Manejar cámara
@@ -654,69 +777,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         });
         
         function startCamera() {
-            navigator.mediaDevices.getUserMedia({ video: true })
+            navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
                 .then(function(mediaStream) {
                     stream = mediaStream;
                     const video = document.getElementById('video');
                     video.srcObject = stream;
-                    document.getElementById('cameraPreview').style.display = 'block';
-                    document.getElementById('btnCamera').innerHTML = '<i class="fas fa-camera me-2"></i>Capturar';
-                    
-                    // Agregar botón de captura
-                    if (!document.getElementById('captureBtn')) {
-                        const captureBtn = document.createElement('button');
-                        captureBtn.type = 'button';
-                        captureBtn.id = 'captureBtn';
-                        captureBtn.className = 'btn btn-success mt-2';
-                        captureBtn.innerHTML = '<i class="fas fa-camera me-2"></i>Capturar Foto';
-                        captureBtn.addEventListener('click', capturePhoto);
-                        document.getElementById('cameraPreview').appendChild(captureBtn);
-                    }
-                })
-                .catch(function(err) {
-                    alert('Error al acceder a la cámara: ' + err.message);
-                });
-        }
-        
-        function capturePhoto() {
-            const video = document.getElementById('video');
-            const canvas = document.getElementById('canvas');
-            const context = canvas.getContext('2d');
-            
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            context.drawImage(video, 0, 0);
-            
-            const dataURL = canvas.toDataURL('image/jpeg');
-            document.getElementById('foto_camera').value = dataURL;
-            
-            showPreview(dataURL);
-            stopCamera();
-        }
-        
-        function stopCamera() {
-            if (stream) {
-                stream.getTracks().forEach(track => track.stop());
-                stream = null;
-            }
-            document.getElementById('cameraPreview').style.display = 'none';
+                    document.getElementById('cameraPreview').style.display = 'none';
             document.getElementById('btnCamera').innerHTML = '<i class="fas fa-camera me-2"></i>Tomar Foto';
             const captureBtn = document.getElementById('captureBtn');
             if (captureBtn) captureBtn.remove();
         }
         
-        function showPreview(src) {
-            document.getElementById('previewImg').src = src;
-            document.getElementById('photoPreview').style.display = 'block';
-            document.getElementById('cameraPreview').style.display = 'none';
+        // Manejar cambio de sucursal
+        document.getElementById('selectSucursal')?.addEventListener('change', function() {
+            const nuevaSucursal = this.value;
+            const url = `formulario_mantenimiento.php?cod_operario=<?= $cod_operario ?>&cod_sucursal=${nuevaSucursal}`;
+            window.location.href = url;
+        });
+        
+        function goToDashboard() {
+            const url = `dashboard_sucursales.php?cod_operario=<?= $cod_operario ?>&cod_sucursal=<?= $cod_sucursal ?>`;
+            window.location.href = url;
         }
         
-        document.getElementById('removePhoto').addEventListener('click', function() {
-            document.getElementById('photoPreview').style.display = 'none';
-            document.getElementById('foto').value = '';
-            document.getElementById('foto_camera').value = '';
-            stopCamera();
-        });
+        function openEquipmentForm() {
+            const url = `formulario_equipos.php?cod_operario=<?= $cod_operario ?>&cod_sucursal=<?= $cod_sucursal ?>`;
+            window.location.href = url;
+        }
+        
+        function openMaintenanceForm() {
+            window.location.reload();
+        }
         
         // Validación del formulario
         document.getElementById('maintenanceForm').addEventListener('submit', function(e) {
@@ -736,26 +827,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         });
         
-        // Manejar cambio de sucursal
-        document.getElementById('selectSucursal')?.addEventListener('change', function() {
-            const nuevaSucursal = this.value;
-            const url = `formulario_mantenimiento.php?cod_operario=<?= $cod_operario ?>&cod_sucursal=${nuevaSucursal}`;
-            window.location.href = url;
-        });
-        
-        function goToDashboard() {
-            const url = `dashboard_sucursales.php?cod_operario=<?= $cod_operario ?>&cod_sucursal=<?= $cod_sucursal ?>`;
-            window.location.href = url;
-        }
-        
-        function openEquipmentForm() {
-            const url = `formulario_equipos.php?cod_operario=<?= $cod_operario ?>&cod_sucursal=<?= $cod_sucursal ?>`;
-            window.location.href = url;
-        }
-        
         // Prevenir envío múltiple del formulario
         document.addEventListener('DOMContentLoaded', function() {
-            const form = document.getElementById('maintenanceForm'); // Para mantenimiento
+            const form = document.getElementById('maintenanceForm');
             
             if (form) {
                 let isSubmitting = false;
@@ -774,7 +848,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Guardando...';
                     isSubmitting = true;
                     
-                    // Re-habilitar después de 5 segundos por si hay error (seguridad)
+                    // Re-habilitar después de 10 segundos por si hay error
                     setTimeout(() => {
                         if (isSubmitting) {
                             submitBtn.disabled = false;
@@ -785,15 +859,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }, 10000);
                 });
                 
-                // También prevenir envío con Enter
-                form.addEventListener('keydown', function(e) {
-                    if (e.key === 'Enter') {
-                        e.preventDefault();
-                        return false;
-                    }
-                });
-                
-                // Prevenir Enter en campos específicos
+                // Prevenir Enter en campos de texto
                 const textInputs = form.querySelectorAll('input[type="text"], textarea, select');
                 textInputs.forEach(input => {
                     input.addEventListener('keydown', function(e) {
@@ -803,6 +869,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         }
                     });
                 });
+            }
+        });
+        
+        // Limpiar cámara al cerrar/salir
+        window.addEventListener('beforeunload', function() {
+            if (stream) {
+                stopCamera();
             }
         });
     </script>
