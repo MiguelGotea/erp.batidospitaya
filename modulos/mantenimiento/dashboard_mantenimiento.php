@@ -1374,38 +1374,56 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticket_id_chat'])) {
 
         function getUniqueColumnValues(columnIndex) {
             const values = new Set();
-            table.column(columnIndex).data().each(function(value) {
-                let cleanValue = value.toString().trim();
-                
-                // Limpiar HTML para columnas específicas
-                if (columnIndex === 5) { // Urgencia
-                    // Extraer solo el número del nivel de urgencia
-                    const match = cleanValue.match(/urgency-btn-(\d)/);
-                    if (match) {
-                        const level = match[1];
-                        // Mapear número a texto
+            
+            if (columnIndex === 5) { // Urgencia - leer directamente del DOM
+                table.rows().every(function() {
+                    const row = this.node();
+                    const cell = $(row).find('td').eq(columnIndex);
+                    
+                    // Buscar el botón seleccionado
+                    const selectedBtn = cell.find('.btn-urgency.selected');
+                    if (selectedBtn.length > 0) {
+                        const level = selectedBtn.text().trim();
                         const urgencyMap = {
                             '1': 'No urgente',
                             '2': 'Medio',
                             '3': 'Urgente',
                             '4': 'Crítico'
                         };
-                        cleanValue = urgencyMap[level] || level;
+                        values.add(urgencyMap[level] || level);
+                    } else {
+                        // Si no hay seleccionado, buscar cualquier botón y extraer los niveles
+                        cell.find('.btn-urgency').each(function() {
+                            const level = $(this).text().trim();
+                            const urgencyMap = {
+                                '1': 'No urgente',
+                                '2': 'Medio',
+                                '3': 'Urgente',
+                                '4': 'Crítico'
+                            };
+                            values.add(urgencyMap[level] || level);
+                        });
                     }
-                } else if (columnIndex === 6) { // Estado
-                    // Extraer texto del badge de estado
-                    const tempDiv = document.createElement('div');
-                    tempDiv.innerHTML = cleanValue;
-                    const badge = tempDiv.querySelector('.status-badge');
-                    if (badge) {
-                        cleanValue = badge.textContent.trim();
+                });
+            } else {
+                table.column(columnIndex).data().each(function(value) {
+                    let cleanValue = value.toString().trim();
+                    
+                    if (columnIndex === 6) { // Estado
+                        const tempDiv = document.createElement('div');
+                        tempDiv.innerHTML = cleanValue;
+                        const badge = tempDiv.querySelector('.status-badge');
+                        if (badge) {
+                            cleanValue = badge.textContent.trim();
+                        }
                     }
-                }
-                
-                if (cleanValue) {
-                    values.add(cleanValue);
-                }
-            });
+                    
+                    if (cleanValue) {
+                        values.add(cleanValue);
+                    }
+                });
+            }
+            
             return Array.from(values).sort();
         }
         
@@ -1436,13 +1454,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticket_id_chat'])) {
                 for (let column in activeFilters) {
                     if (activeFilters[column].length > 0) {
                         const columnIndex = getColumnIndex(column);
-                        let cellValue = data[columnIndex].trim();
+                        let cellValue = '';
                         
-                        // Limpiar HTML según la columna
                         if (column === 'urgencia') {
-                            const match = cellValue.match(/urgency-btn-(\d)/);
-                            if (match) {
-                                const level = match[1];
+                            // Leer directamente del DOM
+                            const row = table.row(dataIndex).node();
+                            const cell = $(row).find('td').eq(columnIndex);
+                            const selectedBtn = cell.find('.btn-urgency.selected');
+                            
+                            if (selectedBtn.length > 0) {
+                                const level = selectedBtn.text().trim();
                                 const urgencyMap = {
                                     '1': 'No urgente',
                                     '2': 'Medio',
@@ -1451,12 +1472,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticket_id_chat'])) {
                                 };
                                 cellValue = urgencyMap[level] || level;
                             }
-                        } else if (column === 'estado') {
-                            const tempDiv = document.createElement('div');
-                            tempDiv.innerHTML = cellValue;
-                            const badge = tempDiv.querySelector('.status-badge');
-                            if (badge) {
-                                cellValue = badge.textContent.trim();
+                        } else {
+                            cellValue = data[columnIndex].trim();
+                            
+                            if (column === 'estado') {
+                                const tempDiv = document.createElement('div');
+                                tempDiv.innerHTML = cellValue;
+                                const badge = tempDiv.querySelector('.status-badge');
+                                if (badge) {
+                                    cellValue = badge.textContent.trim();
+                                }
                             }
                         }
                         
