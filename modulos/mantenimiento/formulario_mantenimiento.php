@@ -852,6 +852,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             console.log('----------------------------------------');
         });
 
+        // También puedes agregar el evento focus para cuando se selecciona con teclado
+        document.getElementById('selectSucursal')?.addEventListener('focus', function() {
+            console.log('🎯 Selector de sucursal enfocado (teclado)');
+        });
+
         // Manejar cambio de sucursal
         document.getElementById('selectSucursal')?.addEventListener('change', function() {
             const nuevaSucursal = this.value;
