@@ -841,11 +841,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         });
         
         // Manejar cambio de sucursal
-        document.getElementById('selectSucursal')?.addEventListener('change', function() {
-            const nuevaSucursal = this.value;
-            const url = `formulario_mantenimiento.php?cod_operario=<?= $cod_operario ?>&cod_sucursal=${nuevaSucursal}`;
-            window.location.href = url;
+        function setupSucursalSelector() {
+            const sucursalSelector = document.getElementById('selectSucursal');
+            
+            if (sucursalSelector) {
+                console.log('Selector de sucursal encontrado, configurando evento...');
+                
+                sucursalSelector.addEventListener('change', function() {
+                    const nuevaSucursal = this.value;
+                    console.log('Sucursal cambiada a:', nuevaSucursal);
+                    
+                    // Construir la nueva URL
+                    const url = `formulario_mantenimiento.php?cod_operario=<?= $cod_operario ?>&cod_sucursal=${nuevaSucursal}`;
+                    console.log('Redirigiendo a:', url);
+                    
+                    // Redirigir
+                    window.location.href = url;
+                });
+            } else {
+                console.log('Selector de sucursal no encontrado (probablemente solo hay una sucursal)');
+            }
+        }
+
+        // Ejecutar cuando el DOM esté listo
+        document.addEventListener('DOMContentLoaded', function() {
+            setupSucursalSelector();
         });
+
+        // También ejecutar inmediatamente por si el DOM ya está listo
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', setupSucursalSelector);
+        } else {
+            setupSucursalSelector();
+        }
         
         function goToDashboard() {
             const url = `dashboard_sucursales.php?cod_operario=<?= $cod_operario ?>&cod_sucursal=<?= $cod_sucursal ?>`;
