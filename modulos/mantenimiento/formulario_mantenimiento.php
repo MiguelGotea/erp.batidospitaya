@@ -568,7 +568,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             </div>
                             
                             <!-- Selector de Sucursal (solo mostrar si tiene más de una sucursal) -->
-                            <?php if (count($sucursalesPermitidas) > 1): ?>
+                            <?php if (count($sucursalesPermitidas) > 1): 
+                                console.log("Más de una sucursal permitida");
+                                ?>
                             <div class="mb-3">
                                 <label for="sucursal" class="form-label">Sucursal *</label>
                                 <select id="selectSucursal" class="form-select form-select-sm">
@@ -652,7 +654,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         // Manejar carga de archivos
         document.getElementById('btnFile').addEventListener('click', function() {
-            console.log('btnFile clickeado');
             document.getElementById('fotos').click();
         });
 
