@@ -839,18 +839,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 return;
             }
         });
-        
+
+        // Mostrar en consola cuando se hace click en el selector de sucursal
+        document.getElementById('selectSucursal')?.addEventListener('click', function() {
+            const sucursalSeleccionada = this.value;
+            console.log('🚀 EVENTO SUCURSAL - Click detectado');
+            console.log('👤 Usuario:', '<?= $cod_operario ?>');
+            console.log('🏪 Sucursal actual:', '<?= $cod_sucursal ?>');
+            console.log('📋 Sucursal seleccionada:', sucursalSeleccionada);
+            console.log('🌐 Página:', 'formulario_mantenimiento');
+            console.log('⏰ Timestamp:', new Date().toLocaleString());
+            console.log('----------------------------------------');
+        });
+
         // Manejar cambio de sucursal
         document.getElementById('selectSucursal')?.addEventListener('change', function() {
             const nuevaSucursal = this.value;
             const url = `formulario_mantenimiento.php?cod_operario=<?= $cod_operario ?>&cod_sucursal=${nuevaSucursal}`;
             window.location.href = url;
             console.log(url);
-        });
-
-        document.getElementById('selectSucursal')?.addEventListener('click', function() {
-
-            console.log(this.value);
         });
         
         function goToDashboard() {
