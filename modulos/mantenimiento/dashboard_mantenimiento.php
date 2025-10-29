@@ -1371,11 +1371,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticket_id_chat'])) {
             };
             return columns[column];
         }
-        
+
         function getUniqueColumnValues(columnIndex) {
             const values = new Set();
             table.column(columnIndex).data().each(function(value) {
-                const cleanValue = value.toString().trim();
+                let cleanValue = value.toString().trim();
+                
+                // Limpiar HTML para columnas específicas
+                if (columnIndex === 5) { // Urgencia
+                    // Extraer solo el número del nivel de urgencia
+                    const match = cleanValue.match(/urgency-btn-(\d)/);
+                    if (match) {
+                        const level = match[1];
+                        // Mapear número a texto
+                        const urgencyMap = {
+                            '1': 'No urgente',
+                            '2': 'Medio',
+                            '3': 'Urgente',
+                            '4': 'Crítico'
+                        };
+                        cleanValue = urgencyMap[level] || level;
+                    }
+                } else if (columnIndex === 6) { // Estado
+                    // Extraer texto del badge de estado
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = cleanValue;
+                    const badge = tempDiv.querySelector('.status-badge');
+                    if (badge) {
+                        cleanValue = badge.textContent.trim();
+                    }
+                }
+                
                 if (cleanValue) {
                     values.add(cleanValue);
                 }
@@ -1410,7 +1436,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticket_id_chat'])) {
                 for (let column in activeFilters) {
                     if (activeFilters[column].length > 0) {
                         const columnIndex = getColumnIndex(column);
-                        const cellValue = data[columnIndex].trim();
+                        let cellValue = data[columnIndex].trim();
+                        
+                        // Limpiar HTML según la columna
+                        if (column === 'urgencia') {
+                            const match = cellValue.match(/urgency-btn-(\d)/);
+                            if (match) {
+                                const level = match[1];
+                                const urgencyMap = {
+                                    '1': 'No urgente',
+                                    '2': 'Medio',
+                                    '3': 'Urgente',
+                                    '4': 'Crítico'
+                                };
+                                cellValue = urgencyMap[level] || level;
+                            }
+                        } else if (column === 'estado') {
+                            const tempDiv = document.createElement('div');
+                            tempDiv.innerHTML = cellValue;
+                            const badge = tempDiv.querySelector('.status-badge');
+                            if (badge) {
+                                cellValue = badge.textContent.trim();
+                            }
+                        }
                         
                         if (!activeFilters[column].includes(cellValue)) {
                             return false;
