@@ -13,8 +13,8 @@ class Ticket {
         // Generar código único para el ticket
         $codigo = $this->generateTicketCode();
         
-        $sql = "INSERT INTO mtto_tickets (codigo, titulo, descripcion, tipo_formulario, cod_operario, cod_sucursal, area_equipo, foto) 
-                VALUES (:codigo, :titulo, :descripcion, :tipo_formulario, :cod_operario, :cod_sucursal, :area_equipo, :foto)";
+        $sql = "INSERT INTO mtto_tickets (codigo, titulo, descripcion, tipo_formulario, cod_operario, cod_sucursal, area_equipo) 
+                VALUES (:codigo, :titulo, :descripcion, :tipo_formulario, :cod_operario, :cod_sucursal, :area_equipo)";
         
         $params = [
             ':codigo' => $codigo,
@@ -23,16 +23,40 @@ class Ticket {
             ':tipo_formulario' => $data['tipo_formulario'],
             ':cod_operario' => $data['cod_operario'],
             ':cod_sucursal' => $data['cod_sucursal'],
-            ':area_equipo' => $data['area_equipo'],
-            ':foto' => $data['foto'] ?? null
+            ':area_equipo' => $data['area_equipo']
         ];
         
         $this->db->query($sql, $params);
         return $this->db->lastInsertId();
     }
     
+    // Nueva función para agregar fotos a un ticket
+    public function addFotos($ticket_id, $fotos) {
+        if (empty($fotos)) return;
+        
+        $sql = "INSERT INTO mtto_tickets_fotos (ticket_id, foto, orden) VALUES (?, ?, ?)";
+        
+        foreach ($fotos as $index => $foto) {
+            $this->db->query($sql, [$ticket_id, $foto, $index]);
+        }
+    }
+    
+    // Nueva función para obtener fotos de un ticket
+    public function getFotos($ticket_id) {
+        $sql = "SELECT * FROM mtto_tickets_fotos WHERE ticket_id = ? ORDER BY orden ASC";
+        return $this->db->fetchAll($sql, [$ticket_id]);
+    }
+    
+    // Nueva función para eliminar una foto
+    public function deleteFoto($foto_id) {
+        $sql = "DELETE FROM mtto_tickets_fotos WHERE id = ?";
+        $this->db->query($sql, [$foto_id]);
+    }
+    
     public function getAll($filters = []) {
-        $sql = "SELECT t.*, s.nombre as nombre_sucursal, o.Nombre as nombre_operario, tc.nombre as tipo_caso_nombre 
+        $sql = "SELECT t.*, s.nombre as nombre_sucursal, o.Nombre as nombre_operario, tc.nombre as tipo_caso_nombre,
+                (SELECT COUNT(*) FROM mtto_tickets_fotos WHERE ticket_id = t.id) as total_fotos,
+                (SELECT foto FROM mtto_tickets_fotos WHERE ticket_id = t.id ORDER BY orden ASC LIMIT 1) as primera_foto
                 FROM mtto_tickets t 
                 LEFT JOIN sucursales s ON t.cod_sucursal = s.codigo 
                 LEFT JOIN Operarios o ON t.cod_operario = o.CodOperario 
@@ -147,7 +171,6 @@ class Ticket {
         $year = date('Y');
         $month = date('m');
         
-        // Buscar el último número del mes
         $sql = "SELECT codigo FROM mtto_tickets 
                 WHERE codigo LIKE :pattern 
                 ORDER BY codigo DESC LIMIT 1";

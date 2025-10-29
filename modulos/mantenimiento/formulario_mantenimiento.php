@@ -52,34 +52,47 @@ $sucursales = $sucursalesPermitidas; // Usar solo las sucursales permitidas
 // Procesar formulario
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
-        $foto = null;
+        $fotos = [];
         
-        // Manejar subida de archivo
-        if (isset($_FILES['foto']) && $_FILES['foto']['error'] === UPLOAD_ERR_OK) {
+        // Manejar múltiples archivos subidos
+        if (isset($_FILES['fotos']) && !empty($_FILES['fotos']['name'][0])) {
             $uploadDir = 'uploads/tickets/';
             if (!is_dir($uploadDir)) {
                 mkdir($uploadDir, 0777, true);
             }
             
-            $extension = pathinfo($_FILES['foto']['name'], PATHINFO_EXTENSION);
-            $foto = 'ticket_' . time() . '.' . $extension;
-            move_uploaded_file($_FILES['foto']['tmp_name'], $uploadDir . $foto);
+            $totalFiles = count($_FILES['fotos']['name']);
+            for ($i = 0; $i < $totalFiles; $i++) {
+                if ($_FILES['fotos']['error'][$i] === UPLOAD_ERR_OK) {
+                    $extension = pathinfo($_FILES['fotos']['name'][$i], PATHINFO_EXTENSION);
+                    $foto = 'ticket_' . time() . '_' . $i . '.' . $extension;
+                    if (move_uploaded_file($_FILES['fotos']['tmp_name'][$i], $uploadDir . $foto)) {
+                        $fotos[] = $foto;
+                    }
+                }
+            }
         }
         
-        // Manejar foto desde cámara (base64)
-        if (!empty($_POST['foto_camera'])) {
+        // Manejar fotos desde cámara (base64)
+        if (!empty($_POST['fotos_camera'])) {
             $uploadDir = 'uploads/tickets/';
             if (!is_dir($uploadDir)) {
                 mkdir($uploadDir, 0777, true);
             }
             
-            $img_data = $_POST['foto_camera'];
-            $img_data = str_replace('data:image/jpeg;base64,', '', $img_data);
-            $img_data = str_replace(' ', '+', $img_data);
-            $data = base64_decode($img_data);
-            
-            $foto = 'camera_' . time() . '.jpg';
-            file_put_contents($uploadDir . $foto, $data);
+            $fotosCamera = json_decode($_POST['fotos_camera'], true);
+            if (is_array($fotosCamera)) {
+                foreach ($fotosCamera as $index => $img_data) {
+                    $img_data = str_replace('data:image/jpeg;base64,', '', $img_data);
+                    $img_data = str_replace(' ', '+', $img_data);
+                    $data = base64_decode($img_data);
+                    
+                    $foto = 'camera_' . time() . '_' . $index . '.jpg';
+                    if (file_put_contents($uploadDir . $foto, $data)) {
+                        $fotos[] = $foto;
+                    }
+                }
+            }
         }
         
         $data = [
@@ -88,11 +101,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'tipo_formulario' => 'mantenimiento_general',
             'cod_operario' => $cod_operario,
             'cod_sucursal' => $cod_sucursal,
-            'area_equipo' => $_POST['area'],
-            'foto' => $foto
+            'area_equipo' => $_POST['area']
         ];
         
         $ticket_id = $ticket->create($data);
+        
+        // Guardar las fotos asociadas al ticket
+        if (!empty($fotos)) {
+            $ticket->addFotos($ticket_id, $fotos);
+        }
         
         echo "<script>
             alert('Ticket creado exitosamente. Código: TKT" . date('Ym') . str_pad($ticket_id, 4, '0', STR_PAD_LEFT) . "');
@@ -584,30 +601,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </div>
                         
                         <div class="mb-3">
-                            <label class="form-label">Fotografía (Opcional)</label>
+                            <label class="form-label">Fotografías (Opcional - Máximo 5)</label>
                             <div class="photo-options">
                                 <button type="button" class="btn btn-outline-primary" id="btnFile">
-                                    <i class="fas fa-upload me-2"></i>Subir Archivo
+                                    <i class="fas fa-upload me-2"></i>Subir Archivos
                                 </button>
                                 <button type="button" class="btn btn-outline-success" id="btnCamera">
                                     <i class="fas fa-camera me-2"></i>Tomar Foto
                                 </button>
                             </div>
                             
-                            <input type="file" id="foto" name="foto" accept="image/*" style="display: none;">
-                            <input type="hidden" id="foto_camera" name="foto_camera">
+                            <input type="file" id="fotos" name="fotos[]" accept="image/*" multiple style="display: none;">
+                            <input type="hidden" id="fotos_camera" name="fotos_camera">
                             
                             <div class="camera-preview" id="cameraPreview" style="display: none;">
                                 <video id="video" autoplay></video>
                                 <canvas id="canvas" style="display: none;"></canvas>
                             </div>
                             
-                            <div id="photoPreview" style="display: none;">
-                                <img id="previewImg" src="" alt="Preview" class="img-thumbnail" style="max-width: 300px;">
-                                <button type="button" class="btn btn-sm btn-danger ms-2" id="removePhoto">
-                                    <i class="fas fa-times"></i>
-                                </button>
+                            <div id="photosPreview" style="display: none; margin-top: 15px;">
+                                <label class="form-label"><strong>Fotos seleccionadas:</strong></label>
+                                <div id="photosList" class="row g-2"></div>
                             </div>
+                            
+                            <small class="text-muted d-block mt-2">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Puedes subir hasta 5 fotos. Formatos aceptados: JPG, PNG
+                            </small>
                         </div>
                         
                         <div class="d-grid gap-2 d-md-flex justify-content-md-end">
@@ -627,34 +647,53 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         let stream = null;
+        let fotosSeleccionadas = []; // Array para almacenar fotos (files o base64)
+        const MAX_FOTOS = 5;
         
-        // Manejar carga de archivo
+        // Manejar carga de archivos
         document.getElementById('btnFile').addEventListener('click', function() {
-            document.getElementById('foto').click();
+            document.getElementById('fotos').click();
         });
+
         
-        document.getElementById('foto').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
+        document.getElementById('fotos').addEventListener('change', function(e) {
+            const files = Array.from(e.target.files);
+            
+            if (fotosSeleccionadas.length + files.length > MAX_FOTOS) {
+                alert(`Solo puedes agregar hasta ${MAX_FOTOS} fotos en total`);
+                return;
+            }
+            
+            files.forEach(file => {
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    showPreview(e.target.result);
+                    fotosSeleccionadas.push({
+                        tipo: 'file',
+                        data: e.target.result,
+                        file: file
+                    });
+                    updatePhotosPreview();
                 };
                 reader.readAsDataURL(file);
-            }
+            });
         });
         
         // Manejar cámara
         document.getElementById('btnCamera').addEventListener('click', function() {
+            if (fotosSeleccionadas.length >= MAX_FOTOS) {
+                alert(`Ya has alcanzado el límite de ${MAX_FOTOS} fotos`);
+                return;
+            }
+            
             if (stream) {
                 stopCamera();
             } else {
                 startCamera();
             }
         });
-        
+
         function startCamera() {
-            navigator.mediaDevices.getUserMedia({ video: true })
+            navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
                 .then(function(mediaStream) {
                     stream = mediaStream;
                     const video = document.getElementById('video');
@@ -662,7 +701,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     document.getElementById('cameraPreview').style.display = 'block';
                     document.getElementById('btnCamera').innerHTML = '<i class="fas fa-camera me-2"></i>Capturar';
                     
-                    // Agregar botón de captura
                     if (!document.getElementById('captureBtn')) {
                         const captureBtn = document.createElement('button');
                         captureBtn.type = 'button';
@@ -677,8 +715,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     alert('Error al acceder a la cámara: ' + err.message);
                 });
         }
-        
+
         function capturePhoto() {
+            if (fotosSeleccionadas.length >= MAX_FOTOS) {
+                alert(`Ya has alcanzado el límite de ${MAX_FOTOS} fotos`);
+                stopCamera();
+                return;
+            }
+            
             const video = document.getElementById('video');
             const canvas = document.getElementById('canvas');
             const context = canvas.getContext('2d');
@@ -688,12 +732,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             context.drawImage(video, 0, 0);
             
             const dataURL = canvas.toDataURL('image/jpeg');
-            document.getElementById('foto_camera').value = dataURL;
             
-            showPreview(dataURL);
+            fotosSeleccionadas.push({
+                tipo: 'camera',
+                data: dataURL
+            });
+            
+            updatePhotosPreview();
             stopCamera();
         }
-        
+
         function stopCamera() {
             if (stream) {
                 stream.getTracks().forEach(track => track.stop());
@@ -704,7 +752,63 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             const captureBtn = document.getElementById('captureBtn');
             if (captureBtn) captureBtn.remove();
         }
-        
+    
+        function updatePhotosPreview() {
+            const previewContainer = document.getElementById('photosPreview');
+            const photosList = document.getElementById('photosList');
+            
+            if (fotosSeleccionadas.length === 0) {
+                previewContainer.style.display = 'none';
+                return;
+            }
+            
+            previewContainer.style.display = 'block';
+            photosList.innerHTML = '';
+            
+            fotosSeleccionadas.forEach((foto, index) => {
+                const col = document.createElement('div');
+                col.className = 'col-6 col-md-4 col-lg-3';
+                col.innerHTML = `
+                    <div class="position-relative">
+                        <img src="${foto.data}" class="img-thumbnail w-100" style="height: 150px; object-fit: cover;">
+                        <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 m-1" 
+                                onclick="removePhoto(${index})" title="Eliminar">
+                            <i class="fas fa-times"></i>
+                        </button>
+                        <div class="badge bg-primary position-absolute bottom-0 start-0 m-1">
+                            ${index + 1}
+                        </div>
+                    </div>
+                `;
+                photosList.appendChild(col);
+            });
+            
+            // Actualizar hidden inputs
+            updateHiddenInputs();
+        }
+
+        function removePhoto(index) {
+            fotosSeleccionadas.splice(index, 1);
+            updatePhotosPreview();
+        }
+
+        function updateHiddenInputs() {
+            // Crear DataTransfer para los archivos
+            const dt = new DataTransfer();
+            const fotosCamera = [];
+            
+            fotosSeleccionadas.forEach(foto => {
+                if (foto.tipo === 'file') {
+                    dt.items.add(foto.file);
+                } else if (foto.tipo === 'camera') {
+                    fotosCamera.push(foto.data);
+                }
+            });
+            
+            document.getElementById('fotos').files = dt.files;
+            document.getElementById('fotos_camera').value = JSON.stringify(fotosCamera);
+        }
+
         function showPreview(src) {
             document.getElementById('previewImg').src = src;
             document.getElementById('photoPreview').style.display = 'block';
