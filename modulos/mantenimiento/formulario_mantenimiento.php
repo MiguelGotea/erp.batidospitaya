@@ -568,9 +568,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             </div>
                             
                             <!-- Selector de Sucursal (solo mostrar si tiene más de una sucursal) -->
-                            <?php if (count($sucursalesPermitidas) > 1): 
-                                console.log("Más de una sucursal permitida");
-                                ?>
+                            <?php if (count($sucursalesPermitidas) > 1):?>
                             <div class="mb-3">
                                 <label for="sucursal" class="form-label">Sucursal *</label>
                                 <select id="selectSucursal" class="form-select form-select-sm">
