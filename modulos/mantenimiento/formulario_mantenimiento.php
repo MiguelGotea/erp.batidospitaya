@@ -840,10 +840,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         });
 
-        // Mostrar en consola cuando se hace click en el selector de sucursal
-        document.getElementById('selectSucursal')?.addEventListener('click', function() {
+        // Mostrar en consola cuando se interactúa con el selector de sucursal
+        document.getElementById('selectSucursal')?.addEventListener('mousedown', function() {
             const sucursalSeleccionada = this.value;
-            console.log('🚀 EVENTO SUCURSAL - Click detectado');
+            console.log('🚀 EVENTO SUCURSAL - Dropdown abierto');
             console.log('👤 Usuario:', '<?= $cod_operario ?>');
             console.log('🏪 Sucursal actual:', '<?= $cod_sucursal ?>');
             console.log('📋 Sucursal seleccionada:', sucursalSeleccionada);
