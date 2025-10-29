@@ -88,14 +88,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'tipo_formulario' => 'mantenimiento_general',
             'cod_operario' => $cod_operario,
             'cod_sucursal' => $cod_sucursal,
-            'area_equipo' => $_POST['area']
+            'area_equipo' => $_POST['area'],
             'foto' => $foto
         ];
         
         $ticket_id = $ticket->create($data);
         
         echo "<script>
-            alert('Ticket creado exitosamente. Código: TKT" . date('Ym') . str_pad($ticket_id, 4, '0', STR_PAD_LEFT) . "');
+            alert('Solicitud de cambio de equipo creada exitosamente.');
             window.close();
         </script>";
         
