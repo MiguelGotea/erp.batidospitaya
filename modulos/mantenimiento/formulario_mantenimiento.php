@@ -840,37 +840,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         });
 
+
         // Debug para el selector de sucursal
-        console.log('🔍 Buscando elemento selectSucursal...');
-        const selectSucursal = document.getElementById('selectSucursal');
-        console.log('Elemento encontrado:', selectSucursal);
+console.log('🔍 Buscando elemento selectSucursal...');
+const selectSucursal = document.getElementById('selectSucursal');
+console.log('Elemento encontrado:', selectSucursal);
 
-        if (selectSucursal) {
-            // Mostrar en consola cuando se interactúa con el selector de sucursal
-            selectSucursal.addEventListener('mousedown', function() {
-                console.log('🚀 EVENTO SUCURSAL - Dropdown abierto');
-                console.log('👤 Usuario:', '<?= $cod_operario ?>');
-                console.log('🏪 Sucursal actual:', '<?= $cod_sucursal ?>');
-                console.log('📋 Sucursal seleccionada:', this.value);
-                console.log('🌐 Página:', 'formulario_mantenimiento');
-                console.log('⏰ Timestamp:', new Date().toLocaleString());
-                console.log('----------------------------------------');
-            });
+if (selectSucursal) {
+    // Mostrar en consola cuando se interactúa con el selector de sucursal
+    selectSucursal.addEventListener('mousedown', function() {
+        console.log('🚀 EVENTO SUCURSAL - Dropdown abierto');
+        console.log('👤 Usuario:', '<?= $cod_operario ?>');
+        console.log('🏪 Sucursal actual:', '<?= $cod_sucursal ?>');
+        console.log('📋 Sucursal seleccionada:', this.value);
+        console.log('🌐 Página:', 'formulario_mantenimiento');
+        console.log('⏰ Timestamp:', new Date().toLocaleString());
+        console.log('----------------------------------------');
+    });
 
-            // También para el evento change
-            selectSucursal.addEventListener('change', function() {
-                console.log('🔄 EVENTO SUCURSAL - Cambio detectado');
-                console.log('Nueva sucursal seleccionada:', this.value);
-            });
+    // También para el evento change
+    selectSucursal.addEventListener('change', function() {
+        console.log('🔄 EVENTO SUCURSAL - Cambio detectado');
+        console.log('Nueva sucursal seleccionada:', this.value);
+    });
 
-            console.log('✅ Event listeners agregados correctamente');
-        } else {
-            console.log('❌ ERROR: No se encontró el elemento selectSucursal');
-            
-            // Mostrar todos los elementos select en la página para debug
-            const allSelects = document.querySelectorAll('select');
-            console.log('Todos los selects en la página:', allSelects);
-        }
+    console.log('✅ Event listeners agregados correctamente');
+} else {
+    console.log('❌ ERROR: No se encontró el elemento selectSucursal');
+    
+    // Mostrar todos los elementos select en la página para debug
+    const allSelects = document.querySelectorAll('select');
+    console.log('Todos los selects en la página:', allSelects);
+}
+
+// Mostrar en consola cuando se interactúa con el selector de sucursal
+document.getElementById('selectSucursal')?.addEventListener('mousedown', function() {
+    const sucursalSeleccionada = this.value;
+    console.log('🚀 EVENTO SUCURSAL - Dropdown abierto');
+    console.log('👤 Usuario:', '<?= $cod_operario ?>');
+    console.log('🏪 Sucursal actual:', '<?= $cod_sucursal ?>');
+    console.log('📋 Sucursal seleccionada:', sucursalSeleccionada);
+    console.log('🌐 Página:', 'formulario_mantenimiento');
+    console.log('⏰ Timestamp:', new Date().toLocaleString());
+    console.log('----------------------------------------');
+});
 
         // Manejar cambio de sucursal
         document.getElementById('selectSucursal')?.addEventListener('change', function() {
