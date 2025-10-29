@@ -652,6 +652,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         // Manejar carga de archivos
         document.getElementById('btnFile').addEventListener('click', function() {
+            console.log('btnFile clickeado');
             document.getElementById('fotos').click();
         });
 
