@@ -13,8 +13,8 @@ class Ticket {
         // Generar código único para el ticket
         $codigo = $this->generateTicketCode();
         
-        $sql = "INSERT INTO mtto_tickets (codigo, titulo, descripcion, tipo_formulario, cod_operario, cod_sucursal, area_equipo) 
-                VALUES (:codigo, :titulo, :descripcion, :tipo_formulario, :cod_operario, :cod_sucursal, :area_equipo)";
+        $sql = "INSERT INTO mtto_tickets (codigo, titulo, descripcion, tipo_formulario, cod_operario, cod_sucursal, area_equipo, foto) 
+                VALUES (:codigo, :titulo, :descripcion, :tipo_formulario, :cod_operario, :cod_sucursal, :area_equipo, :foto)";
         
         $params = [
             ':codigo' => $codigo,
@@ -23,66 +23,16 @@ class Ticket {
             ':tipo_formulario' => $data['tipo_formulario'],
             ':cod_operario' => $data['cod_operario'],
             ':cod_sucursal' => $data['cod_sucursal'],
-            ':area_equipo' => $data['area_equipo']
+            ':area_equipo' => $data['area_equipo'],
+            ':foto' => $data['foto'] ?? null
         ];
         
         $this->db->query($sql, $params);
-        $ticket_id = $this->db->lastInsertId();
-        
-        // Guardar fotos si existen
-        if (!empty($data['fotos']) && is_array($data['fotos'])) {
-            $this->saveFotos($ticket_id, $data['fotos']);
-        }
-        
-        return $ticket_id;
-    }
-    
-    public function saveFotos($ticket_id, $fotos) {
-        foreach ($fotos as $index => $foto) {
-            if (!empty($foto)) {
-                $sql = "INSERT INTO mtto_tickets_fotos (ticket_id, foto, orden) 
-                        VALUES (:ticket_id, :foto, :orden)";
-                
-                $params = [
-                    ':ticket_id' => $ticket_id,
-                    ':foto' => $foto,
-                    ':orden' => $index + 1
-                ];
-                
-                $this->db->query($sql, $params);
-            }
-        }
-    }
-    
-    public function getFotos($ticket_id) {
-        $sql = "SELECT * FROM mtto_tickets_fotos 
-                WHERE ticket_id = :ticket_id 
-                ORDER BY orden ASC";
-        
-        return $this->db->fetchAll($sql, [':ticket_id' => $ticket_id]);
-    }
-    
-    public function deleteFoto($foto_id) {
-        // Obtener info de la foto antes de eliminar
-        $sql = "SELECT foto FROM mtto_tickets_fotos WHERE id = :id";
-        $foto = $this->db->fetchOne($sql, [':id' => $foto_id]);
-        
-        if ($foto) {
-            // Eliminar archivo físico
-            $filePath = 'uploads/tickets/' . $foto['foto'];
-            if (file_exists($filePath)) {
-                unlink($filePath);
-            }
-            
-            // Eliminar registro
-            $sql = "DELETE FROM mtto_tickets_fotos WHERE id = :id";
-            $this->db->query($sql, [':id' => $foto_id]);
-        }
+        return $this->db->lastInsertId();
     }
     
     public function getAll($filters = []) {
-        $sql = "SELECT t.*, s.nombre as nombre_sucursal, o.Nombre as nombre_operario, tc.nombre as tipo_caso_nombre,
-                (SELECT COUNT(*) FROM mtto_tickets_fotos WHERE ticket_id = t.id) as num_fotos
+        $sql = "SELECT t.*, s.nombre as nombre_sucursal, o.Nombre as nombre_operario, tc.nombre as tipo_caso_nombre 
                 FROM mtto_tickets t 
                 LEFT JOIN sucursales s ON t.cod_sucursal = s.codigo 
                 LEFT JOIN Operarios o ON t.cod_operario = o.CodOperario 
@@ -119,13 +69,7 @@ class Ticket {
                 LEFT JOIN mtto_tipos_casos tc ON t.tipo_caso_id = tc.id 
                 WHERE t.id = :id";
         
-        $ticket = $this->db->fetchOne($sql, [':id' => $id]);
-        
-        if ($ticket) {
-            $ticket['fotos'] = $this->getFotos($id);
-        }
-        
-        return $ticket;
+        return $this->db->fetchOne($sql, [':id' => $id]);
     }
     
     public function update($id, $data) {
@@ -133,7 +77,7 @@ class Ticket {
         $params = [':id' => $id];
         
         foreach ($data as $key => $value) {
-            if ($key !== 'id' && $key !== 'fotos') {
+            if ($key !== 'id') {
                 $fields[] = "{$key} = :{$key}";
                 $params[":{$key}"] = $value;
             }
@@ -142,11 +86,6 @@ class Ticket {
         if (!empty($fields)) {
             $sql = "UPDATE mtto_tickets SET " . implode(', ', $fields) . " WHERE id = :id";
             $this->db->query($sql, $params);
-        }
-        
-        // Guardar nuevas fotos si existen
-        if (!empty($data['fotos']) && is_array($data['fotos'])) {
-            $this->saveFotos($id, $data['fotos']);
         }
     }
     
