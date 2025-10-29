@@ -616,12 +616,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 </button>
                             </div>
                             
-                            <input type="file" id="foto" name="foto" accept="image/*" style="display: none;">
-                            <input type="hidden" id="foto_camera" name="foto_camera">
+                            <input type="file" id="fotos" name="fotos[]" accept="image/*" multiple style="display: none;">
+                            <input type="hidden" id="fotos_camera" name="fotos_camera">
                             
-                            <div class="camera-preview" id="cameraPreview" style="display: none;">
-                                <video id="video" autoplay></video>
-                                <canvas id="canvas" style="display: none;"></canvas>
+                            <div id="photosPreview" style="display: none; margin-top: 15px;">
+                                <label class="form-label"><strong>Fotos seleccionadas:</strong></label>
+                                <div id="photosList" class="row g-2"></div>
                             </div>
                             
                             <div id="photoPreview" style="display: none;">
