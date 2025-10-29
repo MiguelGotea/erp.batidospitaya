@@ -847,6 +847,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             window.location.href = url;
             console.log(url);
         });
+
+        document.getElementById('selectSucursal')?.addEventListener('click', function() {
+
+            console.log(this.value);
+        });
         
         function goToDashboard() {
             const url = `dashboard_sucursales.php?cod_operario=<?= $cod_operario ?>&cod_sucursal=<?= $cod_sucursal ?>`;
