@@ -1392,17 +1392,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticket_id_chat'])) {
                         };
                         values.add(urgencyMap[level] || level);
                     } else {
-                        // Si no hay seleccionado, buscar cualquier botón y extraer los niveles
-                        cell.find('.btn-urgency').each(function() {
-                            const level = $(this).text().trim();
-                            const urgencyMap = {
-                                '1': 'No urgente',
-                                '2': 'Medio',
-                                '3': 'Urgente',
-                                '4': 'Crítico'
-                            };
-                            values.add(urgencyMap[level] || level);
-                        });
+                        // Si no hay botón seleccionado = No categorizado
+                        values.add('No categorizado');
                     }
                 });
             } else {
@@ -1471,6 +1462,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticket_id_chat'])) {
                                     '4': 'Crítico'
                                 };
                                 cellValue = urgencyMap[level] || level;
+                            } else {
+                                // Si no hay seleccionado = No categorizado
+                                cellValue = 'No categorizado';
                             }
                         } else {
                             cellValue = data[columnIndex].trim();
