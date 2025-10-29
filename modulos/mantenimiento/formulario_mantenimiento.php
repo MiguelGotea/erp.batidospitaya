@@ -31,11 +31,12 @@ if (empty($sucursalesPermitidas)) {
     die("No tienes sucursales asignadas. Contacta al administrador.");
 }
 
-// Validar parámetros y determinar sucursal actual (usar nueva función)
-if (!isset($_GET['cod_sucursal']) || !verificarAccesoSucursalMantenimiento($_SESSION['usuario_id'], $_GET['cod_sucursal'])) {
-    $cod_sucursal = $sucursalesPermitidas[0]['codigo'];
-} else {
+// Determinar sucursal actual - SOLUCIÓN MEJORADA
+if (isset($_GET['cod_sucursal']) && verificarAccesoSucursalMantenimiento($_SESSION['usuario_id'], $_GET['cod_sucursal'])) {
     $cod_sucursal = $_GET['cod_sucursal'];
+} else {
+    // Usar la primera sucursal permitida por defecto
+    $cod_sucursal = $sucursalesPermitidas[0]['codigo'];
 }
 
 // El código de operario siempre debe ser el del usuario logueado
@@ -475,7 +476,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 
                 <div class="buttons-container">
                     <?php if ($esAdmin || verificarAccesoCargo([5, 14, 16, 35])): ?>
-                        <a href="calendario.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'calendario.php' ? 'activo' : '' ?>">
+                        <a href="calendario.php?cod_sucursal=<?= $cod_sucursal ?>" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'calendario.php' ? 'activo' : '' ?>">
                             <i class="fas fa-calendar-alt"></i> <span class="btn-text">Calendario</span>
                         </a>
                     <?php endif; ?>
@@ -486,10 +487,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     
                     <a href="#" onclick="openEquipmentForm()" class="btn-agregar">
                         <i class="fas fa-laptop"></i> <span class="btn-text">Cambio de Equipos</span>
-                    </a>
-                    
-                    <a href="#" onclick="location.reload()" class="btn-agregar" style="display:none;">
-                        <i class="fas fa-sync-alt"></i> <span class="btn-text">Actualizar</span>
                     </a>
                     
                     <?php if ($esAdmin || verificarAccesoCargo([16, 5])): ?>
@@ -835,21 +832,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             window.location.href = url;
         }
 
-        // Manejar cambio de sucursal - SOLUCIÓN CORREGIDA
+        // Manejar cambio de sucursal - SOLUCIÓN DEFINITIVA
         function setupSucursalSelector() {
             const sucursalSelector = document.getElementById('selectSucursal');
             if (sucursalSelector) {
                 console.log('Selector de sucursal encontrado, agregando listener...');
+                
                 sucursalSelector.addEventListener('change', function() {
                     const nuevaSucursal = this.value;
                     console.log('Sucursal cambiada a:', nuevaSucursal);
-                    const url = `formulario_mantenimiento.php?cod_operario=<?= $cod_operario ?>&cod_sucursal=${nuevaSucursal}`;
-                    console.log('Redirigiendo a:', url);
-                    window.location.href = url;
+                    
+                    // Construir URL correctamente
+                    const urlParams = new URLSearchParams(window.location.search);
+                    urlParams.set('cod_sucursal', nuevaSucursal);
+                    
+                    // Mantener el cod_operario si existe
+                    if (!urlParams.has('cod_operario')) {
+                        urlParams.set('cod_operario', '<?= $cod_operario ?>');
+                    }
+                    
+                    const newUrl = `formulario_mantenimiento.php?${urlParams.toString()}`;
+                    console.log('Redirigiendo a:', newUrl);
+                    
+                    window.location.href = newUrl;
                 });
             } else {
                 console.log('Selector de sucursal no encontrado (probablemente solo hay una sucursal)');
             }
+        }
+
+        function openMaintenanceForm() {
+            const url = `formulario_mantenimiento.php?cod_operario=<?= $cod_operario ?>&cod_sucursal=<?= $cod_sucursal ?>`;
+            window.location.href = url;
+        }
+
+        function openEquipmentForm() {
+            const url = `formulario_equipos.php?cod_operario=<?= $cod_operario ?>&cod_sucursal=<?= $cod_sucursal ?>`;
+            window.location.href = url;
+        }
+
+        function goToDashboard() {
+            const url = `dashboard_sucursales.php?cod_operario=<?= $cod_operario ?>&cod_sucursal=<?= $cod_sucursal ?>`;
+            window.location.href = url;
         }
 
         // Prevenir envío múltiple del formulario
