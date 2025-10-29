@@ -457,6 +457,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
                 
                 <div class="buttons-container">
+
+                    <a href="dashboard_sucursales.php?cod_operario=<?= $cod_operario ?>&cod_sucursal=<?= $cod_sucursal ?>" class="btn-agregar" style="display:none;">
+                        <i class="fas fa-arrow-left"></i> <span class="btn-text">Volver al Panel</span>
+                    </a>
+
                     <?php if ($esAdmin || verificarAccesoCargo([5, 14, 16, 35])): ?>
                         <a href="calendario.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'calendario.php' ? 'activo' : '' ?>">
                             <i class="fas fa-calendar-alt"></i> <span class="btn-text">Calendario</span>
@@ -594,17 +599,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 </button>
                             </div>
                             
-                            <input type="file" id="fotos" name="fotos[]" accept="image/*" multiple style="display: none;">
-                            <input type="hidden" id="fotos_camera" name="fotos_camera">
+                            <input type="file" id="foto" name="foto" accept="image/*" style="display: none;">
+                            <input type="hidden" id="foto_camera" name="foto_camera">
                             
                             <div class="camera-preview" id="cameraPreview" style="display: none;">
                                 <video id="video" autoplay></video>
                                 <canvas id="canvas" style="display: none;"></canvas>
                             </div>
                             
-                            <div id="photosPreview" style="display: none; margin-top: 15px;">
-                                <label class="form-label"><strong>Fotos seleccionadas:</strong></label>
-                                <div id="photosList" class="row g-2"></div>
+                            <div id="photoPreview" style="display: none;">
+                                <img id="previewImg" src="" alt="Preview" class="img-thumbnail" style="max-width: 300px;">
+                                <button type="button" class="btn btn-sm btn-danger ms-2" id="removePhoto">
+                                    <i class="fas fa-times"></i>
+                                </button>
                             </div>
                             
                             <small class="text-muted d-block mt-2">
@@ -630,8 +637,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         let stream = null;
-        let fotosSeleccionadas = []; // Array para almacenar fotos (files o base64)
-        const MAX_FOTOS = 5;
         
         // Manejar carga de archivo
         document.getElementById('btnFile').addEventListener('click', function() {
@@ -651,10 +656,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         // Manejar cámara
         document.getElementById('btnCamera').addEventListener('click', function() {
-            if (fotosSeleccionadas.length >= MAX_FOTOS) {
-                alert(`Ya has alcanzado el límite de ${MAX_FOTOS} fotos`);
-                return;
-            }
             
             if (stream) {
                 stopCamera();
@@ -664,7 +665,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         });
 
         function startCamera() {
-            navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+            navigator.mediaDevices.getUserMedia({ video: true })
                 .then(function(mediaStream) {
                     stream = mediaStream;
                     const video = document.getElementById('video');
@@ -688,12 +689,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         function capturePhoto() {
-            if (fotosSeleccionadas.length >= MAX_FOTOS) {
-                alert(`Ya has alcanzado el límite de ${MAX_FOTOS} fotos`);
-                stopCamera();
-                return;
-            }
-            
             const video = document.getElementById('video');
             const canvas = document.getElementById('canvas');
             const context = canvas.getContext('2d');
@@ -704,12 +699,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             const dataURL = canvas.toDataURL('image/jpeg');
             
-            fotosSeleccionadas.push({
-                tipo: 'camera',
-                data: dataURL
-            });
+            document.getElementById('foto_camera').value = dataURL;
             
-            updatePhotosPreview();
+            showPreview(dataURL);
             stopCamera();
         }
 
@@ -722,62 +714,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             document.getElementById('btnCamera').innerHTML = '<i class="fas fa-camera me-2"></i>Tomar Foto';
             const captureBtn = document.getElementById('captureBtn');
             if (captureBtn) captureBtn.remove();
-        }
-    
-        function updatePhotosPreview() {
-            const previewContainer = document.getElementById('photosPreview');
-            const photosList = document.getElementById('photosList');
-            
-            if (fotosSeleccionadas.length === 0) {
-                previewContainer.style.display = 'none';
-                return;
-            }
-            
-            previewContainer.style.display = 'block';
-            photosList.innerHTML = '';
-            
-            fotosSeleccionadas.forEach((foto, index) => {
-                const col = document.createElement('div');
-                col.className = 'col-6 col-md-4 col-lg-3';
-                col.innerHTML = `
-                    <div class="position-relative">
-                        <img src="${foto.data}" class="img-thumbnail w-100" style="height: 150px; object-fit: cover;">
-                        <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 m-1" 
-                                onclick="removePhoto(${index})" title="Eliminar">
-                            <i class="fas fa-times"></i>
-                        </button>
-                        <div class="badge bg-primary position-absolute bottom-0 start-0 m-1">
-                            ${index + 1}
-                        </div>
-                    </div>
-                `;
-                photosList.appendChild(col);
-            });
-            
-            // Actualizar hidden inputs
-            updateHiddenInputs();
-        }
-
-        function removePhoto(index) {
-            fotosSeleccionadas.splice(index, 1);
-            updatePhotosPreview();
-        }
-
-        function updateHiddenInputs() {
-            // Crear DataTransfer para los archivos
-            const dt = new DataTransfer();
-            const fotosCamera = [];
-            
-            fotosSeleccionadas.forEach(foto => {
-                if (foto.tipo === 'file') {
-                    dt.items.add(foto.file);
-                } else if (foto.tipo === 'camera') {
-                    fotosCamera.push(foto.data);
-                }
-            });
-            
-            document.getElementById('fotos').files = dt.files;
-            document.getElementById('fotos_camera').value = JSON.stringify(fotosCamera);
         }
 
         function showPreview(src) {
