@@ -845,6 +845,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             const nuevaSucursal = this.value;
             const url = `formulario_mantenimiento.php?cod_operario=<?= $cod_operario ?>&cod_sucursal=${nuevaSucursal}`;
             window.location.href = url;
+            console.log(url);
         });
         
         function goToDashboard() {
