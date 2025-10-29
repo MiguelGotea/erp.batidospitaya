@@ -841,13 +841,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         });
 
 
-        // Manejar cambio de sucursal
-        document.getElementById('selectSucursal')?.addEventListener('change', function() {
-            const nuevaSucursal = this.value;
-            const url = `formulario_mantenimiento.php?cod_operario=<?= $cod_operario ?>&cod_sucursal=${nuevaSucursal}`;
-            window.location.href = url;
-            console.log(url);
-        });
+        // Manejar cambio de sucursal - Versión corregida
+        function setupSucursalSelector() {
+            const sucursalSelector = document.getElementById('selectSucursal');
+            if (sucursalSelector) {
+                sucursalSelector.addEventListener('change', function() {
+                    const nuevaSucursal = this.value;
+                    const url = `formulario_mantenimiento.php?cod_operario=<?= $cod_operario ?>&cod_sucursal=${nuevaSucursal}`;
+                    window.location.href = url;
+                });
+            }
+        }
         
         function goToDashboard() {
             const url = `dashboard_sucursales.php?cod_operario=<?= $cod_operario ?>&cod_sucursal=<?= $cod_sucursal ?>`;
