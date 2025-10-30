@@ -640,7 +640,7 @@ function getColorByUrgency($urgencia, $tipo_formulario) {
         }
 
         /* Vista lista: Hover */
-        .fc-listWeek-view .fc-list-event:hover {
+        .fc-list-event:hover {
             background-color: rgba(81, 184, 172, 0.1) !important;
         }
 
@@ -678,21 +678,6 @@ function getColorByUrgency($urgencia, $tipo_formulario) {
             line-height: 1.3 !important;
             padding: 6px 8px !important;
         }
-
-        /* Vista lista: Mejor formato */
-        .fc-listWeek-view .fc-list-event-title {
-            font-weight: normal !important;
-        }
-
-        .fc-listWeek-view .fc-list-event {
-            cursor: pointer;
-        }
-
-        .fc-listWeek-view .fc-list-event:hover {
-            background-color: rgba(81, 184, 172, 0.1) !important;
-        }
-
-
         
     </style>
 </head>
