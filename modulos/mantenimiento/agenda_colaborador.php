@@ -38,7 +38,11 @@ $colaborador_filtro = isset($_GET['colaborador']) ? intval($_GET['colaborador'])
 // Obtener tickets del colaborador
 $tickets = [];
 if ($colaborador_filtro) {
-    $tickets = $ticket->getTicketsPorColaborador($colaborador_filtro, date('Y-m-d'));
+    if (!verificarAccesoCargo([16])) {
+        $tickets = $ticket->getTicketsPorSucursal($colaborador_filtro, date('Y-m-d'));
+    } else {
+    $tickets = $ticket->getTicketsPorColaborador($colaborador_filtro, '01/01/2000');
+    }
 }
 ?>
 <!DOCTYPE html>
