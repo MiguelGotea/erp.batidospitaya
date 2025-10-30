@@ -867,92 +867,6 @@ function getColorByUrgency($urgencia, $tipo_formulario) {
         // Cargar colaboradores disponibles y asignados
         let colaboradoresDisponibles = [];
 
-        //Funcion de colaboradores asignados a ticket
-        function abrirModalColaboradores(ticketId) {
-            $.ajax({
-                url: 'ajax/get_modal_colaboradores.php',
-                method: 'GET',
-                data: { ticket_id: ticketId },
-                success: function(response) {
-                    const modal = $('<div class="modal fade" id="modalColaboradores"><div class="modal-dialog"><div class="modal-content">' + response + '</div></div></div>');
-                    $('body').append(modal);
-                    const bsModal = new bootstrap.Modal(document.getElementById('modalColaboradores'));
-                    bsModal.show();
-                    modal.on('hidden.bs.modal', function() {
-                        modal.remove();
-                    });
-                }
-            });
-        }
-
-        function cargarColaboradores() {
-            $.ajax({
-                url: 'ajax/get_colaboradores.php',
-                method: 'GET',
-                dataType: 'json',
-                success: function(response) {
-                    if (response.success) {
-                        colaboradoresDisponibles = response.colaboradores;
-                        actualizarSelectoresColaboradores();
-                    }
-                }
-            });
-        }
-
-        function actualizarSelectoresColaboradores() {
-            $('.colaborador-select').each(function() {
-                const ticketId = $(this).data('ticket-id');
-                cargarColaboradoresTicket(ticketId, this);
-            });
-        }
-
-        function cargarColaboradoresTicket(ticketId, container) {
-            $.ajax({
-                url: 'ajax/get_ticket_colaboradores.php',
-                method: 'GET',
-                data: { ticket_id: ticketId },
-                dataType: 'json',
-                success: function(response) {
-                    if (response.success) {
-                        const listContainer = $(`#colaboradores-list-${ticketId}`);
-                        if (listContainer.length) {
-                            if (response.colaboradores.length === 0) {
-                                listContainer.html('<span class="badge" style="background: rgba(255,255,255,0.3); color: inherit; font-size: 0.85em; padding: 1px 4px;">Sin asignar</span>');
-                            } else {
-                                let html = '';
-                                response.colaboradores.forEach(col => {
-                                    const primerNombre = col.Nombre.split(' ')[0];
-                                    html += `<span class="badge" style="background: rgba(255,255,255,0.3); color: inherit; font-size: 0.85em; padding: 1px 4px;">${primerNombre}</span>`;
-                                });
-                                listContainer.html(html);
-                            }
-                        }
-                    }
-                }
-            });
-        }
-        
-        function actualizarColaboradores(ticketId, selectElement) {
-            const selectedValues = Array.from(selectElement.selectedOptions).map(opt => opt.value);
-            
-            $.ajax({
-                url: 'ajax/update_ticket_colaboradores.php',
-                method: 'POST',
-                data: {
-                    ticket_id: ticketId,
-                    colaboradores: selectedValues
-                },
-                dataType: 'json',
-                success: function(response) {
-                    if (response.success) {
-                        console.log('Colaboradores actualizados');
-                    } else {
-                        alert('Error: ' + response.message);
-                    }
-                }
-            });
-        }
-
         // Procesar tickets para agrupar por día y sucursal
         const eventos = <?= json_encode($calendar_events) ?>;
         eventos.forEach(evento => {
@@ -1915,6 +1829,92 @@ function getColorByUrgency($urgencia, $tipo_formulario) {
                 error: function(xhr, status, error) {
                     console.error('Error AJAX:', xhr.responseText);
                     alert('❌ Error en la comunicación con el servidor');
+                }
+            });
+        }
+
+        //Funcion de colaboradores asignados a ticket
+        function abrirModalColaboradores(ticketId) {
+            $.ajax({
+                url: 'ajax/get_modal_colaboradores.php',
+                method: 'GET',
+                data: { ticket_id: ticketId },
+                success: function(response) {
+                    const modal = $('<div class="modal fade" id="modalColaboradores"><div class="modal-dialog"><div class="modal-content">' + response + '</div></div></div>');
+                    $('body').append(modal);
+                    const bsModal = new bootstrap.Modal(document.getElementById('modalColaboradores'));
+                    bsModal.show();
+                    modal.on('hidden.bs.modal', function() {
+                        modal.remove();
+                    });
+                }
+            });
+        }
+
+        function cargarColaboradores() {
+            $.ajax({
+                url: 'ajax/get_colaboradores.php',
+                method: 'GET',
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        colaboradoresDisponibles = response.colaboradores;
+                        actualizarSelectoresColaboradores();
+                    }
+                }
+            });
+        }
+
+        function actualizarSelectoresColaboradores() {
+            $('.colaborador-select').each(function() {
+                const ticketId = $(this).data('ticket-id');
+                cargarColaboradoresTicket(ticketId, this);
+            });
+        }
+
+        function cargarColaboradoresTicket(ticketId, container) {
+            $.ajax({
+                url: 'ajax/get_ticket_colaboradores.php',
+                method: 'GET',
+                data: { ticket_id: ticketId },
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        const listContainer = $(`#colaboradores-list-${ticketId}`);
+                        if (listContainer.length) {
+                            if (response.colaboradores.length === 0) {
+                                listContainer.html('<span class="badge" style="background: rgba(255,255,255,0.3); color: inherit; font-size: 0.85em; padding: 1px 4px;">Sin asignar</span>');
+                            } else {
+                                let html = '';
+                                response.colaboradores.forEach(col => {
+                                    const primerNombre = col.Nombre.split(' ')[0];
+                                    html += `<span class="badge" style="background: rgba(255,255,255,0.3); color: inherit; font-size: 0.85em; padding: 1px 4px;">${primerNombre}</span>`;
+                                });
+                                listContainer.html(html);
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function actualizarColaboradores(ticketId, selectElement) {
+            const selectedValues = Array.from(selectElement.selectedOptions).map(opt => opt.value);
+            
+            $.ajax({
+                url: 'ajax/update_ticket_colaboradores.php',
+                method: 'POST',
+                data: {
+                    ticket_id: ticketId,
+                    colaboradores: selectedValues
+                },
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        console.log('Colaboradores actualizados');
+                    } else {
+                        alert('Error: ' + response.message);
+                    }
                 }
             });
         }
