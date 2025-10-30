@@ -1141,7 +1141,7 @@ function getColorByUrgency($urgencia, $tipo_formulario) {
                         const status = arg.event.extendedProps.status || '';
                         const tipo_formulario = arg.event.extendedProps.tipo_formulario || '';
                         const id = arg.event.id;
-                        setTimeout(() => cargarColaboradoresTicket(id), 100);
+                        //setTimeout(() => cargarColaboradoresTicket(id), 100);
                         
                         // Vista Mes: Ocultar (se maneja con CSS)
                         if (view === 'dayGridMonth') {
