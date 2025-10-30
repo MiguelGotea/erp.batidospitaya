@@ -1064,27 +1064,27 @@ function getColorByUrgency($urgencia, $tipo_formulario) {
                             
                             return {
                                 html: `<div style="font-size: 0.75em; line-height: 1.2; padding: 2px;" onclick="event.stopPropagation();">
-                                    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 3px; margin-bottom: 2px;">
-                                        <div style="background: #51B8AC; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.5em; white-space: normal; word-wrap: break-word; border: 0.5px solid rgba(255,255,255,0.3);">
-                                            <i class="${icono}" style="font-size: 0.6em;"></i> ${sucursal}
-                                        </div>
-                                    </div>
-                                    
-                                    <div style="font-size: 0.7em; line-height: 1.1; white-space: normal; word-wrap: break-word; padding: 1px 0px; border-radius: 2px; cursor: pointer;" onclick="mostrarDetallesTicket(${id})">
-                                        ${titulo}
-                                    </div>
-                                    
-                                    <div style="margin-top: 4px; border-top: 1px solid rgba(255,255,255,0.3); padding-top: 4px; font-size: 0.65em; display: flex; justify-content: space-between; align-items: center;">
-                                        <div id="colaboradores-list-${id}" style="display: flex; flex-wrap: wrap; gap: 2px;">
-                                            <span class="badge" style="background: rgba(255,255,255,0.3); color: inherit; font-size: 0.85em; padding: 1px 4px;">Cargando...</span>
-                                        </div>
-                                        <button class="btn btn-sm" 
-                                                onclick="event.stopPropagation(); abrirModalColaboradores(${id})"
-                                                style="font-size: 0.7em; padding: 1px 6px; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); color: inherit; border-radius: 3px;">
-                                            <i class="fas fa-plus"></i>
-                                        </button>
-                                    </div>
-                                </div>`
+                                            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 3px; margin-bottom: 2px;" onclick="mostrarDetallesTicket(${id})">
+                                                <div style="background: #51B8AC; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.5em; white-space: normal; word-wrap: break-word; border: 0.5px solid rgba(255,255,255,0.3);">
+                                                    <i class="${icono}" style="font-size: 0.6em;"></i> ${sucursal}
+                                                </div>
+                                            </div>
+                                            
+                                            <div style="font-size: 0.7em; line-height: 1.1; white-space: normal; word-wrap: break-word; padding: 1px 0px; border-radius: 2px; cursor: pointer;" onclick="mostrarDetallesTicket(${id})">
+                                                ${titulo}
+                                            </div>
+                                            
+                                            <div style="margin-top: 4px; border-top: 1px solid rgba(255,255,255,0.3); padding-top: 4px; font-size: 0.65em; display: flex; justify-content: space-between; align-items: center;">
+                                                <div id="colaboradores-list-${id}" style="display: flex; flex-wrap: wrap; gap: 2px;" onclick="mostrarDetallesTicket(${id})">
+                                                    <span class="badge" style="background: rgba(255,255,255,0.3); color: inherit; font-size: 0.85em; padding: 1px 4px;">Cargando...</span>
+                                                </div>
+                                                <button class="btn btn-sm" 
+                                                        onclick="event.stopPropagation(); abrirModalColaboradores(${id})"
+                                                        style="font-size: 0.7em; padding: 1px 6px; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); color: inherit; border-radius: 3px;">
+                                                    <i class="fas fa-plus"></i>
+                                                </button>
+                                            </div>
+                                        </div>`
                             };
                         }
                         
