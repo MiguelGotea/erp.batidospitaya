@@ -217,7 +217,38 @@ if (!verificarAccesoCargo(14)) {
             <h1 class="module-title-page">Área de Mantenimiento</h1>
         </div>
         
+          <!-- Contenedor para indicadores -->
+        <div class="indicadores-container">
+            <div class="pendientes-container" style="margin-bottom: 30px;">
+                <div class="pendientes-card faltas-indicador <?= $faltasPendientesOperaciones['color'] ?>" onclick="mostrarModalFaltasOperaciones()" style="cursor: pointer;">
+                    <div class="pendientes-content">
+                        <div class="pendientes-count"><?= $faltasPendientesOperaciones['total'] ?></div>
+                        <div class="pendientes-info">
+                            <div class="pendientes-fecha" id="faltasFechaOperaciones">
+                                <?php 
+                                $diasRestantes = $faltasPendientesOperaciones['dias_restantes'];
+                                if ($faltasPendientesOperaciones['total'] == 0) {
+                                    echo 'Al día';
+                                } elseif ($diasRestantes < 0) {
+                                    echo 'Vencido hace ' . abs($diasRestantes) . ' días';
+                                } elseif ($diasRestantes === 0) {
+                                    echo 'Vence hoy';
+                                } else {
+                                    echo $diasRestantes . ' días restantes';
+                                }
+                                ?>
+                            </div>
+                            <div class="pendientes-titulo">
+                                Faltas Tiendas
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
         <!-- Grupo 1: Vista Pública -->
+        <!--
         <h2 class="category-title">Comunicación Interna</h2>
         <div class="modules">
             <a href="../supervision/auditorias_original/index_auditorias_publico.php" class="module-card">
@@ -227,6 +258,7 @@ if (!verificarAccesoCargo(14)) {
                 <h3 class="module-title">Vista Pública</h3>
             </a>
         </div>
+        -->
         
         <!-- Grupo 2: Mantenimiento -->
         <h2 class="category-title">Gestión de Mantenimiento</h2>
