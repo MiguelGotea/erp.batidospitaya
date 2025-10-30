@@ -639,11 +639,6 @@ function getColorByUrgency($urgencia, $tipo_formulario) {
             width: 14.28% !important; /* Distribución equitativa para 7 días */
         }
 
-        /* Vista lista: Hover */
-        .fc-list-event:hover {
-            background-color: rgba(81, 184, 172, 0.1) !important;
-        }
-
         /* Mostrar eventos de múltiples días en vista semana */
         .fc-timeGridWeek-view .fc-daygrid-event,
         .fc-timeGridWeek-view .fc-daygrid-event-harness {
@@ -1063,49 +1058,33 @@ function getColorByUrgency($urgencia, $tipo_formulario) {
                             return { html: '<div style="display: none;"></div>' };
                         }
                         
-                        // Vista Semana: Sello como encabezado compacto - Texto completo
+                        // Vista Semana: Con selector de colaboradores
                         if (view === 'timeGridWeek') {
-                            // Determinar el icono según el tipo de formulario
-                            let icono = ''; // Por defecto
-                            
-                            if (tipo_formulario === 'cambio_equipos') {
-                                icono = 'fas fa-exclamation-triangle';
-                            } else {
-                                icono = '   ';
-                            }
+                            let icono = tipo_formulario === 'cambio_equipos' ? 'fas fa-exclamation-triangle' : '';
                             
                             return {
-                                html: '<div style="font-size: 0.75em; line-height: 1.2; padding: 2px;">' + 
+                                html: `<div style="font-size: 0.75em; line-height: 1.2; padding: 2px;" onclick="event.stopPropagation();">
+                                    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 3px; margin-bottom: 2px;">
+                                        <div style="background: #51B8AC; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.5em; white-space: normal; word-wrap: break-word; border: 0.5px solid rgba(255,255,255,0.3);">
+                                            <i class="${icono}" style="font-size: 0.6em;"></i> ${sucursal}
+                                        </div>
+                                    </div>
                                     
-                                    '<div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 3px; margin-bottom: 2px;">' +
-                                        '<div style="background: #51B8AC; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.5em; white-space: normal; word-wrap: break-word; border: 0.5px solid rgba(255,255,255,0.3);">' + 
-                                            '<i class="' + icono + '" style="font-size: 0.6em;"></i> ' + sucursal + 
-                                        '</div>' +
-                                    '</div>' +
+                                    <div style="font-size: 0.7em; line-height: 1.1; white-space: normal; word-wrap: break-word; padding: 1px 0px; border-radius: 2px;" onclick="mostrarDetallesTicket(${id})">
+                                        ${titulo}
+                                    </div>
                                     
-                                    '<div style="font-size: 0.7em; line-height: 1.1; white-space: normal; word-wrap: break-word; padding: 1px 0px; border-radius: 2px;">' + 
-                                        titulo + 
-                                    '</div>' +
-                                    
-                                    '</div>'
-                            };
-                        }
-
-                        // Vista Lista: Mostrar solo título (sin código)
-                        if (view === 'listWeek') {
-                            let botonFinalizar = '';
-                            if (status !== 'finalizado') {
-                                botonFinalizar = '<button type="button" class="btn btn-success btn-sm" onclick="finalizarTicketRapido(' + id + ', this)" title="Finalizar ticket">' +
-                                                '<i class="fas fa-check-circle me-1"></i>Finalizar' +
-                                                '</button>';
-                            }
-                            
-                            return {
-                                html: '<div style="display: grid; grid-template-columns: 100px 1fr auto; gap: 8px; align-items: center; padding: 2px 4px;">' +
-                                    '<div style="font-weight: bold; text-align: left;">' + sucursal + '</div>' +
-                                    '<div>' + titulo + ': <span style="font-style: italic;">' + descripcion + '</span></div>' +
-                                    '<div style="text-align: right;">' + botonFinalizar + '</div>' +
-                                    '</div>'
+                                    <div style="margin-top: 4px; border-top: 1px solid rgba(255,255,255,0.3); padding-top: 4px;">
+                                        <select class="form-select form-select-sm colaborador-select" 
+                                                data-ticket-id="${id}"
+                                                onclick="event.stopPropagation()"
+                                                onchange="actualizarColaboradores(${id}, this)"
+                                                multiple
+                                                style="font-size: 0.65em; padding: 2px; background: rgba(255,255,255,0.9); border: 1px solid rgba(0,0,0,0.2); max-height: 60px;">
+                                            <option value="">Cargando...</option>
+                                        </select>
+                                    </div>
+                                </div>`
                             };
                         }
                         
@@ -1175,6 +1154,80 @@ function getColorByUrgency($urgencia, $tipo_formulario) {
                 calendar.render();
                 console.log('✅ Calendario renderizado exitosamente');
                 
+                // Cargar colaboradores disponibles y asignados
+                let colaboradoresDisponibles = [];
+
+                function cargarColaboradores() {
+                    $.ajax({
+                        url: 'ajax/get_colaboradores.php',
+                        method: 'GET',
+                        dataType: 'json',
+                        success: function(response) {
+                            if (response.success) {
+                                colaboradoresDisponibles = response.colaboradores;
+                                actualizarSelectoresColaboradores();
+                            }
+                        }
+                    });
+                }
+
+                function actualizarSelectoresColaboradores() {
+                    $('.colaborador-select').each(function() {
+                        const ticketId = $(this).data('ticket-id');
+                        cargarColaboradoresTicket(ticketId, this);
+                    });
+                }
+
+                function cargarColaboradoresTicket(ticketId, selectElement) {
+                    $.ajax({
+                        url: 'ajax/get_ticket_colaboradores.php',
+                        method: 'GET',
+                        data: { ticket_id: ticketId },
+                        dataType: 'json',
+                        success: function(response) {
+                            if (response.success) {
+                                let options = '';
+                                colaboradoresDisponibles.forEach(col => {
+                                    const selected = response.colaboradores.some(tc => tc.cod_operario == col.CodOperario) ? 'selected' : '';
+                                    options += `<option value="${col.CodOperario}" ${selected}>${col.Nombre} ${col.Apellido || ''}</option>`;
+                                });
+                                $(selectElement).html(options);
+                            }
+                        }
+                    });
+                }
+
+                function actualizarColaboradores(ticketId, selectElement) {
+                    const selectedValues = Array.from(selectElement.selectedOptions).map(opt => opt.value);
+                    
+                    $.ajax({
+                        url: 'ajax/update_ticket_colaboradores.php',
+                        method: 'POST',
+                        data: {
+                            ticket_id: ticketId,
+                            colaboradores: selectedValues
+                        },
+                        dataType: 'json',
+                        success: function(response) {
+                            if (response.success) {
+                                console.log('Colaboradores actualizados');
+                            } else {
+                                alert('Error: ' + response.message);
+                            }
+                        }
+                    });
+                }
+
+                // Llamar al cargar el calendario
+                cargarColaboradores();
+
+                // Recargar selectores después de cada refresh
+                const originalRefresh = refrescarCalendarioYSidebar;
+                refrescarCalendarioYSidebar = function() {
+                    originalRefresh();
+                    setTimeout(cargarColaboradores, 500);
+                };
+
                 // Inicializar drag de tickets
                 inicializarDragTickets();
                 inicializarDropZoneSidebar();

@@ -41,6 +41,12 @@ try {
     
     $ticket->update($ticket_id, $data);
     
+    // Asignar colaborador por defecto (645) si no tiene ninguno
+    $colaboradores = $ticket->getColaboradores($ticket_id);
+    if (empty($colaboradores)) {
+        $ticket->asignarColaborador($ticket_id, 645);
+    }
+    
     echo json_encode([
         'success' => true, 
         'message' => 'Ticket programado exitosamente',
