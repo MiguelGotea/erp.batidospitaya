@@ -225,7 +225,6 @@ class Ticket {
     public function getColaboradoresDisponibles() {
         $sql = "SELECT CodOperario, Nombre, Apellido 
                 FROM Operarios 
-                WHERE Operativo = 1 
                 ORDER BY Nombre, Apellido";
         return $this->db->fetchAll($sql);
     }
