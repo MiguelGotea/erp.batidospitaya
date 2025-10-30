@@ -199,5 +199,57 @@ class Ticket {
     public function getTiposCasos() {
         return $this->db->fetchAll("SELECT * FROM mtto_tipos_casos WHERE activo = 1 ORDER BY nombre");
     }
+    
+    // Nuevas funciones para colaboradores
+    public function asignarColaborador($ticket_id, $cod_operario, $asignado_por = null) {
+        $sql = "INSERT INTO mtto_tickets_colaboradores (ticket_id, cod_operario, asignado_por) 
+                VALUES (?, ?, ?) 
+                ON DUPLICATE KEY UPDATE fecha_asignacion = CURRENT_TIMESTAMP";
+        $this->db->query($sql, [$ticket_id, $cod_operario, $asignado_por]);
+    }
+    
+    public function removerColaborador($ticket_id, $cod_operario) {
+        $sql = "DELETE FROM mtto_tickets_colaboradores WHERE ticket_id = ? AND cod_operario = ?";
+        $this->db->query($sql, [$ticket_id, $cod_operario]);
+    }
+    
+    public function getColaboradores($ticket_id) {
+        $sql = "SELECT tc.*, o.Nombre, o.Apellido 
+                FROM mtto_tickets_colaboradores tc
+                LEFT JOIN Operarios o ON tc.cod_operario = o.CodOperario
+                WHERE tc.ticket_id = ?
+                ORDER BY tc.fecha_asignacion ASC";
+        return $this->db->fetchAll($sql, [$ticket_id]);
+    }
+    
+    public function getColaboradoresDisponibles() {
+        $sql = "SELECT CodOperario, Nombre, Apellido 
+                FROM Operarios 
+                WHERE Operativo = 1 
+                ORDER BY Nombre, Apellido";
+        return $this->db->fetchAll($sql);
+    }
+    
+    public function getTicketsPorColaborador($cod_operario, $fecha_inicio = null) {
+        $sql = "SELECT t.*, s.nombre as nombre_sucursal, tc.fecha_asignacion,
+                (SELECT COUNT(*) FROM mtto_tickets_fotos WHERE ticket_id = t.id) as total_fotos
+                FROM mtto_tickets t
+                INNER JOIN mtto_tickets_colaboradores tc ON t.id = tc.ticket_id
+                LEFT JOIN sucursales s ON t.cod_sucursal = s.codigo
+                WHERE tc.cod_operario = ?
+                AND t.fecha_inicio IS NOT NULL
+                AND t.status != 'finalizado'";
+        
+        $params = [$cod_operario];
+        
+        if ($fecha_inicio) {
+            $sql .= " AND t.fecha_inicio >= ?";
+            $params[] = $fecha_inicio;
+        }
+        
+        $sql .= " ORDER BY t.fecha_inicio ASC, t.fecha_final ASC";
+        
+        return $this->db->fetchAll($sql, $params);
+    }
 }
 ?>
