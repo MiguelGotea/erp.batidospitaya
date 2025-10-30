@@ -8,19 +8,34 @@ try {
         throw new Exception('Método no permitido');
     }
     
-    // Verificar si es finalización simple o con detalles
-    $finalizacion_completa = isset($_POST['detalle_trabajo']) && isset($_POST['materiales_usados']);
+    if (!isset($_POST['id']) && !isset($_POST['ticket_id'])) {
+        throw new Exception('ID de ticket requerido');
+    }
     
-    if ($finalizacion_completa) {
-        // Finalización con detalles, materiales y fotos
-        if (!isset($_POST['ticket_id'])) {
-            throw new Exception('ID de ticket requerido');
+    $ticket = new Ticket();
+    
+    // Determinar si es finalización simple (desde calendario/dashboard) o completa (desde agenda)
+    $esFinalizacionCompleta = isset($_POST['detalle_trabajo']) || isset($_POST['materiales_usados']);
+    
+    if ($esFinalizacionCompleta) {
+        // ==================== FINALIZACIÓN COMPLETA (DESDE AGENDA) ====================
+        $ticket_id = isset($_POST['ticket_id']) ? intval($_POST['ticket_id']) : intval($_POST['id']);
+        
+        if (!isset($_POST['detalle_trabajo']) || !isset($_POST['materiales_usados'])) {
+            throw new Exception('Detalle de trabajo y materiales son requeridos');
         }
         
-        $ticket_id = intval($_POST['ticket_id']);
-        $detalle_trabajo = $_POST['detalle_trabajo'];
-        $materiales_usados = $_POST['materiales_usados'];
+        $detalle_trabajo = trim($_POST['detalle_trabajo']);
+        $materiales_usados = trim($_POST['materiales_usados']);
         $finalizado_por = $_SESSION['usuario_id'] ?? null;
+        
+        if (empty($detalle_trabajo)) {
+            throw new Exception('El detalle del trabajo no puede estar vacío');
+        }
+        
+        if (empty($materiales_usados)) {
+            throw new Exception('Los materiales usados no pueden estar vacíos');
+        }
         
         // Procesar fotos de finalización
         $fotosFin = [];
@@ -74,9 +89,7 @@ try {
             }
         }
         
-        $ticket = new Ticket();
-        
-        // Finalizar ticket con detalles
+        // Finalizar ticket con información completa
         $ticket->finalizarTicket($ticket_id, $detalle_trabajo, $materiales_usados, $finalizado_por);
         
         // Guardar fotos de finalización
@@ -86,40 +99,37 @@ try {
         
         echo json_encode([
             'success' => true,
-            'message' => 'Ticket finalizado correctamente con detalles y fotos',
+            'message' => 'Ticket finalizado correctamente con detalles',
             'status' => 'finalizado',
-            'fotos_agregadas' => count($fotosFin),
-            'tipo_finalizacion' => 'completa'
+            'fotos_agregadas' => count($fotosFin)
         ]);
         
     } else {
-        // Finalización simple (tu código original)
-        if (!isset($_POST['id'])) {
-            throw new Exception('ID de ticket requerido');
-        }
-        
+        // ==================== FINALIZACIÓN SIMPLE (DESDE CALENDARIO/DASHBOARD) ====================
         $ticket_id = intval($_POST['id']);
         $status = 'finalizado';
         
-        $ticket = new Ticket();
-        
-        // Actualizar ticket con estado finalizado
+        // Actualizar solo el estado
         $data = [
             'status' => $status,
+            'fecha_finalizacion' => date('Y-m-d H:i:s'),
+            'finalizado_por' => $_SESSION['usuario_id'] ?? null
         ];
         
         $ticket->update($ticket_id, $data);
         
         echo json_encode([
-            'success' => true, 
+            'success' => true,
             'message' => 'Ticket finalizado exitosamente',
-            'status' => $status,
-            'tipo_finalizacion' => 'simple'
+            'status' => $status
         ]);
     }
     
 } catch (Exception $e) {
     http_response_code(400);
-    echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+    echo json_encode([
+        'success' => false,
+        'message' => $e->getMessage()
+    ]);
 }
 ?>
