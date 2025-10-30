@@ -74,9 +74,75 @@ try {
         throw new Exception('No hay datos para actualizar');
     }
     
+    // Actualizar ticket
     $ticket->update($_POST['id'], $data);
     
-    echo json_encode(['success' => true, 'message' => 'Ticket actualizado exitosamente']);
+    // ==================== MANEJO DE NUEVAS FOTOS ====================
+    $nuevasFotos = [];
+    $totalNuevasFotos = 0;
+    
+    // Procesar archivos subidos
+    if (isset($_FILES['nuevas_fotos']) && !empty($_FILES['nuevas_fotos']['name'][0])) {
+        $uploadDir = __DIR__ . '/../uploads/tickets/';
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0777, true);
+        }
+        
+        $totalFiles = count($_FILES['nuevas_fotos']['name']);
+        for ($i = 0; $i < $totalFiles; $i++) {
+            if ($_FILES['nuevas_fotos']['error'][$i] === UPLOAD_ERR_OK) {
+                $extension = pathinfo($_FILES['nuevas_fotos']['name'][$i], PATHINFO_EXTENSION);
+                $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif'];
+                
+                if (!in_array(strtolower($extension), $allowedExtensions)) {
+                    continue; // Saltar archivos no permitidos
+                }
+                
+                $foto = 'ticket_' . $_POST['id'] . '_' . time() . '_' . $i . '.' . $extension;
+                if (move_uploaded_file($_FILES['nuevas_fotos']['tmp_name'][$i], $uploadDir . $foto)) {
+                    $nuevasFotos[] = $foto;
+                    $totalNuevasFotos++;
+                }
+            }
+        }
+    }
+    
+    // Procesar fotos de cámara (base64)
+    if (!empty($_POST['nuevas_fotos_camera'])) {
+        $uploadDir = __DIR__ . '/../uploads/tickets/';
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0777, true);
+        }
+        
+        $fotosCamera = json_decode($_POST['nuevas_fotos_camera'], true);
+        if (is_array($fotosCamera)) {
+            foreach ($fotosCamera as $index => $img_data) {
+                $img_data = str_replace('data:image/jpeg;base64,', '', $img_data);
+                $img_data = str_replace(' ', '+', $img_data);
+                $data_decoded = base64_decode($img_data);
+                
+                if ($data_decoded !== false) {
+                    $foto = 'camera_' . $_POST['id'] . '_' . time() . '_' . $index . '.jpg';
+                    if (file_put_contents($uploadDir . $foto, $data_decoded)) {
+                        $nuevasFotos[] = $foto;
+                        $totalNuevasFotos++;
+                    }
+                }
+            }
+        }
+    }
+    
+    // Guardar nuevas fotos en la base de datos
+    if (!empty($nuevasFotos)) {
+        $ticket->addFotos($_POST['id'], $nuevasFotos);
+    }
+    // ==================== FIN MANEJO DE NUEVAS FOTOS ====================
+    
+    echo json_encode([
+        'success' => true, 
+        'message' => 'Ticket actualizado exitosamente',
+        'nuevas_fotos_agregadas' => $totalNuevasFotos
+    ]);
     
 } catch (Exception $e) {
     http_response_code(400);
