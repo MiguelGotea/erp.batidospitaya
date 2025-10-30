@@ -687,6 +687,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         // Manejar cámara
         document.getElementById('btnCamera').addEventListener('click', function() {
+            if (fotosSeleccionadas.length >= MAX_FOTOS) {
+                alert(`Ya has alcanzado el límite de ${MAX_FOTOS} fotos`);
+                return;
+            }
             
             if (stream) {
                 stopCamera();
@@ -696,7 +700,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         });
 
         function startCamera() {
-            navigator.mediaDevices.getUserMedia({ video: true })
+            navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
                 .then(function(mediaStream) {
                     stream = mediaStream;
                     const video = document.getElementById('video');
