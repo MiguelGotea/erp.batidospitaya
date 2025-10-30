@@ -1221,21 +1221,6 @@ function getColorByUrgency($urgencia, $tipo_formulario) {
                     });
                 }
 
-                // Actualizar después de refrescar
-                const originalRefresh = refrescarCalendarioYSidebar;
-                refrescarCalendarioYSidebar = function() {
-                    originalRefresh();
-                    setTimeout(() => {
-                        $('.fc-event').each(function() {
-                            const ticketId = $(this).find('[id^="colaboradores-list-"]').attr('id');
-                            if (ticketId) {
-                                const id = ticketId.replace('colaboradores-list-', '');
-                                cargarColaboradoresTicket(id);
-                            }
-                        });
-                    }, 500);
-                };
-
                 function actualizarColaboradores(ticketId, selectElement) {
                     const selectedValues = Array.from(selectElement.selectedOptions).map(opt => opt.value);
                     
@@ -1264,7 +1249,15 @@ function getColorByUrgency($urgencia, $tipo_formulario) {
                 const originalRefresh = refrescarCalendarioYSidebar;
                 refrescarCalendarioYSidebar = function() {
                     originalRefresh();
-                    setTimeout(cargarColaboradores, 500);
+                    setTimeout(() => {
+                        $('.fc-event').each(function() {
+                            const ticketId = $(this).find('[id^="colaboradores-list-"]').attr('id');
+                            if (ticketId) {
+                                const id = ticketId.replace('colaboradores-list-', '');
+                                cargarColaboradoresTicket(id);
+                            }
+                        });
+                    }, 500);
                 };
 
                 // Inicializar drag de tickets
