@@ -476,7 +476,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <i class="fas fa-arrow-left"></i> <span class="btn-text">Volver al Panel</span>
                     </a>
                     
-                    <?php if ($esAdmin || verificarAccesoCargo([5, 14, 16, 35])): ?>
+                    <?php if ($esAdmin || verificarAccesoCargo([5, 16, 35])): ?>
                         <a href="calendario.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'calendario.php' ? 'activo' : '' ?>">
                             <i class="fas fa-calendar-alt"></i> <span class="btn-text">Calendario</span>
                         </a>
@@ -488,10 +488,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     
                     <a href="#" onclick="openEquipmentForm()" class="btn-agregar activo">
                         <i class="fas fa-laptop"></i> <span class="btn-text">Cambio de Equipos</span>
-                    </a>
-                    
-                    <a href="#" onclick="location.reload()" class="btn-agregar" style="display:none;">
-                        <i class="fas fa-sync-alt"></i> <span class="btn-text">Actualizar</span>
                     </a>
                     
                     <?php if ($esAdmin || verificarAccesoCargo([16, 5])): ?>

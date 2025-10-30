@@ -989,7 +989,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticket_id_chat'])) {
                         </div>
                         
                         <div class="buttons-container">
-                            <?php if ($esAdmin || verificarAccesoCargo([5, 11, 14, 16, 35])): ?>
+                            <?php if ($esAdmin || verificarAccesoCargo([5, 11, 16, 35])): ?>
                                 <a href="calendario.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'calendario.php' ? 'activo' : '' ?>">
                                     <i class="fas fa-calendar-alt"></i> <span class="btn-text">Calendario</span>
                                 </a>

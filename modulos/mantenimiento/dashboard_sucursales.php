@@ -468,21 +468,8 @@ if ($accesoCompleto) {
                     <img src="../../assets/img/Logo.svg" alt="Batidos Pitaya" class="logo">
                 </div>
                 
-                <div class="buttons-container">
-                    <!-- Selector de Sucursal (solo mostrar si tiene más de una sucursal) -->
-                    <?php if (count($sucursalesPermitidas) > 1): ?>
-                    <div class="sucursal-selector" style="display:none;">
-                        <select id="selectSucursal" class="form-select form-select-sm" style="max-width: 200px;">
-                            <?php foreach ($sucursalesPermitidas as $suc): ?>
-                                <option value="<?= $suc['codigo'] ?>" <?= $suc['codigo'] == $cod_sucursal ? 'selected' : '' ?>>
-                                    <?= htmlspecialchars($suc['nombre']) ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <?php endif; ?>
-                    
-                    <?php if ($esAdmin || verificarAccesoCargo([5, 14, 16, 35])): ?>
+                <div class="buttons-container">                    
+                    <?php if ($esAdmin || verificarAccesoCargo([5, 16, 35])): ?>
                         <a href="calendario.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'calendario.php' ? 'activo' : '' ?>">
                             <i class="fas fa-calendar-alt"></i> <span class="btn-text">Calendario</span>
                         </a>

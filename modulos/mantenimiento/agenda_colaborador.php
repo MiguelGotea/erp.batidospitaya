@@ -354,11 +354,7 @@ if ($colaborador_filtro) {
                     <img src="../../assets/img/Logo.svg" alt="Batidos Pitaya" class="logo">
                 </div>
                 
-                <div class="buttons-container">
-                    <a href="#" onclick="refreshData()" class="btn-agregar activo" style="display:none;">
-                        <i class="fas fa-calendar-alt"></i> <span class="btn-text">Calendario</span>
-                    </a>
-                    
+                <div class="buttons-container">                   
                     <?php if ($esAdmin || verificarAccesoCargo([14, 16, 35])): ?>
                         <a href="agenda_colaborador.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'agenda_colaborador.php' ? 'activo' : '' ?>">
                             <i class="fas fa-tasks"></i> <span class="btn-text">Agenda</span>

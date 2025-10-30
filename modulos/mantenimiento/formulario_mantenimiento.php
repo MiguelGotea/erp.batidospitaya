@@ -474,12 +474,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
                 
                 <div class="buttons-container">
-
-                    <a href="dashboard_sucursales.php?cod_operario=<?= $cod_operario ?>&cod_sucursal=<?= $cod_sucursal ?>" class="btn-agregar" style="display:none;">
-                        <i class="fas fa-arrow-left"></i> <span class="btn-text">Volver al Panel</span>
-                    </a>
-
-                    <?php if ($esAdmin || verificarAccesoCargo([5, 14, 16, 35])): ?>
+                    <?php if ($esAdmin || verificarAccesoCargo([5, 16, 35])): ?>
                         <a href="calendario.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'calendario.php' ? 'activo' : '' ?>">
                             <i class="fas fa-calendar-alt"></i> <span class="btn-text">Calendario</span>
                         </a>
