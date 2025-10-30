@@ -885,6 +885,74 @@ function getColorByUrgency($urgencia, $tipo_formulario) {
             });
         }
 
+        function cargarColaboradores() {
+            $.ajax({
+                url: 'ajax/get_colaboradores.php',
+                method: 'GET',
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        colaboradoresDisponibles = response.colaboradores;
+                        actualizarSelectoresColaboradores();
+                    }
+                }
+            });
+        }
+
+        function actualizarSelectoresColaboradores() {
+            $('.colaborador-select').each(function() {
+                const ticketId = $(this).data('ticket-id');
+                cargarColaboradoresTicket(ticketId, this);
+            });
+        }
+
+        function cargarColaboradoresTicket(ticketId, container) {
+            $.ajax({
+                url: 'ajax/get_ticket_colaboradores.php',
+                method: 'GET',
+                data: { ticket_id: ticketId },
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        const listContainer = $(`#colaboradores-list-${ticketId}`);
+                        if (listContainer.length) {
+                            if (response.colaboradores.length === 0) {
+                                listContainer.html('<span class="badge" style="background: rgba(255,255,255,0.3); color: inherit; font-size: 0.85em; padding: 1px 4px;">Sin asignar</span>');
+                            } else {
+                                let html = '';
+                                response.colaboradores.forEach(col => {
+                                    const primerNombre = col.Nombre.split(' ')[0];
+                                    html += `<span class="badge" style="background: rgba(255,255,255,0.3); color: inherit; font-size: 0.85em; padding: 1px 4px;">${primerNombre}</span>`;
+                                });
+                                listContainer.html(html);
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function actualizarColaboradores(ticketId, selectElement) {
+            const selectedValues = Array.from(selectElement.selectedOptions).map(opt => opt.value);
+            
+            $.ajax({
+                url: 'ajax/update_ticket_colaboradores.php',
+                method: 'POST',
+                data: {
+                    ticket_id: ticketId,
+                    colaboradores: selectedValues
+                },
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        console.log('Colaboradores actualizados');
+                    } else {
+                        alert('Error: ' + response.message);
+                    }
+                }
+            });
+        }
+
         // Procesar tickets para agrupar por día y sucursal
         const eventos = <?= json_encode($calendar_events) ?>;
         eventos.forEach(evento => {
@@ -1073,6 +1141,7 @@ function getColorByUrgency($urgencia, $tipo_formulario) {
                         const status = arg.event.extendedProps.status || '';
                         const tipo_formulario = arg.event.extendedProps.tipo_formulario || '';
                         const id = arg.event.id;
+                        setTimeout(() => cargarColaboradoresTicket(id), 100);
                         
                         // Vista Mes: Ocultar (se maneja con CSS)
                         if (view === 'dayGridMonth') {
@@ -1174,76 +1243,6 @@ function getColorByUrgency($urgencia, $tipo_formulario) {
                 console.log('📅 Calendario creado, renderizando...');
                 calendar.render();
                 console.log('✅ Calendario renderizado exitosamente');
-                
-                function cargarColaboradores() {
-                    $.ajax({
-                        url: 'ajax/get_colaboradores.php',
-                        method: 'GET',
-                        dataType: 'json',
-                        success: function(response) {
-                            if (response.success) {
-                                colaboradoresDisponibles = response.colaboradores;
-                                actualizarSelectoresColaboradores();
-                            }
-                        }
-                    });
-                }
-
-                function actualizarSelectoresColaboradores() {
-                    $('.colaborador-select').each(function() {
-                        const ticketId = $(this).data('ticket-id');
-                        cargarColaboradoresTicket(ticketId, this);
-                    });
-                }
-
-                function cargarColaboradoresTicket(ticketId, container) {
-                    $.ajax({
-                        url: 'ajax/get_ticket_colaboradores.php',
-                        method: 'GET',
-                        data: { ticket_id: ticketId },
-                        dataType: 'json',
-                        success: function(response) {
-                            if (response.success) {
-                                const listContainer = $(`#colaboradores-list-${ticketId}`);
-                                if (listContainer.length) {
-                                    if (response.colaboradores.length === 0) {
-                                        listContainer.html('<span class="badge" style="background: rgba(255,255,255,0.3); color: inherit; font-size: 0.85em; padding: 1px 4px;">Sin asignar</span>');
-                                    } else {
-                                        let html = '';
-                                        response.colaboradores.forEach(col => {
-                                            const primerNombre = col.Nombre.split(' ')[0];
-                                            html += `<span class="badge" style="background: rgba(255,255,255,0.3); color: inherit; font-size: 0.85em; padding: 1px 4px;">${primerNombre}</span>`;
-                                        });
-                                        listContainer.html(html);
-                                    }
-                                }
-                            }
-                        }
-                    });
-                }
-                
-                function actualizarColaboradores(ticketId, selectElement) {
-                    const selectedValues = Array.from(selectElement.selectedOptions).map(opt => opt.value);
-                    
-                    $.ajax({
-                        url: 'ajax/update_ticket_colaboradores.php',
-                        method: 'POST',
-                        data: {
-                            ticket_id: ticketId,
-                            colaboradores: selectedValues
-                        },
-                        dataType: 'json',
-                        success: function(response) {
-                            if (response.success) {
-                                console.log('Colaboradores actualizados');
-                            } else {
-                                alert('Error: ' + response.message);
-                            }
-                        }
-                    });
-                }
-                // Llamar al cargar el calendario
-                cargarColaboradores();
 
                 // Recargar selectores después de cada refresh
                 const originalRefresh = refrescarCalendarioYSidebar;
@@ -1259,6 +1258,9 @@ function getColorByUrgency($urgencia, $tipo_formulario) {
                         });
                     }, 500);
                 };
+
+                // Llamar al cargar el calendario
+                cargarColaboradores();
 
                 // Inicializar drag de tickets
                 inicializarDragTickets();
@@ -1603,6 +1605,15 @@ function getColorByUrgency($urgencia, $tipo_formulario) {
                     location.reload();
                 }
             });
+
+            setTimeout(() => {
+                cargarColaboradores(); // Recargar lista global
+                // Recargar colaboradores de cada ticket visible
+                document.querySelectorAll('[id^="colaboradores-list-"]').forEach(el => {
+                    const ticketId = el.id.replace('colaboradores-list-', '');
+                    cargarColaboradoresTicket(ticketId);
+                });
+            }, 500);
         }
         
         function inicializarDropZoneSidebar() {
@@ -1754,6 +1765,7 @@ function getColorByUrgency($urgencia, $tipo_formulario) {
                 }
             });
         } 
+
         // Mostrar detalles del ticket
         function mostrarDetallesTicket(ticketId) {
             console.log('Mostrar detalles:', ticketId);
