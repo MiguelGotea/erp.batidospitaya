@@ -578,6 +578,7 @@ if ($accesoCompleto) {
                                         <th>Categoría</th>
                                         <th>Fecha Programada</th>
                                         <th>Tipo</th>
+                                        <th>Foto</th>
                                         <th>Acciones</th>
                                     </tr>
                                 </thead>
@@ -619,6 +620,23 @@ if ($accesoCompleto) {
                                             <span class="badge <?= $t['tipo_formulario'] === 'mantenimiento_general' ? 'bg-primary' : 'bg-info' ?>">
                                                 <?= $t['tipo_formulario'] === 'mantenimiento_general' ? 'Mantenimiento' : 'Equipos' ?>
                                             </span>
+                                        </td>
+                                        <td>
+                                            <?php 
+                                            $ticketFotos = $ticket->getFotos($t['id']);
+                                            if (!empty($ticketFotos)): 
+                                            ?>
+                                                <div class="photo-gallery-preview" onclick="showPhotosModal(<?= $t['id'] ?>)" style="cursor: pointer;">
+                                                    <img src="uploads/tickets/<?= $ticketFotos[0]['foto'] ?>" alt="Foto" class="ticket-photo" style="width: 40px; height: 40px; object-fit: cover; border-radius: 5px;">
+                                                    <?php if (count($ticketFotos) > 1): ?>
+                                                        <span class="badge bg-primary" style="position: absolute; bottom: 0; right: 0; font-size: 0.7rem;">
+                                                            +<?= count($ticketFotos) - 1 ?>
+                                                        </span>
+                                                    <?php endif; ?>
+                                                </div>
+                                            <?php else: ?>
+                                                <small class="text-muted">Sin fotos</small>
+                                            <?php endif; ?>
                                         </td>
                                         <td>
                                             <button class="btn btn-sm btn-success" onclick="openChat(<?= $t['id'] ?>)" title="Chat de seguimiento">
