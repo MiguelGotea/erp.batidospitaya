@@ -1,6 +1,6 @@
 <?php
 class Database {
-    private $host = '145.223.105.42';
+    private $host = 'localhost';
     private $port = '3306';
     private $db_name = 'u839374897_erp';
     private $username = 'u839374897_erp';
