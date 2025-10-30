@@ -863,45 +863,11 @@ function getColorByUrgency($urgencia, $tipo_formulario) {
         let calendar;
         let draggedTicket = null;
         const sucursalesPorDia = {};
+
         // Cargar colaboradores disponibles y asignados
         let colaboradoresDisponibles = [];
 
         //Funcion de colaboradores asignados a ticket
-
-
-        function actualizarSelectoresColaboradores() {
-            $('.colaborador-select').each(function() {
-                const ticketId = $(this).data('ticket-id');
-                cargarColaboradoresTicket(ticketId, this);
-            });
-        }
-
-        function cargarColaboradoresTicket(ticketId, container) {
-            $.ajax({
-                url: 'ajax/get_ticket_colaboradores.php',
-                method: 'GET',
-                data: { ticket_id: ticketId },
-                dataType: 'json',
-                success: function(response) {
-                    if (response.success) {
-                        const listContainer = $(`#colaboradores-list-${ticketId}`);
-                        if (listContainer.length) {
-                            if (response.colaboradores.length === 0) {
-                                listContainer.html('<span class="badge" style="background: rgba(255,255,255,0.3); color: inherit; font-size: 0.85em; padding: 1px 4px;">Sin asignar</span>');
-                            } else {
-                                let html = '';
-                                response.colaboradores.forEach(col => {
-                                    const primerNombre = col.Nombre.split(' ')[0];
-                                    html += `<span class="badge" style="background: rgba(255,255,255,0.3); color: inherit; font-size: 0.85em; padding: 1px 4px;">${primerNombre}</span>`;
-                                });
-                                listContainer.html(html);
-                            }
-                        }
-                    }
-                }
-            });
-        }
-
         function abrirModalColaboradores(ticketId) {
             $.ajax({
                 url: 'ajax/get_modal_colaboradores.php',
@@ -1244,6 +1210,38 @@ function getColorByUrgency($urgencia, $tipo_formulario) {
                     });
                 }
 
+                function actualizarSelectoresColaboradores() {
+                    $('.colaborador-select').each(function() {
+                        const ticketId = $(this).data('ticket-id');
+                        cargarColaboradoresTicket(ticketId, this);
+                    });
+                }
+
+                function cargarColaboradoresTicket(ticketId, container) {
+                    $.ajax({
+                        url: 'ajax/get_ticket_colaboradores.php',
+                        method: 'GET',
+                        data: { ticket_id: ticketId },
+                        dataType: 'json',
+                        success: function(response) {
+                            if (response.success) {
+                                const listContainer = $(`#colaboradores-list-${ticketId}`);
+                                if (listContainer.length) {
+                                    if (response.colaboradores.length === 0) {
+                                        listContainer.html('<span class="badge" style="background: rgba(255,255,255,0.3); color: inherit; font-size: 0.85em; padding: 1px 4px;">Sin asignar</span>');
+                                    } else {
+                                        let html = '';
+                                        response.colaboradores.forEach(col => {
+                                            const primerNombre = col.Nombre.split(' ')[0];
+                                            html += `<span class="badge" style="background: rgba(255,255,255,0.3); color: inherit; font-size: 0.85em; padding: 1px 4px;">${primerNombre}</span>`;
+                                        });
+                                        listContainer.html(html);
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
                 // Llamar al cargar el calendario
                 cargarColaboradores();
 
