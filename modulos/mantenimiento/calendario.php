@@ -867,19 +867,7 @@ function getColorByUrgency($urgencia, $tipo_formulario) {
         let colaboradoresDisponibles = [];
 
         //Funcion de colaboradores asignados a ticket
-        function cargarColaboradores() {
-            $.ajax({
-                url: 'ajax/get_colaboradores.php',
-                method: 'GET',
-                dataType: 'json',
-                success: function(response) {
-                    if (response.success) {
-                        colaboradoresDisponibles = response.colaboradores;
-                        actualizarSelectoresColaboradores();
-                    }
-                }
-            });
-        }
+
 
         function actualizarSelectoresColaboradores() {
             $('.colaborador-select').each(function() {
@@ -1242,6 +1230,19 @@ function getColorByUrgency($urgencia, $tipo_formulario) {
                 calendar.render();
                 console.log('✅ Calendario renderizado exitosamente');
                 
+                function cargarColaboradores() {
+                    $.ajax({
+                        url: 'ajax/get_colaboradores.php',
+                        method: 'GET',
+                        dataType: 'json',
+                        success: function(response) {
+                            if (response.success) {
+                                colaboradoresDisponibles = response.colaboradores;
+                                actualizarSelectoresColaboradores();
+                            }
+                        }
+                    });
+                }
 
                 // Llamar al cargar el calendario
                 cargarColaboradores();
