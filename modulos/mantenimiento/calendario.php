@@ -1074,8 +1074,8 @@ function getColorByUrgency($urgencia, $tipo_formulario) {
                                                 ${titulo}
                                             </div>
                                             
-                                            <div style="margin-top: 4px; border-top: 1px solid rgba(255,255,255,0.3); padding-top: 4px; font-size: 0.65em; display: flex; justify-content: space-between; align-items: center;">
-                                                <div id="colaboradores-list-${id}" style="display: flex; flex-wrap: wrap; gap: 2px;" onclick="mostrarDetallesTicket(${id})">
+                                            <div style="margin-top: 4px; border-top: 1px solid rgba(255,255,255,0.3); padding-top: 4px; font-size: 0.65em; display: flex; justify-content: space-between; align-items: center;" onclick="mostrarDetallesTicket(${id})">
+                                                <div id="colaboradores-list-${id}" style="display: flex; flex-wrap: wrap; gap: 2px;" >
                                                     <span class="badge" style="background: rgba(255,255,255,0.3); color: inherit; font-size: 0.85em; padding: 1px 4px;">Cargando...</span>
                                                 </div>
                                                 <button class="btn btn-sm" 
