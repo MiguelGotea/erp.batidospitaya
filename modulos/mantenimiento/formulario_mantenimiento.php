@@ -724,6 +724,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         function capturePhoto() {
+            if (fotosSeleccionadas.length >= MAX_FOTOS) {
+                alert(`Ya has alcanzado el límite de ${MAX_FOTOS} fotos`);
+                stopCamera();
+                return;
+            }
+            
             const video = document.getElementById('video');
             const canvas = document.getElementById('canvas');
             const context = canvas.getContext('2d');
@@ -734,9 +740,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             const dataURL = canvas.toDataURL('image/jpeg');
             
-            document.getElementById('foto_camera').value = dataURL;
+            fotosSeleccionadas.push({
+                tipo: 'camera',
+                data: dataURL
+            });
             
-            showPreview(dataURL);
+            updatePhotosPreview();
             stopCamera();
         }
 
@@ -749,6 +758,62 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             document.getElementById('btnCamera').innerHTML = '<i class="fas fa-camera me-2"></i>Tomar Foto';
             const captureBtn = document.getElementById('captureBtn');
             if (captureBtn) captureBtn.remove();
+        }
+        
+        function updatePhotosPreview() {
+            const previewContainer = document.getElementById('photosPreview');
+            const photosList = document.getElementById('photosList');
+            
+            if (fotosSeleccionadas.length === 0) {
+                previewContainer.style.display = 'none';
+                return;
+            }
+            
+            previewContainer.style.display = 'block';
+            photosList.innerHTML = '';
+            
+            fotosSeleccionadas.forEach((foto, index) => {
+                const col = document.createElement('div');
+                col.className = 'col-6 col-md-4 col-lg-3';
+                col.innerHTML = `
+                    <div class="position-relative">
+                        <img src="${foto.data}" class="img-thumbnail w-100" style="height: 150px; object-fit: cover;">
+                        <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 m-1" 
+                                onclick="removePhoto(${index})" title="Eliminar">
+                            <i class="fas fa-times"></i>
+                        </button>
+                        <div class="badge bg-primary position-absolute bottom-0 start-0 m-1">
+                            ${index + 1}
+                        </div>
+                    </div>
+                `;
+                photosList.appendChild(col);
+            });
+            
+            // Actualizar hidden inputs
+            updateHiddenInputs();
+        }
+
+        function removePhoto(index) {
+            fotosSeleccionadas.splice(index, 1);
+            updatePhotosPreview();
+        }
+
+        function updateHiddenInputs() {
+            // Crear DataTransfer para los archivos
+            const dt = new DataTransfer();
+            const fotosCamera = [];
+            
+            fotosSeleccionadas.forEach(foto => {
+                if (foto.tipo === 'file') {
+                    dt.items.add(foto.file);
+                } else if (foto.tipo === 'camera') {
+                    fotosCamera.push(foto.data);
+                }
+            });
+            
+            document.getElementById('fotos').files = dt.files;
+            document.getElementById('fotos_camera').value = JSON.stringify(fotosCamera);
         }
 
         function showPreview(src) {
