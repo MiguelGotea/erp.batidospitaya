@@ -486,6 +486,8 @@ function getColorByUrgency($urgencia, $tipo_formulario) {
         .fc-daygrid-day-events::-webkit-scrollbar-track {
             background: #f1f1f1;
         }
+
+
         
         .fc-daygrid-day-events::-webkit-scrollbar-thumb {
             background: #888;
@@ -915,7 +917,7 @@ function getColorByUrgency($urgencia, $tipo_formulario) {
                     headerToolbar: {
                         left: 'prev,next today',
                         center: 'title',
-                        right: 'dayGridMonth,timeGridWeek,listWeek'
+                        right: 'dayGridMonth,timeGridWeek' //,listWeek' se elimna
                     },
                     
                     height: 'auto',
