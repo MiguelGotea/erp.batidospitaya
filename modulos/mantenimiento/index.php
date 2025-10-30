@@ -157,6 +157,7 @@ if (!verificarAccesoCargo(14)) {
             text-align: center; /*Texto de categorías al centro*/
         }
         
+        
         @media (max-width: 768px) {
             .modules {
                 grid-template-columns: repeat(3, 1fr); /* 3 columnas en móvil */
@@ -184,7 +185,129 @@ if (!verificarAccesoCargo(14)) {
                 gap: 15px;
                 text-align: center;
             }
+
+            .modal-content-pendientes {
+                margin: 10% auto;
+                width: 95%;
+            }
+            
+            .item-tardanza {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            
+            .btn-justificar {
+                margin-left: 0;
+                width: 100%;
+                text-align: center;
+            }
+            
+            .pendientes-content {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+            
+            .pendientes-info {
+                text-align: center;
+            }
+            
+            .pendientes-fecha {
+                font-size: 0.7rem !important;
+            }
+            
+            .indicadores-container {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .pendientes-container {
+                min-width: 100%;
+                max-width: 100%;
+            }
         }
+        
+        /* Estilos para el contenedor de indicadores */
+        .indicadores-container {
+            display: flex;
+            flex-direction: row; /* En una sola fila */
+            gap: 15px;
+            margin-bottom: 30px;
+            max-width: 1200px;
+            margin: 0 auto 30px auto;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .pendientes-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            flex: 1;
+        }
+
+        .pendiente-card {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            text-align: center;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+            transition: transform 0.3s, box-shadow 0.3s;
+            min-width: 200px;
+            max-width: 250px;
+        }
+        
+        .pendiente-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .pendientes-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 5px;
+        }
+
+        .pendientes-count {
+            font-size: 2.5rem !important;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            min-width: 80px;
+        }
+
+        .pendientes-fecha {
+            font-size: 0.8rem !important;
+            opacity: 0.9;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .pendientes-titulo {
+            font-size: 0.9rem !important;
+            font-weight: 600;
+            margin-top: 5px;
+        }
+
+        .pendientes-info {
+            text-align: center;
+            margin-top: 5px;
+        }
+
+        .pendientes-detalle {
+            margin-bottom: 10px;
+            font-size: 0.6rem;
+            opacity: 0.9;
+        }
+
+
     </style>
 </head>
 <body>
