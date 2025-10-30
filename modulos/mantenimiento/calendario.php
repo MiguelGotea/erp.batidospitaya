@@ -1141,7 +1141,7 @@ function getColorByUrgency($urgencia, $tipo_formulario) {
                         const status = arg.event.extendedProps.status || '';
                         const tipo_formulario = arg.event.extendedProps.tipo_formulario || '';
                         const id = arg.event.id;
-                        //setTimeout(() => cargarColaboradoresTicket(id), 100);
+                        setTimeout(() => cargarColaboradoresTicket(id), 100);
                         
                         // Vista Mes: Ocultar (se maneja con CSS)
                         if (view === 'dayGridMonth') {
@@ -1606,14 +1606,14 @@ function getColorByUrgency($urgencia, $tipo_formulario) {
                 }
             });
 
-            setTimeout(() => {
-                cargarColaboradores(); // Recargar lista global
-                // Recargar colaboradores de cada ticket visible
-                document.querySelectorAll('[id^="colaboradores-list-"]').forEach(el => {
-                    const ticketId = el.id.replace('colaboradores-list-', '');
-                    cargarColaboradoresTicket(ticketId);
-                });
-            }, 500);
+            //setTimeout(() => {
+            //    cargarColaboradores(); // Recargar lista global
+            //    // Recargar colaboradores de cada ticket visible
+            //    document.querySelectorAll('[id^="colaboradores-list-"]').forEach(el => {
+            //        const ticketId = el.id.replace('colaboradores-list-', '');
+            //        cargarColaboradoresTicket(ticketId);
+            //    });
+            //}, 500);
         }
         
         function inicializarDropZoneSidebar() {
