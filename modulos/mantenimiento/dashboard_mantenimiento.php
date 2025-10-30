@@ -35,14 +35,7 @@ $chat_model = new Chat();
 $tickets = $ticket->getAll();
 $tipos_casos = $ticket->getTiposCasos();
 
-// Obtener estadísticas
-$stats = [
-    'total' => count($tickets),
-    'solicitado' => count(array_filter($tickets, fn($t) => $t['status'] === 'solicitado')),
-    // 'clasificado' => count(array_filter($tickets, fn($t) => $t['status'] === 'clasificado')),
-    'agendado' => count(array_filter($tickets, fn($t) => $t['status'] === 'agendado')),
-    'finalizado' => count(array_filter($tickets, fn($t) => $t['status'] === 'finalizado'))
-];
+
 
 // Procesar envío de mensaje desde el sidebar
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticket_id_chat'])) {
@@ -413,14 +406,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticket_id_chat'])) {
             margin-bottom: 20px;
         }
         
-        .stats-card {
-            background: linear-gradient(135deg, #51B8AC 0%, #0E544C 100%);
-            color: white;
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-        
         .btn-primary {
             background-color: #51B8AC;
             border-color: #51B8AC;
@@ -428,13 +413,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticket_id_chat'])) {
         .btn-primary:hover {
             background-color: #0E544C;
             border-color: #0E544C;
-        }
-        
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-bottom: 30px;
         }
         
         .stat-item {
@@ -952,9 +930,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticket_id_chat'])) {
                 font-size: 13px;
             }
             
-            .stats-grid {
-                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            }
         }
         
         @media (max-width: 480px) {
@@ -1043,28 +1018,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticket_id_chat'])) {
                         </div>
                     </div>
                 </header>
-
-                <!-- Estadísticas -->
-                <div class="stats-card">
-                    <div class="stats-grid">
-                        <div class="stat-item">
-                            <h3><?= $stats['total'] ?></h3>
-                            <p>Total Tickets</p>
-                        </div>
-                        <div class="stat-item">
-                            <h3><?= $stats['solicitado'] ?></h3>
-                            <p>Solicitados</p>
-                        </div>
-                        <div class="stat-item">
-                            <h3><?= $stats['agendado'] ?></h3>
-                            <p>Agendados</p>
-                        </div>
-                        <div class="stat-item">
-                            <h3><?= $stats['finalizado'] ?></h3>
-                            <p>Finalizados</p>
-                        </div>
-                    </div>
-                </div>
 
                 <!-- Filtros Activos -->
                 <div id="activeFiltersContainer" style="display: none;">
