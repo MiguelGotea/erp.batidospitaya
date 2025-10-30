@@ -1,4 +1,5 @@
 <?php
+require_once 'models/Ticket.php';
 require_once '../../includes/auth.php';
 require_once '../../includes/funciones.php';
 
@@ -12,6 +13,7 @@ if (!verificarAccesoCargo(14)) {
     header('Location: ../index.php');
     exit();
 }
+
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -216,30 +218,31 @@ if (!verificarAccesoCargo(14)) {
         <div class="module-header">
             <h1 class="module-title-page">Área de Mantenimiento</h1>
         </div>
-        
+
+        <?php
+            $ticket = new Ticket();
+            $tickets = $ticket->getAll();
+            // Obtener estadísticas
+            $stats = [
+                'total' => count($tickets),
+                'solicitado' => count(array_filter($tickets, fn($t) => $t['status'] === 'solicitado')),
+                'agendado' => count(array_filter($tickets, fn($t) => $t['status'] === 'agendado')),
+                'finalizado' => count(array_filter($tickets, fn($t) => $t['status'] === 'finalizado'))
+            ];
+        ?>
+
           <!-- Contenedor para indicadores -->
         <div class="indicadores-container">
             <div class="pendientes-container" style="margin-bottom: 30px;">
-                <div class="pendientes-card faltas-indicador <?= $faltasPendientesOperaciones['color'] ?>" onclick="mostrarModalFaltasOperaciones()" style="cursor: pointer;">
+                <div class="pendientes-card faltas-indicador <?= 'verde' ?>" onclick="" style="cursor: pointer;">
                     <div class="pendientes-content">
-                        <div class="pendientes-count"><?= $faltasPendientesOperaciones['total'] ?></div>
+                        <div class="pendientes-count">contador</div>
                         <div class="pendientes-info">
                             <div class="pendientes-fecha" id="faltasFechaOperaciones">
-                                <?php 
-                                $diasRestantes = $faltasPendientesOperaciones['dias_restantes'];
-                                if ($faltasPendientesOperaciones['total'] == 0) {
-                                    echo 'Al día';
-                                } elseif ($diasRestantes < 0) {
-                                    echo 'Vencido hace ' . abs($diasRestantes) . ' días';
-                                } elseif ($diasRestantes === 0) {
-                                    echo 'Vence hoy';
-                                } else {
-                                    echo $diasRestantes . ' días restantes';
-                                }
-                                ?>
+                                <?= $stats['total'] ?>
                             </div>
                             <div class="pendientes-titulo">
-                                Faltas Tiendas
+                                Solicitudes Totales
                             </div>
                         </div>
                     </div>
