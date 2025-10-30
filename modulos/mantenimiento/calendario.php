@@ -885,27 +885,6 @@ function getColorByUrgency($urgencia, $tipo_formulario) {
             });
         }
 
-        function actualizarColaboradores(ticketId, selectElement) {
-            const selectedValues = Array.from(selectElement.selectedOptions).map(opt => opt.value);
-            
-            $.ajax({
-                url: 'ajax/update_ticket_colaboradores.php',
-                method: 'POST',
-                data: {
-                    ticket_id: ticketId,
-                    colaboradores: selectedValues
-                },
-                dataType: 'json',
-                success: function(response) {
-                    if (response.success) {
-                        console.log('Colaboradores actualizados');
-                    } else {
-                        alert('Error: ' + response.message);
-                    }
-                }
-            });
-        }
-
         // Procesar tickets para agrupar por día y sucursal
         const eventos = <?= json_encode($calendar_events) ?>;
         eventos.forEach(evento => {
@@ -1238,6 +1217,27 @@ function getColorByUrgency($urgencia, $tipo_formulario) {
                                         listContainer.html(html);
                                     }
                                 }
+                            }
+                        }
+                    });
+                }
+                
+                function actualizarColaboradores(ticketId, selectElement) {
+                    const selectedValues = Array.from(selectElement.selectedOptions).map(opt => opt.value);
+                    
+                    $.ajax({
+                        url: 'ajax/update_ticket_colaboradores.php',
+                        method: 'POST',
+                        data: {
+                            ticket_id: ticketId,
+                            colaboradores: selectedValues
+                        },
+                        dataType: 'json',
+                        success: function(response) {
+                            if (response.success) {
+                                console.log('Colaboradores actualizados');
+                            } else {
+                                alert('Error: ' + response.message);
                             }
                         }
                     });
