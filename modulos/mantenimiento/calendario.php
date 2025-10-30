@@ -1052,7 +1052,6 @@ function getColorByUrgency($urgencia, $tipo_formulario) {
                         const status = arg.event.extendedProps.status || '';
                         const tipo_formulario = arg.event.extendedProps.tipo_formulario || '';
                         const id = arg.event.id;
-                        //setTimeout(() => cargarColaboradoresTicket(id), 100);
                         
                         // Vista Mes: Ocultar (se maneja con CSS)
                         if (view === 'dayGridMonth') {
@@ -1154,21 +1153,6 @@ function getColorByUrgency($urgencia, $tipo_formulario) {
                 console.log('📅 Calendario creado, renderizando...');
                 calendar.render();
                 console.log('✅ Calendario renderizado exitosamente');
-
-                // Recargar selectores después de cada refresh
-                const originalRefresh = refrescarCalendarioYSidebar;
-                refrescarCalendarioYSidebar = function() {
-                    originalRefresh();
-                    setTimeout(() => {
-                        $('.fc-event').each(function() {
-                            const ticketId = $(this).find('[id^="colaboradores-list-"]').attr('id');
-                            if (ticketId) {
-                                const id = ticketId.replace('colaboradores-list-', '');
-                                cargarColaboradoresTicket(id);
-                            }
-                        });
-                    }, 500);
-                };
 
                 // Inicializar drag de tickets
                 inicializarDragTickets();
