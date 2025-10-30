@@ -688,10 +688,12 @@ function getColorByUrgency($urgencia, $tipo_formulario) {
                     <a href="#" onclick="refreshData()" class="btn-agregar activo" style="display:none;">
                         <i class="fas fa-calendar-alt"></i> <span class="btn-text">Calendario</span>
                     </a>
-
-                    <a href="agenda_colaborador.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'agenda_colaborador.php' ? 'activo' : '' ?>">
-                        <i class="fas fa-tasks"></i> <span class="btn-text">Agenda</span>
-                    </a>
+                    
+                    <?php if ($esAdmin || verificarAccesoCargo([16, 35])): ?>
+                        <a href="agenda_colaborador.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'agenda_colaborador.php' ? 'activo' : '' ?>">
+                            <i class="fas fa-tasks"></i> <span class="btn-text">Agenda</span>
+                        </a>
+                    <?php endif; ?>
 
                     <?php if ($esAdmin || verificarAccesoCargo([5, 11, 14, 16, 35])): ?>
                         <a href="calendario.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'calendario.php' ? 'activo' : '' ?>">
