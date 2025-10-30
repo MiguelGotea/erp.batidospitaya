@@ -483,14 +483,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <i class="fas fa-calendar-alt"></i> <span class="btn-text">Calendario</span>
                         </a>
                     <?php endif; ?>
-                    
-                    <a href="#" onclick="openMaintenanceForm()" class="btn-agregar">
-                        <i class="fas fa-tools"></i> <span class="btn-text">Mantenimiento General</span>
-                    </a>
-                    
-                    <a href="#" onclick="openEquipmentForm()" class="btn-agregar activo">
-                        <i class="fas fa-laptop"></i> <span class="btn-text">Cambio de Equipos</span>
-                    </a>
+
+                    <?php if (!verificarAccesoCargo([14])): ?>
+                        <a href="#" onclick="openMaintenanceForm()" class="btn-agregar">
+                            <i class="fas fa-tools"></i> <span class="btn-text">Mantenimiento General</span>
+                        </a>
+                    <?php endif; ?>
+
+                    <?php if (!verificarAccesoCargo([14])): ?>
+                        <a href="#" onclick="openEquipmentForm()" class="btn-agregar activo">
+                            <i class="fas fa-laptop"></i> <span class="btn-text">Cambio de Equipos</span>
+                        </a>
+                    <?php endif; ?>
                     
                     <?php if ($esAdmin || verificarAccesoCargo([16, 5])): ?>
                         <a href="dashboard_sucursales.php?cod_operario=<?= $cod_operario ?>&cod_sucursal=<?= $cod_sucursal ?>" class="btn-agregar">
