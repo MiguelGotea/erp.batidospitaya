@@ -355,17 +355,41 @@ if ($colaborador_filtro) {
                 </div>
                 
                 <div class="buttons-container">
-                    <a href="calendario.php" class="btn-agregar">
+                    <a href="#" onclick="refreshData()" class="btn-agregar activo" style="display:none;">
                         <i class="fas fa-calendar-alt"></i> <span class="btn-text">Calendario</span>
                     </a>
                     
-                    <a href="agenda_colaborador.php" class="btn-agregar activo">
-                        <i class="fas fa-tasks"></i> <span class="btn-text">Agenda Colaboradores</span>
+                    <?php if ($esAdmin || verificarAccesoCargo([14, 16, 35])): ?>
+                        <a href="agenda_colaborador.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'agenda_colaborador.php' ? 'activo' : '' ?>">
+                            <i class="fas fa-tasks"></i> <span class="btn-text">Agenda</span>
+                        </a>
+                    <?php endif; ?>
+
+                    <?php if ($esAdmin || verificarAccesoCargo([5, 11, 16, 35])): ?>
+                        <a href="calendario.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'calendario.php' ? 'activo' : '' ?>">
+                            <i class="fas fa-calendar-alt"></i> <span class="btn-text">Calendario</span>
+                        </a>
+                    <?php endif; ?>
+                    
+                    <a href="formulario_mantenimiento.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'formulario_mantenimiento.php' ? 'activo' : '' ?>">
+                        <i class="fas fa-tools"></i> <span class="btn-text">Mantenimiento General</span>
                     </a>
                     
-                    <a href="dashboard_mantenimiento.php" class="btn-agregar">
-                        <i class="fas fa-list"></i> <span class="btn-text">Solicitudes</span>
+                    <a href="formulario_equipos.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'formulario_equipos.php' ? 'activo' : '' ?>">
+                        <i class="fas fa-laptop"></i> <span class="btn-text">Cambio de Equipos</span>
                     </a>
+                    
+                    <?php if ($esAdmin || verificarAccesoCargo([16, 5])): ?>
+                        <a href="dashboard_sucursales.php?cod_operario=<?= $cod_operario ?>&cod_sucursal=<?= $cod_sucursal ?>" class="btn-agregar">
+                            <i class="fas fa-sync-alt"></i> <span class="btn-text">Solicitudes</span>
+                        </a>
+                    <?php endif; ?>
+                    
+                    <?php if ($esAdmin || verificarAccesoCargo([11, 14, 16, 35])): ?>
+                        <a href="dashboard_mantenimiento.php?cod_operario=<?= $cod_operario ?>&cod_sucursal=<?= $cod_sucursal ?>" class="btn-agregar">
+                            <i class="fas fa-sync-alt"></i> <span class="btn-text">Solicitudes</span>
+                        </a>
+                    <?php endif; ?>
                 </div>
                 
                 <div class="user-info">
