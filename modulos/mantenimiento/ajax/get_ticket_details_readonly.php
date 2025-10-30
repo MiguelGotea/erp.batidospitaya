@@ -7,6 +7,7 @@ if (!isset($_GET['id'])) {
 
 $ticket_model = new Ticket();
 $ticket = $ticket_model->getById($_GET['id']);
+$fotos = $ticket_model->getFotos($_GET['id']);
 
 if (!$ticket) {
     die('Ticket no encontrado');
@@ -103,15 +104,24 @@ if (!$ticket) {
     </div>
 </div>
 
-<?php if ($ticket['foto']): ?>
+<?php if (!empty($fotos)): ?>
     <div class="mb-3">
-        <label class="form-label"><strong>Fotografía:</strong></label>
-        <div>
-            <img src="uploads/tickets/<?= $ticket['foto'] ?>" alt="Foto del ticket" 
-                 class="img-thumbnail" style="max-width: 400px; max-height: 300px; cursor: pointer;"
-                 onclick="showFullImage('uploads/tickets/<?= $ticket['foto'] ?>')">
-            <br><small class="text-muted">Haz clic en la imagen para verla en tamaño completo</small>
+        <label class="form-label"><strong>Fotografías (<?= count($fotos) ?>):</strong></label>
+        <div class="photos-grid">
+            <?php foreach ($fotos as $index => $foto): ?>
+                <div class="photo-item">
+                    <img src="uploads/tickets/<?= $foto['foto'] ?>" alt="Foto <?= $index + 1 ?>" 
+                         class="img-thumbnail" 
+                         style="max-width: 200px; max-height: 150px; object-fit: cover; cursor: pointer;"
+                         onclick="showPhotoFullscreen('uploads/tickets/<?= $foto['foto'] ?>', <?= $index + 1 ?>, <?= count($fotos) ?>)">
+                    <small class="d-block text-center text-muted mt-1">Foto <?= $index + 1 ?></small>
+                </div>
+            <?php endforeach; ?>
         </div>
+        <small class="text-muted d-block mt-2">
+            <i class="fas fa-info-circle me-1"></i>
+            Haz clic en cualquier imagen para verla en tamaño completo
+        </small>
     </div>
 <?php endif; ?>
 
@@ -148,6 +158,17 @@ if (!$ticket) {
 </div>
 
 <style>
+.photos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 15px;
+    margin-top: 10px;
+}
+
+.photo-item {
+    text-align: center;
+}
+
 .urgency-bar {
     width: 100%;
     height: 20px;
@@ -224,26 +245,26 @@ if (!$ticket) {
 </style>
 
 <script>
-function showFullImage(src) {
+function showPhotoFullscreen(src, current, total) {
     const modal = document.createElement('div');
     modal.className = 'modal fade';
     modal.innerHTML = `
-        <div class="modal-dialog modal-lg">
+        <div class="modal-dialog modal-xl">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Imagen del Ticket</h5>
+                    <h5 class="modal-title">Foto ${current} de ${total}</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body text-center">
-                    <img src="${src}" alt="Imagen completa" class="img-fluid">
+                    <img src="${src}" alt="Imagen completa" class="img-fluid" style="max-height: 80vh;">
                 </div>
             </div>
         </div>
     `;
     document.body.appendChild(modal);
-    new bootstrap.Modal(modal).show();
+    const bsModal = new bootstrap.Modal(modal);
+    bsModal.show();
     
-    // Limpiar modal después de cerrarlo
     modal.addEventListener('hidden.bs.modal', function() {
         document.body.removeChild(modal);
     });
