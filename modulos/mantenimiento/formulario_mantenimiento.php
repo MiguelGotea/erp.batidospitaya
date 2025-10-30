@@ -654,21 +654,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         let stream = null;
+        let fotosSeleccionadas = []; // Array para almacenar fotos (files o base64)
+        const MAX_FOTOS = 5;
         
-        // Manejar carga de archivo
+        // Manejar carga de archivos
         document.getElementById('btnFile').addEventListener('click', function() {
-            document.getElementById('foto').click();
+            document.getElementById('fotos').click();
         });
+
         
-        document.getElementById('foto').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
+        document.getElementById('fotos').addEventListener('change', function(e) {
+            const files = Array.from(e.target.files);
+            
+            if (fotosSeleccionadas.length + files.length > MAX_FOTOS) {
+                alert(`Solo puedes agregar hasta ${MAX_FOTOS} fotos en total`);
+                return;
+            }
+            
+            files.forEach(file => {
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    showPreview(e.target.result);
+                    fotosSeleccionadas.push({
+                        tipo: 'file',
+                        data: e.target.result,
+                        file: file
+                    });
+                    updatePhotosPreview();
                 };
                 reader.readAsDataURL(file);
-            }
+            });
         });
         
         // Manejar cámara
