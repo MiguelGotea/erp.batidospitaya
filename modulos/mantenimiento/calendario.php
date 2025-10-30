@@ -1058,7 +1058,7 @@ function getColorByUrgency($urgencia, $tipo_formulario) {
                             return { html: '<div style="display: none;"></div>' };
                         }
                         
-                        // Vista Semana: Con selector de colaboradores
+                        // Vista Semana: Con nombres de colaboradores y botón +
                         if (view === 'timeGridWeek') {
                             let icono = tipo_formulario === 'cambio_equipos' ? 'fas fa-exclamation-triangle' : '';
                             
@@ -1070,19 +1070,19 @@ function getColorByUrgency($urgencia, $tipo_formulario) {
                                         </div>
                                     </div>
                                     
-                                    <div style="font-size: 0.7em; line-height: 1.1; white-space: normal; word-wrap: break-word; padding: 1px 0px; border-radius: 2px;" onclick="mostrarDetallesTicket(${id})">
+                                    <div style="font-size: 0.7em; line-height: 1.1; white-space: normal; word-wrap: break-word; padding: 1px 0px; border-radius: 2px; cursor: pointer;" onclick="mostrarDetallesTicket(${id})">
                                         ${titulo}
                                     </div>
                                     
-                                    <div style="margin-top: 4px; border-top: 1px solid rgba(255,255,255,0.3); padding-top: 4px;">
-                                        <select class="form-select form-select-sm colaborador-select" 
-                                                data-ticket-id="${id}"
-                                                onclick="event.stopPropagation()"
-                                                onchange="actualizarColaboradores(${id}, this)"
-                                                multiple
-                                                style="font-size: 0.65em; padding: 2px; background: rgba(255,255,255,0.9); border: 1px solid rgba(0,0,0,0.2); max-height: 60px;">
-                                            <option value="">Cargando...</option>
-                                        </select>
+                                    <div style="margin-top: 4px; border-top: 1px solid rgba(255,255,255,0.3); padding-top: 4px; font-size: 0.65em;">
+                                        <div id="colaboradores-list-${id}" style="display: flex; flex-wrap: wrap; gap: 2px; margin-bottom: 2px;">
+                                            <span class="badge" style="background: rgba(255,255,255,0.3); color: inherit; font-size: 0.85em; padding: 1px 4px;">Cargando...</span>
+                                        </div>
+                                        <button class="btn btn-sm" 
+                                                onclick="event.stopPropagation(); abrirModalColaboradores(${id})"
+                                                style="font-size: 0.7em; padding: 1px 6px; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); color: inherit; border-radius: 3px;">
+                                            <i class="fas fa-plus"></i> Asignar
+                                        </button>
                                     </div>
                                 </div>`
                             };
@@ -1178,7 +1178,7 @@ function getColorByUrgency($urgencia, $tipo_formulario) {
                     });
                 }
 
-                function cargarColaboradoresTicket(ticketId, selectElement) {
+                function cargarColaboradoresTicket(ticketId, container) {
                     $.ajax({
                         url: 'ajax/get_ticket_colaboradores.php',
                         method: 'GET',
@@ -1186,16 +1186,55 @@ function getColorByUrgency($urgencia, $tipo_formulario) {
                         dataType: 'json',
                         success: function(response) {
                             if (response.success) {
-                                let options = '';
-                                colaboradoresDisponibles.forEach(col => {
-                                    const selected = response.colaboradores.some(tc => tc.cod_operario == col.CodOperario) ? 'selected' : '';
-                                    options += `<option value="${col.CodOperario}" ${selected}>${col.Nombre} ${col.Apellido || ''}</option>`;
-                                });
-                                $(selectElement).html(options);
+                                const listContainer = $(`#colaboradores-list-${ticketId}`);
+                                if (listContainer.length) {
+                                    if (response.colaboradores.length === 0) {
+                                        listContainer.html('<span class="badge" style="background: rgba(255,255,255,0.3); color: inherit; font-size: 0.85em; padding: 1px 4px;">Sin asignar</span>');
+                                    } else {
+                                        let html = '';
+                                        response.colaboradores.forEach(col => {
+                                            const primerNombre = col.Nombre.split(' ')[0];
+                                            html += `<span class="badge" style="background: rgba(255,255,255,0.3); color: inherit; font-size: 0.85em; padding: 1px 4px;">${primerNombre}</span>`;
+                                        });
+                                        listContainer.html(html);
+                                    }
+                                }
                             }
                         }
                     });
                 }
+
+                function abrirModalColaboradores(ticketId) {
+                    $.ajax({
+                        url: 'ajax/get_modal_colaboradores.php',
+                        method: 'GET',
+                        data: { ticket_id: ticketId },
+                        success: function(response) {
+                            const modal = $('<div class="modal fade" id="modalColaboradores"><div class="modal-dialog"><div class="modal-content">' + response + '</div></div></div>');
+                            $('body').append(modal);
+                            const bsModal = new bootstrap.Modal(document.getElementById('modalColaboradores'));
+                            bsModal.show();
+                            modal.on('hidden.bs.modal', function() {
+                                modal.remove();
+                            });
+                        }
+                    });
+                }
+
+                // Actualizar después de refrescar
+                const originalRefresh = refrescarCalendarioYSidebar;
+                refrescarCalendarioYSidebar = function() {
+                    originalRefresh();
+                    setTimeout(() => {
+                        $('.fc-event').each(function() {
+                            const ticketId = $(this).find('[id^="colaboradores-list-"]').attr('id');
+                            if (ticketId) {
+                                const id = ticketId.replace('colaboradores-list-', '');
+                                cargarColaboradoresTicket(id);
+                            }
+                        });
+                    }, 500);
+                };
 
                 function actualizarColaboradores(ticketId, selectElement) {
                     const selectedValues = Array.from(selectElement.selectedOptions).map(opt => opt.value);

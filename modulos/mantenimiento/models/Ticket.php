@@ -237,8 +237,7 @@ class Ticket {
                 INNER JOIN mtto_tickets_colaboradores tc ON t.id = tc.ticket_id
                 LEFT JOIN sucursales s ON t.cod_sucursal = s.codigo
                 WHERE tc.cod_operario = ?
-                AND t.fecha_inicio IS NOT NULL
-                AND t.status != 'finalizado'";
+                AND t.fecha_inicio IS NOT NULL";
         
         $params = [$cod_operario];
         
@@ -247,9 +246,48 @@ class Ticket {
             $params[] = $fecha_inicio;
         }
         
-        $sql .= " ORDER BY t.fecha_inicio ASC, t.fecha_final ASC";
+        $sql .= " ORDER BY 
+                CASE WHEN t.status = 'finalizado' THEN 1 ELSE 0 END,
+                t.fecha_inicio ASC, t.fecha_final ASC";
         
         return $this->db->fetchAll($sql, $params);
+    }
+    
+    public function getColaboradoresAsignados() {
+        $sql = "SELECT DISTINCT o.CodOperario, o.Nombre, o.Apellido 
+                FROM Operarios o
+                INNER JOIN mtto_tickets_colaboradores tc ON o.CodOperario = tc.cod_operario
+                INNER JOIN mtto_tickets t ON tc.ticket_id = t.id
+                WHERE t.fecha_inicio IS NOT NULL
+                AND o.Operativo = 1
+                ORDER BY o.Nombre, o.Apellido";
+        return $this->db->fetchAll($sql);
+    }
+    
+    public function finalizarTicket($ticket_id, $detalle_trabajo, $materiales_usados, $finalizado_por) {
+        $sql = "UPDATE mtto_tickets 
+                SET status = 'finalizado', 
+                    detalle_trabajo = ?,
+                    materiales_usados = ?,
+                    fecha_finalizacion = CURRENT_TIMESTAMP,
+                    finalizado_por = ?
+                WHERE id = ?";
+        $this->db->query($sql, [$detalle_trabajo, $materiales_usados, $finalizado_por, $ticket_id]);
+    }
+    
+    public function addFotosFinalizacion($ticket_id, $fotos) {
+        if (empty($fotos)) return;
+        
+        $sql = "INSERT INTO mtto_tickets_fotos_finalizacion (ticket_id, foto, orden) VALUES (?, ?, ?)";
+        
+        foreach ($fotos as $index => $foto) {
+            $this->db->query($sql, [$ticket_id, $foto, $index]);
+        }
+    }
+    
+    public function getFotosFinalizacion($ticket_id) {
+        $sql = "SELECT * FROM mtto_tickets_fotos_finalizacion WHERE ticket_id = ? ORDER BY orden ASC";
+        return $this->db->fetchAll($sql, [$ticket_id]);
     }
 }
 ?>
