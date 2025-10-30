@@ -307,17 +307,14 @@ if (!verificarAccesoCargo(14)) {
             opacity: 0.9;
         }
 
-        /* Colores según el estado */
-        .indicador-verde .pendientes-card {
-            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-        }
-
-        .indicador-amarillo .pendientes-card {
-            background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
-        }
-
-        .indicador-rojo .pendientes-card {
-            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        .pendientes-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            padding: 20px;
+            color: white;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease;
+            cursor: pointer;
         }
     </style>
 </head>
