@@ -7,19 +7,29 @@ require_once 'models/Ticket.php';
 require_once '../../includes/auth.php';
 require_once '../../includes/funciones.php';
 
+//******************************Estándar para header******************************
 verificarAutenticacion();
 
 $usuario = obtenerUsuarioActual();
 $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
 
-if (!verificarAccesoCargo([5, 11, 14, 16, 35]) && !$esAdmin) {
+// Verificar acceso al módulo Mantenimiento (Código 14)
+verificarAccesoCargo([5, 11, 14, 16, 35]);
+
+// Verificar acceso al módulo
+if (!verificarAccesoCargo([5, 11, 14, 16, 35]) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
     header('Location: ../index.php');
     exit();
 }
 
+// Obtenemos el cargo principal usando la función de funciones.php
 $cargoUsuario = obtenerCargoPrincipalUsuario($_SESSION['usuario_id']);
 
+//******************************Estándar para header, termina******************************
+
 $ticket = new Ticket();
+
+// Filtrar tickets según el cargo del usuario
 $colaboradoresDisponibles = $ticket->getColaboradoresAsignados(); // Solo los asignados
 
 // Filtro de colaborador
