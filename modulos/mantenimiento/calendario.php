@@ -1081,7 +1081,7 @@ function getColorByUrgency($urgencia, $tipo_formulario) {
                                         <button class="btn btn-sm" 
                                                 onclick="event.stopPropagation(); abrirModalColaboradores(${id})"
                                                 style="font-size: 0.7em; padding: 1px 6px; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); color: inherit; border-radius: 3px;">
-                                            <i class="fas fa-plus"></i> Asignar
+                                            <i class="fas fa-plus"></i>
                                         </button>
                                     </div>
                                 </div>`
