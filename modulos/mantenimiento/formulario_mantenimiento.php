@@ -619,6 +619,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <input type="file" id="fotos" name="fotos[]" accept="image/*" multiple style="display: none;">
                             <input type="hidden" id="fotos_camera" name="fotos_camera">
                             
+                            <div class="camera-preview" id="cameraPreview" style="display: none;">
+                                <video id="video" autoplay></video>
+                                <canvas id="canvas" style="display: none;"></canvas>
+                            </div>
+                            
                             <div id="photosPreview" style="display: none; margin-top: 15px;">
                                 <label class="form-label"><strong>Fotos seleccionadas:</strong></label>
                                 <div id="photosList" class="row g-2"></div>
@@ -759,7 +764,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             const captureBtn = document.getElementById('captureBtn');
             if (captureBtn) captureBtn.remove();
         }
-        
+
         function updatePhotosPreview() {
             const previewContainer = document.getElementById('photosPreview');
             const photosList = document.getElementById('photosList');
