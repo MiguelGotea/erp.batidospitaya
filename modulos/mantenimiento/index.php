@@ -369,7 +369,7 @@ if (!verificarAccesoCargo(14)) {
                     <div class="pendientes-content">
                         <div class="pendientes-count">Solicitudes Totales</div>
                         <div class="pendientes-info">
-                            <div class="pendientes-fecha" id="faltasFechaOperaciones">
+                            <div class="pendientes-fecha">
                                 <?= $stats['total'] ?>
                             </div>
                             <div class="pendientes-titulo">
