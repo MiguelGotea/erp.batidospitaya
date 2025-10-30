@@ -307,7 +307,18 @@ if (!verificarAccesoCargo(14)) {
             opacity: 0.9;
         }
 
+        /* Colores según el estado */
+        .indicador-verde .pendientes-card {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        }
 
+        .indicador-amarillo .pendientes-card {
+            background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+        }
+
+        .indicador-rojo .pendientes-card {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        }
     </style>
 </head>
 <body>
@@ -357,9 +368,9 @@ if (!verificarAccesoCargo(14)) {
           <!-- Contenedor para indicadores -->
         <div class="indicadores-container">
             <div class="pendientes-container" style="margin-bottom: 30px;">
-                <div class="pendientes-card faltas-indicador <?= 'verde' ?>" onclick="" style="cursor: pointer;">
+                <div class="pendientes-card faltas-indicador verde" onclick="" style="cursor: pointer;">
                     <div class="pendientes-content">
-                        <div class="pendientes-count">contador</div>
+                        <div class="pendientes-count">Solicitudes Totales</div>
                         <div class="pendientes-info">
                             <div class="pendientes-fecha" id="faltasFechaOperaciones">
                                 <?= $stats['total'] ?>
