@@ -1157,6 +1157,9 @@ function getColorByUrgency($urgencia, $tipo_formulario) {
                 console.log('📅 Calendario creado, renderizando...');
                 calendar.render();
                 console.log('✅ Calendario renderizado exitosamente');
+                
+                // Llamar al cargar el calendario
+                cargarColaboradores();
 
                 // Recargar selectores después de cada refresh
                 const originalRefresh = refrescarCalendarioYSidebar;
@@ -1172,9 +1175,6 @@ function getColorByUrgency($urgencia, $tipo_formulario) {
                         });
                     }, 500);
                 };
-
-                // Llamar al cargar el calendario
-                cargarColaboradores();
 
                 // Inicializar drag de tickets
                 inicializarDragTickets();
