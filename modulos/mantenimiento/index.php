@@ -368,7 +368,7 @@ if (!verificarAccesoCargo(14)) {
           <!-- Contenedor para indicadores -->
         <div class="indicadores-container">
             <div class="pendientes-container" style="margin-bottom: 30px;">
-                <div class="pendientes-card faltas-indicador verde" onclick="" style="cursor: pointer;">
+                <div class="pendientes-card" onclick="" style="cursor: pointer;">
                     <div class="pendientes-content">
                         <div class="pendientes-count">Solicitudes Totales</div>
                         <div class="pendientes-info">
