@@ -1001,14 +1001,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticket_id_chat'])) {
                                 </a>
                             <?php endif; ?>
                             
-                            <?php if ($esAdmin || verificarAccesoCargo([5, 14, 16, 35])): ?>
-                                <a href="formulario_mantenimiento.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'formulario_mantenimiento.php' ? 'activo' : '' ?>">
+                            <?php if ($esAdmin || verificarAccesoCargo([5, 16, 35])): ?>
+                                <a href="#" onclick="openMaintenanceForm()" class="btn-agregar">
                                     <i class="fas fa-tools"></i> <span class="btn-text">Mantenimiento General</span>
                                 </a>
                             <?php endif; ?>
-                            
-                            <?php if ($esAdmin || verificarAccesoCargo([5, 14, 16, 35])): ?>
-                                <a href="formulario_equipos.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'formulario_equipos.php' ? 'activo' : '' ?>">
+
+                            <?php if ($esAdmin || verificarAccesoCargo([5, 16, 35])): ?>
+                                <a href="#" onclick="openEquipmentForm()" class="btn-agregar activo">
                                     <i class="fas fa-laptop"></i> <span class="btn-text">Cambio de Equipos</span>
                                 </a>
                             <?php endif; ?>

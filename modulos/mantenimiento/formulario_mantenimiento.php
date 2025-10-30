@@ -487,13 +487,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </a>
                     <?php endif; ?>
                     
-                    <a href="#" onclick="openMaintenanceForm()" class="btn-agregar activo">
-                        <i class="fas fa-tools"></i> <span class="btn-text">Mantenimiento General</span>
-                    </a>
-                    
-                    <a href="#" onclick="openEquipmentForm()" class="btn-agregar">
-                        <i class="fas fa-laptop"></i> <span class="btn-text">Cambio de Equipos</span>
-                    </a>
+                    <?php if ($esAdmin || verificarAccesoCargo([5, 16, 35])): ?>
+                        <a href="#" onclick="openMaintenanceForm()" class="btn-agregar">
+                            <i class="fas fa-tools"></i> <span class="btn-text">Mantenimiento General</span>
+                        </a>
+                    <?php endif; ?>
+
+                    <?php if ($esAdmin || verificarAccesoCargo([5, 16, 35])): ?>
+                        <a href="#" onclick="openEquipmentForm()" class="btn-agregar activo">
+                            <i class="fas fa-laptop"></i> <span class="btn-text">Cambio de Equipos</span>
+                        </a>
+                    <?php endif; ?>
                     
                     <a href="#" onclick="location.reload()" class="btn-agregar" style="display:none;">
                         <i class="fas fa-sync-alt"></i> <span class="btn-text">Actualizar</span>

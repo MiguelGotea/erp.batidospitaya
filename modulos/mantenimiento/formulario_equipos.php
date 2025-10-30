@@ -484,13 +484,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </a>
                     <?php endif; ?>
 
-                    <?php if (!verificarAccesoCargo([14])): ?>
+                    <?php if ($esAdmin || verificarAccesoCargo([5, 16, 35])): ?>
                         <a href="#" onclick="openMaintenanceForm()" class="btn-agregar">
                             <i class="fas fa-tools"></i> <span class="btn-text">Mantenimiento General</span>
                         </a>
                     <?php endif; ?>
 
-                    <?php if (!verificarAccesoCargo([14])): ?>
+                    <?php if ($esAdmin || verificarAccesoCargo([5, 16, 35])): ?>
                         <a href="#" onclick="openEquipmentForm()" class="btn-agregar activo">
                             <i class="fas fa-laptop"></i> <span class="btn-text">Cambio de Equipos</span>
                         </a>

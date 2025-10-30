@@ -482,13 +482,17 @@ if ($accesoCompleto) {
                         </a>
                     <?php endif; ?>
                     
-                    <a href="#" onclick="openMaintenanceForm()" class="btn-agregar">
-                        <i class="fas fa-tools"></i> <span class="btn-text">Mantenimiento General</span>
-                    </a>
-                    
-                    <a href="#" onclick="openEquipmentForm()" class="btn-agregar">
-                        <i class="fas fa-laptop"></i> <span class="btn-text">Cambio de Equipos</span>
-                    </a>
+                    <?php if ($esAdmin || verificarAccesoCargo([5, 16, 35])): ?>
+                        <a href="#" onclick="openMaintenanceForm()" class="btn-agregar">
+                            <i class="fas fa-tools"></i> <span class="btn-text">Mantenimiento General</span>
+                        </a>
+                    <?php endif; ?>
+
+                    <?php if ($esAdmin || verificarAccesoCargo([5, 16, 35])): ?>
+                        <a href="#" onclick="openEquipmentForm()" class="btn-agregar activo">
+                            <i class="fas fa-laptop"></i> <span class="btn-text">Cambio de Equipos</span>
+                        </a>
+                    <?php endif; ?>
                     
                     <a href="dashboard_sucursales.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'dashboard_sucursales.php' ? 'activo' : '' ?>">
                         <i class="fas fa-sync-alt"></i> <span class="btn-text">Solicitudes</span>
