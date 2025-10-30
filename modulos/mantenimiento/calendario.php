@@ -1052,7 +1052,7 @@ function getColorByUrgency($urgencia, $tipo_formulario) {
                         const status = arg.event.extendedProps.status || '';
                         const tipo_formulario = arg.event.extendedProps.tipo_formulario || '';
                         const id = arg.event.id;
-                        setTimeout(() => cargarColaboradoresTicket(id), 100);
+                        //setTimeout(() => cargarColaboradoresTicket(id), 100);
                         
                         // Vista Mes: Ocultar (se maneja con CSS)
                         if (view === 'dayGridMonth') {
@@ -1176,6 +1176,9 @@ function getColorByUrgency($urgencia, $tipo_formulario) {
                 // INICIALIZAR FILTRO AL CARGAR LA PÁGINA
                 inicializarFiltroSucursal();
                 console.log('✅ Inicialización completa');
+                
+                // Cargar colaboradores en los eventos del calendario
+                cargarColaboradoresEnEventos();
                 
             } catch (error) {
                 console.error('❌ Error al crear calendario:', error);
@@ -1503,6 +1506,11 @@ function getColorByUrgency($urgencia, $tipo_formulario) {
                     
                     // Actualizar sidebar con los nuevos datos
                     actualizarSidebar(data.tickets_sin_fecha);
+
+                    // ✅ AGREGAR: Recargar colaboradores después de refrescar
+                    setTimeout(() => {
+                        cargarColaboradoresEnEventos();
+                    }, 500);
                     
                     console.log('✅ Calendario y sidebar actualizados con filtro preservado');
                 },
@@ -1819,6 +1827,18 @@ function getColorByUrgency($urgencia, $tipo_formulario) {
         }
 
         //Funcion de colaboradores asignados a ticket
+        function cargarColaboradoresEnEventos() {
+            setTimeout(() => {
+                $('.fc-event').each(function() {
+                    const ticketId = $(this).find('[id^="colaboradores-list-"]').attr('id');
+                    if (ticketId) {
+                        const id = ticketId.replace('colaboradores-list-', '');
+                        cargarColaboradoresTicket(id);
+                    }
+                });
+            }, 500);
+        }
+
         function abrirModalColaboradores(ticketId) {
             $.ajax({
                 url: 'ajax/get_modal_colaboradores.php',
