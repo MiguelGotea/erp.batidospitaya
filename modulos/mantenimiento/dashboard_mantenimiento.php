@@ -849,6 +849,69 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticket_id_chat'])) {
             margin-top: 20px;
         }
 
+        .photo-gallery-preview {
+            position: relative;
+            display: inline-block;
+        }
+
+        .photo-count {
+            position: absolute;
+            bottom: 5px;
+            right: 5px;
+            font-size: 0.75rem !important;
+            padding: 3px 6px;
+        }
+
+        .ticket-photo {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 5px;
+            border: 2px solid #dee2e6;
+            transition: transform 0.2s;
+        }
+
+        .ticket-photo:hover {
+            transform: scale(1.1);
+        }
+
+        /* Estilos para el carousel de fotos en modal */
+        .photos-carousel {
+            max-width: 100%;
+            margin: 0 auto;
+        }
+
+        .photos-carousel img {
+            max-height: 500px;
+            width: 100%;
+            object-fit: contain;
+        }
+
+        .carousel-thumbnails {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            overflow-x: auto;
+            padding: 10px 0;
+        }
+
+        .carousel-thumbnail {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border: 2px solid #dee2e6;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .carousel-thumbnail:hover,
+        .carousel-thumbnail.active {
+            border-color: #51B8AC;
+            transform: scale(1.05);
+        }
+
         @media (max-width: 768px) {
             .chat-sidebar {
                 width: 100%;
@@ -1078,11 +1141,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticket_id_chat'])) {
                                                     </span>
                                                 </td>
                                                 <td>
-                                                    <?php if ($t['foto']): ?>
-                                                        <img src="uploads/tickets/<?= $t['foto'] ?>" alt="Foto" class="ticket-photo" 
-                                                            onclick="showPhotoModal('uploads/tickets/<?= $t['foto'] ?>')">
+                                                    <?php 
+                                                    $ticketFotos = $ticket->getFotos($t['id']);
+                                                    if (!empty($ticketFotos)): 
+                                                    ?>
+                                                        <div class="photo-gallery-preview" onclick="showPhotosModal(<?= $t['id'] ?>)" style="cursor: pointer;">
+                                                            <img src="uploads/tickets/<?= $ticketFotos[0]['foto'] ?>" alt="Foto" class="ticket-photo">
+                                                            <?php if (count($ticketFotos) > 1): ?>
+                                                                <span class="badge bg-primary photo-count">+<?= count($ticketFotos) - 1 ?></span>
+                                                            <?php endif; ?>
+                                                        </div>
                                                     <?php else: ?>
-                                                        <small class="text-muted">Sin foto</small>
+                                                        <small class="text-muted">Sin fotos</small>
                                                     <?php endif; ?>
                                                 </td>
                                                 <td>
@@ -1564,6 +1634,82 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticket_id_chat'])) {
                 updateActiveFiltersBadges();
             });
         }
+
+        function showPhotosModal(ticketId) {
+            $.ajax({
+                url: 'ajax/get_ticket_photos.php',
+                method: 'GET',
+                data: { ticket_id: ticketId },
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success && response.fotos.length > 0) {
+                        let html = '';
+                        
+                        // Crear carousel
+                        html += '<div id="photosCarousel" class="carousel slide photos-carousel" data-bs-ride="false">';
+                        html += '<div class="carousel-inner">';
+                        
+                        response.fotos.forEach((foto, index) => {
+                            html += `<div class="carousel-item ${index === 0 ? 'active' : ''}">
+                                <img src="uploads/tickets/${foto.foto}" class="d-block w-100" alt="Foto ${index + 1}">
+                                <div class="text-center mt-2">
+                                    <small class="text-muted">Foto ${index + 1} de ${response.fotos.length}</small>
+                                </div>
+                            </div>`;
+                        });
+                        
+                        html += '</div>';
+                        
+                        // Controles del carousel
+                        if (response.fotos.length > 1) {
+                            html += `
+                                <button class="carousel-control-prev" type="button" data-bs-target="#photosCarousel" data-bs-slide="prev">
+                                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                    <span class="visually-hidden">Anterior</span>
+                                </button>
+                                <button class="carousel-control-next" type="button" data-bs-target="#photosCarousel" data-bs-slide="next">
+                                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                    <span class="visually-hidden">Siguiente</span>
+                                </button>
+                            `;
+                            
+                            // Thumbnails
+                            html += '<div class="carousel-thumbnails">';
+                            response.fotos.forEach((foto, index) => {
+                                html += `
+                                    <img src="uploads/tickets/${foto.foto}" 
+                                        class="carousel-thumbnail ${index === 0 ? 'active' : ''}" 
+                                        data-bs-target="#photosCarousel" 
+                                        data-bs-slide-to="${index}"
+                                        alt="Thumbnail ${index + 1}">
+                                `;
+                            });
+                            html += '</div>';
+                        }
+                        
+                        html += '</div>';
+                        
+                        $('#photosGalleryBody').html(html);
+                        
+                        // Event listener para actualizar thumbnails activos
+                        const carousel = document.getElementById('photosCarousel');
+                        if (carousel) {
+                            carousel.addEventListener('slid.bs.carousel', function (e) {
+                                $('.carousel-thumbnail').removeClass('active');
+                                $(`.carousel-thumbnail[data-bs-slide-to="${e.to}"]`).addClass('active');
+                            });
+                        }
+                        
+                        new bootstrap.Modal(document.getElementById('photosGalleryModal')).show();
+                    } else {
+                        alert('No hay fotos disponibles para este ticket');
+                    }
+                },
+                error: function() {
+                    alert('Error al cargar las fotos');
+                }
+            });
+        }
         
         // ========== FUNCIONES PARA FILTROS EXTERNOS ==========
         
@@ -1991,5 +2137,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticket_id_chat'])) {
         }
 
     </script>
+
+    <!-- Modal para galería de fotos -->
+    <div class="modal fade" id="photosGalleryModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-images me-2"></i>
+                        Fotografías del Ticket
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="photosGalleryBody">
+                    <!-- Contenido cargado dinámicamente -->
+                </div>
+            </div>
+        </div>
+    </div>
+
 </body>
 </html>
