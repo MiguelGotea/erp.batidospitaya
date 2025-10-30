@@ -760,6 +760,100 @@ if ($accesoCompleto) {
         //        location.reload();
         //    }
         //}, 60000);
+
+
+        // Agregar la misma función showPhotosModal del dashboard_mantenimiento.php
+        function showPhotosModal(ticketId) {
+            $.ajax({
+                url: 'ajax/get_ticket_photos.php',
+                method: 'GET',
+                data: { ticket_id: ticketId },
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success && response.fotos.length > 0) {
+                        let html = '';
+                        
+                        html += '<div id="photosCarousel" class="carousel slide photos-carousel" data-bs-ride="false">';
+                        html += '<div class="carousel-inner">';
+                        
+                        response.fotos.forEach((foto, index) => {
+                            html += `<div class="carousel-item ${index === 0 ? 'active' : ''}">
+                                <img src="uploads/tickets/${foto.foto}" class="d-block w-100" alt="Foto ${index + 1}" style="max-height: 500px; object-fit: contain;">
+                                <div class="text-center mt-2">
+                                    <small class="text-muted">Foto ${index + 1} de ${response.fotos.length}</small>
+                                </div>
+                            </div>`;
+                        });
+                        
+                        html += '</div>';
+                        
+                        if (response.fotos.length > 1) {
+                            html += `
+                                <button class="carousel-control-prev" type="button" data-bs-target="#photosCarousel" data-bs-slide="prev">
+                                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                </button>
+                                <button class="carousel-control-next" type="button" data-bs-target="#photosCarousel" data-bs-slide="next">
+                                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                </button>
+                            `;
+                            
+                            html += '<div class="d-flex gap-2 mt-3 overflow-auto p-2">';
+                            response.fotos.forEach((foto, index) => {
+                                html += `
+                                    <img src="uploads/tickets/${foto.foto}" 
+                                        class="carousel-thumbnail ${index === 0 ? 'active' : ''}" 
+                                        data-bs-target="#photosCarousel" 
+                                        data-bs-slide-to="${index}"
+                                        style="width: 80px; height: 80px; object-fit: cover; border: 2px solid ${index === 0 ? '#51B8AC' : '#dee2e6'}; border-radius: 5px; cursor: pointer;"
+                                        alt="Thumbnail ${index + 1}">
+                                `;
+                            });
+                            html += '</div>';
+                        }
+                        
+                        html += '</div>';
+                        
+                        $('#photosGalleryBody').html(html);
+                        
+                        const carousel = document.getElementById('photosCarousel');
+                        if (carousel) {
+                            carousel.addEventListener('slid.bs.carousel', function (e) {
+                                $('.carousel-thumbnail').css('border-color', '#dee2e6');
+                                $(`.carousel-thumbnail[data-bs-slide-to="${e.to}"]`).css('border-color', '#51B8AC');
+                            });
+                        }
+                        
+                        new bootstrap.Modal(document.getElementById('photosGalleryModal')).show();
+                    } else {
+                        alert('No hay fotos disponibles para este ticket');
+                    }
+                },
+                error: function() {
+                    alert('Error al cargar las fotos');
+                }
+            });
+        }
     </script>
+
+
+    <!-- Modal para galería de fotos -->
+    <div class="modal fade" id="photosGalleryModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-images me-2"></i>
+                        Fotografías del Ticket
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="photosGalleryBody">
+                    <!-- Contenido cargado dinámicamente -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+
 </body>
 </html>
