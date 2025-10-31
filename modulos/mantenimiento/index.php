@@ -381,9 +381,7 @@ if (!verificarAccesoCargo(14)) {
                     </div>
                 </div>
             </div>
-        </div>
 
-        <div class="indicadores-container">
             <div class="pendientes-container" style="margin-bottom: 30px;">
                 <div class="pendientes-card" onclick="" style="cursor: pointer;">
                     <div class="pendientes-content">
@@ -401,9 +399,7 @@ if (!verificarAccesoCargo(14)) {
                     </div>
                 </div>
             </div>
-        </div>
 
-        <div class="indicadores-container">
             <div class="pendientes-container" style="margin-bottom: 30px;">
                 <div class="pendientes-card" onclick="" style="cursor: pointer;">
                     <div class="pendientes-content">
