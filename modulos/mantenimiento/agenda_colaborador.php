@@ -24,8 +24,7 @@ if (!verificarAccesoCargo([5, 11, 14, 16, 35]) && !(isset($_SESSION['usuario_rol
 
 // Obtenemos el cargo principal usando la función de funciones.php
 $cargoUsuario = obtenerCargoPrincipalUsuario($_SESSION['usuario_id']);
-log.console($cargoUsuario);
-
+$cargoUsuariocodigo = obtenerCargoCodigoPrincipalUsuario($_SESSION['usuario_id']);
 //******************************Estándar para header, termina******************************
 
 $ticket = new Ticket();
@@ -39,7 +38,7 @@ $colaborador_filtro = isset($_GET['colaborador']) ? intval($_GET['colaborador'])
 // Obtener tickets del colaborador
 $tickets = [];
 if ($colaborador_filtro) {
-    if ($cargoUsuario == 14) {
+    if ($cargoUsuariocodigo == 14) {
         $tickets = $ticket->getTicketsPorColaborador($colaborador_filtro, date('Y-m-d'));
     } else {
     $tickets = $ticket->getTicketsPorColaborador($colaborador_filtro, "2016-01-01");
