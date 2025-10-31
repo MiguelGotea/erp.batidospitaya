@@ -368,7 +368,7 @@ if (!verificarAccesoCargo(14)) {
                 <div class="pendientes-card" onclick="" style="cursor: pointer;">
                     <div class="pendientes-content">
                         <div class="pendientes-count">
-                            <?= $stats['total']-$stats['agendado'] ?>
+                            <?= $stats['total']-$stats['agendado']-$stats['finalizado'] ?>
                         </div>
                         <div class="pendientes-info">
                             <div class="pendientes-fecha">
