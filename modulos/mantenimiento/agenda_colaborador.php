@@ -443,12 +443,6 @@ if ($colaborador_filtro) {
         </div>
 
         <?php if ($colaborador_filtro): ?>
-            <div class="mb-3">
-                <h5>
-                    <i class="fas fa-calendar-check me-2"></i>
-                    Tickets programados (<?= count($tickets) ?>)
-                </h5>
-            </div>
 
             <?php if (empty($tickets)): ?>
                 <div class="text-center py-5">
