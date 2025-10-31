@@ -485,8 +485,9 @@ if ($colaborador_filtro) {
                             </div>
                             
                             <div class="ticket-footer">
-                                <?php if (!empty($fotos)): ?>
-                                    <div class="fotos-preview">
+                                <div class="fotos-preview">
+                                    <?php if (!empty($fotos)): ?>
+                                    
                                         <?php foreach (array_slice($fotos, 0, 3) as $foto): ?>
                                             <img src="uploads/tickets/<?= $foto['foto'] ?>" 
                                                  class="foto-thumb" 
@@ -499,9 +500,8 @@ if ($colaborador_filtro) {
                                                 +<?= count($fotos) - 3 ?>
                                             </div>
                                         <?php endif; ?>
-                                    </div>
-                                <?php endif; ?>
-                                
+                                    <?php endif; ?>
+                                </div>
                                 <?php if (!$finalizado): ?>
                                     <button class="btn-finalizar" onclick="abrirModalFinalizar(<?= $t['id'] ?>)">
                                         <i class="fas fa-check-circle me-1"></i>Finalizar
