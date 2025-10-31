@@ -38,7 +38,7 @@ $colaborador_filtro = isset($_GET['colaborador']) ? intval($_GET['colaborador'])
 // Obtener tickets del colaborador
 $tickets = [];
 if ($colaborador_filtro) {
-    if (obtenerCargoCodigoPrincipalUsuario($_SESSION['usuario_id'])=14) {
+    if ($cargoUsuario == 14) {
         $tickets = $ticket->getTicketsPorSucursal($colaborador_filtro, "2016-01-01");
     } else {
     $tickets = $ticket->getTicketsPorColaborador($colaborador_filtro, date('Y-m-d'));
