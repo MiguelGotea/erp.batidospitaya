@@ -41,7 +41,7 @@ if ($colaborador_filtro) {
     if (!verificarAccesoCargo([16])) {
         $tickets = $ticket->getTicketsPorSucursal($colaborador_filtro, date('Y-m-d'));
     } else {
-    $tickets = $ticket->getTicketsPorColaborador($colaborador_filtro, '01/01/2000');
+    $tickets = $ticket->getTicketsPorColaborador($colaborador_filtro, "2016-01-01");
     }
 }
 ?>
