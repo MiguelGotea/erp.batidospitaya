@@ -469,8 +469,10 @@ if ($colaborador_filtro) {
                                     <?php endif; ?>
                                 </div>
                                 
-                                <i class="fas fa-map-marker-alt me-1"></i>
-                                <?= htmlspecialchars($t['nombre_sucursal']) ?>
+                                <span class="ticket-sucursal">
+                                    <i class="fas fa-map-marker-alt me-1"></i>
+                                    <?= htmlspecialchars($t['nombre_sucursal']) ?>
+                                </span>
                             </div>
                             
                             <div class="ticket-title">
