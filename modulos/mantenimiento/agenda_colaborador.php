@@ -373,13 +373,13 @@ if ($colaborador_filtro) {
                     
                     <?php if ($esAdmin || verificarAccesoCargo([5, 16, 35])): ?>
                         <a href="#" onclick="openMaintenanceForm()" class="btn-agregar">
-                            <i class="fas fa-tools"></i> <span class="btn-text">Mantenimiento General</span>
+                            <i class="fas fa-tools"></i> <span class="btn-text">Mantenimiento</span>
                         </a>
                     <?php endif; ?>
 
                     <?php if ($esAdmin || verificarAccesoCargo([5, 16, 35])): ?>
                         <a href="#" onclick="openEquipmentForm()" class="btn-agregar activo">
-                            <i class="fas fa-laptop"></i> <span class="btn-text">Cambio de Equipos</span>
+                            <i class="fas fa-laptop"></i> <span class="btn-text">Equipos</span>
                         </a>
                     <?php endif; ?>
                     
