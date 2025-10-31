@@ -39,9 +39,9 @@ $colaborador_filtro = isset($_GET['colaborador']) ? intval($_GET['colaborador'])
 $tickets = [];
 if ($colaborador_filtro) {
     if (verificarAccesoCargo(14)) {
-        $tickets = $ticket->getTicketsPorSucursal($colaborador_filtro, date('Y-m-d'));
+        $tickets = $ticket->getTicketsPorSucursal($colaborador_filtro, "2016-01-01");
     } else {
-    $tickets = $ticket->getTicketsPorColaborador($colaborador_filtro, "2016-01-01");
+    $tickets = $ticket->getTicketsPorColaborador($colaborador_filtro, date('Y-m-d'));
     }
 }
 ?>
