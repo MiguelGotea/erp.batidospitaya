@@ -24,6 +24,7 @@ if (!verificarAccesoCargo([5, 11, 14, 16, 35]) && !(isset($_SESSION['usuario_rol
 
 // Obtenemos el cargo principal usando la función de funciones.php
 $cargoUsuario = obtenerCargoPrincipalUsuario($_SESSION['usuario_id']);
+log.console($cargoUsuario);
 
 //******************************Estándar para header, termina******************************
 
