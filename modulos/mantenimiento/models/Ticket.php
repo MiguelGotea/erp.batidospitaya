@@ -247,7 +247,7 @@ class Ticket {
         
         $sql .= " ORDER BY 
                 CASE WHEN t.status = 'finalizado' THEN 1 ELSE 0 END,
-                t.fecha_inicio ASC, t.fecha_final ASC";
+                t.fecha_inicio ASC, t.fecha_final ASC, nombre_sucursal ASC";
         
         return $this->db->fetchAll($sql, $params);
     }

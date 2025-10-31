@@ -469,9 +469,8 @@ if ($colaborador_filtro) {
                                     <?php endif; ?>
                                 </div>
                                 
-                                <span class="status-badge status-<?= $t['status'] ?>">
-                                    <?= ucfirst($t['status']) ?>
-                                </span>
+                                <i class="fas fa-map-marker-alt me-1"></i>
+                                <?= htmlspecialchars($t['nombre_sucursal']) ?>
                             </div>
                             
                             <div class="ticket-title">
