@@ -39,7 +39,7 @@ $colaborador_filtro = isset($_GET['colaborador']) ? intval($_GET['colaborador'])
 $tickets = [];
 if ($colaborador_filtro) {
     if ($cargoUsuario == 14) {
-        $tickets = $ticket->getTicketsPorSucursal($colaborador_filtro, date('Y-m-d'));
+        $tickets = $ticket->getTicketsPorColaborador($colaborador_filtro, date('Y-m-d'));
     } else {
     $tickets = $ticket->getTicketsPorColaborador($colaborador_filtro, "2016-01-01");
     }
