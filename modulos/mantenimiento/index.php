@@ -367,13 +367,55 @@ if (!verificarAccesoCargo(14)) {
             <div class="pendientes-container" style="margin-bottom: 30px;">
                 <div class="pendientes-card" onclick="" style="cursor: pointer;">
                     <div class="pendientes-content">
-                        <div class="pendientes-count">Solicitudes Totales</div>
+                        <div class="pendientes-count">
+                            <?= $stats['total']-$stats['agendado'] ?>
+                        </div>
                         <div class="pendientes-info">
                             <div class="pendientes-fecha">
-                                <?= $stats['total'] ?>
+                                Solicitudes Pendientes por Agendar
                             </div>
                             <div class="pendientes-titulo">
+                                --
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="indicadores-container">
+            <div class="pendientes-container" style="margin-bottom: 30px;">
+                <div class="pendientes-card" onclick="" style="cursor: pointer;">
+                    <div class="pendientes-content">
+                        <div class="pendientes-count">
+                            <?= $stats['finalizado'] ?>
+                        </div>
+                        <div class="pendientes-info">
+                            <div class="pendientes-fecha">
+                                Solicitudes Concluidas
+                            </div>
+                            <div class="pendientes-titulo">
+                                --
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="indicadores-container">
+            <div class="pendientes-container" style="margin-bottom: 30px;">
+                <div class="pendientes-card" onclick="" style="cursor: pointer;">
+                    <div class="pendientes-content">
+                        <div class="pendientes-count">
+                            <?= $stats['total'] ?>
+                        </div>
+                        <div class="pendientes-info">
+                            <div class="pendientes-fecha">
                                 Solicitudes Totales
+                            </div>
+                            <div class="pendientes-titulo">
+                                --
                             </div>
                         </div>
                     </div>
