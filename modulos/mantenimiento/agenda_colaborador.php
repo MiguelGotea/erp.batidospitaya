@@ -480,11 +480,6 @@ if ($colaborador_filtro) {
                                 <?= htmlspecialchars($t['titulo']) ?>
                             </div>
                             
-                            <div class="ticket-sucursal">
-                                <i class="fas fa-map-marker-alt me-1"></i>
-                                <?= htmlspecialchars($t['nombre_sucursal']) ?>
-                            </div>
-                            
                             <div class="ticket-desc">
                                 <?= htmlspecialchars($t['descripcion']) ?>
                             </div>
