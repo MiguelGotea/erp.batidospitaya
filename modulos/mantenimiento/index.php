@@ -324,8 +324,8 @@ require_once '../../includes/menu_lateral.php';
 </head>
 <body>
     <!-- Renderizar menú lateral -->
-    <?php echo renderMenuLateral($cargoOperario, 'index.php'); ?>
-    
+    <?php echo renderMenuLateral($CodigoCargoOperario, 'index.php'); ?>
+
     <div class="container">
         <header>
             <img src="../../assets/img/Logo.svg" alt="Batidos Pitaya" class="logo">
