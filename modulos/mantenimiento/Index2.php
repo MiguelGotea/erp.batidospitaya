@@ -1,8 +1,7 @@
 <?php
 require_once '../../includes/auth.php';
 require_once '../../includes/funciones.php';
-// Incluir el menú lateral
-require_once 'includes/menu_lateral.php';
+
 verificarAutenticacion();
 
 $usuario = obtenerUsuarioActual();
@@ -11,7 +10,8 @@ $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admi
 verificarAccesoCargo([11, 16]);
 
 // Obtener cargo del operario para el menú
-$cargoUsuariocodigo = $usuario['CodNivelesCargos'];
+$cargoOperario = isset($_SESSION['usuario_cargo']) ? $_SESSION['usuario_cargo'] : 11;
+
 // Obtener todas las sucursales
 $sucursales = obtenerTodasSucursales();
 
@@ -24,7 +24,7 @@ $faltasPendientesOperaciones = obtenerFaltasPendientesOperaciones();
 $cantidadAnunciosNoLeidos = obtenerCantidadAnunciosNoLeidos($_SESSION['usuario_id']);
 
 // Incluir el menú lateral
-require_once 'includes/menu_lateral.php';
+require_once '../../includes/menu_lateral.php';
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -343,7 +343,7 @@ require_once 'includes/menu_lateral.php';
 </head>
 <body>
     <!-- Incluir menú lateral -->
-    <?php echo renderMenuLateral($cargoUsuariocodigo, 'operaciones', 'index.php'); ?>
+    <?php echo renderMenuLateral($cargoOperario, 'index.php'); ?>
     
     <!-- Contenido principal -->
     <div class="main-container">

@@ -2,7 +2,6 @@
 require_once 'models/Ticket.php';
 require_once '../../includes/auth.php';
 require_once '../../includes/funciones.php';
-// Incluir el menú lateral
 require_once '../../includes/menu_lateral.php';
 
 verificarAutenticacion();
@@ -629,7 +628,7 @@ if (!verificarAccesoCargo(14)) {
 </head>
 <body>
     <!-- Incluir menú lateral -->
-    <?php echo renderMenuLateral($cargoUsuariocodigo, 'mantenimiento', 'index.php'); ?>
+    <?php echo renderMenuLateral($cargoUsuariocodigo, 'index.php'); ?>
 
     <!-- Contenido principal -->
     <div class="main-container">
