@@ -1009,7 +1009,7 @@ require_once '../../includes/menu_lateral.php';
 </head>
 <body>
     <!-- Incluir menú lateral -->
-    <?php echo renderMenuLateral($cargoOperario, 'index2.php'); ?>
+    <?php echo renderMenuLateral($cargoOperario, 'index.php'); ?>
     
     <!-- Contenido principal -->
     <div class="main-container">
