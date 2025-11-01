@@ -629,9 +629,13 @@ if (!verificarAccesoCargo(14)) {
 </head>
 <body>
     <!-- Incluir menú lateral -->
-    <?php echo renderMenuLateral($cargoUsuariocodigo, 'Mantenimiento', 'index.php'); ?>
+    <?php echo renderMenuLateral($cargoUsuariocodigo, 'mantenimiento', 'index.php'); ?>
 
-    <div class="container">
+    <!-- Contenido principal -->
+    <div class="main-container">
+        <div class="content-wrapper">
+            
+
         <header>
             <img src="../../assets/img/Logo.svg" alt="Batidos Pitaya" class="logo">
             <div class="user-info">
@@ -675,8 +679,9 @@ if (!verificarAccesoCargo(14)) {
             ];
         ?>
 
+        <div class="dashboard-grid">
           <!-- Contenedor para indicadores -->
-        <div class="indicadores-container">
+
             <div class="pendientes-container" style="margin-bottom: 30px;">
                 <div class="pendientes-card" onclick="" style="cursor: pointer;">
                     <div class="pendientes-content">
@@ -744,7 +749,10 @@ if (!verificarAccesoCargo(14)) {
             </a>
         </div>
         -->
-        
+            <h2 class="section-title">
+                <i class="fas fa-bolt"></i> Accesos Rápidos
+            </h2>
+        <div class="quick-access-grid">
         <!-- Grupo 2: Mantenimiento -->
         <h2 class="category-title">Gestión de Mantenimiento</h2>
         <div class="modules">
@@ -765,7 +773,7 @@ if (!verificarAccesoCargo(14)) {
             </a>
             -->
         </div>
-        
+        </div>
         <!-- Grupo 3: Reportes (opcional) -->
         <!--
         <h2 class="category-title">Reportes y Estadísticas</h2>
@@ -778,6 +786,6 @@ if (!verificarAccesoCargo(14)) {
             </a>
         </div>
         -->
-    </div>
+
 </body>
 </html>
