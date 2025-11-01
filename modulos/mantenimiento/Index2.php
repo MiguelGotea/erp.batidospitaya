@@ -11,7 +11,7 @@ $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admi
 verificarAccesoCargo([11, 16]);
 
 // Obtener cargo del operario para el menú
-$cargoUsuariocodigo = obtenerCargoCodigoPrincipalUsuario($_SESSION['usuario_id']);
+$cargoUsuariocodigo = $usuario['CodNivelesCargos'];
 // Obtener todas las sucursales
 $sucursales = obtenerTodasSucursales();
 
