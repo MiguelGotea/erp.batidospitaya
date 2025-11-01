@@ -7,7 +7,7 @@ require_once '../../includes/menu_lateral.php';
 
 $usuario = obtenerUsuarioActual();
 $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
-$cargoUsuariocodigo = obtenerCargoCodigoPrincipalUsuario($_SESSION['usuario_id']);
+$cargoUsuariocodigo = $usuario['cargo_codigo'];
 
 // Verificar acceso al módulo (cargos con permiso para ver marcaciones)
 if (!verificarAccesoCargo(14)) {
