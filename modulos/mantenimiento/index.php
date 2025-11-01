@@ -7,12 +7,16 @@ require_once '../../includes/funciones.php';
 
 $usuario = obtenerUsuarioActual();
 $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
+$CodigoCargoOperario = $usuario['CodNivelesCargos'];
 
 // Verificar acceso al módulo (cargos con permiso para ver marcaciones)
 if (!verificarAccesoCargo(14)) {
     header('Location: ../index.php');
     exit();
 }
+
+// Incluir el menú lateral
+require_once '../../includes/menu_lateral.php';
 
 ?>
 <!DOCTYPE html>
@@ -319,6 +323,9 @@ if (!verificarAccesoCargo(14)) {
     </style>
 </head>
 <body>
+    <!-- Renderizar menú lateral -->
+    <?php echo renderMenuLateral($cargoOperario, 'index.php'); ?>
+    
     <div class="container">
         <header>
             <img src="../../assets/img/Logo.svg" alt="Batidos Pitaya" class="logo">
