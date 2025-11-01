@@ -349,7 +349,7 @@ if (!verificarAccesoCargo(14)) {
         
         <div class="module-header">
             <h1 class="module-title-page">Área de Mantenimiento</h1>
-            <h1 class="module-title-page"><?$esAdmin?></h1>
+            <?$esAdmin?>
         </div>
 
         <?php
