@@ -2,11 +2,12 @@
 require_once 'models/Ticket.php';
 require_once '../../includes/auth.php';
 require_once '../../includes/funciones.php';
-
-//verificarAccesoModulo('sistema'); Esto ya no se usa
+// Incluir el menú lateral
+require_once '../../includes/menu_lateral.php';
 
 $usuario = obtenerUsuarioActual();
 $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
+$cargoUsuariocodigo = obtenerCargoCodigoPrincipalUsuario($_SESSION['usuario_id']);
 
 // Verificar acceso al módulo (cargos con permiso para ver marcaciones)
 if (!verificarAccesoCargo(14)) {
@@ -348,6 +349,7 @@ if (!verificarAccesoCargo(14)) {
         
         <div class="module-header">
             <h1 class="module-title-page">Área de Mantenimiento</h1>
+            <h1 class="module-title-page"><?$esAdmin?></h1>
         </div>
 
         <?php
