@@ -629,7 +629,7 @@ if (!verificarAccesoCargo(14)) {
 </head>
 <body>
     <!-- Incluir menú lateral -->
-    <?php echo renderMenuLateral($cargoUsuariocodigo, 'operaciones', 'index.php'); ?>
+    <?php echo renderMenuLateral($cargoUsuariocodigo, 'Mantenimiento', 'index.php'); ?>
 
     <div class="container">
         <header>
