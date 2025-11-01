@@ -319,7 +319,7 @@ if (!verificarAccesoCargo(14)) {
             cursor: pointer;
         }
 
-        
+
 
         * {
             box-sizing: border-box;
@@ -628,6 +628,9 @@ if (!verificarAccesoCargo(14)) {
     </style>
 </head>
 <body>
+    <!-- Incluir menú lateral -->
+    <?php echo renderMenuLateral($cargoUsuariocodigo, 'operaciones', 'index.php'); ?>
+
     <div class="container">
         <header>
             <img src="../../assets/img/Logo.svg" alt="Batidos Pitaya" class="logo">
