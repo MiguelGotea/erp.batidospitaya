@@ -349,7 +349,7 @@ if (!verificarAccesoCargo(14)) {
         
         <div class="module-header">
             <h1 class="module-title-page">Área de Mantenimiento</h1>
-            <?$esAdmin?>
+            <?= $esAdmin ? '<span class="badge badge-admin">Administrador</span>' : '<span class="badge badge-user">Usuario</span>' ?>
         </div>
 
         <?php
