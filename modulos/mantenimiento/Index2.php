@@ -49,7 +49,7 @@ require_once '../../includes/menu_lateral.php';
         }
         
         .main-container {
-            margin-left: 260px;
+            margin-left: 70px;
             transition: margin-left 0.3s ease;
         }
         
