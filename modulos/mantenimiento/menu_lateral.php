@@ -220,14 +220,8 @@ function renderMenuLateral($cargoOperario, $paginaActual = '') {
         .sidebar-header .logo {
             height: 40px;
             width: auto;
-            opacity: 0;
-            transition: opacity 0.3s ease 0.15s;
-            transform: translateX(-10px);
-        }
-        
-        .sidebar:hover .sidebar-header .logo {
             opacity: 1;
-            transform: translateX(0);
+            transition: all 0.3s ease 0.15s;
         }
         
         /* ==================== GRUPOS ==================== */
@@ -322,7 +316,8 @@ function renderMenuLateral($cargoOperario, $paginaActual = '') {
             background: #fafafa;
         }
         
-        .menu-group.active .menu-items {
+        /* Solo mostrar subgrupos cuando el sidebar está expandido Y el grupo está activo */
+        .sidebar:hover .menu-group.active .menu-items {
             max-height: 600px;
         }
         
@@ -756,31 +751,3 @@ function renderMenuLateral($cargoOperario, $paginaActual = '') {
     return ob_get_clean();
 }
 
-/**
- * Función helper para obtener el nombre del módulo según el cargo
- */
-function getNombreModulo($cargoOperario) {
-    $modulos = [
-        11 => 'Operaciones',
-        14 => 'Mantenimiento',
-        16 => 'Recursos Humanos',
-        21 => 'Supervisión'
-    ];
-    
-    return $modulos[$cargoOperario] ?? 'Sistema';
-}
-
-/**
- * Función helper para obtener el icono del módulo según el cargo
- */
-function getIconoModulo($cargoOperario) {
-    $iconos = [
-        11 => 'fas fa-cogs',
-        14 => 'fas fa-tools',
-        16 => 'fas fa-users',
-        21 => 'fas fa-binoculars'
-    ];
-    
-    return $iconos[$cargoOperario] ?? 'fas fa-home';
-}
-?>
