@@ -23,12 +23,12 @@ $menuGlobal = [
     [
         'nombre' => 'Recursos Humanos',
         'icon' => 'fas fa-users',
-        'cargos_permitidos' => [11, 16, 21],
+        'cargos_permitidos' => [11, 5, 16, 21],
         'items' => [
             [
-                'nombre' => 'Gestión de RRHH', 
+                'nombre' => 'Tardanzas', 
                 'url' => '../operaciones/tardanzas_manual.php',
-                'cargos_permitidos' => [11, 16, 21]
+                'cargos_permitidos' => [11, 5, 16, 21]
             ],
             [
                 'nombre' => 'Control de Asistencia', 
@@ -39,13 +39,33 @@ $menuGlobal = [
                 'nombre' => 'Reportes de Personal', 
                 'url' => '../rrhh/reportes.php',
                 'cargos_permitidos' => [16, 21]
+            ],
+            [
+                'nombre' => 'Faltas/Ausencias', 
+                'url' => '../lideres/faltas_manual.php',
+                'cargos_permitidos' => [11, 5]
+            ],
+            [
+                'nombre' => 'Generar Horarios', 
+                'url' => '../lideres/programar_horarios_lider.php',
+                'cargos_permitidos' => [11, 5]
+            ],
+            [
+                'nombre' => 'Horarios Programados', 
+                'url' => '../supervision/ver_horarios_compactos.php',
+                'cargos_permitidos' => [11, 5]
+            ],
+            [
+                'nombre' => 'Marcaciones', 
+                'url' => '../supervision/ver_horarios_compactos.php',
+                'cargos_permitidos' => [13, 5, 8, 11, 21, 22]
             ]
         ]
     ],
     [
         'nombre' => 'Supervisión',
         'icon' => 'fas fa-eye',
-        'cargos_permitidos' => [11, 21],
+        'cargos_permitidos' => [11, 21, 16],
         'items' => [
             [
                 'nombre' => 'Auditorías de Efectivo', 
@@ -62,12 +82,32 @@ $menuGlobal = [
     [
         'nombre' => 'Comunicación Interna',
         'icon' => 'fas fa-comments',
-        'cargos_permitidos' => [11, 14, 16, 21],
+        'cargos_permitidos' => [11, 5, 14, 16, 21],
         'items' => [
             [
-                'nombre' => 'Vista Pública', 
+                'nombre' => 'Avisos', 
                 'url' => '../supervision/auditorias_original/index_avisos_publico.php',
-                'cargos_permitidos' => [11, 14, 16, 21]
+                'cargos_permitidos' => [11, 5, 14, 16, 21]
+            ],
+            [
+                'nombre' => 'Auditorías', 
+                'url' => '../supervision/auditorias_original/index_auditorias_publico.php',
+                'cargos_permitidos' => [11, 5, 14, 16, 21]
+            ],
+            [
+                'nombre' => 'Promedios', 
+                'url' => '../supervision/auditorias_original/promedio.php',
+                'cargos_permitidos' => [11, 5, 14, 16, 21]
+            ],
+            [
+                'nombre' => 'KPI Sucursales', 
+                'url' => '../sucursales/kpi_sucursales.php',
+                'cargos_permitidos' => [11, 5]
+            ],
+            [
+                'nombre' => 'Reclamos', 
+                'url' => '../supervision/auditorias_original/index_reclamos_publico.php',
+                'cargos_permitidos' => [11, 5, 14, 16, 21]
             ],
             [
                 'nombre' => 'Gestión de Comunicación', 
@@ -79,27 +119,37 @@ $menuGlobal = [
     [
         'nombre' => 'Mantenimiento y Equipos',
         'icon' => 'fas fa-tools',
-        'cargos_permitidos' => [11, 14, 21],
+        'cargos_permitidos' => [11, 14, 21, 5],
         'items' => [
             [
                 'nombre' => 'Solicitudes', 
                 'url' => '../mantenimiento/dashboard_sucursales.php',
-                'cargos_permitidos' => [11, 21, 5]
+                'cargos_permitidos' => [11, 16, 5]
             ],
             [
                 'nombre' => 'Solicitudes', 
                 'url' => '../mantenimiento/dashboard_mantenimiento.php',
-                'cargos_permitidos' => [35, 14]
+                'cargos_permitidos' => [35, 14, 11, 16]
             ],
             [
                 'nombre' => 'Agenda Diaria', 
                 'url' => '../mantenimiento/agenda_colaborador.php',
-                'cargos_permitidos' => [14, 35]
+                'cargos_permitidos' => [11, 14, 16, 35]
             ],
             [
                 'nombre' => 'Calendario', 
                 'url' => '../mantenimiento/calendario.php',
-                'cargos_permitidos' => [21, 11, 35]
+                'cargos_permitidos' => [21, 5, 11, 16, 35]
+            ],
+            [
+                'nombre' => 'Mantenimiento', 
+                'url' => '../mantenimiento/formulario_mantenimiento.php',
+                'cargos_permitidos' => [11, 5, 35, 16]
+            ],
+            [
+                'nombre' => 'Equipo', 
+                'url' => '../mantenimiento/formulario_equipos.php',
+                'cargos_permitidos' => [11, 5, 16, 35]
             ]
         ]
     ],
@@ -588,7 +638,7 @@ function renderMenuLateral($cargoOperario, $paginaActual = '') {
     <!-- Sidebar -->
     <div class="sidebar" id="sidebar">
         <div class="sidebar-header">
-            <img src="../../assets/img/Logo.svg" alt="Batidos Pitaya" class="logo">
+            <img src="../../assets/img/icon12.png" alt="Batidos Pitaya" class="logo">
         </div>
         
         <?php foreach ($menuFiltrado as $index => $grupo): ?>
