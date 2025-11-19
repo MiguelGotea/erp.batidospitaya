@@ -11,12 +11,12 @@ $menuGlobal = [
     [
         'nombre' => 'Inicio',
         'icon' => 'fas fa-home',
-        'cargos_permitidos' => [11, 14, 16, 21],
+        'cargos_permitidos' => [11, 5, 14, 16, 21],
         'items' => [
             [
                 'nombre' => 'Dashboard', 
                 'url' => 'index.php',
-                'cargos_permitidos' => [11, 14, 16, 21]
+                'cargos_permitidos' => [11, 5, 14, 16, 21]
             ]
         ]
     ],
@@ -27,37 +27,37 @@ $menuGlobal = [
         'items' => [
             [
                 'nombre' => 'Tardanzas', 
-                'url' => '../operaciones/tardanzas_manual.php',
+                'url' => 'operaciones/tardanzas_manual.php',
                 'cargos_permitidos' => [11, 5, 16, 21]
             ],
             [
                 'nombre' => 'Control de Asistencia', 
-                'url' => '../supervision/ver_horarios_compactos.php',
+                'url' => 'supervision/ver_horarios_compactos.php',
                 'cargos_permitidos' => [11, 16, 21]
             ],
             [
                 'nombre' => 'Reportes de Personal', 
-                'url' => '../rrhh/reportes.php',
+                'url' => 'rrhh/reportes.php',
                 'cargos_permitidos' => [16, 21]
             ],
             [
                 'nombre' => 'Faltas/Ausencias', 
-                'url' => '../lideres/faltas_manual.php',
+                'url' => 'lideres/faltas_manual.php',
                 'cargos_permitidos' => [11, 5]
             ],
             [
                 'nombre' => 'Generar Horarios', 
-                'url' => '../lideres/programar_horarios_lider.php',
+                'url' => 'lideres/programar_horarios_lider.php',
                 'cargos_permitidos' => [11, 5]
             ],
             [
                 'nombre' => 'Horarios Programados', 
-                'url' => '../supervision/ver_horarios_compactos.php',
+                'url' => 'supervision/ver_horarios_compactos.php',
                 'cargos_permitidos' => [11, 5]
             ],
             [
                 'nombre' => 'Marcaciones', 
-                'url' => '../supervision/ver_horarios_compactos.php',
+                'url' => 'supervision/ver_horarios_compactos.php',
                 'cargos_permitidos' => [13, 5, 8, 11, 21, 22]
             ]
         ]
@@ -69,12 +69,12 @@ $menuGlobal = [
         'items' => [
             [
                 'nombre' => 'Auditorías de Efectivo', 
-                'url' => '../supervision/auditorias_original/auditinternas/auditorias_consolidadas.php',
+                'url' => 'auditorias_original/auditinternas/auditorias_consolidadas.php',
                 'cargos_permitidos' => [11, 21]
             ],
             [
                 'nombre' => 'Control de Inventario', 
-                'url' => '../supervision/inventario.php',
+                'url' => 'supervision/inventario.php',
                 'cargos_permitidos' => [21]
             ]
         ]
@@ -86,32 +86,32 @@ $menuGlobal = [
         'items' => [
             [
                 'nombre' => 'Avisos', 
-                'url' => '../supervision/auditorias_original/index_avisos_publico.php',
+                'url' => 'supervision/auditorias_original/index_avisos_publico.php',
                 'cargos_permitidos' => [11, 5, 14, 16, 21]
             ],
             [
                 'nombre' => 'Auditorías', 
-                'url' => '../supervision/auditorias_original/index_auditorias_publico.php',
+                'url' => 'supervision/auditorias_original/index_auditorias_publico.php',
                 'cargos_permitidos' => [11, 5, 14, 16, 21]
             ],
             [
                 'nombre' => 'Promedios', 
-                'url' => '../supervision/auditorias_original/promedio.php',
+                'url' => 'supervision/auditorias_original/promedio.php',
                 'cargos_permitidos' => [11, 5, 14, 16, 21]
             ],
             [
                 'nombre' => 'KPI Sucursales', 
-                'url' => '../sucursales/kpi_sucursales.php',
+                'url' => 'sucursales/kpi_sucursales.php',
                 'cargos_permitidos' => [11, 5]
             ],
             [
                 'nombre' => 'Reclamos', 
-                'url' => '../supervision/auditorias_original/index_reclamos_publico.php',
+                'url' => 'supervision/auditorias_original/index_reclamos_publico.php',
                 'cargos_permitidos' => [11, 5, 14, 16, 21]
             ],
             [
                 'nombre' => 'Gestión de Comunicación', 
-                'url' => '../supervision/auditorias_original/index_avisos.php',
+                'url' => 'supervision/auditorias_original/index_avisos.php',
                 'cargos_permitidos' => [11, 21]
             ]
         ]
@@ -123,32 +123,32 @@ $menuGlobal = [
         'items' => [
             [
                 'nombre' => 'Solicitudes', 
-                'url' => '../mantenimiento/dashboard_sucursales.php',
+                'url' => 'mantenimiento/dashboard_sucursales.php',
                 'cargos_permitidos' => [11, 16, 5]
             ],
             [
                 'nombre' => 'Solicitudes', 
-                'url' => '../mantenimiento/dashboard_mantenimiento.php',
+                'url' => 'mantenimiento/dashboard_mantenimiento.php',
                 'cargos_permitidos' => [35, 14, 11, 16]
             ],
             [
                 'nombre' => 'Agenda Diaria', 
-                'url' => '../mantenimiento/agenda_colaborador.php',
+                'url' => 'mantenimiento/agenda_colaborador.php',
                 'cargos_permitidos' => [11, 14, 16, 35]
             ],
             [
                 'nombre' => 'Calendario', 
-                'url' => '../mantenimiento/calendario.php',
+                'url' => 'mantenimiento/calendario.php',
                 'cargos_permitidos' => [21, 5, 11, 16, 35]
             ],
             [
                 'nombre' => 'Mantenimiento', 
-                'url' => '../mantenimiento/formulario_mantenimiento.php',
+                'url' => 'mantenimiento/formulario_mantenimiento.php',
                 'cargos_permitidos' => [11, 5, 35, 16]
             ],
             [
                 'nombre' => 'Equipo', 
-                'url' => '../mantenimiento/formulario_equipos.php',
+                'url' => 'mantenimiento/formulario_equipos.php',
                 'cargos_permitidos' => [11, 5, 16, 35]
             ]
         ]
@@ -160,17 +160,86 @@ $menuGlobal = [
         'items' => [
             [
                 'nombre' => 'Dashboard Ejecutivo', 
-                'url' => '../reportes/ejecutivo.php',
+                'url' => 'reportes/ejecutivo.php',
                 'cargos_permitidos' => [11, 21]
             ],
             [
                 'nombre' => 'Reportes Operativos', 
-                'url' => '../reportes/operativos.php',
+                'url' => 'reportes/operativos.php',
                 'cargos_permitidos' => [11, 21]
             ]
         ]
-    ]
+    ],
 ];
+
+/**
+ * Detecta la ruta base automáticamente basado en la estructura de módulos
+ */
+function detectarRutaBase() {
+    // Obtener la ruta del script actual
+    $scriptActual = $_SERVER['SCRIPT_FILENAME'];
+    $documentRoot = $_SERVER['DOCUMENT_ROOT'];
+    
+    // Convertir a ruta relativa desde el document root
+    $rutaRelativa = str_replace($documentRoot, '', $scriptActual);
+    
+    // Buscar la posición de '/modulos/' en la ruta
+    $posModulos = strpos($rutaRelativa, '/modulos/');
+    
+    if ($posModulos !== false) {
+        // Extraer la parte de la ruta hasta /modulos/
+        $rutaHastaModulos = substr($rutaRelativa, 0, $posModulos + 9); // +9 para incluir '/modulos/'
+        
+        // Contar cuántos directorios hay después de /modulos/
+        $rutaDespuesModulos = substr($rutaRelativa, $posModulos + 9);
+        $nivelesProfundidad = substr_count($rutaDespuesModulos, '/');
+        
+        // Generar la ruta base (../../ etc.)
+        if ($nivelesProfundidad === 0) {
+            return './';
+        } else {
+            return str_repeat('../', $nivelesProfundidad);
+        }
+    }
+    
+    // Si no se encuentra /modulos/, asumir que estamos en la raíz
+    return './';
+}
+
+/**
+ * Genera la URL correcta para cualquier archivo en la estructura de módulos
+ */
+function generarUrlModulo($rutaDestino) {
+    $rutaBase = detectarRutaBase();
+    
+    // Si el destino es solo "index.php", apuntar al index del módulo actual
+    if ($rutaDestino === 'index.php') {
+        return $rutaBase . 'index.php';
+    }
+    
+    // Para otras rutas, construir la ruta completa
+    return $rutaBase . $rutaDestino;
+}
+
+/**
+ * Detecta el módulo actual basado en la ruta
+ */
+function detectarModuloActual() {
+    $scriptActual = $_SERVER['SCRIPT_FILENAME'];
+    $documentRoot = $_SERVER['DOCUMENT_ROOT'];
+    
+    $rutaRelativa = str_replace($documentRoot, '', $scriptActual);
+    $posModulos = strpos($rutaRelativa, '/modulos/');
+    
+    if ($posModulos !== false) {
+        $rutaDespuesModulos = substr($rutaRelativa, $posModulos + 9); // +9 para saltar '/modulos/'
+        $partes = explode('/', $rutaDespuesModulos);
+        return $partes[0] ?? 'desconocido';
+    }
+    
+    return 'raiz';
+}
+
 
 /**
  * Función para verificar si un cargo tiene acceso a un elemento
@@ -213,6 +282,7 @@ function filtrarMenuPorPermisos($menu, $cargoOperario) {
  * Función principal para renderizar el menú lateral
  * @param int $cargoOperario - Código del cargo del usuario
  * @param string $paginaActual - Nombre del archivo actual para marcar como activo
+ * @param string $basePath - Ruta base desde la raíz del proyecto (ej: '../../')
  * @return string HTML del menú lateral
  */
 function renderMenuLateral($cargoOperario, $paginaActual = '') {
@@ -227,6 +297,9 @@ function renderMenuLateral($cargoOperario, $paginaActual = '') {
     if (empty($menuFiltrado)) {
         return '';
     }
+    
+    // Detectar módulo actual para el Dashboard
+    $moduloActual = detectarModuloActual();
     
     ob_start();
     ?>
@@ -638,7 +711,7 @@ function renderMenuLateral($cargoOperario, $paginaActual = '') {
     <!-- Sidebar -->
     <div class="sidebar" id="sidebar">
         <div class="sidebar-header">
-            <img src="../../assets/img/icon12.png" alt="Batidos Pitaya" class="logo">
+            <img src="<?php echo generarUrlModulo('../../assets/img/icon12.png'); ?>" alt="Batidos Pitaya" class="logo">
         </div>
         
         <?php foreach ($menuFiltrado as $index => $grupo): ?>
@@ -661,12 +734,12 @@ function renderMenuLateral($cargoOperario, $paginaActual = '') {
                         $isActive = '';
                         if ($paginaActual) {
                             $urlFile = basename($item['url']);
-                            if ($urlFile === $paginaActual || strpos($item['url'], $paginaActual) !== false) {
+                            if ($urlFile === $paginaActual) {
                                 $isActive = 'active';
                             }
                         }
                         ?>
-                        <a href="<?php echo htmlspecialchars($item['url']); ?>" 
+                        <a href="<?php echo htmlspecialchars(generarUrlModulo($item['url'])); ?>" 
                            class="menu-item <?php echo $isActive; ?>"
                            title="<?php echo htmlspecialchars($item['nombre']); ?>">
                             <?php echo htmlspecialchars($item['nombre']); ?>
