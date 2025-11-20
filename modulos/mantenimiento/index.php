@@ -287,10 +287,6 @@ if (!verificarAccesoCargo(14)) {
     <div class="container">
         <!-- Renderizar header universal -->
         <?php echo renderHeader($usuario, $esAdmin, ''); ?>
-        
-        <div class="module-header">
-            <h1 class="module-title-page">Área de Mantenimiento</h1>
-        </div>
 
         <?php
             $ticket = new Ticket();
@@ -304,6 +300,7 @@ if (!verificarAccesoCargo(14)) {
             ];
         ?>
 
+        <h2 class="category-title">Indicadores</h2>
           <!-- Contenedor para indicadores -->
         <div class="indicadores-container">
             <div class="pendientes-container" style="margin-bottom: 30px;">
@@ -361,52 +358,6 @@ if (!verificarAccesoCargo(14)) {
             </div>
         </div>
         
-        <!-- Grupo 1: Vista Pública -->
-        <!--
-        <h2 class="category-title">Comunicación Interna</h2>
-        <div class="modules">
-            <a href="../supervision/auditorias_original/index_auditorias_publico.php" class="module-card">
-                <div class="module-icon">
-                    <i class="fas fa-eye"></i>
-                </div>
-                <h3 class="module-title">Vista Pública</h3>
-            </a>
-        </div>
-        -->
-        
-        <!-- Grupo 2: Mantenimiento -->
-        <h2 class="category-title">Gestión de Mantenimiento</h2>
-        <div class="modules">
-            <a href="dashboard_mantenimiento.php" class="module-card">
-                <div class="module-icon">
-                    <i class="fas fa-tools"></i>
-                </div>
-                <h3 class="module-title">Solicitudes</h3>
-            </a>
-            
-            <!-- Puedes agregar más módulos de mantenimiento aquí -->
-            <!--
-            <a href="otro_modulo_mantenimiento.php" class="module-card">
-                <div class="module-icon">
-                    <i class="fas fa-wrench"></i>
-                </div>
-                <h3 class="module-title">Otro Módulo</h3>
-            </a>
-            -->
-        </div>
-        
-        <!-- Grupo 3: Reportes (opcional) -->
-        <!--
-        <h2 class="category-title">Reportes y Estadísticas</h2>
-        <div class="modules">
-            <a href="reportes_mantenimiento.php" class="module-card">
-                <div class="module-icon">
-                    <i class="fas fa-chart-bar"></i>
-                </div>
-                <h3 class="module-title">Reportes</h3>
-            </a>
-        </div>
-        -->
     </div>
 </body>
 </html>
