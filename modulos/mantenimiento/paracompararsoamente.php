@@ -1836,7 +1836,7 @@ header {
         table {
             width: 100%;
             border-collapse: collapse;
-            table-layout: fixed;
+            table-layout: auto;
         }
 
         th, td {
@@ -1846,11 +1846,18 @@ header {
             vertical-align: middle;
         }
         
+        /* Eliminar o modificar estos estilos para las celdas */
         td {
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            max-width: 200px;
+            /* Eliminar estas propiedades que cortan el texto */
+            /* white-space: nowrap; */
+            /* overflow: hidden; */
+            /* text-overflow: ellipsis; */
+            /* max-width: 200px; */
+            
+            /* Agregar estas propiedades para permitir texto multilínea */
+            white-space: normal;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
         }
 
         th {
@@ -1859,8 +1866,13 @@ header {
             text-align: center;
         }
         
-        tr:nth-child(even) {
-            background-color: #f2f2f2;
+        /* Específicamente para la columna de observaciones */
+        td:nth-child(6) { /* Asumiendo que observaciones es la 6ta columna */
+            min-width: 200px; /* Ancho mínimo */
+            max-width: 400px; /* Ancho máximo opcional */
+            white-space: normal;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
         }
         
         /* Badges para estados de tardanzas */
@@ -2138,8 +2150,16 @@ header {
         
 /* Estilos para el modal de foto ampliada */
 #modalVerFoto {
-    background-color: transparent;
-    z-index: 1001; /* Un z-index mayor que el modal de edición */
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.9);
+    z-index: 10000;
+    justify-content: center;
+    align-items: center;
 }
 
 #modalVerFoto .modal-content {
@@ -2217,6 +2237,149 @@ a.btn{
 .filter-group input[type="text"] {
     position: relative;
     z-index: 1;
+}
+
+
+/* Estilos para el botón de foto en la tabla */
+.btn-foto {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 4px;
+    transition: background-color 0.3s;
+}
+
+.btn-foto:hover {
+    background-color: #f0f0f0;
+}
+
+.btn-foto i {
+    transition: color 0.3s;
+}
+
+.btn-foto:hover i {
+    color: #0E544C !important;
+}
+/* Estilos para el modal de foto ampliada - CORREGIDOS */
+#modalVerFoto {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.9);
+    z-index: 10000;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer; /* Cambia el cursor a pointer para indicar que se puede cerrar */
+}
+
+.modal-content-foto {
+    background: transparent;
+    max-width: 85%;
+    max-height: 85%;
+    width: auto;
+    height: auto;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    cursor: default; /* El contenido no cambia el cursor */
+}
+.modal-header-foto {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding: 0 10px;
+}
+
+.modal-close-foto {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    font-size: 1.5rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.3s;
+}
+
+.modal-close-foto:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+
+.zoom-controls {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-zoom {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.3s;
+}
+
+.btn-zoom:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.image-container {
+    overflow: auto;
+    max-width: 100%;
+    max-height: calc(85vh - 80px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: transparent;
+    border-radius: 8px;
+    padding: 10px;
+    cursor: default; /* El contenedor de imagen no cambia el cursor */
+}
+
+#fotoAmpliada {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    transition: transform 0.3s ease;
+    border-radius: 4px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    cursor: default; /* La imagen no cambia el cursor */
+}
+
+/* Estados de zoom */
+#fotoAmpliada.zoom-1 {
+    transform: scale(1);
+}
+
+#fotoAmpliada.zoom-2 {
+    transform: scale(1.5);
+}
+
+#fotoAmpliada.zoom-3 {
+    transform: scale(2);
+}
+
+#fotoAmpliada.zoom-4 {
+    transform: scale(2.5);
+}
+
+#fotoAmpliada.zoom-5 {
+    transform: scale(3);
 }
     </style>
 </head>
@@ -2432,6 +2595,7 @@ a.btn{
                         <?php if ($esAdmin || verificarAccesoCargo([11, 16])): ?>
                             <th></th>
                         <?php endif; ?>
+                        <th>Foto</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -2468,8 +2632,7 @@ a.btn{
                             <td title="<?= $tardanza['observaciones'] ? htmlspecialchars($tardanza['observaciones']) : '-' ?>">
                                 <?php 
                                 if ($tardanza['observaciones']) {
-                                    $observacion = htmlspecialchars($tardanza['observaciones']);
-                                    echo strlen($observacion) > 30 ? substr($observacion, 0, 30) . '...' : $observacion;
+                                    echo nl2br(htmlspecialchars($tardanza['observaciones']));
                                 } else {
                                     echo '-';
                                 }
@@ -2477,6 +2640,7 @@ a.btn{
                             </td>
                             <td><?= htmlspecialchars($tardanza['registrador_nombre'] . ' ' . $tardanza['registrador_apellido']) ?></td>
                             <td style="display:none;"><?= formatoFechaCorta($tardanza['fecha_registro']) ?></td>
+                            
                             <?php if ($esAdmin || verificarAccesoCargo([11, 16])): ?>
                                 <td style="text-align: center;">
                                     <button type="button" onclick="mostrarModalEditarTardanza(
@@ -2494,6 +2658,19 @@ a.btn{
                                     </button>
                                 </td>
                             <?php endif; ?>
+                            <!-- NUEVA CELDA DE FOTO -->
+                            <td style="text-align: center;">
+                                <?php if (!empty($tardanza['foto_path'])): ?>
+                                    <button type="button" 
+                                            onclick="mostrarFotoAmpliadaDesdeTabla('<?= $tardanza['foto_path'] ?>')" 
+                                            class="btn-foto"
+                                            title="Ver foto">
+                                        <i class="fas fa-camera" style="color: #51B8AC; font-size: 18px;"></i>
+                                    </button>
+                                <?php else: ?>
+                                    <i class="fas fa-camera" style="color: #ccc; font-size: 18px;" title="Sin foto"></i>
+                                <?php endif; ?>
+                            </td>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>
@@ -2580,13 +2757,28 @@ a.btn{
         </div>
     </div>
     
-<!-- Modal para ver foto ampliada (sin fondo oscuro) -->
-<div class="modal" id="modalVerFoto" style="background-color: transparent; pointer-events: none;">
-    <div class="modal-content" style="max-width: 90%; max-height: 90%; background: transparent; box-shadow: none; pointer-events: auto;">
-        <button class="modal-close" onclick="cerrarModalFoto()" style="position: fixed; top: 20px; right: 20px; background: rgba(0,0,0,0.5); color: white; border: none; border-radius: 50%; width: 40px; height: 40px; font-size: 1.5rem; z-index: 1001;">&times;</button>
-        <img id="fotoAmpliada" src="" alt="Foto ampliada" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+    <!-- Modal para ver foto ampliada - VERSIÓN CORREGIDA -->
+    <div class="modal" id="modalVerFoto">
+        <div class="modal-content-foto">
+            <div class="modal-header-foto">
+                <button class="modal-close-foto" onclick="cerrarModalFoto()">&times;</button>
+                <div class="zoom-controls">
+                    <button class="btn-zoom" onclick="zoomIn()" title="Acercar">
+                        <i class="fas fa-search-plus"></i>
+                    </button>
+                    <button class="btn-zoom" onclick="zoomOut()" title="Alejar">
+                        <i class="fas fa-search-minus"></i>
+                    </button>
+                    <button class="btn-zoom" onclick="resetZoom()" title="Tamaño original">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="image-container">
+                <img id="fotoAmpliada" src="" alt="Foto ampliada">
+            </div>
+        </div>
     </div>
-</div>
     
     <!-- Modal para editar tardanza manual -->
     <div class="modal" id="modalEditarTardanza">
@@ -2736,583 +2928,718 @@ a.btn{
         </div>
     </div>
     
-    <script>
-        // Datos de operarios para el autocompletado
-        const operariosData = [
-            {id: 0, nombre: 'Todos los colaboradores'},
-            <?php foreach ($operarios as $op): ?>
-            {id: <?php echo $op['CodOperario']; ?>, nombre: '<?php echo addslashes($op['nombre_completo']); ?>'},
-            <?php endforeach; ?>
-        ];
+   <script>
+    // =============================================
+    // VARIABLES GLOBALES PARA EL VISOR DE FOTOS
+    // =============================================
+    let currentZoomLevel = 1;
+    const maxZoomLevel = 5;
+    const minZoomLevel = 1;
+    const zoomStep = 0.5;
+    // =============================================
+
+    // Datos de operarios para el autocompletado
+    const operariosData = [
+        {id: 0, nombre: 'Todos los colaboradores'},
+        <?php foreach ($operarios as $op): ?>
+        {id: <?php echo $op['CodOperario']; ?>, nombre: '<?php echo addslashes($op['nombre_completo']); ?>'},
+        <?php endforeach; ?>
+    ];
+    
+    // Función para buscar operarios
+    function buscarOperarios(texto) {
+        if (!texto) {
+            return operariosData;
+        }
+        return operariosData.filter(op => 
+            op.nombre.toLowerCase().includes(texto.toLowerCase())
+        );
+    }
+    
+    // Manejar el input de operario
+    const operarioInput = document.getElementById('operario');
+    const operarioIdInput = document.getElementById('operario_id');
+    const sugerenciasDiv = document.getElementById('operarios-sugerencias');
+    
+    // Modificar el evento input del campo operario
+    operarioInput.addEventListener('input', function() {
+        const texto = this.value.trim();
         
-        // Función para buscar operarios
-        function buscarOperarios(texto) {
-            if (!texto) {
-                return operariosData;
-            }
-            return operariosData.filter(op => 
-                op.nombre.toLowerCase().includes(texto.toLowerCase())
-            );
+        // Si el campo está vacío, resetear a "todos"
+        if (texto === '') {
+            operarioIdInput.value = '0';
+            sugerenciasDiv.style.display = 'none';
+            return;
         }
         
-        // Manejar el input de operario
-        const operarioInput = document.getElementById('operario');
-        const operarioIdInput = document.getElementById('operario_id');
-        const sugerenciasDiv = document.getElementById('operarios-sugerencias');
+        const resultados = buscarOperarios(texto);
         
-        // Modificar el evento input del campo operario
-        operarioInput.addEventListener('input', function() {
+        sugerenciasDiv.innerHTML = '';
+        
+        if (resultados.length > 0) {
+            resultados.forEach(op => {
+                const div = document.createElement('div');
+                div.textContent = op.nombre;
+                div.style.padding = '8px';
+                div.style.cursor = 'pointer';
+                div.addEventListener('click', function() {
+                    operarioInput.value = op.nombre;
+                    operarioIdInput.value = op.id;
+                    sugerenciasDiv.style.display = 'none';
+                });
+                div.addEventListener('mouseover', function() {
+                    this.style.backgroundColor = '#f5f5f5';
+                });
+                div.addEventListener('mouseout', function() {
+                    this.style.backgroundColor = 'white';
+                });
+                sugerenciasDiv.appendChild(div);
+            });
+            sugerenciasDiv.style.display = 'block';
+        } else {
+            sugerenciasDiv.style.display = 'none';
+        }
+    });
+    
+    // Ocultar sugerencias al hacer clic fuera
+    document.addEventListener('click', function(e) {
+        if (e.target !== operarioInput) {
+            sugerenciasDiv.style.display = 'none';
+        }
+    });
+    
+    // Manejar tecla Enter en el input
+    operarioInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
             const texto = this.value.trim();
-            
-            // Si el campo está vacío, resetear a "todos"
-            if (texto === '') {
-                operarioIdInput.value = '0';
-                sugerenciasDiv.style.display = 'none';
-                return;
-            }
-            
             const resultados = buscarOperarios(texto);
-            
-            sugerenciasDiv.innerHTML = '';
-            
             if (resultados.length > 0) {
-                resultados.forEach(op => {
-                    const div = document.createElement('div');
-                    div.textContent = op.nombre;
-                    div.style.padding = '8px';
-                    div.style.cursor = 'pointer';
-                    div.addEventListener('click', function() {
-                        operarioInput.value = op.nombre;
-                        operarioIdInput.value = op.id;
-                        sugerenciasDiv.style.display = 'none';
-                    });
-                    div.addEventListener('mouseover', function() {
-                        this.style.backgroundColor = '#f5f5f5';
-                    });
-                    div.addEventListener('mouseout', function() {
-                        this.style.backgroundColor = 'white';
-                    });
-                    sugerenciasDiv.appendChild(div);
-                });
-                sugerenciasDiv.style.display = 'block';
-            } else {
-                sugerenciasDiv.style.display = 'none';
+                this.value = resultados[0].nombre;
+                operarioIdInput.value = resultados[0].id;
             }
-        });
+            sugerenciasDiv.style.display = 'none';
+        }
+    });
+    
+    // Actualizar función actualizarFiltros para incluir el operario
+    function actualizarFiltros() {
+        const sucursal = document.getElementById('sucursal').value;
+        const desde = document.getElementById('desde').value;
+        const hasta = document.getElementById('hasta').value;
+        const operario = document.getElementById('operario_id').value;
         
-        // Ocultar sugerencias al hacer clic fuera
-        document.addEventListener('click', function(e) {
-            if (e.target !== operarioInput) {
-                sugerenciasDiv.style.display = 'none';
-            }
-        });
-        
-        // Manejar tecla Enter en el input
-        operarioInput.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                const texto = this.value.trim();
-                const resultados = buscarOperarios(texto);
-                if (resultados.length > 0) {
-                    this.value = resultados[0].nombre;
-                    operarioIdInput.value = resultados[0].id;
-                }
-                sugerenciasDiv.style.display = 'none';
-            }
-        });
-        
-        // Actualizar función actualizarFiltros para incluir el operario
-        function actualizarFiltros() {
-            const sucursal = document.getElementById('sucursal').value;
-            const desde = document.getElementById('desde').value;
-            const hasta = document.getElementById('hasta').value;
-            const operario = document.getElementById('operario_id').value;
-            
-            // Validar fechas
-            if (!desde || !hasta) {
-                alert('Por favor seleccione ambas fechas');
-                return;
-            }
-            
-            if (new Date(desde) > new Date(hasta)) {
-                alert('La fecha "Desde" no puede ser mayor que la fecha "Hasta"');
-                return;
-            }
-            
-            // Construir URL con parámetros
-            const params = new URLSearchParams();
-            if (sucursal) params.append('sucursal', sucursal);
-            params.append('desde', desde);
-            params.append('hasta', hasta);
-            if (operario > 0) params.append('operario', operario);
-            
-            window.location.href = 'tardanzas_manual.php?' + params.toString();
+        // Validar fechas
+        if (!desde || !hasta) {
+            alert('Por favor seleccione ambas fechas');
+            return;
         }
         
-        // Mostrar modal para nueva tardanza
-        function mostrarModalNuevaTardanza() {
-            // Establecer fecha predeterminada como hoy
-            document.getElementById('nueva_fecha').valueAsDate = new Date();
-            
-            // Limpiar selección de operario
-            const selectOperario = document.getElementById('nueva_operario');
+        if (new Date(desde) > new Date(hasta)) {
+            alert('La fecha "Desde" no puede ser mayor que la fecha "Hasta"');
+            return;
+        }
+        
+        // Construir URL con parámetros
+        const params = new URLSearchParams();
+        if (sucursal) params.append('sucursal', sucursal);
+        params.append('desde', desde);
+        params.append('hasta', hasta);
+        if (operario > 0) params.append('operario', operario);
+        
+        window.location.href = 'tardanzas_manual.php?' + params.toString();
+    }
+    
+    // Mostrar modal para nueva tardanza
+    function mostrarModalNuevaTardanza() {
+        // Establecer fecha predeterminada como hoy
+        document.getElementById('nueva_fecha').valueAsDate = new Date();
+        
+        // Limpiar selección de operario
+        const selectOperario = document.getElementById('nueva_operario');
+        selectOperario.innerHTML = '<option value="">Seleccione un colaborador</option>';
+        
+        // Obtener primera sucursal del select
+        const selectSucursal = document.getElementById('nueva_sucursal');
+        const primeraSucursal = selectSucursal.value;
+        
+        // Cargar operarios de la primera sucursal
+        if (primeraSucursal) {
+            cargarOperariosSucursal(primeraSucursal);
+        }
+        
+        document.getElementById('modalNuevaTardanza').style.display = 'flex';
+    }
+    
+    // Función para cargar operarios de una sucursal
+    function cargarOperariosSucursal(codSucursal) {
+        const selectOperario = document.getElementById('nueva_operario');
+        
+        if (!codSucursal) {
             selectOperario.innerHTML = '<option value="">Seleccione un colaborador</option>';
-            
-            // Obtener primera sucursal del select
-            const selectSucursal = document.getElementById('nueva_sucursal');
-            const primeraSucursal = selectSucursal.value;
-            
-            // Cargar operarios de la primera sucursal
-            if (primeraSucursal) {
-                cargarOperariosSucursal(primeraSucursal);
-            }
-            
-            document.getElementById('modalNuevaTardanza').style.display = 'flex';
+            return;
         }
         
-        // Función para cargar operarios de una sucursal
-        function cargarOperariosSucursal(codSucursal) {
-            const selectOperario = document.getElementById('nueva_operario');
-            
-            if (!codSucursal) {
-                selectOperario.innerHTML = '<option value="">Seleccione un colaborador</option>';
-                return;
-            }
-            
-            // Mostrar carga
-            selectOperario.innerHTML = '<option value="">Cargando colaboradores...</option>';
-            
-            // Hacer petición al mismo archivo con parámetros GET
-            fetch(`tardanzas_manual.php?action=obtener_operarios&sucursal=${codSucursal}&con_marcaciones=1`)
-                .then(response => response.json())
-                .then(data => {
-                    let options = '<option value="">Seleccione un colaborador</option>';
-                    
-                    if (data.length > 0) {
-                        data.forEach(operario => {
-                            options += `<option value="${operario.CodOperario}">${operario.Nombre} ${operario.Apellido}</option>`;
-                        });
-                    } else {
-                        options = '<option value="">No hay colaboradores en esta sucursal</option>';
-                    }
-                    
-                    selectOperario.innerHTML = options;
-                })
-                .catch(error => {
-                    console.error('Error al cargar colaboradores:', error);
-                    selectOperario.innerHTML = '<option value="">Error al cargar colaboradores</option>';
-                });
-        }
+        // Mostrar carga
+        selectOperario.innerHTML = '<option value="">Cargando colaboradores...</option>';
         
-        // Mostrar vista previa de la foto al seleccionarla
-        document.getElementById('nueva_foto').addEventListener('change', function(e) {
-            const preview = document.getElementById('nueva_foto_preview');
-            const file = e.target.files[0];
-            
-            if (file) {
-                const reader = new FileReader();
+        // Hacer petición al mismo archivo con parámetros GET
+        fetch(`tardanzas_manual.php?action=obtener_operarios&sucursal=${codSucursal}&con_marcaciones=1`)
+            .then(response => response.json())
+            .then(data => {
+                let options = '<option value="">Seleccione un colaborador</option>';
                 
-                reader.onload = function(e) {
-                    preview.src = e.target.result;
-                    preview.style.display = 'block';
+                if (data.length > 0) {
+                    data.forEach(operario => {
+                        options += `<option value="${operario.CodOperario}">${operario.Nombre} ${operario.Apellido}</option>`;
+                    });
+                } else {
+                    options = '<option value="">No hay colaboradores en esta sucursal</option>';
                 }
                 
-                reader.readAsDataURL(file);
-            } else {
-                preview.style.display = 'none';
-            }
-        });
-        
-        // Función para mostrar los detalles en el modal de edición
-        function mostrarModalEditarTardanza(id, codOperario, nombre, sucursal, fecha, tipoJustificacion, estado, observaciones, fotoPath) {
-            document.getElementById('editar_id').value = id;
-            // Agregar código de operario al campo oculto
-            document.getElementById('editar_cod_operario').value = codOperario;
-            document.getElementById('editar_nombre').textContent = nombre;
-            document.getElementById('editar_sucursal').textContent = sucursal;
-            
-            document.getElementById('editar_fecha').textContent = formatearFechaLocal(fecha);
-            
-            document.getElementById('editar_tipo_justificacion').textContent = tipoJustificacion.replace('_', ' ');
-            
-            // Estado
-            document.getElementById('editar_estado').value = estado;
-            
-            // Observaciones
-            document.getElementById('editar_observaciones').value = observaciones || '';
-            
-            // Foto
-            const fotoPreview = document.getElementById('editar_foto_preview');
-            const fotoLink = document.getElementById('editar_foto_link');
-            const fotoContainer = document.getElementById('foto-container');
-            
-            if (fotoPath) {
-                const fotoUrl = `uploads/tardanzas/${fotoPath}`;
-                fotoPreview.src = fotoUrl;
-                fotoPreview.style.display = 'block';
-                fotoLink.href = fotoUrl;
-                fotoLink.style.display = 'inline-block';
-                fotoContainer.style.display = 'block';
-            } else {
-                fotoPreview.style.display = 'none';
-                fotoLink.style.display = 'none';
-                fotoContainer.style.display = 'none';
-            }
-            
-            // Obtener información del horario programado y marcaciones (MANTENER ESTA FUNCIONALIDAD)
-            Promise.all([
-                fetch(`obtener_horario_programado.php?cod_operario=${codOperario}&fecha=${fecha}`).then(r => r.json()),
-                fetch(`obtener_marcaciones.php?cod_operario=${codOperario}&fecha=${fecha}`).then(r => r.json())
-            ])
-            .then(([horario, marcaciones]) => {
-                // Mostrar horario programado
-                const entradaProgramada = horario.hora_entrada ? formatoHoraAmPm(horario.hora_entrada) : 'No programado';
-                const salidaProgramada = horario.hora_salida ? formatoHoraAmPm(horario.hora_salida) : 'No programado';
-                
-                document.getElementById('editar_entrada_programada').textContent = entradaProgramada;
-                document.getElementById('editar_salida_programada').textContent = salidaProgramada;
-                
-                // Mostrar horario marcado
-                const entradaMarcada = marcaciones.hora_ingreso ? formatoHoraAmPm(marcaciones.hora_ingreso) : 'No marcado';
-                const salidaMarcada = marcaciones.hora_salida ? formatoHoraAmPm(marcaciones.hora_salida) : 'No marcado';
-                
-                document.getElementById('editar_entrada_marcada').textContent = entradaMarcada;
-                document.getElementById('editar_salida_marcada').textContent = salidaMarcada;
+                selectOperario.innerHTML = options;
             })
             .catch(error => {
-                console.error('Error al obtener datos:', error);
-                document.getElementById('editar_entrada_programada').textContent = 'Error';
-                document.getElementById('editar_salida_programada').textContent = 'Error';
-                document.getElementById('editar_entrada_marcada').textContent = 'Error';
-                document.getElementById('editar_salida_marcada').textContent = 'Error';
+                console.error('Error al cargar colaboradores:', error);
+                selectOperario.innerHTML = '<option value="">Error al cargar colaboradores</option>';
             });
-            
-            // Agregar parámetros de filtro al formulario
-            const urlParams = new URLSearchParams(window.location.search);
-            document.querySelector('#formEditarTardanza input[name="sucursal"]').value = urlParams.get('sucursal') || '';
-            document.querySelector('#formEditarTardanza input[name="desde"]').value = urlParams.get('desde') || '';
-            document.querySelector('#formEditarTardanza input[name="hasta"]').value = urlParams.get('hasta') || '';
-            
-            document.getElementById('modalEditarTardanza').style.display = 'flex';
-            
-            // Asegurarse de que el modal se muestre desde arriba
-            document.querySelector('#modalEditarTardanza .modal-content').scrollTop = 0;
-        }
+    }
+    
+    // Mostrar vista previa de la foto al seleccionarla
+    document.getElementById('nueva_foto').addEventListener('change', function(e) {
+        const preview = document.getElementById('nueva_foto_preview');
+        const file = e.target.files[0];
         
-        // Cerrar modal
-        function cerrarModal() {
-            document.getElementById('modalNuevaTardanza').style.display = 'none';
-            document.getElementById('modalEditarTardanza').style.display = 'none';
-        }
-        
-        // Función para habilitar/deshabilitar el botón de consulta en nueva tardanza
-        document.getElementById('nueva_operario').addEventListener('change', function() {
-            const btnConsultar = document.getElementById('btnConsultarMarcacionesNueva');
-            btnConsultar.disabled = !this.value || !document.getElementById('nueva_fecha').value;
-        });
-        
-        document.getElementById('nueva_fecha').addEventListener('change', function() {
-            const btnConsultar = document.getElementById('btnConsultarMarcacionesNueva');
-            btnConsultar.disabled = !this.value || !document.getElementById('nueva_operario').value;
-        });
-        
-        // Evento para el botón de consulta en nueva tardanza
-        document.getElementById('btnConsultarMarcacionesNueva').addEventListener('click', function() {
-            const codOperario = document.getElementById('nueva_operario').value;
-            const fecha = document.getElementById('nueva_fecha').value;
-            const nombre = document.getElementById('nueva_operario').options[document.getElementById('nueva_operario').selectedIndex].text;
-            const sucursal = document.getElementById('nueva_sucursal').options[document.getElementById('nueva_sucursal').selectedIndex].text;
+        if (file) {
+            const reader = new FileReader();
             
-            if (!codOperario || !fecha) {
-                alert('Seleccione un colaborador y una fecha para consultar las marcaciones');
-                return;
+            reader.onload = function(e) {
+                preview.src = e.target.result;
+                preview.style.display = 'block';
             }
             
-            mostrarModalConsultarMarcaciones(codOperario, nombre, sucursal, fecha, 0);
+            reader.readAsDataURL(file);
+        } else {
+            preview.style.display = 'none';
+        }
+    });
+    
+    // Función para mostrar los detalles en el modal de edición
+    function mostrarModalEditarTardanza(id, codOperario, nombre, sucursal, fecha, tipoJustificacion, estado, observaciones, fotoPath) {
+        document.getElementById('editar_id').value = id;
+        // Agregar código de operario al campo oculto
+        document.getElementById('editar_cod_operario').value = codOperario;
+        document.getElementById('editar_nombre').textContent = nombre;
+        document.getElementById('editar_sucursal').textContent = sucursal;
+        
+        document.getElementById('editar_fecha').textContent = formatearFechaLocal(fecha);
+        
+        document.getElementById('editar_tipo_justificacion').textContent = tipoJustificacion.replace('_', ' ');
+        
+        // Estado
+        document.getElementById('editar_estado').value = estado;
+        
+        // Observaciones
+        document.getElementById('editar_observaciones').value = observaciones || '';
+        
+        // Foto
+        const fotoPreview = document.getElementById('editar_foto_preview');
+        const fotoLink = document.getElementById('editar_foto_link');
+        const fotoContainer = document.getElementById('foto-container');
+        
+        if (fotoPath) {
+            const fotoUrl = `uploads/tardanzas/${fotoPath}`;
+            fotoPreview.src = fotoUrl;
+            fotoPreview.style.display = 'block';
+            fotoLink.href = fotoUrl;
+            fotoLink.style.display = 'inline-block';
+            fotoContainer.style.display = 'block';
+        } else {
+            fotoPreview.style.display = 'none';
+            fotoLink.style.display = 'none';
+            fotoContainer.style.display = 'none';
+        }
+        
+        // Obtener información del horario programado y marcaciones (MANTENER ESTA FUNCIONALIDAD)
+        Promise.all([
+            fetch(`obtener_horario_programado.php?cod_operario=${codOperario}&fecha=${fecha}`).then(r => r.json()),
+            fetch(`obtener_marcaciones.php?cod_operario=${codOperario}&fecha=${fecha}`).then(r => r.json())
+        ])
+        .then(([horario, marcaciones]) => {
+            // Mostrar horario programado
+            const entradaProgramada = horario.hora_entrada ? formatoHoraAmPm(horario.hora_entrada) : 'No programado';
+            const salidaProgramada = horario.hora_salida ? formatoHoraAmPm(horario.hora_salida) : 'No programado';
+            
+            document.getElementById('editar_entrada_programada').textContent = entradaProgramada;
+            document.getElementById('editar_salida_programada').textContent = salidaProgramada;
+            
+            // Mostrar horario marcado
+            const entradaMarcada = marcaciones.hora_ingreso ? formatoHoraAmPm(marcaciones.hora_ingreso) : 'No marcado';
+            const salidaMarcada = marcaciones.hora_salida ? formatoHoraAmPm(marcaciones.hora_salida) : 'No marcado';
+            
+            document.getElementById('editar_entrada_marcada').textContent = entradaMarcada;
+            document.getElementById('editar_salida_marcada').textContent = salidaMarcada;
+        })
+        .catch(error => {
+            console.error('Error al obtener datos:', error);
+            document.getElementById('editar_entrada_programada').textContent = 'Error';
+            document.getElementById('editar_salida_programada').textContent = 'Error';
+            document.getElementById('editar_entrada_marcada').textContent = 'Error';
+            document.getElementById('editar_salida_marcada').textContent = 'Error';
         });
         
-        // Evento para el botón de consulta en editar tardanza
-        document.getElementById('btnConsultarMarcacionesEditar').addEventListener('click', function() {
-            const idTardanza = document.getElementById('editar_id').value;
-            const nombre = document.getElementById('editar_nombre').textContent;
-            const sucursal = document.getElementById('editar_sucursal').textContent;
-            const fecha = document.getElementById('editar_fecha').textContent;
-            const minutos = parseInt(document.getElementById('editar_minutos').textContent);
-            
-            // Obtener el código de operario del formulario de edición (necesitarás incluirlo como campo oculto)
-            const codOperario = document.getElementById('editar_cod_operario').value;
-            
-            mostrarModalConsultarMarcaciones(codOperario, nombre, sucursal, fecha, minutos);
-        });
+        // Agregar parámetros de filtro al formulario
+        const urlParams = new URLSearchParams(window.location.search);
+        document.querySelector('#formEditarTardanza input[name="sucursal"]').value = urlParams.get('sucursal') || '';
+        document.querySelector('#formEditarTardanza input[name="desde"]').value = urlParams.get('desde') || '';
+        document.querySelector('#formEditarTardanza input[name="hasta"]').value = urlParams.get('hasta') || '';
         
-        // Función para mostrar el modal de consulta de marcaciones
-        function mostrarModalConsultarMarcaciones(codOperario, nombre, sucursal, fechaTardanza, minutosTardanza) {
-            // Mostrar información básica
-            document.getElementById('consulta_nombre').textContent = nombre;
-            document.getElementById('consulta_sucursal').textContent = sucursal;
-            
-            document.getElementById('consulta_fecha_tardanza').textContent = formatoFechaCompleta(fechaTardanza);
-            
-            document.getElementById('consulta_minutos_tardanza').textContent = minutosTardanza + ' minutos';
-            
-            // Preparar información de depuración
-            let debugInfo = `Iniciando consulta para:\n`;
-            debugInfo += `- Colaborador: ${codOperario}\n`;
-            debugInfo += `- Fecha de tardanza original: ${fechaTardanza}\n`;
-            
-            // Convertir la fecha al formato YYYY-MM-DD si no está en ese formato
-            let fechaConsulta;
-            try {
-                if (fechaTardanza.match(/^\d{4}-\d{2}-\d{2}$/)) {
-                    fechaConsulta = fechaTardanza;
-                } else {
-                    // Intentar parsear otros formatos
-                    const fechaObj = new Date(fechaTardanza);
-                    if (isNaN(fechaObj.getTime())) {
-                        throw new Error('Formato de fecha no reconocido');
-                    }
-                    fechaConsulta = fechaObj.toISOString().split('T')[0];
+        document.getElementById('modalEditarTardanza').style.display = 'flex';
+        
+        // Asegurarse de que el modal se muestre desde arriba
+        document.querySelector('#modalEditarTardanza .modal-content').scrollTop = 0;
+    }
+    
+    // Cerrar modal
+    function cerrarModal() {
+        document.getElementById('modalNuevaTardanza').style.display = 'none';
+        document.getElementById('modalEditarTardanza').style.display = 'none';
+    }
+    
+    // Función para habilitar/deshabilitar el botón de consulta en nueva tardanza
+    document.getElementById('nueva_operario').addEventListener('change', function() {
+        const btnConsultar = document.getElementById('btnConsultarMarcacionesNueva');
+        btnConsultar.disabled = !this.value || !document.getElementById('nueva_fecha').value;
+    });
+    
+    document.getElementById('nueva_fecha').addEventListener('change', function() {
+        const btnConsultar = document.getElementById('btnConsultarMarcacionesNueva');
+        btnConsultar.disabled = !this.value || !document.getElementById('nueva_operario').value;
+    });
+    
+    // Evento para el botón de consulta en nueva tardanza
+    document.getElementById('btnConsultarMarcacionesNueva').addEventListener('click', function() {
+        const codOperario = document.getElementById('nueva_operario').value;
+        const fecha = document.getElementById('nueva_fecha').value;
+        const nombre = document.getElementById('nueva_operario').options[document.getElementById('nueva_operario').selectedIndex].text;
+        const sucursal = document.getElementById('nueva_sucursal').options[document.getElementById('nueva_sucursal').selectedIndex].text;
+        
+        if (!codOperario || !fecha) {
+            alert('Seleccione un colaborador y una fecha para consultar las marcaciones');
+            return;
+        }
+        
+        mostrarModalConsultarMarcaciones(codOperario, nombre, sucursal, fecha, 0);
+    });
+    
+    // Evento para el botón de consulta en editar tardanza
+    document.getElementById('btnConsultarMarcacionesEditar').addEventListener('click', function() {
+        const idTardanza = document.getElementById('editar_id').value;
+        const nombre = document.getElementById('editar_nombre').textContent;
+        const sucursal = document.getElementById('editar_sucursal').textContent;
+        const fecha = document.getElementById('editar_fecha').textContent;
+        const minutos = parseInt(document.getElementById('editar_minutos').textContent);
+        
+        // Obtener el código de operario del formulario de edición (necesitarás incluirlo como campo oculto)
+        const codOperario = document.getElementById('editar_cod_operario').value;
+        
+        mostrarModalConsultarMarcaciones(codOperario, nombre, sucursal, fecha, minutos);
+    });
+    
+    // Función para mostrar el modal de consulta de marcaciones
+    function mostrarModalConsultarMarcaciones(codOperario, nombre, sucursal, fechaTardanza, minutosTardanza) {
+        // Mostrar información básica
+        document.getElementById('consulta_nombre').textContent = nombre;
+        document.getElementById('consulta_sucursal').textContent = sucursal;
+        
+        document.getElementById('consulta_fecha_tardanza').textContent = formatoFechaCompleta(fechaTardanza);
+        
+        document.getElementById('consulta_minutos_tardanza').textContent = minutosTardanza + ' minutos';
+        
+        // Preparar información de depuración
+        let debugInfo = `Iniciando consulta para:\n`;
+        debugInfo += `- Colaborador: ${codOperario}\n`;
+        debugInfo += `- Fecha de tardanza original: ${fechaTardanza}\n`;
+        
+        // Convertir la fecha al formato YYYY-MM-DD si no está en ese formato
+        let fechaConsulta;
+        try {
+            if (fechaTardanza.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                fechaConsulta = fechaTardanza;
+            } else {
+                // Intentar parsear otros formatos
+                const fechaObj = new Date(fechaTardanza);
+                if (isNaN(fechaObj.getTime())) {
+                    throw new Error('Formato de fecha no reconocido');
                 }
-            } catch (e) {
-                fechaConsulta = fechaTardanza; // Usar el valor original si hay error
-                debugInfo += `- Error al formatear fecha: ${e.message}\n`;
+                fechaConsulta = fechaObj.toISOString().split('T')[0];
             }
-            
-            debugInfo += `- Fecha enviada al servidor: ${fechaConsulta}\n`;
-            document.getElementById('consulta_fecha_utilizada').textContent = formatoFechaCompleta(fechaConsulta);
-            
-            // Obtener información de marcaciones del servidor
-            fetch(`obtener_marcaciones.php?cod_operario=${codOperario}&fecha=${fechaConsulta}&debug=1`)
-                .then(response => response.json())
-                .then(data => {
-                    debugInfo += `Respuesta del servidor:\n${JSON.stringify(data, null, 2)}\n`;
-                    
-                    // Mostrar información de marcaciones con fechas utilizadas
-                    const mostrarHoraConFecha = (hora, elementoHora, elementoFecha, tipo) => {
-                        if (hora) {
-                            document.getElementById(elementoHora).textContent = formatoHoraAmPm(hora);
-                            document.getElementById(elementoFecha).textContent = 
-                                `(Consultado para ${tipo} en fecha: ${formatoFechaCompleta(fechaConsulta)})`;
-                        } else {
-                            document.getElementById(elementoHora).textContent = 'No registrado';
-                            document.getElementById(elementoFecha).textContent = 
-                                `(Consultado para ${tipo} en fecha: ${formatoFechaCompleta(fechaConsulta)})`;
-                        }
-                    };
-                    
-                    mostrarHoraConFecha(
-                        data.hora_entrada_programada, 
-                        'consulta_entrada_programada', 
-                        'consulta_fecha_entrada_programada',
-                        'entrada programada'
-                    );
-                    
-                    mostrarHoraConFecha(
-                        data.hora_ingreso, 
-                        'consulta_entrada_marcada', 
-                        'consulta_fecha_entrada_marcada',
-                        'entrada marcada'
-                    );
-                    
-                    mostrarHoraConFecha(
-                        data.hora_salida_programada, 
-                        'consulta_salida_programada', 
-                        'consulta_fecha_salida_programada',
-                        'salida programada'
-                    );
-                    
-                    mostrarHoraConFecha(
-                        data.hora_salida, 
-                        'consulta_salida_marcada', 
-                        'consulta_fecha_salida_marcada',
-                        'salida marcada'
-                    );
-                    
-                    // Mostrar semana utilizada para horario
-                    if (data.semana_horario) {
-                        debugInfo += `Semana de horario utilizada: ${data.semana_horario.id} (${data.semana_horario.fecha_inicio} a ${data.semana_horario.fecha_fin})\n`;
+        } catch (e) {
+            fechaConsulta = fechaTardanza; // Usar el valor original si hay error
+            debugInfo += `- Error al formatear fecha: ${e.message}\n`;
+        }
+        
+        debugInfo += `- Fecha enviada al servidor: ${fechaConsulta}\n`;
+        document.getElementById('consulta_fecha_utilizada').textContent = formatoFechaCompleta(fechaConsulta);
+        
+        // Obtener información de marcaciones del servidor
+        fetch(`obtener_marcaciones.php?cod_operario=${codOperario}&fecha=${fechaConsulta}&debug=1`)
+            .then(response => response.json())
+            .then(data => {
+                debugInfo += `Respuesta del servidor:\n${JSON.stringify(data, null, 2)}\n`;
+                
+                // Mostrar información de marcaciones con fechas utilizadas
+                const mostrarHoraConFecha = (hora, elementoHora, elementoFecha, tipo) => {
+                    if (hora) {
+                        document.getElementById(elementoHora).textContent = formatoHoraAmPm(hora);
+                        document.getElementById(elementoFecha).textContent = 
+                            `(Consultado para ${tipo} en fecha: ${formatoFechaCompleta(fechaConsulta)})`;
+                    } else {
+                        document.getElementById(elementoHora).textContent = 'No registrado';
+                        document.getElementById(elementoFecha).textContent = 
+                            `(Consultado para ${tipo} en fecha: ${formatoFechaCompleta(fechaConsulta)})`;
                     }
-                    
-                    document.getElementById('consulta_debug_info').textContent = debugInfo;
-                    
-                    // Mostrar el modal
-                    document.getElementById('modalConsultarMarcaciones').style.display = 'flex';
-                })
-                .catch(error => {
-                    console.error('Error al obtener marcaciones:', error);
-                    debugInfo += `Error en la consulta: ${error.message}\n`;
-                    document.getElementById('consulta_debug_info').textContent = debugInfo;
-                    document.getElementById('modalConsultarMarcaciones').style.display = 'flex';
-                });
-        }
-        
-        function formatearFechaLocal(fechaStr) {
-            const fecha = new Date(fechaStr + 'T00:00:00');
-            const opciones = { day: '2-digit', month: 'short', year: '2-digit' };
-            return fecha.toLocaleDateString('es-ES', opciones);
-        }
-        
-        // Función auxiliar para formatear fechas completas
-        function formatoFechaCompleta(fechaStr) {
-            try {
-                const fecha = new Date(fechaStr + 'T00:00:00');
-                const opciones = { 
-                    weekday: 'long', 
-                    year: 'numeric', 
-                    month: 'long', 
-                    day: 'numeric',
-                    timeZone: 'UTC'
                 };
-                return fecha.toLocaleDateString('es-ES', opciones) + 
-                       ` (${fecha.toISOString().split('T')[0]})`;
-            } catch (e) {
-                return fechaStr; // Si hay error, devolver el valor original
-            }
-        }
-        
-        // Función para cerrar el modal de consulta
-        function cerrarModalConsultar() {
-            document.getElementById('modalConsultarMarcaciones').style.display = 'none';
-        }
-        
-        // Función auxiliar para formatear horas
-        function formatoHoraAmPm(hora) {
-            if (!hora) return '-';
-            return new Date(`2000-01-01T${hora}`).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-        }
-        
-        // Cargar operarios cuando se selecciona una sucursal en el modal de nueva tardanza
-        document.getElementById('nueva_sucursal').addEventListener('change', function() {
-            cargarOperariosSucursal(this.value);
-        });
-        
-        document.getElementById('formNuevaTardanza').addEventListener('submit', function(e) {
-            const fotoInput = document.getElementById('nueva_foto');
-            if (!fotoInput.files || fotoInput.files.length === 0) {
-                alert('Debe seleccionar una foto como evidencia');
-                e.preventDefault();
-                return false;
-            }
-            
-            // Validar tipo de archivo
-            const file = fotoInput.files[0];
-            if (!file.type.match('image.*')) {
-                alert('El archivo debe ser una imagen');
-                e.preventDefault();
-                return false;
-            }
-            
-            return true;
-        });
-        
-// Función para mostrar la foto ampliada
-function mostrarFotoAmpliada(src) {
-    document.getElementById('fotoAmpliada').src = src;
-    document.getElementById('modalVerFoto').style.display = 'flex';
-    
-    // Deshabilitar el scroll del modal de edición detrás
-    document.querySelector('#modalEditarTardanza .modal-content').style.overflow = 'hidden';
-}
-
-// Función para cerrar el modal de foto ampliada
-function cerrarModalFoto() {
-    document.getElementById('modalVerFoto').style.display = 'none';
-    
-    // Restaurar el scroll del modal de edición
-    document.querySelector('#modalEditarTardanza .modal-content').style.overflow = 'auto';
-}
-
-// Cerrar modal al hacer clic fuera del contenido
-window.addEventListener('click', function(event) {
-    if (event.target === document.getElementById('modalVerFoto')) {
-        cerrarModalFoto();
+                
+                mostrarHoraConFecha(
+                    data.hora_entrada_programada, 
+                    'consulta_entrada_programada', 
+                    'consulta_fecha_entrada_programada',
+                    'entrada programada'
+                );
+                
+                mostrarHoraConFecha(
+                    data.hora_ingreso, 
+                    'consulta_entrada_marcada', 
+                    'consulta_fecha_entrada_marcada',
+                    'entrada marcada'
+                );
+                
+                mostrarHoraConFecha(
+                    data.hora_salida_programada, 
+                    'consulta_salida_programada', 
+                    'consulta_fecha_salida_programada',
+                    'salida programada'
+                );
+                
+                mostrarHoraConFecha(
+                    data.hora_salida, 
+                    'consulta_salida_marcada', 
+                    'consulta_fecha_salida_marcada',
+                    'salida marcada'
+                );
+                
+                // Mostrar semana utilizada para horario
+                if (data.semana_horario) {
+                    debugInfo += `Semana de horario utilizada: ${data.semana_horario.id} (${data.semana_horario.fecha_inicio} a ${data.semana_horario.fecha_fin})\n`;
+                }
+                
+                document.getElementById('consulta_debug_info').textContent = debugInfo;
+                
+                // Mostrar el modal
+                document.getElementById('modalConsultarMarcaciones').style.display = 'flex';
+            })
+            .catch(error => {
+                console.error('Error al obtener marcaciones:', error);
+                debugInfo += `Error en la consulta: ${error.message}\n`;
+                document.getElementById('consulta_debug_info').textContent = debugInfo;
+                document.getElementById('modalConsultarMarcaciones').style.display = 'flex';
+            });
     }
-});
+    
+    function formatearFechaLocal(fechaStr) {
+        const fecha = new Date(fechaStr + 'T00:00:00');
+        const opciones = { day: '2-digit', month: 'short', year: '2-digit' };
+        return fecha.toLocaleDateString('es-ES', opciones);
+    }
+    
+    // Función auxiliar para formatear fechas completas
+    function formatoFechaCompleta(fechaStr) {
+        try {
+            const fecha = new Date(fechaStr + 'T00:00:00');
+            const opciones = { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric',
+                timeZone: 'UTC'
+            };
+            return fecha.toLocaleDateString('es-ES', opciones) + 
+                   ` (${fecha.toISOString().split('T')[0]})`;
+        } catch (e) {
+            return fechaStr; // Si hay error, devolver el valor original
+        }
+    }
+    
+    // Función para cerrar el modal de consulta
+    function cerrarModalConsultar() {
+        document.getElementById('modalConsultarMarcaciones').style.display = 'none';
+    }
+    
+    // Función auxiliar para formatear horas
+    function formatoHoraAmPm(hora) {
+        if (!hora) return '-';
+        return new Date(`2000-01-01T${hora}`).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+    }
+    
+    // Cargar operarios cuando se selecciona una sucursal en el modal de nueva tardanza
+    document.getElementById('nueva_sucursal').addEventListener('change', function() {
+        cargarOperariosSucursal(this.value);
+    });
+    
+    document.getElementById('formNuevaTardanza').addEventListener('submit', function(e) {
+        const fotoInput = document.getElementById('nueva_foto');
+        if (!fotoInput.files || fotoInput.files.length === 0) {
+            alert('Debe seleccionar una foto como evidencia');
+            e.preventDefault();
+            return false;
+        }
         
-        // Cerrar modal al hacer clic fuera del contenido
-        window.addEventListener('click', function(event) {
-            const modals = ['modalNuevaTardanza', 'modalEditarTardanza'];
+        // Validar tipo de archivo
+        const file = fotoInput.files[0];
+        if (!file.type.match('image.*')) {
+            alert('El archivo debe ser una imagen');
+            e.preventDefault();
+            return false;
+        }
+        
+        return true;
+    });
+
+    // =============================================
+    // FUNCIONES DEL VISOR DE FOTOS - CORREGIDAS
+    // =============================================
+
+    // Función para mostrar foto ampliada desde la tabla
+    function mostrarFotoAmpliadaDesdeTabla(fotoPath) {
+        if (!fotoPath) {
+            alert('No hay foto disponible');
+            return;
+        }
+        
+        const fotoUrl = `uploads/tardanzas/${fotoPath}`;
+        const fotoAmpliada = document.getElementById('fotoAmpliada');
+        
+        // Resetear zoom al abrir nueva foto
+        currentZoomLevel = 1;
+        fotoAmpliada.style.transform = `scale(${currentZoomLevel})`;
+        fotoAmpliada.style.cursor = 'zoom-in';
+        
+        // Cargar la imagen
+        fotoAmpliada.src = fotoUrl;
+        
+        // Mostrar el modal
+        document.getElementById('modalVerFoto').style.display = 'flex';
+    }
+
+    // Función para mostrar foto ampliada desde el modal de edición
+    function mostrarFotoAmpliada(src) {
+        const fotoAmpliada = document.getElementById('fotoAmpliada');
+        
+        // Resetear zoom al abrir nueva foto
+        currentZoomLevel = 1;
+        fotoAmpliada.style.transform = `scale(${currentZoomLevel})`;
+        fotoAmpliada.style.cursor = 'zoom-in';
+        
+        // Cargar la imagen
+        fotoAmpliada.src = src;
+        
+        // Mostrar el modal
+        document.getElementById('modalVerFoto').style.display = 'flex';
+    }
+
+    // Función para cerrar el modal de foto ampliada
+    function cerrarModalFoto() {
+        document.getElementById('modalVerFoto').style.display = 'none';
+        // Resetear zoom al cerrar
+        currentZoomLevel = 1;
+        const fotoAmpliada = document.getElementById('fotoAmpliada');
+        if (fotoAmpliada) {
+            fotoAmpliada.style.transform = 'scale(1)';
+            fotoAmpliada.style.cursor = 'zoom-in';
+        }
+    }
+
+    // Funciones de zoom
+    function zoomIn() {
+        if (currentZoomLevel < maxZoomLevel) {
+            currentZoomLevel += zoomStep;
+            applyZoom();
+        }
+    }
+
+    function zoomOut() {
+        if (currentZoomLevel > minZoomLevel) {
+            currentZoomLevel -= zoomStep;
+            applyZoom();
+        }
+    }
+
+    function resetZoom() {
+        currentZoomLevel = 1;
+        applyZoom();
+    }
+
+    function applyZoom() {
+        const fotoAmpliada = document.getElementById('fotoAmpliada');
+        if (fotoAmpliada) {
+            fotoAmpliada.style.transform = `scale(${currentZoomLevel})`;
             
-            modals.forEach(modalId => {
-                const modal = document.getElementById(modalId);
-                if (event.target === modal) {
-                    cerrarModal();
+            // Actualizar cursor según el nivel de zoom
+            if (currentZoomLevel > 1) {
+                fotoAmpliada.style.cursor = 'zoom-out';
+            } else {
+                fotoAmpliada.style.cursor = 'zoom-in';
+            }
+        }
+    }
+
+    // =============================================
+    // EVENT LISTENERS PARA EL VISOR DE FOTOS
+    // =============================================
+
+    // Inicializar event listeners cuando el DOM esté listo
+    document.addEventListener('DOMContentLoaded', function() {
+        const modalFoto = document.getElementById('modalVerFoto');
+        const imageContainer = document.getElementById('imageContainer');
+        const fotoAmpliada = document.getElementById('fotoAmpliada');
+        
+        // Cerrar modal al hacer clic en el fondo (modal mismo)
+        if (modalFoto) {
+            modalFoto.addEventListener('click', function(e) {
+                // Solo cerrar si se hace clic directamente en el modal (fondo)
+                if (e.target === modalFoto) {
+                    cerrarModalFoto();
                 }
             });
+        }
+        
+        // Prevenir que el clic en el contenido cierre el modal
+        if (imageContainer) {
+            imageContainer.addEventListener('click', function(e) {
+                e.stopPropagation();
+            });
+        }
+        
+        // Zoom con la rueda del mouse en la imagen
+        if (fotoAmpliada) {
+            fotoAmpliada.addEventListener('wheel', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                if (e.deltaY < 0) {
+                    zoomIn();
+                } else {
+                    zoomOut();
+                }
+            });
+
+            // Alternar zoom al hacer clic en la imagen
+            fotoAmpliada.addEventListener('click', function(e) {
+                e.stopPropagation();
+                if (currentZoomLevel === 1) {
+                    zoomIn();
+                } else {
+                    resetZoom();
+                }
+            });
+        }
+
+        // Cerrar modal con tecla Escape
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && document.getElementById('modalVerFoto').style.display === 'flex') {
+                cerrarModalFoto();
+            }
         });
-        
-        // Ajustar el posicionamiento del dropdown cuando se muestre
-function ajustarPosicionDropdown() {
-    const input = document.getElementById('operario');
-    const dropdown = document.getElementById('operarios-sugerencias');
+    });
     
-    if (input && dropdown) {
-        // Obtener la posición del input
-        const rect = input.getBoundingClientRect();
-        
-        // Posicionar el dropdown justo debajo del input
-        dropdown.style.top = (rect.bottom + window.scrollY) + 'px';
-        dropdown.style.left = rect.left + 'px';
-        dropdown.style.width = rect.width + 'px';
-    }
-}
+    // =============================================
+    // FUNCIONES ADICIONALES
+    // =============================================
 
-// Modificar el evento input para ajustar la posición
-operarioInput.addEventListener('input', function() {
-    const texto = this.value.trim();
-    
-    // Si el campo está vacío, resetear a "todos"
-    if (texto === '') {
-        operarioIdInput.value = '0';
-        sugerenciasDiv.style.display = 'none';
-        return;
-    }
-    
-    const resultados = buscarOperarios(texto);
-    
-    sugerenciasDiv.innerHTML = '';
-    
-    if (resultados.length > 0) {
-        resultados.forEach(op => {
-            const div = document.createElement('div');
-            div.textContent = op.nombre;
-            div.style.padding = '8px';
-            div.style.cursor = 'pointer';
-            div.addEventListener('click', function() {
-                operarioInput.value = op.nombre;
-                operarioIdInput.value = op.id;
-                sugerenciasDiv.style.display = 'none';
-            });
-            div.addEventListener('mouseover', function() {
-                this.style.backgroundColor = '#f5f5f5';
-            });
-            div.addEventListener('mouseout', function() {
-                this.style.backgroundColor = 'white';
-            });
-            sugerenciasDiv.appendChild(div);
+    // Cerrar modal al hacer clic fuera del contenido
+    window.addEventListener('click', function(event) {
+        const modals = ['modalNuevaTardanza', 'modalEditarTardanza'];
+        
+        modals.forEach(modalId => {
+            const modal = document.getElementById(modalId);
+            if (event.target === modal) {
+                cerrarModal();
+            }
         });
+    });
+    
+    // Ajustar el posicionamiento del dropdown cuando se muestre
+    function ajustarPosicionDropdown() {
+        const input = document.getElementById('operario');
+        const dropdown = document.getElementById('operarios-sugerencias');
         
-        // Ajustar posición antes de mostrar
-        ajustarPosicionDropdown();
-        sugerenciasDiv.style.display = 'block';
-    } else {
-        sugerenciasDiv.style.display = 'none';
+        if (input && dropdown) {
+            // Obtener la posición del input
+            const rect = input.getBoundingClientRect();
+            
+            // Posicionar el dropdown justo debajo del input
+            dropdown.style.top = (rect.bottom + window.scrollY) + 'px';
+            dropdown.style.left = rect.left + 'px';
+            dropdown.style.width = rect.width + 'px';
+        }
     }
-});
 
-// Ajustar posición cuando se redimensiona la ventana
-window.addEventListener('resize', function() {
-    if (sugerenciasDiv.style.display === 'block') {
-        ajustarPosicionDropdown();
-    }
-});
+    // Modificar el evento input para ajustar la posición
+    operarioInput.addEventListener('input', function() {
+        const texto = this.value.trim();
+        
+        // Si el campo está vacío, resetear a "todos"
+        if (texto === '') {
+            operarioIdInput.value = '0';
+            sugerenciasDiv.style.display = 'none';
+            return;
+        }
+        
+        const resultados = buscarOperarios(texto);
+        
+        sugerenciasDiv.innerHTML = '';
+        
+        if (resultados.length > 0) {
+            resultados.forEach(op => {
+                const div = document.createElement('div');
+                div.textContent = op.nombre;
+                div.style.padding = '8px';
+                div.style.cursor = 'pointer';
+                div.addEventListener('click', function() {
+                    operarioInput.value = op.nombre;
+                    operarioIdInput.value = op.id;
+                    sugerenciasDiv.style.display = 'none';
+                });
+                div.addEventListener('mouseover', function() {
+                    this.style.backgroundColor = '#f5f5f5';
+                });
+                div.addEventListener('mouseout', function() {
+                    this.style.backgroundColor = 'white';
+                });
+                sugerenciasDiv.appendChild(div);
+            });
+            
+            // Ajustar posición antes de mostrar
+            ajustarPosicionDropdown();
+            sugerenciasDiv.style.display = 'block';
+        } else {
+            sugerenciasDiv.style.display = 'none';
+        }
+    });
 
-// Ajustar posición cuando se hace scroll
-window.addEventListener('scroll', function() {
-    if (sugerenciasDiv.style.display === 'block') {
-        ajustarPosicionDropdown();
-    }
-});
-    </script>
+    // Ajustar posición cuando se redimensiona la ventana
+    window.addEventListener('resize', function() {
+        if (sugerenciasDiv.style.display === 'block') {
+            ajustarPosicionDropdown();
+        }
+    });
+
+    // Ajustar posición cuando se hace scroll
+    window.addEventListener('scroll', function() {
+        if (sugerenciasDiv.style.display === 'block') {
+            ajustarPosicionDropdown();
+        }
+    });
+</script>
 </body>
 </html>
