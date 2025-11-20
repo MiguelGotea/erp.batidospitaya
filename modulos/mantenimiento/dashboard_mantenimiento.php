@@ -960,8 +960,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticket_id_chat'])) {
     <?php echo renderMenuLateral($cargoOperario, 'dashboard_mantenimiento.php'); ?>
     
     <!-- Contenido principal -->
-    <div class="main-container">   ya existe en el css de menu lateral
-        <div class="contenedor-principal"> ya existe en el css de menu lateral
+    <div class="main-container">   
+        <div class="contenedor-principal"> 
             <!-- todo el contenido existente -->
 
             <div class="main-layout">
