@@ -6,12 +6,17 @@ if (session_status() == PHP_SESSION_NONE) {
 require_once 'models/Ticket.php';
 require_once '../../includes/auth.php';
 require_once '../../includes/funciones.php';
-
+// Incluir el menú lateral
+require_once '../../includes/menu_lateral.php';
+// Incluir el header universal
+require_once '../../includes/header_universal.php';
 //******************************Estándar para header******************************
 verificarAutenticacion();
 
 $usuario = obtenerUsuarioActual();
 $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
+// Obtener cargo del operario para el menú
+$cargoOperario = $usuario['CodNivelesCargos'];
 
 // Verificar acceso al módulo Mantenimiento (Código 14)
 verificarAccesoCargo([5, 11, 14, 16, 35]);
@@ -105,8 +110,8 @@ function getColorByUrgency($urgencia, $tipo_formulario) {
         
         body {
             background-color: #F6F6F6;
-            color: #333;
-            padding: 5px;
+            margin: 0;
+            padding: 0;
         }
         
         .container {
@@ -117,110 +122,7 @@ function getColorByUrgency($urgencia, $tipo_formulario) {
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             padding: 10px;
         }
-        
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 0;
-            border-bottom: 1px solid #ddd;
-            margin-bottom: 30px;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-
-        .header-container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            width: 100%;
-            padding: 0 5px;
-            box-sizing: border-box;
-            margin: 1px auto;
-            flex-wrap: wrap;
-        }
-
-        .logo {
-            height: 50px;
-        }
-
-        .logo-container {
-            flex-shrink: 0;
-            margin-right: auto;
-        }
-
-        .buttons-container {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            justify-content: center;
-            flex-grow: 1;
-            position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
-        }
-
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-left: auto;
-        }
-
-        .btn-agregar {
-            background-color: transparent;
-            color: #51B8AC;
-            border: 1px solid #51B8AC;
-            text-decoration: none;
-            padding: 6px 10px;
-            border-radius: 8px;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.3s;
-            white-space: nowrap;
-            font-size: 14px;
-            flex-shrink: 0;
-        }
-
-        .btn-agregar.activo {
-            background-color: #51B8AC;
-            color: white;
-            font-weight: normal;
-        }
-
-        .btn-agregar:hover {
-            background-color: #0E544C;
-            color: white;
-            border-color: #0E544C;
-        }
-
-        .user-avatar {
-            width: 35px;
-            height: 35px;
-            border-radius: 50%;
-            background-color: #51B8AC;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
-        }
-
-        .btn-logout {
-            background: #51B8AC;
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-
-        .btn-logout:hover {
-            background: #0E544C;
-        }
-        
+              
         .title {
             color: #0E544C;
             font-size: 1.5rem !important;
@@ -677,184 +579,128 @@ function getColorByUrgency($urgencia, $tipo_formulario) {
     </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <div class="header-container">
-                <div class="logo-container">
-                    <img src="../../assets/img/Logo.svg" alt="Batidos Pitaya" class="logo">
-                </div>
-                
-                <div class="buttons-container">                    
-                    <?php if ($esAdmin || verificarAccesoCargo([14, 16, 35])): ?>
-                        <a href="agenda_colaborador.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'agenda_colaborador.php' ? 'activo' : '' ?>">
-                            <i class="fas fa-tasks"></i> <span class="btn-text">Agenda</span>
-                        </a>
-                    <?php endif; ?>
-
-                    <?php if ($esAdmin || verificarAccesoCargo([5, 11, 16, 35])): ?>
-                        <a href="calendario.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'calendario.php' ? 'activo' : '' ?>">
-                            <i class="fas fa-calendar-alt"></i> <span class="btn-text">Calendario</span>
-                        </a>
-                    <?php endif; ?>
-                    
-                    <?php if ($esAdmin || verificarAccesoCargo([5, 16, 35])): ?>
-                        <a href="formulario_mantenimiento.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'formulario_mantenimiento.php' ? 'activo' : '' ?>">
-                            <i class="fas fa-tools"></i> <span class="btn-text">Mantenimiento</span>
-                        </a>
-                    <?php endif; ?>
-
-                    <?php if ($esAdmin || verificarAccesoCargo([5, 16, 35])): ?>
-                        <a href="formulario_equipos.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'formulario_equipos.php' ? 'activo' : '' ?>">
-                            <i class="fas fa-laptop"></i> <span class="btn-text">Equipos</span>
-                        </a>
-                    <?php endif; ?>
-                    
-                    <?php if ($esAdmin || verificarAccesoCargo([16, 5])): ?>
-                        <a href="dashboard_sucursales.php?cod_operario=<?= $cod_operario ?>&cod_sucursal=<?= $cod_sucursal ?>" class="btn-agregar">
-                            <i class="fas fa-sync-alt"></i> <span class="btn-text">Solicitudes</span>
-                        </a>
-                    <?php endif; ?>
-                    
-                    <?php if ($esAdmin || verificarAccesoCargo([11, 14, 16, 35])): ?>
-                        <a href="dashboard_mantenimiento.php?cod_operario=<?= $cod_operario ?>&cod_sucursal=<?= $cod_sucursal ?>" class="btn-agregar">
-                            <i class="fas fa-sync-alt"></i> <span class="btn-text">Solicitudes</span>
-                        </a>
-                    <?php endif; ?>
-                </div>
-                
-                <div class="user-info">
-                    <div class="user-avatar">
-                        <?= $esAdmin ? 
-                            strtoupper(substr($usuario['nombre'], 0, 1)) : 
-                            strtoupper(substr($usuario['Nombre'], 0, 1)) ?>
+    <!-- Renderizar menú lateral -->
+    <?php echo renderMenuLateral($cargoOperario, 'calendario.php'); ?>
+    
+    <!-- Contenido principal -->
+    <div class="main-container">   <!-- ya existe en el css de menu lateral -->
+        <div class="contenedor-principal"> <!-- ya existe en el css de menu lateral -->
+            <!-- todo el contenido existente -->
+            <div class="container">
+                <!-- Renderizar header universal -->
+                <?php echo renderHeader($usuario, $esAdmin, ''); ?>
+                <div class="calendar-container">
+                    <!-- Calendario principal -->
+                    <div class="calendar-main" id="calendarMain">
+                        <div id='calendar'></div>
                     </div>
-                    <div>
-                        <div>
-                            <?= $esAdmin ? 
-                                htmlspecialchars($usuario['nombre']) : 
-                                htmlspecialchars($usuario['Nombre'].' '.$usuario['Apellido']) ?>
+
+                    <!-- Sidebar con tickets sin programar -->
+                    <div class="sidebar" id="ticketsSidebar">
+                        <div class="sidebar-header">
+                            <h5 class="mb-1">
+                                <i class="fas fa-clock me-2"></i>
+                                Solicitudes pendientes por programar
+                            </h5>
                         </div>
-                        <small>
-                            <?= htmlspecialchars($cargoUsuario) ?>
-                        </small>
-                    </div>
-                    <a href="../index.php" class="btn-logout">
-                        <i class="fas fa-sign-out-alt"></i>
-                    </a>
-                </div>
-            </div>
-        </header>
-
-        <div class="calendar-container">
-            <!-- Calendario principal -->
-            <div class="calendar-main" id="calendarMain">
-                <div id='calendar'></div>
-            </div>
-
-            <!-- Sidebar con tickets sin programar -->
-            <div class="sidebar" id="ticketsSidebar">
-                <div class="sidebar-header">
-                    <h5 class="mb-1">
-                        <i class="fas fa-clock me-2"></i>
-                        Solicitudes pendientes por programar
-                    </h5>
-                </div>
-                
-                <!-- Filtro por sucursal -->
-                <div class="sidebar-filter p-3 border-bottom">
-                    <select class="form-select form-select-sm" id="filterSucursal">
-                        <option value="">Todas las sucursales</option>
-                        <?php 
-                        // Obtener sucursales únicas
-                        $sucursales = [];
-                        foreach ($tickets_sin_fecha as $ticket) {
-                            if (!empty($ticket['nombre_sucursal'])) {
-                                $sucursales[$ticket['nombre_sucursal']] = $ticket['nombre_sucursal'];
-                            }
-                        }
-                        sort($sucursales);
-                        ?>
-                        <?php foreach ($sucursales as $sucursal): ?>
-                            <option value="<?= htmlspecialchars($sucursal) ?>"><?= htmlspecialchars($sucursal) ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                
-                <div class="unscheduled-tickets" id="unscheduledTickets">
-                    <?php if (empty($tickets_sin_fecha)): ?>
-                        <div class="text-center text-muted py-4">
-                            <i class="fas fa-check-circle fa-3x mb-3"></i>
-                            <p>¡Todos los tickets están programados!</p>
-                        </div>
-                    <?php else: ?>
-                        <?php foreach ($tickets_sin_fecha as $ticket): ?>
-                            <div class="ticket-item" 
-                                draggable="true" 
-                                data-ticket-id="<?= $ticket['id'] ?>"
-                                data-ticket-title="<?= htmlspecialchars($ticket['titulo']) ?>"
-                                data-ticket-codigo="<?= htmlspecialchars($ticket['codigo']) ?>"
-                                data-sucursal="<?= htmlspecialchars($ticket['nombre_sucursal']) ?>"
-                                style="background: <?= getColorByUrgency($ticket['nivel_urgencia'], $ticket['tipo_formulario']) ?>; color: white;">
-                                
-                                <div class="small" style="opacity: 0.9;">
-                                    <span style="background: #51B8AC; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.8em;">
-                                        <?php if ($ticket['tipo_formulario'] === 'cambio_equipos'): ?>
-                                            <i class="fas fa-exclamation-triangle me-1"></i>
-                                        <?php endif; ?>
-                                        <?= htmlspecialchars($ticket['nombre_sucursal']) ?>
-                                    </span>
-                                </div>
-
-                                <div class="mb-2">
-                                    <?= htmlspecialchars($ticket['titulo']) ?>
-                                </div>
-                                
-                            </div>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
-                </div>
-            </div>
-
-            <script>
-                // Variable global para controlar el drag
-                let isDraggingTicket = false;
-                
-                document.addEventListener('DOMContentLoaded', function() {
-                    
-                    const filterSucursal = document.getElementById('filterSucursal');
-                    const ticketItems = document.querySelectorAll('.ticket-item');
-                    
-                    filterSucursal.addEventListener('change', function() {
-                        const selectedSucursal = this.value;
                         
-                        ticketItems.forEach(function(item) {
-                            const itemSucursal = item.getAttribute('data-sucursal');
+                        <!-- Filtro por sucursal -->
+                        <div class="sidebar-filter p-3 border-bottom">
+                            <select class="form-select form-select-sm" id="filterSucursal">
+                                <option value="">Todas las sucursales</option>
+                                <?php 
+                                // Obtener sucursales únicas
+                                $sucursales = [];
+                                foreach ($tickets_sin_fecha as $ticket) {
+                                    if (!empty($ticket['nombre_sucursal'])) {
+                                        $sucursales[$ticket['nombre_sucursal']] = $ticket['nombre_sucursal'];
+                                    }
+                                }
+                                sort($sucursales);
+                                ?>
+                                <?php foreach ($sucursales as $sucursal): ?>
+                                    <option value="<?= htmlspecialchars($sucursal) ?>"><?= htmlspecialchars($sucursal) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        
+                        <div class="unscheduled-tickets" id="unscheduledTickets">
+                            <?php if (empty($tickets_sin_fecha)): ?>
+                                <div class="text-center text-muted py-4">
+                                    <i class="fas fa-check-circle fa-3x mb-3"></i>
+                                    <p>¡Todos los tickets están programados!</p>
+                                </div>
+                            <?php else: ?>
+                                <?php foreach ($tickets_sin_fecha as $ticket): ?>
+                                    <div class="ticket-item" 
+                                        draggable="true" 
+                                        data-ticket-id="<?= $ticket['id'] ?>"
+                                        data-ticket-title="<?= htmlspecialchars($ticket['titulo']) ?>"
+                                        data-ticket-codigo="<?= htmlspecialchars($ticket['codigo']) ?>"
+                                        data-sucursal="<?= htmlspecialchars($ticket['nombre_sucursal']) ?>"
+                                        style="background: <?= getColorByUrgency($ticket['nivel_urgencia'], $ticket['tipo_formulario']) ?>; color: white;">
+                                        
+                                        <div class="small" style="opacity: 0.9;">
+                                            <span style="background: #51B8AC; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.8em;">
+                                                <?php if ($ticket['tipo_formulario'] === 'cambio_equipos'): ?>
+                                                    <i class="fas fa-exclamation-triangle me-1"></i>
+                                                <?php endif; ?>
+                                                <?= htmlspecialchars($ticket['nombre_sucursal']) ?>
+                                            </span>
+                                        </div>
+
+                                        <div class="mb-2">
+                                            <?= htmlspecialchars($ticket['titulo']) ?>
+                                        </div>
+                                        
+                                    </div>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+
+                    <script>
+                        // Variable global para controlar el drag
+                        let isDraggingTicket = false;
+                        
+                        document.addEventListener('DOMContentLoaded', function() {
                             
-                            if (selectedSucursal === '' || itemSucursal === selectedSucursal) {
-                                item.style.display = 'block';
-                            } else {
-                                item.style.display = 'none';
-                            }
+                            const filterSucursal = document.getElementById('filterSucursal');
+                            const ticketItems = document.querySelectorAll('.ticket-item');
+                            
+                            filterSucursal.addEventListener('change', function() {
+                                const selectedSucursal = this.value;
+                                
+                                ticketItems.forEach(function(item) {
+                                    const itemSucursal = item.getAttribute('data-sucursal');
+                                    
+                                    if (selectedSucursal === '' || itemSucursal === selectedSucursal) {
+                                        item.style.display = 'block';
+                                    } else {
+                                        item.style.display = 'none';
+                                    }
+                                });
+                            });
+                        
+
+                            // Eventos para los tickets
+                            ticketItems.forEach(function(item) {
+                                // Evento click
+                                item.addEventListener('click', function(e) {
+                                    // Solo abrir modal si no hay un drag en curso
+                                    if (!isDraggingTicket) {
+                                        const ticketId = this.getAttribute('data-ticket-id');
+                                        mostrarDetallesTicket(ticketId);
+                                    }
+                                });
+                            });
                         });
-                    });
-                
-
-                    // Eventos para los tickets
-                    ticketItems.forEach(function(item) {
-                        // Evento click
-                        item.addEventListener('click', function(e) {
-                            // Solo abrir modal si no hay un drag en curso
-                            if (!isDraggingTicket) {
-                                const ticketId = this.getAttribute('data-ticket-id');
-                                mostrarDetallesTicket(ticketId);
-                            }
-                        });
-                    });
-                });
-            
-            </script>
+                    
+                    </script>
 
 
+                </div>
+            </div>
         </div>
     </div>
 
