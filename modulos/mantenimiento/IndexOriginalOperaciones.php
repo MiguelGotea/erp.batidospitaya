@@ -1320,11 +1320,11 @@ if (!empty($sucursales)) {
                     <div class="pendientes-content">
                         <div class="pendientes-count" id="anunciosCount">0</div>
                         <div class="pendientes-info">
-                            <div class="pendientes-fecha" id="anunciosFecha">
-                                <!-- Se llenará con JavaScript -->
-                            </div>
                             <div class="pendientes-titulo">
                                 Nuevos Anuncios
+                            </div>
+                            <div class="pendientes-fecha" id="anunciosFecha">
+                                <!-- Se llenará con JavaScript -->
                             </div>
                         </div>
                     </div>
@@ -1337,11 +1337,11 @@ if (!empty($sucursales)) {
                     <div class="pendientes-content">
                         <div class="pendientes-count" id="tardanzasCount">0</div>
                         <div class="pendientes-info">
-                            <div class="pendientes-fecha" id="tardanzasFecha">
-                                <!-- Se llenará con JavaScript -->
-                            </div>
                             <div class="pendientes-titulo">
                                 Tardanzas Pendientes
+                            </div>
+                            <div class="pendientes-fecha" id="tardanzasFecha">
+                                <!-- Se llenará con JavaScript -->
                             </div>
                         </div>
                     </div>
@@ -1354,11 +1354,11 @@ if (!empty($sucursales)) {
                     <div class="pendientes-content">
                         <div class="pendientes-count" id="feriadosCount">0</div>
                         <div class="pendientes-info">
-                            <div class="pendientes-fecha" id="feriadosFecha">
-                                <!-- Se llenará con JavaScript -->
-                            </div>
                             <div class="pendientes-titulo">
                                 Feriados Pendientes
+                            </div>
+                            <div class="pendientes-fecha" id="feriadosFecha">
+                                <!-- Se llenará con JavaScript -->
                             </div>
                         </div>
                     </div>
@@ -1371,11 +1371,11 @@ if (!empty($sucursales)) {
                     <div class="pendientes-content">
                         <div class="pendientes-count" id="reclamosCount">0</div>
                         <div class="pendientes-info">
-                            <div class="pendientes-fecha" id="reclamosFecha">
-                                Tolerancia: 7 días
-                            </div>
                             <div class="pendientes-titulo">
                                 Reclamos Pendientes
+                            </div>
+                            <div class="pendientes-fecha" id="reclamosFecha">
+                                Tolerancia: 7 días
                             </div>
                         </div>
                     </div>
@@ -1388,11 +1388,11 @@ if (!empty($sucursales)) {
                     <div class="pendientes-content">
                         <div class="pendientes-count" id="kpiCount">0</div>
                         <div class="pendientes-info">
-                            <div class="pendientes-fecha" id="kpiFecha">
-                                Mes actual
-                            </div>
                             <div class="pendientes-titulo">
                                 KPI Pendientes
+                            </div>
+                            <div class="pendientes-fecha" id="kpiFecha">
+                                Mes actual
                             </div>
                         </div>
                     </div>
@@ -1405,6 +1405,9 @@ if (!empty($sucursales)) {
                     <div class="pendientes-content">
                         <div class="pendientes-count"><?= $tardanzasPendientesOperaciones['total'] ?></div>
                         <div class="pendientes-info">
+                            <div class="pendientes-titulo">
+                                Tardanzas Tiendas
+                            </div>
                             <div class="pendientes-fecha" id="tardanzasFechaOperaciones">
                                 <?php 
                                 $diasRestantes = $tardanzasPendientesOperaciones['dias_restantes'];
@@ -1419,9 +1422,6 @@ if (!empty($sucursales)) {
                                 }
                                 ?>
                             </div>
-                            <div class="pendientes-titulo">
-                                Tardanzas Tiendas
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -1432,6 +1432,9 @@ if (!empty($sucursales)) {
                     <div class="pendientes-content">
                         <div class="pendientes-count"><?= $faltasPendientesOperaciones['total'] ?></div>
                         <div class="pendientes-info">
+                            <div class="pendientes-titulo">
+                                Faltas Tiendas
+                            </div>
                             <div class="pendientes-fecha" id="faltasFechaOperaciones">
                                 <?php 
                                 $diasRestantes = $faltasPendientesOperaciones['dias_restantes'];
@@ -1445,9 +1448,6 @@ if (!empty($sucursales)) {
                                     echo $diasRestantes . ' días restantes';
                                 }
                                 ?>
-                            </div>
-                            <div class="pendientes-titulo">
-                                Faltas Tiendas
                             </div>
                         </div>
                     </div>

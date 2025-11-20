@@ -1,6 +1,10 @@
 <?php
 require_once '../../includes/auth.php';
 require_once '../../includes/funciones.php';
+// Incluir el header universal
+require_once '../../includes/header_universal.php';
+// Incluir el menú lateral
+require_once '../../includes/menu_lateral.php';
 
 verificarAutenticacion();
 
@@ -700,8 +704,7 @@ if (!empty($sucursales)) {
     }
 }
 
-// Incluir el menú lateral
-require_once '../../includes/menu_lateral.php';
+
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -723,66 +726,6 @@ require_once '../../includes/menu_lateral.php';
         body {
             background-color: #F6F6F6;
             color: #333;
-        }
-        
-        .content-wrapper {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        
-        /* Header */
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px 0;
-            border-bottom: 2px solid #e0e0e0;
-            margin-bottom: 30px;
-            background: white;
-            border-radius: 8px;
-            padding: 15px 20px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        }
-        
-        .logo {
-            height: 45px;
-        }
-        
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        
-        .user-avatar {
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #51B8AC 0%, #0E544C 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
-            font-size: 1.2rem !important;
-            box-shadow: 0 2px 8px rgba(81, 184, 172, 0.3);
-        }
-        
-        .btn-logout {
-            background: linear-gradient(135deg, #51B8AC 0%, #0E544C 100%);
-            color: white;
-            border: none;
-            padding: 10px 18px;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.3s;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        
-        .btn-logout:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(81, 184, 172, 0.4);
         }
         
         /* Dashboard Grid */
@@ -999,51 +942,25 @@ require_once '../../includes/menu_lateral.php';
                 grid-template-columns: repeat(2, 1fr);
             }
             
-            header {
-                flex-direction: column;
-                gap: 15px;
-                text-align: center;
-            }
         }
     </style>
 </head>
+
 <body>
-    <!-- Incluir menú lateral -->
-    <?php echo renderMenuLateral($cargoOperario, 'index.php'); ?>
+    <!-- Renderizar menú lateral -->
+    <?php echo renderMenuLateral($cargoOperario); ?>
     
     <!-- Contenido principal -->
-    <div class="main-container">
-        <div class="content-wrapper">
+    <div class="main-container">   <!-- ya existe en el css de menu lateral -->
+        <div class="contenedor-principal"> <!-- ya existe en el css de menu lateral -->
+            <!-- todo el contenido existente -->
             <!-- Header -->
-            <header>
-                <img src="../../assets/img/Logo.svg" alt="Batidos Pitaya" class="logo">
-                <div class="user-info">
-                    <div class="user-avatar">
-                        <?= $esAdmin ? 
-                            strtoupper(substr($usuario['nombre'], 0, 1)) : 
-                            strtoupper(substr($usuario['Nombre'], 0, 1)) ?>
-                    </div>
-                    <div>
-                        <div style="font-weight: 600;">
-                            <?= $esAdmin ? 
-                                htmlspecialchars($usuario['nombre']) : 
-                                htmlspecialchars($usuario['Nombre'].' '.$usuario['Apellido']) ?>
-                        </div>
-                        <small style="color: #666;">
-                            <?= $esAdmin ? 
-                                'Administrador' : 
-                                htmlspecialchars($usuario['cargo_nombre'] ?? 'Sin cargo definido') ?>
-                        </small>
-                    </div>
-                    <a href="../../logout.php" class="btn-logout">
-                        <i class="fas fa-sign-out-alt"></i>
-                    </a>
-                </div>
-            </header>
+            <!-- Renderizar header universal -->
+            <?php echo renderHeader($usuario, $esAdmin, ''); ?>
             
             <!-- Sección: Indicadores de Gestión -->
             <h2 class="section-title">
-                <i class="fas fa-chart-line"></i> Indicadores de Gestión
+                <i class="fas fa-chart-line"></i> Indicadores de Control
             </h2>
             
             <div class="dashboard-grid">
