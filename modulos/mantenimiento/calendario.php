@@ -170,7 +170,7 @@ function getColorByUrgency($urgencia, $tipo_formulario) {
             border-color: #0E544C !important;
         }
         
-        .sidebar {
+        .sidebarsolicitudes {
             width: 350px;
             background: white;
             border-radius: 10px;
@@ -189,7 +189,7 @@ function getColorByUrgency($urgencia, $tipo_formulario) {
             flex: 1 0 100%;
         }
         
-        .sidebar-header {
+        .sidebarsolicitudes-header {
             background: #0E544C;
             color: white;
             padding: 20px;
@@ -436,7 +436,7 @@ function getColorByUrgency($urgencia, $tipo_formulario) {
                 padding: 10px;
             }
             
-            .sidebar {
+            .sidebarsolicitudes {
                 width: 100%;
                 max-height: 400px;
             }
@@ -580,8 +580,11 @@ function getColorByUrgency($urgencia, $tipo_formulario) {
 </head>
 <body>
     <!-- Renderizar menú lateral -->
-    <?php echo renderMenuLateral($cargoOperario, 'calendario.php'); ?>
-
+    <?php echo renderMenuLateral($cargoOperario, 'index_avisos_publico.php'); ?>
+    
+    <!-- Contenido principal -->
+    <div class="main-container">   <!-- ya existe en el css de menu lateral -->
+        <div class="contenedor-principal"> <!-- ya existe en el css de menu lateral -->
             <!-- todo el contenido existente -->
             <div class="container">
                 <!-- Renderizar header universal -->
@@ -593,8 +596,8 @@ function getColorByUrgency($urgencia, $tipo_formulario) {
                     </div>
 
                     <!-- Sidebar con tickets sin programar -->
-                    <div class="sidebar" id="ticketsSidebar">
-                        <div class="sidebar-header">
+                    <div class="sidebarsolicitudes" id="ticketsSidebar">
+                        <div class="sidebarsolicitudes-header">
                             <h5 class="mb-1">
                                 <i class="fas fa-clock me-2"></i>
                                 Solicitudes pendientes por programar
@@ -698,7 +701,8 @@ function getColorByUrgency($urgencia, $tipo_formulario) {
 
                 </div>
             </div>
-
+        </div>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
