@@ -584,7 +584,7 @@ function getColorByUrgency($urgencia, $tipo_formulario) {
     
     <!-- Contenido principal -->
     <div class="main-container">   <!-- ya existe en el css de menu lateral -->
-        <div class="contenedor-principal"> <!-- ya existe en el css de menu lateral -->
+
             <!-- todo el contenido existente -->
             <div class="container">
                 <!-- Renderizar header universal -->
@@ -701,7 +701,7 @@ function getColorByUrgency($urgencia, $tipo_formulario) {
 
                 </div>
             </div>
-        </div>
+
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -1457,7 +1457,7 @@ function getColorByUrgency($urgencia, $tipo_formulario) {
             });
         }
         
-    function programarTicket(ticket, fechaInicio, fechaFinal) {
+        function programarTicket(ticket, fechaInicio, fechaFinal) {
             console.log('Programando ticket automáticamente:', ticket, fechaInicio, fechaFinal);
             
             const loading = document.createElement('div');
