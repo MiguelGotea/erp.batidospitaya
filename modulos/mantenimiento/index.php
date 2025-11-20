@@ -11,6 +11,8 @@ require_once '../../includes/header_universal.php';
 
 $usuario = obtenerUsuarioActual();
 $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
+// Obtener cargo del operario para el menú
+$cargoOperario = $usuario['CodNivelesCargos'];
 $CodigoCargoOperario = $usuario['CodNivelesCargos'];
 
 // Verificar acceso al módulo (cargos con permiso para ver marcaciones)
@@ -41,7 +43,8 @@ if (!verificarAccesoCargo(14)) {
         
         body {
             background-color: #F6F6F6;
-            color: #333;
+            margin: 0;
+            padding: 0;
         }
         
         .container {
@@ -282,82 +285,88 @@ if (!verificarAccesoCargo(14)) {
 </head>
 <body>
     <!-- Renderizar menú lateral -->
-    <?php echo renderMenuLateral($CodigoCargoOperario, 'index.php'); ?>
+    <?php echo renderMenuLateral($cargoOperario); ?>
+    
+    <!-- Contenido principal -->
+    <div class="main-container">   <!-- ya existe en el css de menu lateral -->
+        <div class="contenedor-principal"> <!-- ya existe en el css de menu lateral -->
+            <!-- todo el contenido existente -->
+            <div class="container">
+                <!-- Renderizar header universal -->
+                <?php echo renderHeader($usuario, $esAdmin, ''); ?>
 
-    <div class="container">
-        <!-- Renderizar header universal -->
-        <?php echo renderHeader($usuario, $esAdmin, ''); ?>
+                <?php
+                    $ticket = new Ticket();
+                    $tickets = $ticket->getAll();
+                    // Obtener estadísticas
+                    $stats = [
+                        'total' => count($tickets),
+                        'solicitado' => count(array_filter($tickets, fn($t) => $t['status'] === 'solicitado')),
+                        'agendado' => count(array_filter($tickets, fn($t) => $t['status'] === 'agendado')),
+                        'finalizado' => count(array_filter($tickets, fn($t) => $t['status'] === 'finalizado'))
+                    ];
+                ?>
 
-        <?php
-            $ticket = new Ticket();
-            $tickets = $ticket->getAll();
-            // Obtener estadísticas
-            $stats = [
-                'total' => count($tickets),
-                'solicitado' => count(array_filter($tickets, fn($t) => $t['status'] === 'solicitado')),
-                'agendado' => count(array_filter($tickets, fn($t) => $t['status'] === 'agendado')),
-                'finalizado' => count(array_filter($tickets, fn($t) => $t['status'] === 'finalizado'))
-            ];
-        ?>
-
-        <h2 class="category-title">Indicadores</h2>
-          <!-- Contenedor para indicadores -->
-        <div class="indicadores-container">
-            <div class="pendientes-container" style="margin-bottom: 30px;">
-                <div class="pendientes-card" onclick="" style="cursor: pointer;">
-                    <div class="pendientes-content">
-                        <div class="pendientes-count">
-                            <?= $stats['total']-$stats['agendado']-$stats['finalizado'] ?>
-                        </div>
-                        <div class="pendientes-info">
-                            <div class="pendientes-fecha">
-                                Solicitudes Pendientes por Agendar
+                <h2 class="category-title">Indicadores</h2>
+                <!-- Contenedor para indicadores -->
+                <div class="indicadores-container">
+                    <div class="pendientes-container" style="margin-bottom: 30px;">
+                        <div class="pendientes-card" onclick="" style="cursor: pointer;">
+                            <div class="pendientes-content">
+                                <div class="pendientes-count">
+                                    <?= $stats['total']-$stats['agendado']-$stats['finalizado'] ?>
+                                </div>
+                                <div class="pendientes-info">
+                                    <div class="pendientes-fecha">
+                                        Solicitudes Pendientes por Agendar
+                                    </div>
+                                    <div class="pendientes-titulo">
+                                        --
+                                    </div>
+                                </div>
                             </div>
-                            <div class="pendientes-titulo">
-                                --
+                        </div>
+                    </div>
+
+                    <div class="pendientes-container" style="margin-bottom: 30px;">
+                        <div class="pendientes-card" onclick="" style="cursor: pointer;">
+                            <div class="pendientes-content">
+                                <div class="pendientes-count">
+                                    <?= $stats['finalizado'] ?>
+                                </div>
+                                <div class="pendientes-info">
+                                    <div class="pendientes-fecha">
+                                        Solicitudes Concluidas
+                                    </div>
+                                    <div class="pendientes-titulo">
+                                        --
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pendientes-container" style="margin-bottom: 30px;">
+                        <div class="pendientes-card" onclick="" style="cursor: pointer;">
+                            <div class="pendientes-content">
+                                <div class="pendientes-count">
+                                    <?= $stats['total'] ?>
+                                </div>
+                                <div class="pendientes-info">
+                                    <div class="pendientes-fecha">
+                                        Solicitudes Totales
+                                    </div>
+                                    <div class="pendientes-titulo">
+                                        --
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
-
-            <div class="pendientes-container" style="margin-bottom: 30px;">
-                <div class="pendientes-card" onclick="" style="cursor: pointer;">
-                    <div class="pendientes-content">
-                        <div class="pendientes-count">
-                            <?= $stats['finalizado'] ?>
-                        </div>
-                        <div class="pendientes-info">
-                            <div class="pendientes-fecha">
-                                Solicitudes Concluidas
-                            </div>
-                            <div class="pendientes-titulo">
-                                --
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="pendientes-container" style="margin-bottom: 30px;">
-                <div class="pendientes-card" onclick="" style="cursor: pointer;">
-                    <div class="pendientes-content">
-                        <div class="pendientes-count">
-                            <?= $stats['total'] ?>
-                        </div>
-                        <div class="pendientes-info">
-                            <div class="pendientes-fecha">
-                                Solicitudes Totales
-                            </div>
-                            <div class="pendientes-titulo">
-                                --
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                
             </div>
         </div>
-        
     </div>
 </body>
 </html>
