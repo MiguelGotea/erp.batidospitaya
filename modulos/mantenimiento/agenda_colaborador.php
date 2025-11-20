@@ -254,7 +254,7 @@ if ($colaborador_filtro) {
 </head>
 <body>
     <!-- Renderizar menú lateral -->
-    <?php echo renderMenuLateral($cargoOperario, true); ?>
+    <?php echo renderMenuLateral($cargoOperario, 'agenda_colaborador.php'); ?>
     
     <!-- Contenido principal -->
     <div class="main-container">   <!-- ya existe en el css de menu lateral -->
