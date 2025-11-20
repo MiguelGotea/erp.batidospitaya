@@ -132,8 +132,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         body {
             background-color: #F6F6F6;
-            color: #333;
-            padding: 5px;
+            margin: 0;
+            padding: 0;
         }
         
         .container {
