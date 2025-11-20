@@ -958,7 +958,7 @@ if (!empty($sucursales)) {
             <!-- Renderizar header universal -->
             <?php echo renderHeader($usuario, $esAdmin, ''); ?>
             
-            <!-- Sección: Indicadores de Gestión -->
+            <!-- Sección: Indicadores de Control -->
             <h2 class="section-title">
                 <i class="fas fa-chart-line"></i> Indicadores de Control
             </h2>
