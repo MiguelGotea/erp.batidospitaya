@@ -7,12 +7,16 @@ if (session_status() == PHP_SESSION_NONE) {
 require_once 'models/Ticket.php';
 require_once '../../includes/auth.php';
 require_once '../../includes/funciones.php';
+// Incluir el menú lateral
+require_once '../../includes/menu_lateral.php';
 
 //******************************Estándar para header******************************
 verificarAutenticacion();
 
 $usuario = obtenerUsuarioActual();
 $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
+// Obtener cargo del operario para el menú
+$cargoOperario = $usuario['CodNivelesCargos'];
 
 // Verificar acceso a formularios de mantenimiento (Código 14 y 19)
 if (!verificarAccesoFormulariosMantenimiento($_SESSION['usuario_id'])) {
@@ -142,8 +146,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         body {
             background-color: #F6F6F6;
-            color: #333;
-            padding: 5px;
+            margin: 0;
+            padding: 0;
         }
         
         .container {
@@ -466,197 +470,206 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <div class="header-container">
-                <div class="logo-container">
-                    <img src="../../assets/img/Logo.svg" alt="Batidos Pitaya" class="logo">
-                </div>
-                
-                <div class="buttons-container">
-
-                    <?php if ($esAdmin || verificarAccesoCargo([14, 16, 35])): ?>
-                        <a href="agenda_colaborador.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'agenda_colaborador.php' ? 'activo' : '' ?>">
-                            <i class="fas fa-tasks"></i> <span class="btn-text">Agenda</span>
-                        </a>
-                    <?php endif; ?>
-                    
-                    <?php if ($esAdmin || verificarAccesoCargo([5, 16, 35])): ?>
-                        <a href="calendario.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'calendario.php' ? 'activo' : '' ?>">
-                            <i class="fas fa-calendar-alt"></i> <span class="btn-text">Calendario</span>
-                        </a>
-                    <?php endif; ?>
-                    
-                    <?php if ($esAdmin || verificarAccesoCargo([5, 16, 35])): ?>
-                        <a href="formulario_mantenimiento.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'formulario_mantenimiento.php' ? 'activo' : '' ?>">
-                            <i class="fas fa-tools"></i> <span class="btn-text">Mantenimiento</span>
-                        </a>
-                    <?php endif; ?>
-
-                    <?php if ($esAdmin || verificarAccesoCargo([5, 16, 35])): ?>
-                        <a href="formulario_equipos.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'formulario_equipos.php' ? 'activo' : '' ?>">
-                            <i class="fas fa-laptop"></i> <span class="btn-text">Equipos</span>
-                        </a>
-                    <?php endif; ?>
-                    
-                    <a href="#" onclick="location.reload()" class="btn-agregar" style="display:none;">
-                        <i class="fas fa-sync-alt"></i> <span class="btn-text">Actualizar</span>
-                    </a>
-                    
-                    <?php if ($esAdmin || verificarAccesoCargo([16, 5])): ?>
-                        <a href="dashboard_sucursales.php?cod_operario=<?= $cod_operario ?>&cod_sucursal=<?= $cod_sucursal ?>" class="btn-agregar">
-                            <i class="fas fa-sync-alt"></i> <span class="btn-text">Solicitudes</span>
-                        </a>
-                    <?php endif; ?>
-                    
-                    <?php if ($esAdmin || verificarAccesoCargo([14, 16, 35])): ?>
-                        <a href="dashboard_mantenimiento.php?cod_operario=<?= $cod_operario ?>&cod_sucursal=<?= $cod_sucursal ?>" class="btn-agregar">
-                            <i class="fas fa-sync-alt"></i> <span class="btn-text">Solicitudes</span>
-                        </a>
-                    <?php endif; ?>
-                </div>
-                
-                <div class="user-info">
-                    <div class="user-avatar">
-                        <?= $esAdmin ? 
-                            strtoupper(substr($usuario['nombre'], 0, 1)) : 
-                            strtoupper(substr($usuario['Nombre'], 0, 1)) ?>
-                    </div>
-                    <div>
-                        <div>
-                            <?= $esAdmin ? 
-                                htmlspecialchars($usuario['nombre']) : 
-                                htmlspecialchars($usuario['Nombre'].' '.$usuario['Apellido']) ?>
+    <!-- Renderizar menú lateral -->
+    <?php echo renderMenuLateral($cargoOperario, 'index_avisos_publico.php'); ?>
+    
+    <!-- Contenido principal -->
+    <div class="main-container">   <!-- ya existe en el css de menu lateral -->
+        <div class="contenedor-principal"> <!-- ya existe en el css de menu lateral -->
+            <!-- todo el contenido existente -->
+            <div class="container">
+                <header>
+                    <div class="header-container">
+                        <div class="logo-container">
+                            <img src="../../assets/img/Logo.svg" alt="Batidos Pitaya" class="logo">
                         </div>
-                        <small>
-                            <?= htmlspecialchars($cargoUsuario) ?>
-                        </small>
-                    </div>
-                    <a href="../index.php" class="btn-logout">
-                        <i class="fas fa-sign-out-alt"></i>
-                    </a>
-                </div>
-            </div>
-        </header>
+                        
+                        <div class="buttons-container">
 
-        <h1 style="display:none;" class="title">
-            <i class="fas fa-tools me-2"></i>
-            Solicitud de Mantenimiento General
-        </h1>
-
-        <div class="form-container">
-            <div class="card shadow">
-                <div class="card-header">
-                    <h4 class="mb-0">
-                        <i class="fas fa-tools me-2"></i>
-                        Nueva Solicitud de Mantenimiento
-                    </h4>
-                </div>
-                <div class="card-body">
-                    <?php if (isset($error)): ?>
-                        <div class="alert alert-danger">
-                            <i class="fas fa-exclamation-triangle me-2"></i>
-                            <?= $error ?>
-                        </div>
-                    <?php endif; ?>
-                    
-                    <form method="POST" enctype="multipart/form-data" id="maintenanceForm">
-                        <div class="row">
-                            <div class="mb-3" style="display:none;">
-                                <label for="sucursal" class="form-label">Sucursal *</label>
-                                <select class="form-select" id="sucursal" name="sucursal" required 
-                                        <?= count($sucursales) == 1 ? 'disabled' : '' ?>>
-                                    <?php foreach ($sucursales as $sucursalItem): ?>
-                                        <option value="<?= $sucursalItem['codigo'] ?>" 
-                                                <?= ($sucursalItem['codigo'] == $cod_sucursal) ? 'selected' : '' ?>>
-                                            <?= htmlspecialchars($sucursalItem['nombre']) ?>
-                                        </option>
-                                    <?php endforeach; ?>
-                                </select>
-                                <?php if (count($sucursales) == 1): ?>
-                                    <input type="hidden" name="sucursal" value="<?= $sucursales[0]['codigo'] ?>">
-                                <?php endif; ?>
-                            </div>
-                            
-                            <!-- Selector de Sucursal (solo mostrar si tiene más de una sucursal) -->
-                            <?php if (count($sucursalesPermitidas) > 1): ?>
-                            <div class="mb-3">
-                                <label for="sucursal" class="form-label">Sucursal *</label>
-                                <select id="selectSucursal" class="form-select form-select-sm">
-                                    <?php foreach ($sucursalesPermitidas as $suc): ?>
-                                        <option value="<?= $suc['codigo'] ?>" <?= $suc['codigo'] == $cod_sucursal ? 'selected' : '' ?>>
-                                            <?= htmlspecialchars($suc['nombre']) ?>
-                                        </option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
+                            <?php if ($esAdmin || verificarAccesoCargo([14, 16, 35])): ?>
+                                <a href="agenda_colaborador.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'agenda_colaborador.php' ? 'activo' : '' ?>">
+                                    <i class="fas fa-tasks"></i> <span class="btn-text">Agenda</span>
+                                </a>
                             <?php endif; ?>
                             
-                            <div class="mb-3">
-                                <label for="area" class="form-label">Área Física *</label>
-                                <input type="text" class="form-control" id="area" name="area" 
-                                       placeholder="Ej: Area de preparacion, Almacén, Mueble de caja..." required>
-                            </div>
+                            <?php if ($esAdmin || verificarAccesoCargo([5, 16, 35])): ?>
+                                <a href="calendario.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'calendario.php' ? 'activo' : '' ?>">
+                                    <i class="fas fa-calendar-alt"></i> <span class="btn-text">Calendario</span>
+                                </a>
+                            <?php endif; ?>
+                            
+                            <?php if ($esAdmin || verificarAccesoCargo([5, 16, 35])): ?>
+                                <a href="formulario_mantenimiento.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'formulario_mantenimiento.php' ? 'activo' : '' ?>">
+                                    <i class="fas fa-tools"></i> <span class="btn-text">Mantenimiento</span>
+                                </a>
+                            <?php endif; ?>
+
+                            <?php if ($esAdmin || verificarAccesoCargo([5, 16, 35])): ?>
+                                <a href="formulario_equipos.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'formulario_equipos.php' ? 'activo' : '' ?>">
+                                    <i class="fas fa-laptop"></i> <span class="btn-text">Equipos</span>
+                                </a>
+                            <?php endif; ?>
+                            
+                            <a href="#" onclick="location.reload()" class="btn-agregar" style="display:none;">
+                                <i class="fas fa-sync-alt"></i> <span class="btn-text">Actualizar</span>
+                            </a>
+                            
+                            <?php if ($esAdmin || verificarAccesoCargo([16, 5])): ?>
+                                <a href="dashboard_sucursales.php?cod_operario=<?= $cod_operario ?>&cod_sucursal=<?= $cod_sucursal ?>" class="btn-agregar">
+                                    <i class="fas fa-sync-alt"></i> <span class="btn-text">Solicitudes</span>
+                                </a>
+                            <?php endif; ?>
+                            
+                            <?php if ($esAdmin || verificarAccesoCargo([14, 16, 35])): ?>
+                                <a href="dashboard_mantenimiento.php?cod_operario=<?= $cod_operario ?>&cod_sucursal=<?= $cod_sucursal ?>" class="btn-agregar">
+                                    <i class="fas fa-sync-alt"></i> <span class="btn-text">Solicitudes</span>
+                                </a>
+                            <?php endif; ?>
                         </div>
                         
-                        <div class="mb-3">
-                            <label for="titulo" class="form-label">Título del Problema *</label>
-                            <input type="text" class="form-control" id="titulo" name="titulo" 
-                                   placeholder="Resumen breve del problema" required>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="descripcion" class="form-label">Descripción Detallada *</label>
-                            <textarea class="form-control" id="descripcion" name="descripcion" rows="4" 
-                                      placeholder="Describe detalladamente el problema o solicitud de mantenimiento..." required></textarea>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label class="form-label">Fotografías (Opcional - Máximo 5)</label>
-                            <div class="photo-options">
-                                <button type="button" class="btn btn-outline-primary" id="btnFile">
-                                    <i class="fas fa-upload me-2"></i>Subir Archivos
-                                </button>
-                                <button type="button" class="btn btn-outline-success" id="btnCamera">
-                                    <i class="fas fa-camera me-2"></i>Tomar Foto
-                                </button>
+                        <div class="user-info">
+                            <div class="user-avatar">
+                                <?= $esAdmin ? 
+                                    strtoupper(substr($usuario['nombre'], 0, 1)) : 
+                                    strtoupper(substr($usuario['Nombre'], 0, 1)) ?>
                             </div>
-                            
-                            <input type="file" id="fotos" name="fotos[]" accept="image/*" multiple style="display: none;">
-                            <input type="hidden" id="fotos_camera" name="fotos_camera">
-                            
-                            <div class="camera-preview" id="cameraPreview" style="display: none;">
-                                <video id="video" autoplay></video>
-                                <canvas id="canvas" style="display: none;"></canvas>
+                            <div>
+                                <div>
+                                    <?= $esAdmin ? 
+                                        htmlspecialchars($usuario['nombre']) : 
+                                        htmlspecialchars($usuario['Nombre'].' '.$usuario['Apellido']) ?>
+                                </div>
+                                <small>
+                                    <?= htmlspecialchars($cargoUsuario) ?>
+                                </small>
                             </div>
-                            
-                            <div id="photosPreview" style="display: none; margin-top: 15px;">
-                                <label class="form-label"><strong>Fotos seleccionadas:</strong></label>
-                                <div id="photosList" class="row g-2"></div>
-                            </div>
-                            
-                            <div id="photoPreview" style="display: none;">
-                                <img id="previewImg" src="" alt="Preview" class="img-thumbnail" style="max-width: 300px;">
-                                <button type="button" class="btn btn-sm btn-danger ms-2" id="removePhoto">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                            </div>
-                            
-                            <small class="text-muted d-block mt-2">
-                                <i class="fas fa-info-circle me-1"></i>
-                                Puedes subir hasta 5 fotos. Formatos aceptados: JPG, PNG
-                            </small>
+                            <a href="../index.php" class="btn-logout">
+                                <i class="fas fa-sign-out-alt"></i>
+                            </a>
                         </div>
-                        
-                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                            <button type="button" class="btn btn-secondary me-md-2" onclick="goToDashboard()">
-                                <i class="fas fa-times me-2"></i>Cancelar
-                            </button>
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-paper-plane me-2"></i>Enviar Solicitud
-                            </button>
+                    </div>
+                </header>
+
+                <h1 style="display:none;" class="title">
+                    <i class="fas fa-tools me-2"></i>
+                    Solicitud de Mantenimiento General
+                </h1>
+
+                <div class="form-container">
+                    <div class="card shadow">
+                        <div class="card-header">
+                            <h4 class="mb-0">
+                                <i class="fas fa-tools me-2"></i>
+                                Nueva Solicitud de Mantenimiento
+                            </h4>
                         </div>
-                    </form>
+                        <div class="card-body">
+                            <?php if (isset($error)): ?>
+                                <div class="alert alert-danger">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    <?= $error ?>
+                                </div>
+                            <?php endif; ?>
+                            
+                            <form method="POST" enctype="multipart/form-data" id="maintenanceForm">
+                                <div class="row">
+                                    <div class="mb-3" style="display:none;">
+                                        <label for="sucursal" class="form-label">Sucursal *</label>
+                                        <select class="form-select" id="sucursal" name="sucursal" required 
+                                                <?= count($sucursales) == 1 ? 'disabled' : '' ?>>
+                                            <?php foreach ($sucursales as $sucursalItem): ?>
+                                                <option value="<?= $sucursalItem['codigo'] ?>" 
+                                                        <?= ($sucursalItem['codigo'] == $cod_sucursal) ? 'selected' : '' ?>>
+                                                    <?= htmlspecialchars($sucursalItem['nombre']) ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                        <?php if (count($sucursales) == 1): ?>
+                                            <input type="hidden" name="sucursal" value="<?= $sucursales[0]['codigo'] ?>">
+                                        <?php endif; ?>
+                                    </div>
+                                    
+                                    <!-- Selector de Sucursal (solo mostrar si tiene más de una sucursal) -->
+                                    <?php if (count($sucursalesPermitidas) > 1): ?>
+                                    <div class="mb-3">
+                                        <label for="sucursal" class="form-label">Sucursal *</label>
+                                        <select id="selectSucursal" class="form-select form-select-sm">
+                                            <?php foreach ($sucursalesPermitidas as $suc): ?>
+                                                <option value="<?= $suc['codigo'] ?>" <?= $suc['codigo'] == $cod_sucursal ? 'selected' : '' ?>>
+                                                    <?= htmlspecialchars($suc['nombre']) ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+                                    <?php endif; ?>
+                                    
+                                    <div class="mb-3">
+                                        <label for="area" class="form-label">Área Física *</label>
+                                        <input type="text" class="form-control" id="area" name="area" 
+                                            placeholder="Ej: Area de preparacion, Almacén, Mueble de caja..." required>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="titulo" class="form-label">Título del Problema *</label>
+                                    <input type="text" class="form-control" id="titulo" name="titulo" 
+                                        placeholder="Resumen breve del problema" required>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="descripcion" class="form-label">Descripción Detallada *</label>
+                                    <textarea class="form-control" id="descripcion" name="descripcion" rows="4" 
+                                            placeholder="Describe detalladamente el problema o solicitud de mantenimiento..." required></textarea>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Fotografías (Opcional - Máximo 5)</label>
+                                    <div class="photo-options">
+                                        <button type="button" class="btn btn-outline-primary" id="btnFile">
+                                            <i class="fas fa-upload me-2"></i>Subir Archivos
+                                        </button>
+                                        <button type="button" class="btn btn-outline-success" id="btnCamera">
+                                            <i class="fas fa-camera me-2"></i>Tomar Foto
+                                        </button>
+                                    </div>
+                                    
+                                    <input type="file" id="fotos" name="fotos[]" accept="image/*" multiple style="display: none;">
+                                    <input type="hidden" id="fotos_camera" name="fotos_camera">
+                                    
+                                    <div class="camera-preview" id="cameraPreview" style="display: none;">
+                                        <video id="video" autoplay></video>
+                                        <canvas id="canvas" style="display: none;"></canvas>
+                                    </div>
+                                    
+                                    <div id="photosPreview" style="display: none; margin-top: 15px;">
+                                        <label class="form-label"><strong>Fotos seleccionadas:</strong></label>
+                                        <div id="photosList" class="row g-2"></div>
+                                    </div>
+                                    
+                                    <div id="photoPreview" style="display: none;">
+                                        <img id="previewImg" src="" alt="Preview" class="img-thumbnail" style="max-width: 300px;">
+                                        <button type="button" class="btn btn-sm btn-danger ms-2" id="removePhoto">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                    
+                                    <small class="text-muted d-block mt-2">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Puedes subir hasta 5 fotos. Formatos aceptados: JPG, PNG
+                                    </small>
+                                </div>
+                                
+                                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                    <button type="button" class="btn btn-secondary me-md-2" onclick="goToDashboard()">
+                                        <i class="fas fa-times me-2"></i>Cancelar
+                                    </button>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-paper-plane me-2"></i>Enviar Solicitud
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
