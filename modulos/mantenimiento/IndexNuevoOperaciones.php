@@ -729,7 +729,7 @@ if (!empty($sucursales)) {
         }
         
         /* Dashboard Grid */
-        .dashboard-grid {
+        .indicadores-container {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 20px;
@@ -747,7 +747,7 @@ if (!empty($sucursales)) {
         }
         
         /* Cards de indicadores mejoradas */
-        .indicator-card {
+        .pendientes-container {
             background: white;
             border-radius: 12px;
             padding: 20px;
@@ -758,7 +758,7 @@ if (!empty($sucursales)) {
             overflow: hidden;
         }
         
-        .indicator-card::before {
+        .pendientes-container::before {
             content: '';
             position: absolute;
             top: 0;
@@ -768,7 +768,7 @@ if (!empty($sucursales)) {
             background: linear-gradient(90deg, #51B8AC 0%, #0E544C 100%);
         }
         
-        .indicator-card:hover {
+        .pendientes-container:hover {
             transform: translateY(-5px);
             box-shadow: 0 8px 20px rgba(0,0,0,0.12);
         }
@@ -934,7 +934,7 @@ if (!empty($sucursales)) {
         
         /* Responsive */
         @media (max-width: 768px) {
-            .dashboard-grid {
+            .indicadores-container {
                 grid-template-columns: 1fr;
             }
             
@@ -963,9 +963,9 @@ if (!empty($sucursales)) {
                 <i class="fas fa-chart-line"></i> Indicadores de Control
             </h2>
             
-            <div class="dashboard-grid">
+            <div class="indicadores-container">
                 <!-- Indicador: Anuncios Nuevos -->
-                <div class="indicator-card" id="cardAnuncios" onclick="irAAnuncios()">
+                <div class="pendientes-container" id="cardAnuncios" onclick="irAAnuncios()">
                     <div class="indicator-header">
                         <div class="indicator-icon">
                             <i class="fas fa-bullhorn"></i>
@@ -986,7 +986,7 @@ if (!empty($sucursales)) {
                 </div>
                 
                 <!-- Indicador: Tardanzas Pendientes -->
-                <div class="indicator-card" onclick="mostrarModalTardanzasOperaciones()">
+                <div class="pendientes-container" onclick="mostrarModalTardanzasOperaciones()">
                     <div class="indicator-header">
                         <div class="indicator-icon">
                             <i class="fas fa-user-clock"></i>
@@ -1016,7 +1016,7 @@ if (!empty($sucursales)) {
                 </div>
                 
                 <!-- Indicador: Faltas Pendientes -->
-                <div class="indicator-card" onclick="mostrarModalFaltasOperaciones()">
+                <div class="pendientes-container" onclick="mostrarModalFaltasOperaciones()">
                     <div class="indicator-header">
                         <div class="indicator-icon">
                             <i class="fas fa-calendar-times"></i>
@@ -1046,7 +1046,7 @@ if (!empty($sucursales)) {
                 </div>
                 
                 <!-- Indicador: KPI (placeholder por ahora) -->
-                <div class="indicator-card" style="opacity: 0.6; cursor: default;">
+                <div class="pendientes-container" style="opacity: 0.6; cursor: default;">
                     <div class="indicator-header">
                         <div class="indicator-icon">
                             <i class="fas fa-chart-bar"></i>
