@@ -588,7 +588,7 @@ function getColorByUrgency($urgencia, $tipo_formulario) {
             <!-- todo el contenido existente -->
             <div class="container">
                 <!-- Renderizar header universal -->
-                <?php echo renderHeader($usuario, $esAdmin, ''); ?>
+                <?php echo renderHeader($usuario, $esAdmin, 'Calendario'); ?>
                 <div class="calendar-container">
                     <!-- Calendario principal -->
                     <div class="calendar-main" id="calendarMain">
