@@ -867,7 +867,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticket_id_chat'])) {
                 <div class="main-content" id="mainContent">
                     <div class="container">
                         <!-- Renderizar header universal -->
-                        <?php echo renderHeader($usuario, $esAdmin, ''); ?>
+                        <?php echo renderHeader($usuario, $esAdmin, 'Solicitudes de Mantenimiento'); ?>
 
                         <!-- Filtros Activos -->
                         <div id="activeFiltersContainer" style="display: none;">
