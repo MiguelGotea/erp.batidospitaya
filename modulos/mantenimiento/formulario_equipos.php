@@ -129,7 +129,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             font-family: 'Calibri', sans-serif;
             font-size: clamp(11px, 2vw, 16px) !important;
         }
-        
+
         body {
             background-color: #F6F6F6;
             margin: 0;
@@ -156,12 +156,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             max-width: 800px;
             margin: 0 auto;
             padding: 20px;
-        }
-        
-        .card-header {
-            background: linear-gradient(135deg, #51B8AC 0%, #0E544C 100%);
-            color: white;
-            border-radius: 8px 8px 0 0 !important;
         }
         
         .btn-primary {
@@ -377,7 +371,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <!-- todo el contenido existente -->
             <div class="container">
                 <!-- Renderizar header universal -->
-                <?php echo renderHeader($usuario, $esAdmin, ''); ?>
+                <?php echo renderHeader($usuario, $esAdmin, 'Solicitud de Equipos'); ?>
 
                 <h1 class="title" style="display:none;">
                     <i class="fas fa-laptop me-2"></i>
@@ -386,12 +380,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 <div class="form-container">
                     <div class="card shadow">
-                        <div class="card-header">
-                            <h4 class="mb-0">
-                                <i class="fas fa-laptop me-2"></i>
-                                Nueva Solicitud de Cambio de Equipos
-                            </h4>
-                        </div>
                         <div class="card-body">
                             <?php if (isset($error)): ?>
                                 <div class="alert alert-danger">
