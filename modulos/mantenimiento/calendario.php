@@ -581,9 +581,6 @@ function getColorByUrgency($urgencia, $tipo_formulario) {
 <body>
     <!-- Renderizar menú lateral -->
     <?php echo renderMenuLateral($cargoOperario, 'calendario.php'); ?>
-    
-    <!-- Contenido principal -->
-    <div class="main-container">   <!-- ya existe en el css de menu lateral -->
 
             <!-- todo el contenido existente -->
             <div class="container">
@@ -702,7 +699,7 @@ function getColorByUrgency($urgencia, $tipo_formulario) {
                 </div>
             </div>
 
-    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js'></script>
