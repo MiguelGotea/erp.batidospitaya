@@ -364,7 +364,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body>
     <!-- Renderizar menú lateral -->
-    <?php echo renderMenuLateral($cargoOperario, 'index_avisos_publico.php'); ?>
+    <?php echo renderMenuLateral($cargoOperario, 'formulario_mantenimiento.php'); ?>
     
     <!-- Contenido principal -->
     <div class="main-container">   <!-- ya existe en el css de menu lateral -->
