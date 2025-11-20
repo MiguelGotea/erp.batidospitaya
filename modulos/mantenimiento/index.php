@@ -2,6 +2,10 @@
 require_once 'models/Ticket.php';
 require_once '../../includes/auth.php';
 require_once '../../includes/funciones.php';
+// Incluir el menú lateral
+require_once '../../includes/menu_lateral.php';
+// Incluir el header universal
+require_once '../../includes/header_universal.php';
 
 //verificarAccesoModulo('sistema'); Esto ya no se usa
 
@@ -15,8 +19,7 @@ if (!verificarAccesoCargo(14)) {
     exit();
 }
 
-// Incluir el menú lateral
-require_once '../../includes/menu_lateral.php';
+
 
 ?>
 <!DOCTYPE html>
@@ -45,37 +48,6 @@ require_once '../../includes/menu_lateral.php';
             max-width: 1200px;
             margin: 0 auto;
             padding: 10px;
-        }
-        
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 0;
-            border-bottom: 1px solid #ddd;
-            margin-bottom: 30px;
-        }
-        
-        .logo {
-            height: 50px;
-        }
-        
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background-color: #51B8AC;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
         }
         
         .modules {
@@ -124,20 +96,6 @@ require_once '../../includes/menu_lateral.php';
         .module-desc {
             color: #666;
             font-size: 0.9rem;
-        }
-        
-        .btn-logout {
-            background: #51B8AC;
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-        
-        .btn-logout:hover {
-            background: #0E544C;
         }
         
         .module-header {
@@ -327,31 +285,8 @@ require_once '../../includes/menu_lateral.php';
     <?php echo renderMenuLateral($CodigoCargoOperario, 'index.php'); ?>
 
     <div class="container">
-        <header>
-            <img src="../../assets/img/Logo.svg" alt="Batidos Pitaya" class="logo">
-            <div class="user-info">
-                <div class="user-avatar">
-                    <?= $esAdmin ? 
-                        strtoupper(substr($usuario['nombre'], 0, 1)) : 
-                        strtoupper(substr($usuario['Nombre'], 0, 1)) ?>
-                </div>
-                <div>
-                    <div>
-                        <?= $esAdmin ? 
-                            htmlspecialchars($usuario['nombre']) : 
-                            htmlspecialchars($usuario['Nombre'].' '.$usuario['Apellido']) ?>
-                    </div>
-                    <small>
-                        <?= $esAdmin ? 
-                            'Administrador' : 
-                            htmlspecialchars($usuario['cargo_nombre'] ?? 'Sin cargo definido') ?>
-                    </small>
-                </div>
-                <a href="../../logout.php" class="btn-logout">
-                    <i class="fas fa-sign-out-alt"></i>
-                </a>
-            </div>
-        </header>
+        <!-- Renderizar header universal -->
+        <?php echo renderHeader($usuario, $esAdmin, ''); ?>
         
         <div class="module-header">
             <h1 class="module-title-page">Área de Mantenimiento</h1>
