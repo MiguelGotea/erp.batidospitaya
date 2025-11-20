@@ -378,7 +378,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <!-- todo el contenido existente -->
             <div class="container">
                 <!-- Renderizar header universal -->
-                <?php echo renderHeader($usuario, $esAdmin, 'Agenda Diaria'); ?>
+                <?php echo renderHeader($usuario, $esAdmin, 'Solicitud de Mantenimiento'); ?>
 
                 <h1 style="display:none;" class="title">
                     <i class="fas fa-tools me-2"></i>
