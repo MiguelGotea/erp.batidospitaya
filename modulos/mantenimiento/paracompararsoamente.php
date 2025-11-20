@@ -303,6 +303,81 @@ function obtenerOperariosSucursalEnRango($codSucursal, $fechaDesde, $fechaHasta)
 }
 
 /**
+ * Obtiene información de horarios programados y marcados para una tardanza específica
+ */
+function obtenerInformacionHorariosTardanza($codOperario, $fechaTardanza) {
+    global $conn;
+    
+    // Valores por defecto
+    $resultado = [
+        'entrada_programada' => 'No',
+        'salida_programada' => 'No',
+        'entrada_marcada' => 'No marco',
+        'salida_marcada' => 'No marco'
+    ];
+    
+    try {
+        // 1. Obtener horario programado
+        $semana = obtenerSemanaPorFecha($fechaTardanza);
+        if ($semana) {
+            $stmt = $conn->prepare("
+                SELECT * FROM HorariosSemanalesOperaciones
+                WHERE cod_operario = ? 
+                AND id_semana_sistema = ?
+                LIMIT 1
+            ");
+            $stmt->execute([$codOperario, $semana['id']]);
+            $horario = $stmt->fetch();
+            
+            if ($horario) {
+                // Obtener día de la semana (1=lunes, 7=domingo)
+                $diaSemana = date('N', strtotime($fechaTardanza));
+                $dias = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'];
+                $diaNombre = $dias[$diaSemana - 1];
+                
+                $columnaEntrada = $diaNombre . '_entrada';
+                $columnaSalida = $diaNombre . '_salida';
+                $columnaEstado = $diaNombre . '_estado';
+                
+                if ($horario[$columnaEstado] === 'Activo' && $horario[$columnaEntrada]) {
+                    $resultado['entrada_programada'] = formatoHoraCorta($horario[$columnaEntrada]);
+                    $resultado['salida_programada'] = $horario[$columnaSalida] ? formatoHoraCorta($horario[$columnaSalida]) : 'No';
+                }
+            }
+        }
+        
+        // 2. Obtener marcaciones
+        $stmt = $conn->prepare("
+            SELECT hora_ingreso, hora_salida 
+            FROM marcaciones 
+            WHERE CodOperario = ? 
+            AND fecha = ?
+            LIMIT 1
+        ");
+        $stmt->execute([$codOperario, $fechaTardanza]);
+        $marcacion = $stmt->fetch();
+        
+        if ($marcacion) {
+            $resultado['entrada_marcada'] = $marcacion['hora_ingreso'] ? formatoHoraCorta($marcacion['hora_ingreso']) : 'No marco';
+            $resultado['salida_marcada'] = $marcacion['hora_salida'] ? formatoHoraCorta($marcacion['hora_salida']) : 'No marco';
+        }
+        
+    } catch (PDOException $e) {
+        error_log("Error al obtener horarios para tardanza: " . $e->getMessage());
+    }
+    
+    return $resultado;
+}
+
+/**
+ * Formatea una hora a formato corto (HH:MM)
+ */
+function formatoHoraCorta($hora) {
+    if (!$hora) return 'No';
+    return date('H:i', strtotime($hora));
+}
+
+/**
  * Obtiene días laborables de un operario en un rango de fechas
  */
 function obtenerDiasLaborablesOperario($codOperario, $codSucursal, $fechaDesde, $fechaHasta) {
@@ -2587,6 +2662,8 @@ a.btn{
                         <th>Colaborador</th>
                         <th>Sucursal</th>
                         <th>Fecha Tardanza</th>
+                        <!-- NUEVA COLUMNA -->
+                        <th>Horarios</th>
                         <th>Tipo Justificación</th>
                         <th>Estado</th>
                         <th>Observaciones</th>
@@ -2608,11 +2685,22 @@ a.btn{
                                     $tardanza['operario_apellido'] . ' ' . 
                                     ($tardanza['operario_apellido2'] ?? '')
                                 );
+                                
+                                    // OBTENER INFORMACIÓN DE HORARIOS PARA ESTA TARDANZA
+                                $horariosInfo = obtenerInformacionHorariosTardanza(
+                                    $tardanza['cod_operario'], 
+                                    $tardanza['fecha_tardanza']
+                                );
                             ?>
                             
                             <td><?= htmlspecialchars($tardanza['operario_nombre'] . ' ' . $tardanza['operario_apellido'] . ($tardanza['operario_apellido2'] ? ' ' . $tardanza['operario_apellido2'] : '')) ?></td>
                             <td><?= htmlspecialchars($tardanza['sucursal_nombre']) ?></td>
                             <td><?= formatoFechaCorta($tardanza['fecha_tardanza']) ?></td>
+                            <!-- NUEVA CELDA CON HORARIOS -->
+                            <td style="white-space: nowrap; font-size: 0.9em;">
+                                <div><strong>Programado:</strong> <?= $horariosInfo['entrada_programada'] ?> - <?= $horariosInfo['salida_programada'] ?></div>
+                                <div><strong>Marcado:</strong> <?= $horariosInfo['entrada_marcada'] ?> - <?= $horariosInfo['salida_marcada'] ?></div>
+                            </td>
                             <td><?= ucfirst(str_replace('_', ' ', $tardanza['tipo_justificacion'])) ?></td>
                             <td>
                                 <?php
@@ -3167,15 +3255,15 @@ a.btn{
         ])
         .then(([horario, marcaciones]) => {
             // Mostrar horario programado
-            const entradaProgramada = horario.hora_entrada ? formatoHoraAmPm(horario.hora_entrada) : 'No programado';
-            const salidaProgramada = horario.hora_salida ? formatoHoraAmPm(horario.hora_salida) : 'No programado';
+            const entradaProgramada = horario.hora_entrada ? formatoHoraAmPm(horario.hora_entrada) : 'No';
+            const salidaProgramada = horario.hora_salida ? formatoHoraAmPm(horario.hora_salida) : 'No';
             
             document.getElementById('editar_entrada_programada').textContent = entradaProgramada;
             document.getElementById('editar_salida_programada').textContent = salidaProgramada;
             
             // Mostrar horario marcado
-            const entradaMarcada = marcaciones.hora_ingreso ? formatoHoraAmPm(marcaciones.hora_ingreso) : 'No marcado';
-            const salidaMarcada = marcaciones.hora_salida ? formatoHoraAmPm(marcaciones.hora_salida) : 'No marcado';
+            const entradaMarcada = marcaciones.hora_ingreso ? formatoHoraAmPm(marcaciones.hora_ingreso) : 'No marco';
+            const salidaMarcada = marcaciones.hora_salida ? formatoHoraAmPm(marcaciones.hora_salida) : 'No marco';
             
             document.getElementById('editar_entrada_marcada').textContent = entradaMarcada;
             document.getElementById('editar_salida_marcada').textContent = salidaMarcada;
@@ -3640,6 +3728,7 @@ a.btn{
             ajustarPosicionDropdown();
         }
     });
+    
 </script>
 </body>
 </html>
