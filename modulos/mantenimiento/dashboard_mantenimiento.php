@@ -10,7 +10,8 @@ require_once '../../includes/auth.php';
 require_once '../../includes/funciones.php';
 // Incluir el menú lateral
 require_once '../../includes/menu_lateral.php';
-
+// Incluir el header universal
+require_once '../../includes/header_universal.php';
 
 //******************************Estándar para header******************************
 verificarAutenticacion();
@@ -298,109 +299,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticket_id_chat'])) {
             border-radius: 8px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             padding: 10px;
-        }
-
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 0;
-            border-bottom: 1px solid #ddd;
-            margin-bottom: 30px;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-
-        .header-container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            width: 100%;
-            padding: 0 5px;
-            box-sizing: border-box;
-            margin: 1px auto;
-            flex-wrap: wrap;
-        }
-
-        .logo {
-            height: 50px;
-        }
-
-        .logo-container {
-            flex-shrink: 0;
-            margin-right: auto;
-        }
-
-        .buttons-container {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            justify-content: center;
-            flex-grow: 1;
-            position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
-        }
-
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-left: auto;
-        }
-
-        .btn-agregar {
-            background-color: transparent;
-            color: #51B8AC;
-            border: 1px solid #51B8AC;
-            text-decoration: none;
-            padding: 6px 10px;
-            border-radius: 8px;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.3s;
-            white-space: nowrap;
-            font-size: 14px;
-            flex-shrink: 0;
-        }
-
-        .btn-agregar.activo {
-            background-color: #51B8AC;
-            color: white;
-            font-weight: normal;
-        }
-
-        .btn-agregar:hover {
-            background-color: #0E544C;
-            color: white;
-            border-color: #0E544C;
-        }
-
-        .user-avatar {
-            width: 35px;
-            height: 35px;
-            border-radius: 50%;
-            background-color: #51B8AC;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
-        }
-
-        .btn-logout {
-            background: #51B8AC;
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-
-        .btn-logout:hover {
-            background: #0E544C;
         }
         
         .title {
@@ -968,67 +866,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticket_id_chat'])) {
                 <!-- Contenido Principal -->
                 <div class="main-content" id="mainContent">
                     <div class="container">
-                        <header>
-                            <div class="header-container">
-                                <div class="logo-container">
-                                    <img src="../../assets/img/Logo.svg" alt="Batidos Pitaya" class="logo">
-                                </div>
-                                
-                                <div class="buttons-container">
-                                    <?php if ($esAdmin || verificarAccesoCargo([14, 16, 35])): ?>
-                                        <a href="agenda_colaborador.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'agenda_colaborador.php' ? 'activo' : '' ?>">
-                                            <i class="fas fa-tasks"></i> <span class="btn-text">Agenda</span>
-                                        </a>
-                                    <?php endif; ?>
-                                    
-                                    <?php if ($esAdmin || verificarAccesoCargo([5, 11, 16, 35])): ?>
-                                        <a href="calendario.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'calendario.php' ? 'activo' : '' ?>">
-                                            <i class="fas fa-calendar-alt"></i> <span class="btn-text">Calendario</span>
-                                        </a>
-                                    <?php endif; ?>
-                                    
-                                    <?php if ($esAdmin || verificarAccesoCargo([5, 16, 35])): ?>
-                                        <a href="formulario_mantenimiento.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'formulario_mantenimiento.php' ? 'activo' : '' ?>">
-                                            <i class="fas fa-tools"></i> <span class="btn-text">Mantenimiento</span>
-                                        </a>
-                                    <?php endif; ?>
-
-                                    <?php if ($esAdmin || verificarAccesoCargo([5, 16, 35])): ?>
-                                        <a href="formulario_equipos.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'formulario_equipos.php' ? 'activo' : '' ?>">
-                                            <i class="fas fa-laptop"></i> <span class="btn-text">Equipos</span>
-                                        </a>
-                                    <?php endif; ?>
-                                    
-                                    <?php if ($esAdmin || verificarAccesoCargo([11, 14, 16, 35])): ?>
-                                        <a href="dashboard_mantenimiento.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'dashboard_mantenimiento.php' ? 'activo' : '' ?>">
-                                            <i class="fas fa-sync-alt"></i> <span class="btn-text">Solicitudes</span>
-                                        </a>
-                                    <?php endif; ?>
-                                    
-                                </div>
-                                
-                                <div class="user-info">
-                                    <div class="user-avatar">
-                                        <?= $esAdmin ? 
-                                            strtoupper(substr($usuario['nombre'], 0, 1)) : 
-                                            strtoupper(substr($usuario['Nombre'], 0, 1)) ?>
-                                    </div>
-                                    <div>
-                                        <div>
-                                            <?= $esAdmin ? 
-                                                htmlspecialchars($usuario['nombre']) : 
-                                                htmlspecialchars($usuario['Nombre'].' '.$usuario['Apellido']) ?>
-                                        </div>
-                                        <small>
-                                            <?= htmlspecialchars($cargoUsuario) ?>
-                                        </small>
-                                    </div>
-                                    <a href="../index.php" class="btn-logout">
-                                        <i class="fas fa-sign-out-alt"></i>
-                                    </a>
-                                </div>
-                            </div>
-                        </header>
+                        <!-- Renderizar header universal -->
+                        <?php echo renderHeader($usuario, $esAdmin, ''); ?>
 
                         <!-- Filtros Activos -->
                         <div id="activeFiltersContainer" style="display: none;">
