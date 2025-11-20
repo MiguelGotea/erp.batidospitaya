@@ -265,10 +265,6 @@ if ($colaborador_filtro) {
                 <?php echo renderHeader($usuario, $esAdmin, 'Agenda Diaria'); ?>
 
                 <div class="filter-section">
-                    <h4 class="mb-3">
-                        <i class="fas fa-filter me-2"></i>
-                        Filtrar Agenda por Colaborador
-                    </h4>
                     <form method="GET" class="row g-3">
                         <div class="col-md-8">
                             <select name="colaborador" class="form-select" required>
