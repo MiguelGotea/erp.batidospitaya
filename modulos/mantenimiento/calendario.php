@@ -580,7 +580,7 @@ function getColorByUrgency($urgencia, $tipo_formulario) {
 </head>
 <body>
     <!-- Renderizar menú lateral -->
-    <?php echo renderMenuLateral($cargoOperario, 'calendario.php'); ?>
+    <?php echo renderMenuLateral($cargoOperario); ?>
     
     <!-- Contenido principal -->
     <div class="main-container">   <!-- ya existe en el css de menu lateral -->

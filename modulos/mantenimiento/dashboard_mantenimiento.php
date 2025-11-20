@@ -855,7 +855,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticket_id_chat'])) {
 </head>
 <body>
     <!-- Renderizar menú lateral -->
-    <?php echo renderMenuLateral($cargoOperario, 'dashboard_mantenimiento.php'); ?>
+    <?php echo renderMenuLateral($cargoOperario); ?>
     
     <!-- Contenido principal -->
     <div class="main-container">   

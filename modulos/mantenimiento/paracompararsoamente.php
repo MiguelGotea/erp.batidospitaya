@@ -295,18 +295,45 @@ function filtrarMenuPorPermisos($menu, $cargoOperario) {
 }
 
 /**
+ * Detecta automáticamente el nombre del archivo actual limpio (sin parámetros)
+ */
+function detectarPaginaActual() {
+    // Obtener la ruta del script actual
+    $scriptActual = $_SERVER['SCRIPT_NAME'];
+    
+    // Extraer solo el nombre del archivo
+    $nombreArchivo = basename($scriptActual);
+    
+    // Remover parámetros de consulta si los hay
+    $nombreArchivo = strtok($nombreArchivo, '?');
+    
+    return $nombreArchivo;
+}
+
+/**
  * Función principal para renderizar el menú lateral
  * @param int $cargoOperario - Código del cargo del usuario
- * @param string $paginaActual - Nombre del archivo actual para marcar como activo
- * @param string $basePath - Ruta base desde la raíz del proyecto (ej: '../../')
+ * @param string|bool $paginaActual - Nombre del archivo actual. 
+ *                                   true: detectar automáticamente,
+ *                                   string: usar ese nombre,
+ *                                   false: no marcar ningún elemento como activo
  * @return string HTML del menú lateral
  */
-function renderMenuLateral($cargoOperario, $paginaActual = '') {
+function renderMenuLateral($cargoOperario, $paginaActual = true) {
     global $menuGlobal;
     
     if (!$cargoOperario) {
         return '';
     }
+    
+    // Determinar la página actual
+    $paginaActualFinal = '';
+    if ($paginaActual === true) {
+        $paginaActualFinal = detectarPaginaActual();
+    } elseif (is_string($paginaActual) && !empty($paginaActual)) {
+        $paginaActualFinal = $paginaActual;
+    }
+    // Si es false, $paginaActualFinal queda vacío y no marca nada como activo
     
     $menuFiltrado = filtrarMenuPorPermisos($menuGlobal, $cargoOperario);
     
