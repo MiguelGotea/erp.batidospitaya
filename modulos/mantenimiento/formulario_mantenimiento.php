@@ -173,12 +173,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             padding: 20px;
         }
         
-        .card-header {
-            background: linear-gradient(135deg, #51B8AC 0%, #0E544C 100%);
-            color: white;
-            border-radius: 8px 8px 0 0 !important;
-        }
-        
         .btn-primary {
             background-color: #51B8AC;
             border-color: #51B8AC;
@@ -387,12 +381,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 <div class="form-container">
                     <div class="card shadow">
-                        <div class="card-header">
-                            <h4 class="mb-0">
-                                <i class="fas fa-tools me-2"></i>
-                                Nueva Solicitud de Mantenimiento
-                            </h4>
-                        </div>
                         <div class="card-body">
                             <?php if (isset($error)): ?>
                                 <div class="alert alert-danger">
