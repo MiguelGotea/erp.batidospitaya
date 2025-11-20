@@ -8,12 +8,16 @@ require_once '../../includes/auth.php';
 require_once '../../includes/funciones.php';
 // Incluir el header universal
 require_once '../../includes/header_universal.php';
+// Incluir el menú lateral
+require_once '../../includes/menu_lateral.php';
+
 //******************************Estándar para header******************************
 verificarAutenticacion();
 
 $usuario = obtenerUsuarioActual();
 $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
-
+// Obtener cargo del operario para el menú
+$cargoOperario = $usuario['CodNivelesCargos'];
 // Verificar acceso al módulo Mantenimiento (Código 14)
 verificarAccesoCargo([5, 11, 14, 16, 35]);
 
@@ -66,8 +70,8 @@ if ($colaborador_filtro) {
         
         body {
             background-color: #F6F6F6;
-            color: #333;
-            padding: 5px;
+            margin: 0;
+            padding: 0;
         }
         
         .container {
@@ -249,111 +253,120 @@ if ($colaborador_filtro) {
     </style>
 </head>
 <body>
-    <div class="container">
-        <!-- Renderizar header universal -->
-        <?php echo renderHeader($usuario, $esAdmin, 'Agenda Diaria'); ?>
+    <!-- Renderizar menú lateral -->
+    <?php echo renderMenuLateral($cargoOperario, 'index_avisos_publico.php'); ?>
+    
+    <!-- Contenido principal -->
+    <div class="main-container">   <!-- ya existe en el css de menu lateral -->
+        <div class="contenedor-principal"> <!-- ya existe en el css de menu lateral -->
+            <!-- todo el contenido existente -->
+            <div class="container">
+                <!-- Renderizar header universal -->
+                <?php echo renderHeader($usuario, $esAdmin, 'Agenda Diaria'); ?>
 
-        <div class="filter-section">
-            <h4 class="mb-3">
-                <i class="fas fa-filter me-2"></i>
-                Filtrar Agenda por Colaborador
-            </h4>
-            <form method="GET" class="row g-3">
-                <div class="col-md-8">
-                    <select name="colaborador" class="form-select" required>
-                        <option value="">Seleccionar colaborador...</option>
-                        <?php foreach ($colaboradoresDisponibles as $col): ?>
-                            <option value="<?= $col['CodOperario'] ?>" 
-                                    <?= $colaborador_filtro == $col['CodOperario'] ? 'selected' : '' ?>>
-                                <?= htmlspecialchars($col['Nombre'] . ' ' . ($col['Apellido'] ?? '')) ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                <div class="col-md-4">
-                    <button type="submit" class="btn btn-light w-100">
-                        <i class="fas fa-search me-2"></i>Buscar
-                    </button>
-                </div>
-            </form>
-        </div>
-
-        <?php if ($colaborador_filtro): ?>
-
-            <?php if (empty($tickets)): ?>
-                <div class="text-center py-5">
-                    <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
-                    <p class="text-muted">No hay tickets asignados a este colaborador</p>
-                </div>
-            <?php else: ?>
-                <div class="ticket-list">
-                    <?php foreach ($tickets as $t): ?>
-                        <?php
-                        $borderClass = $t['tipo_formulario'] === 'cambio_equipos' ? 
-                            'ticket-equipos' : 
-                            'ticket-urgencia-' . ($t['nivel_urgencia'] ?? '0');
-                        $finalizado = $t['status'] === 'finalizado';
-                        $fotos = $ticket->getFotos($t['id']);
-                        ?>
-                        <div class="ticket-card <?= $borderClass ?> <?= $finalizado ? 'ticket-finalizado' : '' ?>">
-                            <div class="ticket-header">
-                                <div class="ticket-date">
-                                    <i class="fas fa-calendar me-1"></i>
-                                    <?= date('d/m/Y', strtotime($t['fecha_inicio'])) ?>
-                                    <?php if ($t['fecha_final'] != $t['fecha_inicio']): ?>
-                                        - <?= date('d/m', strtotime($t['fecha_final'])) ?>
-                                    <?php endif; ?>
-                                </div>
-                                
-                                <span class="ticket-sucursal">
-                                    <i class="fas fa-map-marker-alt me-1"></i>
-                                    <?= htmlspecialchars($t['nombre_sucursal']) ?>
-                                </span>
-                            </div>
-                            
-                            <div class="ticket-title">
-                                <i class="fas fa-<?= $t['tipo_formulario'] === 'cambio_equipos' ? 'laptop' : 'tools' ?> me-1"></i>
-                                <?= htmlspecialchars($t['titulo']) ?>
-                            </div>
-                            
-                            <div class="ticket-desc">
-                                <?= htmlspecialchars($t['descripcion']) ?>
-                            </div>
-                            
-                            <div class="ticket-footer">
-                                <div class="fotos-preview">
-                                    <?php if (!empty($fotos)): ?>
-                                    
-                                        <?php foreach (array_slice($fotos, 0, 3) as $foto): ?>
-                                            <img src="uploads/tickets/<?= $foto['foto'] ?>" 
-                                                 class="foto-thumb" 
-                                                 onclick="mostrarFotosTicket(<?= $t['id'] ?>)">
-                                        <?php endforeach; ?>
-                                        <?php if (count($fotos) > 3): ?>
-                                            <div class="foto-thumb d-flex align-items-center justify-content-center" 
-                                                 style="background: #f8f9fa; border: 1px solid #dee2e6; font-size: 0.75em; font-weight: bold; color: #6c757d;"
-                                                 onclick="mostrarFotosTicket(<?= $t['id'] ?>)">
-                                                +<?= count($fotos) - 3 ?>
-                                            </div>
-                                        <?php endif; ?>
-                                    <?php endif; ?>
-                                </div>
-                                <?php if (!$finalizado): ?>
-                                    <button class="btn-finalizar" onclick="abrirModalFinalizar(<?= $t['id'] ?>)">
-                                        <i class="fas fa-check-circle me-1"></i>Finalizar
-                                    </button>
-                                <?php endif; ?>
-                            </div>
+                <div class="filter-section">
+                    <h4 class="mb-3">
+                        <i class="fas fa-filter me-2"></i>
+                        Filtrar Agenda por Colaborador
+                    </h4>
+                    <form method="GET" class="row g-3">
+                        <div class="col-md-8">
+                            <select name="colaborador" class="form-select" required>
+                                <option value="">Seleccionar colaborador...</option>
+                                <?php foreach ($colaboradoresDisponibles as $col): ?>
+                                    <option value="<?= $col['CodOperario'] ?>" 
+                                            <?= $colaborador_filtro == $col['CodOperario'] ? 'selected' : '' ?>>
+                                        <?= htmlspecialchars($col['Nombre'] . ' ' . ($col['Apellido'] ?? '')) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
                         </div>
-                    <?php endforeach; ?>
+                        <div class="col-md-4">
+                            <button type="submit" class="btn btn-light w-100">
+                                <i class="fas fa-search me-2"></i>Buscar
+                            </button>
+                        </div>
+                    </form>
                 </div>
-            <?php endif; ?>
-        <?php else: ?>
-            <div class="text-center py-5">
-                <i class="fas fa-user-friends fa-3x text-muted mb-3"></i>
-                <p class="text-muted">Selecciona un colaborador para ver su agenda</p>
+
+                <?php if ($colaborador_filtro): ?>
+
+                    <?php if (empty($tickets)): ?>
+                        <div class="text-center py-5">
+                            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No hay tickets asignados a este colaborador</p>
+                        </div>
+                    <?php else: ?>
+                        <div class="ticket-list">
+                            <?php foreach ($tickets as $t): ?>
+                                <?php
+                                $borderClass = $t['tipo_formulario'] === 'cambio_equipos' ? 
+                                    'ticket-equipos' : 
+                                    'ticket-urgencia-' . ($t['nivel_urgencia'] ?? '0');
+                                $finalizado = $t['status'] === 'finalizado';
+                                $fotos = $ticket->getFotos($t['id']);
+                                ?>
+                                <div class="ticket-card <?= $borderClass ?> <?= $finalizado ? 'ticket-finalizado' : '' ?>">
+                                    <div class="ticket-header">
+                                        <div class="ticket-date">
+                                            <i class="fas fa-calendar me-1"></i>
+                                            <?= date('d/m/Y', strtotime($t['fecha_inicio'])) ?>
+                                            <?php if ($t['fecha_final'] != $t['fecha_inicio']): ?>
+                                                - <?= date('d/m', strtotime($t['fecha_final'])) ?>
+                                            <?php endif; ?>
+                                        </div>
+                                        
+                                        <span class="ticket-sucursal">
+                                            <i class="fas fa-map-marker-alt me-1"></i>
+                                            <?= htmlspecialchars($t['nombre_sucursal']) ?>
+                                        </span>
+                                    </div>
+                                    
+                                    <div class="ticket-title">
+                                        <i class="fas fa-<?= $t['tipo_formulario'] === 'cambio_equipos' ? 'laptop' : 'tools' ?> me-1"></i>
+                                        <?= htmlspecialchars($t['titulo']) ?>
+                                    </div>
+                                    
+                                    <div class="ticket-desc">
+                                        <?= htmlspecialchars($t['descripcion']) ?>
+                                    </div>
+                                    
+                                    <div class="ticket-footer">
+                                        <div class="fotos-preview">
+                                            <?php if (!empty($fotos)): ?>
+                                            
+                                                <?php foreach (array_slice($fotos, 0, 3) as $foto): ?>
+                                                    <img src="uploads/tickets/<?= $foto['foto'] ?>" 
+                                                        class="foto-thumb" 
+                                                        onclick="mostrarFotosTicket(<?= $t['id'] ?>)">
+                                                <?php endforeach; ?>
+                                                <?php if (count($fotos) > 3): ?>
+                                                    <div class="foto-thumb d-flex align-items-center justify-content-center" 
+                                                        style="background: #f8f9fa; border: 1px solid #dee2e6; font-size: 0.75em; font-weight: bold; color: #6c757d;"
+                                                        onclick="mostrarFotosTicket(<?= $t['id'] ?>)">
+                                                        +<?= count($fotos) - 3 ?>
+                                                    </div>
+                                                <?php endif; ?>
+                                            <?php endif; ?>
+                                        </div>
+                                        <?php if (!$finalizado): ?>
+                                            <button class="btn-finalizar" onclick="abrirModalFinalizar(<?= $t['id'] ?>)">
+                                                <i class="fas fa-check-circle me-1"></i>Finalizar
+                                            </button>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php endif; ?>
+                <?php else: ?>
+                    <div class="text-center py-5">
+                        <i class="fas fa-user-friends fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">Selecciona un colaborador para ver su agenda</p>
+                    </div>
+                <?php endif; ?>
             </div>
-        <?php endif; ?>
+        </div>
     </div>
 
     <!-- Modal para ver fotos -->
