@@ -1119,15 +1119,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticket_id_chat'])) {
         };
 
         $(document).ready(function() {
-            // Inicializar DataTable
-            table =$('#ticketsTable').DataTable({
+            // Inicializar DataTable con ordenamiento de fechas corregido
+            table = $('#ticketsTable').DataTable({
                 language: {
                     url: 'https://cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json'
                 },
-                order: [[0, 'desc']],
+                order: [[0, 'desc']], // Ordenar por primera columna (fecha) descendente
                 pageLength: 25,
                 columnDefs: [
-                    { orderable: false, targets: [7,8] }
+                    { 
+                        // Columna 0 - Fecha (convertir para ordenamiento)
+                        targets: 0,
+                        type: 'date-eu', // Tipo europeo para dd/mm/yyyy
+                        render: function(data, type, row) {
+                            if (type === 'sort' || type === 'type') {
+                                // Convertir dd/mm/yyyy a yyyy-mm-dd para ordenamiento
+                                const parts = data.split('/');
+                                if (parts.length === 3) {
+                                    return parts[2] + '-' + parts[1] + '-' + parts[0];
+                                }
+                            }
+                            return data; // Para display, mantener formato original
+                        }
+                    },
+                    { 
+                        orderable: false, 
+                        targets: [7,8] // Columnas de foto y acciones no ordenables
+                    }
                 ]
             });
 
