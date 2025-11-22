@@ -909,7 +909,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticket_id_chat'])) {
                                                 <tbody>
                                                     <?php foreach ($tickets as $t): ?>
                                                     <tr>
-                                                        <td>
+                                                        <td data-order="<?= date('Y-m-d', strtotime($t['created_at'])) ?>">
                                                             <strong><?= date('d/m/Y', strtotime($t['created_at'])) ?></strong>
                                                         </td>
                                                         <td>
@@ -1119,32 +1119,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticket_id_chat'])) {
         };
 
         $(document).ready(function() {
-            // Inicializar DataTable con ordenamiento de fechas corregido
             table = $('#ticketsTable').DataTable({
                 language: {
                     url: 'https://cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json'
                 },
-                order: [[0, 'desc']], // Ordenar por primera columna (fecha) descendente
+                order: [[0, 'desc']],
                 pageLength: 25,
                 columnDefs: [
                     { 
-                        // Columna 0 - Fecha (convertir para ordenamiento)
                         targets: 0,
-                        type: 'date-eu', // Tipo europeo para dd/mm/yyyy
-                        render: function(data, type, row) {
-                            if (type === 'sort' || type === 'type') {
-                                // Convertir dd/mm/yyyy a yyyy-mm-dd para ordenamiento
-                                const parts = data.split('/');
-                                if (parts.length === 3) {
-                                    return parts[2] + '-' + parts[1] + '-' + parts[0];
-                                }
-                            }
-                            return data; // Para display, mantener formato original
-                        }
+                        type: 'date' // Indicar que es tipo fecha
                     },
                     { 
                         orderable: false, 
-                        targets: [7,8] // Columnas de foto y acciones no ordenables
+                        targets: [7,8] 
                     }
                 ]
             });
