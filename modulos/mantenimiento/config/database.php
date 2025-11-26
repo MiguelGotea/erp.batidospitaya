@@ -1,4 +1,5 @@
 <?php
+//database.php
 class Database {
     private $host = 'localhost';
     private $port = '3306';
