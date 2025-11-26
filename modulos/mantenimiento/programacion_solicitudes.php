@@ -220,6 +220,34 @@ $sucursales = $ticket->getSucursales();
             color: white;
         }
         
+        .btn-desprogramar {
+            position: absolute;
+            top: 0.25rem;
+            right: 2rem;
+            width: 20px;
+            height: 20px;
+            border-radius: 3px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 0;
+            font-size: 0.7rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        
+        .ticket-card:hover .btn-desprogramar {
+            opacity: 1;
+        }
+        
+        .btn-desprogramar:hover {
+            background: #c82333;
+        }
+        
         .urgency-1 { background: #28a745; }
         .urgency-2 { background: #ffc107; color: #000; }
         .urgency-3 { background: #fd7e14; }
@@ -229,9 +257,9 @@ $sucursales = $ticket->getSucursales();
         /* Sidebar */
         .sidebar {
             position: fixed;
-            right: -400px;
+            right: -450px;
             top: 0;
-            width: 400px;
+            width: 450px;
             height: 100vh;
             background: white;
             box-shadow: -2px 0 10px rgba(0,0,0,0.1);
@@ -262,14 +290,6 @@ $sucursales = $ticket->getSucursales();
         
         .sidebar-filter {
             margin-bottom: 1rem;
-        }
-        
-        .btn-toggle-sidebar {
-            position: fixed;
-            right: 1rem;
-            top: 50%;
-            transform: translateY(-50%);
-            z-index: 999;
         }
         
         .ticket-card-extended {
@@ -322,6 +342,9 @@ $sucursales = $ticket->getSucursales();
             <button class="btn btn-primary-custom" onclick="cambiarSemana(<?php echo $semanaActual + 1; ?>)">
                 Semana Siguiente <i class="fas fa-chevron-right"></i>
             </button>
+            <button class="btn btn-primary-custom" onclick="toggleSidebar()">
+                <i class="fas fa-list"></i> Solicitudes por Programar
+            </button>
         </div>
 
         <div class="calendar-container">
@@ -367,11 +390,6 @@ $sucursales = $ticket->getSucursales();
             </div>
         </div>
     </div>
-
-    <!-- Botón para abrir sidebar -->
-    <button class="btn btn-primary-custom btn-toggle-sidebar" onclick="toggleSidebar()">
-        <i class="fas fa-list"></i>
-    </button>
 
     <!-- Sidebar -->
     <div class="sidebar" id="sidebar">
@@ -429,84 +447,128 @@ $sucursales = $ticket->getSucursales();
         
         function renderizarSolicitudes() {
             // Limpiar celdas
-            $('.day-cell').empty();
+            $('.day-cell').empty().css('min-height', '100px');
             
-            // Agrupar por equipo y calcular posiciones verticales
-            const equipoPositions = {};
+            // Agrupar tickets por equipo
+            const ticketsPorEquipo = {};
             
             solicitudesProgramadas.forEach(ticket => {
                 const equipoAsignado = ticket.equipo_asignado || 'Cambio de Equipos';
-                const fechaInicio = new Date(ticket.fecha_inicio + 'T00:00:00');
-                const fechaFinal = new Date(ticket.fecha_final + 'T00:00:00');
+                if (!ticketsPorEquipo[equipoAsignado]) {
+                    ticketsPorEquipo[equipoAsignado] = [];
+                }
+                ticketsPorEquipo[equipoAsignado].push(ticket);
+            });
+            
+            // Procesar cada equipo
+            Object.keys(ticketsPorEquipo).forEach(equipo => {
+                const tickets = ticketsPorEquipo[equipo];
                 
-                // Encontrar la primera celda donde debe aparecer
-                const primeraFecha = fechasSemana.find(f => {
-                    const fechaSemana = new Date(f.fecha + 'T00:00:00');
-                    return fechaSemana.getTime() === fechaInicio.getTime();
+                // Array para trackear las "filas" ocupadas
+                // Cada elemento es un objeto {maxDia: fecha_hasta_donde_llega}
+                const filas = [];
+                
+                tickets.forEach(ticket => {
+                    const fechaInicio = new Date(ticket.fecha_inicio + 'T00:00:00');
+                    const fechaFinal = new Date(ticket.fecha_final + 'T00:00:00');
+                    
+                    // Encontrar índice de fecha en la semana
+                    const indiceFechaInicio = fechasSemana.findIndex(f => {
+                        const fechaSemana = new Date(f.fecha + 'T00:00:00');
+                        return fechaSemana.getTime() === fechaInicio.getTime();
+                    });
+                    
+                    if (indiceFechaInicio === -1) return;
+                    
+                    // Calcular días que abarca
+                    const diffTime = fechaFinal - fechaInicio;
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+                    
+                    // Encontrar la primera fila donde cabe este ticket
+                    let filaIndex = -1;
+                    for (let i = 0; i < filas.length; i++) {
+                        // Verificar si esta fila está libre para todas las fechas del ticket
+                        let cabe = true;
+                        for (let d = 0; d < diffDays; d++) {
+                            const diaActual = indiceFechaInicio + d;
+                            if (filas[i][diaActual]) {
+                                cabe = false;
+                                break;
+                            }
+                        }
+                        if (cabe) {
+                            filaIndex = i;
+                            break;
+                        }
+                    }
+                    
+                    // Si no cabe en ninguna fila, crear una nueva
+                    if (filaIndex === -1) {
+                        filaIndex = filas.length;
+                        filas.push({});
+                    }
+                    
+                    // Marcar los días como ocupados en esta fila
+                    for (let d = 0; d < diffDays; d++) {
+                        const diaActual = indiceFechaInicio + d;
+                        filas[filaIndex][diaActual] = true;
+                    }
+                    
+                    // Crear la tarjeta
+                    const primeraFecha = fechasSemana[indiceFechaInicio];
+                    const celda = document.querySelector(
+                        `.day-cell[data-fecha="${primeraFecha.fecha}"][data-equipo="${equipo}"]`
+                    );
+                    
+                    if (!celda) return;
+                    
+                    const urgencyClass = ticket.nivel_urgencia ? `urgency-${ticket.nivel_urgencia}` : 'urgency-null';
+                    
+                    const topPosition = filaIndex * 70;
+                    
+                    const card = document.createElement('div');
+                    card.className = 'ticket-card' + (diffDays > 1 ? ' multi-day' : '');
+                    card.draggable = true;
+                    card.dataset.ticketId = ticket.id;
+                    card.dataset.tipoFormulario = ticket.tipo_formulario;
+                    card.dataset.fechaInicio = ticket.fecha_inicio;
+                    card.dataset.fechaFinal = ticket.fecha_final;
+                    card.dataset.dias = diffDays;
+                    
+                    card.innerHTML = `
+                        <button class="btn-desprogramar" onclick="desprogramarTicket(${ticket.id}, event)">×</button>
+                        <div class="urgency-badge ${urgencyClass}">${ticket.nivel_urgencia || '-'}</div>
+                        <div class="ticket-title">${ticket.titulo}</div>
+                        <div class="ticket-sucursal">${ticket.nombre_sucursal}</div>
+                        <div class="resize-handle"></div>
+                    `;
+                    
+                    // Si abarca más de un día, usar posición absoluta
+                    if (diffDays > 1) {
+                        card.style.width = `calc(${diffDays * 100}% + ${(diffDays - 1)}px)`;
+                        card.style.top = topPosition + 'px';
+                        card.style.left = '0.5rem';
+                        card.style.right = '0.5rem';
+                    } else {
+                        card.style.top = topPosition + 'px';
+                    }
+                    
+                    celda.appendChild(card);
+                    
+                    card.addEventListener('click', function(e) {
+                        if (!e.target.classList.contains('resize-handle') && 
+                            !e.target.classList.contains('btn-desprogramar') && 
+                            !resizing) {
+                            mostrarDetallesTicket(ticket.id);
+                        }
+                    });
                 });
                 
-                if (!primeraFecha) return;
-                
-                const celda = document.querySelector(
-                    `.day-cell[data-fecha="${primeraFecha.fecha}"][data-equipo="${equipoAsignado}"]`
-                );
-                
-                if (!celda) return;
-                
-                // Calcular días que abarca
-                const diffTime = fechaFinal - fechaInicio;
-                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-                
-                const urgencyClass = ticket.nivel_urgencia ? `urgency-${ticket.nivel_urgencia}` : 'urgency-null';
-                
-                // Calcular posición vertical
-                if (!equipoPositions[equipoAsignado]) {
-                    equipoPositions[equipoAsignado] = 0;
-                }
-                const topPosition = equipoPositions[equipoAsignado];
-                equipoPositions[equipoAsignado] += 70; // Altura + margen
-                
-                const card = document.createElement('div');
-                card.className = 'ticket-card' + (diffDays > 1 ? ' multi-day' : '');
-                card.draggable = true;
-                card.dataset.ticketId = ticket.id;
-                card.dataset.tipoFormulario = ticket.tipo_formulario;
-                card.dataset.fechaInicio = ticket.fecha_inicio;
-                card.dataset.fechaFinal = ticket.fecha_final;
-                card.dataset.dias = diffDays;
-                
-                card.innerHTML = `
-                    <div class="urgency-badge ${urgencyClass}">${ticket.nivel_urgencia || '-'}</div>
-                    <div class="ticket-title">${ticket.titulo}</div>
-                    <div class="ticket-sucursal">${ticket.nombre_sucursal}</div>
-                    <div class="resize-handle"></div>
-                `;
-                
-                // Si abarca más de un día, usar posición absoluta
-                if (diffDays > 1) {
-                    // Obtener ancho real de celda
-                    const celdas = document.querySelectorAll(`.day-cell[data-equipo="${equipoAsignado}"]`);
-                    const cellWidth = celdas[0] ? celdas[0].offsetWidth : 150;
-                    
-                    // Calcular ancho total sin gaps (los gaps son los bordes)
-                    card.style.width = `calc(${diffDays * 100}% + ${(diffDays - 1)}px)`;
-                    card.style.top = topPosition + 'px';
-                    card.style.left = '0.5rem';
-                    card.style.right = '0.5rem';
-                }
-                
-                celda.appendChild(card);
-                
-                // Ajustar altura mínima de la celda
-                const minHeight = topPosition + 70;
-                if (celda.offsetHeight < minHeight) {
+                // Ajustar altura de todas las celdas de este equipo
+                const minHeight = (filas.length * 70) + 30;
+                const celdasEquipo = document.querySelectorAll(`.day-cell[data-equipo="${equipo}"]`);
+                celdasEquipo.forEach(celda => {
                     celda.style.minHeight = minHeight + 'px';
-                }
-                
-                card.addEventListener('click', function(e) {
-                    if (!e.target.classList.contains('resize-handle') && !resizing) {
-                        mostrarDetallesTicket(ticket.id);
-                    }
                 });
             });
             
@@ -699,6 +761,28 @@ $sucursales = $ticket->getSucursales();
                         location.reload();
                     } else {
                         alert('Error al mover: ' + response.message);
+                    }
+                },
+                dataType: 'json'
+            });
+        }
+        
+        function desprogramarTicket(ticketId, event) {
+            event.stopPropagation();
+            
+            if (!confirm('¿Desea desprogramar esta solicitud?')) {
+                return;
+            }
+            
+            $.ajax({
+                url: 'ajax/desprogramar_ticket.php',
+                method: 'POST',
+                data: { ticket_id: ticketId },
+                success: function(response) {
+                    if (response.success) {
+                        location.reload();
+                    } else {
+                        alert('Error al desprogramar: ' + response.message);
                     }
                 },
                 dataType: 'json'
