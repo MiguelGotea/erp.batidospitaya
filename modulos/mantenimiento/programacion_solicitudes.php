@@ -161,6 +161,7 @@ $sucursales = $ticket->getSucursales();
             min-height: 100px;
             padding: 0.5rem;
             position: relative;
+            overflow: visible;
         }
         
         .day-cell.drop-zone {
@@ -176,6 +177,12 @@ $sucursales = $ticket->getSucursales();
             cursor: move;
             position: relative;
             transition: all 0.2s;
+            user-select: none;
+        }
+        
+        .ticket-card.multi-day {
+            position: absolute;
+            z-index: 3;
         }
         
         .ticket-card:hover {
@@ -280,15 +287,24 @@ $sucursales = $ticket->getSucursales();
             right: 0;
             top: 0;
             bottom: 0;
-            width: 8px;
+            width: 12px;
             cursor: ew-resize;
-            background: rgba(0,0,0,0.1);
+            background: rgba(81, 184, 172, 0.3);
             opacity: 0;
             transition: opacity 0.2s;
+            z-index: 10;
         }
         
-        .ticket-card-extended:hover .resize-handle {
+        .ticket-card:hover .resize-handle {
             opacity: 1;
+        }
+        
+        .resizing {
+            cursor: ew-resize !important;
+        }
+        
+        .resizing * {
+            cursor: ew-resize !important;
         }
     </style>
 </head>
@@ -415,13 +431,20 @@ $sucursales = $ticket->getSucursales();
             // Limpiar celdas
             $('.day-cell').empty();
             
+            // Agrupar por equipo y calcular posiciones verticales
+            const equipoPositions = {};
+            
             solicitudesProgramadas.forEach(ticket => {
                 const equipoAsignado = ticket.equipo_asignado || 'Cambio de Equipos';
-                const fechaInicio = new Date(ticket.fecha_inicio);
-                const fechaFinal = new Date(ticket.fecha_final);
+                const fechaInicio = new Date(ticket.fecha_inicio + 'T00:00:00');
+                const fechaFinal = new Date(ticket.fecha_final + 'T00:00:00');
                 
                 // Encontrar la primera celda donde debe aparecer
-                const primeraFecha = fechasSemana.find(f => new Date(f.fecha).toDateString() === fechaInicio.toDateString());
+                const primeraFecha = fechasSemana.find(f => {
+                    const fechaSemana = new Date(f.fecha + 'T00:00:00');
+                    return fechaSemana.getTime() === fechaInicio.getTime();
+                });
+                
                 if (!primeraFecha) return;
                 
                 const celda = document.querySelector(
@@ -436,8 +459,15 @@ $sucursales = $ticket->getSucursales();
                 
                 const urgencyClass = ticket.nivel_urgencia ? `urgency-${ticket.nivel_urgencia}` : 'urgency-null';
                 
+                // Calcular posición vertical
+                if (!equipoPositions[equipoAsignado]) {
+                    equipoPositions[equipoAsignado] = 0;
+                }
+                const topPosition = equipoPositions[equipoAsignado];
+                equipoPositions[equipoAsignado] += 70; // Altura + margen
+                
                 const card = document.createElement('div');
-                card.className = 'ticket-card';
+                card.className = 'ticket-card' + (diffDays > 1 ? ' multi-day' : '');
                 card.draggable = true;
                 card.dataset.ticketId = ticket.id;
                 card.dataset.tipoFormulario = ticket.tipo_formulario;
@@ -452,18 +482,29 @@ $sucursales = $ticket->getSucursales();
                     <div class="resize-handle"></div>
                 `;
                 
+                // Si abarca más de un día, usar posición absoluta
+                if (diffDays > 1) {
+                    // Obtener ancho real de celda
+                    const celdas = document.querySelectorAll(`.day-cell[data-equipo="${equipoAsignado}"]`);
+                    const cellWidth = celdas[0] ? celdas[0].offsetWidth : 150;
+                    
+                    // Calcular ancho total sin gaps (los gaps son los bordes)
+                    card.style.width = `calc(${diffDays * 100}% + ${(diffDays - 1)}px)`;
+                    card.style.top = topPosition + 'px';
+                    card.style.left = '0.5rem';
+                    card.style.right = '0.5rem';
+                }
+                
                 celda.appendChild(card);
                 
-                // Si abarca más días, calcular ancho
-                if (diffDays > 1) {
-                    const cellWidth = celda.offsetWidth;
-                    card.style.width = (cellWidth * diffDays + (diffDays - 1)) + 'px';
-                    card.style.position = 'relative';
-                    card.style.zIndex = '2';
+                // Ajustar altura mínima de la celda
+                const minHeight = topPosition + 70;
+                if (celda.offsetHeight < minHeight) {
+                    celda.style.minHeight = minHeight + 'px';
                 }
                 
                 card.addEventListener('click', function(e) {
-                    if (!e.target.classList.contains('resize-handle')) {
+                    if (!e.target.classList.contains('resize-handle') && !resizing) {
                         mostrarDetallesTicket(ticket.id);
                     }
                 });
@@ -505,35 +546,53 @@ $sucursales = $ticket->getSucursales();
         
         let resizing = null;
         function startResize(e) {
+            e.preventDefault();
             e.stopPropagation();
+            
             resizing = {
                 card: e.target.closest('.ticket-card'),
                 startX: e.clientX,
-                startWidth: e.target.closest('.ticket-card').offsetWidth
+                startWidth: e.target.closest('.ticket-card').offsetWidth,
+                startDias: parseInt(e.target.closest('.ticket-card').dataset.dias)
             };
+            
+            resizing.card.draggable = false;
+            document.body.classList.add('resizing');
+            
             document.addEventListener('mousemove', doResize);
             document.addEventListener('mouseup', stopResize);
         }
         
         function doResize(e) {
             if (!resizing) return;
+            
             const diff = e.clientX - resizing.startX;
-            const newWidth = resizing.startWidth + diff;
-            const cellWidth = resizing.card.closest('.day-cell').offsetWidth;
-            const newDays = Math.max(1, Math.round(newWidth / cellWidth));
-            resizing.card.style.width = (cellWidth * newDays + (newDays - 1)) + 'px';
+            const celda = resizing.card.closest('.day-cell');
+            const todasCeldas = celda.parentElement.querySelectorAll('.day-cell');
+            const cellWidth = todasCeldas[1] ? todasCeldas[1].offsetWidth : 150;
+            
+            const newDays = Math.max(1, Math.round((resizing.startWidth + diff) / cellWidth));
+            
+            resizing.card.style.width = `calc(${newDays * 100}% + ${(newDays - 1)}px)`;
             resizing.card.dataset.dias = newDays;
         }
         
         function stopResize(e) {
             if (!resizing) return;
+            
             const ticketId = resizing.card.dataset.ticketId;
             const dias = parseInt(resizing.card.dataset.dias);
-            const fechaInicio = new Date(resizing.card.dataset.fechaInicio);
+            const fechaInicio = new Date(resizing.card.dataset.fechaInicio + 'T00:00:00');
             const fechaFinal = new Date(fechaInicio);
             fechaFinal.setDate(fechaFinal.getDate() + dias - 1);
             
-            actualizarFechas(ticketId, fechaInicio.toISOString().split('T')[0], fechaFinal.toISOString().split('T')[0]);
+            const fechaInicioStr = fechaInicio.toISOString().split('T')[0];
+            const fechaFinalStr = fechaFinal.toISOString().split('T')[0];
+            
+            actualizarFechas(ticketId, fechaInicioStr, fechaFinalStr);
+            
+            resizing.card.draggable = true;
+            document.body.classList.remove('resizing');
             
             document.removeEventListener('mousemove', doResize);
             document.removeEventListener('mouseup', stopResize);
@@ -542,6 +601,10 @@ $sucursales = $ticket->getSucursales();
         
         let draggedElement = null;
         function handleDragStart(e) {
+            if (resizing) {
+                e.preventDefault();
+                return;
+            }
             draggedElement = e.target;
             e.target.classList.add('dragging');
             e.dataTransfer.effectAllowed = 'move';
