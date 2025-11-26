@@ -370,26 +370,30 @@ $ticket = new Ticket();
 
         // Inicializar
         $(document).ready(function() {
+            console.log('=== INICIANDO APLICACIÓN ===');
             loadCurrentWeek();
         });
 
         function loadCurrentWeek() {
+            console.log('Cargando semana actual...');
             $.ajax({
                 url: 'ajax/planificador/get_current_week.php',
                 method: 'GET',
+                dataType: 'json',
                 success: function(response) {
+                    console.log('Semana actual:', response);
                     currentWeek = parseInt(response.week_number);
                     loadWeekData();
                 },
-                error: function() {
+                error: function(xhr, status, error) {
+                    console.error('Error al cargar semana actual:', xhr.responseText);
                     alert('Error al cargar la semana actual');
                 }
             });
         }
 
-        // Modificar la función loadWeekData para ver los datos
-        const originalLoadWeekData = loadWeekData;
-        loadWeekData = function() {
+        function loadWeekData() {
+            console.log('Cargando datos de semana:', currentWeek);
             $('#schedulerLoading').show();
             $('#schedulerGrid').hide();
 
@@ -401,8 +405,8 @@ $ticket = new Ticket();
                 success: function(response) {
                     console.log('=== DATOS RECIBIDOS ===');
                     console.log('Fechas:', response.dates);
-                    console.log('Equipos:', response.work_teams);
-                    console.log('Tickets:', response.scheduled_tickets);
+                    console.log('Equipos de trabajo:', response.work_teams);
+                    console.log('Tickets programados:', response.scheduled_tickets);
                     
                     weekDates = response.dates;
                     workTeams = response.work_teams;
@@ -412,23 +416,26 @@ $ticket = new Ticket();
                 },
                 error: function(xhr, status, error) {
                     console.error('Error completo:', xhr.responseText);
-                    alert('Error al cargar los datos de la semana');
+                    alert('Error al cargar los datos de la semana: ' + xhr.responseText);
                     $('#schedulerLoading').hide();
                 }
             });
-        };
+        }
 
         function loadUnscheduledTickets() {
+            console.log('Cargando tickets sin programar...');
             $.ajax({
                 url: 'ajax/planificador/get_unscheduled_tickets.php',
                 method: 'GET',
                 dataType: 'json',
                 success: function(response) {
+                    console.log('Tickets sin programar:', response.tickets);
                     allUnscheduledTickets = response.tickets;
                     loadSucursales(response.sucursales);
                     renderUnscheduled();
                 },
-                error: function() {
+                error: function(xhr) {
+                    console.error('Error:', xhr.responseText);
                     $('#sidebarContent').html('<div class="empty-state">Error al cargar solicitudes</div>');
                 }
             });
@@ -443,6 +450,7 @@ $ticket = new Ticket();
         }
 
         function renderScheduler(scheduledTickets) {
+            console.log('Renderizando scheduler...');
             const grid = $('#schedulerGrid');
             
             // Header row
@@ -461,18 +469,24 @@ $ticket = new Ticket();
                 html += `<div class="team-row-label">${team.team_name}</div>`;
                 
                 for (let dayIndex = 0; dayIndex < 6; dayIndex++) {
-                    const dayDate = weekDates[dayIndex].date;
-                    const tickets = scheduledTickets.filter(t => 
-                        t.team_key === team.team_key && 
-                        t.fecha_inicio <= dayDate && 
-                        t.fecha_final >= dayDate
-                    );
+                    const dayDate = weekDates[dayIndex].fecha;
+                    console.log('Buscando tickets para fecha:', dayDate, 'equipo:', team.team_key);
+                    
+                    const tickets = scheduledTickets.filter(t => {
+                        const match = t.team_key === team.team_key && 
+                               t.fecha_inicio <= dayDate && 
+                               t.fecha_final >= dayDate;
+                        if (match) {
+                            console.log('Ticket encontrado:', t.titulo, 'Inicio:', t.fecha_inicio, 'Final:', t.fecha_final);
+                        }
+                        return match;
+                    });
                     
                     html += `<div class="day-cell" 
                         data-team="${team.team_key}" 
                         data-day="${dayIndex}" 
                         data-date="${dayDate}"
-                        data-is-cambio="${team.is_cambio_equipos}"
+                        data-is-cambio="${team.is_cambio_equipos ? 1 : 0}"
                         ondrop="drop(event)" 
                         ondragover="allowDrop(event)" 
                         ondragleave="dragLeave(event)">`;
@@ -569,8 +583,8 @@ $ticket = new Ticket();
         }
 
         function drag(event) {
-            const ticketId = $(event.target).data('ticket-id');
-            const tipo = $(event.target).data('tipo');
+            const ticketId = $(event.target).closest('[data-ticket-id]').data('ticket-id');
+            const tipo = $(event.target).closest('[data-tipo]').data('tipo');
             event.dataTransfer.setData('ticketId', ticketId);
             event.dataTransfer.setData('tipo', tipo);
             $(event.target).addClass('dragging');
@@ -594,7 +608,9 @@ $ticket = new Ticket();
             const teamKey = $(event.currentTarget).data('team');
             const dayIndex = parseInt($(event.currentTarget).data('day'));
             const targetDate = $(event.currentTarget).data('date');
-            const isCambioTeam = $(event.currentTarget).data('is-cambio') === true;
+            const isCambioTeam = $(event.currentTarget).data('is-cambio') == 1;
+
+            console.log('Drop:', {ticketId, tipo, teamKey, targetDate, isCambioTeam});
 
             // Validar restricciones
             if (isCambioTeam && tipo !== 'cambio_equipos') {
@@ -619,6 +635,7 @@ $ticket = new Ticket();
                 },
                 dataType: 'json',
                 success: function(response) {
+                    console.log('Respuesta del servidor:', response);
                     if (response.success) {
                         loadWeekData();
                         if (sidebarOpen) {
@@ -628,8 +645,9 @@ $ticket = new Ticket();
                         alert('Error: ' + response.message);
                     }
                 },
-                error: function() {
-                    alert('Error al asignar la solicitud');
+                error: function(xhr) {
+                    console.error('Error:', xhr.responseText);
+                    alert('Error al asignar la solicitud: ' + xhr.responseText);
                 }
             });
         }
