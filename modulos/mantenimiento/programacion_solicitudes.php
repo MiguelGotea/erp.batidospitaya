@@ -158,8 +158,8 @@ $sucursales = $ticket->getSucursales();
         .day-cell {
             border-right: 1px solid #dee2e6;
             border-bottom: 1px solid #dee2e6;
-            min-height: 100px;
-            padding: 0.5rem;
+            min-height: 80px;
+            padding: 0;
             position: relative;
             overflow: visible;
         }
@@ -172,17 +172,14 @@ $sucursales = $ticket->getSucursales();
             background: white;
             border: 2px solid #dee2e6;
             border-radius: 6px;
-            padding: 0.5rem;
-            margin-bottom: 0.5rem;
+            padding: 0.4rem 0.5rem;
+            margin: 0.25rem;
             cursor: move;
-            position: relative;
+            position: absolute;
             transition: all 0.2s;
             user-select: none;
-        }
-        
-        .ticket-card.multi-day {
-            position: absolute;
-            z-index: 3;
+            height: 55px;
+            box-sizing: border-box;
         }
         
         .ticket-card:hover {
@@ -195,14 +192,21 @@ $sucursales = $ticket->getSucursales();
         }
         
         .ticket-title {
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             font-weight: 500;
-            margin-bottom: 0.25rem;
+            margin-bottom: 0.15rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            padding-right: 25px;
         }
         
         .ticket-sucursal {
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             color: #6c757d;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         
         .urgency-badge {
@@ -447,7 +451,11 @@ $sucursales = $ticket->getSucursales();
         
         function renderizarSolicitudes() {
             // Limpiar celdas
-            $('.day-cell').empty().css('min-height', '100px');
+            $('.day-cell').empty().css('min-height', '80px');
+            
+            // Obtener ancho de celda una sola vez
+            const primeraCelda = document.querySelector('.day-cell');
+            const anchoBase = primeraCelda ? primeraCelda.offsetWidth : 150;
             
             // Agrupar tickets por equipo
             const ticketsPorEquipo = {};
@@ -464,9 +472,12 @@ $sucursales = $ticket->getSucursales();
             Object.keys(ticketsPorEquipo).forEach(equipo => {
                 const tickets = ticketsPorEquipo[equipo];
                 
-                // Array para trackear las "filas" ocupadas
-                // Cada elemento es un objeto {maxDia: fecha_hasta_donde_llega}
+                // Array de filas: cada elemento es un array de 6 elementos (uno por día)
+                // true = ocupado, false = libre
                 const filas = [];
+                
+                // Crear estructura para trackear posiciones
+                const posiciones = []; // {ticket, fila, columnaInicio, dias}
                 
                 tickets.forEach(ticket => {
                     const fechaInicio = new Date(ticket.fecha_inicio + 'T00:00:00');
@@ -482,58 +493,67 @@ $sucursales = $ticket->getSucursales();
                     
                     // Calcular días que abarca
                     const diffTime = fechaFinal - fechaInicio;
-                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+                    const diffDays = Math.min(Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1, 6 - indiceFechaInicio);
                     
-                    // Encontrar la primera fila donde cabe este ticket
-                    let filaIndex = -1;
-                    for (let i = 0; i < filas.length; i++) {
-                        // Verificar si esta fila está libre para todas las fechas del ticket
+                    // Encontrar la primera fila donde cabe
+                    let filaEncontrada = -1;
+                    for (let f = 0; f < filas.length; f++) {
                         let cabe = true;
                         for (let d = 0; d < diffDays; d++) {
-                            const diaActual = indiceFechaInicio + d;
-                            if (filas[i][diaActual]) {
+                            if (indiceFechaInicio + d < 6 && filas[f][indiceFechaInicio + d]) {
                                 cabe = false;
                                 break;
                             }
                         }
                         if (cabe) {
-                            filaIndex = i;
+                            filaEncontrada = f;
                             break;
                         }
                     }
                     
                     // Si no cabe en ninguna fila, crear una nueva
-                    if (filaIndex === -1) {
-                        filaIndex = filas.length;
-                        filas.push({});
+                    if (filaEncontrada === -1) {
+                        filaEncontrada = filas.length;
+                        filas.push([false, false, false, false, false, false]);
                     }
                     
-                    // Marcar los días como ocupados en esta fila
+                    // Marcar los días como ocupados
                     for (let d = 0; d < diffDays; d++) {
-                        const diaActual = indiceFechaInicio + d;
-                        filas[filaIndex][diaActual] = true;
+                        if (indiceFechaInicio + d < 6) {
+                            filas[filaEncontrada][indiceFechaInicio + d] = true;
+                        }
                     }
                     
-                    // Crear la tarjeta
-                    const primeraFecha = fechasSemana[indiceFechaInicio];
+                    // Guardar posición
+                    posiciones.push({
+                        ticket: ticket,
+                        fila: filaEncontrada,
+                        columnaInicio: indiceFechaInicio,
+                        dias: diffDays
+                    });
+                });
+                
+                // Ahora crear las tarjetas con las posiciones calculadas
+                posiciones.forEach(pos => {
+                    const ticket = pos.ticket;
+                    const urgencyClass = ticket.nivel_urgencia ? `urgency-${ticket.nivel_urgencia}` : 'urgency-null';
+                    
+                    // Encontrar la celda inicial
+                    const primeraFecha = fechasSemana[pos.columnaInicio];
                     const celda = document.querySelector(
                         `.day-cell[data-fecha="${primeraFecha.fecha}"][data-equipo="${equipo}"]`
                     );
                     
                     if (!celda) return;
                     
-                    const urgencyClass = ticket.nivel_urgencia ? `urgency-${ticket.nivel_urgencia}` : 'urgency-null';
-                    
-                    const topPosition = filaIndex * 70;
-                    
                     const card = document.createElement('div');
-                    card.className = 'ticket-card' + (diffDays > 1 ? ' multi-day' : '');
+                    card.className = 'ticket-card';
                     card.draggable = true;
                     card.dataset.ticketId = ticket.id;
                     card.dataset.tipoFormulario = ticket.tipo_formulario;
                     card.dataset.fechaInicio = ticket.fecha_inicio;
                     card.dataset.fechaFinal = ticket.fecha_final;
-                    card.dataset.dias = diffDays;
+                    card.dataset.dias = pos.dias;
                     
                     card.innerHTML = `
                         <button class="btn-desprogramar" onclick="desprogramarTicket(${ticket.id}, event)">×</button>
@@ -543,15 +563,23 @@ $sucursales = $ticket->getSucursales();
                         <div class="resize-handle"></div>
                     `;
                     
-                    // Si abarca más de un día, usar posición absoluta
-                    if (diffDays > 1) {
-                        card.style.width = `calc(${diffDays * 100}% + ${(diffDays - 1)}px)`;
-                        card.style.top = topPosition + 'px';
-                        card.style.left = '0.5rem';
-                        card.style.right = '0.5rem';
+                    // Calcular posición
+                    const topPos = (pos.fila * 60) + 5; // 60px por fila + 5px margen
+                    const leftPos = 5; // margen izquierdo
+                    
+                    // Calcular ancho según días
+                    let anchoCard;
+                    if (pos.dias === 1) {
+                        anchoCard = anchoBase - 10; // restar márgenes
                     } else {
-                        card.style.top = topPosition + 'px';
+                        // Para múltiples días: ancho = (anchoBase * días) + (gaps * (días-1)) - márgenes
+                        anchoCard = (anchoBase * pos.dias) + (1 * (pos.dias - 1)) - 10;
                     }
+                    
+                    card.style.top = topPos + 'px';
+                    card.style.left = leftPos + 'px';
+                    card.style.width = anchoCard + 'px';
+                    card.style.zIndex = pos.dias > 1 ? '3' : '2';
                     
                     celda.appendChild(card);
                     
@@ -564,11 +592,11 @@ $sucursales = $ticket->getSucursales();
                     });
                 });
                 
-                // Ajustar altura de todas las celdas de este equipo
-                const minHeight = (filas.length * 70) + 30;
+                // Ajustar altura de todas las celdas del equipo
+                const alturaMinima = (filas.length * 60) + 20;
                 const celdasEquipo = document.querySelectorAll(`.day-cell[data-equipo="${equipo}"]`);
                 celdasEquipo.forEach(celda => {
-                    celda.style.minHeight = minHeight + 'px';
+                    celda.style.minHeight = Math.max(80, alturaMinima) + 'px';
                 });
             });
             
@@ -630,12 +658,23 @@ $sucursales = $ticket->getSucursales();
             
             const diff = e.clientX - resizing.startX;
             const celda = resizing.card.closest('.day-cell');
-            const todasCeldas = celda.parentElement.querySelectorAll('.day-cell');
-            const cellWidth = todasCeldas[1] ? todasCeldas[1].offsetWidth : 150;
+            const anchoBase = celda.offsetWidth;
             
-            const newDays = Math.max(1, Math.round((resizing.startWidth + diff) / cellWidth));
+            // Calcular cuántos días debería abarcar según el ancho actual
+            const anchoActual = resizing.startWidth + diff;
+            let newDays = 1;
             
-            resizing.card.style.width = `calc(${newDays * 100}% + ${(newDays - 1)}px)`;
+            for (let d = 1; d <= 6; d++) {
+                const anchoEsperado = (anchoBase * d) + (1 * (d - 1)) - 10;
+                if (anchoActual >= anchoEsperado - (anchoBase / 3)) {
+                    newDays = d;
+                }
+            }
+            
+            // Calcular el ancho exacto para ese número de días
+            const anchoFinal = (anchoBase * newDays) + (1 * (newDays - 1)) - 10;
+            
+            resizing.card.style.width = anchoFinal + 'px';
             resizing.card.dataset.dias = newDays;
         }
         
