@@ -11,7 +11,7 @@ try {
     $week_number = isset($_GET['week_number']) ? intval($_GET['week_number']) : 518;
     
     // Obtener fechas de la semana (Lunes a Sábado)
-    $sql = "SELECT fecha, 
+    $sql = "SELECT DATE(fecha) as fecha, 
             CASE DAYOFWEEK(fecha)
                 WHEN 2 THEN 'Lun'
                 WHEN 3 THEN 'Mar'
@@ -76,8 +76,14 @@ try {
     ];
     
     // Obtener tickets programados en esta semana
-    $sql = "SELECT t.*, 
+    $sql = "SELECT t.id,
+            t.titulo,
+            t.tipo_formulario,
+            DATE(t.fecha_inicio) as fecha_inicio,
+            DATE(t.fecha_final) as fecha_final,
+            t.nivel_urgencia,
             s.nombre as nombre_sucursal,
+            s.codigo as cod_sucursal,
             GROUP_CONCAT(DISTINCT tc.tipo_usuario ORDER BY tc.tipo_usuario SEPARATOR '|') as team_key
             FROM mtto_tickets t
             LEFT JOIN sucursales s ON t.cod_sucursal = s.codigo
@@ -85,9 +91,9 @@ try {
             WHERE t.fecha_inicio IS NOT NULL 
             AND t.fecha_final IS NOT NULL
             AND (
-                (t.fecha_inicio BETWEEN ? AND ?)
-                OR (t.fecha_final BETWEEN ? AND ?)
-                OR (t.fecha_inicio <= ? AND t.fecha_final >= ?)
+                (DATE(t.fecha_inicio) BETWEEN ? AND ?)
+                OR (DATE(t.fecha_final) BETWEEN ? AND ?)
+                OR (DATE(t.fecha_inicio) <= ? AND DATE(t.fecha_final) >= ?)
             )
             GROUP BY t.id
             ORDER BY s.nombre";
@@ -109,7 +115,7 @@ try {
         'dates' => $dates,
         'work_teams' => $unique_teams,
         'scheduled_tickets' => $tickets
-    ]);
+    ], JSON_UNESCAPED_UNICODE);
     
 } catch (Exception $e) {
     http_response_code(500);

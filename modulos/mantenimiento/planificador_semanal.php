@@ -387,7 +387,9 @@ $ticket = new Ticket();
             });
         }
 
-        function loadWeekData() {
+        // Modificar la función loadWeekData para ver los datos
+        const originalLoadWeekData = loadWeekData;
+        loadWeekData = function() {
             $('#schedulerLoading').show();
             $('#schedulerGrid').hide();
 
@@ -397,6 +399,11 @@ $ticket = new Ticket();
                 data: { week_number: currentWeek },
                 dataType: 'json',
                 success: function(response) {
+                    console.log('=== DATOS RECIBIDOS ===');
+                    console.log('Fechas:', response.dates);
+                    console.log('Equipos:', response.work_teams);
+                    console.log('Tickets:', response.scheduled_tickets);
+                    
                     weekDates = response.dates;
                     workTeams = response.work_teams;
                     renderScheduler(response.scheduled_tickets);
@@ -404,12 +411,12 @@ $ticket = new Ticket();
                     $('#schedulerGrid').show();
                 },
                 error: function(xhr, status, error) {
-                    console.error('Error:', error);
+                    console.error('Error completo:', xhr.responseText);
                     alert('Error al cargar los datos de la semana');
                     $('#schedulerLoading').hide();
                 }
             });
-        }
+        };
 
         function loadUnscheduledTickets() {
             $.ajax({
