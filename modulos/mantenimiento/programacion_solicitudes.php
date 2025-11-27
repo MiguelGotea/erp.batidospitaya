@@ -377,14 +377,25 @@ if (isset($_GET['semana'])) {
                 url: 'ajax/agenda_get_cronograma.php',
                 method: 'GET',
                 data: { semana: semanaActual },
-                success: function(response) {
-                    const data = JSON.parse(response);
+                dataType: 'json',
+                success: function(data) {
+                    if (data.error) {
+                        console.error('Error del servidor:', data);
+                        alert('Error: ' + data.error);
+                        return;
+                    }
+                    
                     fechasSemana = data.fechas;
                     equiposTrabajo = data.equipos;
                     renderizarCronograma(data);
                 },
-                error: function() {
-                    alert('Error al cargar el cronograma');
+                error: function(xhr, status, error) {
+                    console.error('Error AJAX:', {
+                        status: status,
+                        error: error,
+                        response: xhr.responseText
+                    });
+                    alert('Error al cargar el cronograma. Por favor revisa la consola.');
                 }
             });
         }
@@ -728,11 +739,21 @@ if (isset($_GET['semana'])) {
                 url: 'ajax/agenda_get_tickets_pendientes.php',
                 method: 'GET',
                 data: { sucursal: filtroSucursal },
-                success: function(response) {
-                    const tickets = JSON.parse(response);
-                    renderizarTicketsPendientes(tickets);
+                dataType: 'json',
+                success: function(data) {
+                    if (data.error) {
+                        console.error('Error del servidor:', data);
+                        alert('Error: ' + data.error);
+                        return;
+                    }
+                    renderizarTicketsPendientes(data);
                 },
-                error: function() {
+                error: function(xhr, status, error) {
+                    console.error('Error AJAX:', {
+                        status: status,
+                        error: error,
+                        response: xhr.responseText
+                    });
                     alert('Error al cargar solicitudes pendientes');
                 }
             });
