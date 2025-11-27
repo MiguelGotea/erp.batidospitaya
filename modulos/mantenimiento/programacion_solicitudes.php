@@ -125,6 +125,14 @@ if (isset($_GET['semana'])) {
             z-index: 10;
         }
         
+        .ticket-overlay {
+            cursor: pointer;
+        }
+        
+        .ticket-overlay:hover {
+            background: rgba(81, 184, 172, 0.05);
+        }
+        
         .ticket-title {
             font-weight: 600;
             font-size: 0.8rem;
@@ -174,12 +182,13 @@ if (isset($_GET['semana'])) {
             display: flex;
             align-items: center;
             justify-content: center;
-            opacity: 0;
-            transition: opacity 0.2s;
+            opacity: 1;
+            z-index: 5;
         }
         
-        .ticket-card:hover .btn-unschedule {
-            opacity: 1;
+        .btn-unschedule:hover {
+            background: #c82333;
+            transform: scale(1.1);
         }
         
         .resize-handle {
@@ -328,12 +337,37 @@ if (isset($_GET['semana'])) {
         
         function mostrarDetallesTicket(ticketId) {
             console.log('Mostrar detalles:', ticketId);
+            
+            // Remover modales previos para evitar conflictos
+            $('.modal').remove();
+            $('.modal-backdrop').remove();
+            
             $.ajax({
                 url: 'ajax/get_ticket_details.php',
                 method: 'GET',
                 data: { id: ticketId },
                 success: function(response) {
-                    const modal = $('<div class="modal fade"><div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header"><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body">' + response + '</div></div></div></div>');
+                    // Limpiar scripts duplicados del response
+                    let cleanResponse = response;
+                    
+                    // Crear modal
+                    const modal = $(`
+                        <div class="modal fade" tabindex="-1">
+                            <div class="modal-dialog modal-lg">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Detalles de Solicitud</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body"></div>
+                                </div>
+                            </div>
+                        </div>
+                    `);
+                    
+                    // Insertar contenido
+                    modal.find('.modal-body').html(cleanResponse);
+                    
                     $('body').append(modal);
                     
                     setTimeout(function() {
@@ -347,13 +381,19 @@ if (isset($_GET['semana'])) {
                         if (typeof initUrgencyControls === 'function') {
                             initUrgencyControls();
                         }
-                    }, 0);
+                    }, 100);
                     
                     modal.modal('show');
                     
                     modal.on('hidden.bs.modal', function() { 
-                        modal.remove(); 
+                        modal.remove();
+                        $('.modal-backdrop').remove();
+                        $('body').removeClass('modal-open').css('padding-right', '');
                     });
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error al cargar detalles:', error);
+                    alert('Error al cargar los detalles de la solicitud');
                 }
             });
         }
@@ -534,6 +574,7 @@ if (isset($_GET['semana'])) {
             card.style.left = '5px';
             card.style.top = (fila * 60 + 5) + 'px';
             card.style.width = anchoCard + 'px';
+            card.style.zIndex = '2';
             
             card.innerHTML = `
                 <div class="ticket-title">${escapeHtml(ticket.titulo)}</div>
@@ -559,6 +600,53 @@ if (isset($_GET['semana'])) {
             resizeHandle.addEventListener('mousedown', (e) => startResize(e, card, ticket, fechas, diaInicio));
             
             celda.appendChild(card);
+            
+            // Si la tarjeta cubre múltiples días, crear overlays invisibles para hover
+            if (numDias > 1) {
+                for (let i = 1; i < numDias; i++) {
+                    const diaIdx = diaInicio + i;
+                    if (diaIdx >= fechas.length) break;
+                    
+                    const celdaSiguiente = document.querySelector(
+                        `.day-cell[data-fecha="${fechas[diaIdx].fecha}"][data-equipo="${equipoId}"]`
+                    );
+                    
+                    if (celdaSiguiente) {
+                        const overlay = document.createElement('div');
+                        overlay.className = 'ticket-overlay';
+                        overlay.style.cssText = `
+                            position: absolute;
+                            left: 0;
+                            top: ${fila * 60 + 5}px;
+                            width: calc(100% - 10px);
+                            height: 55px;
+                            pointer-events: all;
+                            z-index: 1;
+                        `;
+                        overlay.dataset.parentTicket = ticket.id;
+                        
+                        // Eventos para hacer hover en la tarjeta original
+                        overlay.addEventListener('mouseenter', () => {
+                            card.classList.add('hover');
+                            card.style.boxShadow = '0 2px 8px rgba(0,0,0,0.25)';
+                            card.style.zIndex = '10';
+                        });
+                        
+                        overlay.addEventListener('mouseleave', () => {
+                            card.classList.remove('hover');
+                            card.style.boxShadow = '0 1px 4px rgba(0,0,0,0.15)';
+                            card.style.zIndex = '2';
+                        });
+                        
+                        overlay.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            mostrarDetallesTicket(ticket.id);
+                        });
+                        
+                        celdaSiguiente.appendChild(overlay);
+                    }
+                }
+            }
         }
         
         // ========== RESIZE ==========
