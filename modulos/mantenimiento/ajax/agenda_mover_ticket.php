@@ -1,5 +1,5 @@
 <?php
-// ajax/agenda_mover_ticket.php - VERSIÓN MEJORADA
+// ajax/agenda_mover_ticket.php - VERSIÓN MEJORADA V2
 ob_start();
 error_reporting(0);
 ini_set('display_errors', 0);
@@ -46,7 +46,7 @@ try {
         throw new Exception('Ticket no encontrado');
     }
     
-    // 2. CRÍTICO: Guardar los tipos de usuario actuales ANTES de borrar
+    // 2. GUARDAR los tipos de usuario actuales ANTES de borrar
     $tiposActualesResult = $db->fetchAll(
         "SELECT DISTINCT tipo_usuario 
          FROM mtto_tickets_colaboradores 
@@ -59,7 +59,7 @@ try {
     
     $tiposActuales = array_column($tiposActualesResult, 'tipo_usuario');
     
-    // 3. Calcular el MD5 de los tipos actuales para comparar
+    // 3. Calcular el MD5 de los tipos actuales
     $md5Actual = '';
     if (!empty($tiposActuales)) {
         $md5Actual = md5(implode('|', $tiposActuales));
@@ -75,22 +75,29 @@ try {
     
     // 5. Determinar qué tipos de usuario usar
     $tiposAUsar = [];
+    $razonDecision = '';
     
     if ($equipoId === 'cambio_equipos') {
         // Para cambio de equipos, no asignar colaboradores
         $tiposAUsar = [];
+        $razonDecision = 'Cambio de equipos - sin colaboradores';
+        
     } elseif ($md5Actual === $equipoId) {
         // Si el equipo destino es el mismo que el origen, mantener los tipos actuales
         $tiposAUsar = $tiposActuales;
+        $razonDecision = 'Mismo equipo - mantener tipos actuales';
+        
     } else {
-        // Si es un equipo diferente, obtener los tipos del equipo destino
-        $tiposDestino = obtenerTiposUsuarioDeEquipo($db, $equipoId);
+        // Es un equipo diferente - buscar tipos del equipo destino
+        $tiposDestino = obtenerTiposDeEquipoPorMD5($db, $equipoId);
         
         if (!empty($tiposDestino)) {
             $tiposAUsar = $tiposDestino;
+            $razonDecision = 'Equipo diferente - usar tipos del destino';
         } else {
-            // Si no se encuentran tipos del equipo destino, mantener los actuales
+            // Si no encuentra tipos del equipo destino, mantener los actuales
             $tiposAUsar = !empty($tiposActuales) ? $tiposActuales : ['Jefe de Manteniento'];
+            $razonDecision = 'Equipo no encontrado - mantener tipos actuales como fallback';
         }
     }
     
@@ -113,9 +120,11 @@ try {
         'success' => true,
         'ticket_id' => $ticketId,
         'equipo_id' => $equipoId,
+        'md5_actual' => $md5Actual,
         'tipos_previos' => $tiposActuales,
         'tipos_aplicados' => $tiposAUsar,
-        'mismo_equipo' => ($md5Actual === $equipoId)
+        'mismo_equipo' => ($md5Actual === $equipoId),
+        'razon' => $razonDecision
     ], JSON_UNESCAPED_UNICODE);
     
 } catch (Exception $e) {
@@ -127,39 +136,36 @@ try {
     ], JSON_UNESCAPED_UNICODE);
 }
 
-function obtenerTiposUsuarioDeEquipo($db, $equipoId) {
+function obtenerTiposDeEquipoPorMD5($db, $equipoIdMD5) {
     try {
-        // Buscar cualquier ticket que tenga exactamente esa combinación de tipos
+        // Buscar TODOS los tickets del historial que tengan exactamente esa combinación
         $sql = "
-            SELECT tc.tipo_usuario
+            SELECT 
+                ticket_id,
+                GROUP_CONCAT(DISTINCT tipo_usuario ORDER BY tipo_usuario SEPARATOR '|') as tipos_str,
+                MD5(GROUP_CONCAT(DISTINCT tipo_usuario ORDER BY tipo_usuario SEPARATOR '|')) as md5_tipos
             FROM mtto_tickets_colaboradores tc
             INNER JOIN mtto_tickets t ON tc.ticket_id = t.id
             WHERE t.tipo_formulario = 'mantenimiento_general'
             AND tc.tipo_usuario IS NOT NULL
             AND tc.tipo_usuario != ''
-            AND tc.ticket_id IN (
-                SELECT ticket_id
-                FROM mtto_tickets_colaboradores tc2
-                INNER JOIN mtto_tickets t2 ON tc2.ticket_id = t2.id
-                WHERE t2.tipo_formulario = 'mantenimiento_general'
-                AND tc2.tipo_usuario IS NOT NULL
-                AND tc2.tipo_usuario != ''
-                GROUP BY tc2.ticket_id
-                HAVING MD5(GROUP_CONCAT(DISTINCT tc2.tipo_usuario ORDER BY tc2.tipo_usuario SEPARATOR '|')) = ?
-                LIMIT 1
-            )
-            GROUP BY tc.tipo_usuario
-            ORDER BY tc.tipo_usuario
+            GROUP BY tc.ticket_id
+            HAVING md5_tipos = ?
+            LIMIT 1
         ";
         
-        $result = $db->fetchAll($sql, [$equipoId]);
+        $result = $db->fetchOne($sql, [$equipoIdMD5]);
         
-        if (!empty($result)) {
-            return array_column($result, 'tipo_usuario');
+        if ($result && !empty($result['tipos_str'])) {
+            $tipos = explode('|', $result['tipos_str']);
+            return array_values(array_filter($tipos));
         }
         
         return [];
+        
     } catch (Exception $e) {
+        // Log error para debugging
+        error_log("Error en obtenerTiposDeEquipoPorMD5: " . $e->getMessage());
         return [];
     }
 }
