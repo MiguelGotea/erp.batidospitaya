@@ -287,15 +287,31 @@ $tickets_pendientes = $ticketModel->getTicketsWithoutDates();
     
     <script>
     // Renderizar tickets en el cronograma
+    // Modificar el evento DOMContentLoaded
     document.addEventListener('DOMContentLoaded', function() {
         console.log('DOM Cargado - Iniciando renderizado');
+        
+        // Mostrar loader
+        const loader = document.getElementById('loader');
+        if (loader) loader.style.display = 'flex';
         
         // Pequeño delay para asegurar que todo esté listo
         setTimeout(function() {
             renderizarCronograma();
+            
+            // Ocultar loader después de que todo esté renderizado
+            setTimeout(() => {
+                if (loader) loader.style.display = 'none';
+            }, 500);
+            
             console.log('Renderizado completado');
-        }, 100);
+        }, 200);
     });
     </script>
 </body>
+<!-- Loader -->
+<div id="loader" class="loader-overlay">
+    <div class="loader-spinner"></div>
+    <p>Cargando programación...</p>
+</div>
 </html>
