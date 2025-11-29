@@ -6,37 +6,19 @@ let resizing = null;
 // ==================== RENDERIZADO Y EMPAQUETADO ====================
 
 function renderizarCronograma() {
-    console.log('🚀 Iniciando renderizarCronograma');
-    console.log('📦 Equipos a procesar:', Object.keys(ticketsPorEquipo));
-    
-    // Forzar ancho mínimo de celdas antes de renderizar
-    document.querySelectorAll('.calendar-cell').forEach(cell => {
-        cell.style.minWidth = '120px';
-    });
-    
     // Procesar cada equipo de trabajo
     Object.keys(ticketsPorEquipo).forEach(equipo => {
-        console.log(`\n📋 Procesando equipo: "${equipo}"`);
-        
         const tickets = ticketsPorEquipo[equipo];
-        
-        if (!tickets || tickets.length === 0) {
-            console.log(`  ⚠️ Sin tickets para: ${equipo}`);
-            return;
-        }
-        
-        console.log(`  ✅ Tickets encontrados: ${tickets.length}`);
+        if (!tickets || tickets.length === 0) return;
         
         // Inicializar matriz de ocupación para este equipo
         const matrizOcupacion = [];
         const posiciones = [];
         
         // Procesar cada ticket
-        tickets.forEach((ticket, idx) => {
-            console.log(`    🎫 Ticket ${idx + 1}/${tickets.length}: ${ticket.titulo}`);
+        tickets.forEach(ticket => {
             const posicion = calcularPosicion(ticket, matrizOcupacion);
             if (posicion) {
-                console.log(`      📍 Posición: fila=${posicion.fila}, día=${posicion.diaInicio}, días=${posicion.numDias}`);
                 posiciones.push({
                     ticket: ticket,
                     fila: posicion.fila,
@@ -46,19 +28,14 @@ function renderizarCronograma() {
             }
         });
         
-        console.log(`  📊 Total filas necesarias: ${matrizOcupacion.length}`);
-        
         // Renderizar tickets en el DOM
         posiciones.forEach(pos => {
             renderizarTicket(pos.ticket, pos.fila, pos.diaInicio, pos.numDias, equipo);
         });
         
         // Ajustar altura de las celdas del equipo
-        console.log(`  🎨 Ajustando alturas para: ${equipo}`);
         ajustarAlturaCeldas(equipo, matrizOcupacion.length);
     });
-    
-    console.log('\n✅ Renderizado completado');
 }
 
 function calcularPosicion(ticket, matrizOcupacion) {
@@ -227,34 +204,15 @@ function renderizarTicket(ticket, fila, diaInicio, numDias, equipo) {
 
 function ajustarAlturaCeldas(equipo, numFilas) {
     const row = document.querySelector(`tr[data-equipo="${equipo}"]`);
-    if (!row) {
-        console.warn(`No se encontró la fila para el equipo: ${equipo}`);
-        return;
-    }
+    if (!row) return;
     
-    const alturaMinima = Math.max(100, (numFilas * 60) + 40);
+    const alturaMinima = Math.max(80, (numFilas * 60) + 20);
+    const celdas = row.querySelectorAll('.calendar-cell, .equipo-label');
     
-    console.log(`⚙️ Equipo: ${equipo}, Filas: ${numFilas}, Altura calculada: ${alturaMinima}px`);
-    
-    // Forzar altura en el TR
-    row.style.setProperty('height', alturaMinima + 'px', 'important');
-    row.style.setProperty('min-height', alturaMinima + 'px', 'important');
-    
-    // Ajustar TODAS las celdas de esta fila
-    const todasLasCeldas = row.querySelectorAll('td');
-    
-    todasLasCeldas.forEach((celda, index) => {
-        celda.style.setProperty('height', alturaMinima + 'px', 'important');
-        celda.style.setProperty('min-height', alturaMinima + 'px', 'important');
-        celda.style.setProperty('max-height', 'none', 'important');
+    celdas.forEach(celda => {
+        celda.style.minHeight = alturaMinima + 'px';
         celda.style.position = 'relative';
-        celda.style.verticalAlign = 'top';
-        celda.style.overflow = 'visible';
-        
-        console.log(`  └─ Celda ${index}: altura aplicada = ${alturaMinima}px`);
     });
-    
-    console.log(`✅ Altura ajustada para equipo: ${equipo}`);
 }
 
 // ==================== DRAG & DROP ====================

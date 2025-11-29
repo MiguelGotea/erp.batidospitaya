@@ -9,7 +9,6 @@ body {
 .calendar-table {
     margin-bottom: 0;
     font-size: 0.85rem;
-    table-layout: fixed; /* IMPORTANTE */
 }
 
 .calendar-table th {
@@ -22,33 +21,13 @@ body {
 .calendar-table td {
     padding: 0;
     vertical-align: top;
+    min-height: 80px;
     border: 1px solid #dee2e6;
-    position: relative;
-}
-
-/* FORZAR ALTURAS - Sobrescribir Bootstrap */
-.calendar-table tbody tr {
-    height: auto !important;
-}
-
-.calendar-table tbody td {
-    vertical-align: top !important;
-    overflow: visible !important;
-}
-
-.calendar-table tbody td.calendar-cell,
-.calendar-table tbody td.equipo-label {
-    box-sizing: border-box !important;
-}
-
-/* Asegurar que las celdas no colapsen */
-.table > :not(caption) > * > * {
-    padding: 0 !important;
 }
 
 .calendar-cell {
     position: relative;
-    min-width: 120px;
+    min-height: 80px;
 }
 
 .equipo-label {
@@ -56,11 +35,10 @@ body {
     font-weight: 600;
     font-size: 0.75rem;
     padding: 0.5rem;
-    vertical-align: top;
+    vertical-align: middle;
     position: sticky;
     left: 0;
     z-index: 10;
-    width: 150px;
 }
 
 /* Tarjetas de tickets */
