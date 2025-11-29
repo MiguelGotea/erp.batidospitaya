@@ -226,15 +226,25 @@ function renderizarTicket(ticket, fila, diaInicio, numDias, equipo) {
 
 function ajustarAlturaCeldas(equipo, numFilas) {
     const row = document.querySelector(`tr[data-equipo="${equipo}"]`);
-    if (!row) return;
+    if (!row) {
+        console.warn(`No se encontró fila para equipo: ${equipo}`);
+        return;
+    }
     
-    const alturaMinima = Math.max(80, (numFilas * 60) + 20);
+    // Altura mínima + altura por fila (con margen)
+    const alturaMinima = Math.max(80, (numFilas * 60) + 30);
     const celdas = row.querySelectorAll('.calendar-cell, .equipo-label');
     
-    celdas.forEach(celda => {
+    console.log(`Ajustando ${celdas.length} celdas a altura: ${alturaMinima}px`);
+    
+    celdas.forEach((celda, index) => {
         celda.style.minHeight = alturaMinima + 'px';
+        celda.style.height = alturaMinima + 'px';
         celda.style.position = 'relative';
     });
+    
+    // Forzar reflow
+    row.offsetHeight;
 }
 
 // ==================== DRAG & DROP ====================
