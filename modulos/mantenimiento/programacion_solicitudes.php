@@ -100,11 +100,30 @@ $sql_tickets = "
     ORDER BY s.nombre
 ";
 
-$params = [
-    $fecha_test_inicio, $fecha_test_fin,
-    $fecha_test_inicio, $fecha_test_fin, 
-    $fecha_test_fin, $fecha_test_inicio
-];
+try {
+    $params = [
+        $fecha_inicio_semana, $fecha_fin_semana,
+        $fecha_inicio_semana, $fecha_fin_semana,
+        $fecha_fin_semana, $fecha_inicio_semana
+    ];
+    
+    $tickets_programados = $db->fetchAll($sql_tickets, $params);
+    echo "Consulta exitosa. Resultados: " . count($tickets_programados);
+    
+} catch (Exception $e) {
+    echo "ERROR DETALLADO:<br>";
+    echo "Mensaje: " . $e->getMessage() . "<br>";
+    echo "Código: " . $e->getCode() . "<br>";
+    echo "Archivo: " . $e->getFile() . "<br>";
+    echo "Línea: " . $e->getLine() . "<br>";
+    
+    // Muestra la consulta con parámetros reemplazados
+    $sql_debug = $sql_tickets;
+    foreach ($params as $param) {
+        $sql_debug = preg_replace('/\?/', "'" . $param . "'", $sql_debug, 1);
+    }
+    echo "SQL Debug: " . $sql_debug;
+}
 
 $tickets_programados = $db->fetchAll($sql_tickets, $params);
 print_r($tickets_programados);
