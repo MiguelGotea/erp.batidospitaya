@@ -3,7 +3,7 @@
 require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/models/Ticket.php';
 
-$ticket = new Ticket();
+$ticketModel = new Ticket();
 
 // Obtener semana actual (518 por defecto)
 $semana_actual = isset($_GET['semana']) ? intval($_GET['semana']) : 518;
@@ -140,7 +140,7 @@ foreach ($tickets_programados as $ticket) {
 }
 
 // Obtener tickets sin programar
-$tickets_pendientes = $ticket->getTicketsWithoutDates();
+$tickets_pendientes = $ticketModel->getTicketsWithoutDates();
 ?>
 
 <!DOCTYPE html>
@@ -226,7 +226,7 @@ $tickets_pendientes = $ticket->getTicketsWithoutDates();
                 <select class="form-select form-select-sm" id="filtroSucursal" onchange="filtrarPendientes()">
                     <option value="">Todas las sucursales</option>
                     <?php 
-                    $sucursales = $ticket->getSucursales();
+                    $sucursales = $ticketModel->getSucursales();
                     foreach ($sucursales as $suc): 
                     ?>
                         <option value="<?php echo $suc['cod_sucursal']; ?>">
