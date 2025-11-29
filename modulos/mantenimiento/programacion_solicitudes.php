@@ -1,7 +1,4 @@
 <?php
-// TEMPORAL: Mostrar todos los errores
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
 // programacion_solicitudes.php
 require_once 'config/database.php';
 require_once 'models/Ticket.php';
@@ -83,7 +80,6 @@ sort($equipos_normalizados);
 $equipos_trabajo = array_merge($equipos_trabajo, $equipos_normalizados);
 
 // Obtener tickets programados de la semana
-// Obtener tickets programados de la semana
 $sql_tickets = "
     SELECT t.*, 
            s.nombre as nombre_sucursal,
@@ -103,18 +99,11 @@ $sql_tickets = "
     GROUP BY t.id
     ORDER BY s.nombre
 ";
-
 $tickets_programados = $db->fetchAll($sql_tickets, [
-    $fecha_inicio_semana, $fecha_fin_semana,    // Primer BETWEEN
-    $fecha_inicio_semana, $fecha_fin_semana,    // Segundo BETWEEN  
-    $fecha_fin_semana, $fecha_inicio_semana     // Tercera condición (orden INVERTIDO)
+    $fecha_inicio_semana, $fecha_fin_semana,
+    $fecha_inicio_semana, $fecha_fin_semana,
+    $fecha_fin_semana, $fecha_inicio_semana  // CAMBIO: Últimos dos parámetros invertidos
 ]);
-
-// Manejo de errores para debug
-if (!$tickets_programados) {
-    echo "Error en la consulta: " . $db->errorInfo()[2] ?? 'Error desconocido';
-    exit;
-}
 
 // Agrupar tickets por equipo de trabajo
 $tickets_por_equipo = [];
@@ -122,7 +111,7 @@ foreach ($equipos_trabajo as $equipo) {
     $tickets_por_equipo[$equipo] = [];
 }
 
-// AGREGAR "Sin Equipo" a la lista de equipos si no existe
+// AGREGAR: "Sin Equipo" a la lista antes del foreach
 if (!in_array('Sin Equipo', $equipos_trabajo)) {
     $equipos_trabajo[] = 'Sin Equipo';
     $tickets_por_equipo['Sin Equipo'] = [];
@@ -133,15 +122,18 @@ foreach ($tickets_programados as $ticket) {
     if ($ticket['tipo_formulario'] === 'cambio_equipos') {
         $equipo_key = 'Cambio de Equipos';
     } else {
-        // Normalizar equipo - CORREGIDO: Manejar NULL y strings vacíos
-        $equipo_trabajo = $ticket['equipo_trabajo'] ?? '';
-        $tipos = (!empty($equipo_trabajo) && $equipo_trabajo !== 'NULL') ? explode(' + ', $equipo_trabajo) : [];
+        // Normalizar equipo
+        $tipos = !empty($ticket['equipo_trabajo']) ? explode(' + ', $ticket['equipo_trabajo']) : [];
         $tipos_unicos = array_unique($tipos);
         sort($tipos_unicos);
         $equipo_key = implode(' + ', $tipos_unicos);
         
         if (empty($equipo_key)) {
             $equipo_key = 'Sin Equipo';
+            if (!in_array($equipo_key, $equipos_trabajo)) {
+                $equipos_trabajo[] = $equipo_key;
+                $tickets_por_equipo[$equipo_key] = [];
+            }
         }
     }
     
@@ -152,10 +144,8 @@ foreach ($tickets_programados as $ticket) {
     $tickets_por_equipo[$equipo_key][] = $ticket;
 }
 
-
 // Obtener tickets sin programar
-$ticketModel = new Ticket(); // Crear nueva instancia
-$tickets_pendientes = $ticketModel->getTicketsWithoutDates();
+$tickets_pendientes = $ticket->getTicketsWithoutDates();
 ?>
 
 <!DOCTYPE html>
@@ -290,19 +280,15 @@ $tickets_pendientes = $ticketModel->getTicketsWithoutDates();
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="js/programacion_solicitudes.js"></script>
     
-<script>
-// Datos de tickets para JavaScript
-const ticketsPorEquipo = <?php echo json_encode($tickets_por_equipo, JSON_UNESCAPED_UNICODE); ?>;
-const fechasSemana = <?php echo json_encode($fechas, JSON_UNESCAPED_UNICODE); ?>;
+    <script>
+    // Datos de tickets para JavaScript
+    const ticketsPorEquipo = <?php echo json_encode($tickets_por_equipo, JSON_UNESCAPED_UNICODE); ?>;
+    const fechasSemana = <?php echo json_encode($fechas, JSON_UNESCAPED_UNICODE); ?>;
     
-// Renderizar tickets en el cronograma
-document.addEventListener('DOMContentLoaded', function() {
-    if (typeof renderizarCronograma === 'function') {
+    // Renderizar tickets en el cronograma
+    document.addEventListener('DOMContentLoaded', function() {
         renderizarCronograma();
-    } else {
-        console.error('La función renderizarCronograma no está definida');
-    }
-});
-</script>
+    });
+    </script>
 </body>
 </html>
