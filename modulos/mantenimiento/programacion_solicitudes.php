@@ -102,9 +102,9 @@ $sql_tickets = "
 ";
 
 $tickets_programados = $db->fetchAll($sql_tickets, [
-    $fecha_inicio_semana, $fecha_fin_semana,
-    $fecha_inicio_semana, $fecha_fin_semana,
-    $fecha_fin_semana, $fecha_inicio_semana  // CAMBIO: Últimos dos parámetros invertidos
+    $fecha_inicio_semana, $fecha_fin_semana,    // Primer BETWEEN
+    $fecha_inicio_semana, $fecha_fin_semana,    // Segundo BETWEEN  
+    $fecha_fin_semana, $fecha_inicio_semana     // Tercera condición (orden INVERTIDO)
 ]);
 
 // Agrupar tickets por equipo de trabajo
