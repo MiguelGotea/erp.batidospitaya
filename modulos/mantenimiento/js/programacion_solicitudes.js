@@ -209,10 +209,17 @@ function ajustarAlturaCeldas(equipo, numFilas) {
     const alturaMinima = Math.max(80, (numFilas * 60) + 20);
     const celdas = row.querySelectorAll('.calendar-cell, .equipo-label');
     
+    // Forzar reflow antes de aplicar estilos
+    row.offsetHeight;
+    
     celdas.forEach(celda => {
         celda.style.minHeight = alturaMinima + 'px';
+        celda.style.height = alturaMinima + 'px'; // Forzar altura exacta
         celda.style.position = 'relative';
     });
+    
+    // Forzar otro reflow después de aplicar estilos
+    row.offsetHeight;
 }
 
 // ==================== DRAG & DROP ====================
