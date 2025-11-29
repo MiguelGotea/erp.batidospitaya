@@ -773,17 +773,209 @@ function mostrarDetallesTicket(ticketId) {
         method: 'GET',
         data: { id: ticketId },
         success: function(response) {
-            // Crear modal completamente aislado con estilos inline
+            // Crear estilos aislados para el modal
+            const modalStyles = `
+                <style id="modal-detalles-styles">
+                    #modalDetallesTicket * {
+                        box-sizing: border-box;
+                        margin: 0;
+                        padding: 0;
+                    }
+                    #modalDetallesTicket .modal-dialog {
+                        position: relative;
+                        width: auto;
+                        margin: 1.75rem auto;
+                        pointer-events: none;
+                        max-width: 800px;
+                    }
+                    #modalDetallesTicket .modal-content {
+                        position: relative;
+                        display: flex;
+                        flex-direction: column;
+                        width: 100%;
+                        pointer-events: auto;
+                        background-color: #fff;
+                        background-clip: padding-box;
+                        border: 1px solid rgba(0,0,0,.2);
+                        border-radius: 0.5rem;
+                        outline: 0;
+                        box-shadow: 0 0.5rem 1rem rgba(0,0,0,.15);
+                    }
+                    #modalDetallesTicket .modal-header {
+                        display: flex;
+                        flex-shrink: 0;
+                        align-items: center;
+                        justify-content: space-between;
+                        padding: 1rem 1rem;
+                        background-color: #0E544C;
+                        color: white;
+                        border-bottom: 1px solid #dee2e6;
+                        border-top-left-radius: calc(0.5rem - 1px);
+                        border-top-right-radius: calc(0.5rem - 1px);
+                    }
+                    #modalDetallesTicket .modal-title {
+                        margin-bottom: 0;
+                        line-height: 1.5;
+                        font-size: 1.25rem;
+                        font-weight: 500;
+                        color: white;
+                    }
+                    #modalDetallesTicket .btn-close {
+                        box-sizing: content-box;
+                        width: 1em;
+                        height: 1em;
+                        padding: 0.25em 0.25em;
+                        color: #fff;
+                        background: transparent url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23fff'%3e%3cpath d='M.293.293a1 1 0 011.414 0L8 6.586 14.293.293a1 1 0 111.414 1.414L9.414 8l6.293 6.293a1 1 0 01-1.414 1.414L8 9.414l-6.293 6.293a1 1 0 01-1.414-1.414L6.586 8 .293 1.707a1 1 0 010-1.414z'/%3e%3c/svg%3e") center/1em auto no-repeat;
+                        border: 0;
+                        border-radius: 0.25rem;
+                        opacity: 1;
+                        cursor: pointer;
+                    }
+                    #modalDetallesTicket .btn-close:hover {
+                        opacity: 0.75;
+                    }
+                    #modalDetallesTicket .modal-body {
+                        position: relative;
+                        flex: 1 1 auto;
+                        padding: 1.5rem;
+                        max-height: 70vh;
+                        overflow-y: auto;
+                        background-color: #fff;
+                        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+                        font-size: 1rem;
+                        line-height: 1.5;
+                        color: #212529;
+                    }
+                    #modalDetallesTicket .modal-body .form-label {
+                        display: inline-block;
+                        margin-bottom: 0.5rem;
+                        font-weight: 600;
+                        color: #212529;
+                    }
+                    #modalDetallesTicket .modal-body .form-control {
+                        display: block;
+                        width: 100%;
+                        padding: 0.375rem 0.75rem;
+                        font-size: 1rem;
+                        font-weight: 400;
+                        line-height: 1.5;
+                        color: #212529;
+                        background-color: #fff;
+                        background-clip: padding-box;
+                        border: 1px solid #ced4da;
+                        appearance: none;
+                        border-radius: 0.25rem;
+                        transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+                    }
+                    #modalDetallesTicket .modal-body .form-select {
+                        display: block;
+                        width: 100%;
+                        padding: 0.375rem 2.25rem 0.375rem 0.75rem;
+                        font-size: 1rem;
+                        font-weight: 400;
+                        line-height: 1.5;
+                        color: #212529;
+                        background-color: #fff;
+                        border: 1px solid #ced4da;
+                        border-radius: 0.25rem;
+                        transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+                    }
+                    #modalDetallesTicket .modal-body .btn {
+                        display: inline-block;
+                        font-weight: 400;
+                        line-height: 1.5;
+                        color: #212529;
+                        text-align: center;
+                        text-decoration: none;
+                        vertical-align: middle;
+                        cursor: pointer;
+                        user-select: none;
+                        background-color: transparent;
+                        border: 1px solid transparent;
+                        padding: 0.375rem 0.75rem;
+                        font-size: 1rem;
+                        border-radius: 0.25rem;
+                        transition: color .15s ease-in-out,background-color .15s ease-in-out,border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+                    }
+                    #modalDetallesTicket .modal-body .btn-primary {
+                        color: #fff;
+                        background-color: #51B8AC;
+                        border-color: #51B8AC;
+                    }
+                    #modalDetallesTicket .modal-body .btn-primary:hover {
+                        background-color: #0E544C;
+                        border-color: #0E544C;
+                    }
+                    #modalDetallesTicket .modal-body .btn-secondary {
+                        color: #fff;
+                        background-color: #6c757d;
+                        border-color: #6c757d;
+                    }
+                    #modalDetallesTicket .modal-body .btn-danger {
+                        color: #fff;
+                        background-color: #dc3545;
+                        border-color: #dc3545;
+                    }
+                    #modalDetallesTicket .modal-body .mb-3 {
+                        margin-bottom: 1rem !important;
+                    }
+                    #modalDetallesTicket .modal-body .mt-3 {
+                        margin-top: 1rem !important;
+                    }
+                    #modalDetallesTicket .modal-body .row {
+                        display: flex;
+                        flex-wrap: wrap;
+                        margin-right: -0.75rem;
+                        margin-left: -0.75rem;
+                    }
+                    #modalDetallesTicket .modal-body .col-md-6 {
+                        flex: 0 0 auto;
+                        width: 50%;
+                        padding-right: 0.75rem;
+                        padding-left: 0.75rem;
+                    }
+                    #modalDetallesTicket .modal-body .col-12 {
+                        flex: 0 0 auto;
+                        width: 100%;
+                        padding-right: 0.75rem;
+                        padding-left: 0.75rem;
+                    }
+                    #modalDetallesTicket .modal-body img {
+                        max-width: 100%;
+                        height: auto;
+                        border-radius: 0.25rem;
+                    }
+                    #modalDetallesTicket .modal-body h5,
+                    #modalDetallesTicket .modal-body h6 {
+                        margin-top: 0;
+                        margin-bottom: 0.5rem;
+                        font-weight: 600;
+                        line-height: 1.2;
+                        color: #212529;
+                    }
+                    #modalDetallesTicket .modal-body p {
+                        margin-top: 0;
+                        margin-bottom: 1rem;
+                    }
+                    #modalDetallesTicket .modal-body textarea {
+                        min-height: 100px;
+                    }
+                </style>
+            `;
+            
+            // Crear modal con ID específico
             const modalHtml = `
+                ${modalStyles}
                 <div class="modal fade" id="modalDetallesTicket" tabindex="-1" style="z-index: 1060;">
-                    <div class="modal-dialog modal-lg" style="margin: 1.75rem auto;">
-                        <div class="modal-content" style="background: white; border: 1px solid #dee2e6; border-radius: 0.5rem; box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15);">
-                            <div class="modal-header" style="display: flex; align-items: center; justify-content: space-between; padding: 1rem; background-color: #0E544C; color: white; border-bottom: 1px solid #dee2e6; border-radius: 0.5rem 0.5rem 0 0;">
-                                <h5 class="modal-title" style="margin: 0; font-size: 1.25rem; font-weight: 500; line-height: 1.5; color: white;">Detalles de la Solicitud</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="padding: 0.5rem; margin: -0.5rem -0.5rem -0.5rem auto; background: transparent url('data:image/svg+xml,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 16 16%27 fill=%27%23fff%27%3e%3cpath d=%27M.293.293a1 1 0 011.414 0L8 6.586 14.293.293a1 1 0 111.414 1.414L9.414 8l6.293 6.293a1 1 0 01-1.414 1.414L8 9.414l-6.293 6.293a1 1 0 01-1.414-1.414L6.586 8 .293 1.707a1 1 0 010-1.414z%27/%3e%3c/svg%3e') center/1em auto no-repeat; border: 0; opacity: 1; cursor: pointer;"></button>
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Detalles de la Solicitud</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                             </div>
-                            <div class="modal-body" style="position: relative; flex: 1 1 auto; padding: 1.5rem; max-height: 70vh; overflow-y: auto; background-color: white; font-family: inherit; font-size: 1rem; line-height: 1.5; color: #212529;">
-                                <div style="all: revert;">${response}</div>
+                            <div class="modal-body">
+                                ${response}
                             </div>
                         </div>
                     </div>
@@ -808,7 +1000,9 @@ function mostrarDetallesTicket(ticketId) {
             
             modal.show();
             
-            modalElement.addEventListener('hidden.bs.modal', function() { 
+            modalElement.addEventListener('hidden.bs.modal', function() {
+                // Eliminar también los estilos
+                $('#modal-detalles-styles').remove();
                 modalElement.remove(); 
             });
         },
