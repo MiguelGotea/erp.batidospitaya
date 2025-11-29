@@ -99,6 +99,7 @@ $sql_tickets = "
     GROUP BY t.id
     ORDER BY s.nombre
 ";
+
 $tickets_programados = $db->fetchAll($sql_tickets, [
     $fecha_inicio_semana, $fecha_fin_semana,
     $fecha_inicio_semana, $fecha_fin_semana,
@@ -110,8 +111,6 @@ $tickets_por_equipo = [];
 foreach ($equipos_trabajo as $equipo) {
     $tickets_por_equipo[$equipo] = [];
 }
-
-
 
 foreach ($tickets_programados as $ticket) {
     // Determinar equipo
