@@ -313,22 +313,6 @@ body.resizing * {
     animation: slideIn 0.3s ease-out;
 }
 
-/* Header personalizado */
-.page-header {
-    background-color: #0E544C;
-    padding: 1.5rem;
-    border-radius: 8px;
-    color: white;
-    box-shadow: 0 4px 12px rgba(14, 84, 76, 0.2);
-    margin-bottom: 1.5rem;
-}
-
-.page-header h4 {
-    margin: 0;
-    font-weight: 600;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
 /* Botones de navegación */
 .btn-nav-week {
     background-color: #51B8AC;
