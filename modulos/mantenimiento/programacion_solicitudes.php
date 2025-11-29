@@ -113,7 +113,7 @@ foreach ($equipos_trabajo as $equipo) {
 
 
 
-oreach ($tickets_programados as $ticket) {
+foreach ($tickets_programados as $ticket) {
     // Determinar equipo
     if ($ticket['tipo_formulario'] === 'cambio_equipos') {
         $equipo_key = 'Cambio de Equipos';
