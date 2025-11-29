@@ -1,6 +1,6 @@
 <?php
 // historial_solicitudes.php
-$version = "1.0.1";
+$version = "1.0.2";
 
 require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/models/Ticket.php';
@@ -8,8 +8,8 @@ require_once __DIR__ . '/models/Ticket.php';
 $ticketModel = new Ticket();
 
 // Variables de filtro (completar manualmente)
-$codigo_sucursal_busqueda = ''; // Ej: 'SUC001'
-$cargoOperario = 0; // 5 = filtrado por sucursal, otro = sin filtro
+$codigo_sucursal_busqueda = 12; // Ej: 'SUC001'
+$cargoOperario = 5; // 5 = filtrado por sucursal, otro = sin filtro
 
 // Determinar si se filtra por sucursal
 $filtrar_sucursal = ($cargoOperario == 5 && !empty($codigo_sucursal_busqueda));
