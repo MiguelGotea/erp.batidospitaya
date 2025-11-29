@@ -1,0 +1,270 @@
+/* css/historial_solicitudes.css */
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background-color: #f8f9fa;
+}
+
+/* Header */
+.page-header {
+    background-color: #0E544C;
+    padding: 1.5rem;
+    border-radius: 8px;
+    color: white;
+    box-shadow: 0 4px 12px rgba(14, 84, 76, 0.2);
+}
+
+.page-header h4 {
+    margin: 0;
+    font-weight: 600;
+}
+
+/* Filtros */
+.filtros-container {
+    background-color: white;
+    padding: 1rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(14, 84, 76, 0.1);
+}
+
+/* Tabla */
+.tabla-solicitudes {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(14, 84, 76, 0.1);
+    margin-bottom: 0;
+}
+
+.tabla-solicitudes thead {
+    background-color: #0E544C;
+    color: white;
+}
+
+.tabla-solicitudes thead th {
+    vertical-align: middle;
+    padding: 0.75rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    border: none;
+    position: relative;
+    white-space: nowrap;
+}
+
+.tabla-solicitudes tbody tr {
+    transition: background-color 0.2s;
+}
+
+.tabla-solicitudes tbody tr:hover {
+    background-color: #f0f7f6;
+}
+
+.tabla-solicitudes tbody td {
+    vertical-align: middle;
+    padding: 0.75rem;
+    font-size: 0.85rem;
+    border-bottom: 1px solid #dee2e6;
+}
+
+/* Botón de filtro */
+.btn-filtro {
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    padding: 0.25rem;
+    margin-left: 0.5rem;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+}
+
+.btn-filtro:hover {
+    opacity: 1;
+}
+
+.btn-filtro i {
+    font-size: 0.85rem;
+}
+
+/* Badge de urgencia */
+.badge-urgencia {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.35rem 0.65rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: white;
+    min-width: 100px;
+}
+
+/* Badge de estado */
+.badge-status {
+    display: inline-block;
+    padding: 0.35rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: white;
+    text-transform: capitalize;
+}
+
+/* Badge de tipo */
+.badge-tipo {
+    display: inline-block;
+    background-color: #51B8AC;
+    color: white;
+    padding: 0.35rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+/* Selector de urgencia */
+.urgencia-selector {
+    display: flex;
+    gap: 0.25rem;
+    align-items: center;
+}
+
+.urgencia-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 4px;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: bold;
+    color: white;
+}
+
+.urgencia-btn:hover {
+    transform: scale(1.1);
+    border-color: #0E544C;
+}
+
+.urgencia-btn.active {
+    border-color: #0E544C;
+    box-shadow: 0 0 0 3px rgba(14, 84, 76, 0.2);
+}
+
+/* Botón de fotos */
+.btn-fotos {
+    background-color: #51B8AC;
+    border: none;
+    color: white;
+    padding: 0.35rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-fotos:hover {
+    background-color: #0E544C;
+    transform: translateY(-1px);
+}
+
+.btn-fotos:disabled {
+    background-color: #6c757d;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Lista de opciones en modal filtro */
+.lista-opciones {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    padding: 0.5rem;
+}
+
+.opcion-filtro {
+    padding: 0.35rem 0.5rem;
+    cursor: pointer;
+    border-radius: 3px;
+    transition: background-color 0.2s;
+    font-size: 0.85rem;
+}
+
+.opcion-filtro:hover {
+    background-color: #e8f5f3;
+}
+
+.opcion-filtro.selected {
+    background-color: #51B8AC;
+    color: white;
+}
+
+/* Paginación */
+.pagination {
+    margin: 0;
+}
+
+.pagination .page-link {
+    color: #0E544C;
+    border-color: #dee2e6;
+}
+
+.pagination .page-item.active .page-link {
+    background-color: #51B8AC;
+    border-color: #51B8AC;
+}
+
+.pagination .page-link:hover {
+    background-color: #e8f5f3;
+    border-color: #51B8AC;
+}
+
+/* Carousel de fotos */
+#carouselFotos .carousel-inner img {
+    width: 100%;
+    height: auto;
+    max-height: 500px;
+    object-fit: contain;
+}
+
+#carouselFotos .carousel-control-prev,
+#carouselFotos .carousel-control-next {
+    background-color: rgba(14, 84, 76, 0.3);
+    width: 10%;
+}
+
+/* Texto truncado con tooltip */
+.texto-truncado {
+    max-width: 300px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: help;
+}
+
+.texto-expandible {
+    max-width: 400px;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    cursor: pointer;
+}
+
+.texto-expandible:hover {
+    color: #51B8AC;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .tabla-solicitudes {
+        font-size: 0.75rem;
+    }
+    
+    .tabla-solicitudes thead th,
+    .tabla-solicitudes tbody td {
+        padding: 0.5rem;
+    }
+}
