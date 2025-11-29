@@ -280,10 +280,13 @@ $tickets_pendientes = $ticketModel->getTicketsWithoutDates();
     const ticketsPorEquipo = <?php echo json_encode($tickets_por_equipo, JSON_UNESCAPED_UNICODE); ?>;
     const fechasSemana = <?php echo json_encode($fechas, JSON_UNESCAPED_UNICODE); ?>;
     
-    // Renderizar tickets en el cronograma
     document.addEventListener('DOMContentLoaded', function() {
-        renderizarCronograma();
+        // Esperar un frame más para asegurar que el layout esté calculado
+        setTimeout(() => {
+            renderizarCronograma();
+        }, 100);
     });
+
     </script>
 </body>
 </html>
