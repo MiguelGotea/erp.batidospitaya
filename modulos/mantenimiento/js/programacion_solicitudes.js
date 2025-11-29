@@ -152,25 +152,29 @@ function renderizarTicket(ticket, fila, diaInicio, numDias, equipo) {
     card.style.left = '5px';
     card.style.width = anchoCard + 'px';
     card.style.height = '55px';
+    card.style.backgroundColor = 'white';
+    card.style.border = '1px solid #ddd';
+    card.style.borderRadius = '4px';
+    card.style.padding = '0.4rem 0.5rem';
     card.style.cursor = 'move';
     card.style.boxSizing = 'border-box';
-    card.style.zIndex = '50';
+    card.style.overflow = 'hidden';
     
     card.innerHTML = `
         <div style="position: relative; height: 100%;">
-            <div style="font-size: 0.8rem; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 30px;">
+            <div style="font-size: 0.8rem; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 25px;">
                 ${ticket.titulo}
             </div>
-            <div style="font-size: 0.7rem; color: #666; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 30px; padding-bottom: 22px;">
+            <div style="font-size: 0.7rem; color: #666; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 25px;">
                 ${ticket.nombre_sucursal}
             </div>
             
             <button class="btn-desprogramar" onclick="desprogramarTicket(${ticket.id}, event)" title="Desprogramar">
-                <i class="bi bi-x-lg"></i>
+                <i class="bi bi-x"></i>
             </button>
             
             <button class="btn-colaboradores" onclick="mostrarColaboradores(${ticket.id}, event)" title="Asignar colaboradores">
-                <i class="bi bi-plus-lg"></i>
+                <i class="bi bi-plus"></i>
             </button>
             
             ${ticket.nivel_urgencia ? `
@@ -196,55 +200,6 @@ function renderizarTicket(ticket, fila, diaInicio, numDias, equipo) {
     });
     
     celdaInicio.appendChild(card);
-    
-    // IMPORTANTE: Extender pointer-events a todas las celdas que ocupa
-    for (let i = 1; i < numDias; i++) {
-        const celdaSiguiente = celdas[diaInicio + i];
-        if (celdaSiguiente) {
-            // Crear overlay invisible para capturar eventos
-            const overlay = document.createElement('div');
-            overlay.style.position = 'absolute';
-            overlay.style.top = top + 'px';
-            overlay.style.left = '0';
-            overlay.style.width = '100%';
-            overlay.style.height = '55px';
-            overlay.style.pointerEvents = 'auto';
-            overlay.style.cursor = 'move';
-            overlay.style.zIndex = '49';
-            
-            // Replicar eventos del card original
-            overlay.addEventListener('mouseenter', () => {
-                card.style.borderColor = '#0E544C';
-                card.style.boxShadow = '0 4px 12px rgba(14, 84, 76, 0.25)';
-                card.style.transform = 'translateY(-1px)';
-                card.querySelectorAll('.btn-desprogramar, .btn-colaboradores, .resize-handle').forEach(el => {
-                    el.style.opacity = '1';
-                });
-            });
-            
-            overlay.addEventListener('mouseleave', () => {
-                if (!card.matches(':hover')) {
-                    card.style.borderColor = '#51B8AC';
-                    card.style.boxShadow = '0 2px 4px rgba(14, 84, 76, 0.1)';
-                    card.style.transform = '';
-                    card.querySelectorAll('.btn-desprogramar, .btn-colaboradores, .resize-handle').forEach(el => {
-                        el.style.opacity = '0';
-                    });
-                }
-            });
-            
-            overlay.addEventListener('click', (e) => {
-                mostrarDetallesTicket(ticket.id);
-            });
-            
-            overlay.draggable = true;
-            overlay.addEventListener('dragstart', (e) => {
-                handleDragStart.call(card, e);
-            });
-            
-            celdaSiguiente.appendChild(overlay);
-        }
-    }
 }
 
 function ajustarAlturaCeldas(equipo, numFilas) {
@@ -576,33 +531,21 @@ function renderModalColaboradores(ticketId, colaboradores, operarios) {
 }
 
 function agregarColaborador(ticketId, codOperario, tipoUsuario) {
-    // Validar que se haya seleccionado un colaborador cuando viene de la nueva fila
-    const selectColaborador = document.getElementById('nuevoColaborador');
-    if (selectColaborador && !codOperario) {
-        codOperario = selectColaborador.value;
-    }
-    
     $.ajax({
         url: 'ajax/agenda_save_colaborador.php',
         method: 'POST',
         data: {
             ticket_id: ticketId,
-            cod_operario: codOperario || null, // Permitir NULL
+            cod_operario: codOperario,
             tipo_usuario: tipoUsuario
         },
         dataType: 'json',
         success: function(response) {
             if (response.success) {
-                // Cerrar modal y recargar (necesario para recalcular equipos)
                 $('#modalColaboradores').modal('hide');
-                location.reload();
             } else {
                 alert('Error: ' + response.message);
             }
-        },
-        error: function(xhr) {
-            console.error('Error completo:', xhr.responseText);
-            alert('Error al agregar colaborador. Ver consola para detalles.');
         }
     });
 }
@@ -630,10 +573,6 @@ function eliminarColaborador(colaboradorId) {
         success: function(response) {
             if (response.success) {
                 $(`tr[data-id="${colaboradorId}"]`).remove();
-                // Mostrar mensaje temporal
-                const mensaje = $('<div class="alert alert-success" style="position: fixed; top: 20px; right: 20px; z-index: 9999;">Colaborador eliminado</div>');
-                $('body').append(mensaje);
-                setTimeout(() => mensaje.fadeOut(() => mensaje.remove()), 2000);
             }
         }
     });
@@ -707,26 +646,8 @@ function mostrarDetallesTicket(ticketId) {
         method: 'GET',
         data: { id: ticketId },
         success: function(response) {
-            // Crear modal aislado sin heredar estilos
-            const modalHtml = `
-                <div class="modal fade" id="modalDetallesTicket" tabindex="-1" style="z-index: 1060;">
-                    <div class="modal-dialog modal-lg">
-                        <div class="modal-content" style="all: initial; font-family: inherit;">
-                            <div class="modal-header" style="background-color: #0E544C; color: white; padding: 1rem; border-bottom: 1px solid #dee2e6; border-radius: 0.3rem 0.3rem 0 0;">
-                                <h5 class="modal-title" style="margin: 0; font-size: 1.25rem; font-weight: 500;">Detalles de la Solicitud</h5>
-                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" style="padding: 0.5rem; margin: -0.5rem -0.5rem -0.5rem auto;"></button>
-                            </div>
-                            <div class="modal-body" style="padding: 1rem; max-height: 70vh; overflow-y: auto; background-color: white;">
-                                ${response}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            $('body').append(modalHtml);
-            const modalElement = document.getElementById('modalDetallesTicket');
-            const modal = new bootstrap.Modal(modalElement);
+            const modal = $('<div class="modal fade"><div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header"><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body">' + response + '</div></div></div></div>');
+            $('body').append(modal);
             
             setTimeout(function() {
                 const hiddenInput = document.getElementById('edit_nivel_urgencia');
@@ -738,16 +659,12 @@ function mostrarDetallesTicket(ticketId) {
                 if (typeof initUrgencyControls === 'function') {
                     initUrgencyControls();
                 }
-            }, 100);
+            }, 0);
             
-            modal.show();
-            
-            modalElement.addEventListener('hidden.bs.modal', function() { 
-                modalElement.remove(); 
+            modal.modal('show');
+            modal.on('hidden.bs.modal', function() { 
+                modal.remove(); 
             });
-        },
-        error: function() {
-            alert('Error al cargar los detalles de la solicitud');
         }
     });
 }
