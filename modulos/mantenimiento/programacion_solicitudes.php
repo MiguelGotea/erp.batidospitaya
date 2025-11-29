@@ -107,7 +107,13 @@ $params = [
     $fecha_fin_semana, $fecha_inicio_semana   // Tercera condición (orden cambiado)
 ];
 
+echo "SQL: " . $sql_tickets . "<br>";
+echo "Parámetros: ";
+print_r($params);
+echo "<br>";
+
 $tickets_programados = $db->fetchAll($sql_tickets, $params);
+echo "Número de tickets: " . count($tickets_programados);
 // Verifica que $db esté bien inicializada
 var_dump(get_class($db));
 print_r($tickets_programados);
