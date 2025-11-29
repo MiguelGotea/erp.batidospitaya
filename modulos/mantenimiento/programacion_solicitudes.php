@@ -122,18 +122,15 @@ foreach ($tickets_programados as $ticket) {
     if ($ticket['tipo_formulario'] === 'cambio_equipos') {
         $equipo_key = 'Cambio de Equipos';
     } else {
-        // Normalizar equipo
-        $tipos = !empty($ticket['equipo_trabajo']) ? explode(' + ', $ticket['equipo_trabajo']) : [];
+        // CAMBIO: Manejo mejorado de valores NULL/vacíos
+        $equipo_trabajo = $ticket['equipo_trabajo'] ?? '';
+        $tipos = (!empty($equipo_trabajo) && $equipo_trabajo !== 'NULL') ? explode(' + ', $equipo_trabajo) : [];
         $tipos_unicos = array_unique($tipos);
         sort($tipos_unicos);
         $equipo_key = implode(' + ', $tipos_unicos);
         
         if (empty($equipo_key)) {
             $equipo_key = 'Sin Equipo';
-            if (!in_array($equipo_key, $equipos_trabajo)) {
-                $equipos_trabajo[] = $equipo_key;
-                $tickets_por_equipo[$equipo_key] = [];
-            }
         }
     }
     
