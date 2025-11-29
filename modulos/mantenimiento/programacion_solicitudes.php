@@ -147,24 +147,5 @@ $tickets_pendientes = $ticket->getTicketsWithoutDates();
 <!DOCTYPE html>
 <html lang="es">
 
-<body>
-    <div class="container-fluid p-3">
-       
-    </div>
 
-    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="js/programacion_solicitudes.js"></script>
-    
-    <script>
-    // Datos de tickets para JavaScript
-    const ticketsPorEquipo = <?php echo json_encode($tickets_por_equipo, JSON_UNESCAPED_UNICODE); ?>;
-    const fechasSemana = <?php echo json_encode($fechas, JSON_UNESCAPED_UNICODE); ?>;
-    
-    // Renderizar tickets en el cronograma
-    document.addEventListener('DOMContentLoaded', function() {
-        renderizarCronograma();
-    });
-    </script>
-</body>
 </html>
