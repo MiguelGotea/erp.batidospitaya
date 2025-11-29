@@ -81,8 +81,30 @@ $equipos_trabajo = array_merge($equipos_trabajo, $equipos_normalizados);
 
 // Obtener tickets programados de la semana
 $sql_tickets = "
-    SELECT t.*,
-           s.nombre as nombre_sucursal,
+    SELECT t.id, 
+           ANY_VALUE(t.codigo) as codigo,
+           ANY_VALUE(t.titulo) as titulo,
+           ANY_VALUE(t.descripcion) as descripcion,
+           ANY_VALUE(t.tipo_formulario) as tipo_formulario,
+           ANY_VALUE(t.cod_operario) as cod_operario,
+           ANY_VALUE(t.cod_sucursal) as cod_sucursal,
+           ANY_VALUE(t.area_equipo) as area_equipo,
+           ANY_VALUE(t.foto) as foto,
+           ANY_VALUE(t.nivel_urgencia) as nivel_urgencia,
+           ANY_VALUE(t.fecha_inicio) as fecha_inicio,
+           ANY_VALUE(t.fecha_final) as fecha_final,
+           ANY_VALUE(t.status) as status,
+           ANY_VALUE(t.tipo_caso_id) as tipo_caso_id,
+           ANY_VALUE(t.created_at) as created_at,
+           ANY_VALUE(t.updated_at) as updated_at,
+           ANY_VALUE(t.detalle_trabajo) as detalle_trabajo,
+           ANY_VALUE(t.materiales_usados) as materiales_usados,
+           ANY_VALUE(t.fecha_finalizacion) as fecha_finalizacion,
+           ANY_VALUE(t.finalizado_por) as finalizado_por,
+           ANY_VALUE(t.tiempo_estimado) as tiempo_estimado,
+           ANY_VALUE(s.nombre) as nombre_sucursal,
+           CAST(t.fecha_inicio AS DATE) as fecha_inicio_date,
+           CAST(t.fecha_final AS DATE) as fecha_final_date,
            GROUP_CONCAT(DISTINCT tc.tipo_usuario ORDER BY tc.tipo_usuario SEPARATOR ' + ') as equipo_trabajo
     FROM mtto_tickets t
     LEFT JOIN sucursales s ON t.cod_sucursal = s.codigo
@@ -90,9 +112,9 @@ $sql_tickets = "
     WHERE t.fecha_inicio IS NOT NULL 
     AND t.fecha_final IS NOT NULL
     AND (
-        (t.fecha_inicio BETWEEN ? AND ?)
-        OR (t.fecha_final BETWEEN ? AND ?)
-        OR (t.fecha_inicio <= ? AND t.fecha_final >= ?)
+        (CAST(t.fecha_inicio AS DATE) BETWEEN ? AND ?)
+        OR (CAST(t.fecha_final AS DATE) BETWEEN ? AND ?)
+        OR (CAST(t.fecha_inicio AS DATE) <= ? AND CAST(t.fecha_final AS DATE) >= ?)
     )
     GROUP BY t.id
     ORDER BY s.nombre
