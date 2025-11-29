@@ -226,7 +226,7 @@ $tickets_pendientes = $ticketModel->getTicketsWithoutDates();
                 <select class="form-select form-select-sm" id="filtroSucursal" onchange="filtrarPendientes()">
                     <option value="">Todas las sucursales</option>
                     <?php 
-                    $sucursales = $ticket->getSucursales();
+                    $sucursales = $ticketModel->getSucursales();
                     foreach ($sucursales as $suc): 
                     ?>
                         <option value="<?php echo $suc['cod_sucursal']; ?>">
