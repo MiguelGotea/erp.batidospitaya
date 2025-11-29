@@ -9,6 +9,8 @@ body {
 .calendar-table {
     margin-bottom: 0;
     font-size: 0.85rem;
+    table-layout: fixed;
+    width: 100%;
 }
 
 .calendar-table th {
@@ -23,11 +25,13 @@ body {
     vertical-align: top;
     min-height: 80px;
     border: 1px solid #dee2e6;
+    position: relative;
 }
 
 .calendar-cell {
     position: relative;
     min-height: 80px;
+    width: 100%;
 }
 
 .equipo-label {
@@ -39,6 +43,15 @@ body {
     position: sticky;
     left: 0;
     z-index: 10;
+    min-width: 150px;
+    max-width: 150px;
+    width: 150px;
+}
+
+/* Contenedor para scroll horizontal si es necesario */
+.table-responsive {
+    overflow-x: auto;
+    overflow-y: visible;
 }
 
 /* Tarjetas de tickets */
