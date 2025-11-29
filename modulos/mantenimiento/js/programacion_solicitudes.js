@@ -208,13 +208,7 @@ function ajustarAlturaCeldas(equipo, numFilas) {
     
     const alturaMinima = Math.max(80, (numFilas * 60) + 20);
     const celdas = row.querySelectorAll('.calendar-cell, .equipo-label');
-
-    console.log(`Ajustando equipo ${equipo} a ${alturaMinima}px (${numFilas} filas)`);
     
-    // Forzar múltiples reflows
-    void row.offsetHeight; // Reflow 1
-    void row.offsetWidth;  // Reflow 2
-
     celdas.forEach(celda => {
         celda.style.minHeight = alturaMinima + 'px';
         celda.style.position = 'relative';
