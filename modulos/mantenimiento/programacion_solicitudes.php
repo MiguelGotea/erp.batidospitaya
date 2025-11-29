@@ -108,7 +108,8 @@ $params = [
 ];
 
 $tickets_programados = $db->fetchAll($sql_tickets, $params);
-
+// Verifica que $db esté bien inicializada
+var_dump(get_class($db));
 print_r($tickets_programados);
 
 $tickets_programados = $db->fetchAll($sql_tickets, $params);
