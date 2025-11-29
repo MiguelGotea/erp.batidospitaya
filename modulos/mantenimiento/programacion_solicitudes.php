@@ -78,9 +78,10 @@ foreach ($equipos_unicos as $equipo) {
 
 sort($equipos_normalizados);
 $equipos_trabajo = array_merge($equipos_trabajo, $equipos_normalizados);
-// Prueba con fechas que sabes que existen
-$fecha_test_inicio = '2024-01-01';
-$fecha_test_fin = '2024-12-31';
+
+// Define las fechas primero
+$fecha_inicio_semana = '2025-11-24';
+$fecha_fin_semana = '2025-11-29';
 
 $sql_tickets = "
     SELECT t.*, 
@@ -100,20 +101,19 @@ $sql_tickets = "
     ORDER BY s.nombre
 ";
 
-// NOTA: El orden de los parámetros en la última condición
 $params = [
-    $fecha_inicio_semana, $fecha_fin_semana,  // Primer BETWEEN
-    $fecha_inicio_semana, $fecha_fin_semana,  // Segundo BETWEEN  
-    $fecha_fin_semana, $fecha_inicio_semana   // Tercera condición (orden cambiado)
+    $fecha_inicio_semana, $fecha_fin_semana,
+    $fecha_inicio_semana, $fecha_fin_semana,
+    $fecha_fin_semana, $fecha_inicio_semana
 ];
 
-echo "SQL: " . $sql_tickets . "<br>";
-echo "Parámetros: ";
-print_r($params);
-echo "<br>";
-
-$tickets_programados = $db->fetchAll($sql_tickets, $params);
-echo "Número de tickets: " . count($tickets_programados);
+try {
+    $tickets_programados = $db->fetchAll($sql_tickets, $params);
+    echo "ÉXITO: " . count($tickets_programados) . " tickets encontrados";
+} catch (Exception $e) {
+    echo "ERROR: " . $e->getMessage();
+}
+?>
 // Verifica que $db esté bien inicializada
 var_dump(get_class($db));
 print_r($tickets_programados);
