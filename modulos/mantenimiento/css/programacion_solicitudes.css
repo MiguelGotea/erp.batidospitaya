@@ -2,20 +2,26 @@
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    background-color: #f8f9fa;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
 }
 
 /* Tabla del cronograma */
 .calendar-table {
     margin-bottom: 0;
     font-size: 0.85rem;
+    background-color: white;
+    box-shadow: 0 2px 8px rgba(14, 84, 76, 0.1);
+    border-radius: 8px;
+    overflow: hidden;
 }
 
 .calendar-table th {
     text-align: center;
     vertical-align: middle;
-    padding: 0.5rem;
-    font-size: 0.8rem;
+    padding: 0.75rem 0.5rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
 }
 
 .calendar-table td {
@@ -23,22 +29,31 @@ body {
     vertical-align: top;
     min-height: 80px;
     border: 1px solid #dee2e6;
+    background-color: #fafbfc;
 }
 
 .calendar-cell {
     position: relative;
     min-height: 80px;
+    transition: background-color 0.2s;
+}
+
+.calendar-cell:hover {
+    background-color: #f0f7f6;
 }
 
 .equipo-label {
-    background-color: #f8f9fa;
+    background: linear-gradient(135deg, #0E544C 0%, #51B8AC 100%);
+    color: white;
     font-weight: 600;
-    font-size: 0.75rem;
-    padding: 0.5rem;
+    font-size: 0.8rem;
+    padding: 0.75rem 0.5rem;
     vertical-align: middle;
     position: sticky;
     left: 0;
     z-index: 10;
+    text-align: center;
+    box-shadow: 2px 0 8px rgba(14, 84, 76, 0.1);
 }
 
 /* Tarjetas de tickets */
@@ -46,18 +61,22 @@ body {
     position: absolute;
     box-sizing: border-box;
     height: 55px;
-    background-color: white;
-    border: 1px solid #ddd;
-    border-radius: 4px;
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    border: 2px solid #51B8AC;
+    border-radius: 6px;
     padding: 0.4rem 0.5rem;
     cursor: move;
-    transition: box-shadow 0.2s;
-    overflow: hidden;
+    transition: all 0.2s;
+    overflow: visible;
+    box-shadow: 0 2px 4px rgba(14, 84, 76, 0.1);
+    pointer-events: auto;
 }
 
 .ticket-card:hover {
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    box-shadow: 0 4px 12px rgba(14, 84, 76, 0.25);
+    transform: translateY(-1px);
     z-index: 100;
+    border-color: #0E544C;
 }
 
 .ticket-card:hover .btn-desprogramar,
@@ -69,66 +88,69 @@ body {
 /* Botones en tarjetas */
 .btn-desprogramar {
     position: absolute;
-    top: 0.25rem;
-    right: 2rem;
-    background: none;
+    bottom: 0.25rem;
+    left: 0.25rem;
+    background-color: #dc3545;
     border: none;
-    color: #dc3545;
-    font-size: 1rem;
+    color: white;
+    font-size: 0.75rem;
     cursor: pointer;
-    padding: 0;
-    width: 20px;
-    height: 20px;
+    padding: 0.15rem 0.35rem;
+    border-radius: 3px;
     display: flex;
     align-items: center;
     justify-content: center;
     opacity: 0;
-    transition: opacity 0.2s;
+    transition: all 0.2s;
     z-index: 10;
+    font-weight: 600;
 }
 
 .btn-desprogramar:hover {
-    color: #a71d2a;
+    background-color: #a71d2a;
+    transform: scale(1.05);
 }
 
 .btn-colaboradores {
     position: absolute;
-    top: 0.25rem;
-    right: 3.5rem;
-    background: none;
+    bottom: 0.25rem;
+    left: 2rem;
+    background-color: #51B8AC;
     border: none;
-    color: #51B8AC;
-    font-size: 1rem;
+    color: white;
+    font-size: 0.75rem;
     cursor: pointer;
-    padding: 0;
-    width: 20px;
-    height: 20px;
+    padding: 0.15rem 0.35rem;
+    border-radius: 3px;
     display: flex;
     align-items: center;
     justify-content: center;
     opacity: 0;
-    transition: opacity 0.2s;
+    transition: all 0.2s;
     z-index: 10;
+    font-weight: 600;
 }
 
 .btn-colaboradores:hover {
-    color: #3d8d83;
+    background-color: #0E544C;
+    transform: scale(1.05);
 }
 
 /* Badge de urgencia en tarjeta */
 .badge-urgencia-card {
     position: absolute;
-    bottom: 0.25rem;
+    top: 0.25rem;
     right: 0.25rem;
-    width: 18px;
-    height: 18px;
-    border-radius: 3px;
+    width: 22px;
+    height: 22px;
+    border-radius: 4px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.7rem;
+    font-size: 0.75rem;
     font-weight: bold;
     color: white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
 /* Resize handle */
@@ -138,15 +160,16 @@ body {
     right: 0;
     bottom: 0;
     width: 12px;
-    background-color: rgba(81, 184, 172, 0.3);
+    background: linear-gradient(90deg, transparent 0%, rgba(81, 184, 172, 0.4) 100%);
     cursor: ew-resize;
     opacity: 0;
-    transition: opacity 0.2s;
+    transition: all 0.2s;
     z-index: 5;
 }
 
 .resize-handle:hover {
-    background-color: rgba(81, 184, 172, 0.5);
+    background: linear-gradient(90deg, transparent 0%, rgba(14, 84, 76, 0.6) 100%);
+    width: 14px;
 }
 
 body.resizing {
@@ -165,12 +188,13 @@ body.resizing * {
     right: -400px;
     width: 400px;
     height: 100vh;
-    background-color: white;
-    box-shadow: -2px 0 10px rgba(0,0,0,0.1);
+    background: linear-gradient(180deg, #ffffff 0%, #f8f9fa 100%);
+    box-shadow: -4px 0 20px rgba(14, 84, 76, 0.15);
     transition: right 0.3s ease;
     z-index: 1050;
     display: flex;
     flex-direction: column;
+    border-left: 3px solid #51B8AC;
 }
 
 .sidebar-pendientes.open {
@@ -197,21 +221,24 @@ body.resizing * {
 
 /* Tarjetas de tickets pendientes */
 .ticket-pendiente {
-    background-color: white;
-    border: 1px solid #ddd;
-    border-radius: 4px;
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    border: 2px solid #51B8AC;
+    border-radius: 6px;
     padding: 0.6rem;
     margin-bottom: 0.5rem;
     cursor: move;
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    transition: box-shadow 0.2s;
+    transition: all 0.2s;
     position: relative;
+    box-shadow: 0 2px 4px rgba(14, 84, 76, 0.1);
 }
 
 .ticket-pendiente:hover {
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    box-shadow: 0 4px 12px rgba(14, 84, 76, 0.25);
+    transform: translateX(4px);
+    border-color: #0E544C;
 }
 
 .ticket-content {
@@ -235,34 +262,39 @@ body.resizing * {
 
 .badge-tipo {
     display: inline-block;
-    background-color: #e9ecef;
-    color: #495057;
-    padding: 0.15rem 0.4rem;
-    border-radius: 3px;
+    background: linear-gradient(135deg, #51B8AC 0%, #0E544C 100%);
+    color: white;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
     font-size: 0.7rem;
+    font-weight: 600;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
 }
 
 .badge-urgencia {
-    width: 20px;
-    height: 20px;
-    border-radius: 3px;
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.75rem;
+    font-size: 0.8rem;
     font-weight: bold;
     color: white;
     flex-shrink: 0;
     margin-left: 0.5rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
 /* Drag states */
 .dragging {
-    opacity: 0.5;
+    opacity: 0.6;
+    transform: scale(0.98);
 }
 
 .drag-over {
-    background-color: #e8f5f3 !important;
+    background: linear-gradient(135deg, #e8f5f3 0%, #d0ede9 100%) !important;
+    border: 2px dashed #51B8AC !important;
 }
 
 /* Responsive */
