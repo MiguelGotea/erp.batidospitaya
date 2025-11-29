@@ -1,5 +1,4 @@
 <?php
-$version = "1.0.5"; // Incrementa cuando hagas cambios
 // programacion_solicitudes.php
 require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/models/Ticket.php';
@@ -152,7 +151,7 @@ $tickets_pendientes = $ticketModel->getTicketsWithoutDates();
     <title>Programación de Solicitudes</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="css/programacion_solicitudes.css?v=<?php echo $version; ?>">
+    <link rel="stylesheet" href="css/programacion_solicitudes.css">
 </head>
 <body>
     <div class="container-fluid p-3">
@@ -274,7 +273,7 @@ $tickets_pendientes = $ticketModel->getTicketsWithoutDates();
 
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="js/programacion_solicitudes.js?v=<?php echo $version; ?>"></script>
+    <script src="js/programacion_solicitudes.js"></script>
     
     <script>
     // Datos de tickets para JavaScript
