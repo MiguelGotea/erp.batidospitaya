@@ -113,23 +113,26 @@ foreach ($equipos_trabajo as $equipo) {
     $tickets_por_equipo[$equipo] = [];
 }
 
+// AGREGAR "Sin Equipo" a la lista de equipos si no existe
+if (!in_array('Sin Equipo', $equipos_trabajo)) {
+    $equipos_trabajo[] = 'Sin Equipo';
+    $tickets_por_equipo['Sin Equipo'] = [];
+}
+
 foreach ($tickets_programados as $ticket) {
     // Determinar equipo
     if ($ticket['tipo_formulario'] === 'cambio_equipos') {
         $equipo_key = 'Cambio de Equipos';
     } else {
-        // Normalizar equipo
-        $tipos = !empty($ticket['equipo_trabajo']) ? explode(' + ', $ticket['equipo_trabajo']) : [];
+        // Normalizar equipo - CORREGIDO: Manejar NULL y strings vacíos
+        $equipo_trabajo = $ticket['equipo_trabajo'] ?? '';
+        $tipos = (!empty($equipo_trabajo) && $equipo_trabajo !== 'NULL') ? explode(' + ', $equipo_trabajo) : [];
         $tipos_unicos = array_unique($tipos);
         sort($tipos_unicos);
         $equipo_key = implode(' + ', $tipos_unicos);
         
         if (empty($equipo_key)) {
             $equipo_key = 'Sin Equipo';
-            if (!in_array($equipo_key, $equipos_trabajo)) {
-                $equipos_trabajo[] = $equipo_key;
-                $tickets_por_equipo[$equipo_key] = [];
-            }
         }
     }
     
