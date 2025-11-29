@@ -77,7 +77,14 @@ foreach ($equipos_unicos as $equipo) {
 }
 
 sort($equipos_normalizados);
-$equipos_trabajo = array_merge($equipos_trabajo, $equipos_normalizados);
+// FALTA: Definir $equipos_trabajo antes del foreach
+$equipos_trabajo = ['Cambio de Equipos', 'Conductor', 'Conductor + Jefe de Manteniento', 'Jefe de Manteniento', 'Lider de Infraestructura', 'Sin Equipo'];
+
+// Agrupar tickets por equipo de trabajo
+$tickets_por_equipo = [];
+foreach ($equipos_trabajo as $equipo) {
+    $tickets_por_equipo[$equipo] = [];
+}
 
 // Define las fechas primero
 $fecha_inicio_semana = '2025-11-24';
