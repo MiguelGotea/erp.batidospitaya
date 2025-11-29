@@ -1,5 +1,5 @@
 <?php
-$version = "1.0.12"; // Incrementa cuando hagas cambios
+$version = "1.0.13"; // Incrementa cuando hagas cambios
 // programacion_solicitudes.php
 require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/models/Ticket.php';
@@ -157,25 +157,23 @@ $tickets_pendientes = $ticketModel->getTicketsWithoutDates();
 <body>
     <div class="container-fluid p-3">
         <!-- Header -->
-        <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="page-header d-flex justify-content-between align-items-center">
             <h4 class="mb-0">Programación de Solicitudes - Semana <?php echo $semana_actual; ?></h4>
-            <div>
-                <button class="btn btn-sm" style="background-color: #51B8AC; color: white;" onclick="toggleSidebar()">
-                    <i class="bi bi-list-task"></i> Solicitudes Pendientes
-                </button>
-            </div>
+            <button class="btn btn-light" onclick="toggleSidebar()">
+                <i class="bi bi-list-task"></i> Solicitudes Pendientes
+            </button>
         </div>
 
         <!-- Navegación de semanas -->
-        <div class="d-flex justify-content-center align-items-center gap-3 mb-3">
-            <a href="?semana=<?php echo $semana_actual - 1; ?>" class="btn btn-sm btn-outline-secondary">
+        <div class="d-flex justify-content-center align-items-center gap-3 mb-4">
+            <a href="?semana=<?php echo $semana_actual - 1; ?>" class="btn btn-nav-week">
                 <i class="bi bi-chevron-left"></i> Anterior
             </a>
-            <span class="fw-bold">
+            <div class="week-display">
                 <?php echo date('d/m/Y', strtotime($fecha_inicio_semana)); ?> - 
                 <?php echo date('d/m/Y', strtotime($fecha_fin_semana)); ?>
-            </span>
-            <a href="?semana=<?php echo $semana_actual + 1; ?>" class="btn btn-sm btn-outline-secondary">
+            </div>
+            <a href="?semana=<?php echo $semana_actual + 1; ?>" class="btn btn-nav-week">
                 Siguiente <i class="bi bi-chevron-right"></i>
             </a>
         </div>
@@ -285,7 +283,6 @@ $tickets_pendientes = $ticketModel->getTicketsWithoutDates();
     document.addEventListener('DOMContentLoaded', function() {
         renderizarCronograma();
     });
-
     </script>
 </body>
 </html>
