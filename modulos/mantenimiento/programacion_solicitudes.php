@@ -79,24 +79,35 @@ foreach ($equipos_unicos as $equipo) {
 sort($equipos_normalizados);
 $equipos_trabajo = array_merge($equipos_trabajo, $equipos_normalizados);
 $sql_tickets = "
-    SELECT t.*,
+    SELECT t.*, 
            s.nombre as nombre_sucursal,
-           GROUP_CONCAT(DISTINCT tc.tipo_usuario ORDER BY tc.tipo_usuario SEPARATOR ' + ') as equipo_trabajo
+           (SELECT GROUP_CONCAT(DISTINCT tc2.tipo_usuario ORDER BY tc2.tipo_usuario SEPARATOR ' + ') 
+            FROM mtto_tickets_colaboradores tc2 
+            WHERE tc2.ticket_id = t.id) as equipo_trabajo
     FROM mtto_tickets t
     LEFT JOIN sucursales s ON t.cod_sucursal = s.codigo
-    LEFT JOIN mtto_tickets_colaboradores tc ON t.id = tc.ticket_id
     WHERE t.fecha_inicio IS NOT NULL 
     AND t.fecha_final IS NOT NULL
     AND (
-        (t.fecha_inicio BETWEEN '2024-01-01' AND '2024-12-31')
-        OR (t.fecha_final BETWEEN '2024-01-01' AND '2024-12-31')
-        OR (t.fecha_inicio <= '2024-12-31' AND t.fecha_final >= '2024-01-01')
+        (t.fecha_inicio BETWEEN ? AND ?)
+        OR (t.fecha_final BETWEEN ? AND ?)
+        OR (t.fecha_inicio <= ? AND t.fecha_final >= ?)
     )
-    GROUP BY t.id
     ORDER BY s.nombre
 ";
 
-$tickets_programados = $db->fetchAll($sql_tickets);
+// Verifica que los parámetros sean exactamente 6
+$params = [
+    $fecha_inicio_semana, $fecha_fin_semana,  // Primer BETWEEN
+    $fecha_inicio_semana, $fecha_fin_semana,  // Segundo BETWEEN  
+    $fecha_fin_semana, $fecha_inicio_semana   // Tercera condición (NOTA el orden cambiado)
+];
+
+echo "Número de parámetros: " . count($params) . "<br>";
+print_r($params);
+
+$tickets_programados = $db->fetchAll($sql_tickets, $params);
+
 // Consulta mínima para aislar el problema
 $sql_test = "
     SELECT t.id, t.titulo, s.nombre as nombre_sucursal
