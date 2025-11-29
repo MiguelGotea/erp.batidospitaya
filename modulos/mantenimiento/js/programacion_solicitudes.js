@@ -208,20 +208,34 @@ function renderizarTicket(ticket, fila, diaInicio, numDias, equipo) {
 
 function ajustarAlturaCeldas(equipo, numFilas) {
     const row = document.querySelector(`tr[data-equipo="${equipo}"]`);
-    if (!row) return;
+    if (!row) {
+        console.warn(`No se encontró la fila para el equipo: ${equipo}`);
+        return;
+    }
     
-    const alturaMinima = Math.max(80, (numFilas * 60) + 20);
+    const alturaMinima = Math.max(100, (numFilas * 60) + 40);
     
-    console.log(`Equipo: ${equipo}, Filas: ${numFilas}, Altura: ${alturaMinima}px`);
+    console.log(`⚙️ Equipo: ${equipo}, Filas: ${numFilas}, Altura calculada: ${alturaMinima}px`);
     
-    // Ajustar todas las celdas con !important via setAttribute
-    const celdas = row.querySelectorAll('td');
+    // Forzar altura en el TR
+    row.style.setProperty('height', alturaMinima + 'px', 'important');
+    row.style.setProperty('min-height', alturaMinima + 'px', 'important');
     
-    celdas.forEach(celda => {
+    // Ajustar TODAS las celdas de esta fila
+    const todasLasCeldas = row.querySelectorAll('td');
+    
+    todasLasCeldas.forEach((celda, index) => {
         celda.style.setProperty('height', alturaMinima + 'px', 'important');
         celda.style.setProperty('min-height', alturaMinima + 'px', 'important');
+        celda.style.setProperty('max-height', 'none', 'important');
         celda.style.position = 'relative';
+        celda.style.verticalAlign = 'top';
+        celda.style.overflow = 'visible';
+        
+        console.log(`  └─ Celda ${index}: altura aplicada = ${alturaMinima}px`);
     });
+    
+    console.log(`✅ Altura ajustada para equipo: ${equipo}`);
 }
 
 // ==================== DRAG & DROP ====================

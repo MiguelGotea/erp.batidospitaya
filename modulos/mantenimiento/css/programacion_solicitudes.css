@@ -26,8 +26,24 @@ body {
     position: relative;
 }
 
-.calendar-table tr {
-    /* No poner height aquí */
+/* FORZAR ALTURAS - Sobrescribir Bootstrap */
+.calendar-table tbody tr {
+    height: auto !important;
+}
+
+.calendar-table tbody td {
+    vertical-align: top !important;
+    overflow: visible !important;
+}
+
+.calendar-table tbody td.calendar-cell,
+.calendar-table tbody td.equipo-label {
+    box-sizing: border-box !important;
+}
+
+/* Asegurar que las celdas no colapsen */
+.table > :not(caption) > * > * {
+    padding: 0 !important;
 }
 
 .calendar-cell {
