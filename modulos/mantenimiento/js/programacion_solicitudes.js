@@ -187,14 +187,52 @@ function renderizarTicket(ticket, fila, diaInicio, numDias, equipo) {
         </div>
     `;
     
+    // Variables para detectar drag vs click
+    let isDragging = false;
+    let isResizing = false;
+    let mouseDownTime = 0;
+    let mouseDownX = 0;
+    let mouseDownY = 0;
+    
     // Event listeners
-    card.addEventListener('dragstart', handleDragStart);
+    card.addEventListener('mousedown', (e) => {
+        if (e.target.closest('.btn-desprogramar') || 
+            e.target.closest('.btn-colaboradores') ||
+            e.target.closest('.resize-handle')) {
+            return;
+        }
+        isDragging = false;
+        mouseDownTime = Date.now();
+        mouseDownX = e.clientX;
+        mouseDownY = e.clientY;
+    });
+    
+    card.addEventListener('mousemove', (e) => {
+        const deltaX = Math.abs(e.clientX - mouseDownX);
+        const deltaY = Math.abs(e.clientY - mouseDownY);
+        if (deltaX > 5 || deltaY > 5) {
+            isDragging = true;
+        }
+    });
+    
+    card.addEventListener('dragstart', (e) => {
+        isDragging = true;
+        handleDragStart.call(card, e);
+    });
+    
     card.addEventListener('click', (e) => {
+        const clickDuration = Date.now() - mouseDownTime;
+        
         if (!e.target.closest('.btn-desprogramar') && 
             !e.target.closest('.btn-colaboradores') &&
-            !e.target.closest('.resize-handle')) {
+            !e.target.closest('.resize-handle') &&
+            !isDragging && 
+            !isResizing &&
+            clickDuration < 300) {
             mostrarDetallesTicket(ticket.id);
         }
+        isDragging = false;
+        isResizing = false;
     });
     
     celdaInicio.appendChild(card);
@@ -214,6 +252,26 @@ function renderizarTicket(ticket, fila, diaInicio, numDias, equipo) {
             overlay.style.cursor = 'move';
             overlay.style.zIndex = '49';
             
+            let overlayDragging = false;
+            let overlayMouseDownTime = 0;
+            let overlayMouseDownX = 0;
+            let overlayMouseDownY = 0;
+            
+            overlay.addEventListener('mousedown', (e) => {
+                overlayDragging = false;
+                overlayMouseDownTime = Date.now();
+                overlayMouseDownX = e.clientX;
+                overlayMouseDownY = e.clientY;
+            });
+            
+            overlay.addEventListener('mousemove', (e) => {
+                const deltaX = Math.abs(e.clientX - overlayMouseDownX);
+                const deltaY = Math.abs(e.clientY - overlayMouseDownY);
+                if (deltaX > 5 || deltaY > 5) {
+                    overlayDragging = true;
+                }
+            });
+            
             // Replicar eventos del card original
             overlay.addEventListener('mouseenter', () => {
                 card.style.borderColor = '#0E544C';
@@ -230,11 +288,16 @@ function renderizarTicket(ticket, fila, diaInicio, numDias, equipo) {
             });
             
             overlay.addEventListener('click', (e) => {
-                mostrarDetallesTicket(ticket.id);
+                const clickDuration = Date.now() - overlayMouseDownTime;
+                if (!overlayDragging && clickDuration < 300) {
+                    mostrarDetallesTicket(ticket.id);
+                }
+                overlayDragging = false;
             });
             
             overlay.draggable = true;
             overlay.addEventListener('dragstart', (e) => {
+                overlayDragging = true;
                 handleDragStart.call(card, e);
             });
             
@@ -710,17 +773,17 @@ function mostrarDetallesTicket(ticketId) {
         method: 'GET',
         data: { id: ticketId },
         success: function(response) {
-            // Crear modal aislado sin heredar estilos
+            // Crear modal completamente aislado con estilos inline
             const modalHtml = `
                 <div class="modal fade" id="modalDetallesTicket" tabindex="-1" style="z-index: 1060;">
-                    <div class="modal-dialog modal-lg">
-                        <div class="modal-content" style="all: initial; font-family: inherit;">
-                            <div class="modal-header" style="background-color: #0E544C; color: white; padding: 1rem; border-bottom: 1px solid #dee2e6; border-radius: 0.3rem 0.3rem 0 0;">
-                                <h5 class="modal-title" style="margin: 0; font-size: 1.25rem; font-weight: 500;">Detalles de la Solicitud</h5>
-                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" style="padding: 0.5rem; margin: -0.5rem -0.5rem -0.5rem auto;"></button>
+                    <div class="modal-dialog modal-lg" style="margin: 1.75rem auto;">
+                        <div class="modal-content" style="background: white; border: 1px solid #dee2e6; border-radius: 0.5rem; box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15);">
+                            <div class="modal-header" style="display: flex; align-items: center; justify-content: space-between; padding: 1rem; background-color: #0E544C; color: white; border-bottom: 1px solid #dee2e6; border-radius: 0.5rem 0.5rem 0 0;">
+                                <h5 class="modal-title" style="margin: 0; font-size: 1.25rem; font-weight: 500; line-height: 1.5; color: white;">Detalles de la Solicitud</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="padding: 0.5rem; margin: -0.5rem -0.5rem -0.5rem auto; background: transparent url('data:image/svg+xml,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 16 16%27 fill=%27%23fff%27%3e%3cpath d=%27M.293.293a1 1 0 011.414 0L8 6.586 14.293.293a1 1 0 111.414 1.414L9.414 8l6.293 6.293a1 1 0 01-1.414 1.414L8 9.414l-6.293 6.293a1 1 0 01-1.414-1.414L6.586 8 .293 1.707a1 1 0 010-1.414z%27/%3e%3c/svg%3e') center/1em auto no-repeat; border: 0; opacity: 1; cursor: pointer;"></button>
                             </div>
-                            <div class="modal-body" style="padding: 1rem; max-height: 70vh; overflow-y: auto; background-color: white;">
-                                ${response}
+                            <div class="modal-body" style="position: relative; flex: 1 1 auto; padding: 1.5rem; max-height: 70vh; overflow-y: auto; background-color: white; font-family: inherit; font-size: 1rem; line-height: 1.5; color: #212529;">
+                                <div style="all: revert;">${response}</div>
                             </div>
                         </div>
                     </div>
