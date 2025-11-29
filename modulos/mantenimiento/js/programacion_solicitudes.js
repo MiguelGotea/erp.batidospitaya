@@ -152,29 +152,25 @@ function renderizarTicket(ticket, fila, diaInicio, numDias, equipo) {
     card.style.left = '5px';
     card.style.width = anchoCard + 'px';
     card.style.height = '55px';
-    card.style.backgroundColor = 'white';
-    card.style.border = '1px solid #ddd';
-    card.style.borderRadius = '4px';
-    card.style.padding = '0.4rem 0.5rem';
     card.style.cursor = 'move';
     card.style.boxSizing = 'border-box';
-    card.style.overflow = 'hidden';
+    card.style.zIndex = '50';
     
     card.innerHTML = `
         <div style="position: relative; height: 100%;">
-            <div style="font-size: 0.8rem; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 25px;">
+            <div style="font-size: 0.8rem; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 30px;">
                 ${ticket.titulo}
             </div>
-            <div style="font-size: 0.7rem; color: #666; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 25px;">
+            <div style="font-size: 0.7rem; color: #666; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 30px; padding-bottom: 22px;">
                 ${ticket.nombre_sucursal}
             </div>
             
             <button class="btn-desprogramar" onclick="desprogramarTicket(${ticket.id}, event)" title="Desprogramar">
-                <i class="bi bi-x"></i>
+                <i class="bi bi-x-lg"></i>
             </button>
             
             <button class="btn-colaboradores" onclick="mostrarColaboradores(${ticket.id}, event)" title="Asignar colaboradores">
-                <i class="bi bi-plus"></i>
+                <i class="bi bi-plus-lg"></i>
             </button>
             
             ${ticket.nivel_urgencia ? `
@@ -200,6 +196,55 @@ function renderizarTicket(ticket, fila, diaInicio, numDias, equipo) {
     });
     
     celdaInicio.appendChild(card);
+    
+    // IMPORTANTE: Extender pointer-events a todas las celdas que ocupa
+    for (let i = 1; i < numDias; i++) {
+        const celdaSiguiente = celdas[diaInicio + i];
+        if (celdaSiguiente) {
+            // Crear overlay invisible para capturar eventos
+            const overlay = document.createElement('div');
+            overlay.style.position = 'absolute';
+            overlay.style.top = top + 'px';
+            overlay.style.left = '0';
+            overlay.style.width = '100%';
+            overlay.style.height = '55px';
+            overlay.style.pointerEvents = 'auto';
+            overlay.style.cursor = 'move';
+            overlay.style.zIndex = '49';
+            
+            // Replicar eventos del card original
+            overlay.addEventListener('mouseenter', () => {
+                card.style.borderColor = '#0E544C';
+                card.style.boxShadow = '0 4px 12px rgba(14, 84, 76, 0.25)';
+                card.style.transform = 'translateY(-1px)';
+                card.querySelectorAll('.btn-desprogramar, .btn-colaboradores, .resize-handle').forEach(el => {
+                    el.style.opacity = '1';
+                });
+            });
+            
+            overlay.addEventListener('mouseleave', () => {
+                if (!card.matches(':hover')) {
+                    card.style.borderColor = '#51B8AC';
+                    card.style.boxShadow = '0 2px 4px rgba(14, 84, 76, 0.1)';
+                    card.style.transform = '';
+                    card.querySelectorAll('.btn-desprogramar, .btn-colaboradores, .resize-handle').forEach(el => {
+                        el.style.opacity = '0';
+                    });
+                }
+            });
+            
+            overlay.addEventListener('click', (e) => {
+                mostrarDetallesTicket(ticket.id);
+            });
+            
+            overlay.draggable = true;
+            overlay.addEventListener('dragstart', (e) => {
+                handleDragStart.call(card, e);
+            });
+            
+            celdaSiguiente.appendChild(overlay);
+        }
+    }
 }
 
 function ajustarAlturaCeldas(equipo, numFilas) {
@@ -531,21 +576,33 @@ function renderModalColaboradores(ticketId, colaboradores, operarios) {
 }
 
 function agregarColaborador(ticketId, codOperario, tipoUsuario) {
+    // Validar que se haya seleccionado un colaborador cuando viene de la nueva fila
+    const selectColaborador = document.getElementById('nuevoColaborador');
+    if (selectColaborador && !codOperario) {
+        codOperario = selectColaborador.value;
+    }
+    
     $.ajax({
         url: 'ajax/agenda_save_colaborador.php',
         method: 'POST',
         data: {
             ticket_id: ticketId,
-            cod_operario: codOperario,
+            cod_operario: codOperario || null, // Permitir NULL
             tipo_usuario: tipoUsuario
         },
         dataType: 'json',
         success: function(response) {
             if (response.success) {
+                // Cerrar modal y recargar (necesario para recalcular equipos)
                 $('#modalColaboradores').modal('hide');
+                location.reload();
             } else {
                 alert('Error: ' + response.message);
             }
+        },
+        error: function(xhr) {
+            console.error('Error completo:', xhr.responseText);
+            alert('Error al agregar colaborador. Ver consola para detalles.');
         }
     });
 }
@@ -573,6 +630,10 @@ function eliminarColaborador(colaboradorId) {
         success: function(response) {
             if (response.success) {
                 $(`tr[data-id="${colaboradorId}"]`).remove();
+                // Mostrar mensaje temporal
+                const mensaje = $('<div class="alert alert-success" style="position: fixed; top: 20px; right: 20px; z-index: 9999;">Colaborador eliminado</div>');
+                $('body').append(mensaje);
+                setTimeout(() => mensaje.fadeOut(() => mensaje.remove()), 2000);
             }
         }
     });
