@@ -142,6 +142,8 @@ foreach ($tickets_programados as $ticket) {
     
     $tickets_por_equipo[$equipo_key][] = $ticket;
 }
+// DEBUG: Verificar la agrupación (opcional - puedes quitar esto después)
+echo "<script>console.log('Tickets por equipo:', " . json_encode($tickets_por_equipo) . ");</script>";
 
 // Obtener tickets sin programar
 $tickets_pendientes = $ticket->getTicketsWithoutDates();
