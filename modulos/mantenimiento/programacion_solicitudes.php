@@ -1,9 +1,25 @@
 <?php
 // programacion_solicitudes.php
-$version = "1.0.21"; // Incrementa cuando hagas cambios
+$version = "1.0.22"; // Incrementa cuando hagas cambios
 
 require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/models/Ticket.php';
+require_once '../../includes/auth.php';
+require_once '../../includes/funciones.php';
+
+//verificarAutenticacion();   //no usar 
+
+$usuario = obtenerUsuarioActual();
+$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
+
+//verificarAccesoModulo('operaciones');  //no usar
+//verificarAccesoCargo([11, 16]);  //no usar
+
+// Verificar acceso al módulo (cargos con permiso para ver marcaciones)
+if (!verificarAccesoCargo(35, 16) && !$esAdmin) {
+    header('Location: ../index.php');
+    exit();
+}
 
 $ticketModel = new Ticket();
 
