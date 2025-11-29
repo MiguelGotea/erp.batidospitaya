@@ -56,9 +56,10 @@ body {
 
 /* Tarjetas de tickets */
 .ticket-card {
-    position: absolute;
+    position: absolute !important;
     box-sizing: border-box;
     height: 55px;
+    min-width: 100px;
     background-color: white;
     border: 1px solid #ddd;
     border-radius: 4px;
@@ -66,6 +67,19 @@ body {
     cursor: move;
     transition: box-shadow 0.2s;
     overflow: hidden;
+    z-index: 1;
+}
+
+/* Ajustar el contenedor de la tabla */
+.container-fluid {
+    max-width: 100%;
+    padding: 1rem;
+}
+
+/* Asegurar que las celdas no colapsen */
+.calendar-table td.calendar-cell {
+    min-width: 120px;
+    width: auto;
 }
 
 .ticket-card:hover {
