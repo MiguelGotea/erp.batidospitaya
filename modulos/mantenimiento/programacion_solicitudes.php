@@ -92,6 +92,9 @@ $sql_test = "
 $resultado_test = $db->fetchAll($sql_test);
 print_r($resultado_test);
 
+echo "Fecha inicio semana: " . $fecha_inicio_semana . "<br>";
+echo "Fecha fin semana: " . $fecha_fin_semana . "<br>";
+
 // Agrupar tickets por equipo de trabajo
 $tickets_por_equipo = [];
 foreach ($equipos_trabajo as $equipo) {
