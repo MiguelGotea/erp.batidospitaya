@@ -154,7 +154,8 @@ foreach ($tickets_programados as $ticket) {
 
 
 // Obtener tickets sin programar
-$tickets_pendientes = $ticket->getTicketsWithoutDates();
+$ticketModel = new Ticket(); // Crear nueva instancia
+$tickets_pendientes = $ticketModel->getTicketsWithoutDates();
 ?>
 
 <!DOCTYPE html>
