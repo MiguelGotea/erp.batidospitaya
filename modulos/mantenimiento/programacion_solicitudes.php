@@ -226,7 +226,7 @@ $tickets_pendientes = $ticketModel->getTicketsWithoutDates();
                 <select class="form-select form-select-sm" id="filtroSucursal" onchange="filtrarPendientes()">
                     <option value="">Todas las sucursales</option>
                     <?php 
-                    $sucursales = $ticketModel->getSucursales();
+                    $sucursales = $ticket->getSucursales();
                     foreach ($sucursales as $suc): 
                     ?>
                         <option value="<?php echo $suc['cod_sucursal']; ?>">
@@ -273,28 +273,16 @@ $tickets_pendientes = $ticketModel->getTicketsWithoutDates();
 
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/programacion_solicitudes.js"></script>
     
     <script>
     // Datos de tickets para JavaScript
     const ticketsPorEquipo = <?php echo json_encode($tickets_por_equipo, JSON_UNESCAPED_UNICODE); ?>;
     const fechasSemana = <?php echo json_encode($fechas, JSON_UNESCAPED_UNICODE); ?>;
     
-    console.log('Tickets por equipo:', ticketsPorEquipo);
-    console.log('Fechas semana:', fechasSemana);
-    </script>
-    
-    <script src="js/programacion_solicitudes.js"></script>
-    
-    <script>
     // Renderizar tickets en el cronograma
     document.addEventListener('DOMContentLoaded', function() {
-        console.log('DOM Cargado - Iniciando renderizado');
-        
-        // Pequeño delay para asegurar que todo esté listo
-        setTimeout(function() {
-            renderizarCronograma();
-            console.log('Renderizado completado');
-        }, 100);
+        renderizarCronograma();
     });
     </script>
 </body>
