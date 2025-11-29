@@ -9,6 +9,7 @@ body {
 .calendar-table {
     margin-bottom: 0;
     font-size: 0.85rem;
+    table-layout: fixed; /* IMPORTANTE */
 }
 
 .calendar-table th {
@@ -23,17 +24,15 @@ body {
     vertical-align: top;
     border: 1px solid #dee2e6;
     position: relative;
-    height: auto; /* CAMBIAR */
 }
 
 .calendar-table tr {
-    height: auto; /* AGREGAR */
+    /* No poner height aquí */
 }
 
 .calendar-cell {
     position: relative;
-    width: 100%; /* AGREGAR */
-    height: 100%; /* AGREGAR */
+    min-width: 120px;
 }
 
 .equipo-label {
@@ -41,10 +40,11 @@ body {
     font-weight: 600;
     font-size: 0.75rem;
     padding: 0.5rem;
-    vertical-align: top; /* CAMBIAR DE middle a top */
+    vertical-align: top;
     position: sticky;
     left: 0;
     z-index: 10;
+    width: 150px;
 }
 
 /* Tarjetas de tickets */
