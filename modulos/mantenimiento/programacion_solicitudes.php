@@ -107,6 +107,12 @@ $tickets_programados = $db->fetchAll($sql_tickets, [
     $fecha_fin_semana, $fecha_inicio_semana     // Tercera condición (orden INVERTIDO)
 ]);
 
+// Manejo de errores para debug
+if (!$tickets_programados) {
+    echo "Error en la consulta: " . $db->errorInfo()[2] ?? 'Error desconocido';
+    exit;
+}
+
 // Agrupar tickets por equipo de trabajo
 $tickets_por_equipo = [];
 foreach ($equipos_trabajo as $equipo) {
