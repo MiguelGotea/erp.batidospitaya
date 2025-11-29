@@ -23,11 +23,13 @@ body {
     vertical-align: top;
     min-height: 80px;
     border: 1px solid #dee2e6;
+    position: relative; /* AGREGAR ESTO */
 }
 
 .calendar-cell {
     position: relative;
     min-height: 80px;
+    height: 100%; /* AGREGAR ESTO */
 }
 
 .equipo-label {
@@ -35,7 +37,7 @@ body {
     font-weight: 600;
     font-size: 0.75rem;
     padding: 0.5rem;
-    vertical-align: middle;
+    vertical-align: top; /* CAMBIAR DE middle a top */
     position: sticky;
     left: 0;
     z-index: 10;
