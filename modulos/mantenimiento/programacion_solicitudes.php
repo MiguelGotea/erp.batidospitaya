@@ -81,14 +81,8 @@ $equipos_trabajo = array_merge($equipos_trabajo, $equipos_normalizados);
 
 // Obtener tickets programados de la semana
 $sql_tickets = "
-    SELECT t.id, t.codigo, t.titulo, t.descripcion, t.tipo_formulario, 
-           t.cod_operario, t.cod_sucursal, t.area_equipo, t.foto, t.nivel_urgencia,
-           t.fecha_inicio, t.fecha_final, t.status, t.tipo_caso_id, t.created_at,
-           t.updated_at, t.detalle_trabajo, t.materiales_usados, t.fecha_finalizacion,
-           t.finalizado_por, t.tiempo_estimado,
+    SELECT t.*,
            s.nombre as nombre_sucursal,
-           CAST(t.fecha_inicio AS DATE) as fecha_inicio_cast,
-           CAST(t.fecha_final AS DATE) as fecha_final_cast,
            GROUP_CONCAT(DISTINCT tc.tipo_usuario ORDER BY tc.tipo_usuario SEPARATOR ' + ') as equipo_trabajo
     FROM mtto_tickets t
     LEFT JOIN sucursales s ON t.cod_sucursal = s.codigo
@@ -96,15 +90,11 @@ $sql_tickets = "
     WHERE t.fecha_inicio IS NOT NULL 
     AND t.fecha_final IS NOT NULL
     AND (
-        (CAST(t.fecha_inicio AS DATE) BETWEEN ? AND ?)
-        OR (CAST(t.fecha_final AS DATE) BETWEEN ? AND ?)
-        OR (CAST(t.fecha_inicio AS DATE) <= ? AND CAST(t.fecha_final AS DATE) >= ?)
+        (t.fecha_inicio BETWEEN ? AND ?)
+        OR (t.fecha_final BETWEEN ? AND ?)
+        OR (t.fecha_inicio <= ? AND t.fecha_final >= ?)
     )
-    GROUP BY t.id, t.codigo, t.titulo, t.descripcion, t.tipo_formulario, 
-             t.cod_operario, t.cod_sucursal, t.area_equipo, t.foto, t.nivel_urgencia,
-             t.fecha_inicio, t.fecha_final, t.status, t.tipo_caso_id, t.created_at,
-             t.updated_at, t.detalle_trabajo, t.materiales_usados, t.fecha_finalizacion,
-             t.finalizado_por, t.tiempo_estimado, s.nombre
+    GROUP BY t.id
     ORDER BY s.nombre
 ";
 
