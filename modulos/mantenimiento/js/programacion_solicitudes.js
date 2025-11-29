@@ -214,15 +214,12 @@ function ajustarAlturaCeldas(equipo, numFilas) {
     
     console.log(`Equipo: ${equipo}, Filas: ${numFilas}, Altura: ${alturaMinima}px`);
     
-    // Ajustar altura del TR completo
-    row.style.height = alturaMinima + 'px';
-    
-    // Ajustar todas las celdas
+    // Ajustar todas las celdas con !important via setAttribute
     const celdas = row.querySelectorAll('td');
     
     celdas.forEach(celda => {
-        celda.style.height = alturaMinima + 'px';
-        celda.style.minHeight = alturaMinima + 'px';
+        celda.style.setProperty('height', alturaMinima + 'px', 'important');
+        celda.style.setProperty('min-height', alturaMinima + 'px', 'important');
         celda.style.position = 'relative';
     });
 }
