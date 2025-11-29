@@ -111,11 +111,7 @@ foreach ($equipos_trabajo as $equipo) {
     $tickets_por_equipo[$equipo] = [];
 }
 
-// AGREGAR: "Sin Equipo" a la lista antes del foreach
-if (!in_array('Sin Equipo', $equipos_trabajo)) {
-    $equipos_trabajo[] = 'Sin Equipo';
-    $tickets_por_equipo['Sin Equipo'] = [];
-}
+
 
 foreach ($tickets_programados as $ticket) {
     // Determinar equipo
