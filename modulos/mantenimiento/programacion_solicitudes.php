@@ -78,6 +78,10 @@ foreach ($equipos_unicos as $equipo) {
 
 sort($equipos_normalizados);
 $equipos_trabajo = array_merge($equipos_trabajo, $equipos_normalizados);
+// Prueba con fechas que sabes que existen
+$fecha_test_inicio = '2024-01-01';
+$fecha_test_fin = '2024-12-31';
+
 $sql_tickets = "
     SELECT t.*, 
            s.nombre as nombre_sucursal,
@@ -96,15 +100,14 @@ $sql_tickets = "
     ORDER BY s.nombre
 ";
 
-// Verifica que los parámetros sean exactamente 6
 $params = [
-    $fecha_inicio_semana, $fecha_fin_semana,  // Primer BETWEEN
-    $fecha_inicio_semana, $fecha_fin_semana,  // Segundo BETWEEN  
-    $fecha_fin_semana, $fecha_inicio_semana   // Tercera condición (NOTA el orden cambiado)
+    $fecha_test_inicio, $fecha_test_fin,
+    $fecha_test_inicio, $fecha_test_fin, 
+    $fecha_test_fin, $fecha_test_inicio
 ];
 
-echo "Número de parámetros: " . count($params) . "<br>";
-print_r($params);
+$tickets_programados = $db->fetchAll($sql_tickets, $params);
+print_r($tickets_programados);
 
 $tickets_programados = $db->fetchAll($sql_tickets, $params);
 
