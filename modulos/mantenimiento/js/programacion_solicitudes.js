@@ -60,6 +60,7 @@ function renderizarCronograma() {
     
     console.log('\n✅ Renderizado completado');
 }
+
 function calcularPosicion(ticket, matrizOcupacion) {
     // Calcular índice de día de inicio
     let diaInicio = fechasSemana.indexOf(ticket.fecha_inicio);
