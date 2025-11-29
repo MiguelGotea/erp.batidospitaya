@@ -79,7 +79,40 @@ foreach ($equipos_unicos as $equipo) {
 sort($equipos_normalizados);
 $equipos_trabajo = array_merge($equipos_trabajo, $equipos_normalizados);
 
+// Obtener tickets programados de la semana
+$sql_tickets = "
+    SELECT t.id, t.codigo, t.titulo, t.descripcion, t.tipo_formulario, 
+           t.cod_operario, t.cod_sucursal, t.area_equipo, t.foto, t.nivel_urgencia,
+           t.fecha_inicio, t.fecha_final, t.status, t.tipo_caso_id, t.created_at,
+           t.updated_at, t.detalle_trabajo, t.materiales_usados, t.fecha_finalizacion,
+           t.finalizado_por, t.tiempo_estimado,
+           s.nombre as nombre_sucursal,
+           CAST(t.fecha_inicio AS DATE) as fecha_inicio_cast,
+           CAST(t.fecha_final AS DATE) as fecha_final_cast,
+           GROUP_CONCAT(DISTINCT tc.tipo_usuario ORDER BY tc.tipo_usuario SEPARATOR ' + ') as equipo_trabajo
+    FROM mtto_tickets t
+    LEFT JOIN sucursales s ON t.cod_sucursal = s.codigo
+    LEFT JOIN mtto_tickets_colaboradores tc ON t.id = tc.ticket_id
+    WHERE t.fecha_inicio IS NOT NULL 
+    AND t.fecha_final IS NOT NULL
+    AND (
+        (CAST(t.fecha_inicio AS DATE) BETWEEN ? AND ?)
+        OR (CAST(t.fecha_final AS DATE) BETWEEN ? AND ?)
+        OR (CAST(t.fecha_inicio AS DATE) <= ? AND CAST(t.fecha_final AS DATE) >= ?)
+    )
+    GROUP BY t.id, t.codigo, t.titulo, t.descripcion, t.tipo_formulario, 
+             t.cod_operario, t.cod_sucursal, t.area_equipo, t.foto, t.nivel_urgencia,
+             t.fecha_inicio, t.fecha_final, t.status, t.tipo_caso_id, t.created_at,
+             t.updated_at, t.detalle_trabajo, t.materiales_usados, t.fecha_finalizacion,
+             t.finalizado_por, t.tiempo_estimado, s.nombre
+    ORDER BY s.nombre
+";
 
+$tickets_programados = $db->fetchAll($sql_tickets, [
+    $fecha_inicio_semana, $fecha_fin_semana,
+    $fecha_inicio_semana, $fecha_fin_semana,
+    $fecha_inicio_semana, $fecha_fin_semana
+]);
 
 // Agrupar tickets por equipo de trabajo
 $tickets_por_equipo = [];
