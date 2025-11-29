@@ -142,3 +142,35 @@ foreach ($tickets_programados as $ticket) {
 // Obtener tickets sin programar
 $tickets_pendientes = $ticket->getTicketsWithoutDates();
 ?>
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Programación de Solicitudes</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="css/programacion_solicitudes.css">
+</head>
+<body>
+    <div class="container-fluid p-3">
+       
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/programacion_solicitudes.js"></script>
+    
+    <script>
+    // Datos de tickets para JavaScript
+    const ticketsPorEquipo = <?php echo json_encode($tickets_por_equipo, JSON_UNESCAPED_UNICODE); ?>;
+    const fechasSemana = <?php echo json_encode($fechas, JSON_UNESCAPED_UNICODE); ?>;
+    
+    // Renderizar tickets en el cronograma
+    document.addEventListener('DOMContentLoaded', function() {
+        renderizarCronograma();
+    });
+    </script>
+</body>
+</html>
