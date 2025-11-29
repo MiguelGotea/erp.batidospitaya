@@ -6,6 +6,10 @@ let resizing = null;
 // ==================== RENDERIZADO Y EMPAQUETADO ====================
 
 function renderizarCronograma() {
+    // Forzar ancho mínimo de celdas antes de renderizar
+    document.querySelectorAll('.calendar-cell').forEach(cell => {
+        cell.style.minWidth = '120px';
+    });
     // Procesar cada equipo de trabajo
     Object.keys(ticketsPorEquipo).forEach(equipo => {
         const tickets = ticketsPorEquipo[equipo];
