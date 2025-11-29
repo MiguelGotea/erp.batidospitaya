@@ -161,17 +161,19 @@ function renderizarTicket(ticket, fila, diaInicio, numDias, equipo) {
             <div style="font-size: 0.8rem; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 30px;">
                 ${ticket.titulo}
             </div>
-            <div style="font-size: 0.7rem; color: #666; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 30px; padding-bottom: 22px;">
-                ${ticket.nombre_sucursal}
+            <div style="display: flex; align-items: center; gap: 0.25rem; margin-top: 0.25rem;">
+                <button class="btn-desprogramar" onclick="desprogramarTicket(${ticket.id}, event)" title="Desprogramar">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+                
+                <button class="btn-colaboradores" onclick="mostrarColaboradores(${ticket.id}, event)" title="Asignar colaboradores">
+                    <i class="bi bi-plus-lg"></i>
+                </button>
+                
+                <div style="font-size: 0.7rem; color: #666; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-left: 0.25rem;">
+                    ${ticket.nombre_sucursal}
+                </div>
             </div>
-            
-            <button class="btn-desprogramar" onclick="desprogramarTicket(${ticket.id}, event)" title="Desprogramar">
-                <i class="bi bi-x-lg"></i>
-            </button>
-            
-            <button class="btn-colaboradores" onclick="mostrarColaboradores(${ticket.id}, event)" title="Asignar colaboradores">
-                <i class="bi bi-plus-lg"></i>
-            </button>
             
             ${ticket.nivel_urgencia ? `
                 <span class="badge-urgencia-card" style="background-color: ${colorUrgencia};">
@@ -217,9 +219,6 @@ function renderizarTicket(ticket, fila, diaInicio, numDias, equipo) {
                 card.style.borderColor = '#0E544C';
                 card.style.boxShadow = '0 4px 12px rgba(14, 84, 76, 0.25)';
                 card.style.transform = 'translateY(-1px)';
-                card.querySelectorAll('.btn-desprogramar, .btn-colaboradores, .resize-handle').forEach(el => {
-                    el.style.opacity = '1';
-                });
             });
             
             overlay.addEventListener('mouseleave', () => {
@@ -227,9 +226,6 @@ function renderizarTicket(ticket, fila, diaInicio, numDias, equipo) {
                     card.style.borderColor = '#51B8AC';
                     card.style.boxShadow = '0 2px 4px rgba(14, 84, 76, 0.1)';
                     card.style.transform = '';
-                    card.querySelectorAll('.btn-desprogramar, .btn-colaboradores, .resize-handle').forEach(el => {
-                        el.style.opacity = '0';
-                    });
                 }
             });
             
@@ -250,15 +246,12 @@ function renderizarTicket(ticket, fila, diaInicio, numDias, equipo) {
 function ajustarAlturaCeldas(equipo, numFilas) {
     const row = document.querySelector(`tr[data-equipo="${equipo}"]`);
     if (!row) {
-        console.warn(`No se encontró fila para equipo: ${equipo}`);
         return;
     }
     
     // Altura mínima + altura por fila (con margen)
     const alturaMinima = Math.max(80, (numFilas * 60) + 30);
     const celdas = row.querySelectorAll('.calendar-cell, .equipo-label');
-    
-    console.log(`Ajustando ${celdas.length} celdas a altura: ${alturaMinima}px`);
     
     celdas.forEach((celda, index) => {
         celda.style.minHeight = alturaMinima + 'px';
