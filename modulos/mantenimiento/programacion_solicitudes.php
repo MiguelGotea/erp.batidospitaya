@@ -142,7 +142,6 @@ foreach ($tickets_programados as $ticket) {
 // Obtener tickets sin programar
 $tickets_pendientes = $ticketModel->getTicketsWithoutDates();
 ?>
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -224,7 +223,7 @@ $tickets_pendientes = $ticketModel->getTicketsWithoutDates();
                 <select class="form-select form-select-sm" id="filtroSucursal" onchange="filtrarPendientes()">
                     <option value="">Todas las sucursales</option>
                     <?php 
-                    $sucursales = $ticketModel->getSucursales();
+                    $sucursales = $ticket->getSucursales();
                     foreach ($sucursales as $suc): 
                     ?>
                         <option value="<?php echo $suc['cod_sucursal']; ?>">
