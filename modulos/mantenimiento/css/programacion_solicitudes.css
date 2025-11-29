@@ -65,6 +65,7 @@ body {
     border: 2px solid #51B8AC;
     border-radius: 6px;
     padding: 0.4rem 0.5rem;
+    padding-right: 0;
     cursor: move;
     transition: all 0.2s;
     overflow: visible;
