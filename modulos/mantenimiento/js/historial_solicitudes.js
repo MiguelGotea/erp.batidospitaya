@@ -16,18 +16,9 @@ $(document).ready(function() {
         paginaActual = 1;
         cargarDatos();
     });
-    
-    $('#filtroSucursalGlobal').change(function() {
-        if (!FILTRAR_SUCURSAL) {
-            paginaActual = 1;
-            cargarDatos();
-        }
-    });
 });
 
 function cargarDatos() {
-    const sucursalGlobal = $('#filtroSucursalGlobal').val();
-    
     $.ajax({
         url: 'ajax/historial_get_solicitudes.php',
         method: 'POST',
@@ -36,7 +27,6 @@ function cargarDatos() {
             registros: registrosPorPagina,
             filtros: JSON.stringify(filtros),
             orden: JSON.stringify(ordenActual),
-            sucursal_global: sucursalGlobal,
             filtrar_sucursal: FILTRAR_SUCURSAL,
             codigo_sucursal: CODIGO_SUCURSAL_BUSQUEDA
         },
@@ -204,6 +194,12 @@ function renderizarOpcionesFiltro(opciones, campo) {
     const lista = $('#listaOpciones');
     lista.empty();
     
+    // Verificar si el filtro de sucursal debe estar bloqueado
+    if (campo === 'nombre_sucursal' && FILTRAR_SUCURSAL) {
+        lista.append('<div class="text-muted text-center p-3">Filtro bloqueado por permisos</div>');
+        return;
+    }
+    
     opciones.forEach(opcion => {
         const selected = filtros[campo] && filtros[campo].includes(opcion.valor) ? 'selected' : '';
         lista.append(`
@@ -228,16 +224,22 @@ function toggleOpcion(campo, valor) {
     }
     
     const index = filtros[campo].indexOf(valor);
+    const elemento = event.target;
+    
     if (index > -1) {
         filtros[campo].splice(index, 1);
         if (filtros[campo].length === 0) {
             delete filtros[campo];
         }
+        elemento.classList.remove('selected');
     } else {
         filtros[campo].push(valor);
+        elemento.classList.add('selected');
     }
     
-    event.target.classList.toggle('selected');
+    // Aplicar filtro automáticamente
+    paginaActual = 1;
+    cargarDatos();
 }
 
 function aplicarOrden(direccion) {
@@ -247,7 +249,9 @@ function aplicarOrden(direccion) {
     };
     paginaActual = 1;
     cargarDatos();
-    $('#modalFiltro').modal('hide');
+    
+    const modal = bootstrap.Modal.getInstance(document.getElementById('modalFiltro'));
+    modal.hide();
 }
 
 function limpiarFiltro() {
@@ -256,7 +260,9 @@ function limpiarFiltro() {
         paginaActual = 1;
         cargarDatos();
     }
-    $('#modalFiltro').modal('hide');
+    
+    const modal = bootstrap.Modal.getInstance(document.getElementById('modalFiltro'));
+    modal.hide();
 }
 
 // Urgencia

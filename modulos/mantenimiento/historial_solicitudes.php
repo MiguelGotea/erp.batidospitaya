@@ -1,6 +1,6 @@
 <?php
 // historial_solicitudes.php
-$version = "1.0.2";
+$version = "1.0.4";
 
 require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/models/Ticket.php';
@@ -8,8 +8,8 @@ require_once __DIR__ . '/models/Ticket.php';
 $ticketModel = new Ticket();
 
 // Variables de filtro (completar manualmente)
-$codigo_sucursal_busqueda = 12; // Ej: 'SUC001'
-$cargoOperario = 5; // 5 = filtrado por sucursal, otro = sin filtro
+$codigo_sucursal_busqueda = ''; // Ej: 'SUC001'
+$cargoOperario = 0; // 5 = filtrado por sucursal, otro = sin filtro
 
 // Determinar si se filtra por sucursal
 $filtrar_sucursal = ($cargoOperario == 5 && !empty($codigo_sucursal_busqueda));
@@ -65,32 +65,6 @@ $sucursales = $ticketModel->getSucursales();
         <!-- Header -->
         <div class="page-header d-flex justify-content-between align-items-center mb-4">
             <h4 class="mb-0">Historial de Solicitudes</h4>
-            <div class="d-flex gap-2 align-items-center">
-                <label class="text-white mb-0">Registros por página:</label>
-                <select id="registrosPorPagina" class="form-select form-select-sm" style="width: auto;">
-                    <option value="25" selected>25</option>
-                    <option value="50">50</option>
-                    <option value="100">100</option>
-                </select>
-            </div>
-        </div>
-
-        <!-- Filtros superiores -->
-        <div class="filtros-container mb-3">
-            <div class="row">
-                <div class="col-md-4">
-                    <label class="form-label">Filtro de Sucursal</label>
-                    <select id="filtroSucursalGlobal" class="form-select" <?php echo $filtrar_sucursal ? 'disabled' : ''; ?>>
-                        <option value="">Todas las sucursales</option>
-                        <?php foreach ($sucursales as $suc): ?>
-                            <option value="<?php echo $suc['cod_sucursal']; ?>" 
-                                <?php echo ($filtrar_sucursal && $suc['cod_sucursal'] == $codigo_sucursal_busqueda) ? 'selected' : ''; ?>>
-                                <?php echo htmlspecialchars($suc['nombre_sucursal']); ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-            </div>
         </div>
 
         <!-- Tabla -->
@@ -157,7 +131,15 @@ $sucursales = $ticketModel->getSucursales();
 
         <!-- Paginación -->
         <div class="d-flex justify-content-between align-items-center mt-3">
-            <div id="infoPaginacion">Mostrando 0 de 0 registros</div>
+            <div class="d-flex gap-2 align-items-center">
+                <label class="mb-0">Registros por página:</label>
+                <select id="registrosPorPagina" class="form-select form-select-sm" style="width: auto;">
+                    <option value="25" selected>25</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                </select>
+                <span id="infoPaginacion" class="ms-3">Mostrando 0 de 0 registros</span>
+            </div>
             <nav>
                 <ul class="pagination mb-0" id="paginacion">
                     <!-- Botones de paginación dinámicos -->
