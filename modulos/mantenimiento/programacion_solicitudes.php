@@ -1,7 +1,7 @@
 <?php
 // programacion_solicitudes.php
-require_once 'config/database.php';
-require_once 'models/Ticket.php';
+require_once __DIR__ . '/config/database.php';
+require_once __DIR__ . '/models/Ticket.php';
 
 $ticket = new Ticket();
 
