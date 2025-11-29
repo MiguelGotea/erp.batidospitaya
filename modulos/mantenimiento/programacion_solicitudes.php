@@ -20,6 +20,7 @@ if (empty($fechas_semana)) {
     die("No se encontraron fechas para la semana $semana_actual");
 }
 
+
 // Extraer solo las fechas
 $fechas = array_column($fechas_semana, 'fecha');
 $fecha_inicio_semana = $fechas[0];
