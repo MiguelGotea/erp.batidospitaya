@@ -21,15 +21,19 @@ body {
 .calendar-table td {
     padding: 0;
     vertical-align: top;
-    min-height: 80px;
     border: 1px solid #dee2e6;
-    position: relative; /* AGREGAR ESTO */
+    position: relative;
+    height: auto; /* CAMBIAR */
+}
+
+.calendar-table tr {
+    height: auto; /* AGREGAR */
 }
 
 .calendar-cell {
     position: relative;
-    min-height: 80px;
-    height: 100%; /* AGREGAR ESTO */
+    width: 100%; /* AGREGAR */
+    height: 100%; /* AGREGAR */
 }
 
 .equipo-label {
