@@ -8,6 +8,8 @@ require_once '../../includes/auth.php';
 require_once '../../includes/funciones.php';
 // Incluir el menú lateral
 require_once '../../includes/menu_lateral.php';
+// Incluir el header universal
+require_once '../../includes/header_universal.php';
 
 //verificarAutenticacion();   //no usar 
 
@@ -183,15 +185,9 @@ $tickets_pendientes = $ticketModel->getTicketsWithoutDates();
     <div class="main-container">   <!-- ya existe en el css de menu lateral -->
         <div class="contenedor-principal"> <!-- ya existe en el css de menu lateral -->
             <!-- todo el contenido existente -->
+            <!-- Renderizar header universal -->
+            <?php echo renderHeader($usuario, $esAdmin, 'Programacion de Solicitudes'); ?>
             <div class="container-fluid p-3">
-                <!-- Header -->
-                <div class="page-header d-flex justify-content-between align-items-center">
-                    <h4 class="mb-0">Programación de Solicitudes - Semana <?php echo $semana_actual; ?></h4>
-                    <button class="btn btn-light" onclick="toggleSidebar()">
-                        <i class="bi bi-list-task"></i> Solicitudes Pendientes
-                    </button>
-                </div>
-
                 <!-- Navegación de semanas -->
                 <div class="d-flex justify-content-center align-items-center gap-3 mb-4">
                     <a href="?semana=<?php echo $semana_actual - 1; ?>" class="btn btn-nav-week">
@@ -204,6 +200,10 @@ $tickets_pendientes = $ticketModel->getTicketsWithoutDates();
                     <a href="?semana=<?php echo $semana_actual + 1; ?>" class="btn btn-nav-week">
                         Siguiente <i class="bi bi-chevron-right"></i>
                     </a>
+
+                    <button class="btn btn-light" onclick="toggleSidebar()">
+                        <i class="bi bi-list-task"></i> Solicitudes Pendientes
+                    </button>
                 </div>
 
                 <!-- Cronograma -->
