@@ -77,74 +77,36 @@ foreach ($equipos_unicos as $equipo) {
 }
 
 sort($equipos_normalizados);
-// FALTA: Definir $equipos_trabajo antes del foreach
-// Definir equipos de trabajo
-$equipos_trabajo = ['Cambio de Equipos', 'Conductor', 'Conductor + Jefe de Manteniento', 'Jefe de Manteniento', 'Lider de Infraestructura', 'Sin Equipo'];
+$equipos_trabajo = array_merge($equipos_trabajo, $equipos_normalizados);
 
-// Inicializar array de tickets por equipo
-$tickets_por_equipo = [];
-foreach ($equipos_trabajo as $equipo) {
-    $tickets_por_equipo[$equipo] = [];
-}
-
-// Agrupar tickets
-foreach ($tickets_programados as $ticket) {
-    // Determinar equipo
-    if ($ticket['tipo_formulario'] === 'cambio_equipos') {
-        $equipo_key = 'Cambio de Equipos';
-    } else {
-        $tipos = !empty($ticket['equipo_trabajo']) ? explode(' + ', $ticket['equipo_trabajo']) : [];
-        $tipos_unicos = array_unique($tipos);
-        sort($tipos_unicos);
-        $equipo_key = implode(' + ', $tipos_unicos);
-        
-        if (empty($equipo_key)) {
-            $equipo_key = 'Sin Equipo';
-        }
-        
-        // Si el equipo no está en la lista, agregarlo
-        if (!in_array($equipo_key, $equipos_trabajo)) {
-            $equipos_trabajo[] = $equipo_key;
-            $tickets_por_equipo[$equipo_key] = [];
-        }
-    }
-    
-    $tickets_por_equipo[$equipo_key][] = $ticket;
-}
-
-// DEBUG: Verificar la agrupación
-echo "<h3>DEBUG - Tickets por equipo:</h3>";
-foreach ($tickets_por_equipo as $equipo => $tickets) {
-    echo "<strong>$equipo:</strong> " . count($tickets) . " tickets<br>";
-}
-// Verifica que $db esté bien inicializada
-var_dump(get_class($db));
-print_r($tickets_programados);
-
-$tickets_programados = $db->fetchAll($sql_tickets, $params);
-
-// Consulta mínima para aislar el problema
-$sql_test = "
-    SELECT t.id, t.titulo, s.nombre as nombre_sucursal
+// Obtener tickets programados de la semana
+// Obtener tickets programados de la semana
+$sql_tickets = "
+    SELECT t.*, 
+           s.nombre as nombre_sucursal,
+           CAST(t.fecha_inicio AS DATE) as fecha_inicio,
+           CAST(t.fecha_final AS DATE) as fecha_final,
+           GROUP_CONCAT(DISTINCT tc.tipo_usuario ORDER BY tc.tipo_usuario SEPARATOR ' + ') as equipo_trabajo
     FROM mtto_tickets t
     LEFT JOIN sucursales s ON t.cod_sucursal = s.codigo
+    LEFT JOIN mtto_tickets_colaboradores tc ON t.id = tc.ticket_id
     WHERE t.fecha_inicio IS NOT NULL 
     AND t.fecha_final IS NOT NULL
-    LIMIT 5
+    AND (
+        (CAST(t.fecha_inicio AS DATE) BETWEEN ? AND ?)
+        OR (CAST(t.fecha_final AS DATE) BETWEEN ? AND ?)
+        OR (CAST(t.fecha_inicio AS DATE) <= ? AND CAST(t.fecha_final AS DATE) >= ?)
+    )
+    GROUP BY t.id
+    ORDER BY s.nombre
 ";
 
-$resultado_test = $db->fetchAll($sql_test);
-print_r($resultado_test);
+$tickets_programados = $db->fetchAll($sql_tickets, [
+    $fecha_inicio_semana, $fecha_fin_semana,
+    $fecha_inicio_semana, $fecha_fin_semana,
+    $fecha_fin_semana, $fecha_inicio_semana  // CAMBIO: Últimos dos parámetros invertidos
+]);
 
-echo "Fecha inicio semana: " . $fecha_inicio_semana . "<br>";
-echo "Fecha fin semana: " . $fecha_fin_semana . "<br>";
-// Verifica si la conexión funciona
-try {
-    $test_connection = $db->fetchAll("SELECT 1 as test");
-    echo "Conexión OK<br>";
-} catch (Exception $e) {
-    echo "Error de conexión: " . $e->getMessage() . "<br>";
-}
 // Agrupar tickets por equipo de trabajo
 $tickets_por_equipo = [];
 foreach ($equipos_trabajo as $equipo) {
