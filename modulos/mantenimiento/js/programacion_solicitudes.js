@@ -6,23 +6,37 @@ let resizing = null;
 // ==================== RENDERIZADO Y EMPAQUETADO ====================
 
 function renderizarCronograma() {
+    console.log('🚀 Iniciando renderizarCronograma');
+    console.log('📦 Equipos a procesar:', Object.keys(ticketsPorEquipo));
+    
     // Forzar ancho mínimo de celdas antes de renderizar
     document.querySelectorAll('.calendar-cell').forEach(cell => {
         cell.style.minWidth = '120px';
     });
+    
     // Procesar cada equipo de trabajo
     Object.keys(ticketsPorEquipo).forEach(equipo => {
+        console.log(`\n📋 Procesando equipo: "${equipo}"`);
+        
         const tickets = ticketsPorEquipo[equipo];
-        if (!tickets || tickets.length === 0) return;
+        
+        if (!tickets || tickets.length === 0) {
+            console.log(`  ⚠️ Sin tickets para: ${equipo}`);
+            return;
+        }
+        
+        console.log(`  ✅ Tickets encontrados: ${tickets.length}`);
         
         // Inicializar matriz de ocupación para este equipo
         const matrizOcupacion = [];
         const posiciones = [];
         
         // Procesar cada ticket
-        tickets.forEach(ticket => {
+        tickets.forEach((ticket, idx) => {
+            console.log(`    🎫 Ticket ${idx + 1}/${tickets.length}: ${ticket.titulo}`);
             const posicion = calcularPosicion(ticket, matrizOcupacion);
             if (posicion) {
+                console.log(`      📍 Posición: fila=${posicion.fila}, día=${posicion.diaInicio}, días=${posicion.numDias}`);
                 posiciones.push({
                     ticket: ticket,
                     fila: posicion.fila,
@@ -32,16 +46,20 @@ function renderizarCronograma() {
             }
         });
         
+        console.log(`  📊 Total filas necesarias: ${matrizOcupacion.length}`);
+        
         // Renderizar tickets en el DOM
         posiciones.forEach(pos => {
             renderizarTicket(pos.ticket, pos.fila, pos.diaInicio, pos.numDias, equipo);
         });
         
         // Ajustar altura de las celdas del equipo
+        console.log(`  🎨 Ajustando alturas para: ${equipo}`);
         ajustarAlturaCeldas(equipo, matrizOcupacion.length);
     });
+    
+    console.log('\n✅ Renderizado completado');
 }
-
 function calcularPosicion(ticket, matrizOcupacion) {
     // Calcular índice de día de inicio
     let diaInicio = fechasSemana.indexOf(ticket.fecha_inicio);
