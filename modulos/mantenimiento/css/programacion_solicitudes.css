@@ -129,7 +129,7 @@ body {
     top: 0;
     right: 0;
     bottom: 0;
-    width: 20px;
+    width: 10px;
     background-color: #51B8AC;
     cursor: ew-resize;
     opacity: 1;
@@ -141,7 +141,7 @@ body {
 
 .resize-handle:hover {
     background-color: #0E544C;
-    width: 22px;
+    width: 12px;
 }
 
 .resize-handle::before {
