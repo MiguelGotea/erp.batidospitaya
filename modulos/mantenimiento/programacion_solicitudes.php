@@ -202,7 +202,7 @@ $tickets_pendientes = $ticketModel->getTicketsWithoutDates();
                     </a>
 
                     <button class="btn btn-nav-week" onclick="toggleSidebar()">
-                        <i class="bi bi-chevron-right"></i> Solicitudes Pendientes
+                        <i class="bi bi-list-task"></i> Solicitudes Pendientes
                     </button>
                 </div>
 
