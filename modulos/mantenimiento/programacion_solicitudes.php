@@ -142,6 +142,7 @@ foreach ($tickets_programados as $ticket) {
 // Obtener tickets sin programar
 $tickets_pendientes = $ticketModel->getTicketsWithoutDates();
 ?>
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -155,23 +156,25 @@ $tickets_pendientes = $ticketModel->getTicketsWithoutDates();
 <body>
     <div class="container-fluid p-3">
         <!-- Header -->
-        <div class="page-header d-flex justify-content-between align-items-center">
+        <div class="d-flex justify-content-between align-items-center mb-3">
             <h4 class="mb-0">Programación de Solicitudes - Semana <?php echo $semana_actual; ?></h4>
-            <button class="btn btn-light" onclick="toggleSidebar()">
-                <i class="bi bi-list-task"></i> Solicitudes Pendientes
-            </button>
+            <div>
+                <button class="btn btn-sm" style="background-color: #51B8AC; color: white;" onclick="toggleSidebar()">
+                    <i class="bi bi-list-task"></i> Solicitudes Pendientes
+                </button>
+            </div>
         </div>
 
         <!-- Navegación de semanas -->
-        <div class="d-flex justify-content-center align-items-center gap-3 mb-4">
-            <a href="?semana=<?php echo $semana_actual - 1; ?>" class="btn btn-nav-week">
+        <div class="d-flex justify-content-center align-items-center gap-3 mb-3">
+            <a href="?semana=<?php echo $semana_actual - 1; ?>" class="btn btn-sm btn-outline-secondary">
                 <i class="bi bi-chevron-left"></i> Anterior
             </a>
-            <div class="week-display">
+            <span class="fw-bold">
                 <?php echo date('d/m/Y', strtotime($fecha_inicio_semana)); ?> - 
                 <?php echo date('d/m/Y', strtotime($fecha_fin_semana)); ?>
-            </div>
-            <a href="?semana=<?php echo $semana_actual + 1; ?>" class="btn btn-nav-week">
+            </span>
+            <a href="?semana=<?php echo $semana_actual + 1; ?>" class="btn btn-sm btn-outline-secondary">
                 Siguiente <i class="bi bi-chevron-right"></i>
             </a>
         </div>
@@ -270,16 +273,28 @@ $tickets_pendientes = $ticketModel->getTicketsWithoutDates();
 
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="js/programacion_solicitudes.js"></script>
     
     <script>
     // Datos de tickets para JavaScript
     const ticketsPorEquipo = <?php echo json_encode($tickets_por_equipo, JSON_UNESCAPED_UNICODE); ?>;
     const fechasSemana = <?php echo json_encode($fechas, JSON_UNESCAPED_UNICODE); ?>;
     
+    console.log('Tickets por equipo:', ticketsPorEquipo);
+    console.log('Fechas semana:', fechasSemana);
+    </script>
+    
+    <script src="js/programacion_solicitudes.js"></script>
+    
+    <script>
     // Renderizar tickets en el cronograma
     document.addEventListener('DOMContentLoaded', function() {
-        renderizarCronograma();
+        console.log('DOM Cargado - Iniciando renderizado');
+        
+        // Pequeño delay para asegurar que todo esté listo
+        setTimeout(function() {
+            renderizarCronograma();
+            console.log('Renderizado completado');
+        }, 100);
     });
     </script>
 </body>
