@@ -140,8 +140,7 @@ foreach ($tickets_programados as $ticket) {
 }
 
 // Obtener tickets sin programar
-$ticketModel = new Ticket();
-$tickets_pendientes = $ticketModel->getTicketsWithoutDates();
+$tickets_pendientes = $ticket->getTicketsWithoutDates();
 ?>
 
 <!DOCTYPE html>
