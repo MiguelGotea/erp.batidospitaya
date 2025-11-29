@@ -2,7 +2,7 @@
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    background-color: #f8f9fa;
 }
 
 /* Tabla del cronograma */
@@ -61,7 +61,7 @@ body {
     position: absolute;
     box-sizing: border-box;
     height: 55px;
-    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    background-color: white;
     border: 2px solid #51B8AC;
     border-radius: 6px;
     padding: 0.4rem 0.5rem;
@@ -79,58 +79,26 @@ body {
     border-color: #0E544C;
 }
 
-.ticket-card:hover .btn-desprogramar,
-.ticket-card:hover .btn-colaboradores,
-.ticket-card:hover .resize-handle {
-    opacity: 1;
-}
-
 /* Botones en tarjetas */
-.btn-desprogramar {
-    position: absolute;
-    bottom: 0.25rem;
-    left: 0.25rem;
-    background-color: #dc3545;
-    border: none;
-    color: white;
-    font-size: 0.75rem;
-    cursor: pointer;
-    padding: 0.15rem 0.35rem;
-    border-radius: 3px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    transition: all 0.2s;
-    z-index: 10;
-    font-weight: 600;
-}
-
-.btn-desprogramar:hover {
-    background-color: #a71d2a;
-    transform: scale(1.05);
-}
-
+.btn-desprogramar,
 .btn-colaboradores {
-    position: absolute;
-    bottom: 0.25rem;
-    left: 2rem;
     background-color: #51B8AC;
     border: none;
     color: white;
-    font-size: 0.75rem;
+    font-size: 0.65rem;
     cursor: pointer;
-    padding: 0.15rem 0.35rem;
+    padding: 0.15rem 0.3rem;
     border-radius: 3px;
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    opacity: 0;
     transition: all 0.2s;
     z-index: 10;
     font-weight: 600;
+    flex-shrink: 0;
 }
 
+.btn-desprogramar:hover,
 .btn-colaboradores:hover {
     background-color: #0E544C;
     transform: scale(1.05);
@@ -162,7 +130,7 @@ body {
     width: 12px;
     background: linear-gradient(90deg, transparent 0%, rgba(81, 184, 172, 0.4) 100%);
     cursor: ew-resize;
-    opacity: 0;
+    opacity: 1;
     transition: all 0.2s;
     z-index: 5;
 }
@@ -188,7 +156,7 @@ body.resizing * {
     right: -400px;
     width: 400px;
     height: 100vh;
-    background: linear-gradient(180deg, #ffffff 0%, #f8f9fa 100%);
+    background-color: white;
     box-shadow: -4px 0 20px rgba(14, 84, 76, 0.15);
     transition: right 0.3s ease;
     z-index: 1050;
@@ -221,7 +189,7 @@ body.resizing * {
 
 /* Tarjetas de tickets pendientes */
 .ticket-pendiente {
-    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    background-color: white;
     border: 2px solid #51B8AC;
     border-radius: 6px;
     padding: 0.6rem;
@@ -262,7 +230,7 @@ body.resizing * {
 
 .badge-tipo {
     display: inline-block;
-    background: linear-gradient(135deg, #51B8AC 0%, #0E544C 100%);
+    background-color: #51B8AC;
     color: white;
     padding: 0.2rem 0.5rem;
     border-radius: 4px;
