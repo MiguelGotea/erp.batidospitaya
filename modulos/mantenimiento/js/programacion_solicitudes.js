@@ -211,9 +211,17 @@ function ajustarAlturaCeldas(equipo, numFilas) {
     if (!row) return;
     
     const alturaMinima = Math.max(80, (numFilas * 60) + 20);
-    const celdas = row.querySelectorAll('.calendar-cell, .equipo-label');
+    
+    console.log(`Equipo: ${equipo}, Filas: ${numFilas}, Altura: ${alturaMinima}px`);
+    
+    // Ajustar altura del TR completo
+    row.style.height = alturaMinima + 'px';
+    
+    // Ajustar todas las celdas
+    const celdas = row.querySelectorAll('td');
     
     celdas.forEach(celda => {
+        celda.style.height = alturaMinima + 'px';
         celda.style.minHeight = alturaMinima + 'px';
         celda.style.position = 'relative';
     });
