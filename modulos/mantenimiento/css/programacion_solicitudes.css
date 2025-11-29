@@ -312,3 +312,74 @@ body.resizing * {
         font-size: 0.7rem;
     }
 }
+
+/* Animaciones sutiles */
+@keyframes slideIn {
+    from {
+        transform: translateX(20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.ticket-card {
+    animation: slideIn 0.3s ease-out;
+}
+
+/* Header personalizado */
+.page-header {
+    background: linear-gradient(135deg, #0E544C 0%, #51B8AC 100%);
+    padding: 1.5rem;
+    border-radius: 8px;
+    color: white;
+    box-shadow: 0 4px 12px rgba(14, 84, 76, 0.2);
+    margin-bottom: 1.5rem;
+}
+
+.page-header h4 {
+    margin: 0;
+    font-weight: 600;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Botones de navegación */
+.btn-nav-week {
+    background: linear-gradient(135deg, #51B8AC 0%, #0E544C 100%);
+    border: none;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-weight: 600;
+    transition: all 0.3s;
+    box-shadow: 0 2px 6px rgba(14, 84, 76, 0.2);
+}
+
+.btn-nav-week:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(14, 84, 76, 0.3);
+    color: white;
+}
+
+/* Week display */
+.week-display {
+    background: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 6px;
+    font-weight: 600;
+    color: #0E544C;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+/* Mejoras al sidebar header */
+.sidebar-header {
+    background: linear-gradient(135deg, #0E544C 0%, #51B8AC 100%);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.sidebar-header h5 {
+    font-weight: 600;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}

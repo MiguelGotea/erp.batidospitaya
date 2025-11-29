@@ -707,8 +707,26 @@ function mostrarDetallesTicket(ticketId) {
         method: 'GET',
         data: { id: ticketId },
         success: function(response) {
-            const modal = $('<div class="modal fade"><div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header"><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body">' + response + '</div></div></div></div>');
-            $('body').append(modal);
+            // Crear modal aislado sin heredar estilos
+            const modalHtml = `
+                <div class="modal fade" id="modalDetallesTicket" tabindex="-1" style="z-index: 1060;">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content" style="all: initial; font-family: inherit;">
+                            <div class="modal-header" style="background-color: #0E544C; color: white; padding: 1rem; border-bottom: 1px solid #dee2e6; border-radius: 0.3rem 0.3rem 0 0;">
+                                <h5 class="modal-title" style="margin: 0; font-size: 1.25rem; font-weight: 500;">Detalles de la Solicitud</h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" style="padding: 0.5rem; margin: -0.5rem -0.5rem -0.5rem auto;"></button>
+                            </div>
+                            <div class="modal-body" style="padding: 1rem; max-height: 70vh; overflow-y: auto; background-color: white;">
+                                ${response}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            $('body').append(modalHtml);
+            const modalElement = document.getElementById('modalDetallesTicket');
+            const modal = new bootstrap.Modal(modalElement);
             
             setTimeout(function() {
                 const hiddenInput = document.getElementById('edit_nivel_urgencia');
@@ -720,12 +738,16 @@ function mostrarDetallesTicket(ticketId) {
                 if (typeof initUrgencyControls === 'function') {
                     initUrgencyControls();
                 }
-            }, 0);
+            }, 100);
             
-            modal.modal('show');
-            modal.on('hidden.bs.modal', function() { 
-                modal.remove(); 
+            modal.show();
+            
+            modalElement.addEventListener('hidden.bs.modal', function() { 
+                modalElement.remove(); 
             });
+        },
+        error: function() {
+            alert('Error al cargar los detalles de la solicitud');
         }
     });
 }

@@ -156,25 +156,23 @@ $tickets_pendientes = $ticketModel->getTicketsWithoutDates();
 <body>
     <div class="container-fluid p-3">
         <!-- Header -->
-        <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="page-header d-flex justify-content-between align-items-center">
             <h4 class="mb-0">Programación de Solicitudes - Semana <?php echo $semana_actual; ?></h4>
-            <div>
-                <button class="btn btn-sm" style="background-color: #51B8AC; color: white;" onclick="toggleSidebar()">
-                    <i class="bi bi-list-task"></i> Solicitudes Pendientes
-                </button>
-            </div>
+            <button class="btn btn-light" onclick="toggleSidebar()">
+                <i class="bi bi-list-task"></i> Solicitudes Pendientes
+            </button>
         </div>
 
         <!-- Navegación de semanas -->
-        <div class="d-flex justify-content-center align-items-center gap-3 mb-3">
-            <a href="?semana=<?php echo $semana_actual - 1; ?>" class="btn btn-sm btn-outline-secondary">
+        <div class="d-flex justify-content-center align-items-center gap-3 mb-4">
+            <a href="?semana=<?php echo $semana_actual - 1; ?>" class="btn btn-nav-week">
                 <i class="bi bi-chevron-left"></i> Anterior
             </a>
-            <span class="fw-bold">
+            <div class="week-display">
                 <?php echo date('d/m/Y', strtotime($fecha_inicio_semana)); ?> - 
                 <?php echo date('d/m/Y', strtotime($fecha_fin_semana)); ?>
-            </span>
-            <a href="?semana=<?php echo $semana_actual + 1; ?>" class="btn btn-sm btn-outline-secondary">
+            </div>
+            <a href="?semana=<?php echo $semana_actual + 1; ?>" class="btn btn-nav-week">
                 Siguiente <i class="bi bi-chevron-right"></i>
             </a>
         </div>
@@ -226,7 +224,7 @@ $tickets_pendientes = $ticketModel->getTicketsWithoutDates();
                 <select class="form-select form-select-sm" id="filtroSucursal" onchange="filtrarPendientes()">
                     <option value="">Todas las sucursales</option>
                     <?php 
-                    $sucursales = $ticketModel->getSucursales();
+                    $sucursales = $ticket->getSucursales();
                     foreach ($sucursales as $suc): 
                     ?>
                         <option value="<?php echo $suc['cod_sucursal']; ?>">
@@ -273,28 +271,16 @@ $tickets_pendientes = $ticketModel->getTicketsWithoutDates();
 
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/programacion_solicitudes.js"></script>
     
     <script>
     // Datos de tickets para JavaScript
     const ticketsPorEquipo = <?php echo json_encode($tickets_por_equipo, JSON_UNESCAPED_UNICODE); ?>;
     const fechasSemana = <?php echo json_encode($fechas, JSON_UNESCAPED_UNICODE); ?>;
     
-    console.log('Tickets por equipo:', ticketsPorEquipo);
-    console.log('Fechas semana:', fechasSemana);
-    </script>
-    
-    <script src="js/programacion_solicitudes.js"></script>
-    
-    <script>
     // Renderizar tickets en el cronograma
     document.addEventListener('DOMContentLoaded', function() {
-        console.log('DOM Cargado - Iniciando renderizado');
-        
-        // Pequeño delay para asegurar que todo esté listo
-        setTimeout(function() {
-            renderizarCronograma();
-            console.log('Renderizado completado');
-        }, 100);
+        renderizarCronograma();
     });
     </script>
 </body>

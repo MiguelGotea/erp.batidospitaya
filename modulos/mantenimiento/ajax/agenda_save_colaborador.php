@@ -10,7 +10,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 $ticket_id = isset($_POST['ticket_id']) ? intval($_POST['ticket_id']) : 0;
-$cod_operario = isset($_POST['cod_operario']) ? intval($_POST['cod_operario']) : null;
+$cod_operario = isset($_POST['cod_operario']) && $_POST['cod_operario'] !== '' ? intval($_POST['cod_operario']) : null;
 $tipo_usuario = isset($_POST['tipo_usuario']) ? $_POST['tipo_usuario'] : '';
 
 if ($ticket_id <= 0 || empty($tipo_usuario)) {
@@ -25,6 +25,7 @@ if (!in_array($tipo_usuario, $tipos_validos)) {
 }
 
 try {
+    // Permitir cod_operario NULL
     $sql = "INSERT INTO mtto_tickets_colaboradores (ticket_id, cod_operario, tipo_usuario) 
             VALUES (?, ?, ?)";
     
