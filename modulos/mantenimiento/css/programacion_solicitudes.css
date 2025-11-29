@@ -60,7 +60,6 @@ body {
     z-index: 100;
 }
 
-
 .ticket-card:hover .btn-desprogramar,
 .ticket-card:hover .btn-colaboradores,
 .ticket-card:hover .resize-handle {
