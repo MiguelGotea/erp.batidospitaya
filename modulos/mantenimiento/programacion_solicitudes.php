@@ -81,30 +81,10 @@ $equipos_trabajo = array_merge($equipos_trabajo, $equipos_normalizados);
 
 // Obtener tickets programados de la semana
 $sql_tickets = "
-    SELECT t.id, 
-           ANY_VALUE(t.codigo) as codigo,
-           ANY_VALUE(t.titulo) as titulo,
-           ANY_VALUE(t.descripcion) as descripcion,
-           ANY_VALUE(t.tipo_formulario) as tipo_formulario,
-           ANY_VALUE(t.cod_operario) as cod_operario,
-           ANY_VALUE(t.cod_sucursal) as cod_sucursal,
-           ANY_VALUE(t.area_equipo) as area_equipo,
-           ANY_VALUE(t.foto) as foto,
-           ANY_VALUE(t.nivel_urgencia) as nivel_urgencia,
-           ANY_VALUE(t.fecha_inicio) as fecha_inicio,
-           ANY_VALUE(t.fecha_final) as fecha_final,
-           ANY_VALUE(t.status) as status,
-           ANY_VALUE(t.tipo_caso_id) as tipo_caso_id,
-           ANY_VALUE(t.created_at) as created_at,
-           ANY_VALUE(t.updated_at) as updated_at,
-           ANY_VALUE(t.detalle_trabajo) as detalle_trabajo,
-           ANY_VALUE(t.materiales_usados) as materiales_usados,
-           ANY_VALUE(t.fecha_finalizacion) as fecha_finalizacion,
-           ANY_VALUE(t.finalizado_por) as finalizado_por,
-           ANY_VALUE(t.tiempo_estimado) as tiempo_estimado,
-           ANY_VALUE(s.nombre) as nombre_sucursal,
-           CAST(t.fecha_inicio AS DATE) as fecha_inicio_date,
-           CAST(t.fecha_final AS DATE) as fecha_final_date,
+    SELECT t.*, 
+           s.nombre as nombre_sucursal,
+           CAST(t.fecha_inicio AS DATE) as fecha_inicio,
+           CAST(t.fecha_final AS DATE) as fecha_final,
            GROUP_CONCAT(DISTINCT tc.tipo_usuario ORDER BY tc.tipo_usuario SEPARATOR ' + ') as equipo_trabajo
     FROM mtto_tickets t
     LEFT JOIN sucursales s ON t.cod_sucursal = s.codigo
@@ -120,11 +100,17 @@ $sql_tickets = "
     ORDER BY s.nombre
 ";
 
-$tickets_programados = $db->fetchAll($sql_tickets, [
-    $fecha_inicio_semana, $fecha_fin_semana,
-    $fecha_inicio_semana, $fecha_fin_semana,
-    $fecha_inicio_semana, $fecha_fin_semana
-]);
+try {
+    $tickets_programados = $db->fetchAll($sql_tickets, [
+        $fecha_inicio_semana, $fecha_fin_semana,
+        $fecha_inicio_semana, $fecha_fin_semana,
+        $fecha_inicio_semana, $fecha_fin_semana
+    ]);
+} catch (Exception $e) {
+    echo "Error: " . $e->getMessage();
+    // También muestra la consulta SQL con los parámetros
+    echo "SQL: " . $sql_tickets;
+}
 
 // Agrupar tickets por equipo de trabajo
 $tickets_por_equipo = [];
