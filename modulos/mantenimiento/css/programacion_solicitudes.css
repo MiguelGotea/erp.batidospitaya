@@ -108,7 +108,7 @@ body {
 /* Badge de urgencia en tarjeta */
 .badge-urgencia-card {
     position: absolute;
-    top: 0.25rem;
+    top: 1.4rem;
     right: 25px;
     width: 22px;
     height: 22px;
