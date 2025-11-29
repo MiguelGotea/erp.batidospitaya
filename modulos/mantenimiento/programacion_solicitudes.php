@@ -2,10 +2,12 @@
 // programacion_solicitudes.php
 $version = "1.0.22"; // Incrementa cuando hagas cambios
 
-require_once __DIR__ . '/config/database.php';
-require_once __DIR__ . '/models/Ticket.php';
+require_once '/config/database.php';
+require_once '/models/Ticket.php';
 require_once '../../includes/auth.php';
 require_once '../../includes/funciones.php';
+// Incluir el header universal
+require_once '../../includes/header_universal.php';
 
 //verificarAutenticacion();   //no usar 
 
@@ -174,12 +176,8 @@ $tickets_pendientes = $ticketModel->getTicketsWithoutDates();
 <body>
     <div class="container-fluid p-3">
         <!-- Header -->
-        <div class="page-header d-flex justify-content-between align-items-center">
-            <h4 class="mb-0">Programación de Solicitudes - Semana <?php echo $semana_actual; ?></h4>
-            <button class="btn btn-light" onclick="toggleSidebar()">
-                <i class="bi bi-list-task"></i> Solicitudes Pendientes
-            </button>
-        </div>
+        <!-- Renderizar header universal -->
+        <?php echo renderHeader($usuario, $esAdmin, '[Anexar titulo de pagina]'); ?>
 
         <!-- Navegación de semanas -->
         <div class="d-flex justify-content-center align-items-center gap-3 mb-4">

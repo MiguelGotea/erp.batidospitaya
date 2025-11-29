@@ -1510,39 +1510,39 @@ function getColorByUrgency($urgencia, $tipo_formulario) {
         } 
 
         // Mostrar detalles del ticket
-        function mostrarDetallesTicket(ticketId) {
-            console.log('Mostrar detalles:', ticketId);
-            $.ajax({
-                url: 'ajax/get_ticket_details.php',
-                method: 'GET',
-                data: { id: ticketId },
-                success: function(response) {
-                    const modal = $('<div class="modal fade"><div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header"><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body">' + response + '</div></div></div></div>');
-                    $('body').append(modal);
-                    
-                    // ✅ RESETEAR y luego INICIALIZAR
-                    setTimeout(function() {
-                        // Leer el valor correcto del input hidden que viene del servidor
-                        const hiddenInput = document.getElementById('edit_nivel_urgencia');
-                        if (hiddenInput && typeof window.currentUrgency !== 'undefined') {
-                            const newUrgency = hiddenInput.value ? parseInt(hiddenInput.value) : null;
-                            console.log('🔄 Reseteando urgencia de', window.currentUrgency, 'a', newUrgency);
-                            window.currentUrgency = newUrgency;
-                        }
+            function mostrarDetallesTicket(ticketId) {
+                console.log('Mostrar detalles:', ticketId);
+                $.ajax({
+                    url: 'ajax/get_ticket_details.php',
+                    method: 'GET',
+                    data: { id: ticketId },
+                    success: function(response) {
+                        const modal = $('<div class="modal fade"><div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header"><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body">' + response + '</div></div></div></div>');
+                        $('body').append(modal);
                         
-                        if (typeof initUrgencyControls === 'function') {
-                            initUrgencyControls();
-                        }
-                    }, 0);
-                    
-                    modal.modal('show');
-                    
-                    modal.on('hidden.bs.modal', function() { 
-                        modal.remove(); 
-                    });
-                }
-            });
-        }
+                        // ✅ RESETEAR y luego INICIALIZAR
+                        setTimeout(function() {
+                            // Leer el valor correcto del input hidden que viene del servidor
+                            const hiddenInput = document.getElementById('edit_nivel_urgencia');
+                            if (hiddenInput && typeof window.currentUrgency !== 'undefined') {
+                                const newUrgency = hiddenInput.value ? parseInt(hiddenInput.value) : null;
+                                console.log('🔄 Reseteando urgencia de', window.currentUrgency, 'a', newUrgency);
+                                window.currentUrgency = newUrgency;
+                            }
+                            
+                            if (typeof initUrgencyControls === 'function') {
+                                initUrgencyControls();
+                            }
+                        }, 0);
+                        
+                        modal.modal('show');
+                        
+                        modal.on('hidden.bs.modal', function() { 
+                            modal.remove(); 
+                        });
+                    }
+                });
+            }
         
         // Mostrar tickets del día
         function mostrarTicketsDelDia(fecha) {
