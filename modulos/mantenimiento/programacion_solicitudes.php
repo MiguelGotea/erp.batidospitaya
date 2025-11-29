@@ -1,5 +1,5 @@
 <?php
-$version = "1.0.11"; // Incrementa cuando hagas cambios
+$version = "1.0.12"; // Incrementa cuando hagas cambios
 // programacion_solicitudes.php
 require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/models/Ticket.php';
