@@ -1,9 +1,7 @@
 <?php
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
 // programacion_solicitudes.php
-require_once __DIR__ . '/config/database.php';
-require_once __DIR__ . '/models/Ticket.php';
+require_once 'config/database.php';
+require_once 'models/Ticket.php';
 
 $ticketModel = new Ticket();
 
