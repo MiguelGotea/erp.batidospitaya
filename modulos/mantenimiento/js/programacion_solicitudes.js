@@ -1,3 +1,10 @@
+document.addEventListener('DOMContentLoaded', function() {
+    // Esperar un frame más para asegurar que el layout esté calculado
+    setTimeout(() => {
+        renderizarCronograma();
+    }, 100);
+});
+
 // js/programacion_solicitudes.js - Archivo completo
 
 let draggedTicket = null;
@@ -5,11 +12,22 @@ let resizing = null;
 
 // ==================== RENDERIZADO Y EMPAQUETADO ====================
 
+// También modifica la función renderizarCronograma para ser más robusta
 function renderizarCronograma() {
+    console.log('Iniciando renderizado del cronograma...');
+    
+    // Limpiar cualquier contenido previo
+    document.querySelectorAll('.ticket-card').forEach(card => card.remove());
+    
     // Procesar cada equipo de trabajo
     Object.keys(ticketsPorEquipo).forEach(equipo => {
         const tickets = ticketsPorEquipo[equipo];
-        if (!tickets || tickets.length === 0) return;
+        if (!tickets || tickets.length === 0) {
+            console.log(`No hay tickets para equipo: ${equipo}`);
+            return;
+        }
+        
+        console.log(`Procesando equipo: ${equipo} con ${tickets.length} tickets`);
         
         // Inicializar matriz de ocupación para este equipo
         const matrizOcupacion = [];
@@ -34,8 +52,12 @@ function renderizarCronograma() {
         });
         
         // Ajustar altura de las celdas del equipo
-        ajustarAlturaCeldas(equipo, matrizOcupacion.length);
+        const numFilas = matrizOcupacion.length || 1;
+        console.log(`Ajustando altura para equipo ${equipo}: ${numFilas} filas`);
+        ajustarAlturaCeldas(equipo, numFilas);
     });
+    
+    console.log('Renderizado completado');
 }
 
 function calcularPosicion(ticket, matrizOcupacion) {
