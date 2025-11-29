@@ -78,49 +78,45 @@ foreach ($equipos_unicos as $equipo) {
 
 sort($equipos_normalizados);
 // FALTA: Definir $equipos_trabajo antes del foreach
+// Definir equipos de trabajo
 $equipos_trabajo = ['Cambio de Equipos', 'Conductor', 'Conductor + Jefe de Manteniento', 'Jefe de Manteniento', 'Lider de Infraestructura', 'Sin Equipo'];
 
-// Agrupar tickets por equipo de trabajo
+// Inicializar array de tickets por equipo
 $tickets_por_equipo = [];
 foreach ($equipos_trabajo as $equipo) {
     $tickets_por_equipo[$equipo] = [];
 }
 
-// Define las fechas primero
-$fecha_inicio_semana = '2025-11-24';
-$fecha_fin_semana = '2025-11-29';
-
-$sql_tickets = "
-    SELECT t.*, 
-           s.nombre as nombre_sucursal,
-           (SELECT GROUP_CONCAT(DISTINCT tc2.tipo_usuario ORDER BY tc2.tipo_usuario SEPARATOR ' + ') 
-            FROM mtto_tickets_colaboradores tc2 
-            WHERE tc2.ticket_id = t.id) as equipo_trabajo
-    FROM mtto_tickets t
-    LEFT JOIN sucursales s ON t.cod_sucursal = s.codigo
-    WHERE t.fecha_inicio IS NOT NULL 
-    AND t.fecha_final IS NOT NULL
-    AND (
-        (t.fecha_inicio BETWEEN ? AND ?)
-        OR (t.fecha_final BETWEEN ? AND ?)
-        OR (t.fecha_inicio <= ? AND t.fecha_final >= ?)
-    )
-    ORDER BY s.nombre
-";
-
-$params = [
-    $fecha_inicio_semana, $fecha_fin_semana,
-    $fecha_inicio_semana, $fecha_fin_semana,
-    $fecha_fin_semana, $fecha_inicio_semana
-];
-
-try {
-    $tickets_programados = $db->fetchAll($sql_tickets, $params);
-    echo "ÉXITO: " . count($tickets_programados) . " tickets encontrados";
-} catch (Exception $e) {
-    echo "ERROR: " . $e->getMessage();
+// Agrupar tickets
+foreach ($tickets_programados as $ticket) {
+    // Determinar equipo
+    if ($ticket['tipo_formulario'] === 'cambio_equipos') {
+        $equipo_key = 'Cambio de Equipos';
+    } else {
+        $tipos = !empty($ticket['equipo_trabajo']) ? explode(' + ', $ticket['equipo_trabajo']) : [];
+        $tipos_unicos = array_unique($tipos);
+        sort($tipos_unicos);
+        $equipo_key = implode(' + ', $tipos_unicos);
+        
+        if (empty($equipo_key)) {
+            $equipo_key = 'Sin Equipo';
+        }
+        
+        // Si el equipo no está en la lista, agregarlo
+        if (!in_array($equipo_key, $equipos_trabajo)) {
+            $equipos_trabajo[] = $equipo_key;
+            $tickets_por_equipo[$equipo_key] = [];
+        }
+    }
+    
+    $tickets_por_equipo[$equipo_key][] = $ticket;
 }
-?>
+
+// DEBUG: Verificar la agrupación
+echo "<h3>DEBUG - Tickets por equipo:</h3>";
+foreach ($tickets_por_equipo as $equipo => $tickets) {
+    echo "<strong>$equipo:</strong> " . count($tickets) . " tickets<br>";
+}
 // Verifica que $db esté bien inicializada
 var_dump(get_class($db));
 print_r($tickets_programados);
