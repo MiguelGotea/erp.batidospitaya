@@ -537,15 +537,14 @@ function renderModalColaboradores(ticketId, colaboradores, operarios) {
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header" style="background-color: #0E544C; color: white;">
-                        <h5 class="modal-title">Asignar Colaboradores</h5>
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
                         <table class="table table-sm">
                             <thead>
                                 <tr>
+                                    <th>Cargo</th>
                                     <th>Colaborador</th>
-                                    <th>Tipo</th>
                                     <th>Acciones</th>
                                 </tr>
                             </thead>
@@ -554,6 +553,7 @@ function renderModalColaboradores(ticketId, colaboradores, operarios) {
     colaboradores.forEach(col => {
         html += `
             <tr data-id="${col.id}">
+                <td><small>${col.tipo_usuario}</small></td>
                 <td>
                     <select class="form-select form-select-sm colaborador-select" data-id="${col.id}">
                         <option value="">Seleccionar...</option>`;
@@ -566,7 +566,6 @@ function renderModalColaboradores(ticketId, colaboradores, operarios) {
         html += `
                     </select>
                 </td>
-                <td><small>${col.tipo_usuario}</small></td>
                 <td>
                     <button class="btn btn-sm btn-danger" onclick="eliminarColaborador(${col.id})">
                         <i class="bi bi-x"></i>
