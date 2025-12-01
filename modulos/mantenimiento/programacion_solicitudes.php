@@ -29,12 +29,15 @@ if (!verificarAccesoCargo(35, 16) && !$esAdmin) {
 
 $ticketModel = new Ticket();
 
-// Obtener semanaactual (518 por defecto)
-$sql_semanaactual = "SELECT fecha, numero_semana 
+// Usar CURDATE() para obtener la fecha actual
+$sql_semanaactualhoy = "SELECT fecha, numero_semana 
                FROM FechasSistema 
                WHERE fecha = CURDATE()";
-$resultadossql_semanaactual = $db->fetchAll($sql_semanaactual);
-$semana_actual = isset($resultadossql_semanaactual[0]['numero_semana']) ? $resultadossql_semanaactual[0]['numero_semana'] : 517;
+$resultadossemanaactualhoy = $db->fetchAll($sql_semanaactualhoy);
+$semanaactualhoy = isset($resultadossemanaactualhoy[0]['numero_semana']) ? $resultadossemanaactualhoy[0]['numero_semana'] : null;
+
+// Obtener semana actual (518 por defecto)
+$semana_actual = isset($_GET['semana']) ? intval($_GET['semana']) : $semanaactualhoy;
 
 // Obtener fechas de la semana desde FechasSistema
 $sql_fechas = "SELECT CAST(fecha AS DATE) as fecha, numero_semana 
