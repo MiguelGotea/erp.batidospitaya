@@ -34,7 +34,7 @@ $sql_semanaactual = "SELECT fecha, numero_semana
                FROM FechasSistema 
                WHERE fecha = CURDATE()";
 $resultadossql_semanaactual = $db->fetchAll($sql_semanaactual);
-$semana_actual = isset($resultadossql_semanaactual[0]['numero_semana']) ? $resultadossql_semanaactual[0]['numero_semana'] : 518;
+$semana_actual = isset($resultadossql_semanaactual[0]['numero_semana']) ? $resultadossql_semanaactual[0]['numero_semana'] : 517;
 
 // Obtener fechas de la semana desde FechasSistema
 $sql_fechas = "SELECT CAST(fecha AS DATE) as fecha, numero_semana 
