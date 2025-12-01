@@ -553,7 +553,6 @@ function renderModalColaboradores(ticketId, colaboradores, operarios) {
     colaboradores.forEach(col => {
         html += `
             <tr data-id="${col.id}">
-                <td><small>${col.tipo_usuario}</small></td>
                 <td>
                     <select class="form-select form-select-sm colaborador-select" data-id="${col.id}">
                         <option value="">Seleccionar...</option>`;
@@ -566,6 +565,7 @@ function renderModalColaboradores(ticketId, colaboradores, operarios) {
         html += `
                     </select>
                 </td>
+                <td><small>${col.tipo_usuario}</small></td>
                 <td>
                     <button class="btn btn-sm btn-danger" onclick="eliminarColaborador(${col.id})">
                         <i class="bi bi-x"></i>
@@ -577,6 +577,15 @@ function renderModalColaboradores(ticketId, colaboradores, operarios) {
     html += `
                                 <tr id="nuevaFila" style="display: none;">
                                     <td>
+                                        <select class="form-select form-select-sm" id="nuevoTipo">
+                                            <option value="">Seleccionar tipo...</option>
+                                            <option value="Jefe de Manteniento">Jefe de Mantenimiento</option>
+                                            <option value="Lider de Infraestructura">Líder de Infraestructura</option>
+                                            <option value="Conductor">Conductor</option>
+                                            <option value="Auxiliar de Mantenimiento">Auxiliar de Mantenimiento</option>
+                                        </select>
+                                    </td>
+                                    <td>
                                         <select class="form-select form-select-sm" id="nuevoColaborador">
                                             <option value="">Seleccionar...</option>`;
     
@@ -587,15 +596,7 @@ function renderModalColaboradores(ticketId, colaboradores, operarios) {
     html += `
                                         </select>
                                     </td>
-                                    <td>
-                                        <select class="form-select form-select-sm" id="nuevoTipo">
-                                            <option value="">Seleccionar tipo...</option>
-                                            <option value="Jefe de Manteniento">Jefe de Mantenimiento</option>
-                                            <option value="Lider de Infraestructura">Líder de Infraestructura</option>
-                                            <option value="Conductor">Conductor</option>
-                                            <option value="Auxiliar de Mantenimiento">Auxiliar de Mantenimiento</option>
-                                        </select>
-                                    </td>
+
                                     <td></td>
                                 </tr>
                             </tbody>
