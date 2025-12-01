@@ -12,24 +12,16 @@ require_once '../../includes/header_universal.php';
 require_once '../../includes/menu_lateral.php';
 
 //******************************Estándar para header******************************
-verificarAutenticacion();
-
 $usuario = obtenerUsuarioActual();
 $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
 // Obtener cargo del operario para el menú
 $cargoOperario = $usuario['CodNivelesCargos'];
-// Verificar acceso al módulo Mantenimiento (Código 14)
-verificarAccesoCargo([5, 11, 14, 16, 35]);
 
 // Verificar acceso al módulo
-if (!verificarAccesoCargo([5, 11, 14, 16, 35]) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
+if (!verificarAccesoCargo([14, 16, 35]) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
     header('Location: ../index.php');
     exit();
 }
-
-// Obtenemos el cargo principal usando la función de funciones.php
-$cargoUsuario = obtenerCargoPrincipalUsuario($_SESSION['usuario_id']);
-$cargoUsuariocodigo = obtenerCargoCodigoPrincipalUsuario($_SESSION['usuario_id']);
 //******************************Estándar para header, termina******************************
 
 $ticket = new Ticket();
@@ -43,7 +35,7 @@ $colaborador_filtro = isset($_GET['colaborador']) ? intval($_GET['colaborador'])
 // Obtener tickets del colaborador
 $tickets = [];
 if ($colaborador_filtro) {
-    if ($cargoUsuariocodigo == 14) {
+    if ($cargoOperario == 14) {
         $tickets = $ticket->getTicketsPorColaborador($colaborador_filtro, date('Y-m-d'));
     } else {
     $tickets = $ticket->getTicketsPorColaborador($colaborador_filtro, "2016-01-01");
