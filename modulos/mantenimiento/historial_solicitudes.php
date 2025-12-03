@@ -1,6 +1,6 @@
 <?php
 // historial_solicitudes.php
-$version = "1.0.10";
+$version = "1.0.11";
 
 require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/models/Ticket.php';
@@ -8,8 +8,8 @@ require_once __DIR__ . '/models/Ticket.php';
 $ticketModel = new Ticket();
 
 // Variables de control de acceso (rellenar según lógica de usuario)
-$codigo_sucursal_busqueda = 'Matagalpa'; // Ejemplo: 'SUC001'
-$cargoOperario = 5; // Ejemplo: 5 para restringir, cualquier otro valor para libre
+$codigo_sucursal_busqueda = ''; // Ejemplo: 'SUC001'
+$cargoOperario = 35; // Ejemplo: 5 para restringir, cualquier otro valor para libre
 
 // Determinar si el filtro de sucursal está bloqueado
 $filtro_sucursal_bloqueado = ($cargoOperario == 5);
