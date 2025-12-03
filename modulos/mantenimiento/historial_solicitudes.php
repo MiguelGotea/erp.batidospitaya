@@ -11,9 +11,10 @@ $usuario = obtenerUsuarioActual();
 // Obtener cargo del operario para el menú
 $cargoOperario = $usuario['CodNivelesCargos'];
 $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
+
 $cod_sucursal=obtenerSucursalesUsuario($cargoOperario);
 global $db;
-$codigo_sucursal_busqueda = $db->fetchOne("SELECT nombre FROM sucursales WHERE codigo = ?", [$cod_sucursal][0]);
+$codigo_sucursal_busqueda = $db->fetchOne("SELECT nombre FROM sucursales WHERE codigo = ?", [$cod_sucursal[0]]);
 //$codigo_sucursal_busqueda='Matagalpa';
 //verificarAccesoModulo('operaciones');  //no usar
 //verificarAccesoCargo([11, 16]);  //no usar
