@@ -8,6 +8,8 @@ require_once '../../includes/auth.php';
 require_once '../../includes/funciones.php';
 // Incluir el menú lateral
 require_once '../../includes/menu_lateral.php';
+// Incluir el header universal
+require_once '../../includes/header_universal.php';
 
 $usuario = obtenerUsuarioActual();
 // Obtener cargo del operario para el menú
@@ -84,11 +86,9 @@ function getTextoUrgencia($nivel) {
     <div class="main-container">   <!-- ya existe en el css de menu lateral -->
         <div class="contenedor-principal"> <!-- ya existe en el css de menu lateral -->
             <!-- todo el contenido existente -->
+            <?php echo renderHeader($usuario, $esAdmin, 'Historial de Solicitudes'); ?>
             <div class="container-fluid p-3">
                 <!-- Header -->
-                <div class="page-header d-flex justify-content-between align-items-center mb-3">
-                    <h4 class="mb-0">Historial de Solicitudes</h4>
-                </div>
 
                 <!-- Tabla de solicitudes -->
                 <div class="table-responsive">
