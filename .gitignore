@@ -8,5 +8,5 @@
 /modulos/*
 !/modulos/mantenimiento/
 
-# Excluir la carpeta uploads dentro de mantenimiento
-/modulos/mantenimiento/uploads/
+# Excluir todo dentro de uploads (pero mantener la carpeta)
+/modulos/mantenimiento/uploads/*
