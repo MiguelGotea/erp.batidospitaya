@@ -20,7 +20,7 @@ $sucursales = obtenerSucursalesUsuario($_SESSION['usuario_id']);
 $codigo_sucursal_busqueda=$sucursales[0]['nombre'];
 
 // Verificar acceso al módulo (cargos con permiso para ver marcaciones)
-if (!verificarAccesoCargo(35, 16, 5, 11, 2) && !$esAdmin) {
+if (!verificarAccesoCargo(35, 16, 5, 11) && !$esAdmin) {
     header('Location: ../index.php');
     exit();
 }
