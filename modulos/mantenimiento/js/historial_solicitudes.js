@@ -310,44 +310,34 @@ function actualizarUrgencia(ticketId, nuevoNivel) {
     });
 }
 
-// Mostrar fotos - Versión debug
+// Mostrar fotos
 function mostrarFotos(ticketId) {
-    console.log('=== DEBUG: Iniciando mostrarFotos ===');
-    console.log('Ticket ID:', ticketId);
-    
     $.ajax({
         url: 'ajax/historial_get_fotos.php',
         method: 'GET',
         data: { ticket_id: ticketId },
         dataType: 'json',
         success: function(response) {
-            console.log('=== DEBUG: Respuesta AJAX ===');
-            console.log('Respuesta completa:', JSON.stringify(response, null, 2));
-            
-            if (response.success) {
-                console.log('Número de fotos:', response.fotos ? response.fotos.length : 0);
+            if (response.success && response.fotos.length > 0) {
+                const carouselInner = $('#carouselFotosInner');
+                carouselInner.empty();
                 
-                if (response.fotos && response.fotos.length > 0) {
-                    console.log('Detalle de cada foto:');
-                    response.fotos.forEach((foto, index) => {
-                        console.log(`Foto ${index}:`, foto);
-                        console.log(`  URL: ${foto.foto_url || foto.foto}`);
-                    });
-                    
-                    // Resto del código para mostrar las fotos...
-                    
-                } else {
-                    console.warn('Array de fotos vacío');
-                }
+                response.fotos.forEach((foto, index) => {
+                    const activeClass = index === 0 ? 'active' : '';
+                    carouselInner.append(`
+                        <div class="carousel-item ${activeClass}">
+                            <img src="${foto.foto}" class="d-block w-100" alt="Foto ${index + 1}">
+                        </div>
+                    `);
+                });
+                
+                $('#modalFotos').modal('show');
             } else {
-                console.warn('Respuesta no exitosa:', response.message);
+                alert('No se encontraron fotos');
             }
         },
-        error: function(xhr, status, error) {
-            console.error('=== DEBUG: Error AJAX ===');
-            console.error('Status:', status);
-            console.error('Error:', error);
-            console.error('Respuesta:', xhr.responseText);
+        error: function() {
+            alert('Error al cargar las fotos');
         }
     });
 }
