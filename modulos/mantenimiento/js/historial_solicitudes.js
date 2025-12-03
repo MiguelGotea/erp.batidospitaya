@@ -311,33 +311,55 @@ function actualizarUrgencia(ticketId, nuevoNivel) {
 }
 
 // Mostrar fotos
+// Mostrar fotos
 function mostrarFotos(ticketId) {
+    console.log('Solicitando fotos para ticket ID:', ticketId);
+    
     $.ajax({
         url: 'ajax/historial_get_fotos.php',
         method: 'GET',
         data: { ticket_id: ticketId },
         dataType: 'json',
         success: function(response) {
-            if (response.success && response.fotos.length > 0) {
+            console.log('Respuesta de fotos:', response);
+            
+            if (response.success && response.fotos && response.fotos.length > 0) {
                 const carouselInner = $('#carouselFotosInner');
                 carouselInner.empty();
                 
                 response.fotos.forEach((foto, index) => {
+                    console.log(`Procesando foto ${index}:`, foto);
+                    
                     const activeClass = index === 0 ? 'active' : '';
+                    
+                    // Usar foto_url si existe, sino usar foto
+                    const imgSrc = foto.foto_url || foto.foto || '';
+                    console.log('URL de imagen a cargar:', imgSrc);
+                    
                     carouselInner.append(`
                         <div class="carousel-item ${activeClass}">
-                            <img src="${foto.foto}" class="d-block w-100" alt="Foto ${index + 1}">
+                            <img src="${imgSrc}" class="d-block w-100" 
+                                 style="max-height: 500px; object-fit: contain; background: #f8f9fa;"
+                                 alt="Foto ${index + 1}" 
+                                 onerror="console.error('Error cargando imagen:', this.src); 
+                                          this.onerror=null; 
+                                          this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'400\' height=\'300\'><rect width=\'100%\' height=\'100%\' fill=\'%23f8f9fa\'/><text x=\'50%\' y=\'50%\' font-family=\'Arial\' font-size=\'16\' fill=\'%236c757d\' text-anchor=\'middle\' dominant-baseline=\'middle\'>Imagen no disponible</text></svg>';">
                         </div>
                     `);
                 });
                 
-                $('#modalFotos').modal('show');
+                // Mostrar el modal
+                const modal = new bootstrap.Modal(document.getElementById('modalFotos'));
+                modal.show();
+                
             } else {
-                alert('No se encontraron fotos');
+                console.warn('No se encontraron fotos');
+                alert('No se encontraron fotos para este ticket');
             }
         },
-        error: function() {
-            alert('Error al cargar las fotos');
+        error: function(xhr, status, error) {
+            console.error('Error en la solicitud:', error);
+            alert('Error al cargar las fotos. Por favor, revisa la consola para más detalles.');
         }
     });
 }
