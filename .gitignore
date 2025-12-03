@@ -6,5 +6,7 @@
 
 # Excluir todo en modulos EXCEPTO mantenimiento
 /modulos/*
-
 !/modulos/mantenimiento/
+
+# Excluir la carpeta uploads dentro de mantenimiento
+/modulos/mantenimiento/uploads/
