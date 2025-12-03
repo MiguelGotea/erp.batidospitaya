@@ -1,4 +1,65 @@
-// js/historial_solicitudes.js
+// Posicionar panel de filtro dinámicamente
+function posicionarPanelFiltro(panel, icon) {
+    const iconOffset = $(icon).offset();
+    const iconWidth = $(icon).outerWidth();
+    const iconHeight = $(icon).outerHeight();
+    const panelWidth = panel.outerWidth();
+    const panelHeight = panel.outerHeight();
+    
+    const windowWidth = $(window).width();
+    const windowHeight = $(window).height();
+    const scrollTop = $(window).scrollTop();
+    
+    let top = iconOffset.top + iconHeight + 5;
+    let left = iconOffset.left - panelWidth + iconWidth;
+    
+    // Ajustar si se sale por la derecha
+    if (left + panelWidth > windowWidth) {
+        left = windowWidth - panelWidth - 10;
+    }
+    
+    // Ajustar si se sale por la izquierda
+    if (left < 10) {
+        left = 10;
+    }
+    
+    // Ajustar si se sale por abajo - mostrar arriba del icono
+    if (top + panelHeight > windowHeight + scrollTop) {
+        top = iconOffset.top - panelHeight - 5;
+    }
+    
+    // Si aún así se sale por arriba, ajustar al top de la ventana
+    if (top < scrollTop + 10) {
+        top = scrollTop + 10;
+        panel.css('max-height', (windowHeight - 60) + 'px');
+    }
+    
+    panel.css({
+        top: top + 'px',
+        left: left + 'px'
+    });
+}
+
+// Actualizar indicadores de filtros activos
+function actualizarIndicadoresFiltros() {
+    $('.filter-icon').removeClass('has-filter');
+    
+    Object.keys(filtrosActivos).forEach(columna => {
+        const valor = filtrosActivos[columna];
+        if ((Array.isArray(valor) && valor.length > 0) || (!Array.isArray(valor) && valor !== '')) {
+            $(`th[data-column="${columna}"] .filter-icon`).addClass('has-filter');
+        }
+    });
+}
+
+// Limpiar filtro específico
+function limpiarFiltro(columna) {
+    delete filtrosActivos[columna];
+    cerrarTodosFiltros();
+    paginaActual = 1;
+    cargarDatos();
+    actualizarIndicadoresFiltros();
+}// js/historial_solicitudes.js
 
 let paginaActual = 1;
 let registrosPorPagina = 25;
@@ -41,6 +102,23 @@ $(document).ready(function() {
             cerrarTodosFiltros();
         }
     });
+    
+    // Cerrar filtros al hacer scroll
+    $('.table-responsive').on('scroll', function() {
+        cerrarTodosFiltros();
+    });
+    
+    // Cerrar filtros al hacer scroll en la ventana
+    $(window).on('scroll', function() {
+        cerrarTodosFiltros();
+    });
+    
+    // Recalcular posición al hacer resize
+    $(window).on('resize', function() {
+        if (panelFiltroAbierto) {
+            cerrarTodosFiltros();
+        }
+    });
 });
 
 // Cargar datos de la tabla
@@ -59,6 +137,7 @@ function cargarDatos() {
             if (response.success) {
                 renderizarTabla(response.datos);
                 renderizarPaginacion(response.total_registros);
+                actualizarIndicadoresFiltros();
             } else {
                 alert('Error: ' + response.message);
             }
@@ -261,36 +340,43 @@ function toggleFilter(icon) {
     cerrarTodosFiltros();
     
     // Crear y mostrar nuevo panel
-    crearPanelFiltro(th, columna, tipo);
+    crearPanelFiltro(th, columna, tipo, icon);
     panelFiltroAbierto = columna;
     $(icon).addClass('active');
+    
+    // Actualizar indicador si hay filtro activo
+    actualizarIndicadoresFiltros();
 }
 
 // Crear panel de filtro
-function crearPanelFiltro(th, columna, tipo) {
+function crearPanelFiltro(th, columna, tipo, icon) {
     const panel = $('<div class="filter-panel show"></div>');
     
     // Sección de ordenamiento
     panel.append(`
         <div class="filter-section">
-            <label>Ordenar:</label>
-            <button class="filter-sort-btn ${ordenActivo.columna === columna && ordenActivo.direccion === 'asc' ? 'active' : ''}" 
-                    onclick="aplicarOrden('${columna}', 'asc')">
-                <i class="bi bi-sort-alpha-down"></i> Ascendente
-            </button>
-            <button class="filter-sort-btn ${ordenActivo.columna === columna && ordenActivo.direccion === 'desc' ? 'active' : ''}" 
-                    onclick="aplicarOrden('${columna}', 'desc')">
-                <i class="bi bi-sort-alpha-up"></i> Descendente
-            </button>
+            <span class="filter-section-title">Ordenar:</span>
+            <div class="filter-sort-buttons">
+                <button class="filter-sort-btn ${ordenActivo.columna === columna && ordenActivo.direccion === 'asc' ? 'active' : ''}" 
+                        onclick="aplicarOrden('${columna}', 'asc')">
+                    <i class="bi bi-sort-alpha-down"></i> Ascendente (A→Z)
+                </button>
+                <button class="filter-sort-btn ${ordenActivo.columna === columna && ordenActivo.direccion === 'desc' ? 'active' : ''}" 
+                        onclick="aplicarOrden('${columna}', 'desc')">
+                    <i class="bi bi-sort-alpha-up"></i> Descendente (Z→A)
+                </button>
+            </div>
         </div>
     `);
     
     // Sección de búsqueda y opciones según el tipo
     if (tipo === 'text' || tipo === 'date') {
+        const valorActual = filtrosActivos[columna] || '';
         panel.append(`
             <div class="filter-section">
-                <label>Buscar:</label>
+                <span class="filter-section-title">Buscar:</span>
                 <input type="text" class="filter-search" placeholder="Escribir..." 
+                       value="${valorActual}"
                        oninput="filtrarBusqueda('${columna}', this.value)">
             </div>
         `);
@@ -299,8 +385,20 @@ function crearPanelFiltro(th, columna, tipo) {
         cargarOpcionesFiltro(panel, columna, tipo);
     }
     
-    th.css('position', 'relative');
-    th.append(panel);
+    // Botones de acción
+    panel.append(`
+        <div class="filter-actions">
+            <button class="filter-action-btn clear" onclick="limpiarFiltro('${columna}')">
+                <i class="bi bi-x-circle"></i> Limpiar
+            </button>
+        </div>
+    `);
+    
+    // Agregar al body en lugar del th
+    $('body').append(panel);
+    
+    // Calcular y aplicar posición
+    posicionarPanelFiltro(panel, icon);
 }
 
 // Cargar opciones de filtro
@@ -312,19 +410,29 @@ function cargarOpcionesFiltro(panel, columna, tipo) {
         dataType: 'json',
         success: function(response) {
             if (response.success) {
-                let html = '<div class="filter-section"><label>Filtrar por:</label>';
+                let html = '<div class="filter-section">';
+                html += '<span class="filter-section-title">Filtrar por:</span>';
                 html += '<input type="text" class="filter-search" placeholder="Buscar..." onkeyup="buscarEnOpciones(this)">';
                 html += '<div class="filter-options">';
                 
                 response.opciones.forEach(opcion => {
                     const checked = filtrosActivos[columna] && filtrosActivos[columna].includes(opcion.valor) ? 'checked' : '';
-                    const disabled = columna === 'nombre_sucursal' && filtroSucursalBloqueado && opcion.valor !== codigoSucursalBusqueda ? 'disabled' : '';
-                    const disabledClass = disabled ? 'disabled' : '';
+                    
+                    // Validar si debe estar deshabilitado (solo para sucursales)
+                    let disabled = '';
+                    let disabledClass = '';
+                    
+                    if (columna === 'nombre_sucursal' && filtroSucursalBloqueado) {
+                        if (opcion.texto !== codigoSucursalBusqueda) {
+                            disabled = 'disabled';
+                            disabledClass = 'disabled';
+                        }
+                    }
                     
                     html += `
                         <div class="filter-option ${disabledClass}">
                             <input type="checkbox" value="${opcion.valor}" ${checked} ${disabled}
-                                   onchange="toggleOpcionFiltro('${columna}', this.value, this.checked)">
+                                   onchange="toggleOpcionFiltro('${columna}', '${opcion.valor}', this.checked)">
                             <span>${opcion.texto}</span>
                         </div>
                     `;
@@ -335,8 +443,9 @@ function cargarOpcionesFiltro(panel, columna, tipo) {
                 
                 // Si el filtro está bloqueado, marcar automáticamente la sucursal
                 if (columna === 'nombre_sucursal' && filtroSucursalBloqueado && codigoSucursalBusqueda) {
-                    if (!filtrosActivos[columna]) {
+                    if (!filtrosActivos[columna] || !filtrosActivos[columna].includes(codigoSucursalBusqueda)) {
                         filtrosActivos[columna] = [codigoSucursalBusqueda];
+                        paginaActual = 1;
                         cargarDatos();
                     }
                 }
@@ -369,6 +478,7 @@ function filtrarBusqueda(columna, valor) {
     }
     paginaActual = 1;
     cargarDatos();
+    actualizarIndicadoresFiltros();
 }
 
 // Toggle opción de filtro
@@ -390,6 +500,7 @@ function toggleOpcionFiltro(columna, valor, checked) {
     
     paginaActual = 1;
     cargarDatos();
+    actualizarIndicadoresFiltros();
 }
 
 // Buscar en opciones
