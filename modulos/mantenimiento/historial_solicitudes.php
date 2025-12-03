@@ -19,7 +19,7 @@ $codigo_sucursal_busqueda=$sucursales[0]['nombre'];
 //verificarAccesoCargo([11, 16]);  //no usar
 
 // Verificar acceso al módulo (cargos con permiso para ver marcaciones)
-if (!verificarAccesoCargo(35, 16, 5, 11) && !$esAdmin) {
+if (!verificarAccesoCargo(35, 16, 5, 11, 2) && !$esAdmin) {
     header('Location: ../index.php');
     exit();
 }
