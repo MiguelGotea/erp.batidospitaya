@@ -54,6 +54,13 @@ function actualizarIndicadoresFiltros() {
 
 // Limpiar filtro específico
 function limpiarFiltro(columna) {
+    // Si es sucursal y está bloqueado, no permitir limpiar
+    if (columna === 'nombre_sucursal' && 
+        typeof filtroSucursalBloqueado !== 'undefined' && 
+        filtroSucursalBloqueado) {
+        return;
+    }
+    
     delete filtrosActivos[columna];
     cerrarTodosFiltros();
     paginaActual = 1;
@@ -66,7 +73,7 @@ let registrosPorPagina = 25;
 let filtrosActivos = {};
 let ordenActivo = { columna: null, direccion: 'asc' };
 let panelFiltroAbierto = null;
-let totalRegistros = 0; // <-- AÑADE ESTA LÍNEA
+let totalRegistros = 0;
 
 // Colores de urgencia
 const coloresUrgencia = {
@@ -136,7 +143,7 @@ function cargarDatos() {
         dataType: 'json',
         success: function(response) {
             if (response.success) {
-                totalRegistros = response.total_registros; // <-- AÑADE ESTA LÍNEA
+                totalRegistros = response.total_registros;
                 renderizarTabla(response.datos);
                 renderizarPaginacion(response.total_registros);
                 actualizarIndicadoresFiltros();
@@ -397,9 +404,19 @@ function crearPanelFiltro(th, columna, tipo, icon) {
     }
     
     // Botones de acción
+    const botonLimpiarDeshabilitado = (columna === 'nombre_sucursal' && 
+                                        typeof filtroSucursalBloqueado !== 'undefined' && 
+                                        filtroSucursalBloqueado);
+    
+    const disabledAttr = botonLimpiarDeshabilitado ? 'disabled' : '';
+    const disabledStyle = botonLimpiarDeshabilitado ? 'opacity: 0.5; cursor: not-allowed;' : '';
+    
     panel.append(`
         <div class="filter-actions">
-            <button class="filter-action-btn clear" onclick="limpiarFiltro('${columna}')">
+            <button class="filter-action-btn clear" 
+                    onclick="limpiarFiltro('${columna}')" 
+                    ${disabledAttr}
+                    style="${disabledStyle}">
                 <i class="bi bi-x-circle"></i> Limpiar
             </button>
         </div>
