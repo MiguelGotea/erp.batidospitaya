@@ -22,7 +22,7 @@ $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admi
 //verificarAccesoCargo([11, 16]);  //no usar
 
 // Verificar acceso al módulo (cargos con permiso para ver marcaciones)
-if (!verificarAccesoCargo(35, 16) && !$esAdmin) {
+if (!verificarAccesoCargo([35, 16]) && !$esAdmin) {
     header('Location: ../index.php');
     exit();
 }
