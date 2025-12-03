@@ -9,4 +9,4 @@
 !/modulos/mantenimiento/
 
 # Excluir todo dentro de uploads (pero mantener la carpeta)
-#/modulos/mantenimiento/uploads/*
+/modulos/mantenimiento/uploads/*
