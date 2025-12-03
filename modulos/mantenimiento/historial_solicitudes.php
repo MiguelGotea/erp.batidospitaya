@@ -15,7 +15,7 @@ echo $cargoOperario;
 $sucursales = obtenerSucursalesUsuario($_SESSION['usuario_id']);
 //$codigo_sucursal_busqueda = 
 echo $sucursales[0]['nombre'];
-$codigo_sucursal_busqueda='Matagalpa';
+$codigo_sucursal_busqueda=$sucursales[0]['nombre'];
 
 //verificarAccesoModulo('operaciones');  //no usar
 //verificarAccesoCargo([11, 16]);  //no usar
