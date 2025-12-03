@@ -15,6 +15,7 @@ $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admi
 $sucursales = obtenerSucursalesUsuario($cargoOperario);
 $codigo_sucursal_busqueda = $sucursales[0]['nombre'];
 //$codigo_sucursal_busqueda='Matagalpa';
+
 //verificarAccesoModulo('operaciones');  //no usar
 //verificarAccesoCargo([11, 16]);  //no usar
 
