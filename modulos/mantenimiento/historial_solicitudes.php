@@ -6,6 +6,8 @@ require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/models/Ticket.php';
 require_once '../../includes/auth.php';
 require_once '../../includes/funciones.php';
+// Incluir el menú lateral
+require_once '../../includes/menu_lateral.php';
 
 $usuario = obtenerUsuarioActual();
 // Obtener cargo del operario para el menú
@@ -14,9 +16,6 @@ $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admi
 
 $sucursales = obtenerSucursalesUsuario($_SESSION['usuario_id']);
 $codigo_sucursal_busqueda=$sucursales[0]['nombre'];
-
-//verificarAccesoModulo('operaciones');  //no usar
-//verificarAccesoCargo([11, 16]);  //no usar
 
 // Verificar acceso al módulo (cargos con permiso para ver marcaciones)
 if (!verificarAccesoCargo(35, 16, 5, 11, 2) && !$esAdmin) {
@@ -77,70 +76,80 @@ function getTextoUrgencia($nivel) {
     <link rel="stylesheet" href="css/historial_solicitudes.css?v=<?php echo $version; ?>">
 </head>
 <body>
-    <div class="container-fluid p-3">
-        <!-- Header -->
-        <div class="page-header d-flex justify-content-between align-items-center mb-3">
-            <h4 class="mb-0">Historial de Solicitudes</h4>
-        </div>
 
-        <!-- Tabla de solicitudes -->
-        <div class="table-responsive">
-            <table class="table table-hover historial-table" id="tablaSolicitudes">
-                <thead>
-                    <tr>
-                        <th data-column="created_at" data-type="date">
-                            Solicitado
-                            <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
-                        </th>
-                        <th data-column="titulo" data-type="text">
-                            Título
-                            <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
-                        </th>
-                        <th data-column="descripcion" data-type="text">
-                            Descripción
-                            <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
-                        </th>
-                        <th data-column="nombre_sucursal" data-type="list">
-                            Sucursal
-                            <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
-                        </th>
-                        <th data-column="tipo_formulario" data-type="list">
-                            Tipo
-                            <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
-                        </th>
-                        <th data-column="nivel_urgencia" data-type="urgency">
-                            Urgencia
-                            <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
-                        </th>
-                        <th data-column="status" data-type="list">
-                            Estado
-                            <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
-                        </th>
-                        <th data-column="fecha_inicio" data-type="date">
-                            Agendado
-                            <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
-                        </th>
-                        <th style="width: 80px;">Foto</th>
-                    </tr>
-                </thead>
-                <tbody id="tablaSolicitudesBody">
-                    <!-- Datos cargados vía AJAX -->
-                </tbody>
-            </table>
-        </div>
+    <!-- Renderizar menú lateral -->
+    <?php echo renderMenuLateral($cargoOperario); ?>
+    
+    <!-- Contenido principal -->
+    <div class="main-container">   <!-- ya existe en el css de menu lateral -->
+        <div class="contenedor-principal"> <!-- ya existe en el css de menu lateral -->
+            <!-- todo el contenido existente -->
+            <div class="container-fluid p-3">
+                <!-- Header -->
+                <div class="page-header d-flex justify-content-between align-items-center mb-3">
+                    <h4 class="mb-0">Historial de Solicitudes</h4>
+                </div>
 
-        <!-- Paginación -->
-        <div class="d-flex justify-content-between align-items-center mt-3">
-            <div class="d-flex align-items-center gap-2">
-                <label class="mb-0">Mostrar:</label>
-                <select class="form-select form-select-sm" id="registrosPorPagina" style="width: auto;" onchange="cambiarRegistrosPorPagina()">
-                    <option value="25" selected>25</option>
-                    <option value="50">50</option>
-                    <option value="100">100</option>
-                </select>
-                <span class="mb-0">registros</span>
+                <!-- Tabla de solicitudes -->
+                <div class="table-responsive">
+                    <table class="table table-hover historial-table" id="tablaSolicitudes">
+                        <thead>
+                            <tr>
+                                <th data-column="created_at" data-type="date">
+                                    Solicitado
+                                    <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                </th>
+                                <th data-column="titulo" data-type="text">
+                                    Título
+                                    <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                </th>
+                                <th data-column="descripcion" data-type="text">
+                                    Descripción
+                                    <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                </th>
+                                <th data-column="nombre_sucursal" data-type="list">
+                                    Sucursal
+                                    <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                </th>
+                                <th data-column="tipo_formulario" data-type="list">
+                                    Tipo
+                                    <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                </th>
+                                <th data-column="nivel_urgencia" data-type="urgency">
+                                    Urgencia
+                                    <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                </th>
+                                <th data-column="status" data-type="list">
+                                    Estado
+                                    <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                </th>
+                                <th data-column="fecha_inicio" data-type="date">
+                                    Agendado
+                                    <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                </th>
+                                <th style="width: 80px;">Foto</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaSolicitudesBody">
+                            <!-- Datos cargados vía AJAX -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Paginación -->
+                <div class="d-flex justify-content-between align-items-center mt-3">
+                    <div class="d-flex align-items-center gap-2">
+                        <label class="mb-0">Mostrar:</label>
+                        <select class="form-select form-select-sm" id="registrosPorPagina" style="width: auto;" onchange="cambiarRegistrosPorPagina()">
+                            <option value="25" selected>25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                        <span class="mb-0">registros</span>
+                    </div>
+                    <div id="paginacion"></div>
+                </div>
             </div>
-            <div id="paginacion"></div>
         </div>
     </div>
 
