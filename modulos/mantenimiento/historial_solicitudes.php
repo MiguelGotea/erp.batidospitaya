@@ -9,7 +9,7 @@ $ticketModel = new Ticket();
 
 // Variables de control de acceso (rellenar según lógica de usuario)
 $codigo_sucursal_busqueda = 12; // Ejemplo: 'SUC001'
-$cargoOperario = 0; // Ejemplo: 5 para restringir, cualquier otro valor para libre
+$cargoOperario = 5; // Ejemplo: 5 para restringir, cualquier otro valor para libre
 
 // Determinar si el filtro de sucursal está bloqueado
 $filtro_sucursal_bloqueado = ($cargoOperario == 5);
