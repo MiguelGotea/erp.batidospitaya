@@ -19,6 +19,11 @@ if ($ticket_id <= 0) {
 try {
     $sql = "SELECT * FROM mtto_tickets_fotos WHERE ticket_id = ? ORDER BY orden ASC";
     $fotos = $db->fetchAll($sql, [$ticket_id]);
+
+    // Agregar ruta completa a cada foto
+    foreach ($fotos as &$foto) {
+        $foto['foto'] = 'uploads/tickets/' . $foto['foto'];
+    }    
     
     echo json_encode([
         'success' => true,
