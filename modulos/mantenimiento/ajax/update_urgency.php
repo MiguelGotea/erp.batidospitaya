@@ -14,7 +14,6 @@ if (!isset($_POST['ticket_id']) || !isset($_POST['nivel_urgencia'])) {
     exit;
 }
 
-
 $ticket_id = intval($_POST['ticket_id']);
 $nivel_urgencia = intval($_POST['nivel_urgencia']);
 
