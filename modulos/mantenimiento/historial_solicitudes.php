@@ -1,15 +1,30 @@
 <?php
 // historial_solicitudes.php
-$version = "1.0.12";
+$version = "1.0.13";
 
 require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/models/Ticket.php';
+require_once '../../includes/auth.php';
+require_once '../../includes/funciones.php';
+
+$usuario = obtenerUsuarioActual();
+// Obtener cargo del operario para el menú
+$cargoOperario = $usuario['CodNivelesCargos'];
+$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
+$cod_sucursal=obtenerSucursalesUsuario($cargoOperario);
+global $db;
+$codigo_sucursal_busqueda = $db->fetchOne("SELECT nombre FROM sucursales WHERE codigo = ?", [$cod_sucursal][1]);
+//verificarAccesoModulo('operaciones');  //no usar
+//verificarAccesoCargo([11, 16]);  //no usar
+
+// Verificar acceso al módulo (cargos con permiso para ver marcaciones)
+if (!verificarAccesoCargo(35, 16) && !$esAdmin) {
+    header('Location: ../index.php');
+    exit();
+}
+
 
 $ticketModel = new Ticket();
-
-// Variables de control de acceso (rellenar según lógica de usuario)
-$codigo_sucursal_busqueda = ''; // Ejemplo: 'SUC001'
-$cargoOperario = 35; // Ejemplo: 5 para restringir, cualquier otro valor para libre
 
 // Determinar si el filtro de sucursal está bloqueado
 $filtro_sucursal_bloqueado = ($cargoOperario == 5);
