@@ -87,6 +87,41 @@ body {
     font-size: 0.85rem;
 }
 
+.col-agendado {
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+/* Estilos de fecha agendada según estado */
+.fecha-sin-programar {
+    color: #dc3545;
+    font-weight: 600;
+}
+
+.fecha-semana-actual {
+    color: #ffc107;
+    font-weight: 700;
+    background-color: rgba(255, 193, 7, 0.1);
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    border: 2px solid #ffc107;
+}
+
+.fecha-proxima {
+    color: #51B8AC;
+    font-weight: 700;
+    background-color: rgba(81, 184, 172, 0.1);
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    border: 2px solid #51B8AC;
+}
+
+.fecha-finalizado {
+    color: #6c757d;
+    font-weight: 400;
+    opacity: 0.6;
+}
+
 /* Badge de tipo */
 .badge-tipo {
     padding: 0.35rem 0.65rem;
@@ -120,35 +155,24 @@ body {
 .urgency-selector {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 0.25rem;
-    padding: 0.25rem 0.5rem;
+    padding: 0.4rem 0.75rem;
     border-radius: 4px;
-    cursor: pointer;
     transition: all 0.2s;
-    min-width: 90px;
+    min-width: 110px;
 }
 
-.urgency-selector:hover {
+.urgency-selector[style*="cursor: pointer"]:hover {
     opacity: 0.8;
     transform: scale(1.05);
 }
 
-.urgency-number {
-    width: 20px;
-    height: 20px;
-    border-radius: 3px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.75rem;
-    font-weight: bold;
-    color: white;
-}
-
 .urgency-text {
-    font-size: 0.75rem;
+    font-size: 0.8rem;
     font-weight: 600;
     color: white;
+    text-align: center;
 }
 
 /* Icono de filtro */

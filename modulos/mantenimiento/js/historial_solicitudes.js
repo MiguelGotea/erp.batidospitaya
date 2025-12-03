@@ -185,8 +185,9 @@ function renderizarTabla(datos) {
         const colorEstado = coloresEstado[row.status] || '#6c757d';
         tr.append(`<td><span class="badge-estado" style="background-color: ${colorEstado};">${row.status}</span></td>`);
         
-        // Agendado
-        tr.append(`<td>${row.fecha_inicio ? formatearFecha(row.fecha_inicio) : '-'}</td>`);
+        // Agendado - con estilos según estado
+        const fechaAgendadoHTML = renderizarFechaAgendado(row.fecha_inicio, row.status);
+        tr.append(`<td class="col-agendado">${fechaAgendadoHTML}</td>`);
         
         // Foto
         const tieneFotos = parseInt(row.total_fotos) > 0;
@@ -205,9 +206,13 @@ function renderizarUrgencia(ticketId, nivelActual) {
     const color = coloresUrgencia[nivel];
     const texto = textosUrgencia[nivel];
     
+    // Solo permitir cambiar si cargoOperario = 35
+    const permiteEditar = (typeof cargoOperario !== 'undefined' && cargoOperario === 35);
+    const cursor = permiteEditar ? 'pointer' : 'default';
+    const onClick = permiteEditar ? `onclick="cambiarUrgencia(${ticketId}, ${nivel})"` : '';
+    
     return `
-        <div class="urgency-selector" style="background-color: ${color};" onclick="cambiarUrgencia(${ticketId}, ${nivel})">
-            <div class="urgency-number" style="background-color: rgba(0,0,0,0.2);">${nivel}</div>
+        <div class="urgency-selector" style="background-color: ${color}; cursor: ${cursor};" ${onClick}>
             <div class="urgency-text">${texto}</div>
         </div>
     `;
@@ -215,6 +220,11 @@ function renderizarUrgencia(ticketId, nivelActual) {
 
 // Cambiar nivel de urgencia
 function cambiarUrgencia(ticketId, nivelActual) {
+    // Validar permiso
+    if (typeof cargoOperario === 'undefined' || cargoOperario !== 35) {
+        return;
+    }
+    
     const opciones = `
         <div style="padding: 0.5rem;">
             <div style="font-weight: 600; margin-bottom: 0.5rem;">Seleccionar nivel:</div>
@@ -223,12 +233,11 @@ function cambiarUrgencia(ticketId, nivelActual) {
                 const texto = textosUrgencia[nivel];
                 const selected = nivel === nivelActual ? '✓ ' : '';
                 return `
-                    <div style="padding: 0.35rem; cursor: pointer; border-radius: 3px; margin-bottom: 0.25rem; background-color: ${color}; color: white; display: flex; align-items: center; gap: 0.5rem;" 
+                    <div style="padding: 0.5rem 0.75rem; cursor: pointer; border-radius: 3px; margin-bottom: 0.25rem; background-color: ${color}; color: white; display: flex; align-items: center; justify-content: center; gap: 0.5rem; font-weight: 600;" 
                          onmouseover="this.style.opacity='0.8'" 
                          onmouseout="this.style.opacity='1'"
                          onclick="actualizarUrgencia(${ticketId}, ${nivel})">
-                        <span style="font-weight: bold;">${selected}${nivel}</span>
-                        <span>${texto}</span>
+                        <span>${selected}${texto}</span>
                     </div>
                 `;
             }).join('')}
@@ -578,4 +587,43 @@ function formatearFecha(fecha) {
     const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
     const d = new Date(fecha);
     return `${String(d.getDate()).padStart(2, '0')}-${meses[d.getMonth()]}`;
+}
+
+// Renderizar fecha agendado con estilos según estado
+function renderizarFechaAgendado(fechaInicio, status) {
+    if (!fechaInicio) {
+        return '<span class="fecha-sin-programar">Sin programar</span>';
+    }
+    
+    // Si está finalizado, mostrar con menos realce
+    if (status === 'finalizado') {
+        return `<span class="fecha-finalizado">${formatearFecha(fechaInicio)}</span>`;
+    }
+    
+    // Calcular semana actual
+    const hoy = new Date();
+    const fechaTicket = new Date(fechaInicio);
+    
+    // Obtener lunes de esta semana
+    const lunesActual = new Date(hoy);
+    lunesActual.setDate(hoy.getDate() - (hoy.getDay() === 0 ? 6 : hoy.getDay() - 1));
+    lunesActual.setHours(0, 0, 0, 0);
+    
+    // Obtener domingo de esta semana
+    const domingoActual = new Date(lunesActual);
+    domingoActual.setDate(lunesActual.getDate() + 6);
+    domingoActual.setHours(23, 59, 59, 999);
+    
+    // Verificar si está en la semana actual
+    if (fechaTicket >= lunesActual && fechaTicket <= domingoActual) {
+        return `<span class="fecha-semana-actual"><i class="bi bi-exclamation-circle"></i> ${formatearFecha(fechaInicio)}</span>`;
+    }
+    
+    // Si es semana siguiente en adelante
+    if (fechaTicket > domingoActual) {
+        return `<span class="fecha-proxima"><i class="bi bi-calendar-check"></i> ${formatearFecha(fechaInicio)}</span>`;
+    }
+    
+    // Si ya pasó la fecha (atrasado)
+    return `<span class="fecha-sin-programar"><i class="bi bi-exclamation-triangle"></i> ${formatearFecha(fechaInicio)}</span>`;
 }

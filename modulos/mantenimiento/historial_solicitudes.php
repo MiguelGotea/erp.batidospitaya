@@ -1,6 +1,6 @@
 <?php
 // historial_solicitudes.php
-$version = "1.0.5";
+$version = "1.0.10";
 
 require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/models/Ticket.php';
@@ -158,6 +158,20 @@ function getTextoUrgencia($nivel) {
     <script>
         const filtroSucursalBloqueado = <?php echo $filtro_sucursal_bloqueado ? 'true' : 'false'; ?>;
         const codigoSucursalBusqueda = '<?php echo $codigo_sucursal_busqueda; ?>';
+        const cargoOperario = <?php echo $cargoOperario; ?>;
+        
+        // Aplicar filtro de sucursal automáticamente si está bloqueado
+        $(document).ready(function() {
+            if (filtroSucursalBloqueado && codigoSucursalBusqueda) {
+                // Esperar a que el JS se cargue
+                setTimeout(function() {
+                    if (typeof filtrosActivos !== 'undefined') {
+                        filtrosActivos['nombre_sucursal'] = [codigoSucursalBusqueda];
+                        cargarDatos();
+                    }
+                }, 100);
+            }
+        });
     </script>
     <script src="js/historial_solicitudes.js?v=<?php echo $version; ?>"></script>
 </body>
