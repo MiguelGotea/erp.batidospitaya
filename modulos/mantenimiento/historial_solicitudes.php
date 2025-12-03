@@ -1,6 +1,6 @@
 <?php
 // historial_solicitudes.php
-$version = "1.0.16";
+$version = "1.0.17";
 
 require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/models/Ticket.php';
