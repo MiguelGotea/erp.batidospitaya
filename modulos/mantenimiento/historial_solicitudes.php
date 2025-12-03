@@ -8,7 +8,7 @@ require_once __DIR__ . '/models/Ticket.php';
 $ticketModel = new Ticket();
 
 // Variables de control de acceso (rellenar según lógica de usuario)
-$codigo_sucursal_busqueda = '12'; // Ejemplo: 'SUC001'
+$codigo_sucursal_busqueda = 'Matagalpa'; // Ejemplo: 'SUC001'
 $cargoOperario = 5; // Ejemplo: 5 para restringir, cualquier otro valor para libre
 
 // Determinar si el filtro de sucursal está bloqueado
