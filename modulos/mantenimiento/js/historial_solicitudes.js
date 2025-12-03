@@ -324,9 +324,11 @@ function mostrarFotos(ticketId) {
                 
                 response.fotos.forEach((foto, index) => {
                     const activeClass = index === 0 ? 'active' : '';
+                    // Agrega la ruta completa
+                    const rutaCompleta = 'uploads/tickets/' + foto.foto;
                     carouselInner.append(`
                         <div class="carousel-item ${activeClass}">
-                            <img src="${foto.foto}" class="d-block w-100" alt="Foto ${index + 1}">
+                            <img src="${rutaCompleta}" class="d-block w-100" alt="Foto ${index + 1}">
                         </div>
                     `);
                 });
