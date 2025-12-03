@@ -11,20 +11,18 @@ $usuario = obtenerUsuarioActual();
 // Obtener cargo del operario para el menú
 $cargoOperario = $usuario['CodNivelesCargos'];
 $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
-echo $cargoOperario;
+
 $sucursales = obtenerSucursalesUsuario($_SESSION['usuario_id']);
-//$codigo_sucursal_busqueda = 
-echo $sucursales[0]['nombre'];
 $codigo_sucursal_busqueda=$sucursales[0]['nombre'];
 
 //verificarAccesoModulo('operaciones');  //no usar
 //verificarAccesoCargo([11, 16]);  //no usar
 
 // Verificar acceso al módulo (cargos con permiso para ver marcaciones)
-//if (!verificarAccesoCargo(35, 16, 5, 11) && !$esAdmin) {
-//    header('Location: ../index.php');
-//    exit();
-//}
+if (!verificarAccesoCargo(35, 16, 5, 11) && !$esAdmin) {
+    header('Location: ../index.php');
+    exit();
+}
 
 
 $ticketModel = new Ticket();
