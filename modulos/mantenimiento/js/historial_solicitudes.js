@@ -136,6 +136,7 @@ function cargarDatos() {
         dataType: 'json',
         success: function(response) {
             if (response.success) {
+                totalRegistros = response.total_registros; // <-- AÑADE ESTA LÍNEA
                 renderizarTabla(response.datos);
                 renderizarPaginacion(response.total_registros);
                 actualizarIndicadoresFiltros();
