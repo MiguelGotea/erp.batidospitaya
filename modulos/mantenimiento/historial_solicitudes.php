@@ -11,7 +11,7 @@ $usuario = obtenerUsuarioActual();
 // Obtener cargo del operario para el menú
 $cargoOperario = $usuario['CodNivelesCargos'];
 $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
-
+echo $cargoOperario;
 $sucursales = obtenerSucursalesUsuario($cargoOperario);
 //$codigo_sucursal_busqueda = 
 echo $sucursales[0]['nombre'];
