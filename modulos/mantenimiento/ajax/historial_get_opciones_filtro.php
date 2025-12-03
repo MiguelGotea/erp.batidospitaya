@@ -16,7 +16,7 @@ try {
     $opciones = [];
     
     if ($columna === 'nombre_sucursal') {
-        $sql = "SELECT DISTINCT s.codigo as valor, s.nombre as texto
+        $sql = "SELECT DISTINCT s.nombre as valor, s.nombre as texto
                 FROM sucursales s
                 INNER JOIN mtto_tickets t ON t.cod_sucursal = s.codigo
                 ORDER BY s.nombre";
