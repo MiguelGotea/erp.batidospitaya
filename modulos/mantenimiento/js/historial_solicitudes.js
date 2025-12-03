@@ -66,6 +66,7 @@ let registrosPorPagina = 25;
 let filtrosActivos = {};
 let ordenActivo = { columna: null, direccion: 'asc' };
 let panelFiltroAbierto = null;
+let totalRegistros = 0; // <-- AÑADE ESTA LÍNEA
 
 // Colores de urgencia
 const coloresUrgencia = {
