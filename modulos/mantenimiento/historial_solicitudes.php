@@ -25,6 +25,7 @@ $codigo_sucursal_busqueda=$sucursales[0]['nombre'];
 //    exit();
 //}
 
+
 $ticketModel = new Ticket();
 
 // Determinar si el filtro de sucursal está bloqueado
