@@ -12,7 +12,7 @@ $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
 $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
 echo $cargoOperario;
-$sucursales = obtenerSucursalesUsuario($cargoOperario);
+$sucursales = obtenerSucursalesUsuario($_SESSION['usuario_id']);
 //$codigo_sucursal_busqueda = 
 echo $sucursales[0]['nombre'];
 $codigo_sucursal_busqueda='Matagalpa';
