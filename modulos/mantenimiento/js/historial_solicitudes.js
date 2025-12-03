@@ -310,10 +310,10 @@ function actualizarUrgencia(ticketId, nuevoNivel) {
     });
 }
 
-// Mostrar fotos
-// Mostrar fotos
+// Mostrar fotos - Versión debug
 function mostrarFotos(ticketId) {
-    console.log('Solicitando fotos para ticket ID:', ticketId);
+    console.log('=== DEBUG: Iniciando mostrarFotos ===');
+    console.log('Ticket ID:', ticketId);
     
     $.ajax({
         url: 'ajax/historial_get_fotos.php',
@@ -321,45 +321,33 @@ function mostrarFotos(ticketId) {
         data: { ticket_id: ticketId },
         dataType: 'json',
         success: function(response) {
-            console.log('Respuesta de fotos:', response);
+            console.log('=== DEBUG: Respuesta AJAX ===');
+            console.log('Respuesta completa:', JSON.stringify(response, null, 2));
             
-            if (response.success && response.fotos && response.fotos.length > 0) {
-                const carouselInner = $('#carouselFotosInner');
-                carouselInner.empty();
+            if (response.success) {
+                console.log('Número de fotos:', response.fotos ? response.fotos.length : 0);
                 
-                response.fotos.forEach((foto, index) => {
-                    console.log(`Procesando foto ${index}:`, foto);
+                if (response.fotos && response.fotos.length > 0) {
+                    console.log('Detalle de cada foto:');
+                    response.fotos.forEach((foto, index) => {
+                        console.log(`Foto ${index}:`, foto);
+                        console.log(`  URL: ${foto.foto_url || foto.foto}`);
+                    });
                     
-                    const activeClass = index === 0 ? 'active' : '';
+                    // Resto del código para mostrar las fotos...
                     
-                    // Usar foto_url si existe, sino usar foto
-                    const imgSrc = foto.foto_url || foto.foto || '';
-                    console.log('URL de imagen a cargar:', imgSrc);
-                    
-                    carouselInner.append(`
-                        <div class="carousel-item ${activeClass}">
-                            <img src="${imgSrc}" class="d-block w-100" 
-                                 style="max-height: 500px; object-fit: contain; background: #f8f9fa;"
-                                 alt="Foto ${index + 1}" 
-                                 onerror="console.error('Error cargando imagen:', this.src); 
-                                          this.onerror=null; 
-                                          this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'400\' height=\'300\'><rect width=\'100%\' height=\'100%\' fill=\'%23f8f9fa\'/><text x=\'50%\' y=\'50%\' font-family=\'Arial\' font-size=\'16\' fill=\'%236c757d\' text-anchor=\'middle\' dominant-baseline=\'middle\'>Imagen no disponible</text></svg>';">
-                        </div>
-                    `);
-                });
-                
-                // Mostrar el modal
-                const modal = new bootstrap.Modal(document.getElementById('modalFotos'));
-                modal.show();
-                
+                } else {
+                    console.warn('Array de fotos vacío');
+                }
             } else {
-                console.warn('No se encontraron fotos');
-                alert('No se encontraron fotos para este ticket');
+                console.warn('Respuesta no exitosa:', response.message);
             }
         },
         error: function(xhr, status, error) {
-            console.error('Error en la solicitud:', error);
-            alert('Error al cargar las fotos. Por favor, revisa la consola para más detalles.');
+            console.error('=== DEBUG: Error AJAX ===');
+            console.error('Status:', status);
+            console.error('Error:', error);
+            console.error('Respuesta:', xhr.responseText);
         }
     });
 }
