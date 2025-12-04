@@ -52,6 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             move_uploaded_file($_FILES['foto']['tmp_name'], $uploadDir . $foto);
         }
         
+        
         // Manejar foto desde cámara
         if (!empty($_POST['foto_camera'])) {
             $uploadDir = 'uploads/chat/';
