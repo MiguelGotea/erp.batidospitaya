@@ -55,6 +55,7 @@ ssh-keygen -l -f ~/.ssh/erp-batidos-deploy.pub
 cat ~/.ssh/id_rsa.pub
 # ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDX7DgzolhqZ... u839374897@us-phx-web1059.main-hosting.eu
 
+
 # Clave Ed25519 (recomendada)
 cat ~/.ssh/erp-batidos-deploy.pub  
 # ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAHWWJu9du9uzZKDP5ChDrpCef8QB4uvJMXZ58SkH2XZ erp-deploy@batidospitaya.com
