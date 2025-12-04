@@ -279,7 +279,7 @@ if ($es_mantenimiento) {
 </div>
 
 <script>
-const ticketIdDetalle = <?= $ticket['id'] ?>;
+const ticketIdDetalleModal  = <?= $ticket['id'] ?>;
 const nivelUrgenciaActual = <?= $ticket['nivel_urgencia'] ?? 'null' ?>;
 const puedeEditar = <?= $puedeEditar ? 'true' : 'false' ?>;
 const esMantenimiento = <?= $es_mantenimiento ? 'true' : 'false' ?>;
@@ -336,7 +336,7 @@ function cargarColaboradoresDetalle() {
     $.ajax({
         url: 'ajax/detalles_get_colaboradores.php',
         method: 'GET',
-        data: { ticket_id: ticketIdDetalle },
+        data: { ticket_id: ticketIdDetalleModal },
         dataType: 'json',
         success: function(response) {
             if (response.success) {
@@ -493,7 +493,7 @@ function guardarNuevoColaboradorDetalle() {
         url: 'ajax/detalles_save_colaborador.php',
         method: 'POST',
         data: {
-            ticket_id: ticketIdDetalle,
+            ticket_id: ticketIdDetalleModal,
             tipo_usuario: tipo,
             cod_operario: null
         },
@@ -542,7 +542,7 @@ function cargarMaterialesDetalle() {
     $.ajax({
         url: 'ajax/detalles_get_materiales.php',
         method: 'GET',
-        data: { ticket_id: ticketIdDetalle },
+        data: { ticket_id: ticketIdDetalleModal },
         dataType: 'json',
         success: function(response) {
             if (response.success) {
@@ -672,7 +672,7 @@ function eliminarNuevaFotoDetalle(index) {
 // Guardar todo
 function guardarDetallesTicket() {
     const formData = new FormData();
-    formData.append('ticket_id', ticketIdDetalle);
+    formData.append('ticket_id', ticketIdDetalleModal);
     formData.append('titulo', $('#titulo_detalle').val());
     formData.append('area_equipo', $('#area_equipo_detalle').val());
     formData.append('descripcion', $('#descripcion_detalle').val());
@@ -746,7 +746,7 @@ function guardarMaterialesDetalle() {
         url: 'ajax/detalles_save_materiales.php',
         method: 'POST',
         data: {
-            ticket_id: ticketIdDetalle,
+            ticket_id: ticketIdDetalleModal,
             materiales: JSON.stringify(materiales)
         },
         dataType: 'json',
