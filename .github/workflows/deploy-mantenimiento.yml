@@ -23,13 +23,15 @@ jobs:
       run: |
         echo "🔄 Sincronizando modulos/mantenimiento/"
         
-        # Crear la carpeta si no existe
+        # Crear la carpeta si no existe (incluyendo uploads)
         ssh -o StrictHostKeyChecking=no -p 65002 ${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_HOST }} \
-          "mkdir -p ${{ secrets.HOSTINGER_PATH }}/modulos/mantenimiento"
+          "mkdir -p ${{ secrets.HOSTINGER_PATH }}/modulos/mantenimiento && \
+           mkdir -p ${{ secrets.HOSTINGER_PATH }}/modulos/mantenimiento/uploads"
         
-        # Sincronizar la carpeta completa
+        # Sincronizar la carpeta excluyendo uploads
         rsync -avz \
           --delete \
+          --exclude='uploads/' \
           -e "ssh -o StrictHostKeyChecking=no -p 65002" \
           ./modulos/mantenimiento/ \
           ${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_HOST }}:${{ secrets.HOSTINGER_PATH }}/modulos/mantenimiento/
@@ -38,11 +40,14 @@ jobs:
       run: |
         ssh -o StrictHostKeyChecking=no -p 65002 ${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_HOST }} \
           "chmod -R 755 ${{ secrets.HOSTINGER_PATH }}/modulos/mantenimiento/ && \
-           find ${{ secrets.HOSTINGER_PATH }}/modulos/mantenimiento/ -type f -exec chmod 644 {} \;"
+           find ${{ secrets.HOSTINGER_PATH }}/modulos/mantenimiento/ -type f -exec chmod 644 {} \; && \
+           chmod -R 755 ${{ secrets.HOSTINGER_PATH }}/modulos/mantenimiento/uploads/ && \
+           chmod -R 777 ${{ secrets.HOSTINGER_PATH }}/modulos/mantenimiento/uploads/ || true"
         
     - name: ✅ Verificar deploy
       run: |
         echo "✅ Deploy completado"
+        echo "📁 Carpeta 'uploads' excluida del sync"
         echo "🌐 Sitio: https://erp.batidospitaya.com"
         echo "📁 Carpeta: modulos/mantenimiento/"
         echo "🖥️ Servidor: ${{ secrets.HOSTINGER_HOST }}:65002"
