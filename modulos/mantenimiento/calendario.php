@@ -19,10 +19,10 @@ $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admi
 $cargoOperario = $usuario['CodNivelesCargos'];
 
 // Verificar acceso al módulo Mantenimiento (Código 14)
-verificarAccesoCargo([5, 11, 14, 16, 35]);
+verificarAccesoCargo([5, 43, 11, 14, 16, 35]);
 
 // Verificar acceso al módulo
-if (!verificarAccesoCargo([5, 11, 14, 16, 35]) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
+if (!verificarAccesoCargo([5, 43, 11, 14, 16, 35]) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
     header('Location: ../index.php');
     exit();
 }
