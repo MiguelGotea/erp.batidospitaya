@@ -19,6 +19,17 @@ $fotos = $ticket_model->getFotos($_GET['id']);
 session_start();
 $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
 $puedeEditar = $esAdmin || verificarAccesoCargo([14, 16, 35]);
+$esLider = verificarAccesoCargo([5]);
+
+if ($esLider && !$esAdmin && !verificarAccesoCargo([14, 16, 35])) {
+    require_once '../../../includes/funciones.php';
+    $sucursalesLider = obtenerSucursalesLider($_SESSION['usuario_id']);
+    $codigosSucursales = array_column($sucursalesLider, 'codigo');
+    
+    if (!in_array($ticket['cod_sucursal'], $codigosSucursales)) {
+        die('No tienes permiso para ver este ticket');
+    }
+}
 
 if (!$ticket) {
     die('Ticket no encontrado');
@@ -321,27 +332,19 @@ $textosUrgencia = [
 </div>
 
 <script src="js/detalles_ticket.js"></script>
-
-<!-- Usa esto -->
 <script>
-(function() {
-    const ticketData = {
-        id: <?= $ticket['id'] ?>,
-        tipo_formulario: '<?= $ticket['tipo_formulario'] ?>',
-        puedeEditar: <?= $puedeEditar ? 'true' : 'false' ?>,
-        nivelUrgencia: <?= $ticket['nivel_urgencia'] ?? 0 ?>,
-        fotos: <?= json_encode($fotos, JSON_UNESCAPED_UNICODE) ?>,
-        coloresUrgencia: <?= json_encode($coloresUrgencia) ?>,
-        textosUrgencia: <?= json_encode($textosUrgencia) ?>
-    };
-    
-    document.addEventListener('DOMContentLoaded', function() {
-        // Usar namespace si usas la solución 2
-        if (typeof window.ticketDetallesApp !== 'undefined') {
-            window.ticketDetallesApp.reset();
-        }
-        
-        initDetallesTicket(ticketData);
-    });
-})();
+const ticketData = {
+    id: <?= $ticket['id'] ?>,
+    tipo_formulario: '<?= $ticket['tipo_formulario'] ?>',
+    puedeEditar: <?= $puedeEditar ? 'true' : 'false' ?>,
+    nivelUrgencia: <?= $ticket['nivel_urgencia'] ?? 0 ?>,
+    fotos: <?= json_encode($fotos, JSON_UNESCAPED_UNICODE) ?>,
+    coloresUrgencia: <?= json_encode($coloresUrgencia) ?>,
+    textosUrgencia: <?= json_encode($textosUrgencia) ?>
+};
+
+// Inicializar componentes
+document.addEventListener('DOMContentLoaded', function() {
+    initDetallesTicket(ticketData);
+});
 </script>
