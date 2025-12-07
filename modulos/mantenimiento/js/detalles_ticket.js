@@ -1,57 +1,62 @@
-// js/detalles_ticket.js
+// js/detalles_ticket.js - Función global para evitar conflictos
 
-let ticketGlobal = null;
-let fotosActuales = [];
-let fotoActualIndex = 0;
-let nuevasFotos = [];
-let materialesFrecuentes = [];
-let materialesTicket = [];
-let colaboradoresTicket = [];
-
-function initDetallesTicket(data) {
-    ticketGlobal = data;
-    fotosActuales = data.fotos || [];
+window.initDetallesTicket = function(data) {
+    const ticket = {
+        data: data,
+        fotosActuales: data.fotos || [],
+        fotoActualIndex: 0,
+        nuevasFotos: [],
+        materialesFrecuentes: [],
+        materialesTicket: [],
+        colaboradoresTicket: [],
+        stream: null
+    };
     
     // Inicializar selector de urgencia
     if (data.puedeEditar) {
-        initSelectorUrgencia(data.nivelUrgencia, data.coloresUrgencia, data.textosUrgencia);
+        initSelectorUrgenciaDetalles(data, ticket);
     }
     
     // Inicializar carousel de fotos
-    initFotosCarousel();
+    initFotosCarouselDetalles(ticket);
     
     // Cargar materiales (solo para mantenimiento)
     if (data.tipo_formulario === 'mantenimiento_general') {
-        cargarMateriales();
+        cargarMaterialesDetalles(ticket);
     }
     
     // Cargar colaboradores
-    cargarColaboradores();
-}
+    cargarColaboradoresDetalles(ticket);
+    
+    // Guardar referencia global
+    window.ticketDetallesActual = ticket;
+};
 
 // ==================== SELECTOR DE URGENCIA ====================
-function initSelectorUrgencia(nivelActual, colores, textos) {
-    const container = document.getElementById('urgencia-selector');
-    const nivelSeleccionado = nivelActual || 0;
-    const colorActual = colores[nivelSeleccionado];
-    const textoActual = textos[nivelSeleccionado];
+function initSelectorUrgenciaDetalles(data, ticket) {
+    const container = document.getElementById('urgencia-selector-detalles');
+    if (!container) return;
+    
+    const nivelSeleccionado = data.nivelUrgencia || 0;
+    const colorActual = data.coloresUrgencia[nivelSeleccionado];
+    const textoActual = data.textosUrgencia[nivelSeleccionado];
     
     let html = `
         <div class="urgencia-selector-compacto" 
              style="background-color: ${colorActual};" 
-             onclick="toggleOpcionesUrgencia()">
-            <span id="urgencia-texto-actual">${textoActual}</span>
+             onclick="toggleOpcionesUrgenciaDetalles()">
+            <span id="urgencia-texto-actual-detalles">${textoActual}</span>
         </div>
-        <div class="urgencia-opciones" id="urgencia-opciones" style="display: none;">
+        <div class="urgencia-opciones" id="urgencia-opciones-detalles" style="display: none;">
     `;
     
     [0, 1, 2, 3, 4].forEach(nivel => {
         const selected = nivel === nivelSeleccionado ? 'selected' : '';
         html += `
             <div class="urgencia-opcion ${selected}" 
-                 style="background-color: ${colores[nivel]};"
-                 onclick="seleccionarUrgencia(${nivel})">
-                ${textos[nivel]}
+                 style="background-color: ${data.coloresUrgencia[nivel]};"
+                 onclick="seleccionarUrgenciaDetalles(${nivel})">
+                ${data.textosUrgencia[nivel]}
             </div>
         `;
     });
@@ -60,19 +65,25 @@ function initSelectorUrgencia(nivelActual, colores, textos) {
     container.innerHTML = html;
 }
 
-function toggleOpcionesUrgencia() {
-    const opciones = document.getElementById('urgencia-opciones');
-    opciones.style.display = opciones.style.display === 'none' ? 'block' : 'none';
-}
+window.toggleOpcionesUrgenciaDetalles = function() {
+    const opciones = document.getElementById('urgencia-opciones-detalles');
+    if (opciones) {
+        opciones.style.display = opciones.style.display === 'none' ? 'block' : 'none';
+    }
+};
 
-function seleccionarUrgencia(nivel) {
-    document.getElementById('nivel_urgencia_hidden').value = nivel;
+window.seleccionarUrgenciaDetalles = function(nivel) {
+    const hiddenInput = document.getElementById('nivel_urgencia_hidden_detalles');
+    if (hiddenInput) {
+        hiddenInput.value = nivel;
+    }
     
-    const textoActual = document.getElementById('urgencia-texto-actual');
-    const selectorCompacto = textoActual.closest('.urgencia-selector-compacto');
-    
-    textoActual.textContent = ticketGlobal.textosUrgencia[nivel];
-    selectorCompacto.style.backgroundColor = ticketGlobal.coloresUrgencia[nivel];
+    const textoActual = document.getElementById('urgencia-texto-actual-detalles');
+    if (textoActual && window.ticketDetallesActual) {
+        const selectorCompacto = textoActual.closest('.urgencia-selector-compacto');
+        textoActual.textContent = window.ticketDetallesActual.data.textosUrgencia[nivel];
+        selectorCompacto.style.backgroundColor = window.ticketDetallesActual.data.coloresUrgencia[nivel];
+    }
     
     // Actualizar selección visual
     document.querySelectorAll('.urgencia-opcion').forEach(opcion => {
@@ -80,17 +91,18 @@ function seleccionarUrgencia(nivel) {
     });
     event.target.classList.add('selected');
     
-    toggleOpcionesUrgencia();
-}
+    window.toggleOpcionesUrgenciaDetalles();
+};
 
 // ==================== FOTOS CAROUSEL ====================
-function initFotosCarousel() {
-    const container = document.getElementById('fotosCarousel');
+function initFotosCarouselDetalles(ticket) {
+    const container = document.getElementById('fotosCarouselDetalles');
+    if (!container) return;
     
-    if (fotosActuales.length === 0) {
+    if (ticket.fotosActuales.length === 0) {
         container.innerHTML = '<p class="text-muted"><i class="bi bi-info-circle"></i> No hay fotografías adjuntas</p>';
-        if (ticketGlobal.puedeEditar) {
-            container.innerHTML += getBotonesAgregarFotos();
+        if (ticket.data.puedeEditar) {
+            container.innerHTML += getBotonesAgregarFotosDetalles();
         }
         return;
     }
@@ -98,7 +110,7 @@ function initFotosCarousel() {
     let html = '<div class="fotos-carousel">';
     html += '<div class="fotos-carousel-inner">';
     
-    fotosActuales.forEach((foto, index) => {
+    ticket.fotosActuales.forEach((foto, index) => {
         const activeClass = index === 0 ? 'active' : '';
         html += `
             <div class="fotos-carousel-item ${activeClass}">
@@ -109,24 +121,24 @@ function initFotosCarousel() {
     
     html += '</div>';
     
-    if (fotosActuales.length > 1) {
+    if (ticket.fotosActuales.length > 1) {
         html += `
-            <button class="fotos-carousel-control prev" onclick="cambiarFoto(-1)">
+            <button class="fotos-carousel-control prev" onclick="cambiarFotoDetalles(-1)">
                 <i class="bi bi-chevron-left"></i>
             </button>
-            <button class="fotos-carousel-control next" onclick="cambiarFoto(1)">
+            <button class="fotos-carousel-control next" onclick="cambiarFotoDetalles(1)">
                 <i class="bi bi-chevron-right"></i>
             </button>
         `;
     }
     
-    html += `<div class="fotos-indicators">Foto ${fotoActualIndex + 1} de ${fotosActuales.length}</div>`;
+    html += `<div class="fotos-indicators" id="fotos-indicators-detalles">Foto ${ticket.fotoActualIndex + 1} de ${ticket.fotosActuales.length}</div>`;
     html += '</div>';
     
-    if (ticketGlobal.puedeEditar) {
+    if (ticket.data.puedeEditar) {
         html += '<div class="foto-actions">';
-        html += getBotonesAgregarFotos();
-        html += `<button type="button" class="btn btn-danger btn-sm" onclick="eliminarFotoActual()">
+        html += getBotonesAgregarFotosDetalles();
+        html += `<button type="button" class="btn btn-danger btn-sm" onclick="eliminarFotoActualDetalles()">
                     <i class="bi bi-trash"></i> Eliminar Foto Actual
                  </button>`;
         html += '</div>';
@@ -135,97 +147,111 @@ function initFotosCarousel() {
     container.innerHTML = html;
 }
 
-function getBotonesAgregarFotos() {
+function getBotonesAgregarFotosDetalles() {
     return `
-        <button type="button" class="btn btn-primary-custom btn-sm" onclick="document.getElementById('inputFotos').click()">
+        <button type="button" class="btn btn-primary-custom btn-sm" onclick="document.getElementById('inputFotosDetalles').click()">
             <i class="bi bi-upload"></i> Subir Fotos
         </button>
-        <button type="button" class="btn btn-success btn-sm" onclick="tomarFoto()">
+        <button type="button" class="btn btn-success btn-sm" onclick="tomarFotoDetalles()">
             <i class="bi bi-camera"></i> Tomar Foto
         </button>
-        <input type="file" id="inputFotos" accept="image/*" multiple style="display: none;" onchange="handleFileSelect(event)">
-        <video id="videoCamera" style="display: none; max-width: 300px; border-radius: 8px; margin-top: 10px;" autoplay></video>
-        <canvas id="canvasCamera" style="display: none;"></canvas>
+        <input type="file" id="inputFotosDetalles" accept="image/*" multiple style="display: none;" onchange="handleFileSelectDetalles(event)">
+        <video id="videoCameraDetalles" style="display: none; max-width: 300px; border-radius: 8px; margin-top: 10px;" autoplay></video>
+        <canvas id="canvasCameraDetalles" style="display: none;"></canvas>
     `;
 }
 
-function cambiarFoto(direccion) {
-    fotoActualIndex += direccion;
-    if (fotoActualIndex < 0) fotoActualIndex = fotosActuales.length - 1;
-    if (fotoActualIndex >= fotosActuales.length) fotoActualIndex = 0;
+window.cambiarFotoDetalles = function(direccion) {
+    const ticket = window.ticketDetallesActual;
+    if (!ticket) return;
+    
+    ticket.fotoActualIndex += direccion;
+    if (ticket.fotoActualIndex < 0) ticket.fotoActualIndex = ticket.fotosActuales.length - 1;
+    if (ticket.fotoActualIndex >= ticket.fotosActuales.length) ticket.fotoActualIndex = 0;
     
     document.querySelectorAll('.fotos-carousel-item').forEach((item, index) => {
-        item.classList.toggle('active', index === fotoActualIndex);
+        item.classList.toggle('active', index === ticket.fotoActualIndex);
     });
     
-    document.querySelector('.fotos-indicators').textContent = 
-        `Foto ${fotoActualIndex + 1} de ${fotosActuales.length}`;
-}
+    const indicator = document.getElementById('fotos-indicators-detalles');
+    if (indicator) {
+        indicator.textContent = `Foto ${ticket.fotoActualIndex + 1} de ${ticket.fotosActuales.length}`;
+    }
+};
 
-function eliminarFotoActual() {
+window.eliminarFotoActualDetalles = function() {
     if (!confirm('¿Eliminar esta foto?')) return;
     
-    const fotoId = fotosActuales[fotoActualIndex].id;
+    const ticket = window.ticketDetallesActual;
+    if (!ticket) return;
+    
+    const fotoId = ticket.fotosActuales[ticket.fotoActualIndex].id;
     
     $.ajax({
         url: 'ajax/detalles_delete_foto.php',
         method: 'POST',
-        data: { foto_id: fotoId, ticket_id: ticketGlobal.id },
+        data: { foto_id: fotoId, ticket_id: ticket.data.id },
         dataType: 'json',
         success: function(response) {
             if (response.success) {
-                fotosActuales.splice(fotoActualIndex, 1);
-                fotoActualIndex = 0;
-                initFotosCarousel();
+                ticket.fotosActuales.splice(ticket.fotoActualIndex, 1);
+                ticket.fotoActualIndex = 0;
+                initFotosCarouselDetalles(ticket);
             } else {
                 alert('Error: ' + response.message);
             }
         }
     });
-}
+};
 
-function handleFileSelect(event) {
+window.handleFileSelectDetalles = function(event) {
+    const ticket = window.ticketDetallesActual;
+    if (!ticket) return;
+    
     Array.from(event.target.files).forEach(file => {
         const reader = new FileReader();
         reader.onload = function(e) {
-            nuevasFotos.push({ tipo: 'file', data: e.target.result, file: file });
+            ticket.nuevasFotos.push({ tipo: 'file', data: e.target.result, file: file });
         };
         reader.readAsDataURL(file);
     });
-}
+};
 
-let stream = null;
-function tomarFoto() {
-    const video = document.getElementById('videoCamera');
+window.tomarFotoDetalles = function() {
+    const ticket = window.ticketDetallesActual;
+    if (!ticket) return;
     
-    if (stream) {
+    const video = document.getElementById('videoCameraDetalles');
+    if (!video) return;
+    
+    if (ticket.stream) {
         // Capturar foto
-        const canvas = document.getElementById('canvasCamera');
+        const canvas = document.getElementById('canvasCameraDetalles');
         const context = canvas.getContext('2d');
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
         context.drawImage(video, 0, 0);
         
         const dataURL = canvas.toDataURL('image/jpeg');
-        nuevasFotos.push({ tipo: 'camera', data: dataURL });
+        ticket.nuevasFotos.push({ tipo: 'camera', data: dataURL });
         
         // Detener cámara
-        stream.getTracks().forEach(track => track.stop());
-        stream = null;
+        ticket.stream.getTracks().forEach(track => track.stop());
+        ticket.stream = null;
         video.style.display = 'none';
     } else {
         // Iniciar cámara
         navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
             .then(function(mediaStream) {
-                stream = mediaStream;
-                video.srcObject = stream;
+                ticket.stream = mediaStream;
+                video.srcObject = mediaStream;
                 video.style.display = 'block';
             })
             .catch(function(err) {
                 alert('Error al acceder a la cámara: ' + err.message);
             });
     }
-}
+};
 
 // ==================== MATERIALES ====================
 function cargarMateriales() {

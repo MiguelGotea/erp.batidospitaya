@@ -241,8 +241,8 @@ $textosUrgencia = [
     
     <div class="modal-body">
         <form id="formDetallesTicket">
-            <input type="hidden" id="ticket_id" value="<?= $ticket['id'] ?>">
-            <input type="hidden" id="nivel_urgencia_hidden" value="<?= $ticket['nivel_urgencia'] ?? 0 ?>">
+            <input type="hidden" id="ticket_id_detalles" value="<?= $ticket['id'] ?>">
+            <input type="hidden" id="nivel_urgencia_hidden_detalles" value="<?= $ticket['nivel_urgencia'] ?? 0 ?>">
             
             <!-- Información básica -->
             <div class="row mb-3">
@@ -258,14 +258,14 @@ $textosUrgencia = [
             
             <div class="row mb-3">
                 <div class="col-md-6">
-                    <label for="titulo" class="form-label">Título:</label>
-                    <input type="text" class="form-control" id="titulo" 
+                    <label for="titulo_detalles" class="form-label">Título:</label>
+                    <input type="text" class="form-control" id="titulo_detalles" 
                            value="<?= htmlspecialchars($ticket['titulo']) ?>" 
                            <?= !$puedeEditar ? 'readonly' : '' ?> required>
                 </div>
                 <div class="col-md-6">
-                    <label for="area_equipo" class="form-label"><?= $labelArea ?>:</label>
-                    <input type="text" class="form-control" id="area_equipo" 
+                    <label for="area_equipo_detalles" class="form-label"><?= $labelArea ?>:</label>
+                    <input type="text" class="form-control" id="area_equipo_detalles" 
                            value="<?= htmlspecialchars($ticket['area_equipo']) ?>" 
                            <?= !$puedeEditar ? 'readonly' : '' ?> required>
                 </div>
@@ -279,7 +279,7 @@ $textosUrgencia = [
                 <div class="col-md-6">
                     <label class="form-label">Nivel de Urgencia:</label>
                     <?php if ($puedeEditar): ?>
-                        <div id="urgencia-selector"></div>
+                        <div id="urgencia-selector-detalles"></div>
                     <?php else: ?>
                         <?php 
                         $nivelActual = $ticket['nivel_urgencia'] ?? 0;
@@ -294,29 +294,29 @@ $textosUrgencia = [
             </div>
             
             <div class="mb-3">
-                <label for="descripcion" class="form-label">Descripción:</label>
-                <textarea class="form-control" id="descripcion" rows="4" 
+                <label for="descripcion_detalles" class="form-label">Descripción:</label>
+                <textarea class="form-control" id="descripcion_detalles" rows="4" 
                           <?= !$puedeEditar ? 'readonly' : '' ?> required><?= htmlspecialchars($ticket['descripcion']) ?></textarea>
             </div>
             
             <!-- Fotos -->
             <div class="mb-3">
                 <label class="form-label">Fotografías (<?= count($fotos) ?>):</label>
-                <div id="fotosCarousel"></div>
+                <div id="fotosCarouselDetalles"></div>
             </div>
             
             <!-- Materiales (solo para mantenimiento) -->
             <?php if ($ticket['tipo_formulario'] === 'mantenimiento_general'): ?>
             <div class="mb-3">
                 <label class="form-label">Materiales Utilizados:</label>
-                <div class="materiales-container" id="materialesContainer"></div>
+                <div class="materiales-container" id="materialesContainerDetalles"></div>
             </div>
             <?php endif; ?>
             
             <!-- Colaboradores Asignados -->
             <div class="mb-3">
                 <label class="form-label">Colaboradores Asignados:</label>
-                <div class="colaboradores-container" id="colaboradoresContainer"></div>
+                <div class="colaboradores-container" id="colaboradoresContainerDetalles"></div>
             </div>
         </form>
     </div>
@@ -324,27 +324,34 @@ $textosUrgencia = [
     <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
         <?php if ($puedeEditar): ?>
-        <button type="button" class="btn btn-primary-custom" onclick="guardarCambios()">
+        <button type="button" class="btn btn-primary-custom" onclick="guardarCambiosDetalles()">
             <i class="bi bi-save"></i> Guardar Cambios
         </button>
         <?php endif; ?>
     </div>
 </div>
 
-<script src="js/detalles_ticket.js"></script>
 <script>
-const ticketData = {
-    id: <?= $ticket['id'] ?>,
-    tipo_formulario: '<?= $ticket['tipo_formulario'] ?>',
-    puedeEditar: <?= $puedeEditar ? 'true' : 'false' ?>,
-    nivelUrgencia: <?= $ticket['nivel_urgencia'] ?? 0 ?>,
-    fotos: <?= json_encode($fotos, JSON_UNESCAPED_UNICODE) ?>,
-    coloresUrgencia: <?= json_encode($coloresUrgencia) ?>,
-    textosUrgencia: <?= json_encode($textosUrgencia) ?>
-};
+(function() {
+    const ticketDataDetalles = {
+        id: <?= $ticket['id'] ?>,
+        tipo_formulario: '<?= $ticket['tipo_formulario'] ?>',
+        puedeEditar: <?= $puedeEditar ? 'true' : 'false' ?>,
+        nivelUrgencia: <?= $ticket['nivel_urgencia'] ?? 0 ?>,
+        fotos: <?= json_encode($fotos, JSON_UNESCAPED_UNICODE) ?>,
+        coloresUrgencia: <?= json_encode($coloresUrgencia) ?>,
+        textosUrgencia: <?= json_encode($textosUrgencia) ?>
+    };
 
-// Inicializar componentes
-document.addEventListener('DOMContentLoaded', function() {
-    initDetallesTicket(ticketData);
-});
+    // Esperar a que se cargue el script
+    function esperarScript() {
+        if (typeof window.initDetallesTicket === 'function') {
+            window.initDetallesTicket(ticketDataDetalles);
+        } else {
+            setTimeout(esperarScript, 100);
+        }
+    }
+    
+    esperarScript();
+})();
 </script>
