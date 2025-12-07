@@ -321,22 +321,6 @@ $textosUrgencia = [
 </div>
 
 <script src="js/detalles_ticket.js"></script>
-<script>
-const ticketData = {
-    id: <?= $ticket['id'] ?>,
-    tipo_formulario: '<?= $ticket['tipo_formulario'] ?>',
-    puedeEditar: <?= $puedeEditar ? 'true' : 'false' ?>,
-    nivelUrgencia: <?= $ticket['nivel_urgencia'] ?? 0 ?>,
-    fotos: <?= json_encode($fotos, JSON_UNESCAPED_UNICODE) ?>,
-    coloresUrgencia: <?= json_encode($coloresUrgencia) ?>,
-    textosUrgencia: <?= json_encode($textosUrgencia) ?>
-};
-
-// Inicializar componentes
-document.addEventListener('DOMContentLoaded', function() {
-    initDetallesTicket(ticketData);
-});
-</script>
 
 <!-- Usa esto -->
 <script>
