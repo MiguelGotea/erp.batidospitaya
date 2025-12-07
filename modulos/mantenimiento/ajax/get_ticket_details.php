@@ -333,8 +333,7 @@ $textosUrgencia = [
 
 <script src="js/detalles_ticket.js"></script>
 <script>
-// Crear objeto global inmediatamente
-window.ticketDetallesData = {
+const ticketData = {
     id: <?= $ticket['id'] ?>,
     tipo_formulario: '<?= $ticket['tipo_formulario'] ?>',
     puedeEditar: <?= $puedeEditar ? 'true' : 'false' ?>,
@@ -344,20 +343,8 @@ window.ticketDetallesData = {
     textosUrgencia: <?= json_encode($textosUrgencia) ?>
 };
 
-// Inicializar inmediatamente después de cargar el DOM
-(function() {
-    // Esperar a que el DOM esté listo
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', function() {
-            if (typeof initDetallesTicket === 'function') {
-                initDetallesTicket(window.ticketDetallesData);
-            }
-        });
-    } else {
-        // DOM ya está listo
-        if (typeof initDetallesTicket === 'function') {
-            initDetallesTicket(window.ticketDetallesData);
-        }
-    }
-})();
+// Inicializar componentes
+document.addEventListener('DOMContentLoaded', function() {
+    initDetallesTicket(ticketData);
+});
 </script>
