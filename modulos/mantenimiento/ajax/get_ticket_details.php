@@ -331,7 +331,7 @@ $textosUrgencia = [
     </div>
 </div>
 
-<script src="js/detalles_ticket.js"></script>
+<script src="../js/detalles_ticket.js"></script>
 <script>
 const ticketData = {
     id: <?= $ticket['id'] ?>,
