@@ -7,10 +7,6 @@ require_once 'config/database.php';
 $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
 
-// Solo líder de infraestructura
-if ($cargoOperario != 35) {
-    die("Acceso denegado");
-}
 
 $mes = $_GET['mes'] ?? date('n');
 $anio = $_GET['anio'] ?? date('Y');
