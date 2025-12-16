@@ -1,5 +1,8 @@
 <?php
 // public_html/modulos/mantenimiento/equipos_calendario.php
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
 require_once '../../includes/auth.php';
 require_once '../../includes/funciones.php';
 require_once 'config/database.php';
