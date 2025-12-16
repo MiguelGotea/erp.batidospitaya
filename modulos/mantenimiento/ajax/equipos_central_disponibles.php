@@ -1,4 +1,3 @@
-
 <?php
 // public_html/modulos/mantenimiento/ajax/equipos_central_disponibles.php
 header('Content-Type: application/json');

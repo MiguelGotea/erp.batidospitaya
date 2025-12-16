@@ -32,7 +32,7 @@ try {
                     ELSE 'Sin ubicación'
                 END
                 FROM mtto_equipos_movimientos m
-                LEFT JOIN sucursales s ON m.destino_id = s.codigo AND m.destino_tipo = 'Sucursal'
+                LEFT JOIN sucursales s ON m.destino_id = s.id AND m.destino_tipo = 'Sucursal'
                 WHERE m.equipo_id = e.id 
                     AND m.estado = 'Completado'
                 ORDER BY m.fecha_ejecutada DESC, m.id DESC
@@ -87,11 +87,11 @@ try {
         $sql .= "
             AND (
                 SELECT CASE 
-                    WHEN m.destino_tipo = 'Sucursal' THEN s.nombre
+                    WHEN m.destino_tipo = 'Sucursal' THEN s.codigo
                     ELSE NULL
                 END
                 FROM mtto_equipos_movimientos m
-                LEFT JOIN sucursales s ON m.destino_id = s.codigo
+                LEFT JOIN sucursales s ON m.destino_id = s.id
                 WHERE m.equipo_id = e.id 
                     AND m.estado = 'Completado'
                 ORDER BY m.fecha_ejecutada DESC, m.id DESC
