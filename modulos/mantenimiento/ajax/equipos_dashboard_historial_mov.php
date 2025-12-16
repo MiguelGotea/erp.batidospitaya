@@ -26,8 +26,8 @@ try {
                 WHEN m.destino_tipo = 'Proveedor' THEN CONCAT('Proveedor: ', m.proveedor_nombre)
             END as destino
         FROM mtto_equipos_movimientos m
-        LEFT JOIN sucursales so ON m.origen_id = so.id AND m.origen_tipo = 'Sucursal'
-        LEFT JOIN sucursales sd ON m.destino_id = sd.id AND m.destino_tipo = 'Sucursal'
+        LEFT JOIN sucursales so ON m.origen_id = so.codigo AND m.origen_tipo = 'Sucursal'
+        LEFT JOIN sucursales sd ON m.destino_id = sd.codigo AND m.destino_tipo = 'Sucursal'
         WHERE m.equipo_id = :equipo_id
         ORDER BY 
             COALESCE(m.fecha_ejecutada, m.fecha_planificada) DESC,

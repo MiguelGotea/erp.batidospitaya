@@ -150,7 +150,7 @@ $sucursales = $db->fetchAll("SELECT id, codigo, nombre FROM sucursales WHERE act
                         <select name="sucursal_inicial_id" id="sucursal_inicial_id">
                             <option value="">Seleccione una sucursal</option>
                             <?php foreach ($sucursales as $sucursal): ?>
-                                <option value="<?php echo $sucursal['id']; ?>">
+                                <option value="<?php echo $sucursal['codigo']; ?>">
                                     <?php echo htmlspecialchars($sucursal['codigo'] . ' - ' . $sucursal['nombre']); ?>
                                 </option>
                             <?php endforeach; ?>

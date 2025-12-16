@@ -40,7 +40,7 @@ try {
                 GROUP BY equipo_id
             ) m2 ON m1.id = m2.max_id
         ) m ON e.id = m.equipo_id
-        LEFT JOIN sucursales s ON m.destino_id = s.id AND m.destino_tipo = 'Sucursal'
+        LEFT JOIN sucursales s ON m.destino_id = s.codigo AND m.destino_tipo = 'Sucursal'
         WHERE e.activo = 1
             AND NOT EXISTS (
                 SELECT 1 FROM mtto_equipos_mantenimientos mt
@@ -84,7 +84,7 @@ try {
                 GROUP BY equipo_id
             ) m2 ON m1.id = m2.max_id
         ) m ON e.id = m.equipo_id
-        LEFT JOIN sucursales s ON m.destino_id = s.id AND m.destino_tipo = 'Sucursal'
+        LEFT JOIN sucursales s ON m.destino_id = s.codigo AND m.destino_tipo = 'Sucursal'
         WHERE e.activo = 1
             AND NOT EXISTS (
                 SELECT 1 FROM mtto_equipos_mantenimientos mt
@@ -115,7 +115,7 @@ try {
             sol.id as solicitud_id
         FROM mtto_equipos_solicitudes sol
         INNER JOIN mtto_equipos e ON sol.equipo_id = e.id
-        INNER JOIN sucursales s ON sol.sucursal_id = s.id
+        INNER JOIN sucursales s ON sol.sucursal_id = s.codigo
         WHERE sol.estado IN ('Solicitado', 'Agendado')
             AND e.activo = 1
     ");

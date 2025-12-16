@@ -47,7 +47,7 @@ try {
             ELSE 'Sin ubicación'
         END as ubicacion
         FROM mtto_equipos_movimientos m
-        LEFT JOIN sucursales s ON m.destino_id = s.id AND m.destino_tipo = 'Sucursal'
+        LEFT JOIN sucursales s ON m.destino_id = s.codigo AND m.destino_tipo = 'Sucursal'
         WHERE m.equipo_id = :equipo_id 
             AND m.estado = 'Completado'
         ORDER BY m.fecha_ejecutada DESC, m.id DESC

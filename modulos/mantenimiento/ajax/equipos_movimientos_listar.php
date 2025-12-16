@@ -27,8 +27,8 @@ try {
             m.observaciones
         FROM mtto_equipos_movimientos m
         INNER JOIN mtto_equipos e ON m.equipo_id = e.id
-        LEFT JOIN sucursales so ON m.origen_id = so.id AND m.origen_tipo = 'Sucursal'
-        LEFT JOIN sucursales sd ON m.destino_id = sd.id AND m.destino_tipo = 'Sucursal'
+        LEFT JOIN sucursales so ON m.origen_id = so.codigo AND m.origen_tipo = 'Sucursal'
+        LEFT JOIN sucursales sd ON m.destino_id = sd.codigo AND m.destino_tipo = 'Sucursal'
         WHERE m.estado IN ('Planificado', 'En Tránsito')
         ORDER BY m.fecha_planificada ASC, m.id ASC
     ");
