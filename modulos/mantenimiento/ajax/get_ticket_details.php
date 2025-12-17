@@ -199,9 +199,6 @@ if ($ticket['tipo_formulario'] === 'mantenimiento_general') {
     
     <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>        
-        <button type="button" class="btn btn-info" onclick="openChatFromModal(<?= $ticket['id'] ?>)">
-            <i class="fas fa-comments me-2"></i>Abrir Chat
-        </button>
         <?php if ($puedeEditar): ?>
         <button type="submit" class="btn btn-primary">
             <i class="fas fa-save me-2"></i>Guardar Cambios
@@ -613,14 +610,4 @@ function updateTicket(event) {
     });
 }
 
-function openChatFromModal(ticketId) {
-    const modalElement = document.querySelector('.modal.show');
-    if (modalElement) {
-        const modal = bootstrap.Modal.getInstance(modalElement);
-        if (modal) {
-            modal.hide();
-        }
-    }
-    window.open('chat.php?ticket_id=' + ticketId + '&emisor=mantenimiento', '_blank');
-}
 </script>
