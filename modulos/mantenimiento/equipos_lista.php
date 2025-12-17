@@ -32,11 +32,6 @@ if ($cargoOperario == 35) {
     <div class="container-main">
         <div class="page-header">
             <h1 class="page-title">📋 Lista de Equipos</h1>
-            <div>
-                <?php if ($cargoOperario == 35): ?>
-                <a href="equipos_registro.php" class="btn btn-primary">➕ Registrar Nuevo Equipo</a>
-                <?php endif; ?>
-            </div>
         </div>
 
         <div class="table-container">
