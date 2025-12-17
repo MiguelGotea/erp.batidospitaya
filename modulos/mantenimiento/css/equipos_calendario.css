@@ -194,9 +194,8 @@
     transition: all 0.2s;
     user-select: none;
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 4px;
+    flex-direction: column;
+    gap: 3px;
 }
 
 .mantenimiento-card:hover {
@@ -230,6 +229,12 @@
     color: #212529;
 }
 
+.mantenimiento-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
 .mantenimiento-codigo {
     flex: 1;
     font-weight: bold;
@@ -238,14 +243,8 @@
     text-overflow: ellipsis;
 }
 
-.mantenimiento-acciones {
-    display: flex;
-    gap: 2px;
-}
-
-.mantenimiento-remove,
-.mantenimiento-check {
-    background: rgba(255,255,255,0.2);
+.mantenimiento-remove {
+    background: rgba(220, 53, 69, 0.9);
     color: white;
     border: none;
     border-radius: 3px;
@@ -258,10 +257,7 @@
     justify-content: center;
     transition: all 0.2s;
     padding: 0;
-}
-
-.mantenimiento-remove {
-    background: rgba(220, 53, 69, 0.9);
+    flex-shrink: 0;
 }
 
 .mantenimiento-remove:hover {
@@ -271,11 +267,23 @@
 
 .mantenimiento-check {
     background: rgba(40, 167, 69, 0.9);
+    color: white;
+    border: none;
+    border-radius: 3px;
+    width: 100%;
+    height: 20px;
+    cursor: pointer;
+    font-size: 14px !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    padding: 0;
 }
 
 .mantenimiento-check:hover {
     background: #28a745;
-    transform: scale(1.1);
+    transform: scale(1.02);
 }
 
 /* Buscador en sidebar */

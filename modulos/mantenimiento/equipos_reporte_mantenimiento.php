@@ -109,8 +109,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             [$programado_id]
         );
         
-
-        
         // Guardar imágenes si hay
         if (isset($_FILES['imagenes'])) {
             $uploadDir = '../uploads/mantenimientos/';

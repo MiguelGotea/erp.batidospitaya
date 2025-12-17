@@ -223,11 +223,12 @@ $equiposEnCentral = $db->fetchAll("
                             <?php endif; ?>
                             <td>
                                 <?php if ($mov['estado'] == 'agendado'): ?>
-                                    <?php if ($cargoOperario == 35 || 
-                                        ($cargoOperario == 5 || $cargoOperario == 43)): ?>
+                                    <?php if ($cargoOperario == 5 || $cargoOperario == 43): ?>
                                     <button class="btn btn-sm btn-success" onclick="finalizarMovimiento(<?= $mov['id'] ?>)">
                                         ✓ Finalizar
                                     </button>
+                                    <?php else: ?>
+                                    <span class="badge badge-warning">Pendiente</span>
                                     <?php endif; ?>
                                 <?php else: ?>
                                     <span class="badge badge-secondary">Completado</span>
@@ -255,7 +256,11 @@ $equiposEnCentral = $db->fetchAll("
                     
                     <div class="form-group">
                         <label class="form-label required">Equipo a Mover</label>
-                        <input type="text" id="mov-equipo-nombre" class="form-control" readonly style="background: #f0f0f0;">
+                        <input type="text" id="mov-equipo-nombre" class="form-control" readonly style="background: #f0f0f0; display: none;">
+                        <select id="mov-equipo-select" class="form-control" onchange="actualizarOrigenDesdeSelect()">
+                            <option value="">Seleccione equipo...</option>
+                        </select>
+                        <input type="hidden" id="mov-equipo-id" name="equipo_id">
                     </div>
                     
                     <div class="form-group">
@@ -337,11 +342,53 @@ $equiposEnCentral = $db->fetchAll("
             WHERE e.activo = 1
         ")) ?>;
 
+        function abrirNuevoMovimiento() {
+            document.getElementById('form-movimiento').reset();
+            document.getElementById('mov-solicitud-id').value = '';
+            document.getElementById('opcion-cambio').style.display = 'none';
+            
+            // Habilitar selector de equipos
+            const equipoNombre = document.getElementById('mov-equipo-nombre');
+            const equipoSelect = document.getElementById('mov-equipo-select');
+            equipoNombre.style.display = 'none';
+            equipoSelect.style.display = 'block';
+            
+            // Cargar equipos
+            equipoSelect.innerHTML = '<option value="">Seleccione equipo...</option>';
+            equiposData.forEach(eq => {
+                const option = document.createElement('option');
+                option.value = eq.id;
+                option.textContent = `${eq.codigo} - ${eq.marca} ${eq.modelo}`;
+                option.dataset.ubicacionCodigo = eq.ubicacion_codigo;
+                option.dataset.ubicacionNombre = eq.ubicacion_nombre;
+                equipoSelect.appendChild(option);
+            });
+            
+            openModal('modal-movimiento');
+        }
+
+        function actualizarOrigenDesdeSelect() {
+            const select = document.getElementById('mov-equipo-select');
+            const option = select.options[select.selectedIndex];
+            
+            if (option.value) {
+                document.getElementById('mov-equipo-id').value = option.value;
+                document.getElementById('mov-origen').value = option.dataset.ubicacionCodigo || '';
+                document.getElementById('mov-origen-nombre').value = option.dataset.ubicacionNombre || 'Sin ubicación';
+            }
+        }
+
         function abrirMovimientoConSolicitud(equipoId, sucursalOrigenCodigo, solicitudId) {
             document.getElementById('form-movimiento').reset();
             document.getElementById('mov-solicitud-id').value = solicitudId;
             document.getElementById('opcion-cambio').style.display = 'block';
-            
+
+            // Deshabilitar selector, mostrar campo bloqueado
+            const equipoNombre = document.getElementById('mov-equipo-nombre');
+            const equipoSelect = document.getElementById('mov-equipo-select');
+            equipoNombre.style.display = 'block';
+            equipoSelect.style.display = 'none';
+
             // Buscar datos del equipo
             const equipo = equiposData.find(eq => eq.id == equipoId);
             if (equipo) {
