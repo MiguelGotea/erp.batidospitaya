@@ -57,6 +57,10 @@ $equiposPreventivo = $db->fetchAll("
         END as indicador
     FROM mtto_equipos e
     WHERE e.activo = 1
+    AND NOT EXISTS (
+        SELECT 1 FROM mtto_equipos_mantenimientos_programados mmpp 
+        WHERE mmpp.equipo_id = e.id
+    )
     HAVING indicador IS NOT NULL
 ", [$mes, $anio]);
 
