@@ -437,12 +437,14 @@ foreach ($mantenimientosProgramados as $mant) {
                                 <div class="mantenimiento-card <?= $mant['mantenimiento_realizado_id'] ? 'finalizado' : '' ?>" 
                                      draggable="<?= $mant['mantenimiento_realizado_id'] ? 'false' : 'true' ?>"
                                      data-programado-id="<?= $mant['id'] ?>">
-                                    <span class="mantenimiento-codigo"><?= htmlspecialchars($mant['codigo']) ?></span>
-                                    <?php if (!$mant['mantenimiento_realizado_id']): ?>
-                                    <div class="mantenimiento-acciones">
+                                    <div class="mantenimiento-header">
+                                        <span class="mantenimiento-codigo"><?= htmlspecialchars($mant['codigo']) ?></span>
+                                        <?php if (!$mant['mantenimiento_realizado_id']): ?>
                                         <button class="mantenimiento-remove" onclick="desprogramar(<?= $mant['id'] ?>)" title="Desprogramar">×</button>
-                                        <button class="mantenimiento-check" onclick="abrirReporte(<?= $mant['id'] ?>, <?= $mant['equipo_id'] ?>)" title="Completar">✓</button>
+                                        <?php endif; ?>
                                     </div>
+                                    <?php if (!$mant['mantenimiento_realizado_id']): ?>
+                                    <button class="mantenimiento-check" onclick="abrirReporte(<?= $mant['id'] ?>, <?= $mant['equipo_id'] ?>)" title="Completar">✓</button>
                                     <?php endif; ?>
                                 </div>
                                 <?php endforeach; ?>
