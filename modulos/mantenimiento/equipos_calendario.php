@@ -81,6 +81,10 @@ $equiposSolicitud = $db->fetchAll("
         SELECT 1 FROM mtto_equipos_mantenimientos mm 
         WHERE mm.solicitud_id = s.id
     )
+    AND NOT EXISTS (
+        SELECT 1 FROM mtto_equipos_mantenimientos_programados mmpp 
+        WHERE mmpp.equipo_id = e.id
+    )
 ");
 
 // Mantenimientos programados del mes
