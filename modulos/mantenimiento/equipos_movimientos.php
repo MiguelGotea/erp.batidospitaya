@@ -148,7 +148,7 @@ $equiposEnCentral = $db->fetchAll("
             <h1 class="page-title">🚚 Gestión de Movimientos de Equipos</h1>
             <div>
                 <?php if ($cargoOperario == 35): ?>
-                <button class="btn btn-primary" onclick="abrirNuevoMovimiento()">
+                <button class="btn btn-primary" onclick="abrirMovimientoConSolicitud()">
                     ➕ Nuevo Movimiento
                 </button>
                 <?php endif; ?>
