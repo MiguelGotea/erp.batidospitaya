@@ -109,18 +109,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             [$programado_id]
         );
         
-        // Si tiene solicitud vinculada, finalizarla
-        if ($solicitudPendiente) {
-            $db->query(
-                "UPDATE mtto_equipos_solicitudes 
-                 SET estado = 'finalizado', 
-                     finalizado_por = ?,
-                     fecha_finalizacion = NOW(),
-                     observaciones_finalizacion = ?
-                 WHERE id = ?",
-                [$_SESSION['usuario_id'], 'Finalizado con reporte de mantenimiento', $solicitudPendiente['id']]
-            );
-        }
+
         
         // Guardar imágenes si hay
         if (isset($_FILES['imagenes'])) {
