@@ -663,7 +663,7 @@ if ($colaborador_filtro) {
             btnSubmit.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Finalizando...';
             
             $.ajax({
-                url: 'ajax/finalizar_ticket.php',
+                url: 'ajax/get_finalizar_ticket.php',
                 method: 'POST',
                 data: formData,
                 processData: false,

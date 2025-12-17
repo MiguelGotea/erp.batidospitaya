@@ -513,7 +513,7 @@ function deletePhoto(fotoId, ticketId) {
     }
     
     $.ajax({
-        url: 'ajax/delete_ticket_photo.php',
+        url: 'ajax/get_delete_ticket_photo.php',
         method: 'POST',
         data: { foto_id: fotoId, ticket_id: ticketId },
         dataType: 'json',
@@ -581,7 +581,7 @@ function updateTicket(event) {
     }
     
     $.ajax({
-        url: 'ajax/update_ticket.php',
+        url: 'ajax/get_update_ticket.php',
         method: 'POST',
         data: formData,
         processData: false,
