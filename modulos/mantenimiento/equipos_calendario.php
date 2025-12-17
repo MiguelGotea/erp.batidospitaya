@@ -77,14 +77,9 @@ $equiposSolicitud = $db->fetchAll("
          ORDER BY m.fecha_realizada DESC LIMIT 1) as ubicacion_actual
     FROM mtto_equipos e
     INNER JOIN mtto_equipos_solicitudes s ON e.id = s.equipo_id
-    WHERE s.estado = 'solicitado'
     AND NOT EXISTS (
         SELECT 1 FROM mtto_equipos_mantenimientos mm 
         WHERE mm.solicitud_id = s.id
-    )
-    AND NOT EXISTS (
-        SELECT 1 FROM mtto_equipos_movimientos mov
-        WHERE mov.equipo_id = e.id AND mov.estado = 'agendado'
     )
 ");
 
