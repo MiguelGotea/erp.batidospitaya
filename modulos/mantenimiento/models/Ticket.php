@@ -194,7 +194,7 @@ class Ticket {
     }
     
     public function getEquipos() {
-        return $this->db->fetchAll("SELECT * FROM mtto_equipos WHERE activo = 1 ORDER BY nombre");
+        return $this->db->fetchAll("SELECT * FROM mtto_equipos WHERE activo = 1 ORDER BY tipo_equipo_id");
     }
     
     public function getTiposCasos() {
