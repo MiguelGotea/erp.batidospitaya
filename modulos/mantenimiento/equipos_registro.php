@@ -55,18 +55,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $equipo_id = $db->lastInsertId();
         
         // Crear movimiento inicial a almacén central (sucursal código 0)
-        $central = $db->fetchOne("SELECT id FROM sucursales WHERE codigo = '0'");
-        
-        if (!$central) {
-            throw new Exception('No se encontró la sucursal central (código 0). Por favor, créela primero.');
-        }
+        $codigo_central = '0';
         
         $db->query(
             "INSERT INTO mtto_equipos_movimientos 
              (equipo_id, sucursal_origen_id, sucursal_destino_id, fecha_programada, 
               fecha_realizada, estado, observaciones, programado_por, finalizado_por)
              VALUES (?, ?, ?, NOW(), NOW(), 'finalizado', 'Registro inicial en almacén central', ?, ?)",
-            [$equipo_id, $central['id'], $central['id'], $_SESSION['usuario_id'], $_SESSION['usuario_id']]
+            [$equipo_id, $codigo_central, $codigo_central, $_SESSION['usuario_id'], $_SESSION['usuario_id']]
         );
         
         $db->getConnection()->commit();

@@ -40,14 +40,14 @@ $proveedores = $db->fetchAll("SELECT id, nombre FROM proveedores_compras_servici
 // Obtener repuestos
 $repuestos = $db->fetchAll("SELECT id, nombre, costo_base, unidad_medida FROM mtto_equipos_repuestos WHERE activo = 1 ORDER BY nombre");
 
-// Obtener solicitudes pendientes del equipo
-$solicitudes = $db->fetchAll(
-    "SELECT id, descripcion_problema, fecha_solicitud
-     FROM mtto_equipos_solicitudes
-     WHERE equipo_id = ? AND estado = 'solicitado'
-     ORDER BY fecha_solicitud DESC",
-    [$equipo_id]
-);
+// Obtener solicitud pendiente del equipo automáticamente
+$solicitudPendiente = $db->fetchOne("
+    SELECT id, descripcion_problema, fecha_solicitud
+    FROM mtto_equipos_solicitudes
+    WHERE equipo_id = ? AND estado = 'solicitado'
+    ORDER BY fecha_solicitud DESC
+    LIMIT 1
+", [$equipo_id]);
 
 // Procesar formulario
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -60,12 +60,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 mantenimiento_programado_id, equipo_id, solicitud_id, tipo,
                 proveedor_servicio_id, fecha_inicio, fecha_finalizacion,
                 problema_encontrado, trabajo_realizado, observaciones,
-                costo_total_repuestos, registrado_por
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                costo_total_repuestos, costo_mano_de_obra, registrado_por
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             [
                 $programado_id,
                 $equipo_id,
-                $_POST['solicitud_id'] ?: null,
+                $solicitudPendiente['id'] ?? null,
                 $programado['tipo'],
                 $_POST['proveedor_servicio_id'] ?: null,
                 $_POST['fecha_inicio'],
@@ -74,6 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_POST['trabajo_realizado'],
                 $_POST['observaciones'],
                 $_POST['costo_total_repuestos'],
+                $_POST['costo_mano_de_obra'] ?? 0,
                 $_SESSION['usuario_id']
             ]
         );
@@ -109,7 +110,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         );
         
         // Si tiene solicitud vinculada, finalizarla
-        if (!empty($_POST['solicitud_id'])) {
+        if ($solicitudPendiente) {
             $db->query(
                 "UPDATE mtto_equipos_solicitudes 
                  SET estado = 'finalizado', 
@@ -117,7 +118,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                      fecha_finalizacion = NOW(),
                      observaciones_finalizacion = ?
                  WHERE id = ?",
-                [$_SESSION['usuario_id'], 'Finalizado con reporte de mantenimiento', $_POST['solicitud_id']]
+                [$_SESSION['usuario_id'], 'Finalizado con reporte de mantenimiento', $solicitudPendiente['id']]
             );
         }
         
@@ -221,17 +222,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <input type="text" class="form-control" value="<?= ucfirst($programado['tipo']) ?>" readonly>
                 </div>
 
-                <?php if (!empty($solicitudes)): ?>
-                <div class="form-group">
-                    <label class="form-label">Vincular con Solicitud (Opcional)</label>
-                    <select name="solicitud_id" class="form-control">
-                        <option value="">Sin vincular</option>
-                        <?php foreach ($solicitudes as $sol): ?>
-                        <option value="<?= $sol['id'] ?>">
-                            Solicitud #<?= $sol['id'] ?> - <?= date('d/m/Y', strtotime($sol['fecha_solicitud'])) ?>
-                        </option>
-                        <?php endforeach; ?>
-                    </select>
+                <?php if ($solicitudPendiente): ?>
+                <div class="alert alert-info">
+                    <strong>📋 Solicitud Vinculada:</strong> Este mantenimiento se vinculará automáticamente con la solicitud 
+                    #<?= $solicitudPendiente['id'] ?> del <?= date('d/m/Y', strtotime($solicitudPendiente['fecha_solicitud'])) ?>
                 </div>
                 <?php endif; ?>
 
@@ -283,9 +277,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
 
                 <div class="form-group">
+                    <label class="form-label">Costo Mano de Obra</label>
+                    <input type="number" step="0.01" name="costo_mano_de_obra" 
+                           id="costo-mano-obra" class="form-control" value="0.00" 
+                           onchange="calcularCostoTotal()">
+                </div>
+
+                <div class="form-group">
                     <label class="form-label">Costo Total Repuestos</label>
                     <input type="number" step="0.01" name="costo_total_repuestos" 
-                           id="costo-total" class="form-control" value="0.00" readonly>
+                           id="costo-total-repuestos" class="form-control" value="0.00" readonly>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" style="font-weight: bold; color: #0E544C;">Costo Total del Mantenimiento</label>
+                    <input type="text" id="costo-total-final" class="form-control" 
+                           style="font-weight: bold; font-size: 18px; background: #e8f5f3;" readonly>
                 </div>
 
                 <!-- Evidencias fotográficas -->
@@ -389,12 +396,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         function calcularCostoTotal() {
-            let total = 0;
+            let totalRepuestos = 0;
             document.querySelectorAll('[id^="precio-total-"]').forEach(input => {
                 const valor = parseFloat(input.value) || 0;
-                total += valor;
+                totalRepuestos += valor;
             });
-            document.getElementById('costo-total').value = total.toFixed(2);
+            document.getElementById('costo-total-repuestos').value = totalRepuestos.toFixed(2);
+            
+            // Calcular total final
+            const manoObra = parseFloat(document.getElementById('costo-mano-obra').value) || 0;
+            const totalFinal = totalRepuestos + manoObra;
+            document.getElementById('costo-total-final').value = 'C$ ' + totalFinal.toFixed(2);
         }
 
         function eliminarRepuesto(id) {

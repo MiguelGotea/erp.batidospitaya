@@ -15,14 +15,14 @@ try {
     $db->getConnection()->beginTransaction();
     
     $equipo_id = $_POST['equipo_id'];
-    $sucursal_origen_id = $_POST['sucursal_origen_id'];
-    $sucursal_destino_id = $_POST['sucursal_destino_id'];
+    $sucursal_origen_codigo = $_POST['sucursal_origen_id']; // Ya viene como código
+    $sucursal_destino_codigo = $_POST['sucursal_destino_id']; // Ya viene como código
     $fecha_programada = $_POST['fecha_programada'];
     $observaciones = $_POST['observaciones'] ?? '';
     $equipo_cambio_id = $_POST['equipo_cambio_id'] ?? null;
     
     // Validar que origen y destino sean diferentes
-    if ($sucursal_origen_id == $sucursal_destino_id) {
+    if ($sucursal_origen_codigo == $sucursal_destino_codigo) {
         throw new Exception('La sucursal origen y destino no pueden ser iguales');
     }
     
@@ -32,7 +32,7 @@ try {
          (equipo_id, sucursal_origen_id, sucursal_destino_id, fecha_programada, 
           observaciones, programado_por)
          VALUES (?, ?, ?, ?, ?, ?)",
-        [$equipo_id, $sucursal_origen_id, $sucursal_destino_id, $fecha_programada, 
+        [$equipo_id, $sucursal_origen_codigo, $sucursal_destino_codigo, $fecha_programada, 
          $observaciones, $usuario_id]
     );
     
@@ -40,19 +40,15 @@ try {
     
     // Si hay equipo de cambio, crear movimiento adicional
     if ($equipo_cambio_id) {
-        // Obtener la central (código 0)
-        $central = $db->fetchOne("SELECT id FROM sucursales WHERE codigo = '0'");
-        
-        if (!$central) {
-            throw new Exception('No se encontró la sucursal central');
-        }
+        // La central siempre es código 0
+        $codigo_central = '0';
         
         $db->query(
             "INSERT INTO mtto_equipos_movimientos 
              (equipo_id, sucursal_origen_id, sucursal_destino_id, fecha_programada, 
               observaciones, programado_por)
              VALUES (?, ?, ?, ?, ?, ?)",
-            [$equipo_cambio_id, $central['id'], $sucursal_origen_id, $fecha_programada, 
+            [$equipo_cambio_id, $codigo_central, $sucursal_origen_codigo, $fecha_programada, 
              'Equipo de reemplazo', $usuario_id]
         );
         

@@ -24,70 +24,55 @@ $primerDia = new DateTime("$anio-$mes-01");
 $ultimoDia = clone $primerDia;
 $ultimoDia->modify('last day of this month');
 
-// Equipos con preventivo recomendado este mes
+// Equipos con preventivo recomendado este mes o vencidos
 $equiposPreventivo = $db->fetchAll("
     SELECT 
         e.id, e.codigo, e.marca, e.modelo,
         (SELECT s.nombre 
          FROM mtto_equipos_movimientos m 
-         INNER JOIN sucursales s ON m.sucursal_destino_id = s.id 
+         INNER JOIN sucursales s ON m.sucursal_destino_id = s.codigo 
          WHERE m.equipo_id = e.id AND m.estado = 'finalizado' 
          ORDER BY m.fecha_realizada DESC LIMIT 1) as ubicacion_actual,
-        DATE_ADD(
-            (SELECT MAX(mm.fecha_finalizacion)
-             FROM mtto_equipos_mantenimientos mm
-             WHERE mm.equipo_id = e.id AND mm.tipo = 'preventivo'),
-            INTERVAL e.frecuencia_mantenimiento_meses MONTH
-        ) as proxima_fecha
+        CASE 
+            WHEN (SELECT MAX(mm.fecha_finalizacion) FROM mtto_equipos_mantenimientos mm WHERE mm.equipo_id = e.id) IS NOT NULL
+            THEN DATE_ADD((SELECT MAX(mm.fecha_finalizacion) FROM mtto_equipos_mantenimientos mm WHERE mm.equipo_id = e.id), INTERVAL e.frecuencia_mantenimiento_meses MONTH)
+            ELSE DATE_ADD(e.fecha_compra, INTERVAL e.frecuencia_mantenimiento_meses MONTH)
+        END as proxima_fecha,
+        CASE 
+            WHEN MONTH(CASE 
+                WHEN (SELECT MAX(mm.fecha_finalizacion) FROM mtto_equipos_mantenimientos mm WHERE mm.equipo_id = e.id) IS NOT NULL
+                THEN DATE_ADD((SELECT MAX(mm.fecha_finalizacion) FROM mtto_equipos_mantenimientos mm WHERE mm.equipo_id = e.id), INTERVAL e.frecuencia_mantenimiento_meses MONTH)
+                ELSE DATE_ADD(e.fecha_compra, INTERVAL e.frecuencia_mantenimiento_meses MONTH)
+            END) = ? AND YEAR(CASE 
+                WHEN (SELECT MAX(mm.fecha_finalizacion) FROM mtto_equipos_mantenimientos mm WHERE mm.equipo_id = e.id) IS NOT NULL
+                THEN DATE_ADD((SELECT MAX(mm.fecha_finalizacion) FROM mtto_equipos_mantenimientos mm WHERE mm.equipo_id = e.id), INTERVAL e.frecuencia_mantenimiento_meses MONTH)
+                ELSE DATE_ADD(e.fecha_compra, INTERVAL e.frecuencia_mantenimiento_meses MONTH)
+            END) = ? THEN 'verde'
+            WHEN CASE 
+                WHEN (SELECT MAX(mm.fecha_finalizacion) FROM mtto_equipos_mantenimientos mm WHERE mm.equipo_id = e.id) IS NOT NULL
+                THEN DATE_ADD((SELECT MAX(mm.fecha_finalizacion) FROM mtto_equipos_mantenimientos mm WHERE mm.equipo_id = e.id), INTERVAL e.frecuencia_mantenimiento_meses MONTH)
+                ELSE DATE_ADD(e.fecha_compra, INTERVAL e.frecuencia_mantenimiento_meses MONTH)
+            END < CURDATE() THEN 'rojo'
+            ELSE NULL
+        END as indicador
     FROM mtto_equipos e
     WHERE e.activo = 1
-    AND MONTH(DATE_ADD(
-            (SELECT MAX(mm.fecha_finalizacion)
-             FROM mtto_equipos_mantenimientos mm
-             WHERE mm.equipo_id = e.id AND mm.tipo = 'preventivo'),
-            INTERVAL e.frecuencia_mantenimiento_meses MONTH
-        )) = ?
-    AND YEAR(DATE_ADD(
-            (SELECT MAX(mm.fecha_finalizacion)
-             FROM mtto_equipos_mantenimientos mm
-             WHERE mm.equipo_id = e.id AND mm.tipo = 'preventivo'),
-            INTERVAL e.frecuencia_mantenimiento_meses MONTH
-        )) = ?
+    HAVING indicador IS NOT NULL
 ", [$mes, $anio]);
 
-// Equipos con preventivo vencido
-$equiposVencidos = $db->fetchAll("
-    SELECT 
-        e.id, e.codigo, e.marca, e.modelo,
-        (SELECT s.nombre 
-         FROM mtto_equipos_movimientos m 
-         INNER JOIN sucursales s ON m.sucursal_destino_id = s.id 
-         WHERE m.equipo_id = e.id AND m.estado = 'finalizado' 
-         ORDER BY m.fecha_realizada DESC LIMIT 1) as ubicacion_actual,
-        DATE_ADD(
-            (SELECT MAX(mm.fecha_finalizacion)
-             FROM mtto_equipos_mantenimientos mm
-             WHERE mm.equipo_id = e.id AND mm.tipo = 'preventivo'),
-            INTERVAL e.frecuencia_mantenimiento_meses MONTH
-        ) as proxima_fecha
-    FROM mtto_equipos e
-    WHERE e.activo = 1
-    AND DATE_ADD(
-            (SELECT MAX(mm.fecha_finalizacion)
-             FROM mtto_equipos_mantenimientos mm
-             WHERE mm.equipo_id = e.id AND mm.tipo = 'preventivo'),
-            INTERVAL e.frecuencia_mantenimiento_meses MONTH
-        ) < CURDATE()
-");
+// Separar en verdes y rojos
+$equiposPreventivo = array_filter($equiposPreventivo, function($eq) {
+    return $eq['indicador'] !== null;
+});
 
-// Equipos con solicitud pendiente
+// Equipos con solicitud pendiente sin movimiento agendado
 $equiposSolicitud = $db->fetchAll("
     SELECT 
         e.id, e.codigo, e.marca, e.modelo,
         s.id as solicitud_id,
         (SELECT su.nombre 
          FROM mtto_equipos_movimientos m 
-         INNER JOIN sucursales su ON m.sucursal_destino_id = su.id 
+         INNER JOIN sucursales su ON m.sucursal_destino_id = su.codigo 
          WHERE m.equipo_id = e.id AND m.estado = 'finalizado' 
          ORDER BY m.fecha_realizada DESC LIMIT 1) as ubicacion_actual
     FROM mtto_equipos e
@@ -96,6 +81,10 @@ $equiposSolicitud = $db->fetchAll("
     AND NOT EXISTS (
         SELECT 1 FROM mtto_equipos_mantenimientos mm 
         WHERE mm.solicitud_id = s.id
+    )
+    AND NOT EXISTS (
+        SELECT 1 FROM mtto_equipos_movimientos mov
+        WHERE mov.equipo_id = e.id AND mov.estado = 'agendado'
     )
 ");
 
@@ -340,33 +329,31 @@ foreach ($mantenimientosProgramados as $mant) {
             <div class="sidebar">
                 <!-- Equipos con preventivo este mes -->
                 <div class="sidebar-section">
-                    <div class="sidebar-title">🟢 Preventivo Este Mes</div>
-                    <?php foreach ($equiposPreventivo as $eq): ?>
-                    <div class="equipo-card preventivo" draggable="true" 
+                    <div class="sidebar-title">Mantenimiento Preventivo</div>
+                    <?php 
+                    $tieneEquipos = false;
+                    foreach ($equiposPreventivo as $eq): 
+                        $tieneEquipos = true;
+                        $indicador = $eq['indicador'] == 'verde' ? '🟢' : '🔴';
+                        $claseBorde = $eq['indicador'] == 'verde' ? 'preventivo' : 'vencido';
+                        $mensaje = $eq['indicador'] == 'verde' ? 'Le toca este mes' : 'Vencido - Requiere atención';
+                    ?>
+                    <div class="equipo-card <?= $claseBorde ?>" draggable="true" 
                          data-equipo-id="<?= $eq['id'] ?>" 
-                         data-tipo="preventivo">
-                        <div class="equipo-codigo"><?= htmlspecialchars($eq['codigo']) ?></div>
+                         data-tipo="preventivo"
+                         title="<?= $mensaje ?>">
+                        <div class="equipo-codigo"><?= $indicador ?> <?= htmlspecialchars($eq['codigo']) ?></div>
                         <div class="equipo-info"><?= htmlspecialchars($eq['marca'] . ' ' . $eq['modelo']) ?></div>
+                        <div class="equipo-info" style="font-size: 10px; color: #999;">
+                            <?= $mensaje ?>
+                        </div>
                         <div class="equipo-ubicacion">📍 <?= htmlspecialchars($eq['ubicacion_actual'] ?? 'Sin ubicación') ?></div>
                     </div>
                     <?php endforeach; ?>
+                    <?php if (!$tieneEquipos): ?>
+                        <p style="color: #666; font-size: 12px; padding: 10px;">No hay equipos pendientes</p>
+                    <?php endif; ?>
                 </div>
-
-                <!-- Equipos vencidos -->
-                <?php if (!empty($equiposVencidos)): ?>
-                <div class="sidebar-section">
-                    <div class="sidebar-title">🔴 Preventivo Vencido</div>
-                    <?php foreach ($equiposVencidos as $eq): ?>
-                    <div class="equipo-card vencido" draggable="true" 
-                         data-equipo-id="<?= $eq['id'] ?>" 
-                         data-tipo="preventivo">
-                        <div class="equipo-codigo"><?= htmlspecialchars($eq['codigo']) ?></div>
-                        <div class="equipo-info"><?= htmlspecialchars($eq['marca'] . ' ' . $eq['modelo']) ?></div>
-                        <div class="equipo-ubicacion">📍 <?= htmlspecialchars($eq['ubicacion_actual'] ?? 'Sin ubicación') ?></div>
-                    </div>
-                    <?php endforeach; ?>
-                </div>
-                <?php endif; ?>
 
                 <!-- Equipos con solicitud -->
                 <?php if (!empty($equiposSolicitud)): ?>
@@ -447,18 +434,12 @@ foreach ($mantenimientosProgramados as $mant) {
                                 <div class="mantenimiento-card <?= $mant['mantenimiento_realizado_id'] ? 'finalizado' : '' ?>" 
                                      draggable="<?= $mant['mantenimiento_realizado_id'] ? 'false' : 'true' ?>"
                                      data-programado-id="<?= $mant['id'] ?>">
+                                    <span class="mantenimiento-codigo"><?= htmlspecialchars($mant['codigo']) ?></span>
                                     <?php if (!$mant['mantenimiento_realizado_id']): ?>
-                                    <button class="mantenimiento-remove" onclick="desprogramar(<?= $mant['id'] ?>)">×</button>
-                                    <?php endif; ?>
-                                    <div style="padding-right: 20px;">
-                                        <strong><?= htmlspecialchars($mant['codigo']) ?></strong><br>
-                                        <small><?= htmlspecialchars($mant['ubicacion_actual'] ?? 'Sin ubicación') ?></small>
+                                    <div class="mantenimiento-acciones">
+                                        <button class="mantenimiento-remove" onclick="desprogramar(<?= $mant['id'] ?>)" title="Desprogramar">×</button>
+                                        <button class="mantenimiento-check" onclick="abrirReporte(<?= $mant['id'] ?>, <?= $mant['equipo_id'] ?>)" title="Completar">✓</button>
                                     </div>
-                                    <?php if (!$mant['mantenimiento_realizado_id']): ?>
-                                    <button class="btn btn-success btn-sm mantenimiento-check" 
-                                            onclick="abrirReporte(<?= $mant['id'] ?>, <?= $mant['equipo_id'] ?>)">
-                                        ✓ Reporte
-                                    </button>
                                     <?php endif; ?>
                                 </div>
                                 <?php endforeach; ?>

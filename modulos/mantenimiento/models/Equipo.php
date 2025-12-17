@@ -18,18 +18,19 @@ class Equipo {
                     p.nombre as proveedor_nombre,
                     (SELECT s.nombre 
                      FROM mtto_equipos_movimientos m 
-                     INNER JOIN sucursales s ON m.sucursal_destino_id = s.id 
+                     INNER JOIN sucursales s ON m.sucursal_destino_id = s.codigo 
                      WHERE m.equipo_id = e.id AND m.estado = 'finalizado' 
                      ORDER BY m.fecha_realizada DESC LIMIT 1) as ubicacion_actual,
                     (SELECT s.codigo 
                      FROM mtto_equipos_movimientos m 
-                     INNER JOIN sucursales s ON m.sucursal_destino_id = s.id 
+                     INNER JOIN sucursales s ON m.sucursal_destino_id = s.codigo 
                      WHERE m.equipo_id = e.id AND m.estado = 'finalizado' 
                      ORDER BY m.fecha_realizada DESC LIMIT 1) as codigo_sucursal_actual,
-                    (SELECT DATE_ADD(mm.fecha_inicio, INTERVAL e.frecuencia_mantenimiento_meses MONTH)
-                     FROM mtto_equipos_mantenimientos mm
-                     WHERE mm.equipo_id = e.id AND mm.tipo = 'preventivo'
-                     ORDER BY mm.fecha_finalizacion DESC LIMIT 1) as proxima_fecha_preventivo,
+                    CASE 
+                        WHEN (SELECT MAX(mm.fecha_finalizacion) FROM mtto_equipos_mantenimientos mm WHERE mm.equipo_id = e.id) IS NOT NULL
+                        THEN DATE_ADD((SELECT MAX(mm.fecha_finalizacion) FROM mtto_equipos_mantenimientos mm WHERE mm.equipo_id = e.id), INTERVAL e.frecuencia_mantenimiento_meses MONTH)
+                        ELSE DATE_ADD(e.fecha_compra, INTERVAL e.frecuencia_mantenimiento_meses MONTH)
+                    END as proxima_fecha_preventivo,
                     (SELECT COUNT(*) FROM mtto_equipos_solicitudes sol 
                      WHERE sol.equipo_id = e.id AND sol.estado = 'solicitado') as tiene_solicitud_pendiente,
                     (SELECT sol.id FROM mtto_equipos_solicitudes sol 

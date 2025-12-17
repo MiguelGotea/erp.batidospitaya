@@ -103,6 +103,12 @@ body {
     font-size: clamp(10px, 1.8vw, 14px) !important;
 }
 
+.btn:disabled,
+.btn[disabled] {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
 /* Tablas */
 .table-container {
     background-color: #fff;
@@ -172,6 +178,7 @@ tbody td {
 
 .filter-dropdown.active {
     display: block;
+    position: fixed;
 }
 
 .filter-controls {
@@ -515,6 +522,27 @@ select.form-control {
 .badge-secondary {
     background-color: #6c757d;
     color: white;
+}
+
+/* Info rows */
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.info-row:last-child {
+    border-bottom: none;
+}
+
+.info-label {
+    font-weight: 600;
+    color: #333;
+}
+
+.info-value {
+    color: #666;
 }
 
 /* Responsive */

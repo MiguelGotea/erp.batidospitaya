@@ -185,19 +185,23 @@
 .mantenimiento-card {
     background: #51B8AC;
     color: white;
-    padding: 8px;
+    padding: 4px 6px;
     border-radius: 4px;
-    margin-bottom: 5px;
-    font-size: clamp(10px, 1.5vw, 12px) !important;
+    margin-bottom: 3px;
+    font-size: clamp(10px, 1.5vw, 11px) !important;
     cursor: move;
     position: relative;
     transition: all 0.2s;
     user-select: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4px;
 }
 
 .mantenimiento-card:hover {
     background: #0E544C;
-    transform: translateY(-2px);
+    transform: translateY(-1px);
     box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
@@ -226,22 +230,38 @@
     color: #212529;
 }
 
-.mantenimiento-remove {
-    position: absolute;
-    top: 2px;
-    right: 2px;
-    background: rgba(220, 53, 69, 0.9);
+.mantenimiento-codigo {
+    flex: 1;
+    font-weight: bold;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mantenimiento-acciones {
+    display: flex;
+    gap: 2px;
+}
+
+.mantenimiento-remove,
+.mantenimiento-check {
+    background: rgba(255,255,255,0.2);
     color: white;
     border: none;
     border-radius: 3px;
-    width: 18px;
-    height: 18px;
+    width: 20px;
+    height: 20px;
     cursor: pointer;
-    font-size: 12px !important;
+    font-size: 14px !important;
     display: flex;
     align-items: center;
     justify-content: center;
     transition: all 0.2s;
+    padding: 0;
+}
+
+.mantenimiento-remove {
+    background: rgba(220, 53, 69, 0.9);
 }
 
 .mantenimiento-remove:hover {
@@ -250,20 +270,12 @@
 }
 
 .mantenimiento-check {
-    margin-top: 5px;
-    width: 100%;
-    padding: 3px;
-    font-size: clamp(9px, 1.3vw, 11px) !important;
-    background: rgba(255,255,255,0.2);
-    border: 1px solid rgba(255,255,255,0.3);
-    color: white;
-    border-radius: 3px;
-    cursor: pointer;
-    transition: all 0.2s;
+    background: rgba(40, 167, 69, 0.9);
 }
 
 .mantenimiento-check:hover {
-    background: rgba(255,255,255,0.3);
+    background: #28a745;
+    transform: scale(1.1);
 }
 
 /* Buscador en sidebar */

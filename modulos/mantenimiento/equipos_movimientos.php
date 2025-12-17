@@ -84,7 +84,7 @@ if ($cargoOperario == 35) {
     $equiposConSolicitud = [];
 }
 
-// Obtener todas las sucursales para los selectores
+// Obtener todas las sucursales para los selectores (SIN filtro activo)
 $todasSucursales = $db->fetchAll("SELECT id, codigo, nombre FROM sucursales ORDER BY nombre");
 
 // Obtener equipos disponibles en central
@@ -251,28 +251,25 @@ $equiposEnCentral = $db->fetchAll("
             <div class="modal-body">
                 <form id="form-movimiento" onsubmit="guardarMovimiento(event)">
                     <input type="hidden" id="mov-solicitud-id" name="solicitud_id">
+                    <input type="hidden" id="mov-equipo-id" name="equipo_id">
                     
                     <div class="form-group">
                         <label class="form-label required">Equipo a Mover</label>
-                        <select name="equipo_id" id="mov-equipo-id" class="form-control" required onchange="actualizarOrigenDestino()">
-                            <option value="">Seleccione equipo...</option>
-                        </select>
+                        <input type="text" id="mov-equipo-nombre" class="form-control" readonly style="background: #f0f0f0;">
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label required">Sucursal Origen</label>
-                        <select name="sucursal_origen_id" id="mov-origen" class="form-control" required>
-                            <?php foreach ($todasSucursales as $suc): ?>
-                            <option value="<?= $suc['id'] ?>"><?= htmlspecialchars($suc['nombre']) ?></option>
-                            <?php endforeach; ?>
-                        </select>
+                        <label class="form-label">Sucursal Origen (Ubicación Actual)</label>
+                        <input type="text" id="mov-origen-nombre" class="form-control" readonly style="background: #f0f0f0;">
+                        <input type="hidden" id="mov-origen" name="sucursal_origen_id">
                     </div>
 
                     <div class="form-group">
                         <label class="form-label required">Sucursal Destino</label>
                         <select name="sucursal_destino_id" id="mov-destino" class="form-control" required>
+                            <option value="">Seleccione destino...</option>
                             <?php foreach ($todasSucursales as $suc): ?>
-                            <option value="<?= $suc['id'] ?>"><?= htmlspecialchars($suc['nombre']) ?></option>
+                            <option value="<?= $suc['codigo'] ?>"><?= htmlspecialchars($suc['nombre']) ?></option>
                             <?php endforeach; ?>
                         </select>
                     </div>
@@ -327,63 +324,36 @@ $equiposEnCentral = $db->fetchAll("
         const equiposData = <?= json_encode($db->fetchAll("
             SELECT 
                 e.id, e.codigo, e.marca, e.modelo,
-                (SELECT s.id FROM mtto_equipos_movimientos m 
-                 INNER JOIN sucursales s ON m.sucursal_destino_id = s.id 
+                (SELECT s.codigo FROM mtto_equipos_movimientos m 
+                 INNER JOIN sucursales s ON m.sucursal_destino_id = s.codigo 
                  WHERE m.equipo_id = e.id AND m.estado = 'finalizado' 
-                 ORDER BY m.fecha_realizada DESC LIMIT 1) as ubicacion_actual_id
+                 ORDER BY m.fecha_realizada DESC LIMIT 1) as ubicacion_codigo,
+                (SELECT s.nombre FROM mtto_equipos_movimientos m 
+                 INNER JOIN sucursales s ON m.sucursal_destino_id = s.codigo 
+                 WHERE m.equipo_id = e.id AND m.estado = 'finalizado' 
+                 ORDER BY m.fecha_realizada DESC LIMIT 1) as ubicacion_nombre
             FROM mtto_equipos e
             WHERE e.activo = 1
         ")) ?>;
 
-        function abrirNuevoMovimiento() {
-            document.getElementById('form-movimiento').reset();
-            document.getElementById('mov-solicitud-id').value = '';
-            document.getElementById('opcion-cambio').style.display = 'none';
-            cargarEquipos();
-            openModal('modal-movimiento');
-        }
-
-        function abrirMovimientoConSolicitud(equipoId, sucursalOrigenId, solicitudId) {
+        function abrirMovimientoConSolicitud(equipoId, sucursalOrigenCodigo, solicitudId) {
             document.getElementById('form-movimiento').reset();
             document.getElementById('mov-solicitud-id').value = solicitudId;
             document.getElementById('opcion-cambio').style.display = 'block';
             
-            cargarEquipos(equipoId);
-            document.getElementById('mov-origen').value = sucursalOrigenId;
+            // Buscar datos del equipo
+            const equipo = equiposData.find(eq => eq.id == equipoId);
+            if (equipo) {
+                document.getElementById('mov-equipo-id').value = equipoId;
+                document.getElementById('mov-equipo-nombre').value = `${equipo.codigo} - ${equipo.marca} ${equipo.modelo}`;
+                document.getElementById('mov-origen').value = equipo.ubicacion_codigo;
+                document.getElementById('mov-origen-nombre').value = equipo.ubicacion_nombre || 'Sin ubicación';
+            }
             
             // Destino por defecto: central (código 0)
-            const central = document.querySelector('#mov-destino option[value]');
-            if (central) document.getElementById('mov-destino').value = central.value;
+            document.getElementById('mov-destino').value = '0';
             
             openModal('modal-movimiento');
-        }
-
-        function cargarEquipos(selectedId = null) {
-            const select = document.getElementById('mov-equipo-id');
-            select.innerHTML = '<option value="">Seleccione equipo...</option>';
-            
-            equiposData.forEach(eq => {
-                const option = document.createElement('option');
-                option.value = eq.id;
-                option.textContent = `${eq.codigo} - ${eq.marca} ${eq.modelo}`;
-                option.dataset.ubicacionId = eq.ubicacion_actual_id;
-                if (selectedId && eq.id == selectedId) {
-                    option.selected = true;
-                }
-                select.appendChild(option);
-            });
-            
-            if (selectedId) actualizarOrigenDestino();
-        }
-
-        function actualizarOrigenDestino() {
-            const select = document.getElementById('mov-equipo-id');
-            const option = select.options[select.selectedIndex];
-            const ubicacionId = option.dataset.ubicacionId;
-            
-            if (ubicacionId) {
-                document.getElementById('mov-origen').value = ubicacionId;
-            }
         }
 
         function toggleEquipoCambio() {

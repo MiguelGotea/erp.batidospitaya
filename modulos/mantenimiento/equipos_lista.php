@@ -148,9 +148,15 @@ if ($cargoOperario == 35) {
                                     📊 Dashboard
                                 </a>
                                 <?php if ($cargoOperario == 5 || $cargoOperario == 43): ?>
-                                <button class="btn btn-sm btn-warning" onclick="solicitarMantenimiento(<?= $equipo['id'] ?>)" title="Solicitar Mantenimiento">
-                                    🔧 Solicitar
-                                </button>
+                                    <?php if ($equipo['tiene_solicitud_pendiente'] > 0): ?>
+                                        <button class="btn btn-sm btn-secondary" disabled title="Ya tiene solicitud pendiente">
+                                            🔧 Solicitado
+                                        </button>
+                                    <?php else: ?>
+                                        <button class="btn btn-sm btn-warning" onclick="solicitarMantenimiento(<?= $equipo['id'] ?>)" title="Solicitar Mantenimiento">
+                                            🔧 Solicitar
+                                        </button>
+                                    <?php endif; ?>
                                 <?php endif; ?>
                             </td>
                         </tr>
