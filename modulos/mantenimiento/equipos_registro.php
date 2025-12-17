@@ -88,11 +88,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body>
     <div class="container-main">
-        <div class="page-header">
-            <h1 class="page-title">➕ Registrar Nuevo Equipo</h1>
-            <a href="equipos_lista.php" class="btn btn-secondary">← Volver a Lista</a>
-        </div>
-
         <?php if (isset($mensaje)): ?>
         <div class="alert alert-<?= $tipo_mensaje ?>">
             <?= $mensaje ?>
