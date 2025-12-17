@@ -166,7 +166,7 @@ class Mantenimiento {
                     m.id as mantenimiento_realizado_id,
                     (SELECT s.nombre 
                      FROM mtto_equipos_movimientos mov 
-                     INNER JOIN sucursales s ON mov.sucursal_destino_id = s.id 
+                     INNER JOIN sucursales s ON mov.sucursal_destino_id = s.codigo 
                      WHERE mov.equipo_id = mp.equipo_id AND mov.estado = 'finalizado' 
                      ORDER BY mov.fecha_realizada DESC LIMIT 1) as ubicacion_actual
                 FROM mtto_equipos_mantenimientos_programados mp

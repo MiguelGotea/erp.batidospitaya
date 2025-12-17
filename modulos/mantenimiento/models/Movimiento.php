@@ -21,8 +21,8 @@ class Movimiento {
                     of.Nombre as finalizado_nombre, of.Apellido as finalizado_apellido
                 FROM mtto_equipos_movimientos m
                 INNER JOIN mtto_equipos e ON m.equipo_id = e.id
-                INNER JOIN sucursales so ON m.sucursal_origen_id = so.id
-                INNER JOIN sucursales sd ON m.sucursal_destino_id = sd.id
+                INNER JOIN sucursales so ON m.sucursal_origen_id = so.codigo
+                INNER JOIN sucursales sd ON m.sucursal_destino_id = sd.codigo
                 LEFT JOIN Operarios op ON m.programado_por = op.CodOperario
                 LEFT JOIN Operarios of ON m.finalizado_por = of.CodOperario
                 WHERE 1=1";
@@ -61,8 +61,8 @@ class Movimiento {
                     sd.nombre as sucursal_destino
                 FROM mtto_equipos_movimientos m
                 INNER JOIN mtto_equipos e ON m.equipo_id = e.id
-                INNER JOIN sucursales so ON m.sucursal_origen_id = so.id
-                INNER JOIN sucursales sd ON m.sucursal_destino_id = sd.id
+                INNER JOIN sucursales so ON m.sucursal_origen_id = so.codigo
+                INNER JOIN sucursales sd ON m.sucursal_destino_id = sd.codigo
                 WHERE m.id = ?";
         
         return $this->db->fetchOne($sql, [$id]);
@@ -103,7 +103,7 @@ class Movimiento {
         $sql = "SELECT 
                     s.id, s.codigo, s.nombre
                 FROM mtto_equipos_movimientos m
-                INNER JOIN sucursales s ON m.sucursal_destino_id = s.id
+                INNER JOIN sucursales s ON m.sucursal_destino_id = s.codigo
                 WHERE m.equipo_id = ? AND m.estado = 'finalizado'
                 ORDER BY m.fecha_realizada DESC
                 LIMIT 1";

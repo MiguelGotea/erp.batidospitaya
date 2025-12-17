@@ -38,7 +38,7 @@ try {
     $ubicacion = $db->fetchOne("
         SELECT s.id 
         FROM mtto_equipos_movimientos m
-        INNER JOIN sucursales s ON m.sucursal_destino_id = s.id
+        INNER JOIN sucursales s ON m.sucursal_destino_id = s.codigo
         WHERE m.equipo_id = ? AND m.estado = 'finalizado'
         ORDER BY m.fecha_realizada DESC 
         LIMIT 1

@@ -20,7 +20,7 @@ try {
                     e.id, e.codigo, e.marca, e.modelo,
                     (SELECT s.nombre 
                      FROM mtto_equipos_movimientos m 
-                     INNER JOIN sucursales s ON m.sucursal_destino_id = s.id 
+                     INNER JOIN sucursales s ON m.sucursal_destino_id = s.codigo 
                      WHERE m.equipo_id = e.id AND m.estado = 'finalizado' 
                      ORDER BY m.fecha_realizada DESC LIMIT 1) as ubicacion_actual
                 FROM mtto_equipos e
@@ -63,7 +63,7 @@ try {
                     o.Nombre as solicitante_nombre, o.Apellido as solicitante_apellido
                 FROM mtto_equipos_solicitudes s
                 INNER JOIN mtto_equipos e ON s.equipo_id = e.id
-                INNER JOIN sucursales suc ON s.sucursal_id = suc.id
+                INNER JOIN sucursales suc ON s.sucursal_id = suc.codigo
                 INNER JOIN Operarios o ON s.solicitado_por = o.CodOperario
                 WHERE s.estado = 'solicitado'
                 ORDER BY s.fecha_solicitud DESC
@@ -84,7 +84,7 @@ try {
                     of.Nombre as finalizador_nombre, of.Apellido as finalizador_apellido
                 FROM mtto_equipos_solicitudes s
                 INNER JOIN mtto_equipos e ON s.equipo_id = e.id
-                INNER JOIN sucursales suc ON s.sucursal_id = suc.id
+                INNER JOIN sucursales suc ON s.sucursal_id = suc.codigo
                 INNER JOIN Operarios o ON s.solicitado_por = o.CodOperario
                 LEFT JOIN Operarios of ON s.finalizado_por = of.CodOperario
                 WHERE s.id = ?

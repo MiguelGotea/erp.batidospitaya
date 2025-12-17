@@ -22,7 +22,7 @@ class Solicitud {
                     (SELECT COUNT(*) FROM mtto_equipos_mantenimientos WHERE solicitud_id = s.id) as tiene_mantenimiento
                 FROM mtto_equipos_solicitudes s
                 INNER JOIN mtto_equipos e ON s.equipo_id = e.id
-                INNER JOIN sucursales suc ON s.sucursal_id = suc.id
+                INNER JOIN sucursales suc ON s.sucursal_id = suc.codigo
                 INNER JOIN Operarios o ON s.solicitado_por = o.CodOperario
                 LEFT JOIN Operarios of ON s.finalizado_por = of.CodOperario
                 WHERE 1=1";
@@ -61,7 +61,7 @@ class Solicitud {
                     of.Nombre as finalizador_nombre, of.Apellido as finalizador_apellido
                 FROM mtto_equipos_solicitudes s
                 INNER JOIN mtto_equipos e ON s.equipo_id = e.id
-                INNER JOIN sucursales suc ON s.sucursal_id = suc.id
+                INNER JOIN sucursales suc ON s.sucursal_id = suc.codigo
                 INNER JOIN Operarios o ON s.solicitado_por = o.CodOperario
                 LEFT JOIN Operarios of ON s.finalizado_por = of.CodOperario
                 WHERE s.id = ?";

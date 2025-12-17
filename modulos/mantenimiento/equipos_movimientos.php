@@ -20,8 +20,8 @@ if ($cargoOperario == 35) {
             of.Nombre as finalizado_nombre, of.Apellido as finalizado_apellido
         FROM mtto_equipos_movimientos m
         INNER JOIN mtto_equipos e ON m.equipo_id = e.id
-        INNER JOIN sucursales so ON m.sucursal_origen_id = so.id
-        INNER JOIN sucursales sd ON m.sucursal_destino_id = sd.id
+        INNER JOIN sucursales so ON m.sucursal_origen_id = so.codigo
+        INNER JOIN sucursales sd ON m.sucursal_destino_id = sd.codigo
         LEFT JOIN Operarios op ON m.programado_por = op.CodOperario
         LEFT JOIN Operarios of ON m.finalizado_por = of.CodOperario
         ORDER BY 
@@ -36,12 +36,12 @@ if ($cargoOperario == 35) {
             s.id as solicitud_id, s.descripcion_problema,
             (SELECT suc.id 
              FROM mtto_equipos_movimientos mov 
-             INNER JOIN sucursales suc ON mov.sucursal_destino_id = suc.id 
+             INNER JOIN sucursales suc ON mov.sucursal_destino_id = suc.codigo 
              WHERE mov.equipo_id = e.id AND mov.estado = 'finalizado' 
              ORDER BY mov.fecha_realizada DESC LIMIT 1) as sucursal_actual_id,
             (SELECT suc.nombre 
              FROM mtto_equipos_movimientos mov 
-             INNER JOIN sucursales suc ON mov.sucursal_destino_id = suc.id 
+             INNER JOIN sucursales suc ON mov.sucursal_destino_id = suc.codigo 
              WHERE mov.equipo_id = e.id AND mov.estado = 'finalizado' 
              ORDER BY mov.fecha_realizada DESC LIMIT 1) as sucursal_actual
         FROM mtto_equipos e
@@ -62,7 +62,7 @@ if ($cargoOperario == 35) {
 } else {
     // Líderes de sucursal solo ven movimientos de su sucursal
     $codigoSucursal = $sucursales[0]['codigo'];
-    $sucursalId = $db->fetchOne("SELECT id FROM sucursales WHERE codigo = ?", [$codigoSucursal])['id'];
+    $sucursalId = $db->fetchOne("SELECT codigo FROM sucursales WHERE codigo = ?", [$codigoSucursal])['codigo'];
     
     $movimientos = $db->fetchAll("
         SELECT 
@@ -73,8 +73,8 @@ if ($cargoOperario == 35) {
             op.Nombre as programado_nombre, op.Apellido as programado_apellido
         FROM mtto_equipos_movimientos m
         INNER JOIN mtto_equipos e ON m.equipo_id = e.id
-        INNER JOIN sucursales so ON m.sucursal_origen_id = so.id
-        INNER JOIN sucursales sd ON m.sucursal_destino_id = sd.id
+        INNER JOIN sucursales so ON m.sucursal_origen_id = so.codigo
+        INNER JOIN sucursales sd ON m.sucursal_destino_id = sd.codigo
         LEFT JOIN Operarios op ON m.programado_por = op.CodOperario
         WHERE (m.sucursal_origen_id = ? OR m.sucursal_destino_id = ?)
         AND m.estado = 'agendado'
@@ -98,7 +98,7 @@ $equiposEnCentral = $db->fetchAll("
     AND e.id IN (
         SELECT mov.equipo_id 
         FROM mtto_equipos_movimientos mov
-        INNER JOIN sucursales s ON mov.sucursal_destino_id = s.id
+        INNER JOIN sucursales s ON mov.sucursal_destino_id = s.codigo
         WHERE s.codigo = '0' AND mov.estado = 'finalizado'
         AND mov.id = (
             SELECT MAX(m2.id) 
