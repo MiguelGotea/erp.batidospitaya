@@ -43,6 +43,7 @@ try {
         ORDER BY m.fecha_realizada DESC 
         LIMIT 1
     ", [$equipo_id]);
+    echo json_encode($equipo_id);
     
     if (!$ubicacion) {
         echo json_encode(['success' => false, 'message' => 'No se pudo determinar la ubicación del equipo']);
