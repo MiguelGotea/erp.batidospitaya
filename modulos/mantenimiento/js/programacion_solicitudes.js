@@ -138,38 +138,54 @@ function renderizarTicket(ticket, fila, diaInicio, numDias, equipo) {
     };
     const colorUrgencia = coloresUrgencia[ticket.nivel_urgencia] || '#8b8b8bff';
     
+    // VERIFICAR SI ESTÁ FINALIZADO
+    const esFinalizado = ticket.status && ticket.status.toLowerCase() === 'finalizado';
+    
     // Crear elemento
     const card = document.createElement('div');
     card.className = 'ticket-card';
-    card.draggable = true;
+    card.draggable = !esFinalizado; // SOLO DRAG SI NO ESTÁ FINALIZADO
     card.dataset.ticketId = ticket.id;
     card.dataset.fechaInicio = ticket.fecha_inicio;
     card.dataset.fechaFinal = ticket.fecha_final;
     card.dataset.tipoFormulario = ticket.tipo_formulario;
+    card.dataset.finalizado = esFinalizado; // AGREGAR ATRIBUTO PARA IDENTIFICAR
     
     card.style.position = 'absolute';
     card.style.top = top + 'px';
     card.style.left = '5px';
     card.style.width = anchoCard + 'px';
     card.style.height = '55px';
-    card.style.cursor = 'move';
+    card.style.cursor = esFinalizado ? 'default' : 'move'; // CAMBIAR CURSOR
     card.style.boxSizing = 'border-box';
     card.style.zIndex = '50';
     
-    card.innerHTML = `
+    if (esFinalizado) {
+        card.style.opacity = '0.8';
+        card.style.filter = 'grayscale(0.3)';
+    }
+    
+    // CREAR HTML DEPENDIENDO SI ESTÁ FINALIZADO
+    let innerHTML = `
         <div style="position: relative; height: 100%;">
             <div style="font-size: 0.8rem; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 30px;">
                 ${ticket.titulo}
+                ${esFinalizado ? ' <span style="color: #28a745; font-size: 0.7rem;">✓</span>' : ''}
             </div>
-            <div style="display: flex; align-items: center; gap: 0.25rem; margin-top: 0.25rem;">
+            <div style="display: flex; align-items: center; gap: 0.25rem; margin-top: 0.25rem;">`;
+    
+    if (!esFinalizado) {
+        innerHTML += `
                 <button class="btn-desprogramar" onclick="desprogramarTicket(${ticket.id}, event)" title="Desprogramar">
                     <i class="bi bi-x-lg"></i>
                 </button>
                 
                 <button class="btn-colaboradores" onclick="mostrarColaboradores(${ticket.id}, event)" title="Asignar colaboradores">
                     <i class="bi bi-plus-lg"></i>
-                </button>
-                
+                </button>`;
+    }
+    
+    innerHTML += `
                 <div style="font-size: 0.7rem; color: #666; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-left: 0.25rem;">
                     ${ticket.nombre_sucursal}
                 </div>
@@ -179,129 +195,145 @@ function renderizarTicket(ticket, fila, diaInicio, numDias, equipo) {
                 <span class="badge-urgencia-card" style="background-color: ${colorUrgencia};">
                     ${ticket.nivel_urgencia}
                 </span>
-            ` : ''}
-            
+            ` : ''}`;
+    
+    // SOLO AGREGAR RESIZE HANDLE SI NO ESTÁ FINALIZADO
+    if (!esFinalizado) {
+        innerHTML += `
             <div class="resize-handle" 
                  onmousedown="startResize(event, ${ticket.id}, '${ticket.fecha_inicio}', '${ticket.fecha_final}')">
-            </div>
-        </div>
-    `;
+            </div>`;
+    }
     
-    // Variables para detectar drag vs click
-    let isDragging = false;
-    let isResizing = false;
-    let mouseDownTime = 0;
-    let mouseDownX = 0;
-    let mouseDownY = 0;
+    innerHTML += `</div>`;
+    card.innerHTML = innerHTML;
     
-    // Event listeners
-    card.addEventListener('mousedown', (e) => {
-        if (e.target.closest('.btn-desprogramar') || 
-            e.target.closest('.btn-colaboradores') ||
-            e.target.closest('.resize-handle')) {
-            return;
-        }
-        isDragging = false;
-        mouseDownTime = Date.now();
-        mouseDownX = e.clientX;
-        mouseDownY = e.clientY;
-    });
-    
-    card.addEventListener('mousemove', (e) => {
-        const deltaX = Math.abs(e.clientX - mouseDownX);
-        const deltaY = Math.abs(e.clientY - mouseDownY);
-        if (deltaX > 5 || deltaY > 5) {
-            isDragging = true;
-        }
-    });
-    
-    card.addEventListener('dragstart', (e) => {
-        isDragging = true;
-        handleDragStart.call(card, e);
-    });
-    
-    card.addEventListener('click', (e) => {
-        const clickDuration = Date.now() - mouseDownTime;
+    // SOLO AGREGAR EVENT LISTENERS SI NO ESTÁ FINALIZADO
+    if (!esFinalizado) {
+        // Variables para detectar drag vs click
+        let isDragging = false;
+        let isResizing = false;
+        let mouseDownTime = 0;
+        let mouseDownX = 0;
+        let mouseDownY = 0;
         
-        if (!e.target.closest('.btn-desprogramar') && 
-            !e.target.closest('.btn-colaboradores') &&
-            !e.target.closest('.resize-handle') &&
-            !isDragging && 
-            !isResizing &&
-            clickDuration < 300) {
-            mostrarDetallesTicket(ticket.id);
-        }
-        isDragging = false;
-        isResizing = false;
-    });
+        // Event listeners
+        card.addEventListener('mousedown', (e) => {
+            if (e.target.closest('.btn-desprogramar') || 
+                e.target.closest('.btn-colaboradores') ||
+                e.target.closest('.resize-handle')) {
+                return;
+            }
+            isDragging = false;
+            mouseDownTime = Date.now();
+            mouseDownX = e.clientX;
+            mouseDownY = e.clientY;
+        });
+        
+        card.addEventListener('mousemove', (e) => {
+            const deltaX = Math.abs(e.clientX - mouseDownX);
+            const deltaY = Math.abs(e.clientY - mouseDownY);
+            if (deltaX > 5 || deltaY > 5) {
+                isDragging = true;
+            }
+        });
+        
+        card.addEventListener('dragstart', (e) => {
+            isDragging = true;
+            handleDragStart.call(card, e);
+        });
+        
+        card.addEventListener('click', (e) => {
+            const clickDuration = Date.now() - mouseDownTime;
+            
+            if (!e.target.closest('.btn-desprogramar') && 
+                !e.target.closest('.btn-colaboradores') &&
+                !e.target.closest('.resize-handle') &&
+                !isDragging && 
+                !isResizing &&
+                clickDuration < 300) {
+                mostrarDetallesTicket(ticket.id);
+            }
+            isDragging = false;
+            isResizing = false;
+        });
+    } else {
+        // PARA TICKETS FINALIZADOS, SOLO PERMITIR CLICK PARA VER DETALLES
+        card.addEventListener('click', (e) => {
+            if (!e.target.closest('.btn-desprogramar') && 
+                !e.target.closest('.btn-colaboradores')) {
+                mostrarDetallesTicket(ticket.id);
+            }
+        });
+    }
     
     celdaInicio.appendChild(card);
     
-    // IMPORTANTE: Extender pointer-events a todas las celdas que ocupa
-    for (let i = 1; i < numDias; i++) {
-        const celdaSiguiente = celdas[diaInicio + i];
-        if (celdaSiguiente) {
-            // Crear overlay invisible para capturar eventos
-            const overlay = document.createElement('div');
-            overlay.style.position = 'absolute';
-            overlay.style.top = top + 'px';
-            overlay.style.left = '0';
-            overlay.style.width = '100%';
-            overlay.style.height = '55px';
-            overlay.style.pointerEvents = 'auto';
-            overlay.style.cursor = 'move';
-            overlay.style.zIndex = '49';
-            
-            let overlayDragging = false;
-            let overlayMouseDownTime = 0;
-            let overlayMouseDownX = 0;
-            let overlayMouseDownY = 0;
-            
-            overlay.addEventListener('mousedown', (e) => {
-                overlayDragging = false;
-                overlayMouseDownTime = Date.now();
-                overlayMouseDownX = e.clientX;
-                overlayMouseDownY = e.clientY;
-            });
-            
-            overlay.addEventListener('mousemove', (e) => {
-                const deltaX = Math.abs(e.clientX - overlayMouseDownX);
-                const deltaY = Math.abs(e.clientY - overlayMouseDownY);
-                if (deltaX > 5 || deltaY > 5) {
+    // SOLO CREAR OVERLAYS PARA EVENTOS SI NO ESTÁ FINALIZADO
+    if (!esFinalizado) {
+        for (let i = 1; i < numDias; i++) {
+            const celdaSiguiente = celdas[diaInicio + i];
+            if (celdaSiguiente) {
+                const overlay = document.createElement('div');
+                overlay.style.position = 'absolute';
+                overlay.style.top = top + 'px';
+                overlay.style.left = '0';
+                overlay.style.width = '100%';
+                overlay.style.height = '55px';
+                overlay.style.pointerEvents = 'auto';
+                overlay.style.cursor = 'move';
+                overlay.style.zIndex = '49';
+                
+                let overlayDragging = false;
+                let overlayMouseDownTime = 0;
+                let overlayMouseDownX = 0;
+                let overlayMouseDownY = 0;
+                
+                overlay.addEventListener('mousedown', (e) => {
+                    overlayDragging = false;
+                    overlayMouseDownTime = Date.now();
+                    overlayMouseDownX = e.clientX;
+                    overlayMouseDownY = e.clientY;
+                });
+                
+                overlay.addEventListener('mousemove', (e) => {
+                    const deltaX = Math.abs(e.clientX - overlayMouseDownX);
+                    const deltaY = Math.abs(e.clientY - overlayMouseDownY);
+                    if (deltaX > 5 || deltaY > 5) {
+                        overlayDragging = true;
+                    }
+                });
+                
+                overlay.addEventListener('mouseenter', () => {
+                    card.style.borderColor = '#0E544C';
+                    card.style.boxShadow = '0 4px 12px rgba(14, 84, 76, 0.25)';
+                    card.style.transform = 'translateY(-1px)';
+                });
+                
+                overlay.addEventListener('mouseleave', () => {
+                    if (!card.matches(':hover')) {
+                        card.style.borderColor = '#51B8AC';
+                        card.style.boxShadow = '0 2px 4px rgba(14, 84, 76, 0.1)';
+                        card.style.transform = '';
+                    }
+                });
+                
+                overlay.addEventListener('click', (e) => {
+                    const clickDuration = Date.now() - overlayMouseDownTime;
+                    if (!overlayDragging && clickDuration < 300) {
+                        mostrarDetallesTicket(ticket.id);
+                    }
+                    overlayDragging = false;
+                });
+                
+                overlay.draggable = true;
+                overlay.addEventListener('dragstart', (e) => {
                     overlayDragging = true;
-                }
-            });
-            
-            // Replicar eventos del card original
-            overlay.addEventListener('mouseenter', () => {
-                card.style.borderColor = '#0E544C';
-                card.style.boxShadow = '0 4px 12px rgba(14, 84, 76, 0.25)';
-                card.style.transform = 'translateY(-1px)';
-            });
-            
-            overlay.addEventListener('mouseleave', () => {
-                if (!card.matches(':hover')) {
-                    card.style.borderColor = '#51B8AC';
-                    card.style.boxShadow = '0 2px 4px rgba(14, 84, 76, 0.1)';
-                    card.style.transform = '';
-                }
-            });
-            
-            overlay.addEventListener('click', (e) => {
-                const clickDuration = Date.now() - overlayMouseDownTime;
-                if (!overlayDragging && clickDuration < 300) {
-                    mostrarDetallesTicket(ticket.id);
-                }
-                overlayDragging = false;
-            });
-            
-            overlay.draggable = true;
-            overlay.addEventListener('dragstart', (e) => {
-                overlayDragging = true;
-                handleDragStart.call(card, e);
-            });
-            
-            celdaSiguiente.appendChild(overlay);
+                    handleDragStart.call(card, e);
+                });
+                
+                celdaSiguiente.appendChild(overlay);
+            }
         }
     }
 }
@@ -330,6 +362,12 @@ function ajustarAlturaCeldas(equipo, numFilas) {
 
 function handleDragStart(e) {
     if (resizing) {
+        e.preventDefault();
+        return;
+    }
+    
+    // VERIFICAR SI EL TICKET ESTÁ FINALIZADO
+    if (e.target.dataset.finalizado === 'true') {
         e.preventDefault();
         return;
     }

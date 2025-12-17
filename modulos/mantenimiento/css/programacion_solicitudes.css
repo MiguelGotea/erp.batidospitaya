@@ -352,3 +352,21 @@ body.resizing * {
     font-weight: 600;
     text-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
+
+/* Estilos para tickets finalizados */
+.ticket-card[data-finalizado="true"] {
+    background-color: #f8f9fa !important;
+    border-color: #28a745 !important;
+    border-style: dashed !important;
+}
+
+.ticket-card[data-finalizado="true"]:hover {
+    transform: none !important;
+    box-shadow: 0 2px 4px rgba(40, 167, 69, 0.1) !important;
+}
+
+.ticket-card[data-finalizado="true"] .btn-desprogramar,
+.ticket-card[data-finalizado="true"] .btn-colaboradores,
+.ticket-card[data-finalizado="true"] .resize-handle {
+    display: none !important;
+}
