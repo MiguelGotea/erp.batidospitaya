@@ -115,6 +115,7 @@ function cabEnFila(fila, diaInicio, numDias) {
 
 function renderizarTicket(ticket, fila, diaInicio, numDias, equipo) {
     const esFinalizado = ticket.status === 'finalizado';
+    
     // Obtener la celda correspondiente
     const row = document.querySelector(`tr[data-equipo="${equipo}"]`);
     if (!row) return;
@@ -142,13 +143,16 @@ function renderizarTicket(ticket, fila, diaInicio, numDias, equipo) {
     // Crear elemento
     const card = document.createElement('div');
     card.className = 'ticket-card';
+    if (esFinalizado) {
+        card.classList.add('finalizado');
+    }
+    
     card.dataset.ticketId = ticket.id;
     card.dataset.fechaInicio = ticket.fecha_inicio;
     card.dataset.fechaFinal = ticket.fecha_final;
     card.dataset.tipoFormulario = ticket.tipo_formulario;
-    card.dataset.status = ticket.status; // Agregar status como data attribute
     
-    // Si está finalizado, no es arrastrable
+    // Solo hacer arrastrable si NO está finalizado
     if (!esFinalizado) {
         card.draggable = true;
     }
@@ -158,21 +162,14 @@ function renderizarTicket(ticket, fila, diaInicio, numDias, equipo) {
     card.style.left = '5px';
     card.style.width = anchoCard + 'px';
     card.style.height = '55px';
-    card.style.cursor = esFinalizado ? 'pointer' : 'move'; // Cambiar cursor
     card.style.boxSizing = 'border-box';
     card.style.zIndex = '50';
+    card.style.cursor = esFinalizado ? 'pointer' : 'move';
     
-    // Si está finalizado, aplicar estilo blanco y negro
-    if (esFinalizado) {
-        card.style.filter = 'grayscale(100%)';
-        card.style.backgroundColor = '#f8f9fa';
-        card.style.borderColor = '#dee2e6';
-    }
-    
-    // Construir el HTML interno condicionalmente
+    // Construir HTML interno
     let innerHTML = `
         <div style="position: relative; height: 100%;">
-            <div style="font-size: 0.8rem; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 30px;">
+            <div class="ticket-title" style="font-size: 0.8rem; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 30px;">
                 ${ticket.titulo}
                 ${esFinalizado ? ' <small class="text-muted">(Finalizado)</small>' : ''}
             </div>
@@ -196,16 +193,15 @@ function renderizarTicket(ticket, fila, diaInicio, numDias, equipo) {
                 </div>
             </div>`;
     
-    // El color de urgencia siempre visible
+    // Badge de urgencia - siempre visible
     if (ticket.nivel_urgencia) {
-        const colorUrgencia = coloresUrgencia[ticket.nivel_urgencia] || '#8b8b8bff';
         innerHTML += `
             <span class="badge-urgencia-card" style="background-color: ${colorUrgencia};">
                 ${ticket.nivel_urgencia}
             </span>`;
     }
     
-    // Solo mostrar resize-handle si NO está finalizado
+    // Resize handle solo si NO está finalizado
     if (!esFinalizado) {
         innerHTML += `
             <div class="resize-handle" 
@@ -219,14 +215,14 @@ function renderizarTicket(ticket, fila, diaInicio, numDias, equipo) {
     
     card.innerHTML = innerHTML;
     
-    // Event listeners condicionales
+    // Variables para detectar drag vs click
     let isDragging = false;
     let isResizing = false;
     let mouseDownTime = 0;
     let mouseDownX = 0;
     let mouseDownY = 0;
     
-    // Solo agregar eventos de arrastre si NO está finalizado
+    // Event listeners solo si NO está finalizado
     if (!esFinalizado) {
         card.addEventListener('mousedown', (e) => {
             if (e.target.closest('.btn-desprogramar') || 
@@ -258,24 +254,43 @@ function renderizarTicket(ticket, fila, diaInicio, numDias, equipo) {
     card.addEventListener('click', (e) => {
         const clickDuration = Date.now() - mouseDownTime;
         
-        // Para tickets finalizados, permitir siempre el click para ver detalles
+        // Para tickets finalizados, permitir siempre el click
         if (esFinalizado) {
             mostrarDetallesTicket(ticket.id);
-        } else if (!e.target.closest('.btn-desprogramar') && 
-                   !e.target.closest('.btn-colaboradores') &&
-                   !e.target.closest('.resize-handle') &&
-                   !isDragging && 
-                   !isResizing &&
-                   clickDuration < 300) {
+            return;
+        }
+        
+        // Para tickets no finalizados, verificar que no sea un drag
+        if (!e.target.closest('.btn-desprogramar') && 
+            !e.target.closest('.btn-colaboradores') &&
+            !e.target.closest('.resize-handle') &&
+            !isDragging && 
+            !isResizing &&
+            clickDuration < 300) {
             mostrarDetallesTicket(ticket.id);
         }
         isDragging = false;
         isResizing = false;
     });
     
-    // ... (resto del código existente para los overlays)
+    // Agregar hover effect solo para tickets no finalizados
+    if (!esFinalizado) {
+        card.addEventListener('mouseenter', () => {
+            card.style.borderColor = '#0E544C';
+            card.style.boxShadow = '0 4px 12px rgba(14, 84, 76, 0.25)';
+            card.style.transform = 'translateY(-1px)';
+        });
+        
+        card.addEventListener('mouseleave', () => {
+            card.style.borderColor = '#51B8AC';
+            card.style.boxShadow = '0 2px 4px rgba(14, 84, 76, 0.1)';
+            card.style.transform = '';
+        });
+    }
     
-    // Modificar la creación de overlays para tickets finalizados
+    celdaInicio.appendChild(card);
+    
+    // Crear overlays para las celdas que ocupa el ticket
     for (let i = 1; i < numDias; i++) {
         const celdaSiguiente = celdas[diaInicio + i];
         if (celdaSiguiente) {
@@ -286,15 +301,23 @@ function renderizarTicket(ticket, fila, diaInicio, numDias, equipo) {
             overlay.style.width = '100%';
             overlay.style.height = '55px';
             overlay.style.pointerEvents = 'auto';
-            overlay.style.cursor = esFinalizado ? 'pointer' : 'move';
             overlay.style.zIndex = '49';
+            overlay.style.cursor = esFinalizado ? 'pointer' : 'move';
             
-            // Si está finalizado, no agregar eventos de arrastre
+            if (esFinalizado) {
+                overlay.classList.add('ticket-card-overlay', 'finalizado');
+            } else {
+                overlay.classList.add('ticket-card-overlay');
+            }
+            
+            let overlayDragging = false;
+            let overlayMouseDownTime = 0;
+            let overlayMouseDownX = 0;
+            let overlayMouseDownY = 0;
+            
+            // Event listeners solo si NO está finalizado
             if (!esFinalizado) {
-                let overlayDragging = false;
-                let overlayMouseDownTime = 0;
-                let overlayMouseDownX = 0;
-                let overlayMouseDownY = 0;
+                overlay.draggable = true;
                 
                 overlay.addEventListener('mousedown', (e) => {
                     overlayDragging = false;
@@ -311,27 +334,9 @@ function renderizarTicket(ticket, fila, diaInicio, numDias, equipo) {
                     }
                 });
                 
-                overlay.draggable = true;
                 overlay.addEventListener('dragstart', (e) => {
                     overlayDragging = true;
                     handleDragStart.call(card, e);
-                });
-            }
-            
-            // Hover effects solo para tickets no finalizados
-            if (!esFinalizado) {
-                overlay.addEventListener('mouseenter', () => {
-                    card.style.borderColor = '#0E544C';
-                    card.style.boxShadow = '0 4px 12px rgba(14, 84, 76, 0.25)';
-                    card.style.transform = 'translateY(-1px)';
-                });
-                
-                overlay.addEventListener('mouseleave', () => {
-                    if (!card.matches(':hover')) {
-                        card.style.borderColor = '#51B8AC';
-                        card.style.boxShadow = '0 2px 4px rgba(14, 84, 76, 0.1)';
-                        card.style.transform = '';
-                    }
                 });
             }
             
