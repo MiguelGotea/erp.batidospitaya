@@ -87,7 +87,7 @@ $equiposSolicitud = $db->fetchAll("
     )
     AND NOT EXISTS (
         SELECT 1 FROM mtto_equipos_mantenimientos_programados mmpp 
-        WHERE mmpp.equipo_id = e.id
+        WHERE mmpp.equipo_id = e.id AND mmpp.estado = 'agendado'
     )
 ");
 

@@ -33,6 +33,7 @@ function cargarDatosIniciales() {
 }
 
 function abrirNuevoMovimiento() {
+    console.error('se abrio movimiento limpio');
     document.getElementById('form-movimiento').reset();
     document.getElementById('mov-solicitud-id').value = '';
     document.getElementById('opcion-cambio').style.display = 'none';
