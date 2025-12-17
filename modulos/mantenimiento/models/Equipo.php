@@ -64,7 +64,7 @@ class Equipo {
                 AND e.id IN (
                     SELECT mov.equipo_id 
                     FROM mtto_equipos_movimientos mov
-                    INNER JOIN sucursales s ON mov.sucursal_destino_id = s.id
+                    INNER JOIN sucursales s ON mov.sucursal_destino_id = s.codigo
                     WHERE s.codigo = ? AND mov.estado = 'finalizado'
                     AND mov.id = (
                         SELECT MAX(m2.id) 
