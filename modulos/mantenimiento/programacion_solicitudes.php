@@ -116,7 +116,6 @@ $sql_tickets = "
            s.nombre as nombre_sucursal,
            CAST(t.fecha_inicio AS DATE) as fecha_inicio,
            CAST(t.fecha_final AS DATE) as fecha_final,
-           t.status, -- AGREGAR ESTA LÍNEA
            GROUP_CONCAT(DISTINCT tc.tipo_usuario ORDER BY tc.tipo_usuario SEPARATOR ' + ') as equipo_trabajo
     FROM mtto_tickets t
     LEFT JOIN sucursales s ON t.cod_sucursal = s.codigo
