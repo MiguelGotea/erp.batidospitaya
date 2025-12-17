@@ -36,7 +36,7 @@ try {
     
     // Obtener sucursal del equipo (ubicación actual)
     $ubicacion = $db->fetchOne("
-        SELECT s.id 
+        SELECT s.codigo 
         FROM mtto_equipos_movimientos m
         INNER JOIN sucursales s ON m.sucursal_destino_id = s.codigo
         WHERE m.equipo_id = ? AND m.estado = 'finalizado'
