@@ -257,7 +257,7 @@ $equiposEnCentral = $db->fetchAll("
 
                     <div class="form-group">
                         <label class="form-label required">Equipo a Mover</label>
-                        <select name="equipo_id" id="mov-equipo-id" class="form-control" required onchange="actualizarOrigenDestino()">
+                        <select name="equipo_id" id="mov-equipo-id" class="form-control">
                             <option value="">Seleccione equipo...</option>
                             <?php foreach ($equiposEnCentral as $eq): ?>
                             <option value="<?= $eq['id'] ?>">
