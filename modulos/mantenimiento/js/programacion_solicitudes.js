@@ -170,7 +170,6 @@ function renderizarTicket(ticket, fila, diaInicio, numDias, equipo) {
         <div style="position: relative; height: 100%;">
             <div style="font-size: 0.8rem; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 30px;">
                 ${ticket.titulo}
-                ${esFinalizado ? ' <span style="color: #28a745; font-size: 0.7rem;">✓</span>' : ''}
             </div>
             <div style="display: flex; align-items: center; gap: 0.25rem; margin-top: 0.25rem;">`;
     
