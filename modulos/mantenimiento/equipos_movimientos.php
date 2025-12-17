@@ -85,7 +85,7 @@ if ($cargoOperario == 35) {
 }
 
 // Obtener todas las sucursales para los selectores
-$todasSucursales = $db->fetchAll("SELECT id, codigo, nombre FROM sucursales WHERE activa = 1 ORDER BY nombre");
+$todasSucursales = $db->fetchAll("SELECT id, codigo, nombre FROM sucursales ORDER BY nombre");
 
 // Obtener equipos disponibles en central
 $equiposEnCentral = $db->fetchAll("
