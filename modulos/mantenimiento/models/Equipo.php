@@ -55,7 +55,7 @@ class Equipo {
                     t.nombre as tipo_nombre,
                     (SELECT s.nombre 
                      FROM mtto_equipos_movimientos m 
-                     INNER JOIN sucursales s ON m.sucursal_destino_id = s.id 
+                     INNER JOIN sucursales s ON m.sucursal_destino_id = s.codigo 
                      WHERE m.equipo_id = e.id AND m.estado = 'finalizado' 
                      ORDER BY m.fecha_realizada DESC LIMIT 1) as ubicacion_actual
                 FROM mtto_equipos e
@@ -84,12 +84,12 @@ class Equipo {
                     p.nombre as proveedor_nombre,
                     (SELECT s.nombre 
                      FROM mtto_equipos_movimientos m 
-                     INNER JOIN sucursales s ON m.sucursal_destino_id = s.id 
+                     INNER JOIN sucursales s ON m.sucursal_destino_id = s.codigo 
                      WHERE m.equipo_id = e.id AND m.estado = 'finalizado' 
                      ORDER BY m.fecha_realizada DESC LIMIT 1) as ubicacion_actual,
                     (SELECT s.codigo 
                      FROM mtto_equipos_movimientos m 
-                     INNER JOIN sucursales s ON m.sucursal_destino_id = s.id 
+                     INNER JOIN sucursales s ON m.sucursal_destino_id = s.codigo
                      WHERE m.equipo_id = e.id AND m.estado = 'finalizado' 
                      ORDER BY m.fecha_realizada DESC LIMIT 1) as codigo_sucursal_actual
                 FROM mtto_equipos e
@@ -216,8 +216,8 @@ class Equipo {
                     of.Nombre as finalizado_nombre,
                     of.Apellido as finalizado_apellido
                 FROM mtto_equipos_movimientos m
-                INNER JOIN sucursales so ON m.sucursal_origen_id = so.id
-                INNER JOIN sucursales sd ON m.sucursal_destino_id = sd.id
+                INNER JOIN sucursales so ON m.sucursal_origen_id = so.codigo
+                INNER JOIN sucursales sd ON m.sucursal_destino_id = sd.codigo
                 LEFT JOIN Operarios op ON m.programado_por = op.CodOperario
                 LEFT JOIN Operarios of ON m.finalizado_por = of.CodOperario
                 WHERE m.equipo_id = ?
