@@ -356,7 +356,7 @@ body.resizing * {
 /* Estilos para tickets finalizados */
 .ticket-card[data-finalizado="true"] {
     background-color: #f8f9fa !important;
-    border-color: #0E544C !important;
+    border-color: #51B8AC !important;
     border-style: dashed !important;
 }
 
