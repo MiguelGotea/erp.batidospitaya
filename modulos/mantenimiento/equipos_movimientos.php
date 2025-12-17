@@ -34,7 +34,7 @@ if ($cargoOperario == 35) {
         SELECT 
             e.id as equipo_id, e.codigo, e.marca, e.modelo,
             s.id as solicitud_id, s.descripcion_problema,
-            (SELECT suc.id 
+            (SELECT suc.codigo 
              FROM mtto_equipos_movimientos mov 
              INNER JOIN sucursales suc ON mov.sucursal_destino_id = suc.codigo 
              WHERE mov.equipo_id = e.id AND mov.estado = 'finalizado' 
