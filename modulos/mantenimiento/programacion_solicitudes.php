@@ -110,18 +110,12 @@ foreach ($equipos_unicos as $equipo) {
 sort($equipos_normalizados);
 $equipos_trabajo = array_merge($equipos_trabajo, $equipos_normalizados);
 
-// Función para verificar si un ticket está finalizado
-function esTicketFinalizado($ticket) {
-    return isset($ticket['status']) && $ticket['status'] === 'finalizado';
-}
-
 // Obtener tickets programados de la semana
 $sql_tickets = "
     SELECT t.*, 
            s.nombre as nombre_sucursal,
            CAST(t.fecha_inicio AS DATE) as fecha_inicio,
            CAST(t.fecha_final AS DATE) as fecha_final,
-           t.status,  -- <-- Agregar esta columna
            GROUP_CONCAT(DISTINCT tc.tipo_usuario ORDER BY tc.tipo_usuario SEPARATOR ' + ') as equipo_trabajo
     FROM mtto_tickets t
     LEFT JOIN sucursales s ON t.cod_sucursal = s.codigo

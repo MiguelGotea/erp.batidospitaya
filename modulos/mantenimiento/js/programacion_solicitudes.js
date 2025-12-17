@@ -114,8 +114,6 @@ function cabEnFila(fila, diaInicio, numDias) {
 }
 
 function renderizarTicket(ticket, fila, diaInicio, numDias, equipo) {
-    const esFinalizado = ticket.status === 'finalizado';
-    
     // Obtener la celda correspondiente
     const row = document.querySelector(`tr[data-equipo="${equipo}"]`);
     if (!row) return;
@@ -143,77 +141,51 @@ function renderizarTicket(ticket, fila, diaInicio, numDias, equipo) {
     // Crear elemento
     const card = document.createElement('div');
     card.className = 'ticket-card';
-    if (esFinalizado) {
-        card.classList.add('finalizado');
-    }
-    
+    card.draggable = true;
     card.dataset.ticketId = ticket.id;
     card.dataset.fechaInicio = ticket.fecha_inicio;
     card.dataset.fechaFinal = ticket.fecha_final;
     card.dataset.tipoFormulario = ticket.tipo_formulario;
-    
-    // Solo hacer arrastrable si NO está finalizado
-    if (!esFinalizado) {
-        card.draggable = true;
-    }
     
     card.style.position = 'absolute';
     card.style.top = top + 'px';
     card.style.left = '5px';
     card.style.width = anchoCard + 'px';
     card.style.height = '55px';
+    card.style.cursor = 'move';
     card.style.boxSizing = 'border-box';
     card.style.zIndex = '50';
-    card.style.cursor = esFinalizado ? 'pointer' : 'move';
     
-    // Construir HTML interno
-    let innerHTML = `
+    card.innerHTML = `
         <div style="position: relative; height: 100%;">
-            <div class="ticket-title" style="font-size: 0.8rem; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 30px;">
+            <div style="font-size: 0.8rem; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 30px;">
                 ${ticket.titulo}
-                ${esFinalizado ? ' <small class="text-muted">(Finalizado)</small>' : ''}
             </div>
-            <div style="display: flex; align-items: center; gap: 0.25rem; margin-top: 0.25rem;">`;
-    
-    // Solo mostrar botones si NO está finalizado
-    if (!esFinalizado) {
-        innerHTML += `
+            <div style="display: flex; align-items: center; gap: 0.25rem; margin-top: 0.25rem;">
                 <button class="btn-desprogramar" onclick="desprogramarTicket(${ticket.id}, event)" title="Desprogramar">
                     <i class="bi bi-x-lg"></i>
                 </button>
                 
                 <button class="btn-colaboradores" onclick="mostrarColaboradores(${ticket.id}, event)" title="Asignar colaboradores">
                     <i class="bi bi-plus-lg"></i>
-                </button>`;
-    }
-    
-    innerHTML += `
-                <div style="font-size: 0.7rem; color: #666; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; ${!esFinalizado ? 'padding-left: 0.25rem;' : ''}">
+                </button>
+                
+                <div style="font-size: 0.7rem; color: #666; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-left: 0.25rem;">
                     ${ticket.nombre_sucursal}
                 </div>
-            </div>`;
-    
-    // Badge de urgencia - siempre visible
-    if (ticket.nivel_urgencia) {
-        innerHTML += `
-            <span class="badge-urgencia-card" style="background-color: ${colorUrgencia};">
-                ${ticket.nivel_urgencia}
-            </span>`;
-    }
-    
-    // Resize handle solo si NO está finalizado
-    if (!esFinalizado) {
-        innerHTML += `
+            </div>
+            
+            ${ticket.nivel_urgencia ? `
+                <span class="badge-urgencia-card" style="background-color: ${colorUrgencia};">
+                    ${ticket.nivel_urgencia}
+                </span>
+            ` : ''}
+            
             <div class="resize-handle" 
                  onmousedown="startResize(event, ${ticket.id}, '${ticket.fecha_inicio}', '${ticket.fecha_final}')">
-            </div>`;
-    }
-    
-    innerHTML += `
+            </div>
         </div>
     `;
-    
-    card.innerHTML = innerHTML;
     
     // Variables para detectar drag vs click
     let isDragging = false;
@@ -222,45 +194,35 @@ function renderizarTicket(ticket, fila, diaInicio, numDias, equipo) {
     let mouseDownX = 0;
     let mouseDownY = 0;
     
-    // Event listeners solo si NO está finalizado
-    if (!esFinalizado) {
-        card.addEventListener('mousedown', (e) => {
-            if (e.target.closest('.btn-desprogramar') || 
-                e.target.closest('.btn-colaboradores') ||
-                e.target.closest('.resize-handle')) {
-                return;
-            }
-            isDragging = false;
-            mouseDownTime = Date.now();
-            mouseDownX = e.clientX;
-            mouseDownY = e.clientY;
-        });
-        
-        card.addEventListener('mousemove', (e) => {
-            const deltaX = Math.abs(e.clientX - mouseDownX);
-            const deltaY = Math.abs(e.clientY - mouseDownY);
-            if (deltaX > 5 || deltaY > 5) {
-                isDragging = true;
-            }
-        });
-        
-        card.addEventListener('dragstart', (e) => {
-            isDragging = true;
-            handleDragStart.call(card, e);
-        });
-    }
+    // Event listeners
+    card.addEventListener('mousedown', (e) => {
+        if (e.target.closest('.btn-desprogramar') || 
+            e.target.closest('.btn-colaboradores') ||
+            e.target.closest('.resize-handle')) {
+            return;
+        }
+        isDragging = false;
+        mouseDownTime = Date.now();
+        mouseDownX = e.clientX;
+        mouseDownY = e.clientY;
+    });
     
-    // Click event para todos los tickets
+    card.addEventListener('mousemove', (e) => {
+        const deltaX = Math.abs(e.clientX - mouseDownX);
+        const deltaY = Math.abs(e.clientY - mouseDownY);
+        if (deltaX > 5 || deltaY > 5) {
+            isDragging = true;
+        }
+    });
+    
+    card.addEventListener('dragstart', (e) => {
+        isDragging = true;
+        handleDragStart.call(card, e);
+    });
+    
     card.addEventListener('click', (e) => {
         const clickDuration = Date.now() - mouseDownTime;
         
-        // Para tickets finalizados, permitir siempre el click
-        if (esFinalizado) {
-            mostrarDetallesTicket(ticket.id);
-            return;
-        }
-        
-        // Para tickets no finalizados, verificar que no sea un drag
         if (!e.target.closest('.btn-desprogramar') && 
             !e.target.closest('.btn-colaboradores') &&
             !e.target.closest('.resize-handle') &&
@@ -273,27 +235,13 @@ function renderizarTicket(ticket, fila, diaInicio, numDias, equipo) {
         isResizing = false;
     });
     
-    // Agregar hover effect solo para tickets no finalizados
-    if (!esFinalizado) {
-        card.addEventListener('mouseenter', () => {
-            card.style.borderColor = '#0E544C';
-            card.style.boxShadow = '0 4px 12px rgba(14, 84, 76, 0.25)';
-            card.style.transform = 'translateY(-1px)';
-        });
-        
-        card.addEventListener('mouseleave', () => {
-            card.style.borderColor = '#51B8AC';
-            card.style.boxShadow = '0 2px 4px rgba(14, 84, 76, 0.1)';
-            card.style.transform = '';
-        });
-    }
-    
     celdaInicio.appendChild(card);
     
-    // Crear overlays para las celdas que ocupa el ticket
+    // IMPORTANTE: Extender pointer-events a todas las celdas que ocupa
     for (let i = 1; i < numDias; i++) {
         const celdaSiguiente = celdas[diaInicio + i];
         if (celdaSiguiente) {
+            // Crear overlay invisible para capturar eventos
             const overlay = document.createElement('div');
             overlay.style.position = 'absolute';
             overlay.style.top = top + 'px';
@@ -301,56 +249,56 @@ function renderizarTicket(ticket, fila, diaInicio, numDias, equipo) {
             overlay.style.width = '100%';
             overlay.style.height = '55px';
             overlay.style.pointerEvents = 'auto';
+            overlay.style.cursor = 'move';
             overlay.style.zIndex = '49';
-            overlay.style.cursor = esFinalizado ? 'pointer' : 'move';
-            
-            if (esFinalizado) {
-                overlay.classList.add('ticket-card-overlay', 'finalizado');
-            } else {
-                overlay.classList.add('ticket-card-overlay');
-            }
             
             let overlayDragging = false;
             let overlayMouseDownTime = 0;
             let overlayMouseDownX = 0;
             let overlayMouseDownY = 0;
             
-            // Event listeners solo si NO está finalizado
-            if (!esFinalizado) {
-                overlay.draggable = true;
-                
-                overlay.addEventListener('mousedown', (e) => {
-                    overlayDragging = false;
-                    overlayMouseDownTime = Date.now();
-                    overlayMouseDownX = e.clientX;
-                    overlayMouseDownY = e.clientY;
-                });
-                
-                overlay.addEventListener('mousemove', (e) => {
-                    const deltaX = Math.abs(e.clientX - overlayMouseDownX);
-                    const deltaY = Math.abs(e.clientY - overlayMouseDownY);
-                    if (deltaX > 5 || deltaY > 5) {
-                        overlayDragging = true;
-                    }
-                });
-                
-                overlay.addEventListener('dragstart', (e) => {
-                    overlayDragging = true;
-                    handleDragStart.call(card, e);
-                });
-            }
+            overlay.addEventListener('mousedown', (e) => {
+                overlayDragging = false;
+                overlayMouseDownTime = Date.now();
+                overlayMouseDownX = e.clientX;
+                overlayMouseDownY = e.clientY;
+            });
             
-            // Click event para overlay
-            overlay.addEventListener('click', (e) => {
-                if (esFinalizado) {
-                    mostrarDetallesTicket(ticket.id);
-                } else {
-                    const clickDuration = Date.now() - overlayMouseDownTime;
-                    if (!overlayDragging && clickDuration < 300) {
-                        mostrarDetallesTicket(ticket.id);
-                    }
-                    overlayDragging = false;
+            overlay.addEventListener('mousemove', (e) => {
+                const deltaX = Math.abs(e.clientX - overlayMouseDownX);
+                const deltaY = Math.abs(e.clientY - overlayMouseDownY);
+                if (deltaX > 5 || deltaY > 5) {
+                    overlayDragging = true;
                 }
+            });
+            
+            // Replicar eventos del card original
+            overlay.addEventListener('mouseenter', () => {
+                card.style.borderColor = '#0E544C';
+                card.style.boxShadow = '0 4px 12px rgba(14, 84, 76, 0.25)';
+                card.style.transform = 'translateY(-1px)';
+            });
+            
+            overlay.addEventListener('mouseleave', () => {
+                if (!card.matches(':hover')) {
+                    card.style.borderColor = '#51B8AC';
+                    card.style.boxShadow = '0 2px 4px rgba(14, 84, 76, 0.1)';
+                    card.style.transform = '';
+                }
+            });
+            
+            overlay.addEventListener('click', (e) => {
+                const clickDuration = Date.now() - overlayMouseDownTime;
+                if (!overlayDragging && clickDuration < 300) {
+                    mostrarDetallesTicket(ticket.id);
+                }
+                overlayDragging = false;
+            });
+            
+            overlay.draggable = true;
+            overlay.addEventListener('dragstart', (e) => {
+                overlayDragging = true;
+                handleDragStart.call(card, e);
             });
             
             celdaSiguiente.appendChild(overlay);
@@ -384,15 +332,6 @@ function handleDragStart(e) {
     if (resizing) {
         e.preventDefault();
         return;
-    }
-    
-    const card = e.target.closest('.ticket-card');
-    const status = card ? card.dataset.status : null;
-    
-    // No permitir arrastrar tickets finalizados
-    if (status === 'finalizado') {
-        e.preventDefault();
-        return false;
     }
     
     draggedTicket = {
@@ -493,13 +432,6 @@ function startResize(e, ticketId, fechaInicio, fechaFinal) {
     e.preventDefault();
     
     const card = e.target.closest('.ticket-card');
-    const status = card ? card.dataset.status : null;
-    
-    // No permitir redimensionar tickets finalizados
-    if (status === 'finalizado') {
-        return;
-    }
-    
     card.draggable = false;
     
     resizing = {

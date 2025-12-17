@@ -352,38 +352,3 @@ body.resizing * {
     font-weight: 600;
     text-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
-
-
-/* Estilo para tickets finalizados */
-.ticket-card.finalizado {
-    filter: grayscale(100%);
-    background-color: #f8f9fa !important;
-    border-color: #dee2e6 !important;
-    opacity: 0.8;
-    cursor: pointer !important;
-}
-
-.ticket-card.finalizado .ticket-title {
-    color: #6c757d !important;
-}
-
-/* El badge de urgencia debe mantenerse con color */
-.ticket-card.finalizado .badge-urgencia-card {
-    filter: none !important;
-}
-
-/* Ocultar botones en tickets finalizados */
-.ticket-card.finalizado .btn-desprogramar,
-.ticket-card.finalizado .btn-colaboradores,
-.ticket-card.finalizado .resize-handle {
-    display: none !important;
-}
-
-/* Overlay para tickets finalizados */
-.ticket-card-overlay.finalizado {
-    cursor: pointer !important;
-}
-
-.ticket-card-overlay.finalizado:hover {
-    background-color: transparent !important;
-}
