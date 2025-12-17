@@ -432,7 +432,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                             <option value="">Seleccionar equipo</option>
                                             <?php foreach ($equipos as $equipo): ?>
                                                 <option value="<?= htmlspecialchars($equipo['marca']) ?>" 
-                                                        data-descripcion="<?= htmlspecialchars($equipo['descripcion']) ?>">
+                                                        data-descripcion="<?= htmlspecialchars($equipo['caracteristicas']) ?>">
                                                     <?= htmlspecialchars($equipo['marca']) ?>
                                                 </option>
                                             <?php endforeach; ?>
