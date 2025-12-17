@@ -259,9 +259,25 @@ $equiposEnCentral = $db->fetchAll("
                     </div>
 
                     <div class="form-group">
+                        <label class="form-label required">Equipo a Mover</label>
+                        <select name="equipo_id" id="mov-equipo-id" class="form-control" required onchange="actualizarOrigenDestino()">
+                            <option value="">Seleccione equipo...</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
                         <label class="form-label">Sucursal Origen (Ubicación Actual)</label>
                         <input type="text" id="mov-origen-nombre" class="form-control" readonly style="background: #f0f0f0;">
                         <input type="hidden" id="mov-origen" name="sucursal_origen_id">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label required">Sucursal Origen</label>
+                        <select name="sucursal_origen_id" id="mov-origen" class="form-control" required>
+                            <?php foreach ($todasSucursales as $suc): ?>
+                            <option value="<?= $suc['id'] ?>"><?= htmlspecialchars($suc['nombre']) ?></option>
+                            <?php endforeach; ?>
+                        </select>
                     </div>
 
                     <div class="form-group">
