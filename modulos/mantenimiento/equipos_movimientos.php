@@ -251,12 +251,9 @@ $equiposEnCentral = $db->fetchAll("
             <div class="modal-body">
                 <form id="form-movimiento" onsubmit="guardarMovimiento(event)">
                     <input type="hidden" id="mov-solicitud-id" name="solicitud_id">
-                    <input type="hidden" id="mov-equipo-id" name="equipo_id">
                     
-                    <div class="form-group">
-                        <label class="form-label required">Equipo a Mover</label>
-                        <input type="text" id="mov-equipo-nombre" class="form-control" readonly style="background: #f0f0f0;">
-                    </div>
+                    
+
 
                     <div class="form-group">
                         <label class="form-label required">Equipo a Mover</label>
@@ -265,11 +262,7 @@ $equiposEnCentral = $db->fetchAll("
                         </select>
                     </div>
 
-                    <div class="form-group">
-                        <label class="form-label">Sucursal Origen (Ubicación Actual)</label>
-                        <input type="text" id="mov-origen-nombre" class="form-control" readonly style="background: #f0f0f0;">
-                        <input type="hidden" id="mov-origen" name="sucursal_origen_id">
-                    </div>
+
 
                     <div class="form-group">
                         <label class="form-label required">Sucursal Origen</label>
