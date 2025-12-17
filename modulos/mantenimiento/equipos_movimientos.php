@@ -251,31 +251,17 @@ $equiposEnCentral = $db->fetchAll("
             <div class="modal-body">
                 <form id="form-movimiento" onsubmit="guardarMovimiento(event)">
                     <input type="hidden" id="mov-solicitud-id" name="solicitud_id">
+                    <input type="hidden" id="mov-equipo-id" name="equipo_id">
                     
-                    
-
-
                     <div class="form-group">
                         <label class="form-label required">Equipo a Mover</label>
-                        <select name="equipo_id" id="mov-equipo-id" class="form-control">
-                            <option value="">Seleccione equipo...</option>
-                            <?php foreach ($equiposEnCentral as $eq): ?>
-                            <option value="<?= $eq['id'] ?>">
-                                <?= htmlspecialchars($eq['codigo'] . ' - ' . $eq['marca'] . ' ' . $eq['modelo']) ?>
-                            </option>
-                            <?php endforeach; ?>
-                        </select>
+                        <input type="text" id="mov-equipo-nombre" class="form-control" readonly style="background: #f0f0f0;">
                     </div>
-
-
-
+                    
                     <div class="form-group">
-                        <label class="form-label required">Sucursal Origen</label>
-                        <select name="sucursal_origen_id" id="mov-origen" class="form-control" required>
-                            <?php foreach ($todasSucursales as $suc): ?>
-                            <option value="<?= $suc['id'] ?>"><?= htmlspecialchars($suc['nombre']) ?></option>
-                            <?php endforeach; ?>
-                        </select>
+                        <label class="form-label">Sucursal Origen (Ubicación Actual)</label>
+                        <input type="text" id="mov-origen-nombre" class="form-control" readonly style="background: #f0f0f0;">
+                        <input type="hidden" id="mov-origen" name="sucursal_origen_id">
                     </div>
 
                     <div class="form-group">
