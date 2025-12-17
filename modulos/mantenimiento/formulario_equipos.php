@@ -431,9 +431,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         <select class="form-select" id="equipo" name="equipo" required>
                                             <option value="">Seleccionar equipo</option>
                                             <?php foreach ($equipos as $equipo): ?>
-                                                <option value="<?= htmlspecialchars($equipo['nombre']) ?>" 
+                                                <option value="<?= htmlspecialchars($equipo['marca']) ?>" 
                                                         data-descripcion="<?= htmlspecialchars($equipo['descripcion']) ?>">
-                                                    <?= htmlspecialchars($equipo['nombre']) ?>
+                                                    <?= htmlspecialchars($equipo['marca']) ?>
                                                 </option>
                                             <?php endforeach; ?>
                                         </select>
