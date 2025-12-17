@@ -320,6 +320,7 @@ $equiposEnCentral = $db->fetchAll("
     </div>
 
     <script src="js/equipos_funciones.js"></script>
+    <script src="js/equipos_movimientos.js"></script>
     <script>
         const equiposData = <?= json_encode($db->fetchAll("
             SELECT 
