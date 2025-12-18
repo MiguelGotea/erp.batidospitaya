@@ -252,7 +252,7 @@ $equiposEnCentral = $db->fetchAll("
             <div class="modal-body">
                 <form id="form-movimiento" onsubmit="guardarMovimiento(event)">
                     <input type="hidden" id="mov-solicitud-id" name="solicitud_id">
-                    <input type="hidden" id="mov-equipo-id" name="equipo_id">
+                    <!--<input type="hidden" id="mov-equipo-id" name="equipo_id">-->
                     
                     <div class="form-group">
                         <label class="form-label required">Equipo a Mover</label>
