@@ -33,6 +33,13 @@ try {
     if ($sucursal_origen_codigo == $sucursal_destino_codigo) {
         throw new Exception('La sucursal origen y destino no pueden ser iguales');
     }
+
+    // DEPURACIÓN: Mostrar valores que se insertarán
+    error_log('Valores a insertar:');
+    error_log('- equipo_id: ' . $equipo_id . ' (tipo: ' . gettype($equipo_id) . ')');
+    error_log('- sucursal_origen: ' . $sucursal_origen_codigo);
+    error_log('- sucursal_destino: ' . $sucursal_destino_codigo);
+    error_log('- fecha_programada: ' . $fecha_programada);
     
     // Crear movimiento principal (retirar equipo)
     $db->query(
