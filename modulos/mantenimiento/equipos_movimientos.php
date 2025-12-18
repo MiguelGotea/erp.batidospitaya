@@ -252,17 +252,15 @@ $equiposEnCentral = $db->fetchAll("
             <div class="modal-body">
                 <form id="form-movimiento" onsubmit="guardarMovimiento(event)">
                     <input type="hidden" id="mov-solicitud-id" name="solicitud_id">
-                    <!--<input type="hidden" id="mov-equipo-id" name="equipo_id">-->
                     
                     <div class="form-group">
                         <label class="form-label required">Equipo a Mover</label>
                         <input type="text" id="mov-equipo-nombre" class="form-control" readonly style="background: #f0f0f0; display: none;">
-                        <select id="mov-equipo-select" class="form-control" onchange="actualizarOrigenDesdeSelect()">
+                        <select id="mov-equipo-select" name="equipo_id" class="form-control" onchange="actualizarOrigenDesdeSelect()">
                             <option value="">Seleccione equipo...</option>
                         </select>
-                        <input type="hidden" id="mov-equipo-id" name="equipo_id">
                     </div>
-                    
+
                     <div class="form-group">
                         <label class="form-label">Sucursal Origen (Ubicación Actual)</label>
                         <input type="text" id="mov-origen-nombre" class="form-control" readonly style="background: #f0f0f0;">
@@ -372,7 +370,6 @@ $equiposEnCentral = $db->fetchAll("
             const option = select.options[select.selectedIndex];
             
             if (option.value) {
-                document.getElementById('mov-equipo-id').value = option.value;
                 document.getElementById('mov-origen').value = option.dataset.ubicacionCodigo || '';
                 document.getElementById('mov-origen-nombre').value = option.dataset.ubicacionNombre || 'Sin ubicación';
             }
@@ -382,17 +379,27 @@ $equiposEnCentral = $db->fetchAll("
             document.getElementById('form-movimiento').reset();
             document.getElementById('mov-solicitud-id').value = solicitudId;
             document.getElementById('opcion-cambio').style.display = 'block';
-
+            
             // Deshabilitar selector, mostrar campo bloqueado
             const equipoNombre = document.getElementById('mov-equipo-nombre');
             const equipoSelect = document.getElementById('mov-equipo-select');
             equipoNombre.style.display = 'block';
             equipoSelect.style.display = 'none';
-
+            
             // Buscar datos del equipo
             const equipo = equiposData.find(eq => eq.id == equipoId);
             if (equipo) {
-                document.getElementById('mov-equipo-id').value = equipoId;
+                // Crear un hidden input para enviar el equipo_id
+                let hiddenInput = document.getElementById('mov-equipo-id-hidden');
+                if (!hiddenInput) {
+                    hiddenInput = document.createElement('input');
+                    hiddenInput.type = 'hidden';
+                    hiddenInput.id = 'mov-equipo-id-hidden';
+                    hiddenInput.name = 'equipo_id';
+                    document.getElementById('form-movimiento').appendChild(hiddenInput);
+                }
+                hiddenInput.value = equipoId;
+                
                 document.getElementById('mov-equipo-nombre').value = `${equipo.codigo} - ${equipo.marca} ${equipo.modelo}`;
                 document.getElementById('mov-origen').value = equipo.ubicacion_codigo;
                 document.getElementById('mov-origen-nombre').value = equipo.ubicacion_nombre || 'Sin ubicación';
