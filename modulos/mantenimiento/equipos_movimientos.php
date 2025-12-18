@@ -414,33 +414,47 @@ $equiposEnCentral = $db->fetchAll("
             }
         }
 
-        function guardarMovimiento(e) {
-            e.preventDefault();
-            
-            const formData = new FormData(e.target);
-            showLoading(true);
-            
-            fetch('ajax/equipos_movimiento_crear.php', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(result => {
-                showLoading(false);
-                if (result.success) {
-                    showAlert(result.message, 'success');
-                    closeModal('modal-movimiento');
-                    setTimeout(() => location.reload(), 1500);
-                } else {
-                    showAlert(result.message || 'Error al crear movimiento', 'danger');
-                }
-            })
-            .catch(error => {
-                showLoading(false);
-                console.error('Error:', error);
-                showAlert('Error al procesar la solicitud', 'danger');
-            });
+function guardarMovimiento(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(e.target);
+    
+    // DEPURACIÓN: Ver datos del formulario
+    console.log('=== DATOS DEL FORMULARIO ===');
+    for (let [key, value] of formData.entries()) {
+        console.log(`${key}: ${value} (tipo: ${typeof value})`);
+    }
+    
+    // Verificar que equipo_id tiene valor
+    const equipoId = formData.get('equipo_id');
+    if (!equipoId) {
+        alert('Error: No se seleccionó ningún equipo');
+        return;
+    }
+    
+    showLoading(true);
+    
+    fetch('ajax/equipos_movimiento_crear.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(result => {
+        showLoading(false);
+        if (result.success) {
+            showAlert(result.message, 'success');
+            closeModal('modal-movimiento');
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            showAlert(result.message || 'Error al crear movimiento', 'danger');
         }
+    })
+    .catch(error => {
+        showLoading(false);
+        console.error('Error:', error);
+        showAlert('Error al procesar la solicitud', 'danger');
+    });
+}
 
         function finalizarMovimiento(movimientoId) {
             if (!confirm('¿Confirmar que el movimiento se ha realizado?')) {
