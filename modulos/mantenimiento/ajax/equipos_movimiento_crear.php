@@ -20,7 +20,11 @@ try {
     $fecha_programada = $_POST['fecha_programada'];
     $observaciones = $_POST['observaciones'] ?? '';
     $equipo_cambio_id = $_POST['equipo_cambio_id'] ?? null;
-    
+
+    // CONVERTIR LAS MISMAS VARIABLES A INT
+    $sucursal_origen_codigo = (int)$sucursal_origen_codigo;     // Ahora es INT
+    $sucursal_destino_codigo = (int)$sucursal_destino_codigo;   // Ahora es INT
+
     // Validar que origen y destino sean diferentes
     if ($sucursal_origen_codigo == $sucursal_destino_codigo) {
         throw new Exception('La sucursal origen y destino no pueden ser iguales');
