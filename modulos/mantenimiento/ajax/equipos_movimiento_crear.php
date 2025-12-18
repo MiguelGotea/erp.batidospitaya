@@ -34,9 +34,9 @@ try {
         throw new Exception('El ID del equipo es requerido');
     }
     
-    if (empty($sucursal_destino_codigo)) {
-        throw new Exception('La sucursal destino es requerida');
-    }
+    //if (empty($sucursal_destino_codigo)) {
+    //    throw new Exception('La sucursal destino es requerida');
+    //}
     
     if (empty($fecha_programada)) {
         throw new Exception('La fecha programada es requerida');
@@ -53,7 +53,7 @@ try {
     if (!$equipo_existe) {
         throw new Exception("El equipo con ID $equipo_id no existe o está inactivo");
     }
-    
+
     // CONVERTIR LAS MISMAS VARIABLES A INT
     $sucursal_origen_codigo = (int)$sucursal_origen_codigo;     // Ahora es INT
     $sucursal_destino_codigo = (int)$sucursal_destino_codigo;   // Ahora es INT
