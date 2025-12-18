@@ -12,6 +12,10 @@ session_start();
 $usuario_id = $_SESSION['usuario_id'];
 
 try {
+    // DEPURACIÓN: Mostrar los valores recibidos
+    error_log('=== DEPURACIÓN equipos_movimiento_crear.php ===');
+    error_log('POST recibido: ' . print_r($_POST, true));
+    error_log('Usuario ID: ' . $usuario_id);
     $db->getConnection()->beginTransaction();
     
     $equipo_id = $_POST['equipo_id'];
