@@ -11,7 +11,7 @@ $codigo_sucursal_busqueda = $sucursales[0]['nombre'];
 $equipoModel = new Equipo();
 
 // Obtener equipos según el cargo
-if ($cargoOperario == 35) {
+if ($cargoOperario == 35 || $cargoOperario == 14) {
     // Líder de infraestructura ve todos los equipos
     $equipos = $equipoModel->obtenerTodos();
 } else {

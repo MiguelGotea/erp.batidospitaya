@@ -9,7 +9,7 @@ $sucursales = obtenerSucursalesUsuario($_SESSION['usuario_id']);
 $codigo_sucursal_busqueda = $sucursales[0]['nombre'];
 
 // Solo líder de infraestructura puede registrar
-if ($cargoOperario != 35) {
+if ($cargoOperario != 35 || $cargoOperario != 14) {
     header('Location: equipos_lista.php');
     exit;
 }
