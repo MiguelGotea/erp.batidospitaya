@@ -1,5 +1,6 @@
 <?php
 require_once '../../includes/auth.php';
+require_once '../../includes/conexion.php';
 require_once __DIR__ . '/models/Equipo.php';
 
 $usuario = obtenerUsuarioActual();
@@ -15,7 +16,7 @@ if (!tienePermiso('historial_activos', 'vista', $cargoOperario)) {
 $equipoModel = new Equipo();
 
 // Obtener equipos según el cargo
-if (!tienePermiso('historial_activos', 'historial_total_activos', $cargoOperario)) {
+if (tienePermiso('historial_activos', 'historial_total_activos', $cargoOperario)) {
     // Líder de infraestructura ve todos los equipos
     $equipos = $equipoModel->obtenerTodos();
 } else {
