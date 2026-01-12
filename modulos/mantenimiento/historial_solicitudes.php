@@ -1,30 +1,27 @@
 <?php
-// historial_solicitudes.php
-$version = "1.0.17";
-
 require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/models/Ticket.php';
 require_once '../../includes/auth.php';
-require_once '../../includes/funciones.php';
-// Incluir el menú lateral
 require_once '../../includes/menu_lateral.php';
-// Incluir el header universal
 require_once '../../includes/header_universal.php';
+require_once '../../core/permissions/permissions.php';
 
 $usuario = obtenerUsuarioActual();
 // Obtener cargo del operario para el menú
 $cargoOperario = $usuario['CodNivelesCargos'];
-$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
 
 $sucursales = obtenerSucursalesUsuario($_SESSION['usuario_id']);
 $codigo_sucursal_busqueda=$sucursales[0]['nombre'];
 
 // Verificar acceso al módulo (cargos con permiso para ver marcaciones)
-if (!verificarAccesoCargo([35, 16, 5, 43, 11, 19, 12, 14, 26, 42]) && !$esAdmin) {
-    header('Location: ../index.php');
+//if (!verificarAccesoCargo([35, 16, 5, 43, 11, 19, 12, 14, 26, 42]) && !$esAdmin) {
+//    header('Location: ../index.php');
+//    exit();
+//}
+if (!tienePermiso('historial_solicitudes_mantenimiento', 'vista', $cargoOperario)) {
+    header('Location: /login.php');
     exit();
 }
-
 
 $ticketModel = new Ticket();
 
@@ -89,7 +86,7 @@ function getTextoUrgencia($nivel) {
     <div class="main-container">   <!-- ya existe en el css de menu lateral -->
         <div class="contenedor-principal"> <!-- ya existe en el css de menu lateral -->
             <!-- todo el contenido existente -->
-            <?php echo renderHeader($usuario, $esAdmin, 'Historial de Solicitudes'); ?>
+            <?php echo renderHeader($usuario, false, 'Historial de Solicitudes'); ?>
             <div class="container-fluid p-3">
                 <!-- Header -->
 
