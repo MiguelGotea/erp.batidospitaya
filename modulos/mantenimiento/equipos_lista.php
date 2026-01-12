@@ -2,6 +2,8 @@
 require_once '../../includes/auth.php';
 require_once __DIR__ . '/models/Equipo.php';
 require_once '../../core/permissions/permissions.php';
+require_once '../../includes/header_universal.php';
+require_once '../../includes/menu_lateral.php';
 
 $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
@@ -32,137 +34,144 @@ if (tienePermiso('historial_activos', 'historial_total_activos', $cargoOperario)
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lista de Equipos - Sistema de Mantenimiento</title>
     <link rel="stylesheet" href="css/equipos_general.css">
+    <link rel="stylesheet" href="/assets/css/global_tools.css?v=<?php echo mt_rand(1, 10000); ?>"> <!-- contiene main, sub container * y body -->
 </head>
 <body>
-    <div class="container-main">
-        <div class="page-header">
-            <h1 class="page-title">📋 Lista de Equipos</h1>
-        </div>
+    <?php echo renderMenuLateral($cargoOperario); ?>
+    <div class="main-container">   <!-- ya existe en el css de menu lateral -->
+        <div class="sub-container"> <!-- ya existe en el css de menu lateral -->
+            <?php echo renderHeader($usuario, false, '[Anexar titulo de pagina]'); ?> <!-- Dejar vacio si Bienvenido.. -->
+            <div class="container-main">
+                <div class="page-header">
+                    <h1 class="page-title">📋 Lista de Equipos</h1>
+                </div>
 
-        <div class="table-container">
-            <div class="table-responsive">
-                <table id="tabla-equipos">
-                    <thead>
-                        <tr>
-                            <th class="table-filter-header">
-                                Código
-                                <span class="filter-icon" data-column="0">▼</span>
-                                <div class="filter-dropdown">
-                                    <div class="filter-controls">
-                                        <div class="filter-sort-btns">
-                                            <button class="btn btn-sm btn-secondary" onclick="sortTable(document.getElementById('tabla-equipos'), 0, 'asc')">↑ ASC</button>
-                                            <button class="btn btn-sm btn-secondary" onclick="sortTable(document.getElementById('tabla-equipos'), 0, 'desc')">↓ DESC</button>
+                <div class="table-container">
+                    <div class="table-responsive">
+                        <table id="tabla-equipos">
+                            <thead>
+                                <tr>
+                                    <th class="table-filter-header">
+                                        Código
+                                        <span class="filter-icon" data-column="0">▼</span>
+                                        <div class="filter-dropdown">
+                                            <div class="filter-controls">
+                                                <div class="filter-sort-btns">
+                                                    <button class="btn btn-sm btn-secondary" onclick="sortTable(document.getElementById('tabla-equipos'), 0, 'asc')">↑ ASC</button>
+                                                    <button class="btn btn-sm btn-secondary" onclick="sortTable(document.getElementById('tabla-equipos'), 0, 'desc')">↓ DESC</button>
+                                                </div>
+                                                <button class="btn btn-sm btn-danger filter-clear-btn" onclick="clearFilter(this.closest('.filter-dropdown'), document.getElementById('tabla-equipos'), 0)">Limpiar</button>
+                                                <input type="text" class="filter-search" placeholder="Buscar..." oninput="searchFilterOptions(this)">
+                                            </div>
+                                            <div class="filter-options"></div>
                                         </div>
-                                        <button class="btn btn-sm btn-danger filter-clear-btn" onclick="clearFilter(this.closest('.filter-dropdown'), document.getElementById('tabla-equipos'), 0)">Limpiar</button>
-                                        <input type="text" class="filter-search" placeholder="Buscar..." oninput="searchFilterOptions(this)">
-                                    </div>
-                                    <div class="filter-options"></div>
-                                </div>
-                            </th>
-                            <th class="table-filter-header">
-                                Tipo
-                                <span class="filter-icon" data-column="1">▼</span>
-                                <div class="filter-dropdown">
-                                    <div class="filter-controls">
-                                        <div class="filter-sort-btns">
-                                            <button class="btn btn-sm btn-secondary" onclick="sortTable(document.getElementById('tabla-equipos'), 1, 'asc')">↑ ASC</button>
-                                            <button class="btn btn-sm btn-secondary" onclick="sortTable(document.getElementById('tabla-equipos'), 1, 'desc')">↓ DESC</button>
+                                    </th>
+                                    <th class="table-filter-header">
+                                        Tipo
+                                        <span class="filter-icon" data-column="1">▼</span>
+                                        <div class="filter-dropdown">
+                                            <div class="filter-controls">
+                                                <div class="filter-sort-btns">
+                                                    <button class="btn btn-sm btn-secondary" onclick="sortTable(document.getElementById('tabla-equipos'), 1, 'asc')">↑ ASC</button>
+                                                    <button class="btn btn-sm btn-secondary" onclick="sortTable(document.getElementById('tabla-equipos'), 1, 'desc')">↓ DESC</button>
+                                                </div>
+                                                <button class="btn btn-sm btn-danger filter-clear-btn" onclick="clearFilter(this.closest('.filter-dropdown'), document.getElementById('tabla-equipos'), 1)">Limpiar</button>
+                                                <input type="text" class="filter-search" placeholder="Buscar..." oninput="searchFilterOptions(this)">
+                                            </div>
+                                            <div class="filter-options"></div>
                                         </div>
-                                        <button class="btn btn-sm btn-danger filter-clear-btn" onclick="clearFilter(this.closest('.filter-dropdown'), document.getElementById('tabla-equipos'), 1)">Limpiar</button>
-                                        <input type="text" class="filter-search" placeholder="Buscar..." oninput="searchFilterOptions(this)">
-                                    </div>
-                                    <div class="filter-options"></div>
-                                </div>
-                            </th>
-                            <th class="table-filter-header">
-                                Marca/Modelo
-                                <span class="filter-icon" data-column="2">▼</span>
-                                <div class="filter-dropdown">
-                                    <div class="filter-controls">
-                                        <div class="filter-sort-btns">
-                                            <button class="btn btn-sm btn-secondary" onclick="sortTable(document.getElementById('tabla-equipos'), 2, 'asc')">↑ ASC</button>
-                                            <button class="btn btn-sm btn-secondary" onclick="sortTable(document.getElementById('tabla-equipos'), 2, 'desc')">↓ DESC</button>
+                                    </th>
+                                    <th class="table-filter-header">
+                                        Marca/Modelo
+                                        <span class="filter-icon" data-column="2">▼</span>
+                                        <div class="filter-dropdown">
+                                            <div class="filter-controls">
+                                                <div class="filter-sort-btns">
+                                                    <button class="btn btn-sm btn-secondary" onclick="sortTable(document.getElementById('tabla-equipos'), 2, 'asc')">↑ ASC</button>
+                                                    <button class="btn btn-sm btn-secondary" onclick="sortTable(document.getElementById('tabla-equipos'), 2, 'desc')">↓ DESC</button>
+                                                </div>
+                                                <button class="btn btn-sm btn-danger filter-clear-btn" onclick="clearFilter(this.closest('.filter-dropdown'), document.getElementById('tabla-equipos'), 2)">Limpiar</button>
+                                                <input type="text" class="filter-search" placeholder="Buscar..." oninput="searchFilterOptions(this)">
+                                            </div>
+                                            <div class="filter-options"></div>
                                         </div>
-                                        <button class="btn btn-sm btn-danger filter-clear-btn" onclick="clearFilter(this.closest('.filter-dropdown'), document.getElementById('tabla-equipos'), 2)">Limpiar</button>
-                                        <input type="text" class="filter-search" placeholder="Buscar..." oninput="searchFilterOptions(this)">
-                                    </div>
-                                    <div class="filter-options"></div>
-                                </div>
-                            </th>
-                            <th class="table-filter-header">
-                                Ubicación Actual
-                                <span class="filter-icon" data-column="3">▼</span>
-                                <div class="filter-dropdown">
-                                    <div class="filter-controls">
-                                        <div class="filter-sort-btns">
-                                            <button class="btn btn-sm btn-secondary" onclick="sortTable(document.getElementById('tabla-equipos'), 3, 'asc')">↑ ASC</button>
-                                            <button class="btn btn-sm btn-secondary" onclick="sortTable(document.getElementById('tabla-equipos'), 3, 'desc')">↓ DESC</button>
+                                    </th>
+                                    <th class="table-filter-header">
+                                        Ubicación Actual
+                                        <span class="filter-icon" data-column="3">▼</span>
+                                        <div class="filter-dropdown">
+                                            <div class="filter-controls">
+                                                <div class="filter-sort-btns">
+                                                    <button class="btn btn-sm btn-secondary" onclick="sortTable(document.getElementById('tabla-equipos'), 3, 'asc')">↑ ASC</button>
+                                                    <button class="btn btn-sm btn-secondary" onclick="sortTable(document.getElementById('tabla-equipos'), 3, 'desc')">↓ DESC</button>
+                                                </div>
+                                                <button class="btn btn-sm btn-danger filter-clear-btn" onclick="clearFilter(this.closest('.filter-dropdown'), document.getElementById('tabla-equipos'), 3)">Limpiar</button>
+                                                <input type="text" class="filter-search" placeholder="Buscar..." oninput="searchFilterOptions(this)">
+                                            </div>
+                                            <div class="filter-options"></div>
                                         </div>
-                                        <button class="btn btn-sm btn-danger filter-clear-btn" onclick="clearFilter(this.closest('.filter-dropdown'), document.getElementById('tabla-equipos'), 3)">Limpiar</button>
-                                        <input type="text" class="filter-search" placeholder="Buscar..." oninput="searchFilterOptions(this)">
-                                    </div>
-                                    <div class="filter-options"></div>
-                                </div>
-                            </th>
-                            <th>Próximo Mtto Preventivo</th>
-                            <th>Estado</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($equipos as $equipo): ?>
-                        <tr>
-                            <td><?= htmlspecialchars($equipo['codigo']) ?></td>
-                            <td><?= htmlspecialchars($equipo['tipo_nombre']) ?></td>
-                            <td><?= htmlspecialchars($equipo['marca'] . ' ' . $equipo['modelo']) ?></td>
-                            <td><?= htmlspecialchars($equipo['ubicacion_actual'] ?? 'Sin ubicación') ?></td>
-                            <td>
-                                <?php 
-                                if ($equipo['proxima_fecha_preventivo']) {
-                                    $fecha = new DateTime($equipo['proxima_fecha_preventivo']);
-                                    $hoy = new DateTime();
-                                    $diferencia = $hoy->diff($fecha);
-                                    
-                                    if ($fecha < $hoy) {
-                                        echo '<span class="badge badge-danger">' . $fecha->format('d/m/Y') . ' (Vencido)</span>';
-                                    } else {
-                                        echo '<span class="badge badge-success">' . $fecha->format('d/m/Y') . '</span>';
-                                    }
-                                } else {
-                                    echo '<span class="badge badge-secondary">Sin registro</span>';
-                                }
-                                ?>
-                            </td>
-                            <td>
-                                <?php if ($equipo['tiene_solicitud_pendiente'] > 0): ?>
-                                    <span class="badge badge-warning">Solicitud Pendiente</span>
-                                    <?php if ($equipo['fecha_movimiento_programado']): ?>
-                                        <br><small>Movimiento: <?= date('d/m/Y', strtotime($equipo['fecha_movimiento_programado'])) ?></small>
-                                    <?php endif; ?>
-                                <?php else: ?>
-                                    <span class="badge badge-success">Operativo</span>
-                                <?php endif; ?>
-                            </td>
-                            <td>
-                                <a href="equipos_dashboard.php?id=<?= $equipo['id'] ?>" class="btn btn-sm btn-primary" title="Ver Dashboard">
-                                    📊 Dashboard
-                                </a>
-                                <?php if ($cargoOperario == 5 || $cargoOperario == 43): ?>
-                                    <?php if ($equipo['tiene_solicitud_pendiente'] > 0): ?>
-                                        <button class="btn btn-sm btn-secondary" disabled title="Ya tiene solicitud pendiente">
-                                            🔧 Solicitado
-                                        </button>
-                                    <?php else: ?>
-                                        <button class="btn btn-sm btn-warning" onclick="solicitarMantenimiento(<?= $equipo['id'] ?>)" title="Solicitar Mantenimiento">
-                                            🔧 Solicitar
-                                        </button>
-                                    <?php endif; ?>
-                                <?php endif; ?>
-                            </td>
-                        </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
+                                    </th>
+                                    <th>Próximo Mtto Preventivo</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($equipos as $equipo): ?>
+                                <tr>
+                                    <td><?= htmlspecialchars($equipo['codigo']) ?></td>
+                                    <td><?= htmlspecialchars($equipo['tipo_nombre']) ?></td>
+                                    <td><?= htmlspecialchars($equipo['marca'] . ' ' . $equipo['modelo']) ?></td>
+                                    <td><?= htmlspecialchars($equipo['ubicacion_actual'] ?? 'Sin ubicación') ?></td>
+                                    <td>
+                                        <?php 
+                                        if ($equipo['proxima_fecha_preventivo']) {
+                                            $fecha = new DateTime($equipo['proxima_fecha_preventivo']);
+                                            $hoy = new DateTime();
+                                            $diferencia = $hoy->diff($fecha);
+                                            
+                                            if ($fecha < $hoy) {
+                                                echo '<span class="badge badge-danger">' . $fecha->format('d/m/Y') . ' (Vencido)</span>';
+                                            } else {
+                                                echo '<span class="badge badge-success">' . $fecha->format('d/m/Y') . '</span>';
+                                            }
+                                        } else {
+                                            echo '<span class="badge badge-secondary">Sin registro</span>';
+                                        }
+                                        ?>
+                                    </td>
+                                    <td>
+                                        <?php if ($equipo['tiene_solicitud_pendiente'] > 0): ?>
+                                            <span class="badge badge-warning">Solicitud Pendiente</span>
+                                            <?php if ($equipo['fecha_movimiento_programado']): ?>
+                                                <br><small>Movimiento: <?= date('d/m/Y', strtotime($equipo['fecha_movimiento_programado'])) ?></small>
+                                            <?php endif; ?>
+                                        <?php else: ?>
+                                            <span class="badge badge-success">Operativo</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td>
+                                        <a href="equipos_dashboard.php?id=<?= $equipo['id'] ?>" class="btn btn-sm btn-primary" title="Ver Dashboard">
+                                            📊 Dashboard
+                                        </a>
+                                        <?php if ($cargoOperario == 5 || $cargoOperario == 43): ?>
+                                            <?php if ($equipo['tiene_solicitud_pendiente'] > 0): ?>
+                                                <button class="btn btn-sm btn-secondary" disabled title="Ya tiene solicitud pendiente">
+                                                    🔧 Solicitado
+                                                </button>
+                                            <?php else: ?>
+                                                <button class="btn btn-sm btn-warning" onclick="solicitarMantenimiento(<?= $equipo['id'] ?>)" title="Solicitar Mantenimiento">
+                                                    🔧 Solicitar
+                                                </button>
+                                            <?php endif; ?>
+                                        <?php endif; ?>
+                                    </td>
+                                </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
