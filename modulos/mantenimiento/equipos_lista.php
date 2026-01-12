@@ -1,6 +1,5 @@
 <?php
 require_once '../../includes/auth.php';
-require_once '../../includes/conexion.php';
 require_once __DIR__ . '/models/Equipo.php';
 require_once '../../core/permissions/permissions.php';
 
