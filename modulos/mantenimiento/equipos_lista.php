@@ -1,6 +1,5 @@
 <?php
 require_once '../../includes/auth.php';
-require_once '../../includes/funciones.php';
 require_once __DIR__ . '/models/Equipo.php';
 
 $usuario = obtenerUsuarioActual();
@@ -8,10 +7,15 @@ $cargoOperario = $usuario['CodNivelesCargos'];
 $sucursales = obtenerSucursalesUsuario($_SESSION['usuario_id']);
 $codigo_sucursal_busqueda = $sucursales[0]['nombre'];
 
+if (!tienePermiso('historial_activos', 'vista', $cargoOperario)) {
+    header('Location: /login.php');
+    exit();
+}
+
 $equipoModel = new Equipo();
 
 // Obtener equipos según el cargo
-if ($cargoOperario == 35 || $cargoOperario == 14) {
+if (!tienePermiso('historial_activos', 'historial_total_activos', $cargoOperario)) {
     // Líder de infraestructura ve todos los equipos
     $equipos = $equipoModel->obtenerTodos();
 } else {
