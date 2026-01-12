@@ -33,6 +33,10 @@ if (tienePermiso('historial_activos', 'historial_total_activos', $cargoOperario)
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lista de Equipos - Sistema de Mantenimiento</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="icon" href="../../assets/img/icon12.png" type="image/png">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="css/equipos_general.css">
     <link rel="stylesheet" href="/assets/css/global_tools.css?v=<?php echo mt_rand(1, 10000); ?>"> <!-- contiene main, sub container * y body -->
 </head>
@@ -40,7 +44,7 @@ if (tienePermiso('historial_activos', 'historial_total_activos', $cargoOperario)
     <?php echo renderMenuLateral($cargoOperario); ?>
     <div class="main-container">   <!-- ya existe en el css de menu lateral -->
         <div class="sub-container"> <!-- ya existe en el css de menu lateral -->
-            <?php echo renderHeader($usuario, false, '[Anexar titulo de pagina]'); ?> <!-- Dejar vacio si Bienvenido.. -->
+            <?php echo renderHeader($usuario, false, 'Historial de Activos'); ?> <!-- Dejar vacio si Bienvenido.. -->
             <div class="container-main">
                 <div class="page-header">
                     <h1 class="page-title">📋 Lista de Equipos</h1>
