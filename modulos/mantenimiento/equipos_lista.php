@@ -46,10 +46,6 @@ if (tienePermiso('historial_activos', 'historial_total_activos', $cargoOperario)
         <div class="sub-container"> <!-- ya existe en el css de menu lateral -->
             <?php echo renderHeader($usuario, false, 'Historial de Activos'); ?> <!-- Dejar vacio si Bienvenido.. -->
             <div class="container-main">
-                <div class="page-header">
-                    <h1 class="page-title">📋 Lista de Equipos</h1>
-                </div>
-
                 <div class="table-container">
                     <div class="table-responsive">
                         <table id="tabla-equipos">
