@@ -2,13 +2,34 @@
    ESTILOS GENERALES DEL SISTEMA DE MANTENIMIENTO
    ============================================ */
 
-/* Tablas */
-.table-container {
+
+
+/* Contenedor principal */
+.container-main {
+    max-width: 1400px;
+    margin: 20px auto;
+    padding: 0 15px;
+}
+
+/* Cabecera de página */
+.page-header {
     background-color: #fff;
+    padding: 20px;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    overflow: hidden;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
+
+.page-title {
+    font-size: clamp(16px, 3vw, 24px) !important;
+    font-weight: bold;
+    color: #333;
+}
+
+/* Botones */
 .btn {
     padding: 10px 20px;
     border: none;
