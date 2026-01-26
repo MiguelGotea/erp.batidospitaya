@@ -655,172 +655,168 @@ function renderizarFechaAgendado(fechaInicio, status) {
     return `<span class="fecha-sin-programar"><i class="bi bi-exclamation-triangle"></i> ${formatearFecha(fechaInicio)}</span>`;
 }
 
-// ========== FUNCIONES PARA CALENDARIO DE RANGO DE FECHAS ==========
-
-// Crear calendario de rango de fechas
+// ========== FUNCIONES PARA CALENDARIO DE RANGO DE FECHAS (DOS CALENDARIOS) ==========
+// Crear calendario de rango de fechas con DOS calendarios separados
 function crearCalendarioRangoFechas(columna, fechaActual) {
     const hoy = new Date();
     const mesActual = hoy.getMonth();
     const anioActual = hoy.getFullYear();
 
+    const fechaDesde = fechaActual?.desde || '';
+    const fechaHasta = fechaActual?.hasta || '';
+
     const html = `
-        <div class="filter-section">
-            <span class="filter-section-title">Rango de Fechas:</span>
+        <div class="filter-section" style="margin-top: 4px; margin-bottom: 6px;">
+            <span class="filter-section-title">Desde:</span>
             <div class="daterange-inputs">
-                <div class="daterange-calendar-container" data-columna="${columna}">
+                <div class="daterange-calendar-container">
                     <div class="daterange-month-selector">
-                        <select id="daterange-month-${columna}" onchange="actualizarCalendario('${columna}')">
-                            <option value="0">Enero</option>
-                            <option value="1">Febrero</option>
-                            <option value="2">Marzo</option>
-                            <option value="3">Abril</option>
-                            <option value="4">Mayo</option>
-                            <option value="5">Junio</option>
-                            <option value="6">Julio</option>
-                            <option value="7">Agosto</option>
-                            <option value="8">Septiembre</option>
-                            <option value="9">Octubre</option>
-                            <option value="10">Noviembre</option>
-                            <option value="11">Diciembre</option>
-                        </select>
-                        <select id="daterange-year-${columna}" onchange="actualizarCalendario('${columna}')">
-                            ${generarOpcionesAnio(anioActual)}
-                        </select>
+                        <select id="mesDesde-${columna}" onchange="actualizarCalendario('desde', '${columna}')"></select>
+                        <select id="añoDesde-${columna}" onchange="actualizarCalendario('desde', '${columna}')"></select>
                     </div>
-                    <div class="daterange-calendar" id="daterange-calendar-${columna}">
-                        <!-- Calendario generado dinámicamente -->
+                    <div class="daterange-calendar" id="calendarioDesde-${columna}"></div>
+                </div>
+            </div>
+        </div>
+        <div class="filter-section" style="margin-top: 4px; margin-bottom: 6px;">
+            <span class="filter-section-title">Hasta:</span>
+            <div class="daterange-inputs">
+                <div class="daterange-calendar-container">
+                    <div class="daterange-month-selector">
+                        <select id="mesHasta-${columna}" onchange="actualizarCalendario('hasta', '${columna}')"></select>
+                        <select id="añoHasta-${columna}" onchange="actualizarCalendario('hasta', '${columna}')"></select>
                     </div>
+                    <div class="daterange-calendar" id="calendarioHasta-${columna}"></div>
                 </div>
             </div>
         </div>
     `;
 
-    // Establecer valores actuales después de insertar el HTML
     setTimeout(() => {
-        $(`#daterange-month-${columna}`).val(mesActual);
-        $(`#daterange-year-${columna}`).val(anioActual);
-        actualizarCalendario(columna);
-    }, 10);
+        inicializarSelectoresFecha(columna, mesActual, anioActual, fechaDesde, fechaHasta);
+        actualizarCalendario('desde', columna);
+        actualizarCalendario('hasta', columna);
+    }, 50);
 
     return html;
 }
+// Inicializar selectores de fecha
+function inicializarSelectoresFecha(columna, mesActual, anioActual, fechaDesde, fechaHasta) {
+    const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+        'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 
-// Generar opciones de año
-function generarOpcionesAnio(anioActual) {
-    let html = '';
-    for (let i = anioActual - 2; i <= anioActual + 1; i++) {
-        html += `<option value="${i}">${i}</option>`;
+    let mesDesdeSeleccionado = mesActual;
+    let anioDesdeSeleccionado = anioActual;
+    let mesHastaSeleccionado = mesActual;
+    let anioHastaSeleccionado = anioActual;
+
+    if (fechaDesde) {
+        const d = new Date(fechaDesde);
+        mesDesdeSeleccionado = d.getMonth();
+        anioDesdeSeleccionado = d.getFullYear();
     }
-    return html;
+
+    if (fechaHasta) {
+        const d = new Date(fechaHasta);
+        mesHastaSeleccionado = d.getMonth();
+        anioHastaSeleccionado = d.getFullYear();
+    }
+
+    // Llenar selectores de mes
+    const selectMesDesde = $(`#mesDesde-${columna}`);
+    const selectMesHasta = $(`#mesHasta-${columna}`);
+    meses.forEach((mes, idx) => {
+        selectMesDesde.append(`<option value="${idx}" ${idx === mesDesdeSeleccionado ? 'selected' : ''}>${mes}</option>`);
+        selectMesHasta.append(`<option value="${idx}" ${idx === mesHastaSeleccionado ? 'selected' : ''}>${mes}</option>`);
+    });
+
+    // Llenar selectores de año
+    const selectAnioDesde = $(`#añoDesde-${columna}`);
+    const selectAnioHasta = $(`#añoHasta-${columna}`);
+    for (let anio = anioActual - 2; anio <= anioActual + 1; anio++) {
+        selectAnioDesde.append(`<option value="${anio}" ${anio === anioDesdeSeleccionado ? 'selected' : ''}>${anio}</option>`);
+        selectAnioHasta.append(`<option value="${anio}" ${anio === anioHastaSeleccionado ? 'selected' : ''}>${anio}</option>`);
+    }
 }
+// Actualizar calendario (desde o hasta)
+function actualizarCalendario(tipo, columna) {
+    const mes = parseInt($(`#mes${tipo.charAt(0).toUpperCase() + tipo.slice(1)}-${columna}`).val());
+    const anio = parseInt($(`#año${tipo.charAt(0).toUpperCase() + tipo.slice(1)}-${columna}`).val());
+    const calendarioId = `#calendario${tipo.charAt(0).toUpperCase() + tipo.slice(1)}-${columna}`;
 
-// Actualizar calendario
-function actualizarCalendario(columna) {
-    const mes = parseInt($(`#daterange-month-${columna}`).val());
-    const anio = parseInt($(`#daterange-year-${columna}`).val());
+    const primerDia = new Date(anio, mes, 1).getDay();
+    const diasEnMes = new Date(anio, mes + 1, 0).getDate();
 
-    const primerDia = new Date(anio, mes, 1);
-    const ultimoDia = new Date(anio, mes + 1, 0);
-    const diasEnMes = ultimoDia.getDate();
-    const primerDiaSemana = primerDia.getDay(); // 0 = Domingo
+    const diasSemana = ['D', 'L', 'M', 'M', 'J', 'V', 'S'];
+    let html = '<div class="daterange-calendar-header">';
+    diasSemana.forEach(dia => {
+        html += `<div class="daterange-calendar-day-name">${dia}</div>`;
+    });
+    html += '</div><div class="daterange-calendar-days">';
 
-    let html = `
-        <div class="daterange-calendar-header">
-            <div class="daterange-calendar-day-name">D</div>
-            <div class="daterange-calendar-day-name">L</div>
-            <div class="daterange-calendar-day-name">M</div>
-            <div class="daterange-calendar-day-name">M</div>
-            <div class="daterange-calendar-day-name">J</div>
-            <div class="daterange-calendar-day-name">V</div>
-            <div class="daterange-calendar-day-name">S</div>
-        </div>
-        <div class="daterange-calendar-days">
-    `;
-
-    // Días vacíos antes del primer día
-    for (let i = 0; i < primerDiaSemana; i++) {
+    // Días vacíos al inicio
+    for (let i = 0; i < primerDia; i++) {
         html += '<div class="daterange-calendar-day empty"></div>';
     }
 
     // Días del mes
-    const filtroActual = filtrosActivos[columna] || {};
-    const fechaDesde = filtroActual.desde ? new Date(filtroActual.desde) : null;
-    const fechaHasta = filtroActual.hasta ? new Date(filtroActual.hasta) : null;
-
     for (let dia = 1; dia <= diasEnMes; dia++) {
-        const fechaDia = new Date(anio, mes, dia);
-        const fechaStr = formatearFechaISO(fechaDia);
-
-        let clases = 'daterange-calendar-day';
-
-        // Marcar si está seleccionado
-        if (fechaDesde && fechaDia.getTime() === fechaDesde.getTime()) {
-            clases += ' selected';
-        }
-        if (fechaHasta && fechaDia.getTime() === fechaHasta.getTime()) {
-            clases += ' selected';
-        }
-
-        // Marcar si está en el rango
-        if (fechaDesde && fechaHasta && fechaDia > fechaDesde && fechaDia < fechaHasta) {
-            clases += ' in-range';
-        }
-
-        html += `<div class="${clases}" onclick="event.stopPropagation(); seleccionarFechaRango('${columna}', '${fechaStr}')">${dia}</div>`;
+        const fechaStr = `${anio}-${String(mes + 1).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
+        const clases = obtenerClasesCalendario(fechaStr, columna);
+        html += `<div class="daterange-calendar-day ${clases}" onclick="event.stopPropagation(); seleccionarFecha('${tipo}', '${fechaStr}', '${columna}')">${dia}</div>`;
     }
 
     html += '</div>';
-
-    $(`#daterange-calendar-${columna}`).html(html);
+    $(calendarioId).html(html);
 }
+// Obtener clases para días del calendario
+function obtenerClasesCalendario(fecha, columna) {
+    const fechaDesde = filtrosActivos[columna]?.desde;
+    const fechaHasta = filtrosActivos[columna]?.hasta;
 
-// Seleccionar fecha en el rango
-function seleccionarFechaRango(columna, fechaStr) {
+    let clases = [];
+
+    if (fechaDesde && fecha === fechaDesde) {
+        clases.push('selected');
+    }
+
+    if (fechaHasta && fecha === fechaHasta) {
+        clases.push('selected');
+    }
+
+    if (fechaDesde && fechaHasta && fecha > fechaDesde && fecha < fechaHasta) {
+        clases.push('in-range');
+    }
+
+    return clases.join(' ');
+}
+// Seleccionar fecha en calendario
+function seleccionarFecha(tipo, fecha, columna) {
     if (!filtrosActivos[columna]) {
         filtrosActivos[columna] = {};
     }
 
-    const fechaSeleccionada = new Date(fechaStr);
-    const filtro = filtrosActivos[columna];
+    filtrosActivos[columna][tipo] = fecha;
 
-    // Si no hay fecha desde, establecerla
-    if (!filtro.desde) {
-        filtro.desde = fechaStr;
-        filtro.hasta = '';
-    }
-    // Si hay fecha desde pero no hasta
-    else if (!filtro.hasta) {
-        const fechaDesde = new Date(filtro.desde);
+    // Actualizar ambos calendarios para reflejar el rango
+    actualizarCalendario('desde', columna);
+    actualizarCalendario('hasta', columna);
 
-        // Si la nueva fecha es anterior a desde, intercambiar
-        if (fechaSeleccionada < fechaDesde) {
-            filtro.hasta = filtro.desde;
-            filtro.desde = fechaStr;
-        } else {
-            filtro.hasta = fechaStr;
+    // Si ambas fechas están seleccionadas, aplicar filtro y CERRAR PANEL
+    if (filtrosActivos[columna].desde && filtrosActivos[columna].hasta) {
+        // Validar que 'desde' no sea mayor que 'hasta'
+        if (filtrosActivos[columna].desde > filtrosActivos[columna].hasta) {
+            // Intercambiar fechas
+            const temp = filtrosActivos[columna].desde;
+            filtrosActivos[columna].desde = filtrosActivos[columna].hasta;
+            filtrosActivos[columna].hasta = temp;
         }
-    }
-    // Si ya hay ambas fechas, reiniciar
-    else {
-        filtro.desde = fechaStr;
-        filtro.hasta = '';
-    }
 
-    // Actualizar calendario visual
-    actualizarCalendario(columna);
-
-    // Si ya hay ambas fechas, aplicar filtro
-    if (filtro.desde && filtro.hasta) {
         paginaActual = 1;
         cargarDatos();
         actualizarIndicadoresFiltros();
-    }
-}
 
-// Formatear fecha a ISO (YYYY-MM-DD)
-function formatearFechaISO(fecha) {
-    const anio = fecha.getFullYear();
-    const mes = String(fecha.getMonth() + 1).padStart(2, '0');
-    const dia = String(fecha.getDate()).padStart(2, '0');
-    return `${anio}-${mes}-${dia}`;
+        // CERRAR EL PANEL AUTOMÁTICAMENTE
+        cerrarTodosFiltros();
+    }
 }
