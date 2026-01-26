@@ -20,23 +20,39 @@ try {
     // Construir WHERE con filtros
     $where_conditions = [];
     $params = [];
-    
+
     foreach ($filtros as $columna => $valor) {
         if (is_array($valor)) {
-            // Filtro de lista (múltiples valores)
-            $placeholders = str_repeat('?,', count($valor) - 1) . '?';
-            
-            if ($columna === 'nombre_sucursal') {
-                $where_conditions[] = "s.nombre IN ($placeholders)";
-            } elseif ($columna === 'nivel_urgencia') {
-                $where_conditions[] = "t.nivel_urgencia IN ($placeholders)";
-            } elseif ($columna === 'tipo_formulario') {
-                $where_conditions[] = "t.tipo_formulario IN ($placeholders)";
-            } elseif ($columna === 'status') {
-                $where_conditions[] = "t.status IN ($placeholders)";
+            // Verificar si es un filtro de rango de fechas (daterange)
+            if (isset($valor['desde']) || isset($valor['hasta'])) {
+                // Filtro de rango de fechas
+                if (!empty($valor['desde']) && !empty($valor['hasta'])) {
+                    $where_conditions[] = "DATE(t.$columna) BETWEEN ? AND ?";
+                    $params[] = $valor['desde'];
+                    $params[] = $valor['hasta'];
+                } elseif (!empty($valor['desde'])) {
+                    $where_conditions[] = "DATE(t.$columna) >= ?";
+                    $params[] = $valor['desde'];
+                } elseif (!empty($valor['hasta'])) {
+                    $where_conditions[] = "DATE(t.$columna) <= ?";
+                    $params[] = $valor['hasta'];
+                }
+            } else {
+                // Filtro de lista (múltiples valores)
+                $placeholders = str_repeat('?,', count($valor) - 1) . '?';
+
+                if ($columna === 'nombre_sucursal') {
+                    $where_conditions[] = "s.nombre IN ($placeholders)";
+                } elseif ($columna === 'nivel_urgencia') {
+                    $where_conditions[] = "t.nivel_urgencia IN ($placeholders)";
+                } elseif ($columna === 'tipo_formulario') {
+                    $where_conditions[] = "t.tipo_formulario IN ($placeholders)";
+                } elseif ($columna === 'status') {
+                    $where_conditions[] = "t.status IN ($placeholders)";
+                }
+
+                $params = array_merge($params, $valor);
             }
-            
-            $params = array_merge($params, $valor);
         } else {
             // Filtro de texto (LIKE)
             if ($columna === 'titulo') {
@@ -45,21 +61,18 @@ try {
             } elseif ($columna === 'descripcion') {
                 $where_conditions[] = "t.descripcion LIKE ?";
                 $params[] = "%$valor%";
-            } elseif ($columna === 'created_at' || $columna === 'fecha_inicio') {
-                $where_conditions[] = "t.$columna LIKE ?";
-                $params[] = "%$valor%";
             }
         }
     }
-    
+
     $where_sql = !empty($where_conditions) ? 'WHERE ' . implode(' AND ', $where_conditions) : '';
-    
+
     // Construir ORDER BY
     $order_sql = '';
     if ($orden['columna']) {
         $columna_orden = $orden['columna'];
         $direccion = $orden['direccion'] === 'desc' ? 'DESC' : 'ASC';
-        
+
         if ($columna_orden === 'nombre_sucursal') {
             $order_sql = "ORDER BY s.nombre $direccion";
         } elseif (in_array($columna_orden, ['created_at', 'titulo', 'descripcion', 'nivel_urgencia', 'status', 'fecha_inicio', 'tipo_formulario'])) {
@@ -68,7 +81,7 @@ try {
     } else {
         $order_sql = "ORDER BY t.created_at DESC";
     }
-    
+
     // Consulta principal con paginación
     $sql = "SELECT t.*, 
                    s.nombre as nombre_sucursal,
@@ -78,28 +91,28 @@ try {
             $where_sql
             $order_sql
             LIMIT ? OFFSET ?";
-    
+
     $params[] = $registros_por_pagina;
     $params[] = $offset;
-    
+
     $datos = $db->fetchAll($sql, $params);
-    
+
     // Contar total de registros
     $sql_count = "SELECT COUNT(*) as total
                   FROM mtto_tickets t
                   LEFT JOIN sucursales s ON t.cod_sucursal = s.codigo
                   $where_sql";
-    
+
     $count_params = array_slice($params, 0, count($params) - 2);
     $total_result = $db->fetchOne($sql_count, $count_params);
     $total_registros = $total_result['total'];
-    
+
     echo json_encode([
         'success' => true,
         'datos' => $datos,
         'total_registros' => $total_registros
     ], JSON_UNESCAPED_UNICODE);
-    
+
 } catch (Exception $e) {
     echo json_encode([
         'success' => false,

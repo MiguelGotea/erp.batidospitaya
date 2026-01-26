@@ -5,35 +5,35 @@ function posicionarPanelFiltro(panel, icon) {
     const iconHeight = $(icon).outerHeight();
     const panelWidth = panel.outerWidth();
     const panelHeight = panel.outerHeight();
-    
+
     const windowWidth = $(window).width();
     const windowHeight = $(window).height();
     const scrollTop = $(window).scrollTop();
-    
+
     let top = iconOffset.top + iconHeight + 5;
     let left = iconOffset.left - panelWidth + iconWidth;
-    
+
     // Ajustar si se sale por la derecha
     if (left + panelWidth > windowWidth) {
         left = windowWidth - panelWidth - 10;
     }
-    
+
     // Ajustar si se sale por la izquierda
     if (left < 10) {
         left = 10;
     }
-    
+
     // Ajustar si se sale por abajo - mostrar arriba del icono
     if (top + panelHeight > windowHeight + scrollTop) {
         top = iconOffset.top - panelHeight - 5;
     }
-    
+
     // Si aún así se sale por arriba, ajustar al top de la ventana
     if (top < scrollTop + 10) {
         top = scrollTop + 10;
         panel.css('max-height', (windowHeight - 60) + 'px');
     }
-    
+
     panel.css({
         top: top + 'px',
         left: left + 'px'
@@ -43,7 +43,7 @@ function posicionarPanelFiltro(panel, icon) {
 // Actualizar indicadores de filtros activos
 function actualizarIndicadoresFiltros() {
     $('.filter-icon').removeClass('has-filter');
-    
+
     Object.keys(filtrosActivos).forEach(columna => {
         const valor = filtrosActivos[columna];
         if ((Array.isArray(valor) && valor.length > 0) || (!Array.isArray(valor) && valor !== '')) {
@@ -55,12 +55,12 @@ function actualizarIndicadoresFiltros() {
 // Limpiar filtro específico
 function limpiarFiltro(columna) {
     // Si es sucursal y está bloqueado, no permitir limpiar
-    if (columna === 'nombre_sucursal' && 
-        typeof filtroSucursalBloqueado !== 'undefined' && 
+    if (columna === 'nombre_sucursal' &&
+        typeof filtroSucursalBloqueado !== 'undefined' &&
         filtroSucursalBloqueado) {
         return;
     }
-    
+
     delete filtrosActivos[columna];
     cerrarTodosFiltros();
     paginaActual = 1;
@@ -101,28 +101,28 @@ const coloresEstado = {
 };
 
 // Inicializar al cargar la página
-$(document).ready(function() {
+$(document).ready(function () {
     cargarDatos();
-    
+
     // Cerrar filtros al hacer click fuera
-    $(document).on('click', function(e) {
+    $(document).on('click', function (e) {
         if (!$(e.target).closest('.filter-panel, .filter-icon').length) {
             cerrarTodosFiltros();
         }
     });
-    
+
     // Cerrar filtros al hacer scroll
-    $('.table-responsive').on('scroll', function() {
+    $('.table-responsive').on('scroll', function () {
         cerrarTodosFiltros();
     });
-    
+
     // Cerrar filtros al hacer scroll en la ventana
-    $(window).on('scroll', function() {
+    $(window).on('scroll', function () {
         cerrarTodosFiltros();
     });
-    
+
     // Recalcular posición al hacer resize
-    $(window).on('resize', function() {
+    $(window).on('resize', function () {
         if (panelFiltroAbierto) {
             cerrarTodosFiltros();
         }
@@ -141,7 +141,7 @@ function cargarDatos() {
             orden: JSON.stringify(ordenActivo)
         },
         dataType: 'json',
-        success: function(response) {
+        success: function (response) {
             if (response.success) {
                 totalRegistros = response.total_registros;
                 renderizarTabla(response.datos);
@@ -151,7 +151,7 @@ function cargarDatos() {
                 alert('Error: ' + response.message);
             }
         },
-        error: function() {
+        error: function () {
             alert('Error al cargar los datos');
         }
     });
@@ -161,50 +161,50 @@ function cargarDatos() {
 function renderizarTabla(datos) {
     const tbody = $('#tablaSolicitudesBody');
     tbody.empty();
-    
+
     if (datos.length === 0) {
         tbody.append('<tr><td colspan="9" class="text-center py-4">No se encontraron registros</td></tr>');
         return;
     }
-    
+
     datos.forEach(row => {
         const tr = $('<tr>');
-        
+
         // Solicitado
         tr.append(`<td>${formatearFecha(row.created_at)}</td>`);
-        
+
         // Título
         tr.append(`<td class="col-titulo">${row.titulo}</td>`);
-        
+
         // Descripción
         tr.append(`<td class="col-descripcion">${row.descripcion}</td>`);
-        
+
         // Sucursal
         tr.append(`<td class="col-sucursal">${row.nombre_sucursal}</td>`);
-        
+
         // Tipo
         const tipoClass = row.tipo_formulario === 'cambio_equipos' ? 'cambio-equipo' : 'mantenimiento';
         const tipoText = row.tipo_formulario === 'cambio_equipos' ? 'Cambio Equipo' : 'Mantenimiento';
         tr.append(`<td><span class="badge-tipo ${tipoClass}">${tipoText}</span></td>`);
-        
+
         // Urgencia
         tr.append(`<td>${renderizarUrgencia(row.id, row.nivel_urgencia)}</td>`);
-        
+
         // Estado
         const colorEstado = coloresEstado[row.status] || '#6c757d';
         tr.append(`<td><span class="badge-estado" style="background-color: ${colorEstado};">${row.status}</span></td>`);
-        
+
         // Agendado - con estilos según estado
         const fechaAgendadoHTML = renderizarFechaAgendado(row.fecha_inicio, row.status);
         tr.append(`<td class="col-agendado">${fechaAgendadoHTML}</td>`);
-        
+
         // Foto
         const tieneFotos = parseInt(row.total_fotos) > 0;
-        const btnFoto = tieneFotos 
+        const btnFoto = tieneFotos
             ? `<button class="btn-foto" onclick="mostrarFotos(${row.id})"><i class="bi bi-camera"></i> Ver (${row.total_fotos})</button>`
             : `<button class="btn-foto" disabled><i class="bi bi-camera"></i> Sin fotos</button>`;
         tr.append(`<td>${btnFoto}</td>`);
-        
+
         tbody.append(tr);
     });
 }
@@ -214,12 +214,12 @@ function renderizarUrgencia(ticketId, nivelActual) {
     const nivel = nivelActual || 0;
     const color = coloresUrgencia[nivel];
     const texto = textosUrgencia[nivel];
-    
+
     // Solo permitir cambiar si cargoOperario = 35
     const permiteEditar = (typeof cargoOperario !== 'undefined' && cargoOperario === 35);
     const cursor = permiteEditar ? 'pointer' : 'default';
     const onClick = permiteEditar ? `onclick="cambiarUrgencia(${ticketId}, ${nivel})"` : '';
-    
+
     return `
         <div class="urgency-selector" style="background-color: ${color}; cursor: ${cursor};" ${onClick}>
             <div class="urgency-text">${texto}</div>
@@ -233,15 +233,15 @@ function cambiarUrgencia(ticketId, nivelActual) {
     if (typeof cargoOperario === 'undefined' || cargoOperario !== 35) {
         return;
     }
-    
+
     const opciones = `
         <div style="padding: 0.5rem;">
             <div style="font-weight: 600; margin-bottom: 0.5rem;">Seleccionar nivel:</div>
             ${[0, 1, 2, 3, 4].map(nivel => {
-                const color = coloresUrgencia[nivel];
-                const texto = textosUrgencia[nivel];
-                const selected = nivel === nivelActual ? '✓ ' : '';
-                return `
+        const color = coloresUrgencia[nivel];
+        const texto = textosUrgencia[nivel];
+        const selected = nivel === nivelActual ? '✓ ' : '';
+        return `
                     <div style="padding: 0.5rem 0.75rem; cursor: pointer; border-radius: 3px; margin-bottom: 0.25rem; background-color: ${color}; color: white; display: flex; align-items: center; justify-content: center; gap: 0.5rem; font-weight: 600;" 
                          onmouseover="this.style.opacity='0.8'" 
                          onmouseout="this.style.opacity='1'"
@@ -249,17 +249,17 @@ function cambiarUrgencia(ticketId, nivelActual) {
                         <span>${selected}${texto}</span>
                     </div>
                 `;
-            }).join('')}
+    }).join('')}
         </div>
     `;
-    
+
     // Cerrar modal anterior si existe
     const modalAnterior = document.getElementById('modalUrgencia');
     if (modalAnterior) {
         $(modalAnterior).modal('hide');
         modalAnterior.remove();
     }
-    
+
     const modalHtml = `
         <div class="modal fade" id="modalUrgencia" tabindex="-1">
             <div class="modal-dialog modal-sm">
@@ -275,12 +275,12 @@ function cambiarUrgencia(ticketId, nivelActual) {
             </div>
         </div>
     `;
-    
+
     $('body').append(modalHtml);
     const modal = new bootstrap.Modal(document.getElementById('modalUrgencia'));
     modal.show();
-    
-    $('#modalUrgencia').on('hidden.bs.modal', function() {
+
+    $('#modalUrgencia').on('hidden.bs.modal', function () {
         $(this).remove();
     });
 }
@@ -288,7 +288,7 @@ function cambiarUrgencia(ticketId, nivelActual) {
 // Actualizar nivel de urgencia
 function actualizarUrgencia(ticketId, nuevoNivel) {
     $('#modalUrgencia').modal('hide');
-    
+
     $.ajax({
         url: 'ajax/historial_actualizar_urgencia.php',
         method: 'POST',
@@ -297,14 +297,14 @@ function actualizarUrgencia(ticketId, nuevoNivel) {
             nivel_urgencia: nuevoNivel
         },
         dataType: 'json',
-        success: function(response) {
+        success: function (response) {
             if (response.success) {
                 cargarDatos();
             } else {
                 alert('Error: ' + response.message);
             }
         },
-        error: function() {
+        error: function () {
             alert('Error al actualizar la urgencia');
         }
     });
@@ -317,11 +317,11 @@ function mostrarFotos(ticketId) {
         method: 'GET',
         data: { ticket_id: ticketId },
         dataType: 'json',
-        success: function(response) {
+        success: function (response) {
             if (response.success && response.fotos.length > 0) {
                 const carouselInner = $('#carouselFotosInner');
                 carouselInner.empty();
-                
+
                 response.fotos.forEach((foto, index) => {
                     const activeClass = index === 0 ? 'active' : '';
                     carouselInner.append(`
@@ -330,13 +330,13 @@ function mostrarFotos(ticketId) {
                         </div>
                     `);
                 });
-                
+
                 $('#modalFotos').modal('show');
             } else {
                 alert('No se encontraron fotos');
             }
         },
-        error: function() {
+        error: function () {
             alert('Error al cargar las fotos');
         }
     });
@@ -347,21 +347,21 @@ function toggleFilter(icon) {
     const th = $(icon).closest('th');
     const columna = th.data('column');
     const tipo = th.data('type');
-    
+
     // Si ya hay un panel abierto en esta columna, cerrarlo
     if (panelFiltroAbierto === columna) {
         cerrarTodosFiltros();
         return;
     }
-    
+
     // Cerrar otros filtros
     cerrarTodosFiltros();
-    
+
     // Crear y mostrar nuevo panel
     crearPanelFiltro(th, columna, tipo, icon);
     panelFiltroAbierto = columna;
     $(icon).addClass('active');
-    
+
     // Actualizar indicador si hay filtro activo
     actualizarIndicadoresFiltros();
 }
@@ -369,7 +369,7 @@ function toggleFilter(icon) {
 // Crear panel de filtro
 function crearPanelFiltro(th, columna, tipo, icon) {
     const panel = $('<div class="filter-panel show"></div>');
-    
+
     // Sección de ordenamiento
     panel.append(`
         <div class="filter-section">
@@ -386,9 +386,9 @@ function crearPanelFiltro(th, columna, tipo, icon) {
             </div>
         </div>
     `);
-    
+
     // Sección de búsqueda y opciones según el tipo
-    if (tipo === 'text' || tipo === 'date') {
+    if (tipo === 'text') {
         const valorActual = filtrosActivos[columna] || '';
         panel.append(`
             <div class="filter-section">
@@ -398,19 +398,26 @@ function crearPanelFiltro(th, columna, tipo, icon) {
                        oninput="filtrarBusqueda('${columna}', this.value)">
             </div>
         `);
+    } else if (tipo === 'daterange') {
+        // Agregar clase para scroll
+        panel.addClass('has-daterange');
+
+        // Crear calendario de rango de fechas
+        const fechaActual = filtrosActivos[columna] || { desde: '', hasta: '' };
+        panel.append(crearCalendarioRangoFechas(columna, fechaActual));
     } else if (tipo === 'list' || tipo === 'urgency') {
         // Cargar opciones únicas de la columna
         cargarOpcionesFiltro(panel, columna, tipo);
     }
-    
+
     // Botones de acción
-    const botonLimpiarDeshabilitado = (columna === 'nombre_sucursal' && 
-                                        typeof filtroSucursalBloqueado !== 'undefined' && 
-                                        filtroSucursalBloqueado);
-    
+    const botonLimpiarDeshabilitado = (columna === 'nombre_sucursal' &&
+        typeof filtroSucursalBloqueado !== 'undefined' &&
+        filtroSucursalBloqueado);
+
     const disabledAttr = botonLimpiarDeshabilitado ? 'disabled' : '';
     const disabledStyle = botonLimpiarDeshabilitado ? 'opacity: 0.5; cursor: not-allowed;' : '';
-    
+
     panel.append(`
         <div class="filter-actions">
             <button class="filter-action-btn clear" 
@@ -421,10 +428,10 @@ function crearPanelFiltro(th, columna, tipo, icon) {
             </button>
         </div>
     `);
-    
+
     // Agregar al body en lugar del th
     $('body').append(panel);
-    
+
     // Calcular y aplicar posición
     posicionarPanelFiltro(panel, icon);
 }
@@ -436,27 +443,27 @@ function cargarOpcionesFiltro(panel, columna, tipo) {
         method: 'POST',
         data: { columna: columna, tipo: tipo },
         dataType: 'json',
-        success: function(response) {
+        success: function (response) {
             if (response.success) {
                 let html = '<div class="filter-section">';
                 html += '<span class="filter-section-title">Filtrar por:</span>';
                 html += '<input type="text" class="filter-search" placeholder="Buscar..." onkeyup="buscarEnOpciones(this)">';
                 html += '<div class="filter-options">';
-                
+
                 response.opciones.forEach(opcion => {
                     const checked = filtrosActivos[columna] && filtrosActivos[columna].includes(opcion.valor) ? 'checked' : '';
-                    
+
                     // Validar si debe estar deshabilitado (solo para sucursales)
                     let disabled = '';
                     let disabledClass = '';
-                    
+
                     if (columna === 'nombre_sucursal' && filtroSucursalBloqueado) {
                         if (opcion.texto !== codigoSucursalBusqueda) {
                             disabled = 'disabled';
                             disabledClass = 'disabled';
                         }
                     }
-                    
+
                     html += `
                         <div class="filter-option ${disabledClass}">
                             <input type="checkbox" value="${opcion.valor}" ${checked} ${disabled}
@@ -465,10 +472,10 @@ function cargarOpcionesFiltro(panel, columna, tipo) {
                         </div>
                     `;
                 });
-                
+
                 html += '</div></div>';
                 panel.append(html);
-                
+
                 // Si el filtro está bloqueado, marcar automáticamente la sucursal
                 if (columna === 'nombre_sucursal' && filtroSucursalBloqueado && codigoSucursalBusqueda) {
                     if (!filtrosActivos[columna] || !filtrosActivos[columna].includes(codigoSucursalBusqueda)) {
@@ -514,7 +521,7 @@ function toggleOpcionFiltro(columna, valor, checked) {
     if (!filtrosActivos[columna]) {
         filtrosActivos[columna] = [];
     }
-    
+
     if (checked) {
         if (!filtrosActivos[columna].includes(valor)) {
             filtrosActivos[columna].push(valor);
@@ -525,7 +532,7 @@ function toggleOpcionFiltro(columna, valor, checked) {
             delete filtrosActivos[columna];
         }
     }
-    
+
     paginaActual = 1;
     cargarDatos();
     actualizarIndicadoresFiltros();
@@ -535,8 +542,8 @@ function toggleOpcionFiltro(columna, valor, checked) {
 function buscarEnOpciones(input) {
     const busqueda = input.value.toLowerCase();
     const opciones = $(input).siblings('.filter-options').find('.filter-option');
-    
-    opciones.each(function() {
+
+    opciones.each(function () {
         const texto = $(this).text().toLowerCase();
         $(this).toggle(texto.includes(busqueda));
     });
@@ -554,37 +561,37 @@ function renderizarPaginacion(totalRegistros) {
     const totalPaginas = Math.ceil(totalRegistros / registrosPorPagina);
     const paginacion = $('#paginacion');
     paginacion.empty();
-    
+
     // Botón anterior
     paginacion.append(`
         <button class="pagination-btn" onclick="cambiarPagina(${paginaActual - 1})" ${paginaActual === 1 ? 'disabled' : ''}>
             <i class="bi bi-chevron-left"></i>
         </button>
     `);
-    
+
     // Números de página
     let inicio = Math.max(1, paginaActual - 2);
     let fin = Math.min(totalPaginas, paginaActual + 2);
-    
+
     if (inicio > 1) {
         paginacion.append(`<button class="pagination-btn" onclick="cambiarPagina(1)">1</button>`);
         if (inicio > 2) {
             paginacion.append(`<span class="pagination-btn" disabled>...</span>`);
         }
     }
-    
+
     for (let i = inicio; i <= fin; i++) {
         const activeClass = i === paginaActual ? 'active' : '';
         paginacion.append(`<button class="pagination-btn ${activeClass}" onclick="cambiarPagina(${i})">${i}</button>`);
     }
-    
+
     if (fin < totalPaginas) {
         if (fin < totalPaginas - 1) {
             paginacion.append(`<span class="pagination-btn" disabled>...</span>`);
         }
         paginacion.append(`<button class="pagination-btn" onclick="cambiarPagina(${totalPaginas})">${totalPaginas}</button>`);
     }
-    
+
     // Botón siguiente
     paginacion.append(`
         <button class="pagination-btn" onclick="cambiarPagina(${paginaActual + 1})" ${paginaActual === totalPaginas ? 'disabled' : ''}>
@@ -613,36 +620,206 @@ function renderizarFechaAgendado(fechaInicio, status) {
     if (!fechaInicio) {
         return '<span class="fecha-sin-programar">Sin programar</span>';
     }
-    
+
     // Si está finalizado, mostrar con menos realce
     if (status === 'finalizado') {
         return `<span class="fecha-finalizado">${formatearFecha(fechaInicio)}</span>`;
     }
-    
+
     // Calcular semana actual
     const hoy = new Date();
     const fechaTicket = new Date(fechaInicio);
-    
+
     // Obtener lunes de esta semana
     const lunesActual = new Date(hoy);
     lunesActual.setDate(hoy.getDate() - (hoy.getDay() === 0 ? 6 : hoy.getDay() - 1));
     lunesActual.setHours(0, 0, 0, 0);
-    
+
     // Obtener domingo de esta semana
     const domingoActual = new Date(lunesActual);
     domingoActual.setDate(lunesActual.getDate() + 6);
     domingoActual.setHours(23, 59, 59, 999);
-    
+
     // Verificar si está en la semana actual
     if (fechaTicket >= lunesActual && fechaTicket <= domingoActual) {
         return `<span class="fecha-semana-actual"><i class="bi bi-exclamation-circle"></i> ${formatearFecha(fechaInicio)}</span>`;
     }
-    
+
     // Si es semana siguiente en adelante
     if (fechaTicket > domingoActual) {
         return `<span class="fecha-proxima"><i class="bi bi-calendar-check"></i> ${formatearFecha(fechaInicio)}</span>`;
     }
-    
+
     // Si ya pasó la fecha (atrasado)
     return `<span class="fecha-sin-programar"><i class="bi bi-exclamation-triangle"></i> ${formatearFecha(fechaInicio)}</span>`;
+}
+
+// ========== FUNCIONES PARA CALENDARIO DE RANGO DE FECHAS ==========
+
+// Crear calendario de rango de fechas
+function crearCalendarioRangoFechas(columna, fechaActual) {
+    const hoy = new Date();
+    const mesActual = hoy.getMonth();
+    const anioActual = hoy.getFullYear();
+
+    const html = `
+        <div class="filter-section">
+            <span class="filter-section-title">Rango de Fechas:</span>
+            <div class="daterange-inputs">
+                <div class="daterange-calendar-container" data-columna="${columna}">
+                    <div class="daterange-month-selector">
+                        <select id="daterange-month-${columna}" onchange="actualizarCalendario('${columna}')">
+                            <option value="0">Enero</option>
+                            <option value="1">Febrero</option>
+                            <option value="2">Marzo</option>
+                            <option value="3">Abril</option>
+                            <option value="4">Mayo</option>
+                            <option value="5">Junio</option>
+                            <option value="6">Julio</option>
+                            <option value="7">Agosto</option>
+                            <option value="8">Septiembre</option>
+                            <option value="9">Octubre</option>
+                            <option value="10">Noviembre</option>
+                            <option value="11">Diciembre</option>
+                        </select>
+                        <select id="daterange-year-${columna}" onchange="actualizarCalendario('${columna}')">
+                            ${generarOpcionesAnio(anioActual)}
+                        </select>
+                    </div>
+                    <div class="daterange-calendar" id="daterange-calendar-${columna}">
+                        <!-- Calendario generado dinámicamente -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Establecer valores actuales después de insertar el HTML
+    setTimeout(() => {
+        $(`#daterange-month-${columna}`).val(mesActual);
+        $(`#daterange-year-${columna}`).val(anioActual);
+        actualizarCalendario(columna);
+    }, 10);
+
+    return html;
+}
+
+// Generar opciones de año
+function generarOpcionesAnio(anioActual) {
+    let html = '';
+    for (let i = anioActual - 2; i <= anioActual + 1; i++) {
+        html += `<option value="${i}">${i}</option>`;
+    }
+    return html;
+}
+
+// Actualizar calendario
+function actualizarCalendario(columna) {
+    const mes = parseInt($(`#daterange-month-${columna}`).val());
+    const anio = parseInt($(`#daterange-year-${columna}`).val());
+
+    const primerDia = new Date(anio, mes, 1);
+    const ultimoDia = new Date(anio, mes + 1, 0);
+    const diasEnMes = ultimoDia.getDate();
+    const primerDiaSemana = primerDia.getDay(); // 0 = Domingo
+
+    let html = `
+        <div class="daterange-calendar-header">
+            <div class="daterange-calendar-day-name">D</div>
+            <div class="daterange-calendar-day-name">L</div>
+            <div class="daterange-calendar-day-name">M</div>
+            <div class="daterange-calendar-day-name">M</div>
+            <div class="daterange-calendar-day-name">J</div>
+            <div class="daterange-calendar-day-name">V</div>
+            <div class="daterange-calendar-day-name">S</div>
+        </div>
+        <div class="daterange-calendar-days">
+    `;
+
+    // Días vacíos antes del primer día
+    for (let i = 0; i < primerDiaSemana; i++) {
+        html += '<div class="daterange-calendar-day empty"></div>';
+    }
+
+    // Días del mes
+    const filtroActual = filtrosActivos[columna] || {};
+    const fechaDesde = filtroActual.desde ? new Date(filtroActual.desde) : null;
+    const fechaHasta = filtroActual.hasta ? new Date(filtroActual.hasta) : null;
+
+    for (let dia = 1; dia <= diasEnMes; dia++) {
+        const fechaDia = new Date(anio, mes, dia);
+        const fechaStr = formatearFechaISO(fechaDia);
+
+        let clases = 'daterange-calendar-day';
+
+        // Marcar si está seleccionado
+        if (fechaDesde && fechaDia.getTime() === fechaDesde.getTime()) {
+            clases += ' selected';
+        }
+        if (fechaHasta && fechaDia.getTime() === fechaHasta.getTime()) {
+            clases += ' selected';
+        }
+
+        // Marcar si está en el rango
+        if (fechaDesde && fechaHasta && fechaDia > fechaDesde && fechaDia < fechaHasta) {
+            clases += ' in-range';
+        }
+
+        html += `<div class="${clases}" onclick="seleccionarFechaRango('${columna}', '${fechaStr}')">${dia}</div>`;
+    }
+
+    html += '</div>';
+
+    $(`#daterange-calendar-${columna}`).html(html);
+}
+
+// Seleccionar fecha en el rango
+function seleccionarFechaRango(columna, fechaStr) {
+    if (!filtrosActivos[columna]) {
+        filtrosActivos[columna] = {};
+    }
+
+    const fechaSeleccionada = new Date(fechaStr);
+    const filtro = filtrosActivos[columna];
+
+    // Si no hay fecha desde, establecerla
+    if (!filtro.desde) {
+        filtro.desde = fechaStr;
+        filtro.hasta = '';
+    }
+    // Si hay fecha desde pero no hasta
+    else if (!filtro.hasta) {
+        const fechaDesde = new Date(filtro.desde);
+
+        // Si la nueva fecha es anterior a desde, intercambiar
+        if (fechaSeleccionada < fechaDesde) {
+            filtro.hasta = filtro.desde;
+            filtro.desde = fechaStr;
+        } else {
+            filtro.hasta = fechaStr;
+        }
+    }
+    // Si ya hay ambas fechas, reiniciar
+    else {
+        filtro.desde = fechaStr;
+        filtro.hasta = '';
+    }
+
+    // Actualizar calendario visual
+    actualizarCalendario(columna);
+
+    // Si ya hay ambas fechas, aplicar filtro
+    if (filtro.desde && filtro.hasta) {
+        paginaActual = 1;
+        cargarDatos();
+        actualizarIndicadoresFiltros();
+    }
+}
+
+// Formatear fecha a ISO (YYYY-MM-DD)
+function formatearFechaISO(fecha) {
+    const anio = fecha.getFullYear();
+    const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+    const dia = String(fecha.getDate()).padStart(2, '0');
+    return `${anio}-${mes}-${dia}`;
 }

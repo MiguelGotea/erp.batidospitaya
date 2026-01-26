@@ -11,7 +11,7 @@ $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
 
 $sucursales = obtenerSucursalesUsuario($_SESSION['usuario_id']);
-$codigo_sucursal_busqueda=$sucursales[0]['nombre'];
+$codigo_sucursal_busqueda = $sucursales[0]['nombre'];
 
 // Verificar acceso al módulo (cargos con permiso para ver marcaciones)
 //if (!verificarAccesoCargo([35, 16, 5, 43, 11, 19, 12, 14, 26, 42]) && !$esAdmin) {
@@ -32,58 +32,79 @@ $filtro_sucursal_bloqueado = ($cargoOperario == 5);
 $sucursales = $ticketModel->getSucursales();
 
 // Función para obtener color de urgencia
-function getColorUrgencia($nivel) {
-    switch($nivel) {
-        case 1: return '#28a745';
-        case 2: return '#ffc107';
-        case 3: return '#fd7e14';
-        case 4: return '#dc3545';
-        default: return '#8b8b8bff';
+function getColorUrgencia($nivel)
+{
+    switch ($nivel) {
+        case 1:
+            return '#28a745';
+        case 2:
+            return '#ffc107';
+        case 3:
+            return '#fd7e14';
+        case 4:
+            return '#dc3545';
+        default:
+            return '#8b8b8bff';
     }
 }
 
 // Función para obtener color de estado
-function getColorEstado($estado) {
-    switch($estado) {
-        case 'solicitado': return '#6c757d';
-        case 'clasificado': return '#17a2b8';
-        case 'agendado': return '#ffc107';
-        case 'finalizado': return '#28a745';
-        default: return '#6c757d';
+function getColorEstado($estado)
+{
+    switch ($estado) {
+        case 'solicitado':
+            return '#6c757d';
+        case 'clasificado':
+            return '#17a2b8';
+        case 'agendado':
+            return '#ffc107';
+        case 'finalizado':
+            return '#28a745';
+        default:
+            return '#6c757d';
     }
 }
 
 // Función para obtener texto de urgencia
-function getTextoUrgencia($nivel) {
-    switch($nivel) {
-        case 1: return 'No Urgente';
-        case 2: return 'Medio';
-        case 3: return 'Urgente';
-        case 4: return 'Crítico';
-        default: return 'No Clasificado';
+function getTextoUrgencia($nivel)
+{
+    switch ($nivel) {
+        case 1:
+            return 'No Urgente';
+        case 2:
+            return 'Medio';
+        case 3:
+            return 'Urgente';
+        case 4:
+            return 'Crítico';
+        default:
+            return 'No Clasificado';
     }
 }
 ?>
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Historial de Solicitudes</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <link rel="icon" href="../../assets/img/icon12.png" type="image/png">
-    
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/assets/css/global_tools.css?v=<?php echo mt_rand(1, 10000); ?>">
     <link rel="stylesheet" href="css/historial_solicitudes.css?v=<?php echo mt_rand(1, 10000); ?>">
 </head>
+
 <body>
 
     <!-- Renderizar menú lateral -->
     <?php echo renderMenuLateral($cargoOperario); ?>
-    
+
     <!-- Contenido principal -->
-    <div class="main-container">   <!-- ya existe en el css de menu lateral -->
+    <div class="main-container"> <!-- ya existe en el css de menu lateral -->
         <div class="contenedor-principal"> <!-- ya existe en el css de menu lateral -->
             <!-- todo el contenido existente -->
             <?php echo renderHeader($usuario, false, 'Historial de Solicitudes'); ?>
@@ -95,7 +116,7 @@ function getTextoUrgencia($nivel) {
                     <table class="table table-hover historial-table" id="tablaSolicitudes">
                         <thead>
                             <tr>
-                                <th data-column="created_at" data-type="date">
+                                <th data-column="created_at" data-type="daterange">
                                     Solicitado
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
@@ -123,7 +144,7 @@ function getTextoUrgencia($nivel) {
                                     Estado
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
-                                <th data-column="fecha_inicio" data-type="date">
+                                <th data-column="fecha_inicio" data-type="daterange">
                                     Agendado
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
@@ -140,7 +161,8 @@ function getTextoUrgencia($nivel) {
                 <div class="d-flex justify-content-between align-items-center mt-3">
                     <div class="d-flex align-items-center gap-2">
                         <label class="mb-0">Mostrar:</label>
-                        <select class="form-select form-select-sm" id="registrosPorPagina" style="width: auto;" onchange="cambiarRegistrosPorPagina()">
+                        <select class="form-select form-select-sm" id="registrosPorPagina" style="width: auto;"
+                            onchange="cambiarRegistrosPorPagina()">
                             <option value="25" selected>25</option>
                             <option value="50">50</option>
                             <option value="100">100</option>
@@ -166,10 +188,12 @@ function getTextoUrgencia($nivel) {
                         <div class="carousel-inner" id="carouselFotosInner">
                             <!-- Fotos cargadas vía AJAX -->
                         </div>
-                        <button class="carousel-control-prev" type="button" data-bs-target="#carouselFotos" data-bs-slide="prev">
+                        <button class="carousel-control-prev" type="button" data-bs-target="#carouselFotos"
+                            data-bs-slide="prev">
                             <span class="carousel-control-prev-icon" aria-hidden="true"></span>
                         </button>
-                        <button class="carousel-control-next" type="button" data-bs-target="#carouselFotos" data-bs-slide="next">
+                        <button class="carousel-control-next" type="button" data-bs-target="#carouselFotos"
+                            data-bs-slide="next">
                             <span class="carousel-control-next-icon" aria-hidden="true"></span>
                         </button>
                     </div>
@@ -184,12 +208,12 @@ function getTextoUrgencia($nivel) {
         const filtroSucursalBloqueado = <?php echo $filtro_sucursal_bloqueado ? 'true' : 'false'; ?>;
         const codigoSucursalBusqueda = '<?php echo $codigo_sucursal_busqueda; ?>';
         const cargoOperario = <?php echo $cargoOperario; ?>;
-        
+
         // Aplicar filtro de sucursal automáticamente si está bloqueado
-        $(document).ready(function() {
+        $(document).ready(function () {
             if (filtroSucursalBloqueado && codigoSucursalBusqueda) {
                 // Esperar a que el JS se cargue
-                setTimeout(function() {
+                setTimeout(function () {
                     if (typeof filtrosActivos !== 'undefined') {
                         filtrosActivos['nombre_sucursal'] = [codigoSucursalBusqueda];
                         cargarDatos();
@@ -200,4 +224,5 @@ function getTextoUrgencia($nivel) {
     </script>
     <script src="js/historial_solicitudes.js?v=<?php echo $version; ?>"></script>
 </body>
+
 </html>
