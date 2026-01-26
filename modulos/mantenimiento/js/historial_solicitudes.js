@@ -106,7 +106,8 @@ $(document).ready(function () {
 
     // Cerrar filtros al hacer click fuera
     $(document).on('click', function (e) {
-        if (!$(e.target).closest('.filter-panel, .filter-icon').length) {
+        // No cerrar si el click es dentro del panel de filtro, el icono, o elementos del calendario
+        if (!$(e.target).closest('.filter-panel, .filter-icon, .daterange-calendar-day, .daterange-month-selector').length) {
             cerrarTodosFiltros();
         }
     });
@@ -765,7 +766,7 @@ function actualizarCalendario(columna) {
             clases += ' in-range';
         }
 
-        html += `<div class="${clases}" onclick="seleccionarFechaRango('${columna}', '${fechaStr}')">${dia}</div>`;
+        html += `<div class="${clases}" onclick="event.stopPropagation(); seleccionarFechaRango('${columna}', '${fechaStr}')">${dia}</div>`;
     }
 
     html += '</div>';
