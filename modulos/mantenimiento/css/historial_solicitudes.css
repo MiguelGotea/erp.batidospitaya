@@ -18,7 +18,7 @@ body {
 .page-header h4 {
     margin: 0;
     font-weight: 600;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 /* Tabla */
@@ -210,7 +210,7 @@ body {
     background: white;
     border: 1px solid #ccc;
     border-radius: 4px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     min-width: 250px;
     max-width: 300px;
     z-index: 9999;
@@ -245,8 +245,8 @@ body {
 }
 
 .filter-sort-buttons {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     gap: 0.35rem;
 }
 
@@ -262,6 +262,7 @@ body {
     transition: all 0.2s;
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 0.5rem;
 }
 
@@ -576,11 +577,11 @@ body {
     .historial-table {
         font-size: 0.8rem;
     }
-    
+
     .col-titulo {
         max-width: 150px;
     }
-    
+
     .col-descripcion {
         max-width: 200px;
     }
