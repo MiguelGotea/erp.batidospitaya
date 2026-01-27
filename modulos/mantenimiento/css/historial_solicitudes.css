@@ -252,9 +252,10 @@ body {
 
 .filter-sort-btn {
     width: 100%;
-    padding: 0.5rem 0.75rem;
-    font-size: 0.8rem;
-    text-align: left;
+    padding: 0.4rem 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-align: center;
     background: white;
     border: 1px solid #dee2e6;
     border-radius: 3px;
@@ -263,11 +264,11 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0.5rem;
+    gap: 0.25rem;
 }
 
 .filter-sort-btn i {
-    font-size: 1rem;
+    font-size: 0.75rem;
 }
 
 .filter-sort-btn:hover {
@@ -361,6 +362,8 @@ body {
 .filter-action-btn.clear {
     background-color: #dc3545;
     color: white;
+    width: 100%;
+    margin-top: 0.5rem;
 }
 
 .filter-action-btn.clear:hover {

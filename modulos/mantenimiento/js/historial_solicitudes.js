@@ -378,15 +378,16 @@ function crearPanelFiltro(th, columna, tipo, icon) {
             <div class="filter-sort-buttons">
                 <button class="filter-sort-btn ${ordenActivo.columna === columna && ordenActivo.direccion === 'asc' ? 'active' : ''}" 
                         onclick="aplicarOrden('${columna}', 'asc')">
-                    <i class="bi bi-sort-alpha-down"></i> Ascendente (A→Z)
+                    ASC ↑
                 </button>
                 <button class="filter-sort-btn ${ordenActivo.columna === columna && ordenActivo.direccion === 'desc' ? 'active' : ''}" 
                         onclick="aplicarOrden('${columna}', 'desc')">
-                    <i class="bi bi-sort-alpha-up"></i> Descendente (Z→A)
+                    DESC ↓
                 </button>
             </div>
         </div>
     `);
+
 
     // Sección de búsqueda y opciones según el tipo
     if (tipo === 'text') {
@@ -411,7 +412,7 @@ function crearPanelFiltro(th, columna, tipo, icon) {
         cargarOpcionesFiltro(panel, columna, tipo);
     }
 
-    // Botones de acción
+    // Botón de limpiar (siempre debajo de los botones de ordenamiento)
     const botonLimpiarDeshabilitado = (columna === 'nombre_sucursal' &&
         typeof filtroSucursalBloqueado !== 'undefined' &&
         filtroSucursalBloqueado);
@@ -420,15 +421,14 @@ function crearPanelFiltro(th, columna, tipo, icon) {
     const disabledStyle = botonLimpiarDeshabilitado ? 'opacity: 0.5; cursor: not-allowed;' : '';
 
     panel.append(`
-        <div class="filter-actions">
-            <button class="filter-action-btn clear" 
-                    onclick="limpiarFiltro('${columna}')" 
-                    ${disabledAttr}
-                    style="${disabledStyle}">
-                <i class="bi bi-x-circle"></i> Limpiar
-            </button>
-        </div>
+        <button class="filter-action-btn clear" 
+                onclick="limpiarFiltro('${columna}')" 
+                ${disabledAttr}
+                style="${disabledStyle}">
+            <i class="bi bi-x-circle"></i> Limpiar
+        </button>
     `);
+
 
     // Agregar al body en lugar del th
     $('body').append(panel);
@@ -492,6 +492,18 @@ function cargarOpcionesFiltro(panel, columna, tipo) {
 
 // Cerrar todos los filtros
 function cerrarTodosFiltros() {
+    // Antes de cerrar, verificar si hay un filtro de fecha con solo una fecha seleccionada
+    for (const columna in filtrosActivos) {
+        if (filtrosActivos[columna] && filtrosActivos[columna].desde && !filtrosActivos[columna].hasta) {
+            // Si solo hay fecha "desde", usar la misma fecha para "hasta"
+            filtrosActivos[columna].hasta = filtrosActivos[columna].desde;
+            paginaActual = 1;
+            cargarDatos();
+            actualizarIndicadoresFiltros();
+            break; // Solo procesar el primero encontrado
+        }
+    }
+
     $('.filter-panel').remove();
     $('.filter-icon').removeClass('active');
     panelFiltroAbierto = null;
@@ -655,8 +667,9 @@ function renderizarFechaAgendado(fechaInicio, status) {
     return `<span class="fecha-sin-programar"><i class="bi bi-exclamation-triangle"></i> ${formatearFecha(fechaInicio)}</span>`;
 }
 
-// ========== FUNCIONES PARA CALENDARIO DE RANGO DE FECHAS (DOS CALENDARIOS) ==========
-// Crear calendario de rango de fechas con DOS calendarios separados
+// ========== FUNCIONES PARA CALENDARIO DE RANGO DE FECHAS (UN SOLO CALENDARIO) ==========
+
+// Crear calendario de rango de fechas con UN SOLO calendario
 function crearCalendarioRangoFechas(columna, fechaActual) {
     const hoy = new Date();
     const mesActual = hoy.getMonth();
@@ -667,26 +680,14 @@ function crearCalendarioRangoFechas(columna, fechaActual) {
 
     const html = `
         <div class="filter-section" style="margin-top: 4px; margin-bottom: 6px;">
-            <span class="filter-section-title">Desde:</span>
+            <span class="filter-section-title">Seleccionar rango:</span>
             <div class="daterange-inputs">
                 <div class="daterange-calendar-container">
                     <div class="daterange-month-selector">
-                        <select id="mesDesde-${columna}" onchange="actualizarCalendario('desde', '${columna}')"></select>
-                        <select id="añoDesde-${columna}" onchange="actualizarCalendario('desde', '${columna}')"></select>
+                        <select id="mes-${columna}" onchange="actualizarCalendario('${columna}')"></select>
+                        <select id="año-${columna}" onchange="actualizarCalendario('${columna}')"></select>
                     </div>
-                    <div class="daterange-calendar" id="calendarioDesde-${columna}"></div>
-                </div>
-            </div>
-        </div>
-        <div class="filter-section" style="margin-top: 4px; margin-bottom: 6px;">
-            <span class="filter-section-title">Hasta:</span>
-            <div class="daterange-inputs">
-                <div class="daterange-calendar-container">
-                    <div class="daterange-month-selector">
-                        <select id="mesHasta-${columna}" onchange="actualizarCalendario('hasta', '${columna}')"></select>
-                        <select id="añoHasta-${columna}" onchange="actualizarCalendario('hasta', '${columna}')"></select>
-                    </div>
-                    <div class="daterange-calendar" id="calendarioHasta-${columna}"></div>
+                    <div class="daterange-calendar" id="calendario-${columna}"></div>
                 </div>
             </div>
         </div>
@@ -694,55 +695,45 @@ function crearCalendarioRangoFechas(columna, fechaActual) {
 
     setTimeout(() => {
         inicializarSelectoresFecha(columna, mesActual, anioActual, fechaDesde, fechaHasta);
-        actualizarCalendario('desde', columna);
-        actualizarCalendario('hasta', columna);
+        actualizarCalendario(columna);
     }, 50);
 
     return html;
 }
+
 // Inicializar selectores de fecha
 function inicializarSelectoresFecha(columna, mesActual, anioActual, fechaDesde, fechaHasta) {
     const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
         'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 
-    let mesDesdeSeleccionado = mesActual;
-    let anioDesdeSeleccionado = anioActual;
-    let mesHastaSeleccionado = mesActual;
-    let anioHastaSeleccionado = anioActual;
+    let mesSeleccionado = mesActual;
+    let anioSeleccionado = anioActual;
 
+    // Si hay una fecha desde, usar ese mes/año
     if (fechaDesde) {
         const d = new Date(fechaDesde);
-        mesDesdeSeleccionado = d.getMonth();
-        anioDesdeSeleccionado = d.getFullYear();
+        mesSeleccionado = d.getMonth();
+        anioSeleccionado = d.getFullYear();
     }
 
-    if (fechaHasta) {
-        const d = new Date(fechaHasta);
-        mesHastaSeleccionado = d.getMonth();
-        anioHastaSeleccionado = d.getFullYear();
-    }
-
-    // Llenar selectores de mes
-    const selectMesDesde = $(`#mesDesde-${columna}`);
-    const selectMesHasta = $(`#mesHasta-${columna}`);
+    // Llenar selector de mes
+    const selectMes = $(`#mes-${columna}`);
     meses.forEach((mes, idx) => {
-        selectMesDesde.append(`<option value="${idx}" ${idx === mesDesdeSeleccionado ? 'selected' : ''}>${mes}</option>`);
-        selectMesHasta.append(`<option value="${idx}" ${idx === mesHastaSeleccionado ? 'selected' : ''}>${mes}</option>`);
+        selectMes.append(`<option value="${idx}" ${idx === mesSeleccionado ? 'selected' : ''}>${mes}</option>`);
     });
 
-    // Llenar selectores de año
-    const selectAnioDesde = $(`#añoDesde-${columna}`);
-    const selectAnioHasta = $(`#añoHasta-${columna}`);
+    // Llenar selector de año
+    const selectAnio = $(`#año-${columna}`);
     for (let anio = anioActual - 2; anio <= anioActual + 1; anio++) {
-        selectAnioDesde.append(`<option value="${anio}" ${anio === anioDesdeSeleccionado ? 'selected' : ''}>${anio}</option>`);
-        selectAnioHasta.append(`<option value="${anio}" ${anio === anioHastaSeleccionado ? 'selected' : ''}>${anio}</option>`);
+        selectAnio.append(`<option value="${anio}" ${anio === anioSeleccionado ? 'selected' : ''}>${anio}</option>`);
     }
 }
-// Actualizar calendario (desde o hasta)
-function actualizarCalendario(tipo, columna) {
-    const mes = parseInt($(`#mes${tipo.charAt(0).toUpperCase() + tipo.slice(1)}-${columna}`).val());
-    const anio = parseInt($(`#año${tipo.charAt(0).toUpperCase() + tipo.slice(1)}-${columna}`).val());
-    const calendarioId = `#calendario${tipo.charAt(0).toUpperCase() + tipo.slice(1)}-${columna}`;
+
+// Actualizar calendario
+function actualizarCalendario(columna) {
+    const mes = parseInt($(`#mes-${columna}`).val());
+    const anio = parseInt($(`#año-${columna}`).val());
+    const calendarioId = `#calendario-${columna}`;
 
     const primerDia = new Date(anio, mes, 1).getDay();
     const diasEnMes = new Date(anio, mes + 1, 0).getDate();
@@ -763,12 +754,13 @@ function actualizarCalendario(tipo, columna) {
     for (let dia = 1; dia <= diasEnMes; dia++) {
         const fechaStr = `${anio}-${String(mes + 1).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
         const clases = obtenerClasesCalendario(fechaStr, columna);
-        html += `<div class="daterange-calendar-day ${clases}" onclick="event.stopPropagation(); seleccionarFecha('${tipo}', '${fechaStr}', '${columna}')">${dia}</div>`;
+        html += `<div class="daterange-calendar-day ${clases}" onclick="event.stopPropagation(); seleccionarFecha('${fechaStr}', '${columna}')">${dia}</div>`;
     }
 
     html += '</div>';
     $(calendarioId).html(html);
 }
+
 // Obtener clases para días del calendario
 function obtenerClasesCalendario(fecha, columna) {
     const fechaDesde = filtrosActivos[columna]?.desde;
@@ -790,20 +782,23 @@ function obtenerClasesCalendario(fecha, columna) {
 
     return clases.join(' ');
 }
-// Seleccionar fecha en calendario
-function seleccionarFecha(tipo, fecha, columna) {
+
+// Seleccionar fecha en calendario (lógica de 2 clics)
+function seleccionarFecha(fecha, columna) {
     if (!filtrosActivos[columna]) {
         filtrosActivos[columna] = {};
     }
 
-    filtrosActivos[columna][tipo] = fecha;
+    // Si no hay fecha desde, esta es la primera selección
+    if (!filtrosActivos[columna].desde) {
+        filtrosActivos[columna].desde = fecha;
+        filtrosActivos[columna].hasta = ''; // Limpiar hasta
+        actualizarCalendario(columna);
+    }
+    // Si ya hay fecha desde pero no hasta, esta es la segunda selección
+    else if (!filtrosActivos[columna].hasta) {
+        filtrosActivos[columna].hasta = fecha;
 
-    // Actualizar ambos calendarios para reflejar el rango
-    actualizarCalendario('desde', columna);
-    actualizarCalendario('hasta', columna);
-
-    // Si ambas fechas están seleccionadas, aplicar filtro y CERRAR PANEL
-    if (filtrosActivos[columna].desde && filtrosActivos[columna].hasta) {
         // Validar que 'desde' no sea mayor que 'hasta'
         if (filtrosActivos[columna].desde > filtrosActivos[columna].hasta) {
             // Intercambiar fechas
@@ -812,11 +807,16 @@ function seleccionarFecha(tipo, fecha, columna) {
             filtrosActivos[columna].hasta = temp;
         }
 
+        // Aplicar filtro y cerrar panel
         paginaActual = 1;
         cargarDatos();
         actualizarIndicadoresFiltros();
-
-        // CERRAR EL PANEL AUTOMÁTICAMENTE
         cerrarTodosFiltros();
+    }
+    // Si ya hay ambas fechas, reiniciar la selección
+    else {
+        filtrosActivos[columna].desde = fecha;
+        filtrosActivos[columna].hasta = '';
+        actualizarCalendario(columna);
     }
 }
