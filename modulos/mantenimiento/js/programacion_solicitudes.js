@@ -10,11 +10,11 @@ function renderizarCronograma() {
     Object.keys(ticketsPorEquipo).forEach(equipo => {
         const tickets = ticketsPorEquipo[equipo];
         if (!tickets || tickets.length === 0) return;
-        
+
         // Inicializar matriz de ocupación para este equipo
         const matrizOcupacion = [];
         const posiciones = [];
-        
+
         // Procesar cada ticket
         tickets.forEach(ticket => {
             const posicion = calcularPosicion(ticket, matrizOcupacion);
@@ -27,12 +27,12 @@ function renderizarCronograma() {
                 });
             }
         });
-        
+
         // Renderizar tickets en el DOM
         posiciones.forEach(pos => {
             renderizarTicket(pos.ticket, pos.fila, pos.diaInicio, pos.numDias, equipo);
         });
-        
+
         // Ajustar altura de las celdas del equipo
         ajustarAlturaCeldas(equipo, matrizOcupacion.length);
     });
@@ -41,7 +41,7 @@ function renderizarCronograma() {
 function calcularPosicion(ticket, matrizOcupacion) {
     // Calcular índice de día de inicio
     let diaInicio = fechasSemana.indexOf(ticket.fecha_inicio);
-    
+
     if (diaInicio === -1) {
         // El ticket empieza antes de esta semana
         const fechaInicioSemana = new Date(fechasSemana[0]);
@@ -52,7 +52,7 @@ function calcularPosicion(ticket, matrizOcupacion) {
             return null;
         }
     }
-    
+
     return calcularPosicionDesdeInicio(ticket, diaInicio, matrizOcupacion);
 }
 
@@ -61,42 +61,42 @@ function calcularPosicionDesdeInicio(ticket, diaInicio, matrizOcupacion) {
     const fechaInicio = new Date(ticket.fecha_inicio);
     const fechaFinal = new Date(ticket.fecha_final);
     const fechaFinSemana = new Date(fechasSemana[fechasSemana.length - 1]);
-    
+
     // Limitar al fin de semana si se extiende más allá
     const fechaFinalVisible = fechaFinal > fechaFinSemana ? fechaFinSemana : fechaFinal;
-    
+
     // Calcular días desde el inicio visible
-    const inicioVisible = diaInicio === 0 && fechaInicio < new Date(fechasSemana[0]) 
-        ? new Date(fechasSemana[0]) 
+    const inicioVisible = diaInicio === 0 && fechaInicio < new Date(fechasSemana[0])
+        ? new Date(fechasSemana[0])
         : new Date(fechasSemana[diaInicio]);
-    
+
     const numDias = Math.ceil((fechaFinalVisible - inicioVisible) / (1000 * 60 * 60 * 24)) + 1;
-    
+
     // Limitar a los días disponibles en la semana
     const diasDisponibles = fechasSemana.length - diaInicio;
     const diasReales = Math.min(numDias, diasDisponibles);
-    
+
     // Buscar la primera fila donde cabe el ticket
     let filaEncontrada = -1;
-    
+
     for (let fila = 0; fila < matrizOcupacion.length; fila++) {
         if (cabEnFila(matrizOcupacion[fila], diaInicio, diasReales)) {
             filaEncontrada = fila;
             break;
         }
     }
-    
+
     // Si no cabe en ninguna fila, crear una nueva
     if (filaEncontrada === -1) {
         matrizOcupacion.push(new Array(fechasSemana.length).fill(false));
         filaEncontrada = matrizOcupacion.length - 1;
     }
-    
+
     // Marcar los días como ocupados
     for (let i = 0; i < diasReales; i++) {
         matrizOcupacion[filaEncontrada][diaInicio + i] = true;
     }
-    
+
     return {
         fila: filaEncontrada,
         diaInicio: diaInicio,
@@ -117,18 +117,18 @@ function renderizarTicket(ticket, fila, diaInicio, numDias, equipo) {
     // Obtener la celda correspondiente
     const row = document.querySelector(`tr[data-equipo="${equipo}"]`);
     if (!row) return;
-    
+
     const celdas = row.querySelectorAll('.calendar-cell');
     const celdaInicio = celdas[diaInicio];
     if (!celdaInicio) return;
-    
+
     // Calcular ancho
     const anchoCelda = celdaInicio.offsetWidth;
     const anchoCard = (anchoCelda * numDias) + (1 * (numDias - 1)) - 10;
-    
+
     // Calcular posición vertical
     const top = (fila * 60) + 5;
-    
+
     // Color de urgencia
     const coloresUrgencia = {
         1: '#28a745',
@@ -137,10 +137,10 @@ function renderizarTicket(ticket, fila, diaInicio, numDias, equipo) {
         4: '#dc3545'
     };
     const colorUrgencia = coloresUrgencia[ticket.nivel_urgencia] || '#8b8b8bff';
-    
+
     // VERIFICAR SI ESTÁ FINALIZADO
     const esFinalizado = ticket.status && ticket.status.toLowerCase() === 'finalizado';
-    
+
     // Crear elemento
     const card = document.createElement('div');
     card.className = 'ticket-card';
@@ -150,7 +150,7 @@ function renderizarTicket(ticket, fila, diaInicio, numDias, equipo) {
     card.dataset.fechaFinal = ticket.fecha_final;
     card.dataset.tipoFormulario = ticket.tipo_formulario;
     card.dataset.finalizado = esFinalizado; // AGREGAR ATRIBUTO PARA IDENTIFICAR
-    
+
     card.style.position = 'absolute';
     card.style.top = top + 'px';
     card.style.left = '5px';
@@ -159,12 +159,12 @@ function renderizarTicket(ticket, fila, diaInicio, numDias, equipo) {
     card.style.cursor = esFinalizado ? 'default' : 'move'; // CAMBIAR CURSOR
     card.style.boxSizing = 'border-box';
     card.style.zIndex = '50';
-    
+
     if (esFinalizado) {
         card.style.opacity = '0.8';
         card.style.filter = 'grayscale(0.3)';
     }
-    
+
     // CREAR HTML DEPENDIENDO SI ESTÁ FINALIZADO
     let innerHTML = `
         <div style="position: relative; height: 100%;">
@@ -172,7 +172,7 @@ function renderizarTicket(ticket, fila, diaInicio, numDias, equipo) {
                 ${ticket.titulo}
             </div>
             <div style="display: flex; align-items: center; gap: 0.25rem; margin-top: 0.25rem;">`;
-    
+
     if (!esFinalizado) {
         innerHTML += `
                 <button class="btn-desprogramar" onclick="desprogramarTicket(${ticket.id}, event)" title="Desprogramar">
@@ -183,7 +183,7 @@ function renderizarTicket(ticket, fila, diaInicio, numDias, equipo) {
                     <i class="bi bi-plus-lg"></i>
                 </button>`;
     }
-    
+
     innerHTML += `
                 <div style="font-size: 0.7rem; color: #666; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-left: 0.25rem;">
                     ${ticket.nombre_sucursal}
@@ -195,7 +195,7 @@ function renderizarTicket(ticket, fila, diaInicio, numDias, equipo) {
                     ${ticket.nivel_urgencia}
                 </span>
             ` : ''}`;
-    
+
     // SOLO AGREGAR RESIZE HANDLE SI NO ESTÁ FINALIZADO
     if (!esFinalizado) {
         innerHTML += `
@@ -203,10 +203,10 @@ function renderizarTicket(ticket, fila, diaInicio, numDias, equipo) {
                  onmousedown="startResize(event, ${ticket.id}, '${ticket.fecha_inicio}', '${ticket.fecha_final}')">
             </div>`;
     }
-    
+
     innerHTML += `</div>`;
     card.innerHTML = innerHTML;
-    
+
     // SOLO AGREGAR EVENT LISTENERS SI NO ESTÁ FINALIZADO
     if (!esFinalizado) {
         // Variables para detectar drag vs click
@@ -215,10 +215,10 @@ function renderizarTicket(ticket, fila, diaInicio, numDias, equipo) {
         let mouseDownTime = 0;
         let mouseDownX = 0;
         let mouseDownY = 0;
-        
+
         // Event listeners
         card.addEventListener('mousedown', (e) => {
-            if (e.target.closest('.btn-desprogramar') || 
+            if (e.target.closest('.btn-desprogramar') ||
                 e.target.closest('.btn-colaboradores') ||
                 e.target.closest('.resize-handle')) {
                 return;
@@ -228,7 +228,7 @@ function renderizarTicket(ticket, fila, diaInicio, numDias, equipo) {
             mouseDownX = e.clientX;
             mouseDownY = e.clientY;
         });
-        
+
         card.addEventListener('mousemove', (e) => {
             const deltaX = Math.abs(e.clientX - mouseDownX);
             const deltaY = Math.abs(e.clientY - mouseDownY);
@@ -236,19 +236,19 @@ function renderizarTicket(ticket, fila, diaInicio, numDias, equipo) {
                 isDragging = true;
             }
         });
-        
+
         card.addEventListener('dragstart', (e) => {
             isDragging = true;
             handleDragStart.call(card, e);
         });
-        
+
         card.addEventListener('click', (e) => {
             const clickDuration = Date.now() - mouseDownTime;
-            
-            if (!e.target.closest('.btn-desprogramar') && 
+
+            if (!e.target.closest('.btn-desprogramar') &&
                 !e.target.closest('.btn-colaboradores') &&
                 !e.target.closest('.resize-handle') &&
-                !isDragging && 
+                !isDragging &&
                 !isResizing &&
                 clickDuration < 300) {
                 mostrarDetallesTicket(ticket.id);
@@ -259,15 +259,15 @@ function renderizarTicket(ticket, fila, diaInicio, numDias, equipo) {
     } else {
         // PARA TICKETS FINALIZADOS, SOLO PERMITIR CLICK PARA VER DETALLES
         card.addEventListener('click', (e) => {
-            if (!e.target.closest('.btn-desprogramar') && 
+            if (!e.target.closest('.btn-desprogramar') &&
                 !e.target.closest('.btn-colaboradores')) {
                 mostrarDetallesTicket(ticket.id);
             }
         });
     }
-    
+
     celdaInicio.appendChild(card);
-    
+
     // SOLO CREAR OVERLAYS PARA EVENTOS SI NO ESTÁ FINALIZADO
     if (!esFinalizado) {
         for (let i = 1; i < numDias; i++) {
@@ -282,19 +282,19 @@ function renderizarTicket(ticket, fila, diaInicio, numDias, equipo) {
                 overlay.style.pointerEvents = 'auto';
                 overlay.style.cursor = 'move';
                 overlay.style.zIndex = '49';
-                
+
                 let overlayDragging = false;
                 let overlayMouseDownTime = 0;
                 let overlayMouseDownX = 0;
                 let overlayMouseDownY = 0;
-                
+
                 overlay.addEventListener('mousedown', (e) => {
                     overlayDragging = false;
                     overlayMouseDownTime = Date.now();
                     overlayMouseDownX = e.clientX;
                     overlayMouseDownY = e.clientY;
                 });
-                
+
                 overlay.addEventListener('mousemove', (e) => {
                     const deltaX = Math.abs(e.clientX - overlayMouseDownX);
                     const deltaY = Math.abs(e.clientY - overlayMouseDownY);
@@ -302,13 +302,13 @@ function renderizarTicket(ticket, fila, diaInicio, numDias, equipo) {
                         overlayDragging = true;
                     }
                 });
-                
+
                 overlay.addEventListener('mouseenter', () => {
                     card.style.borderColor = '#0E544C';
                     card.style.boxShadow = '0 4px 12px rgba(14, 84, 76, 0.25)';
                     card.style.transform = 'translateY(-1px)';
                 });
-                
+
                 overlay.addEventListener('mouseleave', () => {
                     if (!card.matches(':hover')) {
                         card.style.borderColor = '#51B8AC';
@@ -316,7 +316,7 @@ function renderizarTicket(ticket, fila, diaInicio, numDias, equipo) {
                         card.style.transform = '';
                     }
                 });
-                
+
                 overlay.addEventListener('click', (e) => {
                     const clickDuration = Date.now() - overlayMouseDownTime;
                     if (!overlayDragging && clickDuration < 300) {
@@ -324,13 +324,13 @@ function renderizarTicket(ticket, fila, diaInicio, numDias, equipo) {
                     }
                     overlayDragging = false;
                 });
-                
+
                 overlay.draggable = true;
                 overlay.addEventListener('dragstart', (e) => {
                     overlayDragging = true;
                     handleDragStart.call(card, e);
                 });
-                
+
                 celdaSiguiente.appendChild(overlay);
             }
         }
@@ -342,17 +342,17 @@ function ajustarAlturaCeldas(equipo, numFilas) {
     if (!row) {
         return;
     }
-    
+
     // Altura mínima + altura por fila (con margen)
     const alturaMinima = Math.max(80, (numFilas * 60) + 30);
     const celdas = row.querySelectorAll('.calendar-cell, .equipo-label');
-    
+
     celdas.forEach((celda, index) => {
         celda.style.minHeight = alturaMinima + 'px';
         celda.style.height = alturaMinima + 'px';
         celda.style.position = 'relative';
     });
-    
+
     // Forzar reflow
     row.offsetHeight;
 }
@@ -364,23 +364,23 @@ function handleDragStart(e) {
         e.preventDefault();
         return;
     }
-    
+
     // VERIFICAR SI EL TICKET ESTÁ FINALIZADO
     if (e.target.dataset.finalizado === 'true') {
         e.preventDefault();
         return;
     }
-    
+
     draggedTicket = {
         id: e.target.dataset.ticketId,
         fechaInicio: e.target.dataset.fechaInicio,
         fechaFinal: e.target.dataset.fechaFinal,
         tipoFormulario: e.target.dataset.tipoFormulario,
-        duracion: e.target.dataset.fechaInicio && e.target.dataset.fechaInicio !== 'null' 
-            ? calcularDias(e.target.dataset.fechaInicio, e.target.dataset.fechaFinal) 
+        duracion: e.target.dataset.fechaInicio && e.target.dataset.fechaInicio !== 'null'
+            ? calcularDias(e.target.dataset.fechaInicio, e.target.dataset.fechaFinal)
             : 1
     };
-    
+
     e.target.classList.add('dragging');
     e.dataTransfer.effectAllowed = 'move';
 }
@@ -390,12 +390,12 @@ function handleDragOver(e) {
         e.preventDefault();
     }
     e.dataTransfer.dropEffect = 'move';
-    
+
     const cell = e.target.closest('.calendar-cell');
     if (cell) {
         cell.classList.add('drag-over');
     }
-    
+
     return false;
 }
 
@@ -403,61 +403,66 @@ function handleDrop(e) {
     if (e.stopPropagation) {
         e.stopPropagation();
     }
-    
+
     // Limpiar estados
     document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
     document.querySelectorAll('.dragging').forEach(el => el.classList.remove('dragging'));
-    
+
     const cell = e.target.closest('.calendar-cell');
     if (!cell) return false;
-    
+
     const equipoTrabajo = cell.dataset.equipoTrabajo;
     const fecha = cell.dataset.fecha;
     const esGrupoCambioEquipos = equipoTrabajo === 'Cambio de Equipos';
-    
+
     // Validar tipo_formulario
     if (draggedTicket.tipoFormulario === 'cambio_equipos' && !esGrupoCambioEquipos) {
         alert('Las solicitudes de cambio de equipos solo pueden programarse en el grupo "Cambio de Equipos"');
         return false;
     }
-    
+
     if (draggedTicket.tipoFormulario === 'mantenimiento_general' && esGrupoCambioEquipos) {
         alert('Las solicitudes de mantenimiento general no pueden programarse en el grupo "Cambio de Equipos"');
         return false;
     }
-    
+
     const nuevaFechaInicio = fecha;
     const nuevaFechaFinal = sumarDias(fecha, draggedTicket.duracion - 1);
-    
-    // Extraer tipos de usuario del equipo de trabajo
-    const tiposUsuario = equipoTrabajo === 'Cambio de Equipos' ? [] : equipoTrabajo.split(' + ');
-    
-    // Si viene del sidebar, usar asignar, si no, usar mover
-    const esDesdeSidebar = !draggedTicket.fechaInicio || draggedTicket.fechaInicio === 'null';
-    const url = esDesdeSidebar ? 'ajax/agenda_asignar_ticket.php' : 'ajax/agenda_mover_ticket.php';
-    
+
+    // Mapeo de filas a códigos de cargo
+    const mapeoFilasCargos = {
+        'Líder de Infraestructura y Expansión Comercial': [35],
+        'Jefe de Mantenimiento': [14],
+        'Conductor': [20],
+        'Líder de Infraestructura y Expansión Comercial + Jefe de Mantenimiento': [35, 14],
+        'Cambio de Equipos': [35]
+    };
+
+    const cargos = mapeoFilasCargos[equipoTrabajo] || [];
+
+    // Actualizar fechas y colaboradores
     $.ajax({
-        url: url,
+        url: 'ajax/programacion_actualizar_ticket_calendario.php',
         method: 'POST',
         data: {
             ticket_id: draggedTicket.id,
             fecha_inicio: nuevaFechaInicio,
             fecha_final: nuevaFechaFinal,
-            tipos_usuario: JSON.stringify(tiposUsuario)
+            cargos: JSON.stringify(cargos)
         },
-        dataType: 'json',
-        success: function(response) {
-            if (response.success) {
+        success: function (response) {
+            const result = JSON.parse(response);
+            if (result.success) {
                 location.reload();
             } else {
-                alert('Error: ' + response.message);
+                alert(result.message || 'Error al asignar ticket');
             }
         },
-        error: function() {
-            alert('Error al mover la solicitud');
+        error: function () {
+            alert('Error al asignar ticket');
         }
     });
-    
+
     draggedTicket = null;
     return false;
 }
@@ -467,10 +472,10 @@ function handleDrop(e) {
 function startResize(e, ticketId, fechaInicio, fechaFinal) {
     e.stopPropagation();
     e.preventDefault();
-    
+
     const card = e.target.closest('.ticket-card');
     card.draggable = false;
-    
+
     resizing = {
         card: card,
         ticketId: ticketId,
@@ -479,7 +484,7 @@ function startResize(e, ticketId, fechaInicio, fechaFinal) {
         originalWidth: card.offsetWidth,
         cellWidth: card.closest('.calendar-cell').offsetWidth
     };
-    
+
     document.body.classList.add('resizing');
     document.addEventListener('mousemove', handleResize);
     document.addEventListener('mouseup', stopResize);
@@ -487,32 +492,32 @@ function startResize(e, ticketId, fechaInicio, fechaFinal) {
 
 function handleResize(e) {
     if (!resizing) return;
-    
+
     const deltaX = e.clientX - resizing.startX;
     const newWidth = Math.max(resizing.cellWidth - 10, resizing.originalWidth + deltaX);
-    
+
     // Calcular número de días
     const numDias = Math.max(1, Math.round((newWidth + 10) / resizing.cellWidth));
     const exactWidth = (resizing.cellWidth * numDias) + (1 * (numDias - 1)) - 10;
-    
+
     resizing.card.style.width = exactWidth + 'px';
     resizing.nuevaFechaFinal = sumarDias(resizing.fechaInicio, numDias - 1);
 }
 
 function stopResize(e) {
     if (!resizing) return;
-    
+
     document.removeEventListener('mousemove', handleResize);
     document.removeEventListener('mouseup', stopResize);
     document.body.classList.remove('resizing');
-    
+
     const card = resizing.card;
     const ticketId = resizing.ticketId;
     const fechaInicio = resizing.fechaInicio;
     const fechaFinal = resizing.nuevaFechaFinal;
-    
+
     card.draggable = true;
-    
+
     // Actualizar fechas
     $.ajax({
         url: 'ajax/agenda_actualizar_fechas.php',
@@ -523,7 +528,7 @@ function stopResize(e) {
             fecha_final: fechaFinal
         },
         dataType: 'json',
-        success: function(response) {
+        success: function (response) {
             if (response.success) {
                 location.reload();
             } else {
@@ -531,214 +536,111 @@ function stopResize(e) {
             }
         }
     });
-    
+
     resizing = null;
 }
 
 // ==================== COLABORADORES ====================
 
-function mostrarColaboradores(ticketId, event) {
-    event.stopPropagation();
-    
+// Abrir modal de colaboradores
+function abrirModalColaboradores(ticketId) {
+    $('#ticketIdColaboradores').val(ticketId);
+    cargarColaboradoresAsignados(ticketId);
+    $('#modalColaboradores').modal('show');
+}
+
+// Cargar colaboradores asignados
+function cargarColaboradoresAsignados(ticketId) {
     $.ajax({
-        url: 'ajax/agenda_get_colaboradores.php',
+        url: 'ajax/programacion_get_colaboradores.php',
         method: 'GET',
         data: { ticket_id: ticketId },
-        dataType: 'json',
-        success: function(response) {
-            if (response.success) {
-                cargarOperariosYModal(ticketId, response.colaboradores);
-            } else {
-                alert('Error: ' + response.message);
-            }
+        success: function (response) {
+            const colaboradores = JSON.parse(response);
+            renderizarColaboradoresAsignados(colaboradores);
+        },
+        error: function () {
+            alert('Error al cargar colaboradores');
         }
     });
 }
 
-function cargarOperariosYModal(ticketId, colaboradores) {
-    $.ajax({
-        url: 'ajax/agenda_get_operarios.php',
-        method: 'GET',
-        dataType: 'json',
-        success: function(response) {
-            if (response.success) {
-                renderModalColaboradores(ticketId, colaboradores, response.operarios);
-            }
-        }
-    });
-}
+// Renderizar lista de colaboradores
+function renderizarColaboradoresAsignados(colaboradores) {
+    const lista = $('#listaColaboradoresAsignados');
+    lista.empty();
 
-function renderModalColaboradores(ticketId, colaboradores, operarios) {
-    let html = `
-        <div class="modal fade" id="modalColaboradores" tabindex="-1">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header" style="background-color: #0E544C; color: white;">
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <table class="table table-sm">
-                            <thead>
-                                <tr>
-                                    <th>Cargo</th>
-                                    <th>Colaborador</th>
-                                    <th>Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody id="listaColaboradores">`;
-    
-    colaboradores.forEach(col => {
-        html += `
-            <tr data-id="${col.id}">
-                <td><small>${col.tipo_usuario}</small></td>
-                <td>
-                    <select class="form-select form-select-sm colaborador-select" data-id="${col.id}">
-                        <option value="">Seleccionar...</option>`;
-        
-        operarios.forEach(op => {
-            const selected = op.CodOperario == col.cod_operario ? 'selected' : '';
-            html += `<option value="${op.CodOperario}" ${selected}>${op.nombre_completo}</option>`;
-        });
-        
-        html += `
-                    </select>
-                </td>
-                
-                <td>
-                    <button class="btn btn-sm btn-danger" onclick="eliminarColaborador(${col.id})">
-                        <i class="bi bi-x"></i>
-                    </button>
-                </td>
-            </tr>`;
-    });
-    
-    html += `
-                                <tr id="nuevaFila" style="display: none;">
-                                    <td>
-                                        <select class="form-select form-select-sm" id="nuevoTipo">
-                                            <option value="">Seleccionar tipo...</option>
-                                            <option value="Jefe de Manteniento">Jefe de Mantenimiento</option>
-                                            <option value="Lider de Infraestructura">Líder de Infraestructura</option>
-                                            <option value="Conductor">Conductor</option>
-                                            <option value="Auxiliar de Mantenimiento">Auxiliar de Mantenimiento</option>
-                                        </select>
-                                    </td>
-                                    <td>
-                                        <select class="form-select form-select-sm" id="nuevoColaborador">
-                                            <option value="">Seleccionar...</option>`;
-    
-    operarios.forEach(op => {
-        html += `<option value="${op.CodOperario}">${op.nombre_completo}</option>`;
-    });
-    
-    html += `
-                                        </select>
-                                    </td>
-
-                                    <td></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                        <button class="btn btn-sm btn-success" id="btnAgregarNuevo" style="background-color: #51B8AC; border: none;">
-                            <i class="bi bi-plus"></i> Agregar
-                        </button>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                    </div>
-                </div>
-            </div>
-        </div>`;
-    
-    $('body').append(html);
-    const modal = new bootstrap.Modal(document.getElementById('modalColaboradores'));
-    modal.show();
-    
-    // Event listeners
-    $('#btnAgregarNuevo').click(function() {
-        $('#nuevaFila').show();
-        $(this).hide();
-    });
-    
-    $('#nuevoTipo').change(function() {
-        const tipo = $(this).val();
-        if (tipo) {
-            agregarColaborador(ticketId, null, tipo);
-        }
-    });
-    
-    $('.colaborador-select').change(function() {
-        const colaboradorId = $(this).data('id');
-        const codOperario = $(this).val();
-        actualizarColaborador(colaboradorId, codOperario);
-    });
-    
-    $('#modalColaboradores').on('hidden.bs.modal', function() {
-        $(this).remove();
-        location.reload();
-    });
-}
-
-function agregarColaborador(ticketId, codOperario, tipoUsuario) {
-    // Validar que se haya seleccionado un colaborador cuando viene de la nueva fila
-    const selectColaborador = document.getElementById('nuevoColaborador');
-    if (selectColaborador && !codOperario) {
-        codOperario = selectColaborador.value;
+    if (colaboradores.length === 0) {
+        lista.html('<p class="text-muted">No hay colaboradores asignados</p>');
+        return;
     }
-    
+
+    colaboradores.forEach(col => {
+        lista.append(`
+            <div class="d-flex justify-content-between align-items-center mb-2 p-2 border rounded">
+                <div>
+                    <strong>${col.nombre_cargo}</strong><br>
+                    <small class="text-muted">${col.nombre_operario}</small>
+                </div>
+                <button class="btn btn-sm btn-danger" onclick="eliminarColaborador(${col.id})">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </div>
+        `);
+    });
+}
+
+// Agregar colaborador
+function agregarColaborador() {
+    const ticketId = $('#ticketIdColaboradores').val();
+    const codCargo = $('#selectCargo').val();
+
+    if (!codCargo) {
+        alert('Seleccione un cargo');
+        return;
+    }
+
     $.ajax({
-        url: 'ajax/agenda_save_colaborador.php',
+        url: 'ajax/programacion_asignar_colaborador.php',
         method: 'POST',
         data: {
             ticket_id: ticketId,
-            cod_operario: codOperario || null, // Permitir NULL
-            tipo_usuario: tipoUsuario
+            cod_cargo: codCargo
         },
-        dataType: 'json',
-        success: function(response) {
-            if (response.success) {
-                // Cerrar modal y recargar (necesario para recalcular equipos)
-                $('#modalColaboradores').modal('hide');
-                location.reload();
+        success: function (response) {
+            const result = JSON.parse(response);
+            if (result.success) {
+                cargarColaboradoresAsignados(ticketId);
+                $('#selectCargo').val('');
             } else {
-                alert('Error: ' + response.message);
+                alert(result.message || 'Error al asignar colaborador');
             }
         },
-        error: function(xhr) {
-            console.error('Error completo:', xhr.responseText);
-            alert('Error al agregar colaborador. Ver consola para detalles.');
+        error: function () {
+            alert('Error al asignar colaborador');
         }
     });
 }
 
-function actualizarColaborador(colaboradorId, codOperario) {
-    $.ajax({
-        url: 'ajax/agenda_update_colaborador.php',
-        method: 'POST',
-        data: {
-            colaborador_id: colaboradorId,
-            cod_operario: codOperario
-        },
-        dataType: 'json'
-    });
-}
-
-function eliminarColaborador(colaboradorId) {
+// Eliminar colaborador
+function eliminarColaborador(id) {
     if (!confirm('¿Eliminar este colaborador?')) return;
-    
+
     $.ajax({
-        url: 'ajax/agenda_delete_colaborador.php',
+        url: 'ajax/programacion_eliminar_colaborador.php',
         method: 'POST',
-        data: { colaborador_id: colaboradorId },
-        dataType: 'json',
-        success: function(response) {
-            if (response.success) {
-                $(`tr[data-id="${colaboradorId}"]`).remove();
-                // Mostrar mensaje temporal
-                const mensaje = $('<div class="alert alert-success" style="position: fixed; top: 20px; right: 20px; z-index: 9999;">Colaborador eliminado</div>');
-                $('body').append(mensaje);
-                setTimeout(() => mensaje.fadeOut(() => mensaje.remove()), 2000);
+        data: { id: id },
+        success: function (response) {
+            const result = JSON.parse(response);
+            if (result.success) {
+                const ticketId = $('#ticketIdColaboradores').val();
+                cargarColaboradoresAsignados(ticketId);
+            } else {
+                alert(result.message || 'Error al eliminar colaborador');
             }
+        },
+        error: function () {
+            alert('Error al eliminar colaborador');
         }
     });
 }
@@ -747,17 +649,17 @@ function eliminarColaborador(colaboradorId) {
 
 function desprogramarTicket(ticketId, event) {
     event.stopPropagation();
-    
+
     if (!confirm('¿Está seguro que desea desprogramar esta solicitud?')) {
         return;
     }
-    
+
     $.ajax({
         url: 'ajax/agenda_desprogramar_ticket.php',
         method: 'POST',
         data: { ticket_id: ticketId },
         dataType: 'json',
-        success: function(response) {
+        success: function (response) {
             if (response.success) {
                 location.reload();
             } else {
@@ -777,7 +679,7 @@ function toggleSidebar() {
 function filtrarPendientes() {
     const sucursal = document.getElementById('filtroSucursal').value;
     const tickets = document.querySelectorAll('.ticket-pendiente');
-    
+
     tickets.forEach(ticket => {
         const ticketSucursal = ticket.dataset.sucursal;
         if (!sucursal || ticketSucursal === sucursal) {
@@ -810,7 +712,7 @@ function mostrarDetallesTicket(ticketId) {
         url: 'ajax/get_ticket_details.php',
         method: 'GET',
         data: { id: ticketId },
-        success: function(response) {
+        success: function (response) {
             // Crear modal sin estilos adicionales - el contenido ya tiene sus propios estilos
             const modalHtml = `
                 <div class="modal fade" id="modalDetallesTicket" tabindex="-1">
@@ -821,30 +723,30 @@ function mostrarDetallesTicket(ticketId) {
                     </div>
                 </div>
             `;
-            
+
             $('body').append(modalHtml);
             const modalElement = document.getElementById('modalDetallesTicket');
             const modal = new bootstrap.Modal(modalElement);
-            
-            setTimeout(function() {
+
+            setTimeout(function () {
                 const hiddenInput = document.getElementById('edit_nivel_urgencia');
                 if (hiddenInput && typeof window.currentUrgency !== 'undefined') {
                     const newUrgency = hiddenInput.value ? parseInt(hiddenInput.value) : null;
                     window.currentUrgency = newUrgency;
                 }
-                
+
                 if (typeof initUrgencyControls === 'function') {
                     initUrgencyControls();
                 }
             }, 100);
-            
+
             modal.show();
-            
-            modalElement.addEventListener('hidden.bs.modal', function() {
-                modalElement.remove(); 
+
+            modalElement.addEventListener('hidden.bs.modal', function () {
+                modalElement.remove();
             });
         },
-        error: function() {
+        error: function () {
             alert('Error al cargar los detalles de la solicitud');
         }
     });

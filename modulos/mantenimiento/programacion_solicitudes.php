@@ -1,6 +1,5 @@
 <?php
 // programacion_solicitudes.php
-$version = "2.0.0"; // Incrementa cuando hagas cambios
 
 require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/models/Ticket.php';
@@ -13,7 +12,6 @@ require_once '../../core/permissions/permissions.php';
 $usuario = obtenerUsuarioActual();
 // Obtener cargo del operario para el menú
 $cargoOperario = $usuario['CodNivelesCargos'];
-$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
 
 // Verificar acceso al módulo usando sistema de permisos
 if (!tienePermiso('calendario_solicitudes_mantenimiento', 'vista', $cargoOperario)) {
@@ -67,48 +65,32 @@ function getColorUrgencia($nivel)
     }
 }
 
-// Obtener equipos de trabajo únicos históricos
-$sql_equipos = "
-    SELECT DISTINCT tipo_usuario
-    FROM mtto_tickets_colaboradores
-    WHERE tipo_usuario IS NOT NULL
-    ORDER BY tipo_usuario
+// Obtener cargos del área "Proyectos" para el modal
+$sql_cargos_proyectos = "
+    SELECT CodNivelesCargos, Nombre
+    FROM NivelesCargos
+    WHERE Area = 'Proyectos'
+    ORDER BY Nombre
 ";
-$tipos_disponibles = $db->fetchAll($sql_equipos);
+$cargos_proyectos = $db->fetchAll($sql_cargos_proyectos);
 
-// Construir equipos de trabajo (combinaciones únicas)
-$sql_combinaciones = "
-    SELECT ticket_id, GROUP_CONCAT(DISTINCT tipo_usuario ORDER BY tipo_usuario SEPARATOR ' + ') as equipo
-    FROM mtto_tickets_colaboradores
-    WHERE tipo_usuario IS NOT NULL
-    GROUP BY ticket_id
-";
-$combinaciones = $db->fetchAll($sql_combinaciones);
+// Mapeo de nombres de filas a códigos de cargo
+$mapeo_filas_cargos = [
+    'Líder de Infraestructura y Expansión Comercial' => [35],
+    'Jefe de Mantenimiento' => [14],
+    'Conductor' => [20],
+    'Líder de Infraestructura y Expansión Comercial + Jefe de Mantenimiento' => [35, 14],
+    'Cambio de Equipos' => [35]
+];
 
-$equipos_trabajo = ['Cambio de Equipos']; // Siempre incluir este grupo
-$equipos_unicos = [];
-
-foreach ($combinaciones as $comb) {
-    if (!empty($comb['equipo']) && !in_array($comb['equipo'], $equipos_unicos)) {
-        $equipos_unicos[] = $comb['equipo'];
-    }
-}
-
-// Eliminar duplicados cuando hay múltiples del mismo tipo (ej: "Jefe + Jefe" → "Jefe")
-$equipos_normalizados = [];
-foreach ($equipos_unicos as $equipo) {
-    $tipos = explode(' + ', $equipo);
-    $tipos_unicos = array_unique($tipos);
-    sort($tipos_unicos);
-    $equipo_normalizado = implode(' + ', $tipos_unicos);
-
-    if (!in_array($equipo_normalizado, $equipos_normalizados)) {
-        $equipos_normalizados[] = $equipo_normalizado;
-    }
-}
-
-sort($equipos_normalizados);
-$equipos_trabajo = array_merge($equipos_trabajo, $equipos_normalizados);
+// Definir equipos de trabajo predefinidos basados en cargos
+$equipos_trabajo = [
+    'Cambio de Equipos',
+    'Líder de Infraestructura y Expansión Comercial',
+    'Jefe de Mantenimiento',
+    'Conductor',
+    'Líder de Infraestructura y Expansión Comercial + Jefe de Mantenimiento'
+];
 
 // Obtener tickets programados de la semana
 $sql_tickets = "
@@ -116,7 +98,7 @@ $sql_tickets = "
            s.nombre as nombre_sucursal,
            CAST(t.fecha_inicio AS DATE) as fecha_inicio,
            CAST(t.fecha_final AS DATE) as fecha_final,
-           GROUP_CONCAT(DISTINCT tc.tipo_usuario ORDER BY tc.tipo_usuario SEPARATOR ' + ') as equipo_trabajo
+           GROUP_CONCAT(DISTINCT tc.CodNivelesCargo ORDER BY tc.CodNivelesCargo SEPARATOR ',') as cargos_asignados
     FROM mtto_tickets t
     LEFT JOIN sucursales s ON t.cod_sucursal = s.codigo
     LEFT JOIN mtto_tickets_colaboradores tc ON t.id = tc.ticket_id
@@ -147,27 +129,30 @@ foreach ($equipos_trabajo as $equipo) {
 }
 
 foreach ($tickets_programados as $ticket) {
-    // Determinar equipo
+    // Determinar equipo según cargos asignados o tipo de formulario
     if ($ticket['tipo_formulario'] === 'cambio_equipos') {
         $equipo_key = 'Cambio de Equipos';
     } else {
-        // Normalizar equipo
-        $tipos = !empty($ticket['equipo_trabajo']) ? explode(' + ', $ticket['equipo_trabajo']) : [];
-        $tipos_unicos = array_unique($tipos);
-        sort($tipos_unicos);
-        $equipo_key = implode(' + ', $tipos_unicos);
+        // Mapear cargos a nombre de equipo
+        $cargos = !empty($ticket['cargos_asignados']) ? explode(',', $ticket['cargos_asignados']) : [];
+        sort($cargos);
+        $cargos_str = implode(',', $cargos);
 
-        if (empty($equipo_key)) {
-            $equipo_key = 'Sin Equipo';
-            if (!in_array($equipo_key, $equipos_trabajo)) {
-                $equipos_trabajo[] = $equipo_key;
-                $tickets_por_equipo[$equipo_key] = [];
+        // Buscar en mapeo
+        $equipo_key = 'Sin Equipo';
+        foreach ($mapeo_filas_cargos as $nombre_equipo => $cargos_equipo) {
+            sort($cargos_equipo);
+            if (implode(',', $cargos_equipo) === $cargos_str) {
+                $equipo_key = $nombre_equipo;
+                break;
             }
         }
-    }
 
-    if (!isset($tickets_por_equipo[$equipo_key])) {
-        $tickets_por_equipo[$equipo_key] = [];
+        // Si no existe el equipo, agregarlo
+        if (!isset($tickets_por_equipo[$equipo_key])) {
+            $equipos_trabajo[] = $equipo_key;
+            $tickets_por_equipo[$equipo_key] = [];
+        }
     }
 
     $tickets_por_equipo[$equipo_key][] = $ticket;
@@ -189,7 +174,7 @@ $tickets_pendientes = $ticketModel->getTicketsWithoutDates();
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="css/programacion_solicitudes.css?v=<?php echo $version; ?>">
+    <link rel="stylesheet" href="css/programacion_solicitudes.css?v=<?php echo mt_rand(1, 10000); ?>">
 </head>
 
 <body>
@@ -201,7 +186,7 @@ $tickets_pendientes = $ticketModel->getTicketsWithoutDates();
         <div class="sub-container"> <!-- Estructura estándar ERP -->
             <!-- todo el contenido existente -->
             <!-- Renderizar header universal -->
-            <?php echo renderHeader($usuario, $esAdmin, 'Programacion de Solicitudes'); ?>
+            <?php echo renderHeader($usuario, false, 'Programacion de Solicitudes'); ?>
             <div class="container-fluid p-3">
                 <!-- Navegación de semanas -->
                 <div class="d-flex justify-content-center align-items-center gap-3 mb-4">
@@ -232,7 +217,9 @@ $tickets_pendientes = $ticketModel->getTicketsWithoutDates();
                                     ?>
                                     <th class="text-center">
                                         <?php echo $dia_semana; ?><br>
-                                        <small><?php echo date('d/m', strtotime($fecha)); ?></small>
+                                        <small>
+                                            <?php echo date('d/m', strtotime($fecha)); ?>
+                                        </small>
                                     </th>
                                 <?php endforeach; ?>
                             </tr>
@@ -240,7 +227,9 @@ $tickets_pendientes = $ticketModel->getTicketsWithoutDates();
                         <tbody>
                             <?php foreach ($equipos_trabajo as $equipo): ?>
                                 <tr data-equipo="<?php echo htmlspecialchars($equipo); ?>">
-                                    <td class="equipo-label"><?php echo htmlspecialchars($equipo); ?></td>
+                                    <td class="equipo-label">
+                                        <?php echo htmlspecialchars($equipo); ?>
+                                    </td>
                                     <?php foreach ($fechas as $fecha): ?>
                                         <td class="calendar-cell" data-fecha="<?php echo $fecha; ?>"
                                             data-equipo-trabajo="<?php echo htmlspecialchars($equipo); ?>"
@@ -286,7 +275,9 @@ $tickets_pendientes = $ticketModel->getTicketsWithoutDates();
                                 onclick="mostrarDetallesTicket(<?php echo $t['id']; ?>)">
 
                                 <div class="ticket-content">
-                                    <strong class="ticket-titulo"><?php echo htmlspecialchars($t['titulo']); ?></strong>
+                                    <strong class="ticket-titulo">
+                                        <?php echo htmlspecialchars($t['titulo']); ?>
+                                    </strong>
                                     <small class="ticket-sucursal d-block text-muted">
                                         <?php echo htmlspecialchars($t['nombre_sucursal']); ?>
                                     </small>
@@ -308,9 +299,52 @@ $tickets_pendientes = $ticketModel->getTicketsWithoutDates();
             </div>
         </div>
     </div>
+
+    <!-- Modal de Colaboradores -->
+    <div class="modal fade" id="modalColaboradores" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header" style="background-color: #0E544C; color: white;">
+                    <h5 class="modal-title">Asignar Colaboradores</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="ticketIdColaboradores">
+
+                    <!-- Lista de colaboradores asignados -->
+                    <div id="listaColaboradoresAsignados" class="mb-3"></div>
+
+                    <!-- Agregar nuevo colaborador -->
+                    <div class="card">
+                        <div class="card-body">
+                            <h6>Agregar Colaborador</h6>
+                            <div class="row g-2">
+                                <div class="col-10">
+                                    <select class="form-select" id="selectCargo">
+                                        <option value="">Seleccionar cargo...</option>
+                                        <?php foreach ($cargos_proyectos as $cargo): ?>
+                                            <option value="<?php echo $cargo['CodNivelesCargos']; ?>">
+                                                <?php echo htmlspecialchars($cargo['Nombre']); ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                                <div class="col-2">
+                                    <button class="btn btn-success w-100" onclick="agregarColaborador()">
+                                        <i class="bi bi-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="js/programacion_solicitudes.js?v=<?php echo $version; ?>"></script>
+    <script src="js/programacion_solicitudes.js?v=<?php echo mt_rand(1, 10000); ?>"></script>
 
     <script>
         // Datos de tickets para JavaScript
