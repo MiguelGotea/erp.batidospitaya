@@ -6,24 +6,18 @@ require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/models/Ticket.php';
 require_once '../../includes/auth.php';
 require_once '../../includes/funciones.php';
-// Incluir el menú lateral
 require_once '../../includes/menu_lateral.php';
-// Incluir el header universal
 require_once '../../includes/header_universal.php';
-
-//verificarAutenticacion();   //no usar 
+require_once '../../core/permissions/permissions.php';
 
 $usuario = obtenerUsuarioActual();
 // Obtener cargo del operario para el menú
 $cargoOperario = $usuario['CodNivelesCargos'];
 $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
 
-//verificarAccesoModulo('operaciones');  //no usar
-//verificarAccesoCargo([11, 16]);  //no usar
-
-// Verificar acceso al módulo (cargos con permiso para ver marcaciones)
-if (!verificarAccesoCargo([35, 16]) && !$esAdmin) {
-    header('Location: ../index.php');
+// Verificar acceso al módulo usando sistema de permisos
+if (!tienePermiso('calendario_solicitudes_mantenimiento', 'vista', $cargoOperario)) {
+    header('Location: /login.php');
     exit();
 }
 
@@ -57,13 +51,19 @@ $fecha_inicio_semana = $fechas[0];
 $fecha_fin_semana = end($fechas);
 
 // Función para obtener color de urgencia
-function getColorUrgencia($nivel) {
-    switch($nivel) {
-        case 1: return '#28a745';
-        case 2: return '#ffc107';
-        case 3: return '#fd7e14';
-        case 4: return '#dc3545';
-        default: return '#8b8b8bff';
+function getColorUrgencia($nivel)
+{
+    switch ($nivel) {
+        case 1:
+            return '#28a745';
+        case 2:
+            return '#ffc107';
+        case 3:
+            return '#fd7e14';
+        case 4:
+            return '#dc3545';
+        default:
+            return '#8b8b8bff';
     }
 }
 
@@ -101,7 +101,7 @@ foreach ($equipos_unicos as $equipo) {
     $tipos_unicos = array_unique($tipos);
     sort($tipos_unicos);
     $equipo_normalizado = implode(' + ', $tipos_unicos);
-    
+
     if (!in_array($equipo_normalizado, $equipos_normalizados)) {
         $equipos_normalizados[] = $equipo_normalizado;
     }
@@ -132,9 +132,12 @@ $sql_tickets = "
 ";
 
 $tickets_programados = $db->fetchAll($sql_tickets, [
-    $fecha_inicio_semana, $fecha_fin_semana,
-    $fecha_inicio_semana, $fecha_fin_semana,
-    $fecha_inicio_semana, $fecha_fin_semana
+    $fecha_inicio_semana,
+    $fecha_fin_semana,
+    $fecha_inicio_semana,
+    $fecha_fin_semana,
+    $fecha_inicio_semana,
+    $fecha_fin_semana
 ]);
 
 // Agrupar tickets por equipo de trabajo
@@ -153,7 +156,7 @@ foreach ($tickets_programados as $ticket) {
         $tipos_unicos = array_unique($tipos);
         sort($tipos_unicos);
         $equipo_key = implode(' + ', $tipos_unicos);
-        
+
         if (empty($equipo_key)) {
             $equipo_key = 'Sin Equipo';
             if (!in_array($equipo_key, $equipos_trabajo)) {
@@ -162,11 +165,11 @@ foreach ($tickets_programados as $ticket) {
             }
         }
     }
-    
+
     if (!isset($tickets_por_equipo[$equipo_key])) {
         $tickets_por_equipo[$equipo_key] = [];
     }
-    
+
     $tickets_por_equipo[$equipo_key][] = $ticket;
 }
 
@@ -176,6 +179,7 @@ $tickets_pendientes = $ticketModel->getTicketsWithoutDates();
 
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -187,13 +191,14 @@ $tickets_pendientes = $ticketModel->getTicketsWithoutDates();
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="css/programacion_solicitudes.css?v=<?php echo $version; ?>">
 </head>
+
 <body>
     <!-- Renderizar menú lateral -->
     <?php echo renderMenuLateral($cargoOperario); ?>
-    
+
     <!-- Contenido principal -->
-    <div class="main-container">   <!-- ya existe en el css de menu lateral -->
-        <div class="contenedor-principal"> <!-- ya existe en el css de menu lateral -->
+    <div class="main-container"> <!-- ya existe en el css de menu lateral -->
+        <div class="sub-container"> <!-- Estructura estándar ERP -->
             <!-- todo el contenido existente -->
             <!-- Renderizar header universal -->
             <?php echo renderHeader($usuario, $esAdmin, 'Programacion de Solicitudes'); ?>
@@ -204,7 +209,7 @@ $tickets_pendientes = $ticketModel->getTicketsWithoutDates();
                         <i class="bi bi-chevron-left"></i> Anterior
                     </a>
                     <div class="week-display">
-                        <?php echo date('d/m/Y', strtotime($fecha_inicio_semana)); ?> - 
+                        <?php echo date('d/m/Y', strtotime($fecha_inicio_semana)); ?> -
                         <?php echo date('d/m/Y', strtotime($fecha_fin_semana)); ?>
                     </div>
                     <a href="?semana=<?php echo $semana_actual + 1; ?>" class="btn btn-nav-week">
@@ -222,9 +227,9 @@ $tickets_pendientes = $ticketModel->getTicketsWithoutDates();
                         <thead style="background-color: #0E544C; color: white;">
                             <tr>
                                 <th style="width: 150px;">Equipo de Trabajo</th>
-                                <?php foreach ($fechas as $fecha): 
+                                <?php foreach ($fechas as $fecha):
                                     $dia_semana = ['', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'][date('N', strtotime($fecha))];
-                                ?>
+                                    ?>
                                     <th class="text-center">
                                         <?php echo $dia_semana; ?><br>
                                         <small><?php echo date('d/m', strtotime($fecha)); ?></small>
@@ -237,11 +242,9 @@ $tickets_pendientes = $ticketModel->getTicketsWithoutDates();
                                 <tr data-equipo="<?php echo htmlspecialchars($equipo); ?>">
                                     <td class="equipo-label"><?php echo htmlspecialchars($equipo); ?></td>
                                     <?php foreach ($fechas as $fecha): ?>
-                                        <td class="calendar-cell" 
-                                            data-fecha="<?php echo $fecha; ?>"
+                                        <td class="calendar-cell" data-fecha="<?php echo $fecha; ?>"
                                             data-equipo-trabajo="<?php echo htmlspecialchars($equipo); ?>"
-                                            ondragover="handleDragOver(event)"
-                                            ondrop="handleDrop(event)">
+                                            ondragover="handleDragOver(event)" ondrop="handleDrop(event)">
                                         </td>
                                     <?php endforeach; ?>
                                 </tr>
@@ -262,10 +265,10 @@ $tickets_pendientes = $ticketModel->getTicketsWithoutDates();
                     <div class="mb-3">
                         <select class="form-select form-select-sm" id="filtroSucursal" onchange="filtrarPendientes()">
                             <option value="">Todas las sucursales</option>
-                            <?php 
+                            <?php
                             $sucursales = $ticketModel->getSucursales();
-                            foreach ($sucursales as $suc): 
-                            ?>
+                            foreach ($sucursales as $suc):
+                                ?>
                                 <option value="<?php echo $suc['cod_sucursal']; ?>">
                                     <?php echo htmlspecialchars($suc['nombre_sucursal']); ?>
                                 </option>
@@ -276,16 +279,12 @@ $tickets_pendientes = $ticketModel->getTicketsWithoutDates();
                     <!-- Lista de tickets pendientes -->
                     <div id="listaPendientes">
                         <?php foreach ($tickets_pendientes as $t): ?>
-                            <div class="ticket-pendiente" 
-                                draggable="true"
-                                data-ticket-id="<?php echo $t['id']; ?>"
-                                data-fecha-inicio="null"
-                                data-fecha-final="null"
+                            <div class="ticket-pendiente" draggable="true" data-ticket-id="<?php echo $t['id']; ?>"
+                                data-fecha-inicio="null" data-fecha-final="null"
                                 data-tipo-formulario="<?php echo $t['tipo_formulario']; ?>"
-                                data-sucursal="<?php echo $t['cod_sucursal']; ?>"
-                                ondragstart="handleDragStart(event)"
+                                data-sucursal="<?php echo $t['cod_sucursal']; ?>" ondragstart="handleDragStart(event)"
                                 onclick="mostrarDetallesTicket(<?php echo $t['id']; ?>)">
-                                
+
                                 <div class="ticket-content">
                                     <strong class="ticket-titulo"><?php echo htmlspecialchars($t['titulo']); ?></strong>
                                     <small class="ticket-sucursal d-block text-muted">
@@ -295,9 +294,9 @@ $tickets_pendientes = $ticketModel->getTicketsWithoutDates();
                                         <?php echo $t['tipo_formulario'] === 'cambio_equipos' ? 'Cambio Equipo' : 'Mantenimiento'; ?>
                                     </small>
                                 </div>
-                                
+
                                 <?php if ($t['nivel_urgencia']): ?>
-                                    <span class="badge-urgencia" 
+                                    <span class="badge-urgencia"
                                         style="background-color: <?php echo getColorUrgencia($t['nivel_urgencia']); ?>">
                                         <?php echo $t['nivel_urgencia']; ?>
                                     </span>
@@ -308,20 +307,21 @@ $tickets_pendientes = $ticketModel->getTicketsWithoutDates();
                 </div>
             </div>
         </div>
-    </div>                                
+    </div>
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="js/programacion_solicitudes.js?v=<?php echo $version; ?>"></script>
-    
+
     <script>
-    // Datos de tickets para JavaScript
-    const ticketsPorEquipo = <?php echo json_encode($tickets_por_equipo, JSON_UNESCAPED_UNICODE); ?>;
-    const fechasSemana = <?php echo json_encode($fechas, JSON_UNESCAPED_UNICODE); ?>;
-    
-    // Renderizar tickets en el cronograma
-    document.addEventListener('DOMContentLoaded', function() {
-        renderizarCronograma();
-    });
+        // Datos de tickets para JavaScript
+        const ticketsPorEquipo = <?php echo json_encode($tickets_por_equipo, JSON_UNESCAPED_UNICODE); ?>;
+        const fechasSemana = <?php echo json_encode($fechas, JSON_UNESCAPED_UNICODE); ?>;
+
+        // Renderizar tickets en el cronograma
+        document.addEventListener('DOMContentLoaded', function () {
+            renderizarCronograma();
+        });
     </script>
 </body>
+
 </html>
