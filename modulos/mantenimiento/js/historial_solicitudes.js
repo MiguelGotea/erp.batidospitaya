@@ -388,6 +388,23 @@ function crearPanelFiltro(th, columna, tipo, icon) {
         </div>
     `);
 
+    // Botón de limpiar (inmediatamente debajo de los botones de ordenamiento)
+    const botonLimpiarDeshabilitado = (columna === 'nombre_sucursal' &&
+        typeof filtroSucursalBloqueado !== 'undefined' &&
+        filtroSucursalBloqueado);
+
+    const disabledAttr = botonLimpiarDeshabilitado ? 'disabled' : '';
+    const disabledStyle = botonLimpiarDeshabilitado ? 'opacity: 0.5; cursor: not-allowed;' : '';
+
+    panel.append(`
+        <button class="filter-action-btn clear" 
+                onclick="limpiarFiltro('${columna}')" 
+                ${disabledAttr}
+                style="${disabledStyle}">
+            <i class="bi bi-x-circle"></i> Limpiar
+        </button>
+    `);
+
 
     // Sección de búsqueda y opciones según el tipo
     if (tipo === 'text') {
@@ -412,22 +429,6 @@ function crearPanelFiltro(th, columna, tipo, icon) {
         cargarOpcionesFiltro(panel, columna, tipo);
     }
 
-    // Botón de limpiar (siempre debajo de los botones de ordenamiento)
-    const botonLimpiarDeshabilitado = (columna === 'nombre_sucursal' &&
-        typeof filtroSucursalBloqueado !== 'undefined' &&
-        filtroSucursalBloqueado);
-
-    const disabledAttr = botonLimpiarDeshabilitado ? 'disabled' : '';
-    const disabledStyle = botonLimpiarDeshabilitado ? 'opacity: 0.5; cursor: not-allowed;' : '';
-
-    panel.append(`
-        <button class="filter-action-btn clear" 
-                onclick="limpiarFiltro('${columna}')" 
-                ${disabledAttr}
-                style="${disabledStyle}">
-            <i class="bi bi-x-circle"></i> Limpiar
-        </button>
-    `);
 
 
     // Agregar al body en lugar del th
