@@ -131,11 +131,16 @@ body {
 
 /* Badge de tipo */
 .badge-tipo {
-    padding: 0.35rem 0.65rem;
+    padding: 0 0.65rem;
     border-radius: 4px;
     font-size: 0.75rem;
     font-weight: 600;
     white-space: nowrap;
+    height: 24px;
+    line-height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .badge-tipo.mantenimiento {
@@ -150,12 +155,17 @@ body {
 
 /* Badge de estado */
 .badge-estado {
-    padding: 0.35rem 0.65rem;
+    padding: 0 0.65rem;
     border-radius: 4px;
     font-size: 0.75rem;
     font-weight: 600;
     color: white;
     white-space: nowrap;
+    height: 24px;
+    line-height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 /* Selector de urgencia */
@@ -164,10 +174,11 @@ body {
     align-items: center;
     justify-content: center;
     gap: 0.25rem;
-    padding: 0.4rem 0.75rem;
+    padding: 0 0.75rem;
     border-radius: 4px;
     transition: all 0.2s;
     min-width: 110px;
+    height: 24px;
 }
 
 .urgency-selector[style*="cursor: pointer"]:hover {
@@ -176,10 +187,11 @@ body {
 }
 
 .urgency-text {
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     font-weight: 600;
     color: white;
     text-align: center;
+    line-height: 1;
 }
 
 /* Icono de filtro */

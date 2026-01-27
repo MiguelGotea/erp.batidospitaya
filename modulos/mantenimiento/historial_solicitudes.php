@@ -25,8 +25,8 @@ if (!tienePermiso('historial_solicitudes_mantenimiento', 'vista', $cargoOperario
 
 $ticketModel = new Ticket();
 
-// Determinar si el filtro de sucursal está bloqueado
-$filtro_sucursal_bloqueado = ($cargoOperario == 5);
+// Determinar si el filtro de sucursal está bloqueado (solo líderes ven su sucursal)
+$filtro_sucursal_bloqueado = !tienePermiso('historial_solicitudes_mantenimiento', 'vista_todas_sucursales', $cargoOperario);
 
 // Obtener sucursales
 $sucursales = $ticketModel->getSucursales();
@@ -105,7 +105,7 @@ function getTextoUrgencia($nivel)
 
     <!-- Contenido principal -->
     <div class="main-container"> <!-- ya existe en el css de menu lateral -->
-        <div class="contenedor-principal"> <!-- ya existe en el css de menu lateral -->
+        <div class="sub-container"> <!-- Estructura estándar ERP -->
             <!-- todo el contenido existente -->
             <?php echo renderHeader($usuario, false, 'Historial de Solicitudes'); ?>
             <div class="container-fluid p-3">
