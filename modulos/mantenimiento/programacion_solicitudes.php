@@ -265,35 +265,83 @@ $tickets_pendientes = $ticketModel->getTicketsWithoutDates();
                         </select>
                     </div>
 
-                    <!-- Lista de tickets pendientes -->
-                    <div id="listaPendientes">
-                        <?php foreach ($tickets_pendientes as $t): ?>
-                            <div class="ticket-pendiente" draggable="true" data-ticket-id="<?php echo $t['id']; ?>"
-                                data-fecha-inicio="null" data-fecha-final="null"
-                                data-tipo-formulario="<?php echo $t['tipo_formulario']; ?>"
-                                data-sucursal="<?php echo $t['cod_sucursal']; ?>" ondragstart="handleDragStart(event)"
-                                onclick="mostrarDetallesTicket(<?php echo $t['id']; ?>)">
+                    <!-- Pestañas -->
+                    <ul class="nav nav-tabs mb-3" id="tabsPendientes" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="tab-mantenimiento" data-bs-toggle="tab"
+                                data-bs-target="#contenido-mantenimiento" type="button" role="tab">
+                                Mantenimiento
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="tab-cambio-equipo" data-bs-toggle="tab"
+                                data-bs-target="#contenido-cambio-equipo" type="button" role="tab">
+                                Cambio Equipo
+                            </button>
+                        </li>
+                    </ul>
 
-                                <div class="ticket-content">
-                                    <strong class="ticket-titulo">
-                                        <?php echo htmlspecialchars($t['titulo']); ?>
-                                    </strong>
-                                    <small class="ticket-sucursal d-block text-muted">
-                                        <?php echo htmlspecialchars($t['nombre_sucursal']); ?>
-                                    </small>
-                                    <small class="badge-tipo">
-                                        <?php echo $t['tipo_formulario'] === 'cambio_equipos' ? 'Cambio Equipo' : 'Mantenimiento'; ?>
-                                    </small>
-                                </div>
+                    <!-- Contenido de pestañas -->
+                    <div class="tab-content" id="contenidoTabsPendientes">
+                        <!-- Pestaña Mantenimiento -->
+                        <div class="tab-pane fade show active" id="contenido-mantenimiento" role="tabpanel">
+                            <?php foreach ($tickets_pendientes as $t): ?>
+                                <?php if ($t['tipo_formulario'] === 'mantenimiento_general'): ?>
+                                    <div class="ticket-pendiente" draggable="true" data-ticket-id="<?php echo $t['id']; ?>"
+                                        data-fecha-inicio="null" data-fecha-final="null"
+                                        data-tipo-formulario="<?php echo $t['tipo_formulario']; ?>"
+                                        data-sucursal="<?php echo $t['cod_sucursal']; ?>" ondragstart="handleDragStart(event)"
+                                        onclick="mostrarDetallesTicket(<?php echo $t['id']; ?>)">
 
-                                <?php if ($t['nivel_urgencia']): ?>
-                                    <span class="badge-urgencia"
-                                        style="background-color: <?php echo getColorUrgencia($t['nivel_urgencia']); ?>">
-                                        <?php echo $t['nivel_urgencia']; ?>
-                                    </span>
+                                        <div class="ticket-content">
+                                            <div class="d-flex justify-content-between align-items-start mb-1">
+                                                <strong class="ticket-titulo">
+                                                    <?php echo htmlspecialchars($t['titulo']); ?>
+                                                </strong>
+                                                <?php if ($t['nivel_urgencia']): ?>
+                                                    <span class="badge-urgencia ms-2"
+                                                        style="background-color: <?php echo getColorUrgencia($t['nivel_urgencia']); ?>">
+                                                        <?php echo $t['nivel_urgencia']; ?>
+                                                    </span>
+                                                <?php endif; ?>
+                                            </div>
+                                            <small class="ticket-descripcion d-block text-muted mb-1">
+                                                <?php echo htmlspecialchars(substr($t['descripcion'], 0, 80)) . (strlen($t['descripcion']) > 80 ? '...' : ''); ?>
+                                            </small>
+                                            <small class="ticket-sucursal d-block text-muted">
+                                                📍 <?php echo htmlspecialchars($t['nombre_sucursal']); ?>
+                                            </small>
+                                        </div>
+                                    </div>
                                 <?php endif; ?>
-                            </div>
-                        <?php endforeach; ?>
+                            <?php endforeach; ?>
+                        </div>
+
+                        <!-- Pestaña Cambio Equipo -->
+                        <div class="tab-pane fade" id="contenido-cambio-equipo" role="tabpanel">
+                            <?php foreach ($tickets_pendientes as $t): ?>
+                                <?php if ($t['tipo_formulario'] === 'cambio_equipos'): ?>
+                                    <div class="ticket-pendiente" draggable="true" data-ticket-id="<?php echo $t['id']; ?>"
+                                        data-fecha-inicio="null" data-fecha-final="null"
+                                        data-tipo-formulario="<?php echo $t['tipo_formulario']; ?>"
+                                        data-sucursal="<?php echo $t['cod_sucursal']; ?>" ondragstart="handleDragStart(event)"
+                                        onclick="mostrarDetallesTicket(<?php echo $t['id']; ?>)">
+
+                                        <div class="ticket-content">
+                                            <strong class="ticket-titulo d-block mb-1">
+                                                <?php echo htmlspecialchars($t['titulo']); ?>
+                                            </strong>
+                                            <small class="ticket-descripcion d-block text-muted mb-1">
+                                                <?php echo htmlspecialchars(substr($t['descripcion'], 0, 80)) . (strlen($t['descripcion']) > 80 ? '...' : ''); ?>
+                                            </small>
+                                            <small class="ticket-sucursal d-block text-muted">
+                                                📍 <?php echo htmlspecialchars($t['nombre_sucursal']); ?>
+                                            </small>
+                                        </div>
+                                    </div>
+                                <?php endif; ?>
+                            <?php endforeach; ?>
+                        </div>
                     </div>
                 </div>
             </div>
