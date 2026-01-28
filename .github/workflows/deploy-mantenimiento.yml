@@ -1,10 +1,11 @@
-name: 🚀 Deploy Módulo Mantenimiento
+name: 🚀 Deploy Módulos Mantenimiento y Sistemas
 
 on:
   push:
     branches: [ main ]
     paths:
       - 'modulos/mantenimiento/**'
+      - 'modulos/sistemas/**'
 
 jobs:
   deploy:
@@ -36,18 +37,39 @@ jobs:
           ./modulos/mantenimiento/ \
           ${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_HOST }}:${{ secrets.HOSTINGER_PATH }}/modulos/mantenimiento/
           
+    - name: 📤 Sincronizar carpeta sistemas
+      run: |
+        echo "🔄 Sincronizando modulos/sistemas/"
+        
+        # Crear la carpeta si no existe (incluyendo uploads)
+        ssh -o StrictHostKeyChecking=no -p 65002 ${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_HOST }} \
+          "mkdir -p ${{ secrets.HOSTINGER_PATH }}/modulos/sistemas && \
+           mkdir -p ${{ secrets.HOSTINGER_PATH }}/modulos/sistemas/uploads"
+        
+        # Sincronizar la carpeta excluyendo uploads
+        rsync -avz \
+          --delete \
+          --exclude='uploads/' \
+          -e "ssh -o StrictHostKeyChecking=no -p 65002" \
+          ./modulos/sistemas/ \
+          ${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_HOST }}:${{ secrets.HOSTINGER_PATH }}/modulos/sistemas/
+          
     - name: 🔧 Configurar permisos
       run: |
         ssh -o StrictHostKeyChecking=no -p 65002 ${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_HOST }} \
           "chmod -R 755 ${{ secrets.HOSTINGER_PATH }}/modulos/mantenimiento/ && \
            find ${{ secrets.HOSTINGER_PATH }}/modulos/mantenimiento/ -type f -exec chmod 644 {} \; && \
            chmod -R 755 ${{ secrets.HOSTINGER_PATH }}/modulos/mantenimiento/uploads/ && \
-           chmod -R 777 ${{ secrets.HOSTINGER_PATH }}/modulos/mantenimiento/uploads/ || true"
+           chmod -R 777 ${{ secrets.HOSTINGER_PATH }}/modulos/mantenimiento/uploads/ || true && \
+           chmod -R 755 ${{ secrets.HOSTINGER_PATH }}/modulos/sistemas/ && \
+           find ${{ secrets.HOSTINGER_PATH }}/modulos/sistemas/ -type f -exec chmod 644 {} \; && \
+           chmod -R 755 ${{ secrets.HOSTINGER_PATH }}/modulos/sistemas/uploads/ && \
+           chmod -R 777 ${{ secrets.HOSTINGER_PATH }}/modulos/sistemas/uploads/ || true"
         
     - name: ✅ Verificar deploy
       run: |
         echo "✅ Deploy completado"
-        echo "📁 Carpeta 'uploads' excluida del sync"
+        echo "📁 Carpetas 'uploads' excluidas del sync"
         echo "🌐 Sitio: https://erp.batidospitaya.com"
-        echo "📁 Carpeta: modulos/mantenimiento/"
+        echo "📁 Carpetas: modulos/mantenimiento/ y modulos/sistemas/"
         echo "🖥️ Servidor: ${{ secrets.HOSTINGER_HOST }}:65002"

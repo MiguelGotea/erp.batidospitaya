@@ -4,9 +4,11 @@
 !/.gitignore
 !/modulos/
 
-# Excluir todo en modulos EXCEPTO mantenimiento
+# Excluir todo en modulos EXCEPTO mantenimiento y sistemas
 /modulos/*
 !/modulos/mantenimiento/
+!/modulos/sistemas/
 
-# Excluir todo dentro de uploads (pero mantener la carpeta)
+# Excluir todo dentro de uploads (pero mantener las carpetas)
 /modulos/mantenimiento/uploads/*
+/modulos/sistemas/uploads/*
