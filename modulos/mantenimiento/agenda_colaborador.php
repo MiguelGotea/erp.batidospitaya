@@ -6,7 +6,6 @@ if (session_status() == PHP_SESSION_NONE) {
 require_once 'models/Ticket.php';
 require_once '../../includes/auth.php';
 require_once '../../includes/funciones.php';
-// Incluir el header universal
 require_once '../../includes/header_universal.php';
 // Incluir el menú lateral
 require_once '../../includes/menu_lateral.php';
@@ -38,19 +37,20 @@ if ($colaborador_filtro) {
     if ($cargoOperario == 14) {
         $tickets = $ticket->getTicketsPorColaborador($colaborador_filtro, "2016-01-01"); //date('Y-m-d')
     } else {
-    $tickets = $ticket->getTicketsPorColaborador($colaborador_filtro, "2016-01-01");
+        $tickets = $ticket->getTicketsPorColaborador($colaborador_filtro, "2016-01-01");
     }
 }
 ?>
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Agenda de Colaboradores</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <link rel="icon" href="../../assets/img/icon12.png" type="image/png">
-    
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         * {
@@ -60,22 +60,22 @@ if ($colaborador_filtro) {
             font-family: 'Calibri', sans-serif;
             font-size: clamp(11px, 2vw, 16px) !important;
         }
-        
+
         body {
             background-color: #F6F6F6;
             margin: 0;
             padding: 0;
         }
-        
+
         .container {
             max-width: 100%;
             margin: 0 auto;
             background: white;
             border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
             padding: 10px;
         }
-        
+
         .filter-section {
             background: linear-gradient(135deg, #51B8AC 0%, #0E544C 100%);
             color: white;
@@ -83,34 +83,48 @@ if ($colaborador_filtro) {
             border-radius: 10px;
             margin-bottom: 20px;
         }
-        
+
         .ticket-list {
             display: flex;
             flex-direction: column;
             gap: 15px;
         }
-        
+
         .ticket-card {
             background: white;
             border-left: 5px solid;
             border-radius: 8px;
             padding: 10px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
             transition: transform 0.2s;
             cursor: pointer;
         }
-        
+
         .ticket-card:hover {
             transform: translateX(5px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
-        
-        .ticket-urgencia-1 { border-left-color: #28a745; }
-        .ticket-urgencia-2 { border-left-color: #ffc107; }
-        .ticket-urgencia-3 { border-left-color: #fd7e14; }
-        .ticket-urgencia-4 { border-left-color: #dc3545; }
-        .ticket-equipos { border-left-color: #dc3545; }
-        
+
+        .ticket-urgencia-1 {
+            border-left-color: #28a745;
+        }
+
+        .ticket-urgencia-2 {
+            border-left-color: #ffc107;
+        }
+
+        .ticket-urgencia-3 {
+            border-left-color: #fd7e14;
+        }
+
+        .ticket-urgencia-4 {
+            border-left-color: #dc3545;
+        }
+
+        .ticket-equipos {
+            border-left-color: #dc3545;
+        }
+
         .ticket-header {
             display: flex;
             justify-content: space-between;
@@ -118,7 +132,7 @@ if ($colaborador_filtro) {
             margin-bottom: 6px;
             gap: 10px;
         }
-        
+
         .ticket-date {
             background: #f8f9fa;
             padding: 4px 8px;
@@ -128,7 +142,7 @@ if ($colaborador_filtro) {
             color: #0E544C;
             white-space: nowrap;
         }
-        
+
         .status-badge {
             padding: 3px 10px;
             border-radius: 20px;
@@ -136,23 +150,30 @@ if ($colaborador_filtro) {
             font-weight: 600;
             white-space: nowrap;
         }
-        
-        .status-agendado { background: #fd7e14; color: white; }
-        .status-finalizado { background: #198754; color: white; }
-        
+
+        .status-agendado {
+            background: #fd7e14;
+            color: white;
+        }
+
+        .status-finalizado {
+            background: #198754;
+            color: white;
+        }
+
         .ticket-title {
             font-size: 0.95em;
             font-weight: 600;
             margin-bottom: 4px;
             color: #0E544C;
         }
-        
+
         .ticket-sucursal {
             font-size: 0.8em;
             color: #6c757d;
             margin-bottom: 4px;
         }
-        
+
         .ticket-desc {
             font-size: 0.85em;
             color: #495057;
@@ -165,7 +186,7 @@ if ($colaborador_filtro) {
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
         }
-        
+
         .ticket-footer {
             display: flex;
             justify-content: space-between;
@@ -175,13 +196,13 @@ if ($colaborador_filtro) {
             padding-top: 6px;
             border-top: 1px solid #e9ecef;
         }
-        
+
         .fotos-preview {
             display: flex;
             gap: 4px;
             flex-wrap: wrap;
         }
-        
+
         .foto-thumb {
             width: 40px;
             height: 40px;
@@ -191,11 +212,11 @@ if ($colaborador_filtro) {
             cursor: pointer;
             transition: transform 0.2s;
         }
-        
+
         .foto-thumb:hover {
             transform: scale(1.1);
         }
-        
+
         .btn-finalizar {
             background: #28a745;
             color: white;
@@ -207,23 +228,23 @@ if ($colaborador_filtro) {
             transition: background 0.2s;
             white-space: nowrap;
         }
-        
+
         .btn-finalizar:hover {
             background: #218838;
         }
-        
+
         .ticket-finalizado {
             opacity: 0.7;
             background: #f8f9fa;
         }
-        
+
         @media (max-width: 768px) {
             .header-container {
                 flex-direction: row;
                 align-items: center;
                 gap: 10px;
             }
-            
+
             .buttons-container {
                 position: static;
                 transform: none;
@@ -232,12 +253,12 @@ if ($colaborador_filtro) {
                 justify-content: center;
                 margin-top: 10px;
             }
-            
+
             .logo-container {
                 order: 1;
                 margin-right: 0;
             }
-            
+
             .user-info {
                 order: 2;
                 margin-left: auto;
@@ -245,12 +266,13 @@ if ($colaborador_filtro) {
         }
     </style>
 </head>
+
 <body>
     <!-- Renderizar menú lateral -->
     <?php echo renderMenuLateral($cargoOperario); ?>
-    
+
     <!-- Contenido principal -->
-    <div class="main-container">   <!-- ya existe en el css de menu lateral -->
+    <div class="main-container"> <!-- ya existe en el css de menu lateral -->
         <div class="contenedor-principal"> <!-- ya existe en el css de menu lateral -->
             <!-- todo el contenido existente -->
             <div class="container">
@@ -263,8 +285,7 @@ if ($colaborador_filtro) {
                             <select name="colaborador" class="form-select" required>
                                 <option value="">Seleccionar colaborador...</option>
                                 <?php foreach ($colaboradoresDisponibles as $col): ?>
-                                    <option value="<?= $col['CodOperario'] ?>" 
-                                            <?= $colaborador_filtro == $col['CodOperario'] ? 'selected' : '' ?>>
+                                    <option value="<?= $col['CodOperario'] ?>" <?= $colaborador_filtro == $col['CodOperario'] ? 'selected' : '' ?>>
                                         <?= htmlspecialchars($col['Nombre'] . ' ' . ($col['Apellido'] ?? '')) ?>
                                     </option>
                                 <?php endforeach; ?>
@@ -289,8 +310,8 @@ if ($colaborador_filtro) {
                         <div class="ticket-list">
                             <?php foreach ($tickets as $t): ?>
                                 <?php
-                                $borderClass = $t['tipo_formulario'] === 'cambio_equipos' ? 
-                                    'ticket-equipos' : 
+                                $borderClass = $t['tipo_formulario'] === 'cambio_equipos' ?
+                                    'ticket-equipos' :
                                     'ticket-urgencia-' . ($t['nivel_urgencia'] ?? '0');
                                 $finalizado = $t['status'] === 'finalizado';
                                 $fotos = $ticket->getFotos($t['id']);
@@ -304,33 +325,33 @@ if ($colaborador_filtro) {
                                                 - <?= date('d/m', strtotime($t['fecha_final'])) ?>
                                             <?php endif; ?>
                                         </div>
-                                        
+
                                         <span class="ticket-sucursal">
                                             <i class="fas fa-map-marker-alt me-1"></i>
                                             <?= htmlspecialchars($t['nombre_sucursal']) ?>
                                         </span>
                                     </div>
-                                    
+
                                     <div class="ticket-title">
-                                        <i class="fas fa-<?= $t['tipo_formulario'] === 'cambio_equipos' ? 'laptop' : 'tools' ?> me-1"></i>
+                                        <i
+                                            class="fas fa-<?= $t['tipo_formulario'] === 'cambio_equipos' ? 'laptop' : 'tools' ?> me-1"></i>
                                         <?= htmlspecialchars($t['titulo']) ?>
                                     </div>
-                                    
+
                                     <div class="ticket-desc">
                                         <?= htmlspecialchars($t['descripcion']) ?>
                                     </div>
-                                    
+
                                     <div class="ticket-footer">
                                         <div class="fotos-preview">
                                             <?php if (!empty($fotos)): ?>
-                                            
+
                                                 <?php foreach (array_slice($fotos, 0, 3) as $foto): ?>
-                                                    <img src="uploads/tickets/<?= $foto['foto'] ?>" 
-                                                        class="foto-thumb" 
+                                                    <img src="uploads/tickets/<?= $foto['foto'] ?>" class="foto-thumb"
                                                         onclick="mostrarFotosTicket(<?= $t['id'] ?>)">
                                                 <?php endforeach; ?>
                                                 <?php if (count($fotos) > 3): ?>
-                                                    <div class="foto-thumb d-flex align-items-center justify-content-center" 
+                                                    <div class="foto-thumb d-flex align-items-center justify-content-center"
                                                         style="background: #f8f9fa; border: 1px solid #dee2e6; font-size: 0.75em; font-weight: bold; color: #6c757d;"
                                                         onclick="mostrarFotosTicket(<?= $t['id'] ?>)">
                                                         +<?= count($fotos) - 3 ?>
@@ -388,25 +409,23 @@ if ($colaborador_filtro) {
                 <div class="modal-body">
                     <form id="formFinalizar" enctype="multipart/form-data">
                         <input type="hidden" id="ticket_id_fin" name="ticket_id">
-                        
+
                         <div class="mb-3">
                             <label for="detalle_trabajo" class="form-label">
                                 <strong>Detalle del Trabajo Realizado *</strong>
                             </label>
-                            <textarea class="form-control" id="detalle_trabajo" name="detalle_trabajo" 
-                                      rows="3" required 
-                                      placeholder="Describe el trabajo que se realizó..."></textarea>
+                            <textarea class="form-control" id="detalle_trabajo" name="detalle_trabajo" rows="3" required
+                                placeholder="Describe el trabajo que se realizó..."></textarea>
                         </div>
-                        
+
                         <div class="mb-3">
                             <label for="materiales_usados" class="form-label">
                                 <strong>Materiales Utilizados *</strong>
                             </label>
-                            <textarea class="form-control" id="materiales_usados" name="materiales_usados" 
-                                      rows="3" required 
-                                      placeholder="Lista los materiales que se utilizaron..."></textarea>
+                            <textarea class="form-control" id="materiales_usados" name="materiales_usados" rows="3"
+                                required placeholder="Lista los materiales que se utilizaron..."></textarea>
                         </div>
-                        
+
                         <div class="mb-3">
                             <label class="form-label">
                                 <strong>Fotos del Trabajo Finalizado (Opcional)</strong>
@@ -419,15 +438,17 @@ if ($colaborador_filtro) {
                                     <i class="fas fa-camera me-2"></i>Tomar Foto
                                 </button>
                             </div>
-                            
-                            <input type="file" id="fotos_fin" name="fotos_fin[]" accept="image/*" multiple style="display: none;">
+
+                            <input type="file" id="fotos_fin" name="fotos_fin[]" accept="image/*" multiple
+                                style="display: none;">
                             <input type="hidden" id="fotos_camera_fin" name="fotos_camera_fin">
-                            
-                            <div class="camera-preview" id="cameraPreviewFin" style="display: none; max-width: 300px; margin: 10px 0;">
+
+                            <div class="camera-preview" id="cameraPreviewFin"
+                                style="display: none; max-width: 300px; margin: 10px 0;">
                                 <video id="videoFin" autoplay style="width: 100%; border-radius: 8px;"></video>
                                 <canvas id="canvasFin" style="display: none;"></canvas>
                             </div>
-                            
+
                             <div id="photosPreviewFin" style="display: none; margin-top: 10px;">
                                 <div id="photosListFin" class="row g-2"></div>
                             </div>
@@ -446,7 +467,7 @@ if ($colaborador_filtro) {
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    
+
     <script>
         let streamFin = null;
         let fotosFin = [];
@@ -458,11 +479,11 @@ if ($colaborador_filtro) {
                 method: 'GET',
                 data: { ticket_id: ticketId },
                 dataType: 'json',
-                success: function(response) {
+                success: function (response) {
                     if (response.success && response.fotos.length > 0) {
                         let html = '<div id="photosCarousel" class="carousel slide" data-bs-ride="false">';
                         html += '<div class="carousel-inner">';
-                        
+
                         response.fotos.forEach((foto, index) => {
                             html += `<div class="carousel-item ${index === 0 ? 'active' : ''}">
                                 <img src="uploads/tickets/${foto.foto}" class="d-block w-100" style="max-height: 500px; object-fit: contain;">
@@ -471,9 +492,9 @@ if ($colaborador_filtro) {
                                 </div>
                             </div>`;
                         });
-                        
+
                         html += '</div>';
-                        
+
                         if (response.fotos.length > 1) {
                             html += `<button class="carousel-control-prev" type="button" data-bs-target="#photosCarousel" data-bs-slide="prev">
                                         <span class="carousel-control-prev-icon"></span>
@@ -482,9 +503,9 @@ if ($colaborador_filtro) {
                                         <span class="carousel-control-next-icon"></span>
                                     </button>`;
                         }
-                        
+
                         html += '</div>';
-                        
+
                         $('#fotosModalBody').html(html);
                         new bootstrap.Modal(document.getElementById('fotosModal')).show();
                     }
@@ -501,21 +522,21 @@ if ($colaborador_filtro) {
         }
 
         // Manejo de fotos finalización
-        document.getElementById('btnFileFin')?.addEventListener('click', function() {
+        document.getElementById('btnFileFin')?.addEventListener('click', function () {
             document.getElementById('fotos_fin').click();
         });
 
-        document.getElementById('fotos_fin')?.addEventListener('change', function(e) {
+        document.getElementById('fotos_fin')?.addEventListener('change', function (e) {
             const files = Array.from(e.target.files);
-            
+
             if (fotosFin.length + files.length > MAX_FOTOS_FIN) {
                 alert(`Solo puedes agregar hasta ${MAX_FOTOS_FIN} fotos`);
                 return;
             }
-            
+
             files.forEach(file => {
                 const reader = new FileReader();
-                reader.onload = function(e) {
+                reader.onload = function (e) {
                     fotosFin.push({
                         tipo: 'file',
                         data: e.target.result,
@@ -527,12 +548,12 @@ if ($colaborador_filtro) {
             });
         });
 
-        document.getElementById('btnCameraFin')?.addEventListener('click', function() {
+        document.getElementById('btnCameraFin')?.addEventListener('click', function () {
             if (fotosFin.length >= MAX_FOTOS_FIN) {
                 alert(`Ya has alcanzado el límite de ${MAX_FOTOS_FIN} fotos`);
                 return;
             }
-            
+
             if (streamFin) {
                 stopCameraFin();
             } else {
@@ -542,12 +563,12 @@ if ($colaborador_filtro) {
 
         function startCameraFin() {
             navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
-                .then(function(mediaStream) {
+                .then(function (mediaStream) {
                     streamFin = mediaStream;
                     const video = document.getElementById('videoFin');
                     video.srcObject = streamFin;
                     document.getElementById('cameraPreviewFin').style.display = 'block';
-                    
+
                     if (!document.getElementById('captureBtnFin')) {
                         const captureBtn = document.createElement('button');
                         captureBtn.type = 'button';
@@ -558,7 +579,7 @@ if ($colaborador_filtro) {
                         document.getElementById('cameraPreviewFin').appendChild(captureBtn);
                     }
                 })
-                .catch(function(err) {
+                .catch(function (err) {
                     alert('Error al acceder a la cámara: ' + err.message);
                 });
         }
@@ -569,22 +590,22 @@ if ($colaborador_filtro) {
                 stopCameraFin();
                 return;
             }
-            
+
             const video = document.getElementById('videoFin');
             const canvas = document.getElementById('canvasFin');
             const context = canvas.getContext('2d');
-            
+
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
             context.drawImage(video, 0, 0);
-            
+
             const dataURL = canvas.toDataURL('image/jpeg');
-            
+
             fotosFin.push({
                 tipo: 'camera',
                 data: dataURL
             });
-            
+
             updatePhotosPreviewFin();
             stopCameraFin();
         }
@@ -602,15 +623,15 @@ if ($colaborador_filtro) {
         function updatePhotosPreviewFin() {
             const previewContainer = document.getElementById('photosPreviewFin');
             const photosList = document.getElementById('photosListFin');
-            
+
             if (fotosFin.length === 0) {
                 previewContainer.style.display = 'none';
                 return;
             }
-            
+
             previewContainer.style.display = 'block';
             photosList.innerHTML = '';
-            
+
             fotosFin.forEach((foto, index) => {
                 const col = document.createElement('div');
                 col.className = 'col-6 col-md-4';
@@ -625,7 +646,7 @@ if ($colaborador_filtro) {
                 `;
                 photosList.appendChild(col);
             });
-            
+
             updateHiddenInputsFin();
         }
 
@@ -637,7 +658,7 @@ if ($colaborador_filtro) {
         function updateHiddenInputsFin() {
             const dt = new DataTransfer();
             const fotosCamera = [];
-            
+
             fotosFin.forEach(foto => {
                 if (foto.tipo === 'file') {
                     dt.items.add(foto.file);
@@ -645,7 +666,7 @@ if ($colaborador_filtro) {
                     fotosCamera.push(foto.data);
                 }
             });
-            
+
             document.getElementById('fotos_fin').files = dt.files;
             document.getElementById('fotos_camera_fin').value = JSON.stringify(fotosCamera);
         }
@@ -653,16 +674,16 @@ if ($colaborador_filtro) {
         function finalizarTicket() {
             const form = document.getElementById('formFinalizar');
             const formData = new FormData(form);
-            
+
             if (!form.checkValidity()) {
                 form.reportValidity();
                 return;
             }
-            
+
             const btnSubmit = event.target;
             btnSubmit.disabled = true;
             btnSubmit.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Finalizando...';
-            
+
             $.ajax({
                 url: 'ajax/get_finalizar_ticket.php',
                 method: 'POST',
@@ -670,7 +691,7 @@ if ($colaborador_filtro) {
                 processData: false,
                 contentType: false,
                 dataType: 'json',
-                success: function(response) {
+                success: function (response) {
                     if (response.success) {
                         $('#finalizarModal').modal('hide');
                         alert('✅ Ticket finalizado correctamente');
@@ -681,7 +702,7 @@ if ($colaborador_filtro) {
                         btnSubmit.innerHTML = '<i class="fas fa-check-circle me-2"></i>Finalizar Ticket';
                     }
                 },
-                error: function(xhr) {
+                error: function (xhr) {
                     console.error('Error:', xhr.responseText);
                     alert('❌ Error al finalizar el ticket');
                     btnSubmit.disabled = false;
@@ -691,4 +712,5 @@ if ($colaborador_filtro) {
         }
     </script>
 </body>
+
 </html>
