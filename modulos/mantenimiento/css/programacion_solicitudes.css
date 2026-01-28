@@ -411,3 +411,9 @@ body.resizing * {
     line-height: 1.3;
     color: #6c757d;
 }
+
+/* Botón de cierre del sidebar */
+.sidebar-header .btn-close {
+    margin-left: auto;
+    flex-shrink: 0;
+}
