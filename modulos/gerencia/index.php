@@ -11,7 +11,7 @@ $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admi
 
 $cargoOperario = $usuario['CodNivelesCargos'];
 
-// Verificar acceso al módulo (cargos con permiso para ver marcaciones)
+
 if (!$esAdmin && !verificarAccesoCargo([16, 49])) {
     header('Location: ../index.php');
     exit();
@@ -19,12 +19,15 @@ if (!$esAdmin && !verificarAccesoCargo([16, 49])) {
 ?>
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gerencia - Batidos Pitaya</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-    <link rel="stylesheet" href="../../assets/css/indexmodulos.css?v=<?= filemtime($_SERVER['DOCUMENT_ROOT'].'/assets/css/indexmodulos.css') ?>"> <!-- CSS propio con manejo de versiones  evitar cache de buscador -->
+    <link rel="stylesheet"
+        href="../../assets/css/indexmodulos.css?v=<?= filemtime($_SERVER['DOCUMENT_ROOT'] . '/assets/css/indexmodulos.css') ?>">
+    <!-- CSS propio con manejo de versiones  evitar cache de buscador -->
     <link rel="icon" href="../../assets/img/icon12.png" type="image/png">
     <style>
         * {
@@ -34,15 +37,17 @@ if (!$esAdmin && !verificarAccesoCargo([16, 49])) {
             font-family: 'Calibri', sans-serif;
             font-size: clamp(12px, 2vw, 18px) !important;
         }
+
         body {
             background-color: #F6F6F6;
             margin: 0;
             padding: 0;
         }
-        
+
         }
     </style>
 </head>
+
 <body>
     <?php echo renderMenuLateral($cargoOperario); ?>
     <div class="main-container">
@@ -59,7 +64,7 @@ if (!$esAdmin && !verificarAccesoCargo([16, 49])) {
                     </div>
                     <div class="quick-access-title">KPI Semanal</div>
                 </a>
-                
+
                 <a href="../marketing/cupones.php" class="quick-access-card">
                     <div class="quick-access-icon">
                         <i class="fas fa-ticket-alt "></i>
@@ -67,9 +72,10 @@ if (!$esAdmin && !verificarAccesoCargo([16, 49])) {
                     <div class="quick-access-title">Cupones</div>
                 </a>
             </div>
-      
-      
+
+
         </div>
     </div>
 </body>
+
 </html>
