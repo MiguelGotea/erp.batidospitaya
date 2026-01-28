@@ -1,7 +1,5 @@
 <?php
-if (session_status() == PHP_SESSION_NONE) {
-    session_start();
-}
+
 
 require_once 'models/Ticket.php';
 require_once '../../core/auth/auth.php';
