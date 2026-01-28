@@ -13,7 +13,7 @@ class GroqService
 
     public function __construct()
     {
-        $this->apiKey = '';
+        $this->apiKey = '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';
     }
 
     /**
