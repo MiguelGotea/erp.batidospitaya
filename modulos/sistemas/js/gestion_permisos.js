@@ -22,15 +22,15 @@ const tipoApiMap = {
  */
 function cambiarTab(tipo) {
     console.log('Cambiando a tab:', tipo);
-    
+
     // Desactivar todos los tabs
     $('.tab-btn-custom').removeClass('tab-active');
     $('.tab-content-custom').removeClass('tab-content-active');
-    
+
     // Activar el tab seleccionado
     $('#tab-' + tipo).addClass('tab-active');
     $('#content-' + tipo).addClass('tab-content-active');
-    
+
     // Cargar datos si no existen
     if (Object.keys(datosHerramientas[tipo]).length === 0) {
         cargarHerramientasPorTipo(tipo);
@@ -38,11 +38,11 @@ function cambiarTab(tipo) {
 }
 
 // Cargar al inicio
-$(document).ready(function() {
+$(document).ready(function () {
     cargarEstructuraHerramientas();
-    
+
     // Búsqueda de herramientas por tipo
-    $('.buscar-input').on('input', function() {
+    $('.buscar-input').on('input', function () {
         const tipo = $(this).data('tipo');
         filtrarHerramientas($(this).val(), tipo);
     });
@@ -52,7 +52,7 @@ $(document).ready(function() {
  * Función auxiliar para obtener containerId
  */
 function getContainerId(tipo) {
-    switch(tipo) {
+    switch (tipo) {
         case 'herramientas': return '#treeHerramientas';
         case 'indicadores': return '#treeIndicadores';
         case 'balances': return '#treeBalances';
@@ -73,15 +73,15 @@ function cargarEstructuraHerramientas() {
 function cargarHerramientasPorTipo(tipo) {
     const containerId = getContainerId(tipo);
     const tipoApi = tipoApiMap[tipo];
-    
+
     console.log('Cargando tipo:', tipo, '- API tipo:', tipoApi, '- Container:', containerId);
-    
+
     $.ajax({
         url: 'ajax/obtener_estructura_permisos.php',
         method: 'GET',
         data: { tipo_componente: tipoApi },
         dataType: 'json',
-        success: function(response) {
+        success: function (response) {
             console.log('Response recibida:', response);
             if (response.success) {
                 datosHerramientas[tipo] = response.data;
@@ -91,7 +91,7 @@ function cargarHerramientasPorTipo(tipo) {
                 $(containerId).html('<div class="alert alert-danger m-3">Error: ' + response.message + '</div>');
             }
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             console.error('Error AJAX:', {
                 status: status,
                 error: error,
@@ -110,15 +110,15 @@ function cargarHerramientasPorTipo(tipo) {
 function renderizarArbolHerramientas(grupos, containerId, tipo) {
     const container = $(containerId);
     container.empty();
-    
+
     if (Object.keys(grupos).length === 0) {
         container.html('<p class="text-center text-muted p-3">No hay ' + tipo + 's disponibles</p>');
         return;
     }
-    
+
     Object.keys(grupos).sort().forEach(nombreGrupo => {
         const herramientas = grupos[nombreGrupo];
-        
+
         const grupoHtml = `
             <div class="tree-group" data-tipo="${tipo}">
                 <div class="tree-group-header" onclick="toggleGrupo(this)">
@@ -129,15 +129,15 @@ function renderizarArbolHerramientas(grupos, containerId, tipo) {
                 </div>
                 <div class="tree-group-items">
                     ${herramientas.map(h => `
-                        <div class="tree-item" data-id="${h.id}" data-nombre="${h.nombre}" data-descripcion="${h.descripcion || ''}" onclick="seleccionarHerramienta(${h.id}, '${h.nombre}', '${(h.descripcion || '').replace(/'/g, "\\'")}')">
-                            <i class="bi bi-file-earmark-code"></i>
-                            ${h.nombre}
+                        <div class="tree-item" data-id="${h.id}" data-nombre="${h.nombre}" data-titulo="${h.titulo || h.nombre}" data-descripcion="${h.descripcion || ''}" data-url-real="${h.url_real || ''}" onclick="seleccionarHerramienta(${h.id}, '${h.nombre}', '${(h.titulo || h.nombre).replace(/'/g, "\\'").replace(/"/g, '&quot;')}', '${(h.descripcion || '').replace(/'/g, "\\'").replace(/"/g, '&quot;')}', '${(h.url_real || '').replace(/'/g, "\\'").replace(/"/g, '&quot;')}')">
+                            <i class="${h.icono || 'bi bi-file-earmark-code'}"></i>
+                            ${h.titulo || h.nombre}
                         </div>
                     `).join('')}
                 </div>
             </div>
         `;
-        
+
         container.append(grupoHtml);
     });
 }
@@ -148,7 +148,7 @@ function renderizarArbolHerramientas(grupos, containerId, tipo) {
 function toggleGrupo(element) {
     const $header = $(element);
     const $items = $header.next('.tree-group-items');
-    
+
     $header.toggleClass('expanded');
     $items.toggleClass('show');
 }
@@ -163,15 +163,15 @@ function seleccionarHerramienta(id, nombre, titulo, descripcion, urlReal) {
             return;
         }
     }
-    
+
     // Marcar como activa
     $('.tree-item').removeClass('active');
     $(`.tree-item[data-id="${id}"]`).addClass('active');
-    
+
     // Actualizar header con título
     $('#herramientaSeleccionadaNombre').text(titulo || nombre);
     $('#headerActions').show();
-    
+
     // Mostrar descripción y URL si existen
     if ((descripcion && descripcion.trim() !== '') || (urlReal && urlReal.trim() !== '')) {
         if (descripcion && descripcion.trim() !== '') {
@@ -180,24 +180,24 @@ function seleccionarHerramienta(id, nombre, titulo, descripcion, urlReal) {
         } else {
             $('#descripcionTexto').parent().hide();
         }
-        
+
         if (urlReal && urlReal.trim() !== '') {
             $('#urlRealTexto').text(urlReal);
             $('#urlRealTexto').parent().show();
         } else {
             $('#urlRealTexto').parent().hide();
         }
-        
+
         $('#herramientaDescripcion').show();
     } else {
         $('#herramientaDescripcion').hide();
     }
-    
+
     // Guardar datos actuales
     herramientaActual = { id, nombre, titulo, descripcion, urlReal };
     cambiosPendientes = false;
     $('#btnGuardarFlotante').hide();
-    
+
     // Cargar permisos
     cargarPermisosHerramienta(id);
 }
@@ -208,13 +208,13 @@ function seleccionarHerramienta(id, nombre, titulo, descripcion, urlReal) {
 function cargarPermisosHerramienta(toolId) {
     const panel = $('#panelPermisos');
     panel.html('<div class="text-center p-5"><div class="spinner-border" role="status"></div><p class="mt-2">Cargando permisos...</p></div>');
-    
+
     $.ajax({
         url: 'ajax/obtener_permisos_herramienta.php',
         method: 'GET',
         data: { tool_id: toolId },
         dataType: 'json',
-        success: function(response) {
+        success: function (response) {
             if (response.success) {
                 permisosOriginales = JSON.parse(JSON.stringify(response.data.permisos));
                 permisosModificados = JSON.parse(JSON.stringify(response.data.permisos));
@@ -223,7 +223,7 @@ function cargarPermisosHerramienta(toolId) {
                 mostrarError('Error al cargar permisos: ' + response.message);
             }
         },
-        error: function() {
+        error: function () {
             mostrarError('Error de conexión al cargar permisos');
         }
     });
@@ -234,7 +234,7 @@ function cargarPermisosHerramienta(toolId) {
  */
 function renderizarPanelPermisos(data) {
     const { acciones, areas, permisos } = data;
-    
+
     if (acciones.length === 0) {
         $('#panelPermisos').html(`
             <div class="empty-state">
@@ -245,7 +245,7 @@ function renderizarPanelPermisos(data) {
         `);
         return;
     }
-    
+
     // Crear tabs
     const tabsHtml = `
         <ul class="nav nav-tabs nav-tabs-custom" role="tablist">
@@ -271,7 +271,7 @@ function renderizarPanelPermisos(data) {
             `).join('')}
         </div>
     `;
-    
+
     $('#panelPermisos').html(tabsHtml);
 }
 
@@ -280,7 +280,7 @@ function renderizarPanelPermisos(data) {
  */
 function renderizarContenidoAccion(accion, areas, permisos) {
     const stats = calcularEstadisticas(accion.id, permisos);
-    
+
     let html = `
         <div class="permisos-stats">
             <div class="stat-item">
@@ -297,7 +297,7 @@ function renderizarContenidoAccion(accion, areas, permisos) {
             </div>
         </div>
     `;
-    
+
     // Agrupar áreas
     const areasAgrupadas = {};
     areas.forEach(area => {
@@ -306,17 +306,17 @@ function renderizarContenidoAccion(accion, areas, permisos) {
         }
         areasAgrupadas[area.Area].push(area);
     });
-    
+
     // Renderizar cada área
     Object.keys(areasAgrupadas).sort().forEach(nombreArea => {
         const cargosArea = areasAgrupadas[nombreArea];
-        const permitidosArea = cargosArea.filter(c => 
+        const permitidosArea = cargosArea.filter(c =>
             permisos[accion.id] && permisos[accion.id][c.CodNivelesCargos] === 'allow'
         ).length;
-        
+
         // Determinar si todos los cargos tienen permiso
         const todosPermitidos = permitidosArea === cargosArea.length;
-        
+
         html += `
             <div class="area-section" data-accion-id="${accion.id}" data-area-nombre="${nombreArea}">
                 <div class="area-header" onclick="toggleArea(this)">
@@ -337,8 +337,8 @@ function renderizarContenidoAccion(accion, areas, permisos) {
                 </div>
                 <div class="area-cargos">
                     ${cargosArea.map(cargo => {
-                        const tienePermiso = permisos[accion.id] && permisos[accion.id][cargo.CodNivelesCargos] === 'allow';
-                        return `
+            const tienePermiso = permisos[accion.id] && permisos[accion.id][cargo.CodNivelesCargos] === 'allow';
+            return `
                             <div class="cargo-item" data-cargo-id="${cargo.CodNivelesCargos}">
                                 <span class="cargo-nombre">${cargo.Nombre}</span>
                                 <label class="toggle-switch">
@@ -349,12 +349,12 @@ function renderizarContenidoAccion(accion, areas, permisos) {
                                 </label>
                             </div>
                         `;
-                    }).join('')}
+        }).join('')}
                 </div>
             </div>
         `;
     });
-    
+
     return html;
 }
 
@@ -364,7 +364,7 @@ function renderizarContenidoAccion(accion, areas, permisos) {
 function toggleArea(element) {
     const $header = $(element);
     const $cargos = $header.next('.area-cargos');
-    
+
     $header.toggleClass('expanded');
     $cargos.toggleClass('show');
 }
@@ -376,16 +376,16 @@ function togglePermiso(accionId, cargoId, tienePermiso) {
     if (!permisosModificados[accionId]) {
         permisosModificados[accionId] = {};
     }
-    
+
     permisosModificados[accionId][cargoId] = tienePermiso ? 'allow' : 'deny';
-    
+
     // Marcar como cambios pendientes
     cambiosPendientes = true;
     $('#btnGuardarFlotante').fadeIn();
-    
+
     // Actualizar estadísticas
     actualizarEstadisticas();
-    
+
     // Verificar si afecta al switch del área
     actualizarSwitchArea(accionId, cargoId);
 }
@@ -397,26 +397,26 @@ function toggleAreaCompleta(accionId, nombreArea, permitir) {
     // Encontrar todos los cargos del área actual
     const $areaSection = $(`.area-section[data-accion-id="${accionId}"][data-area-nombre="${nombreArea}"]`);
     const $cargoItems = $areaSection.find('.cargo-item');
-    
+
     // Actualizar permisos de todos los cargos del área
-    $cargoItems.each(function() {
+    $cargoItems.each(function () {
         const cargoId = parseInt($(this).data('cargo-id'));
         const $checkbox = $(this).find('input[type="checkbox"]');
-        
+
         // Actualizar checkbox
         $checkbox.prop('checked', permitir);
-        
+
         // Actualizar permisos modificados
         if (!permisosModificados[accionId]) {
             permisosModificados[accionId] = {};
         }
         permisosModificados[accionId][cargoId] = permitir ? 'allow' : 'deny';
     });
-    
+
     // Marcar como cambios pendientes
     cambiosPendientes = true;
     $('#btnGuardarFlotante').fadeIn();
-    
+
     // Actualizar estadísticas
     actualizarEstadisticas();
 }
@@ -428,16 +428,16 @@ function actualizarSwitchArea(accionId, cargoId) {
     // Encontrar el área del cargo modificado
     const $cargoItem = $(`.cargo-item[data-cargo-id="${cargoId}"]`);
     const $areaSection = $cargoItem.closest('.area-section');
-    
+
     if ($areaSection.length === 0) return;
-    
+
     // Contar cuántos cargos tienen permiso en esta área
     const totalCargos = $areaSection.find('.cargo-item').length;
     const cargosPermitidos = $areaSection.find('.cargo-item input[type="checkbox"]:checked').length;
-    
+
     // Actualizar badge
     $areaSection.find('.area-badge').text(`${cargosPermitidos}/${totalCargos}`);
-    
+
     // Actualizar switch del área (solo encendido si TODOS tienen permiso)
     const $switchArea = $areaSection.find('.toggle-switch-area input[type="checkbox"]');
     $switchArea.prop('checked', cargosPermitidos === totalCargos);
@@ -449,7 +449,7 @@ function actualizarSwitchArea(accionId, cargoId) {
 function calcularEstadisticas(accionId, permisos) {
     const permisosAccion = permisos[accionId] || {};
     const valores = Object.values(permisosAccion);
-    
+
     return {
         total: valores.length,
         permitidos: valores.filter(p => p === 'allow').length,
@@ -466,7 +466,7 @@ function actualizarEstadisticas() {
     const totalCargos = $activeTab.find('.cargo-item').length;
     const permitidos = $activeTab.find('input[type="checkbox"]:checked').length;
     const denegados = totalCargos - permitidos;
-    
+
     $activeTab.find('.stat-number').eq(0).text(totalCargos);
     $activeTab.find('.stat-number').eq(1).text(permitidos);
     $activeTab.find('.stat-number').eq(2).text(denegados);
@@ -479,10 +479,10 @@ function guardarCambiosPermisos() {
     if (!cambiosPendientes) {
         return;
     }
-    
+
     const btn = $('#btnGuardarFlotante button');
     btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Guardando...');
-    
+
     $.ajax({
         url: 'ajax/guardar_permisos.php',
         method: 'POST',
@@ -491,7 +491,7 @@ function guardarCambiosPermisos() {
             permisos: JSON.stringify(permisosModificados)
         },
         dataType: 'json',
-        success: function(response) {
+        success: function (response) {
             if (response.success) {
                 mostrarExito('Permisos guardados correctamente');
                 cambiosPendientes = false;
@@ -501,10 +501,10 @@ function guardarCambiosPermisos() {
                 mostrarError('Error al guardar: ' + response.message);
             }
         },
-        error: function() {
+        error: function () {
             mostrarError('Error de conexión al guardar');
         },
-        complete: function() {
+        complete: function () {
             btn.prop('disabled', false).html('<i class="bi bi-save"></i> Guardar Cambios');
         }
     });
@@ -518,11 +518,11 @@ function abrirModalNuevaAccion() {
         mostrarError('Seleccione una herramienta primero');
         return;
     }
-    
+
     $('#toolIdNuevaAccion').val(herramientaActual.id);
     $('#nombreHerramientaModal').text(herramientaActual.nombre);
     $('#formNuevaAccion')[0].reset();
-    
+
     const modal = new bootstrap.Modal(document.getElementById('modalNuevaAccion'));
     modal.show();
 }
@@ -532,24 +532,24 @@ function abrirModalNuevaAccion() {
  */
 function guardarNuevaAccion() {
     const form = $('#formNuevaAccion');
-    
+
     if (!form[0].checkValidity()) {
         form[0].reportValidity();
         return;
     }
-    
+
     const data = {
         tool_id: $('#toolIdNuevaAccion').val(),
         nombre_accion: $('#nombreAccion').val().trim(),
         descripcion: $('#descripcionAccion').val().trim()
     };
-    
+
     $.ajax({
         url: 'ajax/crear_accion.php',
         method: 'POST',
         data: data,
         dataType: 'json',
-        success: function(response) {
+        success: function (response) {
             if (response.success) {
                 mostrarExito('Acción creada correctamente');
                 bootstrap.Modal.getInstance(document.getElementById('modalNuevaAccion')).hide();
@@ -559,7 +559,7 @@ function guardarNuevaAccion() {
                 mostrarError('Error: ' + response.message);
             }
         },
-        error: function() {
+        error: function () {
             mostrarError('Error de conexión');
         }
     });
@@ -572,7 +572,7 @@ function filtrarHerramientas(texto, tipo) {
     const filtro = texto.toLowerCase().trim();
     const containerId = getContainerId(tipo);
     const $container = $(containerId);
-    
+
     // Si el filtro está vacío, restaurar vista inicial
     if (filtro === '') {
         $container.find('.tree-item').show();
@@ -581,28 +581,28 @@ function filtrarHerramientas(texto, tipo) {
         $container.find('.tree-group-items').removeClass('show');
         return;
     }
-    
+
     // Mostrar todos primero para poder filtrar
     $container.find('.tree-item').show();
     $container.find('.tree-group-items').addClass('show');
-    
+
     // Filtrar items
-    $container.find('.tree-item').each(function() {
+    $container.find('.tree-item').each(function () {
         const titulo = ($(this).data('titulo') || $(this).data('nombre') || '').toLowerCase();
         const coincide = titulo.includes(filtro);
-        
+
         if (coincide) {
             $(this).show();
         } else {
             $(this).hide();
         }
     });
-    
+
     // Mostrar/ocultar grupos según items visibles
-    $container.find('.tree-group').each(function() {
+    $container.find('.tree-group').each(function () {
         const $grupo = $(this);
         const tieneVisibles = $grupo.find('.tree-item:visible').length > 0;
-        
+
         if (tieneVisibles) {
             $grupo.show();
             $grupo.find('.tree-group-header').addClass('expanded');
