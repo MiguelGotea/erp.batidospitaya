@@ -7,7 +7,7 @@ require_once '../../includes/menu_lateral.php';
 $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
 
-// Verificar acceso al módulo (cargos con permiso para ver marcaciones)
+
 if (!verificarAccesoCargo(15)) {
     header('Location: ../index.php');
     exit();
