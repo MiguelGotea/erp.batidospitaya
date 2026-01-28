@@ -7,7 +7,6 @@ require_once 'models/Ticket.php';
 require_once '../../includes/auth.php';
 require_once '../../includes/funciones.php';
 require_once '../../includes/header_universal.php';
-// Incluir el menú lateral
 require_once '../../includes/menu_lateral.php';
 
 //******************************Estándar para header******************************
