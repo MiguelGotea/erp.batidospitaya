@@ -4,22 +4,25 @@
  * Modelo: llama-3.3-70b-versatile
  */
 
-class GroqService {
-    
+class GroqService
+{
+
     private $apiKey;
     private $endpoint = 'https://api.groq.com/openai/v1/chat/completions';
     private $model = 'llama-3.3-70b-versatile';
-    
-    public function __construct() {
-        $this->apiKey = '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';
+
+    public function __construct()
+    {
+        $this->apiKey = '';
     }
-    
+
     /**
      * Procesar prompt con contexto de negocio
      */
-    public function procesarPrompt($prompt, $contexto) {
+    public function procesarPrompt($prompt, $contexto)
+    {
         $systemPrompt = $this->construirSystemPrompt($contexto);
-        
+
         $payload = [
             'model' => $this->model,
             'messages' => [
@@ -36,10 +39,10 @@ class GroqService {
             'max_tokens' => 2000,
             'top_p' => 0.9
         ];
-        
+
         try {
             $ch = curl_init($this->endpoint);
-            
+
             curl_setopt_array($ch, [
                 CURLOPT_RETURNTRANSFER => true,
                 CURLOPT_POST => true,
@@ -50,41 +53,42 @@ class GroqService {
                 CURLOPT_POSTFIELDS => json_encode($payload),
                 CURLOPT_TIMEOUT => 30
             ]);
-            
+
             $response = curl_exec($ch);
             $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-            
+
             if (curl_errno($ch)) {
                 throw new Exception('Error cURL: ' . curl_error($ch));
             }
-            
+
             curl_close($ch);
-            
+
             if ($httpCode !== 200) {
                 throw new Exception('Error API: HTTP ' . $httpCode);
             }
-            
+
             $result = json_decode($response, true);
-            
+
             if (!isset($result['choices'][0]['message']['content'])) {
                 throw new Exception('Respuesta inválida de la API');
             }
-            
+
             $content = $result['choices'][0]['message']['content'];
-            
+
             // Extraer JSON de la respuesta
             return $this->extraerJSON($content);
-            
+
         } catch (Exception $e) {
             error_log('Error GroqService: ' . $e->getMessage());
             throw $e;
         }
     }
-    
+
     /**
      * Construir system prompt con contexto
      */
-    private function construirSystemPrompt($contexto) {
+    private function construirSystemPrompt($contexto)
+    {
         return <<<PROMPT
 Eres un asistente especializado en analizar consultas de ventas y convertirlas en estructuras de datos para gráficos.
 
@@ -204,23 +208,24 @@ Prompt: "ventas por sucursal del último mes en gráfico de barras"
 - Siempre aplica filtro de "Anulado = 0" para ventas válidas
 PROMPT;
     }
-    
+
     /**
      * Extraer JSON de la respuesta
      */
-    private function extraerJSON($content) {
+    private function extraerJSON($content)
+    {
         // Limpiar posibles backticks
         $content = preg_replace('/```json\s*/i', '', $content);
         $content = preg_replace('/```\s*$/i', '', $content);
         $content = trim($content);
-        
+
         // Intentar decodificar
         $decoded = json_decode($content, true);
-        
+
         if (json_last_error() !== JSON_ERROR_NONE) {
             throw new Exception('JSON inválido: ' . json_last_error_msg());
         }
-        
+
         return $decoded;
     }
 }
