@@ -179,7 +179,7 @@ function renderizarTicket(ticket, fila, diaInicio, numDias, equipo) {
                     <i class="bi bi-x-lg"></i>
                 </button>
                 
-                <button class="btn-colaboradores" onclick="mostrarColaboradores(${ticket.id}, event)" title="Asignar colaboradores">
+                <button class="btn-colaboradores" onclick="abrirModalColaboradores(${ticket.id})" title="Asignar colaboradores">
                     <i class="bi bi-plus-lg"></i>
                 </button>`;
     }
