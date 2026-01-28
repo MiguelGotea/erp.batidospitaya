@@ -141,6 +141,9 @@ function renderizarTicket(ticket, fila, diaInicio, numDias, equipo) {
     // VERIFICAR SI ESTÁ FINALIZADO
     const esFinalizado = ticket.status && ticket.status.toLowerCase() === 'finalizado';
 
+    // VERIFICAR SI ES CAMBIO DE EQUIPOS (no permite asignación manual)
+    const esCambioEquipos = equipo === 'Cambio de Equipos';
+
     // Crear elemento
     const card = document.createElement('div');
     card.className = 'ticket-card';
@@ -177,11 +180,15 @@ function renderizarTicket(ticket, fila, diaInicio, numDias, equipo) {
         innerHTML += `
                 <button class="btn-desprogramar" onclick="desprogramarTicket(${ticket.id}, event)" title="Desprogramar">
                     <i class="bi bi-x-lg"></i>
-                </button>
-                
+                </button>`;
+
+        // SOLO MOSTRAR BOTÓN + SI NO ES CAMBIO DE EQUIPOS
+        if (!esCambioEquipos) {
+            innerHTML += `
                 <button class="btn-colaboradores" onclick="abrirModalColaboradores(${ticket.id})" title="Asignar colaboradores">
                     <i class="bi bi-plus-lg"></i>
                 </button>`;
+        }
     }
 
     innerHTML += `
