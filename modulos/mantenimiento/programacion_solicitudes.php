@@ -308,9 +308,9 @@ $tickets_pendientes = $ticketModel->getTicketsWithoutDates();
                                             <small class="ticket-descripcion d-block text-muted mb-1">
                                                 <?php echo htmlspecialchars(substr($t['descripcion'], 0, 80)) . (strlen($t['descripcion']) > 80 ? '...' : ''); ?>
                                             </small>
-                                            <small class="ticket-sucursal d-block text-muted">
+                                            <span class="badge-sucursal">
                                                 📍 <?php echo htmlspecialchars($t['nombre_sucursal']); ?>
-                                            </small>
+                                            </span>
                                         </div>
                                     </div>
                                 <?php endif; ?>
@@ -334,9 +334,9 @@ $tickets_pendientes = $ticketModel->getTicketsWithoutDates();
                                             <small class="ticket-descripcion d-block text-muted mb-1">
                                                 <?php echo htmlspecialchars(substr($t['descripcion'], 0, 80)) . (strlen($t['descripcion']) > 80 ? '...' : ''); ?>
                                             </small>
-                                            <small class="ticket-sucursal d-block text-muted">
+                                            <span class="badge-sucursal">
                                                 📍 <?php echo htmlspecialchars($t['nombre_sucursal']); ?>
-                                            </small>
+                                            </span>
                                         </div>
                                     </div>
                                 <?php endif; ?>

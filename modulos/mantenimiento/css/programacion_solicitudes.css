@@ -370,3 +370,44 @@ body.resizing * {
 .ticket-card[data-finalizado="true"] .resize-handle {
     display: none !important;
 }
+/* Estilos para pestañas del sidebar */
+#tabsPendientes .nav-link {
+    color: #6c757d;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-bottom: none;
+    font-weight: 500;
+    transition: all 0.3s;
+}
+
+#tabsPendientes .nav-link:hover {
+    background-color: #e9ecef;
+    color: #0E544C;
+}
+
+#tabsPendientes .nav-link.active {
+    background-color: #51B8AC !important;
+    color: white !important;
+    font-weight: 600;
+    border-color: #51B8AC !important;
+    box-shadow: 0 2px 6px rgba(81, 184, 172, 0.3);
+}
+
+/* Badge de sucursal */
+.badge-sucursal {
+    display: inline-block;
+    background-color: #e9ecef;
+    color: #495057;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 500;
+    border: 1px solid #dee2e6;
+}
+
+/* Descripción del ticket en sidebar */
+.ticket-descripcion {
+    font-size: 0.72rem;
+    line-height: 1.3;
+    color: #6c757d;
+}
