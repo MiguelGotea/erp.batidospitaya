@@ -11,7 +11,6 @@ $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admi
 
 $cargoOperario = $usuario['CodNivelesCargos'];
 
-
 if (!$esAdmin && !verificarAccesoCargo([16, 49])) {
     header('Location: ../index.php');
     exit();
