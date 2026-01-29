@@ -173,6 +173,20 @@ function renderGantt(cargosList = []) {
 
     container.append(wrapper);
     initInteractions();
+
+    // Scroll to today's date on initial load
+    scrollToToday();
+}
+
+function scrollToToday() {
+    const hoy = new Date();
+    const difHoy = (hoy - fechaInicioGantt) / (1000 * 60 * 60 * 24);
+    const scrollLeft = Math.max(0, (difHoy * 40) - 200); // Center today with 200px offset
+
+    const ganttWrapper = $('#ganttContainer');
+    if (ganttWrapper.length) {
+        ganttWrapper.scrollLeft(scrollLeft);
+    }
 }
 
 function renderProyectoBar(p, level) {
