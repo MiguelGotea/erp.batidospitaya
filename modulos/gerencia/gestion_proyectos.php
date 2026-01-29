@@ -74,126 +74,135 @@ $permisoCrear = tienePermiso('gestion_proyectos', 'crear_proyecto', $cargoOperar
 
                 <!-- HISTORY SECTION -->
                 <div class="card shadow-sm border-0">
-                    <div class="card-header bg-white py-3">
-                        <h5 class="mb-0 text-dark font-weight-bold">Historial de Proyectos Finalizados</h5>
+                    <?php echo renderHeader($usuario, false, 'Gestión de Proyectos de Liderazgo'); ?>
+
+                    <div class="container-fluid p-3">
+                        <!-- Controles Gantt -->
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div class="btn-group">
+                                <button class="btn btn-outline-secondary" onclick="navegarGantt('anterior')"><i
+                                        class="fas fa-chevron-left"></i> Anterior</button>
+                                <button class="btn btn-outline-secondary" onclick="irAHoy()">Hoy</button>
+                                <button class="btn btn-outline-secondary" onclick="navegarGantt('siguiente')">Siguiente
+                                    <i class="fas fa-chevron-right"></i></button>
+                            </div>
+                        </div>
+
+                        <!-- Contenedor Gantt -->
+                        <div id="ganttContainer" class="gantt-wrapper shadow-sm border rounded">
+                            <!-- El diagrama se renderiza aquí vía JS -->
+                        </div>
+
+                        <!-- Historial de Proyectos Finalizados -->
+                        <div class="mt-5">
+                            <h5 class="mb-3 text-muted"><i class="fas fa-history"></i> Proyectos Finalizados</h5>
+
+                            <div class="table-responsive">
+                                <table class="table table-hover custom-table" id="tablaHistorial">
+                                    <thead>
+                                        <tr>
+                                            <th data-column="cargo" data-type="list">
+                                                Cargo
+                                                <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                            </th>
+                                            <th data-column="nombre" data-type="text">
+                                                Proyecto
+                                                <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                            </th>
+                                            <th data-column="fecha_inicio" data-type="daterange">
+                                                Inicio
+                                                <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                            </th>
+                                            <th data-column="fecha_fin" data-type="daterange">
+                                                Fin
+                                                <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                            </th>
+                                            <th data-column="descripcion" data-type="text">
+                                                Descripción
+                                                <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="historialBody">
+                                        <!-- Datos vía AJAX -->
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- Paginación Estándar -->
+                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                <div class="d-flex align-items-center gap-2">
+                                    <label class="mb-0">Mostrar:</label>
+                                    <select class="form-control form-control-sm" id="registrosPorPagina"
+                                        style="width: auto;" onchange="cambiarRegistrosPorPagina()">
+                                        <option value="25" selected>25</option>
+                                        <option value="50">50</option>
+                                        <option value="100">100</option>
+                                    </select>
+                                    <span class="mb-0">registros</span>
+                                </div>
+                                <div id="paginacion"></div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="card-body">
-                        <div class="row mb-3 align-items-end">
-                            <div class="col-md-2">
-                                <label class="small font-weight-bold">Registros:</label>
-                                <select id="historialLimit" class="form-control form-control-sm"
-                                    onchange="cargarHistorial(1)">
-                                    <option value="25">25</option>
-                                    <option value="50">50</option>
-                                    <option value="100">100</option>
-                                </select>
-                            </div>
-                            <!-- Filtros rápidos -->
-                            <div class="col-md-10 text-right">
-                                <button class="btn btn-light btn-sm border" onclick="toggleFiltrosHistorial()">
-                                    <i class="fas fa-filter"></i> Filtros Avanzados
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="table-responsive">
-                            <table class="table table-hover table-sm custom-table" id="tablaHistorial">
-                                <thead>
-                                    <tr class="bg-light">
-                                        <th data-col="cargo" class="sortable">Cargo <i
-                                                class="fas fa-sort small text-muted"></i></th>
-                                        <th data-col="nombre" class="sortable">Nombre <i
-                                                class="fas fa-sort small text-muted"></i></th>
-                                        <th data-col="fecha_inicio" class="sortable">Inicio <i
-                                                class="fas fa-sort small text-muted"></i></th>
-                                        <th data-col="fecha_fin" class="sortable">Fin <i
-                                                class="fas fa-sort small text-muted"></i></th>
-                                        <th>Descripción</th>
-                                    </tr>
-                                    <tr id="filtrosHistorialRow" style="display:none;">
-                                        <th><input type="text" class="form-control form-control-sm filter-input"
-                                                data-filter="cargo" placeholder="Filtrar..."></th>
-                                        <th><input type="text" class="form-control form-control-sm filter-input"
-                                                data-filter="nombre" placeholder="Filtrar..."></th>
-                                        <th><input type="date" class="form-control form-control-sm filter-input"
-                                                data-filter="inicio_desde"></th>
-                                        <th><input type="date" class="form-control form-control-sm filter-input"
-                                                data-filter="fin_hasta"></th>
-                                        <th><input type="text" class="form-control form-control-sm filter-input"
-                                                data-filter="descripcion" placeholder="Buscar..."></th>
-                                    </tr>
-                                </thead>
-                                <tbody id="historialBody">
-                                    <!-- Content injected via JS -->
-                                </tbody>
-                            </table>
-                        </div>
-
-                        <!-- Paginación -->
-                        <nav id="historialPagination" class="d-flex justify-content-between align-items-center mt-3">
-                            <div class="small text-muted" id="historialStats">Mostrando 0 de 0</div>
-                            <ul class="pagination pagination-sm mb-0">
-                                <!-- Pages injected via JS -->
-                            </ul>
-                        </nav>
-                    </div>
-                </div>
-
-            </div>
-        </div>
-    </div>
-
-    <!-- MODALES -->
-    <!-- Edit project modal (Inline is preferred, but for long descriptions a modal is better) -->
-    <div class="modal fade" id="modalProyecto" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content border-0 shadow">
-                <div class="modal-header bg-dark text-white border-0">
-                    <h5 class="modal-title" id="modalProyectoTitulo">Detalles del Proyecto</h5>
-                    <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <form id="formProyecto">
-                        <input type="hidden" id="editProyectoId">
-                        <div class="form-group">
-                            <label class="font-weight-bold">Nombre</label>
-                            <input type="text" id="editNombre" class="form-control" required>
-                        </div>
-                        <div class="form-group">
-                            <label class="font-weight-bold">Descripción</label>
-                            <textarea id="editDescripcion" class="form-control" rows="3"></textarea>
-                        </div>
-                        <div class="row">
-                            <div class="form-group col-6">
-                                <label class="font-weight-bold">Inicio</label>
-                                <input type="date" id="editFechaInicio" class="form-control" required>
-                            </div>
-                            <div class="form-group col-6">
-                                <label class="font-weight-bold">Fin</label>
-                                <input type="date" id="editFechaFin" class="form-control" required>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer border-0">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-success" id="btnGuardarProyecto">Guardar Cambios</button>
                 </div>
             </div>
-        </div>
-    </div>
 
-    <!-- JS Dependencies -->
-    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+            <!-- Modal Proyecto (Nuevo/Editar) -->
+            <div class="modal fade" id="modalProyecto" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header bg-light">
+                            <h5 class="modal-title" id="modalTitulo">Proyecto</h5>
+                            <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="formProyecto">
+                                <input type="hidden" id="editProyectoId">
+                                <input type="hidden" id="editProyectoPadreId">
+                                <input type="hidden" id="editCargoId">
+                                <input type="hidden" id="editEsSubproyecto">
 
-    <script>
-        // Permisos y variables de sesión pasadas a JS
-        const PERMISO_CREAR = <?php echo $permisoCrear ? 'true' : 'false'; ?>;
-        const CARGO_USUARIO = <?php echo $cargoOperario; ?>;
-    </script>
-    <script src="js/gestion_proyectos.js?v=<?php echo mt_rand(1, 10000); ?>"></script>
+                                <div class="form-group">
+                                    <label>Nombre del Proyecto *</label>
+                                    <input type="text" id="editNombre" class="form-control" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Descripción</label>
+                                    <textarea id="editDescripcion" class="form-control" rows="3"></textarea>
+                                </div>
+                                <div class="row">
+                                    <div class="col-6">
+                                        <div class="form-group">
+                                            <label>Fecha Inicio *</label>
+                                            <input type="date" id="editFechaInicio" class="form-control" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="form-group">
+                                            <label>Fecha Fin *</label>
+                                            <input type="date" id="editFechaFin" class="form-control" required>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                            <button type="button" class="btn btn-primary" id="btnGuardarProyecto">Guardar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Scripts -->
+            <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+            <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+            <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+            <script>
+                const PERMISO_CREAR = <?php echo tienePermiso('gestion_proyectos', 'crear_proyecto', $cargoOperario) ? 'true' : 'false'; ?>;
+            </script>
+            <script src="js/gestion_proyectos.js?v=<?php echo mt_rand(1, 10000); ?>"></script>
 </body>
 
 </html>

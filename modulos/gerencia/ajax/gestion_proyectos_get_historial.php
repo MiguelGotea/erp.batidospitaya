@@ -40,9 +40,14 @@ try {
     $where = ["p.fecha_fin < CURDATE()", "p.es_subproyecto = 0"]; // Solo proyectos padre finalizados
     $params = [];
 
-    if (!empty($filtros['cargo'])) {
-        $where[] = "nc.Nombre LIKE :cargo";
-        $params[':cargo'] = "%" . $filtros['cargo'] . "%";
+    if (!empty($filtros['cargo']) && is_array($filtros['cargo'])) {
+        $placeholders = [];
+        foreach ($filtros['cargo'] as $i => $val) {
+            $key = ":cargo_$i";
+            $placeholders[] = $key;
+            $params[$key] = $val;
+        }
+        $where[] = "nc.Nombre IN (" . implode(",", $placeholders) . ")";
     }
     if (!empty($filtros['nombre'])) {
         $where[] = "p.nombre LIKE :nombre";
@@ -52,13 +57,17 @@ try {
         $where[] = "p.descripcion LIKE :desc";
         $params[':desc'] = "%" . $filtros['descripcion'] . "%";
     }
-    if (!empty($filtros['inicio_desde'])) {
-        $where[] = "p.fecha_inicio >= :ini_desde";
-        $params[':ini_desde'] = $filtros['inicio_desde'];
-    }
-    if (!empty($filtros['inicio_hasta'])) {
-        $where[] = "p.fecha_inicio <= :ini_hasta";
-        $params[':ini_hasta'] = $filtros['inicio_hasta'];
+
+    // Filtros de fecha dinámicos (daterange)
+    foreach (['fecha_inicio', 'fecha_fin'] as $col) {
+        if (!empty($filtros[$col . '_desde'])) {
+            $where[] = "p.$col >= :{$col}_desde";
+            $params[":{$col}_desde"] = $filtros[$col . '_desde'];
+        }
+        if (!empty($filtros[$col . '_hasta'])) {
+            $where[] = "p.$col <= :{$col}_hasta";
+            $params[":{$col}_hasta"] = $filtros[$col . '_hasta'];
+        }
     }
 
     $whereClause = "WHERE " . implode(" AND ", $where);
