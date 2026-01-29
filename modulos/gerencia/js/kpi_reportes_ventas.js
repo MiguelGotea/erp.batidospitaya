@@ -63,6 +63,14 @@ function renderKPITable() {
             </div>
             <div class="kpi-table-wrapper">
                 <table class="kpi-table" id="tablaKpiVentas">
+                    <colgroup>
+                        <col style="width: 180px;">
+                        ${visibleMonths.map(() => `
+                            <col style="width: 75px;">
+                            <col style="width: 75px;">
+                            <col style="width: 75px;">
+                        `).join('')}
+                    </colgroup>
                     <thead>
                         <tr>
                             <th class="tienda-col" rowspan="2">Tienda</th>

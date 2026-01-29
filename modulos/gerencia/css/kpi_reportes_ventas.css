@@ -33,11 +33,14 @@
 }
 
 .kpi-table {
-    width: 100%;
+    width: max-content;
+    /* Don't stretch to 100% to keep columns tight */
+    min-width: 100%;
+    /* Cover at least the wrapper if it fits */
     border-collapse: collapse;
     font-size: 14px;
     table-layout: fixed;
-    /* Force fixed widths */
+    /* Force fixed widths from colgroup/headers */
 }
 
 .kpi-table th,
@@ -80,8 +83,7 @@
     font-size: 11px;
     text-transform: uppercase;
     color: #6c757d;
-    width: 75px !important;
-    text-align: center !important;
+    text-align: center;
 }
 
 .group-row {
@@ -117,6 +119,11 @@
 
 .dot-red {
     background-color: #dc3545;
+}
+
+.kpi-table td:not(.tienda-col) {
+    text-align: center !important;
+    /* Center all numeric and variation cells */
 }
 
 .var-cell {
