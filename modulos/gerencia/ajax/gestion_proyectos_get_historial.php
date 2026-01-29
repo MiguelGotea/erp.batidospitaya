@@ -17,10 +17,20 @@ if (!tienePermiso('gestion_proyectos', 'vista', $cargoOperario)) {
 try {
     // Parámetros de paginación y filtros
     $pagina = isset($_GET['pagina']) ? (int) $_GET['pagina'] : 1;
+    if ($pagina < 1)
+        $pagina = 1;
+
     $limit = isset($_GET['registros_por_pagina']) ? (int) $_GET['registros_por_pagina'] : 25;
+    if ($limit < 1)
+        $limit = 25;
+
     $offset = ($pagina - 1) * $limit;
 
-    $filtros = isset($_GET['filtros']) ? json_decode($_GET['filtros'], true) : [];
+    $filtrosRaw = isset($_GET['filtros']) ? $_GET['filtros'] : '';
+    $filtros = json_decode($filtrosRaw, true);
+    if (!is_array($filtros))
+        $filtros = [];
+
     $ordenCol = isset($_GET['orden_columna']) ? $_GET['orden_columna'] : 'fecha_fin';
     $ordenDir = isset($_GET['orden_direccion']) ? $_GET['orden_direccion'] : 'DESC';
 
@@ -93,7 +103,12 @@ try {
         'datos' => $datos
     ]);
 
-} catch (Exception $e) {
-    echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+} catch (Throwable $e) {
+    echo json_encode([
+        'success' => false,
+        'message' => 'Error en el servidor: ' . $e->getMessage(),
+        'file' => $e->getFile(),
+        'line' => $e->getLine()
+    ]);
 }
 ?>

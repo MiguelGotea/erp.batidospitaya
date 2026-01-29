@@ -15,7 +15,7 @@ let currentHistorialPage = 1;
 let currentHistorialSort = { col: 'fecha_fin', dir: 'DESC' };
 
 // --- INICIALIZACIÓN ---
-$(document).ready(function() {
+$(document).ready(function () {
     initGantt();
     cargarHistorial();
     setupListeners();
@@ -27,12 +27,12 @@ function initGantt() {
 
 function setupListeners() {
     // Filtros de historial
-    $('.filter-input').on('keydown', function(e) {
+    $('.filter-input').on('keydown', function (e) {
         if (e.key === 'Enter') cargarHistorial(1);
     });
 
     // Ordenamiento de tabla
-    $('.sortable').on('click', function() {
+    $('.sortable').on('click', function () {
         const col = $(this).data('col');
         if (currentHistorialSort.col === col) {
             currentHistorialSort.dir = currentHistorialSort.dir === 'ASC' ? 'DESC' : 'ASC';
@@ -67,7 +67,7 @@ function renderGantt() {
     container.empty();
 
     const grid = $('<div class="gantt-grid"></div>');
-    
+
     // 1. Generar Encabezados de Tiempo (3 meses)
     const headers = generateTimeHeaders();
     grid.append(headers);
@@ -76,9 +76,9 @@ function renderGantt() {
     globalData.cargos.forEach(cargo => {
         const row = $('<div class="gantt-row"></div>');
         row.append(`<div class="gantt-cargo-name">${cargo.Nombre}</div>`);
-        
+
         const content = $(`<div class="gantt-content" data-cargo-id="${cargo.CodNivelesCargos}"></div>`);
-        
+
         // Agregar línea de HOY si está en el rango
         const hoy = new Date();
         const hoyPos = calculateDatePosition(hoy);
@@ -88,12 +88,12 @@ function renderGantt() {
 
         // Renderizar proyectos de este cargo
         const proyectosCargo = globalData.proyectos.filter(p => p.CodNivelesCargos == cargo.CodNivelesCargos);
-        
+
         // Organizar proyectos: Padres primero, luego sus hijos si están expandidos
         const padres = proyectosCargo.filter(p => !p.es_subproyecto);
         padres.forEach(padre => {
             content.append(renderProjectBar(padre));
-            
+
             if (padre.esta_expandido == 1) {
                 const hijos = proyectosCargo.filter(p => p.proyecto_padre_id == padre.id);
                 hijos.forEach(hijo => {
@@ -103,7 +103,7 @@ function renderGantt() {
         });
 
         // Click en celda vacía para crear proyecto
-        content.on('click', function(e) {
+        content.on('click', function (e) {
             if ($(e.target).hasClass('gantt-content') && PERMISO_CREAR) {
                 const rect = e.currentTarget.getBoundingClientRect();
                 const x = e.clientX - rect.left;
@@ -126,15 +126,15 @@ function generateTimeHeaders() {
     const daysRow = $('<div class="gantt-header-days"></div>');
 
     let current = new Date(fechaInicioVista);
-    current.setHours(0,0,0,0);
+    current.setHours(0, 0, 0, 0);
 
     // Iterar por 90 días (~3 meses)
     const mesesMap = {}; // Para agrupar días por mes
-    
+
     for (let i = 0; i < 90; i++) {
         const d = new Date(current);
         const mesKey = d.toLocaleString('es', { month: 'long', year: 'numeric' });
-        
+
         if (!mesesMap[mesKey]) mesesMap[mesKey] = 0;
         mesesMap[mesKey]++;
 
@@ -156,13 +156,13 @@ function generateTimeHeaders() {
 function renderProjectBar(p, esSub = false) {
     const startPos = calculateDatePosition(new Date(p.fecha_inicio));
     const endPos = calculateDatePosition(new Date(p.fecha_fin));
-    
+
     // Si el proyecto está fuera de la vista totalmente, no renderizar (simplificado)
     if (startPos === null && endPos === null) return '';
 
     const width = (endPos - startPos) + 40; // Incluir el día final
     const avance = calcularAvance(p.fecha_inicio, p.fecha_fin);
-    
+
     const bar = $(`
         <div class="gantt-bar ${esSub ? 'subproject' : ''}" 
              id="bar-${p.id}"
@@ -185,7 +185,7 @@ function renderProjectBar(p, esSub = false) {
     `);
 
     // Doble click para editar detalles
-    bar.on('dblclick', function() {
+    bar.on('dblclick', function () {
         abrirModalEditar(p);
     });
 
@@ -194,15 +194,15 @@ function renderProjectBar(p, esSub = false) {
 
 function calculateDatePosition(date) {
     const start = new Date(fechaInicioVista);
-    start.setHours(0,0,0,0);
+    start.setHours(0, 0, 0, 0);
     const target = new Date(date);
-    target.setHours(0,0,0,0);
-    
+    target.setHours(0, 0, 0, 0);
+
     const diffTime = target - start;
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    
+
     if (diffDays < 0 || diffDays >= 90) return null; // Fuera de rango visual de 90 días
-    
+
     return diffDays * 40; // 40px por día
 }
 
@@ -215,16 +215,16 @@ function getDateFromPosition(px) {
 
 function calcularAvance(inicio, fin) {
     const hoy = new Date();
-    hoy.setHours(0,0,0,0);
+    hoy.setHours(0, 0, 0, 0);
     const start = new Date(inicio);
     const end = new Date(fin);
-    
+
     if (hoy < start) return 0;
     if (hoy > end) return 100;
-    
+
     const total = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
     const trans = Math.ceil((hoy - start) / (1000 * 60 * 60 * 24)) + 1;
-    
+
     return Math.round((trans / total) * 100);
 }
 
@@ -253,7 +253,7 @@ async function crearProyectoRapido(cargoId, fecha) {
 async function agregarSubproyecto(padreId, e) {
     e.stopPropagation();
     const padre = globalData.proyectos.find(p => p.id == padreId);
-    
+
     const res = await apiCall('ajax/gestion_proyectos_crear.php', {
         nombre: 'Subproyecto',
         CodNivelesCargos: padre.CodNivelesCargos,
@@ -262,7 +262,7 @@ async function agregarSubproyecto(padreId, e) {
         es_subproyecto: 1,
         proyecto_padre_id: padreId
     });
-    
+
     if (res.success) {
         // Asegurar que el padre esté expandido para ver el nuevo hijo
         await apiCall('ajax/gestion_proyectos_toggle_expandir.php', { id: padreId, expandido: 1 });
@@ -289,7 +289,7 @@ async function eliminarProyecto(id, e) {
     e.stopPropagation();
     const p = globalData.proyectos.find(item => item.id == id);
     const holdsSub = globalData.proyectos.some(item => item.proyecto_padre_id == id);
-    
+
     const confirm = await Swal.fire({
         title: '¿Eliminar proyecto?',
         text: holdsSub ? "Este proyecto tiene subproyectos que también serán eliminados." : "Esta acción no se puede deshacer.",
@@ -310,7 +310,7 @@ async function eliminarProyecto(id, e) {
 function initDragAndDrop() {
     if (!PERMISO_CREAR) return;
 
-    $('.gantt-bar').each(function() {
+    $('.gantt-bar').each(function () {
         const bar = $(this);
         const id = bar.data('id');
 
@@ -319,34 +319,34 @@ function initDragAndDrop() {
         let startX = 0;
         let initialLeft = 0;
 
-        bar.on('mousedown', function(e) {
+        bar.on('mousedown', function (e) {
             if ($(e.target).hasClass('gantt-resize-handle') || $(e.target).closest('.gantt-bar-actions').length) return;
-            
+
             isDragging = true;
             startX = e.clientX;
             initialLeft = parseInt(bar.css('left'));
             bar.addClass('dragging');
-            
-            $(document).on('mousemove.gantt', function(e) {
+
+            $(document).on('mousemove.gantt', function (e) {
                 if (!isDragging) return;
                 const deltaX = e.clientX - startX;
                 const newLeft = Math.round((initialLeft + deltaX) / 40) * 40; // Snap to days
                 bar.css('left', newLeft + 'px');
             });
 
-            $(document).on('mouseup.gantt', async function() {
+            $(document).on('mouseup.gantt', async function () {
                 if (!isDragging) return;
                 isDragging = false;
                 $(document).off('.gantt');
-                
+
                 const finalLeft = parseInt(bar.css('left'));
                 if (finalLeft !== initialLeft) {
                     const diffDays = (finalLeft - initialLeft) / 40;
                     const p = globalData.proyectos.find(item => item.id == id);
-                    
+
                     const newStart = addDays(p.fecha_inicio, diffDays);
                     const newEnd = addDays(p.fecha_fin, diffDays);
-                    
+
                     // Actualizar ambos en la BD (backend gestiona padre/hijo)
                     const ok1 = await actualizarCampo(id, 'fecha_inicio', newStart);
                     if (ok1) await actualizarCampo(id, 'fecha_fin', newEnd);
@@ -357,29 +357,29 @@ function initDragAndDrop() {
 
         // Logic for RESIZE (Right edge)
         const handle = bar.find('.gantt-resize-handle');
-        handle.on('mousedown', function(e) {
+        handle.on('mousedown', function (e) {
             e.stopPropagation();
             let isResizing = true;
             let startWidth = parseInt(bar.css('width'));
             let startClientX = e.clientX;
 
-            $(document).on('mousemove.resizer', function(e) {
+            $(document).on('mousemove.resizer', function (e) {
                 if (!isResizing) return;
                 const deltaX = e.clientX - startClientX;
                 const newWidth = Math.max(40, Math.round((startWidth + deltaX) / 40) * 40);
                 bar.css('width', newWidth + 'px');
             });
 
-            $(document).on('mouseup.resizer', async function() {
+            $(document).on('mouseup.resizer', async function () {
                 isResizing = false;
                 $(document).off('.resizer');
-                
+
                 const finalWidth = parseInt(bar.css('width'));
                 if (finalWidth !== startWidth) {
                     const diffDays = (finalWidth - startWidth) / 40;
                     const p = globalData.proyectos.find(item => item.id == id);
                     const newEnd = addDays(p.fecha_fin, diffDays);
-                    
+
                     const ok = await actualizarCampo(id, 'fecha_fin', newEnd);
                     fetchGanttData();
                 }
@@ -411,10 +411,10 @@ function irAHoy() {
 async function cargarHistorial(pagina = 1) {
     currentHistorialPage = pagina;
     const limit = $('#historialLimit').val();
-    
+
     // Recolectar filtros
     const filtros = {};
-    $('.filter-input').each(function() {
+    $('.filter-input').each(function () {
         const val = $(this).val();
         if (val) filtros[$(this).data('filter')] = val;
     });
@@ -430,12 +430,15 @@ async function cargarHistorial(pagina = 1) {
     try {
         const response = await fetch('ajax/gestion_proyectos_get_historial.php?' + query);
         const res = await response.json();
-        
+
         if (res.success) {
             renderHistorial(res.datos, res.total_registros, limit);
+        } else {
+            Swal.fire('Error Historial', res.message, 'error');
         }
     } catch (e) {
         console.error("Error historial", e);
+        Swal.fire('Error', 'No se pudo cargar el historial: ' + e.message, 'error');
     }
 }
 
@@ -472,7 +475,7 @@ function renderHistorial(datos, total, limit) {
 function renderPagination(total, limit) {
     const container = $('#historialPagination .pagination');
     container.empty();
-    
+
     const totalPages = Math.ceil(total / limit);
     if (totalPages <= 1) return;
 
@@ -520,17 +523,17 @@ function formatFechaLetras(dateStr) {
 
 function abrirModalEditar(p) {
     if (!PERMISO_CREAR) return;
-    
+
     $('#editProyectoId').val(p.id);
     $('#editNombre').val(p.nombre);
     $('#editDescripcion').val(p.descripcion);
     $('#editFechaInicio').val(p.fecha_inicio);
     $('#editFechaFin').val(p.fecha_fin);
-    
+
     $('#modalProyecto').modal('show');
 }
 
-$('#btnGuardarProyecto').on('click', async function() {
+$('#btnGuardarProyecto').on('click', async function () {
     const id = $('#editProyectoId').val();
     const data = {
         nombre: $('#editNombre').val(),

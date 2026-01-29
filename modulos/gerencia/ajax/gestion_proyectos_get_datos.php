@@ -51,7 +51,12 @@ try {
         'proyectos' => $proyectos
     ]);
 
-} catch (PDOException $e) {
-    echo json_encode(['success' => false, 'message' => 'Error de base de datos: ' . $e->getMessage()]);
+} catch (Throwable $e) {
+    echo json_encode([
+        'success' => false,
+        'message' => 'Error en el servidor: ' . $e->getMessage(),
+        'file' => $e->getFile(),
+        'line' => $e->getLine()
+    ]);
 }
-
+?>
