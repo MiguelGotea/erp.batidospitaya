@@ -2,7 +2,8 @@
 /**
  * Función para calcular indicadores especiales por fórmula
  */
-function calcularIndicadorEspecial($idIndicador, $numeroSemana, $conn) {
+function calcularIndicadorEspecial($idIndicador, $numeroSemana, $conn)
+{
     switch ($idIndicador) {
         case 6: // Promedio rating Google
             $query = "SELECT 
@@ -29,7 +30,7 @@ function calcularIndicadorEspecial($idIndicador, $numeroSemana, $conn) {
             $stmt->execute([$numeroSemana]);
             $result = $stmt->fetch();
             return $result ? $result['resultado'] : null;
-            
+
         case 7: // Porcentaje ventas mostrador
             $query = "SELECT 
                 CASE 
@@ -55,7 +56,7 @@ function calcularIndicadorEspecial($idIndicador, $numeroSemana, $conn) {
             $stmt->execute([$numeroSemana]);
             $result = $stmt->fetch();
             return $result ? $result['resultado'] : null;
-            
+
         case 8: // Porcentaje reclamos sin investigación
             $query = "SELECT 
                 ROUND(
@@ -74,7 +75,7 @@ function calcularIndicadorEspecial($idIndicador, $numeroSemana, $conn) {
             $stmt->execute([$numeroSemana]);
             $result = $stmt->fetch();
             return $result ? $result['resultado'] : null;
-            
+
         case 13: // Ventas totales
             $query = "SELECT 
                 SUM(CASE WHEN v.Anulado = 0 THEN (v.Precio / 7) ELSE 0 END) AS resultado
@@ -89,7 +90,7 @@ function calcularIndicadorEspecial($idIndicador, $numeroSemana, $conn) {
             $stmt->execute([$numeroSemana]);
             $result = $stmt->fetch();
             return $result ? $result['resultado'] : null;
-            
+
         case 27: // Solicitudes mantenimiento general
             $query = "SELECT 
                 COUNT(*) AS resultado
@@ -105,7 +106,7 @@ function calcularIndicadorEspecial($idIndicador, $numeroSemana, $conn) {
             $stmt->execute([$numeroSemana]);
             $result = $stmt->fetch();
             return $result ? $result['resultado'] : null;
-            
+
         case 28: // Promedio días atención
             $query = "SELECT 
                 AVG(
@@ -127,7 +128,7 @@ function calcularIndicadorEspecial($idIndicador, $numeroSemana, $conn) {
             $stmt->execute([$numeroSemana]);
             $result = $stmt->fetch();
             return $result ? $result['resultado'] : null;
-            
+
         case 29: // Solicitudes cambio equipos
             $query = "SELECT 
                 COUNT(*) AS resultado
@@ -142,7 +143,7 @@ function calcularIndicadorEspecial($idIndicador, $numeroSemana, $conn) {
             $stmt->execute([$numeroSemana]);
             $result = $stmt->fetch();
             return $result ? $result['resultado'] : null;
-            
+
         default:
             return null;
     }
@@ -151,19 +152,24 @@ function calcularIndicadorEspecial($idIndicador, $numeroSemana, $conn) {
 /**
  * Función para actualizar automáticamente los indicadores calculados
  */
-function actualizarIndicadoresCalculados($numeroSemana, $conn) {
-    $indicadoresCalculados = [6, 7, 8, 13, 27, 28, 29];
-    
+function actualizarIndicadoresCalculados($numeroSemana, $conn)
+{
+    // Obtener indicadores automáticos desde la base de datos
+    $query = "SELECT id FROM IndicadoresSemanales WHERE automatico = 1 AND activo = 1";
+    $stmt = $conn->prepare($query);
+    $stmt->execute();
+    $indicadoresCalculados = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
     foreach ($indicadoresCalculados as $idIndicador) {
         $resultado = calcularIndicadorEspecial($idIndicador, $numeroSemana, $conn);
-        
+
         if ($resultado !== null) {
             // Buscar el ID de la semana
             $query = "SELECT id FROM SemanasSistema WHERE numero_semana = ?";
             $stmt = $conn->prepare($query);
             $stmt->execute([$numeroSemana]);
             $semana = $stmt->fetch();
-            
+
             if ($semana) {
                 // Verificar si ya existe
                 $query = "SELECT id FROM IndicadoresSemanalesResultados 
@@ -171,7 +177,7 @@ function actualizarIndicadoresCalculados($numeroSemana, $conn) {
                 $stmt = $conn->prepare($query);
                 $stmt->execute([$idIndicador, $semana['id']]);
                 $existe = $stmt->fetch();
-                
+
                 if ($existe) {
                     // Actualizar
                     $query = "UPDATE IndicadoresSemanalesResultados 
@@ -195,17 +201,18 @@ function actualizarIndicadoresCalculados($numeroSemana, $conn) {
 /**
  * Función para obtener resultado de indicador (unificada) considerando EnUso
  */
-function obtenerResultadoIndicador($indicador, $resultadoBD, $conn, $semanaId = null) {
-    // Si el indicador tiene fórmula especial
-    $indicadoresCalculados = [6, 7, 8, 13, 27, 28, 29];
-    
-    if (in_array($indicador['id'], $indicadoresCalculados) && $semanaId) {
+function obtenerResultadoIndicador($indicador, $resultadoBD, $conn, $semanaId = null)
+{
+    // Verificar si el indicador es automático
+    $esAutomatico = isset($indicador['automatico']) && $indicador['automatico'] == 1;
+
+    if ($esAutomatico && $semanaId) {
         // Obtener número de semana desde el ID
         $query = "SELECT numero_semana FROM SemanasSistema WHERE id = ?";
         $stmt = $conn->prepare($query);
         $stmt->execute([$semanaId]);
         $semana = $stmt->fetch();
-        
+
         if ($semana) {
             $resultado = calcularIndicadorEspecial($indicador['id'], $semana['numero_semana'], $conn);
             // Si EnUso = 1 y resultado es null, usar 0
@@ -215,7 +222,7 @@ function obtenerResultadoIndicador($indicador, $resultadoBD, $conn, $semanaId = 
             return $resultado;
         }
     }
-    
+
     // Si no es indicador calculado, usar la lógica normal
     if (!$resultadoBD) {
         // Si EnUso = 1, retornar 0 en lugar de null
@@ -224,7 +231,7 @@ function obtenerResultadoIndicador($indicador, $resultadoBD, $conn, $semanaId = 
         }
         return null;
     }
-    
+
     if ($indicador['divide'] == 1) {
         if ($resultadoBD['numerador_dato'] !== null && $resultadoBD['denominador_dato'] !== null && $resultadoBD['denominador_dato'] != 0) {
             return $resultadoBD['numerador_dato'] / $resultadoBD['denominador_dato'];
