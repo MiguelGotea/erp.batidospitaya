@@ -70,8 +70,11 @@ function renderGantt(cargosList = []) {
 
     const wrapper = $('<div class="gantt-grid"></div>');
 
-    // 1. Render Headers
+    // 1. Render Headers and Sticky Corner
+    wrapper.append('<div class="gantt-header-corner"></div>');
     const headerTop = $('<div class="gantt-header-top"></div>');
+
+    wrapper.append('<div class="gantt-header-corner-days"></div>');
     const headerDays = $('<div class="gantt-header-days"></div>');
 
     let current = new Date(fechaInicioGantt);
@@ -104,43 +107,30 @@ function renderGantt(cargosList = []) {
         const content = $('<div class="gantt-content"></div>');
         const proyectosCargo = proyectosData.filter(p => p.cargo_nombre === cargo);
 
-        // --- STACKING LOGIC ---
-        // Organizamos los proyectos en "niveles" para que no se superpongan
-        let levels = [[]]; // Array de arrays, cada uno es un nivel de visualización
+        // --- IMPROVED STACKING LOGIC (Hierarchical) ---
+        // Organizamos los proyectos para que los hijos siempre estén debajo del padre
+        let levels = [[]];
 
-        // Primero los proyectos padre, luego hijos
-        const sortedProyectos = proyectosCargo.sort((a, b) => {
-            if (a.es_subproyecto !== b.es_subproyecto) return a.es_subproyecto - b.es_subproyecto;
-            return new Date(a.fecha_inicio) - new Date(b.fecha_inicio);
-        });
+        // Separar padres e hijos
+        const padres = proyectosCargo.filter(p => p.es_subproyecto == 0).sort((a, b) => new Date(a.fecha_inicio) - new Date(b.fecha_inicio));
 
-        sortedProyectos.forEach(p => {
-            // Un subproyecto solo se muestra si su padre está expandido
-            if (p.es_subproyecto == 1) {
-                const padre = proyectosData.find(parent => parent.id == p.proyecto_padre_id);
-                if (padre && parseInt(padre.esta_expandido) === 0) return;
-            }
+        padres.forEach(padre => {
+            // Asignar nivel al padre
+            let padreLevel = findBestLevel(padre, levels);
+            levels[padreLevel].push(padre);
+            content.append(renderProyectoBar(padre, padreLevel));
 
-            let levelAssigned = -1;
-            for (let i = 0; i < levels.length; i++) {
-                const collides = levels[i].some(item => {
-                    return (new Date(p.fecha_inicio) < new Date(item.fecha_fin)) &&
-                        (new Date(p.fecha_fin) > new Date(item.fecha_inicio));
+            // Si está expandido, procesar sus hijos inmediatamente debajo
+            if (parseInt(padre.esta_expandido) !== 0) {
+                const hijos = proyectosCargo.filter(p => p.proyecto_padre_id == padre.id).sort((a, b) => new Date(a.fecha_inicio) - new Date(b.fecha_inicio));
+
+                hijos.forEach(hijo => {
+                    // El hijo DEBE estar en un nivel mayor que el padre
+                    let hijoLevel = findBestLevel(hijo, levels, padreLevel + 1);
+                    levels[hijoLevel].push(hijo);
+                    content.append(renderProyectoBar(hijo, hijoLevel));
                 });
-                if (!collides) {
-                    levelAssigned = i;
-                    break;
-                }
             }
-
-            if (levelAssigned === -1) {
-                levelAssigned = levels.length;
-                levels.push([]);
-            }
-            levels[levelAssigned].push(p);
-
-            const bar = renderProyectoBar(p, levelAssigned);
-            content.append(bar);
         });
 
         // Ajustar altura de la fila según niveles
@@ -630,55 +620,149 @@ function actualizarIconoFiltro(column, active) {
     $(`th[data-column="${column}"] .filter-icon`).toggleClass('active', active);
 }
 
-function aplicarFiltros() {
-    $('.filter-panel').removeClass('show');
-    cargarHistorial(1);
+/** --- HELPERS --- **/
+
+function findBestLevel(p, levels, minLevel = 0) {
+    for (let i = minLevel; i < levels.length; i++) {
+        const collides = levels[i].some(item => {
+            return (new Date(p.fecha_inicio) <= new Date(item.fecha_fin)) &&
+                (new Date(p.fecha_fin) >= new Date(item.fecha_inicio));
+        });
+        if (!collides) return i;
+    }
+    // Si no cabe en ninguno, agregar nuevos niveles vacíos si es necesario
+    while (levels.length <= minLevel) {
+        levels.push([]);
+    }
+    levels.push([]);
+    return levels.length - 1;
 }
 
-function limpiarFiltro(column) {
-    delete currentFilters[column];
-    delete currentFilters[column + '_desde'];
-    delete currentFilters[column + '_hasta'];
-    actualizarIconoFiltro(column, false);
-    aplicarFiltros();
+function arrastrar(e) {
+    if (!elementRef) return;
+    const dx = e.clientX - startX;
+    let newLeft = originalLeft + dx;
+
+    // Snap a días (40px)
+    newLeft = Math.round(newLeft / 40) * 40;
+    elementRef.style.left = newLeft + 'px';
 }
 
-async function cargarOpcionesFiltro() {
+async function finalizarDrag(e) {
+    if (!elementRef) return;
+    document.removeEventListener('mousemove', arrastrar);
+    document.removeEventListener('mouseup', finalizarDrag);
+    elementRef.style.cursor = 'grab';
+
+    const id = elementRef.dataset.id;
+    const newLeft = parseFloat(elementRef.style.left);
+    const daysOffset = Math.round((newLeft - originalLeft) / 40);
+
+    if (daysOffset === 0) return;
+
+    const p = proyectosData.find(item => item.id == id);
+    if (!p) return;
+
+    const newStart = new Date(p.fecha_inicio);
+    newStart.setDate(newStart.getDate() + daysOffset);
+
+    const newEnd = new Date(p.fecha_fin);
+    newEnd.setDate(newEnd.getDate() + daysOffset);
+
+    // CASCADING MOVE: If parent, move all children
+    if (p.es_subproyecto == 0) {
+        const dataUpdate = {
+            id: id,
+            fecha_inicio: formatDate(newStart),
+            fecha_fin: formatDate(newEnd),
+            movimiento_cascada: daysOffset // Flag for backend
+        };
+        actualizarFechasFull(dataUpdate);
+    } else {
+        actualizarFechas(id, formatDate(newStart), formatDate(newEnd));
+    }
+
+    elementRef = null;
+}
+
+function redimensionar(e) {
+    const dx = e.clientX - startX;
+    let newWidth = originalWidth + dx;
+
+    const id = elementRef.dataset.id;
+    const p = proyectosData.find(item => item.id == id);
+
+    // RESIZE CONSTRAINTS: Blocking shortening beyond children
+    if (p && p.es_subproyecto == 0) {
+        const hijos = proyectosData.filter(h => h.proyecto_padre_id == p.id);
+        if (hijos.length > 0) {
+            const maxFechaFinHijos = new Date(Math.max(...hijos.map(h => new Date(h.fecha_fin))));
+            const startParent = new Date(p.fecha_inicio);
+            const minDurationDays = Math.round((maxFechaFinHijos - startParent) / (1000 * 60 * 60 * 24)) + 1;
+            const minWidth = minDurationDays * 40;
+
+            if (newWidth < minWidth) {
+                newWidth = minWidth;
+            }
+        }
+    }
+
+    newWidth = Math.max(40, Math.round(newWidth / 40) * 40);
+    elementRef.style.width = newWidth + 'px';
+}
+
+async function actualizarFechasFull(data) {
     try {
-        const response = await fetch('ajax/gestion_proyectos_get_opciones_filtro.php');
+        const response = await fetch('ajax/gestion_proyectos_actualizar.php', {
+            method: 'POST',
+            body: JSON.stringify(data)
+        });
         const res = await response.json();
         if (res.success) {
-            filterOptions.cargo = res.cargos;
+            cargarDatosGantt();
+        } else {
+            Swal.fire('Error', res.message, 'error');
+            renderGantt(lastCargosList);
         }
-    } catch (e) { }
+    } catch (e) {
+        renderGantt(lastCargosList);
+    }
 }
 
-function filterOptionsList(input) {
-    const val = input.value.toLowerCase();
-    $(input).next('.filter-options').find('.filter-option').each(function () {
-        const text = $(this).text().toLowerCase();
-        $(this).toggle(text.includes(val));
+// UPDATE toggleFilter for standard ERP filters
+function toggleFilter(icon) {
+    const th = $(icon).closest('th');
+    const column = th.data('column');
+    const type = th.data('type');
+
+    // Si ya existe el panel, cerrarlo
+    if ($(`.filter-panel[data-col="${column}"]`).length > 0) {
+        $('.filter-panel').remove();
+        return;
+    }
+
+    $('.filter-panel').remove();
+
+    const panel = $(`<div class="filter-panel show" data-col="${column}"></div>`);
+    const pos = $(icon).offset();
+
+    // Position panel below icon
+    panel.css({
+        top: pos.top + 25,
+        left: Math.min(pos.left, $(window).width() - 280),
+        display: 'block' // Force display
     });
-}
 
-/** --- UTILS --- **/
+    if (type === 'list') {
+        renderListFilter(panel, column);
+    } else if (type === 'daterange') {
+        renderDateFilter(panel, column);
+    } else {
+        renderTextFilter(panel, column);
+    }
 
-function navegarGantt(dir) {
-    const offset = dir === 'anterior' ? -30 : 30;
-    fechaInicioGantt.setDate(fechaInicioGantt.getDate() + offset);
-    renderGantt(lastCargosList);
-}
+    $('body').append(panel);
 
-function irAHoy() {
-    fechaInicioGantt = new Date();
-    fechaInicioGantt.setDate(fechaInicioGantt.getDate() - 30);
-    renderGantt(lastCargosList);
-}
-
-function cambiarRegistrosPorPagina() {
-    cargarHistorial(1);
-}
-
-function formatDate(date) {
-    return date.toISOString().split('T')[0];
+    // Refuerzo para asegurar visibilidad
+    panel.addClass('show');
 }

@@ -48,16 +48,18 @@ $permisoCrear = tienePermiso('gestion_proyectos', 'crear_proyecto', $cargoOperar
                 <!-- GANTT SECTION -->
                 <div class="card shadow-sm border-0 mb-5">
                     <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
-                        <h5 class="mb-0 text-dark font-weight-bold">Diagrama de Gantt - Planificación Estratégica</h5>
+                        <div class="gantt-controls-left">
+                            <!-- Title removed here as per user request -->
+                        </div>
                         <div class="gantt-controls d-flex">
                             <div class="btn-group">
-                                <button class="btn btn-sm btn-outline-secondary" onclick="navegarGantt('anterior')">
+                                <button class="btn btn-sm btn-success" onclick="navegarGantt('anterior')">
                                     <i class="fas fa-chevron-left"></i> Anterior
                                 </button>
-                                <button class="btn btn-sm btn-outline-secondary" onclick="irAHoy()">
+                                <button class="btn btn-sm btn-success mx-1" onclick="irAHoy()">
                                     Hoy
                                 </button>
-                                <button class="btn btn-sm btn-outline-secondary" onclick="navegarGantt('siguiente')">
+                                <button class="btn btn-sm btn-success" onclick="navegarGantt('siguiente')">
                                     Siguiente <i class="fas fa-chevron-right"></i>
                                 </button>
                             </div>

@@ -89,7 +89,26 @@ try {
         }
     }
 
-    // Construir SQL Dinámico
+    // Caso 3: Movimiento en cascada (desplazamiento de padre e hijos)
+    $movimientoCascada = $data['movimiento_cascada'] ?? null;
+    if ($movimientoCascada && isset($updates['fecha_inicio']) && isset($updates['fecha_fin'])) {
+        // 1. Mover el padre (ya está en $updates)
+        // 2. Mover todos los hijos
+        $sqlHijosMove = "UPDATE gestion_proyectos_proyectos 
+                         SET fecha_inicio = DATE_ADD(fecha_inicio, INTERVAL :offset DAY), 
+                             fecha_fin = DATE_ADD(fecha_fin, INTERVAL :offset2 DAY),
+                             modificado_por = :usuario
+                         WHERE proyecto_padre_id = :padre_id";
+        $stmtHijosMove = $conn->prepare($sqlHijosMove);
+        $stmtHijosMove->execute([
+            ':offset' => (int) $movimientoCascada,
+            ':offset2' => (int) $movimientoCascada,
+            ':usuario' => $idOperario,
+            ':padre_id' => $id
+        ]);
+    }
+
+    // Construir SQL Dinámico para el proyecto principal
     $setParts = [];
     foreach ($updates as $campo => $valor) {
         $paramName = ":val_$campo";
@@ -102,8 +121,9 @@ try {
     $stmtFinal = $conn->prepare($sqlFinal);
     $stmtFinal->execute($params);
 
-    // Si es SUBPROYECTO y se movieron fechas, ajustar al PADRE
-    if ($proyecto['es_subproyecto'] == 1 && (isset($updates['fecha_inicio']) || isset($updates['fecha_fin']))) {
+    // Si es SUBPROYECTO y se movieron fechas, ajustar al PADRE (solo si no fue movimiento en cascada)
+    if (!$movimientoCascada && $proyecto['es_subproyecto'] == 1 && (isset($updates['fecha_inicio']) || isset($updates['fecha_fin']))) {
+        // ... (existing padre date adjustment logic)
         $padreId = $proyecto['proyecto_padre_id'];
 
         // Obtener rango extremo de todos los hijos del padre
