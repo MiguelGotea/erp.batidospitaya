@@ -1,0 +1,140 @@
+/* kpi_reportes_ventas.css */
+
+.kpi-ventas-section {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 30px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.kpi-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.kpi-header h4 {
+    margin: 0;
+    color: #333;
+    font-weight: 700;
+}
+
+.kpi-nav {
+    display: flex;
+    gap: 10px;
+}
+
+.kpi-table-wrapper {
+    overflow-x: auto;
+    border: 1px solid #eee;
+    border-radius: 8px;
+}
+
+.kpi-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.kpi-table th,
+.kpi-table td {
+    padding: 10px 8px;
+    border: 1px solid #eee;
+    text-align: right;
+}
+
+.kpi-table th {
+    background-color: #f8f9fa;
+    color: #495057;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.kpi-table .tienda-col {
+    text-align: left;
+    min-width: 150px;
+    background-color: #f8f9fa;
+    position: sticky;
+    left: 0;
+    z-index: 10;
+}
+
+.month-header {
+    text-align: center;
+    background-color: #e9ecef !important;
+}
+
+.sub-header {
+    font-size: 11px;
+    text-transform: uppercase;
+    color: #6c757d;
+}
+
+.group-row {
+    background-color: #f1f3f5;
+    font-weight: 700;
+}
+
+.total-row {
+    background-color: #e9ecef;
+    font-weight: 800;
+}
+
+/* Indicators */
+.indicator-dot {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-right: 5px;
+    vertical-align: middle;
+}
+
+.dot-green {
+    background-color: #28a745;
+}
+
+.dot-yellow {
+    background-color: #ffc107;
+}
+
+.dot-red {
+    background-color: #dc3545;
+}
+
+.var-cell {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 5px;
+}
+
+/* Hidden months */
+.month-group {
+    display: none;
+}
+
+.month-group.active {
+    display: table-cell;
+}
+
+/* Scroll controls */
+.btn-kpi-nav {
+    padding: 5px 12px;
+    border: 1px solid #ced4da;
+    background: #fff;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.btn-kpi-nav:hover {
+    background: #e9ecef;
+}
+
+.btn-kpi-nav:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
