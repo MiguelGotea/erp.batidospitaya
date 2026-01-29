@@ -27,7 +27,7 @@ $cargoOperario = $usuario['CodNivelesCargos'];
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KPI's Sucursales</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-    <link rel="icon" href="../../assets/img/icon12.png" type="image/png">
+    <link rel="icon" href="../../core/assets/img/icon12.png" type="image/png">
     <link rel="stylesheet" href="css/kpi_reportes_ventas.css?v=<?php echo mt_rand(1, 10000); ?>">
     <style>
         * {
