@@ -181,6 +181,9 @@ function renderProyectoBar(p, level) {
                         <i class="fas fa-plus"></i>
                     </div>
                 ` : ''}
+                <div class="gantt-btn-sm bg-primary" onclick="editarProyecto(${p.id}, event)" title="Editar">
+                    <i class="fas fa-pencil-alt"></i>
+                </div>
                 <div class="gantt-btn-sm bg-danger" onclick="confirmarEliminar(${p.id}, event)" title="Eliminar">
                     <i class="fas fa-times"></i>
                 </div>
@@ -189,8 +192,6 @@ function renderProyectoBar(p, level) {
             ${typeof PERMISO_CREAR !== 'undefined' && PERMISO_CREAR ? '<div class="gantt-resize-handle"></div>' : ''}
         </div>
     `);
-
-    bar.on('dblclick', (e) => { e.stopPropagation(); editarProyecto(p); });
     return bar;
 }
 
@@ -202,6 +203,8 @@ function nuevoProyecto(cargoId, cargoNombre) {
     $('#editProyectoPadreId').val('');
     $('#editCargoId').val(cargoId);
     $('#editEsSubproyecto').val(0);
+    $('#editFechaInicio').prop('disabled', false);
+    $('#editFechaFin').prop('disabled', false);
     $('#modalTitulo').text(`Nuevo Proyecto para ${cargoNombre}`);
     $('#modalProyecto').modal('show');
 }
@@ -213,6 +216,8 @@ function nuevoSubproyecto(padreId, cargoId, event) {
     $('#editProyectoPadreId').val(padreId);
     $('#editCargoId').val(cargoId);
     $('#editEsSubproyecto').val(1);
+    $('#editFechaInicio').prop('disabled', false);
+    $('#editFechaFin').prop('disabled', false);
 
     const padre = proyectosData.find(p => p.id == padreId);
     $('#editNombre').val(`Sub: ${padre.nombre}`);
@@ -223,15 +228,19 @@ function nuevoSubproyecto(padreId, cargoId, event) {
     $('#modalProyecto').modal('show');
 }
 
-function editarProyecto(p) {
+window.editarProyecto = function (id, event) {
+    if (event) event.stopPropagation();
+    const p = proyectosData.find(item => item.id == id);
+    if (!p) return;
+
     $('#editProyectoId').val(p.id);
     $('#editProyectoPadreId').val(p.proyecto_padre_id);
     $('#editCargoId').val(p.CodNivelesCargos);
     $('#editEsSubproyecto').val(p.es_subproyecto);
     $('#editNombre').val(p.nombre);
     $('#editDescripcion').val(p.descripcion);
-    $('#editFechaInicio').val(p.fecha_inicio);
-    $('#editFechaFin').val(p.fecha_fin);
+    $('#editFechaInicio').val(p.fecha_inicio).prop('disabled', true);
+    $('#editFechaFin').val(p.fecha_fin).prop('disabled', true);
     $('#modalTitulo').text('Editar Proyecto');
     $('#modalProyecto').modal('show');
 }
