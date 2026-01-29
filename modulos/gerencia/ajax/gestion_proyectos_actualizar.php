@@ -18,18 +18,9 @@ if (!tienePermiso('gestion_proyectos', 'crear_proyecto', $cargoOperario)) {
 
 $data = json_decode(file_get_contents('php://input'), true);
 $id = $data['id'] ?? null;
-$campo = $data['campo'] ?? null;
-$valor = $data['valor'] ?? null;
 
-if (!$id || !$campo) {
-    echo json_encode(['success' => false, 'message' => 'ID y campo son requeridos']);
-    exit();
-}
-
-// Campos permitidos para actualización simple
-$camposPermitidos = ['nombre', 'descripcion', 'orden_visual', 'fecha_inicio', 'fecha_fin'];
-if (!in_array($campo, $camposPermitidos)) {
-    echo json_encode(['success' => false, 'message' => 'Campo no permitido']);
+if (!$id) {
+    echo json_encode(['success' => false, 'message' => 'ID requerido']);
     exit();
 }
 
@@ -46,10 +37,34 @@ try {
         throw new Exception("Proyecto no encontrado");
     }
 
-    // Lógica especial para fechas
-    if ($campo === 'fecha_inicio' || $campo === 'fecha_fin') {
-        $nuevaFechaInicio = ($campo === 'fecha_inicio') ? $valor : $proyecto['fecha_inicio'];
-        $nuevaFechaFin = ($campo === 'fecha_fin') ? $valor : $proyecto['fecha_fin'];
+    // Determinar qué campos actualizar
+    $updates = [];
+    $params = [':id' => $id, ':usuario' => $idOperario];
+
+    // Caso 1: Formato antiguo (campo/valor)
+    if (isset($data['campo']) && isset($data['valor'])) {
+        $campo = $data['campo'];
+        $valor = $data['valor'];
+        $updates[$campo] = $valor;
+    }
+    // Caso 2: Formato nuevo/múltiple (campos directos en el body)
+    else {
+        $camposPermitidos = ['nombre', 'descripcion', 'fecha_inicio', 'fecha_fin', 'orden_visual', 'CodNivelesCargos', 'esta_expandido'];
+        foreach ($camposPermitidos as $cp) {
+            if (isset($data[$cp])) {
+                $updates[$cp] = $data[$cp];
+            }
+        }
+    }
+
+    if (empty($updates)) {
+        throw new Exception("No hay campos para actualizar");
+    }
+
+    // Validaciones especiales para fechas
+    if (isset($updates['fecha_inicio']) || isset($updates['fecha_fin'])) {
+        $nuevaFechaInicio = $updates['fecha_inicio'] ?? $proyecto['fecha_inicio'];
+        $nuevaFechaFin = $updates['fecha_fin'] ?? $proyecto['fecha_fin'];
 
         if (strtotime($nuevaFechaFin) < strtotime($nuevaFechaInicio)) {
             throw new Exception("La fecha de fin debe ser posterior a la de inicio");
@@ -74,17 +89,21 @@ try {
         }
     }
 
-    // Actualizar el campo
-    $sqlUpdate = "UPDATE gestion_proyectos_proyectos SET $campo = :valor, modificado_por = :usuario WHERE id = :id";
-    $stmtUpdate = $conn->prepare($sqlUpdate);
-    $stmtUpdate->execute([
-        ':valor' => $valor,
-        ':usuario' => $idOperario,
-        ':id' => $id
-    ]);
+    // Construir SQL Dinámico
+    $setParts = [];
+    foreach ($updates as $campo => $valor) {
+        $paramName = ":val_$campo";
+        $setParts[] = "$campo = $paramName";
+        $params[$paramName] = ($valor === "") ? null : $valor;
+    }
+    $setParts[] = "modificado_por = :usuario";
 
-    // Si es SUBPROYECTO y se movió/estiró, ajustar al PADRE
-    if ($proyecto['es_subproyecto'] == 1 && ($campo === 'fecha_inicio' || $campo === 'fecha_fin')) {
+    $sqlFinal = "UPDATE gestion_proyectos_proyectos SET " . implode(", ", $setParts) . " WHERE id = :id";
+    $stmtFinal = $conn->prepare($sqlFinal);
+    $stmtFinal->execute($params);
+
+    // Si es SUBPROYECTO y se movieron fechas, ajustar al PADRE
+    if ($proyecto['es_subproyecto'] == 1 && (isset($updates['fecha_inicio']) || isset($updates['fecha_fin']))) {
         $padreId = $proyecto['proyecto_padre_id'];
 
         // Obtener rango extremo de todos los hijos del padre
@@ -120,7 +139,7 @@ try {
     $conn->commit();
     echo json_encode(['success' => true, 'message' => 'Proyecto actualizado correctamente']);
 
-} catch (Exception $e) {
+} catch (Throwable $e) {
     if ($conn->inTransaction())
         $conn->rollBack();
     echo json_encode(['success' => false, 'message' => $e->getMessage()]);

@@ -24,8 +24,8 @@ $descripcion = $data['descripcion'] ?? '';
 $codNivelesCargos = $data['CodNivelesCargos'] ?? null;
 $fechaInicio = $data['fecha_inicio'] ?? null;
 $fechaFin = $data['fecha_fin'] ?? null;
-$esSubproyecto = $data['es_subproyecto'] ?? 0;
-$proyectoPadreId = $data['proyecto_padre_id'] ?? null;
+$esSubproyecto = (int) ($data['es_subproyecto'] ?? 0);
+$proyectoPadreId = !empty($data['proyecto_padre_id']) ? $data['proyecto_padre_id'] : null;
 
 // Validaciones básicas
 if (!$codNivelesCargos || !$fechaInicio || !$fechaFin) {
@@ -94,7 +94,7 @@ try {
         'id' => $nuevoId
     ]);
 
-} catch (PDOException $e) {
+} catch (Throwable $e) {
     if ($conn->inTransaction())
         $conn->rollBack();
     echo json_encode(['success' => false, 'message' => 'Error al crear proyecto: ' . $e->getMessage()]);
