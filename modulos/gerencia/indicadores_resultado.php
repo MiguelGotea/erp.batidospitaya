@@ -58,6 +58,7 @@ $query = "SELECT
             isem.tipo,
             isem.decimales,
             isem.EnUso,
+            isem.automatico,
             nc.Area,
             nc.Nombre as nombre_cargo
           FROM IndicadoresSemanales isem
@@ -88,7 +89,7 @@ $resultadosPorIndicador = [];
 if (!empty($semanas)) {
     $semanasIds = array_column($semanas, 'id');
     $placeholders = str_repeat('?,', count($semanasIds) - 1) . '?';
-    
+
     $query = "SELECT 
                 isr.id_indicador,
                 isr.semana,
@@ -100,24 +101,28 @@ if (!empty($semanas)) {
     $stmt = $conn->prepare($query);
     $stmt->execute($semanasIds);
     $resultados = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    
+
     foreach ($resultados as $resultado) {
         $resultadosPorIndicador[$resultado['id_indicador']][$resultado['semana']] = $resultado;
     }
 }
 
 // Función para obtener resultado desde BD CON MULTIPLICADOR
-function obtenerResultadoBD($indicador, $resultadoBD) {
-    if (!$resultadoBD) return null;
-    
+function obtenerResultadoBD($indicador, $resultadoBD)
+{
+    if (!$resultadoBD)
+        return null;
+
     // Indicador ID 1 (Rotación de Personal) tiene multiplicador 4.2 en numerador
     $multiplicador = ($indicador['id'] == 1) ? 4.2 : 1;
-    
+
     // Si divide=1, calcular división
     if ($indicador['divide'] == 1) {
-        if ($resultadoBD['numerador_dato'] !== null && 
-            $resultadoBD['denominador_dato'] !== null && 
-            $resultadoBD['denominador_dato'] != 0) {
+        if (
+            $resultadoBD['numerador_dato'] !== null &&
+            $resultadoBD['denominador_dato'] !== null &&
+            $resultadoBD['denominador_dato'] != 0
+        ) {
             // Aplicar multiplicador al numerador antes de dividir
             return ($resultadoBD['numerador_dato'] * $multiplicador) / $resultadoBD['denominador_dato'];
         }
@@ -132,17 +137,19 @@ function obtenerResultadoBD($indicador, $resultadoBD) {
 }
 
 // Función para determinar el color según la meta y el tipo
-function getColorMeta($resultado, $meta, $tipometa, $resultadosemanaanteriordato, $indicadorid) {
-    if ($resultado === null || $meta === null) return '';
-    
+function getColorMeta($resultado, $meta, $tipometa, $resultadosemanaanteriordato, $indicadorid)
+{
+    if ($resultado === null || $meta === null)
+        return '';
+
     // Normalizar tipometa a minúsculas para evitar problemas
     $tipometa = strtolower(trim($tipometa));
-    
+
     if ($tipometa === 'arriba') {
         // Meta es estar ARRIBA del valor - si resultado >= meta es VERDE
         // Primero se define si es id de indicador específico entonces se aplica una resta con respecto al resultado de la semana antepasada respecto a la anterior para comprar ese resultado
-        if ($indicadorid==20 || $indicadorid==21){
-            if ($resultado-$resultadosemanaanteriordato >= $meta) {
+        if ($indicadorid == 20 || $indicadorid == 21) {
+            if ($resultado - $resultadosemanaanteriordato >= $meta) {
                 return 'meta-cumplida';
             } else {
                 return 'meta-no-cumplida';
@@ -160,13 +167,14 @@ function getColorMeta($resultado, $meta, $tipometa, $resultadosemanaanteriordato
             return 'meta-no-cumplida';
         }
     }
-    
+
     // Si no hay tipometa definido o es inválido, no colorear
     return '';
 }
 ?>
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -177,34 +185,35 @@ function getColorMeta($resultado, $meta, $tipometa, $resultadosemanaanteriordato
     <link rel="stylesheet" href="css/indicadores_resultado.css?v=<?php echo mt_rand(1, 10000); ?>">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
+
 <body>
     <?php echo renderMenuLateral($cargoOperario); ?>
     <div class="main-container">
         <div class="sub-container">
             <?php echo renderHeader($usuario, $esAdmin, 'Resultados de KPI'); ?>
-            
+
             <div class="info-periodo" style="display:none;">
-                <i class="fas fa-calendar-alt"></i> 
-                Semana actual: <?php echo $numeroSemanaActual; ?> | 
+                <i class="fas fa-calendar-alt"></i>
+                Semana actual: <?php echo $numeroSemanaActual; ?> |
                 Semana anterior: <?php echo $numeroSemanaAnterior; ?>
             </div>
-            
+
             <?php if (empty($indicadoresPorArea)): ?>
                 <div class="mensaje-error">
-                    <i class="fas fa-exclamation-triangle"></i> 
+                    <i class="fas fa-exclamation-triangle"></i>
                     No hay indicadores disponibles para mostrar.
                 </div>
             <?php endif; ?>
-            
+
             <div class="tabla-container">
                 <table>
                     <thead>
                         <tr>
                             <th rowspan="2" style="width: 200px;">Indicador</th>
-                            
+
                             <th rowspan="2" style="width: 100px;">Meta (Sem <?php echo $numeroSemanaAnterior; ?>)</th>
                             <?php foreach ($semanas as $semana): ?>
-                                <?php 
+                                <?php
                                 $fechaFin = formatoFechaCorta($semana['fecha_fin']);
                                 ?>
                                 <th colspan="1">
@@ -219,19 +228,24 @@ function getColorMeta($resultado, $meta, $tipometa, $resultadosemanaanteriordato
                     <tbody>
                         <?php foreach ($indicadoresPorArea as $area => $datosArea): ?>
                             <tr class="area-header">
-                                <td colspan="<?php echo 3 + count($semanas); ?>" style="text-align: left; padding-left: 15px;">
+                                <td colspan="<?php echo 3 + count($semanas); ?>"
+                                    style="text-align: left; padding-left: 15px;">
                                     <?php echo htmlspecialchars($datosArea['Area']); ?>
                                 </td>
                             </tr>
-                            
+
                             <?php foreach ($datosArea['indicadores'] as $indicador): ?>
                                 <tr>
                                     <td class="indicador-nombre">
                                         <?php echo htmlspecialchars($indicador['nombre']); ?>
+                                        <?php if ($indicador['automatico'] == 1): ?>
+                                            <i class="fas fa-calculator icono-automatico"
+                                                title="Indicador calculado automáticamente"></i>
+                                        <?php endif; ?>
                                     </td>
-                                    
 
-                                    
+
+
                                     <!-- Columna de Meta general (solo semana anterior) -->
                                     <?php
                                     $semanaAnterior = obtenerSemanaPorNumero($numeroSemanaAnterior);
@@ -248,16 +262,16 @@ function getColorMeta($resultado, $meta, $tipometa, $resultadosemanaanteriordato
                                         title="Haz clic para editar la meta">
                                         <?php echo formatearValor($metaGeneral, $indicador['tipo'], $indicador['decimales'], $indicador['EnUso']); ?>
                                     </td>
-                                    
+
                                     <?php foreach ($semanas as $semana): ?>
-                                        <?php 
+                                        <?php
                                         $resultado = $resultadosPorIndicador[$indicador['id']][$semana['id']] ?? null;
                                         $valorResultado = obtenerResultadoBD($indicador, $resultado);
-                                        $valorResultadosemanaanterior = obtenerResultadoBD($indicador, $resultadosPorIndicador[$indicador['id']][$semana['id']-1] ?? null);
+                                        $valorResultadosemanaanterior = obtenerResultadoBD($indicador, $resultadosPorIndicador[$indicador['id']][$semana['id'] - 1] ?? null);
                                         $meta = $resultado ? $resultado['meta'] : null;
-                                        $colorMeta = getColorMeta($valorResultado, $meta, $indicador['tipometa'],$valorResultadosemanaanterior,$indicador['id']);
+                                        $colorMeta = getColorMeta($valorResultado, $meta, $indicador['tipometa'], $valorResultadosemanaanterior, $indicador['id']);
                                         ?>
-                                        
+
                                         <td class="resultado columna-resultado <?php echo $colorMeta; ?>">
                                             <?php echo formatearValor($valorResultado, $indicador['tipo'], $indicador['decimales'], $indicador['EnUso']); ?>
                                         </td>
@@ -271,7 +285,7 @@ function getColorMeta($resultado, $meta, $tipometa, $resultadosemanaanteriordato
                     </tbody>
                 </table>
             </div>
-        </div>    
+        </div>
     </div>
 
     <!-- Modal para edición de meta GENERAL -->
@@ -281,12 +295,13 @@ function getColorMeta($resultado, $meta, $tipometa, $resultadosemanaanteriordato
             <form id="formMeta" method="post">
                 <input type="hidden" name="id_indicador" id="modalMetaIdIndicador">
                 <input type="hidden" name="semana" id="modalMetaSemana">
-                
+
                 <div class="form-group">
                     <label for="modalMetaValor">Valor de la Meta:</label>
-                    <input type="number" step="0.01" id="modalMetaValor" name="meta" placeholder="Ingrese el valor de la meta">
+                    <input type="number" step="0.01" id="modalMetaValor" name="meta"
+                        placeholder="Ingrese el valor de la meta">
                 </div>
-                
+
                 <div class="modal-botones">
                     <button type="button" onclick="cerrarModalMeta()" class="btn btn-cancelar">
                         Cancelar
@@ -302,4 +317,5 @@ function getColorMeta($resultado, $meta, $tipometa, $resultadosemanaanteriordato
     <!-- <script src="js/indicadores_resultado.js?v=<?php echo $version; ?>"></script> -->
     <script src="js/indicadores_resultado.js?v=<?php echo time(); ?>"></script>
 </body>
+
 </html>
