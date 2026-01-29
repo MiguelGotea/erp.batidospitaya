@@ -8,6 +8,7 @@ fechaInicioGantt.setDate(fechaInicioGantt.getDate() - 1); // Hoy es la segunda c
 let proyectosData = [];
 let lastCargosList = [];
 let cargandoGantt = false;
+let primeraVez = true; // Track if this is the first load
 
 // Configuración Historial
 let currentHistorialPage = 1;
@@ -48,8 +49,12 @@ async function cargarDatosGantt() {
 
         if (res.success) {
             proyectosData = res.proyectos || [];
-            // Reset all projects to collapsed state on page load
-            proyectosData.forEach(p => p.esta_expandido = 0);
+
+            // Only reset expansion state on first load, preserve it on reloads
+            if (primeraVez) {
+                proyectosData.forEach(p => p.esta_expandido = 0);
+                primeraVez = false;
+            }
 
             // Calculate start date based on earliest project
             if (proyectosData.length > 0) {
@@ -811,4 +816,3 @@ function initDragToScroll() {
 }
 
 
-const fechaFinFormateada = dia + "/" + mesCapitalizado;
