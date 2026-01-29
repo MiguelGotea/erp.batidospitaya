@@ -94,6 +94,15 @@ async function cargarDatosGantt() {
     }
 }
 
+function zoomGantt(delta) {
+    const newWidth = ganttDayWidth + delta;
+    if (newWidth >= 8 && newWidth <= 60) {
+        ganttDayWidth = newWidth;
+        primeraVez = false; // Don't scroll to today on zoom refresh
+        renderGantt(lastCargosList);
+    }
+}
+
 function renderGantt(cargosList = []) {
     lastCargosList = cargosList;
     const container = $('#ganttContainer');
@@ -113,11 +122,25 @@ function renderGantt(cargosList = []) {
         }
     }
 
+    // Update CSS Variable for non-JS calculations
+    document.documentElement.style.setProperty('--day-width', `${ganttDayWidth}px`);
+
     const wrapper = $('<div class="gantt-grid"></div>');
 
     // 1. Render Headers and Sticky Corners
     const headerRow = $('<div class="gantt-header"></div>');
-    headerRow.append('<div class="gantt-header-corner"></div>');
+    const corner = $('<div class="gantt-header-corner"></div>');
+
+    // Inject Zoom Controls
+    const zoomControls = $(`
+        <div class="gantt-zoom-controls">
+            <button class="gantt-zoom-btn" onclick="zoomGantt(-2)" title="Zoom Out"><i class="fas fa-minus"></i></button>
+            <button class="gantt-zoom-btn" onclick="zoomGantt(2)" title="Zoom In"><i class="fas fa-plus"></i></button>
+        </div>
+    `);
+    corner.append(zoomControls);
+    headerRow.append(corner);
+
     const headerTop = $('<div class="gantt-header-top"></div>');
 
     const headerDaysRow = $('<div class="gantt-header"></div>');
@@ -132,7 +155,7 @@ function renderGantt(cargosList = []) {
         const startDay = current.getDate();
         const daysToShow = Math.round(Math.min(daysInMonth - startDay + 1, (endDate - current) / (1000 * 60 * 60 * 24)));
 
-        headerTop.append(`<div class="gantt-month" style="flex: 0 0 ${daysToShow * 14}px">${month}</div>`);
+        headerTop.append(`<div class="gantt-month" style="flex: 0 0 ${daysToShow * ganttDayWidth}px">${month}</div>`);
 
         for (let i = 0; i < daysToShow; i++) {
             const dayDate = new Date(current);
@@ -145,14 +168,14 @@ function renderGantt(cargosList = []) {
 
             // Highlight Sundays in the background
             if (isSunday) {
-                const left = 180 + (totalDays * 14);
+                const left = 180 + (totalDays * ganttDayWidth);
                 wrapper.append(`<div class="gantt-sunday-highlight" style="left: ${left}px"></div>`);
             }
             totalDays++;
         }
 
         // Month separator logic
-        const monthLeft = 180 + (totalDays * 14);
+        const monthLeft = 180 + (totalDays * ganttDayWidth);
         wrapper.append(`<div class="gantt-month-separator" style="left: ${monthLeft}px"></div>`);
 
         current.setDate(current.getDate() + daysToShow);
@@ -234,7 +257,7 @@ function renderGantt(cargosList = []) {
     const hoy = new Date();
     const difHoy = (hoy - fechaInicioGantt) / (1000 * 60 * 60 * 24);
     if (difHoy >= 0 && difHoy <= (endDate - fechaInicioGantt) / (1000 * 60 * 60 * 24)) {
-        const left = 180 + (difHoy * 14);
+        const left = 180 + (difHoy * ganttDayWidth);
         wrapper.append(`<div class="gantt-today-line-full" style="left: ${left}px"></div>`);
     }
 
@@ -251,7 +274,7 @@ function renderGantt(cargosList = []) {
 function scrollToToday() {
     const hoy = new Date();
     const difHoy = (hoy - fechaInicioGantt) / (1000 * 60 * 60 * 24);
-    const scrollLeft = Math.max(0, (difHoy * 14) - 200); // Center today with 200px offset
+    const scrollLeft = Math.max(0, (difHoy * ganttDayWidth) - 200); // Center today with 200px offset
 
     const ganttWrapper = $('#ganttContainer');
     if (ganttWrapper.length) {
@@ -265,8 +288,8 @@ function renderProyectoBar(p, level, currentEndDate) {
     const difStart = (start - fechaInicioGantt) / (1000 * 60 * 60 * 24);
     const duration = (end - start) / (1000 * 60 * 60 * 24) + 1;
 
-    const left = difStart * 14;
-    const width = duration * 14;
+    const left = difStart * ganttDayWidth;
+    const width = duration * ganttDayWidth;
     const top = (level * 45) + 5;
 
     const isPadre = (p.es_subproyecto == 0);
@@ -531,7 +554,7 @@ function arrastrar(e) {
     if (Math.abs(dx) > 5) fueMovido = true;
 
     let newLeft = originalLeft + dx;
-    newLeft = Math.round(newLeft / 14) * 14;
+    newLeft = Math.round(newLeft / ganttDayWidth) * ganttDayWidth;
     elementRef.style.left = newLeft + 'px';
 }
 
@@ -543,7 +566,7 @@ async function finalizarDrag(e) {
 
     const id = elementRef.dataset.id;
     const newLeft = parseFloat(elementRef.style.left);
-    const daysOffset = Math.round((newLeft - originalLeft) / 14);
+    const daysOffset = Math.round((newLeft - originalLeft) / ganttDayWidth);
 
     if (daysOffset === 0) {
         elementRef = null;
@@ -599,12 +622,12 @@ function redimensionar(e) {
             const maxFechaFinHijos = new Date(Math.max(...hijos.map(h => new Date(h.fecha_fin))));
             const startParent = new Date(p.fecha_inicio);
             const minDurationDays = Math.round((maxFechaFinHijos - startParent) / (1000 * 60 * 60 * 24)) + 1;
-            const minWidth = minDurationDays * 14;
+            const minWidth = minDurationDays * ganttDayWidth;
             if (newWidth < minWidth) newWidth = minWidth;
         }
     }
 
-    newWidth = Math.max(14, Math.round(newWidth / 14) * 14);
+    newWidth = Math.max(ganttDayWidth, Math.round(newWidth / ganttDayWidth) * ganttDayWidth);
     elementRef.style.width = newWidth + 'px';
 }
 
@@ -615,7 +638,7 @@ async function finalizarResize(e) {
 
     const id = elementRef.dataset.id;
     const newWidth = parseFloat(elementRef.style.width);
-    const durationDays = Math.round(newWidth / 14);
+    const durationDays = Math.round(newWidth / ganttDayWidth);
 
     const p = proyectosData.find(item => item.id == id);
     const newEnd = new Date(p.fecha_inicio);
