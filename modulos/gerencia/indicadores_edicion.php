@@ -45,11 +45,7 @@ usort($semanasFiltradas, function($a, $b) {
 $semanasFiltradas = array_slice($semanasFiltradas, 0, 8);
 $semanaAnterior = !empty($semanasFiltradas) ? $semanasFiltradas[0] : null;
 
-// Excluir indicadores calculados
-$indicadoresCalculados = [6, 7, 8, 13, 27, 28, 29];
-$placeholders = str_repeat('?,', count($indicadoresCalculados) - 1) . '?';
-
-// Obtener todos los indicadores activos EXCLUYENDO los calculados - INCLUYENDO TIPO Y DECIMALES
+// Obtener todos los indicadores activos EXCLUYENDO los automáticos - INCLUYENDO TIPO Y DECIMALES
 $query = "SELECT 
             isem.id,
             isem.nombre,
@@ -66,11 +62,11 @@ $query = "SELECT
           FROM IndicadoresSemanales isem
           LEFT JOIN NivelesCargos nc ON isem.CodNivelesCargos = nc.CodNivelesCargos
           WHERE isem.activo = 1
-          AND isem.id NOT IN ($placeholders)
+          AND (isem.automatico = 0 OR isem.automatico IS NULL)
           ORDER BY isem.CodNivelesCargos, isem.id";
           
 $stmt = $conn->prepare($query);
-$stmt->execute($indicadoresCalculados);
+$stmt->execute();
 $indicadores = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // Organizar indicadores por área/cargo
