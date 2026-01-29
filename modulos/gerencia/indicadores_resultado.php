@@ -2,9 +2,9 @@
 ini_set('display_errors', 1);
 //ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
-require_once '../../includes/auth.php';
-require_once '../../includes/header_universal.php';
-require_once '../../includes/menu_lateral.php';
+require_once '../../core/auth/auth.php';
+require_once '../../core/layout/header_universal.php';
+require_once '../../core/layout/menu_lateral.php';
 require_once '../../core/permissions/permissions.php';
 require_once 'includes/funciones_indicadores.php';
 
