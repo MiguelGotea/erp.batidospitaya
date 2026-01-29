@@ -37,7 +37,7 @@ function formatearValor($valor, $tipo, $decimales, $enUso = 0)
 {
     // Si EnUso = 1 y valor es null/vacío, usar 0
     if ($enUso == 1 && ($valor === null || $valor === '')) {
-        $valor = '-';
+        $valor = 0;
     }
 
     if ($valor === null || $valor === '') {
