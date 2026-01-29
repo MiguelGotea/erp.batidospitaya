@@ -140,11 +140,16 @@
     font-size: 0.9rem;
     display: flex;
     align-items: center;
-    background: #fff;
+    background: #fff !important;
     position: sticky;
     left: 0;
-    z-index: 10;
+    z-index: 20;
     min-height: var(--row-height);
+    cursor: pointer;
+}
+
+.gantt-cargo-name:hover {
+    background: #f8f9fa !important;
 }
 
 .gantt-content {
@@ -294,7 +299,7 @@
     border: 1px solid #dee2e6;
     border-radius: 8px;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-    padding: 16px;
+    padding: 12px;
     z-index: 2000;
     min-width: 250px;
     display: none;
@@ -302,6 +307,14 @@
 
 .filter-panel.show {
     display: block;
+}
+
+.filter-section {
+    margin-bottom: 12px;
+}
+
+.filter-section:last-of-type {
+    margin-bottom: 0;
 }
 
 .filter-section-title {
@@ -318,6 +331,12 @@
     border: 1px solid #dee2e6;
     border-radius: 6px;
     font-size: 14px;
+}
+
+.filter-search:focus {
+    outline: none;
+    border-color: #51B8AC;
+    box-shadow: 0 0 0 2px rgba(81, 184, 172, 0.1);
 }
 
 .filter-options {
@@ -342,6 +361,74 @@
 
 .filter-option:hover {
     background-color: #f8f9fa;
+}
+
+.filter-option input[type="checkbox"] {
+    margin: 0;
+}
+
+/* Filter Sort Buttons */
+.filter-sort-buttons {
+    display: flex;
+    gap: 6px;
+}
+
+.filter-sort-btn {
+    flex: 1;
+    padding: 6px 10px;
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+}
+
+.filter-sort-btn:hover {
+    background-color: #f8f9fa;
+    border-color: #51B8AC;
+}
+
+.filter-sort-btn.active {
+    background-color: #51B8AC;
+    color: white;
+    border-color: #51B8AC;
+}
+
+/* Filter Actions */
+.filter-actions {
+    display: flex;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.filter-action-btn {
+    flex: 1;
+    padding: 6px 12px;
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+}
+
+.filter-action-btn.clear {
+    color: #dc3545;
+    border-color: #dc3545;
+}
+
+.filter-action-btn.clear:hover {
+    background-color: #dc3545;
+    color: white;
 }
 
 /* Daterange Calendar */
@@ -423,4 +510,23 @@
     color: white !important;
     transform: translateY(-1px);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Scrollbar Styling for Filter Options */
+.filter-options::-webkit-scrollbar {
+    width: 6px;
+}
+
+.filter-options::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.filter-options::-webkit-scrollbar-thumb {
+    background: #51B8AC;
+    border-radius: 10px;
+}
+
+.filter-options::-webkit-scrollbar-thumb:hover {
+    background: #0E544C;
 }

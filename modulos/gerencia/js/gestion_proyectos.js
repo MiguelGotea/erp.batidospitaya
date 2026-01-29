@@ -2,7 +2,7 @@
 // Lógica principal del Diagrama de Gantt
 
 let fechaInicioGantt = new Date();
-fechaInicioGantt.setDate(fechaInicioGantt.getDate() - 30); // Mostrar desde 30 días atrás
+fechaInicioGantt.setDate(fechaInicioGantt.getDate() - 1); // Hoy es la segunda columna
 let proyectosData = [];
 let lastCargosList = [];
 let cargandoGantt = false;
@@ -11,6 +11,8 @@ let cargandoGantt = false;
 let currentHistorialPage = 1;
 let currentFilters = {};
 let filterOptions = { cargo: [] };
+let panelFiltroAbierto = null;
+let ordenActivo = { columna: null, direccion: null };
 
 $(document).ready(function () {
     initGantt();
@@ -22,7 +24,7 @@ $(document).ready(function () {
     // Cerrar paneles de filtro al hacer clic fuera
     $(document).on('click', function (e) {
         if (!$(e.target).closest('.filter-panel, .filter-icon').length) {
-            $('.filter-panel').remove();
+            cerrarTodosFiltros();
         }
     });
 });
@@ -474,7 +476,9 @@ async function cargarHistorial(pagina = 1) {
         const params = new URLSearchParams({
             pagina: pagina,
             registros_por_pagina: limit,
-            filtros: JSON.stringify(currentFilters)
+            filtros: JSON.stringify(currentFilters),
+            orden_columna: ordenActivo.columna || '',
+            orden_direccion: ordenActivo.direccion || ''
         });
         const response = await fetch(`ajax/gestion_proyectos_get_historial.php?${params}`);
         const res = await response.json();
@@ -521,87 +525,169 @@ function renderPaginacion(total, limit, actual) {
     container.append(`<button class="pagination-btn" ${actual === paginas ? 'disabled' : ''} onclick="cargarHistorial(${actual + 1})"><i class="fas fa-chevron-right"></i></button>`);
 }
 
+/** --- FILTROS MEJORADOS (BASADO EN DOCS) --- **/
+
 function toggleFilter(icon) {
     const th = $(icon).closest('th');
-    const column = th.data('column');
-    const type = th.data('type');
+    const columna = th.data('column');
+    const tipo = th.data('type');
 
-    if ($(`.filter-panel[data-col="${column}"]`).length > 0) {
-        $('.filter-panel').remove();
+    if (panelFiltroAbierto === columna) {
+        cerrarTodosFiltros();
         return;
     }
-    $('.filter-panel').remove();
 
-    const panel = $(`<div class="filter-panel show" data-col="${column}"></div>`);
-    const offset = $(icon).offset();
-    panel.css({ top: offset.top + 25, left: Math.min(offset.left, $(window).width() - 280) });
+    cerrarTodosFiltros();
+    crearPanelFiltro(th, columna, tipo, icon);
+    panelFiltroAbierto = columna;
+    $(icon).addClass('active');
+}
 
-    if (type === 'list') renderListFilter(panel, column);
-    else if (type === 'daterange') renderDateFilter(panel, column);
-    else renderTextFilter(panel, column);
+function crearPanelFiltro(th, columna, tipo, icon) {
+    const panel = $('<div class="filter-panel show"></div>');
+
+    // Ordenamiento
+    panel.append(`
+        <div class="filter-section">
+            <span class="filter-section-title">Ordenar:</span>
+            <div class="filter-sort-buttons">
+                <button class="filter-sort-btn ${ordenActivo.columna === columna && ordenActivo.direccion === 'asc' ? 'active' : ''}" 
+                        onclick="aplicarOrden('${columna}', 'asc')">
+                    <i class="bi bi-sort-alpha-down"></i> A→Z
+                </button>
+                <button class="filter-sort-btn ${ordenActivo.columna === columna && ordenActivo.direccion === 'desc' ? 'active' : ''}" 
+                        onclick="aplicarOrden('${columna}', 'desc')">
+                    <i class="bi bi-sort-alpha-up"></i> Z→A
+                </button>
+            </div>
+        </div>
+    `);
+
+    // Botones de acción
+    panel.append(`
+        <div class="filter-actions">
+            <button class="filter-action-btn clear" onclick="limpiarFiltro('${columna}')">
+                <i class="bi bi-x-circle"></i> Limpiar
+            </button>
+        </div>
+    `);
 
     $('body').append(panel);
+
+    // Filtros según tipo
+    if (tipo === 'text') {
+        const valorActual = currentFilters[columna] || '';
+        panel.append(`
+            <div class="filter-section" style="margin-top: 12px;">
+                <span class="filter-section-title">Buscar:</span>
+                <input type="text" class="filter-search" placeholder="Escribir..." 
+                       value="${valorActual}"
+                       oninput="filtrarBusqueda('${columna}', this.value)">
+            </div>
+        `);
+    } else if (tipo === 'list') {
+        const options = filterOptions[columna] || [];
+        const selected = currentFilters[columna] || [];
+        panel.append(`
+            <div class="filter-section" style="margin-top: 12px;">
+                <span class="filter-section-title">Seleccionar:</span>
+                <div class="filter-options">
+                    ${options.map(opt => `
+                        <label class="filter-option">
+                            <input type="checkbox" value="${opt}" ${selected.includes(opt) ? 'checked' : ''} onchange="updateListFilter('${columna}')">
+                            ${opt}
+                        </label>
+                    `).join('')}
+                </div>
+            </div>
+        `);
+    } else if (tipo === 'daterange') {
+        const desde = currentFilters[columna + '_desde'] || '';
+        const hasta = currentFilters[columna + '_hasta'] || '';
+        panel.append(`
+            <div class="filter-section" style="margin-top: 12px;">
+                <span class="filter-section-title">Desde:</span>
+                <input type="date" class="filter-search" id="f_desde_${columna}" value="${desde}">
+                <span class="filter-section-title" style="margin-top: 8px;">Hasta:</span>
+                <input type="date" class="filter-search" id="f_hasta_${columna}" value="${hasta}">
+                <button class="btn btn-sm btn-block btn-primary mt-2" onclick="aplicarFiltroFecha('${columna}')">Aplicar</button>
+            </div>
+        `);
+    }
+
+    posicionarPanelFiltro(panel, icon);
 }
 
-function renderListFilter(panel, column) {
-    const options = filterOptions[column] || [];
-    const selected = currentFilters[column] || [];
-    panel.append('<span class="filter-section-title">Seleccionar opciones</span>');
-    panel.append('<input type="text" class="filter-search mb-2" placeholder="Buscar..." onkeyup="filterOptionsList(this)">');
-    const list = $('<div class="filter-options"></div>');
-    options.forEach(opt => {
-        list.append(`<label class="filter-option"><input type="checkbox" value="${opt}" ${selected.includes(opt) ? 'checked' : ''} onchange="updateListFilter('${column}')"> ${opt}</label>`);
+function posicionarPanelFiltro(panel, icon) {
+    const offset = $(icon).offset();
+    panel.css({
+        top: offset.top + 25,
+        left: Math.min(offset.left, $(window).width() - 280)
     });
-    panel.append(list);
-    panel.append('<button class="btn btn-sm btn-block btn-primary mt-3" onclick="aplicarFiltros()">Aplicar</button>');
 }
 
-function renderDateFilter(panel, column) {
-    panel.append('<span class="filter-section-title">Rango de fechas</span>');
-    panel.append(`
-        <div class="daterange-inputs">
-            <input type="date" class="form-control form-control-sm" id="f_desde" value="${currentFilters[column + '_desde'] || ''}">
-            <input type="date" class="form-control form-control-sm" id="f_hasta" value="${currentFilters[column + '_hasta'] || ''}">
-        </div>
-        <button class="btn btn-sm btn-block btn-primary mt-3" onclick="updateDateFilter('${column}')">Aplicar</button>
-        <button class="btn btn-sm btn-block btn-link text-muted" onclick="limpiarFiltro('${column}')">Limpiar</button>
-    `);
+function cerrarTodosFiltros() {
+    $('.filter-panel').remove();
+    $('.filter-icon').removeClass('active');
+    panelFiltroAbierto = null;
 }
 
-function renderTextFilter(panel, column) {
-    panel.append('<span class="filter-section-title">Buscar</span>');
-    panel.append(`<input type="text" class="filter-search" value="${currentFilters[column] || ''}" onkeypress="if(event.key==='Enter') updateTextFilter('${column}', this.value)">
-                  <button class="btn btn-sm btn-block btn-primary mt-3" onclick="updateTextFilter('${column}', $(this).prev().val())">Buscar</button>`);
+function aplicarOrden(columna, direccion) {
+    ordenActivo = { columna, direccion };
+    cargarHistorial(1);
+    cerrarTodosFiltros();
 }
 
-function updateListFilter(column) {
+function filtrarBusqueda(columna, valor) {
+    currentFilters[columna] = valor;
+    cargarHistorial(1);
+}
+
+function updateListFilter(columna) {
     const selected = [];
-    $(`.filter-panel[data-col="${column}"] input:checked`).each(function () { selected.push($(this).val()); });
-    currentFilters[column] = selected;
-    actualizarIconoFiltro(column, selected.length > 0);
+    $(`.filter-panel input:checked`).each(function () { selected.push($(this).val()); });
+    currentFilters[columna] = selected.length > 0 ? selected : undefined;
+    if (!currentFilters[columna]) delete currentFilters[columna];
+    cargarHistorial(1);
 }
 
-function updateDateFilter(column) {
-    currentFilters[column + '_desde'] = $('#f_desde').val();
-    currentFilters[column + '_hasta'] = $('#f_hasta').val();
-    actualizarIconoFiltro(column, !!(currentFilters[column + '_desde'] || currentFilters[column + '_hasta']));
-    aplicarFiltros();
+function aplicarFiltroFecha(columna) {
+    const desde = $(`#f_desde_${columna}`).val();
+    const hasta = $(`#f_hasta_${columna}`).val();
+    if (desde) currentFilters[columna + '_desde'] = desde;
+    else delete currentFilters[columna + '_desde'];
+    if (hasta) currentFilters[columna + '_hasta'] = hasta;
+    else delete currentFilters[columna + '_hasta'];
+    cargarHistorial(1);
+    cerrarTodosFiltros();
 }
 
-function updateTextFilter(column, value) {
-    currentFilters[column] = value;
-    actualizarIconoFiltro(column, !!value);
-    aplicarFiltros();
+function limpiarFiltro(columna) {
+    delete currentFilters[columna];
+    delete currentFilters[columna + '_desde'];
+    delete currentFilters[columna + '_hasta'];
+    if (ordenActivo.columna === columna) {
+        ordenActivo = { columna: null, direccion: null };
+    }
+    cargarHistorial(1);
+    cerrarTodosFiltros();
 }
 
-function aplicarFiltros() { $('.filter-panel').remove(); cargarHistorial(1); }
-function limpiarFiltro(c) { delete currentFilters[c]; delete currentFilters[c + '_desde']; delete currentFilters[c + '_hasta']; actualizarIconoFiltro(c, false); aplicarFiltros(); }
-async function cargarOpcionesFiltro() { try { const r = await fetch('ajax/gestion_proyectos_get_opciones_filtro.php'); const res = await r.json(); if (res.success) filterOptions.cargo = res.cargos; } catch (e) { } }
-function filterOptionsList(i) { const v = i.value.toLowerCase(); $(i).next('.filter-options').find('.filter-option').each(function () { $(this).toggle($(this).text().toLowerCase().includes(v)); }); }
-function navegarGantt(d) { fechaInicioGantt.setDate(fechaInicioGantt.getDate() + (d === 'anterior' ? -30 : 30)); renderGantt(lastCargosList); }
-function irAHoy() { fechaInicioGantt = new Date(); fechaInicioGantt.setDate(fechaInicioGantt.getDate() - 30); renderGantt(lastCargosList); }
+async function cargarOpcionesFiltro() {
+    try {
+        const response = await fetch('ajax/gestion_proyectos_get_opciones_filtro.php');
+        const res = await response.json();
+        if (res.success) {
+            filterOptions.cargo = res.cargos || [];
+        }
+    } catch (e) { }
+}
+
+/** --- UTILS --- **/
+
+function navegarGantt(d) { fechaInicioGantt.setDate(fechaInicioGantt.getDate() + (d === 'anterior' ? -7 : 7)); renderGantt(lastCargosList); }
+function irAHoy() { fechaInicioGantt = new Date(); fechaInicioGantt.setDate(fechaInicioGantt.getDate() - 1); renderGantt(lastCargosList); }
 function cambiarRegistrosPorPagina() { cargarHistorial(1); }
-function actualizarIconoFiltro(c, a) { $(`th[data-column="${c}"] .filter-icon`).toggleClass('active', a); }
 function formatDate(d) { if (!d) return ''; const dt = new Date(d); return dt.toISOString().split('T')[0]; }
 
 function findBestLevel(p, levels, minLevel = 0) {
