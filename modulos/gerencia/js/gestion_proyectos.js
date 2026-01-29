@@ -179,27 +179,44 @@ function renderGantt(cargosList = []) {
 
         // Hierarchical Stacking Logic
         let levels = [[]];
-        const padres = proyectosCargo.filter(p => p.es_subproyecto == 0).sort((a, b) => new Date(a.fecha_inicio) - new Date(b.fecha_inicio));
+        let colorRowStart = 0;
+        let lastColor = null;
+
+        const padres = proyectosCargo.filter(p => p.es_subproyecto == 0);
 
         padres.forEach(padre => {
-            let padreLevel = findBestLevel(padre, levels);
+            const pColor = padre.color || '';
+            if (lastColor !== null && pColor !== lastColor) {
+                // Color changed! Start this new color group below all existing rows
+                colorRowStart = levels.length;
+            }
+            lastColor = pColor;
+
+            let padreLevel = findBestLevel(padre, levels, colorRowStart);
             levels[padreLevel].push(padre);
             content.append(renderProyectoBar(padre, padreLevel, endDate));
+
             // Si está expandido, procesar sus hijos inmediatamente debajo
             if (parseInt(padre.esta_expandido) !== 0) {
-                const hijos = proyectosCargo.filter(p => p.proyecto_padre_id == padre.id).sort((a, b) => new Date(a.fecha_inicio) - new Date(b.fecha_inicio));
+                const hijos = proyectosCargo.filter(p => p.proyecto_padre_id == padre.id);
 
                 let nextChildLevel = padreLevel + 1;
                 hijos.forEach(hijo => {
-                    // Cada hijo del mismo padre DEBE estar en su propia fila debajo del anterior
                     let hijoLevel = nextChildLevel;
-                    // Aseguramos que el array de niveles tenga espacio
                     while (levels.length <= hijoLevel) levels.push([]);
 
                     levels[hijoLevel].push(hijo);
                     content.append(renderProyectoBar(hijo, hijoLevel, endDate));
-                    nextChildLevel++; // El siguiente hijo irá una fila más abajo
+                    nextChildLevel++;
                 });
+
+                // After subprojects, the next parent in the SAME color group 
+                // should try to fit into rows starting after the LAST subproject row
+                // to avoid overlapping vertically with the subprojects we just added.
+                // However, to be extra safe and keep the grouped look, 
+                // we can update colorRowStart to levels.length if we want them strictly stacked.
+                // For now, let's just update the current "search start" to avoid subproject overlay.
+                // But actually, findBestLevel will already find a free spot.
             }
         });
 
