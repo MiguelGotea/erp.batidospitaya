@@ -72,10 +72,8 @@ try {
             $codSucursal = $sucursal['codigo'];
 
             // Get Meta
-            // Meta table uses cod_sucursal (int) which relates to sucursales.id
-            // Need to get sucursales.id first or join.
-            // Looking at previous research: fk_ventas_meta_sucursal FOREIGN KEY (cod_sucursal) REFERENCES sucursales (id)
-            // But VentasGlobalesAccessCSV uses 'local' which is likely sucursales.codigo
+            // Divisor for meta: calendar days in month (to get daily target)
+            $daysInMonth = (int) date('t', strtotime($primerDiaMes));
 
             // Join meta with sucursal to use codigo
             $stmtMeta = $conn->prepare("
@@ -86,19 +84,28 @@ try {
             ");
             $stmtMeta->execute([$codSucursal, $primerDiaMes, $ultimoDiaMes]);
             $metaRow = $stmtMeta->fetch();
-            $metaVal = $metaRow['total_meta'] ? round($metaRow['total_meta'] / 1000, 1) : 0;
+            $metaTotal = $metaRow['total_meta'] ?: 0;
+            $metaVal = $metaTotal > 0 ? round(($metaTotal / $daysInMonth) / 1000, 1) : 0;
 
-            // Get Real Sales
+            // Get Real Sales and Worked Days
             $realVal = 0;
+            $diasTrabajados = 0;
             if ($ultimoDiaCalculo) {
                 $stmtReal = $conn->prepare("
-                    SELECT SUM(Precio) as total_real
+                    SELECT 
+                        SUM(Precio) as total_real,
+                        COUNT(DISTINCT Fecha) as dias_trabajados
                     FROM VentasGlobalesAccessCSV
                     WHERE local = ? AND Fecha >= ? AND Fecha <= ? AND Anulado = 0
                 ");
                 $stmtReal->execute([$codSucursal, $primerDiaMes, $ultimoDiaCalculo]);
                 $realRow = $stmtReal->fetch();
-                $realVal = $realRow['total_real'] ? round($realRow['total_real'] / 1000, 1) : 0;
+                $realTotal = $realRow['total_real'] ?: 0;
+                $diasTrabajados = (int) ($realRow['dias_trabajados'] ?: 0);
+
+                if ($diasTrabajados > 0) {
+                    $realVal = round(($realTotal / $diasTrabajados) / 1000, 1);
+                }
             }
 
             // Calculate Variation
@@ -110,7 +117,8 @@ try {
             $datosMes['valores'][$codSucursal] = [
                 'meta' => $metaVal,
                 'real' => $realVal,
-                'var' => $varPct
+                'var' => $varPct,
+                'dias_trabajados' => $diasTrabajados
             ];
         }
 
