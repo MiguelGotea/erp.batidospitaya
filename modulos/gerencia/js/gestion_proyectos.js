@@ -46,6 +46,8 @@ async function cargarDatosGantt() {
 
         if (res.success) {
             proyectosData = res.proyectos || [];
+            // Reset all projects to collapsed state on page load
+            proyectosData.forEach(p => p.esta_expandido = 0);
             renderGantt(res.cargos || []);
         } else {
             console.error(res.message);
@@ -69,10 +71,12 @@ function renderGantt(cargosList = []) {
     const wrapper = $('<div class="gantt-grid"></div>');
 
     // 1. Render Headers and Sticky Corners
-    wrapper.append('<div class="gantt-header-corner"></div>');
+    const headerRow = $('<div class="gantt-header"></div>');
+    headerRow.append('<div class="gantt-header-corner"></div>');
     const headerTop = $('<div class="gantt-header-top"></div>');
 
-    wrapper.append('<div class="gantt-header-corner-days"></div>');
+    const headerDaysRow = $('<div class="gantt-header"></div>');
+    headerDaysRow.append('<div class="gantt-header-corner-days"></div>');
     const headerDays = $('<div class="gantt-header-days"></div>');
 
     let current = new Date(fechaInicioGantt);
@@ -92,7 +96,9 @@ function renderGantt(cargosList = []) {
         }
         current.setDate(current.getDate() + daysToShow);
     }
-    wrapper.append(headerTop).append(headerDays);
+    headerRow.append(headerTop);
+    headerDaysRow.append(headerDays);
+    wrapper.append(headerRow).append(headerDaysRow);
 
     // 2. Render Rows per Cargo
     cargosList.forEach(cargoObj => {
@@ -704,7 +710,10 @@ async function cargarOpcionesFiltro() {
 
 /** --- UTILS --- **/
 
-function navegarGantt(d) { fechaInicioGantt.setDate(fechaInicioGantt.getDate() + (d === 'anterior' ? -7 : 7)); renderGantt(lastCargosList); }
+function navegarGantt(d) {
+    fechaInicioGantt.setDate(fechaInicioGantt.getDate() + (d === 'anterior' ? -7 : 7));
+    renderGantt(lastCargosList);
+}
 function irAHoy() { fechaInicioGantt = new Date(); fechaInicioGantt.setDate(fechaInicioGantt.getDate() - 1); renderGantt(lastCargosList); }
 function cambiarRegistrosPorPagina() { cargarHistorial(1); }
 function formatDate(d) { if (!d) return ''; const dt = new Date(d); return dt.toISOString().split('T')[0]; }
