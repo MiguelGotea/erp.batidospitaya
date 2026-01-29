@@ -47,14 +47,6 @@ $permisoCrear = tienePermiso('gestion_proyectos', 'crear_proyecto', $cargoOperar
 
                 <!-- GANTT SECTION -->
                 <div class="card shadow-sm border-0 mb-5">
-                    <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
-                        <div class="gantt-controls-left">
-                            <!-- Navigation buttons removed - using drag-to-scroll instead -->
-                        </div>
-                        <div class="gantt-controls d-flex">
-                            <!-- Empty for now - can add other controls here if needed -->
-                        </div>
-                    </div>
                     <div class="card-body p-0">
                         <div id="ganttContainer" class="gantt-wrapper">
                             <!-- Gantt content will be injected here via JS -->
