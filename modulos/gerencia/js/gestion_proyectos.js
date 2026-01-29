@@ -91,8 +91,19 @@ function renderGantt(cargosList = []) {
     const container = $('#ganttContainer');
     container.empty();
 
-    const endDate = new Date(fechaInicioGantt);
-    endDate.setDate(endDate.getDate() + 90); // 3 meses vista
+    // Calculate dynamic end date based on latest project
+    let endDate = new Date(fechaInicioGantt);
+    endDate.setDate(endDate.getDate() + 180); // Default 6 months
+
+    if (proyectosData.length > 0) {
+        const fechasFin = proyectosData.map(p => new Date(p.fecha_fin));
+        const fechaMasTardia = new Date(Math.max(...fechasFin));
+        fechaMasTardia.setDate(fechaMasTardia.getDate() + 30); // Buffer
+
+        if (fechaMasTardia > endDate) {
+            endDate = fechaMasTardia;
+        }
+    }
 
     const wrapper = $('<div class="gantt-grid"></div>');
 
@@ -113,7 +124,7 @@ function renderGantt(cargosList = []) {
         const startDay = current.getDate();
         const daysToShow = Math.round(Math.min(daysInMonth - startDay + 1, (endDate - current) / (1000 * 60 * 60 * 24)));
 
-        headerTop.append(`<div class="gantt-month" style="flex: 0 0 ${daysToShow * 20}px">${month}</div>`);
+        headerTop.append(`<div class="gantt-month" style="flex: 0 0 ${daysToShow * 14}px">${month}</div>`);
 
         for (let i = 0; i < daysToShow; i++) {
             const dayDate = new Date(current);
@@ -126,11 +137,16 @@ function renderGantt(cargosList = []) {
 
             // Highlight Sundays in the background
             if (isSunday) {
-                const left = 180 + (totalDays * 20);
+                const left = 180 + (totalDays * 14);
                 wrapper.append(`<div class="gantt-sunday-highlight" style="left: ${left}px"></div>`);
             }
             totalDays++;
         }
+
+        // Month separator logic
+        const monthLeft = 180 + (totalDays * 14);
+        wrapper.append(`<div class="gantt-month-separator" style="left: ${monthLeft}px"></div>`);
+
         current.setDate(current.getDate() + daysToShow);
     }
     headerRow.append(headerTop);
@@ -162,7 +178,7 @@ function renderGantt(cargosList = []) {
         padres.forEach(padre => {
             let padreLevel = findBestLevel(padre, levels);
             levels[padreLevel].push(padre);
-            content.append(renderProyectoBar(padre, padreLevel));
+            content.append(renderProyectoBar(padre, padreLevel, endDate));
             // Si está expandido, procesar sus hijos inmediatamente debajo
             if (parseInt(padre.esta_expandido) !== 0) {
                 const hijos = proyectosCargo.filter(p => p.proyecto_padre_id == padre.id).sort((a, b) => new Date(a.fecha_inicio) - new Date(b.fecha_inicio));
@@ -175,7 +191,7 @@ function renderGantt(cargosList = []) {
                     while (levels.length <= hijoLevel) levels.push([]);
 
                     levels[hijoLevel].push(hijo);
-                    content.append(renderProyectoBar(hijo, hijoLevel));
+                    content.append(renderProyectoBar(hijo, hijoLevel, endDate));
                     nextChildLevel++; // El siguiente hijo irá una fila más abajo
                 });
             }
@@ -192,8 +208,8 @@ function renderGantt(cargosList = []) {
     // 3. Today Line
     const hoy = new Date();
     const difHoy = (hoy - fechaInicioGantt) / (1000 * 60 * 60 * 24);
-    if (difHoy >= 0 && difHoy <= 90) {
-        const left = 180 + (difHoy * 20);
+    if (difHoy >= 0 && difHoy <= (endDate - fechaInicioGantt) / (1000 * 60 * 60 * 24)) {
+        const left = 180 + (difHoy * 14);
         wrapper.append(`<div class="gantt-today-line-full" style="left: ${left}px"></div>`);
     }
 
@@ -210,7 +226,7 @@ function renderGantt(cargosList = []) {
 function scrollToToday() {
     const hoy = new Date();
     const difHoy = (hoy - fechaInicioGantt) / (1000 * 60 * 60 * 24);
-    const scrollLeft = Math.max(0, (difHoy * 20) - 200); // Center today with 200px offset
+    const scrollLeft = Math.max(0, (difHoy * 14) - 200); // Center today with 200px offset
 
     const ganttWrapper = $('#ganttContainer');
     if (ganttWrapper.length) {
@@ -218,14 +234,14 @@ function scrollToToday() {
     }
 }
 
-function renderProyectoBar(p, level) {
+function renderProyectoBar(p, level, currentEndDate) {
     const start = new Date(p.fecha_inicio);
     const end = new Date(p.fecha_fin);
     const difStart = (start - fechaInicioGantt) / (1000 * 60 * 60 * 24);
     const duration = (end - start) / (1000 * 60 * 60 * 24) + 1;
 
-    const left = difStart * 20;
-    const width = duration * 20;
+    const left = difStart * 14;
+    const width = duration * 14;
     const top = (level * 45) + 5;
 
     const isPadre = (p.es_subproyecto == 0);
@@ -449,7 +465,7 @@ function arrastrar(e) {
     if (!elementRef) return;
     const dx = e.clientX - startX;
     let newLeft = originalLeft + dx;
-    newLeft = Math.round(newLeft / 20) * 20;
+    newLeft = Math.round(newLeft / 14) * 14;
     elementRef.style.left = newLeft + 'px';
 }
 
@@ -461,7 +477,7 @@ async function finalizarDrag(e) {
 
     const id = elementRef.dataset.id;
     const newLeft = parseFloat(elementRef.style.left);
-    const daysOffset = Math.round((newLeft - originalLeft) / 20);
+    const daysOffset = Math.round((newLeft - originalLeft) / 14);
 
     if (daysOffset === 0) {
         elementRef = null;
@@ -517,12 +533,12 @@ function redimensionar(e) {
             const maxFechaFinHijos = new Date(Math.max(...hijos.map(h => new Date(h.fecha_fin))));
             const startParent = new Date(p.fecha_inicio);
             const minDurationDays = Math.round((maxFechaFinHijos - startParent) / (1000 * 60 * 60 * 24)) + 1;
-            const minWidth = minDurationDays * 20;
+            const minWidth = minDurationDays * 14;
             if (newWidth < minWidth) newWidth = minWidth;
         }
     }
 
-    newWidth = Math.max(20, Math.round(newWidth / 20) * 20);
+    newWidth = Math.max(14, Math.round(newWidth / 14) * 14);
     elementRef.style.width = newWidth + 'px';
 }
 
@@ -533,7 +549,7 @@ async function finalizarResize(e) {
 
     const id = elementRef.dataset.id;
     const newWidth = parseFloat(elementRef.style.width);
-    const durationDays = Math.round(newWidth / 20);
+    const durationDays = Math.round(newWidth / 14);
 
     const p = proyectosData.find(item => item.id == id);
     const newEnd = new Date(p.fecha_inicio);

@@ -10,7 +10,7 @@
     --bar-height: 40px;
     --row-height: 60px;
     --cargo-width: 180px;
-    --day-width: 20px;
+    --day-width: 14px;
 }
 
 /* Gantt Layout */
@@ -125,7 +125,7 @@
     width: var(--day-width);
     min-width: var(--day-width);
     text-align: center;
-    font-size: 0.55rem;
+    font-size: 0.45rem;
     padding: 5px 0;
     border-right: 1px solid var(--color-grid);
     color: #6c757d;
@@ -147,6 +147,17 @@
     pointer-events: none;
     z-index: 1;
     border-right: 1px solid rgba(220, 53, 69, 0.1);
+}
+
+.gantt-month-separator {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background-color: var(--color-oscuro);
+    opacity: 0.4;
+    z-index: 2;
+    pointer-events: none;
 }
 
 /* Rows and Stacking */
