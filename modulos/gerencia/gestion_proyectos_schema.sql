@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS gestion_proyectos_proyectos (
     orden_visual INT DEFAULT 0 COMMENT 'Orden vertical dentro del cargo para proyectos traslapados',
     es_subproyecto TINYINT(1) DEFAULT 0 COMMENT '0=Proyecto padre, 1=Subproyecto',
     proyecto_padre_id INT DEFAULT NULL COMMENT 'NULL si es proyecto padre, ID del padre si es subproyecto',
-    esta_expandido TINYINT(1) DEFAULT 1 COMMENT 'Estado visual de expansión de subproyectos (1=expandido, 0=contraído)',
+    esta_expandido TINYINT(1) DEFAULT 0 COMMENT 'Estado visual de expansión de subproyectos (1=expandido, 0=contraído)',
     
     -- AUDITORÍA
     fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

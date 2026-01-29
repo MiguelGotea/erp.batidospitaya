@@ -163,6 +163,7 @@ function renderProyectoBar(p, level) {
 
     const isPadre = (p.es_subproyecto == 0);
     const isExpandido = parseInt(p.esta_expandido) !== 0;
+    const tieneHijos = isPadre && proyectosData.some(hijo => hijo.proyecto_padre_id == p.id);
 
     const bar = $(`
         <div class="gantt-bar ${p.es_subproyecto == 1 ? 'subproject' : ''}" 
@@ -170,10 +171,12 @@ function renderProyectoBar(p, level) {
              style="left: ${left}px; width: ${width}px; top: ${top}px;"
              title="${p.nombre}: ${p.fecha_inicio} al ${p.fecha_fin}">
             <div class="gantt-bar-actions-top">
-                ${isPadre ? `
+                ${tieneHijos ? `
                     <div class="gantt-btn-sm" onclick="toggleExpandir(${p.id}, event)" title="${isExpandido ? 'Contraer' : 'Expandir'}">
                         <i class="fas ${isExpandido ? 'fa-chevron-up' : 'fa-chevron-down'}"></i>
                     </div>
+                ` : ''}
+                ${isPadre ? `
                     <div class="gantt-btn-sm" onclick="nuevoSubproyecto(${p.id}, ${p.CodNivelesCargos}, event)" title="Añadir Subproyecto">
                         <i class="fas fa-plus"></i>
                     </div>
@@ -527,7 +530,7 @@ function renderPaginacion(total, limit, actual) {
 
 /** --- FILTROS MEJORADOS (BASADO EN DOCS) --- **/
 
-function toggleFilter(icon) {
+window.toggleFilter = function (icon) {
     const th = $(icon).closest('th');
     const columna = th.data('column');
     const tipo = th.data('type');
@@ -632,18 +635,18 @@ function cerrarTodosFiltros() {
     panelFiltroAbierto = null;
 }
 
-function aplicarOrden(columna, direccion) {
+window.aplicarOrden = function (columna, direccion) {
     ordenActivo = { columna, direccion };
     cargarHistorial(1);
     cerrarTodosFiltros();
 }
 
-function filtrarBusqueda(columna, valor) {
+window.filtrarBusqueda = function (columna, valor) {
     currentFilters[columna] = valor;
     cargarHistorial(1);
 }
 
-function updateListFilter(columna) {
+window.updateListFilter = function (columna) {
     const selected = [];
     $(`.filter-panel input:checked`).each(function () { selected.push($(this).val()); });
     currentFilters[columna] = selected.length > 0 ? selected : undefined;
@@ -651,7 +654,7 @@ function updateListFilter(columna) {
     cargarHistorial(1);
 }
 
-function aplicarFiltroFecha(columna) {
+window.aplicarFiltroFecha = function (columna) {
     const desde = $(`#f_desde_${columna}`).val();
     const hasta = $(`#f_hasta_${columna}`).val();
     if (desde) currentFilters[columna + '_desde'] = desde;
@@ -662,7 +665,7 @@ function aplicarFiltroFecha(columna) {
     cerrarTodosFiltros();
 }
 
-function limpiarFiltro(columna) {
+window.limpiarFiltro = function (columna) {
     delete currentFilters[columna];
     delete currentFilters[columna + '_desde'];
     delete currentFilters[columna + '_hasta'];
