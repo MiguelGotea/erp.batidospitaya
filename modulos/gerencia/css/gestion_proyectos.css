@@ -1,0 +1,230 @@
+/* gestion_proyectos.css */
+
+:root {
+    --color-principal: #51B8AC;
+    --color-oscuro: #0E544C;
+    --color-subproyecto: rgba(81, 184, 172, 0.6);
+    --color-grid: #e0e0e0;
+    --color-hoy: #dc3545;
+    --bar-height: 40px;
+    --row-height: 60px;
+    --cargo-width: 180px;
+    --day-width: 40px;
+}
+
+/* Gantt Layout */
+.gantt-wrapper {
+    overflow-x: auto;
+    background: #fff;
+    position: relative;
+    min-height: 400px;
+}
+
+.gantt-grid {
+    display: grid;
+    grid-template-columns: var(--cargo-width) 1fr;
+}
+
+/* Header */
+.gantt-header {
+    display: contents;
+}
+
+.gantt-header-top {
+    grid-column: 2;
+    display: flex;
+    border-bottom: 1px solid var(--color-grid);
+}
+
+.gantt-month {
+    flex: 1;
+    text-align: center;
+    font-weight: bold;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    padding: 10px 0;
+    border-right: 1px solid var(--color-grid);
+    background-color: #f8f9fa;
+}
+
+.gantt-header-days {
+    grid-column: 2;
+    display: flex;
+}
+
+.gantt-day-label {
+    width: var(--day-width);
+    min-width: var(--day-width);
+    text-align: center;
+    font-size: 0.7rem;
+    padding: 5px 0;
+    border-right: 1px solid var(--color-grid);
+    color: #6c757d;
+}
+
+/* Rows */
+.gantt-row {
+    display: contents;
+}
+
+.gantt-cargo-name {
+    padding: 15px;
+    border-bottom: 1px solid var(--color-grid);
+    border-right: 1px solid var(--color-grid);
+    font-weight: 600;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    background: #fff;
+    position: sticky;
+    left: 0;
+    z-index: 10;
+}
+
+.gantt-content {
+    grid-column: 2;
+    position: relative;
+    height: var(--row-height);
+    border-bottom: 1px solid var(--color-grid);
+    background-image: linear-gradient(to right, var(--color-grid) 1px, transparent 1px);
+    background-size: var(--day-width) 100%;
+}
+
+/* Today Line */
+.gantt-today-line {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background-color: var(--color-hoy);
+    z-index: 5;
+}
+
+.gantt-today-line::after {
+    content: '';
+    position: absolute;
+    top: -5px;
+    left: -4px;
+    width: 10px;
+    height: 10px;
+    background-color: var(--color-hoy);
+    border-radius: 50%;
+}
+
+/* Project Bars */
+.gantt-bar {
+    position: absolute;
+    height: var(--bar-height);
+    top: calc((var(--row-height) - var(--bar-height)) / 2);
+    background-color: var(--color-principal);
+    color: #fff;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    padding: 0 15px;
+    font-size: 0.8rem;
+    cursor: grab;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: transform 0.2s, box-shadow 0.2s;
+    user-select: none;
+    white-space: nowrap;
+    overflow: hidden;
+    z-index: 3;
+}
+
+.gantt-bar:active {
+    cursor: grabbing;
+    transform: scale(1.02);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    z-index: 100;
+}
+
+.gantt-bar.subproject {
+    background-color: var(--color-subproyecto);
+    border: 1px dashed rgba(255,255,255,0.3);
+}
+
+.gantt-bar-content {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.gantt-bar-progress {
+    font-size: 0.65rem;
+    margin-left: 8px;
+    opacity: 0.9;
+    font-weight: bold;
+}
+
+/* Bar Controls (Floating inside bar) */
+.gantt-bar-actions {
+    display: flex;
+    gap: 5px;
+    margin-left: 10px;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.gantt-bar:hover .gantt-bar-actions {
+    opacity: 1;
+}
+
+.gantt-btn {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255,255,255,0.2);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.6rem;
+    transition: background 0.2s;
+}
+
+.gantt-btn:hover {
+    background: rgba(255,255,255,0.4);
+}
+
+.gantt-btn-delete:hover {
+    background: #e74c3c;
+}
+
+/* Resize handle */
+.gantt-resize-handle {
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 10px;
+    cursor: ew-resize;
+    z-index: 4;
+}
+
+/* History Table Styles */
+.custom-table th.sortable {
+    cursor: pointer;
+    user-select: none;
+}
+
+.custom-table th.sortable:hover {
+    background-color: #ececec;
+}
+
+.filter-input {
+    font-size: 0.75rem;
+    height: auto;
+    padding: 2px 5px;
+}
+
+/* Tooltip custom (native title is default but we can style if needed) */
+
+/* Responsive adjustment */
+@media (max-width: 1024px) {
+    :root {
+        --cargo-width: 140px;
+    }
+}
