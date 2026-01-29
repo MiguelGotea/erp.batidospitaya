@@ -131,6 +131,23 @@
     color: #6c757d;
 }
 
+.gantt-day-label.gantt-sunday {
+    background-color: rgba(220, 53, 69, 0.1) !important;
+    color: #dc3545;
+    font-weight: bold;
+}
+
+.gantt-sunday-highlight {
+    position: absolute;
+    top: 73px; /* Después del header */
+    bottom: 0;
+    width: var(--day-width);
+    background-color: rgba(220, 53, 69, 0.04);
+    pointer-events: none;
+    z-index: 1;
+    border-right: 1px solid rgba(220, 53, 69, 0.1);
+}
+
 /* Rows and Stacking */
 .gantt-row {
     display: flex;

@@ -106,19 +106,30 @@ function renderGantt(cargosList = []) {
     const headerDays = $('<div class="gantt-header-days"></div>');
 
     let current = new Date(fechaInicioGantt);
+    let totalDays = 0;
     while (current < endDate) {
         const month = current.toLocaleString('es-ES', { month: 'long', year: 'numeric' });
         const daysInMonth = new Date(current.getFullYear(), current.getMonth() + 1, 0).getDate();
         const startDay = current.getDate();
-        const daysToShow = Math.min(daysInMonth - startDay + 1, (endDate - current) / (1000 * 60 * 60 * 24));
+        const daysToShow = Math.round(Math.min(daysInMonth - startDay + 1, (endDate - current) / (1000 * 60 * 60 * 24)));
 
         headerTop.append(`<div class="gantt-month" style="flex: 0 0 ${daysToShow * 40}px">${month}</div>`);
 
         for (let i = 0; i < daysToShow; i++) {
             const dayDate = new Date(current);
             dayDate.setDate(dayDate.getDate() + i);
-            const isWeekend = dayDate.getDay() === 0 || dayDate.getDay() === 6;
-            headerDays.append(`<div class="gantt-day-label ${isWeekend ? 'bg-light' : ''}">${dayDate.getDate()}</div>`);
+            const dayOfWeek = dayDate.getDay();
+            const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+            const isSunday = dayOfWeek === 0;
+
+            headerDays.append(`<div class="gantt-day-label ${isSunday ? 'gantt-sunday' : (isWeekend ? 'bg-light' : '')}">${dayDate.getDate()}</div>`);
+
+            // Highlight Sundays in the background
+            if (isSunday) {
+                const left = 180 + (totalDays * 40);
+                wrapper.append(`<div class="gantt-sunday-highlight" style="left: ${left}px"></div>`);
+            }
+            totalDays++;
         }
         current.setDate(current.getDate() + daysToShow);
     }
