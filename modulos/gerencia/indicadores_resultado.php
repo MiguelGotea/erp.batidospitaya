@@ -158,28 +158,16 @@ function getColorMeta($resultado, $meta, $tipometa, $resultadosemanaanteriordato
 
     if ($tipometa === 'arriba') {
         // Meta es estar ARRIBA del valor - si resultado >= meta es VERDE
-        if ($esAcumulativo) {
-            // Para acumulativos, comparar la diferencia con la meta
-            if ($resultado - $resultadosemanaanteriordato >= $meta) {
-                return 'meta-cumplida';
-            } else {
-                return 'meta-no-cumplida';
-            }
-        } else if ($resultado >= $meta) {
+        // NOTA: Para acumulativos, $resultado ya contiene la diferencia calculada en obtenerResultadoBD()
+        if ($resultado >= $meta) {
             return 'meta-cumplida';
         } else {
             return 'meta-no-cumplida';
         }
     } else if ($tipometa === 'abajo') {
         // Meta es estar ABAJO del valor - si resultado <= meta es VERDE
-        if ($esAcumulativo) {
-            // Para acumulativos, comparar la diferencia con la meta
-            if ($resultado - $resultadosemanaanteriordato <= $meta) {
-                return 'meta-cumplida';
-            } else {
-                return 'meta-no-cumplida';
-            }
-        } else if ($resultado <= $meta) {
+        // NOTA: Para acumulativos, $resultado ya contiene la diferencia calculada en obtenerResultadoBD()
+        if ($resultado <= $meta) {
             return 'meta-cumplida';
         } else {
             return 'meta-no-cumplida';
