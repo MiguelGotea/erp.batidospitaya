@@ -49,6 +49,23 @@ async function cargarDatosGantt() {
             proyectosData = res.proyectos || [];
             // Reset all projects to collapsed state on page load
             proyectosData.forEach(p => p.esta_expandido = 0);
+
+            // Calculate start date based on earliest project
+            if (proyectosData.length > 0) {
+                const fechas = proyectosData.map(p => new Date(p.fecha_inicio));
+                const fechaMasAntigua = new Date(Math.min(...fechas));
+                const hoy = new Date();
+
+                // Use the earlier of: earliest project or today-1
+                if (fechaMasAntigua < hoy) {
+                    fechaInicioGantt = new Date(fechaMasAntigua);
+                    fechaInicioGantt.setDate(fechaInicioGantt.getDate() - 7); // Add 1 week buffer before
+                } else {
+                    fechaInicioGantt = new Date();
+                    fechaInicioGantt.setDate(fechaInicioGantt.getDate() - 1);
+                }
+            }
+
             renderGantt(res.cargos || []);
         } else {
             console.error(res.message);
