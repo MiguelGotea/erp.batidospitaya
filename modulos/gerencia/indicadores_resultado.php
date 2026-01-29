@@ -132,12 +132,12 @@ function obtenerResultadoBD($indicador, $resultadoBD, $resultadoBDAnterior = nul
         // Si divide=0, mostrar numerador_dato
         if ($resultadoBD['numerador_dato'] !== null) {
             $valorActual = $resultadoBD['numerador_dato'];
-            
+
             // Si es acumulativo, restar el valor de la semana anterior
             if (isset($indicador['acumulativo']) && $indicador['acumulativo'] == 1 && $resultadoBDAnterior && $resultadoBDAnterior['numerador_dato'] !== null) {
                 return $valorActual - $resultadoBDAnterior['numerador_dato'];
             }
-            
+
             return $valorActual;
         }
         return null;
@@ -145,7 +145,7 @@ function obtenerResultadoBD($indicador, $resultadoBD, $resultadoBDAnterior = nul
 }
 
 // Función para determinar el color según la meta y el tipo
-function getColorMeta($resultado, $meta, $tipometa, $resultadosemanaanteriordato, $indicadorid)
+function getColorMeta($resultado, $meta, $tipometa, $resultadosemanaanteriordato, $indicador)
 {
     if ($resultado === null || $meta === null)
         return '';
@@ -153,10 +153,13 @@ function getColorMeta($resultado, $meta, $tipometa, $resultadosemanaanteriordato
     // Normalizar tipometa a minúsculas para evitar problemas
     $tipometa = strtolower(trim($tipometa));
 
+    // Verificar si es acumulativo
+    $esAcumulativo = isset($indicador['acumulativo']) && $indicador['acumulativo'] == 1;
+
     if ($tipometa === 'arriba') {
         // Meta es estar ARRIBA del valor - si resultado >= meta es VERDE
-        // Primero se define si es id de indicador específico entonces se aplica una resta con respecto al resultado de la semana antepasada respecto a la anterior para comprar ese resultado
-        if ($indicadorid == 20 || $indicadorid == 21) {
+        if ($esAcumulativo) {
+            // Para acumulativos, comparar la diferencia con la meta
             if ($resultado - $resultadosemanaanteriordato >= $meta) {
                 return 'meta-cumplida';
             } else {
@@ -169,7 +172,14 @@ function getColorMeta($resultado, $meta, $tipometa, $resultadosemanaanteriordato
         }
     } else if ($tipometa === 'abajo') {
         // Meta es estar ABAJO del valor - si resultado <= meta es VERDE
-        if ($resultado <= $meta) {
+        if ($esAcumulativo) {
+            // Para acumulativos, comparar la diferencia con la meta
+            if ($resultado - $resultadosemanaanteriordato <= $meta) {
+                return 'meta-cumplida';
+            } else {
+                return 'meta-no-cumplida';
+            }
+        } else if ($resultado <= $meta) {
             return 'meta-cumplida';
         } else {
             return 'meta-no-cumplida';
@@ -274,18 +284,18 @@ function getColorMeta($resultado, $meta, $tipometa, $resultadosemanaanteriordato
                                     <?php foreach ($semanas as $index => $semana): ?>
                                         <?php
                                         $resultado = $resultadosPorIndicador[$indicador['id']][$semana['id']] ?? null;
-                                        
+
                                         // Obtener resultado de la semana anterior para indicadores acumulativos
                                         $resultadoAnterior = null;
                                         if ($index < count($semanas) - 1) {
                                             $semanaAnteriorId = $semanas[$index + 1]['id'];
                                             $resultadoAnterior = $resultadosPorIndicador[$indicador['id']][$semanaAnteriorId] ?? null;
                                         }
-                                        
+
                                         $valorResultado = obtenerResultadoBD($indicador, $resultado, $resultadoAnterior);
                                         $valorResultadosemanaanterior = obtenerResultadoBD($indicador, $resultadosPorIndicador[$indicador['id']][$semana['id'] - 1] ?? null);
                                         $meta = $resultado ? $resultado['meta'] : null;
-                                        $colorMeta = getColorMeta($valorResultado, $meta, $indicador['tipometa'], $valorResultadosemanaanterior, $indicador['id']);
+                                        $colorMeta = getColorMeta($valorResultado, $meta, $indicador['tipometa'], $valorResultadosemanaanterior, $indicador);
                                         ?>
 
                                         <td class="resultado columna-resultado <?php echo $colorMeta; ?>">
