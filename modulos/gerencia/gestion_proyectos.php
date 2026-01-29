@@ -49,20 +49,10 @@ $permisoCrear = tienePermiso('gestion_proyectos', 'crear_proyecto', $cargoOperar
                 <div class="card shadow-sm border-0 mb-5">
                     <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
                         <div class="gantt-controls-left">
-                            <!-- Title removed here as per user request -->
+                            <!-- Navigation buttons removed - using drag-to-scroll instead -->
                         </div>
                         <div class="gantt-controls d-flex">
-                            <div class="btn-group">
-                                <button class="btn btn-sm btn-gantt-nav" onclick="navegarGantt('anterior')">
-                                    <i class="fas fa-chevron-left"></i> Anterior
-                                </button>
-                                <button class="btn btn-sm btn-gantt-nav mx-1" onclick="irAHoy()">
-                                    Hoy
-                                </button>
-                                <button class="btn btn-sm btn-gantt-nav" onclick="navegarGantt('siguiente')">
-                                    Siguiente <i class="fas fa-chevron-right"></i>
-                                </button>
-                            </div>
+                            <!-- Empty for now - can add other controls here if needed -->
                         </div>
                     </div>
                     <div class="card-body p-0">

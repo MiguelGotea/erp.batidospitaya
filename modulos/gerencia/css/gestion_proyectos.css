@@ -20,6 +20,11 @@
     position: relative;
     min-height: 400px;
     border: 1px solid var(--color-grid);
+    cursor: grab;
+}
+
+.gantt-wrapper:active {
+    cursor: grabbing;
 }
 
 .gantt-grid {

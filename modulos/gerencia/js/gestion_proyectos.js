@@ -175,7 +175,7 @@ function renderGantt(cargosList = []) {
     initInteractions();
 
     // Scroll to today's date on initial load
-    scrollToToday();
+    scrollToToday();`n    setTimeout(() => initDragToScroll(), 100);
 }
 
 function scrollToToday() {
@@ -761,3 +761,42 @@ function findBestLevel(p, levels, minLevel = 0) {
     levels.push([]);
     return levels.length - 1;
 }
+
+
+function initDragToScroll() {
+    const ganttWrapper = document.getElementById('ganttContainer');
+    if (!ganttWrapper) return;
+    
+    let isDown = false;
+    let startX;
+    let scrollLeft;
+    
+    ganttWrapper.addEventListener('mousedown', (e) => {
+        if (!e.target.closest('.gantt-bar, .gantt-cargo-name, .gantt-btn-sm')) {
+            isDown = true;
+            ganttWrapper.style.cursor = 'grabbing';
+            startX = e.pageX - ganttWrapper.offsetLeft;
+            scrollLeft = ganttWrapper.scrollLeft;
+            e.preventDefault();
+        }
+    });
+    
+    ganttWrapper.addEventListener('mouseleave', () => {
+        isDown = false;
+        ganttWrapper.style.cursor = 'grab';
+    });
+    
+    ganttWrapper.addEventListener('mouseup', () => {
+        isDown = false;
+        ganttWrapper.style.cursor = 'grab';
+    });
+    
+    ganttWrapper.addEventListener('mousemove', (e) => {
+        if (!isDown) return;
+        e.preventDefault();
+        const x = e.pageX - ganttWrapper.offsetLeft;
+        const walk = (x - startX) * 1.5;
+        ganttWrapper.scrollLeft = scrollLeft - walk;
+    });
+}
+
