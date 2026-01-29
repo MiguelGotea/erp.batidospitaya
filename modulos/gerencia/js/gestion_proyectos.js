@@ -9,6 +9,7 @@ let proyectosData = [];
 let lastCargosList = [];
 let cargandoGantt = false;
 let primeraVez = true; // Track if this is the first load
+let fueMovido = false; // Flag to skip click if bar was dragged
 
 // Configuración Historial
 let currentHistorialPage = 1;
@@ -280,7 +281,8 @@ function renderProyectoBar(p, level, currentEndDate) {
     const bar = $(`
         <div class="gantt-bar ${p.es_subproyecto == 1 ? 'subproject' : ''}" 
              data-id="${p.id}" 
-             style="left: ${left}px; width: ${width}px; top: ${top}px;"
+             ${isPadre ? `onclick="toggleExpandir(${p.id}, event)"` : ''}
+             style="left: ${left}px; width: ${width}px; top: ${top}px; ${isPadre ? 'cursor: pointer;' : ''}"
              title="${p.nombre}: ${p.fecha_inicio} al ${p.fecha_fin}">
             <div class="gantt-bar-actions-top">
                 ${actionButtons}
@@ -417,7 +419,14 @@ async function eliminarProyecto(id) {
 }
 
 async function toggleExpandir(id, event) {
-    event.stopPropagation();
+    if (event) event.stopPropagation();
+
+    // Si venimos de un arrastre, no expandir
+    if (fueMovido) {
+        fueMovido = false; // Reset for next time
+        return;
+    }
+
     const p = proyectosData.find(item => item.id == id);
     if (!p) return;
 
@@ -455,6 +464,7 @@ function iniciarDrag(e) {
     elementRef = e.currentTarget;
     startX = e.clientX;
     originalLeft = parseFloat(elementRef.style.left);
+    fueMovido = false; // Reset movement flag
 
     document.addEventListener('mousemove', arrastrar);
     document.addEventListener('mouseup', finalizarDrag);
@@ -464,6 +474,10 @@ function iniciarDrag(e) {
 function arrastrar(e) {
     if (!elementRef) return;
     const dx = e.clientX - startX;
+
+    // Mark as moved if distance > 5px (debounce jitter)
+    if (Math.abs(dx) > 5) fueMovido = true;
+
     let newLeft = originalLeft + dx;
     newLeft = Math.round(newLeft / 14) * 14;
     elementRef.style.left = newLeft + 'px';
