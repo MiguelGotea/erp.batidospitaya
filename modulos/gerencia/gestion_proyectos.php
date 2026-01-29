@@ -33,7 +33,7 @@ $permisoCrear = tienePermiso('gestion_proyectos', 'crear_proyecto', $cargoOperar
     <link rel="stylesheet" href="/assets/css/global_tools.css?v=<?php echo mt_rand(1, 10000); ?>">
     <link rel="stylesheet" href="css/gestion_proyectos.css?v=<?php echo mt_rand(1, 10000); ?>">
 
-    <link rel="icon" href="../../assets/img/icon12.png" type="image/png">
+    <link rel="icon" href="../../core/assets/img/icon12.png" type="image/png">
 </head>
 
 <body>
@@ -78,7 +78,8 @@ $permisoCrear = tienePermiso('gestion_proyectos', 'crear_proyecto', $cargoOperar
                 <!-- HISTORY SECTION -->
                 <div class="card shadow-sm border-0">
                     <div class="card-header bg-white py-3">
-                        <h5 class="mb-0 text-dark font-weight-bold"><i class="fas fa-history"></i> Proyectos Finalizados</h5>
+                        <h5 class="mb-0 text-dark font-weight-bold"><i class="fas fa-history"></i> Proyectos Finalizados
+                        </h5>
                     </div>
                     <div class="card-body">
                         <div class="table-responsive">
@@ -89,7 +90,8 @@ $permisoCrear = tienePermiso('gestion_proyectos', 'crear_proyecto', $cargoOperar
                                             Cargo <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                         </th>
                                         <th data-column="nombre" data-type="text">
-                                            Proyecto <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                            Proyecto <i class="bi bi-funnel filter-icon"
+                                                onclick="toggleFilter(this)"></i>
                                         </th>
                                         <th data-column="fecha_inicio" data-type="daterange">
                                             Inicio <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
@@ -98,7 +100,8 @@ $permisoCrear = tienePermiso('gestion_proyectos', 'crear_proyecto', $cargoOperar
                                             Fin <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                         </th>
                                         <th data-column="descripcion" data-type="text">
-                                            Descripción <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                            Descripción <i class="bi bi-funnel filter-icon"
+                                                onclick="toggleFilter(this)"></i>
                                         </th>
                                     </tr>
                                 </thead>
@@ -112,7 +115,8 @@ $permisoCrear = tienePermiso('gestion_proyectos', 'crear_proyecto', $cargoOperar
                         <div class="d-flex justify-content-between align-items-center mt-3">
                             <div class="d-flex align-items-center">
                                 <label class="mb-0 mr-2">Mostrar:</label>
-                                <select class="form-control form-control-sm" id="registrosPorPagina" style="width: auto;" onchange="cambiarRegistrosPorPagina()">
+                                <select class="form-control form-control-sm" id="registrosPorPagina"
+                                    style="width: auto;" onchange="cambiarRegistrosPorPagina()">
                                     <option value="25" selected>25</option>
                                     <option value="50">50</option>
                                     <option value="100">100</option>

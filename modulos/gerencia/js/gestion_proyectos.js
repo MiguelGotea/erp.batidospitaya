@@ -4,6 +4,7 @@
 let fechaInicioGantt = new Date();
 fechaInicioGantt.setDate(fechaInicioGantt.getDate() - 30); // Mostrar desde 30 días atrás
 let proyectosData = [];
+let lastCargosList = [];
 let cargandoGantt = false;
 
 // Configuración Historial
@@ -42,8 +43,12 @@ async function cargarDatosGantt() {
         const res = await response.json();
 
         if (res.success) {
-            proyectosData = res.datos;
-            renderGantt();
+            proyectosData = res.proyectos || [];
+            // También necesitamos asegurarnos de que si no hay proyectos, al menos tengamos los cargos para renderizar las filas vacías
+            // Pero el renderGantt actual se basa en proyectosData.map. 
+            // Si no hay proyectos, el mapa fallará o el diagrama saldrá vacío.
+            // Ajustaré renderGantt para usar res.cargos si res.proyectos está vacío.
+            renderGantt(res.cargos || []);
         } else {
             console.error(res.message);
         }
@@ -55,7 +60,8 @@ async function cargarDatosGantt() {
     }
 }
 
-function renderGantt() {
+function renderGantt(cargosList = []) {
+    lastCargosList = cargosList;
     const container = $('#ganttContainer');
     container.empty();
 
@@ -87,13 +93,12 @@ function renderGantt() {
     }
     wrapper.append(headerTop).append(headerDays);
 
-    // 2. Render Rows per Cargo
-    const cargos = [...new Set(proyectosData.map(p => p.cargo_nombre))].sort();
+    // 2. Render Rows per Cargo (Using the provided cargosList)
+    cargosList.forEach(cargoObj => {
+        const cargo = cargoObj.Nombre;
+        const cargoId = cargoObj.CodNivelesCargos;
 
-    cargos.forEach(cargo => {
         const row = $('<div class="gantt-row"></div>');
-        const cargoId = proyectosData.find(p => p.cargo_nombre === cargo).CodNivelesCargos;
-
         row.append(`<div class="gantt-cargo-name" onclick="nuevoProyecto(${cargoId}, '${cargo}')">${cargo}</div>`);
 
         const content = $('<div class="gantt-content"></div>');
@@ -110,10 +115,10 @@ function renderGantt() {
         });
 
         sortedProyectos.forEach(p => {
-            // Un subproyecto solo se muestra si su padre está expandido (por defecto true en esta versión, pero controlable)
+            // Un subproyecto solo se muestra si su padre está expandido
             if (p.es_subproyecto == 1) {
                 const padre = proyectosData.find(parent => parent.id == p.proyecto_padre_id);
-                if (padre && padre.expandido === false) return;
+                if (padre && parseInt(padre.esta_expandido) === 0) return;
             }
 
             let levelAssigned = -1;
@@ -170,7 +175,7 @@ function renderProyectoBar(p, level) {
     const top = (level * 45) + 5;
 
     const isPadre = (p.es_subproyecto == 0);
-    const isExpandido = p.expandido !== false;
+    const isExpandido = parseInt(p.esta_expandido) !== 0;
 
     const bar = $(`
         <div class="gantt-bar ${p.es_subproyecto == 1 ? 'subproject' : ''}" 
@@ -327,15 +332,16 @@ async function toggleExpandir(id, event) {
     const p = proyectosData.find(item => item.id == id);
     if (!p) return;
 
-    p.expandido = (p.expandido === false); // Invertir estado local
+    const nuevoEstado = parseInt(p.esta_expandido) === 0 ? 1 : 0;
+    p.esta_expandido = nuevoEstado;
 
-    // Opcional: Persistir en BD
+    // Persistir en BD
     fetch('ajax/gestion_proyectos_toggle_expandir.php', {
         method: 'POST',
-        body: JSON.stringify({ id, expandido: p.expandido })
+        body: JSON.stringify({ id, expandido: nuevoEstado })
     });
 
-    renderGantt();
+    renderGantt(lastCargosList);
 }
 
 /** --- INTERACTIONS (DRAG & RESIZE) --- **/
@@ -660,13 +666,13 @@ function filterOptionsList(input) {
 function navegarGantt(dir) {
     const offset = dir === 'anterior' ? -30 : 30;
     fechaInicioGantt.setDate(fechaInicioGantt.getDate() + offset);
-    renderGantt();
+    renderGantt(lastCargosList);
 }
 
 function irAHoy() {
     fechaInicioGantt = new Date();
     fechaInicioGantt.setDate(fechaInicioGantt.getDate() - 30);
-    renderGantt();
+    renderGantt(lastCargosList);
 }
 
 function cambiarRegistrosPorPagina() {
