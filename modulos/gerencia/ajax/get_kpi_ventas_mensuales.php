@@ -21,12 +21,11 @@ $mesActual = (int) date('m');
 $hoy = date('Y-m-d');
 
 try {
-    // 1. Fetch active branches grouped by VMTAP
     $stmtSucursales = $conn->prepare("
-        SELECT codigo, nombre, VMTAP 
+        SELECT id, codigo, nombre, VMTAP 
         FROM sucursales 
         WHERE activa = 1 AND sucursal = 1
-        ORDER BY VMTAP DESC, nombre ASC
+        ORDER BY VMTAP DESC, CAST(codigo AS UNSIGNED) ASC, codigo ASC
     ");
     $stmtSucursales->execute();
     $sucursales = $stmtSucursales->fetchAll(PDO::FETCH_ASSOC);
@@ -71,18 +70,19 @@ try {
         foreach ($sucursales as $sucursal) {
             $codSucursal = $sucursal['codigo'];
 
+            $sucursalId = $sucursal['id'];
+
             // Get Meta
             // Divisor for meta: calendar days in month (to get daily target)
             $daysInMonth = (int) date('t', strtotime($primerDiaMes));
 
-            // Join meta with sucursal to use codigo
+            // Join meta with sucursal id
             $stmtMeta = $conn->prepare("
-                SELECT SUM(vm.meta) as total_meta
-                FROM ventas_meta vm
-                JOIN sucursales s ON vm.cod_sucursal = s.id
-                WHERE s.codigo = ? AND vm.fecha >= ? AND vm.fecha <= ?
+                SELECT SUM(meta) as total_meta
+                FROM ventas_meta
+                WHERE cod_sucursal = ? AND fecha >= ? AND fecha <= ?
             ");
-            $stmtMeta->execute([$codSucursal, $primerDiaMes, $ultimoDiaMes]);
+            $stmtMeta->execute([$sucursalId, $primerDiaMes, $ultimoDiaMes]);
             $metaRow = $stmtMeta->fetch();
             $metaTotal = $metaRow['total_meta'] ?: 0;
             $metaVal = $metaTotal > 0 ? round(($metaTotal / $daysInMonth) / 1000, 1) : 0;

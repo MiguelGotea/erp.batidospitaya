@@ -43,6 +43,8 @@
     padding: 10px 8px;
     border: 1px solid #eee;
     text-align: right;
+    width: 65px;
+    /* Base width for subcolumns */
 }
 
 .kpi-table th {
@@ -54,22 +56,27 @@
 
 .kpi-table .tienda-col {
     text-align: left;
-    min-width: 150px;
+    min-width: 200px;
+    width: 200px;
     background-color: #f8f9fa;
     position: sticky;
     left: 0;
     z-index: 10;
+    font-weight: 500;
 }
 
 .month-header {
     text-align: center;
     background-color: #e9ecef !important;
+    width: 195px !important;
+    /* Total width of 3 subcolumns (65 * 3) */
 }
 
 .sub-header {
     font-size: 11px;
     text-transform: uppercase;
     color: #6c757d;
+    width: 65px !important;
 }
 
 .group-row {
