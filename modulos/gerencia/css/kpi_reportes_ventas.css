@@ -40,11 +40,12 @@
 
 .kpi-table th,
 .kpi-table td {
-    padding: 10px 8px;
+    padding: 10px 4px;
     border: 1px solid #eee;
     text-align: right;
-    width: 65px;
-    /* Base width for subcolumns */
+    width: 75px;
+    min-width: 75px;
+    box-sizing: border-box;
 }
 
 .kpi-table th {
@@ -52,6 +53,7 @@
     color: #495057;
     font-weight: 600;
     white-space: nowrap;
+    text-align: center;
 }
 
 .kpi-table .tienda-col {
@@ -68,15 +70,16 @@
 .month-header {
     text-align: center;
     background-color: #e9ecef !important;
-    width: 195px !important;
-    /* Total width of 3 subcolumns (65 * 3) */
+    width: 225px !important;
+    /* 75 * 3 */
 }
 
 .sub-header {
     font-size: 11px;
     text-transform: uppercase;
     color: #6c757d;
-    width: 65px !important;
+    width: 75px !important;
+    text-align: center !important;
 }
 
 .group-row {
@@ -92,11 +95,13 @@
 /* Indicators */
 .indicator-dot {
     display: inline-block;
-    width: 12px;
-    height: 12px;
+    width: 10px;
+    height: 10px;
+    min-width: 10px;
+    min-height: 10px;
     border-radius: 50%;
-    margin-right: 5px;
-    vertical-align: middle;
+    margin-right: 4px;
+    flex-shrink: 0;
 }
 
 .dot-green {
@@ -114,8 +119,10 @@
 .var-cell {
     display: flex;
     align-items: center;
-    justify-content: flex-end;
-    gap: 5px;
+    justify-content: center;
+    /* Center content */
+    gap: 4px;
+    width: 100%;
 }
 
 /* Hidden months */
