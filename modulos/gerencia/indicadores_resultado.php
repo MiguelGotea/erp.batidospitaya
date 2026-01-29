@@ -59,6 +59,7 @@ $query = "SELECT
             isem.decimales,
             isem.EnUso,
             isem.automatico,
+            isem.acumulativo,
             nc.Area,
             nc.Nombre as nombre_cargo
           FROM IndicadoresSemanales isem
@@ -107,8 +108,8 @@ if (!empty($semanas)) {
     }
 }
 
-// Función para obtener resultado desde BD CON MULTIPLICADOR
-function obtenerResultadoBD($indicador, $resultadoBD)
+// Función para obtener resultado desde BD CON MULTIPLICADOR Y SOPORTE PARA ACUMULATIVOS
+function obtenerResultadoBD($indicador, $resultadoBD, $resultadoBDAnterior = null)
 {
     if (!$resultadoBD)
         return null;
@@ -130,7 +131,14 @@ function obtenerResultadoBD($indicador, $resultadoBD)
     } else {
         // Si divide=0, mostrar numerador_dato
         if ($resultadoBD['numerador_dato'] !== null) {
-            return $resultadoBD['numerador_dato'];
+            $valorActual = $resultadoBD['numerador_dato'];
+            
+            // Si es acumulativo, restar el valor de la semana anterior
+            if (isset($indicador['acumulativo']) && $indicador['acumulativo'] == 1 && $resultadoBDAnterior && $resultadoBDAnterior['numerador_dato'] !== null) {
+                return $valorActual - $resultadoBDAnterior['numerador_dato'];
+            }
+            
+            return $valorActual;
         }
         return null;
     }
@@ -263,10 +271,18 @@ function getColorMeta($resultado, $meta, $tipometa, $resultadosemanaanteriordato
                                         <?php echo formatearValor($metaGeneral, $indicador['tipo'], $indicador['decimales'], $indicador['EnUso']); ?>
                                     </td>
 
-                                    <?php foreach ($semanas as $semana): ?>
+                                    <?php foreach ($semanas as $index => $semana): ?>
                                         <?php
                                         $resultado = $resultadosPorIndicador[$indicador['id']][$semana['id']] ?? null;
-                                        $valorResultado = obtenerResultadoBD($indicador, $resultado);
+                                        
+                                        // Obtener resultado de la semana anterior para indicadores acumulativos
+                                        $resultadoAnterior = null;
+                                        if ($index < count($semanas) - 1) {
+                                            $semanaAnteriorId = $semanas[$index + 1]['id'];
+                                            $resultadoAnterior = $resultadosPorIndicador[$indicador['id']][$semanaAnteriorId] ?? null;
+                                        }
+                                        
+                                        $valorResultado = obtenerResultadoBD($indicador, $resultado, $resultadoAnterior);
                                         $valorResultadosemanaanterior = obtenerResultadoBD($indicador, $resultadosPorIndicador[$indicador['id']][$semana['id'] - 1] ?? null);
                                         $meta = $resultado ? $resultado['meta'] : null;
                                         $colorMeta = getColorMeta($valorResultado, $meta, $indicador['tipometa'], $valorResultadosemanaanterior, $indicador['id']);
