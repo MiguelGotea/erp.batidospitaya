@@ -73,7 +73,7 @@
     left: 0;
     z-index: 40;
     /* Topmost corner */
-    background: #fff;
+    background: #fff !important;
     border-bottom: 1px solid var(--color-grid);
     border-right: 1px solid var(--color-grid);
     height: 41px;
@@ -88,7 +88,7 @@
     font-size: 0.85rem;
     padding: 10px 0;
     border-right: 1px solid var(--color-grid);
-    background-color: #f8f9fa;
+    background-color: #f8f9fa !important;
 }
 
 .gantt-header-days {
@@ -98,7 +98,7 @@
     top: 41px;
     /* Height of months row */
     z-index: 30;
-    background: #fff;
+    background: #fff !important;
     border-bottom: 2px solid var(--color-oscuro);
 }
 
@@ -109,7 +109,7 @@
     top: 41px;
     left: 0;
     z-index: 40;
-    background: #fff;
+    background: #fff !important;
     border-bottom: 2px solid var(--color-oscuro);
     border-right: 1px solid var(--color-grid);
     height: 31px;

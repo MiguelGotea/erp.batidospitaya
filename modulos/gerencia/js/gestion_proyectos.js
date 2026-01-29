@@ -22,7 +22,7 @@ $(document).ready(function () {
     // Cerrar paneles de filtro al hacer clic fuera
     $(document).on('click', function (e) {
         if (!$(e.target).closest('.filter-panel, .filter-icon').length) {
-            $('.filter-panel').removeClass('show');
+            $('.filter-panel').remove();
         }
     });
 });
@@ -44,10 +44,6 @@ async function cargarDatosGantt() {
 
         if (res.success) {
             proyectosData = res.proyectos || [];
-            // También necesitamos asegurarnos de que si no hay proyectos, al menos tengamos los cargos para renderizar las filas vacías
-            // Pero el renderGantt actual se basa en proyectosData.map. 
-            // Si no hay proyectos, el mapa fallará o el diagrama saldrá vacío.
-            // Ajustaré renderGantt para usar res.cargos si res.proyectos está vacío.
             renderGantt(res.cargos || []);
         } else {
             console.error(res.message);
@@ -70,7 +66,7 @@ function renderGantt(cargosList = []) {
 
     const wrapper = $('<div class="gantt-grid"></div>');
 
-    // 1. Render Headers and Sticky Corner
+    // 1. Render Headers and Sticky Corners
     wrapper.append('<div class="gantt-header-corner"></div>');
     const headerTop = $('<div class="gantt-header-top"></div>');
 
@@ -96,7 +92,7 @@ function renderGantt(cargosList = []) {
     }
     wrapper.append(headerTop).append(headerDays);
 
-    // 2. Render Rows per Cargo (Using the provided cargosList)
+    // 2. Render Rows per Cargo
     cargosList.forEach(cargoObj => {
         const cargo = cargoObj.Nombre;
         const cargoId = cargoObj.CodNivelesCargos;
@@ -107,25 +103,18 @@ function renderGantt(cargosList = []) {
         const content = $('<div class="gantt-content"></div>');
         const proyectosCargo = proyectosData.filter(p => p.cargo_nombre === cargo);
 
-        // --- IMPROVED STACKING LOGIC (Hierarchical) ---
-        // Organizamos los proyectos para que los hijos siempre estén debajo del padre
+        // Hierarchical Stacking Logic
         let levels = [[]];
-
-        // Separar padres e hijos
         const padres = proyectosCargo.filter(p => p.es_subproyecto == 0).sort((a, b) => new Date(a.fecha_inicio) - new Date(b.fecha_inicio));
 
         padres.forEach(padre => {
-            // Asignar nivel al padre
             let padreLevel = findBestLevel(padre, levels);
             levels[padreLevel].push(padre);
             content.append(renderProyectoBar(padre, padreLevel));
 
-            // Si está expandido, procesar sus hijos inmediatamente debajo
             if (parseInt(padre.esta_expandido) !== 0) {
                 const hijos = proyectosCargo.filter(p => p.proyecto_padre_id == padre.id).sort((a, b) => new Date(a.fecha_inicio) - new Date(b.fecha_inicio));
-
                 hijos.forEach(hijo => {
-                    // El hijo DEBE estar en un nivel mayor que el padre
                     let hijoLevel = findBestLevel(hijo, levels, padreLevel + 1);
                     levels[hijoLevel].push(hijo);
                     content.append(renderProyectoBar(hijo, hijoLevel));
@@ -133,7 +122,6 @@ function renderGantt(cargosList = []) {
             }
         });
 
-        // Ajustar altura de la fila según niveles
         const rowHeight = Math.max(60, (levels.length * 45) + 10);
         content.css('height', rowHeight + 'px');
         row.find('.gantt-cargo-name').css('height', rowHeight + 'px');
@@ -142,11 +130,11 @@ function renderGantt(cargosList = []) {
         wrapper.append(row);
     });
 
-    // 3. Today Line - Continuous
+    // 3. Today Line
     const hoy = new Date();
     const difHoy = (hoy - fechaInicioGantt) / (1000 * 60 * 60 * 24);
     if (difHoy >= 0 && difHoy <= 90) {
-        const left = 180 + (difHoy * 40); // 180 is cargo width
+        const left = 180 + (difHoy * 40);
         wrapper.append(`<div class="gantt-today-line-full" style="left: ${left}px"></div>`);
     }
 
@@ -172,7 +160,6 @@ function renderProyectoBar(p, level) {
              data-id="${p.id}" 
              style="left: ${left}px; width: ${width}px; top: ${top}px;"
              title="${p.nombre}: ${p.fecha_inicio} al ${p.fecha_fin}">
-            
             <div class="gantt-bar-actions-top">
                 ${isPadre ? `
                     <div class="gantt-btn-sm" onclick="toggleExpandir(${p.id}, event)" title="${isExpandido ? 'Contraer' : 'Expandir'}">
@@ -186,21 +173,18 @@ function renderProyectoBar(p, level) {
                     <i class="fas fa-times"></i>
                 </div>
             </div>
-
             <div class="gantt-bar-title text-truncate">${p.nombre}</div>
-            ${PERMISO_CREAR ? '<div class="gantt-resize-handle"></div>' : ''}
+            ${typeof PERMISO_CREAR !== 'undefined' && PERMISO_CREAR ? '<div class="gantt-resize-handle"></div>' : ''}
         </div>
     `);
 
     bar.on('dblclick', (e) => { e.stopPropagation(); editarProyecto(p); });
-
     return bar;
 }
 
 /** --- ACTIONS & MODALS --- **/
 
 function nuevoProyecto(cargoId, cargoNombre) {
-    if (!PERMISO_CREAR) return;
     $('#formProyecto')[0].reset();
     $('#editProyectoId').val('');
     $('#editProyectoPadreId').val('');
@@ -212,7 +196,6 @@ function nuevoProyecto(cargoId, cargoNombre) {
 
 function nuevoSubproyecto(padreId, cargoId, event) {
     event.stopPropagation();
-    if (!PERMISO_CREAR) return;
     $('#formProyecto')[0].reset();
     $('#editProyectoId').val('');
     $('#editProyectoPadreId').val(padreId);
@@ -229,7 +212,6 @@ function nuevoSubproyecto(padreId, cargoId, event) {
 }
 
 function editarProyecto(p) {
-    if (!PERMISO_CREAR) return;
     $('#editProyectoId').val(p.id);
     $('#editProyectoPadreId').val(p.proyecto_padre_id);
     $('#editCargoId').val(p.CodNivelesCargos);
@@ -281,8 +263,6 @@ async function guardarProyecto() {
 
 function confirmarEliminar(id, event) {
     event.stopPropagation();
-    if (!PERMISO_CREAR) return;
-
     Swal.fire({
         title: '¿Estás seguro?',
         text: "Esta acción no se puede deshacer.",
@@ -325,7 +305,6 @@ async function toggleExpandir(id, event) {
     const nuevoEstado = parseInt(p.esta_expandido) === 0 ? 1 : 0;
     p.esta_expandido = nuevoEstado;
 
-    // Persistir en BD
     fetch('ajax/gestion_proyectos_toggle_expandir.php', {
         method: 'POST',
         body: JSON.stringify({ id, expandido: nuevoEstado })
@@ -337,14 +316,9 @@ async function toggleExpandir(id, event) {
 /** --- INTERACTIONS (DRAG & RESIZE) --- **/
 
 function initInteractions() {
-    if (!PERMISO_CREAR) return;
-
     const bars = document.querySelectorAll('.gantt-bar');
     bars.forEach(bar => {
-        // Drag Horizontal
         bar.addEventListener('mousedown', iniciarDrag);
-
-        // Resize Borde Derecho
         const handle = bar.querySelector('.gantt-resize-handle');
         if (handle) {
             handle.addEventListener('mousedown', iniciarResize);
@@ -372,8 +346,6 @@ function arrastrar(e) {
     if (!elementRef) return;
     const dx = e.clientX - startX;
     let newLeft = originalLeft + dx;
-
-    // Snap a días (40px)
     newLeft = Math.round(newLeft / 40) * 40;
     elementRef.style.left = newLeft + 'px';
 }
@@ -386,18 +358,36 @@ async function finalizarDrag(e) {
 
     const id = elementRef.dataset.id;
     const newLeft = parseFloat(elementRef.style.left);
-    const daysOffset = Math.round(newLeft / 40);
+    const daysOffset = Math.round((newLeft - originalLeft) / 40);
 
-    const newStart = new Date(fechaInicioGantt);
-    newStart.setDate(newStart.getDate() + daysOffset);
+    if (daysOffset === 0) {
+        elementRef = null;
+        return;
+    }
 
     const p = proyectosData.find(item => item.id == id);
-    const duration = (new Date(p.fecha_fin) - new Date(p.fecha_inicio)) / (1000 * 60 * 60 * 24);
+    if (!p) { elementRef = null; return; }
 
-    const newEnd = new Date(newStart);
-    newEnd.setDate(newEnd.getDate() + duration);
+    const newStart = new Date(p.fecha_inicio);
+    newStart.setDate(newStart.getDate() + daysOffset);
+    const newEnd = new Date(p.fecha_fin);
+    newEnd.setDate(newEnd.getDate() + daysOffset);
 
-    actualizarFechas(id, formatDate(newStart), formatDate(newEnd));
+    // Cascading Move
+    if (p.es_subproyecto == 0) {
+        actualizarFechasFull({
+            id: id,
+            fecha_inicio: formatDate(newStart),
+            fecha_fin: formatDate(newEnd),
+            movimiento_cascada: daysOffset
+        });
+    } else {
+        actualizarFechasFull({
+            id: id,
+            fecha_inicio: formatDate(newStart),
+            fecha_fin: formatDate(newEnd)
+        });
+    }
     elementRef = null;
 }
 
@@ -414,11 +404,27 @@ function iniciarResize(e) {
 function redimensionar(e) {
     const dx = e.clientX - startX;
     let newWidth = originalWidth + dx;
+
+    const id = elementRef.dataset.id;
+    const p = proyectosData.find(item => item.id == id);
+
+    if (p && p.es_subproyecto == 0) {
+        const hijos = proyectosData.filter(h => h.proyecto_padre_id == p.id);
+        if (hijos.length > 0) {
+            const maxFechaFinHijos = new Date(Math.max(...hijos.map(h => new Date(h.fecha_fin))));
+            const startParent = new Date(p.fecha_inicio);
+            const minDurationDays = Math.round((maxFechaFinHijos - startParent) / (1000 * 60 * 60 * 24)) + 1;
+            const minWidth = minDurationDays * 40;
+            if (newWidth < minWidth) newWidth = minWidth;
+        }
+    }
+
     newWidth = Math.max(40, Math.round(newWidth / 40) * 40);
     elementRef.style.width = newWidth + 'px';
 }
 
 async function finalizarResize(e) {
+    if (!elementRef) return;
     document.removeEventListener('mousemove', redimensionar);
     document.removeEventListener('mouseup', finalizarResize);
 
@@ -430,285 +436,8 @@ async function finalizarResize(e) {
     const newEnd = new Date(p.fecha_inicio);
     newEnd.setDate(newEnd.getDate() + durationDays - 1);
 
-    actualizarFechas(id, p.fecha_inicio, formatDate(newEnd));
+    actualizarFechasFull({ id, fecha_inicio: p.fecha_inicio, fecha_fin: formatDate(newEnd) });
     elementRef = null;
-}
-
-async function actualizarFechas(id, inicio, fin) {
-    try {
-        const response = await fetch('ajax/gestion_proyectos_actualizar.php', {
-            method: 'POST',
-            body: JSON.stringify({ id, fecha_inicio: inicio, fecha_fin: fin })
-        });
-        const res = await response.json();
-        if (res.success) {
-            cargarDatosGantt();
-        } else {
-            Swal.fire('Error', res.message, 'error');
-            renderGantt(); // Revertir visualmente
-        }
-    } catch (e) {
-        renderGantt();
-    }
-}
-
-/** --- HISTORIAL & FILTROS --- **/
-
-async function cargarHistorial(pagina = 1) {
-    currentHistorialPage = pagina;
-    const limit = $('#registrosPorPagina').val();
-
-    try {
-        const params = new URLSearchParams({
-            pagina: pagina,
-            registros_por_pagina: limit,
-            filtros: JSON.stringify(currentFilters)
-        });
-
-        const response = await fetch(`ajax/gestion_proyectos_get_historial.php?${params}`);
-        const res = await response.json();
-
-        if (res.success) {
-            renderTablaHistorial(res.datos);
-            renderPaginacion(res.total_registros, limit, pagina);
-        } else {
-            Swal.fire('Error', res.message, 'error');
-        }
-    } catch (e) {
-        console.error("Error historial:", e);
-    }
-}
-
-function renderTablaHistorial(datos) {
-    const body = $('#historialBody');
-    body.empty();
-
-    if (datos.length === 0) {
-        body.append('<tr><td colspan="5" class="text-center text-muted py-4">No hay proyectos finalizados con estos filtros</td></tr>');
-        return;
-    }
-
-    datos.forEach(p => {
-        body.append(`
-            <tr>
-                <td><span class="badge badge-pill badge-light border px-3 py-2">${p.cargo_nombre}</span></td>
-                <td class="font-weight-bold">${p.nombre}</td>
-                <td><i class="far fa-calendar-alt text-muted mr-1"></i> ${p.fecha_inicio}</td>
-                <td><i class="far fa-calendar-check text-success mr-1"></i> ${p.fecha_fin}</td>
-                <td class="text-muted small">${p.descripcion || '-'}</td>
-            </tr>
-        `);
-    });
-}
-
-function renderPaginacion(total, limit, actual) {
-    const container = $('#paginacion');
-    container.empty();
-    const paginas = Math.ceil(total / limit);
-    if (paginas <= 1) return;
-
-    // Botón Prev
-    container.append(`<button class="pagination-btn" ${actual === 1 ? 'disabled' : ''} onclick="cargarHistorial(${actual - 1})"><i class="fas fa-chevron-left"></i></button>`);
-
-    // Páginas (simplificado)
-    for (let i = 1; i <= paginas; i++) {
-        if (i === 1 || i === paginas || (i >= actual - 1 && i <= actual + 1)) {
-            container.append(`<button class="pagination-btn ${i === actual ? 'active' : ''}" onclick="cargarHistorial(${i})">${i}</button>`);
-        } else if (i === actual - 2 || i === actual + 2) {
-            container.append('<span class="px-2">...</span>');
-        }
-    }
-
-    // Botón Next
-    container.append(`<button class="pagination-btn" ${actual === paginas ? 'disabled' : ''} onclick="cargarHistorial(${actual + 1})"><i class="fas fa-chevron-right"></i></button>`);
-}
-
-/** --- DINAMIC FILTERS CORE --- **/
-
-function toggleFilter(icon) {
-    const th = $(icon).closest('th');
-    const column = th.data('column');
-    const type = th.data('type');
-
-    // Si ya existe el panel de este icono, lo cerramos
-    if ($(`.filter-panel[data-col="${column}"]`).is(':visible')) {
-        $('.filter-panel').removeClass('show');
-        return;
-    }
-
-    $('.filter-panel').remove(); // Limpiar previos
-
-    const panel = $(`<div class="filter-panel show" data-col="${column}"></div>`);
-    const pos = $(icon).offset();
-    panel.css({ top: pos.top + 25, left: Math.min(pos.left, $(window).width() - 280) });
-
-    if (type === 'list') {
-        renderListFilter(panel, column);
-    } else if (type === 'daterange') {
-        renderDateFilter(panel, column);
-    } else {
-        renderTextFilter(panel, column);
-    }
-
-    $('body').append(panel);
-}
-
-function renderListFilter(panel, column) {
-    const options = filterOptions[column] || [];
-    const selected = currentFilters[column] || [];
-
-    panel.append('<span class="filter-section-title">Seleccionar opciones</span>');
-    panel.append('<input type="text" class="filter-search mb-2" placeholder="Buscar..." onkeyup="filterOptionsList(this)">');
-
-    const list = $('<div class="filter-options"></div>');
-    options.forEach(opt => {
-        const isChecked = selected.includes(opt);
-        list.append(`
-            <label class="filter-option">
-                <input type="checkbox" value="${opt}" ${isChecked ? 'checked' : ''} onchange="updateListFilter('${column}')">
-                ${opt}
-            </label>
-        `);
-    });
-    panel.append(list);
-    panel.append('<button class="btn btn-sm btn-block btn-primary mt-3" onclick="aplicarFiltros()">Aplicar</button>');
-}
-
-function renderDateFilter(panel, column) {
-    panel.append('<span class="filter-section-title">Rango de fechas</span>');
-    panel.append(`
-        <div class="daterange-inputs">
-            <input type="date" class="form-control form-control-sm" id="f_desde" value="${currentFilters[column + '_desde'] || ''}" placeholder="Desde">
-            <input type="date" class="form-control form-control-sm" id="f_hasta" value="${currentFilters[column + '_hasta'] || ''}" placeholder="Hasta">
-        </div>
-        <button class="btn btn-sm btn-block btn-primary mt-3" onclick="updateDateFilter('${column}')">Aplicar</button>
-        <button class="btn btn-sm btn-block btn-link text-muted" onclick="limpiarFiltro('${column}')">Limpiar</button>
-    `);
-}
-
-function renderTextFilter(panel, column) {
-    panel.append('<span class="filter-section-title">Buscar texto</span>');
-    panel.append(`
-        <input type="text" class="filter-search" value="${currentFilters[column] || ''}" onkeypress="if(event.key==='Enter') updateTextFilter('${column}', this.value)">
-        <button class="btn btn-sm btn-block btn-primary mt-3" onclick="updateTextFilter('${column}', $(this).prev().val())">Buscar</button>
-    `);
-}
-
-function updateListFilter(column) {
-    const selected = [];
-    $(`.filter-panel[data-col="${column}"] input:checked`).each(function () {
-        selected.push($(this).val());
-    });
-    currentFilters[column] = selected;
-    actualizarIconoFiltro(column, selected.length > 0);
-}
-
-function updateDateFilter(column) {
-    currentFilters[column + '_desde'] = $('#f_desde').val();
-    currentFilters[column + '_hasta'] = $('#f_hasta').val();
-    actualizarIconoFiltro(column, !!(currentFilters[column + '_desde'] || currentFilters[column + '_hasta']));
-    aplicarFiltros();
-}
-
-function updateTextFilter(column, value) {
-    currentFilters[column] = value;
-    actualizarIconoFiltro(column, !!value);
-    aplicarFiltros();
-}
-
-function actualizarIconoFiltro(column, active) {
-    $(`th[data-column="${column}"] .filter-icon`).toggleClass('active', active);
-}
-
-/** --- HELPERS --- **/
-
-function findBestLevel(p, levels, minLevel = 0) {
-    for (let i = minLevel; i < levels.length; i++) {
-        const collides = levels[i].some(item => {
-            return (new Date(p.fecha_inicio) <= new Date(item.fecha_fin)) &&
-                (new Date(p.fecha_fin) >= new Date(item.fecha_inicio));
-        });
-        if (!collides) return i;
-    }
-    // Si no cabe en ninguno, agregar nuevos niveles vacíos si es necesario
-    while (levels.length <= minLevel) {
-        levels.push([]);
-    }
-    levels.push([]);
-    return levels.length - 1;
-}
-
-function arrastrar(e) {
-    if (!elementRef) return;
-    const dx = e.clientX - startX;
-    let newLeft = originalLeft + dx;
-
-    // Snap a días (40px)
-    newLeft = Math.round(newLeft / 40) * 40;
-    elementRef.style.left = newLeft + 'px';
-}
-
-async function finalizarDrag(e) {
-    if (!elementRef) return;
-    document.removeEventListener('mousemove', arrastrar);
-    document.removeEventListener('mouseup', finalizarDrag);
-    elementRef.style.cursor = 'grab';
-
-    const id = elementRef.dataset.id;
-    const newLeft = parseFloat(elementRef.style.left);
-    const daysOffset = Math.round((newLeft - originalLeft) / 40);
-
-    if (daysOffset === 0) return;
-
-    const p = proyectosData.find(item => item.id == id);
-    if (!p) return;
-
-    const newStart = new Date(p.fecha_inicio);
-    newStart.setDate(newStart.getDate() + daysOffset);
-
-    const newEnd = new Date(p.fecha_fin);
-    newEnd.setDate(newEnd.getDate() + daysOffset);
-
-    // CASCADING MOVE: If parent, move all children
-    if (p.es_subproyecto == 0) {
-        const dataUpdate = {
-            id: id,
-            fecha_inicio: formatDate(newStart),
-            fecha_fin: formatDate(newEnd),
-            movimiento_cascada: daysOffset // Flag for backend
-        };
-        actualizarFechasFull(dataUpdate);
-    } else {
-        actualizarFechas(id, formatDate(newStart), formatDate(newEnd));
-    }
-
-    elementRef = null;
-}
-
-function redimensionar(e) {
-    const dx = e.clientX - startX;
-    let newWidth = originalWidth + dx;
-
-    const id = elementRef.dataset.id;
-    const p = proyectosData.find(item => item.id == id);
-
-    // RESIZE CONSTRAINTS: Blocking shortening beyond children
-    if (p && p.es_subproyecto == 0) {
-        const hijos = proyectosData.filter(h => h.proyecto_padre_id == p.id);
-        if (hijos.length > 0) {
-            const maxFechaFinHijos = new Date(Math.max(...hijos.map(h => new Date(h.fecha_fin))));
-            const startParent = new Date(p.fecha_inicio);
-            const minDurationDays = Math.round((maxFechaFinHijos - startParent) / (1000 * 60 * 60 * 24)) + 1;
-            const minWidth = minDurationDays * 40;
-
-            if (newWidth < minWidth) {
-                newWidth = minWidth;
-            }
-        }
-    }
-
-    newWidth = Math.max(40, Math.round(newWidth / 40) * 40);
-    elementRef.style.width = newWidth + 'px';
 }
 
 async function actualizarFechasFull(data) {
@@ -729,40 +458,153 @@ async function actualizarFechasFull(data) {
     }
 }
 
-// UPDATE toggleFilter for standard ERP filters
+/** --- HISTORIAL & FILTROS --- **/
+
+async function cargarHistorial(pagina = 1) {
+    currentHistorialPage = pagina;
+    const limit = $('#registrosPorPagina').val();
+    try {
+        const params = new URLSearchParams({
+            pagina: pagina,
+            registros_por_pagina: limit,
+            filtros: JSON.stringify(currentFilters)
+        });
+        const response = await fetch(`ajax/gestion_proyectos_get_historial.php?${params}`);
+        const res = await response.json();
+        if (res.success) {
+            renderTablaHistorial(res.datos);
+            renderPaginacion(res.total_registros, limit, pagina);
+        }
+    } catch (e) { console.error("Error historial:", e); }
+}
+
+function renderTablaHistorial(datos) {
+    const body = $('#historialBody');
+    body.empty();
+    if (datos.length === 0) {
+        body.append('<tr><td colspan="5" class="text-center text-muted py-4">No hay resultados</td></tr>');
+        return;
+    }
+    datos.forEach(p => {
+        body.append(`
+            <tr>
+                <td><span class="badge badge-pill badge-light border px-3 py-2">${p.cargo_nombre}</span></td>
+                <td class="font-weight-bold">${p.nombre}</td>
+                <td><i class="far fa-calendar-alt text-muted mr-1"></i> ${p.fecha_inicio}</td>
+                <td><i class="far fa-calendar-check text-success mr-1"></i> ${p.fecha_fin}</td>
+                <td class="text-muted small">${p.descripcion || '-'}</td>
+            </tr>
+        `);
+    });
+}
+
+function renderPaginacion(total, limit, actual) {
+    const container = $('#paginacion');
+    container.empty();
+    const paginas = Math.ceil(total / limit);
+    if (paginas <= 1) return;
+    container.append(`<button class="pagination-btn" ${actual === 1 ? 'disabled' : ''} onclick="cargarHistorial(${actual - 1})"><i class="fas fa-chevron-left"></i></button>`);
+    for (let i = 1; i <= paginas; i++) {
+        if (i === 1 || i === paginas || (i >= actual - 1 && i <= actual + 1)) {
+            container.append(`<button class="pagination-btn ${i === actual ? 'active' : ''}" onclick="cargarHistorial(${i})">${i}</button>`);
+        } else if (i === actual - 2 || i === actual + 2) {
+            container.append('<span class="px-2">...</span>');
+        }
+    }
+    container.append(`<button class="pagination-btn" ${actual === paginas ? 'disabled' : ''} onclick="cargarHistorial(${actual + 1})"><i class="fas fa-chevron-right"></i></button>`);
+}
+
 function toggleFilter(icon) {
     const th = $(icon).closest('th');
     const column = th.data('column');
     const type = th.data('type');
 
-    // Si ya existe el panel, cerrarlo
     if ($(`.filter-panel[data-col="${column}"]`).length > 0) {
         $('.filter-panel').remove();
         return;
     }
-
     $('.filter-panel').remove();
 
     const panel = $(`<div class="filter-panel show" data-col="${column}"></div>`);
-    const pos = $(icon).offset();
+    const offset = $(icon).offset();
+    panel.css({ top: offset.top + 25, left: Math.min(offset.left, $(window).width() - 280) });
 
-    // Position panel below icon
-    panel.css({
-        top: pos.top + 25,
-        left: Math.min(pos.left, $(window).width() - 280),
-        display: 'block' // Force display
-    });
-
-    if (type === 'list') {
-        renderListFilter(panel, column);
-    } else if (type === 'daterange') {
-        renderDateFilter(panel, column);
-    } else {
-        renderTextFilter(panel, column);
-    }
+    if (type === 'list') renderListFilter(panel, column);
+    else if (type === 'daterange') renderDateFilter(panel, column);
+    else renderTextFilter(panel, column);
 
     $('body').append(panel);
+}
 
-    // Refuerzo para asegurar visibilidad
-    panel.addClass('show');
+function renderListFilter(panel, column) {
+    const options = filterOptions[column] || [];
+    const selected = currentFilters[column] || [];
+    panel.append('<span class="filter-section-title">Seleccionar opciones</span>');
+    panel.append('<input type="text" class="filter-search mb-2" placeholder="Buscar..." onkeyup="filterOptionsList(this)">');
+    const list = $('<div class="filter-options"></div>');
+    options.forEach(opt => {
+        list.append(`<label class="filter-option"><input type="checkbox" value="${opt}" ${selected.includes(opt) ? 'checked' : ''} onchange="updateListFilter('${column}')"> ${opt}</label>`);
+    });
+    panel.append(list);
+    panel.append('<button class="btn btn-sm btn-block btn-primary mt-3" onclick="aplicarFiltros()">Aplicar</button>');
+}
+
+function renderDateFilter(panel, column) {
+    panel.append('<span class="filter-section-title">Rango de fechas</span>');
+    panel.append(`
+        <div class="daterange-inputs">
+            <input type="date" class="form-control form-control-sm" id="f_desde" value="${currentFilters[column + '_desde'] || ''}">
+            <input type="date" class="form-control form-control-sm" id="f_hasta" value="${currentFilters[column + '_hasta'] || ''}">
+        </div>
+        <button class="btn btn-sm btn-block btn-primary mt-3" onclick="updateDateFilter('${column}')">Aplicar</button>
+        <button class="btn btn-sm btn-block btn-link text-muted" onclick="limpiarFiltro('${column}')">Limpiar</button>
+    `);
+}
+
+function renderTextFilter(panel, column) {
+    panel.append('<span class="filter-section-title">Buscar</span>');
+    panel.append(`<input type="text" class="filter-search" value="${currentFilters[column] || ''}" onkeypress="if(event.key==='Enter') updateTextFilter('${column}', this.value)">
+                  <button class="btn btn-sm btn-block btn-primary mt-3" onclick="updateTextFilter('${column}', $(this).prev().val())">Buscar</button>`);
+}
+
+function updateListFilter(column) {
+    const selected = [];
+    $(`.filter-panel[data-col="${column}"] input:checked`).each(function () { selected.push($(this).val()); });
+    currentFilters[column] = selected;
+    actualizarIconoFiltro(column, selected.length > 0);
+}
+
+function updateDateFilter(column) {
+    currentFilters[column + '_desde'] = $('#f_desde').val();
+    currentFilters[column + '_hasta'] = $('#f_hasta').val();
+    actualizarIconoFiltro(column, !!(currentFilters[column + '_desde'] || currentFilters[column + '_hasta']));
+    aplicarFiltros();
+}
+
+function updateTextFilter(column, value) {
+    currentFilters[column] = value;
+    actualizarIconoFiltro(column, !!value);
+    aplicarFiltros();
+}
+
+function aplicarFiltros() { $('.filter-panel').remove(); cargarHistorial(1); }
+function limpiarFiltro(c) { delete currentFilters[c]; delete currentFilters[c + '_desde']; delete currentFilters[c + '_hasta']; actualizarIconoFiltro(c, false); aplicarFiltros(); }
+async function cargarOpcionesFiltro() { try { const r = await fetch('ajax/gestion_proyectos_get_opciones_filtro.php'); const res = await r.json(); if (res.success) filterOptions.cargo = res.cargos; } catch (e) { } }
+function filterOptionsList(i) { const v = i.value.toLowerCase(); $(i).next('.filter-options').find('.filter-option').each(function () { $(this).toggle($(this).text().toLowerCase().includes(v)); }); }
+function navegarGantt(d) { fechaInicioGantt.setDate(fechaInicioGantt.getDate() + (d === 'anterior' ? -30 : 30)); renderGantt(lastCargosList); }
+function irAHoy() { fechaInicioGantt = new Date(); fechaInicioGantt.setDate(fechaInicioGantt.getDate() - 30); renderGantt(lastCargosList); }
+function cambiarRegistrosPorPagina() { cargarHistorial(1); }
+function actualizarIconoFiltro(c, a) { $(`th[data-column="${c}"] .filter-icon`).toggleClass('active', a); }
+function formatDate(d) { if (!d) return ''; const dt = new Date(d); return dt.toISOString().split('T')[0]; }
+
+function findBestLevel(p, levels, minLevel = 0) {
+    for (let i = minLevel; i < levels.length; i++) {
+        const collides = levels[i].some(item => {
+            return (new Date(p.fecha_inicio) <= new Date(item.fecha_fin)) && (new Date(p.fecha_fin) >= new Date(item.fecha_inicio));
+        });
+        if (!collides) return i;
+    }
+    while (levels.length <= minLevel) levels.push([]);
+    levels.push([]);
+    return levels.length - 1;
 }
