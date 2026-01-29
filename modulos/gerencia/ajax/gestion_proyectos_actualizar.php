@@ -6,6 +6,7 @@ header('Content-Type: application/json; charset=utf-8');
 require_once '../../../core/auth/auth.php';
 require_once '../../../core/permissions/permissions.php';
 
+
 $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
 $idOperario = $usuario['CodOperario'];
