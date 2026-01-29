@@ -113,7 +113,7 @@ function renderGantt(cargosList = []) {
         const startDay = current.getDate();
         const daysToShow = Math.round(Math.min(daysInMonth - startDay + 1, (endDate - current) / (1000 * 60 * 60 * 24)));
 
-        headerTop.append(`<div class="gantt-month" style="flex: 0 0 ${daysToShow * 40}px">${month}</div>`);
+        headerTop.append(`<div class="gantt-month" style="flex: 0 0 ${daysToShow * 20}px">${month}</div>`);
 
         for (let i = 0; i < daysToShow; i++) {
             const dayDate = new Date(current);
@@ -126,7 +126,7 @@ function renderGantt(cargosList = []) {
 
             // Highlight Sundays in the background
             if (isSunday) {
-                const left = 180 + (totalDays * 40);
+                const left = 180 + (totalDays * 20);
                 wrapper.append(`<div class="gantt-sunday-highlight" style="left: ${left}px"></div>`);
             }
             totalDays++;
@@ -193,7 +193,7 @@ function renderGantt(cargosList = []) {
     const hoy = new Date();
     const difHoy = (hoy - fechaInicioGantt) / (1000 * 60 * 60 * 24);
     if (difHoy >= 0 && difHoy <= 90) {
-        const left = 180 + (difHoy * 40);
+        const left = 180 + (difHoy * 20);
         wrapper.append(`<div class="gantt-today-line-full" style="left: ${left}px"></div>`);
     }
 
@@ -210,7 +210,7 @@ function renderGantt(cargosList = []) {
 function scrollToToday() {
     const hoy = new Date();
     const difHoy = (hoy - fechaInicioGantt) / (1000 * 60 * 60 * 24);
-    const scrollLeft = Math.max(0, (difHoy * 40) - 200); // Center today with 200px offset
+    const scrollLeft = Math.max(0, (difHoy * 20) - 200); // Center today with 200px offset
 
     const ganttWrapper = $('#ganttContainer');
     if (ganttWrapper.length) {
@@ -224,8 +224,8 @@ function renderProyectoBar(p, level) {
     const difStart = (start - fechaInicioGantt) / (1000 * 60 * 60 * 24);
     const duration = (end - start) / (1000 * 60 * 60 * 24) + 1;
 
-    const left = difStart * 40;
-    const width = duration * 40;
+    const left = difStart * 20;
+    const width = duration * 20;
     const top = (level * 45) + 5;
 
     const isPadre = (p.es_subproyecto == 0);
@@ -449,7 +449,7 @@ function arrastrar(e) {
     if (!elementRef) return;
     const dx = e.clientX - startX;
     let newLeft = originalLeft + dx;
-    newLeft = Math.round(newLeft / 40) * 40;
+    newLeft = Math.round(newLeft / 20) * 20;
     elementRef.style.left = newLeft + 'px';
 }
 
@@ -461,7 +461,7 @@ async function finalizarDrag(e) {
 
     const id = elementRef.dataset.id;
     const newLeft = parseFloat(elementRef.style.left);
-    const daysOffset = Math.round((newLeft - originalLeft) / 40);
+    const daysOffset = Math.round((newLeft - originalLeft) / 20);
 
     if (daysOffset === 0) {
         elementRef = null;
@@ -517,12 +517,12 @@ function redimensionar(e) {
             const maxFechaFinHijos = new Date(Math.max(...hijos.map(h => new Date(h.fecha_fin))));
             const startParent = new Date(p.fecha_inicio);
             const minDurationDays = Math.round((maxFechaFinHijos - startParent) / (1000 * 60 * 60 * 24)) + 1;
-            const minWidth = minDurationDays * 40;
+            const minWidth = minDurationDays * 20;
             if (newWidth < minWidth) newWidth = minWidth;
         }
     }
 
-    newWidth = Math.max(40, Math.round(newWidth / 40) * 40);
+    newWidth = Math.max(20, Math.round(newWidth / 20) * 20);
     elementRef.style.width = newWidth + 'px';
 }
 
@@ -533,7 +533,7 @@ async function finalizarResize(e) {
 
     const id = elementRef.dataset.id;
     const newWidth = parseFloat(elementRef.style.width);
-    const durationDays = Math.round(newWidth / 40);
+    const durationDays = Math.round(newWidth / 20);
 
     const p = proyectosData.find(item => item.id == id);
     const newEnd = new Date(p.fecha_inicio);
