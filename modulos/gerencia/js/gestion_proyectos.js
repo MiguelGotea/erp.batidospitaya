@@ -101,7 +101,7 @@ function renderGantt(cargosList = []) {
     headerDaysRow.append(headerDays);
     wrapper.append(headerRow).append(headerDaysRow);
 
-    // 2. Render Rows per Cargo
+    // 2. Render Rows per Cargo - SHOW ALL CARGOS
     cargosList.forEach(cargoObj => {
         const cargo = cargoObj.Nombre;
         const cargoId = cargoObj.CodNivelesCargos;
@@ -110,7 +110,7 @@ function renderGantt(cargosList = []) {
         row.append(`<div class="gantt-cargo-name" onclick="nuevoProyecto(${cargoId}, '${cargo}')">${cargo}</div>`);
 
         const content = $('<div class="gantt-content"></div>');
-        const proyectosCargo = proyectosData.filter(p => p.cargo_nombre === cargo);
+        const proyectosCargo = proyectosData.filter(p => p.CodNivelesCargos == cargoId);
 
         // Hierarchical Stacking Logic
         let levels = [[]];
