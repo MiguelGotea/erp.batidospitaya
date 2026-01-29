@@ -15,6 +15,7 @@ if (!tienePermiso('gestion_proyectos', 'vista', $cargoOperario)) {
     exit();
 }
 
+
 try {
     // Parámetros de paginación y filtros
     $pagina = isset($_GET['pagina']) ? (int) $_GET['pagina'] : 1;
