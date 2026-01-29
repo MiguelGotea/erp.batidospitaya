@@ -204,6 +204,22 @@
     pointer-events: none;
 }
 
+.gantt-bar-end-date {
+    position: absolute;
+    right: -50px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #666;
+    white-space: nowrap;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 2px 6px;
+    border-radius: 4px;
+    border: 1px solid #dee2e6;
+    pointer-events: none;
+}
+
 /* Visibility for filter icons in dark headers */
 .custom-table thead {
     background-color: var(--color-oscuro);

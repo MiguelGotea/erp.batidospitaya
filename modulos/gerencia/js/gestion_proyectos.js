@@ -165,6 +165,12 @@ function renderProyectoBar(p, level) {
     const isExpandido = parseInt(p.esta_expandido) !== 0;
     const tieneHijos = isPadre && proyectosData.some(hijo => hijo.proyecto_padre_id == p.id);
 
+    // Formatear fecha de fin para mostrar al lado derecho
+    const fechaFin = new Date(p.fecha_fin);
+    const dia = fechaFin.getDate();
+    const mesAbrev = fechaFin.toLocaleString('es-ES', { month: 'short' }).replace('.', '').substring(0, 2);
+    const fechaFinFormateada = `${dia}/${mesAbrev.charAt(0).toUpperCase() + mesAbrev.slice(1)}`;
+
     const bar = $(`
         <div class="gantt-bar ${p.es_subproyecto == 1 ? 'subproject' : ''}" 
              data-id="${p.id}" 
@@ -189,6 +195,7 @@ function renderProyectoBar(p, level) {
                 </div>
             </div>
             <div class="gantt-bar-title text-truncate">${p.nombre}</div>
+            <div class="gantt-bar-end-date">${fechaFinFormateada}</div>
             ${typeof PERMISO_CREAR !== 'undefined' && PERMISO_CREAR ? '<div class="gantt-resize-handle"></div>' : ''}
         </div>
     `);
