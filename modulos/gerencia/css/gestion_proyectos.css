@@ -52,33 +52,32 @@
 
 /* Header */
 .gantt-header {
-    display: contents;
+    display: flex;
+    width: 100%;
 }
 
 .gantt-header-top {
-    grid-column: 2;
+    flex: 1;
     display: flex;
     border-bottom: 1px solid var(--color-grid);
     position: sticky;
     top: 0;
     z-index: 30;
-    /* Higher than cargo list to stay on top */
     background: #fff;
 }
 
 /* Corner cell (empty space above cargos) */
 .gantt-header-corner {
-    grid-column: 1;
     position: sticky;
     top: 0;
     left: 0;
     z-index: 40;
-    /* Topmost corner */
     background: #fff !important;
     border-bottom: 1px solid var(--color-grid);
     border-right: 1px solid var(--color-grid);
     height: 41px;
-    /* Matches months row */
+    width: 180px;
+    flex-shrink: 0;
 }
 
 .gantt-month {
@@ -93,11 +92,10 @@
 }
 
 .gantt-header-days {
-    grid-column: 2;
+    flex: 1;
     display: flex;
     position: sticky;
     top: 41px;
-    /* Height of months row */
     z-index: 30;
     background: #fff !important;
     border-bottom: 2px solid var(--color-oscuro);
@@ -105,7 +103,6 @@
 
 /* Second corner (above cargos, even with days) */
 .gantt-header-corner-days {
-    grid-column: 1;
     position: sticky;
     top: 41px;
     left: 0;
@@ -114,7 +111,8 @@
     border-bottom: 2px solid var(--color-oscuro);
     border-right: 1px solid var(--color-grid);
     height: 31px;
-    /* Matches days row */
+    width: 180px;
+    flex-shrink: 0;
 }
 
 .gantt-day-label {
@@ -129,7 +127,8 @@
 
 /* Rows and Stacking */
 .gantt-row {
-    display: contents;
+    display: flex;
+    width: 100%;
 }
 
 .gantt-cargo-name {
@@ -146,6 +145,8 @@
     z-index: 20;
     min-height: var(--row-height);
     cursor: pointer;
+    width: 180px;
+    flex-shrink: 0;
 }
 
 .gantt-cargo-name:hover {
@@ -153,7 +154,7 @@
 }
 
 .gantt-content {
-    grid-column: 2;
+    flex: 1;
     position: relative;
     min-height: var(--row-height);
     border-bottom: 1px solid var(--color-grid);
@@ -249,23 +250,23 @@
     opacity: 1;
 }
 
-/* Floating Card Actions - Improved */
+/* Floating Card Actions - Inside Bar */
 .gantt-bar-actions-top {
     position: absolute;
-    top: -24px;
-    right: 0;
+    top: 50%;
+    right: 8px;
+    transform: translateY(-50%);
     display: flex;
     gap: 4px;
     opacity: 0;
     visibility: hidden;
     transition: all 0.2s;
-    z-index: 50;
+    z-index: 10;
 }
 
 .gantt-bar:hover .gantt-bar-actions-top {
     opacity: 1;
     visibility: visible;
-    top: -28px;
 }
 
 .gantt-btn-sm {
