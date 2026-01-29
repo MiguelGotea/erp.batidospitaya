@@ -70,19 +70,17 @@ try {
         foreach ($sucursales as $sucursal) {
             $codSucursal = $sucursal['codigo'];
 
-            $sucursalId = $sucursal['id'];
-
             // Get Meta
             // Divisor for meta: calendar days in month (to get daily target)
             $daysInMonth = (int) date('t', strtotime($primerDiaMes));
 
-            // Join meta with sucursal id
+            // Join meta with sucursal codigo (instead of id, as requested)
             $stmtMeta = $conn->prepare("
                 SELECT SUM(meta) as total_meta
                 FROM ventas_meta
                 WHERE cod_sucursal = ? AND fecha >= ? AND fecha <= ?
             ");
-            $stmtMeta->execute([$sucursalId, $primerDiaMes, $ultimoDiaMes]);
+            $stmtMeta->execute([$codSucursal, $primerDiaMes, $ultimoDiaMes]);
             $metaRow = $stmtMeta->fetch();
             $metaTotal = $metaRow['total_meta'] ?: 0;
             $metaVal = $metaTotal > 0 ? round(($metaTotal / $daysInMonth) / 1000, 1) : 0;
