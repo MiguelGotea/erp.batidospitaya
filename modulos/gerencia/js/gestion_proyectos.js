@@ -97,6 +97,13 @@ function zoomGantt(delta) {
     const newWidth = ganttDayWidth + delta;
     if (newWidth >= 8 && newWidth <= 60) {
         ganttDayWidth = newWidth;
+
+        // Dynamic font size calculation (map 8-60px to 0.45-0.85rem)
+        const minFont = 0.45;
+        const maxFont = 0.85;
+        const newFontSize = minFont + (ganttDayWidth - 8) * (maxFont - minFont) / (60 - 8);
+        document.documentElement.style.setProperty('--day-font-size', `${newFontSize}rem`);
+
         primeraVez = false; // Don't scroll to today on zoom refresh
         renderGantt(lastCargosList);
     }
@@ -128,17 +135,7 @@ function renderGantt(cargosList = []) {
 
     // 1. Render Headers and Sticky Corners
     const headerRow = $('<div class="gantt-header"></div>');
-    const corner = $('<div class="gantt-header-corner"></div>');
-
-    // Inject Zoom Controls
-    const zoomControls = $(`
-        <div class="gantt-zoom-controls">
-            <button class="gantt-zoom-btn" onclick="zoomGantt(-2)" title="Zoom Out"><i class="fas fa-minus"></i></button>
-            <button class="gantt-zoom-btn" onclick="zoomGantt(2)" title="Zoom In"><i class="fas fa-plus"></i></button>
-        </div>
-    `);
-    corner.append(zoomControls);
-    headerRow.append(corner);
+    headerRow.append('<div class="gantt-header-corner"></div>');
 
     const headerTop = $('<div class="gantt-header-top"></div>');
 
@@ -259,6 +256,15 @@ function renderGantt(cargosList = []) {
         const left = 180 + (difHoy * ganttDayWidth);
         wrapper.append(`<div class="gantt-today-line-full" style="left: ${left}px"></div>`);
     }
+
+    // Floating Zoom Controls (Bottom Right)
+    const floatingControls = $(`
+        <div class="gantt-zoom-controls">
+            <button class="gantt-zoom-btn" onclick="zoomGantt(2)" title="Zoom In"><i class="fas fa-plus"></i></button>
+            <button class="gantt-zoom-btn" onclick="zoomGantt(-2)" title="Zoom Out"><i class="fas fa-minus"></i></button>
+        </div>
+    `);
+    wrapper.append(floatingControls);
 
     container.append(wrapper);
     initInteractions();
