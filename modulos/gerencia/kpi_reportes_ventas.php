@@ -13,7 +13,6 @@ if (!verificarAccesoCargo([5, 43, 11, 27, 26, 42, 49, 16]) && !(isset($_SESSION[
     header('Location: ../index.php');
     exit();
 }
-
 // Obtenemos el cargo principal usando la función de funciones.php
 $cargoUsuario = obtenerCargoPrincipalUsuario($_SESSION['usuario_id']);
 $cargoUsuariocodigo = obtenerCargoCodigoPrincipalUsuario($_SESSION['usuario_id']);
