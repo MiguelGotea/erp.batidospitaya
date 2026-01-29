@@ -16,6 +16,7 @@ const GANTT_COLORS = [
     '#007bff', '#6610f2', '#6f42c1', '#e83e8c', '#6c757d', '#343a40'
 ];
 
+
 // Configuración Historial
 let currentHistorialPage = 1;
 let currentFilters = {};
