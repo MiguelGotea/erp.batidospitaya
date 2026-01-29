@@ -10,6 +10,7 @@ let lastCargosList = [];
 let cargandoGantt = false;
 let primeraVez = true; // Track if this is the first load
 let fueMovido = false; // Flag to skip click if bar was dragged
+let ganttDayWidth = 14; // Default width of a day column in pixels
 
 const GANTT_COLORS = [
     '#dc3545', '#fd7e14', '#ffc107', '#28a745', '#20c997', '#17a2b8',

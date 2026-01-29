@@ -84,6 +84,40 @@
     height: 41px;
     width: 180px;
     flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.gantt-zoom-controls {
+    display: flex;
+    gap: 8px;
+    padding: 2px 5px;
+    background: rgba(81, 184, 172, 0.05);
+    border-radius: 4px;
+    border: 1px solid rgba(81, 184, 172, 0.2);
+}
+
+.gantt-zoom-btn {
+    width: 22px;
+    height: 22px;
+    border: 1px solid #51B8AC;
+    background: #fff;
+    color: #51B8AC;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.2s;
+    padding: 0;
+    line-height: 1;
+}
+
+.gantt-zoom-btn:hover {
+    background: #51B8AC;
+    color: #fff;
 }
 
 .gantt-month {
