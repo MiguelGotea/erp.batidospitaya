@@ -1,231 +1,248 @@
-/**
- * gestion_proyectos.js
- * Lógica refinada con estándares UI/UX del ERP
- */
+// gestion_proyectos.js
+// Lógica principal del Diagrama de Gantt
 
-let fechaInicioVista = new Date();
-fechaInicioVista.setDate((new Date()).getDate() - 15);
+let fechaInicioGantt = new Date();
+fechaInicioGantt.setDate(fechaInicioGantt.getDate() - 30); // Mostrar desde 30 días atrás
+let proyectosData = [];
+let cargandoGantt = false;
 
-let globalData = { cargos: [], proyectos: [] };
-
-// Variables de paginación y filtros estándar
-let paginaActual = 1;
-let registrosPorPagina = 25;
-let filtrosActivos = {};
-let ordenActivo = { columna: 'fecha_fin', direccion: 'DESC' };
-let panelFiltroAbierto = null;
+// Configuración Historial
+let currentHistorialPage = 1;
+let currentFilters = {};
+let filterOptions = { cargo: [] };
 
 $(document).ready(function () {
     initGantt();
-    cargarDatosHistorial();
-    setupListeners();
-
-    // Cerrar filtros al hacer clic fuera
-    $(document).on('click', function (e) {
-        if (!$(e.target).closest('.filter-panel, .filter-icon').length) {
-            cerrarTodosFiltros();
-        }
-    });
-
-    $(window).on('resize', () => panelFiltroAbierto && cerrarTodosFiltros());
-});
-
-function initGantt() {
-    irAHoy();
-}
-
-function setupListeners() {
-    // Escuchar cambios en el modal para validaciones básicas
-    $('#editFechaInicio, #editFechaFin').on('change', function () {
-        const start = new Date($('#editFechaInicio').val());
-        const end = new Date($('#editFechaFin').val());
-        if (end < start) {
-            $('#editFechaFin').val($('#editFechaInicio').val());
-        }
-    });
+    cargarHistorial();
+    cargarOpcionesFiltro();
 
     $('#btnGuardarProyecto').on('click', guardarProyecto);
+
+    // Cerrar paneles de filtro al hacer clic fuera
+    $(document).on('click', function (e) {
+        if (!$(e.target).closest('.filter-panel, .filter-icon').length) {
+            $('.filter-panel').removeClass('show');
+        }
+    });
+});
+
+/** --- GANTT CORE --- **/
+
+async function initGantt() {
+    await cargarDatosGantt();
 }
 
-// --- GANTT CORE ---
+async function cargarDatosGantt() {
+    if (cargandoGantt) return;
+    cargandoGantt = true;
+    $('.gantt-loader').show();
 
-async function fetchGanttData() {
     try {
         const response = await fetch('ajax/gestion_proyectos_get_datos.php');
         const res = await response.json();
+
         if (res.success) {
-            globalData.cargos = res.cargos;
-            globalData.proyectos = res.proyectos;
+            proyectosData = res.datos;
             renderGantt();
+        } else {
+            console.error(res.message);
         }
-    } catch (e) { console.error(e); }
+    } catch (e) {
+        console.error("Error cargando Gantt:", e);
+    } finally {
+        cargandoGantt = false;
+        $('.gantt-loader').hide();
+    }
 }
 
 function renderGantt() {
-    const container = $('#ganttContainer').empty();
-    const grid = $('<div class="gantt-grid"></div>');
+    const container = $('#ganttContainer');
+    container.empty();
 
-    grid.append(generateTimeHeaders());
+    const endDate = new Date(fechaInicioGantt);
+    endDate.setDate(endDate.getDate() + 90); // 3 meses vista
 
-    globalData.cargos.forEach(cargo => {
+    const wrapper = $('<div class="gantt-grid"></div>');
+
+    // 1. Render Headers
+    const headerTop = $('<div class="gantt-header-top"></div>');
+    const headerDays = $('<div class="gantt-header-days"></div>');
+
+    let current = new Date(fechaInicioGantt);
+    while (current < endDate) {
+        const month = current.toLocaleString('es-ES', { month: 'long', year: 'numeric' });
+        const daysInMonth = new Date(current.getFullYear(), current.getMonth() + 1, 0).getDate();
+        const startDay = current.getDate();
+        const daysToShow = Math.min(daysInMonth - startDay + 1, (endDate - current) / (1000 * 60 * 60 * 24));
+
+        headerTop.append(`<div class="gantt-month" style="flex: 0 0 ${daysToShow * 40}px">${month}</div>`);
+
+        for (let i = 0; i < daysToShow; i++) {
+            const dayDate = new Date(current);
+            dayDate.setDate(dayDate.getDate() + i);
+            const isWeekend = dayDate.getDay() === 0 || dayDate.getDay() === 6;
+            headerDays.append(`<div class="gantt-day-label ${isWeekend ? 'bg-light' : ''}">${dayDate.getDate()}</div>`);
+        }
+        current.setDate(current.getDate() + daysToShow);
+    }
+    wrapper.append(headerTop).append(headerDays);
+
+    // 2. Render Rows per Cargo
+    const cargos = [...new Set(proyectosData.map(p => p.cargo_nombre))].sort();
+
+    cargos.forEach(cargo => {
         const row = $('<div class="gantt-row"></div>');
+        const cargoId = proyectosData.find(p => p.cargo_nombre === cargo).CodNivelesCargos;
 
-        // Fila de Cargo - Click para crear proyecto
-        const cargoCell = $(`<div class="gantt-cargo-name" title="Click para nuevo proyecto">${cargo.Nombre}</div>`);
-        cargoCell.on('click', () => PERMISO_CREAR && abrirModalNuevo(cargo.CodNivelesCargos));
-        row.append(cargoCell);
+        row.append(`<div class="gantt-cargo-name" onclick="nuevoProyecto(${cargoId}, '${cargo}')">${cargo}</div>`);
 
-        const content = $(`<div class="gantt-content" data-cargo-id="${cargo.CodNivelesCargos}"></div>`);
+        const content = $('<div class="gantt-content"></div>');
+        const proyectosCargo = proyectosData.filter(p => p.cargo_nombre === cargo);
 
-        // Hoy
-        const hoyPos = calculateDatePosition(new Date());
-        if (hoyPos !== null) content.append(`<div class="gantt-today-line" style="left: ${hoyPos}px"></div>`);
+        // --- STACKING LOGIC ---
+        // Organizamos los proyectos en "niveles" para que no se superpongan
+        let levels = [[]]; // Array de arrays, cada uno es un nivel de visualización
 
-        const proyectosCargo = globalData.proyectos.filter(p => p.CodNivelesCargos == cargo.CodNivelesCargos);
-
-        // Render jerárquico
-        proyectosCargo.filter(p => !p.es_subproyecto).forEach(padre => {
-            content.append(renderProjectBar(padre));
-            if (padre.esta_expandido == 1) {
-                proyectosCargo.filter(p => p.proyecto_padre_id == padre.id).forEach(hijo => {
-                    content.append(renderProjectBar(hijo, true));
-                });
-            }
+        // Primero los proyectos padre, luego hijos
+        const sortedProyectos = proyectosCargo.sort((a, b) => {
+            if (a.es_subproyecto !== b.es_subproyecto) return a.es_subproyecto - b.es_subproyecto;
+            return new Date(a.fecha_inicio) - new Date(b.fecha_inicio);
         });
 
+        sortedProyectos.forEach(p => {
+            // Un subproyecto solo se muestra si su padre está expandido (por defecto true en esta versión, pero controlable)
+            if (p.es_subproyecto == 1) {
+                const padre = proyectosData.find(parent => parent.id == p.proyecto_padre_id);
+                if (padre && padre.expandido === false) return;
+            }
+
+            let levelAssigned = -1;
+            for (let i = 0; i < levels.length; i++) {
+                const collides = levels[i].some(item => {
+                    return (new Date(p.fecha_inicio) < new Date(item.fecha_fin)) &&
+                        (new Date(p.fecha_fin) > new Date(item.fecha_inicio));
+                });
+                if (!collides) {
+                    levelAssigned = i;
+                    break;
+                }
+            }
+
+            if (levelAssigned === -1) {
+                levelAssigned = levels.length;
+                levels.push([]);
+            }
+            levels[levelAssigned].push(p);
+
+            const bar = renderProyectoBar(p, levelAssigned);
+            content.append(bar);
+        });
+
+        // Ajustar altura de la fila según niveles
+        const rowHeight = Math.max(60, (levels.length * 45) + 10);
+        content.css('height', rowHeight + 'px');
+        row.find('.gantt-cargo-name').css('height', rowHeight + 'px');
+
         row.append(content);
-        grid.append(row);
+        wrapper.append(row);
     });
 
-    container.append(grid);
+    // 3. Today Line - Continuous
+    const hoy = new Date();
+    const difHoy = (hoy - fechaInicioGantt) / (1000 * 60 * 60 * 24);
+    if (difHoy >= 0 && difHoy <= 90) {
+        const left = 180 + (difHoy * 40); // 180 is cargo width
+        wrapper.append(`<div class="gantt-today-line-full" style="left: ${left}px"></div>`);
+    }
+
+    container.append(wrapper);
     initInteractions();
 }
 
-function renderProjectBar(p, esSub = false) {
-    const startPos = calculateDatePosition(new Date(p.fecha_inicio));
-    const endPos = calculateDatePosition(new Date(p.fecha_fin));
-    if (startPos === null && endPos === null) return '';
+function renderProyectoBar(p, level) {
+    const start = new Date(p.fecha_inicio);
+    const end = new Date(p.fecha_fin);
+    const difStart = (start - fechaInicioGantt) / (1000 * 60 * 60 * 24);
+    const duration = (end - start) / (1000 * 60 * 60 * 24) + 1;
 
-    const width = (endPos - startPos) + 40;
+    const left = difStart * 40;
+    const width = duration * 40;
+    const top = (level * 45) + 5;
+
+    const isPadre = (p.es_subproyecto == 0);
+    const isExpandido = p.expandido !== false;
 
     const bar = $(`
-        <div class="gantt-bar ${esSub ? 'subproject' : ''}" 
-             id="bar-${p.id}" data-id="${p.id}"
-             style="left: ${startPos}px; width: ${width}px;"
-             title="${p.nombre}\n${p.fecha_inicio} a ${p.fecha_fin}"
-        >
+        <div class="gantt-bar ${p.es_subproyecto == 1 ? 'subproject' : ''}" 
+             data-id="${p.id}" 
+             style="left: ${left}px; width: ${width}px; top: ${top}px;"
+             title="${p.nombre}: ${p.fecha_inicio} al ${p.fecha_fin}">
+            
             <div class="gantt-bar-actions-top">
-                ${!esSub ? `
-                    <button class="gantt-btn-sm" onclick="expandirGantt(${p.id}, ${p.esta_expandido}, event)" title="Ver Subproyectos">
-                        <i class="fas fa-chevron-${p.esta_expandido == 1 ? 'up' : 'down'}"></i>
-                    </button>
-                    <button class="gantt-btn-sm" onclick="abrirModalNuevo(${p.CodNivelesCargos}, ${p.id}, event)" title="Añadir Subproyecto">
+                ${isPadre ? `
+                    <div class="gantt-btn-sm" onclick="toggleExpandir(${p.id}, event)" title="${isExpandido ? 'Contraer' : 'Expandir'}">
+                        <i class="fas ${isExpandido ? 'fa-chevron-up' : 'fa-chevron-down'}"></i>
+                    </div>
+                    <div class="gantt-btn-sm" onclick="nuevoSubproyecto(${p.id}, ${p.CodNivelesCargos}, event)" title="Añadir Subproyecto">
                         <i class="fas fa-plus"></i>
-                    </button>
+                    </div>
                 ` : ''}
-                <button class="gantt-btn-sm bg-danger" onclick="eliminarGantt(${p.id}, event)" title="Eliminar">
+                <div class="gantt-btn-sm bg-danger" onclick="confirmarEliminar(${p.id}, event)" title="Eliminar">
                     <i class="fas fa-times"></i>
-                </button>
+                </div>
             </div>
-            <div class="gantt-bar-title">${p.nombre}</div>
-            <div class="gantt-resize-handle"></div>
+
+            <div class="gantt-bar-title text-truncate">${p.nombre}</div>
+            ${PERMISO_CREAR ? '<div class="gantt-resize-handle"></div>' : ''}
         </div>
     `);
 
-    bar.on('dblclick', (e) => { e.stopPropagation(); abrirModalEditar(p); });
+    bar.on('dblclick', (e) => { e.stopPropagation(); editarProyecto(p); });
+
     return bar;
 }
 
-// --- INTERACCIONES ---
+/** --- ACTIONS & MODALS --- **/
 
-function initInteractions() {
+function nuevoProyecto(cargoId, cargoNombre) {
     if (!PERMISO_CREAR) return;
-
-    $('.gantt-bar').each(function () {
-        const bar = $(this);
-        const id = bar.data('id');
-
-        // Drag Horizontal
-        let isMoving = false;
-        bar.on('mousedown', function (e) {
-            if ($(e.target).hasClass('gantt-resize-handle') || $(e.target).closest('.gantt-bar-actions-top').length) return;
-            isMoving = true;
-            let startX = e.clientX;
-            let initialLeft = parseInt(bar.css('left'));
-
-            $(document).on('mousemove.ganttMove', (me) => {
-                const dx = me.clientX - startX;
-                const newLeft = Math.round((initialLeft + dx) / 40) * 40;
-                bar.css('left', newLeft + 'px');
-            });
-
-            $(document).on('mouseup.ganttMove', async () => {
-                $(document).off('.ganttMove');
-                if (!isMoving) return;
-                isMoving = false;
-                const finalLeft = parseInt(bar.css('left'));
-                if (finalLeft !== initialLeft) {
-                    const days = (finalLeft - initialLeft) / 40;
-                    const proj = globalData.proyectos.find(x => x.id == id);
-                    await apiCall('ajax/gestion_proyectos_actualizar.php', { id, campo: 'fecha_inicio', valor: addDays(proj.fecha_inicio, days) });
-                    await apiCall('ajax/gestion_proyectos_actualizar.php', { id, campo: 'fecha_fin', valor: addDays(proj.fecha_fin, days) });
-                    fetchGanttData();
-                }
-            });
-        });
-
-        // Resize Derecho
-        bar.find('.gantt-resize-handle').on('mousedown', function (e) {
-            e.stopPropagation();
-            let startX = e.clientX;
-            let startWidth = parseInt(bar.css('width'));
-
-            $(document).on('mousemove.ganttResize', (me) => {
-                const dx = me.clientX - startX;
-                const newWidth = Math.max(40, Math.round((startWidth + dx) / 40) * 40);
-                bar.css('width', newWidth + 'px');
-            });
-
-            $(document).on('mouseup.ganttResize', async () => {
-                $(document).off('.ganttResize');
-                const finalWidth = parseInt(bar.css('width'));
-                if (finalWidth !== startWidth) {
-                    const days = (finalWidth - startWidth) / 40;
-                    const proj = globalData.proyectos.find(x => x.id == id);
-                    await apiCall('ajax/gestion_proyectos_actualizar.php', { id, campo: 'fecha_fin', valor: addDays(proj.fecha_fin, days) });
-                    fetchGanttData();
-                }
-            });
-        });
-    });
-}
-
-// --- MODAL ---
-
-function abrirModalNuevo(cargoId, padreId = null, e = null) {
-    if (e) e.stopPropagation();
     $('#formProyecto')[0].reset();
     $('#editProyectoId').val('');
+    $('#editProyectoPadreId').val('');
     $('#editCargoId').val(cargoId);
-    $('#editProyectoPadreId').val(padreId || '');
-    $('#editEsSubproyecto').val(padreId ? 1 : 0);
-    $('#modalTitulo').text(padreId ? 'Nuevo Subproyecto' : 'Nuevo Proyecto');
-
-    // Default dates based on view or parent
-    const today = new Date().toISOString().split('T')[0];
-    $('#editFechaInicio').val(today);
-    $('#editFechaFin').val(today);
-
+    $('#editEsSubproyecto').val(0);
+    $('#modalTitulo').text(`Nuevo Proyecto para ${cargoNombre}`);
     $('#modalProyecto').modal('show');
 }
 
-function abrirModalEditar(p) {
+function nuevoSubproyecto(padreId, cargoId, event) {
+    event.stopPropagation();
+    if (!PERMISO_CREAR) return;
+    $('#formProyecto')[0].reset();
+    $('#editProyectoId').val('');
+    $('#editProyectoPadreId').val(padreId);
+    $('#editCargoId').val(cargoId);
+    $('#editEsSubproyecto').val(1);
+
+    const padre = proyectosData.find(p => p.id == padreId);
+    $('#editNombre').val(`Sub: ${padre.nombre}`);
+    $('#editFechaInicio').val(padre.fecha_inicio);
+    $('#editFechaFin').val(padre.fecha_fin);
+
+    $('#modalTitulo').text(`Añadir Subproyecto`);
+    $('#modalProyecto').modal('show');
+}
+
+function editarProyecto(p) {
+    if (!PERMISO_CREAR) return;
     $('#editProyectoId').val(p.id);
+    $('#editProyectoPadreId').val(p.proyecto_padre_id);
+    $('#editCargoId').val(p.CodNivelesCargos);
+    $('#editEsSubproyecto').val(p.es_subproyecto);
     $('#editNombre').val(p.nombre);
     $('#editDescripcion').val(p.descripcion);
     $('#editFechaInicio').val(p.fecha_inicio);
     $('#editFechaFin').val(p.fecha_fin);
-    $('#editEsSubproyecto').val(p.es_subproyecto);
     $('#modalTitulo').text('Editar Proyecto');
     $('#modalProyecto').modal('show');
 }
@@ -233,256 +250,429 @@ function abrirModalEditar(p) {
 async function guardarProyecto() {
     const data = {
         id: $('#editProyectoId').val(),
+        proyecto_padre_id: $('#editProyectoPadreId').val(),
+        CodNivelesCargos: $('#editCargoId').val(),
+        es_subproyecto: $('#editEsSubproyecto').val(),
         nombre: $('#editNombre').val(),
         descripcion: $('#editDescripcion').val(),
         fecha_inicio: $('#editFechaInicio').val(),
-        fecha_fin: $('#editFechaFin').val(),
-        CodNivelesCargos: $('#editCargoId').val(),
-        proyecto_padre_id: $('#editProyectoPadreId').val(),
-        es_subproyecto: $('#editEsSubproyecto').val()
+        fecha_fin: $('#editFechaFin').val()
     };
 
-    if (!data.nombre) return Swal.fire('Error', 'El nombre es obligatorio', 'error');
-
-    let url = data.id ? 'ajax/gestion_proyectos_actualizar.php' : 'ajax/gestion_proyectos_crear.php';
-
-    // Para simplificar, si es actualizar, el backend actual espera campo/valor. 
-    // Refactoreamos para enviar todo el objeto si es necesario o iterar campos.
-    if (data.id) {
-        const fields = ['nombre', 'descripcion', 'fecha_inicio', 'fecha_fin'];
-        for (const f of fields) {
-            await apiCall(url, { id: data.id, campo: f, valor: data[f] });
-        }
-    } else {
-        await apiCall(url, data);
+    if (!data.nombre || !data.fecha_inicio || !data.fecha_fin) {
+        Swal.fire('Error', 'Completa los campos obligatorios', 'error');
+        return;
     }
 
-    $('#modalProyecto').modal('hide');
-    fetchGanttData();
-}
+    const endpoint = data.id ? 'ajax/gestion_proyectos_actualizar.php' : 'ajax/gestion_proyectos_crear.php';
 
-async function eliminarGantt(id, e) {
-    e.stopPropagation();
-    const res = await apiCall('ajax/gestion_proyectos_eliminar.php', { id });
-    if (res.success) fetchGanttData();
-    else Swal.fire('Error', res.message, 'error');
-}
-
-async function expandirGantt(id, actual, e) {
-    e.stopPropagation();
-    await apiCall('ajax/gestion_proyectos_toggle_expandir.php', { id, expandido: actual == 1 ? 0 : 1 });
-    fetchGanttData();
-}
-
-// --- HISTORIAL & FILTROS ESTÁNDAR ---
-
-async function cargarDatosHistorial() {
     try {
-        const response = await fetch('ajax/gestion_proyectos_get_historial.php?' + new URLSearchParams({
-            pagina: paginaActual,
-            registros_por_pagina: registrosPorPagina,
-            filtros: JSON.stringify(filtrosActivos),
-            orden_columna: ordenActivo.columna,
-            orden_direccion: ordenActivo.direccion
-        }));
+        const response = await fetch(endpoint, {
+            method: 'POST',
+            body: JSON.stringify(data)
+        });
         const res = await response.json();
         if (res.success) {
-            renderizarTablaHistorial(res.datos);
-            renderizarPaginacion(res.total_registros);
+            $('#modalProyecto').modal('hide');
+            Swal.fire('Éxito', res.message, 'success');
+            cargarDatosGantt();
+        } else {
+            Swal.fire('Error', res.message, 'error');
         }
-    } catch (e) { console.error(e); }
+    } catch (e) {
+        Swal.fire('Error', 'Fallo en la comunicación con el servidor', 'error');
+    }
 }
 
-function renderizarTablaHistorial(datos) {
-    const tbody = $('#historialBody').empty();
-    if (!datos.length) return tbody.append('<tr><td colspan="5" class="text-center py-4">No hay registros</td></tr>');
+function confirmarEliminar(id, event) {
+    event.stopPropagation();
+    if (!PERMISO_CREAR) return;
 
-    datos.forEach(row => {
-        tbody.append(`
+    Swal.fire({
+        title: '¿Estás seguro?',
+        text: "Esta acción no se puede deshacer.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#e74c3c',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            eliminarProyecto(id);
+        }
+    });
+}
+
+async function eliminarProyecto(id) {
+    try {
+        const response = await fetch('ajax/gestion_proyectos_eliminar.php', {
+            method: 'POST',
+            body: JSON.stringify({ id })
+        });
+        const res = await response.json();
+        if (res.success) {
+            Swal.fire('Eliminado', res.message, 'success');
+            cargarDatosGantt();
+        } else {
+            Swal.fire('Error', res.message, 'error');
+        }
+    } catch (e) {
+        Swal.fire('Error', 'Ocurrió un error al eliminar', 'error');
+    }
+}
+
+async function toggleExpandir(id, event) {
+    event.stopPropagation();
+    const p = proyectosData.find(item => item.id == id);
+    if (!p) return;
+
+    p.expandido = (p.expandido === false); // Invertir estado local
+
+    // Opcional: Persistir en BD
+    fetch('ajax/gestion_proyectos_toggle_expandir.php', {
+        method: 'POST',
+        body: JSON.stringify({ id, expandido: p.expandido })
+    });
+
+    renderGantt();
+}
+
+/** --- INTERACTIONS (DRAG & RESIZE) --- **/
+
+function initInteractions() {
+    if (!PERMISO_CREAR) return;
+
+    const bars = document.querySelectorAll('.gantt-bar');
+    bars.forEach(bar => {
+        // Drag Horizontal
+        bar.addEventListener('mousedown', iniciarDrag);
+
+        // Resize Borde Derecho
+        const handle = bar.querySelector('.gantt-resize-handle');
+        if (handle) {
+            handle.addEventListener('mousedown', iniciarResize);
+        }
+    });
+}
+
+let elementRef = null;
+let startX = 0;
+let originalLeft = 0;
+let originalWidth = 0;
+
+function iniciarDrag(e) {
+    if (e.target.classList.contains('gantt-resize-handle') || e.target.closest('.gantt-bar-actions-top')) return;
+    elementRef = e.currentTarget;
+    startX = e.clientX;
+    originalLeft = parseFloat(elementRef.style.left);
+
+    document.addEventListener('mousemove', arrastrar);
+    document.addEventListener('mouseup', finalizarDrag);
+    elementRef.style.cursor = 'grabbing';
+}
+
+function arrastrar(e) {
+    if (!elementRef) return;
+    const dx = e.clientX - startX;
+    let newLeft = originalLeft + dx;
+
+    // Snap a días (40px)
+    newLeft = Math.round(newLeft / 40) * 40;
+    elementRef.style.left = newLeft + 'px';
+}
+
+async function finalizarDrag(e) {
+    if (!elementRef) return;
+    document.removeEventListener('mousemove', arrastrar);
+    document.removeEventListener('mouseup', finalizarDrag);
+    elementRef.style.cursor = 'grab';
+
+    const id = elementRef.dataset.id;
+    const newLeft = parseFloat(elementRef.style.left);
+    const daysOffset = Math.round(newLeft / 40);
+
+    const newStart = new Date(fechaInicioGantt);
+    newStart.setDate(newStart.getDate() + daysOffset);
+
+    const p = proyectosData.find(item => item.id == id);
+    const duration = (new Date(p.fecha_fin) - new Date(p.fecha_inicio)) / (1000 * 60 * 60 * 24);
+
+    const newEnd = new Date(newStart);
+    newEnd.setDate(newEnd.getDate() + duration);
+
+    actualizarFechas(id, formatDate(newStart), formatDate(newEnd));
+    elementRef = null;
+}
+
+function iniciarResize(e) {
+    e.stopPropagation();
+    elementRef = e.currentTarget.parentElement;
+    startX = e.clientX;
+    originalWidth = parseFloat(elementRef.style.width);
+
+    document.addEventListener('mousemove', redimensionar);
+    document.addEventListener('mouseup', finalizarResize);
+}
+
+function redimensionar(e) {
+    const dx = e.clientX - startX;
+    let newWidth = originalWidth + dx;
+    newWidth = Math.max(40, Math.round(newWidth / 40) * 40);
+    elementRef.style.width = newWidth + 'px';
+}
+
+async function finalizarResize(e) {
+    document.removeEventListener('mousemove', redimensionar);
+    document.removeEventListener('mouseup', finalizarResize);
+
+    const id = elementRef.dataset.id;
+    const newWidth = parseFloat(elementRef.style.width);
+    const durationDays = Math.round(newWidth / 40);
+
+    const p = proyectosData.find(item => item.id == id);
+    const newEnd = new Date(p.fecha_inicio);
+    newEnd.setDate(newEnd.getDate() + durationDays - 1);
+
+    actualizarFechas(id, p.fecha_inicio, formatDate(newEnd));
+    elementRef = null;
+}
+
+async function actualizarFechas(id, inicio, fin) {
+    try {
+        const response = await fetch('ajax/gestion_proyectos_actualizar.php', {
+            method: 'POST',
+            body: JSON.stringify({ id, fecha_inicio: inicio, fecha_fin: fin })
+        });
+        const res = await response.json();
+        if (res.success) {
+            cargarDatosGantt();
+        } else {
+            Swal.fire('Error', res.message, 'error');
+            renderGantt(); // Revertir visualmente
+        }
+    } catch (e) {
+        renderGantt();
+    }
+}
+
+/** --- HISTORIAL & FILTROS --- **/
+
+async function cargarHistorial(pagina = 1) {
+    currentHistorialPage = pagina;
+    const limit = $('#registrosPorPagina').val();
+
+    try {
+        const params = new URLSearchParams({
+            pagina: pagina,
+            registros_por_pagina: limit,
+            filtros: JSON.stringify(currentFilters)
+        });
+
+        const response = await fetch(`ajax/gestion_proyectos_get_historial.php?${params}`);
+        const res = await response.json();
+
+        if (res.success) {
+            renderTablaHistorial(res.datos);
+            renderPaginacion(res.total_registros, limit, pagina);
+        } else {
+            Swal.fire('Error', res.message, 'error');
+        }
+    } catch (e) {
+        console.error("Error historial:", e);
+    }
+}
+
+function renderTablaHistorial(datos) {
+    const body = $('#historialBody');
+    body.empty();
+
+    if (datos.length === 0) {
+        body.append('<tr><td colspan="5" class="text-center text-muted py-4">No hay proyectos finalizados con estos filtros</td></tr>');
+        return;
+    }
+
+    datos.forEach(p => {
+        body.append(`
             <tr>
-                <td><span class="badge badge-light border">${row.cargo_nombre}</span></td>
-                <td class="font-weight-bold">${row.nombre}</td>
-                <td>${formatFechaLetras(row.fecha_inicio)}</td>
-                <td>${formatFechaLetras(row.fecha_fin)}</td>
-                <td class="small text-muted">${row.descripcion || '-'}</td>
+                <td><span class="badge badge-pill badge-light border px-3 py-2">${p.cargo_nombre}</span></td>
+                <td class="font-weight-bold">${p.nombre}</td>
+                <td><i class="far fa-calendar-alt text-muted mr-1"></i> ${p.fecha_inicio}</td>
+                <td><i class="far fa-calendar-check text-success mr-1"></i> ${p.fecha_fin}</td>
+                <td class="text-muted small">${p.descripcion || '-'}</td>
             </tr>
         `);
     });
 }
 
-// --- LOGICA DE FILTROS (Basada en Estándar Core) ---
-
-function toggleFilter(icon) {
-    const th = $(icon).closest('th');
-    const col = th.data('column');
-    const type = th.data('type');
-
-    if (panelFiltroAbierto && panelFiltroAbierto.col === col) {
-        cerrarTodosFiltros();
-        return;
-    }
-
-    cerrarTodosFiltros();
-
-    const rect = icon.getBoundingClientRect();
-    const panel = $('<div class="filter-panel show"></div>').css({
-        top: (rect.bottom + window.scrollY + 10) + 'px',
-        left: (rect.left - 200) + 'px'
-    });
-
-    panel.append(`<div class="filter-section-title">Filtrar ${th.text().trim()}</div>`);
-
-    if (type === 'text') {
-        const input = $(`<input type="text" class="filter-search" placeholder="Buscar..." value="${filtrosActivos[col] || ''}">`);
-        input.on('keyup', (e) => { if (e.key === 'Enter') aplicarFiltro(col, input.val()); });
-        panel.append(input);
-    } else if (type === 'list') {
-        const listCont = $('<div class="filter-options"><div class="text-center p-2"><i class="fas fa-spinner fa-spin"></i></div></div>');
-        panel.append(listCont);
-        cargarOpcionesLista(col, listCont);
-    } else if (type === 'daterange') {
-        const dcont = $('<div class="daterange-inputs"></div>');
-        dcont.append(`<input type="date" class="form-control form-control-sm mb-2" id="f-desde" value="${filtrosActivos[col + '_desde'] || ''}">`);
-        dcont.append(`<input type="date" class="form-control form-control-sm" id="f-hasta" value="${filtrosActivos[col + '_hasta'] || ''}">`);
-        panel.append(dcont);
-        const btn = $(`<button class="btn btn-sm btn-primary btn-block mt-2">Aplicar</button>`).on('click', () => {
-            filtrosActivos[col + '_desde'] = $('#f-desde').val();
-            filtrosActivos[col + '_hasta'] = $('#f-hasta').val();
-            cerrarTodosFiltros();
-            cargarDatosHistorial();
-        });
-        panel.append(btn);
-    }
-
-    $('body').append(panel);
-    panelFiltroAbierto = { col, panel };
-}
-
-async function cargarOpcionesLista(col, container) {
-    const res = await (await fetch(`ajax/gestion_proyectos_get_opciones_filtro.php?columna=${col}`)).json();
+function renderPaginacion(total, limit, actual) {
+    const container = $('#paginacion');
     container.empty();
-    if (res.success) {
-        res.datos.forEach(opt => {
-            const checked = (filtrosActivos[col] || []).includes(opt.nombre) ? 'checked' : '';
-            const item = $(`
-                <div class="filter-option">
-                    <input type="checkbox" value="${opt.nombre}" ${checked}> ${opt.nombre}
-                </div>
-            `);
-            item.on('click', function (e) {
-                if (e.target.tagName !== 'INPUT') $(this).find('input').prop('checked', !$(this).find('input').prop('checked'));
-                actualizarFiltroLista(col, container);
-            });
-            container.append(item);
-        });
-    }
-}
+    const paginas = Math.ceil(total / limit);
+    if (paginas <= 1) return;
 
-function actualizarFiltroLista(col, container) {
-    const vals = [];
-    container.find('input:checked').each(function () { vals.push($(this).val()); });
-    if (vals.length) filtrosActivos[col] = vals;
-    else delete filtrosActivos[col];
-    cargarDatosHistorial();
-}
+    // Botón Prev
+    container.append(`<button class="pagination-btn" ${actual === 1 ? 'disabled' : ''} onclick="cargarHistorial(${actual - 1})"><i class="fas fa-chevron-left"></i></button>`);
 
-function aplicarFiltro(col, val) {
-    if (val) filtrosActivos[col] = val;
-    else delete filtrosActivos[col];
-    cerrarTodosFiltros();
-    cargarDatosHistorial();
-}
-
-function cerrarTodosFiltros() {
-    $('.filter-panel').remove();
-    panelFiltroAbierto = null;
-}
-
-// --- PAGINACIÓN CORE ---
-
-function renderizarPaginacion(total) {
-    const cont = $('#paginacion').empty();
-    const totalPaginas = Math.ceil(total / registrosPorPagina);
-    if (totalPaginas <= 1) return;
-
-    const btnPrev = $(`<button class="pagination-btn" ${paginaActual === 1 ? 'disabled' : ''}><i class="bi bi-chevron-left"></i></button>`);
-    btnPrev.on('click', () => { paginaActual--; cargarDatosHistorial(); });
-    cont.append(btnPrev);
-
-    for (let i = 1; i <= totalPaginas; i++) {
-        if (i === 1 || i === totalPaginas || (i >= paginaActual - 2 && i <= paginaActual + 2)) {
-            const btn = $(`<button class="pagination-btn ${i === paginaActual ? 'active' : ''}">${i}</button>`);
-            btn.on('click', () => { paginaActual = i; cargarDatosHistorial(); });
-            cont.append(btn);
-        } else if (i === paginaActual - 3 || i === paginaActual + 3) {
-            cont.append('<span class="px-2">...</span>');
+    // Páginas (simplificado)
+    for (let i = 1; i <= paginas; i++) {
+        if (i === 1 || i === paginas || (i >= actual - 1 && i <= actual + 1)) {
+            container.append(`<button class="pagination-btn ${i === actual ? 'active' : ''}" onclick="cargarHistorial(${i})">${i}</button>`);
+        } else if (i === actual - 2 || i === actual + 2) {
+            container.append('<span class="px-2">...</span>');
         }
     }
 
-    const btnNext = $(`<button class="pagination-btn" ${paginaActual === totalPaginas ? 'disabled' : ''}><i class="bi bi-chevron-right"></i></button>`);
-    btnNext.on('click', () => { paginaActual++; cargarDatosHistorial(); });
-    cont.append(btnNext);
+    // Botón Next
+    container.append(`<button class="pagination-btn" ${actual === paginas ? 'disabled' : ''} onclick="cargarHistorial(${actual + 1})"><i class="fas fa-chevron-right"></i></button>`);
 }
 
-function cambiarRegistrosPorPagina() {
-    registrosPorPagina = parseInt($('#registrosPorPagina').val());
-    paginaActual = 1;
-    cargarDatosHistorial();
-}
+/** --- DINAMIC FILTERS CORE --- **/
 
-// --- UTILS ---
+function toggleFilter(icon) {
+    const th = $(icon).closest('th');
+    const column = th.data('column');
+    const type = th.data('type');
 
-function calculateDatePosition(date) {
-    const start = new Date(fechaInicioVista); start.setHours(0, 0, 0, 0);
-    const target = new Date(date); target.setHours(0, 0, 0, 0);
-    const diff = Math.floor((target - start) / (1000 * 60 * 60 * 24));
-    if (diff < 0 || diff >= 90) return null;
-    return diff * 40;
-}
-
-function generateTimeHeaders() {
-    const h = $('<div class="gantt-header"></div>');
-    const top = $('<div class="gantt-header-top"></div>');
-    const days = $('<div class="gantt-header-days"></div>');
-    let curr = new Date(fechaInicioVista);
-    const meses = {};
-    for (let i = 0; i < 90; i++) {
-        const d = new Date(curr);
-        const mKey = d.toLocaleString('es', { month: 'long', year: 'numeric' });
-        meses[mKey] = (meses[mKey] || 0) + 1;
-        days.append(`<div class="gantt-day-label">${d.getDate()}</div>`);
-        curr.setDate(curr.getDate() + 1);
+    // Si ya existe el panel de este icono, lo cerramos
+    if ($(`.filter-panel[data-col="${column}"]`).is(':visible')) {
+        $('.filter-panel').removeClass('show');
+        return;
     }
-    Object.keys(meses).forEach(m => {
-        const w = meses[m] * 40;
-        top.append(`<div class="gantt-month" style="width:${w}px; min-width:${w}px">${m}</div>`);
+
+    $('.filter-panel').remove(); // Limpiar previos
+
+    const panel = $(`<div class="filter-panel show" data-col="${column}"></div>`);
+    const pos = $(icon).offset();
+    panel.css({ top: pos.top + 25, left: Math.min(pos.left, $(window).width() - 280) });
+
+    if (type === 'list') {
+        renderListFilter(panel, column);
+    } else if (type === 'daterange') {
+        renderDateFilter(panel, column);
+    } else {
+        renderTextFilter(panel, column);
+    }
+
+    $('body').append(panel);
+}
+
+function renderListFilter(panel, column) {
+    const options = filterOptions[column] || [];
+    const selected = currentFilters[column] || [];
+
+    panel.append('<span class="filter-section-title">Seleccionar opciones</span>');
+    panel.append('<input type="text" class="filter-search mb-2" placeholder="Buscar..." onkeyup="filterOptionsList(this)">');
+
+    const list = $('<div class="filter-options"></div>');
+    options.forEach(opt => {
+        const isChecked = selected.includes(opt);
+        list.append(`
+            <label class="filter-option">
+                <input type="checkbox" value="${opt}" ${isChecked ? 'checked' : ''} onchange="updateListFilter('${column}')">
+                ${opt}
+            </label>
+        `);
     });
-    return h.append(top).append(days);
+    panel.append(list);
+    panel.append('<button class="btn btn-sm btn-block btn-primary mt-3" onclick="aplicarFiltros()">Aplicar</button>');
 }
 
-async function apiCall(url, data) {
-    const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
-    return await r.json();
+function renderDateFilter(panel, column) {
+    panel.append('<span class="filter-section-title">Rango de fechas</span>');
+    panel.append(`
+        <div class="daterange-inputs">
+            <input type="date" class="form-control form-control-sm" id="f_desde" value="${currentFilters[column + '_desde'] || ''}" placeholder="Desde">
+            <input type="date" class="form-control form-control-sm" id="f_hasta" value="${currentFilters[column + '_hasta'] || ''}" placeholder="Hasta">
+        </div>
+        <button class="btn btn-sm btn-block btn-primary mt-3" onclick="updateDateFilter('${column}')">Aplicar</button>
+        <button class="btn btn-sm btn-block btn-link text-muted" onclick="limpiarFiltro('${column}')">Limpiar</button>
+    `);
 }
 
-function addDays(dStr, days) {
-    const d = new Date(dStr + "T00:00:00");
-    d.setDate(d.getDate() + days);
-    return d.toISOString().split('T')[0];
+function renderTextFilter(panel, column) {
+    panel.append('<span class="filter-section-title">Buscar texto</span>');
+    panel.append(`
+        <input type="text" class="filter-search" value="${currentFilters[column] || ''}" onkeypress="if(event.key==='Enter') updateTextFilter('${column}', this.value)">
+        <button class="btn btn-sm btn-block btn-primary mt-3" onclick="updateTextFilter('${column}', $(this).prev().val())">Buscar</button>
+    `);
 }
 
-function formatFechaLetras(s) {
-    const d = new Date(s + "T00:00:00");
-    return d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: '2-digit' }).replace(/ /g, '-').replace(/\./g, '');
+function updateListFilter(column) {
+    const selected = [];
+    $(`.filter-panel[data-col="${column}"] input:checked`).each(function () {
+        selected.push($(this).val());
+    });
+    currentFilters[column] = selected;
+    actualizarIconoFiltro(column, selected.length > 0);
+}
+
+function updateDateFilter(column) {
+    currentFilters[column + '_desde'] = $('#f_desde').val();
+    currentFilters[column + '_hasta'] = $('#f_hasta').val();
+    actualizarIconoFiltro(column, !!(currentFilters[column + '_desde'] || currentFilters[column + '_hasta']));
+    aplicarFiltros();
+}
+
+function updateTextFilter(column, value) {
+    currentFilters[column] = value;
+    actualizarIconoFiltro(column, !!value);
+    aplicarFiltros();
+}
+
+function actualizarIconoFiltro(column, active) {
+    $(`th[data-column="${column}"] .filter-icon`).toggleClass('active', active);
+}
+
+function aplicarFiltros() {
+    $('.filter-panel').removeClass('show');
+    cargarHistorial(1);
+}
+
+function limpiarFiltro(column) {
+    delete currentFilters[column];
+    delete currentFilters[column + '_desde'];
+    delete currentFilters[column + '_hasta'];
+    actualizarIconoFiltro(column, false);
+    aplicarFiltros();
+}
+
+async function cargarOpcionesFiltro() {
+    try {
+        const response = await fetch('ajax/gestion_proyectos_get_opciones_filtro.php');
+        const res = await response.json();
+        if (res.success) {
+            filterOptions.cargo = res.cargos;
+        }
+    } catch (e) { }
+}
+
+function filterOptionsList(input) {
+    const val = input.value.toLowerCase();
+    $(input).next('.filter-options').find('.filter-option').each(function () {
+        const text = $(this).text().toLowerCase();
+        $(this).toggle(text.includes(val));
+    });
+}
+
+/** --- UTILS --- **/
+
+function navegarGantt(dir) {
+    const offset = dir === 'anterior' ? -30 : 30;
+    fechaInicioGantt.setDate(fechaInicioGantt.getDate() + offset);
+    renderGantt();
 }
 
 function irAHoy() {
-    const h = new Date(); h.setDate(h.getDate() - 15);
-    fechaInicioVista = h;
-    fetchGanttData();
+    fechaInicioGantt = new Date();
+    fechaInicioGantt.setDate(fechaInicioGantt.getDate() - 30);
+    renderGantt();
 }
 
-function navegarGantt(dir) {
-    fechaInicioVista.setMonth(fechaInicioVista.getMonth() + (dir === 'anterior' ? -1 : 1));
-    fetchGanttData();
+function cambiarRegistrosPorPagina() {
+    cargarHistorial(1);
+}
+
+function formatDate(date) {
+    return date.toISOString().split('T')[0];
 }
