@@ -53,13 +53,13 @@ $permisoCrear = tienePermiso('gestion_proyectos', 'crear_proyecto', $cargoOperar
                         </div>
                         <div class="gantt-controls d-flex">
                             <div class="btn-group">
-                                <button class="btn btn-sm btn-success" onclick="navegarGantt('anterior')">
+                                <button class="btn btn-sm btn-gantt-nav" onclick="navegarGantt('anterior')">
                                     <i class="fas fa-chevron-left"></i> Anterior
                                 </button>
-                                <button class="btn btn-sm btn-success mx-1" onclick="irAHoy()">
+                                <button class="btn btn-sm btn-gantt-nav mx-1" onclick="irAHoy()">
                                     Hoy
                                 </button>
-                                <button class="btn btn-sm btn-success" onclick="navegarGantt('siguiente')">
+                                <button class="btn btn-sm btn-gantt-nav" onclick="navegarGantt('siguiente')">
                                     Siguiente <i class="fas fa-chevron-right"></i>
                                 </button>
                             </div>

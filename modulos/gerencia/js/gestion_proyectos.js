@@ -111,13 +111,20 @@ function renderGantt(cargosList = []) {
             let padreLevel = findBestLevel(padre, levels);
             levels[padreLevel].push(padre);
             content.append(renderProyectoBar(padre, padreLevel));
-
+            // Si está expandido, procesar sus hijos inmediatamente debajo
             if (parseInt(padre.esta_expandido) !== 0) {
                 const hijos = proyectosCargo.filter(p => p.proyecto_padre_id == padre.id).sort((a, b) => new Date(a.fecha_inicio) - new Date(b.fecha_inicio));
+
+                let nextChildLevel = padreLevel + 1;
                 hijos.forEach(hijo => {
-                    let hijoLevel = findBestLevel(hijo, levels, padreLevel + 1);
+                    // Cada hijo del mismo padre DEBE estar en su propia fila debajo del anterior
+                    let hijoLevel = nextChildLevel;
+                    // Aseguramos que el array de niveles tenga espacio
+                    while (levels.length <= hijoLevel) levels.push([]);
+
                     levels[hijoLevel].push(hijo);
                     content.append(renderProyectoBar(hijo, hijoLevel));
+                    nextChildLevel++; // El siguiente hijo irá una fila más abajo
                 });
             }
         });

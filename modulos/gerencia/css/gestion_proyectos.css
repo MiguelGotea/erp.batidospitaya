@@ -407,3 +407,20 @@
     opacity: 0.5;
     cursor: not-allowed;
 }
+
+/* Custom Navigation Buttons */
+.btn-gantt-nav {
+    background-color: var(--color-principal) !important;
+    border-color: var(--color-principal) !important;
+    color: white !important;
+    font-weight: 600 !important;
+    transition: all 0.2s !important;
+}
+
+.btn-gantt-nav:hover {
+    background-color: var(--color-oscuro) !important;
+    border-color: var(--color-oscuro) !important;
+    color: white !important;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}

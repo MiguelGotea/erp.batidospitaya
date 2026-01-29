@@ -65,13 +65,15 @@ try {
     if (isset($updates['fecha_inicio']) || isset($updates['fecha_fin'])) {
         $nuevaFechaInicio = $updates['fecha_inicio'] ?? $proyecto['fecha_inicio'];
         $nuevaFechaFin = $updates['fecha_fin'] ?? $proyecto['fecha_fin'];
+        $movimientoCascada = $data['movimiento_cascada'] ?? null;
 
         if (strtotime($nuevaFechaFin) < strtotime($nuevaFechaInicio)) {
             throw new Exception("La fecha de fin debe ser posterior a la de inicio");
         }
 
         // Si es PADRE, validar que no se contraiga más allá de sus hijos
-        if ($proyecto['es_subproyecto'] == 0) {
+        // NOTA: Se evita esta validación si es un movimiento en cascada (desplazamiento en bloque)
+        if (!$movimientoCascada && $proyecto['es_subproyecto'] == 0) {
             $sqlHijos = "SELECT MIN(fecha_inicio) as min_ini, MAX(fecha_fin) as max_fin 
                          FROM gestion_proyectos_proyectos WHERE proyecto_padre_id = :id";
             $stmtHijos = $conn->prepare($sqlHijos);
