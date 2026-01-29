@@ -37,7 +37,8 @@ try {
     $ordenDir = isset($_GET['orden_direccion']) ? $_GET['orden_direccion'] : 'DESC';
 
     // Construcción de la consulta con filtros
-    $where = ["p.fecha_fin < CURDATE()", "p.es_subproyecto = 0"]; // Solo proyectos padre finalizados
+    // Solo proyectos padre donde AMBAS fechas están fuera del año actual
+    $where = ["p.es_subproyecto = 0", "YEAR(p.fecha_inicio) < YEAR(CURDATE())", "YEAR(p.fecha_fin) < YEAR(CURDATE())"];
     $params = [];
 
     if (!empty($filtros['cargo']) && is_array($filtros['cargo'])) {

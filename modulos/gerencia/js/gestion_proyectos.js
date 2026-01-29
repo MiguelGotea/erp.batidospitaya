@@ -135,7 +135,14 @@ function renderGantt(cargosList = []) {
         row.append(`<div class="gantt-cargo-name" onclick="nuevoProyecto(${cargoId}, '${cargo}')">${cargo}</div>`);
 
         const content = $('<div class="gantt-content"></div>');
-        const proyectosCargo = proyectosData.filter(p => p.CodNivelesCargos == cargoId);
+        // Filtrar proyectos de este cargo
+        // Los subproyectos solo se incluyen si su padre existe en proyectosData
+        const proyectosCargo = proyectosData.filter(p => {
+            if (p.CodNivelesCargos != cargoId) return false;
+            if (p.es_subproyecto == 0) return true; // Incluir todos los padres
+            // Para subproyectos, verificar que el padre exista
+            return proyectosData.some(padre => padre.id == p.proyecto_padre_id);
+        });
 
         // Hierarchical Stacking Logic
         let levels = [[]];

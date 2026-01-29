@@ -25,7 +25,9 @@ try {
     $stmtCargos->execute();
     $cargos = $stmtCargos->fetchAll(PDO::FETCH_ASSOC);
 
-    // 2. Obtener proyectos activos (fecha_fin >= HOY)
+    // 2. Obtener proyectos del año en curso
+    // Proyectos padre: se muestran si fecha_inicio O fecha_fin está en el año actual
+    // Subproyectos: se incluyen todos (el filtrado se hace en frontend según visibilidad del padre)
     $sqlProyectos = "SELECT 
                         p.id,
                         p.nombre,
@@ -40,7 +42,8 @@ try {
                         nc.Nombre as cargo_nombre
                     FROM gestion_proyectos_proyectos p
                     INNER JOIN NivelesCargos nc ON p.CodNivelesCargos = nc.CodNivelesCargos
-                    WHERE p.fecha_fin >= CURDATE()
+                    WHERE (p.es_subproyecto = 1) 
+                       OR (p.es_subproyecto = 0 AND (YEAR(p.fecha_inicio) = YEAR(CURDATE()) OR YEAR(p.fecha_fin) = YEAR(CURDATE())))
                     ORDER BY nc.Peso ASC, p.orden_visual ASC";
     $stmtProyectos = $conn->prepare($sqlProyectos);
     $stmtProyectos->execute();
