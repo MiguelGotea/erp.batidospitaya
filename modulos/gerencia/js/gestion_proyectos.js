@@ -53,7 +53,6 @@ async function cargarDatosGantt() {
             // Only reset expansion state on first load, preserve it on reloads
             if (primeraVez) {
                 proyectosData.forEach(p => p.esta_expandido = 0);
-                primeraVez = false;
             }
 
             // Calculate start date based on earliest project
@@ -73,6 +72,9 @@ async function cargarDatosGantt() {
             }
 
             renderGantt(res.cargos || []);
+
+            // Mark as no longer first load after rendering
+            primeraVez = false;
         } else {
             console.error(res.message);
         }
@@ -180,8 +182,10 @@ function renderGantt(cargosList = []) {
     container.append(wrapper);
     initInteractions();
 
-    // Scroll to today's date on initial load
-    scrollToToday();
+    // Only scroll to today's date on first load, preserve scroll position on reloads
+    if (primeraVez) {
+        scrollToToday();
+    }
     setTimeout(() => initDragToScroll(), 100);
 }
 
