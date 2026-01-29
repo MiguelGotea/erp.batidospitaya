@@ -49,7 +49,7 @@ try {
     }
     // Caso 2: Formato nuevo/múltiple (campos directos en el body)
     else {
-        $camposPermitidos = ['nombre', 'descripcion', 'fecha_inicio', 'fecha_fin', 'orden_visual', 'CodNivelesCargos', 'esta_expandido'];
+        $camposPermitidos = ['nombre', 'descripcion', 'fecha_inicio', 'fecha_fin', 'orden_visual', 'CodNivelesCargos', 'esta_expandido', 'color'];
         foreach ($camposPermitidos as $cp) {
             if (isset($data[$cp])) {
                 $updates[$cp] = $data[$cp];

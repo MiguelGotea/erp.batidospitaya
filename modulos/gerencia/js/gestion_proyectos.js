@@ -11,6 +11,11 @@ let cargandoGantt = false;
 let primeraVez = true; // Track if this is the first load
 let fueMovido = false; // Flag to skip click if bar was dragged
 
+const GANTT_COLORS = [
+    '#dc3545', '#fd7e14', '#ffc107', '#28a745', '#20c997', '#17a2b8',
+    '#007bff', '#6610f2', '#6f42c1', '#e83e8c', '#6c757d', '#343a40'
+];
+
 // Configuración Historial
 let currentHistorialPage = 1;
 let currentFilters = {};
@@ -249,6 +254,18 @@ function renderProyectoBar(p, level, currentEndDate) {
     const isExpandido = parseInt(p.esta_expandido) !== 0;
     const tieneHijos = isPadre && proyectosData.some(hijo => hijo.proyecto_padre_id == p.id);
 
+    // Color logic
+    let barStyle = `left: ${left}px; width: ${width}px; top: ${top}px;`;
+    if (p.color) {
+        if (isPadre) {
+            barStyle += `background-color: ${p.color}; border-color: rgba(0,0,0,0.2);`;
+        } else {
+            // Subproject: lighter version (40% opacity)
+            barStyle += `background-color: ${p.color}66; border-color: ${p.color}; border-style: dashed; color: #333;`;
+        }
+    }
+    if (isPadre) barStyle += 'cursor: pointer;';
+
     // Formatear fecha de fin para mostrar al lado derecho
     const fechaFin = new Date(p.fecha_fin);
     const dia = fechaFin.getDate();
@@ -282,7 +299,7 @@ function renderProyectoBar(p, level, currentEndDate) {
         <div class="gantt-bar ${p.es_subproyecto == 1 ? 'subproject' : ''}" 
              data-id="${p.id}" 
              ${isPadre ? `onclick="toggleExpandir(${p.id}, event)"` : ''}
-             style="left: ${left}px; width: ${width}px; top: ${top}px; ${isPadre ? 'cursor: pointer;' : ''}"
+             style="${barStyle}"
              title="${p.nombre}: ${p.fecha_inicio} al ${p.fecha_fin}">
             <div class="gantt-bar-actions-top">
                 ${actionButtons}
@@ -305,6 +322,10 @@ function nuevoProyecto(cargoId, cargoNombre) {
     $('#editEsSubproyecto').val(0);
     $('#editFechaInicio').prop('disabled', false);
     $('#editFechaFin').prop('disabled', false);
+
+    $('#colorPickerGroup').show();
+    seleccionarColor(GANTT_COLORS[0]); // Default first color
+
     $('#modalTitulo').text(`Nuevo Proyecto para ${cargoNombre}`);
     $('#modalProyecto').modal('show');
 }
@@ -318,6 +339,9 @@ function nuevoSubproyecto(padreId, cargoId, event) {
     $('#editEsSubproyecto').val(1);
     $('#editFechaInicio').prop('disabled', false);
     $('#editFechaFin').prop('disabled', false);
+
+    $('#colorPickerGroup').hide(); // Subprojects inherit color, don't pick it
+    $('#editColor').val('');
 
     const padre = proyectosData.find(p => p.id == padreId);
     $('#editNombre').val(`Sub: ${padre.nombre}`);
@@ -341,6 +365,14 @@ window.editarProyecto = function (id, event) {
     $('#editDescripcion').val(p.descripcion);
     $('#editFechaInicio').val(p.fecha_inicio).prop('disabled', true);
     $('#editFechaFin').val(p.fecha_fin).prop('disabled', true);
+
+    if (p.es_subproyecto == 0) {
+        $('#colorPickerGroup').show();
+        seleccionarColor(p.color || GANTT_COLORS[0]);
+    } else {
+        $('#colorPickerGroup').hide();
+    }
+
     $('#modalTitulo').text('Editar Proyecto');
     $('#modalProyecto').modal('show');
 }
@@ -354,7 +386,8 @@ async function guardarProyecto() {
         nombre: $('#editNombre').val(),
         descripcion: $('#editDescripcion').val(),
         fecha_inicio: $('#editFechaInicio').val(),
-        fecha_fin: $('#editFechaFin').val()
+        fecha_fin: $('#editFechaFin').val(),
+        color: $('#editColor').val()
     };
 
     if (!data.nombre || !data.fecha_inicio || !data.fecha_fin) {
@@ -866,5 +899,26 @@ function initDragToScroll() {
         ganttWrapper.scrollLeft = scrollLeft - walk;
     });
 }
+
+/** --- COLOR PICKER --- **/
+function initColorPicker() {
+    const container = $('#colorPickerOptions');
+    if (!container.length) return;
+    container.empty();
+    GANTT_COLORS.forEach(color => {
+        const div = $(`<div class="color-option" style="background-color: ${color}" data-color="${color}"></div>`);
+        div.on('click', () => seleccionarColor(color));
+        container.append(div);
+    });
+}
+
+function seleccionarColor(color) {
+    $('#editColor').val(color);
+    $('.color-option').removeClass('selected').filter(`[data-color="${color}"]`).addClass('selected');
+}
+
+$(document).ready(() => {
+    initColorPicker();
+});
 
 

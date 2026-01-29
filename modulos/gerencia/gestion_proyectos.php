@@ -138,6 +138,11 @@ $permisoCrear = tienePermiso('gestion_proyectos', 'crear_proyecto', $cargoOperar
                             <label>Descripción</label>
                             <textarea id="editDescripcion" class="form-control" rows="3"></textarea>
                         </div>
+                        <div class="form-group" id="colorPickerGroup">
+                            <label>Color de Categoría</label>
+                            <div class="color-picker-container" id="colorPickerOptions"></div>
+                            <input type="hidden" id="editColor" value="">
+                        </div>
                         <div class="row">
                             <div class="col-6">
                                 <div class="form-group">

@@ -40,12 +40,14 @@ try {
                         p.es_subproyecto,
                         p.proyecto_padre_id,
                         p.esta_expandido,
+                        COALESCE(p.color, parent.color) as color,
                         nc.Nombre as cargo_nombre
                     FROM gestion_proyectos_proyectos p
                     INNER JOIN NivelesCargos nc ON p.CodNivelesCargos = nc.CodNivelesCargos
+                    LEFT JOIN gestion_proyectos_proyectos parent ON p.proyecto_padre_id = parent.id
                     WHERE (p.es_subproyecto = 1) 
                        OR (p.es_subproyecto = 0 AND (YEAR(p.fecha_inicio) = YEAR(CURDATE()) OR YEAR(p.fecha_fin) = YEAR(CURDATE())))
-                    ORDER BY nc.Peso ASC, p.orden_visual ASC";
+                    ORDER BY nc.Peso ASC, color ASC, p.orden_visual ASC";
     $stmtProyectos = $conn->prepare($sqlProyectos);
     $stmtProyectos->execute();
     $proyectos = $stmtProyectos->fetchAll(PDO::FETCH_ASSOC);

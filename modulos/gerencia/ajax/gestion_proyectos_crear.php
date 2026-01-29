@@ -26,6 +26,7 @@ $fechaInicio = $data['fecha_inicio'] ?? null;
 $fechaFin = $data['fecha_fin'] ?? null;
 $esSubproyecto = (int) ($data['es_subproyecto'] ?? 0);
 $proyectoPadreId = !empty($data['proyecto_padre_id']) ? $data['proyecto_padre_id'] : null;
+$color = $data['color'] ?? null;
 
 // Validaciones básicas
 if (!$codNivelesCargos || !$fechaInicio || !$fechaFin) {
@@ -43,8 +44,8 @@ try {
 
     // 1. Insertar el proyecto
     $sqlInsert = "INSERT INTO gestion_proyectos_proyectos 
-                    (nombre, descripcion, CodNivelesCargos, fecha_inicio, fecha_fin, es_subproyecto, proyecto_padre_id, creado_por) 
-                  VALUES (:nombre, :descripcion, :cargo, :inicio, :fin, :es_sub, :padre, :creador)";
+                    (nombre, descripcion, CodNivelesCargos, fecha_inicio, fecha_fin, es_subproyecto, proyecto_padre_id, color, creado_por) 
+                  VALUES (:nombre, :descripcion, :cargo, :inicio, :fin, :es_sub, :padre, :color, :creador)";
 
     $stmt = $conn->prepare($sqlInsert);
     $stmt->execute([
@@ -55,6 +56,7 @@ try {
         ':fin' => $fechaFin,
         ':es_sub' => $esSubproyecto,
         ':padre' => $proyectoPadreId,
+        ':color' => $color,
         ':creador' => $idOperario
     ]);
 
