@@ -207,7 +207,8 @@ function renderProyectoBar(p, level) {
     const fechaFin = new Date(p.fecha_fin);
     const dia = fechaFin.getDate();
     const mesAbrev = fechaFin.toLocaleString('es-ES', { month: 'short' }).replace('.', '').substring(0, 2);
-    const fechaFinFormateada = `${dia}/${mesAbrev.charAt(0).toUpperCase() + mesAbrev.slice(1)}`;
+    const mesCapitalizado = mesAbrev.charAt(0).toUpperCase() + mesAbrev.slice(1);
+    const fechaFinFormateada = dia + "/" + mesCapitalizado;
 
     const bar = $(`
         <div class="gantt-bar ${p.es_subproyecto == 1 ? 'subproject' : ''}" 
@@ -800,3 +801,5 @@ function initDragToScroll() {
     });
 }
 
+
+    const fechaFinFormateada = dia + "/" + mesCapitalizado;
