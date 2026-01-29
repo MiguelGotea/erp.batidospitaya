@@ -1,6 +1,7 @@
 // gestion_proyectos.js
 // Lógica principal del Diagrama de Gantt
 
+
 let fechaInicioGantt = new Date();
 fechaInicioGantt.setDate(fechaInicioGantt.getDate() - 1); // Hoy es la segunda columna
 let proyectosData = [];
