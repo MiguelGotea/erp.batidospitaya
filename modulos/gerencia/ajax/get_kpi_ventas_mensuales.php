@@ -90,7 +90,7 @@ try {
             $stmtMeta->execute([$codSucursal, $primerDiaMes, $ultimoDiaMes]);
             $metaRow = $stmtMeta->fetch();
             $metaTotal = $metaRow['total_meta'] ?: 0;
-            $metaVal = $metaTotal > 0 ? round(($metaTotal / $daysInMonth) / 1000, 1) : 0;
+            $metaVal = $metaTotal > 0 ? ($metaTotal / $daysInMonth) / 1000 : 0;
 
             // Get Real Sales and Worked Days
             $realVal = 0;
@@ -109,14 +109,14 @@ try {
                 $diasTrabajados = (int) ($realRow['dias_trabajados'] ?: 0);
 
                 if ($diasCalendario > 0) {
-                    $realVal = round(($realTotal / $diasCalendario) / 1000, 1);
+                    $realVal = ($realTotal / $diasCalendario) / 1000;
                 }
             }
 
             // Calculate Variation
             $varPct = 0;
             if ($metaVal > 0) {
-                $varPct = round((($realVal - $metaVal) / $metaVal) * 100, 1);
+                $varPct = (($realVal - $metaVal) / $metaVal) * 100;
             }
 
             $datosMes['valores'][$codSucursal] = [

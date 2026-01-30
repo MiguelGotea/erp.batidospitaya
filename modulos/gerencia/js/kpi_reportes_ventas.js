@@ -51,7 +51,6 @@ function renderKPITable() {
     let html = `
         <div class="kpi-ventas-section">
             <div class="kpi-header">
-                <h4><i class="fas fa-chart-line text-primary"></i> KPI de Ventas por Sucursal</h4>
                 <div class="kpi-nav">
                     <button class="btn-kpi-nav" onclick="moveMonth(-1)" ${currentStartMonth === 1 ? 'disabled' : ''}>
                         <i class="fas fa-chevron-left"></i>
