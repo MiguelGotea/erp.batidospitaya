@@ -61,7 +61,7 @@ $cargoOperario = $usuario['CodNivelesCargos'];
 
         .iframe-container {
             flex: 1;
-            width: 80%;
+            width: 100%;
             position: relative;
             overflow: hidden;
             padding: 0;
