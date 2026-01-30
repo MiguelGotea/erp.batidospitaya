@@ -5,6 +5,7 @@ require_once '../../core/layout/menu_lateral.php';
 require_once '../../core/layout/header_universal.php';
 require_once '../../core/permissions/permissions.php';
 
+
 $usuario = obtenerUsuarioActual();
 // Obtener cargo del operario para el menú
 $cargoOperario = $usuario['CodNivelesCargos'];
