@@ -64,24 +64,26 @@ function renderKPITable() {
             <div class="kpi-table-wrapper">
                 <table class="kpi-table" id="tablaKpiVentas">
                     <colgroup>
-                        <col style="width: 180px;">
+                        <col style="width: 160px;">
                         ${visibleMonths.map(() => `
-                            <col style="width: 75px;">
-                            <col style="width: 75px;">
-                            <col style="width: 75px;">
+                            <col style="width: 65px;">
+                            <col style="width: 65px;">
+                            <col style="width: 65px;">
+                            <col style="width: 65px;">
                         `).join('')}
                     </colgroup>
                     <thead>
                         <tr>
                             <th class="tienda-col" rowspan="2">Tienda</th>
                             ${visibleMonths.map(m => `
-                                <th colspan="3" class="month-header">${meses[m].nombre}-${kpiData.actual.año.toString().slice(-2)}</th>
+                                <th colspan="4" class="month-header">${meses[m].nombre}-${kpiData.actual.año.toString().slice(-2)}</th>
                             `).join('')}
                         </tr>
                         <tr>
                             ${visibleMonths.map(m => `
                                 <th class="sub-header">Meta</th>
                                 <th class="sub-header">Real</th>
+                                <th class="sub-header">V. Cal</th>
                                 <th class="sub-header">%Var.</th>
                             `).join('')}
                         </tr>
@@ -105,10 +107,11 @@ function renderBranchGroup(branches, visibleMonths, label) {
             <tr>
                 <td class="tienda-col">${s.nombre}</td>
                 ${visibleMonths.map(m => {
-            const val = kpiData.meses[m].valores[s.codigo] || { meta: 0, real: 0, var: 0 };
+            const val = kpiData.meses[m].valores[s.codigo] || { meta: 0, real: 0, calendario: 0, var: 0 };
             return `
                         <td>${formatNumber(val.meta)}</td>
                         <td>${val.real > 0 ? formatNumber(val.real) : '-'}</td>
+                        <td class="cal-cell">${val.calendario > 0 ? formatNumber(val.calendario) : '-'}</td>
                         <td class="var-cell">${renderVariation(val.var, val.real)}</td>
                     `;
         }).join('')}
@@ -121,16 +124,18 @@ function renderBranchGroup(branches, visibleMonths, label) {
         <tr class="group-row">
             <td class="tienda-col">${label}</td>
             ${visibleMonths.map(m => {
-        let subMeta = 0, subReal = 0;
+        let subMeta = 0, subReal = 0, subCal = 0;
         branches.forEach(s => {
-            const val = kpiData.meses[m].valores[s.codigo] || { meta: 0, real: 0 };
+            const val = kpiData.meses[m].valores[s.codigo] || { meta: 0, real: 0, calendario: 0 };
             subMeta += val.meta;
             subReal += val.real;
+            subCal += val.calendario;
         });
         let subVar = subMeta > 0 ? ((subReal - subMeta) / subMeta) * 100 : 0;
         return `
                     <td>${formatNumber(subMeta)}</td>
                     <td>${subReal > 0 ? formatNumber(subReal) : '-'}</td>
+                    <td class="cal-cell">${subCal > 0 ? formatNumber(subCal) : '-'}</td>
                     <td class="var-cell">${renderVariation(subVar, subReal)}</td>
                 `;
     }).join('')}
@@ -145,16 +150,18 @@ function renderTotalRow(branches, visibleMonths) {
         <tr class="total-row">
             <td class="tienda-col">Total</td>
             ${visibleMonths.map(m => {
-        let totMeta = 0, totReal = 0;
+        let totMeta = 0, totReal = 0, totCal = 0;
         branches.forEach(s => {
-            const val = kpiData.meses[m].valores[s.codigo] || { meta: 0, real: 0 };
+            const val = kpiData.meses[m].valores[s.codigo] || { meta: 0, real: 0, calendario: 0 };
             totMeta += val.meta;
             totReal += val.real;
+            totCal += val.calendario;
         });
         let totVar = totMeta > 0 ? ((totReal - totMeta) / totMeta) * 100 : 0;
         return `
                     <td>${formatNumber(totMeta)}</td>
                     <td>${totReal > 0 ? formatNumber(totReal) : '-'}</td>
+                    <td class="cal-cell">${totCal > 0 ? formatNumber(totCal) : '-'}</td>
                     <td class="var-cell">${renderVariation(totVar, totReal)}</td>
                 `;
     }).join('')}

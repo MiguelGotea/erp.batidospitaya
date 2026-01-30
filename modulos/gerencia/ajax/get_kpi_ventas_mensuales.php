@@ -57,8 +57,15 @@ try {
             }
         } elseif ($mes > $mesActual) {
             $ultimoDiaCalculo = null; // Future month
+            $diasCalendario = 0;
         } else {
             $ultimoDiaCalculo = $ultimoDiaMes; // Past month
+            $diasCalendario = (int) date('d', strtotime($ultimoDiaMes));
+        }
+
+        // Days for calendar calculation (one day before today if current month)
+        if ($mes == $mesActual) {
+            $diasCalendario = (int) date('d', strtotime('-1 day'));
         }
 
         $datosMes = [
@@ -104,6 +111,14 @@ try {
                 if ($diasTrabajados > 0) {
                     $realVal = round(($realTotal / $diasTrabajados) / 1000, 1);
                 }
+
+                if ($diasCalendario > 0) {
+                    $calendarioVal = round(($realTotal / $diasCalendario) / 1000, 1);
+                } else {
+                    $calendarioVal = 0;
+                }
+            } else {
+                $calendarioVal = 0;
             }
 
             // Calculate Variation
@@ -115,8 +130,10 @@ try {
             $datosMes['valores'][$codSucursal] = [
                 'meta' => $metaVal,
                 'real' => $realVal,
+                'calendario' => $calendarioVal,
                 'var' => $varPct,
-                'dias_trabajados' => $diasTrabajados
+                'dias_trabajados' => $diasTrabajados,
+                'dias_calendario' => $diasCalendario
             ];
         }
 
