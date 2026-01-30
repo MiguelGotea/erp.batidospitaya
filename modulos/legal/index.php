@@ -4,9 +4,6 @@ require_once '../../core/layout/menu_lateral.php';
 require_once '../../core/layout/header_universal.php';
 require_once '../../core/permissions/permissions.php';
 
-// Verificar acceso al módulo RH (Código 13 para Jefe de RH)
-//verificarAccesoModulo('gerencia');
-
 $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
 
