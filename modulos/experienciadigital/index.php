@@ -1,11 +1,8 @@
 <?php
 require_once '../mantenimiento/models/Ticket.php';
-require_once '../../includes/auth.php';
-require_once '../../includes/funciones.php';
-// Incluir el menú lateral
-require_once '../../includes/menu_lateral.php';
-// Incluir el header universal
-require_once '../../includes/header_universal.php';
+require_once '../../core/auth/auth.php';
+require_once '../../core/layout/menu_lateral.php';
+require_once '../../core/layout/header_universal.php';
 //verificarAccesoModulo('sistema'); Esto ya no se usa
 
 $usuario = obtenerUsuarioActual();
@@ -22,6 +19,7 @@ if (!verificarAccesoCargo([50, 16])) {
 ?>
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -36,13 +34,13 @@ if (!verificarAccesoCargo([50, 16])) {
             font-family: 'Calibri', sans-serif;
             font-size: clamp(12px, 2vw, 18px) !important;
         }
-        
+
         body {
             background-color: #F6F6F6;
             margin: 0;
             padding: 0;
         }
-        
+
         /* Accesos Rápidos */
         .quick-access-grid {
             display: grid;
@@ -50,7 +48,7 @@ if (!verificarAccesoCargo([50, 16])) {
             gap: 15px;
             margin-bottom: 30px;
         }
-            
+
         .quick-access-card {
             background: white;
             border-radius: 10px;
@@ -59,38 +57,38 @@ if (!verificarAccesoCargo([50, 16])) {
             text-decoration: none;
             color: inherit;
             transition: all 0.3s;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             min-height: 140px;
         }
-        
+
         .quick-access-card:hover {
             transform: translateY(-3px);
             box-shadow: 0 5px 15px rgba(81, 184, 172, 0.2);
         }
-        
+
         .quick-access-icon {
             font-size: 2rem !important;
             color: #51B8AC;
             margin-bottom: 10px;
         }
-        
+
         .quick-access-title {
             font-size: 0.9rem !important;
             font-weight: 600;
             color: #0E544C;
         }
-        
+
         .indicator-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 15px;
         }
-        
+
         .indicator-icon {
             width: 50px;
             height: 50px;
@@ -102,7 +100,7 @@ if (!verificarAccesoCargo([50, 16])) {
             background: linear-gradient(135deg, #51B8AC20 0%, #0E544C20 100%);
             color: #0E544C;
         }
-                
+
         /* Sección de título */
         .section-title {
             color: #0E544C;
@@ -112,20 +110,20 @@ if (!verificarAccesoCargo([50, 16])) {
             border-left: 5px solid #51B8AC;
             font-weight: 600;
         }
-        
+
         .indicator-status {
             font-size: 0.85rem !important;
             padding: 4px 12px;
             border-radius: 20px;
             font-weight: 600;
         }
-        
+
         .indicator-action {
             color: #51B8AC;
             font-size: 0.85rem !important;
             font-weight: 600;
         }
-        
+
         .indicator-meta {
             display: flex;
             justify-content: space-between;
@@ -134,41 +132,42 @@ if (!verificarAccesoCargo([50, 16])) {
             padding-top: 15px;
             border-top: 1px solid #e0e0e0;
         }
-        
+
         .status-verde {
             background: #d4edda;
             color: #155724;
         }
-        
+
         .status-amarillo {
             background: #fff3cd;
             color: #856404;
         }
-        
+
         .status-rojo {
             background: #f8d7da;
             color: #721c24;
         }
-        
+
         @media (max-width: 768px) {
-            
+
             .indicator-info {
                 text-align: center;
             }
-            
+
             .indicator-fecha {
                 font-size: 0.7rem !important;
             }
-            
+
             .indicadores-container {
                 grid-template-columns: 1fr;
             }
+
             .quick-access-grid {
                 grid-template-columns: repeat(2, 1fr);
             }
-            
+
         }
-        
+
         /* Estilos para el contenedor de indicadores */
         .indicadores-container {
             display: grid;
@@ -182,13 +181,13 @@ if (!verificarAccesoCargo([50, 16])) {
             background: white;
             border-radius: 12px;
             padding: 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
             transition: all 0.3s ease;
             cursor: pointer;
             position: relative;
             overflow: hidden;
         }
-        
+
         .indicator-card::before {
             content: '';
             position: absolute;
@@ -198,10 +197,10 @@ if (!verificarAccesoCargo([50, 16])) {
             height: 4px;
             background: linear-gradient(90deg, #51B8AC 0%, #0E544C 100%);
         }
-        
+
         .indicator-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
         }
 
         .indicator-count {
@@ -230,88 +229,89 @@ if (!verificarAccesoCargo([50, 16])) {
         }
     </style>
 </head>
+
 <body>
     <!-- Renderizar menú lateral -->
     <?php echo renderMenuLateral($cargoOperario, 'Index.php'); ?>
-    
+
     <div class="main-container">
         <div class="contenedor-principal">
             <!-- Renderizar header universal -->
             <?php echo renderHeader($usuario, $esAdmin, ''); ?>
-    
+
             <!-- Contenedor para indicadores -->
             <!-- Sección: Indicadores de Control -->
             <h2 class="section-title" style="Display:none">
                 <i class="fas fa-chart-line"></i> Indicadores de Control
             </h2>
-            
+
             <div class="indicadores-container" style="Display:none">
                 <div class="indicator-card" onclick="">
-                        <div class="indicator-header">
-                            <div class="indicator-icon">
-                                <i class="fas fa-user-clock"></i>
-                            </div>
+                    <div class="indicator-header">
+                        <div class="indicator-icon">
+                            <i class="fas fa-user-clock"></i>
                         </div>
-                        <div class="indicator-count">
-                            <?= $stats['total']-$stats['agendado']-$stats['finalizado'] ?>
-                        </div>
-                        <div class="indicator-titulo">
-                            Solicitudes Pendientes por Agendar
-                        </div>
-                        <div class="indicator-meta">
-                            <span class="indicator-status <?=  'status-rojo' ?>">
-                                <?= 1 > 0 ? 'Revisar' : 'Al día' ?>
-                            </span>
-                            <span class="indicator-action">
-                                <i class="fas fa-arrow-right"></i>
-                            </span>
-                        </div>
-                </div>
-    
-                <div class="indicator-card" onclick="" style="cursor: pointer;">
-                        <div class="indicator-header">
-                            <div class="indicator-icon">
-                                <i class="fas fa-user-clock"></i>
-                            </div>
-                        </div>
-                        <div class="indicator-count">
-                            <?= $stats['finalizado'] ?>
-                        </div>
-                        <div class="indicator-info">
-                            <div class="indicator-fecha">
-                                Solicitudes Concluidas
-                            </div>
-                            <div class="indicator-titulo">
-                                --
-                            </div>
-                        </div>
+                    </div>
+                    <div class="indicator-count">
+                        <?= $stats['total'] - $stats['agendado'] - $stats['finalizado'] ?>
+                    </div>
+                    <div class="indicator-titulo">
+                        Solicitudes Pendientes por Agendar
+                    </div>
+                    <div class="indicator-meta">
+                        <span class="indicator-status <?= 'status-rojo' ?>">
+                            <?= 1 > 0 ? 'Revisar' : 'Al día' ?>
+                        </span>
+                        <span class="indicator-action">
+                            <i class="fas fa-arrow-right"></i>
+                        </span>
+                    </div>
                 </div>
 
                 <div class="indicator-card" onclick="" style="cursor: pointer;">
-                        <div class="indicator-header">
-                            <div class="indicator-icon">
-                                <i class="fas fa-user-clock"></i>
-                            </div>
+                    <div class="indicator-header">
+                        <div class="indicator-icon">
+                            <i class="fas fa-user-clock"></i>
                         </div>
-                        <div class="indicator-count">
-                            <?= $stats['total'] ?>
+                    </div>
+                    <div class="indicator-count">
+                        <?= $stats['finalizado'] ?>
+                    </div>
+                    <div class="indicator-info">
+                        <div class="indicator-fecha">
+                            Solicitudes Concluidas
                         </div>
-                        <div class="indicator-info">
-                            <div class="indicator-fecha">
-                                Solicitudes Totales
-                            </div>
-                            <div class="indicator-titulo">
-                                --
-                            </div>
+                        <div class="indicator-titulo">
+                            --
                         </div>
+                    </div>
                 </div>
-            </div>        
-    
+
+                <div class="indicator-card" onclick="" style="cursor: pointer;">
+                    <div class="indicator-header">
+                        <div class="indicator-icon">
+                            <i class="fas fa-user-clock"></i>
+                        </div>
+                    </div>
+                    <div class="indicator-count">
+                        <?= $stats['total'] ?>
+                    </div>
+                    <div class="indicator-info">
+                        <div class="indicator-fecha">
+                            Solicitudes Totales
+                        </div>
+                        <div class="indicator-titulo">
+                            --
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Sección: Accesos Rápidos -->
             <h2 class="section-title">
                 <i class="fas fa-bolt"></i> Accesos Rápidos
             </h2>
-            
+
             <div class="quick-access-grid">
                 <a href="../supervision/auditorias_original/nuevoreclamo.php" class="quick-access-card">
                     <div class="quick-access-icon">
@@ -319,14 +319,14 @@ if (!verificarAccesoCargo([50, 16])) {
                     </div>
                     <div class="quick-access-title">Nuevo Reclamo</div>
                 </a>
-                
+
                 <a href="../atencioncliente/resenas_google.php" class="quick-access-card">
                     <div class="quick-access-icon">
                         <i class="fas fa-star"></i>
                     </div>
                     <div class="quick-access-title">Reseñas Google</div>
                 </a>
-                
+
                 <a href="../atencioncliente/cumpleanos_clientes.php" class="quick-access-card">
                     <div class="quick-access-icon">
                         <i class="fa fa-calendar"></i>
@@ -337,4 +337,5 @@ if (!verificarAccesoCargo([50, 16])) {
         </div>
     </div>
 </body>
+
 </html>

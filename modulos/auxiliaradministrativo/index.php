@@ -1,27 +1,29 @@
 <?php
 require_once '../mantenimiento/models/Ticket.php';
-require_once '../../includes/auth.php';
-require_once '../../includes/funciones.php';
-require_once '../../includes/menu_lateral.php';
-require_once '../../includes/header_universal.php';
+require_once '../../core/auth/auth.php';
+require_once '../../core/layout/menu_lateral.php';
+require_once '../../core/layout/header_universal.php';
 
 $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
 $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
 // Verificar acceso al módulo (cargos con permiso para ver marcaciones)
-if (!verificarAccesoCargo([38, 16])) {
+if (!verificarAccesoCargo([19, 16]) && !$esAdmin) {
     header('Location: ../index.php');
     exit();
 }
 ?>
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Infraestructura - Batidos Pitaya</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-    <link rel="stylesheet" href="../../assets/css/indexmodulos.css?v=<?= filemtime($_SERVER['DOCUMENT_ROOT'].'/assets/css/indexmodulos.css') ?>"> <!-- CSS propio con manejo de versiones  evitar cache de buscador -->
+    <link rel="stylesheet"
+        href="../../assets/css/indexmodulos.css?v=<?= filemtime($_SERVER['DOCUMENT_ROOT'] . '/assets/css/indexmodulos.css') ?>">
+    <!-- CSS propio con manejo de versiones  evitar cache de buscador -->
     <link rel="icon" href="../../assets/img/icon12.png" type="image/png">
     <style>
         * {
@@ -31,7 +33,7 @@ if (!verificarAccesoCargo([38, 16])) {
             font-family: 'Calibri', sans-serif;
             font-size: clamp(12px, 2vw, 18px) !important;
         }
-        
+
 
         body {
             background-color: #F6F6F6;
@@ -40,8 +42,9 @@ if (!verificarAccesoCargo([38, 16])) {
         }
     </style>
 </head>
+
 <body>
-    <?php echo renderMenuLateral($cargoOperario, 'Index.php'); ?>
+    <?php echo renderMenuLateral($cargoOperario); ?>
     <div class="main-container">
         <div class="contenedor-principal">
             <?php echo renderHeader($usuario, $esAdmin, ''); ?>
@@ -49,11 +52,11 @@ if (!verificarAccesoCargo([38, 16])) {
             <h2 class="section-title">
                 <i class="fas fa-chart-line"></i> Indicadores de Control
             </h2>
-           <!-- Sección: Accesos Rápidos -->
+            <!-- Sección: Accesos Rápidos -->
             <h2 class="section-title">
                 <i class="fas fa-bolt"></i> Accesos Rápidos
             </h2>
-            
+
             <div class="quick-access-grid">
                 <a href="../supervision/auditorias_original/nuevoreclamo.php" class="quick-access-card">
                     <div class="quick-access-icon">
@@ -61,24 +64,25 @@ if (!verificarAccesoCargo([38, 16])) {
                     </div>
                     <div class="quick-access-title">Nuevo Reclamo</div>
                 </a>
-                
+
                 <a href="../atencioncliente/resenas_google.php" class="quick-access-card">
                     <div class="quick-access-icon">
                         <i class="fas fa-star"></i>
                     </div>
                     <div class="quick-access-title">Reseñas Google</div>
                 </a>
-                
+
                 <a href="../atencioncliente/cumpleanos_clientes.php" class="quick-access-card">
                     <div class="quick-access-icon">
                         <i class="fa fa-calendar"></i>
                     </div>
                     <div class="quick-access-title">Cumpleaños Club Pitaya</div>
                 </a>
-                
+
 
             </div>
         </div>
     </div>
 </body>
+
 </html>

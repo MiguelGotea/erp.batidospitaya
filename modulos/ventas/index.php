@@ -1,7 +1,7 @@
 <?php
-require_once '../../includes/auth.php';
-require_once '../../includes/conexion.php';
-require_once '../../includes/funciones.php';
+require_once '../../core/auth/auth.php';
+require_once '../../core/layout/menu_lateral.php';
+require_once '../../core/layout/header_universal.php';
 
 verificarAccesoModulo('atencioncliente');
 
@@ -64,6 +64,7 @@ try {
 
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -78,19 +79,19 @@ try {
             padding: 0;
             font-family: 'Calibri', sans-serif;
         }
-        
+
         body {
             background-color: #f5f5f5;
             color: #333;
             font-size: 14px;
         }
-        
+
         .container {
             max-width: auto;
             margin: 0 auto;
             padding: 20px;
         }
-        
+
         .header-ventas {
             display: flex;
             justify-content: space-between;
@@ -99,20 +100,20 @@ try {
             margin-bottom: 20px;
             border-bottom: 1px solid #ddd;
         }
-        
+
         .header-ventas h1 {
             display: flex;
             align-items: center;
             gap: 10px;
             color: #0E544C;
         }
-        
+
         .header-actions {
             display: flex;
             align-items: center;
             gap: 20px;
         }
-        
+
         .btn-nuevo-pedido {
             background-color: #51B8AC;
             color: white;
@@ -124,21 +125,21 @@ try {
             gap: 5px;
             transition: background-color 0.3s;
         }
-        
+
         .btn-nuevo-pedido:hover {
             background-color: #0E544C;
         }
-        
+
         .user-info {
             display: flex;
             flex-direction: column;
             align-items: flex-end;
         }
-        
+
         .user-info small {
             color: #666;
         }
-        
+
         .filtros {
             display: flex;
             flex-wrap: wrap;
@@ -147,28 +148,28 @@ try {
             padding: 15px;
             background: white;
             border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
-        
+
         .filtro-group {
             display: flex;
             flex-direction: column;
             min-width: 150px;
         }
-        
+
         .filtro-group label {
             margin-bottom: 5px;
             font-weight: bold;
             color: #555;
         }
-        
-        .filtro-group input, 
+
+        .filtro-group input,
         .filtro-group select {
             padding: 8px 12px;
             border: 1px solid #ddd;
             border-radius: 4px;
         }
-        
+
         .btn-filtrar {
             background-color: #51B8AC;
             color: white;
@@ -179,121 +180,130 @@ try {
             align-self: flex-end;
             transition: background-color 0.3s;
         }
-        
+
         .btn-filtrar:hover {
             background-color: #0E544C;
         }
-        
+
         .pedidos-list {
             background: white;
             border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
             overflow: hidden;
         }
-        
+
         table {
             width: 100%;
             border-collapse: collapse;
         }
-        
-        th, td {
+
+        th,
+        td {
             padding: 12px 15px;
             text-align: left;
             border-bottom: 1px solid #ddd;
         }
-        
+
         th {
             background-color: #0E544C;
             color: white;
             font-weight: normal;
         }
-        
+
         tr:nth-child(even) {
             background-color: #f9f9f9;
         }
-        
+
         tr:hover {
             background-color: #f1f1f1;
         }
-        
+
         .estado-badge {
             padding: 3px 8px;
             border-radius: 4px;
             font-size: 0.8rem;
             font-weight: bold;
         }
-        
+
         .estado-pendiente {
             background-color: #fff3cd;
             color: #856404;
         }
-        
+
         .estado-completado {
             background-color: #d4edda;
             color: #155724;
         }
-        
+
         .estado-cancelado {
             background-color: #f8d7da;
             color: #721c24;
         }
-        
+
         .btn-accion {
             color: #0E544C;
             margin: 0 5px;
             font-size: 1.1rem;
             transition: color 0.3s;
         }
-        
+
         .btn-accion:hover {
             color: #51B8AC;
         }
-        
+
         .logo {
             height: 50px;
         }
-        
+
         @media (max-width: 768px) {
             .header-ventas {
                 flex-direction: column;
                 gap: 15px;
                 align-items: flex-start;
             }
-            
+
             .header-actions {
                 width: 100%;
                 justify-content: space-between;
             }
-            
+
             .filtros {
                 flex-direction: column;
             }
-            
+
             .btn-filtrar {
                 align-self: flex-start;
             }
-            
-            th, td {
+
+            th,
+            td {
                 padding: 8px 10px;
                 font-size: 0.9rem;
             }
-            
+
             table {
                 display: block;
                 overflow-x: auto;
             }
         }
-        
+
         /* Animaciones */
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
-        
+
         .pedidos-list {
             animation: fadeIn 0.5s ease-out;
         }
-        
+
         /* Notificaciones */
         .notificacion {
             position: fixed;
@@ -303,23 +313,24 @@ try {
             background: #51B8AC;
             color: white;
             border-radius: 4px;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
             display: flex;
             align-items: center;
             gap: 10px;
             z-index: 1000;
             animation: fadeIn 0.3s;
         }
-        
+
         .notificacion.error {
             background: #dc3545;
         }
-        
+
         .notificacion.success {
             background: #28a745;
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <header class="header-ventas">
@@ -408,22 +419,27 @@ try {
                                 <!-- Columna botones de acciones -->
                                 <td>
                                     <!-- Botón para ver el pedido (siempre visible) -->
-                                    <a href="verpedido.php?id=<?= $pedido['id'] ?>" class="btn-accion" title="Ver pedido" target="_blank">
+                                    <a href="verpedido.php?id=<?= $pedido['id'] ?>" class="btn-accion" title="Ver pedido"
+                                        target="_blank">
                                         <i class="fas fa-eye"></i>
                                     </a>
                                     <?php if (!in_array($pedido['estado'], ['completado', 'cancelado'])): ?>
-                                        <a href="crearpedido.php?id=<?= $pedido['id'] ?>" class="btn-accion" title="Editar" target="_blank" style="display:none;">
+                                        <a href="crearpedido.php?id=<?= $pedido['id'] ?>" class="btn-accion" title="Editar"
+                                            target="_blank" style="display:none;">
                                             <i class="fas fa-edit"></i>
                                         </a>
-                                        <a style="display:none;" href="#" class="btn-accion btn-reimprimir" data-id="<?= $pedido['id'] ?>" title="Enviar a Sucursal/Motorizado">
+                                        <a style="display:none;" href="#" class="btn-accion btn-reimprimir"
+                                            data-id="<?= $pedido['id'] ?>" title="Enviar a Sucursal/Motorizado">
                                             <i class="fas fa-print"></i>
                                         </a>
                                     <?php endif; ?>
                                     <?php if ($pedido['estado'] == 'pendiente'): ?>
-                                        <a style="display:none;" href="#" class="btn-accion btn-completar" data-id="<?= $pedido['id'] ?>" title="Marcar como completado">
+                                        <a style="display:none;" href="#" class="btn-accion btn-completar"
+                                            data-id="<?= $pedido['id'] ?>" title="Marcar como completado">
                                             <i class="fas fa-check"></i>
                                         </a>
-                                        <a href="#" class="btn-accion btn-cancelar" data-id="<?= $pedido['id'] ?>" title="Cancelar pedido">
+                                        <a href="#" class="btn-accion btn-cancelar" data-id="<?= $pedido['id'] ?>"
+                                            title="Cancelar pedido">
                                             <i class="fas fa-times"></i>
                                         </a>
                                     <?php endif; ?>
@@ -437,36 +453,36 @@ try {
     </div>
 
     <script>
-        $(document).ready(function() {
+        $(document).ready(function () {
             // Filtrar pedidos
-            $('#btn-filtrar').click(function() {
+            $('#btn-filtrar').click(function () {
                 let fecha = $('#fecha').val();
                 let sucursal = $('#sucursal').val();
                 let estado = $('#estado').val();
-                
+
                 let params = new URLSearchParams();
                 if (fecha) params.append('fecha', fecha);
                 if (sucursal) params.append('sucursal', sucursal);
                 if (estado) params.append('estado', estado);
-                
+
                 window.location.href = 'index.php?' + params.toString();
             });
-            
+
             // Marcar pedido como completado
-            $(document).on('click', '.btn-completar', function(e) {
+            $(document).on('click', '.btn-completar', function (e) {
                 e.preventDefault();
                 let pedidoId = $(this).data('id');
-                
+
                 if (confirm('¿Marcar este pedido como completado?')) {
                     $.ajax({
                         url: 'procesar_estado.php',
                         method: 'POST',
-                        data: { 
+                        data: {
                             id: pedidoId,
                             estado: 'completado'
                         },
                         dataType: 'json',
-                        success: function(response) {
+                        success: function (response) {
                             if (response.success) {
                                 mostrarNotificacion('Pedido marcado como completado', 'success');
                                 setTimeout(() => location.reload(), 1500);
@@ -474,28 +490,28 @@ try {
                                 mostrarNotificacion(response.error || 'Error al actualizar', 'error');
                             }
                         },
-                        error: function(xhr, status, error) {
+                        error: function (xhr, status, error) {
                             mostrarNotificacion('Error en la solicitud', 'error');
                         }
                     });
                 }
             });
-            
+
             // Reimprimir pedido
-            $(document).on('click', '.btn-reimprimir', function(e) {
+            $(document).on('click', '.btn-reimprimir', function (e) {
                 e.preventDefault();
                 let pedidoId = $(this).data('id');
-                
+
                 if (confirm('¿Marcar este pedido como entregado e imprimir?')) {
                     $.ajax({
                         url: 'imprimir_pedido.php',
                         method: 'POST',
-                        data: { 
+                        data: {
                             id: pedidoId,
                             estado: 'completado' // Cambiar estado a completado (entregado)
                         },
                         dataType: 'json',
-                        success: function(response) {
+                        success: function (response) {
                             if (response.success) {
                                 mostrarNotificacion('Pedido marcado como entregado y enviado a impresión', 'success');
                                 setTimeout(() => location.reload(), 1500);
@@ -503,28 +519,28 @@ try {
                                 mostrarNotificacion(response.error || 'Error al imprimir', 'error');
                             }
                         },
-                        error: function(xhr, status, error) {
+                        error: function (xhr, status, error) {
                             mostrarNotificacion('Error en la solicitud', 'error');
                         }
                     });
                 }
             });
-            
+
             // Cancelar
-            $(document).on('click', '.btn-cancelar', function(e) {
+            $(document).on('click', '.btn-cancelar', function (e) {
                 e.preventDefault();
                 let pedidoId = $(this).data('id');
-                
+
                 if (confirm('¿Cancelar este pedido? Esta acción no se puede deshacer.')) {
                     $.ajax({
                         url: 'procesar_estado.php',
                         method: 'POST',
-                        data: { 
+                        data: {
                             id: pedidoId,
                             estado: 'cancelado'
                         },
                         dataType: 'json',
-                        success: function(response) {
+                        success: function (response) {
                             if (response.success) {
                                 mostrarNotificacion('Pedido cancelado', 'success');
                                 setTimeout(() => location.reload(), 1500);
@@ -532,13 +548,13 @@ try {
                                 mostrarNotificacion(response.error || 'Error al cancelar', 'error');
                             }
                         },
-                        error: function(xhr, status, error) {
+                        error: function (xhr, status, error) {
                             mostrarNotificacion('Error en la solicitud', 'error');
                         }
                     });
                 }
             });
-            
+
             // Función para mostrar notificaciones
             function mostrarNotificacion(mensaje, tipo = 'info') {
                 const tipos = {
@@ -546,51 +562,51 @@ try {
                     error: { icon: 'exclamation-circle', color: '#dc3545' },
                     info: { icon: 'info-circle', color: '#17a2b8' }
                 };
-                
+
                 // Eliminar notificaciones anteriores
                 $('.notificacion').remove();
-                
+
                 const notif = $(`
                     <div class="notificacion ${tipo}">
                         <i class="fas fa-${tipos[tipo].icon}"></i>
                         <span>${mensaje}</span>
                     </div>
                 `);
-                
+
                 $('body').append(notif);
-                
+
                 setTimeout(() => {
                     notif.fadeOut(300, () => notif.remove());
                 }, 3000);
             }
-            
+
             // Función para verificar nuevos pedidos
             function verificarNuevosPedidos() {
                 const ultimoId = <?= !empty($pedidos) ? $pedidos[0]['id'] : 0 ?>;
-                
+
                 $.ajax({
                     url: 'check_new_orders.php',
                     method: 'POST',
-                    data: { 
+                    data: {
                         ultimo_id: ultimoId,
                         sucursal_id: $('#sucursal').val(),
                         estado: $('#estado').val(),
                         fecha: $('#fecha').val()
                     },
                     dataType: 'json',
-                    success: function(response) {
+                    success: function (response) {
                         if (response.nuevos > 0) {
                             mostrarNotificacion(`Hay ${response.nuevos} nuevo(s) pedido(s)`, 'info');
                             location.reload();
                         }
                     },
-                    complete: function() {
+                    complete: function () {
                         // Verificar cada 3 segundos
                         setTimeout(verificarNuevosPedidos, 3000);
                     }
                 });
             }
-            
+
             // Iniciar la verificación (solo si el usuario tiene permiso)
             if (<?= $usuario['rol'] === 'admin' || $usuario['rol'] === 'supervisor' ? 'true' : 'false' ?>) {
                 setTimeout(verificarNuevosPedidos, 3000);
@@ -598,4 +614,5 @@ try {
         });
     </script>
 </body>
+
 </html>
