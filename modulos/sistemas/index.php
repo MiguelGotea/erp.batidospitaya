@@ -2,12 +2,14 @@
 require_once '../../core/auth/auth.php';
 require_once '../../core/layout/menu_lateral.php';
 require_once '../../core/layout/header_universal.php';
+require_once '../../core/permissions/permissions.php';
 
 $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
 
 
-if (!verificarAccesoCargo(15)) {
+// Verificar acceso al módulo
+if (!tienePermiso('index_sistemas', 'vista', $cargoOperario)) {
     header('Location: ../index.php');
     exit();
 }

@@ -5,14 +5,15 @@
 require_once '../../core/auth/auth.php';
 require_once '../../core/layout/menu_lateral.php';
 require_once '../../core/layout/header_universal.php';
+require_once '../../core/permissions/permissions.php';
 
 $usuario = obtenerUsuarioActual();
 $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
 
 $cargoOperario = $usuario['CodNivelesCargos'];
 
-// Verificar acceso al módulo (cargos con permiso para ver marcaciones)
-if (!verificarAccesoCargo([12])) {
+// Verificar acceso al módulo
+if (!tienePermiso('index_produccion', 'vista', $cargoOperario)) {
     header('Location: ../index.php');
     exit();
 }

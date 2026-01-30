@@ -3,6 +3,7 @@ require_once '../mantenimiento/models/Ticket.php';
 require_once '../../core/auth/auth.php';
 require_once '../../core/layout/menu_lateral.php';
 require_once '../../core/layout/header_universal.php';
+require_once '../../core/permissions/permissions.php';
 //verificarAccesoModulo('sistema'); Esto ya no se usa
 
 $usuario = obtenerUsuarioActual();
@@ -10,7 +11,8 @@ $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admi
 // Obtener cargo del operario para el menú
 $cargoOperario = $usuario['CodNivelesCargos'];
 // Verificar acceso al módulo (cargos con permiso para ver marcaciones)
-if (!verificarAccesoCargo(35, 16)) {
+// Verificar acceso al módulo
+if (!tienePermiso('index_infraestructura', 'vista', $cargoOperario)) {
     header('Location: ../index.php');
     exit();
 }
@@ -403,7 +405,7 @@ if (!verificarAccesoCargo(35, 16)) {
 
 <body>
     <!-- Renderizar menú lateral -->
-    <?php echo renderMenuLateral($cargoOperario, 'Index.php'); ?>
+    <?php echo renderMenuLateral($cargoOperario); ?>
 
     <div class="main-container">
         <div class="contenedor-principal">

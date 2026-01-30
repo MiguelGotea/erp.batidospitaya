@@ -2,6 +2,7 @@
 require_once '../../core/auth/auth.php';
 require_once '../../core/layout/menu_lateral.php';
 require_once '../../core/layout/header_universal.php';
+require_once '../../core/permissions/permissions.php';
 
 //******************************Estándar para header******************************
 
@@ -11,8 +12,8 @@ $cargoOperario = $usuario['CodNivelesCargos'];
 $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
 
 // Verificar acceso al módulo
-if (!verificarAccesoCargo([22, 16]) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
-    header('Location: ../../../index.php');
+if (!tienePermiso('index_atencioncliente', 'vista', $cargoOperario)) {
+    header('Location: ../index.php');
     exit();
 }
 

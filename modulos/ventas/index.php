@@ -2,10 +2,16 @@
 require_once '../../core/auth/auth.php';
 require_once '../../core/layout/menu_lateral.php';
 require_once '../../core/layout/header_universal.php';
-
-verificarAccesoModulo('atencioncliente');
+require_once '../../core/permissions/permissions.php';
 
 $usuario = obtenerUsuarioActual();
+$cargoOperario = $usuario['CodNivelesCargos'];
+
+// Verificar acceso al módulo
+if (!tienePermiso('index_ventas', 'vista', $cargoOperario)) {
+    header('Location: ../index.php');
+    exit();
+}
 $sucursal_id = $usuario['sucursal_id'] ?? null;
 
 // Obtener parámetros de filtrado

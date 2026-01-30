@@ -2,6 +2,7 @@
 require_once '../../core/auth/auth.php';
 require_once '../../core/layout/menu_lateral.php';
 require_once '../../core/layout/header_universal.php';
+require_once '../../core/permissions/permissions.php';
 
 // Verificar acceso al módulo RH (Código 13 para Jefe de RH)
 //verificarAccesoModulo('diseno');
@@ -12,7 +13,8 @@ $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admi
 $cargoOperario = $usuario['CodNivelesCargos'];
 
 // Verificar acceso al módulo (cargos con permiso para ver marcaciones)
-if (!verificarAccesoCargo([25])) {
+// Verificar acceso al módulo
+if (!tienePermiso('index_diseno', 'vista', $cargoOperario)) {
     header('Location: ../index.php');
     exit();
 }
