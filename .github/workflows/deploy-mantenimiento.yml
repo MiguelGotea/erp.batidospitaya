@@ -1,12 +1,10 @@
-name: 🚀 Deploy Módulos Mantenimiento, Sistemas y Gerencia
+name: 🚀 Deploy ERP - 15 Módulos
 
 on:
   push:
     branches: [ main ]
     paths:
-      - 'modulos/mantenimiento/**'
-      - 'modulos/sistemas/**'
-      - 'modulos/gerencia/**'
+      - 'modulos/**'
 
 jobs:
   deploy:
@@ -21,77 +19,77 @@ jobs:
       with:
         ssh-private-key: ${{ secrets.HOSTINGER_SSH_KEY }}
         
-    - name: 📤 Sincronizar carpeta mantenimiento
+    - name: 📤 Sincronizar Módulos ERP
       run: |
-        echo "🔄 Sincronizando modulos/mantenimiento/"
+        # Definir lista de módulos
+        MODULES=(
+          "atencioncliente"
+          "auxiliaradministrativo"
+          "cds"
+          "desarrollo"
+          "diseno"
+          "experienciadigital"
+          "gerencia"
+          "infraestructura"
+          "legal"
+          "mantenimiento"
+          "marketing"
+          "produccion"
+          "sistemas"
+          "tecnicodesarrollohumano"
+          "ventas"
+        )
         
-        # Crear la carpeta si no existe (incluyendo uploads)
-        ssh -o StrictHostKeyChecking=no -p 65002 ${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_HOST }} \
-          "mkdir -p ${{ secrets.HOSTINGER_PATH }}/modulos/mantenimiento && \
-           mkdir -p ${{ secrets.HOSTINGER_PATH }}/modulos/mantenimiento/uploads"
-        
-        # Sincronizar la carpeta excluyendo uploads
-        rsync -avz \
-          --delete \
-          --exclude='uploads/' \
-          -e "ssh -o StrictHostKeyChecking=no -p 65002" \
-          ./modulos/mantenimiento/ \
-          ${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_HOST }}:${{ secrets.HOSTINGER_PATH }}/modulos/mantenimiento/
+        for MODULE in "${MODULES[@]}"; do
+          echo "🔄 Sincronizando modulos/$MODULE/"
           
-    - name: 📤 Sincronizar carpeta sistemas
-      run: |
-        echo "🔄 Sincronizando modulos/sistemas/"
-        
-        # Crear la carpeta si no existe (incluyendo uploads)
-        ssh -o StrictHostKeyChecking=no -p 65002 ${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_HOST }} \
-          "mkdir -p ${{ secrets.HOSTINGER_PATH }}/modulos/sistemas && \
-           mkdir -p ${{ secrets.HOSTINGER_PATH }}/modulos/sistemas/uploads"
-        
-        # Sincronizar la carpeta excluyendo uploads
-        rsync -avz \
-          --delete \
-          --exclude='uploads/' \
-          -e "ssh -o StrictHostKeyChecking=no -p 65002" \
-          ./modulos/sistemas/ \
-          ${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_HOST }}:${{ secrets.HOSTINGER_PATH }}/modulos/sistemas/
+          # Crear la carpeta si no existe (incluyendo uploads)
+          ssh -o StrictHostKeyChecking=no -p 65002 ${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_HOST }} \
+            "mkdir -p ${{ secrets.HOSTINGER_PATH }}/modulos/$MODULE && \
+             mkdir -p ${{ secrets.HOSTINGER_PATH }}/modulos/$MODULE/uploads"
           
-    - name: 📤 Sincronizar carpeta gerencia
-      run: |
-        echo "🔄 Sincronizando modulos/gerencia/"
-        
-        # Crear la carpeta si no existe (incluyendo uploads)
-        ssh -o StrictHostKeyChecking=no -p 65002 ${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_HOST }} \
-          "mkdir -p ${{ secrets.HOSTINGER_PATH }}/modulos/gerencia && \
-           mkdir -p ${{ secrets.HOSTINGER_PATH }}/modulos/gerencia/uploads"
-        
-        # Sincronizar la carpeta excluyendo uploads
-        rsync -avz \
-          --delete \
-          --exclude='uploads/' \
-          -e "ssh -o StrictHostKeyChecking=no -p 65002" \
-          ./modulos/gerencia/ \
-          ${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_HOST }}:${{ secrets.HOSTINGER_PATH }}/modulos/gerencia/
+          # Sincronizar la carpeta excluyendo uploads
+          rsync -avz \
+            --delete \
+            --exclude='uploads/' \
+            -e "ssh -o StrictHostKeyChecking=no -p 65002" \
+            ./modulos/$MODULE/ \
+            ${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_HOST }}:${{ secrets.HOSTINGER_PATH }}/modulos/$MODULE/
+        done
           
     - name: 🔧 Configurar permisos
       run: |
-        ssh -o StrictHostKeyChecking=no -p 65002 ${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_HOST }} \
-          "chmod -R 755 ${{ secrets.HOSTINGER_PATH }}/modulos/mantenimiento/ && \
-           find ${{ secrets.HOSTINGER_PATH }}/modulos/mantenimiento/ -type f -exec chmod 644 {} \; && \
-           chmod -R 755 ${{ secrets.HOSTINGER_PATH }}/modulos/mantenimiento/uploads/ && \
-           chmod -R 777 ${{ secrets.HOSTINGER_PATH }}/modulos/mantenimiento/uploads/ || true && \
-           chmod -R 755 ${{ secrets.HOSTINGER_PATH }}/modulos/sistemas/ && \
-           find ${{ secrets.HOSTINGER_PATH }}/modulos/sistemas/ -type f -exec chmod 644 {} \; && \
-           chmod -R 755 ${{ secrets.HOSTINGER_PATH }}/modulos/sistemas/uploads/ && \
-           chmod -R 777 ${{ secrets.HOSTINGER_PATH }}/modulos/sistemas/uploads/ || true && \
-           chmod -R 755 ${{ secrets.HOSTINGER_PATH }}/modulos/gerencia/ && \
-           find ${{ secrets.HOSTINGER_PATH }}/modulos/gerencia/ -type f -exec chmod 644 {} \; && \
-           chmod -R 755 ${{ secrets.HOSTINGER_PATH }}/modulos/gerencia/uploads/ && \
-           chmod -R 777 ${{ secrets.HOSTINGER_PATH }}/modulos/gerencia/uploads/ || true"
+        # Definir lista de módulos de nuevo para el paso de permisos
+        MODULES=(
+          "atencioncliente"
+          "auxiliaradministrativo"
+          "cds"
+          "desarrollo"
+          "diseno"
+          "experienciadigital"
+          "gerencia"
+          "infraestructura"
+          "legal"
+          "mantenimiento"
+          "marketing"
+          "produccion"
+          "sistemas"
+          "tecnicodesarrollohumano"
+          "ventas"
+        )
+        
+        for MODULE in "${MODULES[@]}"; do
+          echo "🔧 Configurando permisos para modulos/$MODULE/"
+          ssh -o StrictHostKeyChecking=no -p 65002 ${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_HOST }} \
+            "chmod -R 755 ${{ secrets.HOSTINGER_PATH }}/modulos/$MODULE/ && \
+             find ${{ secrets.HOSTINGER_PATH }}/modulos/$MODULE/ -type f -exec chmod 644 {} \; && \
+             chmod -R 755 ${{ secrets.HOSTINGER_PATH }}/modulos/$MODULE/uploads/ && \
+             chmod -R 777 ${{ secrets.HOSTINGER_PATH }}/modulos/$MODULE/uploads/ || true"
+        done
         
     - name: ✅ Verificar deploy
       run: |
-        echo "✅ Deploy completado"
+        echo "✅ Deploy completado para los 15 módulos"
         echo "📁 Carpetas 'uploads' excluidas del sync"
         echo "🌐 Sitio: https://erp.batidospitaya.com"
-        echo "📁 Carpetas: modulos/mantenimiento/, modulos/sistemas/ y modulos/gerencia/"
         echo "🖥️ Servidor: ${{ secrets.HOSTINGER_HOST }}:65002"

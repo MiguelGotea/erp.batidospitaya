@@ -4,13 +4,37 @@
 !/.gitignore
 !/modulos/
 
-# Excluir todo en modulos EXCEPTO mantenimiento, sistemas y gerencia
+# Excluir todo en modulos EXCEPTO los modulos permitidos (15 en total)
 /modulos/*
-!/modulos/mantenimiento/
-!/modulos/sistemas/
+!/modulos/atencioncliente/
+!/modulos/auxiliaradministrativo/
+!/modulos/cds/
+!/modulos/desarrollo/
+!/modulos/diseno/
+!/modulos/experienciadigital/
 !/modulos/gerencia/
+!/modulos/infraestructura/
+!/modulos/legal/
+!/modulos/mantenimiento/
+!/modulos/marketing/
+!/modulos/produccion/
+!/modulos/sistemas/
+!/modulos/tecnicodesarrollohumano/
+!/modulos/ventas/
 
 # Excluir todo dentro de uploads (pero mantener las carpetas)
-/modulos/mantenimiento/uploads/*
-/modulos/sistemas/uploads/*
+/modulos/atencioncliente/uploads/*
+/modulos/auxiliaradministrativo/uploads/*
+/modulos/cds/uploads/*
+/modulos/desarrollo/uploads/*
+/modulos/diseno/uploads/*
+/modulos/experienciadigital/uploads/*
 /modulos/gerencia/uploads/*
+/modulos/infraestructura/uploads/*
+/modulos/legal/uploads/*
+/modulos/mantenimiento/uploads/*
+/modulos/marketing/uploads/*
+/modulos/produccion/uploads/*
+/modulos/sistemas/uploads/*
+/modulos/tecnicodesarrollohumano/uploads/*
+/modulos/ventas/uploads/*
