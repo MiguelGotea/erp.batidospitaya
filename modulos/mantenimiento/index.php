@@ -66,7 +66,7 @@ if (!tienePermiso('index_mantenimiento', 'vista', $cargoOperario)) {
 
     <!-- Contenido principal -->
     <div class="main-container"> <!-- ya existe en el css de menu lateral -->
-        <div class="contenedor-principal"> <!-- ya existe en el css de menu lateral -->
+        <div class="sub-container"> <!-- ya existe en el css de menu lateral -->
             <!-- todo el contenido existente -->
 
             <!-- Renderizar header universal -->
