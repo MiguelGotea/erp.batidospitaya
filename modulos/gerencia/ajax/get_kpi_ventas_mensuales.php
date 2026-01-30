@@ -108,17 +108,9 @@ try {
                 $realTotal = $realRow['total_real'] ?: 0;
                 $diasTrabajados = (int) ($realRow['dias_trabajados'] ?: 0);
 
-                if ($diasTrabajados > 0) {
-                    $realVal = round(($realTotal / $diasTrabajados) / 1000, 1);
-                }
-
                 if ($diasCalendario > 0) {
-                    $calendarioVal = round(($realTotal / $diasCalendario) / 1000, 1);
-                } else {
-                    $calendarioVal = 0;
+                    $realVal = round(($realTotal / $diasCalendario) / 1000, 1);
                 }
-            } else {
-                $calendarioVal = 0;
             }
 
             // Calculate Variation
@@ -130,7 +122,6 @@ try {
             $datosMes['valores'][$codSucursal] = [
                 'meta' => $metaVal,
                 'real' => $realVal,
-                'calendario' => $calendarioVal,
                 'var' => $varPct,
                 'dias_trabajados' => $diasTrabajados,
                 'dias_calendario' => $diasCalendario
