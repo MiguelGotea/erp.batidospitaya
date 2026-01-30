@@ -41,20 +41,24 @@ jobs:
         )
         
         for MODULE in "${MODULES[@]}"; do
-          echo "🔄 Sincronizando modulos/$MODULE/"
-          
-          # Crear la carpeta si no existe (incluyendo uploads)
-          ssh -o StrictHostKeyChecking=no -p 65002 ${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_HOST }} \
-            "mkdir -p ${{ secrets.HOSTINGER_PATH }}/modulos/$MODULE && \
-             mkdir -p ${{ secrets.HOSTINGER_PATH }}/modulos/$MODULE/uploads"
-          
-          # Sincronizar la carpeta excluyendo uploads
-          rsync -avz \
-            --delete \
-            --exclude='uploads/' \
-            -e "ssh -o StrictHostKeyChecking=no -p 65002" \
-            ./modulos/$MODULE/ \
-            ${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_HOST }}:${{ secrets.HOSTINGER_PATH }}/modulos/$MODULE/
+          if [ -d "./modulos/$MODULE" ]; then
+            echo "🔄 Sincronizando modulos/$MODULE/"
+            
+            # Crear la carpeta si no existe (incluyendo uploads)
+            ssh -o StrictHostKeyChecking=no -p 65002 ${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_HOST }} \
+              "mkdir -p ${{ secrets.HOSTINGER_PATH }}/modulos/$MODULE && \
+               mkdir -p ${{ secrets.HOSTINGER_PATH }}/modulos/$MODULE/uploads"
+            
+            # Sincronizar la carpeta excluyendo uploads
+            rsync -avz \
+              --delete \
+              --exclude='uploads/' \
+              -e "ssh -o StrictHostKeyChecking=no -p 65002" \
+              ./modulos/$MODULE/ \
+              ${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_HOST }}:${{ secrets.HOSTINGER_PATH }}/modulos/$MODULE/
+          else
+            echo "⚠️ Saltando modulos/$MODULE/ (no existe localmente)"
+          fi
         done
           
     - name: 🔧 Configurar permisos
@@ -79,12 +83,16 @@ jobs:
         )
         
         for MODULE in "${MODULES[@]}"; do
-          echo "🔧 Configurando permisos para modulos/$MODULE/"
-          ssh -o StrictHostKeyChecking=no -p 65002 ${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_HOST }} \
-            "chmod -R 755 ${{ secrets.HOSTINGER_PATH }}/modulos/$MODULE/ && \
-             find ${{ secrets.HOSTINGER_PATH }}/modulos/$MODULE/ -type f -exec chmod 644 {} \; && \
-             chmod -R 755 ${{ secrets.HOSTINGER_PATH }}/modulos/$MODULE/uploads/ && \
-             chmod -R 777 ${{ secrets.HOSTINGER_PATH }}/modulos/$MODULE/uploads/ || true"
+          if [ -d "./modulos/$MODULE" ]; then
+            echo "🔧 Configurando permisos para modulos/$MODULE/"
+            ssh -o StrictHostKeyChecking=no -p 65002 ${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_HOST }} \
+              "chmod -R 755 ${{ secrets.HOSTINGER_PATH }}/modulos/$MODULE/ && \
+               find ${{ secrets.HOSTINGER_PATH }}/modulos/$MODULE/ -type f -exec chmod 644 {} \; && \
+               chmod -R 755 ${{ secrets.HOSTINGER_PATH }}/modulos/$MODULE/uploads/ && \
+               chmod -R 777 ${{ secrets.HOSTINGER_PATH }}/modulos/$MODULE/uploads/ || true"
+          else
+            echo "⚠️ Saltando permisos para modulos/$MODULE/ (no existe localmente)"
+          fi
         done
         
     - name: ✅ Verificar deploy
