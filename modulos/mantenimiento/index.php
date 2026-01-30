@@ -7,7 +7,6 @@ require_once '../../core/permissions/permissions.php';
 
 
 $usuario = obtenerUsuarioActual();
-$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
 // Obtener cargo del operario para el menú
 $cargoOperario = $usuario['CodNivelesCargos'];
 $CodigoCargoOperario = $usuario['CodNivelesCargos'];
@@ -301,7 +300,7 @@ if (!tienePermiso('index_mantenimiento', 'vista', $cargoOperario)) {
             <!-- todo el contenido existente -->
 
             <!-- Renderizar header universal -->
-            <?php echo renderHeader($usuario, $esAdmin, ''); ?>
+            <?php echo renderHeader($usuario, false, ''); ?>
 
             <?php
             $ticket = new Ticket();
@@ -376,6 +375,4 @@ if (!tienePermiso('index_mantenimiento', 'vista', $cargoOperario)) {
 
         </div>
     </div>
-</body>
-
-</html>
+</body></html>

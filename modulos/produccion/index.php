@@ -8,7 +8,7 @@ require_once '../../core/layout/header_universal.php';
 require_once '../../core/permissions/permissions.php';
 
 $usuario = obtenerUsuarioActual();
-$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
+$usuario = obtenerUsuarioActual();
 
 $cargoOperario = $usuario['CodNivelesCargos'];
 
@@ -476,7 +476,7 @@ if (!tienePermiso('index_produccion', 'vista', $cargoOperario)) {
 
     <div class="main-container">
         <div class="contenedor-principal">
-            <?php echo renderHeader($usuario, $esAdmin, ''); ?>
+            <?php echo renderHeader($usuario, false, ''); ?>
 
             <div class="module-header" style="display:none;">
                 <h1 class="module-title-page">Área de Producción</h1>

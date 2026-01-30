@@ -7,7 +7,6 @@ require_once '../../core/permissions/permissions.php';
 
 $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
-$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
 // Verificar acceso al módulo (cargos con permiso para ver marcaciones)
 // Verificar acceso al módulo
 if (!tienePermiso('index_auxiliaradministrativo', 'vista', $cargoOperario)) {
@@ -49,7 +48,7 @@ if (!tienePermiso('index_auxiliaradministrativo', 'vista', $cargoOperario)) {
     <?php echo renderMenuLateral($cargoOperario); ?>
     <div class="main-container">
         <div class="contenedor-principal">
-            <?php echo renderHeader($usuario, $esAdmin, ''); ?>
+            <?php echo renderHeader($usuario, false, ''); ?>
 
             <h2 class="section-title">
                 <i class="fas fa-chart-line"></i> Indicadores de Control

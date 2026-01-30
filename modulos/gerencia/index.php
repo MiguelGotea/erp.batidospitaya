@@ -8,8 +8,6 @@ require_once '../../core/permissions/permissions.php';
 //verificarAccesoModulo('gerencia');
 
 $usuario = obtenerUsuarioActual();
-$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
-
 $cargoOperario = $usuario['CodNivelesCargos'];
 
 // Verificar acceso al módulo
@@ -53,7 +51,7 @@ if (!tienePermiso('index_gerencia', 'vista', $cargoOperario)) {
     <?php echo renderMenuLateral($cargoOperario); ?>
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, $esAdmin); ?>
+            <?php echo renderHeader($usuario, false); ?>
 
             <h2 class="section-title">
                 <i class="fas fa-bolt"></i> Accesos Rápidos

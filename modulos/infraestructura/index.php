@@ -7,8 +7,6 @@ require_once '../../core/permissions/permissions.php';
 //verificarAccesoModulo('sistema'); Esto ya no se usa
 
 $usuario = obtenerUsuarioActual();
-$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
-// Obtener cargo del operario para el menú
 $cargoOperario = $usuario['CodNivelesCargos'];
 // Verificar acceso al módulo (cargos con permiso para ver marcaciones)
 // Verificar acceso al módulo
@@ -410,7 +408,7 @@ if (!tienePermiso('index_infraestructura', 'vista', $cargoOperario)) {
     <div class="main-container">
         <div class="contenedor-principal">
             <!-- Renderizar header universal -->
-            <?php echo renderHeader($usuario, $esAdmin, ''); ?>
+            <?php echo renderHeader($usuario, false, ''); ?>
 
             <?php
             $ticket = new Ticket();
