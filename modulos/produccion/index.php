@@ -25,7 +25,7 @@ if (!tienePermiso('index_produccion', 'vista', $cargoOperario)) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Producción - Batidos Pitaya</title>
     <link rel="stylesheet" href="../../core/assets/css/indexmodulos.css?v=<?php echo mt_rand(1, 10000); ?>">
-    <link rel="icon" href="../../assets/img/icon12.png" type="image/png">
+    <link rel="icon" href="../../core/assets/img/icon12.png" type="image/png">
     <style>
         .modules {
             display: grid;

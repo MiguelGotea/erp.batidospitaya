@@ -157,10 +157,6 @@ if (!tienePermiso('index_diseno', 'vista', $cargoOperario)) {
         <div class="contenedor-principal">
             <?php echo renderHeader($usuario, false, ''); ?>
 
-            <div class="module-header">
-                <h1 class="module-title-page">Área de Diseño Gráfico y Multimedia</h1>
-            </div>
-
             <div class="modules">
                 <a href="auditorias_original/index_auditorias_publico.php" class="module-card">
 
