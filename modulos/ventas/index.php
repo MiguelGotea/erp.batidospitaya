@@ -80,45 +80,9 @@ try {
     <link rel="icon" type="image/png" href="../../core/assets/img/icon12.png">
     <link rel="stylesheet" href="../../core/assets/css/indexmodulos.css?v=<?php echo mt_rand(1, 10000); ?>">
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Calibri', sans-serif;
-        }
-
-        body {
-            background-color: #f5f5f5;
-            color: #333;
-            font-size: 14px;
-        }
-
         .container {
             max-width: auto;
             margin: 0 auto;
-            padding: 20px;
-        }
-
-        .header-ventas {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px 0;
-            margin-bottom: 20px;
-            border-bottom: 1px solid #ddd;
-        }
-
-        .header-ventas h1 {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            color: #0E544C;
-        }
-
-        .header-actions {
-            display: flex;
-            align-items: center;
-            gap: 20px;
         }
 
         .btn-nuevo-pedido {
@@ -137,15 +101,7 @@ try {
             background-color: #0E544C;
         }
 
-        .user-info {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-        }
 
-        .user-info small {
-            color: #666;
-        }
 
         .filtros {
             display: flex;
@@ -339,123 +295,119 @@ try {
 </head>
 
 <body>
-    <div class="container">
-        <header class="header-ventas">
-            <a href="../../index.php">
-                <img src="../../assets/img/Logo.svg" alt="Batidos Pitaya" class="logo">
-            </a>
-            <h1><i class="fas fa-cash-register"></i> Ventas</h1>
-            <div class="header-actions">
+    <?php echo renderMenuLateral($cargoOperario); ?>
+    <div class="main-container">
+        <div class="sub-container">
+            <?php echo renderHeader($usuario, false, 'Ventas'); ?>
+
+            <div style="display: flex; justify-content: flex-end; margin-bottom: 20px;">
                 <a href="crearpedido.php" class="btn-nuevo-pedido" target="_blank">
                     <i class="fas fa-plus"></i> Nuevo Pedido
                 </a>
-                <div class="user-info">
-                    <span><?= htmlspecialchars($usuario['nombre']) ?></span>
-                    <small><?= ucfirst($usuario['rol']) ?></small>
-                </div>
             </div>
-        </header>
 
-        <div class="filtros">
-            <div class="filtro-group">
-                <label for="fecha">Fecha:</label>
-                <input type="date" id="fecha" name="fecha" value="<?= htmlspecialchars($fecha) ?>">
-            </div>
-            <div class="filtro-group">
-                <label for="sucursal">Sucursal:</label>
-                <select id="sucursal" name="sucursal">
-                    <option value="">Todas</option>
-                    <?php foreach ($sucursales as $sucursal): ?>
-                        <option value="<?= $sucursal['id'] ?>" <?= $sucursal['id'] == $sucursal_filtro ? 'selected' : '' ?>>
-                            <?= htmlspecialchars($sucursal['nombre']) ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-            <div class="filtro-group">
-                <label for="estado">Estado:</label>
-                <select id="estado" name="estado">
-                    <option value="">Todos</option>
-                    <option value="pendiente" <?= $estado == 'pendiente' ? 'selected' : '' ?>>Enviado al Cliente</option>
-                    <option value="completado" <?= $estado == 'completado' ? 'selected' : '' ?>>Completados</option>
-                    <option value="cancelado" <?= $estado == 'cancelado' ? 'selected' : '' ?>>Cancelados</option>
-                </select>
-            </div>
-            <button id="btn-filtrar" class="btn-filtrar">
-                <i class="fas fa-filter"></i> Filtrar
-            </button>
-        </div>
-
-        <div class="pedidos-list">
-            <?php if (empty($pedidos)): ?>
-                <div style="padding: 20px; text-align: center; color: #666;">
-                    No se encontraron pedidos con los filtros seleccionados
+            <div class="filtros">
+                <div class="filtro-group">
+                    <label for="fecha">Fecha:</label>
+                    <input type="date" id="fecha" name="fecha" value="<?= htmlspecialchars($fecha) ?>">
                 </div>
-            <?php else: ?>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Fecha/Hora</th>
-                            <th>Sucursal</th>
-                            <th>Cliente</th>
-                            <th>Total</th>
-                            <th>Estado</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($pedidos as $pedido): ?>
-                            <tr>
-                                <td><?= htmlspecialchars($pedido['codigo']) ?></td>
-                                <td>
-                                    <?php
-                                    $fechaHora = date('Y-m-d H:i:s', strtotime($pedido['fecha_hora'] . ' -6 hours'));
-                                    ?>
-                                    <div><?= formatoFecha($fechaHora) ?></div>
-                                    <small><?= formatoHora($fechaHora) ?></small>
-                                </td>
-                                <td><?= htmlspecialchars($pedido['sucursal']) ?></td>
-                                <td><?= htmlspecialchars($pedido['cliente']) ?></td>
-                                <td>C$ <?= number_format($pedido['monto_total'], 0) ?></td>
-                                <td>
-                                    <span class="estado-badge estado-<?= $pedido['estado'] ?>">
-                                        <?= $pedido['estado'] === 'pendiente' ? 'Enviado al cliente' : ucfirst($pedido['estado']) ?>
-                                    </span>
-                                </td>
-                                <!-- Columna botones de acciones -->
-                                <td>
-                                    <!-- Botón para ver el pedido (siempre visible) -->
-                                    <a href="verpedido.php?id=<?= $pedido['id'] ?>" class="btn-accion" title="Ver pedido"
-                                        target="_blank">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
-                                    <?php if (!in_array($pedido['estado'], ['completado', 'cancelado'])): ?>
-                                        <a href="crearpedido.php?id=<?= $pedido['id'] ?>" class="btn-accion" title="Editar"
-                                            target="_blank" style="display:none;">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                        <a style="display:none;" href="#" class="btn-accion btn-reimprimir"
-                                            data-id="<?= $pedido['id'] ?>" title="Enviar a Sucursal/Motorizado">
-                                            <i class="fas fa-print"></i>
-                                        </a>
-                                    <?php endif; ?>
-                                    <?php if ($pedido['estado'] == 'pendiente'): ?>
-                                        <a style="display:none;" href="#" class="btn-accion btn-completar"
-                                            data-id="<?= $pedido['id'] ?>" title="Marcar como completado">
-                                            <i class="fas fa-check"></i>
-                                        </a>
-                                        <a href="#" class="btn-accion btn-cancelar" data-id="<?= $pedido['id'] ?>"
-                                            title="Cancelar pedido">
-                                            <i class="fas fa-times"></i>
-                                        </a>
-                                    <?php endif; ?>
-                                </td>
-                            </tr>
+                <div class="filtro-group">
+                    <label for="sucursal">Sucursal:</label>
+                    <select id="sucursal" name="sucursal">
+                        <option value="">Todas</option>
+                        <?php foreach ($sucursales as $sucursal): ?>
+                            <option value="<?= $sucursal['id'] ?>" <?= $sucursal['id'] == $sucursal_filtro ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($sucursal['nombre']) ?>
+                            </option>
                         <?php endforeach; ?>
-                    </tbody>
-                </table>
-            <?php endif; ?>
+                    </select>
+                </div>
+                <div class="filtro-group">
+                    <label for="estado">Estado:</label>
+                    <select id="estado" name="estado">
+                        <option value="">Todos</option>
+                        <option value="pendiente" <?= $estado == 'pendiente' ? 'selected' : '' ?>>Enviado al Cliente
+                        </option>
+                        <option value="completado" <?= $estado == 'completado' ? 'selected' : '' ?>>Completados</option>
+                        <option value="cancelado" <?= $estado == 'cancelado' ? 'selected' : '' ?>>Cancelados</option>
+                    </select>
+                </div>
+                <button id="btn-filtrar" class="btn-filtrar">
+                    <i class="fas fa-filter"></i> Filtrar
+                </button>
+            </div>
+
+            <div class="pedidos-list">
+                <?php if (empty($pedidos)): ?>
+                    <div style="padding: 20px; text-align: center; color: #666;">
+                        No se encontraron pedidos con los filtros seleccionados
+                    </div>
+                <?php else: ?>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Fecha/Hora</th>
+                                <th>Sucursal</th>
+                                <th>Cliente</th>
+                                <th>Total</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($pedidos as $pedido): ?>
+                                <tr>
+                                    <td><?= htmlspecialchars($pedido['codigo']) ?></td>
+                                    <td>
+                                        <?php
+                                        $fechaHora = date('Y-m-d H:i:s', strtotime($pedido['fecha_hora'] . ' -6 hours'));
+                                        ?>
+                                        <div><?= formatoFecha($fechaHora) ?></div>
+                                        <small><?= formatoHoraAmPm($fechaHora) ?></small>
+                                    </td>
+                                    <td><?= htmlspecialchars($pedido['sucursal']) ?></td>
+                                    <td><?= htmlspecialchars($pedido['cliente']) ?></td>
+                                    <td>C$ <?= number_format($pedido['monto_total'], 0) ?></td>
+                                    <td>
+                                        <span class="estado-badge estado-<?= $pedido['estado'] ?>">
+                                            <?= $pedido['estado'] === 'pendiente' ? 'Enviado al cliente' : ucfirst($pedido['estado']) ?>
+                                        </span>
+                                    </td>
+                                    <!-- Columna botones de acciones -->
+                                    <td>
+                                        <!-- Botón para ver el pedido (siempre visible) -->
+                                        <a href="verpedido.php?id=<?= $pedido['id'] ?>" class="btn-accion" title="Ver pedido"
+                                            target="_blank">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <?php if (!in_array($pedido['estado'], ['completado', 'cancelado'])): ?>
+                                            <a href="crearpedido.php?id=<?= $pedido['id'] ?>" class="btn-accion" title="Editar"
+                                                target="_blank" style="display:none;">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a style="display:none;" href="#" class="btn-accion btn-reimprimir"
+                                                data-id="<?= $pedido['id'] ?>" title="Enviar a Sucursal/Motorizado">
+                                                <i class="fas fa-print"></i>
+                                            </a>
+                                        <?php endif; ?>
+                                        <?php if ($pedido['estado'] == 'pendiente'): ?>
+                                            <a style="display:none;" href="#" class="btn-accion btn-completar"
+                                                data-id="<?= $pedido['id'] ?>" title="Marcar como completado">
+                                                <i class="fas fa-check"></i>
+                                            </a>
+                                            <a href="#" class="btn-accion btn-cancelar" data-id="<?= $pedido['id'] ?>"
+                                                title="Cancelar pedido">
+                                                <i class="fas fa-times"></i>
+                                            </a>
+                                        <?php endif; ?>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                <?php endif; ?>
+            </div>
         </div>
     </div>
 
