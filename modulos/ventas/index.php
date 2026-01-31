@@ -79,6 +79,19 @@ try {
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <link rel="icon" type="image/png" href="../../assets/img/icon12.png">
     <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Calibri', sans-serif;
+        }
+
+        body {
+            background-color: #f5f5f5;
+            color: #333;
+            font-size: 14px;
+        }
+
         .container {
             max-width: auto;
             margin: 0 auto;
@@ -399,7 +412,7 @@ try {
                                     $fechaHora = date('Y-m-d H:i:s', strtotime($pedido['fecha_hora'] . ' -6 hours'));
                                     ?>
                                     <div><?= formatoFecha($fechaHora) ?></div>
-                                    <small><?= formatoHoraAmPm($fechaHora) ?></small>
+                                    <small><?= formatoHora($fechaHora) ?></small>
                                 </td>
                                 <td><?= htmlspecialchars($pedido['sucursal']) ?></td>
                                 <td><?= htmlspecialchars($pedido['cliente']) ?></td>

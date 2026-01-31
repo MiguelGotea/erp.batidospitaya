@@ -25,22 +25,99 @@ if (!tienePermiso('index_desarrollo', 'vista', $cargoOperario)) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Desarrollo - Batidos Pitaya</title>
-    <link rel="stylesheet"
-        href="../../core/assets/css/indexmodulos.css?v=<?= filemtime($_SERVER['DOCUMENT_ROOT'] . '/core/assets/css/indexmodulos.css') ?>">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <link rel="icon" href="../../assets/img/icon12.png" type="image/png">
     <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Calibri', sans-serif;
+            font-size: clamp(12px, 2vw, 18px) !important;
+        }
+
+        body {
+            background-color: #F6F6F6;
+            margin: 0;
+            padding: 0;
+        }
+
         .container {
             max-width: 1200px;
             margin: 0 auto;
             padding: 10px;
         }
 
+        .modules {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(135px, 135px));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .module-card {
+            background: white;
+            border-radius: 8px;
+            padding: 7px;
+            width: auto;
+            max-width: 135px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center !important;
+            justify-content: center !important;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .module-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .module-icon {
+            font-size: 2.5rem;
+            color: #51B8AC;
+            margin-bottom: 12px;
+        }
+
         .module-title {
+            margin: 0;
             font-size: 1.2rem;
             margin-bottom: 10px;
             color: #0E544C;
         }
 
+        .module-desc {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .module-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .module-title-page {
+            color: #51B8AC;
+            font-size: 1.8rem;
+        }
+
+        .category-title {
+            color: #0E544C;
+            font-size: 1.5rem;
+            margin: 30px 0 15px 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #51B8AC;
+            text-align: center;
+        }
+
+        /* Estilos para el indicador de bienvenida/información */
         .info-container {
             max-width: 1200px;
             margin: 0 auto 30px auto;

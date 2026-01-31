@@ -8,7 +8,6 @@ require_once '../../core/layout/header_universal.php';
 require_once '../../core/permissions/permissions.php';
 
 $usuario = obtenerUsuarioActual();
-$usuario = obtenerUsuarioActual();
 
 $cargoOperario = $usuario['CodNivelesCargos'];
 

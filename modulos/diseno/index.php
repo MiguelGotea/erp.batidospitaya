@@ -24,10 +24,23 @@ if (!tienePermiso('index_diseno', 'vista', $cargoOperario)) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Diseño - Batidos Pitaya</title>
-    <link rel="stylesheet"
-        href="../../core/assets/css/indexmodulos.css?v=<?= filemtime($_SERVER['DOCUMENT_ROOT'] . '/core/assets/css/indexmodulos.css') ?>">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <link rel="icon" href="../../assets/img/icon12.png" type="image/png">
     <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Calibri', sans-serif;
+            font-size: clamp(12px, 2vw, 18px) !important;
+        }
+
+        body {
+            background-color: #F6F6F6;
+            margin: 0;
+            padding: 0;
+        }
+
         .modules {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(135px, 135px));
@@ -74,6 +87,33 @@ if (!tienePermiso('index_diseno', 'vista', $cargoOperario)) {
             font-size: 1.2rem;
             margin-bottom: 10px;
             color: #0E544C;
+        }
+
+        .module-desc {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .module-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .module-title-page {
+            color: #51B8AC;
+            font-size: 1.8rem;
+        }
+
+        .category-title {
+            color: #0E544C;
+            font-size: 1.5rem;
+            margin: 30px 0 15px 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #51B8AC;
+            text-align: center;
+            /*Texto de categorías al centro*/
         }
 
         @media (max-width: 768px) {

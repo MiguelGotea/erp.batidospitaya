@@ -25,9 +25,26 @@ if (!tienePermiso('index_gerencia', 'vista', $cargoOperario)) {
     <title>Gerencia - Batidos Pitaya</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <link rel="stylesheet"
-        href="../../core/assets/css/indexmodulos.css?v=<?= filemtime($_SERVER['DOCUMENT_ROOT'] . '/core/assets/css/indexmodulos.css') ?>">
+        href="../../assets/css/indexmodulos.css?v=<?= filemtime($_SERVER['DOCUMENT_ROOT'] . '/assets/css/indexmodulos.css') ?>">
     <!-- CSS propio con manejo de versiones  evitar cache de buscador -->
     <link rel="icon" href="../../assets/img/icon12.png" type="image/png">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Calibri', sans-serif;
+            font-size: clamp(12px, 2vw, 18px) !important;
+        }
+
+        body {
+            background-color: #F6F6F6;
+            margin: 0;
+            padding: 0;
+        }
+
+        }
+    </style>
 </head>
 
 <body>
