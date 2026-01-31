@@ -433,7 +433,7 @@ if (!tienePermiso('index_produccion', 'vista', $cargoOperario)) {
     <?php echo renderMenuLateral($cargoOperario); ?>
 
     <div class="main-container">
-        <div class="contenedor-principal">
+        <div class="sub-container">
             <?php echo renderHeader($usuario, false, ''); ?>
 
             <div class="module-header" style="display:none;">
