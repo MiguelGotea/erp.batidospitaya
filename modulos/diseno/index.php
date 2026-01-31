@@ -157,11 +157,7 @@ if (!tienePermiso('index_diseno', 'vista', $cargoOperario)) {
         <div class="contenedor-principal">
             <?php echo renderHeader($usuario, false, ''); ?>
 
-            <div class="modules">
-                <a href="auditorias_original/index_auditorias_publico.php" class="module-card">
 
-                </a>
-            </div>
         </div>
     </div>
 </body>
