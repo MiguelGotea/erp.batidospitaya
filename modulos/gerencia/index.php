@@ -5,6 +5,7 @@ require_once '../../core/layout/header_universal.php';
 require_once '../../core/permissions/permissions.php';
 require_once '../../core/components/ComponentRegistry.php';
 
+
 // Verificar sesión y obtener usuario
 $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
