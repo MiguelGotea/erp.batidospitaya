@@ -24,8 +24,7 @@ if (!tienePermiso('index_gerencia', 'vista', $cargoOperario)) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gerencia - Batidos Pitaya</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-    <link rel="stylesheet"
-        href="../../assets/css/indexmodulos.css?v=<?= filemtime($_SERVER['DOCUMENT_ROOT'] . '/assets/css/indexmodulos.css') ?>">
+    <link rel="stylesheet" href="../../assets/css/indexmodulos.css?v=<?php echo mt_rand(1, 10000); ?>">
     <!-- CSS propio con manejo de versiones  evitar cache de buscador -->
     <link rel="icon" href="../../assets/img/icon12.png" type="image/png">
     <style>

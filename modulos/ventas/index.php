@@ -78,6 +78,7 @@ try {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <link rel="icon" type="image/png" href="../../assets/img/icon12.png">
+    <link rel="stylesheet" href="../../assets/css/indexmodulos.css?v=<?php echo mt_rand(1, 10000); ?>">
     <style>
         * {
             box-sizing: border-box;

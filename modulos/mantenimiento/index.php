@@ -29,6 +29,7 @@ if (!tienePermiso('index_mantenimiento', 'vista', $cargoOperario)) {
     <title>Mantenimiento - Batidos Pitaya</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <link rel="icon" href="../../assets/img/icon12.png" type="image/png">
+    <link rel="stylesheet" href="../../assets/css/indexmodulos.css?v=<?php echo mt_rand(1, 10000); ?>">
     <style>
         * {
             box-sizing: border-box;
@@ -375,4 +376,6 @@ if (!tienePermiso('index_mantenimiento', 'vista', $cargoOperario)) {
 
         </div>
     </div>
-</body></html>
+</body>
+
+</html>
