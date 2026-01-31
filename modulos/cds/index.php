@@ -49,7 +49,7 @@ if (!tienePermiso('index_cds', 'vista', $cargoOperario)) {
         <?php echo renderMenuLateral($cargoOperario); ?>
         <div class="main-container">
             <div class="contenedor-principal">
-                <?php echo renderHeader($usuario, $esAdmin); ?>
+                <?php echo renderHeader($usuario, false); ?>
 
                 <h2 class="section-title">
                     <i class="fas fa-chart-line"></i> Indicadores de Control
