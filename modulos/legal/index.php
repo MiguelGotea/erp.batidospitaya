@@ -47,7 +47,7 @@ if (!tienePermiso('index_legal', 'vista', $cargoOperario)) {
     <?php echo renderMenuLateral($cargoOperario); ?>
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, $esAdmin); ?>
+            <?php echo renderHeader($usuario, false); ?>
 
             <h2 class="section-title">
                 <i class="fas fa-bolt"></i> Accesos Rápidos
