@@ -32,10 +32,21 @@ cd "c:\Users\migue\Desktop\Sistema\Pitaya Web\VisualCode\erp.batidospitaya.com"
 - `gitpush-mantenimiento.ps1`
 - `gitpush-marketing.ps1`
 - `gitpush-produccion.ps1`
+- `gitpush-rh.ps1`
 - `gitpush-sistemas.ps1`
 - `gitpush-tecnicodesarrollohumano.ps1`
 - `gitpush-ventas.ps1`
 - `gitpush.ps1` (sube todos los cambios)
+
+## 🔄 Sincronización en Hostinger (Reset)
+
+Si necesitas forzar que el servidor de Hostinger se iguale exactamente a lo que hay en GitHub (útil si hay conflictos o archivos nuevos de configuración):
+
+```bash
+cd ~/domains/erp.batidospitaya.com/public_html
+git fetch origin main
+git reset --hard origin/main
+```
 
 ## ⚡ Tip: Crear Alias (Opcional)
 
