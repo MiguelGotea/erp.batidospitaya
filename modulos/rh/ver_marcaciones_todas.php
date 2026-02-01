@@ -1479,63 +1479,63 @@ function verificarTardanzaYaRegistrada(
 
                     <!-- NUEVO: Filtro por número de semana (solo para líderes) -->
                     <?php if ($esContabilidad): ?>
-                                <!-- Botón Exportar (opcional, puedes eliminarlo si no lo quieres) -->
-                                <div style="display:none;" class="filter-group" style="align-self: flex-end;">
-                                    <a href="ver_marcaciones_todas.php?<?= http_build_query([
-                                        'modo' => $modoVista,
-                                        'sucursal' => $modoVista === 'sucursal' ? $sucursalSeleccionada : '',
-                                        'desde' => $fechaDesde,
-                                        'hasta' => $fechaHasta,
-                                        'activo' => $filtroActivo,
-                                        'operario_id' => $operario_id,
-                                        'exportar_excel' => 1
-                                    ]) ?>" class="btn">
-                                        <i class="fas fa-file-excel"></i> Exportar a Excel
-                                    </a>
-                                </div>
+                        <!-- Botón Exportar (opcional, puedes eliminarlo si no lo quieres) -->
+                        <div style="display:none;" class="filter-group" style="align-self: flex-end;">
+                            <a href="ver_marcaciones_todas.php?<?= http_build_query([
+                                'modo' => $modoVista,
+                                'sucursal' => $modoVista === 'sucursal' ? $sucursalSeleccionada : '',
+                                'desde' => $fechaDesde,
+                                'hasta' => $fechaHasta,
+                                'activo' => $filtroActivo,
+                                'operario_id' => $operario_id,
+                                'exportar_excel' => 1
+                            ]) ?>" class="btn">
+                                <i class="fas fa-file-excel"></i> Exportar a Excel
+                            </a>
+                        </div>
 
-                                <!-- Nuevos botones para Faltas y Tardanzas -->
-                                <div class="filter-group" style="align-self: flex-end; display:none;">
-                                    <a href="ver_marcaciones_todas.php?<?= http_build_query([
-                                        'modo' => $modoVista,
-                                        'sucursal' => $modoVista === 'sucursal' ? $sucursalSeleccionada : '',
-                                        'desde' => $fechaDesde,
-                                        'hasta' => $fechaHasta,
-                                        'activo' => $filtroActivo,
-                                        'operario_id' => $operario_id,
-                                        'exportar_faltas' => 1
-                                    ]) ?>" class="btn" style="background-color: #dc3545;">
-                                        <i class="fas fa-file-excel"></i> Faltas
-                                    </a>
-                                </div>
+                        <!-- Nuevos botones para Faltas y Tardanzas -->
+                        <div class="filter-group" style="align-self: flex-end; display:none;">
+                            <a href="ver_marcaciones_todas.php?<?= http_build_query([
+                                'modo' => $modoVista,
+                                'sucursal' => $modoVista === 'sucursal' ? $sucursalSeleccionada : '',
+                                'desde' => $fechaDesde,
+                                'hasta' => $fechaHasta,
+                                'activo' => $filtroActivo,
+                                'operario_id' => $operario_id,
+                                'exportar_faltas' => 1
+                            ]) ?>" class="btn" style="background-color: #dc3545;">
+                                <i class="fas fa-file-excel"></i> Faltas
+                            </a>
+                        </div>
 
-                                <div class="filter-group" style="align-self: flex-end;">
-                                    <a href="ver_marcaciones_todas.php?<?= http_build_query([
-                                        'modo' => $modoVista,
-                                        'sucursal' => $modoVista === 'sucursal' ? $sucursalSeleccionada : '',
-                                        'desde' => $fechaDesde,
-                                        'hasta' => $fechaHasta,
-                                        'activo' => $filtroActivo,
-                                        'operario_id' => $operario_id,
-                                        'exportar_tardanzas' => 1
-                                    ]) ?>" class="btn" style="background-color: #ffc107; color: #000;">
-                                        <i class="fas fa-file-excel"></i> Excel Tardanzas
-                                    </a>
-                                </div>
+                        <div class="filter-group" style="align-self: flex-end;">
+                            <a href="ver_marcaciones_todas.php?<?= http_build_query([
+                                'modo' => $modoVista,
+                                'sucursal' => $modoVista === 'sucursal' ? $sucursalSeleccionada : '',
+                                'desde' => $fechaDesde,
+                                'hasta' => $fechaHasta,
+                                'activo' => $filtroActivo,
+                                'operario_id' => $operario_id,
+                                'exportar_tardanzas' => 1
+                            ]) ?>" class="btn" style="background-color: #ffc107; color: #000;">
+                                <i class="fas fa-file-excel"></i> Excel Tardanzas
+                            </a>
+                        </div>
 
-                                <!-- Botón para exportar tardanzas detalladas -->
-                                <div class="filter-group" style="align-self: flex-end; display:none;">
-                                    <a href="exportar_tardanzas_detalle.php?<?= http_build_query([
-                                        'modo' => $modoVista,
-                                        'sucursal' => $modoVista === 'sucursal' ? $sucursalSeleccionada : '',
-                                        'desde' => $fechaDesde,
-                                        'hasta' => $fechaHasta,
-                                        'activo' => $filtroActivo,
-                                        'operario_id' => $operario_id
-                                    ]) ?>" class="btn" style="background-color: #17a2b8; color: white;">
-                                        <i class="fas fa-file-excel"></i> Tardanzas Detalle
-                                    </a>
-                                </div>
+                        <!-- Botón para exportar tardanzas detalladas -->
+                        <div class="filter-group" style="align-self: flex-end; display:none;">
+                            <a href="exportar_tardanzas_detalle.php?<?= http_build_query([
+                                'modo' => $modoVista,
+                                'sucursal' => $modoVista === 'sucursal' ? $sucursalSeleccionada : '',
+                                'desde' => $fechaDesde,
+                                'hasta' => $fechaHasta,
+                                'activo' => $filtroActivo,
+                                'operario_id' => $operario_id
+                            ]) ?>" class="btn" style="background-color: #17a2b8; color: white;">
+                                <i class="fas fa-file-excel"></i> Tardanzas Detalle
+                            </a>
+                        </div>
                     <?php endif; ?>
                 </div>
 
@@ -1556,64 +1556,71 @@ function verificarTardanzaYaRegistrada(
 
                 <div class="table-container">
                     <?php if (empty($marcaciones)): ?>
-                                <div class="no-results">
-                                    No se encontraron marcaciones para los filtros seleccionados.
-                                </div>
+                        <div class="no-results">
+                            No se encontraron marcaciones para los filtros seleccionados.
+                        </div>
                     <?php else: ?>
-                                <table id="tabla-marcaciones">
-                                    <thead>
-                                        <tr>
-                                            <th data-column="numero_semana" data-type="number">
-                                                Semana
-                                                <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
-                                            </th>
-                                            <th data-column="nombre_sucursal" data-type="list">
-                                                Sucursal
-                                                <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
-                                            </th>
-                                            <th data-column="nombre_completo" data-type="list">
-                                                Colaborador/a (Código)
-                                                <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
-                                            </th>
-                                            <th data-column="nombre_cargo" data-type="list">
-                                                Cargo
-                                                <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
-                                            </th>
-                                            <th data-column="fecha" data-type="daterange">
-                                                Fecha
-                                                <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
-                                            </th>
-                                            <th>Turno Programado</th>
-                                            <th>Horario Programado</th>
-                                            <th>Horas Programadas</th>
-                                            <th>Horario Marcado</th>
-                                            <th>Horas Trabajadas</th>
-                                            <th>Diferencia</th>
-                                            <th>Diferencia Entrada</th>
-                                            <th>Diferencia Salida</th>
-                                            <th>Total Horas</th>
-                                            <th style="text-align: center;">Acciones</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="tablaMarcacionesBody">
-                                        <!-- Datos cargados vía AJAX -->
-                                    </tbody>
-                                </table>
+                        <table id="tabla-marcaciones">
+                            <thead>
+                                <tr>
+                                    <th data-column="numero_semana" data-type="number">
+                                        Semana
+                                        <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                    </th>
+                                    <th data-column="nombre_sucursal" data-type="list">
+                                        Sucursal
+                                        <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                    </th>
+                                    <th data-column="nombre_completo" data-type="list">
+                                        Colaborador/a (Código)
+                                        <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                    </th>
+                                    <th data-column="nombre_cargo" data-type="list">
+                                        Cargo
+                                        <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                    </th>
+                                    <th data-column="fecha" data-type="daterange">
+                                        Fecha
+                                        <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                    </th>
+                                    <th>Turno Programado</th>
+                                    <th>Horario Programado</th>
+                                    <?php if ($esLider): ?>
+                                        <th>Horas Programadas</th>
+                                    <?php endif; ?>
+                                    <th>Horario Marcado</th>
+                                    <?php if ($esLider): ?>
+                                        <th>Horas Trabajadas</th>
+                                    <?php endif; ?>
+                                    <th style="display:none;">Diferencia Entrada</th>
+                                    <th style="display:none;">Diferencia Salida</th>
+                                    <?php if ($esOperaciones): ?>
+                                        <th>Total Horas<br>Trabajadas</th>
+                                    <?php endif; ?>
+                                    <?php if ($esLider): ?>
+                                        <th style="text-align: center;">Acciones</th>
+                                    <?php endif; ?>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaMarcacionesBody">
+                                <!-- Datos cargados vía AJAX -->
+                            </tbody>
+                        </table>
 
-                                <!-- Controles de paginación -->
-                                <div class="d-flex justify-content-between align-items-center mt-3">
-                                    <div class="d-flex align-items-center gap-2">
-                                        <label class="mb-0">Mostrar:</label>
-                                        <select class="form-select form-select-sm" id="registrosPorPagina" style="width: auto;"
-                                            onchange="cambiarRegistrosPorPagina()">
-                                            <option value="25" selected>25</option>
-                                            <option value="50">50</option>
-                                            <option value="100">100</option>
-                                        </select>
-                                        <span class="mb-0">registros</span>
-                                    </div>
-                                    <div id="paginacion"></div>
-                                </div>
+                        <!-- Controles de paginación -->
+                        <div class="d-flex justify-content-between align-items-center mt-3">
+                            <div class="d-flex align-items-center gap-2">
+                                <label class="mb-0">Mostrar:</label>
+                                <select class="form-select form-select-sm" id="registrosPorPagina" style="width: auto;"
+                                    onchange="cambiarRegistrosPorPagina()">
+                                    <option value="25" selected>25</option>
+                                    <option value="50">50</option>
+                                    <option value="100">100</option>
+                                </select>
+                                <span class="mb-0">registros</span>
+                            </div>
+                            <div id="paginacion"></div>
+                        </div>
                     <?php endif; ?>
                 </div>
             </div>
@@ -1763,12 +1770,12 @@ function verificarTardanzaYaRegistrada(
                 // Datos de operarios para el autocompletado
                 const operariosData = [
                     <?php if ($esLider): ?>
-                                { id: <?php echo $_SESSION['usuario_id']; ?>, nombre: '' },
+                                        { id: <?php echo $_SESSION['usuario_id']; ?>, nombre: '' },
                     <?php else: ?>
-                                { id: 0, nombre: 'Todos los colaboradores' },
+                                        { id: 0, nombre: 'Todos los colaboradores' },
                     <?php endif; ?>
             <?php foreach ($operarios as $op): ?>
-                                { id: <?php echo $op['CodOperario']; ?>, nombre: '<?php echo addslashes($op['nombre_completo']); ?>' },
+                                        { id: <?php echo $op['CodOperario']; ?>, nombre: '<?php echo addslashes($op['nombre_completo']); ?>' },
                     <?php endforeach; ?>
                 ];
 
@@ -1795,13 +1802,13 @@ function verificarTardanzaYaRegistrada(
                     if (texto === '') {
                         operarioIdInput.value = '0';
                         <?php if ($esLider): ?>
-                                        this.value = '';
-                                    operarioIdInput.value = '<?= $_SESSION['usuario_id'] ?>';
+                            this.value = '';
+                            operarioIdInput.value = '<?= $_SESSION['usuario_id'] ?>';
                         <?php else: ?>
-                                        this.value = '';
-                                    operarioIdInput.value = '0';
+                            this.value = '';
+                            operarioIdInput.value = '0';
                         <?php endif; ?>
-                            sugerenciasDiv.style.display = 'none';
+                        sugerenciasDiv.style.display = 'none';
                         return;
                     }
 
@@ -1856,12 +1863,12 @@ function verificarTardanzaYaRegistrada(
                             operarioIdInput.value = '0';
 
                             <?php if ($esLider): ?>
-                                            // Para líderes, mantener su ID
-                                            operarioIdInput.value = '<?= $_SESSION['usuario_id'] ?>';
+                                // Para líderes, mantener su ID
+                                operarioIdInput.value = '<?= $_SESSION['usuario_id'] ?>';
                             <?php endif; ?>
 
-                                // Ocultar sugerencias
-                                sugerenciasDiv.style.display = 'none';
+                            // Ocultar sugerencias
+                            sugerenciasDiv.style.display = 'none';
 
                             // Mostrar mensaje visual opcional (opcional)
                             // this.placeholder = 'Campo vacío - Mostrando todos';
@@ -1888,23 +1895,23 @@ function verificarTardanzaYaRegistrada(
                     let sucursal, modo;
 
                     <?php if ($esLider): ?>
-                                    // Para líderes, usar la primera sucursal asignada
-                                    sucursal = '<?= $sucursales[0]['codigo'] ?? '' ?>';
-                                modo = 'sucursal';
+                        // Para líderes, usar la primera sucursal asignada
+                        sucursal = '<?= $sucursales[0]['codigo'] ?? '' ?>';
+                        modo = 'sucursal';
                     <?php else: ?>
-                                    // Para otros usuarios, usar el valor del select
-                                    sucursal = document.getElementById('sucursal').value;
-                                modo = sucursal === 'todas' ? 'todas' : 'sucursal';
+                        // Para otros usuarios, usar el valor del select
+                        sucursal = document.getElementById('sucursal').value;
+                        modo = sucursal === 'todas' ? 'todas' : 'sucursal';
                     <?php endif; ?>
 
                     const desde = document.getElementById('desde').value;
                     const hasta = document.getElementById('hasta').value;
 
                     <?php if ($esLider): ?>
-                                    const operario_id = document.getElementById('operario_id').value;
+                        const operario_id = document.getElementById('operario_id').value;
                     <?php else: ?>
-                                    const operarioInput = document.getElementById('operario');
-                                const operario_id = document.getElementById('operario_id').value;
+                        const operarioInput = document.getElementById('operario');
+                        const operario_id = document.getElementById('operario_id').value;
                     <?php endif; ?>
 
                     // Validar fechas
@@ -1926,20 +1933,20 @@ function verificarTardanzaYaRegistrada(
                     params.append('activo', '<?= $filtroActivo ?>');
 
                     <?php if ($esLider): ?>
-                                    params.append('operario_id', operario_id);
+                        params.append('operario_id', operario_id);
                     <?php else: ?>
-                                    // Si el campo de operario está vacío o dice "Todos los colaboradores", buscar todos
-                                    if (operarioInput.value.trim() === '' ||
-                                    operarioInput.value === 'Todos los colaboradores' ||
-                                    operarioInput.value === '') {
-                                    params.append('operario_id', '0');
-                                    params.append('operario_vacio', '1'); // Bandera para indicar que se dejó vacío
-                                } else {
-                                    params.append('operario_id', operario_id);
-                                }
+                        // Si el campo de operario está vacío o dice "Todos los colaboradores", buscar todos
+                        if (operarioInput.value.trim() === '' ||
+                            operarioInput.value === 'Todos los colaboradores' ||
+                            operarioInput.value === '') {
+                            params.append('operario_id', '0');
+                            params.append('operario_vacio', '1'); // Bandera para indicar que se dejó vacío
+                        } else {
+                            params.append('operario_id', operario_id);
+                        }
                     <?php endif; ?>
 
-                        window.location.href = `ver_marcaciones_todas.php?${params.toString()}`;
+                    window.location.href = `ver_marcaciones_todas.php?${params.toString()}`;
                 }
 
                 // Modificar la función cambiarFiltroActivo para incluir el modo
@@ -1947,13 +1954,13 @@ function verificarTardanzaYaRegistrada(
                     let sucursal, modo;
 
                     <?php if ($esLider): ?>
-                                    // Para líderes, usar la primera sucursal asignada
-                                    sucursal = '<?= $sucursales[0]['codigo'] ?? '' ?>';
-                                modo = 'sucursal';
+                        // Para líderes, usar la primera sucursal asignada
+                        sucursal = '<?= $sucursales[0]['codigo'] ?? '' ?>';
+                        modo = 'sucursal';
                     <?php else: ?>
-                                    // Para otros usuarios, usar el valor del select
-                                    sucursal = document.getElementById('sucursal').value;
-                                modo = sucursal === 'todas' ? 'todas' : 'sucursal';
+                        // Para otros usuarios, usar el valor del select
+                        sucursal = document.getElementById('sucursal').value;
+                        modo = sucursal === 'todas' ? 'todas' : 'sucursal';
                     <?php endif; ?>
 
                     const desde = document.getElementById('desde').value;
@@ -2003,46 +2010,46 @@ function verificarTardanzaYaRegistrada(
 
                 // Mostrar notificaciones si hay en sesión
                 <?php if (isset($_SESSION['exito'])): ?>
-                                mostrarNotificacion('<?= $_SESSION['exito'] ?>', 'success');
-                                <?php unset($_SESSION['exito']); ?>
+                    mostrarNotificacion('<?= $_SESSION['exito'] ?>', 'success');
+                    <?php unset($_SESSION['exito']); ?>
                 <?php endif; ?>
 
                 <?php if (isset($_SESSION['error'])): ?>
-                                mostrarNotificacion('<?= $_SESSION['error'] ?>', 'error');
-                                <?php unset($_SESSION['error']); ?>
+                    mostrarNotificacion('<?= $_SESSION['error'] ?>', 'error');
+                    <?php unset($_SESSION['error']); ?>
                 <?php endif; ?>
 
-                    // Función para limitar fechas en el cliente
-                    function limitarFechas() {
-                        const hoy = new Date().toISOString().split('T')[0];
-                        const desdeInput = document.getElementById('desde');
-                        const hastaInput = document.getElementById('hasta');
+                // Función para limitar fechas en el cliente
+                function limitarFechas() {
+                    const hoy = new Date().toISOString().split('T')[0];
+                    const desdeInput = document.getElementById('desde');
+                    const hastaInput = document.getElementById('hasta');
 
-                        // Establecer máximo hoy
-                        desdeInput.max = hoy;
-                        hastaInput.max = hoy;
+                    // Establecer máximo hoy
+                    desdeInput.max = hoy;
+                    hastaInput.max = hoy;
 
-                        // Validar al cambiar fechas
-                        desdeInput.addEventListener('change', function () {
-                            if (this.value > hoy) {
-                                this.value = hoy;
-                                mostrarNotificacion('No se pueden seleccionar fechas futuras. Se ajustó al día actual.', 'info');
-                            }
-                            if (this.value > hastaInput.value) {
-                                hastaInput.value = this.value;
-                            }
-                        });
+                    // Validar al cambiar fechas
+                    desdeInput.addEventListener('change', function () {
+                        if (this.value > hoy) {
+                            this.value = hoy;
+                            mostrarNotificacion('No se pueden seleccionar fechas futuras. Se ajustó al día actual.', 'info');
+                        }
+                        if (this.value > hastaInput.value) {
+                            hastaInput.value = this.value;
+                        }
+                    });
 
-                        hastaInput.addEventListener('change', function () {
-                            if (this.value > hoy) {
-                                this.value = hoy;
-                                mostrarNotificacion('No se pueden seleccionar fechas futuras. Se ajustó al día actual.', 'info');
-                            }
-                            if (this.value < desdeInput.value) {
-                                desdeInput.value = this.value;
-                            }
-                        });
-                    }
+                    hastaInput.addEventListener('change', function () {
+                        if (this.value > hoy) {
+                            this.value = hoy;
+                            mostrarNotificacion('No se pueden seleccionar fechas futuras. Se ajustó al día actual.', 'info');
+                        }
+                        if (this.value < desdeInput.value) {
+                            desdeInput.value = this.value;
+                        }
+                    });
+                }
 
                 // Llamar la función cuando se cargue la página
                 document.addEventListener('DOMContentLoaded', function () {
@@ -2067,19 +2074,19 @@ function verificarTardanzaYaRegistrada(
                 // Función para limpiar el filtro de operario
                 function limpiarFiltroOperario() {
                     <?php if ($esLider): ?>
-                                    // Para líderes: seleccionar "Mis marcaciones"
-                                    document.getElementById('operario_id').value = '<?= $_SESSION['usuario_id'] ?>';
-                                aplicarFiltrosLider();
+                        // Para líderes: seleccionar "Mis marcaciones"
+                        document.getElementById('operario_id').value = '<?= $_SESSION['usuario_id'] ?>';
+                        aplicarFiltrosLider();
                     <?php else: ?>
-                                    // Para otros usuarios: resetear a "Todos los colaboradores"
-                                    const operarioInput = document.getElementById('operario');
-                                const operarioIdInput = document.getElementById('operario_id');
+                        // Para otros usuarios: resetear a "Todos los colaboradores"
+                        const operarioInput = document.getElementById('operario');
+                        const operarioIdInput = document.getElementById('operario_id');
 
-                                operarioInput.value = 'Todos los colaboradores';
-                                operarioIdInput.value = '0';
+                        operarioInput.value = 'Todos los colaboradores';
+                        operarioIdInput.value = '0';
 
-                                // Aplicar filtros inmediatamente
-                                aplicarFiltros();
+                        // Aplicar filtros inmediatamente
+                        aplicarFiltros();
                     <?php endif; ?>
                 }
 
@@ -2424,41 +2431,51 @@ function verificarTardanzaYaRegistrada(
                 // Función para limpiar todos los filtros
                 function limpiarTodosFiltros() {
                     <?php if ($esLider): ?>
-                                    // Para líderes
-                                    document.getElementById('numero_semana').value = '';
-                                document.getElementById('operario_id').value = '<?= $_SESSION['usuario_id'] ?>';
+                        // Para líderes
+                        document.getElementById('numero_semana').value = '';
+                        document.getElementById('operario_id').value = '<?= $_SESSION['usuario_id'] ?>';
 
-                                // Establecer fecha actual
-                                const hoy = new Date().toISOString().split('T')[0];
-                                const primerDiaMes = hoy.substring(0, 8) + '01';
+                        // Establecer fecha actual
+                        const hoy = new Date().toISOString().split('T')[0];
+                        const primerDiaMes = hoy.substring(0, 8) + '01';
 
-                                document.getElementById('desde').value = primerDiaMes;
-                                document.getElementById('hasta').value = hoy;
+                        document.getElementById('desde').value = primerDiaMes;
+                        document.getElementById('hasta').value = hoy;
 
-                                // Aplicar filtros
-                                aplicarFiltrosLider();
+                        // Aplicar filtros
+                        aplicarFiltrosLider();
                     <?php else: ?>
-                                    // Para otros usuarios
-                                    document.getElementById('sucursal').value = 'todas';
-                                document.getElementById('operario').value = 'Todos los colaboradores';
-                                document.getElementById('operario_id').value = '0';
+                        // Para otros usuarios
+                        document.getElementById('sucursal').value = 'todas';
+                        document.getElementById('operario').value = 'Todos los colaboradores';
+                        document.getElementById('operario_id').value = '0';
 
-                                // Establecer fecha actual
-                                const hoy = new Date().toISOString().split('T')[0];
-                                const primerDiaMes = hoy.substring(0, 8) + '01';
+                        // Establecer fecha actual
+                        const hoy = new Date().toISOString().split('T')[0];
+                        const primerDiaMes = hoy.substring(0, 8) + '01';
 
-                                document.getElementById('desde').value = primerDiaMes;
-                                document.getElementById('hasta').value = hoy;
+                        document.getElementById('desde').value = primerDiaMes;
+                        document.getElementById('hasta').value = hoy;
 
-                                // Aplicar filtros
-                                aplicarFiltros();
+                        // Aplicar filtros
+                        aplicarFiltros();
                     <?php endif; ?>
                 }
             </script>
 
             <!-- jQuery (required for filter system) -->
             <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-            
+
+            <!-- Permisos del usuario -->
+            <script>
+                const PERMISOS_USUARIO = {
+                    esLider: <?= $esLider ? 'true' : 'false' ?>,
+                    esOperaciones: <?= $esOperaciones ? 'true' : 'false' ?>,
+                    esCDS: <?= $esCDS ? 'true' : 'false' ?>,
+                    esContabilidad: <?= $esContabilidad ? 'true' : 'false' ?>
+                };
+            </script>
+
             <!-- Custom filter system -->
             <script src="js/ver_marcaciones_todas.js?v=<?php echo time(); ?>"></script>
         </div>
