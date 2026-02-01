@@ -233,9 +233,10 @@ function renderizarTabla(datos) {
 
                 tr.append(`<td class="text-center"><div class="rh-actions-cell">${accionesHtml}</div></td>`);
             }
+        }
 
-            tbody.append(tr);
-        });
+        tbody.append(tr);
+    });
 }
 
 // Calcular colspan para mensaje de "no hay registros"
