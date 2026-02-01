@@ -109,10 +109,10 @@ try {
                 $stmt = $conn->query("
                     SELECT 
                         CodNivelesCargos as valor,
-                        Cargo as texto
+                        Nombre as texto
                     FROM NivelesCargos
                     WHERE CodNivelesCargos IN (23, 20, 34)
-                    ORDER BY Cargo
+                    ORDER BY Nombre
                 ");
                 $opciones = $stmt->fetchAll(PDO::FETCH_ASSOC);
             } else {
@@ -120,10 +120,10 @@ try {
                 $stmt = $conn->query("
                     SELECT 
                         CodNivelesCargos as valor,
-                        Cargo as texto
+                        Nombre as texto
                     FROM NivelesCargos
                     WHERE CodNivelesCargos != 27
-                    ORDER BY Cargo
+                    ORDER BY Nombre
                 ");
                 $opciones = $stmt->fetchAll(PDO::FETCH_ASSOC);
             }

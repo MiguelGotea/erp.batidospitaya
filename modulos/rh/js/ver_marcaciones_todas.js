@@ -322,6 +322,11 @@ function filtrarNumerico(columna, tipo, valor) {
         filtrosActivos[columna][tipo] = valor;
     }
 
+    // EXCLUSIÓN MUTUA: Si se filtra por semana, eliminar filtro de fecha
+    if (columna === 'numero_semana') {
+        delete filtrosActivos['fecha'];
+    }
+
     paginaActual = 1;
     cargarDatos();
 }
@@ -466,6 +471,9 @@ function seleccionarFechaUnico(fecha, columna) {
     actualizarCalendarioUnico(columna);
 
     if (filtrosActivos[columna].desde && filtrosActivos[columna].hasta) {
+        // EXCLUSIÓN MUTUA: Si se filtra por fecha, eliminar filtro de semana
+        delete filtrosActivos['numero_semana'];
+
         paginaActual = 1;
         cargarDatos();
     }
@@ -670,10 +678,10 @@ function buscarEnOpciones(input) {
 // Utilidades de formateo
 function formatearFecha(fecha) {
     if (!fecha) return '-';
-    const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-    const d = new Date(fecha);
+    const meses = ['En', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+    const d = new Date(fecha + 'T00:00:00'); // Agregar hora para evitar problemas de zona horaria
     const año = String(d.getFullYear()).slice(-2);
-    return `${String(d.getDate()).padStart(2, '0')}-${meses[d.getMonth()]}-${año}`;
+    return `${String(d.getDate()).padStart(2, '0')}/${meses[d.getMonth()]}/${año}`;
 }
 
 function formatearHora(hora) {
