@@ -125,18 +125,40 @@ try {
     $stmtHorarios->execute($paramsHorarios);
     $horariosProgramados = $stmtHorarios->fetchAll(PDO::FETCH_ASSOC);
 
-    // PASO 2: Obtener marcaciones reales
+    // PASO 2: Obtener marcaciones reales para este rango y operarios/sucursales
+
+    // Si hay filtro de semana, obtener el rango real de esas semanas para traer todas las marcaciones
+    $fechaDesdeMarcaciones = $fechaDesde;
+    $fechaHastaMarcaciones = $fechaHasta;
+
+    if (isset($filtros['numero_semana'])) {
+        $stmtSemanas = $conn->prepare("
+            SELECT MIN(fecha_inicio) as minima, MAX(fecha_fin) as maxima 
+            FROM SemanasSistema 
+            WHERE (numero_semana >= ? OR ? = '') AND (numero_semana <= ? OR ? = '')
+        ");
+        $minSem = isset($filtros['numero_semana']['min']) ? $filtros['numero_semana']['min'] : '';
+        $maxSem = isset($filtros['numero_semana']['max']) ? $filtros['numero_semana']['max'] : '';
+        $stmtSemanas->execute([$minSem, $minSem, $maxSem, $maxSem]);
+        $rangoSemanas = $stmtSemanas->fetch(PDO::FETCH_ASSOC);
+
+        if ($rangoSemanas['minima']) {
+            $fechaDesdeMarcaciones = $rangoSemanas['minima'];
+            $fechaHastaMarcaciones = $rangoSemanas['maxima'];
+            if ($fechaHastaMarcaciones > $fechaHoy)
+                $fechaHastaMarcaciones = $fechaHoy;
+        }
+    }
+
     $sqlMarcaciones = "
-    SELECT
+    SELECT 
         m.id,
         m.fecha,
         m.hora_ingreso,
         m.hora_salida,
         m.CodOperario,
         m.sucursal_codigo,
-        s.nombre as nombre_sucursal,
-        o.Nombre, o.Apellido, o.Apellido2,
-        ss.numero_semana,
+        s.sucursal as nombre_sucursal,
         nc.Nombre as nombre_cargo,
         nc.CodNivelesCargos as codigo_cargo
     FROM marcaciones m
@@ -149,7 +171,7 @@ try {
     WHERE m.fecha BETWEEN ? AND ?
     ";
 
-    $paramsMarcaciones = [$fechaDesde, $fechaHasta];
+    $paramsMarcaciones = [$fechaDesdeMarcaciones, $fechaHastaMarcaciones];
 
     // Aplicar restricciones de permisos para marcaciones
     if ($esLider) {
