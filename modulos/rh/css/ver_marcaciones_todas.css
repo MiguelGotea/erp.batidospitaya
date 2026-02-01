@@ -166,6 +166,7 @@ td {
 th {
     background-color: #0E544C;
     color: white;
+    position: relative;
 }
 
 tr:nth-child(even) {
@@ -617,4 +618,343 @@ a.btn {
     .filter-group {
         min-width: 100%;
     }
+}
+
+/* ========================================
+   ESTILOS PARA SISTEMA DE FILTROS EN ENCABEZADOS
+   ======================================== */
+
+/* Icono de filtro en encabezados */
+.filter-icon {
+    margin-left: 8px;
+    cursor: pointer;
+    font-size: 12px;
+    opacity: 0.6;
+    transition: all 0.3s ease;
+}
+
+.filter-icon:hover {
+    opacity: 1;
+    color: #51B8AC;
+}
+
+.filter-icon.active {
+    opacity: 1;
+    color: #51B8AC;
+}
+
+.filter-icon.has-filter {
+    color: #dc3545;
+    opacity: 1;
+}
+
+/* Panel de filtro */
+.filter-panel {
+    position: fixed;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    padding: 15px;
+    z-index: 10000;
+    min-width: 250px;
+    max-width: 350px;
+    display: none;
+}
+
+.filter-panel.show {
+    display: block;
+}
+
+.filter-panel.has-daterange {
+    min-width: 320px;
+}
+
+/* Secciones del panel */
+.filter-section {
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #eee;
+}
+
+.filter-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.filter-section-title {
+    display: block;
+    font-weight: bold;
+    color: #0E544C;
+    margin-bottom: 8px;
+    font-size: 13px;
+}
+
+/* Botones de ordenamiento */
+.filter-sort-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.filter-sort-btn {
+    flex: 1;
+    padding: 6px 10px;
+    border: 1px solid #ddd;
+    background: white;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.2s;
+}
+
+.filter-sort-btn:hover {
+    background: #f8f9fa;
+    border-color: #51B8AC;
+}
+
+.filter-sort-btn.active {
+    background: #51B8AC;
+    color: white;
+    border-color: #51B8AC;
+}
+
+/* Botones de acción */
+.filter-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.filter-action-btn {
+    flex: 1;
+    padding: 6px 12px;
+    border: 1px solid #ddd;
+    background: white;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.2s;
+}
+
+.filter-action-btn.clear {
+    color: #dc3545;
+    border-color: #dc3545;
+}
+
+.filter-action-btn.clear:hover {
+    background: #dc3545;
+    color: white;
+}
+
+/* Búsqueda en filtros */
+.filter-search {
+    width: 100%;
+    padding: 6px 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 13px;
+    margin-bottom: 8px;
+}
+
+/* Opciones de filtro (checkboxes) */
+.filter-options {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #eee;
+    border-radius: 4px;
+    padding: 8px;
+}
+
+.filter-option {
+    padding: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    border-radius: 3px;
+    transition: background 0.2s;
+}
+
+.filter-option:hover {
+    background: #f8f9fa;
+}
+
+.filter-option input[type="checkbox"] {
+    cursor: pointer;
+}
+
+.filter-option span {
+    font-size: 13px;
+    user-select: none;
+}
+
+/* Scrollbar personalizada */
+.filter-options::-webkit-scrollbar {
+    width: 6px;
+}
+
+.filter-options::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.filter-options::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 3px;
+}
+
+.filter-options::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* Filtros numéricos */
+.numeric-inputs {
+    display: flex;
+    gap: 8px;
+}
+
+.numeric-inputs input {
+    flex: 1;
+}
+
+/* Calendario de rango de fechas */
+.daterange-inputs {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.daterange-calendar-container {
+    background: white;
+}
+
+.daterange-month-selector {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.daterange-month-selector select {
+    flex: 1;
+    padding: 6px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 12px;
+}
+
+.daterange-calendar {
+    width: 100%;
+}
+
+.daterange-calendar-header {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+    margin-bottom: 5px;
+}
+
+.daterange-calendar-day-name {
+    text-align: center;
+    font-weight: bold;
+    font-size: 11px;
+    color: #0E544C;
+    padding: 4px 0;
+}
+
+.daterange-calendar-days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+}
+
+.daterange-calendar-day {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #eee;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.2s;
+}
+
+.daterange-calendar-day:hover {
+    background: #f8f9fa;
+    border-color: #51B8AC;
+}
+
+.daterange-calendar-day.empty {
+    cursor: default;
+    border: none;
+}
+
+.daterange-calendar-day.selected {
+    background: #51B8AC;
+    color: white;
+    border-color: #51B8AC;
+}
+
+.daterange-calendar-day.in-range {
+    background: #e8f5f4;
+    border-color: #51B8AC;
+}
+
+/* Paginación */
+.pagination-btn {
+    padding: 6px 12px;
+    border: 1px solid #ddd;
+    background: white;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    margin: 0 2px;
+    transition: all 0.2s;
+}
+
+.pagination-btn:hover:not(:disabled) {
+    background: #f8f9fa;
+    border-color: #51B8AC;
+}
+
+.pagination-btn.active {
+    background: #51B8AC;
+    color: white;
+    border-color: #51B8AC;
+}
+
+.pagination-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Utilidades */
+.d-flex {
+    display: flex;
+}
+
+.justify-content-between {
+    justify-content: space-between;
+}
+
+.align-items-center {
+    align-items: center;
+}
+
+.gap-2 {
+    gap: 0.5rem;
+}
+
+.mt-3 {
+    margin-top: 1rem;
+}
+
+.mb-0 {
+    margin-bottom: 0;
+}
+
+.form-select-sm {
+    padding: 4px 8px;
+    font-size: 13px;
 }
