@@ -193,8 +193,8 @@ function renderizarTabla(datos) {
                                     '${row.sucursal_codigo}',
                                     '${(row.nombre_sucursal || '').replace(/'/g, "\\'")}',
                                     '${row.fecha}'
-                                )" title="Justificar Falta">
-                            Libre
+                                )" title="Solicitar justificación de falta/ausencia">
+                            Justificar Falta
                         </button>
                     `;
                 }
