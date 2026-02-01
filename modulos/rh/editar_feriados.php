@@ -11,7 +11,6 @@ if (!verificarAccesoCargo(13)) {
 }
 
 $usuario = obtenerUsuarioActual();
-$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
 
 
 // Obtener todos los departamentos para el filtro
