@@ -1011,3 +1011,66 @@ a.btn {
     padding: 4px 8px;
     font-size: 13px;
 }
+
+/* Estilos para la columna de acciones (compacta) */
+.rh-actions-cell {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    align-items: center;
+    min-width: 80px;
+}
+
+.btn-rh-action {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 14px;
+    padding: 0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.btn-rh-action:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+}
+
+/* ROJO: Faltas (Acción Necesaria) */
+.btn-rh-action.falta {
+    background-color: #dc3545;
+    color: white;
+}
+
+.btn-rh-action.falta:hover {
+    background-color: #c82333;
+}
+
+/* AMARILLO: Tardanzas (Acción Necesaria) */
+.btn-rh-action.tardanza {
+    background-color: #ffc107;
+    color: #212529;
+}
+
+.btn-rh-action.tardanza:hover {
+    background-color: #e0a800;
+}
+
+/* VERDE: Ya solicitado (Acción Completada) */
+.status-rh-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}

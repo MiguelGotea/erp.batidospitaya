@@ -1773,12 +1773,12 @@ function verificarTardanzaYaRegistrada(
                 // Datos de operarios para el autocompletado
                 const operariosData = [
                     <?php if ($esLider): ?>
-                                                    { id: <?php echo $_SESSION['usuario_id']; ?>, nombre: '' },
+                                                        { id: <?php echo $_SESSION['usuario_id']; ?>, nombre: '' },
                     <?php else: ?>
-                                                    { id: 0, nombre: 'Todos los colaboradores' },
+                                                        { id: 0, nombre: 'Todos los colaboradores' },
                     <?php endif; ?>
             <?php foreach ($operarios as $op): ?>
-                                                    { id: <?php echo $op['CodOperario']; ?>, nombre: '<?php echo addslashes($op['nombre_completo']); ?>' },
+                                                        { id: <?php echo $op['CodOperario']; ?>, nombre: '<?php echo addslashes($op['nombre_completo']); ?>' },
                     <?php endforeach; ?>
                 ];
 
@@ -1863,44 +1863,45 @@ function verificarTardanzaYaRegistrada(
                                 primeraSugerencia.click();
                             }
                         }
+
+                        // Si se presiona Backspace o Delete
+                        if (e.key === 'Backspace' || e.key === 'Delete') {
+                            // Si hay texto seleccionado o el campo no está vacío
+                            if (this.value.length > 0) {
+                                // Prevenir el comportamiento normal (borrar un carácter)
+                                e.preventDefault();
+
+                                // Borrar todo el contenido
+                                this.value = '';
+                                operarioIdInput.value = '0';
+
+                                <?php if ($esLider): ?>
+                                    // Para líderes, mantener su ID
+                                    operarioIdInput.value = '<?= $_SESSION['usuario_id'] ?>';
+                                <?php endif; ?>
+
+                                // Ocultar sugerencias
+                                sugerenciasDiv.style.display = 'none';
+                            }
+                        }
+
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            const texto = this.value.trim();
+                            const resultados = buscarOperarios(texto);
+                            if (resultados.length > 0) {
+                                this.value = resultados[0].nombre;
+                                operarioIdInput.value = resultados[0].id;
+                                sugerenciasDiv.style.display = 'none';
+                                // Aplicar filtros inmediatamente
+                                if (typeof aplicarFiltros === 'function') aplicarFiltros();
+                            }
+                        }
                     });
                 }
-                // Si se presiona Backspace o Delete
-                if (e.key === 'Backspace' || e.key === 'Delete') {
-                    // Si hay texto seleccionado o el campo no está vacío
-                    if (this.value.length > 0) {
-                        // Prevenir el comportamiento normal (borrar un carácter)
-                        e.preventDefault();
-
-                        // Borrar todo el contenido
-                        this.value = '';
-                        operarioIdInput.value = '0';
-
-                        <?php if ($esLider): ?>
-                            // Para líderes, mantener su ID
-                            operarioIdInput.value = '<?= $_SESSION['usuario_id'] ?>';
-                        <?php endif; ?>
-
-                        // Ocultar sugerencias
-                        sugerenciasDiv.style.display = 'none';
-
-                        // Mostrar mensaje visual opcional (opcional)
-                        // this.placeholder = 'Campo vacío - Mostrando todos';
-
-                        // Auto-aplicar filtros si quieres (OPCIONAL - descomentar si quieres)
-                        // setTimeout(() => aplicarFiltros(), 300);
+                operarioIdInput.value = resultados[0].id;
                     }
-                }
-
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    const texto = this.value.trim();
-                    const resultados = buscarOperarios(texto);
-                    if (resultados.length > 0) {
-                        this.value = resultados[0].nombre;
-                        operarioIdInput.value = resultados[0].id;
-                    }
-                    sugerenciasDiv.style.display = 'none';
+                sugerenciasDiv.style.display = 'none';
                 }
                 });
 
