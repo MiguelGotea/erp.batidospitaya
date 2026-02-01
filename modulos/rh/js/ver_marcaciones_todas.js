@@ -83,74 +83,123 @@ function renderizarTabla(datos) {
 
     datos.forEach(row => {
         const tr = $('<tr>');
-        
+
         // Semana
         tr.append(`<td class="text-center" style="font-weight: bold;">${row.numero_semana || 'N/A'}</td>`);
-        
+
         // Sucursal
         tr.append(`<td>${row.nombre_sucursal || '-'}</td>`);
-        
+
         // Colaborador
-        tr.append(`<td>${row.nombre_completo || '-'} (${row.CodOperario})</td>`);
-        
+        tr.append(`<td>${row.nombre_completo || '-'}</td>`);
+
         // Cargo
         tr.append(`<td>${row.nombre_cargo || '-'}</td>`);
-        
+
         // Fecha
         tr.append(`<td>${formatearFecha(row.fecha)}</td>`);
-        
-        // Turno Programado
-        const turno = determinarTurno(row.hora_entrada_programada, row.hora_salida_programada);
-        tr.append(`<td>${turno}</td>`);
-        
-        // Horario Programado
-        const horarioProgramado = row.hora_entrada_programada && row.hora_salida_programada
-            ? `${formatearHora(row.hora_entrada_programada)} - ${formatearHora(row.hora_salida_programada)}`
-            : '-';
-        tr.append(`<td>${horarioProgramado}</td>`);
-        
+
+        // Turno Programado (Estado del Día) - CON TAGS
+        let estadoHtml = '-';
+        if (row.estado_dia) {
+            const estado = row.estado_dia;
+            if (estado === 'Activo') {
+                estadoHtml = '<span class="status-activo">Activo</span>';
+            } else {
+                estadoHtml = `<span class="inactive-hours">${estado}</span>`;
+            }
+        }
+        tr.append(`<td class="text-center">${estadoHtml}</td>`);
+
+        // Horario Programado - FORMATO HH:MM
+        let horarioProgramado = '-';
+        if (row.hora_entrada_programada && row.hora_salida_programada) {
+            const entrada = formatearHora(row.hora_entrada_programada);
+            const salida = formatearHora(row.hora_salida_programada);
+            horarioProgramado = `<span class="compact-time">${entrada} - ${salida}</span>`;
+        }
+        tr.append(`<td class="text-center">${horarioProgramado}</td>`);
+
         // Horas Programadas
         const horasProgramadas = calcularHoras(row.hora_entrada_programada, row.hora_salida_programada);
-        tr.append(`<td>${horasProgramadas}</td>`);
-        
-        // Horario Marcado
-        const horarioMarcado = row.hora_ingreso && row.hora_salida
-            ? `${formatearHora(row.hora_ingreso)} - ${formatearHora(row.hora_salida)}`
-            : (row.hora_ingreso ? formatearHora(row.hora_ingreso) : '-');
-        tr.append(`<td>${horarioMarcado}</td>`);
-        
+        tr.append(`<td class="text-center" style="font-weight:bold;">${horasProgramadas}</td>`);
+
+        // Horario Marcado - FORMATO HH:MM
+        let horarioMarcado = '-';
+        if (row.hora_ingreso && row.hora_salida) {
+            const entrada = formatearHora(row.hora_ingreso);
+            const salida = formatearHora(row.hora_salida);
+            horarioMarcado = `<span class="compact-time">${entrada} - ${salida}</span>`;
+        } else if (row.hora_ingreso) {
+            horarioMarcado = `<span class="compact-time">${formatearHora(row.hora_ingreso)} - -</span>`;
+        }
+        tr.append(`<td class="text-center">${horarioMarcado}</td>`);
+
         // Horas Trabajadas
         const horasTrabajadas = calcularHoras(row.hora_ingreso, row.hora_salida);
-        tr.append(`<td>${horasTrabajadas}</td>`);
-        
-        // Diferencia
-        const diferencia = calcularDiferencia(
-            row.hora_entrada_programada, row.hora_salida_programada,
-            row.hora_ingreso, row.hora_salida
-        );
-        tr.append(`<td>${diferencia}</td>`);
-        
+        tr.append(`<td class="text-center">${horasTrabajadas}</td>`);
+
         // Diferencia Entrada
         const difEntrada = calcularDiferenciaEntrada(row.hora_entrada_programada, row.hora_ingreso);
-        tr.append(`<td>${difEntrada}</td>`);
-        
+        tr.append(`<td class="text-center">${difEntrada}</td>`);
+
         // Diferencia Salida
         const difSalida = calcularDiferenciaSalida(row.hora_salida_programada, row.hora_salida);
-        tr.append(`<td>${difSalida}</td>`);
-        
-        // Total Horas (placeholder - se puede calcular del total semanal)
-        tr.append(`<td>-</td>`);
-        
-        // Acciones
-        tr.append(`<td>
-            <button class="btn btn-sm btn-info" onclick="verDetalle(${row.CodOperario}, '${row.fecha}')" title="Ver detalle">
-                <i class="bi bi-eye"></i>
-            </button>
-        </td>`);
-        
+        tr.append(`<td class="text-center">${difSalida}</td>`);
+
+        // Total Horas (placeholder)
+        tr.append(`<td class="text-center">-</td>`);
+
+        // Acciones - BOTONES CON MODALES
+        let accionesHtml = '';
+
+        // Verificar si hay tardanza (diferencia de entrada > 1 minuto)
+        if (row.hora_entrada_programada && row.hora_ingreso) {
+            const difMin = calcularMinutosDiferencia(row.hora_entrada_programada, row.hora_ingreso);
+            if (difMin > 1) {
+                // Botón de tardanza
+                accionesHtml = `
+                    <button type="button" class="btn-solicitud-tardanza" 
+                            onclick="mostrarModalTardanza(
+                                ${row.CodOperario},
+                                '${(row.nombre_completo || '').replace(/'/g, "\\'")}',
+                                '${row.sucursal_codigo}',
+                                '${(row.nombre_sucursal || '').replace(/'/g, "\\'")}',
+                                '${row.fecha}',
+                                '${row.hora_entrada_programada}',
+                                '${row.hora_ingreso}',
+                                null,
+                                true
+                            )" title="Justificar Tardanza">
+                        Justificar Tardanza
+                    </button>
+                `;
+            }
+        } else if (!row.tiene_marcacion && row.tiene_horario) {
+            // Botón de falta (solo si el estado permite)
+            const estadosPermitidos = ['Activo', 'Otra.Tienda'];
+            if (estadosPermitidos.includes(row.estado_dia)) {
+                accionesHtml = `
+                    <button type="button" class="btn-solicitud-falta" 
+                            onclick="mostrarModalFalta(
+                                ${row.CodOperario},
+                                '${(row.nombre_completo || '').replace(/'/g, "\\'")}',
+                                '${row.sucursal_codigo}',
+                                '${(row.nombre_sucursal || '').replace(/'/g, "\\'")}',
+                                '${row.fecha}'
+                            )" title="Justificar Falta">
+                        Libre
+                    </button>
+                `;
+            }
+        }
+
+        tr.append(`<td class="text-center" style="white-space: nowrap;">${accionesHtml}</td>`);
+
         tbody.append(tr);
     });
 }
+
 
 // Toggle filtro
 function toggleFilter(icon) {
@@ -624,58 +673,68 @@ function determinarTurno(entrada, salida) {
 
 function calcularHoras(horaInicio, horaFin) {
     if (!horaInicio || !horaFin) return '-';
-    
+
     const inicio = new Date(`2000-01-01 ${horaInicio}`);
     let fin = new Date(`2000-01-01 ${horaFin}`);
-    
+
     if (fin < inicio) {
         fin = new Date(`2000-01-02 ${horaFin}`);
     }
-    
+
     const diff = (fin - inicio) / (1000 * 60 * 60);
     return diff.toFixed(2) + ' hrs';
 }
 
 function calcularDiferencia(entradaProg, salidaProg, entradaMarcada, salidaMarcada) {
     if (!entradaProg || !salidaProg || !entradaMarcada || !salidaMarcada) return '-';
-    
+
     const progInicio = new Date(`2000-01-01 ${entradaProg}`);
     let progFin = new Date(`2000-01-01 ${salidaProg}`);
     if (progFin < progInicio) progFin = new Date(`2000-01-02 ${salidaProg}`);
-    
+
     const marcInicio = new Date(`2000-01-01 ${entradaMarcada}`);
     let marcFin = new Date(`2000-01-01 ${salidaMarcada}`);
     if (marcFin < marcInicio) marcFin = new Date(`2000-01-02 ${salidaMarcada}`);
-    
+
     const horasProg = (progFin - progInicio) / (1000 * 60 * 60);
     const horasMarc = (marcFin - marcInicio) / (1000 * 60 * 60);
-    
+
     const diff = horasMarc - horasProg;
     return (diff >= 0 ? '+' : '') + diff.toFixed(2) + ' hrs';
 }
 
 function calcularDiferenciaEntrada(programada, marcada) {
     if (!programada || !marcada) return '-';
-    
+
     const prog = new Date(`2000-01-01 ${programada}`);
     const marc = new Date(`2000-01-01 ${marcada}`);
-    
+
     const diff = (marc - prog) / (1000 * 60);
     return (diff >= 0 ? '+' : '') + diff.toFixed(0) + ' min';
 }
 
 function calcularDiferenciaSalida(programada, marcada) {
     if (!programada || !marcada) return '-';
-    
+
     let prog = new Date(`2000-01-01 ${programada}`);
     let marc = new Date(`2000-01-01 ${marcada}`);
-    
+
     // Ajustar si la salida es al día siguiente
     if (marc < prog) marc = new Date(`2000-01-02 ${marcada}`);
     if (prog.getHours() < 12 && marc.getHours() >= 12) prog = new Date(`2000-01-02 ${programada}`);
-    
+
     const diff = (marc - prog) / (1000 * 60);
     return (diff >= 0 ? '+' : '') + diff.toFixed(0) + ' min';
+}
+
+function calcularMinutosDiferencia(programada, marcada) {
+    if (!programada || !marcada) return 0;
+
+    const prog = new Date(`2000-01-01 ${programada}`);
+    const marc = new Date(`2000-01-01 ${marcada}`);
+
+    const diff = (marc - prog) / (1000 * 60);
+    return diff;
 }
 
 function verDetalle(codOperario, fecha) {
