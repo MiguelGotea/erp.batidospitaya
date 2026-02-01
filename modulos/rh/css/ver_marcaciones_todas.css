@@ -746,16 +746,23 @@ a.btn {
 .clear-filter-btn {
     background: #dc3545 !important;
     color: white !important;
-    border: none;
-    padding: 4px 8px;
-    border-radius: 3px;
-    cursor: pointer;
-    font-size: 11px;
-    font-weight: bold;
+    border: none !important;
+    padding: 8px 15px !important;
+    border-radius: 4px !important;
+    cursor: pointer !important;
+    font-size: 11px !important;
+    font-weight: bold !important;
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 5px !important;
+    box-shadow: 0 2px 4px rgba(220, 53, 69, 0.3) !important;
 }
 
 .clear-filter-btn:hover {
     background: #c82333 !important;
+    box-shadow: 0 2px 6px rgba(220, 53, 69, 0.4) !important;
 }
 
 /* Botones de ordenamiento */

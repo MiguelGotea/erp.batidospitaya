@@ -103,30 +103,38 @@ try {
             break;
 
         case 'nombre_cargo':
-            // Obtener cargos según permisos
-            if ($esCDS) {
-                // CDS solo ve cargos específicos
-                $stmt = $conn->query("
-                    SELECT 
-                        CodNivelesCargos as valor,
-                        Nombre as texto
-                    FROM NivelesCargos
-                    WHERE CodNivelesCargos IN (23, 20, 34)
-                    ORDER BY Nombre
-                ");
-                $opciones = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            } else {
-                // Otros usuarios ven todos los cargos
-                $stmt = $conn->query("
-                    SELECT 
-                        CodNivelesCargos as valor,
-                        Nombre as texto
-                    FROM NivelesCargos
-                    WHERE CodNivelesCargos != 27
-                    ORDER BY Nombre
-                ");
-                $opciones = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            // Obtener cargos que tienen colaboradores activos según permisos
+            $whereCargos = "";
+            $paramsCargos = [];
+
+            if ($esLider) {
+                $sucursalesLider = obtenerSucursalesLider($usuario['CodOperario']);
+                if (!empty($sucursalesLider)) {
+                    $whereCargos = " AND anc.Sucursal = ? ";
+                    $paramsCargos[] = $sucursalesLider[0]['codigo'];
+                }
+            } elseif ($esCDS) {
+                $whereCargos = " AND anc.Sucursal = '6' AND anc.CodNivelesCargos IN (23, 20, 34) ";
+            } elseif ($esOperaciones) {
+                $whereCargos = " AND s.sucursal = 1 ";
             }
+
+            $stmt = $conn->prepare("
+                SELECT DISTINCT
+                    nc.CodNivelesCargos as valor,
+                    nc.Nombre as texto
+                FROM NivelesCargos nc
+                INNER JOIN AsignacionNivelesCargos anc ON nc.CodNivelesCargos = anc.CodNivelesCargos
+                INNER JOIN Operarios o ON anc.CodOperario = o.CodOperario
+                INNER JOIN sucursales s ON anc.Sucursal = s.codigo
+                WHERE o.Operativo = 1
+                AND (anc.Fin IS NULL OR anc.Fin >= CURDATE())
+                AND nc.CodNivelesCargos != 27
+                $whereCargos
+                ORDER BY nc.Nombre
+            ");
+            $stmt->execute($paramsCargos);
+            $opciones = $stmt->fetchAll(PDO::FETCH_ASSOC);
             break;
 
         case 'estado_dia':

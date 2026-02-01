@@ -253,11 +253,11 @@ function crearPanelFiltro(th, columna, tipo, icon) {
             <div class="filter-sort-buttons">
                 <button class="filter-sort-btn ${ordenActivo.columna === columna && ordenActivo.direccion === 'asc' ? 'active' : ''}" 
                         onclick="aplicarOrden('${columna}', 'asc')">
-                    <i class="bi bi-sort-alpha-down"></i> A→Z
+                    <i class="bi bi-sort-alpha-down"></i> ASC <i class="bi bi-arrow-up"></i>
                 </button>
                 <button class="filter-sort-btn ${ordenActivo.columna === columna && ordenActivo.direccion === 'desc' ? 'active' : ''}" 
                         onclick="aplicarOrden('${columna}', 'desc')">
-                    <i class="bi bi-sort-alpha-up"></i> Z→A
+                    <i class="bi bi-sort-alpha-up"></i> DESC <i class="bi bi-arrow-down"></i>
                 </button>
             </div>
         </div>
@@ -266,8 +266,8 @@ function crearPanelFiltro(th, columna, tipo, icon) {
     // Botones de acción
     panel.append(`
         <div class="filter-actions">
-            <button class="filter-action-btn clear" onclick="limpiarFiltro('${columna}')">
-                <i class="bi bi-x-circle"></i> Limpiar
+            <button class="filter-action-btn clear clear-filter-btn" onclick="limpiarFiltro('${columna}')">
+                <i class="bi bi-eraser-fill"></i> Borrar Filtros
             </button>
         </div>
     `);
