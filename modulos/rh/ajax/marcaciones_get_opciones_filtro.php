@@ -129,6 +129,18 @@ try {
             }
             break;
 
+        case 'estado_dia':
+            // Obtener estados de día únicos
+            $opciones = [
+                ['valor' => 'Activo', 'texto' => 'Activo'],
+                ['valor' => 'Libre', 'texto' => 'Libre'],
+                ['valor' => 'Vacaciones', 'texto' => 'Vacaciones'],
+                ['valor' => 'Feriado', 'texto' => 'Feriado'],
+                ['valor' => 'Otra.Tienda', 'texto' => 'Otra Tienda'],
+                ['valor' => 'Inactivo', 'texto' => 'Inactivo']
+            ];
+            break;
+
         default:
             echo json_encode(['success' => false, 'message' => 'Columna no válida']);
             exit();

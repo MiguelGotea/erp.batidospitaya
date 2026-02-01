@@ -1563,39 +1563,42 @@ function verificarTardanzaYaRegistrada(
                         <table id="tabla-marcaciones">
                             <thead>
                                 <tr>
-                                    <th data-column="numero_semana" data-type="number">
+                                    <th data-column="numero_semana" data-type="number" style="text-align: center;">
                                         Semana
                                         <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                     </th>
-                                    <th data-column="nombre_sucursal" data-type="list">
+                                    <th data-column="nombre_sucursal" data-type="list" style="text-align: center;">
                                         Sucursal
                                         <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                     </th>
-                                    <th data-column="nombre_completo" data-type="list">
-                                        Colaborador/a (Código)
+                                    <th data-column="nombre_completo" data-type="list" style="text-align: center;">
+                                        Colaborador
                                         <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                     </th>
-                                    <th data-column="nombre_cargo" data-type="list">
+                                    <th data-column="nombre_cargo" data-type="list" style="text-align: center;">
                                         Cargo
                                         <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                     </th>
-                                    <th data-column="fecha" data-type="daterange">
+                                    <th data-column="fecha" data-type="daterange" style="text-align: center;">
                                         Fecha
                                         <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                     </th>
-                                    <th>Turno Programado</th>
-                                    <th>Horario Programado</th>
+                                    <th data-column="estado_dia" data-type="list" style="text-align: center;">
+                                        Turno Programado
+                                        <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                    </th>
+                                    <th style="text-align: center;">Horario Programado</th>
                                     <?php if ($esLider): ?>
-                                        <th>Horas Programadas</th>
+                                        <th style="text-align: center;">Horas Programadas</th>
                                     <?php endif; ?>
-                                    <th>Horario Marcado</th>
+                                    <th style="text-align: center;">Horario Marcado</th>
                                     <?php if ($esLider): ?>
-                                        <th>Horas Trabajadas</th>
+                                        <th style="text-align: center;">Horas Trabajadas</th>
                                     <?php endif; ?>
                                     <th style="display:none;">Diferencia Entrada</th>
                                     <th style="display:none;">Diferencia Salida</th>
                                     <?php if ($esOperaciones): ?>
-                                        <th>Total Horas<br>Trabajadas</th>
+                                        <th style="text-align: center;">Total Horas<br>Trabajadas</th>
                                     <?php endif; ?>
                                     <?php if ($esLider): ?>
                                         <th style="text-align: center;">Acciones</th>
@@ -1770,12 +1773,12 @@ function verificarTardanzaYaRegistrada(
                 // Datos de operarios para el autocompletado
                 const operariosData = [
                     <?php if ($esLider): ?>
-                                        { id: <?php echo $_SESSION['usuario_id']; ?>, nombre: '' },
+                                            { id: <?php echo $_SESSION['usuario_id']; ?>, nombre: '' },
                     <?php else: ?>
-                                        { id: 0, nombre: 'Todos los colaboradores' },
+                                            { id: 0, nombre: 'Todos los colaboradores' },
                     <?php endif; ?>
             <?php foreach ($operarios as $op): ?>
-                                        { id: <?php echo $op['CodOperario']; ?>, nombre: '<?php echo addslashes($op['nombre_completo']); ?>' },
+                                            { id: <?php echo $op['CodOperario']; ?>, nombre: '<?php echo addslashes($op['nombre_completo']); ?>' },
                     <?php endforeach; ?>
                 ];
 
