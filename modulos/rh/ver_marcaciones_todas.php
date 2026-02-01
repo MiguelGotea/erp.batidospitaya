@@ -1637,7 +1637,7 @@ function verificarTardanzaYaRegistrada(
                                 'operario_id' => $operario_id,
                                 'exportar_tardanzas' => 1
                             ]) ?>" class="btn" style="background-color: #ffc107; color: #000;">
-                                <i class="fas fa-file-excel"></i> Tardanzas
+                                <i class="fas fa-file-excel"></i> Excel Tardanzas
                             </a>
                         </div>
 
@@ -2209,12 +2209,12 @@ function verificarTardanzaYaRegistrada(
                 // Datos de operarios para el autocompletado
                 const operariosData = [
                     <?php if ($esLider): ?>
-                                                                                                    { id: <?php echo $_SESSION['usuario_id']; ?>, nombre: '' },
+                                                                                                        { id: <?php echo $_SESSION['usuario_id']; ?>, nombre: '' },
                     <?php else: ?>
-                                                                                                    { id: 0, nombre: 'Todos los colaboradores' },
+                                                                                                        { id: 0, nombre: 'Todos los colaboradores' },
                     <?php endif; ?>
             <?php foreach ($operarios as $op): ?>
-                                                                                                { id: <?php echo $op['CodOperario']; ?>, nombre: '<?php echo addslashes($op['nombre_completo']); ?>' },
+                                                                                                    { id: <?php echo $op['CodOperario']; ?>, nombre: '<?php echo addslashes($op['nombre_completo']); ?>' },
                     <?php endforeach; ?>
                 ];
 
