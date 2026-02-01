@@ -336,17 +336,23 @@ try {
     if (!empty($filtros) || $incidenciasFiltro !== 'todos') {
         // Filtro de incidencias (Tri-state)
         if ($incidenciasFiltro !== 'todos') {
-            $resultado = array_filter($resultado, function ($r) use ($incidenciasFiltro) {
-                $esTardanza = false;
-                if (!empty($r['hora_ingreso']) && !empty($r['hora_entrada_programada'])) {
-                    $ingreso = new DateTime($r['hora_ingreso']);
-                    $programada = new DateTime($r['hora_entrada_programada']);
-                    if ($ingreso > $programada)
-                        $esTardanza = true;
-                }
+            $fechaHoyPHP = date('Y-m-d');
+            $resultado = array_filter($resultado, function ($r) use ($incidenciasFiltro, $fechaHoyPHP) {
+                // Si es hoy, no se considera incidencia aún (día en curso)
+                if ($r['fecha'] === $fechaHoyPHP) {
+                    $tieneIncidencia = false;
+                } else {
+                    $esTardanza = false;
+                    if (!empty($r['hora_ingreso']) && !empty($r['hora_entrada_programada'])) {
+                        $ingreso = new DateTime($r['hora_ingreso']);
+                        $programada = new DateTime($r['hora_entrada_programada']);
+                        if ($ingreso > $programada)
+                            $esTardanza = true;
+                    }
 
-                $esFalta = !$r['tiene_marcacion'];
-                $tieneIncidencia = ($esTardanza || $esFalta);
+                    $esFalta = !$r['tiene_marcacion'];
+                    $tieneIncidencia = ($esTardanza || $esFalta);
+                }
 
                 if ($incidenciasFiltro === 'con_incidencia') {
                     return $tieneIncidencia;
