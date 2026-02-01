@@ -5783,12 +5783,12 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                                                                     <td style="padding: 10px; text-align: center;">
                                                                         <button style="display:none;" type="button"
                                                                             class="btn-accion btn-editar"
-                                                                            onclick="editarAdendum(<?= $adendum['CodAsignacionNivelesCargos'] ?>)">
+                                                                            onclick="editarAdendum(<?= $adendum['id'] ?>)">
                                                                             <i class="fas fa-edit"></i>
                                                                         </button>
-                                                                        <?php if (empty($adendum['Fin'])): ?>
+                                                                        <?php if (empty($adendum['FechaFin'])): ?>
                                                                             <button type="button" class="btn-accion"
-                                                                                onclick="abrirModalFinalizarAdenda(<?= $adendum['CodAsignacionNivelesCargos'] ?>)"
+                                                                                onclick="abrirModalFinalizarAdenda(<?= $adendum['id'] ?>)"
                                                                                 style="color: #dc3545; display:none;" title="Finalizar Adenda">
                                                                                 <i class="fas fa-flag-checkered"></i>
                                                                             </button>
