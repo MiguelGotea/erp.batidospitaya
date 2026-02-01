@@ -10,7 +10,10 @@ $cargoOperario = $usuario['CodNivelesCargos'];
 $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
 
 // Verificar acceso al módulo mediante el sistema de permisos
-verificarPermisoORedireccionar('plan_feriados_anual', 'vista', $cargoOperario);
+if (!tienePermiso('plan_feriados_anual', 'vista', $cargoOperario)) {
+    header('Location: /index.php');
+    exit();
+}
 
 $anio = isset($_GET['anio']) ? intval($_GET['anio']) : date('Y');
 

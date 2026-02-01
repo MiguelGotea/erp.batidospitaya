@@ -13,7 +13,10 @@ $cargoOperario = $usuario['CodNivelesCargos'];
 $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
 
 // Verificar acceso al módulo mediante el sistema de permisos
-verificarPermisoORedireccionar('gestion_feriados', 'vista', $cargoOperario);
+if (!tienePermiso('gestion_feriados', 'vista', $cargoOperario)) {
+    header('Location: /index.php');
+    exit();
+}
 
 
 // Obtener todos los departamentos para el filtro
