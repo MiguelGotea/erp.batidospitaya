@@ -1539,7 +1539,7 @@ function verificarTardanzaYaRegistrada(
                     <?php endif; ?>
                 </div>
 
-                <div style="display:none;" class="filter-buttons">
+                <div style="display:none; margin-bottom: 0;" class="filter-buttons">
                     <div class="filter-button <?= $filtroActivo === 'todos' ? 'active' : '' ?>"
                         onclick="cambiarFiltroActivo('todos')">
                         Todos los Colaboradores
@@ -1554,7 +1554,15 @@ function verificarTardanzaYaRegistrada(
                     </div>
                 </div>
 
-                <div class="table-container">
+                <!-- Nota informativa sobre tolerancia -->
+                <div class="alert alert-info"
+                    style="margin-bottom: 10px; padding: 8px 15px; font-size: 0.9rem; display: flex; align-items: center; gap: 10px;">
+                    <i class="fas fa-info-circle"></i>
+                    <span>Tolerancia de 1 minuto: Las opciones de sustento de tardanza solo aparecen cuando la
+                        diferencia es mayor a 1 minuto.</span>
+                </div>
+
+                <div class="table-container" style="margin-top: 0;">
                     <?php if (empty($marcaciones)): ?>
                         <div class="no-results">
                             No se encontraron marcaciones para los filtros seleccionados.
@@ -1793,12 +1801,12 @@ function verificarTardanzaYaRegistrada(
                 // Datos de operarios para el autocompletado
                 const operariosData = [
                     <?php if ($esLider): ?>
-                                                                    { id: <?php echo $_SESSION['usuario_id']; ?>, nombre: '' },
+                                                                        { id: <?php echo $_SESSION['usuario_id']; ?>, nombre: '' },
                     <?php else: ?>
-                                                                    { id: 0, nombre: 'Todos los colaboradores' },
+                                                                        { id: 0, nombre: 'Todos los colaboradores' },
                     <?php endif; ?>
             <?php foreach ($operarios as $op): ?>
-                                                                    { id: <?php echo $op['CodOperario']; ?>, nombre: '<?php echo addslashes($op['nombre_completo']); ?>' },
+                                                                        { id: <?php echo $op['CodOperario']; ?>, nombre: '<?php echo addslashes($op['nombre_completo']); ?>' },
                     <?php endforeach; ?>
                 ];
 

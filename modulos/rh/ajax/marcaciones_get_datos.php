@@ -346,8 +346,13 @@ try {
                     if (!empty($r['hora_ingreso']) && !empty($r['hora_entrada_programada'])) {
                         $ingreso = new DateTime($r['hora_ingreso']);
                         $programada = new DateTime($r['hora_entrada_programada']);
-                        if ($ingreso > $programada)
+                        $intervalo = $programada->diff($ingreso);
+                        $minutosDiferencia = ($intervalo->days * 24 * 60) + ($intervalo->h * 60) + $intervalo->i;
+
+                        // Si la fecha de ingreso es mayor y la diferencia es > 1 minuto
+                        if ($ingreso > $programada && $minutosDiferencia > 1) {
                             $esTardanza = true;
+                        }
                     }
 
                     $esFalta = !$r['tiene_marcacion'];
