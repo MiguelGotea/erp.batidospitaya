@@ -14,7 +14,6 @@ if (!tienePermiso('historial_marcaciones_globales', 'vista', $usuario['CodNivele
     exit();
 }
 
-$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
 $esLider = tienePermiso('historial_marcaciones_globales', 'permisoslider', $usuario['CodNivelesCargos']);
 $siGestion = tienePermiso('historial_marcaciones_globales', 'gestion', $usuario['CodNivelesCargos']);
 $esCDS = tienePermiso('historial_marcaciones_globales', 'permisoscds', $usuario['CodNivelesCargos']);
@@ -58,7 +57,7 @@ $cargoUsuario = obtenerCargoPrincipalUsuario($_SESSION['usuario_id']);
 //******************************Estándar para header, termina******************************
 
 // Obtener sucursales según el tipo de usuario
-if ($esAdmin) { // Si es administrador
+if ($siGestion) { // Si es administrador
     $sucursales = obtenerTodasSucursales();
     $modoVista = $_GET['modo'] ?? 'todas'; // Por defecto 'todas' para admin
 } elseif ($esLider) { // Si es líder de sucursal
@@ -1461,7 +1460,7 @@ function verificarTardanzaYaRegistrada(
                             <label for="sucursal">Sucursal</label>
                             <select id="sucursal" name="sucursal" onchange="aplicarFiltros()">
                                 <!--Aquellos cargos que no pueden ver la opción de Todas las sucursales-->
-                                <?php if ($esAdmin || !$esLider): ?>
+                                <?php if (!$esLider): ?>
                                     <option value="todas" <?= $modoVista === 'todas' ? 'selected' : '' ?>>Todas las sucursales
                                     </option>
                                 <?php endif; ?>
@@ -1597,7 +1596,7 @@ function verificarTardanzaYaRegistrada(
                         </button>
                     </div>
 
-                    <?php if ($esAdmin || $esContabilidad): ?>
+                    <?php if ($esContabilidad): ?>
                         <!-- Botón Exportar (opcional, puedes eliminarlo si no lo quieres) -->
                         <div style="display:none;" class="filter-group" style="align-self: flex-end;">
                             <a href="ver_marcaciones_todas.php?<?= http_build_query([
@@ -1692,22 +1691,22 @@ function verificarTardanzaYaRegistrada(
                                     <th>Fecha</th>
                                     <th>Turno Programado</th>
                                     <th>Horario Programado</th>
-                                    <?php if ($esAdmin || $esLider): ?>
+                                    <?php if ($esLider): ?>
                                         <th>Horas Programadas</th>
                                     <?php endif; ?>
                                     <th>Horario Marcado</th>
-                                    <?php if ($esAdmin || $esLider): ?>
+                                    <?php if ($esLider): ?>
                                         <th>Horas Trabajadas</th>
                                     <?php endif; ?>
                                     <th style="display:none;">Diferencia</th>
                                     <th style="display:none;">Diferencia Entrada</th>
                                     <th style="display:none;">Diferencia Salida</th>
-                                    <?php if ($esAdmin || $esLider): ?>
+                                    <?php if ($esGestion): ?>
                                         <th>Total Horas<br>Trabajadas</th>
                                     <?php endif; ?>
 
                                     <!-- NUEVA COLUMNA: Acciones (solo para cargo 5) -->
-                                    <?php if ($esAdmin || $esLider): ?>
+                                    <?php if ($esLider): ?>
                                         <th style="text-align: center;">Acciones</th>
                                     <?php endif; ?>
                                 </tr>
@@ -2210,12 +2209,12 @@ function verificarTardanzaYaRegistrada(
                 // Datos de operarios para el autocompletado
                 const operariosData = [
                     <?php if ($esLider): ?>
-                                                                                    { id: <?php echo $_SESSION['usuario_id']; ?>, nombre: '' },
+                                                                                            { id: <?php echo $_SESSION['usuario_id']; ?>, nombre: '' },
                     <?php else: ?>
-                                                                                    { id: 0, nombre: 'Todos los colaboradores' },
+                                                                                            { id: 0, nombre: 'Todos los colaboradores' },
                     <?php endif; ?>
             <?php foreach ($operarios as $op): ?>
-                                                                                { id: <?php echo $op['CodOperario']; ?>, nombre: '<?php echo addslashes($op['nombre_completo']); ?>' },
+                                                                                        { id: <?php echo $op['CodOperario']; ?>, nombre: '<?php echo addslashes($op['nombre_completo']); ?>' },
                     <?php endforeach; ?>
                 ];
 
