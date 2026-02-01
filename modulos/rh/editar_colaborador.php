@@ -4,9 +4,6 @@ require_once '../../core/layout/menu_lateral.php';
 require_once '../../core/layout/header_universal.php';
 require_once '../../core/permissions/permissions.php';
 
-// Verificar autenticación y permisos
-verificarAutenticacion();
-
 $usuario = obtenerUsuarioActual();
 $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
 $cargoId = $usuario['CodNivelesCargos'] ?? 0;
@@ -9352,8 +9349,8 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                             alert('Error al cargar los datos del contrato: ' + error.message);
                         });
                 }
-            </div>
-        </div>
-    </div>
-</body>
-</html>
+            </div >
+        </div >
+    </div >
+</body >
+</html >
