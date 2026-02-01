@@ -307,6 +307,13 @@ try {
                 return in_array($r['codigo_cargo'], $filtros['nombre_cargo']);
             });
         }
+
+        // Filtro de Turno Programado (estado_dia)
+        if (isset($filtros['estado_dia']) && is_array($filtros['estado_dia']) && !empty($filtros['estado_dia'])) {
+            $resultado = array_filter($resultado, function ($r) use ($filtros) {
+                return in_array($r['estado_dia'], $filtros['estado_dia']);
+            });
+        }
     }
 
     // Reindexar array después de filtros
