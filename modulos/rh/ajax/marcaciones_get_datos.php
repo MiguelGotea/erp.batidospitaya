@@ -42,11 +42,12 @@ try {
     // PASO 1: Obtener horarios programados
     $sqlHorarios = "
     SELECT
-        hso.cod_operario,
-        hso.cod_sucursal,
+        hso.id,
+        hso.cod_operario as CodOperario,
+        hso.cod_sucursal as sucursal_codigo,
+        ss.numero_semana,
         ss.fecha_inicio,
         ss.fecha_fin,
-        ss.numero_semana,
         hso.lunes_estado, hso.lunes_entrada, hso.lunes_salida,
         hso.martes_estado, hso.martes_entrada, hso.martes_salida,
         hso.miercoles_estado, hso.miercoles_entrada, hso.miercoles_salida,
@@ -65,10 +66,34 @@ try {
     LEFT JOIN AsignacionNivelesCargos anc ON o.CodOperario = anc.CodOperario 
         AND (anc.Fin IS NULL OR anc.Fin >= CURDATE())
     LEFT JOIN NivelesCargos nc ON anc.CodNivelesCargos = nc.CodNivelesCargos
-    WHERE ss.fecha_inicio <= ? AND ss.fecha_fin >= ?
+    WHERE 1=1
     ";
 
-    $paramsHorarios = [$fechaHasta, $fechaDesde];
+    $paramsHorarios = [];
+
+    // Aplicar filtro de semana O filtro de fecha (mutuamente excluyentes)
+    if (isset($filtros['numero_semana']) && !empty($filtros['numero_semana'])) {
+        // Filtrar por número de semana
+        $semanaMin = isset($filtros['numero_semana']['min']) ? intval($filtros['numero_semana']['min']) : null;
+        $semanaMax = isset($filtros['numero_semana']['max']) ? intval($filtros['numero_semana']['max']) : null;
+
+        if ($semanaMin !== null && $semanaMax !== null) {
+            $sqlHorarios .= " AND ss.numero_semana BETWEEN ? AND ?";
+            $paramsHorarios[] = $semanaMin;
+            $paramsHorarios[] = $semanaMax;
+        } elseif ($semanaMin !== null) {
+            $sqlHorarios .= " AND ss.numero_semana >= ?";
+            $paramsHorarios[] = $semanaMin;
+        } elseif ($semanaMax !== null) {
+            $sqlHorarios .= " AND ss.numero_semana <= ?";
+            $paramsHorarios[] = $semanaMax;
+        }
+    } else {
+        // Filtrar por rango de fechas
+        $sqlHorarios .= " AND ss.fecha_inicio <= ? AND ss.fecha_fin >= ?";
+        $paramsHorarios[] = $fechaHasta;
+        $paramsHorarios[] = $fechaDesde;
+    }
 
     // Aplicar restricciones de permisos para horarios
     if ($esLider) {
