@@ -41,10 +41,10 @@ if ($fechaHasta > $fechaHoy) {
 try {
     // PASO 1: Obtener horarios programados
     $sqlHorarios = "
-    SELECT
+    SELECT 
         hso.id,
-        hso.cod_operario as CodOperario,
-        hso.cod_sucursal as sucursal_codigo,
+        hso.cod_operario,
+        hso.cod_sucursal,
         ss.numero_semana,
         ss.fecha_inicio,
         ss.fecha_fin,
