@@ -319,7 +319,7 @@ try {
                     $op = $horario['cod_operario'];
                     if (isset($faltasExistentes[$op])) {
                         foreach ($faltasExistentes[$op] as $fe) {
-                            if ($fe['fecha_falta'] == $fechaStr && $te['cod_sucursal'] == $horario['cod_sucursal']) {
+                            if ($fe['fecha_falta'] == $fechaStr && $fe['cod_sucursal'] == $horario['cod_sucursal']) {
                                 $resultado[count($resultado) - 1]['falta_solicitada'] = true;
                                 break;
                             }

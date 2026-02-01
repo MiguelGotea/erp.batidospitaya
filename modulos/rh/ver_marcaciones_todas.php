@@ -1773,12 +1773,12 @@ function verificarTardanzaYaRegistrada(
                 // Datos de operarios para el autocompletado
                 const operariosData = [
                     <?php if ($esLider): ?>
-                                                { id: <?php echo $_SESSION['usuario_id']; ?>, nombre: '' },
+                                                    { id: <?php echo $_SESSION['usuario_id']; ?>, nombre: '' },
                     <?php else: ?>
-                                                { id: 0, nombre: 'Todos los colaboradores' },
+                                                    { id: 0, nombre: 'Todos los colaboradores' },
                     <?php endif; ?>
             <?php foreach ($operarios as $op): ?>
-                                                { id: <?php echo $op['CodOperario']; ?>, nombre: '<?php echo addslashes($op['nombre_completo']); ?>' },
+                                                    { id: <?php echo $op['CodOperario']; ?>, nombre: '<?php echo addslashes($op['nombre_completo']); ?>' },
                     <?php endforeach; ?>
                 ];
 
@@ -1797,100 +1797,111 @@ function verificarTardanzaYaRegistrada(
                 const operarioIdInput = document.getElementById('operario_id');
                 const sugerenciasDiv = document.getElementById('operarios-sugerencias');
 
-                // Modificar el evento input del campo operario
-                operarioInput.addEventListener('input', function () {
-                    const texto = this.value.trim();
-
-                    // Si el campo está vacío, resetear según el tipo de usuario, en el else es Todos los colaboradores
-                    if (texto === '') {
-                        operarioIdInput.value = '0';
-                        <?php if ($esLider): ?>
-                            this.value = '';
-                            operarioIdInput.value = '<?= $_SESSION['usuario_id'] ?>';
-                        <?php else: ?>
-                            this.value = '';
-                            operarioIdInput.value = '0';
-                        <?php endif; ?>
-                        sugerenciasDiv.style.display = 'none';
-                        return;
-                    }
-
-                    // Si el usuario borra el texto y empieza a escribir, usar búsqueda normal
-                    const resultados = buscarOperarios(texto);
-
-                    sugerenciasDiv.innerHTML = '';
-
-                    if (resultados.length > 0) {
-                        resultados.forEach(op => {
-                            const div = document.createElement('div');
-                            div.textContent = op.nombre;
-                            div.style.padding = '8px';
-                            div.style.cursor = 'pointer';
-                            div.addEventListener('click', function () {
-                                operarioInput.value = op.nombre;
-                                operarioIdInput.value = op.id;
-                                sugerenciasDiv.style.display = 'none';
-                            });
-                            div.addEventListener('mouseover', function () {
-                                this.style.backgroundColor = '#f5f5f5';
-                            });
-                            div.addEventListener('mouseout', function () {
-                                this.style.backgroundColor = 'white';
-                            });
-                            sugerenciasDiv.appendChild(div);
-                        });
-                        sugerenciasDiv.style.display = 'block';
-                    } else {
-                        sugerenciasDiv.style.display = 'none';
-                    }
-                });
-
-                // Ocultar sugerencias al hacer clic fuera
-                document.addEventListener('click', function (e) {
-                    if (e.target !== operarioInput) {
-                        sugerenciasDiv.style.display = 'none';
-                    }
-                });
-
-                // Manejar tecla Enter en el input
-                operarioInput.addEventListener('keydown', function (e) {
-                    // Si se presiona Backspace o Delete
-                    if (e.key === 'Backspace' || e.key === 'Delete') {
-                        // Si hay texto seleccionado o el campo no está vacío
-                        if (this.value.length > 0) {
-                            // Prevenir el comportamiento normal (borrar un carácter)
-                            e.preventDefault();
-
-                            // Borrar todo el contenido
-                            this.value = '';
-                            operarioIdInput.value = '0';
-
-                            <?php if ($esLider): ?>
-                                // Para líderes, mantener su ID
-                                operarioIdInput.value = '<?= $_SESSION['usuario_id'] ?>';
-                            <?php endif; ?>
-
-                            // Ocultar sugerencias
-                            sugerenciasDiv.style.display = 'none';
-
-                            // Mostrar mensaje visual opcional (opcional)
-                            // this.placeholder = 'Campo vacío - Mostrando todos';
-
-                            // Auto-aplicar filtros si quieres (OPCIONAL - descomentar si quieres)
-                            // setTimeout(() => aplicarFiltros(), 300);
-                        }
-                    }
-
-                    if (e.key === 'Enter') {
-                        e.preventDefault();
+                // Solo continuar si los elementos existen
+                if (operarioInput && operarioIdInput && sugerenciasDiv) {
+                    // Modificar el evento input del campo operario
+                    operarioInput.addEventListener('input', function () {
                         const texto = this.value.trim();
-                        const resultados = buscarOperarios(texto);
-                        if (resultados.length > 0) {
-                            this.value = resultados[0].nombre;
-                            operarioIdInput.value = resultados[0].id;
+
+                        // Si el campo está vacío, resetear según el tipo de usuario, en el else es Todos los colaboradores
+                        if (texto === '') {
+                            operarioIdInput.value = '0';
+                            <?php if ($esLider): ?>
+                                this.value = '';
+                                operarioIdInput.value = '<?= $_SESSION['usuario_id'] ?>';
+                            <?php else: ?>
+                                this.value = '';
+                                operarioIdInput.value = '0';
+                            <?php endif; ?>
+                            sugerenciasDiv.style.display = 'none';
+                            return;
                         }
+
+                        // Si el usuario borra el texto y empieza a escribir, usar búsqueda normal
+                        const resultados = buscarOperarios(texto);
+
+                        sugerenciasDiv.innerHTML = '';
+
+                        if (resultados.length > 0) {
+                            resultados.forEach(op => {
+                                const div = document.createElement('div');
+                                div.textContent = op.nombre;
+                                div.style.padding = '8px';
+                                div.style.cursor = 'pointer';
+                                div.addEventListener('click', function () {
+                                    operarioInput.value = op.nombre;
+                                    operarioIdInput.value = op.id;
+                                    sugerenciasDiv.style.display = 'none';
+                                });
+                                div.addEventListener('mouseover', function () {
+                                    this.style.backgroundColor = '#f5f5f5';
+                                });
+                                div.addEventListener('mouseout', function () {
+                                    this.style.backgroundColor = 'white';
+                                });
+                                sugerenciasDiv.appendChild(div);
+                            });
+                            sugerenciasDiv.style.display = 'block';
+                        } else {
+                            sugerenciasDiv.style.display = 'none';
+                        }
+                    });
+
+                    // Ocultar sugerencias al hacer clic fuera
+                    document.addEventListener('click', function (e) {
+                        if (e.target !== operarioInput) {
+                            sugerenciasDiv.style.display = 'none';
+                        }
+                    });
+
+                    // Manejar tecla Enter en el input
+                    operarioInput.addEventListener('keydown', function (e) {
+                        // Si se presiona Enter, seleccionar el primer resultado
+                        if (e.key === 'Enter') {
+                            const primeraSugerencia = sugerenciasDiv.querySelector('div');
+                            if (primeraSugerencia && sugerenciasDiv.style.display === 'block') {
+                                primeraSugerencia.click();
+                            }
+                        }
+                    });
+                }
+                // Si se presiona Backspace o Delete
+                if (e.key === 'Backspace' || e.key === 'Delete') {
+                    // Si hay texto seleccionado o el campo no está vacío
+                    if (this.value.length > 0) {
+                        // Prevenir el comportamiento normal (borrar un carácter)
+                        e.preventDefault();
+
+                        // Borrar todo el contenido
+                        this.value = '';
+                        operarioIdInput.value = '0';
+
+                        <?php if ($esLider): ?>
+                            // Para líderes, mantener su ID
+                            operarioIdInput.value = '<?= $_SESSION['usuario_id'] ?>';
+                        <?php endif; ?>
+
+                        // Ocultar sugerencias
                         sugerenciasDiv.style.display = 'none';
+
+                        // Mostrar mensaje visual opcional (opcional)
+                        // this.placeholder = 'Campo vacío - Mostrando todos';
+
+                        // Auto-aplicar filtros si quieres (OPCIONAL - descomentar si quieres)
+                        // setTimeout(() => aplicarFiltros(), 300);
                     }
+                }
+
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const texto = this.value.trim();
+                    const resultados = buscarOperarios(texto);
+                    if (resultados.length > 0) {
+                        this.value = resultados[0].nombre;
+                        operarioIdInput.value = resultados[0].id;
+                    }
+                    sugerenciasDiv.style.display = 'none';
+                }
                 });
 
                 // Modificar la función aplicarFiltros para incluir el modo
@@ -2070,8 +2081,10 @@ function verificarTardanzaYaRegistrada(
                     sucursal = '<?= $sucursales[0]['codigo'] ?? '' ?>';
                     modo = 'sucursal';
 
-                    const desde = document.getElementById('desde').value;
-                    const hasta = document.getElementById('hasta').value;
+                    const desdeEl = document.getElementById('desde');
+                    const hastaEl = document.getElementById('hasta');
+                    const desde = desdeEl ? desdeEl.value : '';
+                    const hasta = hastaEl ? hastaEl.value : '';
 
                     // Resetear operario_id a 0 para ver todos
                     window.location.href = `ver_marcaciones_todas.php?modo=${modo}&sucursal=${sucursal}&desde=${desde}&hasta=${hasta}&activo=<?= $filtroActivo ?>&operario_id=0`;
@@ -2081,18 +2094,21 @@ function verificarTardanzaYaRegistrada(
                 function limpiarFiltroOperario() {
                     <?php if ($esLider): ?>
                         // Para líderes: seleccionar "Mis marcaciones"
-                        document.getElementById('operario_id').value = '<?= $_SESSION['usuario_id'] ?>';
-                        aplicarFiltrosLider();
+                        const opId = document.getElementById('operario_id');
+                        if (opId) {
+                            opId.value = '<?= $_SESSION['usuario_id'] ?>';
+                            aplicarFiltrosLider();
+                        }
                     <?php else: ?>
                         // Para otros usuarios: resetear a "Todos los colaboradores"
                         const operarioInput = document.getElementById('operario');
                         const operarioIdInput = document.getElementById('operario_id');
 
-                        operarioInput.value = 'Todos los colaboradores';
-                        operarioIdInput.value = '0';
+                        if (operarioInput) operarioInput.value = 'Todos los colaboradores';
+                        if (operarioIdInput) operarioIdInput.value = '0';
 
                         // Aplicar filtros inmediatamente
-                        aplicarFiltros();
+                        if (typeof aplicarFiltros === 'function') aplicarFiltros();
                     <?php endif; ?>
                 }
 
