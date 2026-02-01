@@ -1602,12 +1602,25 @@ function verificarTardanzaYaRegistrada(
                                     <?php endif; ?>
                                     <?php if ($esLider): ?>
                                         <th style="text-align: center;">
-                                            Acciones
-                                            <span id="btnFiltroIncidencias" class="filter-tri-state neutral"
-                                                onclick="toggleFiltroIncidencias()"
-                                                title="Filtrando: TODO (Clic para ver solo CON incidencias)">
-                                                <i class="fas fa-minus-circle"></i>
-                                            </span>
+                                            <div class="header-actions-container">
+                                                <div style="margin-bottom: 5px;">Acciones</div>
+                                                <div class="tri-state-filter-group">
+                                                    <span class="tri-btn neutral active" onclick="setFiltroIncidencias('todos')"
+                                                        title="Ver Todo">
+                                                        <i class="fas fa-minus-circle"></i>
+                                                    </span>
+                                                    <span class="tri-btn positive"
+                                                        onclick="setFiltroIncidencias('con_incidencia')"
+                                                        title="Ver solo CON incidencias">
+                                                        <i class="fas fa-check-circle"></i>
+                                                    </span>
+                                                    <span class="tri-btn negative"
+                                                        onclick="setFiltroIncidencias('sin_incidencia')"
+                                                        title="Ver solo SIN incidencias">
+                                                        <i class="fas fa-times-circle"></i>
+                                                    </span>
+                                                </div>
+                                            </div>
                                         </th>
                                     <?php endif; ?>
                                 </tr>
@@ -1780,12 +1793,12 @@ function verificarTardanzaYaRegistrada(
                 // Datos de operarios para el autocompletado
                 const operariosData = [
                     <?php if ($esLider): ?>
-                                                            { id: <?php echo $_SESSION['usuario_id']; ?>, nombre: '' },
+                                                                { id: <?php echo $_SESSION['usuario_id']; ?>, nombre: '' },
                     <?php else: ?>
-                                                            { id: 0, nombre: 'Todos los colaboradores' },
+                                                                { id: 0, nombre: 'Todos los colaboradores' },
                     <?php endif; ?>
             <?php foreach ($operarios as $op): ?>
-                                                            { id: <?php echo $op['CodOperario']; ?>, nombre: '<?php echo addslashes($op['nombre_completo']); ?>' },
+                                                                { id: <?php echo $op['CodOperario']; ?>, nombre: '<?php echo addslashes($op['nombre_completo']); ?>' },
                     <?php endforeach; ?>
                 ];
 

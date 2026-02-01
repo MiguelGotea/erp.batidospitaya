@@ -1075,40 +1075,63 @@ a.btn {
     border: 1px solid #c3e6cb;
 }
 
-/* Estilos para el filtro de 3 estados en el encabezado */
-.filter-tri-state {
-    cursor: pointer;
-    font-size: 16px;
-    transition: all 0.2s ease;
-    display: inline-flex;
+/* Estilos para el filtro de 3 estados siempre visible en el encabezado */
+.header-actions-container {
+    display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: center;
-    width: 24px;
-    height: 24px;
-    border-radius: 4px;
-    background: rgba(255, 255, 255, 0.1);
-    margin-left: 8px;
-    vertical-align: middle;
+    gap: 4px;
 }
 
-.filter-tri-state:hover {
-    background: rgba(255, 255, 255, 0.2);
+.tri-state-filter-group {
+    display: flex;
+    gap: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 2px;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.tri-btn {
+    cursor: pointer;
+    font-size: 14px;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+    opacity: 0.4;
+    color: white;
+}
+
+.tri-btn:hover {
+    opacity: 0.8;
     transform: scale(1.1);
 }
 
-.filter-tri-state.neutral {
-    color: #ced4da;
-    /* Gris */
+.tri-btn.active {
+    opacity: 1;
+    background: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
 }
 
-.filter-tri-state.positive {
-    color: #28a745;
-    /* Verde: Solo incidencias */
-    background: rgba(40, 167, 69, 0.2);
+.tri-btn.neutral.active {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.3);
 }
 
-.filter-tri-state.negative {
-    color: #dc3545;
-    /* Rojo: Sin incidencias */
-    background: rgba(220, 53, 69, 0.2);
+.tri-btn.positive.active {
+    color: #e0f2f1;
+    /* Verde esmeralda claro */
+    background: #28a745;
+    /* Verde sólido */
+}
+
+.tri-btn.negative.active {
+    color: #ffebee;
+    /* Rojo suave */
+    background: #dc3545;
+    /* Rojo sólido */
 }

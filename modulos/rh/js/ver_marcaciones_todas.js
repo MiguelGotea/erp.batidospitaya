@@ -794,27 +794,57 @@ function calcularMinutosDiferencia(programada, marcada) {
 function verDetalle(codOperario, fecha) {
     // Placeholder para ver detalle de marcación
     alert(`Ver detalle de marcación:\nOperario: ${codOperario}\nFecha: ${fecha}`);
-}// Función para alternar el filtro de incidencias (Tri-state)
-function toggleFiltroIncidencias() {
-    const btn = $('#btnFiltroIncidencias');
-    const icon = btn.find('i');
+    // Función para establecer el filtro de incidencias (Tri-state)
+    function setFiltroIncidencias(estado) {
+        filtroIncidencias = estado;
 
-    if (filtroIncidencias === 'todos') {
-        filtroIncidencias = 'con_incidencia';
-        btn.removeClass('neutral').addClass('positive');
-        icon.removeClass('fa-minus-circle').addClass('fa-check-circle');
-        btn.attr('title', 'Filtrando: Solo registros CON incidencias (Clic para ver SIN incidencias)');
-    } else if (filtroIncidencias === 'con_incidencia') {
-        filtroIncidencias = 'sin_incidencia';
-        btn.removeClass('positive').addClass('negative');
-        icon.removeClass('fa-check-circle').addClass('fa-times-circle');
-        btn.attr('title', 'Filtrando: Solo registros SIN incidencias (Clic para ver TODO)');
-    } else {
-        filtroIncidencias = 'todos';
-        btn.removeClass('negative').addClass('neutral');
-        icon.removeClass('fa-times-circle').addClass('fa-minus-circle');
-        btn.attr('title', 'Filtrando: TODO (Clic para ver solo CON incidencias)');
+        // Actualizar estados visuales en la botonera del encabezado
+        $('.tri-btn').removeClass('active');
+
+        if (estado === 'todos') {
+            $('.tri-btn.neutral').addClass('active');
+        } else if (estado === 'con_incidencia') {
+            $('.tri-btn.positive').addClass('active');
+        } else if (estado === 'sin_incidencia') {
+            $('.tri-btn.negative').addClass('active');
+        }
+
+        // Recargar tabla para aplicar el filtro localmente
+        renderizarTabla(ultimoDatosCargados || []);
     }
 
-    cargarDatos(); // Recargar para aplicar el filtro (aunque sea localmente, cargarDatos llama a renderizarTabla)
-}
+    // Variable para cachear los últimos datos cargados y permitir filtrado local instantáneo
+    let ultimoDatosCargados = [];
+
+    // Modificar cargarDatos para guardar el cache
+    const cargarDatosOriginal = cargarDatos;
+    cargarDatos = function () {
+        $.ajax({
+            url: 'ajax/marcaciones_get_datos.php',
+            method: 'POST',
+            data: {
+                pagina: paginaActual,
+                registros_por_pagina: registrosPorPagina,
+                filtros: JSON.stringify(filtrosActivos),
+                orden: JSON.stringify(ordenActivo)
+            },
+            dataType: 'json',
+            success: function (response) {
+                if (response.success) {
+                    ultimoDatosCargados = response.datos; // Cachear
+                    totalRegistros = response.total_registros;
+                    renderizarTabla(response.datos);
+                    renderizarPaginacion(response.total_registros);
+                    actualizarIndicadoresFiltros();
+                } else {
+                    console.error('Error:', response.message);
+                    alert('Error al cargar datos: ' + response.message);
+                }
+            },
+            error: function (xhr, status, error) {
+                console.error('Error AJAX:', error);
+                alert('Error al cargar los datos');
+            }
+        });
+    };
+
