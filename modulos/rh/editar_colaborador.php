@@ -5,11 +5,10 @@ require_once '../../core/layout/header_universal.php';
 require_once '../../core/permissions/permissions.php';
 
 $usuario = obtenerUsuarioActual();
-$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
 $cargoId = $usuario['CodNivelesCargos'] ?? 0;
 
 // Verificar acceso al módulo
-if (!tienePermiso('editar_colaborador', 'vista', $cargoId) && !$esAdmin) {
+if (!tienePermiso('editar_colaborador', 'vista', $cargoId)) {
     header('Location: ../index.php');
     exit();
 }
@@ -120,8 +119,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['pestaña'])) {
 
     // Verificar permisos según la pestaña
     if (
-        ($pestaña == 'datos-personales' || $pestaña == 'datos-contacto') && !verificarAccesoCargo([13, 16, 39, 30, 37, 28])
-        && !$esAdmin
+        ($pestaña == 'datos-personales' || $pestaña == 'datos-contacto') && !tienePermiso('editar_colaborador', 'edicion', $cargoId)
     ) {
         $_SESSION['error'] = 'No tiene permisos para editar esta información';
         header("Location: editar_colaborador.php?id=$codOperario&pestaña=$pestaña");
@@ -369,7 +367,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['pestaña'])) {
 
     // Para la pestaña de datos-personales, manejar la foto de perfil por separado
     if ($pestaña == 'datos-personales' && isset($_FILES['foto_perfil']) && !empty($_FILES['foto_perfil']['name'])) {
-        if (!verificarAccesoCargo([13, 39, 30, 37, 28])) {
+        if (!tienePermiso('editar_colaborador', 'edicion', $cargoId)) {
             $_SESSION['error'] = 'No tiene permisos para cambiar la foto de perfil';
             header("Location: editar_colaborador.php?id=$codOperario&pestaña=datos-personales");
             exit();
@@ -3211,7 +3209,7 @@ function verificarEstadoGlobalDocumentos($codOperario)
     $completos = 0;
 
     foreach ($pestañasRevisar as $pestaña) {
-        $estado = verificarEstadoDocumentosObligatorios($codOperario, $pestaña);
+        $estado = verificarEstadoDocumentosObligatorios($codOperario, 'global');
 
         if ($estado !== 'no_aplica') {
             $totalObligatorios++;
@@ -3458,49 +3456,49 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                         </div>
 
                         <!-- Pestañas de navegación -->
-                        <?php if ($esAdmin || verificarAccesoCargo([13, 16, 39, 30, 37, 28])): ?>
+                        <?php if (tienePermiso('editar_colaborador', 'edicion', $cargoId)): ?>
                             <a href="?id=<?= $codOperario ?>&pestaña=datos-personales"
                                 class="tab-button <?= $pestaña_activa == 'datos-personales' ? 'active' : '' ?>">Datos
                                 Personales</a>
                         <?php endif; ?>
-                        <?php if ($esAdmin || verificarAccesoCargo([13, 16, 39, 30, 37, 28])): ?>
+                        <?php if (tienePermiso('editar_colaborador', 'edicion', $cargoId)): ?>
                             <a href="?id=<?= $codOperario ?>&pestaña=datos-contacto"
                                 class="tab-button <?= $pestaña_activa == 'datos-contacto' ? 'active' : '' ?>">Datos de
                                 Contacto</a>
                         <?php endif; ?>
-                        <?php if ($esAdmin || verificarAccesoCargo([13, 16, 39, 30, 37, 28])): ?>
+                        <?php if (tienePermiso('editar_colaborador', 'edicion', $cargoId)): ?>
                             <a href="?id=<?= $codOperario ?>&pestaña=contactos-emergencia"
                                 class="tab-button <?= $pestaña_activa == 'contactos-emergencia' ? 'active' : '' ?>">Contactos
                                 de
                                 Emergencia</a>
                         <?php endif; ?>
-                        <?php if ($esAdmin || verificarAccesoCargo([13, 16, 39, 30, 37, 28])): ?>
+                        <?php if (tienePermiso('editar_colaborador', 'edicion', $cargoId)): ?>
                             <a href="?id=<?= $codOperario ?>&pestaña=contrato"
                                 class="tab-button <?= $pestaña_activa == 'contrato' ? 'active' : '' ?>">Contrato</a>
                         <?php endif; ?>
-                        <?php if ($esAdmin || verificarAccesoCargo([0])): ?>
+                        <?php if (verificarAccesoCargo([0])): ?>
                             <a href="?id=<?= $codOperario ?>&pestaña=salario"
                                 class="tab-button <?= $pestaña_activa == 'salario' ? 'active' : '' ?>">Salario</a>
                         <?php endif; ?>
-                        <?php if ($esAdmin || verificarAccesoCargo([13, 16, 39, 30, 37, 28])): ?>
+                        <?php if (tienePermiso('editar_colaborador', 'edicion', $cargoId)): ?>
                             <a href="?id=<?= $codOperario ?>&pestaña=inss"
                                 class="tab-button <?= $pestaña_activa == 'inss' ? 'active' : '' ?>">INSS</a>
                         <?php endif; ?>
-                        <?php if ($esAdmin || verificarAccesoCargo([0])): ?>
+                        <?php if (verificarAccesoCargo([0])): ?>
                             <a href="?id=<?= $codOperario ?>&pestaña=movimientos"
                                 class="tab-button <?= $pestaña_activa == 'movimientos' ? 'active' : '' ?>">Movimientos</a>
                         <?php endif; ?>
-                        <?php if ($esAdmin || verificarAccesoCargo([0])): ?>
+                        <?php if (verificarAccesoCargo([0])): ?>
                             <a href="?id=<?= $codOperario ?>&pestaña=categoria"
                                 class="tab-button <?= $pestaña_activa == 'categoria' ? 'active' : '' ?>">Categoría</a>
                         <?php endif; ?>
-                        <?php if ($esAdmin || verificarAccesoCargo([13, 16, 39, 30, 37, 28])): ?>
+                        <?php if (tienePermiso('editar_colaborador', 'edicion', $cargoId)): ?>
                             <a href="?id=<?= $codOperario ?>&pestaña=adendums"
                                 class="tab-button <?= $pestaña_activa == 'adendums' ? 'active' : '' ?>">Adenda de
                                 Contrato y
                                 Movimientos</a>
                         <?php endif; ?>
-                        <?php if ($esAdmin || verificarAccesoCargo([13, 16, 39, 30, 37, 28])): ?>
+                        <?php if (tienePermiso('editar_colaborador', 'edicion', $cargoId)): ?>
                             <a href="?id=<?= $codOperario ?>&pestaña=expediente-digital"
                                 class="tab-button <?= $pestaña_activa == 'expediente-digital' ? 'active' : '' ?>">
                                 Expediente Digital
@@ -3510,7 +3508,7 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                                 ?>
                             </a>
                         <?php endif; ?>
-                        <?php if ($esAdmin || verificarAccesoCargo([13, 16, 39, 30, 37, 28])): ?>
+                        <?php if (tienePermiso('editar_colaborador', 'edicion', $cargoId)): ?>
                             <a href="?id=<?= $codOperario ?>&pestaña=bitacora"
                                 class="tab-button <?= $pestaña_activa == 'bitacora' ? 'active' : '' ?>">Bitácora</a>
                         <?php endif; ?>
@@ -3518,7 +3516,7 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
 
                     <div class="tab-content">
                         <!-- Pestaña de Datos Personales -->
-                        <?php if ($esAdmin || verificarAccesoCargo([13, 16, 39, 30, 37, 28])): ?>
+                        <?php if (verificarAccesoCargo([13, 16, 39, 30, 37, 28])): ?>
                             <div id="datos-personales"
                                 class="tab-pane <?= $pestaña_activa == 'datos-personales' ? 'active' : '' ?>">
                                 <!-- Sección de Documentos Obligatorios Faltantes -->
@@ -3850,7 +3848,7 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                         <?php endif; ?>
 
                         <!-- Pestaña de Datos de Contacto -->
-                        <?php if ($esAdmin || verificarAccesoCargo([13, 16, 39, 30, 37, 28])): ?>
+                        <?php if (verificarAccesoCargo([13, 16, 39, 30, 37, 28])): ?>
                             <div id="datos-contacto"
                                 class="tab-pane <?= $pestaña_activa == 'datos-contacto' ? 'active' : '' ?>">
                                 <form method="POST" action="">
@@ -3915,7 +3913,7 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                         <?php endif; ?>
 
                         <!-- Pestaña de Contactos de Emergencia -->
-                        <?php if ($esAdmin || verificarAccesoCargo([13, 16, 39, 30, 37, 28])): ?>
+                        <?php if (verificarAccesoCargo([13, 16, 39, 30, 37, 28])): ?>
                             <div id="contactos-emergencia"
                                 class="tab-pane <?= $pestaña_activa == 'contactos-emergencia' ? 'active' : '' ?>">
                                 <div
@@ -4115,7 +4113,7 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                         <?php endif; ?>
 
                         <!-- Pestaña de Contrato -->
-                        <?php if ($esAdmin || verificarAccesoCargo([13, 16, 39, 30, 37, 28])): ?>
+                        <?php if (verificarAccesoCargo([13, 16, 39, 30, 37, 28])): ?>
                             <div id="contrato" class="tab-pane <?= $pestaña_activa == 'contrato' ? 'active' : '' ?>">
                                 <!-- Sección de Documentos Obligatorios Faltantes -->
                                 <div
@@ -4730,7 +4728,7 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                         <?php endif; ?>
 
                         <!-- Pestaña de Salario -->
-                        <?php if ($esAdmin || verificarAccesoCargo([13, 16, 39, 30, 37, 28])): ?>
+                        <?php if (tienePermiso('editar_colaborador', 'edicion', $cargoId)): ?>
                             <div id="salario" class="tab-pane <?= $pestaña_activa == 'salario' ? 'active' : '' ?>">
                                 <div
                                     style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
@@ -4936,7 +4934,7 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                         <?php endif; ?>
 
                         <!-- Pestaña de INSS -->
-                        <?php if ($esAdmin || verificarAccesoCargo([13, 16, 39, 30, 37, 28])): ?>
+                        <?php if (tienePermiso('editar_colaborador', 'edicion', $cargoId)): ?>
                             <div id="inss" class="tab-pane <?= $pestaña_activa == 'inss' ? 'active' : '' ?>">
                                 <!-- Sección de Documentos Obligatorios Faltantes -->
                                 <div
@@ -5261,7 +5259,7 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                         <?php endif; ?>
 
                         <!-- Pestaña de Movimientos -->
-                        <?php if ($esAdmin || verificarAccesoCargo([13, 16, 39, 30, 37, 28])): ?>
+                        <?php if (tienePermiso('editar_colaborador', 'edicion', $cargoId)): ?>
                             <div id="movimientos" class="tab-pane <?= $pestaña_activa == 'movimientos' ? 'active' : '' ?>">
                                 <?php
                                 $historialCargos = obtenerHistorialCargos($codOperario);
@@ -5385,7 +5383,7 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                         <?php endif; ?>
 
                         <!-- Pestaña de Categoría -->
-                        <?php if ($esAdmin || verificarAccesoCargo([13, 16, 39, 30, 37, 28])): ?>
+                        <?php if (verificarAccesoCargo([13, 16, 39, 30, 37, 28])): ?>
                             <div id="categoria" class="tab-pane <?= $pestaña_activa == 'categoria' ? 'active' : '' ?>">
                                 <form method="POST" action="">
                                     <input type="hidden" name="accion_categoria" value="agregar">
@@ -5605,9 +5603,9 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                         <?php endif; ?>
 
                         <!-- Pestaña de Adendums -->
-                        <?php if ($esAdmin || verificarAccesoCargo([11, 13, 16, 21, 39, 30, 37, 28])): ?>
+                        <?php if (tienePermiso('editar_colaborador', 'edicion', $cargoId)): ?>
                             <div id="adendums" class="tab-pane <?= $pestaña_activa == 'adendums' ? 'active' : '' ?>">
-                                <?php if ($esAdmin || verificarAccesoCargo([13, 16, 39, 30, 37, 28])): ?>
+                                <?php if (tienePermiso('editar_colaborador', 'edicion', $cargoId)): ?>
                                     <?php if (!tieneContratoActivo($codOperario)): ?>
                                         <div class="alert alert-warning">
                                             <i class="fas fa-exclamation-triangle"></i>
@@ -5996,7 +5994,7 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                         <?php endif; ?>
 
                         <!-- Pestaña de Expediente Digital -->
-                        <?php if ($esAdmin || verificarAccesoCargo([13, 16, 39, 30, 37, 28])): ?>
+                        <?php if (tienePermiso('editar_colaborador', 'edicion', $cargoId)): ?>
                             <div id="expediente-digital"
                                 class="tab-pane <?= $pestaña_activa == 'expediente-digital' ? 'active' : '' ?>">
                                 <?php
@@ -6273,7 +6271,7 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                         <?php endif; ?>
 
                         <!-- Pestaña de Bitácora -->
-                        <?php if ($esAdmin || verificarAccesoCargo([13, 16, 39, 30, 37, 28])): ?>
+                        <?php if (tienePermiso('editar_colaborador', 'edicion', $cargoId)): ?>
                             <div id="bitacora" class="tab-pane <?= $pestaña_activa == 'bitacora' ? 'active' : '' ?>">
                                 <div style="margin-bottom: 30px;">
                                     <h3 style="color: #0E544C; margin-bottom: 15px;">Nueva Anotación</h3>

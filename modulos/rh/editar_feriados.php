@@ -13,15 +13,6 @@ if (!verificarAccesoCargo(13)) {
 $usuario = obtenerUsuarioActual();
 $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
 
-/**
- * Obtiene todos los departamentos
- */
-function obtenerTodosDepartamentos()
-{
-    global $conn;
-    $stmt = $conn->query("SELECT codigo, nombre FROM departamentos ORDER BY nombre ASC");
-    return $stmt->fetchAll();
-}
 
 // Obtener todos los departamentos para el filtro
 $departamentos = obtenerTodosDepartamentos();
