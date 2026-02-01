@@ -15,7 +15,7 @@ if (!tienePermiso('historial_marcaciones_globales', 'vista', $usuario['CodNivele
 }
 
 $esLider = tienePermiso('historial_marcaciones_globales', 'permisoslider', $usuario['CodNivelesCargos']);
-$siGestion = tienePermiso('historial_marcaciones_globales', 'gestion', $usuario['CodNivelesCargos']);
+$esOperaciones = tienePermiso('historial_marcaciones_globales', 'gestion', $usuario['CodNivelesCargos']);
 $esCDS = tienePermiso('historial_marcaciones_globales', 'permisoscds', $usuario['CodNivelesCargos']);
 $esContabilidad = tienePermiso('historial_marcaciones_globales', 'permisoscontabilidad', $usuario['CodNivelesCargos']);
 
@@ -57,10 +57,7 @@ $cargoUsuario = obtenerCargoPrincipalUsuario($_SESSION['usuario_id']);
 //******************************Estándar para header, termina******************************
 
 // Obtener sucursales según el tipo de usuario
-if ($siGestion) { // Si es administrador
-    $sucursales = obtenerTodasSucursales();
-    $modoVista = $_GET['modo'] ?? 'todas'; // Por defecto 'todas' para admin
-} elseif ($esLider) { // Si es líder de sucursal
+if ($esLider) { // Si es líder de sucursal
     $sucursalesLider = obtenerSucursalesLider($usuario['CodOperario']);
     $modoVista = 'sucursal'; // Forzar modo sucursal para líderes
 
@@ -80,7 +77,7 @@ if ($siGestion) { // Si es administrador
 
     // Guardar la sucursal del líder en una variable global para usar en las consultas
     $sucursalAsignacionLider = $sucursalLider;
-} elseif ($siGestion) { // Si es de operaciones
+} elseif ($esOperaciones) { // Si es de operaciones
     $sucursales = obtenerSucursalesFisicas(); // Solo sucursales físicas (sucursal = 1)
     $modoVista = 'sucursal'; // Forzar modo sucursal para operaciones
 } elseif ($esCDS) { // Si es jefe de CDS (cargo 19)
@@ -90,7 +87,7 @@ if ($siGestion) { // Si es administrador
     $sucursalSeleccionada = '6'; // Forzar sucursal 6
 } else { // Para otros cargos (contabilidad, RH, etc.)
     $sucursales = obtenerTodasSucursales();
-    $modoVista = $_GET['modo'] ?? 'sucursal'; // 'sucursal' o 'todas'
+    $modoVista = $_GET['modo'] ?? 'todas'; // 'sucursal' o 'todas'
 }
 
 // Si no hay sucursales
@@ -1701,7 +1698,7 @@ function verificarTardanzaYaRegistrada(
                                     <th style="display:none;">Diferencia</th>
                                     <th style="display:none;">Diferencia Entrada</th>
                                     <th style="display:none;">Diferencia Salida</th>
-                                    <?php if ($siGestion): ?>
+                                    <?php if ($esOperaciones): ?>
                                         <th>Total Horas<br>Trabajadas</th>
                                     <?php endif; ?>
 
@@ -1948,7 +1945,7 @@ function verificarTardanzaYaRegistrada(
                                             <?= $diferenciaTexto ?>
                                         </td>
 
-                                        <?php if ($siGestion): ?>
+                                        <?php if ($esOperaciones): ?>
                                             <!-- NUEVA CELDA TOTAL HORAS TRABAJADAS - USA EL TOTAL PRECALCULADO -->
                                             <td class="text-center total-horas-operario" data-operario="<?= $codOperario ?>"
                                                 style="font-weight: bold; background-color: #e8f5e9;">
@@ -2209,12 +2206,12 @@ function verificarTardanzaYaRegistrada(
                 // Datos de operarios para el autocompletado
                 const operariosData = [
                     <?php if ($esLider): ?>
-                                                                                                        { id: <?php echo $_SESSION['usuario_id']; ?>, nombre: '' },
+                                                                                                                        { id: <?php echo $_SESSION['usuario_id']; ?>, nombre: '' },
                     <?php else: ?>
-                                                                                                        { id: 0, nombre: 'Todos los colaboradores' },
+                                                                                                                        { id: 0, nombre: 'Todos los colaboradores' },
                     <?php endif; ?>
             <?php foreach ($operarios as $op): ?>
-                                                                                                    { id: <?php echo $op['CodOperario']; ?>, nombre: '<?php echo addslashes($op['nombre_completo']); ?>' },
+                                                                                                                    { id: <?php echo $op['CodOperario']; ?>, nombre: '<?php echo addslashes($op['nombre_completo']); ?>' },
                     <?php endforeach; ?>
                 ];
 
