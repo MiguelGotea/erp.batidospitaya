@@ -45,7 +45,7 @@ SELECT
     s.nombre as nombre_sucursal,
     CONCAT(TRIM(o.Nombre), ' ', TRIM(IFNULL(o.Apellido, ''))) as nombre_completo,
     o.CodOperario,
-    nc.Cargo as nombre_cargo,
+    nc.Nombre as nombre_cargo,
     hso.lunes_entrada, hso.lunes_salida,
     hso.martes_entrada, hso.martes_salida,
     hso.miercoles_entrada, hso.miercoles_salida,
@@ -169,7 +169,7 @@ if ($orden['columna'] && in_array($orden['columna'], $columnas_permitidas)) {
     } elseif ($orden['columna'] === 'nombre_sucursal') {
         $columna_sql = 's.nombre';
     } elseif ($orden['columna'] === 'nombre_cargo') {
-        $columna_sql = 'nc.Cargo';
+        $columna_sql = 'nc.Nombre';
     }
 
     $sql .= " ORDER BY $columna_sql $direccion";
