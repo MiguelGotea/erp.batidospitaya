@@ -7,40 +7,6 @@
     padding: 10px;
 }
 
-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 0;
-    border-bottom: 1px solid #ddd;
-    /* Esta es la línea horizontal */
-    margin-bottom: 30px;
-    /* Espacio después del header */
-    flex-wrap: wrap;
-    gap: 15px;
-}
-
-/* Header styles - Estilo modificado para logo izquierda, botones centro, usuario derecha */
-.header-container {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
-    padding: 0 5px;
-    box-sizing: border-box;
-    margin: 1px auto;
-    flex-wrap: wrap;
-}
-
-.logo {
-    height: 50px;
-}
-
-.logo-container {
-    flex-shrink: 0;
-    margin-right: auto;
-    /* Empuja los demás elementos hacia la derecha */
-}
 
 .buttons-container {
     display: flex;
@@ -55,13 +21,6 @@ header {
     transform: translateX(-50%);
 }
 
-.user-info {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-left: auto;
-    /* Empuja este contenedor a la derecha */
-}
 
 .btn-agregar {
     background-color: transparent;
@@ -91,31 +50,6 @@ header {
     border-color: #0E544C;
 }
 
-.user-avatar {
-    width: 35px;
-    height: 35px;
-    border-radius: 50%;
-    background-color: #51B8AC;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-weight: bold;
-}
-
-.btn-logout {
-    background: #51B8AC;
-    color: white;
-    border: none;
-    padding: 8px 15px;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background 0.3s;
-}
-
-.btn-logout:hover {
-    background: #0E544C;
-}
 
 .title {
     color: #0E544C;
