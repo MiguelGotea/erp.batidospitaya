@@ -2,16 +2,15 @@
 require_once '../../core/auth/auth.php';
 require_once '../../core/layout/header_universal.php';
 require_once '../../core/layout/menu_lateral.php';
+require_once '../../core/permissions/permissions.php';
 
-// Verificar acceso al módulo (solo cargo nivel 13 - RH o Admin)
+// Obtener usuario y cargo antes de verificar permisos
 $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
 $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
 
-if (!verificarAccesoCargo([13, 16, 39, 30, 37, 28]) && !$esAdmin) {
-    header('Location: ../index.php');
-    exit();
-}
+// Verificar acceso al módulo mediante el sistema de permisos
+verificarPermisoORedireccionar('plan_feriados_anual', 'vista', $cargoOperario);
 
 $anio = isset($_GET['anio']) ? intval($_GET['anio']) : date('Y');
 
@@ -68,219 +67,8 @@ sort($aniosDisponibles);
     </title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <link rel="icon" href="../../assets/img/icon12.png" type="image/png">
-    <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Calibri', sans-serif;
-        }
-
-        body {
-            background-color: #F6F6F6;
-            color: #333;
-        }
-
-        .container-fluid {
-            padding: 20px;
-        }
-
-        .controls {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            background: white;
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-        }
-
-        .anio-selector {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .anio-selector select {
-            padding: 8px 15px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 1rem;
-            color: #0E544C;
-            font-weight: bold;
-        }
-
-        .calendar-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px;
-        }
-
-        .month-card {
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            padding: 15px;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .month-header {
-            text-align: center;
-            color: #0E544C;
-            font-weight: bold;
-            font-size: 1.2rem;
-            margin-bottom: 10px;
-            padding-bottom: 5px;
-            border-bottom: 2px solid #51B8AC;
-        }
-
-        .days-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 2px;
-            font-size: 0.8rem;
-        }
-
-        .day-name {
-            text-align: center;
-            font-weight: bold;
-            color: #666;
-            padding: 5px 0;
-        }
-
-        .day {
-            aspect-ratio: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 4px;
-            position: relative;
-            cursor: default;
-        }
-
-        .day.has-feriado {
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        .day.nacional {
-            background-color: rgba(0, 123, 255, 0.2);
-            color: #0056b3;
-            border: 1px solid #007bff;
-        }
-
-        .day.departamental {
-            background-color: rgba(111, 66, 193, 0.2);
-            color: #4e2e8a;
-            border: 1px solid #6f42c1;
-        }
-
-        .day.hoy {
-            background-color: #fff3cd;
-            border: 1px solid #ffca2c;
-        }
-
-        .day:hover.has-feriado {
-            transform: scale(1.1);
-            z-index: 10;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-        }
-
-        .feriado-info {
-            display: none;
-            position: absolute;
-            bottom: 110%;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #333;
-            color: white;
-            padding: 8px 12px;
-            border-radius: 4px;
-            font-size: 0.75rem;
-            white-space: nowrap;
-            z-index: 100;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-        }
-
-        .feriado-info::after {
-            content: '';
-            position: absolute;
-            top: 100%;
-            left: 50%;
-            margin-left: -5px;
-            border-width: 5px;
-            border-style: solid;
-            border-color: #333 transparent transparent transparent;
-        }
-
-        .day:hover .feriado-info {
-            display: block;
-        }
-
-        .legend {
-            display: flex;
-            gap: 20px;
-            margin-top: 20px;
-            padding: 15px;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-        }
-
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 0.9rem;
-        }
-
-        .box {
-            width: 20px;
-            height: 20px;
-            border-radius: 4px;
-        }
-
-        .box-nacional {
-            background-color: rgba(0, 123, 255, 0.2);
-            border: 1px solid #007bff;
-        }
-
-        .box-departamental {
-            background-color: rgba(111, 66, 193, 0.2);
-            border: 1px solid #6f42c1;
-        }
-
-        .btn {
-            padding: 8px 15px;
-            background-color: #51B8AC;
-            color: white;
-            text-decoration: none;
-            border-radius: 4px;
-            transition: background 0.3s;
-            border: none;
-            cursor: pointer;
-        }
-
-        .btn:hover {
-            background-color: #0E544C;
-        }
-
-        .btn-secondary {
-            background-color: #6c757d;
-        }
-
-        .btn-secondary:hover {
-            background-color: #5a6268;
-        }
-
-        @media (max-width: 768px) {
-            .calendar-grid {
-                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="../../core/assets/css/global_tools.css">
+    <link rel="stylesheet" href="css/plan_feriados_anual.css">
 </head>
 
 <body>
@@ -300,11 +88,6 @@ sort($aniosDisponibles);
                             </option>
                         <?php endforeach; ?>
                     </select>
-                </div>
-                <div>
-                    <a href="editar_feriados.php" class="btn btn-secondary">
-                        <i class="fas fa-list"></i> Ver Lista / Editar
-                    </a>
                 </div>
             </div>
 
