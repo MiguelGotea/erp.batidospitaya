@@ -331,7 +331,32 @@ try {
     }
 
     // PASO 4: Aplicar filtros a los resultados combinados
-    if (!empty($filtros)) {
+    $incidenciasFiltro = isset($_POST['incidencias']) ? $_POST['incidencias'] : 'todos';
+
+    if (!empty($filtros) || $incidenciasFiltro !== 'todos') {
+        // Filtro de incidencias (Tri-state)
+        if ($incidenciasFiltro !== 'todos') {
+            $resultado = array_filter($resultado, function ($r) use ($incidenciasFiltro) {
+                $esTardanza = false;
+                if (!empty($r['hora_ingreso']) && !empty($r['hora_entrada_programada'])) {
+                    $ingreso = new DateTime($r['hora_ingreso']);
+                    $programada = new DateTime($r['hora_entrada_programada']);
+                    if ($ingreso > $programada)
+                        $esTardanza = true;
+                }
+
+                $esFalta = !$r['tiene_marcacion'];
+                $tieneIncidencia = ($esTardanza || $esFalta);
+
+                if ($incidenciasFiltro === 'con_incidencia') {
+                    return $tieneIncidencia;
+                } else if ($incidenciasFiltro === 'sin_incidencia') {
+                    return !$tieneIncidencia;
+                }
+                return true;
+            });
+        }
+
         // Filtro de semana
         if (isset($filtros['numero_semana'])) {
             if (isset($filtros['numero_semana']['min']) && $filtros['numero_semana']['min'] !== '') {

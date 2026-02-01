@@ -811,14 +811,15 @@ function setFiltroIncidencias(estado) {
         $('.tri-btn.negative').addClass('active');
     }
 
-    // Recargar tabla para aplicar el filtro localmente
-    renderizarTabla(ultimoDatosCargados || []);
+    // Reiniciar a la primera página y recargar desde el servidor para que la paginación sea correcta
+    paginaActual = 1;
+    cargarDatos();
 }
 
 // Variable para cachear los últimos datos cargados y permitir filtrado local instantáneo
 let ultimoDatosCargados = [];
 
-// Modificar cargarDatos para guardar el cache
+// Modificar cargarDatos para guardar el cache y enviar filtro de incidencias
 const cargarDatosOriginal = cargarDatos;
 cargarDatos = function () {
     $.ajax({
@@ -828,7 +829,8 @@ cargarDatos = function () {
             pagina: paginaActual,
             registros_por_pagina: registrosPorPagina,
             filtros: JSON.stringify(filtrosActivos),
-            orden: JSON.stringify(ordenActivo)
+            orden: JSON.stringify(ordenActivo),
+            incidencias: filtroIncidencias // Nuevo parámetro para filtrado en servidor
         },
         dataType: 'json',
         success: function (response) {
