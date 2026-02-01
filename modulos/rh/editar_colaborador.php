@@ -1558,8 +1558,7 @@ VALUES (?, ?, ?)
                     $codOperario,
                     $idCategoria,
                     $datos['inicio_contrato'],
-                    //$_SESSION['usuario_id'] cod_usuario_creador en el OperariosCategorias si se quiere agregar también ese dato a dicha
-                    tabla
+                    //$_SESSION['usuario_id'] cod_usuario_creador en el OperariosCategorias si se quiere agregar también ese dato a dicha tabla
                 ]);
             }
         }
@@ -3086,6 +3085,11 @@ function agruparArchivosPorCategoriaMejorada($archivos)
     $agrupados = [];
 
     foreach ($archivos as $archivo) {
+        // Asegurar que el tipo esté definido para evitar errores en la vista
+        if (!isset($archivo['tipo'])) {
+            $archivo['tipo'] = 'archivo';
+        }
+
         $categoriaPrincipal = $archivo['categoria_principal'];
         $subcategoria = $archivo['subcategoria'];
 
@@ -8562,5 +8566,4 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
             </div >
         </div >
     </div >
-</body >
-</html >
+</body ></html >
