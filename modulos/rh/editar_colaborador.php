@@ -3209,7 +3209,7 @@ function verificarEstadoGlobalDocumentos($codOperario)
     $completos = 0;
 
     foreach ($pestañasRevisar as $pestaña) {
-        $estado = verificarEstadoDocumentosObligatorios($codOperario, 'global');
+        $estado = verificarEstadoDocumentosObligatorios($codOperario, $pestaña);
 
         if ($estado !== 'no_aplica') {
             $totalObligatorios++;
@@ -3516,7 +3516,7 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
 
                     <div class="tab-content">
                         <!-- Pestaña de Datos Personales -->
-                        <?php if (verificarAccesoCargo([13, 16, 39, 30, 37, 28])): ?>
+                        <?php if (tienePermiso('editar_colaborador', 'edicion', $cargoId)): ?>
                             <div id="datos-personales"
                                 class="tab-pane <?= $pestaña_activa == 'datos-personales' ? 'active' : '' ?>">
                                 <!-- Sección de Documentos Obligatorios Faltantes -->
@@ -3848,7 +3848,7 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                         <?php endif; ?>
 
                         <!-- Pestaña de Datos de Contacto -->
-                        <?php if (verificarAccesoCargo([13, 16, 39, 30, 37, 28])): ?>
+                        <?php if (tienePermiso('editar_colaborador', 'edicion', $cargoId)): ?>
                             <div id="datos-contacto"
                                 class="tab-pane <?= $pestaña_activa == 'datos-contacto' ? 'active' : '' ?>">
                                 <form method="POST" action="">
@@ -3913,7 +3913,7 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                         <?php endif; ?>
 
                         <!-- Pestaña de Contactos de Emergencia -->
-                        <?php if (verificarAccesoCargo([13, 16, 39, 30, 37, 28])): ?>
+                        <?php if (tienePermiso('editar_colaborador', 'edicion', $cargoId)): ?>
                             <div id="contactos-emergencia"
                                 class="tab-pane <?= $pestaña_activa == 'contactos-emergencia' ? 'active' : '' ?>">
                                 <div
@@ -4113,7 +4113,7 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                         <?php endif; ?>
 
                         <!-- Pestaña de Contrato -->
-                        <?php if (verificarAccesoCargo([13, 16, 39, 30, 37, 28])): ?>
+                        <?php if (tienePermiso('editar_colaborador', 'edicion', $cargoId)): ?>
                             <div id="contrato" class="tab-pane <?= $pestaña_activa == 'contrato' ? 'active' : '' ?>">
                                 <!-- Sección de Documentos Obligatorios Faltantes -->
                                 <div
@@ -5383,7 +5383,7 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                         <?php endif; ?>
 
                         <!-- Pestaña de Categoría -->
-                        <?php if (verificarAccesoCargo([13, 16, 39, 30, 37, 28])): ?>
+                        <?php if (tienePermiso('editar_colaborador', 'edicion', $cargoId)): ?>
                             <div id="categoria" class="tab-pane <?= $pestaña_activa == 'categoria' ? 'active' : '' ?>">
                                 <form method="POST" action="">
                                     <input type="hidden" name="accion_categoria" value="agregar">
