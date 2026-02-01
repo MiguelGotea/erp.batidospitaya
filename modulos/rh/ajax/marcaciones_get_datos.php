@@ -119,7 +119,11 @@ if ($esLider) {
         AND anc_cds.CodNivelesCargos IN (23, 20, 34)
         AND (anc_cds.Fin IS NULL OR anc_cds.Fin >= CURDATE())
     )";
+} elseif ($esOperaciones) {
+    // Operaciones solo ve sucursales físicas (sucursal = 1)
+    $sql .= " AND s.sucursal = 1";
 }
+
 
 // Aplicar filtros
 if (!empty($filtros)) {

@@ -18,6 +18,8 @@ if (!tienePermiso('historial_marcaciones_globales', 'vista', $usuario['CodNivele
 // Obtener permisos del usuario
 $esLider = tienePermiso('historial_marcaciones_globales', 'permisoslider', $usuario['CodNivelesCargos']);
 $esCDS = tienePermiso('historial_marcaciones_globales', 'permisoscds', $usuario['CodNivelesCargos']);
+$esOperaciones = tienePermiso('historial_marcaciones_globales', 'permisosoperaciones', $usuario['CodNivelesCargos']);
+
 
 $columna = $_POST['columna'] ?? '';
 $opciones = [];
@@ -37,6 +39,10 @@ try {
             } elseif ($esCDS) {
                 // CDS solo ve sucursal 6
                 $stmt = $conn->query("SELECT codigo as valor, nombre as texto FROM sucursales WHERE codigo = '6'");
+                $opciones = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            } elseif ($esOperaciones) {
+                // Operaciones solo ve sucursales físicas (sucursal = 1)
+                $stmt = $conn->query("SELECT codigo as valor, nombre as texto FROM sucursales WHERE sucursal = 1 ORDER BY nombre");
                 $opciones = $stmt->fetchAll(PDO::FETCH_ASSOC);
             } else {
                 // Otros usuarios ven todas las sucursales
