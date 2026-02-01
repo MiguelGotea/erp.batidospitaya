@@ -599,8 +599,7 @@ function posicionarPanelFiltro(panel, icon) {
 
     panel.css({
         top: top + 'px',
-        left: left + 'px',
-        maxHeight: Math.min(windowHeight - 100, panelHeight) + 'px'
+        left: left + 'px'
     });
 }
 
