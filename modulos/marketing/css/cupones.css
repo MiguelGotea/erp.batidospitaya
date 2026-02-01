@@ -276,6 +276,27 @@ body {
     background-color: rgba(81, 184, 172, 0.2);
 }
 
+/* Info de rango seleccionado */
+.daterange-selected-info {
+    margin-top: 8px;
+    padding: 8px 10px;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    text-align: center;
+    border: 1px solid #dee2e6;
+}
+
+.daterange-selected-info small {
+    font-size: 11px;
+    color: #495057;
+}
+
+.daterange-selected-info strong {
+    color: #0E544C;
+    font-weight: 600;
+}
+
+
 /* Botones de orden */
 .filter-sort-buttons {
     display: grid;
