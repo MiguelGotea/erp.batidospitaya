@@ -428,6 +428,7 @@ function actualizarCalendarioUnico(columna) {
     const año = parseInt($('#añoCalendario').val());
     const calendarioId = '#calendarioUnico';
 
+
     const primerDia = new Date(año, mes, 1).getDay();
     const diasEnMes = new Date(año, mes + 1, 0).getDate();
 
