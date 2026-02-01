@@ -164,10 +164,10 @@ function renderizarTabla(datos) {
                 const difMin = calcularMinutosDiferencia(row.hora_entrada_programada, row.hora_ingreso);
                 if (difMin > 1) {
                     if (row.tardanza_solicitada) {
-                        accionesHtml = `<span class="badge-solicitud-info color-tardanza">Tardanza ya solicitada</span>`;
+                        accionesHtml = `<div class="status-rh-icon tardanza-solicitada" title="Tardanza ya solicitada"><i class="fas fa-history"></i></div>`;
                     } else {
                         accionesHtml = `
-                            <button type="button" class="btn-solicitud-tardanza" 
+                            <button type="button" class="btn-rh-action tardanza" 
                                     onclick="mostrarModalTardanza(
                                         ${row.CodOperario},
                                         '${(row.nombre_completo || '').replace(/'/g, "\\'")}',
@@ -179,7 +179,7 @@ function renderizarTabla(datos) {
                                         null,
                                         true
                                     )" title="Justificar Tardanza">
-                                Justificar Tardanza
+                                <i class="fas fa-clock"></i>
                             </button>
                         `;
                     }
@@ -191,25 +191,25 @@ function renderizarTabla(datos) {
                 const estadosPermitidos = ['Activo', 'Otra.Tienda'];
                 if (estadosPermitidos.includes(row.estado_dia)) {
                     if (row.falta_solicitada) {
-                        accionesHtml = `<span class="badge-solicitud-info color-falta">Falta ya solicitada</span>`;
+                        accionesHtml = `<div class="status-rh-icon falta-solicitada" title="Falta ya solicitada"><i class="fas fa-clipboard-check"></i></div>`;
                     } else {
                         accionesHtml = `
-                            <button type="button" class="btn-solicitud-falta" 
+                            <button type="button" class="btn-rh-action falta" 
                                     onclick="mostrarModalFalta(
                                         ${row.CodOperario},
                                         '${(row.nombre_completo || '').replace(/'/g, "\\'")}',
                                         '${row.sucursal_codigo}',
                                         '${(row.nombre_sucursal || '').replace(/'/g, "\\'")}',
                                         '${row.fecha}'
-                                    )" title="Solicitar justificación de falta/ausencia">
-                                Justificar Falta
+                                    )" title="Justificar Falta">
+                                <i class="fas fa-user-slash"></i>
                             </button>
                         `;
                     }
                 }
             }
 
-            tr.append(`<td class="text-center" style="white-space: nowrap;">${accionesHtml}</td>`);
+            tr.append(`<td class="text-center"><div class="rh-actions-cell">${accionesHtml}</div></td>`);
         }
 
         tbody.append(tr);
