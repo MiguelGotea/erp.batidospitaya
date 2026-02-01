@@ -6,7 +6,6 @@ let panelFiltroAbierto = null;
 let totalRegistros = 0;
 let modalCupon;
 
-
 // Inicializar
 $(document).ready(function () {
     modalCupon = new bootstrap.Modal(document.getElementById('modalCupon'));
