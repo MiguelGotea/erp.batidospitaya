@@ -312,7 +312,7 @@ try {
                         'tiene_horario' => true,
                         'tiene_marcacion' => false,
                         'tardanza_solicitada' => false,
-                        'falta_solicitada' => false
+                        'falta_solicitada' => ($estadoDia === 'Vacaciones')
                     ];
 
                     // Verificar si hay falta solicitada

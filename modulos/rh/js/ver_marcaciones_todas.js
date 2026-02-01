@@ -210,7 +210,7 @@ function renderizarTabla(datos) {
 
                 // 2. Verificar si hay FALTA (solo si no se puso nada arriba)
                 if (accionesHtml === '' && !row.tiene_marcacion && row.tiene_horario) {
-                    const estadosPermitidos = ['Activo', 'Otra.Tienda'];
+                    const estadosPermitidos = ['Activo', 'Otra.Tienda', 'Vacaciones'];
                     if (estadosPermitidos.includes(row.estado_dia)) {
                         if (row.falta_solicitada) {
                             accionesHtml = `<div class="status-rh-icon falta-solicitada" title="Falta ya solicitada"><i class="fas fa-clipboard-check"></i></div>`;
