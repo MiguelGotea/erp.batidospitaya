@@ -1,8 +1,8 @@
 <?php
 $version = "1.3.30";
-require_once '../../../includes/auth.php';
-require_once '../../../includes/header_universal.php';
-require_once '../../../includes/menu_lateral.php';
+require_once '../../../core/auth/auth.php';
+require_once '../../../core/layout/header_universal.php';
+require_once '../../../core/layout/menu_lateral.php';
 require_once '../../../core/permissions/permissions.php';
 
 
@@ -474,7 +474,7 @@ try {
     <?php echo renderMenuLateral($cargoOperario); ?>
     <div class="main-container">
         <div class="sub-container">
-            <?php // echo renderHeader($usuario, false,'Anuncios'); ?>
+            <?php echo renderHeader($usuario, false, 'Anuncios'); ?>
             <!-- Filtros -->
             <div class="filters-container">
                 <div class="filter-group">
@@ -616,7 +616,7 @@ try {
                                         <h4>Documentos adjuntos:</h4>
                                         <?php foreach ($documentos as $doc): ?>
                                             <div class="attachment">
-                                                <a href="<?= htmlspecialchars($doc['file_path']) ?>" target="_blank">
+                                                <a href="<?= htmlspecialchars('../../supervision/auditorias_original/' . $doc['file_path']) ?>" target="_blank">
                                                     <?php 
                                                     $icon = 'fa-file';
                                                     if (strpos($doc['file_type'], 'pdf') !== false) $icon = 'fa-file-pdf';
@@ -665,36 +665,21 @@ try {
                 
                 <!-- Paginación -->
                 <?php if ($totalPages > 1): ?>
-                    <div class="pagination">
+                    <div class="pagination" style="margin-bottom:10px;">
                         <?php if ($currentPage > 1): ?>
-                            <a href="index_avisos_publico.php?page=1<?= $yearFilter ? '&year='.$yearFilter : '' ?><?= $monthFilter ? '&month='.$monthFilter : '' ?><?= $branchFilter ? '&branch='.$branchFilter : '' ?>">
-                                <i class="fas fa-angle-double-left"></i>
-                            </a>
-                            <a href="index_avisos_publico.php?page=<?= $currentPage-1 ?><?= $yearFilter ? '&year='.$yearFilter : '' ?><?= $monthFilter ? '&month='.$monthFilter : '' ?><?= $branchFilter ? '&branch='.$branchFilter : '' ?>">
-                                <i class="fas fa-angle-left"></i>
-                            </a>
+                            <a href="?page=<?= $currentPage - 1 ?><?= $yearFilter ? '&year='.$yearFilter : '' ?><?= $monthFilter ? '&month='.$monthFilter : '' ?><?= $branchFilter ? '&branch='.$branchFilter : '' ?>">&laquo; Anterior</a>
                         <?php endif; ?>
                         
-                        <?php 
-                        // Mostrar solo algunas páginas alrededor de la actual
-                        $startPage = max(1, $currentPage - 2);
-                        $endPage = min($totalPages, $currentPage + 2);
-                        
-                        for ($i = $startPage; $i <= $endPage; $i++): ?>
+                        <?php for ($i = 1; $i <= $totalPages; $i++): ?>
                             <?php if ($i == $currentPage): ?>
                                 <span class="current"><?= $i ?></span>
                             <?php else: ?>
-                                <a href="index_avisos_publico.php?page=<?= $i ?><?= $yearFilter ? '&year='.$yearFilter : '' ?><?= $monthFilter ? '&month='.$monthFilter : '' ?><?= $branchFilter ? '&branch='.$branchFilter : '' ?>"><?= $i ?></a>
+                                <a href="?page=<?= $i ?><?= $yearFilter ? '&year='.$yearFilter : '' ?><?= $monthFilter ? '&month='.$monthFilter : '' ?><?= $branchFilter ? '&branch='.$branchFilter : '' ?>"><?= $i ?></a>
                             <?php endif; ?>
                         <?php endfor; ?>
                         
                         <?php if ($currentPage < $totalPages): ?>
-                            <a href="index_avisos_publico.php?page=<?= $currentPage+1 ?><?= $yearFilter ? '&year='.$yearFilter : '' ?><?= $monthFilter ? '&month='.$monthFilter : '' ?><?= $branchFilter ? '&branch='.$branchFilter : '' ?>">
-                                <i class="fas fa-angle-right"></i>
-                            </a>
-                            <a href="index_avisos_publico.php?page=<?= $totalPages ?><?= $yearFilter ? '&year='.$yearFilter : '' ?><?= $monthFilter ? '&month='.$monthFilter : '' ?><?= $branchFilter ? '&branch='.$branchFilter : '' ?>">
-                                <i class="fas fa-angle-double-right"></i>
-                            </a>
+                            <a href="?page=<?= $currentPage + 1 ?><?= $yearFilter ? '&year='.$yearFilter : '' ?><?= $monthFilter ? '&month='.$monthFilter : '' ?><?= $branchFilter ? '&branch='.$branchFilter : '' ?>">Siguiente &raquo;</a>
                         <?php endif; ?>
                     </div>
                 <?php endif; ?>
