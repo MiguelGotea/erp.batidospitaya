@@ -3,6 +3,8 @@
 //ini_set('display_errors', 1);
 
 require_once '../../core/auth/auth.php';
+require_once '../../core/layout/header_universal.php';
+require_once '../../core/layout/menu_lateral.php';
 
 // Verificar acceso al módulo (solo cargo nivel 13 - RH)
 if (!verificarAccesoCargo(13)) {
@@ -11,6 +13,8 @@ if (!verificarAccesoCargo(13)) {
 }
 
 $usuario = obtenerUsuarioActual();
+$cargoOperario = $usuario['CodNivelesCargos'];
+$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
 
 
 // Obtener todos los departamentos para el filtro
@@ -461,18 +465,13 @@ if (isset($_GET['editar'])) {
 </head>
 
 <body>
-    <div class="container">
-        <div class="header">
-            <div>
-                <h1 class="title">Gestión de Feriados</h1>
-            </div>
-            <div class="user-info">
-                <span><?= htmlspecialchars(obtenerNombreUsuario()) ?></span>
-                <a href="../contabilidad/index.php" class="btn btn-secondary">
-                    <i class="fas fa-sign-out-alt"></i> Regresar
-                </a>
-            </div>
-        </div>
+    <?php echo renderMenuLateral($cargoOperario); ?>
+
+    <div class="main-container">
+        <?php echo renderHeader($usuario, $esAdmin, 'Gestión de Feriados'); ?>
+        
+        <div class="container">
+        <!-- Cabecera eliminada por redundancia con el header universal -->
 
         <?php if (isset($_SESSION['exito'])): ?>
             <div class="alert alert-success">
@@ -493,6 +492,9 @@ if (isset($_GET['editar'])) {
             <button class="btn" onclick="abrirModal()">
                 <i class="fas fa-plus"></i> Agregar Feriado
             </button>
+            <a href="plan_feriados_anual.php" class="btn btn-secondary">
+                <i class="fas fa-calendar-alt"></i> Plan Anual de Feriados
+            </a>
         </div>
 
         <!-- Filtros -->
