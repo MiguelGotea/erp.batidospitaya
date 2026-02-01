@@ -389,11 +389,6 @@ function crearCalendarioDoble(panel, columna) {
                     <div class="daterange-calendar" id="calendarioUnico"></div>
                 </div>
             </div>
-            <div class="daterange-selected-info" id="rangoSeleccionado">
-                ${fechaDesde && fechaHasta ?
-            `<small>Desde: <strong>${formatearFechaLarga(fechaDesde)}</strong> hasta: <strong>${formatearFechaLarga(fechaHasta)}</strong></small>` :
-            '<small class="text-muted">Haz clic en una fecha para comenzar</small>'}
-            </div>
         </div>
     `);
 
@@ -519,17 +514,10 @@ function seleccionarFechaUnico(fecha, columna) {
     // Actualizar el calendario para mostrar el rango
     actualizarCalendarioUnico(columna);
 
-    // Actualizar el texto informativo del rango seleccionado
-    const rangoInfo = $('#rangoSeleccionado');
+    // Aplicar filtro cuando ambas fechas están seleccionadas
     if (filtrosActivos[columna].desde && filtrosActivos[columna].hasta) {
-        rangoInfo.html(`<small>Desde: <strong>${formatearFechaLarga(filtrosActivos[columna].desde)}</strong> hasta: <strong>${formatearFechaLarga(filtrosActivos[columna].hasta)}</strong></small>`);
-        // Aplicar filtro cuando ambas fechas están seleccionadas
         paginaActual = 1;
         cargarDatos();
-    } else if (filtrosActivos[columna].desde) {
-        rangoInfo.html(`<small>Desde: <strong>${formatearFechaLarga(filtrosActivos[columna].desde)}</strong> - <span class="text-muted">Selecciona fecha final</span></small>`);
-    } else {
-        rangoInfo.html('<small class="text-muted">Haz clic en una fecha para comenzar</small>');
     }
 }
 

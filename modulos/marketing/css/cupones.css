@@ -13,7 +13,7 @@ body {
     background: white;
     border-radius: 8px;
     overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .cupones-table thead {
@@ -97,18 +97,12 @@ body {
     background: white;
     border: 1px solid #dee2e6;
     border-radius: 8px;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
     padding: 16px;
     z-index: 1050;
     min-width: 300px;
     max-width: 350px;
     display: none;
-}
-
-/* Panel de filtro con fechas - con scroll */
-.filter-panel.has-daterange {
-    max-height: 90vh;
-    overflow-y: auto;
 }
 
 .filter-panel.show {
@@ -469,16 +463,16 @@ body {
         min-width: 260px;
         max-width: 90vw;
     }
-    
+
     .cupones-table {
         font-size: 13px;
     }
-    
+
     .cupones-table thead th,
     .cupones-table tbody td {
         padding: 10px 8px;
     }
-    
+
     .btn-accion {
         padding: 4px 8px;
         font-size: 12px;
