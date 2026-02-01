@@ -1,3 +1,4 @@
+<?php
 require_once '../../core/auth/auth.php';
 require_once '../../core/layout/menu_lateral.php';
 require_once '../../core/layout/header_universal.php';
@@ -9,8 +10,8 @@ $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admi
 
 // Verificar acceso mediante sistema de permisos
 if (!tienePermiso('cumpleanos_colaboradores', 'vista', $cargoOperario)) {
-header('Location: /index.php');
-exit();
+    header('Location: /index.php');
+    exit();
 }
 
 // Procesar filtros - SOLO por mes, sin año
@@ -19,12 +20,12 @@ $mesSeleccionado = isset($_GET['mes']) ? intval($_GET['mes']) : null;
 // Función para normalizar nombres
 function normalizarNombre($nombre)
 {
-// Eliminar espacios al inicio y final
-$nombre = trim($nombre);
-// Eliminar múltiples espacios entre palabras
-$nombre = preg_replace('/\s+/', ' ', $nombre);
-// Convertir a formato "Primera letra mayúscula, resto minúsculas"
-return ucfirst(strtolower($nombre));
+    // Eliminar espacios al inicio y final
+    $nombre = trim($nombre);
+    // Eliminar múltiples espacios entre palabras
+    $nombre = preg_replace('/\s+/', ' ', $nombre);
+    // Convertir a formato "Primera letra mayúscula, resto minúsculas"
+    return ucfirst(strtolower($nombre));
 }
 
 // Consulta para obtener colaboradores según filtros
@@ -33,10 +34,10 @@ $colaboradoresInvalidos = [];
 $todosColaboradoresValidos = []; // Para almacenar todos los colaboradores válidos (para copiar)
 
 if ($mesSeleccionado) {
-// Depuración: mostrar el valor del filtro
-error_log("Filtrando por mes: $mesSeleccionado");
+    // Depuración: mostrar el valor del filtro
+    error_log("Filtrando por mes: $mesSeleccionado");
 
-$query = "
+    $query = "
 SELECT
 o.CodOperario,
 o.Nombre,
@@ -58,42 +59,42 @@ GROUP BY o.CodOperario
 ORDER BY DAY(o.Cumpleanos), o.Nombre, o.Apellido
 ";
 
-error_log("Consulta SQL: $query");
+    error_log("Consulta SQL: $query");
 
-try {
-$stmt = $conn->prepare($query);
-$stmt->bindParam(':mes', $mesSeleccionado, PDO::PARAM_INT);
-$stmt->execute();
+    try {
+        $stmt = $conn->prepare($query);
+        $stmt->bindParam(':mes', $mesSeleccionado, PDO::PARAM_INT);
+        $stmt->execute();
 
-$count = $stmt->rowCount();
-error_log("Número de resultados: $count");
+        $count = $stmt->rowCount();
+        error_log("Número de resultados: $count");
 
-// Separar colaboradores válidos e inválidos
-while ($colaborador = $stmt->fetch(PDO::FETCH_ASSOC)) {
-error_log("Procesando colaborador: " . $colaborador['CodOperario'] . " - " . $colaborador['Nombre']);
+        // Separar colaboradores válidos e inválidos
+        while ($colaborador = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            error_log("Procesando colaborador: " . $colaborador['CodOperario'] . " - " . $colaborador['Nombre']);
 
-// Construir nombre completo
-$nombreCompleto = trim($colaborador['Nombre'] . ' ' .
-($colaborador['Nombre2'] ? $colaborador['Nombre2'] . ' ' : '') .
-$colaborador['Apellido'] . ' ' .
-($colaborador['Apellido2'] ? $colaborador['Apellido2'] : ''));
+            // Construir nombre completo
+            $nombreCompleto = trim($colaborador['Nombre'] . ' ' .
+                ($colaborador['Nombre2'] ? $colaborador['Nombre2'] . ' ' : '') .
+                $colaborador['Apellido'] . ' ' .
+                ($colaborador['Apellido2'] ? $colaborador['Apellido2'] : ''));
 
-$colaborador['nombre_completo'] = normalizarNombre($nombreCompleto);
+            $colaborador['nombre_completo'] = normalizarNombre($nombreCompleto);
 
-// Validar celular (8 dígitos, sin espacios ni caracteres especiales)
-$celular = preg_replace('/[^0-9]/', '', $colaborador['Celular']);
-if (strlen($celular) === 8) {
-$colaborador['Celular'] = $celular;
-$colaboradores[] = $colaborador;
-$todosColaboradoresValidos[] = $colaborador; // Agregar a la lista completa
-} else {
-$colaboradoresInvalidos[] = $colaborador;
-}
-}
-} catch (PDOException $e) {
-error_log("Error en la consulta: " . $e->getMessage());
-$error = "Error al ejecutar la consulta: " . $e->getMessage();
-}
+            // Validar celular (8 dígitos, sin espacios ni caracteres especiales)
+            $celular = preg_replace('/[^0-9]/', '', $colaborador['Celular']);
+            if (strlen($celular) === 8) {
+                $colaborador['Celular'] = $celular;
+                $colaboradores[] = $colaborador;
+                $todosColaboradoresValidos[] = $colaborador; // Agregar a la lista completa
+            } else {
+                $colaboradoresInvalidos[] = $colaborador;
+            }
+        }
+    } catch (PDOException $e) {
+        error_log("Error en la consulta: " . $e->getMessage());
+        $error = "Error al ejecutar la consulta: " . $e->getMessage();
+    }
 }
 ?>
 <!DOCTYPE html>
