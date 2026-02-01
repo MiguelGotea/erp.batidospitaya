@@ -177,15 +177,18 @@ function renderizarTabla(datos) {
         // Acciones - BOTONES CON MODALES (SOLO SI ES LÍDER)
         if (PERMISOS_USUARIO.esLider) {
             let accionesHtml = '';
+            const hoyStr = new Date().toISOString().split('T')[0];
 
-            // 1. Verificar si hay TARDANZA (diferencia de entrada > 1 minuto)
-            if (row.hora_entrada_programada && row.hora_ingreso) {
-                const difMin = calcularMinutosDiferencia(row.hora_entrada_programada, row.hora_ingreso);
-                if (difMin > 1) {
-                    if (row.tardanza_solicitada) {
-                        accionesHtml = `<div class="status-rh-icon tardanza-solicitada" title="Tardanza ya solicitada"><i class="fas fa-history"></i></div>`;
-                    } else {
-                        accionesHtml = `
+            // Las acciones solo aplican para días anteriores al actual
+            if (row.fecha < hoyStr) {
+                // 1. Verificar si hay TARDANZA (diferencia de entrada > 1 minuto)
+                if (row.hora_entrada_programada && row.hora_ingreso) {
+                    const difMin = calcularMinutosDiferencia(row.hora_entrada_programada, row.hora_ingreso);
+                    if (difMin > 1) {
+                        if (row.tardanza_solicitada) {
+                            accionesHtml = `<div class="status-rh-icon tardanza-solicitada" title="Tardanza ya solicitada"><i class="fas fa-history"></i></div>`;
+                        } else {
+                            accionesHtml = `
                             <button type="button" class="btn-rh-action tardanza" 
                                     onclick="mostrarModalTardanza(
                                         ${row.CodOperario},
@@ -201,18 +204,18 @@ function renderizarTabla(datos) {
                                 <i class="fas fa-clock"></i>
                             </button>
                         `;
+                        }
                     }
                 }
-            }
 
-            // 2. Verificar si hay FALTA (solo si no se puso nada arriba)
-            if (accionesHtml === '' && !row.tiene_marcacion && row.tiene_horario) {
-                const estadosPermitidos = ['Activo', 'Otra.Tienda'];
-                if (estadosPermitidos.includes(row.estado_dia)) {
-                    if (row.falta_solicitada) {
-                        accionesHtml = `<div class="status-rh-icon falta-solicitada" title="Falta ya solicitada"><i class="fas fa-clipboard-check"></i></div>`;
-                    } else {
-                        accionesHtml = `
+                // 2. Verificar si hay FALTA (solo si no se puso nada arriba)
+                if (accionesHtml === '' && !row.tiene_marcacion && row.tiene_horario) {
+                    const estadosPermitidos = ['Activo', 'Otra.Tienda'];
+                    if (estadosPermitidos.includes(row.estado_dia)) {
+                        if (row.falta_solicitada) {
+                            accionesHtml = `<div class="status-rh-icon falta-solicitada" title="Falta ya solicitada"><i class="fas fa-clipboard-check"></i></div>`;
+                        } else {
+                            accionesHtml = `
                             <button type="button" class="btn-rh-action falta" 
                                     onclick="mostrarModalFalta(
                                         ${row.CodOperario},
@@ -224,15 +227,15 @@ function renderizarTabla(datos) {
                                 <i class="fas fa-user-slash"></i>
                             </button>
                         `;
+                        }
                     }
                 }
+
+                tr.append(`<td class="text-center"><div class="rh-actions-cell">${accionesHtml}</div></td>`);
             }
 
-            tr.append(`<td class="text-center"><div class="rh-actions-cell">${accionesHtml}</div></td>`);
-        }
-
-        tbody.append(tr);
-    });
+            tbody.append(tr);
+        });
 }
 
 // Calcular colspan para mensaje de "no hay registros"
