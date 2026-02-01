@@ -4,18 +4,16 @@ require_once '../../core/layout/menu_lateral.php';
 require_once '../../core/layout/header_universal.php';
 require_once '../../core/permissions/permissions.php';
 
-// Verificar autenticación y permisos
-verificarAutenticacion();
 
 $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
 $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
 
 // Verificar acceso al módulo RH (SIEMPRE debe existir permiso 'vista')
-verificarPermisoORedireccionar('contactos_colaboradores', 'vista', $cargoOperario);
-
-// Obtener el cargo principal del usuario
-$cargoUsuario = obtenerCargoPrincipalUsuario($_SESSION['usuario_id']);
+if (!tienePermiso('contactos_colaboradores', 'vista', $cargoOperario)) {
+    header('Location: /index.php');
+    exit();
+}
 
 /**
  * Obtiene los contactos de todos los colaboradores activos
@@ -207,10 +205,12 @@ $contactos = obtenerContactosColaboradores();
 $filtroEstado = $_GET['estado'] ?? 'activos';
 if ($filtroEstado === 'activos') {
     $contactos = array_filter($contactos, function ($c) {
-        return $c['esta_activo']; });
+        return $c['esta_activo'];
+    });
 } elseif ($filtroEstado === 'inactivos') {
     $contactos = array_filter($contactos, function ($c) {
-        return !$c['esta_activo']; });
+        return !$c['esta_activo'];
+    });
 }
 ?>
 <!DOCTYPE html>
@@ -431,157 +431,168 @@ if ($filtroEstado === 'activos') {
             <div class="container-fluid p-3">
                 <div class="container-contactos">
 
-        <!-- Información sobre exportación -->
-        <div style="background: #e8f5e8; padding: 15px; border-radius: 8px; border-left: 4px solid #28a745;">
-            <h4 style="color: #155724; margin-bottom: 10px;">
-                <i class="fas fa-info-circle"></i> Información sobre Exportación
-            </h4>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
-                <div>
-                    <strong>CSV:</strong> Formato de hoja de cálculo compatible con Excel, Google Sheets, etc.
-                </div>
-                <div>
-                    <strong>VCF (vCard):</strong> Formato para importar contactos directamente en aplicaciones de móvil.
-                </div>
-            </div>
-            <p style="margin-top: 10px; color: #2d5016; font-size: 0.9em;">
-                <i class="fas fa-lightbulb"></i> <strong>Tip:</strong> Para importar en tu móvil, descarga el archivo
-                VCF y ábrelo con tu aplicación de contactos.
-            </p>
-        </div>
+                    <!-- Información sobre exportación -->
+                    <div
+                        style="background: #e8f5e8; padding: 15px; border-radius: 8px; border-left: 4px solid #28a745;">
+                        <h4 style="color: #155724; margin-bottom: 10px;">
+                            <i class="fas fa-info-circle"></i> Información sobre Exportación
+                        </h4>
+                        <div
+                            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
+                            <div>
+                                <strong>CSV:</strong> Formato de hoja de cálculo compatible con Excel, Google Sheets,
+                                etc.
+                            </div>
+                            <div>
+                                <strong>VCF (vCard):</strong> Formato para importar contactos directamente en
+                                aplicaciones de móvil.
+                            </div>
+                        </div>
+                        <p style="margin-top: 10px; color: #2d5016; font-size: 0.9em;">
+                            <i class="fas fa-lightbulb"></i> <strong>Tip:</strong> Para importar en tu móvil, descarga
+                            el archivo
+                            VCF y ábrelo con tu aplicación de contactos.
+                        </p>
+                    </div>
 
-        <!-- Resumen de contactos -->
-        <div class="resumen">
-            <h3><i class="fas fa-info-circle"></i> Resumen de Contactos</h3>
-            <div class="estadisticas">
-                <div class="tarjeta-estadistica">
-                    <span class="numero"><?= count($contactos) ?></span>
-                    <span class="etiqueta">Total Colaboradores</span>
-                </div>
-                <div class="tarjeta-estadistica">
-                    <span class="numero">
-                        <?= count(array_filter($contactos, function ($c) {
-                            return !empty($c['Celular']);
-                        })) ?>
-                    </span>
-                    <span class="etiqueta">Con Teléfono Personal</span>
-                </div>
-                <div class="tarjeta-estadistica">
-                    <span class="numero">
-                        <?= count(array_filter($contactos, function ($c) {
-                            return !empty($c['telefono_corporativo']);
-                        })) ?>
-                    </span>
-                    <span class="etiqueta">Con Teléfono Corporativo</span>
-                </div>
-                <div class="tarjeta-estadistica">
-                    <span class="numero">
-                        <?= count(array_filter($contactos, function ($c) {
-                            return !empty($c['Celular']) && !empty($c['telefono_corporativo']);
-                        })) ?>
-                    </span>
-                    <span class="etiqueta">Con Ambos Teléfonos</span>
-                </div>
-            </div>
-        </div>
+                    <!-- Resumen de contactos -->
+                    <div class="resumen">
+                        <h3><i class="fas fa-info-circle"></i> Resumen de Contactos</h3>
+                        <div class="estadisticas">
+                            <div class="tarjeta-estadistica">
+                                <span class="numero"><?= count($contactos) ?></span>
+                                <span class="etiqueta">Total Colaboradores</span>
+                            </div>
+                            <div class="tarjeta-estadistica">
+                                <span class="numero">
+                                    <?= count(array_filter($contactos, function ($c) {
+                                        return !empty($c['Celular']);
+                                    })) ?>
+                                </span>
+                                <span class="etiqueta">Con Teléfono Personal</span>
+                            </div>
+                            <div class="tarjeta-estadistica">
+                                <span class="numero">
+                                    <?= count(array_filter($contactos, function ($c) {
+                                        return !empty($c['telefono_corporativo']);
+                                    })) ?>
+                                </span>
+                                <span class="etiqueta">Con Teléfono Corporativo</span>
+                            </div>
+                            <div class="tarjeta-estadistica">
+                                <span class="numero">
+                                    <?= count(array_filter($contactos, function ($c) {
+                                        return !empty($c['Celular']) && !empty($c['telefono_corporativo']);
+                                    })) ?>
+                                </span>
+                                <span class="etiqueta">Con Ambos Teléfonos</span>
+                            </div>
+                        </div>
+                    </div>
 
-        <!-- Controles de filtro y exportación -->
-        <div class="controles">
-            <div class="filtros">
-                <strong>Filtrar por estado:</strong>
-                <a href="?estado=activos" class="btn-filtro <?= $filtroEstado === 'activos' ? 'activo' : '' ?>">
-                    <i class="fas fa-user-check"></i> Activos
-                </a>
-                <a href="?estado=inactivos" class="btn-filtro <?= $filtroEstado === 'inactivos' ? 'activo' : '' ?>">
-                    <i class="fas fa-user-times"></i> Inactivos
-                </a>
-                <a href="?" class="btn-filtro <?= !isset($_GET['estado']) ? 'activo' : '' ?>">
-                    <i class="fas fa-users"></i> Todos
-                </a>
-            </div>
+                    <!-- Controles de filtro y exportación -->
+                    <div class="controles">
+                        <div class="filtros">
+                            <strong>Filtrar por estado:</strong>
+                            <a href="?estado=activos"
+                                class="btn-filtro <?= $filtroEstado === 'activos' ? 'activo' : '' ?>">
+                                <i class="fas fa-user-check"></i> Activos
+                            </a>
+                            <a href="?estado=inactivos"
+                                class="btn-filtro <?= $filtroEstado === 'inactivos' ? 'activo' : '' ?>">
+                                <i class="fas fa-user-times"></i> Inactivos
+                            </a>
+                            <a href="?" class="btn-filtro <?= !isset($_GET['estado']) ? 'activo' : '' ?>">
+                                <i class="fas fa-users"></i> Todos
+                            </a>
+                        </div>
 
-            <div class="exportacion">
-                <a href="?exportar=csv" class="btn-exportar">
-                    <i class="fas fa-file-csv"></i> Exportar CSV
-                </a>
-                <a href="?exportar=vcf" class="btn-exportar">
-                    <i class="fas fa-address-card"></i> Exportar VCF
-                </a>
-            </div>
-        </div>
+                        <div class="exportacion">
+                            <a href="?exportar=csv" class="btn-exportar">
+                                <i class="fas fa-file-csv"></i> Exportar CSV
+                            </a>
+                            <a href="?exportar=vcf" class="btn-exportar">
+                                <i class="fas fa-address-card"></i> Exportar VCF
+                            </a>
+                        </div>
+                    </div>
 
-        <!-- Tabla de contactos -->
-        <div class="tabla-container">
-            <table id="listaContactos">
-                <thead>
-                    <tr>
-                        <th>Nombre Completo</th>
-                        <th>Cargo</th>
-                        <th>Teléfono Personal</th>
-                        <th>Teléfono Corporativo</th>
-                        <th>Estado</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php if (count($contactos) > 0): ?>
-                        <?php foreach ($contactos as $contacto): ?>
-                            <tr>
-                                <td>
-                                    <strong><?= htmlspecialchars(formatearNombreCompleto($contacto)) ?></strong>
-                                    <?php if (!$contacto['esta_activo']): ?>
-                                        <br><small style="color: #6c757d;">Código: <?= $contacto['CodOperario'] ?></small>
-                                    <?php endif; ?>
-                                </td>
-                                <td>
-                                    <span class="badge-cargo"><?= htmlspecialchars($contacto['cargo_nombre']) ?></span>
-                                </td>
-                                <td>
-                                    <?php if (!empty($contacto['Celular'])): ?>
-                                        <a href="tel:<?= htmlspecialchars($contacto['Celular']) ?>"
-                                            style="color: #0E544C; text-decoration: none;">
-                                            <i class="fas fa-phone"></i> <?= htmlspecialchars($contacto['Celular']) ?>
-                                        </a>
-                                    <?php else: ?>
-                                        <span class="sin-telefono">No registrado</span>
-                                    <?php endif; ?>
-                                </td>
-                                <td>
-                                    <?php if (!empty($contacto['telefono_corporativo'])): ?>
-                                        <a href="tel:<?= htmlspecialchars($contacto['telefono_corporativo']) ?>"
-                                            style="color: #0E544C; text-decoration: none;">
-                                            <i class="fas fa-phone"></i> <?= htmlspecialchars($contacto['telefono_corporativo']) ?>
-                                        </a>
-                                    <?php else: ?>
-                                        <span class="sin-telefono">No registrado</span>
-                                    <?php endif; ?>
-                                </td>
-                                <td>
-                                    <?php if ($contacto['esta_activo']): ?>
-                                        <span class="estado-activo">
-                                            <i class="fas fa-check-circle"></i> Activo
-                                        </span>
-                                    <?php else: ?>
-                                        <span class="estado-inactivo">
-                                            <i class="fas fa-times-circle"></i> Inactivo
-                                        </span>
-                                    <?php endif; ?>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    <?php else: ?>
-                        <tr>
-                            <td colspan="5" style="text-align: center; padding: 40px; color: #6c757d;">
-                                <i class="fas fa-users" style="font-size: 3rem; margin-bottom: 15px; display: block;"></i>
-                                <h3>No se encontraron contactos</h3>
-                                <p>No hay colaboradores que coincidan con el filtro seleccionado.</p>
-                            </td>
-                        </tr>
-                    <?php endif; ?>
-                </tbody>
-            </table>
-        </div>
+                    <!-- Tabla de contactos -->
+                    <div class="tabla-container">
+                        <table id="listaContactos">
+                            <thead>
+                                <tr>
+                                    <th>Nombre Completo</th>
+                                    <th>Cargo</th>
+                                    <th>Teléfono Personal</th>
+                                    <th>Teléfono Corporativo</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php if (count($contactos) > 0): ?>
+                                    <?php foreach ($contactos as $contacto): ?>
+                                        <tr>
+                                            <td>
+                                                <strong><?= htmlspecialchars(formatearNombreCompleto($contacto)) ?></strong>
+                                                <?php if (!$contacto['esta_activo']): ?>
+                                                    <br><small style="color: #6c757d;">Código:
+                                                        <?= $contacto['CodOperario'] ?></small>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td>
+                                                <span
+                                                    class="badge-cargo"><?= htmlspecialchars($contacto['cargo_nombre']) ?></span>
+                                            </td>
+                                            <td>
+                                                <?php if (!empty($contacto['Celular'])): ?>
+                                                    <a href="tel:<?= htmlspecialchars($contacto['Celular']) ?>"
+                                                        style="color: #0E544C; text-decoration: none;">
+                                                        <i class="fas fa-phone"></i> <?= htmlspecialchars($contacto['Celular']) ?>
+                                                    </a>
+                                                <?php else: ?>
+                                                    <span class="sin-telefono">No registrado</span>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td>
+                                                <?php if (!empty($contacto['telefono_corporativo'])): ?>
+                                                    <a href="tel:<?= htmlspecialchars($contacto['telefono_corporativo']) ?>"
+                                                        style="color: #0E544C; text-decoration: none;">
+                                                        <i class="fas fa-phone"></i>
+                                                        <?= htmlspecialchars($contacto['telefono_corporativo']) ?>
+                                                    </a>
+                                                <?php else: ?>
+                                                    <span class="sin-telefono">No registrado</span>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td>
+                                                <?php if ($contacto['esta_activo']): ?>
+                                                    <span class="estado-activo">
+                                                        <i class="fas fa-check-circle"></i> Activo
+                                                    </span>
+                                                <?php else: ?>
+                                                    <span class="estado-inactivo">
+                                                        <i class="fas fa-times-circle"></i> Inactivo
+                                                    </span>
+                                                <?php endif; ?>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    <tr>
+                                        <td colspan="5" style="text-align: center; padding: 40px; color: #6c757d;">
+                                            <i class="fas fa-users"
+                                                style="font-size: 3rem; margin-bottom: 15px; display: block;"></i>
+                                            <h3>No se encontraron contactos</h3>
+                                            <p>No hay colaboradores que coincidan con el filtro seleccionado.</p>
+                                        </td>
+                                    </tr>
+                                <?php endif; ?>
+                            </tbody>
+                        </table>
+                    </div>
 
-        <!--
+                    <!--
             Aplicar en function obtenerContactosColaboradores() esto para excluir los cargos 27 de sucursales
             $sql = "
                 SELECT 
@@ -764,4 +775,5 @@ if ($filtroEstado === 'activos') {
         });
     </script>
 </body>
+
 </html>
