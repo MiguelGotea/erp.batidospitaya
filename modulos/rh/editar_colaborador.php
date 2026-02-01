@@ -3386,6 +3386,7 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
     <title>Editar Colaborador</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <link rel="icon" href="../../core/assets/img/icon12.png" type="image/png">
+    <link rel="stylesheet" href="/core/assets/css/global_tools.css?v=<?php echo mt_rand(1, 10000); ?>">
     <link rel="stylesheet" href="css/editar_colaborador.css?v=<?php echo mt_rand(1, 10000); ?>">
 </head>
 
@@ -3399,17 +3400,17 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                 <h1 style="display:none;" class="title">Editar Colaborador</h1>
 
                 <?php if (isset($_SESSION['exito'])): ?>
-                        <div class="alert alert-success">
-                            <?= $_SESSION['exito'] ?>
-                            <?php unset($_SESSION['exito']); ?>
-                        </div>
+                    <div class="alert alert-success">
+                        <?= $_SESSION['exito'] ?>
+                        <?php unset($_SESSION['exito']); ?>
+                    </div>
                 <?php endif; ?>
 
                 <?php if (isset($_SESSION['error'])): ?>
-                        <div class="alert alert-danger">
-                            <?= $_SESSION['error'] ?>
-                            <?php unset($_SESSION['error']); ?>
-                        </div>
+                    <div class="alert alert-danger">
+                        <?= $_SESSION['error'] ?>
+                        <?php unset($_SESSION['error']); ?>
+                    </div>
                 <?php endif; ?>
 
                 <div class="form-container">
@@ -3429,12 +3430,12 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                                     <div class="foto-perfil"
                                         onclick="document.getElementById('inputFotoPerfil').click()">
                                         <?php if (!empty($colaborador['foto_perfil'])): ?>
-                                                <img src="../../<?= htmlspecialchars($colaborador['foto_perfil']) ?>"
-                                                    alt="Foto de perfil" class="foto-img">
+                                            <img src="../../<?= htmlspecialchars($colaborador['foto_perfil']) ?>"
+                                                alt="Foto de perfil" class="foto-img">
                                         <?php else: ?>
-                                                <div class="iniciales">
-                                                    <?= strtoupper(substr($colaborador['Nombre'], 0, 1)) ?>
-                                                </div>
+                                            <div class="iniciales">
+                                                <?= strtoupper(substr($colaborador['Nombre'], 0, 1)) ?>
+                                            </div>
                                         <?php endif; ?>
                                         <div class="edit-icon">
                                             <i class="fas fa-pencil-alt"></i>
@@ -3458,1949 +3459,1857 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
 
                         <!-- Pestañas de navegación -->
                         <?php if ($esAdmin || verificarAccesoCargo([13, 16, 39, 30, 37, 28])): ?>
-                                <a href="?id=<?= $codOperario ?>&pestaña=datos-personales"
-                                    class="tab-button <?= $pestaña_activa == 'datos-personales' ? 'active' : '' ?>">Datos
-                                    Personales</a>
+                            <a href="?id=<?= $codOperario ?>&pestaña=datos-personales"
+                                class="tab-button <?= $pestaña_activa == 'datos-personales' ? 'active' : '' ?>">Datos
+                                Personales</a>
                         <?php endif; ?>
                         <?php if ($esAdmin || verificarAccesoCargo([13, 16, 39, 30, 37, 28])): ?>
-                                <a href="?id=<?= $codOperario ?>&pestaña=datos-contacto"
-                                    class="tab-button <?= $pestaña_activa == 'datos-contacto' ? 'active' : '' ?>">Datos de
-                                    Contacto</a>
+                            <a href="?id=<?= $codOperario ?>&pestaña=datos-contacto"
+                                class="tab-button <?= $pestaña_activa == 'datos-contacto' ? 'active' : '' ?>">Datos de
+                                Contacto</a>
                         <?php endif; ?>
                         <?php if ($esAdmin || verificarAccesoCargo([13, 16, 39, 30, 37, 28])): ?>
-                                <a href="?id=<?= $codOperario ?>&pestaña=contactos-emergencia"
-                                    class="tab-button <?= $pestaña_activa == 'contactos-emergencia' ? 'active' : '' ?>">Contactos
-                                    de
-                                    Emergencia</a>
+                            <a href="?id=<?= $codOperario ?>&pestaña=contactos-emergencia"
+                                class="tab-button <?= $pestaña_activa == 'contactos-emergencia' ? 'active' : '' ?>">Contactos
+                                de
+                                Emergencia</a>
                         <?php endif; ?>
                         <?php if ($esAdmin || verificarAccesoCargo([13, 16, 39, 30, 37, 28])): ?>
-                                <a href="?id=<?= $codOperario ?>&pestaña=contrato"
-                                    class="tab-button <?= $pestaña_activa == 'contrato' ? 'active' : '' ?>">Contrato</a>
+                            <a href="?id=<?= $codOperario ?>&pestaña=contrato"
+                                class="tab-button <?= $pestaña_activa == 'contrato' ? 'active' : '' ?>">Contrato</a>
                         <?php endif; ?>
                         <?php if ($esAdmin || verificarAccesoCargo([0])): ?>
-                                <a href="?id=<?= $codOperario ?>&pestaña=salario"
-                                    class="tab-button <?= $pestaña_activa == 'salario' ? 'active' : '' ?>">Salario</a>
+                            <a href="?id=<?= $codOperario ?>&pestaña=salario"
+                                class="tab-button <?= $pestaña_activa == 'salario' ? 'active' : '' ?>">Salario</a>
                         <?php endif; ?>
                         <?php if ($esAdmin || verificarAccesoCargo([13, 16, 39, 30, 37, 28])): ?>
-                                <a href="?id=<?= $codOperario ?>&pestaña=inss"
-                                    class="tab-button <?= $pestaña_activa == 'inss' ? 'active' : '' ?>">INSS</a>
+                            <a href="?id=<?= $codOperario ?>&pestaña=inss"
+                                class="tab-button <?= $pestaña_activa == 'inss' ? 'active' : '' ?>">INSS</a>
                         <?php endif; ?>
                         <?php if ($esAdmin || verificarAccesoCargo([0])): ?>
-                                <a href="?id=<?= $codOperario ?>&pestaña=movimientos"
-                                    class="tab-button <?= $pestaña_activa == 'movimientos' ? 'active' : '' ?>">Movimientos</a>
+                            <a href="?id=<?= $codOperario ?>&pestaña=movimientos"
+                                class="tab-button <?= $pestaña_activa == 'movimientos' ? 'active' : '' ?>">Movimientos</a>
                         <?php endif; ?>
                         <?php if ($esAdmin || verificarAccesoCargo([0])): ?>
-                                <a href="?id=<?= $codOperario ?>&pestaña=categoria"
-                                    class="tab-button <?= $pestaña_activa == 'categoria' ? 'active' : '' ?>">Categoría</a>
+                            <a href="?id=<?= $codOperario ?>&pestaña=categoria"
+                                class="tab-button <?= $pestaña_activa == 'categoria' ? 'active' : '' ?>">Categoría</a>
                         <?php endif; ?>
                         <?php if ($esAdmin || verificarAccesoCargo([13, 16, 39, 30, 37, 28])): ?>
-                                <a href="?id=<?= $codOperario ?>&pestaña=adendums"
-                                    class="tab-button <?= $pestaña_activa == 'adendums' ? 'active' : '' ?>">Adenda de
-                                    Contrato y
-                                    Movimientos</a>
+                            <a href="?id=<?= $codOperario ?>&pestaña=adendums"
+                                class="tab-button <?= $pestaña_activa == 'adendums' ? 'active' : '' ?>">Adenda de
+                                Contrato y
+                                Movimientos</a>
                         <?php endif; ?>
                         <?php if ($esAdmin || verificarAccesoCargo([13, 16, 39, 30, 37, 28])): ?>
-                                <a href="?id=<?= $codOperario ?>&pestaña=expediente-digital"
-                                    class="tab-button <?= $pestaña_activa == 'expediente-digital' ? 'active' : '' ?>">
-                                    Expediente Digital
-                                    <?php
-                                    $estadoExpediente = verificarEstadoDocumentosObligatorios($codOperario, 'global');
-                                    echo obtenerIconoEstadoDocumentos($estadoExpediente);
-                                    ?>
-                                </a>
+                            <a href="?id=<?= $codOperario ?>&pestaña=expediente-digital"
+                                class="tab-button <?= $pestaña_activa == 'expediente-digital' ? 'active' : '' ?>">
+                                Expediente Digital
+                                <?php
+                                $estadoExpediente = verificarEstadoDocumentosObligatorios($codOperario, 'global');
+                                echo obtenerIconoEstadoDocumentos($estadoExpediente);
+                                ?>
+                            </a>
                         <?php endif; ?>
                         <?php if ($esAdmin || verificarAccesoCargo([13, 16, 39, 30, 37, 28])): ?>
-                                <a href="?id=<?= $codOperario ?>&pestaña=bitacora"
-                                    class="tab-button <?= $pestaña_activa == 'bitacora' ? 'active' : '' ?>">Bitácora</a>
+                            <a href="?id=<?= $codOperario ?>&pestaña=bitacora"
+                                class="tab-button <?= $pestaña_activa == 'bitacora' ? 'active' : '' ?>">Bitácora</a>
                         <?php endif; ?>
                     </div>
 
                     <div class="tab-content">
                         <!-- Pestaña de Datos Personales -->
                         <?php if ($esAdmin || verificarAccesoCargo([13, 16, 39, 30, 37, 28])): ?>
-                                <div id="datos-personales"
-                                    class="tab-pane <?= $pestaña_activa == 'datos-personales' ? 'active' : '' ?>">
-                                    <!-- Sección de Documentos Obligatorios Faltantes -->
-                                    <div
-                                        style="margin: 20px 0; padding: 15px; background: #fff3cd; border-radius: 8px; border: 1px solid #ffeaa7;">
-                                        <h4 style="color: #856404; margin-bottom: 15px;">
-                                            <i class="fas fa-exclamation-triangle"></i> Documentos Obligatorios Faltantes -
-                                            <?= obtenerNombrePestaña($pestaña_activa) ?>
-                                        </h4>
+                            <div id="datos-personales"
+                                class="tab-pane <?= $pestaña_activa == 'datos-personales' ? 'active' : '' ?>">
+                                <!-- Sección de Documentos Obligatorios Faltantes -->
+                                <div
+                                    style="margin: 20px 0; padding: 15px; background: #fff3cd; border-radius: 8px; border: 1px solid #ffeaa7;">
+                                    <h4 style="color: #856404; margin-bottom: 15px;">
+                                        <i class="fas fa-exclamation-triangle"></i> Documentos Obligatorios Faltantes -
+                                        <?= obtenerNombrePestaña($pestaña_activa) ?>
+                                    </h4>
 
-                                        <?php
-                                        $documentosFaltantesPestana = obtenerDocumentosFaltantesPestana($codOperario, $pestaña_activa);
-                                        ?>
+                                    <?php
+                                    $documentosFaltantesPestana = obtenerDocumentosFaltantesPestana($codOperario, $pestaña_activa);
+                                    ?>
 
-                                        <?php if (!empty($documentosFaltantesPestana)): ?>
-                                                <ul style="color: #856404; margin: 0; padding-left: 20px;">
-                                                    <?php foreach ($documentosFaltantesPestana as $documento): ?>
-                                                            <li><?= htmlspecialchars($documento) ?></li>
-                                                    <?php endforeach; ?>
-                                                </ul>
+                                    <?php if (!empty($documentosFaltantesPestana)): ?>
+                                        <ul style="color: #856404; margin: 0; padding-left: 20px;">
+                                            <?php foreach ($documentosFaltantesPestana as $documento): ?>
+                                                <li><?= htmlspecialchars($documento) ?></li>
+                                            <?php endforeach; ?>
+                                        </ul>
 
-                                                <p style="color: #856404; margin: 15px 0 0 0; font-style: italic;">
-                                                    <i class="fas fa-info-circle"></i> Estos documentos deben ser subidos para
-                                                    completar la
-                                                    información.
-                                                </p>
-                                        <?php else: ?>
-                                                <div style="color: #155724; background: #d4edda; padding: 10px; border-radius: 4px;">
-                                                    <i class="fas fa-check-circle"></i> Todos los documentos obligatorios están
-                                                    completos para
-                                                    esta pestaña.
-                                                </div>
-                                        <?php endif; ?>
-                                    </div>
-
-                                    <form method="POST" action="">
-                                        <input type="hidden" name="accion" value="guardar_datos_personales">
-                                        <input type="hidden" name="pestaña" value="datos-personales">
-
-                                        <div class="readonly-info">
-                                            <p><strong>Código:</strong> <?= htmlspecialchars($colaborador['CodOperario']) ?>
-                                            </p>
+                                        <p style="color: #856404; margin: 15px 0 0 0; font-style: italic;">
+                                            <i class="fas fa-info-circle"></i> Estos documentos deben ser subidos para
+                                            completar la
+                                            información.
+                                        </p>
+                                    <?php else: ?>
+                                        <div style="color: #155724; background: #d4edda; padding: 10px; border-radius: 4px;">
+                                            <i class="fas fa-check-circle"></i> Todos los documentos obligatorios están
+                                            completos para
+                                            esta pestaña.
                                         </div>
-
-                                        <div class="form-row">
-                                            <div class="form-col">
-                                                <div class="form-group">
-                                                    <label for="nombre">Primer Nombre</label>
-                                                    <input type="text" id="nombre" name="nombre" class="form-control"
-                                                        value="<?= htmlspecialchars($colaborador['Nombre'] ?? '') ?>" required>
-                                                </div>
-
-                                                <div class="form-group">
-                                                    <label for="apellido">Primer Apellido</label>
-                                                    <input type="text" id="apellido" name="apellido" class="form-control"
-                                                        value="<?= htmlspecialchars($colaborador['Apellido'] ?? '') ?>"
-                                                        required>
-                                                </div>
-
-                                                <div class="form-group">
-                                                    <label for="cedula">Cédula</label>
-                                                    <input type="text" id="cedula" name="cedula" class="form-control"
-                                                        value="<?= htmlspecialchars($colaborador['Cedula'] ?? '') ?>"
-                                                        placeholder="Ej: XXX-XXXXXX-XXXX"
-                                                        pattern="[0-9]{3}-[0-9]{6}-[0-9]{4}[A-Za-z]?"
-                                                        title="Formato: 001-234567-8910A">
-                                                </div>
-                                            </div>
-
-                                            <div class="form-col">
-                                                <div class="form-group">
-                                                    <label for="nombre2">Segundo Nombre</label>
-                                                    <input type="text" id="nombre2" name="nombre2" class="form-control"
-                                                        value="<?= htmlspecialchars($colaborador['Nombre2'] ?? '') ?>">
-                                                </div>
-
-                                                <div class="form-group">
-                                                    <label for="apellido2">Segundo Apellido</label>
-                                                    <input type="text" id="apellido2" name="apellido2" class="form-control"
-                                                        value="<?= htmlspecialchars($colaborador['Apellido2'] ?? '') ?>">
-                                                </div>
-
-                                                <div class="form-group">
-                                                    <label for="genero">Género</label>
-                                                    <select id="genero" name="genero" class="form-control">
-                                                        <option value="">Seleccionar...</option>
-                                                        <option value="M" <?= (isset($colaborador['Genero']) && $colaborador['Genero'] == 'M') ? 'selected' : '' ?>>Masculino
-                                                        </option>
-                                                        <option value="F" <?= (isset($colaborador['Genero']) && $colaborador['Genero'] == 'F') ? 'selected' : '' ?>>Femenino
-                                                        </option>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div class="form-group">
-                                            <label for="cumpleanos">Fecha de Cumpleaños</label>
-                                            <input type="date" id="cumpleanos" name="cumpleanos" class="form-control"
-                                                value="<?= !empty($colaborador['Cumpleanos']) ? date('Y-m-d', strtotime($colaborador['Cumpleanos'])) : '' ?>">
-                                        </div>
-
-                                        <div class="form-row">
-                                            <div class="form-col">
-                                                <div class="form-group">
-                                                    <label for="usuario">Usuario</label>
-                                                    <input type="text" id="usuario" name="usuario" class="form-control"
-                                                        value="<?= htmlspecialchars($colaborador['usuario'] ?? '') ?>">
-                                                </div>
-                                            </div>
-
-                                            <div class="form-col">
-                                                <div class="form-group">
-                                                    <label for="clave">Clave <small style="color: #6c757d;">(dejar vacío si
-                                                            no desea
-                                                            cambiar)</small></label>
-                                                    <div style="display: flex; align-items: center;">
-                                                        <input type="password" id="clave" name="clave" class="form-control"
-                                                            value="<?= htmlspecialchars($colaborador['clave'] ?? '') ?>"
-                                                            style="flex: 1; margin-right: 10px;">
-                                                        <button type="button" id="toggleClave"
-                                                            style="background: #0E544C; color: white; border: none; padding: 8px; border-radius: 4px; cursor: pointer;">
-                                                            <i class="fas fa-eye"></i>
-                                                        </button>
-                                                    </div>
-
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <button type="submit" class="btn-submit">Guardar Cambios</button>
-                                    </form>
-
-                                    <!-- Sección de Cuentas Bancarias -->
-                                    <div style="margin-top: 40px; border-top: 2px solid #0E544C; padding-top: 20px;">
-                                        <div
-                                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                                            <h3 style="color: #0E544C; margin: 0;">Cuentas Bancarias</h3>
-                                            <button type="button" class="btn-submit" onclick="abrirModalCuenta()"
-                                                style="margin: 0;">
-                                                <i class="fas fa-plus"></i> Agregar
-                                            </button>
-                                        </div>
-
-                                        <?php if (count($cuentasBancarias) > 0): ?>
-                                                <div style="overflow-x: auto;">
-                                                    <table style="width: 100%; border-collapse: collapse;">
-                                                        <thead>
-                                                            <tr style="background-color: #0E544C; color: white;">
-                                                                <th style="padding: 10px; text-align: left;">Número Cuenta</th>
-                                                                <th style="padding: 10px; text-align: left;">Titular</th>
-                                                                <th style="padding: 10px; text-align: left;">Banco</th>
-                                                                <th style="padding: 10px; text-align: left;">Moneda</th>
-                                                                <th style="padding: 10px; text-align: left;">Desde</th>
-                                                                <th style="padding: 10px; text-align: center; display:none;"></th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            <?php foreach ($cuentasBancarias as $cuenta): ?>
-                                                                    <tr style="border-bottom: 1px solid #ddd;">
-                                                                        <td style="padding: 10px;">
-                                                                            <?= htmlspecialchars($cuenta['numero_cuenta']) ?>
-                                                                        </td>
-                                                                        <td style="padding: 10px;">
-                                                                            <?= htmlspecialchars($cuenta['titular']) ?>
-                                                                        </td>
-                                                                        <td style="padding: 10px;"><?= htmlspecialchars($cuenta['banco']) ?>
-                                                                        </td>
-                                                                        <td style="padding: 10px;">
-                                                                            <?= htmlspecialchars($cuenta['moneda']) ?>
-                                                                        </td>
-                                                                        <td style="padding: 10px;">
-                                                                            <?= !empty($cuenta['desde']) ? date('d/m/Y', strtotime($cuenta['desde'])) : '' ?>
-                                                                        </td>
-                                                                        <td style="padding: 10px; text-align: center; display:none;">
-                                                                            <button type="button" class="btn-accion btn-editar"
-                                                                                onclick="editarCuenta(<?= $cuenta['id'] ?>)">
-                                                                                <i class="fas fa-edit"></i>
-                                                                            </button>
-                                                                            <form method="POST" action="" style="display: inline;">
-                                                                                <input type="hidden" name="accion_cuenta" value="eliminar">
-                                                                                <input type="hidden" name="id_cuenta"
-                                                                                    value="<?= $cuenta['id'] ?>">
-                                                                                <button type="submit"
-                                                                                    onclick="return confirm('¿Está seguro de eliminar esta cuenta bancaria?')"
-                                                                                    class="btn-accion btn-eliminar">
-                                                                                    <i class="fas fa-trash"></i>
-                                                                                </button>
-                                                                            </form>
-                                                                        </td>
-                                                                    </tr>
-                                                            <?php endforeach; ?>
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-                                        <?php else: ?>
-                                                <p style="text-align: center; color: #6c757d; padding: 20px;">No hay cuentas
-                                                    bancarias
-                                                    registradas</p>
-                                        <?php endif; ?>
-                                    </div>
-
-                                    <!-- Sección de Archivos Adjuntos -->
-                                    <div style="margin-top: 40px; border-top: 2px solid #6c757d; padding-top: 20px;">
-                                        <div
-                                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                                            <h3 style="color: #6c757d; margin: 0;">Archivos Adjuntos</h3>
-                                            <button type="button" class="btn-submit"
-                                                onclick="abrirModalAdjunto('<?= $pestaña_activa ?>')" style="margin: 0;">
-                                                <i class="fas fa-plus"></i> Agregar Archivo
-                                            </button>
-                                        </div>
-
-                                        <?php if (count($archivosAdjuntos) > 0): ?>
-                                                <div style="overflow-x: auto;">
-                                                    <table style="width: 100%; border-collapse: collapse;">
-                                                        <thead>
-                                                            <tr style="background-color: #6c757d; color: white;">
-                                                                <th style="padding: 10px; text-align: left;">Nombre</th>
-                                                                <th style="padding: 10px; text-align: left;">Descripción</th>
-                                                                <th style="padding: 10px; text-align: left; display:none;">Tamaño
-                                                                </th>
-                                                                <th style="padding: 10px; text-align: left;">Subido por</th>
-                                                                <th style="padding: 10px; text-align: left;">Fecha</th>
-                                                                <th style="padding: 10px; text-align: left;">Tipo de Documento</th>
-                                                                <th style="padding: 10px; text-align: left;">Contrato Asociado</th>
-                                                                <th style="padding: 10px; text-align: center;"></th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            <?php foreach ($archivosAdjuntos as $archivo):
-                                                                // Formatear tamaño del archivo
-                                                                $tamaño = $archivo['tamaño'];
-                                                                if ($tamaño < 1024) {
-                                                                    $tamañoFormateado = $tamaño . ' B';
-                                                                } elseif ($tamaño < 1048576) {
-                                                                    $tamañoFormateado = round($tamaño / 1024, 2) . ' KB';
-                                                                } else {
-                                                                    $tamañoFormateado = round($tamaño / 1048576, 2) . ' MB';
-                                                                }
-                                                                ?>
-                                                                    <tr style="border-bottom: 1px solid #ddd;">
-                                                                        <td style="padding: 10px;">
-                                                                            <?= htmlspecialchars($archivo['nombre_archivo']) ?>
-                                                                        </td>
-                                                                        <td style="padding: 10px;">
-                                                                            <?= htmlspecialchars($archivo['descripcion'] ?? '-') ?>
-                                                                        </td>
-                                                                        <td style="padding: 10px; display:none;"><?= $tamañoFormateado ?>
-                                                                        </td>
-                                                                        <td style="padding: 10px;">
-                                                                            <?= htmlspecialchars($archivo['nombre_usuario'] . ' ' . $archivo['apellido_usuario']) ?>
-                                                                        </td>
-                                                                        <td style="padding: 10px;">
-                                                                            <?= date('d/m/Y H:i', strtotime($archivo['fecha_subida'])) ?>
-                                                                        </td>
-                                                                        <td style="padding: 10px;">
-                                                                            <?php
-                                                                            if (!empty($archivo['tipo_documento'])) {
-                                                                                $tiposDocumentos = obtenerTiposDocumentosPorPestaña($pestaña_activa);
-                                                                                $todosTipos = array_merge($tiposDocumentos['obligatorios'], $tiposDocumentos['opcionales']);
-                                                                                echo htmlspecialchars($todosTipos[$archivo['tipo_documento']] ?? $archivo['tipo_documento']);
-
-                                                                                if ($archivo['obligatorio']) {
-                                                                                    echo ' <span style="color: #dc3545;" title="Documento Obligatorio">●</span>';
-                                                                                }
-                                                                            } else {
-                                                                                echo '<span style="color: #6c757d; font-style: italic;">Sin categorizar</span>';
-                                                                            }
-                                                                            ?>
-                                                                        </td>
-                                                                        <td style="padding: 10px;">
-                                                                            <?php
-                                                                            // Mostrar información del contrato usando codigo_manual_contrato
-                                                                            $pestañasConContrato = ['contrato', 'adendums', 'inss', 'salario', 'movimientos', 'categoria'];
-                                                                            if (in_array($pestaña_activa, $pestañasConContrato) && !empty($archivo['codigo_manual_contrato'])):
-                                                                                ?>
-                                                                                    <span
-                                                                                        style="font-weight: 500;"><?= htmlspecialchars($archivo['codigo_manual_contrato']) ?></span>
-                                                                                    <br>
-                                                                                    <small style="color: #6c757d;">
-                                                                                        <?= !empty($archivo['inicio_contrato']) ? date('d/m/Y', strtotime($archivo['inicio_contrato'])) : 'Fecha no disponible' ?>
-                                                                                        <?php if (!empty($archivo['fin_contrato']) && $archivo['fin_contrato'] != '0000-00-00'): ?>
-                                                                                                - <?= date('d/m/Y', strtotime($archivo['fin_contrato'])) ?>
-                                                                                        <?php else: ?>
-                                                                                                (Activo)
-                                                                                        <?php endif; ?>
-                                                                                    </small>
-                                                                                    <?php if (!empty($archivo['tipo_contrato'])): ?>
-                                                                                            <br>
-                                                                                            <small
-                                                                                                style="color: #0E544C;"><?= htmlspecialchars($archivo['tipo_contrato']) ?></small>
-                                                                                    <?php endif; ?>
-                                                                            <?php else: ?>
-                                                                                    <span style="color: #6c757d; font-style: italic;">
-                                                                                        <?= in_array($pestaña_activa, $pestañasConContrato) ? 'Sin contrato asociado' : 'No aplica' ?>
-                                                                                    </span>
-                                                                            <?php endif; ?>
-                                                                        </td>
-                                                                        <td style="padding: 10px; text-align: center;">
-                                                                            <a href="<?= htmlspecialchars($archivo['ruta_archivo']) ?>"
-                                                                                target="_blank" class="btn-accion btn-editar"
-                                                                                title="Ver archivo">
-                                                                                <i class="fas fa-eye"></i>
-                                                                            </a>
-                                                                            <form method="POST" action="" style="display: inline;">
-                                                                                <input type="hidden" name="accion_adjunto" value="eliminar">
-                                                                                <input type="hidden" name="id_adjunto"
-                                                                                    value="<?= $archivo['id'] ?>">
-                                                                                <input type="hidden" name="pestaña_adjunto"
-                                                                                    value="<?= $pestaña_activa ?>">
-                                                                                <button type="submit"
-                                                                                    onclick="return confirm('¿Está seguro de eliminar este archivo?')"
-                                                                                    class="btn-accion btn-eliminar" title="Eliminar archivo">
-                                                                                    <i class="fas fa-trash"></i>
-                                                                                </button>
-                                                                            </form>
-                                                                        </td>
-                                                                    </tr>
-                                                            <?php endforeach; ?>
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-                                        <?php else: ?>
-                                                <p style="text-align: center; color: #6c757d; padding: 20px;">No hay archivos
-                                                    adjuntos</p>
-                                        <?php endif; ?>
-                                    </div>
+                                    <?php endif; ?>
                                 </div>
-                        <?php endif; ?>
 
-                        <!-- Pestaña de Datos de Contacto -->
-                        <?php if ($esAdmin || verificarAccesoCargo([13, 16, 39, 30, 37, 28])): ?>
-                                <div id="datos-contacto"
-                                    class="tab-pane <?= $pestaña_activa == 'datos-contacto' ? 'active' : '' ?>">
-                                    <form method="POST" action="">
-                                        <input type="hidden" name="accion" value="guardar_datos_contacto">
-                                        <input type="hidden" name="pestaña" value="datos-contacto">
+                                <form method="POST" action="">
+                                    <input type="hidden" name="accion" value="guardar_datos_personales">
+                                    <input type="hidden" name="pestaña" value="datos-personales">
 
-                                        <div class="form-group">
-                                            <label for="direccion">Dirección</label>
-                                            <textarea id="direccion" name="direccion" class="form-control"
-                                                rows="3"><?= htmlspecialchars($colaborador['direccion'] ?? '') ?></textarea>
-                                        </div>
+                                    <div class="readonly-info">
+                                        <p><strong>Código:</strong> <?= htmlspecialchars($colaborador['CodOperario']) ?>
+                                        </p>
+                                    </div>
 
-                                        <div class="form-row">
-                                            <div class="form-col">
-                                                <div class="form-group">
-                                                    <label for="ciudad">Ciudad</label>
-                                                    <input type="text" id="ciudad" name="ciudad" class="form-control"
-                                                        value="<?= htmlspecialchars($colaborador['Ciudad'] ?? '') ?>">
-                                                </div>
-
-                                                <div class="form-group">
-                                                    <label for="celular">Teléfono Móvil (celular)</label>
-                                                    <input type="text" id="celular" name="celular" class="form-control"
-                                                        value="<?= htmlspecialchars($colaborador['Celular'] ?? '') ?>">
-                                                </div>
-
-                                                <div class="form-group">
-                                                    <label for="email_personal">Email Personal</label>
-                                                    <input type="email" id="email_personal" name="email_personal"
-                                                        class="form-control"
-                                                        value="<?= htmlspecialchars($colaborador['email_personal'] ?? '') ?>">
-                                                </div>
+                                    <div class="form-row">
+                                        <div class="form-col">
+                                            <div class="form-group">
+                                                <label for="nombre">Primer Nombre</label>
+                                                <input type="text" id="nombre" name="nombre" class="form-control"
+                                                    value="<?= htmlspecialchars($colaborador['Nombre'] ?? '') ?>" required>
                                             </div>
 
-                                            <div class="form-col">
-                                                <div class="form-group">
-                                                    <label for="telefono_casa">Teléfono de Casa</label>
-                                                    <input type="text" id="telefono_casa" name="telefono_casa"
-                                                        class="form-control"
-                                                        value="<?= htmlspecialchars($colaborador['telefono_casa'] ?? '') ?>">
-                                                </div>
+                                            <div class="form-group">
+                                                <label for="apellido">Primer Apellido</label>
+                                                <input type="text" id="apellido" name="apellido" class="form-control"
+                                                    value="<?= htmlspecialchars($colaborador['Apellido'] ?? '') ?>"
+                                                    required>
+                                            </div>
 
-                                                <div class="form-group">
-                                                    <label for="telefono_corporativo">Teléfono Corporativo</label>
-                                                    <input type="text" id="telefono_corporativo" name="telefono_corporativo"
-                                                        class="form-control"
-                                                        value="<?= htmlspecialchars($colaborador['telefono_corporativo'] ?? '') ?>">
-                                                </div>
-
-                                                <div class="form-group">
-                                                    <label for="email_trabajo">Email de Trabajo</label>
-                                                    <input type="email" id="email_trabajo" name="email_trabajo"
-                                                        class="form-control"
-                                                        value="<?= htmlspecialchars($colaborador['email_trabajo'] ?? '') ?>">
-                                                </div>
+                                            <div class="form-group">
+                                                <label for="cedula">Cédula</label>
+                                                <input type="text" id="cedula" name="cedula" class="form-control"
+                                                    value="<?= htmlspecialchars($colaborador['Cedula'] ?? '') ?>"
+                                                    placeholder="Ej: XXX-XXXXXX-XXXX"
+                                                    pattern="[0-9]{3}-[0-9]{6}-[0-9]{4}[A-Za-z]?"
+                                                    title="Formato: 001-234567-8910A">
                                             </div>
                                         </div>
 
-                                        <button type="submit" class="btn-submit">Guardar Cambios</button>
-                                    </form>
-                                </div>
-                        <?php endif; ?>
+                                        <div class="form-col">
+                                            <div class="form-group">
+                                                <label for="nombre2">Segundo Nombre</label>
+                                                <input type="text" id="nombre2" name="nombre2" class="form-control"
+                                                    value="<?= htmlspecialchars($colaborador['Nombre2'] ?? '') ?>">
+                                            </div>
 
-                        <!-- Pestaña de Contactos de Emergencia -->
-                        <?php if ($esAdmin || verificarAccesoCargo([13, 16, 39, 30, 37, 28])): ?>
-                                <div id="contactos-emergencia"
-                                    class="tab-pane <?= $pestaña_activa == 'contactos-emergencia' ? 'active' : '' ?>">
+                                            <div class="form-group">
+                                                <label for="apellido2">Segundo Apellido</label>
+                                                <input type="text" id="apellido2" name="apellido2" class="form-control"
+                                                    value="<?= htmlspecialchars($colaborador['Apellido2'] ?? '') ?>">
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label for="genero">Género</label>
+                                                <select id="genero" name="genero" class="form-control">
+                                                    <option value="">Seleccionar...</option>
+                                                    <option value="M" <?= (isset($colaborador['Genero']) && $colaborador['Genero'] == 'M') ? 'selected' : '' ?>>Masculino
+                                                    </option>
+                                                    <option value="F" <?= (isset($colaborador['Genero']) && $colaborador['Genero'] == 'F') ? 'selected' : '' ?>>Femenino
+                                                    </option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="cumpleanos">Fecha de Cumpleaños</label>
+                                        <input type="date" id="cumpleanos" name="cumpleanos" class="form-control"
+                                            value="<?= !empty($colaborador['Cumpleanos']) ? date('Y-m-d', strtotime($colaborador['Cumpleanos'])) : '' ?>">
+                                    </div>
+
+                                    <div class="form-row">
+                                        <div class="form-col">
+                                            <div class="form-group">
+                                                <label for="usuario">Usuario</label>
+                                                <input type="text" id="usuario" name="usuario" class="form-control"
+                                                    value="<?= htmlspecialchars($colaborador['usuario'] ?? '') ?>">
+                                            </div>
+                                        </div>
+
+                                        <div class="form-col">
+                                            <div class="form-group">
+                                                <label for="clave">Clave <small style="color: #6c757d;">(dejar vacío si
+                                                        no desea
+                                                        cambiar)</small></label>
+                                                <div style="display: flex; align-items: center;">
+                                                    <input type="password" id="clave" name="clave" class="form-control"
+                                                        value="<?= htmlspecialchars($colaborador['clave'] ?? '') ?>"
+                                                        style="flex: 1; margin-right: 10px;">
+                                                    <button type="button" id="toggleClave"
+                                                        style="background: #0E544C; color: white; border: none; padding: 8px; border-radius: 4px; cursor: pointer;">
+                                                        <i class="fas fa-eye"></i>
+                                                    </button>
+                                                </div>
+
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <button type="submit" class="btn-submit">Guardar Cambios</button>
+                                </form>
+
+                                <!-- Sección de Cuentas Bancarias -->
+                                <div style="margin-top: 40px; border-top: 2px solid #0E544C; padding-top: 20px;">
                                     <div
                                         style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                                        <h3 style="color: #0E544C; margin: 0;">Contactos de Emergencia</h3>
-                                        <button type="button" class="btn-submit" onclick="abrirModalContacto()"
+                                        <h3 style="color: #0E544C; margin: 0;">Cuentas Bancarias</h3>
+                                        <button type="button" class="btn-submit" onclick="abrirModalCuenta()"
                                             style="margin: 0;">
                                             <i class="fas fa-plus"></i> Agregar
                                         </button>
                                     </div>
 
-                                    <?php if (count($contactosEmergencia) > 0): ?>
-                                            <div style="overflow-x: auto;">
-                                                <table style="width: 100%; border-collapse: collapse;">
-                                                    <thead>
-                                                        <tr style="background-color: #0E544C; color: white;">
-                                                            <th style="padding: 10px; text-align: left;">Nombre</th>
-                                                            <th style="padding: 10px; text-align: left;">Parentesco</th>
-                                                            <th style="padding: 10px; text-align: left;">Teléfono Móvil</th>
-                                                            <th style="padding: 10px; text-align: left;">Teléfono Casa</th>
-                                                            <th style="padding: 10px; text-align: left;">Teléfono Trabajo</th>
-                                                            <th style="padding: 10px; text-align: center;"></th>
+                                    <?php if (count($cuentasBancarias) > 0): ?>
+                                        <div style="overflow-x: auto;">
+                                            <table style="width: 100%; border-collapse: collapse;">
+                                                <thead>
+                                                    <tr style="background-color: #0E544C; color: white;">
+                                                        <th style="padding: 10px; text-align: left;">Número Cuenta</th>
+                                                        <th style="padding: 10px; text-align: left;">Titular</th>
+                                                        <th style="padding: 10px; text-align: left;">Banco</th>
+                                                        <th style="padding: 10px; text-align: left;">Moneda</th>
+                                                        <th style="padding: 10px; text-align: left;">Desde</th>
+                                                        <th style="padding: 10px; text-align: center; display:none;"></th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <?php foreach ($cuentasBancarias as $cuenta): ?>
+                                                        <tr style="border-bottom: 1px solid #ddd;">
+                                                            <td style="padding: 10px;">
+                                                                <?= htmlspecialchars($cuenta['numero_cuenta']) ?>
+                                                            </td>
+                                                            <td style="padding: 10px;">
+                                                                <?= htmlspecialchars($cuenta['titular']) ?>
+                                                            </td>
+                                                            <td style="padding: 10px;"><?= htmlspecialchars($cuenta['banco']) ?>
+                                                            </td>
+                                                            <td style="padding: 10px;">
+                                                                <?= htmlspecialchars($cuenta['moneda']) ?>
+                                                            </td>
+                                                            <td style="padding: 10px;">
+                                                                <?= !empty($cuenta['desde']) ? date('d/m/Y', strtotime($cuenta['desde'])) : '' ?>
+                                                            </td>
+                                                            <td style="padding: 10px; text-align: center; display:none;">
+                                                                <button type="button" class="btn-accion btn-editar"
+                                                                    onclick="editarCuenta(<?= $cuenta['id'] ?>)">
+                                                                    <i class="fas fa-edit"></i>
+                                                                </button>
+                                                                <form method="POST" action="" style="display: inline;">
+                                                                    <input type="hidden" name="accion_cuenta" value="eliminar">
+                                                                    <input type="hidden" name="id_cuenta"
+                                                                        value="<?= $cuenta['id'] ?>">
+                                                                    <button type="submit"
+                                                                        onclick="return confirm('¿Está seguro de eliminar esta cuenta bancaria?')"
+                                                                        class="btn-accion btn-eliminar">
+                                                                        <i class="fas fa-trash"></i>
+                                                                    </button>
+                                                                </form>
+                                                            </td>
                                                         </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        <?php foreach ($contactosEmergencia as $contacto): ?>
-                                                                <tr style="border-bottom: 1px solid #ddd;">
-                                                                    <td style="padding: 10px;">
-                                                                        <?= htmlspecialchars($contacto['nombre_contacto']) ?>
-                                                                    </td>
-                                                                    <td style="padding: 10px;">
-                                                                        <?= htmlspecialchars($contacto['parentesco']) ?>
-                                                                    </td>
-                                                                    <td style="padding: 10px;">
-                                                                        <?= htmlspecialchars($contacto['telefono_movil']) ?>
-                                                                    </td>
-                                                                    <td style="padding: 10px;">
-                                                                        <?= htmlspecialchars($contacto['telefono_casa']) ?>
-                                                                    </td>
-                                                                    <td style="padding: 10px;">
-                                                                        <?= htmlspecialchars($contacto['telefono_trabajo']) ?>
-                                                                    </td>
-                                                                    <td style="padding: 10px; text-align: center;">
-                                                                        <button type="button" class="btn-accion btn-editar"
-                                                                            onclick="editarContacto(<?= $contacto['id'] ?>)">
-                                                                            <i class="fas fa-edit"></i>
-                                                                        </button>
-                                                                        <form method="POST" action="" style="display: inline;">
-                                                                            <input type="hidden" name="accion_contacto" value="eliminar">
-                                                                            <input type="hidden" name="id_contacto"
-                                                                                value="<?= $contacto['id'] ?>">
-                                                                            <button type="submit"
-                                                                                onclick="return confirm('¿Está seguro de eliminar este contacto de emergencia?')"
-                                                                                class="btn-accion btn-eliminar">
-                                                                                <i class="fas fa-trash"></i>
-                                                                            </button>
-                                                                        </form>
-                                                                    </td>
-                                                                </tr>
-                                                        <?php endforeach; ?>
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                    <?php else: ?>
-                                            <p style="text-align: center; color: #6c757d; padding: 20px;">No hay contactos de
-                                                emergencia
-                                                registrados</p>
-                                    <?php endif; ?>
-
-                                    <!-- Sección de Archivos Adjuntos -->
-                                    <div style="margin-top: 40px; border-top: 2px solid #6c757d; padding-top: 20px;">
-                                        <div
-                                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                                            <h3 style="color: #6c757d; margin: 0;">Archivos Adjuntos</h3>
-                                            <button type="button" class="btn-submit"
-                                                onclick="abrirModalAdjunto('<?= $pestaña_activa ?>')" style="margin: 0;">
-                                                <i class="fas fa-plus"></i> Agregar Archivo
-                                            </button>
+                                                    <?php endforeach; ?>
+                                                </tbody>
+                                            </table>
                                         </div>
+                                    <?php else: ?>
+                                        <p style="text-align: center; color: #6c757d; padding: 20px;">No hay cuentas
+                                            bancarias
+                                            registradas</p>
+                                    <?php endif; ?>
+                                </div>
 
-                                        <?php if (count($archivosAdjuntos) > 0): ?>
-                                                <div style="overflow-x: auto;">
-                                                    <table style="width: 100%; border-collapse: collapse;">
-                                                        <thead>
-                                                            <tr style="background-color: #6c757d; color: white;">
-                                                                <th style="padding: 10px; text-align: left;">Nombre</th>
-                                                                <th style="padding: 10px; text-align: left;">Descripción</th>
-                                                                <th style="padding: 10px; text-align: left; display:none;">Tamaño
-                                                                </th>
-                                                                <th style="padding: 10px; text-align: left;">Subido por</th>
-                                                                <th style="padding: 10px; text-align: left;">Fecha</th>
-                                                                <th style="padding: 10px; text-align: left;">Tipo de Documento</th>
-                                                                <th style="padding: 10px; text-align: left;">Contrato Asociado</th>
-                                                                <th style="padding: 10px; text-align: center;"></th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            <?php foreach ($archivosAdjuntos as $archivo):
-                                                                // Formatear tamaño del archivo
-                                                                $tamaño = $archivo['tamaño'];
-                                                                if ($tamaño < 1024) {
-                                                                    $tamañoFormateado = $tamaño . ' B';
-                                                                } elseif ($tamaño < 1048576) {
-                                                                    $tamañoFormateado = round($tamaño / 1024, 2) . ' KB';
+                                <!-- Sección de Archivos Adjuntos -->
+                                <div style="margin-top: 40px; border-top: 2px solid #6c757d; padding-top: 20px;">
+                                    <div
+                                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                                        <h3 style="color: #6c757d; margin: 0;">Archivos Adjuntos</h3>
+                                        <button type="button" class="btn-submit"
+                                            onclick="abrirModalAdjunto('<?= $pestaña_activa ?>')" style="margin: 0;">
+                                            <i class="fas fa-plus"></i> Agregar Archivo
+                                        </button>
+                                    </div>
+
+                                    <?php if (count($archivosAdjuntos) > 0): ?>
+                                        <div style="overflow-x: auto;">
+                                            <table style="width: 100%; border-collapse: collapse;">
+                                                <thead>
+                                                    <tr style="background-color: #6c757d; color: white;">
+                                                        <th style="padding: 10px; text-align: left;">Nombre</th>
+                                                        <th style="padding: 10px; text-align: left;">Descripción</th>
+                                                        <th style="padding: 10px; text-align: left; display:none;">Tamaño
+                                                        </th>
+                                                        <th style="padding: 10px; text-align: left;">Subido por</th>
+                                                        <th style="padding: 10px; text-align: left;">Fecha</th>
+                                                        <th style="padding: 10px; text-align: left;">Tipo de Documento</th>
+                                                        <th style="padding: 10px; text-align: left;">Contrato Asociado</th>
+                                                        <th style="padding: 10px; text-align: center;"></th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <?php foreach ($archivosAdjuntos as $archivo):
+                                                        // Formatear tamaño del archivo
+                                                        $tamaño = $archivo['tamaño'];
+                                                        if ($tamaño < 1024) {
+                                                            $tamañoFormateado = $tamaño . ' B';
+                                                        } elseif ($tamaño < 1048576) {
+                                                            $tamañoFormateado = round($tamaño / 1024, 2) . ' KB';
+                                                        } else {
+                                                            $tamañoFormateado = round($tamaño / 1048576, 2) . ' MB';
+                                                        }
+                                                        ?>
+                                                        <tr style="border-bottom: 1px solid #ddd;">
+                                                            <td style="padding: 10px;">
+                                                                <?= htmlspecialchars($archivo['nombre_archivo']) ?>
+                                                            </td>
+                                                            <td style="padding: 10px;">
+                                                                <?= htmlspecialchars($archivo['descripcion'] ?? '-') ?>
+                                                            </td>
+                                                            <td style="padding: 10px; display:none;"><?= $tamañoFormateado ?>
+                                                            </td>
+                                                            <td style="padding: 10px;">
+                                                                <?= htmlspecialchars($archivo['nombre_usuario'] . ' ' . $archivo['apellido_usuario']) ?>
+                                                            </td>
+                                                            <td style="padding: 10px;">
+                                                                <?= date('d/m/Y H:i', strtotime($archivo['fecha_subida'])) ?>
+                                                            </td>
+                                                            <td style="padding: 10px;">
+                                                                <?php
+                                                                if (!empty($archivo['tipo_documento'])) {
+                                                                    $tiposDocumentos = obtenerTiposDocumentosPorPestaña($pestaña_activa);
+                                                                    $todosTipos = array_merge($tiposDocumentos['obligatorios'], $tiposDocumentos['opcionales']);
+                                                                    echo htmlspecialchars($todosTipos[$archivo['tipo_documento']] ?? $archivo['tipo_documento']);
+
+                                                                    if ($archivo['obligatorio']) {
+                                                                        echo ' <span style="color: #dc3545;" title="Documento Obligatorio">●</span>';
+                                                                    }
                                                                 } else {
-                                                                    $tamañoFormateado = round($tamaño / 1048576, 2) . ' MB';
+                                                                    echo '<span style="color: #6c757d; font-style: italic;">Sin categorizar</span>';
                                                                 }
                                                                 ?>
-                                                                    <tr style="border-bottom: 1px solid #ddd;">
-                                                                        <td style="padding: 10px;">
-                                                                            <?= htmlspecialchars($archivo['nombre_archivo']) ?>
-                                                                        </td>
-                                                                        <td style="padding: 10px;">
-                                                                            <?= htmlspecialchars($archivo['descripcion'] ?? '-') ?>
-                                                                        </td>
-                                                                        <td style="padding: 10px; display:none;"><?= $tamañoFormateado ?>
-                                                                        </td>
-                                                                        <td style="padding: 10px;">
-                                                                            <?= htmlspecialchars($archivo['nombre_usuario'] . ' ' . $archivo['apellido_usuario']) ?>
-                                                                        </td>
-                                                                        <td style="padding: 10px;">
-                                                                            <?= date('d/m/Y H:i', strtotime($archivo['fecha_subida'])) ?>
-                                                                        </td>
-                                                                        <td style="padding: 10px;">
-                                                                            <?php
-                                                                            if (!empty($archivo['tipo_documento'])) {
-                                                                                $tiposDocumentos = obtenerTiposDocumentosPorPestaña($pestaña_activa);
-                                                                                $todosTipos = array_merge($tiposDocumentos['obligatorios'], $tiposDocumentos['opcionales']);
-                                                                                echo htmlspecialchars($todosTipos[$archivo['tipo_documento']] ?? $archivo['tipo_documento']);
-
-                                                                                if ($archivo['obligatorio']) {
-                                                                                    echo ' <span style="color: #dc3545;" title="Documento Obligatorio">●</span>';
-                                                                                }
-                                                                            } else {
-                                                                                echo '<span style="color: #6c757d; font-style: italic;">Sin categorizar</span>';
-                                                                            }
-                                                                            ?>
-                                                                        </td>
-                                                                        <td style="padding: 10px;">
-                                                                            <?php
-                                                                            // Mostrar información del contrato usando codigo_manual_contrato
-                                                                            $pestañasConContrato = ['contrato', 'adendums', 'inss', 'salario', 'movimientos', 'categoria'];
-                                                                            if (in_array($pestaña_activa, $pestañasConContrato) && !empty($archivo['codigo_manual_contrato'])):
-                                                                                ?>
-                                                                                    <span
-                                                                                        style="font-weight: 500;"><?= htmlspecialchars($archivo['codigo_manual_contrato']) ?></span>
-                                                                                    <br>
-                                                                                    <small style="color: #6c757d;">
-                                                                                        <?= !empty($archivo['inicio_contrato']) ? date('d/m/Y', strtotime($archivo['inicio_contrato'])) : 'Fecha no disponible' ?>
-                                                                                        <?php if (!empty($archivo['fin_contrato']) && $archivo['fin_contrato'] != '0000-00-00'): ?>
-                                                                                                - <?= date('d/m/Y', strtotime($archivo['fin_contrato'])) ?>
-                                                                                        <?php else: ?>
-                                                                                                (Activo)
-                                                                                        <?php endif; ?>
-                                                                                    </small>
-                                                                                    <?php if (!empty($archivo['tipo_contrato'])): ?>
-                                                                                            <br>
-                                                                                            <small
-                                                                                                style="color: #0E544C;"><?= htmlspecialchars($archivo['tipo_contrato']) ?></small>
-                                                                                    <?php endif; ?>
-                                                                            <?php else: ?>
-                                                                                    <span style="color: #6c757d; font-style: italic;">
-                                                                                        <?= in_array($pestaña_activa, $pestañasConContrato) ? 'Sin contrato asociado' : 'No aplica' ?>
-                                                                                    </span>
-                                                                            <?php endif; ?>
-                                                                        </td>
-                                                                        <td style="padding: 10px; text-align: center;">
-                                                                            <a href="<?= htmlspecialchars($archivo['ruta_archivo']) ?>"
-                                                                                target="_blank" class="btn-accion btn-editar"
-                                                                                title="Ver archivo">
-                                                                                <i class="fas fa-eye"></i>
-                                                                            </a>
-                                                                            <form method="POST" action="" style="display: inline;">
-                                                                                <input type="hidden" name="accion_adjunto" value="eliminar">
-                                                                                <input type="hidden" name="id_adjunto"
-                                                                                    value="<?= $archivo['id'] ?>">
-                                                                                <input type="hidden" name="pestaña_adjunto"
-                                                                                    value="<?= $pestaña_activa ?>">
-                                                                                <button type="submit"
-                                                                                    onclick="return confirm('¿Está seguro de eliminar este archivo?')"
-                                                                                    class="btn-accion btn-eliminar" title="Eliminar archivo">
-                                                                                    <i class="fas fa-trash"></i>
-                                                                                </button>
-                                                                            </form>
-                                                                        </td>
-                                                                    </tr>
-                                                            <?php endforeach; ?>
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-                                        <?php else: ?>
-                                                <p style="text-align: center; color: #6c757d; padding: 20px;">No hay archivos
-                                                    adjuntos</p>
-                                        <?php endif; ?>
-                                    </div>
+                                                            </td>
+                                                            <td style="padding: 10px;">
+                                                                <?php
+                                                                // Mostrar información del contrato usando codigo_manual_contrato
+                                                                $pestañasConContrato = ['contrato', 'adendums', 'inss', 'salario', 'movimientos', 'categoria'];
+                                                                if (in_array($pestaña_activa, $pestañasConContrato) && !empty($archivo['codigo_manual_contrato'])):
+                                                                    ?>
+                                                                    <span
+                                                                        style="font-weight: 500;"><?= htmlspecialchars($archivo['codigo_manual_contrato']) ?></span>
+                                                                    <br>
+                                                                    <small style="color: #6c757d;">
+                                                                        <?= !empty($archivo['inicio_contrato']) ? date('d/m/Y', strtotime($archivo['inicio_contrato'])) : 'Fecha no disponible' ?>
+                                                                        <?php if (!empty($archivo['fin_contrato']) && $archivo['fin_contrato'] != '0000-00-00'): ?>
+                                                                            - <?= date('d/m/Y', strtotime($archivo['fin_contrato'])) ?>
+                                                                        <?php else: ?>
+                                                                            (Activo)
+                                                                        <?php endif; ?>
+                                                                    </small>
+                                                                    <?php if (!empty($archivo['tipo_contrato'])): ?>
+                                                                        <br>
+                                                                        <small
+                                                                            style="color: #0E544C;"><?= htmlspecialchars($archivo['tipo_contrato']) ?></small>
+                                                                    <?php endif; ?>
+                                                                <?php else: ?>
+                                                                    <span style="color: #6c757d; font-style: italic;">
+                                                                        <?= in_array($pestaña_activa, $pestañasConContrato) ? 'Sin contrato asociado' : 'No aplica' ?>
+                                                                    </span>
+                                                                <?php endif; ?>
+                                                            </td>
+                                                            <td style="padding: 10px; text-align: center;">
+                                                                <a href="<?= htmlspecialchars($archivo['ruta_archivo']) ?>"
+                                                                    target="_blank" class="btn-accion btn-editar"
+                                                                    title="Ver archivo">
+                                                                    <i class="fas fa-eye"></i>
+                                                                </a>
+                                                                <form method="POST" action="" style="display: inline;">
+                                                                    <input type="hidden" name="accion_adjunto" value="eliminar">
+                                                                    <input type="hidden" name="id_adjunto"
+                                                                        value="<?= $archivo['id'] ?>">
+                                                                    <input type="hidden" name="pestaña_adjunto"
+                                                                        value="<?= $pestaña_activa ?>">
+                                                                    <button type="submit"
+                                                                        onclick="return confirm('¿Está seguro de eliminar este archivo?')"
+                                                                        class="btn-accion btn-eliminar" title="Eliminar archivo">
+                                                                        <i class="fas fa-trash"></i>
+                                                                    </button>
+                                                                </form>
+                                                            </td>
+                                                        </tr>
+                                                    <?php endforeach; ?>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    <?php else: ?>
+                                        <p style="text-align: center; color: #6c757d; padding: 20px;">No hay archivos
+                                            adjuntos</p>
+                                    <?php endif; ?>
                                 </div>
+                            </div>
+                        <?php endif; ?>
+
+                        <!-- Pestaña de Datos de Contacto -->
+                        <?php if ($esAdmin || verificarAccesoCargo([13, 16, 39, 30, 37, 28])): ?>
+                            <div id="datos-contacto"
+                                class="tab-pane <?= $pestaña_activa == 'datos-contacto' ? 'active' : '' ?>">
+                                <form method="POST" action="">
+                                    <input type="hidden" name="accion" value="guardar_datos_contacto">
+                                    <input type="hidden" name="pestaña" value="datos-contacto">
+
+                                    <div class="form-group">
+                                        <label for="direccion">Dirección</label>
+                                        <textarea id="direccion" name="direccion" class="form-control"
+                                            rows="3"><?= htmlspecialchars($colaborador['direccion'] ?? '') ?></textarea>
+                                    </div>
+
+                                    <div class="form-row">
+                                        <div class="form-col">
+                                            <div class="form-group">
+                                                <label for="ciudad">Ciudad</label>
+                                                <input type="text" id="ciudad" name="ciudad" class="form-control"
+                                                    value="<?= htmlspecialchars($colaborador['Ciudad'] ?? '') ?>">
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label for="celular">Teléfono Móvil (celular)</label>
+                                                <input type="text" id="celular" name="celular" class="form-control"
+                                                    value="<?= htmlspecialchars($colaborador['Celular'] ?? '') ?>">
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label for="email_personal">Email Personal</label>
+                                                <input type="email" id="email_personal" name="email_personal"
+                                                    class="form-control"
+                                                    value="<?= htmlspecialchars($colaborador['email_personal'] ?? '') ?>">
+                                            </div>
+                                        </div>
+
+                                        <div class="form-col">
+                                            <div class="form-group">
+                                                <label for="telefono_casa">Teléfono de Casa</label>
+                                                <input type="text" id="telefono_casa" name="telefono_casa"
+                                                    class="form-control"
+                                                    value="<?= htmlspecialchars($colaborador['telefono_casa'] ?? '') ?>">
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label for="telefono_corporativo">Teléfono Corporativo</label>
+                                                <input type="text" id="telefono_corporativo" name="telefono_corporativo"
+                                                    class="form-control"
+                                                    value="<?= htmlspecialchars($colaborador['telefono_corporativo'] ?? '') ?>">
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label for="email_trabajo">Email de Trabajo</label>
+                                                <input type="email" id="email_trabajo" name="email_trabajo"
+                                                    class="form-control"
+                                                    value="<?= htmlspecialchars($colaborador['email_trabajo'] ?? '') ?>">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <button type="submit" class="btn-submit">Guardar Cambios</button>
+                                </form>
+                            </div>
+                        <?php endif; ?>
+
+                        <!-- Pestaña de Contactos de Emergencia -->
+                        <?php if ($esAdmin || verificarAccesoCargo([13, 16, 39, 30, 37, 28])): ?>
+                            <div id="contactos-emergencia"
+                                class="tab-pane <?= $pestaña_activa == 'contactos-emergencia' ? 'active' : '' ?>">
+                                <div
+                                    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                                    <h3 style="color: #0E544C; margin: 0;">Contactos de Emergencia</h3>
+                                    <button type="button" class="btn-submit" onclick="abrirModalContacto()"
+                                        style="margin: 0;">
+                                        <i class="fas fa-plus"></i> Agregar
+                                    </button>
+                                </div>
+
+                                <?php if (count($contactosEmergencia) > 0): ?>
+                                    <div style="overflow-x: auto;">
+                                        <table style="width: 100%; border-collapse: collapse;">
+                                            <thead>
+                                                <tr style="background-color: #0E544C; color: white;">
+                                                    <th style="padding: 10px; text-align: left;">Nombre</th>
+                                                    <th style="padding: 10px; text-align: left;">Parentesco</th>
+                                                    <th style="padding: 10px; text-align: left;">Teléfono Móvil</th>
+                                                    <th style="padding: 10px; text-align: left;">Teléfono Casa</th>
+                                                    <th style="padding: 10px; text-align: left;">Teléfono Trabajo</th>
+                                                    <th style="padding: 10px; text-align: center;"></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <?php foreach ($contactosEmergencia as $contacto): ?>
+                                                    <tr style="border-bottom: 1px solid #ddd;">
+                                                        <td style="padding: 10px;">
+                                                            <?= htmlspecialchars($contacto['nombre_contacto']) ?>
+                                                        </td>
+                                                        <td style="padding: 10px;">
+                                                            <?= htmlspecialchars($contacto['parentesco']) ?>
+                                                        </td>
+                                                        <td style="padding: 10px;">
+                                                            <?= htmlspecialchars($contacto['telefono_movil']) ?>
+                                                        </td>
+                                                        <td style="padding: 10px;">
+                                                            <?= htmlspecialchars($contacto['telefono_casa']) ?>
+                                                        </td>
+                                                        <td style="padding: 10px;">
+                                                            <?= htmlspecialchars($contacto['telefono_trabajo']) ?>
+                                                        </td>
+                                                        <td style="padding: 10px; text-align: center;">
+                                                            <button type="button" class="btn-accion btn-editar"
+                                                                onclick="editarContacto(<?= $contacto['id'] ?>)">
+                                                                <i class="fas fa-edit"></i>
+                                                            </button>
+                                                            <form method="POST" action="" style="display: inline;">
+                                                                <input type="hidden" name="accion_contacto" value="eliminar">
+                                                                <input type="hidden" name="id_contacto"
+                                                                    value="<?= $contacto['id'] ?>">
+                                                                <button type="submit"
+                                                                    onclick="return confirm('¿Está seguro de eliminar este contacto de emergencia?')"
+                                                                    class="btn-accion btn-eliminar">
+                                                                    <i class="fas fa-trash"></i>
+                                                                </button>
+                                                            </form>
+                                                        </td>
+                                                    </tr>
+                                                <?php endforeach; ?>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                <?php else: ?>
+                                    <p style="text-align: center; color: #6c757d; padding: 20px;">No hay contactos de
+                                        emergencia
+                                        registrados</p>
+                                <?php endif; ?>
+
+                                <!-- Sección de Archivos Adjuntos -->
+                                <div style="margin-top: 40px; border-top: 2px solid #6c757d; padding-top: 20px;">
+                                    <div
+                                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                                        <h3 style="color: #6c757d; margin: 0;">Archivos Adjuntos</h3>
+                                        <button type="button" class="btn-submit"
+                                            onclick="abrirModalAdjunto('<?= $pestaña_activa ?>')" style="margin: 0;">
+                                            <i class="fas fa-plus"></i> Agregar Archivo
+                                        </button>
+                                    </div>
+
+                                    <?php if (count($archivosAdjuntos) > 0): ?>
+                                        <div style="overflow-x: auto;">
+                                            <table style="width: 100%; border-collapse: collapse;">
+                                                <thead>
+                                                    <tr style="background-color: #6c757d; color: white;">
+                                                        <th style="padding: 10px; text-align: left;">Nombre</th>
+                                                        <th style="padding: 10px; text-align: left;">Descripción</th>
+                                                        <th style="padding: 10px; text-align: left; display:none;">Tamaño
+                                                        </th>
+                                                        <th style="padding: 10px; text-align: left;">Subido por</th>
+                                                        <th style="padding: 10px; text-align: left;">Fecha</th>
+                                                        <th style="padding: 10px; text-align: left;">Tipo de Documento</th>
+                                                        <th style="padding: 10px; text-align: left;">Contrato Asociado</th>
+                                                        <th style="padding: 10px; text-align: center;"></th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <?php foreach ($archivosAdjuntos as $archivo):
+                                                        // Formatear tamaño del archivo
+                                                        $tamaño = $archivo['tamaño'];
+                                                        if ($tamaño < 1024) {
+                                                            $tamañoFormateado = $tamaño . ' B';
+                                                        } elseif ($tamaño < 1048576) {
+                                                            $tamañoFormateado = round($tamaño / 1024, 2) . ' KB';
+                                                        } else {
+                                                            $tamañoFormateado = round($tamaño / 1048576, 2) . ' MB';
+                                                        }
+                                                        ?>
+                                                        <tr style="border-bottom: 1px solid #ddd;">
+                                                            <td style="padding: 10px;">
+                                                                <?= htmlspecialchars($archivo['nombre_archivo']) ?>
+                                                            </td>
+                                                            <td style="padding: 10px;">
+                                                                <?= htmlspecialchars($archivo['descripcion'] ?? '-') ?>
+                                                            </td>
+                                                            <td style="padding: 10px; display:none;"><?= $tamañoFormateado ?>
+                                                            </td>
+                                                            <td style="padding: 10px;">
+                                                                <?= htmlspecialchars($archivo['nombre_usuario'] . ' ' . $archivo['apellido_usuario']) ?>
+                                                            </td>
+                                                            <td style="padding: 10px;">
+                                                                <?= date('d/m/Y H:i', strtotime($archivo['fecha_subida'])) ?>
+                                                            </td>
+                                                            <td style="padding: 10px;">
+                                                                <?php
+                                                                if (!empty($archivo['tipo_documento'])) {
+                                                                    $tiposDocumentos = obtenerTiposDocumentosPorPestaña($pestaña_activa);
+                                                                    $todosTipos = array_merge($tiposDocumentos['obligatorios'], $tiposDocumentos['opcionales']);
+                                                                    echo htmlspecialchars($todosTipos[$archivo['tipo_documento']] ?? $archivo['tipo_documento']);
+
+                                                                    if ($archivo['obligatorio']) {
+                                                                        echo ' <span style="color: #dc3545;" title="Documento Obligatorio">●</span>';
+                                                                    }
+                                                                } else {
+                                                                    echo '<span style="color: #6c757d; font-style: italic;">Sin categorizar</span>';
+                                                                }
+                                                                ?>
+                                                            </td>
+                                                            <td style="padding: 10px;">
+                                                                <?php
+                                                                // Mostrar información del contrato usando codigo_manual_contrato
+                                                                $pestañasConContrato = ['contrato', 'adendums', 'inss', 'salario', 'movimientos', 'categoria'];
+                                                                if (in_array($pestaña_activa, $pestañasConContrato) && !empty($archivo['codigo_manual_contrato'])):
+                                                                    ?>
+                                                                    <span
+                                                                        style="font-weight: 500;"><?= htmlspecialchars($archivo['codigo_manual_contrato']) ?></span>
+                                                                    <br>
+                                                                    <small style="color: #6c757d;">
+                                                                        <?= !empty($archivo['inicio_contrato']) ? date('d/m/Y', strtotime($archivo['inicio_contrato'])) : 'Fecha no disponible' ?>
+                                                                        <?php if (!empty($archivo['fin_contrato']) && $archivo['fin_contrato'] != '0000-00-00'): ?>
+                                                                            - <?= date('d/m/Y', strtotime($archivo['fin_contrato'])) ?>
+                                                                        <?php else: ?>
+                                                                            (Activo)
+                                                                        <?php endif; ?>
+                                                                    </small>
+                                                                    <?php if (!empty($archivo['tipo_contrato'])): ?>
+                                                                        <br>
+                                                                        <small
+                                                                            style="color: #0E544C;"><?= htmlspecialchars($archivo['tipo_contrato']) ?></small>
+                                                                    <?php endif; ?>
+                                                                <?php else: ?>
+                                                                    <span style="color: #6c757d; font-style: italic;">
+                                                                        <?= in_array($pestaña_activa, $pestañasConContrato) ? 'Sin contrato asociado' : 'No aplica' ?>
+                                                                    </span>
+                                                                <?php endif; ?>
+                                                            </td>
+                                                            <td style="padding: 10px; text-align: center;">
+                                                                <a href="<?= htmlspecialchars($archivo['ruta_archivo']) ?>"
+                                                                    target="_blank" class="btn-accion btn-editar"
+                                                                    title="Ver archivo">
+                                                                    <i class="fas fa-eye"></i>
+                                                                </a>
+                                                                <form method="POST" action="" style="display: inline;">
+                                                                    <input type="hidden" name="accion_adjunto" value="eliminar">
+                                                                    <input type="hidden" name="id_adjunto"
+                                                                        value="<?= $archivo['id'] ?>">
+                                                                    <input type="hidden" name="pestaña_adjunto"
+                                                                        value="<?= $pestaña_activa ?>">
+                                                                    <button type="submit"
+                                                                        onclick="return confirm('¿Está seguro de eliminar este archivo?')"
+                                                                        class="btn-accion btn-eliminar" title="Eliminar archivo">
+                                                                        <i class="fas fa-trash"></i>
+                                                                    </button>
+                                                                </form>
+                                                            </td>
+                                                        </tr>
+                                                    <?php endforeach; ?>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    <?php else: ?>
+                                        <p style="text-align: center; color: #6c757d; padding: 20px;">No hay archivos
+                                            adjuntos</p>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
                         <?php endif; ?>
 
                         <!-- Pestaña de Contrato -->
                         <?php if ($esAdmin || verificarAccesoCargo([13, 16, 39, 30, 37, 28])): ?>
-                                <div id="contrato" class="tab-pane <?= $pestaña_activa == 'contrato' ? 'active' : '' ?>">
-                                    <!-- Sección de Documentos Obligatorios Faltantes -->
-                                    <div
-                                        style="margin: 20px 0; padding: 15px; background: #fff3cd; border-radius: 8px; border: 1px solid #ffeaa7;">
-                                        <h4 style="color: #856404; margin-bottom: 15px;">
-                                            <i class="fas fa-exclamation-triangle"></i> Documentos Obligatorios Faltantes -
-                                            <?= obtenerNombrePestaña($pestaña_activa) ?>
-                                        </h4>
-
-                                        <?php
-                                        $documentosFaltantesPestana = obtenerDocumentosFaltantesPestana($codOperario, $pestaña_activa);
-                                        ?>
-
-                                        <?php if (!empty($documentosFaltantesPestana)): ?>
-                                                <ul style="color: #856404; margin: 0; padding-left: 20px;">
-                                                    <?php foreach ($documentosFaltantesPestana as $documento): ?>
-                                                            <li><?= htmlspecialchars($documento) ?></li>
-                                                    <?php endforeach; ?>
-                                                </ul>
-
-                                                <p style="color: #856404; margin: 15px 0 0 0; font-style: italic;">
-                                                    <i class="fas fa-info-circle"></i> Estos documentos deben ser subidos para
-                                                    completar la
-                                                    información.
-                                                </p>
-                                        <?php else: ?>
-                                                <div style="color: #155724; background: #d4edda; padding: 10px; border-radius: 4px;">
-                                                    <i class="fas fa-check-circle"></i> Todos los documentos obligatorios están
-                                                    completos para
-                                                    esta pestaña.
-                                                </div>
-                                        <?php endif; ?>
-                                    </div>
+                            <div id="contrato" class="tab-pane <?= $pestaña_activa == 'contrato' ? 'active' : '' ?>">
+                                <!-- Sección de Documentos Obligatorios Faltantes -->
+                                <div
+                                    style="margin: 20px 0; padding: 15px; background: #fff3cd; border-radius: 8px; border: 1px solid #ffeaa7;">
+                                    <h4 style="color: #856404; margin-bottom: 15px;">
+                                        <i class="fas fa-exclamation-triangle"></i> Documentos Obligatorios Faltantes -
+                                        <?= obtenerNombrePestaña($pestaña_activa) ?>
+                                    </h4>
 
                                     <?php
-                                    // Obtener datos del contrato actual
-                                    $contratoActual = obtenerContratoActual($codOperario);
-                                    $estaFinalizado = $contratoActual ? contratoEstaFinalizado($contratoActual) : false;
-                                    $estaActivo = $contratoActual ? contratoEstaActivo($contratoActual) : false;
-                                    $asignacionCargoActual = obtenerAsignacionCargoActual($codOperario);
-                                    $categoriaActual = obtenerCategoriaActual($codOperario);
-                                    $salarioActual = obtenerSalarioActual($codOperario);
-
-                                    // NUEVO: Determinar si debemos mostrar el formulario para nuevo contrato
-                                    $mostrarFormularioNuevoContrato = !$contratoActual || $estaFinalizado;
+                                    $documentosFaltantesPestana = obtenerDocumentosFaltantesPestana($codOperario, $pestaña_activa);
                                     ?>
 
-                                    <?php if ($contratoActual && $estaActivo): ?>
-                                            <div style="margin-bottom: 20px;">
-                                                <h3 style="color: #0E544C; margin-bottom: 15px;">Información de Contrato Actual</h3>
-                                                <div class="readonly-info">
-                                                    <p><strong>Estado:</strong> <span style="color: green;">Contrato Activo</span>
-                                                    </p>
-                                                    <p><strong>Fecha Inicio:</strong>
-                                                        <?= !empty($contratoActual['inicio_contrato']) ? date('d/m/Y', strtotime($contratoActual['inicio_contrato'])) : 'No definida' ?>
-                                                    </p>
-                                                    <p><strong>Tipo de Contrato:</strong>
-                                                        <?= htmlspecialchars(obtenerNombreTipoContrato($contratoActual['cod_tipo_contrato'])) ?>
-                                                    </p>
-                                                    <p><strong>Cargo:</strong>
-                                                        <?= htmlspecialchars(obtenerNombreCargo($asignacionCargoActual['CodNivelesCargos'])) ?>
-                                                    </p>
-                                                    <p><strong>Salario:</strong>
-                                                        <?= $salarioActual ? number_format($salarioActual['monto'], 2) : 'No definido' ?>
-                                                    </p>
-                                                    <?php if (!empty($contratoActual['fin_contrato']) && $contratoActual['fin_contrato'] != '0000-00-00'): ?>
-                                                            <p><strong>Fecha Fin:</strong>
-                                                                <?= date('d/m/Y', strtotime($contratoActual['fin_contrato'])) ?></p>
-                                                            <p><strong>Tiempo Restante:</strong>
-                                                                <?= calcularTiempoRestanteContrato($contratoActual['fin_contrato'], $estaActivo) ?>
-                                                            </p>
-                                                    <?php endif; ?>
-                                                </div>
-                                            </div>
-                                    <?php elseif ($contratoActual && $estaFinalizado): ?>
-                                            <div style="margin-bottom: 20px;">
-                                                <div class="readonly-info" style="background-color: #f8d7da; border-color: #f5c6cb;">
-                                                    <p><strong>Estado:</strong> <span style="color: #721c24;">Contrato
-                                                            Finalizado</span></p>
-                                                    <p><strong>Fecha Salida:</strong>
-                                                        <?= !empty($contratoActual['fecha_salida']) ? date('d/m/Y', strtotime($contratoActual['fecha_salida'])) : 'No definida' ?>
-                                                    </p>
-                                                    <p><strong>Motivo:</strong>
-                                                        <?= htmlspecialchars($contratoActual['motivo'] ?? 'No especificado') ?></p>
-                                                    <p><strong>Puede crear un nuevo contrato:</strong> Complete el formulario
-                                                        inferior para
-                                                        registrar un nuevo contrato.</p>
-                                                </div>
-                                            </div>
+                                    <?php if (!empty($documentosFaltantesPestana)): ?>
+                                        <ul style="color: #856404; margin: 0; padding-left: 20px;">
+                                            <?php foreach ($documentosFaltantesPestana as $documento): ?>
+                                                <li><?= htmlspecialchars($documento) ?></li>
+                                            <?php endforeach; ?>
+                                        </ul>
+
+                                        <p style="color: #856404; margin: 15px 0 0 0; font-style: italic;">
+                                            <i class="fas fa-info-circle"></i> Estos documentos deben ser subidos para
+                                            completar la
+                                            información.
+                                        </p>
                                     <?php else: ?>
-                                            <div style="margin-bottom: 20px;">
-                                                <div class="readonly-info" style="background-color: #fff3cd; border-color: #ffeaa7;">
-                                                    <p><strong>Estado:</strong> <span style="color: #856404;">Sin contrato
-                                                            activo</span></p>
-                                                    <p>Este colaborador no tiene un contrato activo registrado en el sistema.
-                                                        Complete el
-                                                        formulario para crear uno nuevo.</p>
-                                                </div>
-                                            </div>
+                                        <div style="color: #155724; background: #d4edda; padding: 10px; border-radius: 4px;">
+                                            <i class="fas fa-check-circle"></i> Todos los documentos obligatorios están
+                                            completos para
+                                            esta pestaña.
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
+
+                                <?php
+                                // Obtener datos del contrato actual
+                                $contratoActual = obtenerContratoActual($codOperario);
+                                $estaFinalizado = $contratoActual ? contratoEstaFinalizado($contratoActual) : false;
+                                $estaActivo = $contratoActual ? contratoEstaActivo($contratoActual) : false;
+                                $asignacionCargoActual = obtenerAsignacionCargoActual($codOperario);
+                                $categoriaActual = obtenerCategoriaActual($codOperario);
+                                $salarioActual = obtenerSalarioActual($codOperario);
+
+                                // NUEVO: Determinar si debemos mostrar el formulario para nuevo contrato
+                                $mostrarFormularioNuevoContrato = !$contratoActual || $estaFinalizado;
+                                ?>
+
+                                <?php if ($contratoActual && $estaActivo): ?>
+                                    <div style="margin-bottom: 20px;">
+                                        <h3 style="color: #0E544C; margin-bottom: 15px;">Información de Contrato Actual</h3>
+                                        <div class="readonly-info">
+                                            <p><strong>Estado:</strong> <span style="color: green;">Contrato Activo</span>
+                                            </p>
+                                            <p><strong>Fecha Inicio:</strong>
+                                                <?= !empty($contratoActual['inicio_contrato']) ? date('d/m/Y', strtotime($contratoActual['inicio_contrato'])) : 'No definida' ?>
+                                            </p>
+                                            <p><strong>Tipo de Contrato:</strong>
+                                                <?= htmlspecialchars(obtenerNombreTipoContrato($contratoActual['cod_tipo_contrato'])) ?>
+                                            </p>
+                                            <p><strong>Cargo:</strong>
+                                                <?= htmlspecialchars(obtenerNombreCargo($asignacionCargoActual['CodNivelesCargos'])) ?>
+                                            </p>
+                                            <p><strong>Salario:</strong>
+                                                <?= $salarioActual ? number_format($salarioActual['monto'], 2) : 'No definido' ?>
+                                            </p>
+                                            <?php if (!empty($contratoActual['fin_contrato']) && $contratoActual['fin_contrato'] != '0000-00-00'): ?>
+                                                <p><strong>Fecha Fin:</strong>
+                                                    <?= date('d/m/Y', strtotime($contratoActual['fin_contrato'])) ?></p>
+                                                <p><strong>Tiempo Restante:</strong>
+                                                    <?= calcularTiempoRestanteContrato($contratoActual['fin_contrato'], $estaActivo) ?>
+                                                </p>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                <?php elseif ($contratoActual && $estaFinalizado): ?>
+                                    <div style="margin-bottom: 20px;">
+                                        <div class="readonly-info" style="background-color: #f8d7da; border-color: #f5c6cb;">
+                                            <p><strong>Estado:</strong> <span style="color: #721c24;">Contrato
+                                                    Finalizado</span></p>
+                                            <p><strong>Fecha Salida:</strong>
+                                                <?= !empty($contratoActual['fecha_salida']) ? date('d/m/Y', strtotime($contratoActual['fecha_salida'])) : 'No definida' ?>
+                                            </p>
+                                            <p><strong>Motivo:</strong>
+                                                <?= htmlspecialchars($contratoActual['motivo'] ?? 'No especificado') ?></p>
+                                            <p><strong>Puede crear un nuevo contrato:</strong> Complete el formulario
+                                                inferior para
+                                                registrar un nuevo contrato.</p>
+                                        </div>
+                                    </div>
+                                <?php else: ?>
+                                    <div style="margin-bottom: 20px;">
+                                        <div class="readonly-info" style="background-color: #fff3cd; border-color: #ffeaa7;">
+                                            <p><strong>Estado:</strong> <span style="color: #856404;">Sin contrato
+                                                    activo</span></p>
+                                            <p>Este colaborador no tiene un contrato activo registrado en el sistema.
+                                                Complete el
+                                                formulario para crear uno nuevo.</p>
+                                        </div>
+                                    </div>
+                                <?php endif; ?>
+
+                                <!-- FORMULARIO DE CONTRATO -->
+                                <form method="POST" action="" enctype="multipart/form-data">
+                                    <input type="hidden" name="pestaña" value="contrato">
+
+                                    <!-- NUEVO: Cambiar el valor de accion_contrato según si es nuevo o edición -->
+                                    <?php if ($mostrarFormularioNuevoContrato): ?>
+                                        <input type="hidden" name="accion_contrato" value="guardar">
+                                        <h3 style="color: #0E544C; margin-bottom: 15px;">Nuevo Contrato</h3>
+                                    <?php else: ?>
+                                        <input type="hidden" name="accion_contrato" value="guardar">
+                                        <input type="hidden" name="id_contrato" value="<?= $contratoActual['CodContrato'] ?>">
+                                        <h3 style="color: #0E544C; margin-bottom: 15px;">Editar Contrato Actual</h3>
                                     <?php endif; ?>
 
-                                    <!-- FORMULARIO DE CONTRATO -->
-                                    <form method="POST" action="" enctype="multipart/form-data">
-                                        <input type="hidden" name="pestaña" value="contrato">
-
-                                        <!-- NUEVO: Cambiar el valor de accion_contrato según si es nuevo o edición -->
-                                        <?php if ($mostrarFormularioNuevoContrato): ?>
-                                                <input type="hidden" name="accion_contrato" value="guardar">
-                                                <h3 style="color: #0E544C; margin-bottom: 15px;">Nuevo Contrato</h3>
-                                        <?php else: ?>
-                                                <input type="hidden" name="accion_contrato" value="guardar">
-                                                <input type="hidden" name="id_contrato" value="<?= $contratoActual['CodContrato'] ?>">
-                                                <h3 style="color: #0E544C; margin-bottom: 15px;">Editar Contrato Actual</h3>
-                                        <?php endif; ?>
-
-                                        <div class="form-row">
-                                            <div class="form-col">
-                                                <div class="form-group">
-                                                    <label for="codigo_manual_contrato">Código de Contrato</label>
-                                                    <input type="text" id="codigo_manual_contrato" name="codigo_manual_contrato"
-                                                        class="form-control"
-                                                        value="<?= (!$mostrarFormularioNuevoContrato && $contratoActual) ? htmlspecialchars($contratoActual['codigo_manual_contrato'] ?? '') : '' ?>"
-                                                        onblur="validarCodigoContrato(this.value)">
-                                                    <div id="codigo-contrato-error" class="text-danger"
-                                                        style="display: none; font-size: 12px; margin-top: 5px;">
-                                                        ⚠️ Este código de contrato ya existe. Debe usar un código único.
-                                                    </div>
-                                                    <div id="codigo-contrato-success" class="text-success"
-                                                        style="display: none; font-size: 12px; margin-top: 5px;">
-                                                        ✅ Código disponible
-                                                    </div>
+                                    <div class="form-row">
+                                        <div class="form-col">
+                                            <div class="form-group">
+                                                <label for="codigo_manual_contrato">Código de Contrato</label>
+                                                <input type="text" id="codigo_manual_contrato" name="codigo_manual_contrato"
+                                                    class="form-control"
+                                                    value="<?= (!$mostrarFormularioNuevoContrato && $contratoActual) ? htmlspecialchars($contratoActual['codigo_manual_contrato'] ?? '') : '' ?>"
+                                                    onblur="validarCodigoContrato(this.value)">
+                                                <div id="codigo-contrato-error" class="text-danger"
+                                                    style="display: none; font-size: 12px; margin-top: 5px;">
+                                                    ⚠️ Este código de contrato ya existe. Debe usar un código único.
                                                 </div>
-
-                                                <div class="form-group">
-                                                    <label for="cod_cargo">Cargo *</label>
-                                                    <select id="cod_cargo" name="cod_cargo" class="form-control" required
-                                                        onchange="actualizarCategoriaYMostrar()">
-                                                        <option value="">Seleccionar cargo...</option>
-                                                        <?php
-                                                        $cargos = obtenerTodosCargos();
-                                                        foreach ($cargos as $cargo):
-                                                            // Determinar la categoría sugerida para este cargo
-                                                            $categoriaSugerida = '';
-                                                            $idCategoriaSugerida = '';
-
-                                                            if ($cargo['CodNivelesCargos'] == 2) {
-                                                                $categoriaSugerida = ' (Categoría: Training)';
-                                                                $idCategoriaSugerida = 5; // ID de la categoría Operario en CategoriasOperarios
-                                                            } elseif ($cargo['CodNivelesCargos'] == 5) {
-                                                                $categoriaSugerida = ' (Categoría: Líder)';
-                                                                $idCategoriaSugerida = 1; // ID de la categoría Líder en CategoriasOperarios
-                                                            }
-                                                            ?>
-                                                                <option value="<?= $cargo['CodNivelesCargos'] ?>"
-                                                                    data-categoria="<?= $idCategoriaSugerida ?>"
-                                                                    <?= (!$mostrarFormularioNuevoContrato && $asignacionCargoActual && $asignacionCargoActual['CodNivelesCargos'] == $cargo['CodNivelesCargos']) ? 'selected' : '' ?>>
-                                                                    <?= htmlspecialchars($cargo['Nombre']) ?>
-                                                                    <?= $categoriaSugerida ?>
-                                                                </option>
-                                                        <?php endforeach; ?>
-                                                    </select>
-                                                    <div id="infoCategoria" class="categoria-info" style="display: none;">
-                                                        <i class="fas fa-info-circle"></i> <span id="textoCategoria">Categoría
-                                                            asignada
-                                                            automáticamente</span>
-                                                    </div>
-                                                </div>
-
-                                                <div class="form-group" style="display: none;">
-                                                    <label for="id_categoria">Categoría</label>
-                                                    <select id="id_categoria" name="id_categoria" class="form-control">
-                                                        <option value="">Seleccionar categoría...</option>
-                                                        <?php
-                                                        $categorias = obtenerTodasCategorias();
-                                                        foreach ($categorias as $categoria): ?>
-                                                                <option value="<?= $categoria['idCategoria'] ?>"
-                                                                    <?= (!$mostrarFormularioNuevoContrato && $categoriaActual && $categoriaActual['idCategoria'] == $categoria['idCategoria']) ? 'selected' : '' ?>>
-                                                                    <?= htmlspecialchars($categoria['NombreCategoria']) ?>
-                                                                </option>
-                                                        <?php endforeach; ?>
-                                                    </select>
-                                                </div>
-
-                                                <div class="form-group">
-                                                    <label for="ciudad">Departamento/Ciudad de Contrato *</label>
-                                                    <input type="text" id="ciudad" name="ciudad" class="form-control"
-                                                        value="<?= (!$mostrarFormularioNuevoContrato && $contratoActual) ? htmlspecialchars($contratoActual['ciudad']) : '' ?>"
-                                                        required>
-                                                </div>
-
-                                                <div class="form-group">
-                                                    <label for="inicio_contrato">Fecha de Inicio *</label>
-                                                    <input type="date" id="inicio_contrato" name="inicio_contrato"
-                                                        class="form-control"
-                                                        value="<?= (!$mostrarFormularioNuevoContrato && $contratoActual) ? $contratoActual['inicio_contrato'] : date('Y-m-d') ?>"
-                                                        required>
+                                                <div id="codigo-contrato-success" class="text-success"
+                                                    style="display: none; font-size: 12px; margin-top: 5px;">
+                                                    ✅ Código disponible
                                                 </div>
                                             </div>
 
-                                            <div class="form-col">
-                                                <div class="form-group">
-                                                    <label for="cod_tipo_contrato">Tipo de Contrato *</label>
-                                                    <select id="cod_tipo_contrato" name="cod_tipo_contrato" class="form-control"
-                                                        required>
-                                                        <option value="">Seleccionar tipo de contrato...</option>
-                                                        <?php
-                                                        $tiposContrato = obtenerTiposContrato();
-                                                        foreach ($tiposContrato as $tipo): ?>
-                                                                <option value="<?= $tipo['CodTipoContrato'] ?>"
-                                                                    <?= (!$mostrarFormularioNuevoContrato && $contratoActual && $contratoActual['cod_tipo_contrato'] == $tipo['CodTipoContrato']) ? 'selected' : '' ?>>
-                                                                    <?= htmlspecialchars($tipo['nombre']) ?>
-                                                                </option>
-                                                        <?php endforeach; ?>
-                                                    </select>
-                                                </div>
+                                            <div class="form-group">
+                                                <label for="cod_cargo">Cargo *</label>
+                                                <select id="cod_cargo" name="cod_cargo" class="form-control" required
+                                                    onchange="actualizarCategoriaYMostrar()">
+                                                    <option value="">Seleccionar cargo...</option>
+                                                    <?php
+                                                    $cargos = obtenerTodosCargos();
+                                                    foreach ($cargos as $cargo):
+                                                        // Determinar la categoría sugerida para este cargo
+                                                        $categoriaSugerida = '';
+                                                        $idCategoriaSugerida = '';
 
-                                                <div class="form-col">
-                                                    <div class="form-group">
-                                                        <label for="monto_salario">Salario Básico *</label>
-                                                        <input type="number" id="monto_salario" name="monto_salario"
-                                                            class="form-control" step="0.01" min="0"
-                                                            value="<?= (!$mostrarFormularioNuevoContrato && $contratoActual) ? ($contratoActual['salario_inicial'] ?? '') : '' ?>"
-                                                            required>
-                                                    </div>
-
-
-                                                </div>
-
-                                                <div class="form-group">
-                                                    <label for="sucursal">Tienda / Área *</label>
-                                                    <select id="sucursal" name="sucursal" class="form-control" required>
-                                                        <option value="">Seleccionar sucursal...</option>
-                                                        <?php
-                                                        $sucursales = obtenerTodasSucursales();
-                                                        foreach ($sucursales as $sucursal): ?>
-                                                                <option value="<?= $sucursal['codigo'] ?>"
-                                                                    <?= (!$mostrarFormularioNuevoContrato && $contratoActual && $contratoActual['cod_sucursal_contrato'] == $sucursal['codigo']) ? 'selected' : '' ?>>
-                                                                    <?= htmlspecialchars($sucursal['nombre']) ?>
-                                                                </option>
-                                                        <?php endforeach; ?>
-                                                    </select>
-                                                </div>
-                                                <div class="form-group">
-                                                    <label for="frecuencia_pago">Frecuencia de Pago *</label>
-                                                    <select id="frecuencia_pago" name="frecuencia_pago" class="form-control"
-                                                        required>
-                                                        <option value="quincenal" <?= (!$mostrarFormularioNuevoContrato && $contratoActual && ($contratoActual['frecuencia_pago'] ?? 'quincenal') == 'quincenal') ? 'selected' : '' ?>>Quincenal
+                                                        if ($cargo['CodNivelesCargos'] == 2) {
+                                                            $categoriaSugerida = ' (Categoría: Training)';
+                                                            $idCategoriaSugerida = 5; // ID de la categoría Operario en CategoriasOperarios
+                                                        } elseif ($cargo['CodNivelesCargos'] == 5) {
+                                                            $categoriaSugerida = ' (Categoría: Líder)';
+                                                            $idCategoriaSugerida = 1; // ID de la categoría Líder en CategoriasOperarios
+                                                        }
+                                                        ?>
+                                                        <option value="<?= $cargo['CodNivelesCargos'] ?>"
+                                                            data-categoria="<?= $idCategoriaSugerida ?>"
+                                                            <?= (!$mostrarFormularioNuevoContrato && $asignacionCargoActual && $asignacionCargoActual['CodNivelesCargos'] == $cargo['CodNivelesCargos']) ? 'selected' : '' ?>>
+                                                            <?= htmlspecialchars($cargo['Nombre']) ?>
+                                                            <?= $categoriaSugerida ?>
                                                         </option>
-                                                        <option value="mensual" <?= (!$mostrarFormularioNuevoContrato && $contratoActual && ($contratoActual['frecuencia_pago'] ?? '') == 'mensual') ? 'selected' : '' ?>>Mensual</option>
-                                                    </select>
+                                                    <?php endforeach; ?>
+                                                </select>
+                                                <div id="infoCategoria" class="categoria-info" style="display: none;">
+                                                    <i class="fas fa-info-circle"></i> <span id="textoCategoria">Categoría
+                                                        asignada
+                                                        automáticamente</span>
                                                 </div>
+                                            </div>
 
-                                                <div class="form-group" style="display: none;">
-                                                    <label for="foto_contrato">Foto del Contrato</label>
-                                                    <input type="file" id="foto_contrato" name="foto_contrato"
-                                                        class="form-control" accept="image/*,.pdf">
-                                                    <?php if (!$mostrarFormularioNuevoContrato && $contratoActual && !empty($contratoActual['foto'])): ?>
-                                                            <small style="color: green;">Ya existe un archivo subido:
-                                                                <?= htmlspecialchars(basename($contratoActual['foto'])) ?></small>
-                                                    <?php endif; ?>
-                                                </div>
+                                            <div class="form-group" style="display: none;">
+                                                <label for="id_categoria">Categoría</label>
+                                                <select id="id_categoria" name="id_categoria" class="form-control">
+                                                    <option value="">Seleccionar categoría...</option>
+                                                    <?php
+                                                    $categorias = obtenerTodasCategorias();
+                                                    foreach ($categorias as $categoria): ?>
+                                                        <option value="<?= $categoria['idCategoria'] ?>"
+                                                            <?= (!$mostrarFormularioNuevoContrato && $categoriaActual && $categoriaActual['idCategoria'] == $categoria['idCategoria']) ? 'selected' : '' ?>>
+                                                            <?= htmlspecialchars($categoria['NombreCategoria']) ?>
+                                                        </option>
+                                                    <?php endforeach; ?>
+                                                </select>
+                                            </div>
 
-                                                <div class="form-group" id="grupo_fecha_fin_contrato">
-                                                    <label for="fin_contrato">
-                                                        Fecha Fin de Contrato
-                                                        <small style="color: #6c757d;">
-                                                            (solo para contratos temporales)
-                                                        </small>
-                                                    </label>
-                                                    <input type="date" id="fin_contrato" name="fin_contrato"
-                                                        class="form-control"
-                                                        value="<?= (!$mostrarFormularioNuevoContrato && $contratoActual) ? ($contratoActual['fin_contrato'] ?? '') : '' ?>"
-                                                        <?= (!$mostrarFormularioNuevoContrato && $contratoActual && $contratoActual['cod_tipo_contrato'] != 1) ? 'disabled' : '' ?>>
-                                                </div>
+                                            <div class="form-group">
+                                                <label for="ciudad">Departamento/Ciudad de Contrato *</label>
+                                                <input type="text" id="ciudad" name="ciudad" class="form-control"
+                                                    value="<?= (!$mostrarFormularioNuevoContrato && $contratoActual) ? htmlspecialchars($contratoActual['ciudad']) : '' ?>"
+                                                    required>
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label for="inicio_contrato">Fecha de Inicio *</label>
+                                                <input type="date" id="inicio_contrato" name="inicio_contrato"
+                                                    class="form-control"
+                                                    value="<?= (!$mostrarFormularioNuevoContrato && $contratoActual) ? $contratoActual['inicio_contrato'] : date('Y-m-d') ?>"
+                                                    required>
                                             </div>
                                         </div>
 
-                                        <div class="form-group">
-                                            <label for="observaciones">Observaciones</label>
-                                            <textarea id="observaciones" name="observaciones" class="form-control"
-                                                rows="3"><?= (!$mostrarFormularioNuevoContrato && $contratoActual) ? htmlspecialchars($contratoActual['observaciones']) : '' ?></textarea>
-                                        </div>
+                                        <div class="form-col">
+                                            <div class="form-group">
+                                                <label for="cod_tipo_contrato">Tipo de Contrato *</label>
+                                                <select id="cod_tipo_contrato" name="cod_tipo_contrato" class="form-control"
+                                                    required>
+                                                    <option value="">Seleccionar tipo de contrato...</option>
+                                                    <?php
+                                                    $tiposContrato = obtenerTiposContrato();
+                                                    foreach ($tiposContrato as $tipo): ?>
+                                                        <option value="<?= $tipo['CodTipoContrato'] ?>"
+                                                            <?= (!$mostrarFormularioNuevoContrato && $contratoActual && $contratoActual['cod_tipo_contrato'] == $tipo['CodTipoContrato']) ? 'selected' : '' ?>>
+                                                            <?= htmlspecialchars($tipo['nombre']) ?>
+                                                        </option>
+                                                    <?php endforeach; ?>
+                                                </select>
+                                            </div>
 
-                                        <button type="submit" class="btn-submit">
-                                            <?= $mostrarFormularioNuevoContrato ? 'Crear Nuevo Contrato' : 'Actualizar Contrato' ?>
-                                        </button>
+                                            <div class="form-col">
+                                                <div class="form-group">
+                                                    <label for="monto_salario">Salario Básico *</label>
+                                                    <input type="number" id="monto_salario" name="monto_salario"
+                                                        class="form-control" step="0.01" min="0"
+                                                        value="<?= (!$mostrarFormularioNuevoContrato && $contratoActual) ? ($contratoActual['salario_inicial'] ?? '') : '' ?>"
+                                                        required>
+                                                </div>
 
-                                        <!-- Sección de Terminación de Contrato -->
-                                        <?php if (!$mostrarFormularioNuevoContrato && $contratoActual): ?>
-                                                <?php if (empty($contratoActual['fin_contrato']) || $contratoActual['fin_contrato'] >= date('Y-m-d')): ?>
-                                                        <button type="button" class="btn-submit" onclick="abrirModalTerminacion()"
-                                                            style="background-color: #dc3545; margin-left: 10px;">
-                                                            <i class="fas fa-times"></i> Finalizar Contrato
-                                                        </button>
-                                                <?php else: ?>
-                                                        <span style="color: #6c757d; font-style: italic;">Contrato ya finalizado</span>
+
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label for="sucursal">Tienda / Área *</label>
+                                                <select id="sucursal" name="sucursal" class="form-control" required>
+                                                    <option value="">Seleccionar sucursal...</option>
+                                                    <?php
+                                                    $sucursales = obtenerTodasSucursales();
+                                                    foreach ($sucursales as $sucursal): ?>
+                                                        <option value="<?= $sucursal['codigo'] ?>"
+                                                            <?= (!$mostrarFormularioNuevoContrato && $contratoActual && $contratoActual['cod_sucursal_contrato'] == $sucursal['codigo']) ? 'selected' : '' ?>>
+                                                            <?= htmlspecialchars($sucursal['nombre']) ?>
+                                                        </option>
+                                                    <?php endforeach; ?>
+                                                </select>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="frecuencia_pago">Frecuencia de Pago *</label>
+                                                <select id="frecuencia_pago" name="frecuencia_pago" class="form-control"
+                                                    required>
+                                                    <option value="quincenal" <?= (!$mostrarFormularioNuevoContrato && $contratoActual && ($contratoActual['frecuencia_pago'] ?? 'quincenal') == 'quincenal') ? 'selected' : '' ?>>Quincenal
+                                                    </option>
+                                                    <option value="mensual" <?= (!$mostrarFormularioNuevoContrato && $contratoActual && ($contratoActual['frecuencia_pago'] ?? '') == 'mensual') ? 'selected' : '' ?>>Mensual</option>
+                                                </select>
+                                            </div>
+
+                                            <div class="form-group" style="display: none;">
+                                                <label for="foto_contrato">Foto del Contrato</label>
+                                                <input type="file" id="foto_contrato" name="foto_contrato"
+                                                    class="form-control" accept="image/*,.pdf">
+                                                <?php if (!$mostrarFormularioNuevoContrato && $contratoActual && !empty($contratoActual['foto'])): ?>
+                                                    <small style="color: green;">Ya existe un archivo subido:
+                                                        <?= htmlspecialchars(basename($contratoActual['foto'])) ?></small>
                                                 <?php endif; ?>
-                                        <?php endif; ?>
-                                    </form>
+                                            </div>
 
-                                    <!-- Sección de Historial de Contratos -->
-                                    <div style="margin-top: 40px; border-top: 2px solid #6c757d; padding-top: 20px;">
-                                        <div
-                                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                                            <h3 style="color: #6c757d; margin: 0;">
-                                                Historial de Contratos
-                                                <span style="font-size: 0.8em; color: #0E544C;">
-                                                    (Total: <?= count($historialContratos) ?>)
-                                                </span>
-                                            </h3>
+                                            <div class="form-group" id="grupo_fecha_fin_contrato">
+                                                <label for="fin_contrato">
+                                                    Fecha Fin de Contrato
+                                                    <small style="color: #6c757d;">
+                                                        (solo para contratos temporales)
+                                                    </small>
+                                                </label>
+                                                <input type="date" id="fin_contrato" name="fin_contrato"
+                                                    class="form-control"
+                                                    value="<?= (!$mostrarFormularioNuevoContrato && $contratoActual) ? ($contratoActual['fin_contrato'] ?? '') : '' ?>"
+                                                    <?= (!$mostrarFormularioNuevoContrato && $contratoActual && $contratoActual['cod_tipo_contrato'] != 1) ? 'disabled' : '' ?>>
+                                            </div>
                                         </div>
-
-                                        <?php if (count($historialContratos) > 0): ?>
-                                                <div style="overflow-x: auto;">
-                                                    <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
-                                                        <thead>
-                                                            <tr style="background-color: #6c757d; color: white;">
-                                                                <th style="padding: 10px; text-align: left;">Código</th>
-                                                                <th style="padding: 10px; text-align: left;">Tipo</th>
-                                                                <th style="padding: 10px; text-align: left;">Cargo</th>
-                                                                <th style="padding: 10px; text-align: left; display:none;">Categoría
-                                                                </th>
-                                                                <th style="padding: 10px; text-align: left;">Inicio</th>
-                                                                <th style="padding: 10px; text-align: left;">Fin</th>
-                                                                <th style="padding: 10px; text-align: left;">Tiempo Restante</th>
-                                                                <th style="padding: 10px; text-align: left;">Duración</th>
-                                                                <th style="padding: 10px; text-align: left;">Estado</th>
-                                                                <th style="padding: 10px; text-align: left;">Fecha Salida</th>
-                                                                <th style="padding: 10px; text-align: left;">Fecha Liquidación</th>
-                                                                <th style="padding: 10px; text-align: center;">% Docs Obligatorios
-                                                                </th>
-                                                                <th style="padding: 10px; text-align: center;"></th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            <?php foreach ($historialContratos as $contrato):
-                                                                // Determinar si el contrato está finalizado (por fecha_salida)
-                                                                $estaFinalizado = contratoEstaFinalizado($contrato);
-                                                                $estaActivo = !$estaFinalizado && contratoEstaActivo($contrato);
-
-                                                                $estiloFila = '';
-                                                                $estado = '';
-
-                                                                if ($estaFinalizado) {
-                                                                    $estado = '<span style="color: #6c757d;">FINALIZADO</span>';
-                                                                } elseif ($estaActivo) {
-                                                                    $estiloFila = 'background-color: #e8f5e9;';
-                                                                    $estado = '<span style="color: green; font-weight: bold;">ACTIVO</span>';
-                                                                } else {
-                                                                    $estado = '<span style="color: #dc3545;">VENCIDO</span>';
-                                                                }
-
-                                                                // Obtener categoría del contrato desde CategoriasOperarios
-                                                                $categoriaContrato = obtenerCategoriaPorContrato($contrato['CodContrato']);
-
-                                                                // Calcular duración
-                                                                $inicio = new DateTime($contrato['inicio_contrato']);
-
-                                                                // Para la duración, usar fecha_salida si existe, sino fecha fin, sino fecha actual
-                                                                if ($estaFinalizado && !empty($contrato['fecha_salida'])) {
-                                                                    $fin = new DateTime($contrato['fecha_salida']);
-                                                                } elseif (!empty($contrato['fin_contrato']) && $contrato['fin_contrato'] != '0000-00-00') {
-                                                                    $fin = new DateTime($contrato['fin_contrato']);
-                                                                } else {
-                                                                    $fin = new DateTime(); // Fecha actual para contratos activos
-                                                                }
-
-                                                                $intervalo = $inicio->diff($fin);
-                                                                $duracion = $intervalo->format('%y años, %m meses, %d días');
-
-                                                                // Calcular tiempo restante usando tu función existente
-                                                                $tiempoRestante = calcularTiempoRestanteContrato(
-                                                                    $contrato['fin_contrato'],
-                                                                    $estaActivo
-                                                                );
-                                                                ?>
-                                                                    <tr style="border-bottom: 1px solid #ddd; <?= $estiloFila ?>">
-                                                                        <td style="padding: 10px;">
-                                                                            <?= !empty($contrato['codigo_manual_contrato']) ?
-                                                                                htmlspecialchars($contrato['codigo_manual_contrato']) :
-                                                                                '<span style="color: #6c757d; font-style: italic;">Sin código</span>' ?>
-                                                                        </td>
-                                                                        <td style="padding: 10px;">
-                                                                            <?= htmlspecialchars($contrato['tipo_contrato'] ?? 'No especificado') ?>
-                                                                        </td>
-                                                                        <td style="padding: 10px;">
-                                                                            <?= htmlspecialchars($contrato['cargo'] ?? 'No especificado') ?>
-                                                                        </td>
-                                                                        <td style="padding: 10px; display:none;">
-                                                                            <?= $categoriaContrato ? htmlspecialchars($categoriaContrato) : '<span style="color: #6c757d; font-style: italic;">No definida</span>' ?>
-                                                                        </td>
-                                                                        <td style="padding: 10px;">
-                                                                            <?= !empty($contrato['inicio_contrato']) ? date('d/m/Y', strtotime($contrato['inicio_contrato'])) : 'No definida' ?>
-                                                                        </td>
-                                                                        <!-- <td style="padding: 10px;"><?= !empty($contrato['fin_contrato']) ? date('d/m/Y', strtotime($contrato['fin_contrato'])) : 'No definida' ?></td> -->
-                                                                        <td style="padding: 10px;">
-                                                                            <?= !empty($contrato['fin_contrato']) && $contrato['fin_contrato'] != '0000-00-00' ?
-                                                                                date('d/m/Y', strtotime($contrato['fin_contrato'])) :
-                                                                                '<span style="color: #28a745; font-style: italic;">Indefinido</span>' ?>
-                                                                        </td>
-                                                                        <td style="padding: 10px;"><?= $tiempoRestante ?></td>
-                                                                        <td style="padding: 10px;"><?= $duracion ?></td>
-                                                                        <td style="padding: 10px;"><?= $estado ?></td>
-                                                                        <td style="padding: 10px;">
-                                                                            <?= !empty($contrato['fecha_salida']) && $contrato['fecha_salida'] != '0000-00-00' ?
-                                                                                date('d/m/Y', strtotime($contrato['fecha_salida'])) :
-                                                                                '<span style="color: #6c757d; font-style: italic;">No aplica</span>' ?>
-                                                                        </td>
-                                                                        <td style="padding: 10px;">
-                                                                            <?= !empty($contrato['fecha_liquidacion']) && $contrato['fecha_liquidacion'] != '0000-00-00' ?
-                                                                                date('d/m/Y', strtotime($contrato['fecha_liquidacion'])) :
-                                                                                '<span style="color: #6c757d; font-style: italic;">No definida</span>' ?>
-                                                                        </td>
-                                                                        <td style="padding: 10px; text-align: center;">
-                                                                            <?php
-                                                                            $porcentajeDocs = calcularPorcentajeDocumentosObligatoriosContrato($codOperario, $contrato['CodContrato']);
-                                                                            $porcentaje = $porcentajeDocs['porcentaje'];
-                                                                            $completados = $porcentajeDocs['completados'];
-                                                                            $total = $porcentajeDocs['total'];
-
-                                                                            // Determinar color según porcentaje
-                                                                            $color = '#dc3545'; // Rojo por defecto
-                                                                            if ($porcentaje == 100) {
-                                                                                $color = '#28a745'; // Verde
-                                                                            } elseif ($porcentaje >= 50) {
-                                                                                $color = '#ffc107'; // Amarillo
-                                                                            }
-                                                                            ?>
-                                                                            <div
-                                                                                style="display: flex; align-items: center; justify-content: center; gap: 5px;">
-                                                                                <div
-                                                                                    style="width: 60px; height: 20px; background: #e9ecef; border-radius: 10px; overflow: hidden; position: relative;">
-                                                                                    <div
-                                                                                        style="width: <?= $porcentaje ?>%; height: 100%; background: <?= $color ?>; transition: width 0.3s;">
-                                                                                    </div>
-                                                                                </div>
-                                                                                <span
-                                                                                    style="font-weight: bold; color: <?= $color ?>; font-size: 0.9em;">
-                                                                                    <?= $porcentaje ?>%
-                                                                                </span>
-                                                                            </div>
-                                                                            <small style="color: #6c757d; font-size: 0.8em;">
-                                                                                (<?= $completados ?>/<?= $total ?>)
-                                                                            </small>
-                                                                        </td>
-                                                                        <td style="padding: 10px; text-align: center;">
-                                                                            <?php if (!empty($contrato['foto'])): ?>
-                                                                                    <a href="<?= htmlspecialchars($contrato['foto']) ?>" target="_blank"
-                                                                                        class="btn-accion btn-editar" title="Ver contrato">
-                                                                                        <i class="fas fa-eye"></i>
-                                                                                    </a>
-                                                                            <?php endif; ?>
-                                                                            <?php if (!empty($contrato['foto_solicitud_renuncia'])): ?>
-                                                                                    <a href="<?= htmlspecialchars($contrato['foto_solicitud_renuncia']) ?>"
-                                                                                        target="_blank" class="btn-accion" title="Ver renuncia"
-                                                                                        style="color: #dc3545;">
-                                                                                        <i class="fas fa-file-alt"></i>
-                                                                                    </a>
-                                                                            <?php endif; ?>
-                                                                            <button type="button" class="btn-accion btn-editar"
-                                                                                onclick="abrirModalLiquidacion(<?= $contrato['CodContrato'] ?>, '<?= $contrato['fecha_liquidacion'] ?? '' ?>')"
-                                                                                title="Asignar/Editar Fecha de Liquidación">
-                                                                                <i class="fas fa-calendar-alt"></i>
-                                                                            </button>
-
-                                                                            <!-- NUEVO BOTÓN -->
-                                                                            <button type="button" class="btn-accion"
-                                                                                onclick="abrirModalEditarTerminacion(<?= $contrato['CodContrato'] ?>)"
-                                                                                title="Editar Información de Terminación"
-                                                                                style="color: #0E544C;">
-                                                                                <i class="fas fa-edit"></i>
-                                                                            </button>
-                                                                        </td>
-                                                                    </tr>
-                                                            <?php endforeach; ?>
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-                                        <?php else: ?>
-                                                <p style="text-align: center; color: #6c757d; padding: 20px;">No hay historial de
-                                                    contratos</p>
-                                        <?php endif; ?>
                                     </div>
 
-                                    <!-- Sección de Archivos Adjuntos -->
-                                    <div style="margin-top: 40px; border-top: 2px solid #6c757d; padding-top: 20px;">
-                                        <div
-                                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                                            <h3 style="color: #6c757d; margin: 0;">Archivos Adjuntos</h3>
-                                            <button type="button" class="btn-submit"
-                                                onclick="abrirModalAdjunto('<?= $pestaña_activa ?>')" style="margin: 0;">
-                                                <i class="fas fa-plus"></i> Agregar Archivo
+                                    <div class="form-group">
+                                        <label for="observaciones">Observaciones</label>
+                                        <textarea id="observaciones" name="observaciones" class="form-control"
+                                            rows="3"><?= (!$mostrarFormularioNuevoContrato && $contratoActual) ? htmlspecialchars($contratoActual['observaciones']) : '' ?></textarea>
+                                    </div>
+
+                                    <button type="submit" class="btn-submit">
+                                        <?= $mostrarFormularioNuevoContrato ? 'Crear Nuevo Contrato' : 'Actualizar Contrato' ?>
+                                    </button>
+
+                                    <!-- Sección de Terminación de Contrato -->
+                                    <?php if (!$mostrarFormularioNuevoContrato && $contratoActual): ?>
+                                        <?php if (empty($contratoActual['fin_contrato']) || $contratoActual['fin_contrato'] >= date('Y-m-d')): ?>
+                                            <button type="button" class="btn-submit" onclick="abrirModalTerminacion()"
+                                                style="background-color: #dc3545; margin-left: 10px;">
+                                                <i class="fas fa-times"></i> Finalizar Contrato
                                             </button>
-                                        </div>
+                                        <?php else: ?>
+                                            <span style="color: #6c757d; font-style: italic;">Contrato ya finalizado</span>
+                                        <?php endif; ?>
+                                    <?php endif; ?>
+                                </form>
 
-                                        <?php if (count($archivosAdjuntos) > 0): ?>
-                                                <div style="overflow-x: auto;">
-                                                    <table style="width: 100%; border-collapse: collapse;">
-                                                        <thead>
-                                                            <tr style="background-color: #6c757d; color: white;">
-                                                                <th style="padding: 10px; text-align: left;">Nombre</th>
-                                                                <th style="padding: 10px; text-align: left;">Descripción</th>
-                                                                <th style="padding: 10px; text-align: left; display:none;">Tamaño
-                                                                </th>
-                                                                <th style="padding: 10px; text-align: left;">Subido por</th>
-                                                                <th style="padding: 10px; text-align: left;">Fecha</th>
-                                                                <th style="padding: 10px; text-align: left;">Tipo de Documento</th>
-                                                                <th style="padding: 10px; text-align: left;">Contrato Asociado</th>
-                                                                <th style="padding: 10px; text-align: center;"></th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            <?php foreach ($archivosAdjuntos as $archivo):
-                                                                // Formatear tamaño del archivo
-                                                                $tamaño = $archivo['tamaño'];
-                                                                if ($tamaño < 1024) {
-                                                                    $tamañoFormateado = $tamaño . ' B';
-                                                                } elseif ($tamaño < 1048576) {
-                                                                    $tamañoFormateado = round($tamaño / 1024, 2) . ' KB';
-                                                                } else {
-                                                                    $tamañoFormateado = round($tamaño / 1048576, 2) . ' MB';
+                                <!-- Sección de Historial de Contratos -->
+                                <div style="margin-top: 40px; border-top: 2px solid #6c757d; padding-top: 20px;">
+                                    <div
+                                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                                        <h3 style="color: #6c757d; margin: 0;">
+                                            Historial de Contratos
+                                            <span style="font-size: 0.8em; color: #0E544C;">
+                                                (Total: <?= count($historialContratos) ?>)
+                                            </span>
+                                        </h3>
+                                    </div>
+
+                                    <?php if (count($historialContratos) > 0): ?>
+                                        <div style="overflow-x: auto;">
+                                            <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
+                                                <thead>
+                                                    <tr style="background-color: #6c757d; color: white;">
+                                                        <th style="padding: 10px; text-align: left;">Código</th>
+                                                        <th style="padding: 10px; text-align: left;">Tipo</th>
+                                                        <th style="padding: 10px; text-align: left;">Cargo</th>
+                                                        <th style="padding: 10px; text-align: left; display:none;">Categoría
+                                                        </th>
+                                                        <th style="padding: 10px; text-align: left;">Inicio</th>
+                                                        <th style="padding: 10px; text-align: left;">Fin</th>
+                                                        <th style="padding: 10px; text-align: left;">Tiempo Restante</th>
+                                                        <th style="padding: 10px; text-align: left;">Duración</th>
+                                                        <th style="padding: 10px; text-align: left;">Estado</th>
+                                                        <th style="padding: 10px; text-align: left;">Fecha Salida</th>
+                                                        <th style="padding: 10px; text-align: left;">Fecha Liquidación</th>
+                                                        <th style="padding: 10px; text-align: center;">% Docs Obligatorios
+                                                        </th>
+                                                        <th style="padding: 10px; text-align: center;"></th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <?php foreach ($historialContratos as $contrato):
+                                                        // Determinar si el contrato está finalizado (por fecha_salida)
+                                                        $estaFinalizado = contratoEstaFinalizado($contrato);
+                                                        $estaActivo = !$estaFinalizado && contratoEstaActivo($contrato);
+
+                                                        $estiloFila = '';
+                                                        $estado = '';
+
+                                                        if ($estaFinalizado) {
+                                                            $estado = '<span style="color: #6c757d;">FINALIZADO</span>';
+                                                        } elseif ($estaActivo) {
+                                                            $estiloFila = 'background-color: #e8f5e9;';
+                                                            $estado = '<span style="color: green; font-weight: bold;">ACTIVO</span>';
+                                                        } else {
+                                                            $estado = '<span style="color: #dc3545;">VENCIDO</span>';
+                                                        }
+
+                                                        // Obtener categoría del contrato desde CategoriasOperarios
+                                                        $categoriaContrato = obtenerCategoriaPorContrato($contrato['CodContrato']);
+
+                                                        // Calcular duración
+                                                        $inicio = new DateTime($contrato['inicio_contrato']);
+
+                                                        // Para la duración, usar fecha_salida si existe, sino fecha fin, sino fecha actual
+                                                        if ($estaFinalizado && !empty($contrato['fecha_salida'])) {
+                                                            $fin = new DateTime($contrato['fecha_salida']);
+                                                        } elseif (!empty($contrato['fin_contrato']) && $contrato['fin_contrato'] != '0000-00-00') {
+                                                            $fin = new DateTime($contrato['fin_contrato']);
+                                                        } else {
+                                                            $fin = new DateTime(); // Fecha actual para contratos activos
+                                                        }
+
+                                                        $intervalo = $inicio->diff($fin);
+                                                        $duracion = $intervalo->format('%y años, %m meses, %d días');
+
+                                                        // Calcular tiempo restante usando tu función existente
+                                                        $tiempoRestante = calcularTiempoRestanteContrato(
+                                                            $contrato['fin_contrato'],
+                                                            $estaActivo
+                                                        );
+                                                        ?>
+                                                        <tr style="border-bottom: 1px solid #ddd; <?= $estiloFila ?>">
+                                                            <td style="padding: 10px;">
+                                                                <?= !empty($contrato['codigo_manual_contrato']) ?
+                                                                    htmlspecialchars($contrato['codigo_manual_contrato']) :
+                                                                    '<span style="color: #6c757d; font-style: italic;">Sin código</span>' ?>
+                                                            </td>
+                                                            <td style="padding: 10px;">
+                                                                <?= htmlspecialchars($contrato['tipo_contrato'] ?? 'No especificado') ?>
+                                                            </td>
+                                                            <td style="padding: 10px;">
+                                                                <?= htmlspecialchars($contrato['cargo'] ?? 'No especificado') ?>
+                                                            </td>
+                                                            <td style="padding: 10px; display:none;">
+                                                                <?= $categoriaContrato ? htmlspecialchars($categoriaContrato) : '<span style="color: #6c757d; font-style: italic;">No definida</span>' ?>
+                                                            </td>
+                                                            <td style="padding: 10px;">
+                                                                <?= !empty($contrato['inicio_contrato']) ? date('d/m/Y', strtotime($contrato['inicio_contrato'])) : 'No definida' ?>
+                                                            </td>
+                                                            <!-- <td style="padding: 10px;"><?= !empty($contrato['fin_contrato']) ? date('d/m/Y', strtotime($contrato['fin_contrato'])) : 'No definida' ?></td> -->
+                                                            <td style="padding: 10px;">
+                                                                <?= !empty($contrato['fin_contrato']) && $contrato['fin_contrato'] != '0000-00-00' ?
+                                                                    date('d/m/Y', strtotime($contrato['fin_contrato'])) :
+                                                                    '<span style="color: #28a745; font-style: italic;">Indefinido</span>' ?>
+                                                            </td>
+                                                            <td style="padding: 10px;"><?= $tiempoRestante ?></td>
+                                                            <td style="padding: 10px;"><?= $duracion ?></td>
+                                                            <td style="padding: 10px;"><?= $estado ?></td>
+                                                            <td style="padding: 10px;">
+                                                                <?= !empty($contrato['fecha_salida']) && $contrato['fecha_salida'] != '0000-00-00' ?
+                                                                    date('d/m/Y', strtotime($contrato['fecha_salida'])) :
+                                                                    '<span style="color: #6c757d; font-style: italic;">No aplica</span>' ?>
+                                                            </td>
+                                                            <td style="padding: 10px;">
+                                                                <?= !empty($contrato['fecha_liquidacion']) && $contrato['fecha_liquidacion'] != '0000-00-00' ?
+                                                                    date('d/m/Y', strtotime($contrato['fecha_liquidacion'])) :
+                                                                    '<span style="color: #6c757d; font-style: italic;">No definida</span>' ?>
+                                                            </td>
+                                                            <td style="padding: 10px; text-align: center;">
+                                                                <?php
+                                                                $porcentajeDocs = calcularPorcentajeDocumentosObligatoriosContrato($codOperario, $contrato['CodContrato']);
+                                                                $porcentaje = $porcentajeDocs['porcentaje'];
+                                                                $completados = $porcentajeDocs['completados'];
+                                                                $total = $porcentajeDocs['total'];
+
+                                                                // Determinar color según porcentaje
+                                                                $color = '#dc3545'; // Rojo por defecto
+                                                                if ($porcentaje == 100) {
+                                                                    $color = '#28a745'; // Verde
+                                                                } elseif ($porcentaje >= 50) {
+                                                                    $color = '#ffc107'; // Amarillo
                                                                 }
                                                                 ?>
-                                                                    <tr style="border-bottom: 1px solid #ddd;">
-                                                                        <td style="padding: 10px;">
-                                                                            <?= htmlspecialchars($archivo['nombre_archivo']) ?>
-                                                                        </td>
-                                                                        <td style="padding: 10px;">
-                                                                            <?= htmlspecialchars($archivo['descripcion'] ?? '-') ?>
-                                                                        </td>
-                                                                        <td style="padding: 10px; display:none;"><?= $tamañoFormateado ?>
-                                                                        </td>
-                                                                        <td style="padding: 10px;">
-                                                                            <?= htmlspecialchars($archivo['nombre_usuario'] . ' ' . $archivo['apellido_usuario']) ?>
-                                                                        </td>
-                                                                        <td style="padding: 10px;">
-                                                                            <?= date('d/m/Y H:i', strtotime($archivo['fecha_subida'])) ?>
-                                                                        </td>
-                                                                        <td style="padding: 10px;">
-                                                                            <?php
-                                                                            if (!empty($archivo['tipo_documento'])) {
-                                                                                $tiposDocumentos = obtenerTiposDocumentosPorPestaña($pestaña_activa);
-                                                                                $todosTipos = array_merge($tiposDocumentos['obligatorios'], $tiposDocumentos['opcionales']);
-                                                                                echo htmlspecialchars($todosTipos[$archivo['tipo_documento']] ?? $archivo['tipo_documento']);
+                                                                <div
+                                                                    style="display: flex; align-items: center; justify-content: center; gap: 5px;">
+                                                                    <div
+                                                                        style="width: 60px; height: 20px; background: #e9ecef; border-radius: 10px; overflow: hidden; position: relative;">
+                                                                        <div
+                                                                            style="width: <?= $porcentaje ?>%; height: 100%; background: <?= $color ?>; transition: width 0.3s;">
+                                                                        </div>
+                                                                    </div>
+                                                                    <span
+                                                                        style="font-weight: bold; color: <?= $color ?>; font-size: 0.9em;">
+                                                                        <?= $porcentaje ?>%
+                                                                    </span>
+                                                                </div>
+                                                                <small style="color: #6c757d; font-size: 0.8em;">
+                                                                    (<?= $completados ?>/<?= $total ?>)
+                                                                </small>
+                                                            </td>
+                                                            <td style="padding: 10px; text-align: center;">
+                                                                <?php if (!empty($contrato['foto'])): ?>
+                                                                    <a href="<?= htmlspecialchars($contrato['foto']) ?>" target="_blank"
+                                                                        class="btn-accion btn-editar" title="Ver contrato">
+                                                                        <i class="fas fa-eye"></i>
+                                                                    </a>
+                                                                <?php endif; ?>
+                                                                <?php if (!empty($contrato['foto_solicitud_renuncia'])): ?>
+                                                                    <a href="<?= htmlspecialchars($contrato['foto_solicitud_renuncia']) ?>"
+                                                                        target="_blank" class="btn-accion" title="Ver renuncia"
+                                                                        style="color: #dc3545;">
+                                                                        <i class="fas fa-file-alt"></i>
+                                                                    </a>
+                                                                <?php endif; ?>
+                                                                <button type="button" class="btn-accion btn-editar"
+                                                                    onclick="abrirModalLiquidacion(<?= $contrato['CodContrato'] ?>, '<?= $contrato['fecha_liquidacion'] ?? '' ?>')"
+                                                                    title="Asignar/Editar Fecha de Liquidación">
+                                                                    <i class="fas fa-calendar-alt"></i>
+                                                                </button>
 
-                                                                                if ($archivo['obligatorio']) {
-                                                                                    echo ' <span style="color: #dc3545;" title="Documento Obligatorio">●</span>';
-                                                                                }
-                                                                            } else {
-                                                                                echo '<span style="color: #6c757d; font-style: italic;">Sin categorizar</span>';
-                                                                            }
-                                                                            ?>
-                                                                        </td>
-                                                                        <td style="padding: 10px;">
-                                                                            <?php
-                                                                            // Mostrar información del contrato usando codigo_manual_contrato
-                                                                            $pestañasConContrato = ['contrato', 'adendums', 'inss', 'salario', 'movimientos', 'categoria'];
-                                                                            if (in_array($pestaña_activa, $pestañasConContrato) && !empty($archivo['codigo_manual_contrato'])):
-                                                                                ?>
-                                                                                    <span
-                                                                                        style="font-weight: 500;"><?= htmlspecialchars($archivo['codigo_manual_contrato']) ?></span>
-                                                                                    <br>
-                                                                                    <small style="color: #6c757d;">
-                                                                                        <?= !empty($archivo['inicio_contrato']) ? date('d/m/Y', strtotime($archivo['inicio_contrato'])) : 'Fecha no disponible' ?>
-                                                                                        <?php if (!empty($archivo['fin_contrato']) && $archivo['fin_contrato'] != '0000-00-00'): ?>
-                                                                                                - <?= date('d/m/Y', strtotime($archivo['fin_contrato'])) ?>
-                                                                                        <?php else: ?>
-                                                                                                (Activo)
-                                                                                        <?php endif; ?>
-                                                                                    </small>
-                                                                                    <?php if (!empty($archivo['tipo_contrato'])): ?>
-                                                                                            <br>
-                                                                                            <small
-                                                                                                style="color: #0E544C;"><?= htmlspecialchars($archivo['tipo_contrato']) ?></small>
-                                                                                    <?php endif; ?>
-                                                                            <?php else: ?>
-                                                                                    <span style="color: #6c757d; font-style: italic;">
-                                                                                        <?= in_array($pestaña_activa, $pestañasConContrato) ? 'Sin contrato asociado' : 'No aplica' ?>
-                                                                                    </span>
-                                                                            <?php endif; ?>
-                                                                        </td>
-                                                                        <td style="padding: 10px; text-align: center;">
-                                                                            <a href="<?= htmlspecialchars($archivo['ruta_archivo']) ?>"
-                                                                                target="_blank" class="btn-accion btn-editar"
-                                                                                title="Ver archivo">
-                                                                                <i class="fas fa-eye"></i>
-                                                                            </a>
-                                                                            <form method="POST" action="" style="display: inline;">
-                                                                                <input type="hidden" name="accion_adjunto" value="eliminar">
-                                                                                <input type="hidden" name="id_adjunto"
-                                                                                    value="<?= $archivo['id'] ?>">
-                                                                                <input type="hidden" name="pestaña_adjunto"
-                                                                                    value="<?= $pestaña_activa ?>">
-                                                                                <button type="submit"
-                                                                                    onclick="return confirm('¿Está seguro de eliminar este archivo?')"
-                                                                                    class="btn-accion btn-eliminar" title="Eliminar archivo">
-                                                                                    <i class="fas fa-trash"></i>
-                                                                                </button>
-                                                                            </form>
-                                                                        </td>
-                                                                    </tr>
-                                                            <?php endforeach; ?>
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-                                        <?php else: ?>
-                                                <p style="text-align: center; color: #6c757d; padding: 20px;">No hay archivos
-                                                    adjuntos</p>
-                                        <?php endif; ?>
-                                    </div>
+                                                                <!-- NUEVO BOTÓN -->
+                                                                <button type="button" class="btn-accion"
+                                                                    onclick="abrirModalEditarTerminacion(<?= $contrato['CodContrato'] ?>)"
+                                                                    title="Editar Información de Terminación"
+                                                                    style="color: #0E544C;">
+                                                                    <i class="fas fa-edit"></i>
+                                                                </button>
+                                                            </td>
+                                                        </tr>
+                                                    <?php endforeach; ?>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    <?php else: ?>
+                                        <p style="text-align: center; color: #6c757d; padding: 20px;">No hay historial de
+                                            contratos</p>
+                                    <?php endif; ?>
                                 </div>
+
+                                <!-- Sección de Archivos Adjuntos -->
+                                <div style="margin-top: 40px; border-top: 2px solid #6c757d; padding-top: 20px;">
+                                    <div
+                                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                                        <h3 style="color: #6c757d; margin: 0;">Archivos Adjuntos</h3>
+                                        <button type="button" class="btn-submit"
+                                            onclick="abrirModalAdjunto('<?= $pestaña_activa ?>')" style="margin: 0;">
+                                            <i class="fas fa-plus"></i> Agregar Archivo
+                                        </button>
+                                    </div>
+
+                                    <?php if (count($archivosAdjuntos) > 0): ?>
+                                        <div style="overflow-x: auto;">
+                                            <table style="width: 100%; border-collapse: collapse;">
+                                                <thead>
+                                                    <tr style="background-color: #6c757d; color: white;">
+                                                        <th style="padding: 10px; text-align: left;">Nombre</th>
+                                                        <th style="padding: 10px; text-align: left;">Descripción</th>
+                                                        <th style="padding: 10px; text-align: left; display:none;">Tamaño
+                                                        </th>
+                                                        <th style="padding: 10px; text-align: left;">Subido por</th>
+                                                        <th style="padding: 10px; text-align: left;">Fecha</th>
+                                                        <th style="padding: 10px; text-align: left;">Tipo de Documento</th>
+                                                        <th style="padding: 10px; text-align: left;">Contrato Asociado</th>
+                                                        <th style="padding: 10px; text-align: center;"></th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <?php foreach ($archivosAdjuntos as $archivo):
+                                                        // Formatear tamaño del archivo
+                                                        $tamaño = $archivo['tamaño'];
+                                                        if ($tamaño < 1024) {
+                                                            $tamañoFormateado = $tamaño . ' B';
+                                                        } elseif ($tamaño < 1048576) {
+                                                            $tamañoFormateado = round($tamaño / 1024, 2) . ' KB';
+                                                        } else {
+                                                            $tamañoFormateado = round($tamaño / 1048576, 2) . ' MB';
+                                                        }
+                                                        ?>
+                                                        <tr style="border-bottom: 1px solid #ddd;">
+                                                            <td style="padding: 10px;">
+                                                                <?= htmlspecialchars($archivo['nombre_archivo']) ?>
+                                                            </td>
+                                                            <td style="padding: 10px;">
+                                                                <?= htmlspecialchars($archivo['descripcion'] ?? '-') ?>
+                                                            </td>
+                                                            <td style="padding: 10px; display:none;"><?= $tamañoFormateado ?>
+                                                            </td>
+                                                            <td style="padding: 10px;">
+                                                                <?= htmlspecialchars($archivo['nombre_usuario'] . ' ' . $archivo['apellido_usuario']) ?>
+                                                            </td>
+                                                            <td style="padding: 10px;">
+                                                                <?= date('d/m/Y H:i', strtotime($archivo['fecha_subida'])) ?>
+                                                            </td>
+                                                            <td style="padding: 10px;">
+                                                                <?php
+                                                                if (!empty($archivo['tipo_documento'])) {
+                                                                    $tiposDocumentos = obtenerTiposDocumentosPorPestaña($pestaña_activa);
+                                                                    $todosTipos = array_merge($tiposDocumentos['obligatorios'], $tiposDocumentos['opcionales']);
+                                                                    echo htmlspecialchars($todosTipos[$archivo['tipo_documento']] ?? $archivo['tipo_documento']);
+
+                                                                    if ($archivo['obligatorio']) {
+                                                                        echo ' <span style="color: #dc3545;" title="Documento Obligatorio">●</span>';
+                                                                    }
+                                                                } else {
+                                                                    echo '<span style="color: #6c757d; font-style: italic;">Sin categorizar</span>';
+                                                                }
+                                                                ?>
+                                                            </td>
+                                                            <td style="padding: 10px;">
+                                                                <?php
+                                                                // Mostrar información del contrato usando codigo_manual_contrato
+                                                                $pestañasConContrato = ['contrato', 'adendums', 'inss', 'salario', 'movimientos', 'categoria'];
+                                                                if (in_array($pestaña_activa, $pestañasConContrato) && !empty($archivo['codigo_manual_contrato'])):
+                                                                    ?>
+                                                                    <span
+                                                                        style="font-weight: 500;"><?= htmlspecialchars($archivo['codigo_manual_contrato']) ?></span>
+                                                                    <br>
+                                                                    <small style="color: #6c757d;">
+                                                                        <?= !empty($archivo['inicio_contrato']) ? date('d/m/Y', strtotime($archivo['inicio_contrato'])) : 'Fecha no disponible' ?>
+                                                                        <?php if (!empty($archivo['fin_contrato']) && $archivo['fin_contrato'] != '0000-00-00'): ?>
+                                                                            - <?= date('d/m/Y', strtotime($archivo['fin_contrato'])) ?>
+                                                                        <?php else: ?>
+                                                                            (Activo)
+                                                                        <?php endif; ?>
+                                                                    </small>
+                                                                    <?php if (!empty($archivo['tipo_contrato'])): ?>
+                                                                        <br>
+                                                                        <small
+                                                                            style="color: #0E544C;"><?= htmlspecialchars($archivo['tipo_contrato']) ?></small>
+                                                                    <?php endif; ?>
+                                                                <?php else: ?>
+                                                                    <span style="color: #6c757d; font-style: italic;">
+                                                                        <?= in_array($pestaña_activa, $pestañasConContrato) ? 'Sin contrato asociado' : 'No aplica' ?>
+                                                                    </span>
+                                                                <?php endif; ?>
+                                                            </td>
+                                                            <td style="padding: 10px; text-align: center;">
+                                                                <a href="<?= htmlspecialchars($archivo['ruta_archivo']) ?>"
+                                                                    target="_blank" class="btn-accion btn-editar"
+                                                                    title="Ver archivo">
+                                                                    <i class="fas fa-eye"></i>
+                                                                </a>
+                                                                <form method="POST" action="" style="display: inline;">
+                                                                    <input type="hidden" name="accion_adjunto" value="eliminar">
+                                                                    <input type="hidden" name="id_adjunto"
+                                                                        value="<?= $archivo['id'] ?>">
+                                                                    <input type="hidden" name="pestaña_adjunto"
+                                                                        value="<?= $pestaña_activa ?>">
+                                                                    <button type="submit"
+                                                                        onclick="return confirm('¿Está seguro de eliminar este archivo?')"
+                                                                        class="btn-accion btn-eliminar" title="Eliminar archivo">
+                                                                        <i class="fas fa-trash"></i>
+                                                                    </button>
+                                                                </form>
+                                                            </td>
+                                                        </tr>
+                                                    <?php endforeach; ?>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    <?php else: ?>
+                                        <p style="text-align: center; color: #6c757d; padding: 20px;">No hay archivos
+                                            adjuntos</p>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
                         <?php endif; ?>
 
                         <!-- Pestaña de Salario -->
                         <?php if ($esAdmin || verificarAccesoCargo([13, 16, 39, 30, 37, 28])): ?>
-                                <div id="salario" class="tab-pane <?= $pestaña_activa == 'salario' ? 'active' : '' ?>">
+                            <div id="salario" class="tab-pane <?= $pestaña_activa == 'salario' ? 'active' : '' ?>">
+                                <div
+                                    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                                    <h3 style="color: #0E544C; margin: 0;">Historial de Salarios</h3>
+                                    <button type="button" class="btn-submit" onclick="abrirModalSalario()"
+                                        style="margin: 0;">
+                                        <i class="fas fa-plus"></i> Agregar Salario Adicional
+                                    </button>
+                                </div>
+
+                                <?php if (count($salarios) > 0): ?>
+                                    <div style="overflow-x: auto;">
+                                        <table style="width: 100%; border-collapse: collapse;">
+                                            <thead>
+                                                <tr style="background-color: #0E544C; color: white;">
+                                                    <th style="padding: 10px; text-align: left;">Monto</th>
+                                                    <th style="padding: 10px; text-align: left;">Desde</th>
+                                                    <th style="padding: 10px; text-align: left;">Hasta</th>
+                                                    <th style="padding: 10px; text-align: left;">Frecuencia</th>
+                                                    <th style="padding: 10px; text-align: left;">Tipo</th>
+                                                    <th style="padding: 10px; text-align: left;">Observaciones</th>
+                                                    <th style="padding: 10px; text-align: center;"></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <?php foreach ($salarios as $salario): ?>
+                                                    <tr style="border-bottom: 1px solid #ddd;">
+                                                        <td style="padding: 10px;">C$ <?= number_format($salario['monto'], 2) ?>
+                                                        </td>
+                                                        <td style="padding: 10px;">
+                                                            <?= !empty($salario['inicio']) ? date('d/m/Y', strtotime($salario['inicio'])) : '' ?>
+                                                        </td>
+                                                        <td style="padding: 10px;">
+                                                            <?= !empty($salario['fin']) ? date('d/m/Y', strtotime($salario['fin'])) : 'Actual' ?>
+                                                        </td>
+                                                        <td style="padding: 10px;"><?= ucfirst($salario['frecuencia_pago']) ?>
+                                                        </td>
+                                                        <td style="padding: 10px;">
+                                                            <?= $salario['es_salario_inicial'] ? '<span style="color: #0E544C; font-weight: bold;">Salario Inicial</span>' : 'Salario Adicional' ?>
+                                                        </td>
+                                                        <td style="padding: 10px;">
+                                                            <?= htmlspecialchars($salario['observaciones'] ?? '') ?>
+                                                        </td>
+                                                        <td style="padding: 10px; text-align: center;">
+                                                            <!-- Solo permitir editar/eliminar salarios adicionales, no el inicial -->
+                                                            <?php if (!$salario['es_salario_inicial']): ?>
+                                                                <button type="button" class="btn-accion btn-editar"
+                                                                    onclick="editarSalario(<?= $salario['CodSalarioOperario'] ?>)">
+                                                                    <i class="fas fa-edit"></i>
+                                                                </button>
+                                                                <form method="POST" action="" style="display: inline;">
+                                                                    <input type="hidden" name="accion_salario" value="eliminar">
+                                                                    <input type="hidden" name="id_salario"
+                                                                        value="<?= $salario['CodSalarioOperario'] ?>">
+                                                                    <button style="display:none;" type="submit"
+                                                                        onclick="return confirm('¿Está seguro de eliminar este registro de salario?')"
+                                                                        class="btn-accion btn-eliminar">
+                                                                        <i class="fas fa-trash"></i>
+                                                                    </button>
+                                                                </form>
+                                                            <?php else: ?>
+                                                                <span style="color: #6c757d; font-style: italic;">Editar en pestaña
+                                                                    Contrato</span>
+                                                            <?php endif; ?>
+                                                        </td>
+                                                    </tr>
+                                                <?php endforeach; ?>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                <?php else: ?>
+                                    <p style="text-align: center; color: #6c757d; padding: 20px;">No hay registros de
+                                        salario</p>
+                                <?php endif; ?>
+
+                                <!-- Sección de Archivos Adjuntos -->
+                                <div style="margin-top: 40px; border-top: 2px solid #6c757d; padding-top: 20px;">
                                     <div
                                         style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                                        <h3 style="color: #0E544C; margin: 0;">Historial de Salarios</h3>
-                                        <button type="button" class="btn-submit" onclick="abrirModalSalario()"
-                                            style="margin: 0;">
-                                            <i class="fas fa-plus"></i> Agregar Salario Adicional
+                                        <h3 style="color: #6c757d; margin: 0;">Archivos Adjuntos</h3>
+                                        <button type="button" class="btn-submit"
+                                            onclick="abrirModalAdjunto('<?= $pestaña_activa ?>')" style="margin: 0;">
+                                            <i class="fas fa-plus"></i> Agregar Archivo
                                         </button>
                                     </div>
 
-                                    <?php if (count($salarios) > 0): ?>
-                                            <div style="overflow-x: auto;">
-                                                <table style="width: 100%; border-collapse: collapse;">
-                                                    <thead>
-                                                        <tr style="background-color: #0E544C; color: white;">
-                                                            <th style="padding: 10px; text-align: left;">Monto</th>
-                                                            <th style="padding: 10px; text-align: left;">Desde</th>
-                                                            <th style="padding: 10px; text-align: left;">Hasta</th>
-                                                            <th style="padding: 10px; text-align: left;">Frecuencia</th>
-                                                            <th style="padding: 10px; text-align: left;">Tipo</th>
-                                                            <th style="padding: 10px; text-align: left;">Observaciones</th>
-                                                            <th style="padding: 10px; text-align: center;"></th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        <?php foreach ($salarios as $salario): ?>
-                                                                <tr style="border-bottom: 1px solid #ddd;">
-                                                                    <td style="padding: 10px;">C$ <?= number_format($salario['monto'], 2) ?>
-                                                                    </td>
-                                                                    <td style="padding: 10px;">
-                                                                        <?= !empty($salario['inicio']) ? date('d/m/Y', strtotime($salario['inicio'])) : '' ?>
-                                                                    </td>
-                                                                    <td style="padding: 10px;">
-                                                                        <?= !empty($salario['fin']) ? date('d/m/Y', strtotime($salario['fin'])) : 'Actual' ?>
-                                                                    </td>
-                                                                    <td style="padding: 10px;"><?= ucfirst($salario['frecuencia_pago']) ?>
-                                                                    </td>
-                                                                    <td style="padding: 10px;">
-                                                                        <?= $salario['es_salario_inicial'] ? '<span style="color: #0E544C; font-weight: bold;">Salario Inicial</span>' : 'Salario Adicional' ?>
-                                                                    </td>
-                                                                    <td style="padding: 10px;">
-                                                                        <?= htmlspecialchars($salario['observaciones'] ?? '') ?>
-                                                                    </td>
-                                                                    <td style="padding: 10px; text-align: center;">
-                                                                        <!-- Solo permitir editar/eliminar salarios adicionales, no el inicial -->
-                                                                        <?php if (!$salario['es_salario_inicial']): ?>
-                                                                                <button type="button" class="btn-accion btn-editar"
-                                                                                    onclick="editarSalario(<?= $salario['CodSalarioOperario'] ?>)">
-                                                                                    <i class="fas fa-edit"></i>
-                                                                                </button>
-                                                                                <form method="POST" action="" style="display: inline;">
-                                                                                    <input type="hidden" name="accion_salario" value="eliminar">
-                                                                                    <input type="hidden" name="id_salario"
-                                                                                        value="<?= $salario['CodSalarioOperario'] ?>">
-                                                                                    <button style="display:none;" type="submit"
-                                                                                        onclick="return confirm('¿Está seguro de eliminar este registro de salario?')"
-                                                                                        class="btn-accion btn-eliminar">
-                                                                                        <i class="fas fa-trash"></i>
-                                                                                    </button>
-                                                                                </form>
-                                                                        <?php else: ?>
-                                                                                <span style="color: #6c757d; font-style: italic;">Editar en pestaña
-                                                                                    Contrato</span>
-                                                                        <?php endif; ?>
-                                                                    </td>
-                                                                </tr>
-                                                        <?php endforeach; ?>
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                    <?php else: ?>
-                                            <p style="text-align: center; color: #6c757d; padding: 20px;">No hay registros de
-                                                salario</p>
-                                    <?php endif; ?>
+                                    <?php if (count($archivosAdjuntos) > 0): ?>
+                                        <div style="overflow-x: auto;">
+                                            <table style="width: 100%; border-collapse: collapse;">
+                                                <thead>
+                                                    <tr style="background-color: #6c757d; color: white;">
+                                                        <th style="padding: 10px; text-align: left;">Nombre</th>
+                                                        <th style="padding: 10px; text-align: left;">Descripción</th>
+                                                        <th style="padding: 10px; text-align: left; display:none;">Tamaño
+                                                        </th>
+                                                        <th style="padding: 10px; text-align: left;">Subido por</th>
+                                                        <th style="padding: 10px; text-align: left;">Fecha</th>
+                                                        <th style="padding: 10px; text-align: left;">Tipo de Documento</th>
+                                                        <th style="padding: 10px; text-align: left;">Contrato Asociado</th>
+                                                        <th style="padding: 10px; text-align: center;"></th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <?php foreach ($archivosAdjuntos as $archivo):
+                                                        // Formatear tamaño del archivo
+                                                        $tamaño = $archivo['tamaño'];
+                                                        if ($tamaño < 1024) {
+                                                            $tamañoFormateado = $tamaño . ' B';
+                                                        } elseif ($tamaño < 1048576) {
+                                                            $tamañoFormateado = round($tamaño / 1024, 2) . ' KB';
+                                                        } else {
+                                                            $tamañoFormateado = round($tamaño / 1048576, 2) . ' MB';
+                                                        }
+                                                        ?>
+                                                        <tr style="border-bottom: 1px solid #ddd;">
+                                                            <td style="padding: 10px;">
+                                                                <?= htmlspecialchars($archivo['nombre_archivo']) ?>
+                                                            </td>
+                                                            <td style="padding: 10px;">
+                                                                <?= htmlspecialchars($archivo['descripcion'] ?? '-') ?>
+                                                            </td>
+                                                            <td style="padding: 10px; display:none;"><?= $tamañoFormateado ?>
+                                                            </td>
+                                                            <td style="padding: 10px;">
+                                                                <?= htmlspecialchars($archivo['nombre_usuario'] . ' ' . $archivo['apellido_usuario']) ?>
+                                                            </td>
+                                                            <td style="padding: 10px;">
+                                                                <?= date('d/m/Y H:i', strtotime($archivo['fecha_subida'])) ?>
+                                                            </td>
+                                                            <td style="padding: 10px;">
+                                                                <?php
+                                                                if (!empty($archivo['tipo_documento'])) {
+                                                                    $tiposDocumentos = obtenerTiposDocumentosPorPestaña($pestaña_activa);
+                                                                    $todosTipos = array_merge($tiposDocumentos['obligatorios'], $tiposDocumentos['opcionales']);
+                                                                    echo htmlspecialchars($todosTipos[$archivo['tipo_documento']] ?? $archivo['tipo_documento']);
 
-                                    <!-- Sección de Archivos Adjuntos -->
-                                    <div style="margin-top: 40px; border-top: 2px solid #6c757d; padding-top: 20px;">
-                                        <div
-                                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                                            <h3 style="color: #6c757d; margin: 0;">Archivos Adjuntos</h3>
-                                            <button type="button" class="btn-submit"
-                                                onclick="abrirModalAdjunto('<?= $pestaña_activa ?>')" style="margin: 0;">
-                                                <i class="fas fa-plus"></i> Agregar Archivo
-                                            </button>
-                                        </div>
-
-                                        <?php if (count($archivosAdjuntos) > 0): ?>
-                                                <div style="overflow-x: auto;">
-                                                    <table style="width: 100%; border-collapse: collapse;">
-                                                        <thead>
-                                                            <tr style="background-color: #6c757d; color: white;">
-                                                                <th style="padding: 10px; text-align: left;">Nombre</th>
-                                                                <th style="padding: 10px; text-align: left;">Descripción</th>
-                                                                <th style="padding: 10px; text-align: left; display:none;">Tamaño
-                                                                </th>
-                                                                <th style="padding: 10px; text-align: left;">Subido por</th>
-                                                                <th style="padding: 10px; text-align: left;">Fecha</th>
-                                                                <th style="padding: 10px; text-align: left;">Tipo de Documento</th>
-                                                                <th style="padding: 10px; text-align: left;">Contrato Asociado</th>
-                                                                <th style="padding: 10px; text-align: center;"></th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            <?php foreach ($archivosAdjuntos as $archivo):
-                                                                // Formatear tamaño del archivo
-                                                                $tamaño = $archivo['tamaño'];
-                                                                if ($tamaño < 1024) {
-                                                                    $tamañoFormateado = $tamaño . ' B';
-                                                                } elseif ($tamaño < 1048576) {
-                                                                    $tamañoFormateado = round($tamaño / 1024, 2) . ' KB';
+                                                                    if ($archivo['obligatorio']) {
+                                                                        echo ' <span style="color: #dc3545;" title="Documento Obligatorio">●</span>';
+                                                                    }
                                                                 } else {
-                                                                    $tamañoFormateado = round($tamaño / 1048576, 2) . ' MB';
+                                                                    echo '<span style="color: #6c757d; font-style: italic;">Sin categorizar</span>';
                                                                 }
                                                                 ?>
-                                                                    <tr style="border-bottom: 1px solid #ddd;">
-                                                                        <td style="padding: 10px;">
-                                                                            <?= htmlspecialchars($archivo['nombre_archivo']) ?>
-                                                                        </td>
-                                                                        <td style="padding: 10px;">
-                                                                            <?= htmlspecialchars($archivo['descripcion'] ?? '-') ?>
-                                                                        </td>
-                                                                        <td style="padding: 10px; display:none;"><?= $tamañoFormateado ?>
-                                                                        </td>
-                                                                        <td style="padding: 10px;">
-                                                                            <?= htmlspecialchars($archivo['nombre_usuario'] . ' ' . $archivo['apellido_usuario']) ?>
-                                                                        </td>
-                                                                        <td style="padding: 10px;">
-                                                                            <?= date('d/m/Y H:i', strtotime($archivo['fecha_subida'])) ?>
-                                                                        </td>
-                                                                        <td style="padding: 10px;">
-                                                                            <?php
-                                                                            if (!empty($archivo['tipo_documento'])) {
-                                                                                $tiposDocumentos = obtenerTiposDocumentosPorPestaña($pestaña_activa);
-                                                                                $todosTipos = array_merge($tiposDocumentos['obligatorios'], $tiposDocumentos['opcionales']);
-                                                                                echo htmlspecialchars($todosTipos[$archivo['tipo_documento']] ?? $archivo['tipo_documento']);
-
-                                                                                if ($archivo['obligatorio']) {
-                                                                                    echo ' <span style="color: #dc3545;" title="Documento Obligatorio">●</span>';
-                                                                                }
-                                                                            } else {
-                                                                                echo '<span style="color: #6c757d; font-style: italic;">Sin categorizar</span>';
-                                                                            }
-                                                                            ?>
-                                                                        </td>
-                                                                        <td style="padding: 10px;">
-                                                                            <?php
-                                                                            // Mostrar información del contrato usando codigo_manual_contrato
-                                                                            $pestañasConContrato = ['contrato', 'adendums', 'inss', 'salario', 'movimientos', 'categoria'];
-                                                                            if (in_array($pestaña_activa, $pestañasConContrato) && !empty($archivo['codigo_manual_contrato'])):
-                                                                                ?>
-                                                                                    <span
-                                                                                        style="font-weight: 500;"><?= htmlspecialchars($archivo['codigo_manual_contrato']) ?></span>
-                                                                                    <br>
-                                                                                    <small style="color: #6c757d;">
-                                                                                        <?= !empty($archivo['inicio_contrato']) ? date('d/m/Y', strtotime($archivo['inicio_contrato'])) : 'Fecha no disponible' ?>
-                                                                                        <?php if (!empty($archivo['fin_contrato']) && $archivo['fin_contrato'] != '0000-00-00'): ?>
-                                                                                                - <?= date('d/m/Y', strtotime($archivo['fin_contrato'])) ?>
-                                                                                        <?php else: ?>
-                                                                                                (Activo)
-                                                                                        <?php endif; ?>
-                                                                                    </small>
-                                                                                    <?php if (!empty($archivo['tipo_contrato'])): ?>
-                                                                                            <br>
-                                                                                            <small
-                                                                                                style="color: #0E544C;"><?= htmlspecialchars($archivo['tipo_contrato']) ?></small>
-                                                                                    <?php endif; ?>
-                                                                            <?php else: ?>
-                                                                                    <span style="color: #6c757d; font-style: italic;">
-                                                                                        <?= in_array($pestaña_activa, $pestañasConContrato) ? 'Sin contrato asociado' : 'No aplica' ?>
-                                                                                    </span>
-                                                                            <?php endif; ?>
-                                                                        </td>
-                                                                        <td style="padding: 10px; text-align: center;">
-                                                                            <a href="<?= htmlspecialchars($archivo['ruta_archivo']) ?>"
-                                                                                target="_blank" class="btn-accion btn-editar"
-                                                                                title="Ver archivo">
-                                                                                <i class="fas fa-eye"></i>
-                                                                            </a>
-                                                                            <form method="POST" action="" style="display: inline;">
-                                                                                <input type="hidden" name="accion_adjunto" value="eliminar">
-                                                                                <input type="hidden" name="id_adjunto"
-                                                                                    value="<?= $archivo['id'] ?>">
-                                                                                <input type="hidden" name="pestaña_adjunto"
-                                                                                    value="<?= $pestaña_activa ?>">
-                                                                                <button type="submit"
-                                                                                    onclick="return confirm('¿Está seguro de eliminar este archivo?')"
-                                                                                    class="btn-accion btn-eliminar" title="Eliminar archivo">
-                                                                                    <i class="fas fa-trash"></i>
-                                                                                </button>
-                                                                            </form>
-                                                                        </td>
-                                                                    </tr>
-                                                            <?php endforeach; ?>
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-                                        <?php else: ?>
-                                                <p style="text-align: center; color: #6c757d; padding: 20px;">No hay archivos
-                                                    adjuntos</p>
-                                        <?php endif; ?>
-                                    </div>
+                                                            </td>
+                                                            <td style="padding: 10px;">
+                                                                <?php
+                                                                // Mostrar información del contrato usando codigo_manual_contrato
+                                                                $pestañasConContrato = ['contrato', 'adendums', 'inss', 'salario', 'movimientos', 'categoria'];
+                                                                if (in_array($pestaña_activa, $pestañasConContrato) && !empty($archivo['codigo_manual_contrato'])):
+                                                                    ?>
+                                                                    <span
+                                                                        style="font-weight: 500;"><?= htmlspecialchars($archivo['codigo_manual_contrato']) ?></span>
+                                                                    <br>
+                                                                    <small style="color: #6c757d;">
+                                                                        <?= !empty($archivo['inicio_contrato']) ? date('d/m/Y', strtotime($archivo['inicio_contrato'])) : 'Fecha no disponible' ?>
+                                                                        <?php if (!empty($archivo['fin_contrato']) && $archivo['fin_contrato'] != '0000-00-00'): ?>
+                                                                            - <?= date('d/m/Y', strtotime($archivo['fin_contrato'])) ?>
+                                                                        <?php else: ?>
+                                                                            (Activo)
+                                                                        <?php endif; ?>
+                                                                    </small>
+                                                                    <?php if (!empty($archivo['tipo_contrato'])): ?>
+                                                                        <br>
+                                                                        <small
+                                                                            style="color: #0E544C;"><?= htmlspecialchars($archivo['tipo_contrato']) ?></small>
+                                                                    <?php endif; ?>
+                                                                <?php else: ?>
+                                                                    <span style="color: #6c757d; font-style: italic;">
+                                                                        <?= in_array($pestaña_activa, $pestañasConContrato) ? 'Sin contrato asociado' : 'No aplica' ?>
+                                                                    </span>
+                                                                <?php endif; ?>
+                                                            </td>
+                                                            <td style="padding: 10px; text-align: center;">
+                                                                <a href="<?= htmlspecialchars($archivo['ruta_archivo']) ?>"
+                                                                    target="_blank" class="btn-accion btn-editar"
+                                                                    title="Ver archivo">
+                                                                    <i class="fas fa-eye"></i>
+                                                                </a>
+                                                                <form method="POST" action="" style="display: inline;">
+                                                                    <input type="hidden" name="accion_adjunto" value="eliminar">
+                                                                    <input type="hidden" name="id_adjunto"
+                                                                        value="<?= $archivo['id'] ?>">
+                                                                    <input type="hidden" name="pestaña_adjunto"
+                                                                        value="<?= $pestaña_activa ?>">
+                                                                    <button type="submit"
+                                                                        onclick="return confirm('¿Está seguro de eliminar este archivo?')"
+                                                                        class="btn-accion btn-eliminar" title="Eliminar archivo">
+                                                                        <i class="fas fa-trash"></i>
+                                                                    </button>
+                                                                </form>
+                                                            </td>
+                                                        </tr>
+                                                    <?php endforeach; ?>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    <?php else: ?>
+                                        <p style="text-align: center; color: #6c757d; padding: 20px;">No hay archivos
+                                            adjuntos</p>
+                                    <?php endif; ?>
                                 </div>
+                            </div>
                         <?php endif; ?>
 
                         <!-- Pestaña de INSS -->
                         <?php if ($esAdmin || verificarAccesoCargo([13, 16, 39, 30, 37, 28])): ?>
-                                <div id="inss" class="tab-pane <?= $pestaña_activa == 'inss' ? 'active' : '' ?>">
-                                    <!-- Sección de Documentos Obligatorios Faltantes -->
-                                    <div
-                                        style="margin: 20px 0; padding: 15px; background: #fff3cd; border-radius: 8px; border: 1px solid #ffeaa7;">
-                                        <h4 style="color: #856404; margin-bottom: 15px;">
-                                            <i class="fas fa-exclamation-triangle"></i> Documentos Obligatorios Faltantes -
-                                            <?= obtenerNombrePestaña($pestaña_activa) ?>
-                                        </h4>
-
-                                        <?php
-                                        $documentosFaltantesPestana = obtenerDocumentosFaltantesPestana($codOperario, $pestaña_activa);
-                                        ?>
-
-                                        <?php if (!empty($documentosFaltantesPestana)): ?>
-                                                <ul style="color: #856404; margin: 0; padding-left: 20px;">
-                                                    <?php foreach ($documentosFaltantesPestana as $documento): ?>
-                                                            <li><?= htmlspecialchars($documento) ?></li>
-                                                    <?php endforeach; ?>
-                                                </ul>
-
-                                                <p style="color: #856404; margin: 15px 0 0 0; font-style: italic;">
-                                                    <i class="fas fa-info-circle"></i> Estos documentos deben ser subidos para
-                                                    completar la
-                                                    información.
-                                                </p>
-                                        <?php else: ?>
-                                                <div style="color: #155724; background: #d4edda; padding: 10px; border-radius: 4px;">
-                                                    <i class="fas fa-check-circle"></i> Todos los documentos obligatorios están
-                                                    completos para
-                                                    esta pestaña.
-                                                </div>
-                                        <?php endif; ?>
-                                    </div>
+                            <div id="inss" class="tab-pane <?= $pestaña_activa == 'inss' ? 'active' : '' ?>">
+                                <!-- Sección de Documentos Obligatorios Faltantes -->
+                                <div
+                                    style="margin: 20px 0; padding: 15px; background: #fff3cd; border-radius: 8px; border: 1px solid #ffeaa7;">
+                                    <h4 style="color: #856404; margin-bottom: 15px;">
+                                        <i class="fas fa-exclamation-triangle"></i> Documentos Obligatorios Faltantes -
+                                        <?= obtenerNombrePestaña($pestaña_activa) ?>
+                                    </h4>
 
                                     <?php
-                                    // Obtener datos del contrato actual con información INSS
-                                    $contratoConINSS = obtenerContratoConINSS($codOperario);
+                                    $documentosFaltantesPestana = obtenerDocumentosFaltantesPestana($codOperario, $pestaña_activa);
                                     ?>
 
-                                    <?php if (isset($_GET['confirmar']) && $_GET['confirmar'] == 1 && isset($_SESSION['confirmacion_inss'])): ?>
-                                            <div class="alert alert-warning">
-                                                <h4>Confirmación requerida</h4>
-                                                <p>Ya existe un salario INSS registrado para este colaborador. ¿Desea registrar un
-                                                    nuevo salario
-                                                    INSS?
-                                                    El registro anterior será finalizado automáticamente.</p>
-                                                <form method="POST" action="">
-                                                    <input type="hidden" name="pestaña" value="inss">
+                                    <?php if (!empty($documentosFaltantesPestana)): ?>
+                                        <ul style="color: #856404; margin: 0; padding-left: 20px;">
+                                            <?php foreach ($documentosFaltantesPestana as $documento): ?>
+                                                <li><?= htmlspecialchars($documento) ?></li>
+                                            <?php endforeach; ?>
+                                        </ul>
 
-                                                    <div class="form-row">
-                                                        <div class="form-col">
-                                                            <div class="form-group">
-                                                                <label for="codigo_inss">Número de Seguro INSS</label>
-                                                                <input type="text" id="codigo_inss" name="codigo_inss"
-                                                                    class="form-control"
-                                                                    value="<?= htmlspecialchars($colaborador['codigo_inss'] ?? '') ?>">
-                                                            </div>
-
-                                                            <div class="form-group">
-                                                                <label for="hospital_riesgo_laboral">Hospital Asignado para Riesgo
-                                                                    Laboral</label>
-                                                                <input type="text" id="hospital_riesgo_laboral"
-                                                                    name="hospital_riesgo_laboral" class="form-control"
-                                                                    value="<?= htmlspecialchars($colaborador['hospital_riesgo_laboral'] ?? '') ?>">
-                                                            </div>
-                                                        </div>
-
-                                                        <div class="form-col">
-                                                            <div class="form-group">
-                                                                <label for="numero_planilla">Número de Planilla</label>
-                                                                <select id="numero_planilla" name="numero_planilla"
-                                                                    class="form-control">
-                                                                    <option value="">Seleccionar planilla...</option>
-                                                                    <?php foreach ($planillasPatronales as $planilla): ?>
-                                                                            <option value="<?= $planilla['CodPlanilla'] ?>" <?= ($contratoConINSS && $contratoConINSS['numero_planilla'] == $planilla['CodPlanilla']) ? 'selected' : '' ?>>
-                                                                                <?= htmlspecialchars($planilla['nombre_planilla']) ?>
-                                                                            </option>
-                                                                    <?php endforeach; ?>
-                                                                </select>
-                                                            </div>
-
-                                                            <div class="form-group">
-                                                                <label for="hospital_inss">Hospital Asociado</label>
-                                                                <input type="text" id="hospital_inss" name="hospital_inss"
-                                                                    class="form-control"
-                                                                    value="<?= $contratoConINSS ? htmlspecialchars($contratoConINSS['hospital_inss'] ?? '') : '' ?>">
-                                                            </div>
-                                                        </div>
-                                                    </div>
-
-                                                    <button type="submit" class="btn-submit">Guardar Cambios INSS</button>
-                                                </form>
-                                            </div>
+                                        <p style="color: #856404; margin: 15px 0 0 0; font-style: italic;">
+                                            <i class="fas fa-info-circle"></i> Estos documentos deben ser subidos para
+                                            completar la
+                                            información.
+                                        </p>
+                                    <?php else: ?>
+                                        <div style="color: #155724; background: #d4edda; padding: 10px; border-radius: 4px;">
+                                            <i class="fas fa-check-circle"></i> Todos los documentos obligatorios están
+                                            completos para
+                                            esta pestaña.
+                                        </div>
                                     <?php endif; ?>
-
-                                    <form method="POST" action="">
-                                        <input type="hidden" name="pestaña" value="inss">
-
-                                        <div class="form-row">
-                                            <div class="form-col">
-                                                <div class="form-group">
-                                                    <label for="codigo_inss">Número de Seguro INSS</label>
-                                                    <input type="text" id="codigo_inss" name="codigo_inss" class="form-control"
-                                                        value="<?= htmlspecialchars($colaborador['codigo_inss'] ?? '') ?>">
-                                                </div>
-
-                                                <div class="form-group">
-                                                    <label for="hospital_riesgo_laboral">Hospital Asignado para Riesgo
-                                                        Laboral</label>
-                                                    <input type="text" id="hospital_riesgo_laboral"
-                                                        name="hospital_riesgo_laboral" class="form-control"
-                                                        value="<?= htmlspecialchars($colaborador['hospital_riesgo_laboral'] ?? '') ?>">
-                                                </div>
-                                            </div>
-
-                                            <div class="form-col">
-                                                <div class="form-group">
-                                                    <label for="numero_planilla">Número de Planilla</label>
-                                                    <select id="numero_planilla" name="numero_planilla" class="form-control">
-                                                        <option value="">Seleccionar planilla...</option>
-                                                        <?php foreach ($planillasPatronales as $planilla): ?>
-                                                                <option value="<?= $planilla['CodPlanilla'] ?>" <?= ($contratoConINSS && $contratoConINSS['numero_planilla'] == $planilla['CodPlanilla']) ? 'selected' : '' ?>>
-                                                                    <?= htmlspecialchars($planilla['nombre_planilla']) ?>
-                                                                </option>
-                                                        <?php endforeach; ?>
-                                                    </select>
-                                                </div>
-
-                                                <div class="form-group">
-                                                    <label for="hospital_inss">Hospital Asociado</label>
-                                                    <input type="text" id="hospital_inss" name="hospital_inss"
-                                                        class="form-control"
-                                                        value="<?= $contratoConINSS ? htmlspecialchars($contratoConINSS['hospital_inss'] ?? '') : '' ?>">
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <button type="submit" class="btn-submit">Guardar Cambios INSS</button>
-                                    </form>
-
-                                    <div
-                                        style="display: flex; justify-content: space-between; align-items: center; margin: 30px 0 20px 0; display:none;">
-                                        <h3 style="color: #0E544C; margin: 0;">Historial de Salarios INSS</h3>
-                                        <button type="button" class="btn-submit" onclick="abrirModalSalarioINSS()"
-                                            style="margin: 0;">
-                                            <i class="fas fa-plus"></i> Agregar Salario INSS
-                                        </button>
-                                    </div>
-
-                                    <div style="display:none;">
-                                        <?php if (count($salariosINSS) > 0): ?>
-                                                <div style="overflow-x: auto;">
-                                                    <table style="width: 100%; border-collapse: collapse;">
-                                                        <thead>
-                                                            <tr style="background-color: #0E544C; color: white;">
-                                                                <th style="padding: 10px; text-align: left;">Salario INSS</th>
-                                                                <th style="padding: 10px; text-align: left;">Inicio</th>
-                                                                <th style="padding: 10px; text-align: left;">Final</th>
-                                                                <th style="padding: 10px; text-align: left;">Observaciones</th>
-                                                                <th style="padding: 10px; text-align: left;"></th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            <?php foreach ($salariosINSS as $salario): ?>
-                                                                    <tr style="border-bottom: 1px solid #ddd;">
-                                                                        <td style="padding: 10px;">C$
-                                                                            <?= number_format($salario['monto_salario_inss'], 2) ?>
-                                                                        </td>
-                                                                        <td style="padding: 10px;">
-                                                                            <?= !empty($salario['inicio']) ? date('d/m/Y', strtotime($salario['inicio'])) : '' ?>
-                                                                        </td>
-                                                                        <td style="padding: 10px;">
-                                                                            <?= !empty($salario['final']) ? date('d/m/Y', strtotime($salario['final'])) : 'Actual' ?>
-                                                                        </td>
-                                                                        <td style="padding: 10px;">
-                                                                            <?= htmlspecialchars($salario['observaciones_inss'] ?? '') ?>
-                                                                        </td>
-                                                                        <td style="padding: 10px; text-align: center;">
-                                                                            <button type="button" class="btn-accion btn-editar"
-                                                                                onclick="editarSalarioINSS(<?= $salario['id'] ?>)">
-                                                                                <i class="fas fa-edit"></i>
-                                                                            </button>
-                                                                        </td>
-                                                                    </tr>
-                                                            <?php endforeach; ?>
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-                                        <?php else: ?>
-                                                <p style="text-align: center; color: #6c757d; padding: 20px;">No hay registros de
-                                                    salario INSS
-                                                </p>
-                                        <?php endif; ?>
-                                    </div>
-
-                                    <!-- Sección de Archivos Adjuntos -->
-                                    <div style="margin-top: 40px; border-top: 2px solid #6c757d; padding-top: 20px;">
-                                        <div
-                                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                                            <h3 style="color: #6c757d; margin: 0;">Archivos Adjuntos</h3>
-                                            <button type="button" class="btn-submit"
-                                                onclick="abrirModalAdjunto('<?= $pestaña_activa ?>')" style="margin: 0;">
-                                                <i class="fas fa-plus"></i> Agregar Archivo
-                                            </button>
-                                        </div>
-
-                                        <?php if (count($archivosAdjuntos) > 0): ?>
-                                                <div style="overflow-x: auto;">
-                                                    <table style="width: 100%; border-collapse: collapse;">
-                                                        <thead>
-                                                            <tr style="background-color: #6c757d; color: white;">
-                                                                <th style="padding: 10px; text-align: left;">Nombre</th>
-                                                                <th style="padding: 10px; text-align: left;">Descripción</th>
-                                                                <th style="padding: 10px; text-align: left; display:none;">Tamaño
-                                                                </th>
-                                                                <th style="padding: 10px; text-align: left;">Subido por</th>
-                                                                <th style="padding: 10px; text-align: left;">Fecha</th>
-                                                                <th style="padding: 10px; text-align: left;">Tipo de Documento</th>
-                                                                <th style="padding: 10px; text-align: left;">Contrato Asociado</th>
-                                                                <th style="padding: 10px; text-align: center;"></th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            <?php foreach ($archivosAdjuntos as $archivo):
-                                                                $tamaño = $archivo['tamaño'];
-                                                                if ($tamaño < 1024) {
-                                                                    $tamañoFormateado = $tamaño . ' B';
-                                                                } elseif ($tamaño < 1048576) {
-                                                                    $tamañoFormateado = round($tamaño / 1024, 2) . ' KB';
-                                                                } else {
-                                                                    $tamañoFormateado = round($tamaño / 1048576, 2) . ' MB';
-                                                                }
-                                                                ?>
-                                                                    <tr style="border-bottom: 1px solid #ddd;">
-                                                                        <td style="padding: 10px;">
-                                                                            <?= htmlspecialchars($archivo['nombre_archivo']) ?>
-                                                                        </td>
-                                                                        <td style="padding: 10px;">
-                                                                            <?= htmlspecialchars($archivo['descripcion'] ?? '-') ?>
-                                                                        </td>
-                                                                        <td style="padding: 10px; display:none;"><?= $tamañoFormateado ?>
-                                                                        </td>
-                                                                        <td style="padding: 10px;">
-                                                                            <?= htmlspecialchars($archivo['nombre_usuario'] . ' ' . $archivo['apellido_usuario']) ?>
-                                                                        </td>
-                                                                        <td style="padding: 10px;">
-                                                                            <?= date('d/m/Y H:i', strtotime($archivo['fecha_subida'])) ?>
-                                                                        </td>
-                                                                        <td style="padding: 10px;">
-                                                                            <?php
-                                                                            if (!empty($archivo['tipo_documento'])) {
-                                                                                $tiposDocumentos = obtenerTiposDocumentosPorPestaña($pestaña_activa);
-                                                                                $todosTipos = array_merge($tiposDocumentos['obligatorios'], $tiposDocumentos['opcionales']);
-                                                                                echo htmlspecialchars($todosTipos[$archivo['tipo_documento']] ?? $archivo['tipo_documento']);
-
-                                                                                if ($archivo['obligatorio']) {
-                                                                                    echo ' <span style="color: #dc3545;" title="Documento Obligatorio">●</span>';
-                                                                                }
-                                                                            } else {
-                                                                                echo '<span style="color: #6c757d; font-style: italic;">Sin categorizar</span>';
-                                                                            }
-                                                                            ?>
-                                                                        </td>
-                                                                        <td style="padding: 10px;">
-                                                                            <?php
-                                                                            // Mostrar información del contrato usando codigo_manual_contrato
-                                                                            $pestañasConContrato = ['contrato', 'adendums', 'inss', 'salario', 'movimientos', 'categoria'];
-                                                                            if (in_array($pestaña_activa, $pestañasConContrato) && !empty($archivo['codigo_manual_contrato'])):
-                                                                                ?>
-                                                                                    <span
-                                                                                        style="font-weight: 500;"><?= htmlspecialchars($archivo['codigo_manual_contrato']) ?></span>
-                                                                                    <br>
-                                                                                    <small style="color: #6c757d;">
-                                                                                        <?= !empty($archivo['inicio_contrato']) ? date('d/m/Y', strtotime($archivo['inicio_contrato'])) : 'Fecha no disponible' ?>
-                                                                                        <?php if (!empty($archivo['fin_contrato']) && $archivo['fin_contrato'] != '0000-00-00'): ?>
-                                                                                                - <?= date('d/m/Y', strtotime($archivo['fin_contrato'])) ?>
-                                                                                        <?php else: ?>
-                                                                                                (Activo)
-                                                                                        <?php endif; ?>
-                                                                                    </small>
-                                                                                    <?php if (!empty($archivo['tipo_contrato'])): ?>
-                                                                                            <br>
-                                                                                            <small
-                                                                                                style="color: #0E544C;"><?= htmlspecialchars($archivo['tipo_contrato']) ?></small>
-                                                                                    <?php endif; ?>
-                                                                            <?php else: ?>
-                                                                                    <span style="color: #6c757d; font-style: italic;">
-                                                                                        <?= in_array($pestaña_activa, $pestañasConContrato) ? 'Sin contrato asociado' : 'No aplica' ?>
-                                                                                    </span>
-                                                                            <?php endif; ?>
-                                                                        </td>
-                                                                        <td style="padding: 10px; text-align: center;">
-                                                                            <a href="<?= htmlspecialchars($archivo['ruta_archivo']) ?>"
-                                                                                target="_blank" class="btn-accion btn-editar"
-                                                                                title="Ver archivo">
-                                                                                <i class="fas fa-eye"></i>
-                                                                            </a>
-                                                                            <form method="POST" action="" style="display: inline;">
-                                                                                <input type="hidden" name="accion_adjunto" value="eliminar">
-                                                                                <input type="hidden" name="id_adjunto"
-                                                                                    value="<?= $archivo['id'] ?>">
-                                                                                <input type="hidden" name="pestaña_adjunto"
-                                                                                    value="<?= $pestaña_activa ?>">
-                                                                                <button type="submit"
-                                                                                    onclick="return confirm('¿Está seguro de eliminar este archivo?')"
-                                                                                    class="btn-accion btn-eliminar" title="Eliminar archivo">
-                                                                                    <i class="fas fa-trash"></i>
-                                                                                </button>
-                                                                            </form>
-                                                                        </td>
-                                                                    </tr>
-                                                            <?php endforeach; ?>
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-                                        <?php else: ?>
-                                                <p style="text-align: center; color: #6c757d; padding: 20px;">No hay archivos
-                                                    adjuntos</p>
-                                        <?php endif; ?>
-                                    </div>
                                 </div>
-                        <?php endif; ?>
 
-                        <!-- Pestaña de Movimientos -->
-                        <?php if ($esAdmin || verificarAccesoCargo([13, 16, 39, 30, 37, 28])): ?>
-                                <div id="movimientos" class="tab-pane <?= $pestaña_activa == 'movimientos' ? 'active' : '' ?>">
-                                    <?php
-                                    $historialCargos = obtenerHistorialCargos($codOperario);
-                                    $cargosDisponibles = obtenerTodosCargos();
-                                    $sucursales = obtenerTodasSucursales();
-                                    ?>
+                                <?php
+                                // Obtener datos del contrato actual con información INSS
+                                $contratoConINSS = obtenerContratoConINSS($codOperario);
+                                ?>
 
-                                    <div style="margin-bottom: 30px;">
-                                        <h3 style="color: #0E544C; margin-bottom: 15px;">Agregar Nuevo Cargo</h3>
-
-                                        <?php if ($contratoActual): ?>
-                                                <div class="readonly-info" style="margin-bottom: 20px;">
-                                                    <p><strong>Contrato Asociado:</strong>
-                                                        <?= htmlspecialchars($contratoActual['codigo_manual_contrato'] ?? 'Sin código') ?>
-                                                    </p>
-                                                    <p><strong>Los movimientos se asociarán automáticamente a este contrato</strong>
-                                                    </p>
-                                                </div>
-                                        <?php endif; ?>
-
+                                <?php if (isset($_GET['confirmar']) && $_GET['confirmar'] == 1 && isset($_SESSION['confirmacion_inss'])): ?>
+                                    <div class="alert alert-warning">
+                                        <h4>Confirmación requerida</h4>
+                                        <p>Ya existe un salario INSS registrado para este colaborador. ¿Desea registrar un
+                                            nuevo salario
+                                            INSS?
+                                            El registro anterior será finalizado automáticamente.</p>
                                         <form method="POST" action="">
-                                            <input type="hidden" name="pestaña" value="movimientos">
-                                            <input type="hidden" name="accion_movimiento" value="agregar">
+                                            <input type="hidden" name="pestaña" value="inss">
 
                                             <div class="form-row">
                                                 <div class="form-col">
                                                     <div class="form-group">
-                                                        <label for="nuevo_cod_cargo">Cargo *</label>
-                                                        <select id="nuevo_cod_cargo" name="cod_cargo" class="form-control"
-                                                            required>
-                                                            <option value="">Seleccionar cargo...</option>
-                                                            <?php foreach ($cargosDisponibles as $cargo): ?>
-                                                                    <option value="<?= $cargo['CodNivelesCargos'] ?>">
-                                                                        <?= htmlspecialchars($cargo['Nombre']) ?>
-                                                                    </option>
-                                                            <?php endforeach; ?>
-                                                        </select>
+                                                        <label for="codigo_inss">Número de Seguro INSS</label>
+                                                        <input type="text" id="codigo_inss" name="codigo_inss"
+                                                            class="form-control"
+                                                            value="<?= htmlspecialchars($colaborador['codigo_inss'] ?? '') ?>">
                                                     </div>
 
                                                     <div class="form-group">
-                                                        <label for="nuevo_sucursal">Sucursal *</label>
-                                                        <select id="nuevo_sucursal" name="sucursal" class="form-control"
-                                                            required>
-                                                            <option value="">Seleccionar sucursal...</option>
-                                                            <?php foreach ($sucursales as $sucursal): ?>
-                                                                    <option value="<?= $sucursal['codigo'] ?>">
-                                                                        <?= htmlspecialchars($sucursal['nombre']) ?>
-                                                                    </option>
-                                                            <?php endforeach; ?>
-                                                        </select>
+                                                        <label for="hospital_riesgo_laboral">Hospital Asignado para Riesgo
+                                                            Laboral</label>
+                                                        <input type="text" id="hospital_riesgo_laboral"
+                                                            name="hospital_riesgo_laboral" class="form-control"
+                                                            value="<?= htmlspecialchars($colaborador['hospital_riesgo_laboral'] ?? '') ?>">
                                                     </div>
                                                 </div>
 
                                                 <div class="form-col">
                                                     <div class="form-group">
-                                                        <label for="nuevo_fecha_inicio">Fecha de Inicio *</label>
-                                                        <input type="date" id="nuevo_fecha_inicio" name="fecha_inicio"
-                                                            class="form-control" value="<?= date('Y-m-d') ?>" required>
+                                                        <label for="numero_planilla">Número de Planilla</label>
+                                                        <select id="numero_planilla" name="numero_planilla"
+                                                            class="form-control">
+                                                            <option value="">Seleccionar planilla...</option>
+                                                            <?php foreach ($planillasPatronales as $planilla): ?>
+                                                                <option value="<?= $planilla['CodPlanilla'] ?>" <?= ($contratoConINSS && $contratoConINSS['numero_planilla'] == $planilla['CodPlanilla']) ? 'selected' : '' ?>>
+                                                                    <?= htmlspecialchars($planilla['nombre_planilla']) ?>
+                                                                </option>
+                                                            <?php endforeach; ?>
+                                                        </select>
                                                     </div>
 
-                                                    <!-- Tipo de contrato oculto con valor 3 -->
-                                                    <input type="hidden" name="tipo_contrato" value="3">
+                                                    <div class="form-group">
+                                                        <label for="hospital_inss">Hospital Asociado</label>
+                                                        <input type="text" id="hospital_inss" name="hospital_inss"
+                                                            class="form-control"
+                                                            value="<?= $contratoConINSS ? htmlspecialchars($contratoConINSS['hospital_inss'] ?? '') : '' ?>">
+                                                    </div>
                                                 </div>
                                             </div>
 
-                                            <button type="submit" class="btn-submit">Agregar Cargo</button>
+                                            <button type="submit" class="btn-submit">Guardar Cambios INSS</button>
                                         </form>
                                     </div>
+                                <?php endif; ?>
 
-                                    <div style="border-top: 2px solid #0E544C; padding-top: 20px;">
-                                        <h3 style="color: #0E544C; margin-bottom: 15px;">Historial de Cargos</h3>
+                                <form method="POST" action="">
+                                    <input type="hidden" name="pestaña" value="inss">
 
-                                        <?php if (count($historialCargos) > 0): ?>
-                                                <div style="overflow-x: auto;">
-                                                    <table style="width: 100%; border-collapse: collapse;">
-                                                        <thead>
-                                                            <tr style="background-color: #0E544C; color: white;">
-                                                                <th style="padding: 10px; text-align: left;">Cargo</th>
-                                                                <th style="padding: 10px; text-align: left;">Sucursal</th>
-                                                                <th style="padding: 10px; text-align: left;">Fecha Inicio</th>
-                                                                <th style="padding: 10px; text-align: left;">Fecha Fin</th>
-                                                                <th style="padding: 10px; text-align: left;">Tipo Contrato</th>
-                                                                <th style="padding: 10px; text-align: center;"></th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            <?php foreach ($historialCargos as $cargo): ?>
-                                                                    <tr style="border-bottom: 1px solid #ddd;">
-                                                                        <td style="padding: 10px;">
-                                                                            <?= htmlspecialchars($cargo['nombre_cargo'] ?? 'No definido') ?>
-                                                                        </td>
-                                                                        <td style="padding: 10px;">
-                                                                            <?= htmlspecialchars($cargo['nombre_sucursal'] ?? 'No definida') ?>
-                                                                        </td>
-                                                                        <td style="padding: 10px;">
-                                                                            <?= !empty($cargo['Fecha']) ? date('d/m/Y', strtotime($cargo['Fecha'])) : 'No definida' ?>
-                                                                        </td>
-                                                                        <td style="padding: 10px;">
-                                                                            <?= !empty($cargo['Fin']) ? date('d/m/Y', strtotime($cargo['Fin'])) : 'Activo' ?>
-                                                                        </td>
-                                                                        <td style="padding: 10px;">
-                                                                            <?= htmlspecialchars($cargo['nombre_tipo_contrato'] ?? 'No definido') ?>
-                                                                        </td>
-                                                                        <td style="padding: 10px; text-align: center;">
-                                                                            <button type="button" class="btn-accion btn-editar"
-                                                                                onclick="editarMovimiento(<?= $cargo['CodAsignacionNivelesCargos'] ?>)">
-                                                                                <i class="fas fa-edit"></i>
-                                                                            </button>
-                                                                        </td>
-                                                                    </tr>
-                                                            <?php endforeach; ?>
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-                                        <?php else: ?>
-                                                <p style="text-align: center; color: #6c757d; padding: 20px;">No hay historial de
-                                                    cargos</p>
-                                        <?php endif; ?>
+                                    <div class="form-row">
+                                        <div class="form-col">
+                                            <div class="form-group">
+                                                <label for="codigo_inss">Número de Seguro INSS</label>
+                                                <input type="text" id="codigo_inss" name="codigo_inss" class="form-control"
+                                                    value="<?= htmlspecialchars($colaborador['codigo_inss'] ?? '') ?>">
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label for="hospital_riesgo_laboral">Hospital Asignado para Riesgo
+                                                    Laboral</label>
+                                                <input type="text" id="hospital_riesgo_laboral"
+                                                    name="hospital_riesgo_laboral" class="form-control"
+                                                    value="<?= htmlspecialchars($colaborador['hospital_riesgo_laboral'] ?? '') ?>">
+                                            </div>
+                                        </div>
+
+                                        <div class="form-col">
+                                            <div class="form-group">
+                                                <label for="numero_planilla">Número de Planilla</label>
+                                                <select id="numero_planilla" name="numero_planilla" class="form-control">
+                                                    <option value="">Seleccionar planilla...</option>
+                                                    <?php foreach ($planillasPatronales as $planilla): ?>
+                                                        <option value="<?= $planilla['CodPlanilla'] ?>" <?= ($contratoConINSS && $contratoConINSS['numero_planilla'] == $planilla['CodPlanilla']) ? 'selected' : '' ?>>
+                                                            <?= htmlspecialchars($planilla['nombre_planilla']) ?>
+                                                        </option>
+                                                    <?php endforeach; ?>
+                                                </select>
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label for="hospital_inss">Hospital Asociado</label>
+                                                <input type="text" id="hospital_inss" name="hospital_inss"
+                                                    class="form-control"
+                                                    value="<?= $contratoConINSS ? htmlspecialchars($contratoConINSS['hospital_inss'] ?? '') : '' ?>">
+                                            </div>
+                                        </div>
                                     </div>
+
+                                    <button type="submit" class="btn-submit">Guardar Cambios INSS</button>
+                                </form>
+
+                                <div
+                                    style="display: flex; justify-content: space-between; align-items: center; margin: 30px 0 20px 0; display:none;">
+                                    <h3 style="color: #0E544C; margin: 0;">Historial de Salarios INSS</h3>
+                                    <button type="button" class="btn-submit" onclick="abrirModalSalarioINSS()"
+                                        style="margin: 0;">
+                                        <i class="fas fa-plus"></i> Agregar Salario INSS
+                                    </button>
                                 </div>
+
+                                <div style="display:none;">
+                                    <?php if (count($salariosINSS) > 0): ?>
+                                        <div style="overflow-x: auto;">
+                                            <table style="width: 100%; border-collapse: collapse;">
+                                                <thead>
+                                                    <tr style="background-color: #0E544C; color: white;">
+                                                        <th style="padding: 10px; text-align: left;">Salario INSS</th>
+                                                        <th style="padding: 10px; text-align: left;">Inicio</th>
+                                                        <th style="padding: 10px; text-align: left;">Final</th>
+                                                        <th style="padding: 10px; text-align: left;">Observaciones</th>
+                                                        <th style="padding: 10px; text-align: left;"></th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <?php foreach ($salariosINSS as $salario): ?>
+                                                        <tr style="border-bottom: 1px solid #ddd;">
+                                                            <td style="padding: 10px;">C$
+                                                                <?= number_format($salario['monto_salario_inss'], 2) ?>
+                                                            </td>
+                                                            <td style="padding: 10px;">
+                                                                <?= !empty($salario['inicio']) ? date('d/m/Y', strtotime($salario['inicio'])) : '' ?>
+                                                            </td>
+                                                            <td style="padding: 10px;">
+                                                                <?= !empty($salario['final']) ? date('d/m/Y', strtotime($salario['final'])) : 'Actual' ?>
+                                                            </td>
+                                                            <td style="padding: 10px;">
+                                                                <?= htmlspecialchars($salario['observaciones_inss'] ?? '') ?>
+                                                            </td>
+                                                            <td style="padding: 10px; text-align: center;">
+                                                                <button type="button" class="btn-accion btn-editar"
+                                                                    onclick="editarSalarioINSS(<?= $salario['id'] ?>)">
+                                                                    <i class="fas fa-edit"></i>
+                                                                </button>
+                                                            </td>
+                                                        </tr>
+                                                    <?php endforeach; ?>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    <?php else: ?>
+                                        <p style="text-align: center; color: #6c757d; padding: 20px;">No hay registros de
+                                            salario INSS
+                                        </p>
+                                    <?php endif; ?>
+                                </div>
+
+                                <!-- Sección de Archivos Adjuntos -->
+                                <div style="margin-top: 40px; border-top: 2px solid #6c757d; padding-top: 20px;">
+                                    <div
+                                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                                        <h3 style="color: #6c757d; margin: 0;">Archivos Adjuntos</h3>
+                                        <button type="button" class="btn-submit"
+                                            onclick="abrirModalAdjunto('<?= $pestaña_activa ?>')" style="margin: 0;">
+                                            <i class="fas fa-plus"></i> Agregar Archivo
+                                        </button>
+                                    </div>
+
+                                    <?php if (count($archivosAdjuntos) > 0): ?>
+                                        <div style="overflow-x: auto;">
+                                            <table style="width: 100%; border-collapse: collapse;">
+                                                <thead>
+                                                    <tr style="background-color: #6c757d; color: white;">
+                                                        <th style="padding: 10px; text-align: left;">Nombre</th>
+                                                        <th style="padding: 10px; text-align: left;">Descripción</th>
+                                                        <th style="padding: 10px; text-align: left; display:none;">Tamaño
+                                                        </th>
+                                                        <th style="padding: 10px; text-align: left;">Subido por</th>
+                                                        <th style="padding: 10px; text-align: left;">Fecha</th>
+                                                        <th style="padding: 10px; text-align: left;">Tipo de Documento</th>
+                                                        <th style="padding: 10px; text-align: left;">Contrato Asociado</th>
+                                                        <th style="padding: 10px; text-align: center;"></th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <?php foreach ($archivosAdjuntos as $archivo):
+                                                        $tamaño = $archivo['tamaño'];
+                                                        if ($tamaño < 1024) {
+                                                            $tamañoFormateado = $tamaño . ' B';
+                                                        } elseif ($tamaño < 1048576) {
+                                                            $tamañoFormateado = round($tamaño / 1024, 2) . ' KB';
+                                                        } else {
+                                                            $tamañoFormateado = round($tamaño / 1048576, 2) . ' MB';
+                                                        }
+                                                        ?>
+                                                        <tr style="border-bottom: 1px solid #ddd;">
+                                                            <td style="padding: 10px;">
+                                                                <?= htmlspecialchars($archivo['nombre_archivo']) ?>
+                                                            </td>
+                                                            <td style="padding: 10px;">
+                                                                <?= htmlspecialchars($archivo['descripcion'] ?? '-') ?>
+                                                            </td>
+                                                            <td style="padding: 10px; display:none;"><?= $tamañoFormateado ?>
+                                                            </td>
+                                                            <td style="padding: 10px;">
+                                                                <?= htmlspecialchars($archivo['nombre_usuario'] . ' ' . $archivo['apellido_usuario']) ?>
+                                                            </td>
+                                                            <td style="padding: 10px;">
+                                                                <?= date('d/m/Y H:i', strtotime($archivo['fecha_subida'])) ?>
+                                                            </td>
+                                                            <td style="padding: 10px;">
+                                                                <?php
+                                                                if (!empty($archivo['tipo_documento'])) {
+                                                                    $tiposDocumentos = obtenerTiposDocumentosPorPestaña($pestaña_activa);
+                                                                    $todosTipos = array_merge($tiposDocumentos['obligatorios'], $tiposDocumentos['opcionales']);
+                                                                    echo htmlspecialchars($todosTipos[$archivo['tipo_documento']] ?? $archivo['tipo_documento']);
+
+                                                                    if ($archivo['obligatorio']) {
+                                                                        echo ' <span style="color: #dc3545;" title="Documento Obligatorio">●</span>';
+                                                                    }
+                                                                } else {
+                                                                    echo '<span style="color: #6c757d; font-style: italic;">Sin categorizar</span>';
+                                                                }
+                                                                ?>
+                                                            </td>
+                                                            <td style="padding: 10px;">
+                                                                <?php
+                                                                // Mostrar información del contrato usando codigo_manual_contrato
+                                                                $pestañasConContrato = ['contrato', 'adendums', 'inss', 'salario', 'movimientos', 'categoria'];
+                                                                if (in_array($pestaña_activa, $pestañasConContrato) && !empty($archivo['codigo_manual_contrato'])):
+                                                                    ?>
+                                                                    <span
+                                                                        style="font-weight: 500;"><?= htmlspecialchars($archivo['codigo_manual_contrato']) ?></span>
+                                                                    <br>
+                                                                    <small style="color: #6c757d;">
+                                                                        <?= !empty($archivo['inicio_contrato']) ? date('d/m/Y', strtotime($archivo['inicio_contrato'])) : 'Fecha no disponible' ?>
+                                                                        <?php if (!empty($archivo['fin_contrato']) && $archivo['fin_contrato'] != '0000-00-00'): ?>
+                                                                            - <?= date('d/m/Y', strtotime($archivo['fin_contrato'])) ?>
+                                                                        <?php else: ?>
+                                                                            (Activo)
+                                                                        <?php endif; ?>
+                                                                    </small>
+                                                                    <?php if (!empty($archivo['tipo_contrato'])): ?>
+                                                                        <br>
+                                                                        <small
+                                                                            style="color: #0E544C;"><?= htmlspecialchars($archivo['tipo_contrato']) ?></small>
+                                                                    <?php endif; ?>
+                                                                <?php else: ?>
+                                                                    <span style="color: #6c757d; font-style: italic;">
+                                                                        <?= in_array($pestaña_activa, $pestañasConContrato) ? 'Sin contrato asociado' : 'No aplica' ?>
+                                                                    </span>
+                                                                <?php endif; ?>
+                                                            </td>
+                                                            <td style="padding: 10px; text-align: center;">
+                                                                <a href="<?= htmlspecialchars($archivo['ruta_archivo']) ?>"
+                                                                    target="_blank" class="btn-accion btn-editar"
+                                                                    title="Ver archivo">
+                                                                    <i class="fas fa-eye"></i>
+                                                                </a>
+                                                                <form method="POST" action="" style="display: inline;">
+                                                                    <input type="hidden" name="accion_adjunto" value="eliminar">
+                                                                    <input type="hidden" name="id_adjunto"
+                                                                        value="<?= $archivo['id'] ?>">
+                                                                    <input type="hidden" name="pestaña_adjunto"
+                                                                        value="<?= $pestaña_activa ?>">
+                                                                    <button type="submit"
+                                                                        onclick="return confirm('¿Está seguro de eliminar este archivo?')"
+                                                                        class="btn-accion btn-eliminar" title="Eliminar archivo">
+                                                                        <i class="fas fa-trash"></i>
+                                                                    </button>
+                                                                </form>
+                                                            </td>
+                                                        </tr>
+                                                    <?php endforeach; ?>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    <?php else: ?>
+                                        <p style="text-align: center; color: #6c757d; padding: 20px;">No hay archivos
+                                            adjuntos</p>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
                         <?php endif; ?>
 
-                        <!-- Pestaña de Categoría -->
+                        <!-- Pestaña de Movimientos -->
                         <?php if ($esAdmin || verificarAccesoCargo([13, 16, 39, 30, 37, 28])): ?>
-                                <div id="categoria" class="tab-pane <?= $pestaña_activa == 'categoria' ? 'active' : '' ?>">
+                            <div id="movimientos" class="tab-pane <?= $pestaña_activa == 'movimientos' ? 'active' : '' ?>">
+                                <?php
+                                $historialCargos = obtenerHistorialCargos($codOperario);
+                                $cargosDisponibles = obtenerTodosCargos();
+                                $sucursales = obtenerTodasSucursales();
+                                ?>
+
+                                <div style="margin-bottom: 30px;">
+                                    <h3 style="color: #0E544C; margin-bottom: 15px;">Agregar Nuevo Cargo</h3>
+
+                                    <?php if ($contratoActual): ?>
+                                        <div class="readonly-info" style="margin-bottom: 20px;">
+                                            <p><strong>Contrato Asociado:</strong>
+                                                <?= htmlspecialchars($contratoActual['codigo_manual_contrato'] ?? 'Sin código') ?>
+                                            </p>
+                                            <p><strong>Los movimientos se asociarán automáticamente a este contrato</strong>
+                                            </p>
+                                        </div>
+                                    <?php endif; ?>
+
                                     <form method="POST" action="">
-                                        <input type="hidden" name="accion_categoria" value="agregar">
-                                        <input type="hidden" name="pestaña" value="categoria">
+                                        <input type="hidden" name="pestaña" value="movimientos">
+                                        <input type="hidden" name="accion_movimiento" value="agregar">
 
                                         <div class="form-row">
                                             <div class="form-col">
                                                 <div class="form-group">
-                                                    <label for="id_categoria">Categoría *</label>
-                                                    <select id="id_categoria" name="id_categoria" class="form-control" required>
-                                                        <option value="">Seleccionar categoría...</option>
-                                                        <?php foreach ($todasCategorias as $categoria): ?>
-                                                                <option value="<?= $categoria['idCategoria'] ?>">
-                                                                    <?= htmlspecialchars($categoria['NombreCategoria']) ?>
-                                                                    (Peso: <?= $categoria['Peso'] ?>)
-                                                                </option>
+                                                    <label for="nuevo_cod_cargo">Cargo *</label>
+                                                    <select id="nuevo_cod_cargo" name="cod_cargo" class="form-control"
+                                                        required>
+                                                        <option value="">Seleccionar cargo...</option>
+                                                        <?php foreach ($cargosDisponibles as $cargo): ?>
+                                                            <option value="<?= $cargo['CodNivelesCargos'] ?>">
+                                                                <?= htmlspecialchars($cargo['Nombre']) ?>
+                                                            </option>
+                                                        <?php endforeach; ?>
+                                                    </select>
+                                                </div>
+
+                                                <div class="form-group">
+                                                    <label for="nuevo_sucursal">Sucursal *</label>
+                                                    <select id="nuevo_sucursal" name="sucursal" class="form-control"
+                                                        required>
+                                                        <option value="">Seleccionar sucursal...</option>
+                                                        <?php foreach ($sucursales as $sucursal): ?>
+                                                            <option value="<?= $sucursal['codigo'] ?>">
+                                                                <?= htmlspecialchars($sucursal['nombre']) ?>
+                                                            </option>
                                                         <?php endforeach; ?>
                                                     </select>
                                                 </div>
@@ -5408,111 +5317,591 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
 
                                             <div class="form-col">
                                                 <div class="form-group">
-                                                    <label for="fecha_inicio">Fecha de Inicio *</label>
-                                                    <input type="date" id="fecha_inicio" name="fecha_inicio"
+                                                    <label for="nuevo_fecha_inicio">Fecha de Inicio *</label>
+                                                    <input type="date" id="nuevo_fecha_inicio" name="fecha_inicio"
                                                         class="form-control" value="<?= date('Y-m-d') ?>" required>
                                                 </div>
+
+                                                <!-- Tipo de contrato oculto con valor 3 -->
+                                                <input type="hidden" name="tipo_contrato" value="3">
                                             </div>
                                         </div>
 
-                                        <button type="submit" class="btn-submit">Agregar Categoría</button>
+                                        <button type="submit" class="btn-submit">Agregar Cargo</button>
                                     </form>
+                                </div>
 
-                                    <div style="margin-top: 40px; border-top: 2px solid #0E544C; padding-top: 20px;">
-                                        <h3 style="color: #0E544C; margin-bottom: 15px;">Historial de Categorías</h3>
+                                <div style="border-top: 2px solid #0E544C; padding-top: 20px;">
+                                    <h3 style="color: #0E544C; margin-bottom: 15px;">Historial de Cargos</h3>
 
-                                        <?php if (count($categoriasColaborador) > 0): ?>
+                                    <?php if (count($historialCargos) > 0): ?>
+                                        <div style="overflow-x: auto;">
+                                            <table style="width: 100%; border-collapse: collapse;">
+                                                <thead>
+                                                    <tr style="background-color: #0E544C; color: white;">
+                                                        <th style="padding: 10px; text-align: left;">Cargo</th>
+                                                        <th style="padding: 10px; text-align: left;">Sucursal</th>
+                                                        <th style="padding: 10px; text-align: left;">Fecha Inicio</th>
+                                                        <th style="padding: 10px; text-align: left;">Fecha Fin</th>
+                                                        <th style="padding: 10px; text-align: left;">Tipo Contrato</th>
+                                                        <th style="padding: 10px; text-align: center;"></th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <?php foreach ($historialCargos as $cargo): ?>
+                                                        <tr style="border-bottom: 1px solid #ddd;">
+                                                            <td style="padding: 10px;">
+                                                                <?= htmlspecialchars($cargo['nombre_cargo'] ?? 'No definido') ?>
+                                                            </td>
+                                                            <td style="padding: 10px;">
+                                                                <?= htmlspecialchars($cargo['nombre_sucursal'] ?? 'No definida') ?>
+                                                            </td>
+                                                            <td style="padding: 10px;">
+                                                                <?= !empty($cargo['Fecha']) ? date('d/m/Y', strtotime($cargo['Fecha'])) : 'No definida' ?>
+                                                            </td>
+                                                            <td style="padding: 10px;">
+                                                                <?= !empty($cargo['Fin']) ? date('d/m/Y', strtotime($cargo['Fin'])) : 'Activo' ?>
+                                                            </td>
+                                                            <td style="padding: 10px;">
+                                                                <?= htmlspecialchars($cargo['nombre_tipo_contrato'] ?? 'No definido') ?>
+                                                            </td>
+                                                            <td style="padding: 10px; text-align: center;">
+                                                                <button type="button" class="btn-accion btn-editar"
+                                                                    onclick="editarMovimiento(<?= $cargo['CodAsignacionNivelesCargos'] ?>)">
+                                                                    <i class="fas fa-edit"></i>
+                                                                </button>
+                                                            </td>
+                                                        </tr>
+                                                    <?php endforeach; ?>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    <?php else: ?>
+                                        <p style="text-align: center; color: #6c757d; padding: 20px;">No hay historial de
+                                            cargos</p>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        <?php endif; ?>
+
+                        <!-- Pestaña de Categoría -->
+                        <?php if ($esAdmin || verificarAccesoCargo([13, 16, 39, 30, 37, 28])): ?>
+                            <div id="categoria" class="tab-pane <?= $pestaña_activa == 'categoria' ? 'active' : '' ?>">
+                                <form method="POST" action="">
+                                    <input type="hidden" name="accion_categoria" value="agregar">
+                                    <input type="hidden" name="pestaña" value="categoria">
+
+                                    <div class="form-row">
+                                        <div class="form-col">
+                                            <div class="form-group">
+                                                <label for="id_categoria">Categoría *</label>
+                                                <select id="id_categoria" name="id_categoria" class="form-control" required>
+                                                    <option value="">Seleccionar categoría...</option>
+                                                    <?php foreach ($todasCategorias as $categoria): ?>
+                                                        <option value="<?= $categoria['idCategoria'] ?>">
+                                                            <?= htmlspecialchars($categoria['NombreCategoria']) ?>
+                                                            (Peso: <?= $categoria['Peso'] ?>)
+                                                        </option>
+                                                    <?php endforeach; ?>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <div class="form-col">
+                                            <div class="form-group">
+                                                <label for="fecha_inicio">Fecha de Inicio *</label>
+                                                <input type="date" id="fecha_inicio" name="fecha_inicio"
+                                                    class="form-control" value="<?= date('Y-m-d') ?>" required>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <button type="submit" class="btn-submit">Agregar Categoría</button>
+                                </form>
+
+                                <div style="margin-top: 40px; border-top: 2px solid #0E544C; padding-top: 20px;">
+                                    <h3 style="color: #0E544C; margin-bottom: 15px;">Historial de Categorías</h3>
+
+                                    <?php if (count($categoriasColaborador) > 0): ?>
+                                        <div style="overflow-x: auto;">
+                                            <table style="width: 100%; border-collapse: collapse;">
+                                                <thead>
+                                                    <tr style="background-color: #0E544C; color: white;">
+                                                        <th style="padding: 10px; text-align: left;">Categoría</th>
+                                                        <th style="padding: 10px; text-align: left;">Peso</th>
+                                                        <th style="padding: 10px; text-align: left;">Fecha Inicio</th>
+                                                        <th style="padding: 10px; text-align: left;">Fecha Fin</th>
+                                                        <th style="padding: 10px; text-align: left; display:none;">Estado
+                                                        </th>
+                                                        <th style="padding: 10px; text-align: center;"></th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <?php foreach ($categoriasColaborador as $categoria):
+                                                        $estado = empty($categoria['FechaFin']) ?
+                                                            '<span style="color: green; font-weight: bold;">ACTIVA</span>' :
+                                                            '<span style="color: #6c757d;">INACTIVA</span>';
+                                                        ?>
+                                                        <tr style="border-bottom: 1px solid #ddd;">
+                                                            <td style="padding: 10px;">
+                                                                <?= htmlspecialchars($categoria['NombreCategoria']) ?>
+                                                            </td>
+                                                            <td style="padding: 10px;"><?= $categoria['Peso'] ?></td>
+                                                            <td style="padding: 10px;">
+                                                                <?= date('d/m/Y', strtotime($categoria['FechaInicio'])) ?>
+                                                            </td>
+                                                            <td style="padding: 10px;">
+                                                                <?= !empty($categoria['FechaFin']) ? date('d/m/Y', strtotime($categoria['FechaFin'])) : 'No definida' ?>
+                                                            </td>
+                                                            <td style="padding: 10px; display:none;"><?= $estado ?></td>
+                                                            <td style="padding: 10px; text-align: center;">
+                                                                <button type="button" class="btn-accion btn-editar"
+                                                                    onclick="editarCategoria(<?= $categoria['id'] ?>)">
+                                                                    <i class="fas fa-edit"></i>
+                                                                </button>
+                                                            </td>
+                                                        </tr>
+                                                    <?php endforeach; ?>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    <?php else: ?>
+                                        <p style="text-align: center; color: #6c757d; padding: 20px;">No hay categorías
+                                            registradas</p>
+                                    <?php endif; ?>
+                                </div>
+
+                                <!-- Sección de Archivos Adjuntos -->
+                                <div style="margin-top: 40px; border-top: 2px solid #6c757d; padding-top: 20px;">
+                                    <div
+                                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                                        <h3 style="color: #6c757d; margin: 0;">Archivos Adjuntos</h3>
+                                        <button type="button" class="btn-submit"
+                                            onclick="abrirModalAdjunto('<?= $pestaña_activa ?>')" style="margin: 0;">
+                                            <i class="fas fa-plus"></i> Agregar Archivo
+                                        </button>
+                                    </div>
+
+                                    <?php
+                                    // Obtener archivos adjuntos de la pestaña categoría
+                                    $archivosAdjuntosCategoria = obtenerArchivosAdjuntos($codOperario, 'categoria');
+                                    ?>
+
+                                    <?php if (count($archivosAdjuntosCategoria) > 0): ?>
+                                        <div style="overflow-x: auto;">
+                                            <table style="width: 100%; border-collapse: collapse;">
+                                                <thead>
+                                                    <tr style="background-color: #6c757d; color: white;">
+                                                        <th style="padding: 10px; text-align: left;">Nombre</th>
+                                                        <th style="padding: 10px; text-align: left;">Descripción</th>
+                                                        <th style="padding: 10px; text-align: left; display:none;">Tamaño
+                                                        </th>
+                                                        <th style="padding: 10px; text-align: left;">Subido por</th>
+                                                        <th style="padding: 10px; text-align: left;">Fecha</th>
+                                                        <th style="padding: 10px; text-align: left;">Tipo de Documento</th>
+                                                        <th style="padding: 10px; text-align: left;">Contrato Asociado</th>
+                                                        <th style="padding: 10px; text-align: center;"></th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <?php foreach ($archivosAdjuntosCategoria as $archivo):
+                                                        $tamaño = $archivo['tamaño'];
+                                                        if ($tamaño < 1024) {
+                                                            $tamañoFormateado = $tamaño . ' B';
+                                                        } elseif ($tamaño < 1048576) {
+                                                            $tamañoFormateado = round($tamaño / 1024, 2) . ' KB';
+                                                        } else {
+                                                            $tamañoFormateado = round($tamaño / 1048576, 2) . ' MB';
+                                                        }
+                                                        ?>
+                                                        <tr style="border-bottom: 1px solid #ddd;">
+                                                            <td style="padding: 10px;">
+                                                                <?= htmlspecialchars($archivo['nombre_archivo']) ?>
+                                                            </td>
+                                                            <td style="padding: 10px;">
+                                                                <?= htmlspecialchars($archivo['descripcion'] ?? '-') ?>
+                                                            </td>
+                                                            <td style="padding: 10px; display:none;"><?= $tamañoFormateado ?>
+                                                            </td>
+                                                            <td style="padding: 10px;">
+                                                                <?= htmlspecialchars($archivo['nombre_usuario'] . ' ' . $archivo['apellido_usuario']) ?>
+                                                            </td>
+                                                            <td style="padding: 10px;">
+                                                                <?= date('d/m/Y H:i', strtotime($archivo['fecha_subida'])) ?>
+                                                            </td>
+                                                            <td style="padding: 10px;">
+                                                                <?php
+                                                                if (!empty($archivo['tipo_documento'])) {
+                                                                    $tiposDocumentos = obtenerTiposDocumentosPorPestaña($pestaña_activa);
+                                                                    $todosTipos = array_merge($tiposDocumentos['obligatorios'], $tiposDocumentos['opcionales']);
+                                                                    echo htmlspecialchars($todosTipos[$archivo['tipo_documento']] ?? $archivo['tipo_documento']);
+
+                                                                    if ($archivo['obligatorio']) {
+                                                                        echo ' <span style="color: #dc3545;" title="Documento Obligatorio">●</span>';
+                                                                    }
+                                                                } else {
+                                                                    echo '<span style="color: #6c757d; font-style: italic;">Sin categorizar</span>';
+                                                                }
+                                                                ?>
+                                                            </td>
+                                                            <td style="padding: 10px;">
+                                                                <?php
+                                                                // Mostrar información del contrato usando codigo_manual_contrato
+                                                                $pestañasConContrato = ['contrato', 'adendums', 'inss', 'salario', 'movimientos', 'categoria'];
+                                                                if (in_array($pestaña_activa, $pestañasConContrato) && !empty($archivo['codigo_manual_contrato'])):
+                                                                    ?>
+                                                                    <span
+                                                                        style="font-weight: 500;"><?= htmlspecialchars($archivo['codigo_manual_contrato']) ?></span>
+                                                                    <br>
+                                                                    <small style="color: #6c757d;">
+                                                                        <?= !empty($archivo['inicio_contrato']) ? date('d/m/Y', strtotime($archivo['inicio_contrato'])) : 'Fecha no disponible' ?>
+                                                                        <?php if (!empty($archivo['fin_contrato']) && $archivo['fin_contrato'] != '0000-00-00'): ?>
+                                                                            - <?= date('d/m/Y', strtotime($archivo['fin_contrato'])) ?>
+                                                                        <?php else: ?>
+                                                                            (Activo)
+                                                                        <?php endif; ?>
+                                                                    </small>
+                                                                    <?php if (!empty($archivo['tipo_contrato'])): ?>
+                                                                        <br>
+                                                                        <small
+                                                                            style="color: #0E544C;"><?= htmlspecialchars($archivo['tipo_contrato']) ?></small>
+                                                                    <?php endif; ?>
+                                                                <?php else: ?>
+                                                                    <span style="color: #6c757d; font-style: italic;">
+                                                                        <?= in_array($pestaña_activa, $pestañasConContrato) ? 'Sin contrato asociado' : 'No aplica' ?>
+                                                                    </span>
+                                                                <?php endif; ?>
+                                                            </td>
+                                                            <td style="padding: 10px; text-align: center;">
+                                                                <a href="<?= htmlspecialchars($archivo['ruta_archivo']) ?>"
+                                                                    target="_blank" class="btn-accion btn-editar"
+                                                                    title="Ver archivo">
+                                                                    <i class="fas fa-eye"></i>
+                                                                </a>
+                                                                <form method="POST" action="" style="display: inline;">
+                                                                    <input type="hidden" name="accion_adjunto" value="eliminar">
+                                                                    <input type="hidden" name="id_adjunto"
+                                                                        value="<?= $archivo['id'] ?>">
+                                                                    <input type="hidden" name="pestaña_adjunto"
+                                                                        value="<?= $pestaña_activa ?>">
+                                                                    <button type="submit"
+                                                                        onclick="return confirm('¿Está seguro de eliminar este archivo?')"
+                                                                        class="btn-accion btn-eliminar" title="Eliminar archivo">
+                                                                        <i class="fas fa-trash"></i>
+                                                                    </button>
+                                                                </form>
+                                                            </td>
+                                                        </tr>
+                                                    <?php endforeach; ?>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    <?php else: ?>
+                                        <p style="text-align: center; color: #6c757d; padding: 20px;">No hay archivos
+                                            adjuntos</p>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        <?php endif; ?>
+
+                        <!-- Pestaña de Adendums -->
+                        <?php if ($esAdmin || verificarAccesoCargo([11, 13, 16, 21, 39, 30, 37, 28])): ?>
+                            <div id="adendums" class="tab-pane <?= $pestaña_activa == 'adendums' ? 'active' : '' ?>">
+                                <?php if ($esAdmin || verificarAccesoCargo([13, 16, 39, 30, 37, 28])): ?>
+                                    <?php if (!tieneContratoActivo($codOperario)): ?>
+                                        <div class="alert alert-warning">
+                                            <i class="fas fa-exclamation-triangle"></i>
+                                            No se puede agregar información de <?= $pestaña_activa ?> porque el colaborador no
+                                            tiene un
+                                            contrato activo.
+                                            Por favor, complete la información del contrato primero.
+                                        </div>
+                                    <?php else: ?>
+                                        <div style="margin-bottom: 30px;">
+                                            <h3 style="color: #0E544C; margin-bottom: 15px; display:none;">Nuevo
+                                                Adendum/Movimiento</h3>
+
+                                            <form method="POST" action="">
+                                                <input type="hidden" name="accion_adendum" value="agregar">
+                                                <input type="hidden" name="pestaña" value="adendums">
+
+                                                <div class="form-row">
+                                                    <div class="form-col">
+                                                        <div class="form-group">
+                                                            <label for="tipo_adendum">Tipo de Adendum *</label>
+                                                            <select id="tipo_adendum" name="tipo_adendum" class="form-control"
+                                                                required onchange="actualizarCamposAdendum()">
+                                                                <option value="">Seleccionar tipo...</option>
+                                                                <option value="cargo">Cambio de Cargo</option>
+                                                                <option value="salario">Ajuste Salarial</option>
+                                                                <option value="ambos">Cambio de Cargo y Salario</option>
+                                                            </select>
+                                                        </div>
+
+                                                        <div class="form-group" id="grupo_cargo">
+                                                            <label for="cod_cargo_adendum">Cargo *</label>
+                                                            <select id="cod_cargo_adendum" name="cod_cargo" class="form-control">
+                                                                <option value="">Seleccionar cargo...</option>
+                                                                <?php foreach ($cargosDisponibles as $cargo): ?>
+                                                                    <option value="<?= $cargo['CodNivelesCargos'] ?>">
+                                                                        <?= htmlspecialchars($cargo['Nombre']) ?>
+                                                                    </option>
+                                                                <?php endforeach; ?>
+                                                            </select>
+                                                        </div>
+
+                                                        <div class="form-group" id="grupo_sucursal">
+                                                            <label for="sucursal_adendum">Sucursal *</label>
+                                                            <select id="sucursal_adendum" name="sucursal" class="form-control">
+                                                                <option value="">Seleccionar sucursal...</option>
+                                                                <?php foreach ($sucursales as $sucursal): ?>
+                                                                    <option value="<?= $sucursal['codigo'] ?>">
+                                                                        <?= htmlspecialchars($sucursal['nombre']) ?>
+                                                                    </option>
+                                                                <?php endforeach; ?>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="form-col">
+                                                        <div class="form-group" id="grupo_categoria" style="display:none;">
+                                                            <div class="form-group" id="grupo_categoria" style="display:none;">
+                                                                <label for="id_categoria_adendum">Categoría *</label>
+                                                                <select id="id_categoria_adendum" name="id_categoria"
+                                                                    class="form-control">
+                                                                    <option value="">Seleccionar categoría...</option>
+                                                                    <?php foreach ($todasCategorias as $categoria): ?>
+                                                                        <option value="<?= $categoria['idCategoria'] ?>">
+                                                                            <?= htmlspecialchars($categoria['NombreCategoria']) ?>
+                                                                            (Peso: <?= $categoria['Peso'] ?>)
+                                                                        </option>
+                                                                    <?php endforeach; ?>
+                                                                </select>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="form-group" id="grupo_salario">
+                                                            <label for="salario_adendum">Salario (C$) *</label>
+                                                            <input type="number" id="salario_adendum" name="salario"
+                                                                class="form-control" step="0.01" min="0" placeholder="0.00">
+                                                            <small style="color: #6c757d;">Salario de referencia:
+                                                                <?php
+                                                                $salarioReferencia = obtenerSalarioReferencia($codOperario);
+                                                                echo 'C$ ' . number_format($salarioReferencia, 2);
+                                                                ?>
+                                                            </small>
+                                                        </div>
+
+                                                        <div class="form-group">
+                                                            <label for="fecha_inicio_adendum">Fecha de Inicio *</label>
+                                                            <input type="date" id="fecha_inicio_adendum" name="fecha_inicio"
+                                                                class="form-control" value="<?= date('Y-m-d') ?>" required>
+                                                        </div>
+
+                                                        <div class="form-group" style="display:none;">
+                                                            <label for="fecha_fin_adendum">Fecha de Fin (opcional)</label>
+                                                            <input type="date" id="fecha_fin_adendum" name="fecha_fin"
+                                                                class="form-control">
+                                                            <small style="color: #6c757d;">
+                                                                Dejar vacío si es un adendum indefinido. Solo se aplica si es el
+                                                                primer
+                                                                adendum o si desea especificar una fecha final.
+                                                            </small>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="form-group">
+                                                    <label for="observaciones_adendum">Observaciones</label>
+                                                    <textarea id="observaciones_adendum" name="observaciones" class="form-control"
+                                                        rows="3" placeholder="Observaciones sobre el adendum..."></textarea>
+                                                </div>
+
+                                                <button type="submit" class="btn-submit">
+                                                    Agregar Adendum
+                                                </button>
+                                            </form>
+                                        </div>
+
+                                        <div style="border-top: 2px solid #0E544C; padding-top: 20px;">
+                                            <h3 style="color: #0E544C; margin-bottom: 15px;">Historial de Adendums</h3>
+
+                                            <?php if (count($adendumsColaborador) > 0): ?>
                                                 <div style="overflow-x: auto;">
                                                     <table style="width: 100%; border-collapse: collapse;">
                                                         <thead>
                                                             <tr style="background-color: #0E544C; color: white;">
-                                                                <th style="padding: 10px; text-align: left;">Categoría</th>
-                                                                <th style="padding: 10px; text-align: left;">Peso</th>
+                                                                <th style="padding: 10px; text-align: left;">Tipo</th>
+                                                                <th style="padding: 10px; text-align: left;">Cargo</th>
+                                                                <th style="padding: 10px; text-align: left; display:none;">Categoría
+                                                                </th>
+                                                                <th style="padding: 10px; text-align: left;">Salario</th>
+                                                                <th style="padding: 10px; text-align: left;">Sucursal</th>
                                                                 <th style="padding: 10px; text-align: left;">Fecha Inicio</th>
                                                                 <th style="padding: 10px; text-align: left;">Fecha Fin</th>
-                                                                <th style="padding: 10px; text-align: left; display:none;">Estado
-                                                                </th>
+                                                                <th style="padding: 10px; text-align: left;">Estado</th>
                                                                 <th style="padding: 10px; text-align: center;"></th>
                                                             </tr>
                                                         </thead>
                                                         <tbody>
-                                                            <?php foreach ($categoriasColaborador as $categoria):
-                                                                $estado = empty($categoria['FechaFin']) ?
-                                                                    '<span style="color: green; font-weight: bold;">ACTIVA</span>' :
-                                                                    '<span style="color: #6c757d;">INACTIVA</span>';
+                                                            <?php foreach ($adendumsColaborador as $adendum):
+                                                                $estado = empty($adendum['Fin']) ?
+                                                                    '<span style="color: green; font-weight: bold;">ACTIVO</span>' :
+                                                                    '<span style="color: #6c757d;">INACTIVO</span>';
+
+                                                                $tipoTexto = [
+                                                                    'cargo' => 'Cambio Cargo',
+                                                                    'salario' => 'Ajuste Salarial',
+                                                                    'ambos' => 'Cargo y Salario'
+                                                                ];
                                                                 ?>
-                                                                    <tr style="border-bottom: 1px solid #ddd;">
-                                                                        <td style="padding: 10px;">
-                                                                            <?= htmlspecialchars($categoria['NombreCategoria']) ?>
-                                                                        </td>
-                                                                        <td style="padding: 10px;"><?= $categoria['Peso'] ?></td>
-                                                                        <td style="padding: 10px;">
-                                                                            <?= date('d/m/Y', strtotime($categoria['FechaInicio'])) ?>
-                                                                        </td>
-                                                                        <td style="padding: 10px;">
-                                                                            <?= !empty($categoria['FechaFin']) ? date('d/m/Y', strtotime($categoria['FechaFin'])) : 'No definida' ?>
-                                                                        </td>
-                                                                        <td style="padding: 10px; display:none;"><?= $estado ?></td>
-                                                                        <td style="padding: 10px; text-align: center;">
-                                                                            <button type="button" class="btn-accion btn-editar"
-                                                                                onclick="editarCategoria(<?= $categoria['id'] ?>)">
-                                                                                <i class="fas fa-edit"></i>
+                                                                <tr style="border-bottom: 1px solid #ddd;">
+                                                                    <td style="padding: 10px;">
+                                                                        <?= $tipoTexto[$adendum['TipoAdendum']] ?? 'No definido' ?>
+                                                                    </td>
+                                                                    <td style="padding: 10px;">
+                                                                        <?= htmlspecialchars($adendum['nombre_cargo'] ?? 'No definido') ?>
+                                                                    </td>
+                                                                    <td style="padding: 10px; display:none;">
+                                                                        <?= htmlspecialchars($adendum['NombreCategoria'] ?? 'No definido') ?>
+                                                                    </td>
+                                                                    <td style="padding: 10px;">
+                                                                        <?= $adendum['Salario'] ? 'C$ ' . number_format($adendum['Salario'], 2) : 'No definido' ?>
+                                                                    </td>
+                                                                    <td style="padding: 10px;">
+                                                                        <?= htmlspecialchars($adendum['nombre_sucursal'] ?? 'No definida') ?>
+                                                                    </td>
+                                                                    <td style="padding: 10px;">
+                                                                        <?= date('d/m/Y', strtotime($adendum['Fecha'])) ?>
+                                                                    </td>
+                                                                    <td style="padding: 10px;">
+                                                                        <?= !empty($adendum['Fin']) ? date('d/m/Y', strtotime($adendum['Fin'])) : 'No definida' ?>
+                                                                    </td>
+                                                                    <td style="padding: 10px;"><?= $estado ?></td>
+                                                                    <td style="padding: 10px; text-align: center;">
+                                                                        <button style="display:none;" type="button"
+                                                                            class="btn-accion btn-editar"
+                                                                            onclick="editarAdendum(<?= $adendum['id'] ?>)">
+                                                                            <i class="fas fa-edit"></i>
+                                                                        </button>
+                                                                        <?php if (empty($adendum['FechaFin'])): ?>
+                                                                            <button type="button" class="btn-accion"
+                                                                                onclick="abrirModalFinalizarAdenda(<?= $adendum['id'] ?>)"
+                                                                                style="color: #dc3545; display:none;" title="Finalizar Adenda">
+                                                                                <i class="fas fa-flag-checkered"></i>
                                                                             </button>
-                                                                        </td>
-                                                                    </tr>
+                                                                        <?php endif; ?>
+                                                                    </td>
+                                                                </tr>
                                                             <?php endforeach; ?>
                                                         </tbody>
                                                     </table>
                                                 </div>
-                                        <?php else: ?>
-                                                <p style="text-align: center; color: #6c757d; padding: 20px;">No hay categorías
-                                                    registradas</p>
-                                        <?php endif; ?>
-                                    </div>
+                                            <?php else: ?>
+                                                <div
+                                                    style="text-align: center; padding: 40px; background: #f8f9fa; border-radius: 8px; margin: 20px 0;">
+                                                    <i class="fas fa-folder-open"
+                                                        style="font-size: 3rem; color: #6c757d; margin-bottom: 15px;"></i>
+                                                    <h4 style="color: #6c757d;">No hay adendums registrados</h4>
+                                                    <p style="color: #6c757d;">Para subir archivos en esta pestaña, primero debe
+                                                        crear un
+                                                        adendum.</p>
 
-                                    <!-- Sección de Archivos Adjuntos -->
-                                    <div style="margin-top: 40px; border-top: 2px solid #6c757d; padding-top: 20px;">
-                                        <div
-                                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                                            <h3 style="color: #6c757d; margin: 0;">Archivos Adjuntos</h3>
-                                            <button type="button" class="btn-submit"
-                                                onclick="abrirModalAdjunto('<?= $pestaña_activa ?>')" style="margin: 0;">
-                                                <i class="fas fa-plus"></i> Agregar Archivo
-                                            </button>
+                                                    <div style="margin-top: 20px;">
+                                                        <p style="color: #0E544C; font-weight: bold;">
+                                                            <i class="fas fa-info-circle"></i> Flujo correcto:
+                                                        </p>
+                                                        <ol style="text-align: left; display: inline-block; color: #6c757d;">
+                                                            <li>Crear el adendum usando el formulario superior</li>
+                                                            <li>Luego podrá subir archivos asociados al adendum</li>
+                                                        </ol>
+                                                    </div>
+                                                </div>
+                                            <?php endif; ?>
                                         </div>
 
-                                        <?php
-                                        // Obtener archivos adjuntos de la pestaña categoría
-                                        $archivosAdjuntosCategoria = obtenerArchivosAdjuntos($codOperario, 'categoria');
-                                        ?>
+                                        <!-- Sección de Archivos Adjuntos -->
+                                        <div style="margin-top: 40px; border-top: 2px solid #6c757d; padding-top: 20px;">
+                                            <div
+                                                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                                                <h3 style="color: #6c757d; margin: 0;">Archivos Adjuntos</h3>
+                                                <button type="button" class="btn-submit"
+                                                    onclick="abrirModalAdjunto('<?= $pestaña_activa ?>')" style="margin: 0;">
+                                                    <i class="fas fa-plus"></i> Agregar Archivo
+                                                </button>
+                                            </div>
 
-                                        <?php if (count($archivosAdjuntosCategoria) > 0): ?>
+                                            <?php
+                                            $archivosAdjuntosAdendums = obtenerArchivosAdjuntos($codOperario, 'adendums');
+                                            ?>
+
+                                            <?php if (count($archivosAdjuntosAdendums) > 0): ?>
                                                 <div style="overflow-x: auto;">
-                                                    <table style="width: 100%; border-collapse: collapse;">
-                                                        <thead>
-                                                            <tr style="background-color: #6c757d; color: white;">
-                                                                <th style="padding: 10px; text-align: left;">Nombre</th>
-                                                                <th style="padding: 10px; text-align: left;">Descripción</th>
-                                                                <th style="padding: 10px; text-align: left; display:none;">Tamaño
-                                                                </th>
-                                                                <th style="padding: 10px; text-align: left;">Subido por</th>
-                                                                <th style="padding: 10px; text-align: left;">Fecha</th>
-                                                                <th style="padding: 10px; text-align: left;">Tipo de Documento</th>
-                                                                <th style="padding: 10px; text-align: left;">Contrato Asociado</th>
-                                                                <th style="padding: 10px; text-align: center;"></th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            <?php foreach ($archivosAdjuntosCategoria as $archivo):
-                                                                $tamaño = $archivo['tamaño'];
-                                                                if ($tamaño < 1024) {
-                                                                    $tamañoFormateado = $tamaño . ' B';
-                                                                } elseif ($tamaño < 1048576) {
-                                                                    $tamañoFormateado = round($tamaño / 1024, 2) . ' KB';
-                                                                } else {
-                                                                    $tamañoFormateado = round($tamaño / 1048576, 2) . ' MB';
-                                                                }
-                                                                ?>
+                                                    <?php
+                                                    // Agrupar archivos por adendum
+                                                    $archivosPorAdendum = [];
+                                                    foreach ($archivosAdjuntosAdendums as $archivo) {
+                                                        $adendumId = $archivo['cod_adendum_asociado'] ?? 'sin_adendum';
+                                                        if (!isset($archivosPorAdendum[$adendumId])) {
+                                                            $archivosPorAdendum[$adendumId] = [
+                                                                'info' => $archivo, // Información del adendum
+                                                                'archivos' => []
+                                                            ];
+                                                        }
+                                                        $archivosPorAdendum[$adendumId]['archivos'][] = $archivo;
+                                                    }
+
+                                                    // Ordenar por ID de adendum (más reciente primero)
+                                                    krsort($archivosPorAdendum);
+                                                    ?>
+
+                                                    <?php foreach ($archivosPorAdendum as $adendumId => $grupo): ?>
+                                                        <?php if ($adendumId !== 'sin_adendum'): ?>
+                                                            <div
+                                                                style="background: #f8f9fa; padding: 10px; margin: 15px 0; border-left: 4px solid #0E544C;">
+                                                                <strong>Adendum: </strong>
+                                                                <?= htmlspecialchars($grupo['info']['TipoAdendum'] ?? 'N/A') ?> |
+                                                                <strong>Cargo:
+                                                                </strong><?= htmlspecialchars($grupo['info']['nombre_cargo_adendum'] ?? 'N/A') ?>
+                                                                |
+                                                                <strong>Salario: </strong>C$
+                                                                <?= number_format($grupo['info']['salario_adendum'] ?? 0, 2) ?> |
+                                                                <strong>Fecha:
+                                                                </strong><?= !empty($grupo['info']['FechaInicio']) ? date('d/m/Y', strtotime($grupo['info']['FechaInicio'])) : 'N/A' ?>
+                                                            </div>
+                                                        <?php else: ?>
+                                                            <div
+                                                                style="background: #fff3cd; padding: 10px; margin: 15px 0; border-left: 4px solid #ffc107;">
+                                                                <strong>Archivos sin adendum asociado</strong>
+                                                            </div>
+                                                        <?php endif; ?>
+
+                                                        <!-- Tabla de archivos para este adendum -->
+                                                        <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                                                            <thead>
+                                                                <tr style="background-color: #6c757d; color: white;">
+                                                                    <th style="padding: 10px; text-align: left;">Nombre</th>
+                                                                    <th style="padding: 10px; text-align: left;">Descripción</th>
+                                                                    <th style="padding: 10px; text-align: left; display:none;">Tamaño
+                                                                    </th>
+                                                                    <th style="padding: 10px; text-align: left;">Subido por</th>
+                                                                    <th style="padding: 10px; text-align: left;">Fecha</th>
+                                                                    <th style="padding: 10px; text-align: left;">Tipo de Documento</th>
+                                                                    <th style="padding: 10px; text-align: left;">Contrato Asociado</th>
+                                                                    <th style="padding: 10px; text-align: center;"></th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                <?php foreach ($archivosAdjuntosAdendums as $archivo):
+                                                                    $tamaño = $archivo['tamaño'];
+                                                                    if ($tamaño < 1024) {
+                                                                        $tamañoFormateado = $tamaño . ' B';
+                                                                    } elseif ($tamaño < 1048576) {
+                                                                        $tamañoFormateado = round($tamaño / 1024, 2) . ' KB';
+                                                                    } else {
+                                                                        $tamañoFormateado = round($tamaño / 1048576, 2) . ' MB';
+                                                                    }
+                                                                    ?>
                                                                     <tr style="border-bottom: 1px solid #ddd;">
                                                                         <td style="padding: 10px;">
                                                                             <?= htmlspecialchars($archivo['nombre_archivo']) ?>
@@ -5549,26 +5938,26 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                                                                             $pestañasConContrato = ['contrato', 'adendums', 'inss', 'salario', 'movimientos', 'categoria'];
                                                                             if (in_array($pestaña_activa, $pestañasConContrato) && !empty($archivo['codigo_manual_contrato'])):
                                                                                 ?>
-                                                                                    <span
-                                                                                        style="font-weight: 500;"><?= htmlspecialchars($archivo['codigo_manual_contrato']) ?></span>
-                                                                                    <br>
-                                                                                    <small style="color: #6c757d;">
-                                                                                        <?= !empty($archivo['inicio_contrato']) ? date('d/m/Y', strtotime($archivo['inicio_contrato'])) : 'Fecha no disponible' ?>
-                                                                                        <?php if (!empty($archivo['fin_contrato']) && $archivo['fin_contrato'] != '0000-00-00'): ?>
-                                                                                                - <?= date('d/m/Y', strtotime($archivo['fin_contrato'])) ?>
-                                                                                        <?php else: ?>
-                                                                                                (Activo)
-                                                                                        <?php endif; ?>
-                                                                                    </small>
-                                                                                    <?php if (!empty($archivo['tipo_contrato'])): ?>
-                                                                                            <br>
-                                                                                            <small
-                                                                                                style="color: #0E544C;"><?= htmlspecialchars($archivo['tipo_contrato']) ?></small>
+                                                                                <span
+                                                                                    style="font-weight: 500;"><?= htmlspecialchars($archivo['codigo_manual_contrato']) ?></span>
+                                                                                <br>
+                                                                                <small style="color: #6c757d;">
+                                                                                    <?= !empty($archivo['inicio_contrato']) ? date('d/m/Y', strtotime($archivo['inicio_contrato'])) : 'Fecha no disponible' ?>
+                                                                                    <?php if (!empty($archivo['fin_contrato']) && $archivo['fin_contrato'] != '0000-00-00'): ?>
+                                                                                        - <?= date('d/m/Y', strtotime($archivo['fin_contrato'])) ?>
+                                                                                    <?php else: ?>
+                                                                                        (Activo)
                                                                                     <?php endif; ?>
+                                                                                </small>
+                                                                                <?php if (!empty($archivo['tipo_contrato'])): ?>
+                                                                                    <br>
+                                                                                    <small
+                                                                                        style="color: #0E544C;"><?= htmlspecialchars($archivo['tipo_contrato']) ?></small>
+                                                                                <?php endif; ?>
                                                                             <?php else: ?>
-                                                                                    <span style="color: #6c757d; font-style: italic;">
-                                                                                        <?= in_array($pestaña_activa, $pestañasConContrato) ? 'Sin contrato asociado' : 'No aplica' ?>
-                                                                                    </span>
+                                                                                <span style="color: #6c757d; font-style: italic;">
+                                                                                    <?= in_array($pestaña_activa, $pestañasConContrato) ? 'Sin contrato asociado' : 'No aplica' ?>
+                                                                                </span>
                                                                             <?php endif; ?>
                                                                         </td>
                                                                         <td style="padding: 10px; text-align: center;">
@@ -5591,756 +5980,368 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                                                                             </form>
                                                                         </td>
                                                                     </tr>
-                                                            <?php endforeach; ?>
-                                                        </tbody>
-                                                    </table>
+                                                                <?php endforeach; ?>
+                                                            </tbody>
+                                                        </table>
+                                                    <?php endforeach; ?>
                                                 </div>
-                                        <?php else: ?>
+                                            <?php else: ?>
                                                 <p style="text-align: center; color: #6c757d; padding: 20px;">No hay archivos
                                                     adjuntos</p>
-                                        <?php endif; ?>
-                                    </div>
-                                </div>
-                        <?php endif; ?>
-
-                        <!-- Pestaña de Adendums -->
-                        <?php if ($esAdmin || verificarAccesoCargo([11, 13, 16, 21, 39, 30, 37, 28])): ?>
-                                <div id="adendums" class="tab-pane <?= $pestaña_activa == 'adendums' ? 'active' : '' ?>">
-                                    <?php if ($esAdmin || verificarAccesoCargo([13, 16, 39, 30, 37, 28])): ?>
-                                            <?php if (!tieneContratoActivo($codOperario)): ?>
-                                                    <div class="alert alert-warning">
-                                                        <i class="fas fa-exclamation-triangle"></i>
-                                                        No se puede agregar información de <?= $pestaña_activa ?> porque el colaborador no
-                                                        tiene un
-                                                        contrato activo.
-                                                        Por favor, complete la información del contrato primero.
-                                                    </div>
-                                            <?php else: ?>
-                                                    <div style="margin-bottom: 30px;">
-                                                        <h3 style="color: #0E544C; margin-bottom: 15px; display:none;">Nuevo
-                                                            Adendum/Movimiento</h3>
-
-                                                        <form method="POST" action="">
-                                                            <input type="hidden" name="accion_adendum" value="agregar">
-                                                            <input type="hidden" name="pestaña" value="adendums">
-
-                                                            <div class="form-row">
-                                                                <div class="form-col">
-                                                                    <div class="form-group">
-                                                                        <label for="tipo_adendum">Tipo de Adendum *</label>
-                                                                        <select id="tipo_adendum" name="tipo_adendum" class="form-control"
-                                                                            required onchange="actualizarCamposAdendum()">
-                                                                            <option value="">Seleccionar tipo...</option>
-                                                                            <option value="cargo">Cambio de Cargo</option>
-                                                                            <option value="salario">Ajuste Salarial</option>
-                                                                            <option value="ambos">Cambio de Cargo y Salario</option>
-                                                                        </select>
-                                                                    </div>
-
-                                                                    <div class="form-group" id="grupo_cargo">
-                                                                        <label for="cod_cargo_adendum">Cargo *</label>
-                                                                        <select id="cod_cargo_adendum" name="cod_cargo" class="form-control">
-                                                                            <option value="">Seleccionar cargo...</option>
-                                                                            <?php foreach ($cargosDisponibles as $cargo): ?>
-                                                                                    <option value="<?= $cargo['CodNivelesCargos'] ?>">
-                                                                                        <?= htmlspecialchars($cargo['Nombre']) ?>
-                                                                                    </option>
-                                                                            <?php endforeach; ?>
-                                                                        </select>
-                                                                    </div>
-
-                                                                    <div class="form-group" id="grupo_sucursal">
-                                                                        <label for="sucursal_adendum">Sucursal *</label>
-                                                                        <select id="sucursal_adendum" name="sucursal" class="form-control">
-                                                                            <option value="">Seleccionar sucursal...</option>
-                                                                            <?php foreach ($sucursales as $sucursal): ?>
-                                                                                    <option value="<?= $sucursal['codigo'] ?>">
-                                                                                        <?= htmlspecialchars($sucursal['nombre']) ?>
-                                                                                    </option>
-                                                                            <?php endforeach; ?>
-                                                                        </select>
-                                                                    </div>
-                                                                </div>
-
-                                                                <div class="form-col">
-                                                                    <div class="form-group" id="grupo_categoria" style="display:none;">
-                                                                        <div class="form-group" id="grupo_categoria" style="display:none;">
-                                                                            <label for="id_categoria_adendum">Categoría *</label>
-                                                                            <select id="id_categoria_adendum" name="id_categoria"
-                                                                                class="form-control">
-                                                                                <option value="">Seleccionar categoría...</option>
-                                                                                <?php foreach ($todasCategorias as $categoria): ?>
-                                                                                        <option value="<?= $categoria['idCategoria'] ?>">
-                                                                                            <?= htmlspecialchars($categoria['NombreCategoria']) ?>
-                                                                                            (Peso: <?= $categoria['Peso'] ?>)
-                                                                                        </option>
-                                                                                <?php endforeach; ?>
-                                                                            </select>
-                                                                        </div>
-                                                                    </div>
-
-                                                                    <div class="form-group" id="grupo_salario">
-                                                                        <label for="salario_adendum">Salario (C$) *</label>
-                                                                        <input type="number" id="salario_adendum" name="salario"
-                                                                            class="form-control" step="0.01" min="0" placeholder="0.00">
-                                                                        <small style="color: #6c757d;">Salario de referencia:
-                                                                            <?php
-                                                                            $salarioReferencia = obtenerSalarioReferencia($codOperario);
-                                                                            echo 'C$ ' . number_format($salarioReferencia, 2);
-                                                                            ?>
-                                                                        </small>
-                                                                    </div>
-
-                                                                    <div class="form-group">
-                                                                        <label for="fecha_inicio_adendum">Fecha de Inicio *</label>
-                                                                        <input type="date" id="fecha_inicio_adendum" name="fecha_inicio"
-                                                                            class="form-control" value="<?= date('Y-m-d') ?>" required>
-                                                                    </div>
-
-                                                                    <div class="form-group" style="display:none;">
-                                                                        <label for="fecha_fin_adendum">Fecha de Fin (opcional)</label>
-                                                                        <input type="date" id="fecha_fin_adendum" name="fecha_fin"
-                                                                            class="form-control">
-                                                                        <small style="color: #6c757d;">
-                                                                            Dejar vacío si es un adendum indefinido. Solo se aplica si es el
-                                                                            primer
-                                                                            adendum o si desea especificar una fecha final.
-                                                                        </small>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-
-                                                            <div class="form-group">
-                                                                <label for="observaciones_adendum">Observaciones</label>
-                                                                <textarea id="observaciones_adendum" name="observaciones" class="form-control"
-                                                                    rows="3" placeholder="Observaciones sobre el adendum..."></textarea>
-                                                            </div>
-
-                                                            <button type="submit" class="btn-submit">
-                                                                Agregar Adendum
-                                                            </button>
-                                                        </form>
-                                                    </div>
-
-                                                    <div style="border-top: 2px solid #0E544C; padding-top: 20px;">
-                                                        <h3 style="color: #0E544C; margin-bottom: 15px;">Historial de Adendums</h3>
-
-                                                        <?php if (count($adendumsColaborador) > 0): ?>
-                                                                <div style="overflow-x: auto;">
-                                                                    <table style="width: 100%; border-collapse: collapse;">
-                                                                        <thead>
-                                                                            <tr style="background-color: #0E544C; color: white;">
-                                                                                <th style="padding: 10px; text-align: left;">Tipo</th>
-                                                                                <th style="padding: 10px; text-align: left;">Cargo</th>
-                                                                                <th style="padding: 10px; text-align: left; display:none;">Categoría
-                                                                                </th>
-                                                                                <th style="padding: 10px; text-align: left;">Salario</th>
-                                                                                <th style="padding: 10px; text-align: left;">Sucursal</th>
-                                                                                <th style="padding: 10px; text-align: left;">Fecha Inicio</th>
-                                                                                <th style="padding: 10px; text-align: left;">Fecha Fin</th>
-                                                                                <th style="padding: 10px; text-align: left;">Estado</th>
-                                                                                <th style="padding: 10px; text-align: center;"></th>
-                                                                            </tr>
-                                                                        </thead>
-                                                                        <tbody>
-                                                                            <?php foreach ($adendumsColaborador as $adendum):
-                                                                                $estado = empty($adendum['Fin']) ?
-                                                                                    '<span style="color: green; font-weight: bold;">ACTIVO</span>' :
-                                                                                    '<span style="color: #6c757d;">INACTIVO</span>';
-
-                                                                                $tipoTexto = [
-                                                                                    'cargo' => 'Cambio Cargo',
-                                                                                    'salario' => 'Ajuste Salarial',
-                                                                                    'ambos' => 'Cargo y Salario'
-                                                                                ];
-                                                                                ?>
-                                                                                    <tr style="border-bottom: 1px solid #ddd;">
-                                                                                        <td style="padding: 10px;">
-                                                                                            <?= $tipoTexto[$adendum['TipoAdendum']] ?? 'No definido' ?>
-                                                                                        </td>
-                                                                                        <td style="padding: 10px;">
-                                                                                            <?= htmlspecialchars($adendum['nombre_cargo'] ?? 'No definido') ?>
-                                                                                        </td>
-                                                                                        <td style="padding: 10px; display:none;">
-                                                                                            <?= htmlspecialchars($adendum['NombreCategoria'] ?? 'No definido') ?>
-                                                                                        </td>
-                                                                                        <td style="padding: 10px;">
-                                                                                            <?= $adendum['Salario'] ? 'C$ ' . number_format($adendum['Salario'], 2) : 'No definido' ?>
-                                                                                        </td>
-                                                                                        <td style="padding: 10px;">
-                                                                                            <?= htmlspecialchars($adendum['nombre_sucursal'] ?? 'No definida') ?>
-                                                                                        </td>
-                                                                                        <td style="padding: 10px;">
-                                                                                            <?= date('d/m/Y', strtotime($adendum['Fecha'])) ?>
-                                                                                        </td>
-                                                                                        <td style="padding: 10px;">
-                                                                                            <?= !empty($adendum['Fin']) ? date('d/m/Y', strtotime($adendum['Fin'])) : 'No definida' ?>
-                                                                                        </td>
-                                                                                        <td style="padding: 10px;"><?= $estado ?></td>
-                                                                                        <td style="padding: 10px; text-align: center;">
-                                                                                            <button style="display:none;" type="button"
-                                                                                                class="btn-accion btn-editar"
-                                                                                                onclick="editarAdendum(<?= $adendum['id'] ?>)">
-                                                                                                <i class="fas fa-edit"></i>
-                                                                                            </button>
-                                                                                            <?php if (empty($adendum['FechaFin'])): ?>
-                                                                                                    <button type="button" class="btn-accion"
-                                                                                                        onclick="abrirModalFinalizarAdenda(<?= $adendum['id'] ?>)"
-                                                                                                        style="color: #dc3545; display:none;" title="Finalizar Adenda">
-                                                                                                        <i class="fas fa-flag-checkered"></i>
-                                                                                                    </button>
-                                                                                            <?php endif; ?>
-                                                                                        </td>
-                                                                                    </tr>
-                                                                            <?php endforeach; ?>
-                                                                        </tbody>
-                                                                    </table>
-                                                                </div>
-                                                        <?php else: ?>
-                                                                <div
-                                                                    style="text-align: center; padding: 40px; background: #f8f9fa; border-radius: 8px; margin: 20px 0;">
-                                                                    <i class="fas fa-folder-open"
-                                                                        style="font-size: 3rem; color: #6c757d; margin-bottom: 15px;"></i>
-                                                                    <h4 style="color: #6c757d;">No hay adendums registrados</h4>
-                                                                    <p style="color: #6c757d;">Para subir archivos en esta pestaña, primero debe
-                                                                        crear un
-                                                                        adendum.</p>
-
-                                                                    <div style="margin-top: 20px;">
-                                                                        <p style="color: #0E544C; font-weight: bold;">
-                                                                            <i class="fas fa-info-circle"></i> Flujo correcto:
-                                                                        </p>
-                                                                        <ol style="text-align: left; display: inline-block; color: #6c757d;">
-                                                                            <li>Crear el adendum usando el formulario superior</li>
-                                                                            <li>Luego podrá subir archivos asociados al adendum</li>
-                                                                        </ol>
-                                                                    </div>
-                                                                </div>
-                                                        <?php endif; ?>
-                                                    </div>
-
-                                                    <!-- Sección de Archivos Adjuntos -->
-                                                    <div style="margin-top: 40px; border-top: 2px solid #6c757d; padding-top: 20px;">
-                                                        <div
-                                                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                                                            <h3 style="color: #6c757d; margin: 0;">Archivos Adjuntos</h3>
-                                                            <button type="button" class="btn-submit"
-                                                                onclick="abrirModalAdjunto('<?= $pestaña_activa ?>')" style="margin: 0;">
-                                                                <i class="fas fa-plus"></i> Agregar Archivo
-                                                            </button>
-                                                        </div>
-
-                                                        <?php
-                                                        $archivosAdjuntosAdendums = obtenerArchivosAdjuntos($codOperario, 'adendums');
-                                                        ?>
-
-                                                        <?php if (count($archivosAdjuntosAdendums) > 0): ?>
-                                                                <div style="overflow-x: auto;">
-                                                                    <?php
-                                                                    // Agrupar archivos por adendum
-                                                                    $archivosPorAdendum = [];
-                                                                    foreach ($archivosAdjuntosAdendums as $archivo) {
-                                                                        $adendumId = $archivo['cod_adendum_asociado'] ?? 'sin_adendum';
-                                                                        if (!isset($archivosPorAdendum[$adendumId])) {
-                                                                            $archivosPorAdendum[$adendumId] = [
-                                                                                'info' => $archivo, // Información del adendum
-                                                                                'archivos' => []
-                                                                            ];
-                                                                        }
-                                                                        $archivosPorAdendum[$adendumId]['archivos'][] = $archivo;
-                                                                    }
-
-                                                                    // Ordenar por ID de adendum (más reciente primero)
-                                                                    krsort($archivosPorAdendum);
-                                                                    ?>
-
-                                                                    <?php foreach ($archivosPorAdendum as $adendumId => $grupo): ?>
-                                                                            <?php if ($adendumId !== 'sin_adendum'): ?>
-                                                                                    <div
-                                                                                        style="background: #f8f9fa; padding: 10px; margin: 15px 0; border-left: 4px solid #0E544C;">
-                                                                                        <strong>Adendum: </strong>
-                                                                                        <?= htmlspecialchars($grupo['info']['TipoAdendum'] ?? 'N/A') ?> |
-                                                                                        <strong>Cargo:
-                                                                                        </strong><?= htmlspecialchars($grupo['info']['nombre_cargo_adendum'] ?? 'N/A') ?>
-                                                                                        |
-                                                                                        <strong>Salario: </strong>C$
-                                                                                        <?= number_format($grupo['info']['salario_adendum'] ?? 0, 2) ?> |
-                                                                                        <strong>Fecha:
-                                                                                        </strong><?= !empty($grupo['info']['FechaInicio']) ? date('d/m/Y', strtotime($grupo['info']['FechaInicio'])) : 'N/A' ?>
-                                                                                    </div>
-                                                                            <?php else: ?>
-                                                                                    <div
-                                                                                        style="background: #fff3cd; padding: 10px; margin: 15px 0; border-left: 4px solid #ffc107;">
-                                                                                        <strong>Archivos sin adendum asociado</strong>
-                                                                                    </div>
-                                                                            <?php endif; ?>
-
-                                                                            <!-- Tabla de archivos para este adendum -->
-                                                                            <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
-                                                                                <thead>
-                                                                                    <tr style="background-color: #6c757d; color: white;">
-                                                                                        <th style="padding: 10px; text-align: left;">Nombre</th>
-                                                                                        <th style="padding: 10px; text-align: left;">Descripción</th>
-                                                                                        <th style="padding: 10px; text-align: left; display:none;">Tamaño
-                                                                                        </th>
-                                                                                        <th style="padding: 10px; text-align: left;">Subido por</th>
-                                                                                        <th style="padding: 10px; text-align: left;">Fecha</th>
-                                                                                        <th style="padding: 10px; text-align: left;">Tipo de Documento</th>
-                                                                                        <th style="padding: 10px; text-align: left;">Contrato Asociado</th>
-                                                                                        <th style="padding: 10px; text-align: center;"></th>
-                                                                                    </tr>
-                                                                                </thead>
-                                                                                <tbody>
-                                                                                    <?php foreach ($archivosAdjuntosAdendums as $archivo):
-                                                                                        $tamaño = $archivo['tamaño'];
-                                                                                        if ($tamaño < 1024) {
-                                                                                            $tamañoFormateado = $tamaño . ' B';
-                                                                                        } elseif ($tamaño < 1048576) {
-                                                                                            $tamañoFormateado = round($tamaño / 1024, 2) . ' KB';
-                                                                                        } else {
-                                                                                            $tamañoFormateado = round($tamaño / 1048576, 2) . ' MB';
-                                                                                        }
-                                                                                        ?>
-                                                                                            <tr style="border-bottom: 1px solid #ddd;">
-                                                                                                <td style="padding: 10px;">
-                                                                                                    <?= htmlspecialchars($archivo['nombre_archivo']) ?>
-                                                                                                </td>
-                                                                                                <td style="padding: 10px;">
-                                                                                                    <?= htmlspecialchars($archivo['descripcion'] ?? '-') ?>
-                                                                                                </td>
-                                                                                                <td style="padding: 10px; display:none;"><?= $tamañoFormateado ?>
-                                                                                                </td>
-                                                                                                <td style="padding: 10px;">
-                                                                                                    <?= htmlspecialchars($archivo['nombre_usuario'] . ' ' . $archivo['apellido_usuario']) ?>
-                                                                                                </td>
-                                                                                                <td style="padding: 10px;">
-                                                                                                    <?= date('d/m/Y H:i', strtotime($archivo['fecha_subida'])) ?>
-                                                                                                </td>
-                                                                                                <td style="padding: 10px;">
-                                                                                                    <?php
-                                                                                                    if (!empty($archivo['tipo_documento'])) {
-                                                                                                        $tiposDocumentos = obtenerTiposDocumentosPorPestaña($pestaña_activa);
-                                                                                                        $todosTipos = array_merge($tiposDocumentos['obligatorios'], $tiposDocumentos['opcionales']);
-                                                                                                        echo htmlspecialchars($todosTipos[$archivo['tipo_documento']] ?? $archivo['tipo_documento']);
-
-                                                                                                        if ($archivo['obligatorio']) {
-                                                                                                            echo ' <span style="color: #dc3545;" title="Documento Obligatorio">●</span>';
-                                                                                                        }
-                                                                                                    } else {
-                                                                                                        echo '<span style="color: #6c757d; font-style: italic;">Sin categorizar</span>';
-                                                                                                    }
-                                                                                                    ?>
-                                                                                                </td>
-                                                                                                <td style="padding: 10px;">
-                                                                                                    <?php
-                                                                                                    // Mostrar información del contrato usando codigo_manual_contrato
-                                                                                                    $pestañasConContrato = ['contrato', 'adendums', 'inss', 'salario', 'movimientos', 'categoria'];
-                                                                                                    if (in_array($pestaña_activa, $pestañasConContrato) && !empty($archivo['codigo_manual_contrato'])):
-                                                                                                        ?>
-                                                                                                            <span
-                                                                                                                style="font-weight: 500;"><?= htmlspecialchars($archivo['codigo_manual_contrato']) ?></span>
-                                                                                                            <br>
-                                                                                                            <small style="color: #6c757d;">
-                                                                                                                <?= !empty($archivo['inicio_contrato']) ? date('d/m/Y', strtotime($archivo['inicio_contrato'])) : 'Fecha no disponible' ?>
-                                                                                                                <?php if (!empty($archivo['fin_contrato']) && $archivo['fin_contrato'] != '0000-00-00'): ?>
-                                                                                                                        - <?= date('d/m/Y', strtotime($archivo['fin_contrato'])) ?>
-                                                                                                                <?php else: ?>
-                                                                                                                        (Activo)
-                                                                                                                <?php endif; ?>
-                                                                                                            </small>
-                                                                                                            <?php if (!empty($archivo['tipo_contrato'])): ?>
-                                                                                                                    <br>
-                                                                                                                    <small
-                                                                                                                        style="color: #0E544C;"><?= htmlspecialchars($archivo['tipo_contrato']) ?></small>
-                                                                                                            <?php endif; ?>
-                                                                                                    <?php else: ?>
-                                                                                                            <span style="color: #6c757d; font-style: italic;">
-                                                                                                                <?= in_array($pestaña_activa, $pestañasConContrato) ? 'Sin contrato asociado' : 'No aplica' ?>
-                                                                                                            </span>
-                                                                                                    <?php endif; ?>
-                                                                                                </td>
-                                                                                                <td style="padding: 10px; text-align: center;">
-                                                                                                    <a href="<?= htmlspecialchars($archivo['ruta_archivo']) ?>"
-                                                                                                        target="_blank" class="btn-accion btn-editar"
-                                                                                                        title="Ver archivo">
-                                                                                                        <i class="fas fa-eye"></i>
-                                                                                                    </a>
-                                                                                                    <form method="POST" action="" style="display: inline;">
-                                                                                                        <input type="hidden" name="accion_adjunto" value="eliminar">
-                                                                                                        <input type="hidden" name="id_adjunto"
-                                                                                                            value="<?= $archivo['id'] ?>">
-                                                                                                        <input type="hidden" name="pestaña_adjunto"
-                                                                                                            value="<?= $pestaña_activa ?>">
-                                                                                                        <button type="submit"
-                                                                                                            onclick="return confirm('¿Está seguro de eliminar este archivo?')"
-                                                                                                            class="btn-accion btn-eliminar" title="Eliminar archivo">
-                                                                                                            <i class="fas fa-trash"></i>
-                                                                                                        </button>
-                                                                                                    </form>
-                                                                                                </td>
-                                                                                            </tr>
-                                                                                    <?php endforeach; ?>
-                                                                                </tbody>
-                                                                            </table>
-                                                                    <?php endforeach; ?>
-                                                                </div>
-                                                        <?php else: ?>
-                                                                <p style="text-align: center; color: #6c757d; padding: 20px;">No hay archivos
-                                                                    adjuntos</p>
-                                                        <?php endif; ?>
-                                                    </div>
                                             <?php endif; ?>
+                                        </div>
                                     <?php endif; ?>
-                                </div>
+                                <?php endif; ?>
+                            </div>
                         <?php endif; ?>
 
                         <!-- Pestaña de Expediente Digital -->
                         <?php if ($esAdmin || verificarAccesoCargo([13, 16, 39, 30, 37, 28])): ?>
-                                <div id="expediente-digital"
-                                    class="tab-pane <?= $pestaña_activa == 'expediente-digital' ? 'active' : '' ?>">
-                                    <?php
-                                    $expedienteCompleto = obtenerExpedienteDigitalCompleto($codOperario);
-                                    $documentosFaltantes = obtenerDocumentosFaltantes($codOperario);
-                                    $totalArchivos = array_sum(array_map('count', $expedienteCompleto));
-                                    ?>
+                            <div id="expediente-digital"
+                                class="tab-pane <?= $pestaña_activa == 'expediente-digital' ? 'active' : '' ?>">
+                                <?php
+                                $expedienteCompleto = obtenerExpedienteDigitalCompleto($codOperario);
+                                $documentosFaltantes = obtenerDocumentosFaltantes($codOperario);
+                                $totalArchivos = array_sum(array_map('count', $expedienteCompleto));
+                                ?>
 
-                                    <!-- Resumen del Expediente -->
-                                    <div class="resumen-expediente"
-                                        style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 30px; display:none;">
-                                        <h3 style="color: #0E544C; margin-bottom: 15px;">Resumen del Expediente Digital</h3>
+                                <!-- Resumen del Expediente -->
+                                <div class="resumen-expediente"
+                                    style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 30px; display:none;">
+                                    <h3 style="color: #0E544C; margin-bottom: 15px;">Resumen del Expediente Digital</h3>
 
+                                    <div
+                                        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">
                                         <div
-                                            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                                            style="text-align: center; padding: 15px; background: white; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                            <div style="font-size: 2rem; font-weight: bold; color: #0E544C;">
+                                                <?= $totalArchivos ?>
+                                            </div>
+                                            <div style="color: #6c757d;">Total de Documentos</div>
+                                        </div>
+
+                                        <?php foreach ($expedienteCompleto as $categoria => $archivos): ?>
                                             <div
                                                 style="text-align: center; padding: 15px; background: white; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
                                                 <div style="font-size: 2rem; font-weight: bold; color: #0E544C;">
-                                                    <?= $totalArchivos ?>
+                                                    <?= count($archivos) ?>
                                                 </div>
-                                                <div style="color: #6c757d;">Total de Documentos</div>
+                                                <div style="color: #6c757d;"><?= $categoria ?></div>
                                             </div>
-
-                                            <?php foreach ($expedienteCompleto as $categoria => $archivos): ?>
-                                                    <div
-                                                        style="text-align: center; padding: 15px; background: white; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                                                        <div style="font-size: 2rem; font-weight: bold; color: #0E544C;">
-                                                            <?= count($archivos) ?>
-                                                        </div>
-                                                        <div style="color: #6c757d;"><?= $categoria ?></div>
-                                                    </div>
-                                            <?php endforeach; ?>
-                                        </div>
-
-                                        <!-- Estado de finalización -->
-                                        <?php $estadoGlobal = verificarEstadoGlobalDocumentos($codOperario); ?>
-                                        <div style="text-align: center; padding: 15px; display:none; background: <?=
-                                            $estadoGlobal == 'completo' ? '#d4edda' :
-                                            ($estadoGlobal == 'parcial' ? '#fff3cd' : '#f8d7da')
-                                            ?>; border-radius: 6px; border: 1px solid <?=
-                                            $estadoGlobal == 'completo' ? '#c3e6cb' :
-                                            ($estadoGlobal == 'parcial' ? '#ffeaa7' : '#f5c6cb')
-                                            ?>;">
-                                            <h4 style="margin: 0; color: <?=
-                                                $estadoGlobal == 'completo' ? '#155724' :
-                                                ($estadoGlobal == 'parcial' ? '#856404' : '#721c24')
-                                                ?>;">
-                                                <?=
-                                                    $estadoGlobal == 'completo' ? '✅ Expediente Completo' :
-                                                    ($estadoGlobal == 'parcial' ? '⏳ Expediente Parcial' : '❌ Expediente Incompleto')
-                                                    ?>
-                                            </h4>
-                                            <p style="margin: 5px 0 0 0; color: <?=
-                                                $estadoGlobal == 'completo' ? '#155724' :
-                                                ($estadoGlobal == 'parcial' ? '#856404' : '#721c24')
-                                                ?>;">
-                                                <?=
-                                                    $estadoGlobal == 'completo' ? 'Todos los documentos obligatorios están subidos' :
-                                                    ($estadoGlobal == 'parcial' ? 'Faltan algunos documentos obligatorios' : 'Faltan la mayoría de documentos obligatorios')
-                                                    ?>
-                                            </p>
-                                        </div>
+                                        <?php endforeach; ?>
                                     </div>
 
-                                    <!-- Documentos Faltantes -->
-                                    <?php if (!empty($documentosFaltantes)): ?>
-                                            <div class="documentos-faltantes"
-                                                style="background: #fff3cd; padding: 20px; border-radius: 8px; margin-bottom: 30px; border: 1px solid #ffeaa7; display:none;">
-                                                <h4 style="color: #856404; margin-bottom: 15px;">
-                                                    <i class="fas fa-exclamation-triangle"></i> Documentos Obligatorios Faltantes
-                                                </h4>
-
-                                                <?php foreach ($documentosFaltantes as $pestaña => $info): ?>
-                                                        <div style="margin-bottom: 15px;">
-                                                            <h5 style="color: #856404; margin-bottom: 10px;">
-                                                                <?= $info['pestaña_nombre'] ?>
-                                                            </h5>
-                                                            <ul style="color: #856404; margin: 0; padding-left: 20px;">
-                                                                <?php foreach ($info['faltantes'] as $documento): ?>
-                                                                        <li><?= htmlspecialchars($documento['nombre']) ?></li>
-                                                                <?php endforeach; ?>
-                                                            </ul>
-                                                        </div>
-                                                <?php endforeach; ?>
-
-                                                <p style="color: #856404; margin: 15px 0 0 0; font-style: italic;">
-                                                    <i class="fas fa-info-circle"></i> Estos documentos deben ser subidos en sus
-                                                    pestañas
-                                                    correspondientes.
-                                                </p>
-                                            </div>
-                                    <?php else: ?>
-                                            <div class="sin-faltantes"
-                                                style="background: #d4edda; padding: 20px; border-radius: 8px; margin-bottom: 30px; border: 1px solid #c3e6cb;">
-                                                <h4 style="color: #155724; margin: 0;">
-                                                    <i class="fas fa-check-circle"></i> Todos los documentos obligatorios están
-                                                    completos
-                                                </h4>
-                                            </div>
-                                    <?php endif; ?>
-
-                                    <!-- Expediente Digital Organizado -->
-                                    <div class="expediente-organizado">
-                                        <h3 style="color: #0E544C; margin-bottom: 20px; display:none;">Expediente Digital
-                                            Organizado
-                                        </h3>
-
-                                        <!-- Leyenda -->
-                                        <div
-                                            style="background: #e9ecef; padding: 15px; border-radius: 5px; margin-top: 10px; margin-bottom:10px;">
-                                            <h5 style="margin: 0 0 10px 0; color: #495057;">Leyenda:</h5>
-                                            <div style="display: flex; gap: 20px; flex-wrap: wrap;">
-                                                <div style="display: flex; align-items: center; gap: 5px;">
-                                                    <span
-                                                        style="display: inline-block; width: 12px; height: 12px; background: #dc3545; border-radius: 50%;"></span>
-                                                    <span style="font-size: 0.9em;">Documento Obligatorio</span>
-                                                </div>
-                                                <div style="display: flex; align-items: center; gap: 5px;">
-                                                    <span
-                                                        style="display: inline-block; width: 12px; height: 12px; background: #6c757d; border-radius: 50%;"></span>
-                                                    <span style="font-size: 0.9em;">Documento Informativo</span>
-                                                </div>
-                                                <div style="display: flex; align-items: center; gap: 5px;">
-                                                    <i class="fas fa-eye" style="color: #0E544C;"></i>
-                                                    <span style="font-size: 0.9em;">Solo visualización</span>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <?php
-                                        // Obtener todos los documentos esperados (incluyendo faltantes)
-                                        $expedienteCompletoConFaltantes = obtenerExpedienteCompletoConFaltantes($codOperario);
-                                        ?>
-
-                                        <?php if (!empty($expedienteCompletoConFaltantes)): ?>
-                                                <div class="contenido-categoria"
-                                                    style="border: 1px solid #dee2e6; border-top: none; border-radius: 0 0 5px 5px; padding: 0;">
-                                                    <table style="width: 100%; border-collapse: collapse;">
-                                                        <thead>
-                                                            <tr style="background: #f8f9fa;">
-                                                                <th style="padding: 12px; text-align: left; width: 15%;">Estado</th>
-                                                                <th style="padding: 12px; text-align: left; width: 25%;">Documento
-                                                                </th>
-                                                                <th style="padding: 12px; text-align: left; width: 25%;">Descripción
-                                                                </th>
-                                                                <th style="padding: 12px; text-align: left; width: 15%;">Pestaña
-                                                                    Origen</th>
-                                                                <th style="padding: 12px; text-align: left; width: 20%;">Subido por
-                                                                </th>
-                                                                <th style="padding: 12px; text-align: left; width: 15%;">Fecha</th>
-                                                                <th style="padding: 12px; text-align: center; width: 10%;"></th>
-                                                            </tr>
-                                                        </thead>
-                                                    </table>
-                                                </div>
-
-                                                <?php foreach ($expedienteCompletoConFaltantes as $categoriaPrincipal => $subcategorias): ?>
-                                                        <div class="categoria-expediente" style="margin-bottom: 30px;">
-                                                            <div class="header-categoria"
-                                                                style="background: #0E544C; color: white; padding: 12px 15px; border-radius: 5px 5px 0 0;">
-                                                                <h4
-                                                                    style="margin: 0; display: flex; justify-content: space-between; align-items: center;">
-                                                                    <span>
-                                                                        <?= htmlspecialchars($categoriaPrincipal) ?>
-                                                                        <small>(<?= array_sum(array_map('count', $subcategorias)) ?>
-                                                                            documento<?= array_sum(array_map('count', $subcategorias)) !== 1 ? 's' : '' ?>)</small>
-                                                                    </span>
-                                                                    <i class="fas fa-folder"></i>
-                                                                </h4>
-                                                            </div>
-
-                                                            <div class="contenido-categoria"
-                                                                style="border: 1px solid #dee2e6; border-top: none; border-radius: 0 0 5px 5px; padding: 0;">
-                                                                <?php foreach ($subcategorias as $subcategoria => $archivos): ?>
-                                                                        <!-- Tabla de documentos -->
-                                                                        <table style="width: 100%; border-collapse: collapse;">
-                                                                            <tbody>
-                                                                                <?php foreach ($archivos as $archivo): ?>
-                                                                                        <tr style="border-bottom: 1px solid #dee2e6;">
-                                                                                            <td style="padding: 12px;">
-                                                                                                <?php if ($archivo['tipo'] === 'faltante'): ?>
-                                                                                                        <span
-                                                                                                            style="display: inline-block; padding: 3px 8px; background: #dc3545; color: white; border-radius: 12px; font-size: 0.8em;">
-                                                                                                            FALTANTE
-                                                                                                        </span>
-                                                                                                <?php else: ?>
-                                                                                                        <?php if (!empty($archivo['tipo_documento'])): ?>
-                                                                                                                <?php
-                                                                                                                $tiposDocumentos = obtenerTiposDocumentosPorPestaña($archivo['pestaña']);
-                                                                                                                $todosTipos = array_merge($tiposDocumentos['obligatorios'], $tiposDocumentos['opcionales']);
-                                                                                                                $nombreTipo = $todosTipos[$archivo['tipo_documento']] ?? $archivo['tipo_documento'];
-                                                                                                                ?>
-                                                                                                                <span
-                                                                                                                    style="display: inline-block; padding: 3px 8px; background: <?= $archivo['obligatorio'] ? '#28a745' : '#6c757d' ?>; color: white; border-radius: 12px; font-size: 0.8em;">
-                                                                                                                    <?= htmlspecialchars($nombreTipo) ?>
-                                                                                                                    <?= $archivo['obligatorio'] ? ' *' : '' ?>
-                                                                                                                </span>
-                                                                                                        <?php else: ?>
-                                                                                                                <span style="color: #6c757d; font-style: italic;">Sin
-                                                                                                                    tipo</span>
-                                                                                                        <?php endif; ?>
-                                                                                                <?php endif; ?>
-                                                                                            </td>
-                                                                                            <td style="padding: 12px;">
-                                                                                                <?php if ($archivo['tipo'] === 'faltante'): ?>
-                                                                                                        <div style="font-weight: 500; color: #dc3545;">
-                                                                                                            <i class="fas fa-exclamation-circle"></i>
-                                                                                                            <?= htmlspecialchars($archivo['nombre_archivo']) ?>
-                                                                                                        </div>
-                                                                                                <?php else: ?>
-                                                                                                        <div style="font-weight: 500;">
-                                                                                                            <?= htmlspecialchars($archivo['nombre_archivo']) ?>
-                                                                                                        </div>
-                                                                                                        <?php if (!empty($archivo['descripcion'])): ?>
-                                                                                                                <div
-                                                                                                                    style="font-size: 0.9em; color: #6c757d; margin-top: 3px; display:none;">
-                                                                                                                    <?= htmlspecialchars($archivo['descripcion']) ?>
-                                                                                                                </div>
-                                                                                                        <?php endif; ?>
-                                                                                                <?php endif; ?>
-                                                                                            </td>
-                                                                                            <td style="padding: 12px;">
-                                                                                                <?php if ($archivo['tipo'] === 'faltante'): ?>
-                                                                                                        <div style="font-weight: 500; color: #dc3545;">
-                                                                                                            <i class="fas fa-exclamation-circle"></i>
-                                                                                                        </div>
-                                                                                                <?php else: ?>
-                                                                                                        <?php if (!empty($archivo['descripcion'])): ?>
-                                                                                                                <div style="font-size: 0.9em; color: #6c757d; margin-top: 3px;">
-                                                                                                                    <?= htmlspecialchars($archivo['descripcion']) ?>
-                                                                                                                </div>
-                                                                                                        <?php endif; ?>
-                                                                                                <?php endif; ?>
-                                                                                            </td>
-                                                                                            <td style="padding: 12px;">
-                                                                                                <span
-                                                                                                    style="display: inline-block; padding: 3px 8px; background: #e9ecef; color: #495057; border-radius: 12px; font-size: 0.8em;">
-                                                                                                    <?= obtenerNombrePestaña($archivo['pestaña']) ?>
-                                                                                                </span>
-                                                                                            </td>
-                                                                                            <td style="padding: 12px;">
-                                                                                                <?= $archivo['tipo'] === 'faltante' ? 'No subido' : htmlspecialchars($archivo['nombre_usuario'] . ' ' . $archivo['apellido_usuario']) ?>
-                                                                                            </td>
-                                                                                            <td style="padding: 12px;">
-                                                                                                <?= $archivo['tipo'] === 'faltante' ? 'Pendiente' : date('d/m/Y H:i', strtotime($archivo['fecha_subida'])) ?>
-                                                                                            </td>
-                                                                                            <td style="padding: 12px; text-align: center;">
-                                                                                                <?php if ($archivo['tipo'] !== 'faltante'): ?>
-                                                                                                        <a href="<?= htmlspecialchars($archivo['ruta_archivo']) ?>"
-                                                                                                            target="_blank" class="btn-accion btn-editar"
-                                                                                                            title="Ver documento">
-                                                                                                            <i class="fas fa-eye"></i>
-                                                                                                        </a>
-                                                                                                <?php else: ?>
-                                                                                                        <span style="color: #6c757d;">-</span>
-                                                                                                <?php endif; ?>
-                                                                                            </td>
-                                                                                        </tr>
-                                                                                <?php endforeach; ?>
-                                                                            </tbody>
-                                                                        </table>
-                                                                <?php endforeach; ?>
-                                                            </div>
-                                                        </div>
-                                                <?php endforeach; ?>
-                                        <?php else: ?>
-                                                <div style="text-align: center; padding: 40px; color: #6c757d;">
-                                                    <i class="fas fa-folder-open" style="font-size: 3rem; margin-bottom: 15px;"></i>
-                                                    <p>No hay documentos en el expediente digital</p>
-                                                </div>
-                                        <?php endif; ?>
+                                    <!-- Estado de finalización -->
+                                    <?php $estadoGlobal = verificarEstadoGlobalDocumentos($codOperario); ?>
+                                    <div style="text-align: center; padding: 15px; display:none; background: <?=
+                                        $estadoGlobal == 'completo' ? '#d4edda' :
+                                        ($estadoGlobal == 'parcial' ? '#fff3cd' : '#f8d7da')
+                                        ?>; border-radius: 6px; border: 1px solid <?=
+                                        $estadoGlobal == 'completo' ? '#c3e6cb' :
+                                        ($estadoGlobal == 'parcial' ? '#ffeaa7' : '#f5c6cb')
+                                        ?>;">
+                                        <h4 style="margin: 0; color: <?=
+                                            $estadoGlobal == 'completo' ? '#155724' :
+                                            ($estadoGlobal == 'parcial' ? '#856404' : '#721c24')
+                                            ?>;">
+                                            <?=
+                                                $estadoGlobal == 'completo' ? '✅ Expediente Completo' :
+                                                ($estadoGlobal == 'parcial' ? '⏳ Expediente Parcial' : '❌ Expediente Incompleto')
+                                                ?>
+                                        </h4>
+                                        <p style="margin: 5px 0 0 0; color: <?=
+                                            $estadoGlobal == 'completo' ? '#155724' :
+                                            ($estadoGlobal == 'parcial' ? '#856404' : '#721c24')
+                                            ?>;">
+                                            <?=
+                                                $estadoGlobal == 'completo' ? 'Todos los documentos obligatorios están subidos' :
+                                                ($estadoGlobal == 'parcial' ? 'Faltan algunos documentos obligatorios' : 'Faltan la mayoría de documentos obligatorios')
+                                                ?>
+                                        </p>
                                     </div>
                                 </div>
+
+                                <!-- Documentos Faltantes -->
+                                <?php if (!empty($documentosFaltantes)): ?>
+                                    <div class="documentos-faltantes"
+                                        style="background: #fff3cd; padding: 20px; border-radius: 8px; margin-bottom: 30px; border: 1px solid #ffeaa7; display:none;">
+                                        <h4 style="color: #856404; margin-bottom: 15px;">
+                                            <i class="fas fa-exclamation-triangle"></i> Documentos Obligatorios Faltantes
+                                        </h4>
+
+                                        <?php foreach ($documentosFaltantes as $pestaña => $info): ?>
+                                            <div style="margin-bottom: 15px;">
+                                                <h5 style="color: #856404; margin-bottom: 10px;">
+                                                    <?= $info['pestaña_nombre'] ?>
+                                                </h5>
+                                                <ul style="color: #856404; margin: 0; padding-left: 20px;">
+                                                    <?php foreach ($info['faltantes'] as $documento): ?>
+                                                        <li><?= htmlspecialchars($documento['nombre']) ?></li>
+                                                    <?php endforeach; ?>
+                                                </ul>
+                                            </div>
+                                        <?php endforeach; ?>
+
+                                        <p style="color: #856404; margin: 15px 0 0 0; font-style: italic;">
+                                            <i class="fas fa-info-circle"></i> Estos documentos deben ser subidos en sus
+                                            pestañas
+                                            correspondientes.
+                                        </p>
+                                    </div>
+                                <?php else: ?>
+                                    <div class="sin-faltantes"
+                                        style="background: #d4edda; padding: 20px; border-radius: 8px; margin-bottom: 30px; border: 1px solid #c3e6cb;">
+                                        <h4 style="color: #155724; margin: 0;">
+                                            <i class="fas fa-check-circle"></i> Todos los documentos obligatorios están
+                                            completos
+                                        </h4>
+                                    </div>
+                                <?php endif; ?>
+
+                                <!-- Expediente Digital Organizado -->
+                                <div class="expediente-organizado">
+                                    <h3 style="color: #0E544C; margin-bottom: 20px; display:none;">Expediente Digital
+                                        Organizado
+                                    </h3>
+
+                                    <!-- Leyenda -->
+                                    <div
+                                        style="background: #e9ecef; padding: 15px; border-radius: 5px; margin-top: 10px; margin-bottom:10px;">
+                                        <h5 style="margin: 0 0 10px 0; color: #495057;">Leyenda:</h5>
+                                        <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                                            <div style="display: flex; align-items: center; gap: 5px;">
+                                                <span
+                                                    style="display: inline-block; width: 12px; height: 12px; background: #dc3545; border-radius: 50%;"></span>
+                                                <span style="font-size: 0.9em;">Documento Obligatorio</span>
+                                            </div>
+                                            <div style="display: flex; align-items: center; gap: 5px;">
+                                                <span
+                                                    style="display: inline-block; width: 12px; height: 12px; background: #6c757d; border-radius: 50%;"></span>
+                                                <span style="font-size: 0.9em;">Documento Informativo</span>
+                                            </div>
+                                            <div style="display: flex; align-items: center; gap: 5px;">
+                                                <i class="fas fa-eye" style="color: #0E544C;"></i>
+                                                <span style="font-size: 0.9em;">Solo visualización</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <?php
+                                    // Obtener todos los documentos esperados (incluyendo faltantes)
+                                    $expedienteCompletoConFaltantes = obtenerExpedienteCompletoConFaltantes($codOperario);
+                                    ?>
+
+                                    <?php if (!empty($expedienteCompletoConFaltantes)): ?>
+                                        <div class="contenido-categoria"
+                                            style="border: 1px solid #dee2e6; border-top: none; border-radius: 0 0 5px 5px; padding: 0;">
+                                            <table style="width: 100%; border-collapse: collapse;">
+                                                <thead>
+                                                    <tr style="background: #f8f9fa;">
+                                                        <th style="padding: 12px; text-align: left; width: 15%;">Estado</th>
+                                                        <th style="padding: 12px; text-align: left; width: 25%;">Documento
+                                                        </th>
+                                                        <th style="padding: 12px; text-align: left; width: 25%;">Descripción
+                                                        </th>
+                                                        <th style="padding: 12px; text-align: left; width: 15%;">Pestaña
+                                                            Origen</th>
+                                                        <th style="padding: 12px; text-align: left; width: 20%;">Subido por
+                                                        </th>
+                                                        <th style="padding: 12px; text-align: left; width: 15%;">Fecha</th>
+                                                        <th style="padding: 12px; text-align: center; width: 10%;"></th>
+                                                    </tr>
+                                                </thead>
+                                            </table>
+                                        </div>
+
+                                        <?php foreach ($expedienteCompletoConFaltantes as $categoriaPrincipal => $subcategorias): ?>
+                                            <div class="categoria-expediente" style="margin-bottom: 30px;">
+                                                <div class="header-categoria"
+                                                    style="background: #0E544C; color: white; padding: 12px 15px; border-radius: 5px 5px 0 0;">
+                                                    <h4
+                                                        style="margin: 0; display: flex; justify-content: space-between; align-items: center;">
+                                                        <span>
+                                                            <?= htmlspecialchars($categoriaPrincipal) ?>
+                                                            <small>(<?= array_sum(array_map('count', $subcategorias)) ?>
+                                                                documento<?= array_sum(array_map('count', $subcategorias)) !== 1 ? 's' : '' ?>)</small>
+                                                        </span>
+                                                        <i class="fas fa-folder"></i>
+                                                    </h4>
+                                                </div>
+
+                                                <div class="contenido-categoria"
+                                                    style="border: 1px solid #dee2e6; border-top: none; border-radius: 0 0 5px 5px; padding: 0;">
+                                                    <?php foreach ($subcategorias as $subcategoria => $archivos): ?>
+                                                        <!-- Tabla de documentos -->
+                                                        <table style="width: 100%; border-collapse: collapse;">
+                                                            <tbody>
+                                                                <?php foreach ($archivos as $archivo): ?>
+                                                                    <tr style="border-bottom: 1px solid #dee2e6;">
+                                                                        <td style="padding: 12px;">
+                                                                            <?php if ($archivo['tipo'] === 'faltante'): ?>
+                                                                                <span
+                                                                                    style="display: inline-block; padding: 3px 8px; background: #dc3545; color: white; border-radius: 12px; font-size: 0.8em;">
+                                                                                    FALTANTE
+                                                                                </span>
+                                                                            <?php else: ?>
+                                                                                <?php if (!empty($archivo['tipo_documento'])): ?>
+                                                                                    <?php
+                                                                                    $tiposDocumentos = obtenerTiposDocumentosPorPestaña($archivo['pestaña']);
+                                                                                    $todosTipos = array_merge($tiposDocumentos['obligatorios'], $tiposDocumentos['opcionales']);
+                                                                                    $nombreTipo = $todosTipos[$archivo['tipo_documento']] ?? $archivo['tipo_documento'];
+                                                                                    ?>
+                                                                                    <span
+                                                                                        style="display: inline-block; padding: 3px 8px; background: <?= $archivo['obligatorio'] ? '#28a745' : '#6c757d' ?>; color: white; border-radius: 12px; font-size: 0.8em;">
+                                                                                        <?= htmlspecialchars($nombreTipo) ?>
+                                                                                        <?= $archivo['obligatorio'] ? ' *' : '' ?>
+                                                                                    </span>
+                                                                                <?php else: ?>
+                                                                                    <span style="color: #6c757d; font-style: italic;">Sin
+                                                                                        tipo</span>
+                                                                                <?php endif; ?>
+                                                                            <?php endif; ?>
+                                                                        </td>
+                                                                        <td style="padding: 12px;">
+                                                                            <?php if ($archivo['tipo'] === 'faltante'): ?>
+                                                                                <div style="font-weight: 500; color: #dc3545;">
+                                                                                    <i class="fas fa-exclamation-circle"></i>
+                                                                                    <?= htmlspecialchars($archivo['nombre_archivo']) ?>
+                                                                                </div>
+                                                                            <?php else: ?>
+                                                                                <div style="font-weight: 500;">
+                                                                                    <?= htmlspecialchars($archivo['nombre_archivo']) ?>
+                                                                                </div>
+                                                                                <?php if (!empty($archivo['descripcion'])): ?>
+                                                                                    <div
+                                                                                        style="font-size: 0.9em; color: #6c757d; margin-top: 3px; display:none;">
+                                                                                        <?= htmlspecialchars($archivo['descripcion']) ?>
+                                                                                    </div>
+                                                                                <?php endif; ?>
+                                                                            <?php endif; ?>
+                                                                        </td>
+                                                                        <td style="padding: 12px;">
+                                                                            <?php if ($archivo['tipo'] === 'faltante'): ?>
+                                                                                <div style="font-weight: 500; color: #dc3545;">
+                                                                                    <i class="fas fa-exclamation-circle"></i>
+                                                                                </div>
+                                                                            <?php else: ?>
+                                                                                <?php if (!empty($archivo['descripcion'])): ?>
+                                                                                    <div style="font-size: 0.9em; color: #6c757d; margin-top: 3px;">
+                                                                                        <?= htmlspecialchars($archivo['descripcion']) ?>
+                                                                                    </div>
+                                                                                <?php endif; ?>
+                                                                            <?php endif; ?>
+                                                                        </td>
+                                                                        <td style="padding: 12px;">
+                                                                            <span
+                                                                                style="display: inline-block; padding: 3px 8px; background: #e9ecef; color: #495057; border-radius: 12px; font-size: 0.8em;">
+                                                                                <?= obtenerNombrePestaña($archivo['pestaña']) ?>
+                                                                            </span>
+                                                                        </td>
+                                                                        <td style="padding: 12px;">
+                                                                            <?= $archivo['tipo'] === 'faltante' ? 'No subido' : htmlspecialchars($archivo['nombre_usuario'] . ' ' . $archivo['apellido_usuario']) ?>
+                                                                        </td>
+                                                                        <td style="padding: 12px;">
+                                                                            <?= $archivo['tipo'] === 'faltante' ? 'Pendiente' : date('d/m/Y H:i', strtotime($archivo['fecha_subida'])) ?>
+                                                                        </td>
+                                                                        <td style="padding: 12px; text-align: center;">
+                                                                            <?php if ($archivo['tipo'] !== 'faltante'): ?>
+                                                                                <a href="<?= htmlspecialchars($archivo['ruta_archivo']) ?>"
+                                                                                    target="_blank" class="btn-accion btn-editar"
+                                                                                    title="Ver documento">
+                                                                                    <i class="fas fa-eye"></i>
+                                                                                </a>
+                                                                            <?php else: ?>
+                                                                                <span style="color: #6c757d;">-</span>
+                                                                            <?php endif; ?>
+                                                                        </td>
+                                                                    </tr>
+                                                                <?php endforeach; ?>
+                                                            </tbody>
+                                                        </table>
+                                                    <?php endforeach; ?>
+                                                </div>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    <?php else: ?>
+                                        <div style="text-align: center; padding: 40px; color: #6c757d;">
+                                            <i class="fas fa-folder-open" style="font-size: 3rem; margin-bottom: 15px;"></i>
+                                            <p>No hay documentos en el expediente digital</p>
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
                         <?php endif; ?>
 
                         <!-- Pestaña de Bitácora -->
                         <?php if ($esAdmin || verificarAccesoCargo([13, 16, 39, 30, 37, 28])): ?>
-                                <div id="bitacora" class="tab-pane <?= $pestaña_activa == 'bitacora' ? 'active' : '' ?>">
-                                    <div style="margin-bottom: 30px;">
-                                        <h3 style="color: #0E544C; margin-bottom: 15px;">Nueva Anotación</h3>
+                            <div id="bitacora" class="tab-pane <?= $pestaña_activa == 'bitacora' ? 'active' : '' ?>">
+                                <div style="margin-bottom: 30px;">
+                                    <h3 style="color: #0E544C; margin-bottom: 15px;">Nueva Anotación</h3>
 
-                                        <form method="POST" action="">
-                                            <input type="hidden" name="accion_bitacora" value="agregar">
-                                            <input type="hidden" name="pestaña" value="bitacora">
+                                    <form method="POST" action="">
+                                        <input type="hidden" name="accion_bitacora" value="agregar">
+                                        <input type="hidden" name="pestaña" value="bitacora">
 
-                                            <div class="form-group">
-                                                <label for="anotacion">Anotación *</label>
-                                                <textarea id="anotacion" name="anotacion" class="form-control" rows="5"
-                                                    placeholder="Escriba aquí cualquier nota, observación o comentario sobre el colaborador..."
-                                                    required></textarea>
-                                                <small style="color: #6c757d;">
-                                                    Esta anotación quedará registrada permanentemente y no podrá ser editada
-                                                    ni
-                                                    eliminada.
-                                                </small>
-                                            </div>
+                                        <div class="form-group">
+                                            <label for="anotacion">Anotación *</label>
+                                            <textarea id="anotacion" name="anotacion" class="form-control" rows="5"
+                                                placeholder="Escriba aquí cualquier nota, observación o comentario sobre el colaborador..."
+                                                required></textarea>
+                                            <small style="color: #6c757d;">
+                                                Esta anotación quedará registrada permanentemente y no podrá ser editada
+                                                ni
+                                                eliminada.
+                                            </small>
+                                        </div>
 
-                                            <button type="submit" class="btn-submit">
-                                                <i class="fas fa-save"></i> Guardar Anotación
-                                            </button>
-                                        </form>
-                                    </div>
-
-                                    <div style="border-top: 2px solid #0E544C; padding-top: 20px;">
-                                        <h3 style="color: #0E544C; margin-bottom: 15px;">
-                                            Historial de Bitácora
-                                            <span style="font-size: 0.8em; color: #6c757d;">(<?= count($bitacoraColaborador) ?>
-                                                anotaciones)</span>
-                                        </h3>
-
-                                        <?php if (count($bitacoraColaborador) > 0): ?>
-                                                <div style="display: flex; flex-direction: column; gap: 15px;">
-                                                    <?php foreach ($bitacoraColaborador as $anotacion): ?>
-                                                            <div
-                                                                style="background: #f8f9fa; border-left: 4px solid #0E544C; padding: 15px; border-radius: 4px;">
-                                                                <div
-                                                                    style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
-                                                                    <div>
-                                                                        <strong style="color: #0E544C;">
-                                                                            <i class="fas fa-user"></i>
-                                                                            <?= htmlspecialchars($anotacion['nombre_usuario']) ?>
-                                                                        </strong>
-                                                                    </div>
-                                                                    <div style="color: #6c757d; font-size: 0.9em;">
-                                                                        <i class="fas fa-calendar"></i>
-                                                                        <?= date('d/m/Y H:i', strtotime($anotacion['fecha_registro'])) ?>
-                                                                    </div>
-                                                                </div>
-                                                                <div style="color: #333; line-height: 1.6; white-space: pre-wrap;">
-                                                                    <?= htmlspecialchars($anotacion['anotacion']) ?>
-                                                                </div>
-                                                            </div>
-                                                    <?php endforeach; ?>
-                                                </div>
-                                        <?php else: ?>
-                                                <div style="text-align: center; padding: 40px; color: #6c757d;">
-                                                    <i class="fas fa-clipboard"
-                                                        style="font-size: 3rem; margin-bottom: 15px; opacity: 0.3;"></i>
-                                                    <p>No hay anotaciones en la bitácora</p>
-                                                    <p style="font-size: 0.9em;">Las anotaciones aparecerán aquí una vez que se
-                                                        registren</p>
-                                                </div>
-                                        <?php endif; ?>
-                                    </div>
+                                        <button type="submit" class="btn-submit">
+                                            <i class="fas fa-save"></i> Guardar Anotación
+                                        </button>
+                                    </form>
                                 </div>
+
+                                <div style="border-top: 2px solid #0E544C; padding-top: 20px;">
+                                    <h3 style="color: #0E544C; margin-bottom: 15px;">
+                                        Historial de Bitácora
+                                        <span style="font-size: 0.8em; color: #6c757d;">(<?= count($bitacoraColaborador) ?>
+                                            anotaciones)</span>
+                                    </h3>
+
+                                    <?php if (count($bitacoraColaborador) > 0): ?>
+                                        <div style="display: flex; flex-direction: column; gap: 15px;">
+                                            <?php foreach ($bitacoraColaborador as $anotacion): ?>
+                                                <div
+                                                    style="background: #f8f9fa; border-left: 4px solid #0E544C; padding: 15px; border-radius: 4px;">
+                                                    <div
+                                                        style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
+                                                        <div>
+                                                            <strong style="color: #0E544C;">
+                                                                <i class="fas fa-user"></i>
+                                                                <?= htmlspecialchars($anotacion['nombre_usuario']) ?>
+                                                            </strong>
+                                                        </div>
+                                                        <div style="color: #6c757d; font-size: 0.9em;">
+                                                            <i class="fas fa-calendar"></i>
+                                                            <?= date('d/m/Y H:i', strtotime($anotacion['fecha_registro'])) ?>
+                                                        </div>
+                                                    </div>
+                                                    <div style="color: #333; line-height: 1.6; white-space: pre-wrap;">
+                                                        <?= htmlspecialchars($anotacion['anotacion']) ?>
+                                                    </div>
+                                                </div>
+                                            <?php endforeach; ?>
+                                        </div>
+                                    <?php else: ?>
+                                        <div style="text-align: center; padding: 40px; color: #6c757d;">
+                                            <i class="fas fa-clipboard"
+                                                style="font-size: 3rem; margin-bottom: 15px; opacity: 0.3;"></i>
+                                            <p>No hay anotaciones en la bitácora</p>
+                                            <p style="font-size: 0.9em;">Las anotaciones aparecerán aquí una vez que se
+                                                registren</p>
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
                         <?php endif; ?>
                     </div>
                 </div>
@@ -6486,9 +6487,9 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                                 <?php
                                 $tiposSalida = obtenerTiposSalida();
                                 foreach ($tiposSalida as $tipo): ?>
-                                        <option value="<?= $tipo['CodTipoSalida'] ?>">
-                                            <?= htmlspecialchars($tipo['nombre']) ?>
-                                        </option>
+                                    <option value="<?= $tipo['CodTipoSalida'] ?>">
+                                        <?= htmlspecialchars($tipo['nombre']) ?>
+                                    </option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
@@ -6693,9 +6694,9 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                             <select id="edit_cod_cargo" name="cod_cargo" class="form-control" required>
                                 <option value="">Seleccionar cargo...</option>
                                 <?php foreach ($cargosDisponibles as $cargo): ?>
-                                        <option value="<?= $cargo['CodNivelesCargos'] ?>">
-                                            <?= htmlspecialchars($cargo['Nombre']) ?>
-                                        </option>
+                                    <option value="<?= $cargo['CodNivelesCargos'] ?>">
+                                        <?= htmlspecialchars($cargo['Nombre']) ?>
+                                    </option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
@@ -6705,9 +6706,9 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                             <select id="edit_sucursal" name="sucursal" class="form-control" required>
                                 <option value="">Seleccionar sucursal...</option>
                                 <?php foreach ($sucursales as $sucursal): ?>
-                                        <option value="<?= $sucursal['codigo'] ?>">
-                                            <?= htmlspecialchars($sucursal['nombre']) ?>
-                                        </option>
+                                    <option value="<?= $sucursal['codigo'] ?>">
+                                        <?= htmlspecialchars($sucursal['nombre']) ?>
+                                    </option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
@@ -6790,10 +6791,10 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                             <select id="edit_id_categoria" name="id_categoria" class="form-control" required>
                                 <option value="">Seleccionar categoría...</option>
                                 <?php foreach ($todasCategorias as $categoria): ?>
-                                        <option value="<?= $categoria['idCategoria'] ?>">
-                                            <?= htmlspecialchars($categoria['NombreCategoria']) ?>
-                                            (Peso: <?= $categoria['Peso'] ?>)
-                                        </option>
+                                    <option value="<?= $categoria['idCategoria'] ?>">
+                                        <?= htmlspecialchars($categoria['NombreCategoria']) ?>
+                                        (Peso: <?= $categoria['Peso'] ?>)
+                                    </option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
@@ -6846,9 +6847,9 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                                     <select id="edit_cod_cargo_adendum" name="cod_cargo" class="form-control">
                                         <option value="">Seleccionar cargo...</option>
                                         <?php foreach ($cargosDisponibles as $cargo): ?>
-                                                <option value="<?= $cargo['CodNivelesCargos'] ?>">
-                                                    <?= htmlspecialchars($cargo['Nombre']) ?>
-                                                </option>
+                                            <option value="<?= $cargo['CodNivelesCargos'] ?>">
+                                                <?= htmlspecialchars($cargo['Nombre']) ?>
+                                            </option>
                                         <?php endforeach; ?>
                                     </select>
                                 </div>
@@ -6858,9 +6859,9 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                                     <select id="edit_sucursal_adendum" name="sucursal" class="form-control">
                                         <option value="">Seleccionar sucursal...</option>
                                         <?php foreach ($sucursales as $sucursal): ?>
-                                                <option value="<?= $sucursal['codigo'] ?>">
-                                                    <?= htmlspecialchars($sucursal['nombre']) ?>
-                                                </option>
+                                            <option value="<?= $sucursal['codigo'] ?>">
+                                                <?= htmlspecialchars($sucursal['nombre']) ?>
+                                            </option>
                                         <?php endforeach; ?>
                                     </select>
                                 </div>
@@ -6872,10 +6873,10 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                                     <select id="edit_id_categoria_adendum" name="id_categoria" class="form-control">
                                         <option value="">Seleccionar categoría...</option>
                                         <?php foreach ($todasCategorias as $categoria): ?>
-                                                <option value="<?= $categoria['idCategoria'] ?>">
-                                                    <?= htmlspecialchars($categoria['NombreCategoria']) ?>
-                                                    (Peso: <?= $categoria['Peso'] ?>)
-                                                </option>
+                                            <option value="<?= $categoria['idCategoria'] ?>">
+                                                <?= htmlspecialchars($categoria['NombreCategoria']) ?>
+                                                (Peso: <?= $categoria['Peso'] ?>)
+                                            </option>
                                         <?php endforeach; ?>
                                     </select>
                                 </div>
