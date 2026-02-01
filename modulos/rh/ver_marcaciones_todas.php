@@ -1601,7 +1601,14 @@ function verificarTardanzaYaRegistrada(
                                         <th style="text-align: center;">Total Horas<br>Trabajadas</th>
                                     <?php endif; ?>
                                     <?php if ($esLider): ?>
-                                        <th style="text-align: center;">Acciones</th>
+                                        <th style="text-align: center;">
+                                            Acciones
+                                            <span id="btnFiltroIncidencias" class="filter-tri-state neutral"
+                                                onclick="toggleFiltroIncidencias()"
+                                                title="Filtrando: TODO (Clic para ver solo CON incidencias)">
+                                                <i class="fas fa-minus-circle"></i>
+                                            </span>
+                                        </th>
                                     <?php endif; ?>
                                 </tr>
                             </thead>
@@ -1773,12 +1780,12 @@ function verificarTardanzaYaRegistrada(
                 // Datos de operarios para el autocompletado
                 const operariosData = [
                     <?php if ($esLider): ?>
-                                                        { id: <?php echo $_SESSION['usuario_id']; ?>, nombre: '' },
+                                                            { id: <?php echo $_SESSION['usuario_id']; ?>, nombre: '' },
                     <?php else: ?>
-                                                        { id: 0, nombre: 'Todos los colaboradores' },
+                                                            { id: 0, nombre: 'Todos los colaboradores' },
                     <?php endif; ?>
             <?php foreach ($operarios as $op): ?>
-                                                        { id: <?php echo $op['CodOperario']; ?>, nombre: '<?php echo addslashes($op['nombre_completo']); ?>' },
+                                                            { id: <?php echo $op['CodOperario']; ?>, nombre: '<?php echo addslashes($op['nombre_completo']); ?>' },
                     <?php endforeach; ?>
                 ];
 

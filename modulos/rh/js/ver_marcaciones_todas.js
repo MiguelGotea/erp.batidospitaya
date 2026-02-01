@@ -10,6 +10,7 @@ let ordenActivo = { columna: null, direccion: 'desc' };
 let panelFiltroAbierto = null;
 let totalRegistros = 0;
 let scrollTopInicial = 0;
+let filtroIncidencias = 'todos'; // 'todos', 'con_incidencia', 'sin_incidencia'
 
 // Inicializar
 $(document).ready(function () {
@@ -76,13 +77,31 @@ function renderizarTabla(datos) {
     const tbody = $('#tablaMarcacionesBody');
     tbody.empty();
 
-    if (datos.length === 0) {
+    // Aplicar filtro de incidencias localmente si es necesario
+    let datosFiltrados = datos;
+    if (filtroIncidencias === 'con_incidencia') {
+        datosFiltrados = datos.filter(row => {
+            const difMin = calcularMinutosDiferencia(row.hora_entrada_programada, row.hora_ingreso);
+            const tieneTardanza = (row.hora_entrada_programada && row.hora_ingreso && difMin > 1);
+            const tieneFalta = (!row.tiene_marcacion && row.tiene_horario && ['Activo', 'Otra.Tienda'].includes(row.estado_dia));
+            return tieneTardanza || tieneFalta || row.tardanza_solicitada || row.falta_solicitada;
+        });
+    } else if (filtroIncidencias === 'sin_incidencia') {
+        datosFiltrados = datos.filter(row => {
+            const difMin = calcularMinutosDiferencia(row.hora_entrada_programada, row.hora_ingreso);
+            const tieneTardanza = (row.hora_entrada_programada && row.hora_ingreso && difMin > 1);
+            const tieneFalta = (!row.tiene_marcacion && row.tiene_horario && ['Activo', 'Otra.Tienda'].includes(row.estado_dia));
+            return !tieneTardanza && !tieneFalta && !row.tardanza_solicitada && !row.falta_solicitada;
+        });
+    }
+
+    if (datosFiltrados.length === 0) {
         const colspan = calcularColspan();
         tbody.append(`<tr><td colspan="${colspan}" class="text-center py-4">No se encontraron registros</td></tr>`);
         return;
     }
 
-    datos.forEach(row => {
+    datosFiltrados.forEach(row => {
         const tr = $('<tr>');
 
         // Semana
@@ -775,4 +794,27 @@ function calcularMinutosDiferencia(programada, marcada) {
 function verDetalle(codOperario, fecha) {
     // Placeholder para ver detalle de marcación
     alert(`Ver detalle de marcación:\nOperario: ${codOperario}\nFecha: ${fecha}`);
+}// Función para alternar el filtro de incidencias (Tri-state)
+function toggleFiltroIncidencias() {
+    const btn = $('#btnFiltroIncidencias');
+    const icon = btn.find('i');
+
+    if (filtroIncidencias === 'todos') {
+        filtroIncidencias = 'con_incidencia';
+        btn.removeClass('neutral').addClass('positive');
+        icon.removeClass('fa-minus-circle').addClass('fa-check-circle');
+        btn.attr('title', 'Filtrando: Solo registros CON incidencias (Clic para ver SIN incidencias)');
+    } else if (filtroIncidencias === 'con_incidencia') {
+        filtroIncidencias = 'sin_incidencia';
+        btn.removeClass('positive').addClass('negative');
+        icon.removeClass('fa-check-circle').addClass('fa-times-circle');
+        btn.attr('title', 'Filtrando: Solo registros SIN incidencias (Clic para ver TODO)');
+    } else {
+        filtroIncidencias = 'todos';
+        btn.removeClass('negative').addClass('neutral');
+        icon.removeClass('fa-times-circle').addClass('fa-minus-circle');
+        btn.attr('title', 'Filtrando: TODO (Clic para ver solo CON incidencias)');
+    }
+
+    cargarDatos(); // Recargar para aplicar el filtro (aunque sea localmente, cargarDatos llama a renderizarTabla)
 }

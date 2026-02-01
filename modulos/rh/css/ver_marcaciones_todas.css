@@ -1074,3 +1074,41 @@ a.btn {
     color: #155724;
     border: 1px solid #c3e6cb;
 }
+
+/* Estilos para el filtro de 3 estados en el encabezado */
+.filter-tri-state {
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    margin-left: 8px;
+    vertical-align: middle;
+}
+
+.filter-tri-state:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.1);
+}
+
+.filter-tri-state.neutral {
+    color: #ced4da;
+    /* Gris */
+}
+
+.filter-tri-state.positive {
+    color: #28a745;
+    /* Verde: Solo incidencias */
+    background: rgba(40, 167, 69, 0.2);
+}
+
+.filter-tri-state.negative {
+    color: #dc3545;
+    /* Rojo: Sin incidencias */
+    background: rgba(220, 53, 69, 0.2);
+}
