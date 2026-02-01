@@ -159,44 +159,53 @@ function renderizarTabla(datos) {
         if (PERMISOS_USUARIO.esLider) {
             let accionesHtml = '';
 
-            // Verificar si hay tardanza (diferencia de entrada > 1 minuto)
+            // 1. Verificar si hay TARDANZA (diferencia de entrada > 1 minuto)
             if (row.hora_entrada_programada && row.hora_ingreso) {
                 const difMin = calcularMinutosDiferencia(row.hora_entrada_programada, row.hora_ingreso);
                 if (difMin > 1) {
-                    // Botón de tardanza
-                    accionesHtml = `
-                        <button type="button" class="btn-solicitud-tardanza" 
-                                onclick="mostrarModalTardanza(
-                                    ${row.CodOperario},
-                                    '${(row.nombre_completo || '').replace(/'/g, "\\'")}',
-                                    '${row.sucursal_codigo}',
-                                    '${(row.nombre_sucursal || '').replace(/'/g, "\\'")}',
-                                    '${row.fecha}',
-                                    '${row.hora_entrada_programada}',
-                                    '${row.hora_ingreso}',
-                                    null,
-                                    true
-                                )" title="Justificar Tardanza">
-                            Justificar Tardanza
-                        </button>
-                    `;
+                    if (row.tardanza_solicitada) {
+                        accionesHtml = `<span class="badge-solicitud-info color-tardanza">Tardanza ya solicitada</span>`;
+                    } else {
+                        accionesHtml = `
+                            <button type="button" class="btn-solicitud-tardanza" 
+                                    onclick="mostrarModalTardanza(
+                                        ${row.CodOperario},
+                                        '${(row.nombre_completo || '').replace(/'/g, "\\'")}',
+                                        '${row.sucursal_codigo}',
+                                        '${(row.nombre_sucursal || '').replace(/'/g, "\\'")}',
+                                        '${row.fecha}',
+                                        '${row.hora_entrada_programada}',
+                                        '${row.hora_ingreso}',
+                                        null,
+                                        true
+                                    )" title="Justificar Tardanza">
+                                Justificar Tardanza
+                            </button>
+                        `;
+                    }
                 }
-            } else if (!row.tiene_marcacion && row.tiene_horario) {
-                // Botón de falta (solo si el estado permite)
+            }
+
+            // 2. Verificar si hay FALTA (solo si no se puso nada arriba)
+            if (accionesHtml === '' && !row.tiene_marcacion && row.tiene_horario) {
                 const estadosPermitidos = ['Activo', 'Otra.Tienda'];
                 if (estadosPermitidos.includes(row.estado_dia)) {
-                    accionesHtml = `
-                        <button type="button" class="btn-solicitud-falta" 
-                                onclick="mostrarModalFalta(
-                                    ${row.CodOperario},
-                                    '${(row.nombre_completo || '').replace(/'/g, "\\'")}',
-                                    '${row.sucursal_codigo}',
-                                    '${(row.nombre_sucursal || '').replace(/'/g, "\\'")}',
-                                    '${row.fecha}'
-                                )" title="Solicitar justificación de falta/ausencia">
-                            Justificar Falta
-                        </button>
-                    `;
+                    if (row.falta_solicitada) {
+                        accionesHtml = `<span class="badge-solicitud-info color-falta">Falta ya solicitada</span>`;
+                    } else {
+                        accionesHtml = `
+                            <button type="button" class="btn-solicitud-falta" 
+                                    onclick="mostrarModalFalta(
+                                        ${row.CodOperario},
+                                        '${(row.nombre_completo || '').replace(/'/g, "\\'")}',
+                                        '${row.sucursal_codigo}',
+                                        '${(row.nombre_sucursal || '').replace(/'/g, "\\'")}',
+                                        '${row.fecha}'
+                                    )" title="Solicitar justificación de falta/ausencia">
+                                Justificar Falta
+                            </button>
+                        `;
+                    }
                 }
             }
 

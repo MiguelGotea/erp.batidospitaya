@@ -203,6 +203,17 @@ try {
     $stmtMarcaciones->execute($paramsMarcaciones);
     $marcaciones = $stmtMarcaciones->fetchAll(PDO::FETCH_ASSOC);
 
+    // PASO 2.5: Precargar justificaciones existentes para optimizar
+    $sqlTardanzasExistentes = "SELECT cod_operario, fecha_tardanza, cod_sucursal FROM TardanzasManuales WHERE fecha_tardanza BETWEEN ? AND ?";
+    $stmtTardanzas = $conn->prepare($sqlTardanzasExistentes);
+    $stmtTardanzas->execute([$fechaDesdeMarcaciones, $fechaHastaMarcaciones]);
+    $tardanzasExistentes = $stmtTardanzas->fetchAll(PDO::FETCH_GROUP | PDO::FETCH_ASSOC);
+
+    $sqlFaltasExistentes = "SELECT cod_operario, fecha_falta, cod_sucursal FROM faltas_manual WHERE fecha_falta BETWEEN ? AND ?";
+    $stmtFaltasEx = $conn->prepare($sqlFaltasExistentes);
+    $stmtFaltasEx->execute([$fechaDesdeMarcaciones, $fechaHastaMarcaciones]);
+    $faltasExistentes = $stmtFaltasEx->fetchAll(PDO::FETCH_GROUP | PDO::FETCH_ASSOC);
+
     // PASO 3: Combinar horarios programados con marcaciones
     $resultado = [];
     $diasSemana = ['', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'];
@@ -265,8 +276,21 @@ try {
                             'hora_salida_programada' => $horaSalidaProgramada,
                             'estado_dia' => $estadoDia,
                             'tiene_horario' => true,
-                            'tiene_marcacion' => true
+                            'tiene_marcacion' => true,
+                            'tardanza_solicitada' => false,
+                            'falta_solicitada' => false
                         ];
+
+                        // Verificar si hay tardanza solicitada
+                        $op = $horario['cod_operario'];
+                        if (isset($tardanzasExistentes[$op])) {
+                            foreach ($tardanzasExistentes[$op] as $te) {
+                                if ($te['fecha_tardanza'] == $fechaStr && $te['cod_sucursal'] == $horario['cod_sucursal']) {
+                                    $resultado[count($resultado) - 1]['tardanza_solicitada'] = true;
+                                    break;
+                                }
+                            }
+                        }
                     }
                 } else {
                     // No hay marcación - FALTA POTENCIAL
@@ -286,8 +310,21 @@ try {
                         'hora_salida_programada' => $horaSalidaProgramada,
                         'estado_dia' => $estadoDia,
                         'tiene_horario' => true,
-                        'tiene_marcacion' => false
+                        'tiene_marcacion' => false,
+                        'tardanza_solicitada' => false,
+                        'falta_solicitada' => false
                     ];
+
+                    // Verificar si hay falta solicitada
+                    $op = $horario['cod_operario'];
+                    if (isset($faltasExistentes[$op])) {
+                        foreach ($faltasExistentes[$op] as $fe) {
+                            if ($fe['fecha_falta'] == $fechaStr && $te['cod_sucursal'] == $horario['cod_sucursal']) {
+                                $resultado[count($resultado) - 1]['falta_solicitada'] = true;
+                                break;
+                            }
+                        }
+                    }
                 }
             }
         }
