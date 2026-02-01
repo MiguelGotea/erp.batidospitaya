@@ -1701,7 +1701,7 @@ function verificarTardanzaYaRegistrada(
                                     <th style="display:none;">Diferencia</th>
                                     <th style="display:none;">Diferencia Entrada</th>
                                     <th style="display:none;">Diferencia Salida</th>
-                                    <?php if ($esGestion): ?>
+                                    <?php if ($siGestion): ?>
                                         <th>Total Horas<br>Trabajadas</th>
                                     <?php endif; ?>
 
@@ -1889,7 +1889,7 @@ function verificarTardanzaYaRegistrada(
                                         <!-- Horario programado -->
                                         <td class="text-center"><?= $horarioProgramado ?></td>
 
-                                        <?php if ($esAdmin || $esLider): ?>
+                                        <?php if ($esLider): ?>
                                             <!-- Horas Programadas -->
                                             <td style="font-weight:bold;" class="text-center">
                                                 <?= $horasProgramadas ?>
@@ -1899,7 +1899,7 @@ function verificarTardanzaYaRegistrada(
                                         <!-- Horario marcado -->
                                         <td class="text-center"><?= $horarioMarcado ?></td>
 
-                                        <?php if ($esAdmin || $esLider): ?>
+                                        <?php if ($esLider): ?>
                                             <!-- Horas Trabajadas -->
                                             <td class="text-center <?=
                                                 ($horasTrabajadas !== '-' && $horasProgramadas !== '-' &&
@@ -1948,7 +1948,7 @@ function verificarTardanzaYaRegistrada(
                                             <?= $diferenciaTexto ?>
                                         </td>
 
-                                        <?php if ($esAdmin || $siGestion): ?>
+                                        <?php if ($siGestion): ?>
                                             <!-- NUEVA CELDA TOTAL HORAS TRABAJADAS - USA EL TOTAL PRECALCULADO -->
                                             <td class="text-center total-horas-operario" data-operario="<?= $codOperario ?>"
                                                 style="font-weight: bold; background-color: #e8f5e9;">
@@ -1957,7 +1957,7 @@ function verificarTardanzaYaRegistrada(
                                         <?php endif; ?>
 
                                         <!-- NUEVA CELDA: Acciones solo para líderes -->
-                                        <?php if ($esAdmin || $esLider): ?>
+                                        <?php if ($esLider): ?>
                                             <td class="text-center" style="white-space: nowrap;">
                                                 <?php
                                                 // Opción 1: Botón de TARDANZA (solo si hay >1 minuto de diferencia)
@@ -2209,12 +2209,12 @@ function verificarTardanzaYaRegistrada(
                 // Datos de operarios para el autocompletado
                 const operariosData = [
                     <?php if ($esLider): ?>
-                                                                                            { id: <?php echo $_SESSION['usuario_id']; ?>, nombre: '' },
+                                                                                                { id: <?php echo $_SESSION['usuario_id']; ?>, nombre: '' },
                     <?php else: ?>
-                                                                                            { id: 0, nombre: 'Todos los colaboradores' },
+                                                                                                { id: 0, nombre: 'Todos los colaboradores' },
                     <?php endif; ?>
             <?php foreach ($operarios as $op): ?>
-                                                                                        { id: <?php echo $op['CodOperario']; ?>, nombre: '<?php echo addslashes($op['nombre_completo']); ?>' },
+                                                                                            { id: <?php echo $op['CodOperario']; ?>, nombre: '<?php echo addslashes($op['nombre_completo']); ?>' },
                     <?php endforeach; ?>
                 ];
 
