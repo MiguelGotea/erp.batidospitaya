@@ -1949,7 +1949,7 @@ function verificarTardanzaYaRegistrada(
                                             <?= $diferenciaTexto ?>
                                         </td>
 
-                                        <?php if ($esAdmin || $esGestion): ?>
+                                        <?php if ($esAdmin || $siGestion): ?>
                                             <!-- NUEVA CELDA TOTAL HORAS TRABAJADAS - USA EL TOTAL PRECALCULADO -->
                                             <td class="text-center total-horas-operario" data-operario="<?= $codOperario ?>"
                                                 style="font-weight: bold; background-color: #e8f5e9;">
@@ -2210,12 +2210,12 @@ function verificarTardanzaYaRegistrada(
                 // Datos de operarios para el autocompletado
                 const operariosData = [
                     <?php if ($esLider): ?>
-                                                                            { id: <?php echo $_SESSION['usuario_id']; ?>, nombre: '' },
+                                                                                    { id: <?php echo $_SESSION['usuario_id']; ?>, nombre: '' },
                     <?php else: ?>
-                                                                            { id: 0, nombre: 'Todos los colaboradores' },
+                                                                                    { id: 0, nombre: 'Todos los colaboradores' },
                     <?php endif; ?>
             <?php foreach ($operarios as $op): ?>
-                                                                        { id: <?php echo $op['CodOperario']; ?>, nombre: '<?php echo addslashes($op['nombre_completo']); ?>' },
+                                                                                { id: <?php echo $op['CodOperario']; ?>, nombre: '<?php echo addslashes($op['nombre_completo']); ?>' },
                     <?php endforeach; ?>
                 ];
 
