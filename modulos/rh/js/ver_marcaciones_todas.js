@@ -794,57 +794,59 @@ function calcularMinutosDiferencia(programada, marcada) {
 function verDetalle(codOperario, fecha) {
     // Placeholder para ver detalle de marcación
     alert(`Ver detalle de marcación:\nOperario: ${codOperario}\nFecha: ${fecha}`);
-    // Función para establecer el filtro de incidencias (Tri-state)
-    function setFiltroIncidencias(estado) {
-        filtroIncidencias = estado;
+}
 
-        // Actualizar estados visuales en la botonera del encabezado
-        $('.tri-btn').removeClass('active');
+// Función para establecer el filtro de incidencias (Tri-state)
+function setFiltroIncidencias(estado) {
+    filtroIncidencias = estado;
 
-        if (estado === 'todos') {
-            $('.tri-btn.neutral').addClass('active');
-        } else if (estado === 'con_incidencia') {
-            $('.tri-btn.positive').addClass('active');
-        } else if (estado === 'sin_incidencia') {
-            $('.tri-btn.negative').addClass('active');
-        }
+    // Actualizar estados visuales en la botonera del encabezado
+    $('.tri-btn').removeClass('active');
 
-        // Recargar tabla para aplicar el filtro localmente
-        renderizarTabla(ultimoDatosCargados || []);
+    if (estado === 'todos') {
+        $('.tri-btn.neutral').addClass('active');
+    } else if (estado === 'con_incidencia') {
+        $('.tri-btn.positive').addClass('active');
+    } else if (estado === 'sin_incidencia') {
+        $('.tri-btn.negative').addClass('active');
     }
 
-    // Variable para cachear los últimos datos cargados y permitir filtrado local instantáneo
-    let ultimoDatosCargados = [];
+    // Recargar tabla para aplicar el filtro localmente
+    renderizarTabla(ultimoDatosCargados || []);
+}
 
-    // Modificar cargarDatos para guardar el cache
-    const cargarDatosOriginal = cargarDatos;
-    cargarDatos = function () {
-        $.ajax({
-            url: 'ajax/marcaciones_get_datos.php',
-            method: 'POST',
-            data: {
-                pagina: paginaActual,
-                registros_por_pagina: registrosPorPagina,
-                filtros: JSON.stringify(filtrosActivos),
-                orden: JSON.stringify(ordenActivo)
-            },
-            dataType: 'json',
-            success: function (response) {
-                if (response.success) {
-                    ultimoDatosCargados = response.datos; // Cachear
-                    totalRegistros = response.total_registros;
-                    renderizarTabla(response.datos);
-                    renderizarPaginacion(response.total_registros);
-                    actualizarIndicadoresFiltros();
-                } else {
-                    console.error('Error:', response.message);
-                    alert('Error al cargar datos: ' + response.message);
-                }
-            },
-            error: function (xhr, status, error) {
-                console.error('Error AJAX:', error);
-                alert('Error al cargar los datos');
+// Variable para cachear los últimos datos cargados y permitir filtrado local instantáneo
+let ultimoDatosCargados = [];
+
+// Modificar cargarDatos para guardar el cache
+const cargarDatosOriginal = cargarDatos;
+cargarDatos = function () {
+    $.ajax({
+        url: 'ajax/marcaciones_get_datos.php',
+        method: 'POST',
+        data: {
+            pagina: paginaActual,
+            registros_por_pagina: registrosPorPagina,
+            filtros: JSON.stringify(filtrosActivos),
+            orden: JSON.stringify(ordenActivo)
+        },
+        dataType: 'json',
+        success: function (response) {
+            if (response.success) {
+                ultimoDatosCargados = response.datos; // Cachear
+                totalRegistros = response.total_registros;
+                renderizarTabla(response.datos);
+                renderizarPaginacion(response.total_registros);
+                actualizarIndicadoresFiltros();
+            } else {
+                console.error('Error:', response.message);
+                alert('Error al cargar datos: ' + response.message);
             }
-        });
-    };
+        },
+        error: function (xhr, status, error) {
+            console.error('Error AJAX:', error);
+            alert('Error al cargar los datos');
+        }
+    });
+};
 
