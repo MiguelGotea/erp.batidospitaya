@@ -35,6 +35,7 @@ jobs:
           "mantenimiento"
           "marketing"
           "produccion"
+          "rh"
           "sistemas"
           "tecnicodesarrollohumano"
           "ventas"
@@ -77,6 +78,7 @@ jobs:
           "mantenimiento"
           "marketing"
           "produccion"
+          "rh"
           "sistemas"
           "tecnicodesarrollohumano"
           "ventas"
@@ -97,7 +99,7 @@ jobs:
         
     - name: ✅ Verificar deploy
       run: |
-        echo "✅ Deploy completado para los 15 módulos"
+        echo "✅ Deploy completado para los 16 módulos"
         echo "📁 Carpetas 'uploads' excluidas del sync"
         echo "🌐 Sitio: https://erp.batidospitaya.com"
         echo "🖥️ Servidor: ${{ secrets.HOSTINGER_HOST }}:65002"

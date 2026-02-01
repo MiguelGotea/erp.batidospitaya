@@ -19,6 +19,7 @@
 !/modulos/mantenimiento/
 !/modulos/marketing/
 !/modulos/produccion/
+!/modulos/rh/
 !/modulos/sistemas/
 !/modulos/tecnicodesarrollohumano/
 !/modulos/ventas/
@@ -36,6 +37,7 @@
 /modulos/mantenimiento/uploads/*
 /modulos/marketing/uploads/*
 /modulos/produccion/uploads/*
+/modulos/rh/uploads/*
 /modulos/sistemas/uploads/*
 /modulos/tecnicodesarrollohumano/uploads/*
 /modulos/ventas/uploads/*
