@@ -193,9 +193,18 @@ try {
         for ($fecha = clone $fechaInicio; $fecha <= $fechaFin; $fecha->modify('+1 day')) {
             $fechaStr = $fecha->format('Y-m-d');
 
-            // Solo incluir fechas dentro del rango solicitado Y NO FUTURAS
-            if ($fechaStr < $fechaDesde || $fechaStr > $fechaHasta || $fechaStr > $fechaHoy) {
-                continue;
+            // Si hay filtro de semana, NO aplicar filtro de fecha
+            // Si NO hay filtro de semana, aplicar filtro de fecha
+            if (isset($filtros['numero_semana']) && !empty($filtros['numero_semana'])) {
+                // Solo excluir fechas futuras
+                if ($fechaStr > $fechaHoy) {
+                    continue;
+                }
+            } else {
+                // Aplicar filtro de fecha normal
+                if ($fechaStr < $fechaDesde || $fechaStr > $fechaHasta || $fechaStr > $fechaHoy) {
+                    continue;
+                }
             }
 
             $diaSemana = $fecha->format('N'); // 1=lunes, 7=domingo
