@@ -3,7 +3,6 @@
 require_once '../../includes/auth.php';
 require_once '../../includes/funciones.php';
 
-
 if (isset($_GET['action']) && $_GET['action'] == 'obtener_operarios_autocompletado') {
     // Obtener todos los operarios activos
     $sql = "SELECT CodOperario as codigo, 
