@@ -1,6 +1,5 @@
 <?php
-require_once '../../includes/auth.php';
-require_once '../../includes/funciones.php';
+require_once '../../core/auth/auth.php';
 
 // Verificar autenticación y permisos
 verificarAutenticacion();
@@ -223,7 +222,7 @@ if ($filtroEstado === 'activos') {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Contactos de Colaboradores</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-    <link rel="icon" href="../../assets/img/icon12.png" type="image/png">
+    <link rel="icon" href="../../core/assets/img/icon12.png" type="image/png">
     <link rel="icon" href="../../assets/img/icon12.png" type="image/png">
     <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -542,7 +541,7 @@ if ($filtroEstado === 'activos') {
         <header>
             <div class="header-container">
                 <div class="logo-container">
-                    <img src="../../assets/img/Logo.svg" alt="Batidos Pitaya" class="logo">
+                    <img src="../../core/assets/img/Logo.svg" alt="Batidos Pitaya" class="logo">
                 </div>
 
                 <div class="buttons-container">

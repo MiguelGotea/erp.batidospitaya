@@ -1,6 +1,5 @@
 <?php
-require_once '../../includes/auth.php';
-require_once '../../includes/funciones.php';
+require_once '../../core/auth/auth.php';
 
 header('Content-Type: application/json');
 
@@ -8,13 +7,13 @@ try {
     // Obtener contratos próximos a vencer (menos de 1 mes)
     $contratosProximos = obtenerContratosProximosVencer();
     $totalProximos = count($contratosProximos);
-    
+
     echo json_encode([
         'success' => true,
         'total_proximos' => $totalProximos,
         'contratos_proximos' => $contratosProximos
     ]);
-    
+
 } catch (Exception $e) {
     echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
 }
@@ -22,13 +21,14 @@ try {
 /**
  * Obtiene los contratos que vencen en menos de 1 mes
  */
-function obtenerContratosProximosVencer() {
+function obtenerContratosProximosVencer()
+{
     global $conn;
-    
+
     $fechaHoy = new DateTime();
     $fechaLimite = new DateTime();
     $fechaLimite->modify('+1 month'); // Contratos que vencen en los próximos 30 días
-    
+
     $sql = "
         SELECT 
             c.*,
@@ -55,10 +55,10 @@ function obtenerContratosProximosVencer() {
         GROUP BY c.codigo_manual_contrato
         ORDER BY c.fin_contrato ASC
     ";
-    
+
     $stmt = $conn->prepare($sql);
     $stmt->execute([$fechaLimite->format('Y-m-d')]);
-    
+
     return $stmt->fetchAll();
 }
 ?>

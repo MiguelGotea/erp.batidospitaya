@@ -1,6 +1,5 @@
 <?php
-require_once '../../includes/auth.php';
-require_once '../../includes/funciones.php';
+require_once '../../core/auth/auth.php';
 
 if (!isset($_GET['cod_operario']) || !isset($_GET['pestaña'])) {
     header('HTTP/1.1 400 Bad Request');

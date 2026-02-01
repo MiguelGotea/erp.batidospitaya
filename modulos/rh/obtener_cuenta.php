@@ -1,6 +1,5 @@
 <?php
-require_once '../../includes/auth.php';
-require_once '../../includes/funciones.php';
+require_once '../../core/auth/auth.php';
 
 verificarAutenticacion();
 
@@ -12,9 +11,10 @@ if (!isset($_GET['id']) || empty($_GET['id'])) {
 
 $idCuenta = intval($_GET['id']);
 
-function obtenerCuentaBancariaPorId($idCuenta) {
+function obtenerCuentaBancariaPorId($idCuenta)
+{
     global $conn;
-    
+
     $stmt = $conn->prepare("SELECT * FROM CuentaBancaria WHERE id = ?");
     $stmt->execute([$idCuenta]);
     return $stmt->fetch();

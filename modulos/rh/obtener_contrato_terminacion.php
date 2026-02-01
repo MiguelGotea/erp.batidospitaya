@@ -1,6 +1,5 @@
 <?php
-require_once '../../includes/auth.php';
-require_once '../../includes/funciones.php';
+require_once '../../core/auth/auth.php';
 
 verificarAutenticacion();
 
@@ -33,7 +32,7 @@ try {
     ");
     $stmt->execute([$idContrato]);
     $contrato = $stmt->fetch();
-    
+
     if ($contrato) {
         echo json_encode($contrato);
     } else {

@@ -3,9 +3,7 @@ ini_set('display_errors', 1);
 //ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 // Al inicio del archivo, verificar autenticación y acceso al módulo
-require_once '../../includes/auth.php';
-require_once '../../includes/funciones.php';
-require_once '../../includes/conexion.php';
+require_once '../../core/auth/auth.php';
 
 // Verificar acceso al módulo 'operaciones'
 //verificarAccesoModulo('operaciones');
@@ -224,7 +222,7 @@ foreach ($columnasPrincipales as $columna) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestión de Contratos</title>
     <link rel="stylesheet" href="styles.css">
-    <link rel="icon" href="../../assets/img/icon12.png" type="image/png">
+    <link rel="icon" href="../../core/assets/img/icon12.png" type="image/png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
@@ -715,7 +713,7 @@ foreach ($columnasPrincipales as $columna) {
         <header>
             <div class="header-container">
                 <div class="logo-container">
-                    <img src="../../assets/img/Logo.svg" alt="Batidos Pitaya" class="logo">
+                    <img src="../../core/assets/img/Logo.svg" alt="Batidos Pitaya" class="logo">
                 </div>
                 
                 <div class="buttons-container">

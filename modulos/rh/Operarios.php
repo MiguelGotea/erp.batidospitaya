@@ -3,9 +3,7 @@ ini_set('display_errors', 1);
 //ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 // Al inicio del archivo, verificar autenticación y acceso al módulo
-require_once '../../includes/auth.php';
-require_once '../../includes/funciones.php';
-require_once '../../includes/conexion.php';
+require_once '../../core/auth/auth.php';
 
 // Verificar acceso al módulo 'operaciones'
 //verificarAccesoModulo('operaciones');
@@ -35,28 +33,28 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['guardar_edicion'])) {
     $codOperario = $_POST['cod_operario'];
     $campo = $_POST['campo'];
     $valor = $_POST['valor'];
-    
+
     // Obtener el ID del usuario que está modificando
     $cod_operario_actualizacion = $_SESSION['usuario_id'];
     $fecha_actualizacion = date('Y-m-d H:i:s');
-    
+
     // Lista de campos que NO se pueden editar
     $camposNoEditables = [
-        'fecha_hora_regsys', 
-        'registrado_por', 
-        'FechaCreacion', 
+        'fecha_hora_regsys',
+        'registrado_por',
+        'FechaCreacion',
         'FechaRegistro',
         'Operativo',
         'CodOperario'
     ];
-    
+
     // Validar que el campo sea editable
     if (in_array($campo, $camposNoEditables)) {
         $_SESSION['error'] = 'Este campo no se puede editar';
         header("Location: Operarios.php?error=1");
         exit();
     }
-    
+
     // Manejar campos de fecha específicos
     if (in_array($campo, ['Inicio', 'Fin', 'Cumpleanos', 'InicioSeguro', 'FinSeguro'])) {
         if (!empty($valor)) {
@@ -65,27 +63,27 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['guardar_edicion'])) {
             $valor = null;
         }
     }
-    
+
     // Manejar campo bit para Operativo (aunque no debería ser editable, por si acaso)
     if ($campo === 'Operativo') {
         $valor = ($valor == '1') ? 1 : 0;
     }
-    
+
     // Preparar la consulta de actualización
     $query = "UPDATE Operarios SET $campo = :valor, fecha_hora_regsys = :fecha_actualizacion WHERE CodOperario = :cod_operario";
     $stmt = $conn->prepare($query);
-    
+
     try {
         $stmt->execute([
             ':valor' => $valor,
             ':fecha_actualizacion' => $fecha_actualizacion,
             ':cod_operario' => $codOperario
         ]);
-        
+
         $_SESSION['success'] = 'Cambio guardado exitosamente';
         header("Location: Operarios.php?success=1");
         exit();
-        
+
     } catch (PDOException $e) {
         $_SESSION['error'] = 'Error al guardar: ' . $e->getMessage();
         header("Location: Operarios.php?error=1");
@@ -107,11 +105,11 @@ $camposNoEditables = [
 // COLUMNAS QUE SE MOSTRARÁN (las 8 especificadas)
 $columnasMostrar = [
     'CodOperario',
-    'Nombre', 
-    'Nombre2', 
-    'Apellido', 
-    'Apellido2', 
-    'Celular', 
+    'Nombre',
+    'Nombre2',
+    'Apellido',
+    'Apellido2',
+    'Celular',
     'Cedula',
     'Cumpleanos'
 ];
@@ -223,12 +221,13 @@ $nombresColumnasCompletos = [
 
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestión de Operarios</title>
     <link rel="stylesheet" href="styles.css">
-    <link rel="icon" href="../../assets/img/icon12.png" type="image/png">
+    <link rel="icon" href="../../core/assets/img/icon12.png" type="image/png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
@@ -370,7 +369,8 @@ $nombresColumnasCompletos = [
             font-size: 11px;
         }
 
-        th, td {
+        th,
+        td {
             padding: 6px;
             border: 1px solid #ddd;
             white-space: nowrap;
@@ -394,16 +394,16 @@ $nombresColumnasCompletos = [
             transition: background-color 0.3s;
             position: relative;
         }
-        
+
         .editable:hover {
             background-color: #e6f7f5;
         }
-        
+
         .celda-editando {
             background-color: #e6f7f5;
             padding: 0 !important;
         }
-        
+
         .contenedor-edicion {
             display: flex;
             align-items: center;
@@ -411,7 +411,7 @@ $nombresColumnasCompletos = [
             width: 100%;
             height: 100%;
         }
-        
+
         .input-edicion {
             width: calc(100% - 40px);
             padding: 6px 35px 6px 6px !important;
@@ -421,7 +421,7 @@ $nombresColumnasCompletos = [
             font-size: inherit;
             box-sizing: border-box;
         }
-        
+
         .select-edicion {
             width: calc(100% - 40px);
             padding: 6px 35px 6px 6px !important;
@@ -431,7 +431,7 @@ $nombresColumnasCompletos = [
             font-size: inherit;
             box-sizing: border-box;
         }
-        
+
         .botones-edicion {
             position: absolute;
             right: 3px;
@@ -440,8 +440,9 @@ $nombresColumnasCompletos = [
             display: flex;
             gap: 2px;
         }
-        
-        .btn-editar, .btn-cancelar-edicion {
+
+        .btn-editar,
+        .btn-cancelar-edicion {
             width: 18px;
             height: 18px;
             padding: 0;
@@ -453,22 +454,22 @@ $nombresColumnasCompletos = [
             cursor: pointer;
             font-size: 8px;
         }
-        
+
         .btn-editar {
             background-color: #51B8AC;
             color: white;
         }
-        
+
         .btn-cancelar-edicion {
             background-color: #FF6F61;
             color: white;
         }
-        
+
         .no-editable {
             cursor: not-allowed;
             background-color: #f5f5f5;
         }
-        
+
         .success-message {
             background-color: #06D6A0;
             color: white;
@@ -476,7 +477,7 @@ $nombresColumnasCompletos = [
             border-radius: 5px;
             margin-bottom: 20px;
         }
-        
+
         .error-message {
             background-color: #FF6F61;
             color: white;
@@ -499,7 +500,7 @@ $nombresColumnasCompletos = [
             position: relative;
             display: inline-block;
         }
-        
+
         .tooltip-text {
             visibility: hidden;
             width: 200px;
@@ -517,7 +518,7 @@ $nombresColumnasCompletos = [
             transition: opacity 0.3s;
             font-size: 11px;
         }
-        
+
         .tooltip-text::after {
             content: "";
             position: absolute;
@@ -528,7 +529,7 @@ $nombresColumnasCompletos = [
             border-style: solid;
             border-color: #333 transparent transparent transparent;
         }
-        
+
         .tooltip-container:hover .tooltip-text {
             visibility: visible;
             opacity: 1;
@@ -557,13 +558,13 @@ $nombresColumnasCompletos = [
             * {
                 font-size: 9px;
             }
-            
+
             .header-container {
                 flex-direction: row;
                 align-items: center;
                 gap: 8px;
             }
-            
+
             .buttons-container {
                 position: static;
                 transform: none;
@@ -572,27 +573,28 @@ $nombresColumnasCompletos = [
                 justify-content: center;
                 margin-top: 8px;
             }
-            
+
             .logo-container {
                 order: 1;
                 margin-right: 0;
             }
-            
+
             .user-info {
                 order: 2;
                 margin-left: auto;
             }
-            
+
             .btn-agregar {
                 padding: 5px 8px;
                 font-size: 11px;
             }
-            
+
             table {
                 font-size: 9px;
             }
-            
-            th, td {
+
+            th,
+            td {
                 padding: 4px;
                 max-width: 120px;
             }
@@ -602,12 +604,12 @@ $nombresColumnasCompletos = [
                 font-size: 11px;
             }
         }
-        
+
         @media (max-width: 480px) {
             * {
                 font-size: 8px;
             }
-            
+
             .btn-agregar {
                 flex-grow: 1;
                 justify-content: center;
@@ -615,17 +617,18 @@ $nombresColumnasCompletos = [
                 text-align: center;
                 padding: 6px 4px;
             }
-            
+
             .user-info {
                 flex-direction: column;
                 align-items: flex-end;
             }
-            
+
             table {
                 font-size: 8px;
             }
-            
-            th, td {
+
+            th,
+            td {
                 padding: 3px;
                 max-width: 100px;
             }
@@ -652,31 +655,33 @@ $nombresColumnasCompletos = [
         }
     </style>
 </head>
+
 <body>
     <div class="contenedor-principal">
         <header>
             <div class="header-container">
                 <div class="logo-container">
-                    <img src="../../assets/img/Logo.svg" alt="Batidos Pitaya" class="logo">
+                    <img src="../../core/assets/img/Logo.svg" alt="Batidos Pitaya" class="logo">
                 </div>
-                
+
                 <div class="buttons-container">
-                    <a href="Operarios.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'Operarios.php' ? 'activo' : '' ?>">
+                    <a href="Operarios.php"
+                        class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'Operarios.php' ? 'activo' : '' ?>">
                         <i class="fas fa-users"></i> <span class="btn-text">Operarios</span>
                     </a>
                 </div>
-                
+
                 <div class="user-info">
                     <div class="user-avatar">
-                        <?= $esAdmin ? 
-                            strtoupper(substr($usuario['nombre'], 0, 1)) : 
+                        <?= $esAdmin ?
+                            strtoupper(substr($usuario['nombre'], 0, 1)) :
                             strtoupper(substr($usuario['Nombre'], 0, 1)) ?>
                     </div>
                     <div>
                         <div>
-                            <?= $esAdmin ? 
-                                htmlspecialchars($usuario['nombre']) : 
-                                htmlspecialchars($usuario['Nombre'].' '.$usuario['Apellido']) ?>
+                            <?= $esAdmin ?
+                                htmlspecialchars($usuario['nombre']) :
+                                htmlspecialchars($usuario['Nombre'] . ' ' . $usuario['Apellido']) ?>
                         </div>
                         <small>
                             <?= htmlspecialchars($cargoUsuario) ?>
@@ -688,9 +693,9 @@ $nombresColumnasCompletos = [
                 </div>
             </div>
         </header>
-        
+
         <h2>Gestión de Operarios - Información Básica</h2>
-        
+
         <?php if (isset($_GET['success'])): ?>
             <script>
                 Swal.fire({
@@ -705,7 +710,7 @@ $nombresColumnasCompletos = [
                 });
             </script>
         <?php endif; ?>
-        
+
         <?php if (isset($_GET['error'])): ?>
             <script>
                 Swal.fire({
@@ -720,16 +725,17 @@ $nombresColumnasCompletos = [
                 });
             </script>
         <?php endif; ?>
-        
+
         <!-- Filtros y búsqueda -->
         <div class="filtros-container">
             <div class="search-box">
-                <input type="text" id="buscarOperario" placeholder="Buscar en todos los campos..." onkeyup="filtrarTabla()">
+                <input type="text" id="buscarOperario" placeholder="Buscar en todos los campos..."
+                    onkeyup="filtrarTabla()">
                 <button class="btn-filtrar" onclick="filtrarTabla()">
                     <i class="fas fa-search"></i> Buscar
                 </button>
             </div>
-            
+
             <div class="filtros-right">
                 <button class="btn-filtrar" onclick="mostrarTodos()">
                     <i class="fas fa-sync"></i> Mostrar Todos
@@ -739,7 +745,7 @@ $nombresColumnasCompletos = [
                 </span>
             </div>
         </div>
-        
+
         <!-- Tabla de operarios con COLUMNAS ESPECÍFICAS -->
         <div class="table-container">
             <table id="tablaOperarios">
@@ -758,33 +764,27 @@ $nombresColumnasCompletos = [
                 </thead>
                 <tbody>
                     <?php foreach ($operarios as $operario): ?>
-                    <tr>
-                        <?php foreach ($columnasMostrar as $columna): ?>
-                            <td 
-                                <?php if (!in_array($columna, $camposNoEditables)): ?>
-                                    class="editable"
-                                    onclick="iniciarEdicion(this, <?php echo $operario['CodOperario']; ?>, '<?php echo $columna; ?>')"
-                                    data-cod-operario="<?php echo $operario['CodOperario']; ?>"
-                                    data-campo="<?php echo $columna; ?>"
-                                <?php else: ?>
-                                    class="no-editable"
-                                <?php endif; ?>
-                                title="<?php echo htmlspecialchars($operario[$columna] ?? ''); ?>"
-                            >
-                                <?php 
-                                $valor = $operario[$columna] ?? '';
-                                
-                                // MOSTRAR VALORES NETOS - SIN FORMATEO
-                                $valorMostrar = htmlspecialchars($valor);
-                                if (strlen($valorMostrar) > 20) {
-                                    echo substr($valorMostrar, 0, 20) . '...';
-                                } else {
-                                    echo $valorMostrar;
-                                }
-                                ?>
-                            </td>
-                        <?php endforeach; ?>
-                    </tr>
+                        <tr>
+                            <?php foreach ($columnasMostrar as $columna): ?>
+                                <td <?php if (!in_array($columna, $camposNoEditables)): ?> class="editable"
+                                        onclick="iniciarEdicion(this, <?php echo $operario['CodOperario']; ?>, '<?php echo $columna; ?>')"
+                                        data-cod-operario="<?php echo $operario['CodOperario']; ?>"
+                                        data-campo="<?php echo $columna; ?>" <?php else: ?> class="no-editable" <?php endif; ?>
+                                    title="<?php echo htmlspecialchars($operario[$columna] ?? ''); ?>">
+                                    <?php
+                                    $valor = $operario[$columna] ?? '';
+
+                                    // MOSTRAR VALORES NETOS - SIN FORMATEO
+                                    $valorMostrar = htmlspecialchars($valor);
+                                    if (strlen($valorMostrar) > 20) {
+                                        echo substr($valorMostrar, 0, 20) . '...';
+                                    } else {
+                                        echo $valorMostrar;
+                                    }
+                                    ?>
+                                </td>
+                            <?php endforeach; ?>
+                        </tr>
                     <?php endforeach; ?>
                 </tbody>
             </table>
@@ -795,18 +795,18 @@ $nombresColumnasCompletos = [
         // Variable para controlar la celda en edición
         let celdaEditando = null;
         let valorOriginal = null;
-    
+
         // Función para iniciar edición
         function iniciarEdicion(celda, codOperario, campo) {
             // Cerrar edición actual si existe
             if (celdaEditando && celdaEditando !== celda) {
                 cancelarEdicion();
             }
-            
+
             // Guardar referencia y valor original
             celdaEditando = celda;
             valorOriginal = celda.textContent.trim();
-            
+
             // Crear campo de edición
             celda.classList.add('celda-editando');
             celda.innerHTML = `
@@ -822,7 +822,7 @@ $nombresColumnasCompletos = [
                     </div>
                 </div>
             `;
-            
+
             // Enfocar el input
             const input = celda.querySelector('input');
             if (input) {
@@ -830,14 +830,14 @@ $nombresColumnasCompletos = [
                 input.select();
             }
         }
-        
+
         // Función para guardar edición
         function guardarEdicion(codOperario, campo) {
             if (!celdaEditando) return;
-            
+
             const input = celdaEditando.querySelector('input');
             const valor = input.value;
-            
+
             Swal.fire({
                 title: '¿Guardar cambios?',
                 text: `¿Desea actualizar el campo para el operario ${codOperario}?`,
@@ -853,7 +853,7 @@ $nombresColumnasCompletos = [
                 }
             });
         }
-        
+
         // Función para enviar datos al servidor
         function enviarDatosEdicion(codOperario, campo, valor) {
             const formData = new FormData();
@@ -861,62 +861,62 @@ $nombresColumnasCompletos = [
             formData.append('cod_operario', codOperario);
             formData.append('campo', campo);
             formData.append('valor', valor);
-            
+
             fetch('Operarios.php', {
                 method: 'POST',
                 body: formData
             })
-            .then(response => {
-                if (response.ok) {
-                    location.reload();
-                } else {
-                    throw new Error('Error en la respuesta');
-                }
-            })
-            .catch(error => {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'No se pudo guardar',
-                    confirmButtonColor: '#51B8AC'
+                .then(response => {
+                    if (response.ok) {
+                        location.reload();
+                    } else {
+                        throw new Error('Error en la respuesta');
+                    }
+                })
+                .catch(error => {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'No se pudo guardar',
+                        confirmButtonColor: '#51B8AC'
+                    });
                 });
-            });
         }
-        
+
         // Función para cancelar edición
         function cancelarEdicion() {
             if (!celdaEditando) return;
-            
+
             // Restaurar contenido original
             celdaEditando.classList.remove('celda-editando');
             celdaEditando.innerHTML = valorOriginal;
-            
+
             // Restaurar el evento onclick
             const codOperario = celdaEditando.getAttribute('data-cod-operario');
             const campo = celdaEditando.getAttribute('data-campo');
-            celdaEditando.onclick = function() { 
-                iniciarEdicion(this, codOperario, campo); 
+            celdaEditando.onclick = function () {
+                iniciarEdicion(this, codOperario, campo);
             };
-            
+
             // Limpiar variables
             celdaEditando = null;
             valorOriginal = null;
         }
-        
+
         // Función para filtrar tabla
         function filtrarTabla() {
             const input = document.getElementById('buscarOperario');
             const filter = input.value.toLowerCase();
             const table = document.getElementById('tablaOperarios');
             const tr = table.getElementsByTagName('tr');
-            
+
             let contador = 0;
-            
+
             // Empezar desde 1 para saltar el header
             for (let i = 1; i < tr.length; i++) {
                 const td = tr[i].getElementsByTagName('td');
                 let mostrar = false;
-                
+
                 for (let j = 0; j < td.length; j++) {
                     if (td[j]) {
                         const txtValue = td[j].textContent || td[j].innerText;
@@ -926,7 +926,7 @@ $nombresColumnasCompletos = [
                         }
                     }
                 }
-                
+
                 if (mostrar) {
                     tr[i].style.display = '';
                     contador++;
@@ -934,23 +934,23 @@ $nombresColumnasCompletos = [
                     tr[i].style.display = 'none';
                 }
             }
-            
+
             document.getElementById('contadorResultados').textContent = `Mostrando ${contador} operarios`;
         }
-        
+
         // Función para mostrar todos los registros
         function mostrarTodos() {
             document.getElementById('buscarOperario').value = '';
             filtrarTabla();
         }
-        
+
         // Manejo de teclado
-        document.addEventListener('keydown', function(e) {
+        document.addEventListener('keydown', function (e) {
             if (!celdaEditando) return;
-            
+
             const input = celdaEditando.querySelector('input');
             if (!input) return;
-            
+
             if (e.key === 'Enter') {
                 const codOperario = celdaEditando.getAttribute('data-cod-operario');
                 const campo = celdaEditando.getAttribute('data-campo');
@@ -961,9 +961,10 @@ $nombresColumnasCompletos = [
         });
 
         // Auto-focus en la búsqueda al cargar la página
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('buscarOperario').focus();
         });
     </script>
 </body>
+
 </html>

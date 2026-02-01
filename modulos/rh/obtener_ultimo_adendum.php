@@ -1,6 +1,5 @@
 <?php
-require_once '../includes/auth.php';
-require_once '../includes/funciones.php';
+require_once '../../core/auth/auth.php';
 
 // Verificar autenticación
 verificarAutenticacion();
@@ -16,18 +15,19 @@ $codOperario = intval($_GET['cod_operario']);
 /**
  * Obtiene el último adendum activo de un colaborador
  */
-function obtenerUltimoAdendumActivo($codOperario) {
+function obtenerUltimoAdendumActivo($codOperario)
+{
     global $conn;
-    
+
     $stmt = $conn->prepare("
-        SELECT anc.*
-        FROM AsignacionNivelesCargos anc
-        WHERE anc.CodOperario = ? 
-        AND anc.TipoAdendum IS NOT NULL
-        AND (anc.Fin IS NULL OR anc.Fin >= CURDATE())
-        ORDER BY anc.Fecha DESC
-        LIMIT 1
-    ");
+SELECT anc.*
+FROM AsignacionNivelesCargos anc
+WHERE anc.CodOperario = ?
+AND anc.TipoAdendum IS NOT NULL
+AND (anc.Fin IS NULL OR anc.Fin >= CURDATE())
+ORDER BY anc.Fecha DESC
+LIMIT 1
+");
     $stmt->execute([$codOperario]);
     return $stmt->fetch();
 }

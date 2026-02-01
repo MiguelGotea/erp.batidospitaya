@@ -1,7 +1,6 @@
 <?php
 // ajax.php (o agregar esta función a tu archivo ajax existente)
-require_once '../../includes/auth.php';
-require_once '../../includes/funciones.php';
+require_once '../../core/auth/auth.php';
 
 if (isset($_GET['action']) && $_GET['action'] == 'obtener_operarios_autocompletado') {
     // Obtener todos los operarios activos

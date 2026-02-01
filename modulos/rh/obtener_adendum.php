@@ -1,6 +1,5 @@
 <?php
-require_once '../../includes/auth.php';
-require_once '../../includes/funciones.php';
+require_once '../../core/auth/auth.php';
 
 // Verificar autenticación
 verificarAutenticacion();
@@ -14,9 +13,10 @@ if (!isset($_GET['id']) || empty($_GET['id'])) {
 $idAdendum = intval($_GET['id']);
 
 // Obtener el adendum
-function obtenerAdendumPorId($idAdendum) {
+function obtenerAdendumPorId($idAdendum)
+{
     global $conn;
-    
+
     $stmt = $conn->prepare("
         SELECT 
             anc.*,

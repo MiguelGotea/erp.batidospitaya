@@ -48,55 +48,56 @@ $operarios = obtenerOperariosConFiltro($busqueda);
 $reporte = [];
 foreach ($operarios as $operario) {
     $codOperario = $operario['CodOperario'];
-    
+
     // Obtener marcaciones en el rango de fechas
     $marcaciones = obtenerMarcacionesRango($codOperario, $fechaDesde, $fechaHasta);
-    
+
     // Obtener tardanzas manuales justificadas
     $tardanzasJustificadas = obtenerTardanzasJustificadas($codOperario, $fechaDesde, $fechaHasta);
-    
+
     // Obtener faltas manuales NO PAGADAS (solo estas restan de las automáticas)
     $faltasNoPagadas = obtenerFaltasReportadas($codOperario, $fechaDesde, $fechaHasta);
-    
+
     // Calcular estadísticas
     $tardanzasTotales = 0;
     $faltasTotales = 0;
     $diasProgramadosActivos = 0;
-    
+
     foreach ($marcaciones as $marcacion) {
         // Contar días programados como activos
         if ($marcacion['estado_dia'] === 'Activo') {
             $diasProgramadosActivos++;
         }
-        
+
         // Verificar si es tardanza (marcación después de la hora programada + 1 minuto)
         if ($marcacion['hora_entrada_programada'] && $marcacion['hora_ingreso']) {
             $horaProgramada = new DateTime($marcacion['hora_entrada_programada']);
             $horaMarcada = new DateTime($marcacion['hora_ingreso']);
-            
+
             // Calcular diferencia en minutos
             $diferencia = $horaMarcada->diff($horaProgramada);
             $minutosDiferencia = ($diferencia->invert ? 1 : -1) * ($diferencia->h * 60 + $diferencia->i);
-            
+
             if ($minutosDiferencia > 1) { // Más de 1 minuto de tardanza
                 $tardanzasTotales++;
             }
         }
     }
-    
+
     // FALTAS TOTALES = Días programados activos - Días con marcación de entrada
     // Esto identifica días que deberían tener trabajo pero no tienen marcación
-    $diasConMarcacionEntrada = array_filter($marcaciones, function($m) {
+    $diasConMarcacionEntrada = array_filter($marcaciones, function ($m) {
         return !empty($m['hora_ingreso']);
     });
-    
+
     $faltasTotales = $diasProgramadosActivos - count($diasConMarcacionEntrada);
-    if ($faltasTotales < 0) $faltasTotales = 0;
-    
+    if ($faltasTotales < 0)
+        $faltasTotales = 0;
+
     // Calcular valores ejecutados
     $tardanzasEjecutadas = $tardanzasTotales - count($tardanzasJustificadas);
     $faltasEjecutadas = $faltasTotales - count($faltasNoPagadas);
-    
+
     // Agregar al reporte
     $reporte[] = [
         'codigo' => $codOperario,
@@ -113,23 +114,24 @@ foreach ($operarios as $operario) {
 /**
  * Obtiene operarios con filtro de búsqueda, se puede agregar la línea where Operativo = 1, para enlistar solo los activos
  */
-function obtenerOperariosConFiltro($busqueda = '') {
+function obtenerOperariosConFiltro($busqueda = '')
+{
     global $conn;
-    
+
     $sql = "SELECT CodOperario, Nombre, Nombre2, Apellido, Apellido2 
             FROM Operarios";
-    
+
     $params = [];
-    
+
     if (!empty($busqueda)) {
         // Usar WHERE si no hay otras condiciones, o AND si ya hay WHERE
         $sql .= " WHERE (CONCAT(Nombre, ' ', Apellido) LIKE ? OR CodOperario = ?)";
         $params[] = "%$busqueda%";
         $params[] = $busqueda;
     }
-    
+
     $sql .= " ORDER BY Nombre, Apellido";
-    
+
     $stmt = $conn->prepare($sql);
     $stmt->execute($params);
     return $stmt->fetchAll();
@@ -138,9 +140,10 @@ function obtenerOperariosConFiltro($busqueda = '') {
 /**
  * Obtiene marcaciones de un operario en un rango de fechas con horarios programados
  */
-function obtenerMarcacionesRango($codOperario, $fechaDesde, $fechaHasta) {
+function obtenerMarcacionesRango($codOperario, $fechaDesde, $fechaHasta)
+{
     global $conn;
-    
+
     $sql = "
         SELECT 
             m.fecha,
@@ -266,7 +269,7 @@ function obtenerMarcacionesRango($codOperario, $fechaDesde, $fechaHasta) {
         WHERE m.CodOperario = ?
         AND m.fecha BETWEEN ? AND ?
         ORDER BY m.fecha";
-    
+
     $stmt = $conn->prepare($sql);
     $stmt->execute([$codOperario, $fechaDesde, $fechaHasta]);
     return $stmt->fetchAll();
@@ -275,15 +278,16 @@ function obtenerMarcacionesRango($codOperario, $fechaDesde, $fechaHasta) {
 /**
  * Obtiene tardanzas manuales justificadas para un operario en un rango de fechas
  */
-function obtenerTardanzasJustificadas($codOperario, $fechaDesde, $fechaHasta) {
+function obtenerTardanzasJustificadas($codOperario, $fechaDesde, $fechaHasta)
+{
     global $conn;
-    
+
     $sql = "SELECT id, fecha_tardanza as fecha, observaciones 
             FROM TardanzasManuales 
             WHERE cod_operario = ? 
             AND fecha_tardanza BETWEEN ? AND ?
             AND estado = 'Justificado'";
-    
+
     $stmt = $conn->prepare($sql);
     $stmt->execute([$codOperario, $fechaDesde, $fechaHasta]);
     return $stmt->fetchAll();
@@ -292,15 +296,16 @@ function obtenerTardanzasJustificadas($codOperario, $fechaDesde, $fechaHasta) {
 /**
  * Obtiene faltas manuales no pagadas para un operario en un rango de fechas
  */
-function obtenerFaltasReportadas($codOperario, $fechaDesde, $fechaHasta) {
+function obtenerFaltasReportadas($codOperario, $fechaDesde, $fechaHasta)
+{
     global $conn;
-    
+
     $sql = "SELECT id, fecha_falta as fecha, observaciones 
             FROM faltas_manual 
             WHERE cod_operario = ? 
             AND fecha_falta BETWEEN ? AND ?
             AND tipo_falta = 'No_Pagado'";  // SOLO faltas No_Pagado
-    
+
     $stmt = $conn->prepare($sql);
     $stmt->execute([$codOperario, $fechaDesde, $fechaHasta]);
     return $stmt->fetchAll();
@@ -312,48 +317,48 @@ if (isset($_GET['exportar_excel'])) {
     $fechaDesde = $_GET['desde'] ?? date('Y-m-01');
     $fechaHasta = $_GET['hasta'] ?? date('Y-m-t');
     $busqueda = $_GET['busqueda'] ?? '';
-    
+
     // Obtener los datos con los mismos filtros
     $operarios = obtenerOperariosConFiltro($busqueda);
     $reporte = [];
-    
+
     foreach ($operarios as $operario) {
         $codOperario = $operario['CodOperario'];
-        
+
         // Obtener marcaciones en el rango de fechas
         $marcaciones = obtenerMarcacionesRango($codOperario, $fechaDesde, $fechaHasta);
-        
+
         // Obtener tardanzas manuales justificadas
         $tardanzasJustificadas = obtenerTardanzasJustificadas($codOperario, $fechaDesde, $fechaHasta);
-        
+
         // Obtener faltas manuales no pagadas
         $faltasReportadas = obtenerFaltasReportadas($codOperario, $fechaDesde, $fechaHasta);
-        
+
         // Calcular estadísticas
         $tardanzasTotales = 0;
         $faltasTotales = 0;
-        
+
         foreach ($marcaciones as $marcacion) {
             if ($marcacion['hora_entrada_programada'] && $marcacion['hora_ingreso']) {
                 $horaProgramada = new DateTime($marcacion['hora_entrada_programada']);
                 $horaMarcada = new DateTime($marcacion['hora_ingreso']);
-                
+
                 $diferencia = $horaMarcada->diff($horaProgramada);
                 $minutosDiferencia = ($diferencia->invert ? 1 : -1) * ($diferencia->h * 60 + $diferencia->i);
-                
+
                 if ($minutosDiferencia > 1) {
                     $tardanzasTotales++;
                 }
             }
-            
+
             if ($marcacion['estado_dia'] === 'Activo' && !$marcacion['hora_ingreso'] && !$marcacion['hora_salida']) {
                 $faltasTotales++;
             }
         }
-        
+
         $tardanzasEjecutadas = $tardanzasTotales - count($tardanzasJustificadas);
         $faltasEjecutadas = $faltasTotales - count($faltasReportadas);
-        
+
         $reporte[] = [
             'codigo' => $codOperario,
             'nombre_completo' => obtenerNombreCompletoOperario($operario),
@@ -365,11 +370,11 @@ if (isset($_GET['exportar_excel'])) {
             'faltas_ejecutadas' => $faltasEjecutadas > 0 ? $faltasEjecutadas : 0
         ];
     }
-    
+
     // Configurar headers para descarga de archivo Excel
     header('Content-Type: application/vnd.ms-excel');
     header('Content-Disposition: attachment; filename="reporte_tardanzas_faltas_' . date('Y-m-d') . '.xls"');
-    
+
     // Iniciar salida
     echo '<table border="1">';
     echo '<tr>';
@@ -382,7 +387,7 @@ if (isset($_GET['exportar_excel'])) {
     echo '<th>Faltas Reportadas</th>';
     echo '<th>Faltas Ejecutadas</th>';
     echo '</tr>';
-    
+
     foreach ($reporte as $item) {
         echo '<tr>';
         echo '<td>' . $item['codigo'] . '</td>';
@@ -395,19 +400,20 @@ if (isset($_GET['exportar_excel'])) {
         echo '<td>' . $item['faltas_ejecutadas'] . '</td>';
         echo '</tr>';
     }
-    
+
     echo '</table>';
     exit;
 }
 ?>
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reporte de Tardanzas y Faltas por Operario</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-    <link rel="icon" href="../../assets/img/icon12.png" type="image/png">
+    <link rel="icon" href="../../core/assets/img/icon12.png" type="image/png">
     <style>
         * {
             box-sizing: border-box;
@@ -416,161 +422,163 @@ if (isset($_GET['exportar_excel'])) {
             font-family: 'Calibri', sans-serif;
             font-size: clamp(11px, 2vw, 16px) !important;
         }
-        
+
         body {
             background-color: #F6F6F6;
             color: #333;
             padding: 5px;
         }
-        
+
         .container {
             max-width: 100%;
             margin: 0 auto;
             background: white;
             border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
             padding: 10px;
         }
-        
-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 0;
-    border-bottom: 1px solid #ddd;
-    margin-bottom: 30px;
-    flex-wrap: wrap;
-    gap: 15px;
-}
 
-.header-container {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
-    padding: 0 5px;
-    box-sizing: border-box;
-    margin: 1px auto;
-    flex-wrap: wrap;
-}
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
 
-.logo {
-    height: 50px;
-}
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            padding: 0 5px;
+            box-sizing: border-box;
+            margin: 1px auto;
+            flex-wrap: wrap;
+        }
 
-.logo-container {
-    flex-shrink: 0;
-    margin-right: auto;
-}
+        .logo {
+            height: 50px;
+        }
 
-.buttons-container {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    justify-content: center;
-    flex-grow: 1;
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-}
+        .logo-container {
+            flex-shrink: 0;
+            margin-right: auto;
+        }
 
-.user-info {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-left: auto;
-}
+        .buttons-container {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            flex-grow: 1;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+        }
 
-.btn-agregar {
-    background-color: transparent;
-    color: #51B8AC;
-    border: 1px solid #51B8AC;
-    text-decoration: none;
-    padding: 6px 10px;
-    border-radius: 8px;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    transition: all 0.3s;
-    white-space: nowrap;
-    font-size: 14px;
-    flex-shrink: 0;
-}
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-left: auto;
+        }
 
-.btn-agregar.activo {
-    background-color: #51B8AC;
-    color: white;
-    font-weight: normal;
-}
+        .btn-agregar {
+            background-color: transparent;
+            color: #51B8AC;
+            border: 1px solid #51B8AC;
+            text-decoration: none;
+            padding: 6px 10px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+            white-space: nowrap;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
 
-.btn-agregar:hover {
-    background-color: #0E544C;
-    color: white;
-    border-color: #0E544C;
-}
+        .btn-agregar.activo {
+            background-color: #51B8AC;
+            color: white;
+            font-weight: normal;
+        }
 
-.user-avatar {
-    width: 35px;
-    height: 35px;
-    border-radius: 50%;
-    background-color: #51B8AC;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-weight: bold;
-}
+        .btn-agregar:hover {
+            background-color: #0E544C;
+            color: white;
+            border-color: #0E544C;
+        }
 
-.btn-logout {
-    background: #51B8AC;
-    color: white;
-    border: none;
-    padding: 8px 15px;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background 0.3s;
-}
+        .user-avatar {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background-color: #51B8AC;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
 
-.btn-logout:hover {
-    background: #0E544C;
-}
-        
+        .btn-logout {
+            background: #51B8AC;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .btn-logout:hover {
+            background: #0E544C;
+        }
+
         .title {
             color: #0E544C;
             font-size: 1.5rem !important;
         }
-        
+
         .subtitle {
             color: #51B8AC;
             font-size: 1.2rem !important;
             margin-bottom: 20px;
         }
-        
+
         .filters {
             display: flex;
             gap: 15px;
             margin-bottom: 20px;
             flex-wrap: wrap;
         }
-        
+
         .filter-group {
             display: flex;
             flex-direction: column;
             min-width: 200px;
         }
-        
+
         label {
             margin-bottom: 5px;
             font-weight: bold;
             color: #0E544C;
         }
-        
-        select, input, button {
+
+        select,
+        input,
+        button {
             padding: 8px;
             border: 1px solid #ddd;
             border-radius: 4px;
         }
-        
+
         .btn {
             padding: 8px 15px;
             background-color: #51B8AC;
@@ -580,30 +588,31 @@ header {
             cursor: pointer;
             transition: background-color 0.3s;
         }
-        
+
         .btn:hover {
             background-color: #0E544C;
         }
-        
+
         .btn-secondary {
             background-color: #6c757d;
         }
-        
+
         .btn-secondary:hover {
             background-color: #5a6268;
         }
-        
+
         .table-container {
             overflow-x: auto;
             margin-top: 20px;
         }
-        
+
         table {
             width: 100%;
             border-collapse: collapse;
         }
 
-        th, td {
+        th,
+        td {
             padding: 8px;
             text-align: left;
             border: 1px solid #ddd;
@@ -613,47 +622,47 @@ header {
             background-color: #0E544C;
             color: white;
         }
-        
+
         tr:nth-child(even) {
             background-color: #f2f2f2;
         }
-        
+
         .alert {
             padding: 10px;
             margin-bottom: 15px;
             border-radius: 4px;
         }
-        
+
         .alert-success {
             background-color: #d4edda;
             color: #155724;
         }
-        
+
         .alert-danger {
             background-color: #f8d7da;
             color: #721c24;
         }
-        
+
         .alert-info {
             background-color: #d1ecf1;
             color: #0c5460;
         }
-        
+
         .text-center {
             text-align: center;
         }
-        
+
         .no-results {
             text-align: center;
             padding: 20px;
             color: #666;
         }
-        
+
         .search-box {
             position: relative;
             min-width: 250px;
         }
-        
+
         .search-box i {
             position: absolute;
             right: 10px;
@@ -661,98 +670,98 @@ header {
             transform: translateY(-50%);
             color: #6c757d;
         }
-        
+
         .tardanza {
             color: #dc3545;
             font-weight: bold;
         }
-        
+
         .falta {
             color: #dc3545;
             font-weight: bold;
         }
-        
+
         .justificado {
             color: #28a745;
             font-weight: bold;
         }
-        
+
         @media (max-width: 768px) {
-    .header-container {
-        flex-direction: row;
-        align-items: center;
-        gap: 10px;
-    }
-    
-    .buttons-container {
-        position: static;
-        transform: none;
-        order: 3;
-        width: 100%;
-        justify-content: center;
-        margin-top: 10px;
-    }
-    
-    .logo-container {
-        order: 1;
-        margin-right: 0;
-    }
-    
-    .user-info {
-        order: 2;
-        margin-left: auto;
-    }
-    
-    .btn-agregar {
-        padding: 6px 10px;
-        font-size: 13px;
-    }
-    
-    .filtros-form {
-        grid-template-columns: 1fr;
-    }
-    
+            .header-container {
+                flex-direction: row;
+                align-items: center;
+                gap: 10px;
+            }
+
+            .buttons-container {
+                position: static;
+                transform: none;
+                order: 3;
+                width: 100%;
+                justify-content: center;
+                margin-top: 10px;
+            }
+
+            .logo-container {
+                order: 1;
+                margin-right: 0;
+            }
+
+            .user-info {
+                order: 2;
+                margin-left: auto;
+            }
+
+            .btn-agregar {
+                padding: 6px 10px;
+                font-size: 13px;
+            }
+
+            .filtros-form {
+                grid-template-columns: 1fr;
+            }
+
             .filters {
                 flex-direction: column;
             }
-            
+
             .filter-group {
                 width: 100%;
             }
         }
-        
+
         .ejecutado {
             color: #dc3545;
             font-weight: bold;
             background-color: #fff3cd;
         }
 
-@media (max-width: 480px) {
-    .btn-agregar {
-        flex-grow: 1;
-        justify-content: center;
-        white-space: normal;
-        text-align: center;
-        padding: 8px 5px;
-    }
-    
-    .user-info {
-        flex-direction: column;
-        align-items: flex-end;
-    }
-}
+        @media (max-width: 480px) {
+            .btn-agregar {
+                flex-grow: 1;
+                justify-content: center;
+                white-space: normal;
+                text-align: center;
+                padding: 8px 5px;
+            }
 
-a.btn{
-    text-decoration: none;
-}
+            .user-info {
+                flex-direction: column;
+                align-items: flex-end;
+            }
+        }
 
-/* Nuevos estilos para los filtros */
+        a.btn {
+            text-decoration: none;
+        }
+
+        /* Nuevos estilos para los filtros */
         .filtros-container {
             background-color: white;
             padding: 15px;
             border-radius: 8px;
             margin-bottom: 20px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
 
         .filtros-form {
@@ -832,7 +841,7 @@ a.btn{
             border: 1px solid #ddd;
             border-top: none;
             border-radius: 0 0 5px 5px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
             margin-top: -1px;
             position: absolute;
             top: 100%;
@@ -854,6 +863,7 @@ a.btn{
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <header>
@@ -861,62 +871,69 @@ a.btn{
                 <div class="logo-container">
                     <img src="../../assets/img/Logo.svg" alt="Batidos Pitaya" class="logo">
                 </div>
-                
+
                 <div class="buttons-container">
                     <?php if ($esAdmin || verificarAccesoCargo([8, 5, 13, 16])): ?>
-                        <a href="../lideres/faltas_manual.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'faltas_manual.php' ? 'activo' : '' ?>">
+                        <a href="../lideres/faltas_manual.php"
+                            class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'faltas_manual.php' ? 'activo' : '' ?>">
                             <i class="fas fa-user-times"></i> <span class="btn-text">Faltas/Ausencias</span>
                         </a>
                     <?php endif; ?>
-                    
+
                     <?php if ($esAdmin || verificarAccesoCargo([8, 13, 16])): ?>
-                        <a href="../rh/tf_operarios.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'tf_operarios.php' ? 'activo' : '' ?>">
+                        <a href="../rh/tf_operarios.php"
+                            class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'tf_operarios.php' ? 'activo' : '' ?>">
                             <i class="fas fa-user-clock"></i> <span class="btn-text">Totales</span>
                         </a>
                     <?php endif; ?>
-                    
+
                     <?php if ($esAdmin || verificarAccesoCargo([5, 11, 16, 27, 8])): ?>
-                        <a href="../operaciones/tardanzas_manual.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == '../operaciones/tardanzas_manual.php' ? 'activo' : '' ?>">
+                        <a href="../operaciones/tardanzas_manual.php"
+                            class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == '../operaciones/tardanzas_manual.php' ? 'activo' : '' ?>">
                             <i class="fas fa-user-clock"></i> <span class="btn-text">Tardanzas</span>
                         </a>
                     <?php endif; ?>
-                    
+
                     <?php if ($esAdmin || verificarAccesoCargo([11, 8, 16])): ?>
-                        <a href="../operaciones/horas_extras_manual.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'horas_extras_manual.php' ? 'activo' : '' ?>">
+                        <a href="../operaciones/horas_extras_manual.php"
+                            class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'horas_extras_manual.php' ? 'activo' : '' ?>">
                             <i class="fas fa-user-clock"></i> <span class="btn-text">Horas Extras</span>
                         </a>
                     <?php endif; ?>
-                    
+
                     <?php if ($esAdmin || verificarAccesoCargo([8, 11, 16])): ?>
-                        <a href="../operaciones/feriados.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'feriados.php' ? 'activo' : '' ?>">
+                        <a href="../operaciones/feriados.php"
+                            class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'feriados.php' ? 'activo' : '' ?>">
                             <i class="fas fa-calendar-day"></i> <span class="btn-text">Feriados</span>
                         </a>
                     <?php endif; ?>
-                    
+
                     <?php if ($esAdmin || verificarAccesoCargo([8, 16])): ?>
-                        <a href="../operaciones/viaticos.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'viaticos.php' ? 'activo' : '' ?>">
+                        <a href="../operaciones/viaticos.php"
+                            class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'viaticos.php' ? 'activo' : '' ?>">
                             <i class="fas fa-money-check-alt"></i> <span class="btn-text">Viáticos</span>
                         </a>
                     <?php endif; ?>
-                    
+
                     <?php if ($esAdmin || verificarAccesoCargo([5, 16])): ?>
-                        <a href="programar_horarios_lider.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'programar_horarios_lider.php' ? 'activo' : '' ?>">
+                        <a href="programar_horarios_lider.php"
+                            class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'programar_horarios_lider.php' ? 'activo' : '' ?>">
                             <i class="fas fa-user-clock"></i> <span class="btn-text">Generar Horarios</span>
                         </a>
                     <?php endif; ?>
                 </div>
-                
+
                 <div class="user-info">
                     <div class="user-avatar">
-                        <?= $esAdmin ? 
-                            strtoupper(substr($usuario['nombre'], 0, 1)) : 
+                        <?= $esAdmin ?
+                            strtoupper(substr($usuario['nombre'], 0, 1)) :
                             strtoupper(substr($usuario['Nombre'], 0, 1)) ?>
                     </div>
                     <div>
                         <div>
-                            <?= $esAdmin ? 
-                                htmlspecialchars($usuario['nombre']) : 
-                                htmlspecialchars($usuario['Nombre'].' '.$usuario['Apellido']) ?>
+                            <?= $esAdmin ?
+                                htmlspecialchars($usuario['nombre']) :
+                                htmlspecialchars($usuario['Nombre'] . ' ' . $usuario['Apellido']) ?>
                         </div>
                         <small>
                             <?= htmlspecialchars($cargoUsuario) ?>
@@ -928,46 +945,45 @@ a.btn{
                 </div>
             </div>
         </header>
-        
+
         <?php if (isset($_SESSION['exito'])): ?>
             <div class="alert alert-success">
                 <?= $_SESSION['exito'] ?>
                 <?php unset($_SESSION['exito']); ?>
             </div>
         <?php endif; ?>
-        
+
         <?php if (isset($_SESSION['error'])): ?>
             <div class="alert alert-danger">
                 <?= $_SESSION['error'] ?>
                 <?php unset($_SESSION['error']); ?>
             </div>
         <?php endif; ?>
-        
+
         <div class="filtros-container">
             <form method="get" action="tf_operarios.php" class="filtros-form">
                 <div class="filtro-group">
                     <label for="busqueda">Colaborador</label>
-                    <input type="text" id="busqueda" name="busqueda" 
-                           placeholder="Escriba para buscar..." 
-                           value="<?= htmlspecialchars($busqueda) ?>">
+                    <input type="text" id="busqueda" name="busqueda" placeholder="Escriba para buscar..."
+                        value="<?= htmlspecialchars($busqueda) ?>">
                     <div id="operarios-sugerencias"></div>
                 </div>
-                
+
                 <div class="filtro-group">
                     <label for="desde">Desde</label>
                     <input type="date" id="desde" name="desde" value="<?= $fechaDesde ?>">
                 </div>
-                
+
                 <div class="filtro-group">
                     <label for="hasta">Hasta</label>
                     <input type="date" id="hasta" name="hasta" value="<?= $fechaHasta ?>">
                 </div>
-                
+
                 <div class="filtro-buttons">
                     <button type="submit" class="btn-aplicar">
                         <i class="fas fa-search"></i> Buscar
                     </button>
-                    
+
                     <?php if ($esAdmin || verificarAccesoCargo([8, 13, 11])): ?>
                         <a style="display:none;" href="tf_operarios.php?<?= http_build_query([
                             'desde' => $fechaDesde,
@@ -981,7 +997,7 @@ a.btn{
                 </div>
             </form>
         </div>
-        
+
         <div class="table-container">
             <?php if (empty($reporte)): ?>
                 <div class="no-results">
@@ -1031,7 +1047,7 @@ a.btn{
             <?php endif; ?>
         </div>
     </div>
-    
+
     <script>
         // Función para obtener operarios para el autocompletado
         function obtenerOperariosAutocompletado() {
@@ -1051,14 +1067,14 @@ a.btn{
             if (!texto) {
                 return operarios;
             }
-            return operarios.filter(op => 
-                op.nombre.toLowerCase().includes(texto.toLowerCase()) || 
+            return operarios.filter(op =>
+                op.nombre.toLowerCase().includes(texto.toLowerCase()) ||
                 op.codigo.toString().includes(texto)
             );
         }
 
         // Inicializar autocompletado cuando el documento esté listo
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const busquedaInput = document.getElementById('busqueda');
             const sugerenciasDiv = document.getElementById('operarios-sugerencias');
             let operariosData = [];
@@ -1069,19 +1085,19 @@ a.btn{
             });
 
             // Modificar el evento input del campo búsqueda
-            busquedaInput.addEventListener('input', function() {
+            busquedaInput.addEventListener('input', function () {
                 const texto = this.value.trim();
-                
+
                 // Si el campo está vacío, ocultar sugerencias
                 if (texto === '') {
                     sugerenciasDiv.style.display = 'none';
                     return;
                 }
-                
+
                 const resultados = buscarOperarios(texto, operariosData);
-                
+
                 sugerenciasDiv.innerHTML = '';
-                
+
                 if (resultados.length > 0) {
                     resultados.forEach(op => {
                         const div = document.createElement('div');
@@ -1090,14 +1106,14 @@ a.btn{
                         div.setAttribute('data-nombre', op.nombre);
                         div.style.padding = '8px';
                         div.style.cursor = 'pointer';
-                        div.addEventListener('click', function() {
+                        div.addEventListener('click', function () {
                             busquedaInput.value = op.nombre;
                             sugerenciasDiv.style.display = 'none';
                         });
-                        div.addEventListener('mouseover', function() {
+                        div.addEventListener('mouseover', function () {
                             this.style.backgroundColor = '#f5f5f5';
                         });
-                        div.addEventListener('mouseout', function() {
+                        div.addEventListener('mouseout', function () {
                             this.style.backgroundColor = 'white';
                         });
                         sugerenciasDiv.appendChild(div);
@@ -1109,14 +1125,14 @@ a.btn{
             });
 
             // Ocultar sugerencias al hacer clic fuera
-            document.addEventListener('click', function(e) {
+            document.addEventListener('click', function (e) {
                 if (e.target !== busquedaInput && !sugerenciasDiv.contains(e.target)) {
                     sugerenciasDiv.style.display = 'none';
                 }
             });
 
             // Manejar tecla Enter en el input
-            busquedaInput.addEventListener('keydown', function(e) {
+            busquedaInput.addEventListener('keydown', function (e) {
                 if (e.key === 'Enter') {
                     e.preventDefault();
                     const texto = this.value.trim();
@@ -1128,33 +1144,33 @@ a.btn{
                 }
             });
         });
-        
+
         // Aplicar filtros
         function aplicarFiltros() {
             const desde = document.getElementById('desde').value;
             const hasta = document.getElementById('hasta').value;
             const busqueda = document.getElementById('busqueda').value;
-            
+
             // Validar fechas
             if (new Date(desde) > new Date(hasta)) {
                 alert('La fecha "Desde" no puede ser mayor a la fecha "Hasta"');
                 return;
             }
-            
+
             window.location.href = `tf_operarios.php?desde=${desde}&hasta=${hasta}&busqueda=${encodeURIComponent(busqueda)}`;
         }
-        
+
         // Mostrar notificaciones si hay en sesión
         <?php if (isset($_SESSION['exito'])): ?>
             mostrarNotificacion('<?= $_SESSION['exito'] ?>', 'success');
             <?php unset($_SESSION['exito']); ?>
         <?php endif; ?>
-        
+
         <?php if (isset($_SESSION['error'])): ?>
             mostrarNotificacion('<?= $_SESSION['error'] ?>', 'error');
             <?php unset($_SESSION['error']); ?>
         <?php endif; ?>
-        
+
         // Función para mostrar notificaciones
         function mostrarNotificacion(mensaje, tipo = 'info') {
             const estilos = {
@@ -1162,9 +1178,9 @@ a.btn{
                 error: { background: '#f8d7da', color: '#721c24', icon: 'exclamation-circle' },
                 info: { background: '#e2e3e5', color: '#383d41', icon: 'info-circle' }
             };
-            
+
             const estilo = estilos[tipo] || estilos.info;
-            
+
             const notificacion = document.createElement('div');
             notificacion.style.position = 'fixed';
             notificacion.style.top = '20px';
@@ -1183,9 +1199,9 @@ a.btn{
                 <i class="fas fa-${estilo.icon}" style="font-size: 1.2rem;"></i>
                 <span>${mensaje}</span>
             `;
-            
+
             document.body.appendChild(notificacion);
-            
+
             setTimeout(() => {
                 notificacion.style.opacity = '0';
                 notificacion.style.transition = 'opacity 0.5s ease';
@@ -1194,4 +1210,5 @@ a.btn{
         }
     </script>
 </body>
+
 </html>

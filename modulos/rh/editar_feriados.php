@@ -2,8 +2,7 @@
 //error_reporting(E_ALL);
 //ini_set('display_errors', 1);
 
-require_once '../../includes/auth.php';
-require_once '../../includes/funciones.php';
+require_once '../../core/auth/auth.php';
 
 // Verificar acceso al módulo (solo cargo nivel 13 - RH)
 if (!verificarAccesoCargo(13)) {
@@ -17,7 +16,8 @@ $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admi
 /**
  * Obtiene todos los departamentos
  */
-function obtenerTodosDepartamentos() {
+function obtenerTodosDepartamentos()
+{
     global $conn;
     $stmt = $conn->query("SELECT codigo, nombre FROM departamentos ORDER BY nombre ASC");
     return $stmt->fetchAll();
@@ -34,7 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $tipo = $_POST['tipo'];
     $departamento_codigo = $tipo === 'Departamental' ? $_POST['departamento_codigo'] : null;
     $recurrente = isset($_POST['recurrente']) ? 1 : 0;
-    
+
     // Validaciones
     if (empty($fecha) || empty($nombre) || empty($tipo)) {
         $_SESSION['error'] = "Todos los campos obligatorios deben ser completados";
@@ -55,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt->execute([$fecha, $nombre, $tipo, $departamento_codigo, $recurrente]);
                 $_SESSION['exito'] = "Feriado creado correctamente";
             }
-            
+
             header('Location: editar_feriados.php');
             exit();
         } catch (PDOException $e) {
@@ -71,7 +71,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // Procesar eliminación
 if (isset($_GET['eliminar'])) {
     $id = $_GET['eliminar'];
-    
+
     try {
         $sql = "DELETE FROM feriadosnic WHERE id = ?";
         $stmt = $conn->prepare($sql);
@@ -138,6 +138,7 @@ if (isset($_GET['editar'])) {
 ?>
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -152,22 +153,22 @@ if (isset($_GET['editar'])) {
             font-family: 'Calibri', sans-serif;
             font-size: clamp(11px, 2vw, 16px) !important;
         }
-        
+
         body {
             background-color: #F6F6F6;
             color: #333;
             padding: 5px;
         }
-        
+
         .container {
             max-width: 100%;
             margin: 0 auto;
             background: white;
             border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
             padding: 10px;
         }
-        
+
         .header {
             display: flex;
             justify-content: space-between;
@@ -176,32 +177,32 @@ if (isset($_GET['editar'])) {
             padding-bottom: 10px;
             border-bottom: 1px solid #ddd;
         }
-        
+
         .title {
             color: #0E544C;
             font-size: 1.5rem !important;
         }
-        
+
         .filters {
             display: flex;
             gap: 15px;
             margin-bottom: 20px;
             flex-wrap: wrap;
         }
-        
+
         .filter-group {
             display: flex;
             flex-direction: column;
             min-width: 150px;
         }
-        
+
         .filter-buttons {
             display: flex;
             gap: 10px;
             margin-bottom: 20px;
             flex-wrap: wrap;
         }
-        
+
         .filter-button {
             padding: 8px 15px;
             border: 1px solid #ddd;
@@ -210,33 +211,36 @@ if (isset($_GET['editar'])) {
             transition: all 0.3s;
             background-color: #f8f9fa;
         }
-        
+
         .filter-button.active {
             background-color: #51B8AC;
             color: white;
             border-color: #51B8AC;
         }
-        
+
         .filter-button:hover {
             background-color: #e9ecef;
         }
-        
+
         .filter-button.active:hover {
             background-color: #0E544C;
         }
-        
+
         label {
             margin-bottom: 5px;
             font-weight: bold;
             color: #0E544C;
         }
-        
-        select, input, button, textarea {
+
+        select,
+        input,
+        button,
+        textarea {
             padding: 8px;
             border: 1px solid #ddd;
             border-radius: 4px;
         }
-        
+
         .btn {
             padding: 8px 15px;
             background-color: #51B8AC;
@@ -246,32 +250,32 @@ if (isset($_GET['editar'])) {
             cursor: pointer;
             transition: background-color 0.3s;
         }
-        
+
         .btn:hover {
             background-color: #0E544C;
         }
-        
+
         .btn-secondary {
             background-color: #6c757d;
         }
-        
+
         .btn-secondary:hover {
             background-color: #5a6268;
         }
-        
+
         .btn-danger {
             background-color: #dc3545;
         }
-        
+
         .btn-danger:hover {
             background-color: #c82333;
         }
-        
+
         .btn-sm {
             padding: 5px 10px;
             font-size: 0.8rem !important;
         }
-        
+
         .table-container {
             overflow-x: auto;
             margin-top: 20px;
@@ -282,7 +286,8 @@ if (isset($_GET['editar'])) {
             border-collapse: collapse;
         }
 
-        th, td {
+        th,
+        td {
             padding: 8px;
             text-align: left;
             border: 1px solid #ddd;
@@ -292,47 +297,47 @@ if (isset($_GET['editar'])) {
             background-color: #0E544C;
             color: white;
         }
-        
+
         tr:nth-child(even) {
             background-color: #f2f2f2;
         }
-        
+
         .alert {
             padding: 10px;
             margin-bottom: 15px;
             border-radius: 4px;
         }
-        
+
         .alert-success {
             background-color: #d4edda;
             color: #155724;
         }
-        
+
         .alert-danger {
             background-color: #f8d7da;
             color: #721c24;
         }
-        
+
         .alert-info {
             background-color: #d1ecf1;
             color: #0c5460;
         }
-        
+
         .text-center {
             text-align: center;
         }
-        
+
         .no-results {
             text-align: center;
             padding: 20px;
             color: #666;
         }
-        
+
         .search-box {
             position: relative;
             min-width: 250px;
         }
-        
+
         .search-box i {
             position: absolute;
             right: 10px;
@@ -340,24 +345,24 @@ if (isset($_GET['editar'])) {
             transform: translateY(-50%);
             color: #6c757d;
         }
-        
+
         .required::after {
             content: " *";
             color: red;
         }
-        
+
         .checkbox-label {
             display: flex;
             align-items: center;
             gap: 5px;
         }
-        
+
         .actions {
             display: flex;
             gap: 10px;
             justify-content: flex-start;
         }
-        
+
         .badge {
             display: inline-block;
             padding: 3px 7px;
@@ -365,17 +370,17 @@ if (isset($_GET['editar'])) {
             font-size: 0.8rem;
             font-weight: bold;
         }
-        
+
         .badge-nacional {
             background-color: #007bff;
             color: white;
         }
-        
+
         .badge-departamental {
             background-color: #6f42c1;
             color: white;
         }
-        
+
         /* Estilos del modal */
         .modal {
             display: none;
@@ -386,9 +391,9 @@ if (isset($_GET['editar'])) {
             width: 100%;
             height: 100%;
             overflow: auto;
-            background-color: rgba(0,0,0,0.4);
+            background-color: rgba(0, 0, 0, 0.4);
         }
-        
+
         .modal-content {
             background-color: #f8f9fa;
             margin: 5% auto;
@@ -397,9 +402,9 @@ if (isset($_GET['editar'])) {
             border-radius: 8px;
             width: 90%;
             max-width: 600px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
         }
-        
+
         .modal-header {
             display: flex;
             justify-content: space-between;
@@ -408,55 +413,55 @@ if (isset($_GET['editar'])) {
             padding-bottom: 10px;
             border-bottom: 1px solid #ddd;
         }
-        
+
         .modal-title {
             color: #0E544C;
             font-size: 1.3rem !important;
             margin: 0;
         }
-        
+
         .close {
             color: #aaa;
             font-size: 1.5rem;
             font-weight: bold;
             cursor: pointer;
         }
-        
+
         .close:hover {
             color: #333;
         }
-        
+
         .form-group {
             margin-bottom: 15px;
         }
-        
+
         .form-row {
             display: flex;
             gap: 15px;
             margin-bottom: 15px;
         }
-        
+
         .form-col {
             flex: 1;
         }
-        
+
         @media (max-width: 768px) {
             .filters {
                 flex-direction: column;
             }
-            
+
             .filter-group {
                 width: 100%;
             }
-            
+
             .filter-buttons {
                 flex-direction: column;
             }
-            
+
             .form-row {
                 flex-direction: column;
             }
-            
+
             .modal-content {
                 width: 95%;
                 margin: 10% auto;
@@ -464,6 +469,7 @@ if (isset($_GET['editar'])) {
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <div class="header">
@@ -477,28 +483,28 @@ if (isset($_GET['editar'])) {
                 </a>
             </div>
         </div>
-        
+
         <?php if (isset($_SESSION['exito'])): ?>
             <div class="alert alert-success">
                 <?= $_SESSION['exito'] ?>
                 <?php unset($_SESSION['exito']); ?>
             </div>
         <?php endif; ?>
-        
+
         <?php if (isset($_SESSION['error'])): ?>
             <div class="alert alert-danger">
                 <?= $_SESSION['error'] ?>
                 <?php unset($_SESSION['error']); ?>
             </div>
         <?php endif; ?>
-        
+
         <!-- Botón para abrir modal de agregar feriado -->
         <div class="actions" style="margin-bottom: 20px;">
             <button class="btn" onclick="abrirModal()">
                 <i class="fas fa-plus"></i> Agregar Feriado
             </button>
         </div>
-        
+
         <!-- Filtros -->
         <div class="filters">
             <div class="filter-group">
@@ -509,17 +515,19 @@ if (isset($_GET['editar'])) {
                     <?php endforeach; ?>
                 </select>
             </div>
-            
+
             <div class="filter-group">
                 <label for="tipo-filtro">Tipo de Feriado</label>
                 <select id="tipo-filtro" name="tipo" onchange="aplicarFiltros()">
                     <option value="todos" <?= $filtroTipo === 'todos' ? 'selected' : '' ?>>Todos</option>
                     <option value="nacional" <?= $filtroTipo === 'nacional' ? 'selected' : '' ?>>Nacionales</option>
-                    <option value="departamental" <?= $filtroTipo === 'departamental' ? 'selected' : '' ?>>Departamentales</option>
+                    <option value="departamental" <?= $filtroTipo === 'departamental' ? 'selected' : '' ?>>Departamentales
+                    </option>
                 </select>
             </div>
-            
-            <div class="filter-group" id="departamento-filtro-group" style="<?= $filtroTipo !== 'departamental' ? 'display: none;' : '' ?>">
+
+            <div class="filter-group" id="departamento-filtro-group"
+                style="<?= $filtroTipo !== 'departamental' ? 'display: none;' : '' ?>">
                 <label for="departamento-filtro">Departamento</label>
                 <select id="departamento-filtro" name="departamento" onchange="aplicarFiltros()">
                     <option value="">Todos</option>
@@ -530,21 +538,21 @@ if (isset($_GET['editar'])) {
                     <?php endforeach; ?>
                 </select>
             </div>
-            
+
             <div class="filter-group search-box">
                 <label for="busqueda">Buscar Feriado</label>
-                <input type="text" id="busqueda" name="busqueda" value="<?= htmlspecialchars($busqueda) ?>" 
-                       placeholder="Nombre del feriado..." oninput="buscarFeriado()">
+                <input type="text" id="busqueda" name="busqueda" value="<?= htmlspecialchars($busqueda) ?>"
+                    placeholder="Nombre del feriado..." oninput="buscarFeriado()">
                 <i class="fas fa-search"></i>
             </div>
-            
+
             <div class="filter-group" style="align-self: flex-end;">
                 <button class="btn" onclick="aplicarFiltros()">
                     <i class="fas fa-filter"></i> Aplicar Filtros
                 </button>
             </div>
         </div>
-        
+
         <!-- Tabla de feriados -->
         <div class="table-container">
             <?php if (empty($feriados)): ?>
@@ -587,8 +595,8 @@ if (isset($_GET['editar'])) {
                                     <button class="btn btn-secondary btn-sm" onclick="editarFeriado(<?= $feriado['id'] ?>)">
                                         <i class="fas fa-edit"></i>
                                     </button>
-                                    <a href="editar_feriados.php?eliminar=<?= $feriado['id'] ?>" class="btn btn-danger btn-sm" 
-                                       onclick="return confirm('¿Está seguro que desea eliminar este feriado?');">
+                                    <a href="editar_feriados.php?eliminar=<?= $feriado['id'] ?>" class="btn btn-danger btn-sm"
+                                        onclick="return confirm('¿Está seguro que desea eliminar este feriado?');">
                                         <i class="fas fa-trash"></i>
                                     </a>
                                 </td>
@@ -599,7 +607,7 @@ if (isset($_GET['editar'])) {
             <?php endif; ?>
         </div>
     </div>
-    
+
     <!-- Modal para agregar/editar feriados -->
     <div id="feriadoModal" class="modal">
         <div class="modal-content">
@@ -609,19 +617,19 @@ if (isset($_GET['editar'])) {
             </div>
             <form method="POST" id="feriadoForm">
                 <input type="hidden" name="id" id="feriadoId" value="">
-                
+
                 <div class="form-row">
                     <div class="form-col">
                         <label for="modalFecha" class="required">Fecha</label>
                         <input type="date" id="modalFecha" name="fecha" required>
                     </div>
-                    
+
                     <div class="form-col">
                         <label for="modalNombre" class="required">Nombre del Feriado</label>
                         <input type="text" id="modalNombre" name="nombre" required>
                     </div>
                 </div>
-                
+
                 <div class="form-row">
                     <div class="form-col">
                         <label for="modalTipo" class="required">Tipo</label>
@@ -630,7 +638,7 @@ if (isset($_GET['editar'])) {
                             <option value="Departamental">Departamental</option>
                         </select>
                     </div>
-                    
+
                     <div class="form-col" id="modalDepartamentoCol" style="display: none;">
                         <label for="modalDepartamento" class="required">Departamento</label>
                         <select id="modalDepartamento" name="departamento_codigo">
@@ -643,14 +651,14 @@ if (isset($_GET['editar'])) {
                         </select>
                     </div>
                 </div>
-                
+
                 <div class="form-group">
                     <label class="checkbox-label">
                         <input type="checkbox" id="modalRecurrente" name="recurrente" value="1" checked>
                         Feriado recurrente (se repite cada año)
                     </label>
                 </div>
-                
+
                 <div class="actions">
                     <button type="button" class="btn btn-secondary" onclick="cerrarModal()">Cancelar</button>
                     <button type="submit" class="btn">
@@ -660,16 +668,16 @@ if (isset($_GET['editar'])) {
             </form>
         </div>
     </div>
-    
+
     <script>
         // Variables para controlar el tiempo de búsqueda
         let timeoutBusqueda = null;
-        
+
         // Mostrar/ocultar campo departamento según tipo de feriado
         function actualizarDepartamentoField() {
             const tipo = document.getElementById('modalTipo').value;
             const departamentoCol = document.getElementById('modalDepartamentoCol');
-            
+
             if (tipo === 'Departamental') {
                 departamentoCol.style.display = 'flex';
                 document.getElementById('modalDepartamento').required = true;
@@ -678,48 +686,48 @@ if (isset($_GET['editar'])) {
                 document.getElementById('modalDepartamento').required = false;
             }
         }
-        
+
         // Mostrar/ocultar filtro departamento según tipo de feriado
         function actualizarFiltroDepartamento() {
             const tipoFiltro = document.getElementById('tipo-filtro').value;
             const departamentoFiltroGroup = document.getElementById('departamento-filtro-group');
-            
+
             if (tipoFiltro === 'departamental') {
                 departamentoFiltroGroup.style.display = 'flex';
             } else {
                 departamentoFiltroGroup.style.display = 'none';
             }
         }
-        
+
         // Aplicar filtros
         function aplicarFiltros() {
             const anio = document.getElementById('anio').value;
             const tipoFiltro = document.getElementById('tipo-filtro').value;
             const departamentoFiltro = tipoFiltro === 'departamental' ? document.getElementById('departamento-filtro').value : '';
             const busqueda = document.getElementById('busqueda').value;
-            
+
             let url = `editar_feriados.php?anio=${anio}&tipo=${tipoFiltro}`;
-            
+
             if (departamentoFiltro) {
                 url += `&departamento=${departamentoFiltro}`;
             }
-            
+
             if (busqueda) {
                 url += `&busqueda=${encodeURIComponent(busqueda)}`;
             }
-            
+
             window.location.href = url;
         }
-        
+
         // Buscar feriado con delay
         function buscarFeriado() {
             clearTimeout(timeoutBusqueda);
-            
+
             timeoutBusqueda = setTimeout(() => {
                 aplicarFiltros();
             }, 500);
         }
-        
+
         // Funciones para manejar el modal
         function abrirModal() {
             // Limpiar formulario
@@ -727,15 +735,15 @@ if (isset($_GET['editar'])) {
             document.getElementById('modalTitulo').textContent = 'Agregar Nuevo Feriado';
             document.getElementById('feriadoId').value = '';
             document.getElementById('modalDepartamentoCol').style.display = 'none';
-            
+
             // Mostrar modal
             document.getElementById('feriadoModal').style.display = 'block';
         }
-        
+
         function cerrarModal() {
             document.getElementById('feriadoModal').style.display = 'none';
         }
-        
+
         function editarFeriado(id) {
             // Hacer una petición AJAX para obtener los datos del feriado
             fetch(`obtener_feriado.php?id=${id}`)
@@ -749,7 +757,7 @@ if (isset($_GET['editar'])) {
                         document.getElementById('modalNombre').value = data.nombre;
                         document.getElementById('modalTipo').value = data.tipo;
                         document.getElementById('modalRecurrente').checked = data.recurrente == 1;
-                        
+
                         // Manejar el campo departamento
                         if (data.tipo === 'Departamental') {
                             document.getElementById('modalDepartamentoCol').style.display = 'flex';
@@ -757,7 +765,7 @@ if (isset($_GET['editar'])) {
                         } else {
                             document.getElementById('modalDepartamentoCol').style.display = 'none';
                         }
-                        
+
                         // Mostrar modal
                         document.getElementById('feriadoModal').style.display = 'block';
                     }
@@ -767,15 +775,15 @@ if (isset($_GET['editar'])) {
                     mostrarNotificacion('Error al cargar los datos del feriado', 'error');
                 });
         }
-        
+
         // Cerrar modal al hacer clic fuera del contenido
-        window.onclick = function(event) {
+        window.onclick = function (event) {
             const modal = document.getElementById('feriadoModal');
             if (event.target === modal) {
                 cerrarModal();
             }
         }
-        
+
         // Función para mostrar notificaciones
         function mostrarNotificacion(mensaje, tipo = 'info') {
             const estilos = {
@@ -783,9 +791,9 @@ if (isset($_GET['editar'])) {
                 error: { background: '#f8d7da', color: '#721c24', icon: 'exclamation-circle' },
                 info: { background: '#e2e3e5', color: '#383d41', icon: 'info-circle' }
             };
-            
+
             const estilo = estilos[tipo] || estilos.info;
-            
+
             const notificacion = document.createElement('div');
             notificacion.style.position = 'fixed';
             notificacion.style.top = '20px';
@@ -804,37 +812,38 @@ if (isset($_GET['editar'])) {
                 <i class="fas fa-${estilo.icon}" style="font-size: 1.2rem;"></i>
                 <span>${mensaje}</span>
             `;
-            
+
             document.body.appendChild(notificacion);
-            
+
             setTimeout(() => {
                 notificacion.style.opacity = '0';
                 notificacion.style.transition = 'opacity 0.5s ease';
                 setTimeout(() => notificacion.remove(), 500);
             }, 3000);
         }
-        
+
         // Inicializar eventos
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             // Escuchar cambios en el filtro de tipo
             document.getElementById('tipo-filtro').addEventListener('change', actualizarFiltroDepartamento);
-            
+
             // Si hay un feriado para editar en la URL, abrir el modal
             <?php if (isset($_GET['editar'])): ?>
                 editarFeriado(<?= $_GET['editar'] ?>);
             <?php endif; ?>
         });
-        
+
         // Mostrar notificaciones si hay en sesión
         <?php if (isset($_SESSION['exito'])): ?>
             mostrarNotificacion('<?= $_SESSION['exito'] ?>', 'success');
             <?php unset($_SESSION['exito']); ?>
         <?php endif; ?>
-        
+
         <?php if (isset($_SESSION['error'])): ?>
             mostrarNotificacion('<?= $_SESSION['error'] ?>', 'error');
             <?php unset($_SESSION['error']); ?>
         <?php endif; ?>
     </script>
 </body>
+
 </html>

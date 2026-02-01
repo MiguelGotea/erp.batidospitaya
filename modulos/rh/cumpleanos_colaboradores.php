@@ -1,6 +1,5 @@
 <?php
-require_once '../../includes/auth.php';
-require_once '../../includes/funciones.php';
+require_once '../../core/auth/auth.php';
 
 // Verificar acceso solo para cargo 22 (Atención al Cliente)
 verificarAccesoCargo([22, 39, 30, 37, 13]);
@@ -12,7 +11,8 @@ $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admi
 $mesSeleccionado = isset($_GET['mes']) ? intval($_GET['mes']) : null;
 
 // Función para normalizar nombres
-function normalizarNombre($nombre) {
+function normalizarNombre($nombre)
+{
     // Eliminar espacios al inicio y final
     $nombre = trim($nombre);
     // Eliminar múltiples espacios entre palabras
@@ -29,7 +29,7 @@ $todosColaboradoresValidos = []; // Para almacenar todos los colaboradores váli
 if ($mesSeleccionado) {
     // Depuración: mostrar el valor del filtro
     error_log("Filtrando por mes: $mesSeleccionado");
-    
+
     $query = "
         SELECT 
             o.CodOperario,
@@ -53,27 +53,27 @@ if ($mesSeleccionado) {
     ";
 
     error_log("Consulta SQL: $query");
-    
+
     try {
         $stmt = $conn->prepare($query);
         $stmt->bindParam(':mes', $mesSeleccionado, PDO::PARAM_INT);
         $stmt->execute();
-        
+
         $count = $stmt->rowCount();
         error_log("Número de resultados: $count");
-        
+
         // Separar colaboradores válidos e inválidos
         while ($colaborador = $stmt->fetch(PDO::FETCH_ASSOC)) {
             error_log("Procesando colaborador: " . $colaborador['CodOperario'] . " - " . $colaborador['Nombre']);
-            
+
             // Construir nombre completo
-            $nombreCompleto = trim($colaborador['Nombre'] . ' ' . 
-                               ($colaborador['Nombre2'] ? $colaborador['Nombre2'] . ' ' : '') . 
-                               $colaborador['Apellido'] . ' ' . 
-                               ($colaborador['Apellido2'] ? $colaborador['Apellido2'] : ''));
-            
+            $nombreCompleto = trim($colaborador['Nombre'] . ' ' .
+                ($colaborador['Nombre2'] ? $colaborador['Nombre2'] . ' ' : '') .
+                $colaborador['Apellido'] . ' ' .
+                ($colaborador['Apellido2'] ? $colaborador['Apellido2'] : ''));
+
             $colaborador['nombre_completo'] = normalizarNombre($nombreCompleto);
-            
+
             // Validar celular (8 dígitos, sin espacios ni caracteres especiales)
             $celular = preg_replace('/[^0-9]/', '', $colaborador['Celular']);
             if (strlen($celular) === 8) {
@@ -92,13 +92,14 @@ if ($mesSeleccionado) {
 ?>
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cumpleaños de Colaboradores - Batidos Pitaya</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
-    <link rel="icon" href="../../assets/img/icon12.png" type="image/png">
+    <link rel="icon" href="../../core/assets/img/icon12.png" type="image/png">
     <style>
         * {
             box-sizing: border-box;
@@ -107,37 +108,37 @@ if ($mesSeleccionado) {
             font-family: 'Calibri', sans-serif;
             font-size: clamp(12px, 2vw, 18px) !important;
         }
-        
+
         body {
             background-color: #F6F6F6;
             color: #333;
         }
-        
+
         .container {
             max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
         }
-        
+
         .filtros-container {
             background: white;
             padding: 20px;
             border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
             margin-bottom: 20px;
         }
-        
+
         .filtro-group {
             margin-bottom: 15px;
         }
-        
+
         label {
             display: block;
             margin-bottom: 5px;
             font-weight: bold;
             color: #0E544C;
         }
-        
+
         select {
             width: 100%;
             padding: 10px;
@@ -145,7 +146,7 @@ if ($mesSeleccionado) {
             border-radius: 4px;
             background-color: white;
         }
-        
+
         .btn-filtrar {
             background-color: #51B8AC;
             color: white;
@@ -157,7 +158,7 @@ if ($mesSeleccionado) {
             transition: background-color 0.3s;
             margin-right: 10px;
         }
-        
+
         .btn-limpiar {
             background-color: #d9534f;
             color: white;
@@ -168,47 +169,48 @@ if ($mesSeleccionado) {
             font-weight: bold;
             transition: background-color 0.3s;
         }
-        
+
         .btn-filtrar:hover {
             background-color: #0E544C;
         }
-        
+
         .btn-limpiar:hover {
             background-color: #c9302c;
         }
-        
+
         .botones-accion {
             display: flex;
             margin-top: 15px;
         }
-        
+
         .tabla-container {
             background: white;
             padding: 20px;
             border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
-        
+
         table {
             width: 100%;
             border-collapse: collapse;
         }
-        
-        th, td {
+
+        th,
+        td {
             padding: 12px 15px;
             text-align: left;
             border-bottom: 1px solid #ddd;
         }
-        
+
         th {
             background-color: #51B8AC;
             color: white;
         }
-        
+
         tr:hover {
             background-color: #f5f5f5;
         }
-        
+
         .btn-copiar {
             background-color: #0E544C;
             color: white;
@@ -218,35 +220,35 @@ if ($mesSeleccionado) {
             cursor: pointer;
             margin-bottom: 20px;
         }
-        
+
         .btn-copiar:hover {
             background-color: #08332e;
         }
-        
+
         .colaboradores-invalidos {
             margin-top: 30px;
             padding-top: 20px;
             border-top: 2px solid #ddd;
         }
-        
+
         .colaboradores-invalidos h3 {
             color: #d9534f;
             margin-bottom: 15px;
         }
-        
+
         .no-resultados {
             text-align: center;
             padding: 20px;
             color: #666;
             font-style: italic;
         }
-        
+
         .contador-colaboradores {
             margin-bottom: 15px;
             font-weight: bold;
             color: #0E544C;
         }
-        
+
         .btn-regresar {
             display: inline-block;
             margin-top: 15px;
@@ -258,15 +260,15 @@ if ($mesSeleccionado) {
             cursor: pointer;
             text-decoration: none;
         }
-        
+
         .btn-regresar:hover {
             background-color: #5a6268;
         }
-        
+
         .btn-regresar i {
             margin-right: 5px;
         }
-        
+
         .debug-info {
             background-color: #f8d7da;
             color: #721c24;
@@ -277,20 +279,21 @@ if ($mesSeleccionado) {
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <h1>Cumpleaños de Colaboradores</h1>
-        
+
         <a href="../index.php" class="btn-regresar">
             <i class="fas fa-arrow-left"></i> Regresar
         </a>
-        
+
         <?php if (isset($error)): ?>
             <div class="debug-info">
                 <strong>Error:</strong> <?= htmlspecialchars($error) ?>
             </div>
         <?php endif; ?>
-        
+
         <div class="filtros-container">
             <form method="GET" action="" id="formFiltros">
                 <div class="filtro-group">
@@ -311,7 +314,7 @@ if ($mesSeleccionado) {
                         <option value="12" <?= $mesSeleccionado == 12 ? 'selected' : '' ?>>Diciembre</option>
                     </select>
                 </div>
-                
+
                 <div class="botones-accion">
                     <button type="submit" class="btn-filtrar">
                         <i class="fas fa-filter"></i> Filtrar
@@ -322,18 +325,18 @@ if ($mesSeleccionado) {
                 </div>
             </form>
         </div>
-        
+
         <?php if ($mesSeleccionado): ?>
             <div class="tabla-container">
                 <?php if (!empty($colaboradores)): ?>
                     <div class="contador-colaboradores">
                         Total de colaboradores válidos: <?= count($todosColaboradoresValidos) ?>
                     </div>
-                    
+
                     <button id="btnCopiar" class="btn-copiar">
                         <i class="fas fa-copy"></i> Copiar todos los colaboradores válidos al portapapeles
                     </button>
-                    
+
                     <table id="tablaColaboradores">
                         <thead>
                             <tr>
@@ -368,7 +371,7 @@ if ($mesSeleccionado) {
                         <?php endif; ?>
                     </div>
                 <?php endif; ?>
-                
+
                 <?php if (!empty($colaboradoresInvalidos)): ?>
                     <div class="colaboradores-invalidos">
                         <h3>Colaboradores con datos inválidos (no se pueden copiar)</h3>
@@ -416,7 +419,7 @@ if ($mesSeleccionado) {
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
     <script>
-        $(document).ready(function() {
+        $(document).ready(function () {
             // Inicializar DataTable si hay resultados
             <?php if (!empty($colaboradores)): ?>
                 $('#tablaColaboradores').DataTable({
@@ -427,35 +430,36 @@ if ($mesSeleccionado) {
                     lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Todos"]]
                 });
             <?php endif; ?>
-            
+
             // Botón para limpiar filtros
-            $('#btnLimpiar').click(function() {
+            $('#btnLimpiar').click(function () {
                 // Resetear el formulario
                 $('#formFiltros')[0].reset();
                 // Enviar el formulario (recargar sin filtros)
                 window.location.href = window.location.pathname;
             });
-            
+
             // Función para copiar al portapapeles (todos los colaboradores válidos)
-            $('#btnCopiar').click(function() {
+            $('#btnCopiar').click(function () {
                 let datosParaCopiar = '';
-                
+
                 // Usamos los datos de PHP (todosColaboradoresValidos) en lugar de los de la tabla HTML
                 <?php foreach ($todosColaboradoresValidos as $colaborador): ?>
                     datosParaCopiar += `<?= $colaborador['Celular'] ?>\t<?= $colaborador['nombre_completo'] ?>\t<?= $colaborador['sucursales'] ?>\n`;
                 <?php endforeach; ?>
-                
+
                 // Crear elemento temporal para copiar
                 const elementoTemporal = $('<textarea>');
                 $('body').append(elementoTemporal);
                 elementoTemporal.val(datosParaCopiar).select();
                 document.execCommand('copy');
                 elementoTemporal.remove();
-                
+
                 // Mostrar notificación con cantidad copiada
                 alert(`Se copiaron <?= count($todosColaboradoresValidos) ?> registros al portapapeles:\nCelular, Nombre, Sucursal(es)`);
             });
         });
     </script>
 </body>
+
 </html>

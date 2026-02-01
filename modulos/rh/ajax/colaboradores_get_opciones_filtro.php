@@ -1,15 +1,15 @@
 <?php
-require_once '../../../includes/auth.php';
+require_once '../../../core/auth/auth.php';
 
 header('Content-Type: application/json');
 
 try {
     verificarAutenticacion();
-    
+
     $columna = isset($_POST['columna']) ? $_POST['columna'] : '';
-    
+
     $opciones = [];
-    
+
     // Filtro de estado (Operativo)
     if ($columna === 'Operativo') {
         $opciones = [
@@ -17,7 +17,7 @@ try {
             ['valor' => '0', 'texto' => 'Inactivo']
         ];
     }
-    
+
     // Filtro de cargo
     elseif ($columna === 'cargo_nombre') {
         $sql = "SELECT DISTINCT 
@@ -41,11 +41,11 @@ try {
                     ) as cargo
                 FROM Operarios o
                 ORDER BY cargo";
-        
+
         $stmt = $conn->prepare($sql);
         $stmt->execute();
         $resultados = $stmt->fetchAll();
-        
+
         foreach ($resultados as $row) {
             $opciones[] = [
                 'valor' => $row['cargo'],
@@ -53,7 +53,7 @@ try {
             ];
         }
     }
-    
+
     // Filtro de sucursal
     elseif ($columna === 'nombre_sucursal') {
         $sql = "SELECT DISTINCT 
@@ -72,11 +72,11 @@ try {
                 ) ultimo_contrato ON ultimo_contrato.cod_operario = o.CodOperario
                 LEFT JOIN sucursales s ON ultimo_contrato.cod_sucursal_contrato = s.codigo
                 ORDER BY nombre_sucursal";
-        
+
         $stmt = $conn->prepare($sql);
         $stmt->execute();
         $resultados = $stmt->fetchAll();
-        
+
         foreach ($resultados as $row) {
             $opciones[] = [
                 'valor' => $row['nombre_sucursal'],
@@ -84,7 +84,7 @@ try {
             ];
         }
     }
-    
+
     // Filtro de tiempo trabajado (rangos predefinidos)
     elseif ($columna === 'tiempo_trabajado_dias') {
         $opciones = [
@@ -95,7 +95,7 @@ try {
             ['valor' => 'mas_5_años', 'texto' => 'Más de 5 años']
         ];
     }
-    
+
     // Filtro de tiempo restante (categorías predefinidas)
     elseif ($columna === 'tiempo_restante_categoria') {
         $opciones = [
@@ -108,12 +108,12 @@ try {
             ['valor' => 'indefinido', 'texto' => 'Indefinido']
         ];
     }
-    
+
     echo json_encode([
         'success' => true,
         'opciones' => $opciones
     ]);
-    
+
 } catch (Exception $e) {
     echo json_encode([
         'success' => false,

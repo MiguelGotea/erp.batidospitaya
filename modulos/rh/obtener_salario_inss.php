@@ -1,6 +1,5 @@
 <?php
-require_once '../../includes/auth.php';
-require_once '../../includes/funciones.php';
+require_once '../../core/auth/auth.php';
 require_once '../../includes/conexion.php';
 
 // Verificar autenticación
@@ -15,9 +14,10 @@ if (!isset($_GET['id']) || empty($_GET['id'])) {
 $idSalarioINSS = intval($_GET['id']);
 
 // Obtener el salario INSS
-function obtenerSalarioINSSPorId($idSalarioINSS) {
+function obtenerSalarioINSSPorId($idSalarioINSS)
+{
     global $conn;
-    
+
     $stmt = $conn->prepare("
         SELECT * FROM SalarioINSS 
         WHERE id = ?

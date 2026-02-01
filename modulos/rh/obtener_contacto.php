@@ -1,6 +1,5 @@
 <?php
-require_once '../../includes/auth.php';
-require_once '../../includes/funciones.php';
+require_once '../../core/auth/auth.php';
 
 verificarAutenticacion();
 
@@ -12,9 +11,10 @@ if (!isset($_GET['id']) || empty($_GET['id'])) {
 
 $idContacto = intval($_GET['id']);
 
-function obtenerContactoEmergenciaPorId($idContacto) {
+function obtenerContactoEmergenciaPorId($idContacto)
+{
     global $conn;
-    
+
     $stmt = $conn->prepare("SELECT * FROM ContactosEmergencia WHERE id = ?");
     $stmt->execute([$idContacto]);
     return $stmt->fetch();

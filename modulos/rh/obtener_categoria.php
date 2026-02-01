@@ -1,6 +1,5 @@
 <?php
-require_once '../../includes/auth.php';
-require_once '../../includes/funciones.php';
+require_once '../../core/auth/auth.php';
 
 // Verificar autenticación
 verificarAutenticacion();
@@ -8,9 +7,10 @@ verificarAutenticacion();
 /**
  * Obtiene una categoría específica por ID
  */
-function obtenerCategoriaPorId($idCategoria) {
+function obtenerCategoriaPorId($idCategoria)
+{
     global $conn;
-    
+
     $stmt = $conn->prepare("
         SELECT oc.*, co.NombreCategoria, co.Peso
         FROM OperariosCategorias oc
@@ -41,7 +41,7 @@ try {
 
     header('Content-Type: application/json');
     echo json_encode($categoria);
-    
+
 } catch (Exception $e) {
     header('HTTP/1.1 500 Internal Server Error');
     echo json_encode(['error' => 'Error del servidor: ' . $e->getMessage()]);

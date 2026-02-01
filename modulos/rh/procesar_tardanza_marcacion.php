@@ -1,6 +1,5 @@
 <?php
-require_once '../../includes/auth.php';
-require_once '../../includes/funciones.php';
+require_once '../../core/auth/auth.php';
 
 verificarAutenticacion();
 
@@ -39,7 +38,7 @@ if (!isset($_FILES['foto']) || $_FILES['foto']['error'] !== UPLOAD_ERR_OK) {
 }
 
 // Verificar si ya existe una tardanza para esta fecha y operario
-$codOperario = (int)$_POST['cod_operario'];
+$codOperario = (int) $_POST['cod_operario'];
 $codSucursal = $_POST['cod_sucursal'];
 
 $stmt = $conn->prepare("
@@ -70,16 +69,16 @@ try {
         if (!is_dir($uploadDir)) {
             mkdir($uploadDir, 0755, true);
         }
-        
+
         $fileExt = pathinfo($_FILES['foto']['name'], PATHINFO_EXTENSION);
         $fileName = 'tardanza_' . time() . '_' . bin2hex(random_bytes(4)) . '.' . $fileExt;
         $filePath = $uploadDir . $fileName;
-        
+
         if (move_uploaded_file($_FILES['foto']['tmp_name'], $filePath)) {
             $fotoPath = $fileName;
         }
     }
-    
+
     // Insertar la tardanza manual
     $stmt = $conn->prepare("
         INSERT INTO TardanzasManuales (
@@ -94,7 +93,7 @@ try {
             estado
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Pendiente')
     ");
-    
+
     $params = [
         $codOperario,
         $fechaTardanza,
@@ -105,16 +104,16 @@ try {
         $_SESSION['usuario_id'],
         $codContrato
     ];
-    
+
     if ($stmt->execute($params)) {
         echo json_encode([
-            'success' => true, 
+            'success' => true,
             'message' => 'Solicitud de justificación de tardanza enviada correctamente'
         ]);
     } else {
         echo json_encode(['success' => false, 'message' => 'Error al guardar en la base de datos']);
     }
-    
+
 } catch (Exception $e) {
     echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
 }

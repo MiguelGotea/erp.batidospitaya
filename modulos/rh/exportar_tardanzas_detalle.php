@@ -2,11 +2,11 @@
 // /public_html/modulos/rh/exportar_tardanzas_detalle.php
 
 // Limpiar cualquier output previo
-if (ob_get_length()) ob_clean();
+if (ob_get_length())
+    ob_clean();
 ob_start();
 
-require_once '../../includes/auth.php';
-require_once '../../includes/funciones.php';
+require_once '../../core/auth/auth.php';
 
 verificarAutenticacion();
 
@@ -58,14 +58,15 @@ header('Content-Disposition: attachment; filename="tardanzas_detalle_' . $fechaD
 header('Cache-Control: max-age=0');
 
 // Función para generar lista de meses en el rango
-function generarListaMeses($fechaDesde, $fechaHasta) {
+function generarListaMeses($fechaDesde, $fechaHasta)
+{
     $meses = [];
     $inicio = new DateTime($fechaDesde);
     $fin = new DateTime($fechaHasta);
-    
+
     // Establecer al primer día del mes de inicio
     $inicio->modify('first day of this month');
-    
+
     while ($inicio <= $fin) {
         $meses[] = [
             'anio' => $inicio->format('Y'),
@@ -76,14 +77,15 @@ function generarListaMeses($fechaDesde, $fechaHasta) {
         $inicio->modify('+1 month');
         $inicio->modify('first day of this month');
     }
-    
+
     return $meses;
 }
 
 // Función para obtener tardanzas detalladas
-function obtenerTardanzasDetalladas($modoVista, $codSucursal, $fechaDesde, $fechaHasta, $operario_id = 0, $filtroActivo = 'todos') {
+function obtenerTardanzasDetalladas($modoVista, $codSucursal, $fechaDesde, $fechaHasta, $operario_id = 0, $filtroActivo = 'todos')
+{
     global $conn;
-    
+
     try {
         // Base de la consulta para obtener tardanzas automáticas
         $sql = "
@@ -145,28 +147,28 @@ function obtenerTardanzasDetalladas($modoVista, $codSucursal, $fechaDesde, $fech
                 AND m.fecha BETWEEN ss2.fecha_inicio AND ss2.fecha_fin
             )
         ";
-        
+
         $params = [$fechaDesde, $fechaHasta];
-        
+
         // Filtro por sucursal
         if ($modoVista === 'sucursal' && $codSucursal && $codSucursal !== 'todas') {
             $sql .= " AND m.sucursal_codigo = ?";
             $params[] = $codSucursal;
         }
-        
+
         // Filtro por operario
         if ($operario_id > 0) {
             $sql .= " AND m.CodOperario = ?";
             $params[] = $operario_id;
         }
-        
+
         // Filtro de activos/inactivos
         if ($filtroActivo === 'activos') {
             $sql .= " AND o.Operativo = 1";
         } elseif ($filtroActivo === 'inactivos') {
             $sql .= " AND o.Operativo = 0";
         }
-        
+
         // Excluir cargos 27
         $sql .= " AND o.CodOperario NOT IN (
             SELECT DISTINCT anc2.CodOperario 
@@ -174,22 +176,22 @@ function obtenerTardanzasDetalladas($modoVista, $codSucursal, $fechaDesde, $fech
             WHERE anc2.CodNivelesCargos = 27
             AND (anc2.Fin IS NULL OR anc2.Fin >= CURDATE())
         )";
-        
+
         $sql .= " ORDER BY m.fecha DESC, o.Nombre, o.Apellido";
-        
+
         $stmt = $conn->prepare($sql);
         $stmt->execute($params);
         $marcaciones = $stmt->fetchAll();
-        
+
         // Procesar los resultados para identificar tardanzas automáticas
         $tardanzasAutomaticas = [];
-        
+
         foreach ($marcaciones as $marcacion) {
             // Obtener hora programada según el día de la semana
             $diaSemana = date('N', strtotime($marcacion['fecha'])); // 1=lunes, 7=domingo
             $horaProgramada = '';
             $estadoDia = '';
-            
+
             switch ($diaSemana) {
                 case 1: // lunes
                     $horaProgramada = $marcacion['lunes_entrada'];
@@ -220,45 +222,45 @@ function obtenerTardanzasDetalladas($modoVista, $codSucursal, $fechaDesde, $fech
                     $estadoDia = $marcacion['domingo_estado'];
                     break;
             }
-            
+
             // Solo considerar días activos
             if ($estadoDia !== 'Activo') {
                 continue;
             }
-            
+
             // Calcular diferencia en minutos
             $diferenciaMinutos = 0;
             $esTardanza = false;
-            
+
             if (!empty($horaProgramada) && !empty($marcacion['hora_ingreso'])) {
                 $horaProg = new DateTime($horaProgramada);
                 $horaReal = new DateTime($marcacion['hora_ingreso']);
                 $diferencia = $horaReal->diff($horaProg);
                 $diferenciaMinutos = ($diferencia->invert ? 1 : -1) * ($diferencia->h * 60 + $diferencia->i);
-                
+
                 // Es tardanza si llegó más de 1 minuto tarde
                 $esTardanza = $diferenciaMinutos > 1;
             }
-            
+
             // Solo incluir si es tardanza
             if ($esTardanza) {
                 // Obtener mes y año
                 $mes = date('n', strtotime($marcacion['fecha'])); // 1-12
                 $anio = date('Y', strtotime($marcacion['fecha']));
                 $mesAnio = $anio . '-' . str_pad($mes, 2, '0', STR_PAD_LEFT);
-                
+
                 // Verificar si hay tardanza manual registrada
                 $tardanzaManualId = $marcacion['tardanza_manual_id'] ?? null;
                 $tardanzaJustificada = false;
                 $tardanzaReportada = false;
-                
+
                 if ($tardanzaManualId) {
                     $tardanzaReportada = true;
                     if ($marcacion['estado_tardanza'] === 'Justificado') {
                         $tardanzaJustificada = true;
                     }
                 }
-                
+
                 $tardanzasAutomaticas[] = [
                     'fecha' => $marcacion['fecha'],
                     'mes_anio' => $mesAnio,
@@ -284,57 +286,57 @@ function obtenerTardanzasDetalladas($modoVista, $codSucursal, $fechaDesde, $fech
                 ];
             }
         }
-        
+
         // Ahora obtener información de tardanzas reportadas y justificadas para cada operario
         $resultadoFinal = [];
-        
+
         foreach ($tardanzasAutomaticas as $tardanza) {
             $codOperario = $tardanza['cod_operario'];
             $mesAnio = $tardanza['mes_anio'];
-            
+
             // Obtener tardanzas reportadas (todas las faltas_manual para este operario en este mes)
             $fechaDesdeMes = date('Y-m-01', strtotime($tardanza['fecha']));
             $fechaHastaMes = date('Y-m-t', strtotime($tardanza['fecha']));
-            
+
             $sqlReportadas = "SELECT COUNT(*) as total 
                              FROM faltas_manual 
                              WHERE cod_operario = ? 
                              AND fecha_falta BETWEEN ? AND ?";
-            
+
             $stmtReportadas = $conn->prepare($sqlReportadas);
             $stmtReportadas->execute([$codOperario, $fechaDesdeMes, $fechaHastaMes]);
             $tardanzasReportadas = $stmtReportadas->fetch()['total'] ?? 0;
-            
+
             // Obtener tardanzas justificadas (faltas_manual que NO son 'No_Pagado' ni 'Pendiente' en este mes)
             $sqlJustificadas = "SELECT COUNT(*) as total 
                                FROM faltas_manual 
                                WHERE cod_operario = ? 
                                AND fecha_falta BETWEEN ? AND ?
                                AND tipo_falta NOT IN ('No_Pagado', 'Pendiente')";
-            
+
             $stmtJustificadas = $conn->prepare($sqlJustificadas);
             $stmtJustificadas->execute([$codOperario, $fechaDesdeMes, $fechaHastaMes]);
             $tardanzasJustificadas = $stmtJustificadas->fetch()['total'] ?? 0;
-            
+
             // Para este día específico, verificar si es tardanza ejecutada
             $esEjecutada = false;
-            
+
             // Si NO tiene tardanza manual justificada para esta fecha específica, es ejecutada
             if (!$tardanza['tardanza_justificada']) {
                 $esEjecutada = true;
             }
-            
+
             $tardanza['tardanzas_totales'] = 1; // Esta es una tardanza automática
             $tardanza['tardanzas_reportadas_mes'] = $tardanzasReportadas;
             $tardanza['tardanzas_justificadas_mes'] = $tardanzasJustificadas;
             $tardanza['tardanzas_ejecutadas'] = $esEjecutada ? 1 : 0;
             $tardanza['estado_final'] = $esEjecutada ? 'Ejecutada' : ($tardanza['tardanza_justificada'] ? 'Justificada' : 'Reportada');
-            
+
             $resultadoFinal[] = $tardanza;
         }
-        
+
         return $resultadoFinal;
-        
+
     } catch (Exception $e) {
         error_log("Error en obtenerTardanzasDetalladas: " . $e->getMessage());
         return [];
@@ -342,29 +344,33 @@ function obtenerTardanzasDetalladas($modoVista, $codSucursal, $fechaDesde, $fech
 }
 
 // Función auxiliar para obtener nombre del día
-function obtenerNombreDia($numeroDia) {
+function obtenerNombreDia($numeroDia)
+{
     $dias = [
         1 => 'Lunes',
-        2 => 'Martes', 
+        2 => 'Martes',
         3 => 'Miércoles',
         4 => 'Jueves',
         5 => 'Viernes',
         6 => 'Sábado',
         7 => 'Domingo'
     ];
-    
+
     return $dias[$numeroDia] ?? 'Desconocido';
 }
 
 // Función para formatear hora
-function formatoHoraExcel($hora) {
-    if (empty($hora)) return '';
+function formatoHoraExcel($hora)
+{
+    if (empty($hora))
+        return '';
     return date('h:i A', strtotime($hora));
 }
 ?>
 
 <!DOCTYPE html>
 <html>
+
 <head>
     <meta charset="UTF-8">
     <title>Reporte Detallado de Tardanzas</title>
@@ -373,47 +379,58 @@ function formatoHoraExcel($hora) {
             border-collapse: collapse;
             width: 100%;
         }
-        th, td {
+
+        th,
+        td {
             border: 1px solid #ddd;
             padding: 8px;
             text-align: left;
             font-size: 12px;
         }
+
         th {
             background-color: #0E544C;
             color: white;
             font-weight: bold;
         }
+
         .tardanza-ejecutada {
             background-color: #ffcccc;
         }
+
         .tardanza-justificada {
             background-color: #ccffcc;
         }
+
         .tardanza-reportada {
             background-color: #ffffcc;
         }
+
         .resumen {
             margin-bottom: 20px;
             padding: 10px;
             background-color: #f5f5f5;
             border: 1px solid #ddd;
         }
+
         .total-row {
             background-color: #f0f0f0;
             font-weight: bold;
         }
+
         .mes-header {
             background-color: #e8f4f8;
             font-weight: bold;
             text-align: center;
         }
+
         .subtotal {
             background-color: #f9f9f9;
             font-weight: bold;
         }
     </style>
 </head>
+
 <body>
     <?php if (empty($tardanzasDetalladas)): ?>
         <div class="resumen">
@@ -426,9 +443,9 @@ function formatoHoraExcel($hora) {
             <h2>Reporte Detallado de Tardanzas</h2>
             <p><strong>Período:</strong> <?= formatoFecha($fechaDesde) ?> al <?= formatoFecha($fechaHasta) ?></p>
             <p><strong>Total de registros:</strong> <?= count($tardanzasDetalladas) ?></p>
-            <p><strong>Meses incluidos:</strong> 
-                <?php 
-                $nombresMeses = array_map(function($mes) {
+            <p><strong>Meses incluidos:</strong>
+                <?php
+                $nombresMeses = array_map(function ($mes) {
                     return date('F Y', strtotime($mes['anio'] . '-' . $mes['mes'] . '-01'));
                 }, $mesesEnRango);
                 echo implode(', ', $nombresMeses);
@@ -436,7 +453,7 @@ function formatoHoraExcel($hora) {
             </p>
             <p><strong>Generado:</strong> <?= date('d/m/Y H:i:s') ?></p>
         </div>
-        
+
         <!-- Tabla principal -->
         <table>
             <thead>
@@ -465,7 +482,7 @@ function formatoHoraExcel($hora) {
                 </tr>
             </thead>
             <tbody>
-                <?php 
+                <?php
                 $contador = 1;
                 $totales = [
                     'tardanzas_totales' => 0,
@@ -473,13 +490,13 @@ function formatoHoraExcel($hora) {
                     'tardanzas_justificadas' => 0,
                     'tardanzas_ejecutadas' => 0
                 ];
-                
+
                 // Agrupar por operario y mes para acumular valores
                 $porOperarioMes = [];
                 $porSucursalMes = [];
                 $mesActual = '';
-                
-                foreach ($tardanzasDetalladas as $tardanza): 
+
+                foreach ($tardanzasDetalladas as $tardanza):
                     // Determinar clase CSS según estado final
                     $claseFila = '';
                     switch ($tardanza['estado_final']) {
@@ -493,18 +510,18 @@ function formatoHoraExcel($hora) {
                             $claseFila = 'tardanza-reportada';
                             break;
                     }
-                    
+
                     // Acumular totales generales
                     $totales['tardanzas_totales'] += $tardanza['tardanzas_totales'];
                     $totales['tardanzas_reportadas'] += $tardanza['tardanzas_reportadas_mes'];
                     $totales['tardanzas_justificadas'] += $tardanza['tardanzas_justificadas_mes'];
                     $totales['tardanzas_ejecutadas'] += $tardanza['tardanzas_ejecutadas'];
-                    
+
                     // Agrupar por operario y mes
                     $codOperario = $tardanza['cod_operario'];
                     $mesAnio = $tardanza['mes_anio'];
                     $sucursal = $tardanza['nombre_sucursal'];
-                    
+
                     $keyOperarioMes = $codOperario . '_' . $mesAnio;
                     if (!isset($porOperarioMes[$keyOperarioMes])) {
                         $porOperarioMes[$keyOperarioMes] = [
@@ -520,7 +537,7 @@ function formatoHoraExcel($hora) {
                     }
                     $porOperarioMes[$keyOperarioMes]['tardanzas_totales']++;
                     $porOperarioMes[$keyOperarioMes]['tardanzas_ejecutadas'] += $tardanza['tardanzas_ejecutadas'];
-                    
+
                     // Agrupar por sucursal y mes
                     $keySucursalMes = $sucursal . '_' . $mesAnio;
                     if (!isset($porSucursalMes[$keySucursalMes])) {
@@ -537,7 +554,7 @@ function formatoHoraExcel($hora) {
                     $porSucursalMes[$keySucursalMes]['tardanzas_reportadas'] += $tardanza['tardanzas_reportadas_mes'];
                     $porSucursalMes[$keySucursalMes]['tardanzas_justificadas'] += $tardanza['tardanzas_justificadas_mes'];
                     $porSucursalMes[$keySucursalMes]['tardanzas_ejecutadas'] += $tardanza['tardanzas_ejecutadas'];
-                ?>
+                    ?>
                     <tr class="<?= $claseFila ?>">
                         <td><?= $contador++ ?></td>
                         <td><?= formatoFecha($tardanza['fecha']) ?></td>
@@ -575,7 +592,7 @@ function formatoHoraExcel($hora) {
                 </tr>
             </tfoot>
         </table>
-        
+
         <!-- Resumen por Colaborador dividido por Mes -->
         <div style="margin-top: 30px; page-break-before: always;">
             <h3>Resumen por Colaborador - Desglose por Mes</h3>
@@ -594,15 +611,15 @@ function formatoHoraExcel($hora) {
                 }
                 $porColaborador[$codOperario]['meses'][$datos['mes']] = $datos;
             }
-            
-            foreach ($porColaborador as $codOperario => $colaborador): 
+
+            foreach ($porColaborador as $codOperario => $colaborador):
                 // Ordenar meses cronológicamente
-                uksort($colaborador['meses'], function($a, $b) {
+                uksort($colaborador['meses'], function ($a, $b) {
                     return strtotime($a) - strtotime($b);
                 });
-            ?>
+                ?>
                 <h4 style="background-color: #e8f4f8; padding: 5px; margin-top: 15px;">
-                    <?= htmlspecialchars($colaborador['nombre']) ?> (<?= $codOperario ?>) - 
+                    <?= htmlspecialchars($colaborador['nombre']) ?> (<?= $codOperario ?>) -
                     <?= htmlspecialchars($colaborador['sucursal']) ?> - <?= htmlspecialchars($colaborador['cargo']) ?>
                 </h4>
                 <table style="margin-bottom: 20px;">
@@ -624,24 +641,25 @@ function formatoHoraExcel($hora) {
                             'tardanzas_justificadas' => 0,
                             'tardanzas_ejecutadas' => 0
                         ];
-                        
+
                         foreach ($colaborador['meses'] as $mes => $datosMes):
-                            $porcentajeEjecutadas = $datosMes['tardanzas_totales'] > 0 ? 
+                            $porcentajeEjecutadas = $datosMes['tardanzas_totales'] > 0 ?
                                 round(($datosMes['tardanzas_ejecutadas'] / $datosMes['tardanzas_totales']) * 100, 2) : 0;
-                            
+
                             // Acumular totales del colaborador
                             $totalesColaborador['tardanzas_totales'] += $datosMes['tardanzas_totales'];
                             $totalesColaborador['tardanzas_reportadas'] += $datosMes['tardanzas_reportadas'];
                             $totalesColaborador['tardanzas_justificadas'] += $datosMes['tardanzas_justificadas'];
                             $totalesColaborador['tardanzas_ejecutadas'] += $datosMes['tardanzas_ejecutadas'];
-                        ?>
+                            ?>
                             <tr>
                                 <td><?= date('F Y', strtotime($mes . '-01')) ?></td>
                                 <td style="text-align: center;"><?= $datosMes['tardanzas_totales'] ?></td>
                                 <td style="text-align: center;"><?= $datosMes['tardanzas_reportadas'] ?></td>
                                 <td style="text-align: center;"><?= $datosMes['tardanzas_justificadas'] ?></td>
                                 <td style="text-align: center;"><?= $datosMes['tardanzas_ejecutadas'] ?></td>
-                                <td style="text-align: center; <?= $porcentajeEjecutadas > 50 ? 'color: #dc3545;' : 'color: #28a745;' ?>">
+                                <td
+                                    style="text-align: center; <?= $porcentajeEjecutadas > 50 ? 'color: #dc3545;' : 'color: #28a745;' ?>">
                                     <?= $porcentajeEjecutadas ?>%
                                 </td>
                             </tr>
@@ -650,12 +668,16 @@ function formatoHoraExcel($hora) {
                     <tfoot>
                         <tr class="total-row">
                             <td style="text-align: right; font-weight: bold;">TOTAL:</td>
-                            <td style="text-align: center; font-weight: bold;"><?= $totalesColaborador['tardanzas_totales'] ?></td>
-                            <td style="text-align: center; font-weight: bold;"><?= $totalesColaborador['tardanzas_reportadas'] ?></td>
-                            <td style="text-align: center; font-weight: bold;"><?= $totalesColaborador['tardanzas_justificadas'] ?></td>
-                            <td style="text-align: center; font-weight: bold;"><?= $totalesColaborador['tardanzas_ejecutadas'] ?></td>
+                            <td style="text-align: center; font-weight: bold;"><?= $totalesColaborador['tardanzas_totales'] ?>
+                            </td>
                             <td style="text-align: center; font-weight: bold;">
-                                <?= $totalesColaborador['tardanzas_totales'] > 0 ? 
+                                <?= $totalesColaborador['tardanzas_reportadas'] ?></td>
+                            <td style="text-align: center; font-weight: bold;">
+                                <?= $totalesColaborador['tardanzas_justificadas'] ?></td>
+                            <td style="text-align: center; font-weight: bold;">
+                                <?= $totalesColaborador['tardanzas_ejecutadas'] ?></td>
+                            <td style="text-align: center; font-weight: bold;">
+                                <?= $totalesColaborador['tardanzas_totales'] > 0 ?
                                     round(($totalesColaborador['tardanzas_ejecutadas'] / $totalesColaborador['tardanzas_totales']) * 100, 2) : 0 ?>%
                             </td>
                         </tr>
@@ -663,7 +685,7 @@ function formatoHoraExcel($hora) {
                 </table>
             <?php endforeach; ?>
         </div>
-        
+
         <!-- Resumen por Sucursal dividido por Mes -->
         <div style="margin-top: 30px; page-break-before: always;">
             <h3>Resumen por Sucursal - Desglose por Mes</h3>
@@ -679,13 +701,13 @@ function formatoHoraExcel($hora) {
                 }
                 $porSucursal[$sucursal]['meses'][$datos['mes']] = $datos;
             }
-            
-            foreach ($porSucursal as $nombreSucursal => $sucursal): 
+
+            foreach ($porSucursal as $nombreSucursal => $sucursal):
                 // Ordenar meses cronológicamente
-                uksort($sucursal['meses'], function($a, $b) {
+                uksort($sucursal['meses'], function ($a, $b) {
                     return strtotime($a) - strtotime($b);
                 });
-            ?>
+                ?>
                 <h4 style="background-color: #e8f4f8; padding: 5px; margin-top: 15px;">
                     <?= htmlspecialchars($nombreSucursal) ?>
                 </h4>
@@ -708,24 +730,25 @@ function formatoHoraExcel($hora) {
                             'tardanzas_justificadas' => 0,
                             'tardanzas_ejecutadas' => 0
                         ];
-                        
+
                         foreach ($sucursal['meses'] as $mes => $datosMes):
-                            $porcentajeEjecutadas = $datosMes['tardanzas_totales'] > 0 ? 
+                            $porcentajeEjecutadas = $datosMes['tardanzas_totales'] > 0 ?
                                 round(($datosMes['tardanzas_ejecutadas'] / $datosMes['tardanzas_totales']) * 100, 2) : 0;
-                            
+
                             // Acumular totales de la sucursal
                             $totalesSucursal['tardanzas_totales'] += $datosMes['tardanzas_totales'];
                             $totalesSucursal['tardanzas_reportadas'] += $datosMes['tardanzas_reportadas'];
                             $totalesSucursal['tardanzas_justificadas'] += $datosMes['tardanzas_justificadas'];
                             $totalesSucursal['tardanzas_ejecutadas'] += $datosMes['tardanzas_ejecutadas'];
-                        ?>
+                            ?>
                             <tr>
                                 <td><?= date('F Y', strtotime($mes . '-01')) ?></td>
                                 <td style="text-align: center;"><?= $datosMes['tardanzas_totales'] ?></td>
                                 <td style="text-align: center;"><?= $datosMes['tardanzas_reportadas'] ?></td>
                                 <td style="text-align: center;"><?= $datosMes['tardanzas_justificadas'] ?></td>
                                 <td style="text-align: center;"><?= $datosMes['tardanzas_ejecutadas'] ?></td>
-                                <td style="text-align: center; <?= $porcentajeEjecutadas > 50 ? 'color: #dc3545;' : 'color: #28a745;' ?>">
+                                <td
+                                    style="text-align: center; <?= $porcentajeEjecutadas > 50 ? 'color: #dc3545;' : 'color: #28a745;' ?>">
                                     <?= $porcentajeEjecutadas ?>%
                                 </td>
                             </tr>
@@ -735,11 +758,14 @@ function formatoHoraExcel($hora) {
                         <tr class="total-row">
                             <td style="text-align: right; font-weight: bold;">TOTAL:</td>
                             <td style="text-align: center; font-weight: bold;"><?= $totalesSucursal['tardanzas_totales'] ?></td>
-                            <td style="text-align: center; font-weight: bold;"><?= $totalesSucursal['tardanzas_reportadas'] ?></td>
-                            <td style="text-align: center; font-weight: bold;"><?= $totalesSucursal['tardanzas_justificadas'] ?></td>
-                            <td style="text-align: center; font-weight: bold;"><?= $totalesSucursal['tardanzas_ejecutadas'] ?></td>
+                            <td style="text-align: center; font-weight: bold;"><?= $totalesSucursal['tardanzas_reportadas'] ?>
+                            </td>
+                            <td style="text-align: center; font-weight: bold;"><?= $totalesSucursal['tardanzas_justificadas'] ?>
+                            </td>
+                            <td style="text-align: center; font-weight: bold;"><?= $totalesSucursal['tardanzas_ejecutadas'] ?>
+                            </td>
                             <td style="text-align: center; font-weight: bold;">
-                                <?= $totalesSucursal['tardanzas_totales'] > 0 ? 
+                                <?= $totalesSucursal['tardanzas_totales'] > 0 ?
                                     round(($totalesSucursal['tardanzas_ejecutadas'] / $totalesSucursal['tardanzas_totales']) * 100, 2) : 0 ?>%
                             </td>
                         </tr>
@@ -747,7 +773,7 @@ function formatoHoraExcel($hora) {
                 </table>
             <?php endforeach; ?>
         </div>
-        
+
         <!-- Tabla comparativa por mes para todas las sucursales -->
         <div style="margin-top: 30px; page-break-before: always;">
             <h3>Comparativa Mensual - Todas las Sucursales</h3>
@@ -776,23 +802,24 @@ function formatoHoraExcel($hora) {
                         $todosMeses[$datos['mes']] = date('F Y', strtotime($datos['mes'] . '-01'));
                     }
                     ksort($todosMeses);
-                    
+
                     foreach ($todosMeses as $mesKey => $mesNombre):
-                    ?>
+                        ?>
                         <tr>
                             <td><?= $mesNombre ?></td>
-                            <?php foreach ($porSucursal as $nombreSucursal => $datosSucursal): 
+                            <?php foreach ($porSucursal as $nombreSucursal => $datosSucursal):
                                 $datosMes = $datosSucursal['meses'][$mesKey] ?? [
                                     'tardanzas_totales' => 0,
                                     'tardanzas_reportadas' => 0,
                                     'tardanzas_justificadas' => 0,
                                     'tardanzas_ejecutadas' => 0
                                 ];
-                            ?>
+                                ?>
                                 <td style="text-align: center;"><?= $datosMes['tardanzas_totales'] ?></td>
                                 <td style="text-align: center;"><?= $datosMes['tardanzas_reportadas'] ?></td>
                                 <td style="text-align: center;"><?= $datosMes['tardanzas_justificadas'] ?></td>
-                                <td style="text-align: center; <?= $datosMes['tardanzas_totales'] > 0 && ($datosMes['tardanzas_ejecutadas'] / $datosMes['tardanzas_totales']) > 0.5 ? 'color: #dc3545;' : 'color: #28a745;' ?>">
+                                <td
+                                    style="text-align: center; <?= $datosMes['tardanzas_totales'] > 0 && ($datosMes['tardanzas_ejecutadas'] / $datosMes['tardanzas_totales']) > 0.5 ? 'color: #dc3545;' : 'color: #28a745;' ?>">
                                     <?= $datosMes['tardanzas_ejecutadas'] ?>
                                 </td>
                             <?php endforeach; ?>
@@ -803,4 +830,5 @@ function formatoHoraExcel($hora) {
         </div>
     <?php endif; ?>
 </body>
+
 </html>

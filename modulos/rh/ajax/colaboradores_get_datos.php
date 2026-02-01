@@ -1,29 +1,28 @@
 <?php
-require_once '../../../includes/auth.php';
-require_once '../../../includes/funciones.php';
+require_once '../../../core/auth/auth.php';
 
 header('Content-Type: application/json');
 
 try {
     verificarAutenticacion();
-    
-    $pagina = isset($_POST['pagina']) ? (int)$_POST['pagina'] : 1;
-    $registros_por_pagina = isset($_POST['registros_por_pagina']) ? (int)$_POST['registros_por_pagina'] : 25;
+
+    $pagina = isset($_POST['pagina']) ? (int) $_POST['pagina'] : 1;
+    $registros_por_pagina = isset($_POST['registros_por_pagina']) ? (int) $_POST['registros_por_pagina'] : 25;
     $filtros = isset($_POST['filtros']) ? json_decode($_POST['filtros'], true) : [];
     $orden = isset($_POST['orden']) ? json_decode($_POST['orden'], true) : ['columna' => null, 'direccion' => 'asc'];
-    
+
     $offset = ($pagina - 1) * $registros_por_pagina;
-    
+
     // Construir WHERE
     $where = ["o.CodOperario IS NOT NULL"];
     $params = [];
-    
+
     // Filtro de código
     if (isset($filtros['CodOperario']) && $filtros['CodOperario'] !== '') {
         $where[] = "o.CodOperario LIKE :cod_operario";
         $params[":cod_operario"] = '%' . $filtros['CodOperario'] . '%';
     }
-    
+
     // Filtro de nombre completo
     if (isset($filtros['nombre_completo']) && $filtros['nombre_completo'] !== '') {
         $where[] = "CONCAT(
@@ -34,14 +33,14 @@ try {
         ) LIKE :nombre_completo";
         $params[":nombre_completo"] = '%' . $filtros['nombre_completo'] . '%';
     }
-    
+
     // Filtro de teléfonos
     if (isset($filtros['telefonos']) && $filtros['telefonos'] !== '') {
         $where[] = "(o.Celular LIKE :telefonos OR o.telefono_corporativo LIKE :telefonos2)";
         $params[":telefonos"] = '%' . $filtros['telefonos'] . '%';
         $params[":telefonos2"] = '%' . $filtros['telefonos'] . '%';
     }
-    
+
     // Filtro de cargo (lista)
     if (isset($filtros['cargo_nombre']) && is_array($filtros['cargo_nombre']) && count($filtros['cargo_nombre']) > 0) {
         $placeholders = [];
@@ -50,7 +49,7 @@ try {
             $placeholders[] = $key;
             $params[$key] = $valor;
         }
-        
+
         // Subconsulta para obtener el cargo del operario
         $subqueryCargo = "
             COALESCE(
@@ -72,10 +71,10 @@ try {
                 'Sin cargo definido'
             )
         ";
-        
+
         $where[] = "$subqueryCargo IN (" . implode(',', $placeholders) . ")";
     }
-    
+
     // Filtro de estado (lista)
     if (isset($filtros['Operativo']) && is_array($filtros['Operativo']) && count($filtros['Operativo']) > 0) {
         $placeholders = [];
@@ -86,7 +85,7 @@ try {
         }
         $where[] = "o.Operativo IN (" . implode(',', $placeholders) . ")";
     }
-    
+
     // Filtro de sucursal (lista)
     if (isset($filtros['nombre_sucursal']) && is_array($filtros['nombre_sucursal']) && count($filtros['nombre_sucursal']) > 0) {
         $placeholders = [];
@@ -97,7 +96,7 @@ try {
         }
         $where[] = "COALESCE(s.nombre, 'Sin tienda') IN (" . implode(',', $placeholders) . ")";
     }
-    
+
     // Filtro de fecha inicio contrato (rango)
     if (isset($filtros['fecha_inicio_ultimo_contrato']) && is_array($filtros['fecha_inicio_ultimo_contrato'])) {
         if (!empty($filtros['fecha_inicio_ultimo_contrato']['desde'])) {
@@ -109,7 +108,7 @@ try {
             $params[':fecha_inicio_hasta'] = $filtros['fecha_inicio_ultimo_contrato']['hasta'];
         }
     }
-    
+
     // Filtro de fecha fin contrato (rango)
     if (isset($filtros['fecha_fin_ultimo_contrato']) && is_array($filtros['fecha_fin_ultimo_contrato'])) {
         if (!empty($filtros['fecha_fin_ultimo_contrato']['desde'])) {
@@ -121,7 +120,7 @@ try {
             $params[':fecha_fin_hasta'] = $filtros['fecha_fin_ultimo_contrato']['hasta'];
         }
     }
-    
+
     // Filtro de última fecha laborada (rango)
     if (isset($filtros['ultima_fecha_laborada']) && is_array($filtros['ultima_fecha_laborada'])) {
         if (!empty($filtros['ultima_fecha_laborada']['desde'])) {
@@ -133,7 +132,7 @@ try {
             $params[':ultima_fecha_hasta'] = $filtros['ultima_fecha_laborada']['hasta'];
         }
     }
-    
+
     // Filtro de tiempo trabajado (lista con rangos)
     if (isset($filtros['tiempo_trabajado_dias']) && is_array($filtros['tiempo_trabajado_dias']) && count($filtros['tiempo_trabajado_dias']) > 0) {
         $condiciones = [];
@@ -160,7 +159,7 @@ try {
             $where[] = "(" . implode(' OR ', $condiciones) . ")";
         }
     }
-    
+
     // Filtro de tiempo restante (lista con categorías)
     if (isset($filtros['tiempo_restante_categoria']) && is_array($filtros['tiempo_restante_categoria']) && count($filtros['tiempo_restante_categoria']) > 0) {
         $condiciones = [];
@@ -193,21 +192,28 @@ try {
             $where[] = "(" . implode(' OR ', $condiciones) . ")";
         }
     }
-    
+
     $whereClause = 'WHERE ' . implode(' AND ', $where);
-    
+
     // Construir ORDER BY
     $orderClause = '';
     if ($orden['columna']) {
         $columnas_validas = [
-            'CodOperario', 'nombre_completo', 'cargo_nombre', 'telefonos', 
-            'Operativo', 'nombre_sucursal', 'fecha_inicio_ultimo_contrato', 
-            'fecha_fin_ultimo_contrato', 'tiempo_trabajado_dias', 
-            'ultima_fecha_laborada', 'tiempo_restante_categoria'
+            'CodOperario',
+            'nombre_completo',
+            'cargo_nombre',
+            'telefonos',
+            'Operativo',
+            'nombre_sucursal',
+            'fecha_inicio_ultimo_contrato',
+            'fecha_fin_ultimo_contrato',
+            'tiempo_trabajado_dias',
+            'ultima_fecha_laborada',
+            'tiempo_restante_categoria'
         ];
         if (in_array($orden['columna'], $columnas_validas)) {
             $direccion = strtoupper($orden['direccion']) === 'DESC' ? 'DESC' : 'ASC';
-            
+
             // Usar el alias correcto de la columna
             if ($orden['columna'] === 'nombre_completo') {
                 $orderClause = "ORDER BY nombre_completo $direccion";
@@ -251,7 +257,7 @@ try {
     } else {
         $orderClause = "ORDER BY o.Nombre, o.Apellido";
     }
-    
+
     // Consulta de conteo - SIMPLIFICADA sin subconsultas correlated
     $sqlCount = "
         SELECT COUNT(DISTINCT o.CodOperario) as total 
@@ -273,11 +279,11 @@ try {
             )
         $whereClause
     ";
-    
+
     $stmtCount = $conn->prepare($sqlCount);
     $stmtCount->execute($params);
     $totalRegistros = $stmtCount->fetch()['total'];
-    
+
     // Consulta principal - SIMPLIFICADA
     $sql = "
         SELECT 
@@ -343,18 +349,18 @@ try {
         $orderClause
         LIMIT :offset, :limit
     ";
-    
+
     $stmt = $conn->prepare($sql);
-    
+
     foreach ($params as $key => $value) {
         $stmt->bindValue($key, $value);
     }
     $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
     $stmt->bindValue(':limit', $registros_por_pagina, PDO::PARAM_INT);
-    
+
     $stmt->execute();
     $datos = $stmt->fetchAll();
-    
+
     // Procesar datos para agregar campos calculados
     foreach ($datos as &$row) {
         // Calcular tiempo trabajado texto
@@ -364,21 +370,21 @@ try {
             $row['fecha_salida_ultimo'],
             $row['Operativo'] == 1
         );
-        
+
         // Calcular tiempo restante HTML
         $row['tiempo_restante_html'] = calcularTiempoRestanteHTML(
             $row['fecha_fin_ultimo_contrato'],
             $row['Operativo'] == 1,
             $row['fecha_salida_ultimo']
         );
-        
+
         // Determinar categoría de tiempo restante
         $row['tiempo_restante_categoria'] = determinarCategoriaTiempoRestante(
             $row['fecha_fin_ultimo_contrato'],
             $row['Operativo'] == 1,
             $row['fecha_salida_ultimo']
         );
-        
+
         // Mostrar fecha de salida si está inactivo
         if ($row['Operativo'] == 0 && !empty($row['fecha_salida_ultimo'])) {
             $row['fecha_fin_display'] = formatearFechaCorta($row['fecha_salida_ultimo']);
@@ -386,13 +392,13 @@ try {
             $row['fecha_fin_display'] = null;
         }
     }
-    
+
     echo json_encode([
         'success' => true,
         'datos' => $datos,
         'total_registros' => $totalRegistros
     ]);
-    
+
 } catch (Exception $e) {
     echo json_encode([
         'success' => false,
@@ -401,17 +407,18 @@ try {
 }
 
 // Funciones auxiliares
-function calcularTiempoTrabajadoTexto($fechaInicio, $fechaFin, $fechaSalida, $estaActivo) {
+function calcularTiempoTrabajadoTexto($fechaInicio, $fechaFin, $fechaSalida, $estaActivo)
+{
     if (empty($fechaInicio) || $fechaInicio == '0000-00-00') {
         return 'Sin contrato';
     }
-    
+
     try {
         $inicio = new DateTime($fechaInicio);
         $hoy = new DateTime();
-        
+
         $fin = $hoy;
-        
+
         if (!empty($fechaSalida) && $fechaSalida != '0000-00-00') {
             $salidaObj = new DateTime($fechaSalida);
             if ($salidaObj <= $hoy) {
@@ -428,21 +435,21 @@ function calcularTiempoTrabajadoTexto($fechaInicio, $fechaFin, $fechaSalida, $es
                 $fin = $finObj;
             }
         }
-        
+
         if ($fin < $inicio) {
             $fin = clone $inicio;
         }
-        
+
         if ($fin > $hoy) {
             $fin = $hoy;
         }
-        
+
         $diferencia = $inicio->diff($fin);
-        
+
         $años = $diferencia->y;
         $meses = $diferencia->m;
         $dias = $diferencia->d;
-        
+
         $resultado = [];
         if ($años > 0) {
             $resultado[] = $años . ' año' . ($años > 1 ? 's' : '');
@@ -453,15 +460,16 @@ function calcularTiempoTrabajadoTexto($fechaInicio, $fechaFin, $fechaSalida, $es
         if ($dias > 0 && empty($resultado)) {
             $resultado[] = $dias . ' día' . ($dias > 1 ? 's' : '');
         }
-        
+
         return empty($resultado) ? 'Menos de 1 día' : implode(', ', $resultado);
-        
+
     } catch (Exception $e) {
         return 'Error';
     }
 }
 
-function calcularTiempoRestanteHTML($fechaFin, $estaActivo, $fechaSalida) {
+function calcularTiempoRestanteHTML($fechaFin, $estaActivo, $fechaSalida)
+{
     if (!empty($fechaSalida) && $fechaSalida != '0000-00-00') {
         $fechaSalidaObj = new DateTime($fechaSalida);
         $hoy = new DateTime();
@@ -469,26 +477,26 @@ function calcularTiempoRestanteHTML($fechaFin, $estaActivo, $fechaSalida) {
             return '<span class="status-inactivo">Finalizado</span>';
         }
     }
-    
+
     if (!$estaActivo) {
         return '<span class="status-inactivo">Inactivo</span>';
     }
-    
+
     if (empty($fechaFin) || $fechaFin == '0000-00-00') {
         return '<span class="status-success">Indefinido</span>';
     }
-    
+
     try {
         $fin = new DateTime($fechaFin);
         $actual = new DateTime();
-        
+
         if ($fin < $actual) {
             return '<span class="status-inactivo">Vencido</span>';
         }
-        
+
         $diferencia = $actual->diff($fin);
         $diasTotales = $diferencia->days;
-        
+
         if ($diasTotales <= 7) {
             if ($diasTotales == 0) {
                 return '<span class="status-inactivo">Vence hoy</span>';
@@ -515,25 +523,26 @@ function calcularTiempoRestanteHTML($fechaFin, $estaActivo, $fechaSalida) {
     }
 }
 
-function determinarCategoriaTiempoRestante($fechaFin, $estaActivo, $fechaSalida) {
+function determinarCategoriaTiempoRestante($fechaFin, $estaActivo, $fechaSalida)
+{
     if (!$estaActivo || (!empty($fechaSalida) && $fechaSalida != '0000-00-00')) {
         return 'vencido';
     }
-    
+
     if (empty($fechaFin) || $fechaFin == '0000-00-00') {
         return 'indefinido';
     }
-    
+
     try {
         $fin = new DateTime($fechaFin);
         $actual = new DateTime();
-        
+
         if ($fin < $actual) {
             return 'vencido';
         }
-        
+
         $diasTotales = $actual->diff($fin)->days;
-        
+
         if ($diasTotales <= 30) {
             return 'menos_1_mes';
         } elseif ($diasTotales <= 90) {
@@ -550,21 +559,22 @@ function determinarCategoriaTiempoRestante($fechaFin, $estaActivo, $fechaSalida)
     }
 }
 
-function formatearFechaCorta($fecha) {
+function formatearFechaCorta($fecha)
+{
     if (empty($fecha) || $fecha === '0000-00-00') {
         return '';
     }
-    
+
     $meses = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
-    
+
     try {
         $timestamp = strtotime($fecha);
         if ($timestamp === false) {
             return '';
         }
-        
+
         $fechaObj = new DateTime($fecha);
-        $mes = $meses[(int)$fechaObj->format('m') - 1];
+        $mes = $meses[(int) $fechaObj->format('m') - 1];
         return $fechaObj->format('d') . '-' . $mes . '-' . $fechaObj->format('y');
     } catch (Exception $e) {
         return '';
