@@ -1,19 +1,18 @@
 <?php
 require_once '../../core/auth/auth.php';
+require_once '../../core/layout/menu_lateral.php';
+require_once '../../core/layout/header_universal.php';
+require_once '../../core/permissions/permissions.php';
 
 // Verificar autenticación y permisos
 verificarAutenticacion();
 
 $usuario = obtenerUsuarioActual();
+$cargoOperario = $usuario['CodNivelesCargos'];
 $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
 
-// Verificar acceso al módulo RH
-verificarAccesoCargo([13, 16, 39, 30, 37]);
-
-if (!verificarAccesoCargo([13, 16, 39, 30, 37]) && !$esAdmin) {
-    header('Location: ../index.php');
-    exit();
-}
+// Verificar acceso al módulo RH (SIEMPRE debe existir permiso 'vista')
+verificarPermisoORedireccionar('contactos_colaboradores', 'vista', $cargoOperario);
 
 // Obtener el cargo principal del usuario
 $cargoUsuario = obtenerCargoPrincipalUsuario($_SESSION['usuario_id']);
@@ -222,141 +221,215 @@ if ($filtroEstado === 'activos') {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Contactos de Colaboradores</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-    <link rel="icon" href="../../core/assets/img/icon12.png" type="image/png">
     <link rel="icon" href="../../assets/img/icon12.png" type="image/png">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/core/assets/css/global_tools.css?v=<?php echo mt_rand(1, 10000); ?>">
     <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Calibri', sans-serif;
-            font-size: clamp(11px, 2vw, 16px) !important;
-        }
-
-        body {
-            background-color: #F6F6F6;
-            color: #333;
-            padding: 5px;
-        }
-
-        .container {
-            max-width: 100%;
-            margin: 0 auto;
+        .container-contactos {
             background: white;
             border-radius: 8px;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
             padding: 10px;
         }
 
-        header {
+        .title {
+            color: #0E544C;
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        /* Controles de filtro y exportación */
+        .controles {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 10px 0;
-            border-bottom: 1px solid #ddd;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
             flex-wrap: wrap;
             gap: 15px;
         }
 
-        .header-container {
+        .filtros {
             display: flex;
-            justify-content: space-between;
+            gap: 10px;
             align-items: center;
-            width: 100%;
-            padding: 0 5px;
-            box-sizing: border-box;
-            margin: 1px auto;
             flex-wrap: wrap;
         }
 
-        .logo {
-            height: 50px;
-        }
-
-        .logo-container {
-            flex-shrink: 0;
-            margin-right: auto;
-        }
-
-        .buttons-container {
+        .exportacion {
             display: flex;
             gap: 10px;
             flex-wrap: wrap;
-            justify-content: center;
-            flex-grow: 1;
         }
 
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-left: auto;
-        }
-
-        .btn-agregar {
-            background-color: transparent;
-            color: #51B8AC;
-            border: 1px solid #51B8AC;
-            text-decoration: none;
-            padding: 6px 10px;
-            border-radius: 8px;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.3s;
-            white-space: nowrap;
-            font-size: 14px;
-            flex-shrink: 0;
-        }
-
-        .btn-agregar.activo {
-            background-color: #51B8AC;
-            color: white;
-            font-weight: normal;
-        }
-
-        .btn-agregar:hover {
+        .btn-exportar {
             background-color: #0E544C;
-            color: white;
-            border-color: #0E544C;
-        }
-
-        .user-avatar {
-            width: 35px;
-            height: 35px;
-            border-radius: 50%;
-            background-color: #51B8AC;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
-        }
-
-        .btn-logout {
-            background: #51B8AC;
             color: white;
             border: none;
             padding: 8px 15px;
             border-radius: 4px;
             cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
             transition: background 0.3s;
         }
 
-        .btn-logout:hover {
-            background: #0E544C;
+        .btn-exportar:hover {
+            background-color: #51B8AC;
         }
 
-        .title {
-            color: #0E544C;
-            font-size: 1.5rem !important;
-            margin-bottom: 20px;
-            text-align: center;
+        .btn-filtro {
+            background-color: #f8f9fa;
+            color: #333;
+            border: 1px solid #dee2e6;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s;
         }
+
+        .btn-filtro.activo {
+            background-color: #0E544C;
+            color: white;
+            border-color: #0E544C;
+        }
+
+        .btn-filtro:hover {
+            background-color: #e9ecef;
+        }
+
+        /* Estilos para la tabla */
+        .tabla-container {
+            overflow-x: auto;
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 600px;
+        }
+
+        th,
+        td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #0E544C;
+            color: white;
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+        }
+
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+
+        .estado-activo {
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .estado-inactivo {
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        .sin-telefono {
+            color: #6c757d;
+            font-style: italic;
+        }
+
+        .badge-cargo {
+            display: inline-block;
+            padding: 3px 8px;
+            background-color: #e9ecef;
+            color: #495057;
+            border-radius: 12px;
+            font-size: 0.8em;
+            white-space: nowrap;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .controles {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .filtros,
+            .exportacion {
+                justify-content: center;
+            }
+
+            th,
+            td {
+                padding: 8px 10px;
+            }
+        }
+
+        .resumen {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #0E544C;
+        }
+
+        .resumen h3 {
+            color: #0E544C;
+            margin-bottom: 10px;
+        }
+
+        .estadisticas {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .tarjeta-estadistica {
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .tarjeta-estadistica .numero {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #0E544C;
+            display: block;
+        }
+
+        .tarjeta-estadistica .etiqueta {
+            color: #6c757d;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+
+<body>
+    <?php echo renderMenuLateral($cargoOperario); ?>
+
+    <div class="main-container">
+        <div class="sub-container">
+            <?php echo renderHeader($usuario, false, 'Contactos de Colaboradores'); ?>
+
+            <div class="container-fluid p-3">
+                <div class="container-contactos">
 
         /* Controles de filtro y exportación */
         .controles {
@@ -779,8 +852,12 @@ if ($filtroEstado === 'activos') {
                 ORDER BY o.Nombre, o.Apellido
             ";
         -->
+                </div>
+            </div>
+        </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // Función para copiar número de teléfono al portapapeles
         function copiarTelefono(numero) {
@@ -912,5 +989,4 @@ if ($filtroEstado === 'activos') {
         });
     </script>
 </body>
-
 </html>
