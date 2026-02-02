@@ -100,13 +100,8 @@ try {
         $sucursalesLider = obtenerSucursalesLider($usuario['CodOperario']);
         if (!empty($sucursalesLider)) {
             $sucursalLider = $sucursalesLider[0]['codigo'];
-            $sqlHorarios .= " AND EXISTS (
-                SELECT 1 FROM AsignacionNivelesCargos anc_asig
-                WHERE anc_asig.CodOperario = hso.cod_operario
-                AND anc_asig.Sucursal = ?
-                AND (anc_asig.Fin IS NULL OR anc_asig.Fin >= CURDATE())
-                AND anc_asig.CodNivelesCargos != 27
-            )";
+            // Filtrar por la sucursal que define el equipo de trabajo (HSO)
+            $sqlHorarios .= " AND hso.cod_sucursal = ?";
             $paramsHorarios[] = $sucursalLider;
         }
     } elseif ($esCDS) {
@@ -125,83 +120,51 @@ try {
     $stmtHorarios->execute($paramsHorarios);
     $horariosProgramados = $stmtHorarios->fetchAll(PDO::FETCH_ASSOC);
 
-    // PASO 2: Obtener marcaciones reales para este rango y operarios/sucursales
+    // PASO 2: Obtener marcaciones reales para los operarios encontrados
+    $marcaciones = [];
+    if (!empty($horariosProgramados)) {
+        $operariosIds = array_unique(array_column($horariosProgramados, 'cod_operario'));
 
-    // Si hay filtro de semana, obtener el rango real de esas semanas para traer todas las marcaciones
-    $fechaDesdeMarcaciones = $fechaDesde;
-    $fechaHastaMarcaciones = $fechaHasta;
+        if (!empty($operariosIds)) {
+            $fechaDesdeMarcaciones = $fechaDesde;
+            $fechaHastaMarcaciones = $fechaHasta;
 
-    if (isset($filtros['numero_semana'])) {
-        $stmtSemanas = $conn->prepare("
-            SELECT MIN(fecha_inicio) as minima, MAX(fecha_fin) as maxima 
-            FROM SemanasSistema 
-            WHERE (numero_semana >= ? OR ? = '') AND (numero_semana <= ? OR ? = '')
-        ");
-        $minSem = isset($filtros['numero_semana']['min']) ? $filtros['numero_semana']['min'] : '';
-        $maxSem = isset($filtros['numero_semana']['max']) ? $filtros['numero_semana']['max'] : '';
-        $stmtSemanas->execute([$minSem, $minSem, $maxSem, $maxSem]);
-        $rangoSemanas = $stmtSemanas->fetch(PDO::FETCH_ASSOC);
+            if (isset($filtros['numero_semana'])) {
+                $stmtSemanas = $conn->prepare("
+                    SELECT MIN(fecha_inicio) as minima, MAX(fecha_fin) as maxima 
+                    FROM SemanasSistema 
+                    WHERE (numero_semana >= ? OR ? = '') AND (numero_semana <= ? OR ? = '')
+                ");
+                $minSem = isset($filtros['numero_semana']['min']) ? $filtros['numero_semana']['min'] : '';
+                $maxSem = isset($filtros['numero_semana']['max']) ? $filtros['numero_semana']['max'] : '';
+                $stmtSemanas->execute([$minSem, $minSem, $maxSem, $maxSem]);
+                $rangoSemanas = $stmtSemanas->fetch(PDO::FETCH_ASSOC);
 
-        if ($rangoSemanas['minima']) {
-            $fechaDesdeMarcaciones = $rangoSemanas['minima'];
-            $fechaHastaMarcaciones = $rangoSemanas['maxima'];
-            if ($fechaHastaMarcaciones > $fechaHoy)
-                $fechaHastaMarcaciones = $fechaHoy;
+                if ($rangoSemanas['minima']) {
+                    $fechaDesdeMarcaciones = $rangoSemanas['minima'];
+                    $fechaHastaMarcaciones = $rangoSemanas['maxima'];
+                    if ($fechaHastaMarcaciones > $fechaHoy)
+                        $fechaHastaMarcaciones = $fechaHoy;
+                }
+            }
+
+            $placeholders = implode(',', array_fill(0, count($operariosIds), '?'));
+            $sqlMarcaciones = "
+            SELECT 
+                m.id, m.fecha, m.hora_ingreso, m.hora_salida, m.CodOperario, m.sucursal_codigo,
+                s.sucursal as nombre_sucursal
+            FROM marcaciones m
+            JOIN sucursales s ON m.sucursal_codigo = s.codigo
+            WHERE m.fecha BETWEEN ? AND ?
+            AND m.CodOperario IN ($placeholders)
+            ";
+
+            $paramsMarcaciones = array_merge([$fechaDesdeMarcaciones, $fechaHastaMarcaciones], $operariosIds);
+            $stmtMarcaciones = $conn->prepare($sqlMarcaciones);
+            $stmtMarcaciones->execute($paramsMarcaciones);
+            $marcaciones = $stmtMarcaciones->fetchAll(PDO::FETCH_ASSOC);
         }
     }
-
-    $sqlMarcaciones = "
-    SELECT 
-        m.id,
-        m.fecha,
-        m.hora_ingreso,
-        m.hora_salida,
-        m.CodOperario,
-        m.sucursal_codigo,
-        s.sucursal as nombre_sucursal,
-        nc.Nombre as nombre_cargo,
-        nc.CodNivelesCargos as codigo_cargo
-    FROM marcaciones m
-    JOIN Operarios o ON m.CodOperario = o.CodOperario
-    JOIN sucursales s ON m.sucursal_codigo = s.codigo
-    LEFT JOIN SemanasSistema ss ON m.fecha BETWEEN ss.fecha_inicio AND ss.fecha_fin
-    LEFT JOIN AsignacionNivelesCargos anc ON o.CodOperario = anc.CodOperario 
-        AND (anc.Fin IS NULL OR anc.Fin >= CURDATE())
-    LEFT JOIN NivelesCargos nc ON anc.CodNivelesCargos = nc.CodNivelesCargos
-    WHERE m.fecha BETWEEN ? AND ?
-    ";
-
-    $paramsMarcaciones = [$fechaDesdeMarcaciones, $fechaHastaMarcaciones];
-
-    // Aplicar restricciones de permisos para marcaciones
-    if ($esLider) {
-        $sucursalesLider = obtenerSucursalesLider($usuario['CodOperario']);
-        if (!empty($sucursalesLider)) {
-            $sucursalLider = $sucursalesLider[0]['codigo'];
-            $sqlMarcaciones .= " AND EXISTS (
-                SELECT 1 FROM AsignacionNivelesCargos anc_asig
-                WHERE anc_asig.CodOperario = m.CodOperario
-                AND anc_asig.Sucursal = ?
-                AND (anc_asig.Fin IS NULL OR anc_asig.Fin >= CURDATE())
-                AND anc_asig.CodNivelesCargos != 27
-            )";
-            $paramsMarcaciones[] = $sucursalLider;
-        }
-    } elseif ($esCDS) {
-        $sqlMarcaciones .= " AND m.sucursal_codigo = '6'";
-        $sqlMarcaciones .= " AND EXISTS (
-            SELECT 1 FROM AsignacionNivelesCargos anc_cds
-            WHERE anc_cds.CodOperario = m.CodOperario
-            AND anc_cds.CodNivelesCargos IN (23, 20, 34)
-            AND (anc_cds.Fin IS NULL OR anc_cds.Fin >= CURDATE())
-        )";
-    } elseif ($esOperaciones) {
-        $sqlMarcaciones .= " AND s.sucursal = 1";
-    }
-
-    $stmtMarcaciones = $conn->prepare($sqlMarcaciones);
-    $stmtMarcaciones->execute($paramsMarcaciones);
-    $marcaciones = $stmtMarcaciones->fetchAll(PDO::FETCH_ASSOC);
 
     // PASO 2.5: Precargar justificaciones existentes para optimizar
     $sqlTardanzasExistentes = "SELECT cod_operario, fecha_tardanza, cod_sucursal, estado, tipo_justificacion, observaciones FROM TardanzasManuales WHERE fecha_tardanza BETWEEN ? AND ?";
@@ -255,11 +218,10 @@ try {
 
             // Solo incluir días que tienen horario programado
             if (!empty($estadoDia) && $estadoDia !== 'Inactivo') {
-                // Buscar marcaciones para este día y operario
+                // Buscar marcaciones para este día y operario (en cualquier sucursal)
                 $marcacionesDelDia = array_filter($marcaciones, function ($m) use ($horario, $fechaStr) {
                     return $m['CodOperario'] == $horario['cod_operario'] &&
-                        $m['fecha'] == $fechaStr &&
-                        $m['sucursal_codigo'] == $horario['cod_sucursal'];
+                        $m['fecha'] == $fechaStr;
                 });
 
                 if (count($marcacionesDelDia) > 0) {
@@ -285,7 +247,10 @@ try {
                             'tardanza_solicitada' => false,
                             'falta_solicitada' => false,
                             'tardanza_data' => null,
-                            'falta_data' => null
+                            'falta_data' => null,
+                            // Información de la sucursal donde marcó realmente
+                            'sucursal_marcacion_codigo' => $marcacion['sucursal_codigo'],
+                            'sucursal_marcacion_nombre' => $marcacion['nombre_sucursal']
                         ];
 
                         // Verificar si hay tardanza solicitada
