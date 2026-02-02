@@ -161,89 +161,102 @@ function renderizarTabla(datos) {
             tr.append(`<td class="text-center">-</td>`);
         }
 
-        // Acciones - BOTONES CON ICONOS DE ESTADO (VISIBLES PARA TODOS, FUNCIONALES PARA LÍDERES)
+        // Acciones - STATUS TRACKER DE 3 PASOS (BARRA DE PROGRESO)
         let accionesHtml = '';
         const hoyStr = new Date().toISOString().split('T')[0];
 
-        if (row.fecha < hoyStr) {
-            // 1. Lógica para TARDANZA
+        if (row.fecha < hoyStr && (row.hora_entrada_programada || row.tiene_horario)) {
+            let esTardanza = false;
+            let esFalta = false;
+
+            // Determinar tipo de incidencia
             if (row.hora_entrada_programada && row.hora_ingreso) {
                 const difMin = calcularMinutosDiferencia(row.hora_entrada_programada, row.hora_ingreso);
-                if (difMin > 1) {
-                    if (row.tardanza_solicitada && row.tardanza_data) {
-                        const data = row.tardanza_data;
-                        let icon = 'fa-file-medical text-info';
-                        let label = 'Justificación en revisión';
-
-                        if (data.estado === 'Justificado') {
-                            icon = 'fa-check-double text-success';
-                            label = 'Tardanza Justificada (Aceptada)';
-                        } else if (data.estado === 'No Válido') {
-                            icon = 'fa-times-circle text-secondary';
-                            label = 'Tardanza No Válida (Rechazada)';
-                        }
-
-                        const tooltipContent = `<b>${label}</b><br>Tipo: ${data.tipo || 'N/A'}<br>Obs: ${data.observaciones || 'Sin comentarios'}`;
-                        accionesHtml = `<div class="status-rh-icon" title="${label}" data-bs-toggle="tooltip" data-bs-html="true" data-bs-title="${tooltipContent}"><i class="fas ${icon}"></i></div>`;
-                    } else {
-                        const clickHandler = PERMISOS_USUARIO.esLider ? `onclick="mostrarModalTardanza(
-                            ${row.CodOperario},
-                            '${(row.nombre_completo || '').replace(/'/g, "\\'")}',
-                            '${row.sucursal_codigo}',
-                            '${(row.nombre_sucursal || '').replace(/'/g, "\\'")}',
-                            '${row.fecha}',
-                            '${row.hora_entrada_programada}',
-                            '${row.hora_ingreso}',
-                            null,
-                            true
-                        )"` : '';
-
-                        accionesHtml = `
-                            <button type="button" class="btn-rh-action tardanza" 
-                                    ${clickHandler} title="Reportar Tardanza">
-                                <i class="fas fa-exclamation-circle text-warning"></i>
-                            </button>
-                        `;
-                    }
-                }
+                if (difMin > 1) esTardanza = true;
+            } else if (!row.tiene_marcacion && ['Activo', 'Otra.Tienda', 'Vacaciones'].includes(row.estado_dia)) {
+                esFalta = true;
             }
 
-            // 2. Lógica para FALTA (si no se detectó tardanza o ya tiene accionesHtml)
-            if (accionesHtml === '' && !row.tiene_marcacion && row.tiene_horario) {
-                const estadosPermitidos = ['Activo', 'Otra.Tienda', 'Vacaciones'];
-                if (estadosPermitidos.includes(row.estado_dia)) {
-                    if (row.falta_solicitada && row.falta_data) {
-                        const data = row.falta_data;
-                        let icon = 'fa-file-medical text-info';
-                        let label = 'Justificación en revisión';
+            if (esTardanza || esFalta) {
+                const dataJust = esTardanza ? row.tardanza_data : row.falta_data;
+                const solicitada = esTardanza ? row.tardanza_solicitada : row.falta_solicitada;
 
-                        if (data.tipo === 'No_Pagado') {
-                            icon = 'fa-times-circle text-secondary';
-                            label = 'Falta No Pagada';
-                        } else if (data.tipo !== 'Pendiente') {
-                            icon = 'fa-check-double text-success';
-                            label = 'Falta Justificada';
-                        }
+                // Definir estados de los 3 pasos
+                // Paso 1: Incidencia Detectada
+                let step1Class = esTardanza ? 'active-warning' : 'active-danger';
+                let step1Icon = esTardanza ? 'fa-clock' : 'fa-user-slash';
+                let step1Title = esTardanza ? 'Tardanza detectada por sistema' : 'Falta detectada por sistema';
 
-                        const tooltipContent = `<b>${label}</b><br>Tipo: ${data.tipo.replace(/_/g, ' ')}<br>Obs: ${data.observaciones || 'Sin comentarios'}`;
-                        accionesHtml = `<div class="status-rh-icon" title="${label}" data-bs-toggle="tooltip" data-bs-html="true" data-bs-title="${tooltipContent}"><i class="fas ${icon}"></i></div>`;
+                if (solicitada) {
+                    step1Class = 'completed';
+                    step1Icon = 'fa-check';
+                }
+
+                // Paso 2: Justificación (Líder)
+                let step2Class = '';
+                let step2Icon = 'fa-file-medical';
+                let step2Title = 'Justificación pendiente de enviar';
+                let step2Click = '';
+
+                if (solicitada) {
+                    step2Class = (dataJust && (dataJust.estado === 'Justificado' || dataJust.tipo !== 'Pendiente')) ? 'completed' : 'active-info';
+                    step2Icon = (step2Class === 'completed') ? 'fa-check' : 'fa-file-medical';
+                    step2Title = 'Justificación enviada por lider';
+                } else if (PERMISOS_USUARIO.esLider) {
+                    step2Class = 'interactive';
+                    step2Title = 'Haga clic para reportar justificación';
+                    if (esTardanza) {
+                        step2Click = `onclick="mostrarModalTardanza(${row.CodOperario}, '${(row.nombre_completo || '').replace(/'/g, "\\'")}', '${row.sucursal_codigo}', '${(row.nombre_sucursal || '').replace(/'/g, "\\'")}', '${row.fecha}', '${row.hora_entrada_programada}', '${row.hora_ingreso}', null, true)"`;
                     } else {
-                        const clickHandler = PERMISOS_USUARIO.esLider ? `onclick="mostrarModalFalta(
-                            ${row.CodOperario},
-                            '${(row.nombre_completo || '').replace(/'/g, "\\'")}',
-                            '${row.sucursal_codigo}',
-                            '${(row.nombre_sucursal || '').replace(/'/g, "\\'")}',
-                            '${row.fecha}'
-                        )"` : '';
-
-                        accionesHtml = `
-                            <button type="button" class="btn-rh-action falta" 
-                                    ${clickHandler} title="Reportar Falta">
-                                <i class="fas fa-exclamation-circle text-danger"></i>
-                            </button>
-                        `;
+                        step2Click = `onclick="mostrarModalFalta(${row.CodOperario}, '${(row.nombre_completo || '').replace(/'/g, "\\'")}', '${row.sucursal_codigo}', '${(row.nombre_sucursal || '').replace(/'/g, "\\'")}', '${row.fecha}')"`;
                     }
                 }
+
+                // Paso 3: Resolución (RRHH/Operas)
+                let step3Class = '';
+                let step3Icon = 'fa-gavel';
+                let step3Title = 'Esperando revisión final';
+
+                if (dataJust) {
+                    if (esTardanza) {
+                        if (dataJust.estado === 'Justificado') {
+                            step3Class = 'completed';
+                            step3Icon = 'fa-check-double';
+                            step3Title = 'Aceptado: ' + (dataJust.tipo || '');
+                        } else if (dataJust.estado === 'No Válido') {
+                            step3Class = 'failed';
+                            step3Icon = 'fa-times';
+                            step3Title = 'Rechazado';
+                        }
+                    } else {
+                        if (dataJust.tipo === 'No_Pagado') {
+                            step3Class = 'failed';
+                            step3Icon = 'fa-times';
+                            step3Title = 'No Pagado';
+                        } else if (dataJust.tipo !== 'Pendiente') {
+                            step3Class = 'completed';
+                            step3Icon = 'fa-check-double';
+                            step3Title = 'Justificado: ' + dataJust.tipo.replace(/_/g, ' ');
+                        }
+                    }
+                }
+
+                // Generar HTML del Tracker
+                accionesHtml = `
+                    <div class="status-tracker">
+                        <div class="tracker-step ${step1Class}" data-bs-toggle="tooltip" title="${step1Title}">
+                            <i class="fas ${step1Icon}"></i>
+                        </div>
+                        <div class="tracker-line ${solicitada ? 'completed' : ''}"></div>
+                        <div class="tracker-step ${step2Class}" ${step2Click} data-bs-toggle="tooltip" title="${step2Title}">
+                            <i class="fas ${step2Icon}"></i>
+                        </div>
+                        <div class="tracker-line ${step3Class !== '' ? 'completed' : ''}"></div>
+                        <div class="tracker-step ${step3Class}" data-bs-toggle="tooltip" title="${step3Title}">
+                            <i class="fas ${step3Icon}"></i>
+                        </div>
+                    </div>
+                `;
             }
         }
 

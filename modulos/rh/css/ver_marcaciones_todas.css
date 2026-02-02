@@ -1135,3 +1135,102 @@ a.btn {
     background: #dc3545;
     /* Rojo sólido */
 }
+
+/* ========================================
+   STATUS TRACKER (BARRA DE PROGRESO)
+   ======================================== */
+.rh-actions-cell {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 5px 0;
+}
+
+.status-tracker {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    position: relative;
+    padding: 10px 5px;
+}
+
+.tracker-step {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #f0f0f0;
+    border: 2px solid #ddd;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    color: #999;
+    position: relative;
+    z-index: 2;
+    transition: all 0.3s ease;
+    cursor: default;
+}
+
+.tracker-step.interactive {
+    cursor: pointer;
+}
+
+.tracker-step.interactive:hover {
+    transform: scale(1.15);
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.2);
+}
+
+.tracker-line {
+    width: 20px;
+    height: 3px;
+    background: #ddd;
+    position: relative;
+    z-index: 1;
+    margin: 0 -1px;
+}
+
+/* Estados de los pasos */
+.tracker-step.active-warning {
+    background: #fff3cd;
+    border-color: #ffc107;
+    color: #856404;
+}
+
+.tracker-step.active-danger {
+    background: #f8d7da;
+    border-color: #dc3545;
+    color: #721c24;
+}
+
+.tracker-step.active-info {
+    background: #d1ecf1;
+    border-color: #0dcaf0;
+    color: #0c5460;
+}
+
+.tracker-step.completed {
+    background: #d4edda;
+    border-color: #28a745;
+    color: #155724;
+}
+
+.tracker-step.failed {
+    background: #e2e3e5;
+    border-color: #6c757d;
+    color: #383d41;
+}
+
+.tracker-line.completed {
+    background: #28a745;
+}
+
+.tracker-line.active {
+    background: #51B8AC;
+}
+
+/* Tooltips personalizados en el tracker */
+.status-tracker [data-bs-toggle="tooltip"] {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
