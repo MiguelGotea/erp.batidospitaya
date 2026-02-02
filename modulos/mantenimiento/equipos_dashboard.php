@@ -1,8 +1,8 @@
 <?php
 require_once '../../core/auth/auth.php';
 require_once '../../core/permissions/permissions.php';
-require_once '../../core/includes/header_universal.php';
-require_once '../../core/includes/menu_lateral.php';
+require_once '../../core/layout/header_universal.php';
+require_once '../../core/layout/menu_lateral.php';
 require_once __DIR__ . '/models/Equipo.php';
 
 $usuario = obtenerUsuarioActual();
@@ -402,4 +402,6 @@ $mantenimientosEnCurso = $db->fetchAll(
     </div>
 
     <script src="js/equipos_funciones.js"></script>
-</body></html>
+</body>
+
+</html>

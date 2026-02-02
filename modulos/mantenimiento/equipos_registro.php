@@ -1,8 +1,8 @@
 <?php
 require_once '../../core/auth/auth.php';
 require_once '../../core/permissions/permissions.php';
-require_once '../../core/includes/header_universal.php';
-require_once '../../core/includes/menu_lateral.php';
+require_once '../../core/layout/header_universal.php';
+require_once '../../core/layout/menu_lateral.php';
 require_once __DIR__ . '/config/database.php';
 
 $usuario = obtenerUsuarioActual();
