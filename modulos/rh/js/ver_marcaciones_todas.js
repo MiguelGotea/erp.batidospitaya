@@ -51,7 +51,8 @@ function cargarDatos() {
             pagina: paginaActual,
             registros_por_pagina: registrosPorPagina,
             filtros: JSON.stringify(filtrosActivos),
-            orden: JSON.stringify(ordenActivo)
+            orden: JSON.stringify(ordenActivo),
+            incidencias: filtroIncidencias // Parámetro para filtrado en servidor
         },
         dataType: 'json',
         success: function (response) {
@@ -817,38 +818,6 @@ function setFiltroIncidencias(estado) {
 }
 
 // Variable para cachear los últimos datos cargados y permitir filtrado local instantáneo
+// Variable para cachear los últimos datos cargados (opcional para futuras mejoras)
 let ultimoDatosCargados = [];
-
-// Modificar cargarDatos para guardar el cache y enviar filtro de incidencias
-const cargarDatosOriginal = cargarDatos;
-cargarDatos = function () {
-    $.ajax({
-        url: 'ajax/marcaciones_get_datos.php',
-        method: 'POST',
-        data: {
-            pagina: paginaActual,
-            registros_por_pagina: registrosPorPagina,
-            filtros: JSON.stringify(filtrosActivos),
-            orden: JSON.stringify(ordenActivo),
-            incidencias: filtroIncidencias // Nuevo parámetro para filtrado en servidor
-        },
-        dataType: 'json',
-        success: function (response) {
-            if (response.success) {
-                ultimoDatosCargados = response.datos; // Cachear
-                totalRegistros = response.total_registros;
-                renderizarTabla(response.datos);
-                renderizarPaginacion(response.total_registros);
-                actualizarIndicadoresFiltros();
-            } else {
-                console.error('Error:', response.message);
-                alert('Error al cargar datos: ' + response.message);
-            }
-        },
-        error: function (xhr, status, error) {
-            console.error('Error AJAX:', error);
-            alert('Error al cargar los datos');
-        }
-    });
-};
 
