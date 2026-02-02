@@ -15,9 +15,6 @@ $esOperaciones = tienePermiso('historial_marcaciones_globales', 'permisosoperaci
 $esCDS = tienePermiso('historial_marcaciones_globales', 'permisoscds', $usuario['CodNivelesCargos']);
 $esContabilidad = tienePermiso('historial_marcaciones_globales', 'permisoscontabilidad', $usuario['CodNivelesCargos']);
 
-// Obtener las últimas semanas disponibles para el filtro
-$semanasDisponibles = obtenerUltimasSemanas(10); // Obtener las últimas 10 semanas
-
 // Obtener operarios según el tipo de usuario
 if ($esLider) {
     // Para líderes: solo los operarios de su sucursal
