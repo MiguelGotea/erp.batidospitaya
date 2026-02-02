@@ -265,11 +265,13 @@ function renderizarTabla(datos) {
         tbody.append(tr);
     });
 
-    // Inicializar tooltips de Bootstrap para los nuevos iconos
-    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    tooltipTriggerList.map(function (tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl);
-    });
+    // Inicializar tooltips de Bootstrap para los nuevos iconos (si bootstrap está disponible)
+    if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    }
 }
 
 // Calcular colspan para mensaje de "no hay registros"

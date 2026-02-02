@@ -2116,6 +2116,9 @@ function verificarTardanzaYaRegistrada(
             <!-- jQuery (required for filter system) -->
             <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 
+            <!-- Bootstrap 5 Bundle with Popper (required for tooltips) -->
+            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
             <!-- Permisos del usuario -->
             <script>
                 const PERMISOS_USUARIO = {
