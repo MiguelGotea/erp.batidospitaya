@@ -1207,3 +1207,28 @@ a.btn {
     align-items: center;
     justify-content: center;
 }
+
+/* Tag para sucursal externa */
+.external-branch-tag {
+    display: block;
+    font-size: 10px;
+    background-color: #f8f9fa;
+    color: #666;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 1px 4px;
+    margin-top: 3px;
+    text-transform: uppercase;
+    font-weight: 600;
+    max-width: 120px;
+    margin-left: auto;
+    margin-right: auto;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.external-branch-tag i {
+    font-size: 9px;
+    margin-right: 2px;
+}

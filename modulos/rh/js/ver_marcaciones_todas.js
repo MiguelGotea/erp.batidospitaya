@@ -135,12 +135,29 @@ function renderizarTabla(datos) {
 
         // Horario Marcado - FORMATO HH:MM
         let horarioMarcado = '-';
+        let tagSucursal = '';
+
+        // Verificar si marcó en una sucursal distinta a la programada
+        if (row.tiene_marcacion && row.sucursal_marcacion_codigo && row.sucursal_marcacion_codigo !== row.sucursal_codigo) {
+            tagSucursal = `<span class="external-branch-tag" title="Marcó en: ${row.sucursal_marcacion_nombre}">
+                <i class="fas fa-map-marker-alt"></i> ${row.sucursal_marcacion_nombre}
+            </span>`;
+        }
+
         if (row.hora_ingreso && row.hora_salida) {
             const entrada = formatearHora(row.hora_ingreso);
             const salida = formatearHora(row.hora_salida);
-            horarioMarcado = `<span class="compact-time">${entrada} - ${salida}</span>`;
+            horarioMarcado = `<div class="d-flex flex-column align-items-center">
+                <span class="compact-time">${entrada} - ${salida}</span>
+                ${tagSucursal}
+            </div>`;
         } else if (row.hora_ingreso) {
-            horarioMarcado = `<span class="compact-time">${formatearHora(row.hora_ingreso)} - -</span>`;
+            horarioMarcado = `<div class="d-flex flex-column align-items-center">
+                <span class="compact-time">${formatearHora(row.hora_ingreso)} - -</span>
+                ${tagSucursal}
+            </div>`;
+        } else if (tagSucursal) {
+            horarioMarcado = `<div class="d-flex flex-column align-items-center">${tagSucursal}</div>`;
         }
         tr.append(`<td class="text-center">${horarioMarcado}</td>`);
 
