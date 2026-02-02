@@ -46,8 +46,6 @@ ORDER BY nombre_completo";
     $operariosFiltro = $conn->query($sql_operarios)->fetchAll();
 }
 
-// El acceso ya se verificó arriba con tienePermiso
-
 // Obtenemos el cargo principal usando la función de funciones.php
 $cargoUsuario = obtenerCargoPrincipalUsuario($_SESSION['usuario_id']);
 //******************************Estándar para header, termina******************************
@@ -1562,40 +1560,38 @@ function verificarTardanzaYaRegistrada(
                                                     title="Ver Todo">
                                                     <i class="fas fa-minus-circle"></i>
                                                 </span>
-                                                <span class="tri-btn warning"
-                                                        onclick="setFiltroIncidencias('tardanzas')"
-                                                        title="Ver solo TARDANZAS">
-                                                        <i class="fas fa-clock"></i>
-                                                    </span>
-                                                    <span class="tri-btn danger"
-                                                        onclick="setFiltroIncidencias('faltas')"
-                                                        title="Ver solo FALTAS">
-                                                        <i class="fas fa-user-slash"></i>
-                                                    </span>
-                                                </div>
+                                                <span class="tri-btn warning" onclick="setFiltroIncidencias('tardanzas')"
+                                                    title="Ver solo TARDANZAS">
+                                                    <i class="fas fa-clock"></i>
+                                                </span>
+                                                <span class="tri-btn danger" onclick="setFiltroIncidencias('faltas')"
+                                                    title="Ver solo FALTAS">
+                                                    <i class="fas fa-user-slash"></i>
+                                                </span>
                                             </div>
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody id="tablaMarcacionesBody">
-                                    <!-- Datos cargados vía AJAX -->
-                                </tbody>
-                            </table>
+                                        </div>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaMarcacionesBody">
+                                <!-- Datos cargados vía AJAX -->
+                            </tbody>
+                        </table>
 
-                            <!-- Controles de paginación -->
-                            <div class="d-flex justify-content-between align-items-center mt-3">
-                                <div class="d-flex align-items-center gap-2">
-                                    <label class="mb-0">Mostrar:</label>
-                                    <select class="form-select form-select-sm" id="registrosPorPagina" style="width: auto;"
-                                        onchange="cambiarRegistrosPorPagina()">
-                                        <option value="25" selected>25</option>
-                                        <option value="50">50</option>
-                                        <option value="100">100</option>
-                                    </select>
-                                    <span class="mb-0">registros</span>
-                                </div>
-                                <div id="paginacion"></div>
+                        <!-- Controles de paginación -->
+                        <div class="d-flex justify-content-between align-items-center mt-3">
+                            <div class="d-flex align-items-center gap-2">
+                                <label class="mb-0">Mostrar:</label>
+                                <select class="form-select form-select-sm" id="registrosPorPagina" style="width: auto;"
+                                    onchange="cambiarRegistrosPorPagina()">
+                                    <option value="25" selected>25</option>
+                                    <option value="50">50</option>
+                                    <option value="100">100</option>
+                                </select>
+                                <span class="mb-0">registros</span>
                             </div>
+                            <div id="paginacion"></div>
+                        </div>
                     <?php endif; ?>
                 </div>
             </div>
@@ -2085,34 +2081,34 @@ function verificarTardanzaYaRegistrada(
                 // Función para limpiar todos los filtros
                 function limpiarTodosFiltros() {
                     <?php if ($esLider): ?>
-                                // Para líderes
-                                document.getElementById('numero_semana').value = '';
-                                document.getElementById('operario_id').value = '<?= $_SESSION['usuario_id'] ?>';
+                        // Para líderes
+                        document.getElementById('numero_semana').value = '';
+                        document.getElementById('operario_id').value = '<?= $_SESSION['usuario_id'] ?>';
 
-                                // Establecer fecha actual
-                                const hoy = new Date().toISOString().split('T')[0];
-                                const primerDiaMes = hoy.substring(0, 8) + '01';
+                        // Establecer fecha actual
+                        const hoy = new Date().toISOString().split('T')[0];
+                        const primerDiaMes = hoy.substring(0, 8) + '01';
 
-                                document.getElementById('desde').value = primerDiaMes;
-                                document.getElementById('hasta').value = hoy;
+                        document.getElementById('desde').value = primerDiaMes;
+                        document.getElementById('hasta').value = hoy;
 
-                                // Aplicar filtros
-                                aplicarFiltrosLider();
+                        // Aplicar filtros
+                        aplicarFiltrosLider();
                     <?php else: ?>
-                                // Para otros usuarios
-                                document.getElementById('sucursal').value = 'todas';
-                                document.getElementById('operario').value = 'Todos los colaboradores';
-                                document.getElementById('operario_id').value = '0';
+                        // Para otros usuarios
+                        document.getElementById('sucursal').value = 'todas';
+                        document.getElementById('operario').value = 'Todos los colaboradores';
+                        document.getElementById('operario_id').value = '0';
 
-                                // Establecer fecha actual
-                                const hoy = new Date().toISOString().split('T')[0];
-                                const primerDiaMes = hoy.substring(0, 8) + '01';
+                        // Establecer fecha actual
+                        const hoy = new Date().toISOString().split('T')[0];
+                        const primerDiaMes = hoy.substring(0, 8) + '01';
 
-                                document.getElementById('desde').value = primerDiaMes;
-                                document.getElementById('hasta').value = hoy;
+                        document.getElementById('desde').value = primerDiaMes;
+                        document.getElementById('hasta').value = hoy;
 
-                                // Aplicar filtros
-                                aplicarFiltros();
+                        // Aplicar filtros
+                        aplicarFiltros();
                     <?php endif; ?>
                 }
             </script>
