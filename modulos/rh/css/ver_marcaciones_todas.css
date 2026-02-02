@@ -1188,9 +1188,9 @@ a.btn {
 }
 
 .tracker-step.failed {
-    background: #e2e3e5;
-    border-color: #6c757d;
-    color: #383d41;
+    background: #f8d7da;
+    border-color: #dc3545;
+    color: #721c24;
 }
 
 .tracker-line.completed {

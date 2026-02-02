@@ -215,7 +215,7 @@ function renderizarTabla(datos) {
                 // Paso 3: Resolución (RRHH/Operas)
                 let step3Class = '';
                 let step3Icon = 'fa-gavel';
-                let step3Title = 'Esperando revisión final';
+                let step3Title = dataJust ? 'Pendiente de revisión' : 'Esperando revisión final';
 
                 if (dataJust) {
                     if (esTardanza) {
@@ -226,7 +226,7 @@ function renderizarTabla(datos) {
                         } else if (dataJust.estado === 'No Válido') {
                             step3Class = 'failed';
                             step3Icon = 'fa-times';
-                            step3Title = 'Rechazado';
+                            step3Title = 'No Válido / Rechazado';
                         }
                     } else {
                         if (dataJust.tipo === 'No_Pagado') {
@@ -237,6 +237,8 @@ function renderizarTabla(datos) {
                             step3Class = 'completed';
                             step3Icon = 'fa-check-double';
                             step3Title = 'Justificado: ' + dataJust.tipo.replace(/_/g, ' ');
+                        } else {
+                            step3Title = 'Pendiente de revisión';
                         }
                     }
                 }
