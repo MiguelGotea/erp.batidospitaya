@@ -78,20 +78,9 @@ function renderizarTabla(datos) {
     const tbody = $('#tablaMarcacionesBody');
     tbody.empty();
 
-    // Aplicar filtro de incidencias localmente si es necesario
+    // El filtrado por incidencias ya se realiza en el servidor para mantener la paginación correcta.
+    // Solo usamos los datos tal cual vienen del AJAX.
     let datosFiltrados = datos;
-    if (filtroIncidencias === 'tardanzas') {
-        datosFiltrados = datos.filter(row => {
-            const difMin = calcularMinutosDiferencia(row.hora_entrada_programada, row.hora_ingreso);
-            const tieneTardanza = (row.hora_entrada_programada && row.hora_ingreso && difMin > 1);
-            return tieneTardanza || row.tardanza_solicitada;
-        });
-    } else if (filtroIncidencias === 'faltas') {
-        datosFiltrados = datos.filter(row => {
-            const tieneFalta = (!row.tiene_marcacion && row.tiene_horario && ['Activo', 'Otra.Tienda', 'Vacaciones'].includes(row.estado_dia));
-            return tieneFalta || row.falta_solicitada;
-        });
-    }
 
     if (datosFiltrados.length === 0) {
         const colspan = calcularColspan();

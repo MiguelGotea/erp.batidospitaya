@@ -357,7 +357,7 @@ try {
                         }
                     }
 
-                    $esFalta = !$r['tiene_marcacion'];
+                    $esFalta = (!$r['tiene_marcacion'] && in_array($r['estado_dia'], ['Activo', 'Otra.Tienda', 'Vacaciones']));
                     $tieneIncidencia = ($esTardanza || $esFalta);
                 }
 
