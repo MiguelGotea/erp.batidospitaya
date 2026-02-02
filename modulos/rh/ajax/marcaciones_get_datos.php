@@ -209,7 +209,12 @@ try {
     $stmtTardanzas->execute([$fechaDesdeMarcaciones, $fechaHastaMarcaciones]);
     $tardanzasExistentes = $stmtTardanzas->fetchAll(PDO::FETCH_GROUP | PDO::FETCH_ASSOC);
 
-    $sqlFaltasExistentes = "SELECT cod_operario, fecha_falta, cod_sucursal, tipo_falta, observaciones_rrhh as observaciones FROM faltas_manual WHERE fecha_falta BETWEEN ? AND ?";
+    $sqlFaltasExistentes = "
+        SELECT f.cod_operario, f.fecha_falta, f.cod_sucursal, f.tipo_falta, f.observaciones_rrhh as observaciones, t.tipo_status
+        FROM faltas_manual f
+        LEFT JOIN tipos_falta t ON f.tipo_falta = t.codigo
+        WHERE f.fecha_falta BETWEEN ? AND ?
+    ";
     $stmtFaltasEx = $conn->prepare($sqlFaltasExistentes);
     $stmtFaltasEx->execute([$fechaDesdeMarcaciones, $fechaHastaMarcaciones]);
     $faltasExistentes = $stmtFaltasEx->fetchAll(PDO::FETCH_GROUP | PDO::FETCH_ASSOC);
@@ -332,7 +337,8 @@ try {
                                 $resultado[count($resultado) - 1]['falta_solicitada'] = true;
                                 $resultado[count($resultado) - 1]['falta_data'] = [
                                     'tipo' => $fe['tipo_falta'],
-                                    'observaciones' => $fe['observaciones']
+                                    'observaciones' => $fe['observaciones'],
+                                    'tipo_status' => $fe['tipo_status']
                                 ];
                                 break;
                             }

@@ -229,15 +229,18 @@ function renderizarTabla(datos) {
                             step3Title = 'No Válido / Rechazado';
                         }
                     } else {
-                        if (dataJust.tipo === 'No_Pagado') {
+                        // Lógica basada en tipo_status de la tabla tipos_falta
+                        const status = dataJust.tipo_status;
+                        if (status === 'rechazado') {
                             step3Class = 'failed';
                             step3Icon = 'fa-times';
-                            step3Title = 'No Pagado';
-                        } else if (dataJust.tipo !== 'Pendiente') {
+                            step3Title = 'Rechazado: ' + dataJust.tipo.replace(/_/g, ' ');
+                        } else if (status === 'aprobado') {
                             step3Class = 'completed';
                             step3Icon = 'fa-check-double';
-                            step3Title = 'Justificado: ' + dataJust.tipo.replace(/_/g, ' ');
+                            step3Title = 'Aprobado: ' + dataJust.tipo.replace(/_/g, ' ');
                         } else {
+                            // Pendiente o cualquier otro
                             step3Title = 'Pendiente de revisión';
                         }
                     }
