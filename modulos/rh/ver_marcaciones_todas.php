@@ -1448,39 +1448,11 @@ function verificarTardanzaYaRegistrada(
                     <?php unset($_SESSION['error']); ?>
                 <?php endif; ?>
 
-                <div class="filters">
-                    <?php if (!$esLider): // Solo mostrar filtro de sucursal si NO es líder ?>
-                        <div class="filter-group">
-                            <label for="sucursal">Sucursal</label>
-                            <select id="sucursal" name="sucursal" onchange="aplicarFiltros()">
-                                <!--Aquellos cargos que no pueden ver la opción de Todas las sucursales-->
-                                <?php if (!$esLider): ?>
-                                    <option value="todas" <?= $modoVista === 'todas' ? 'selected' : '' ?>>Todas las sucursales
-                                    </option>
-                                <?php endif; ?>
-                                <?php foreach ($sucursales as $sucursal): ?>
-                                    <option value="<?= $sucursal['codigo'] ?>" <?= ($modoVista === 'sucursal' && $sucursalSeleccionada == $sucursal['codigo']) ? 'selected' : '' ?>>
-                                        <?= htmlspecialchars($sucursal['nombre']) ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                    <?php else: // Para líderes, mostrar información de sucursal asignada ?>
-                        <div class="filter-group" style="display:none;">
-                            <label>Sucursal Asignada</label>
-                            <div
-                                style="padding: 8px; background-color: #e9ecef; border-radius: 4px; border: 1px solid #ddd;">
-                                <?= htmlspecialchars($sucursales[0]['nombre'] ?? 'Sin sucursal asignada') ?>
-                            </div>
-                            <input type="hidden" id="sucursal" name="sucursal"
-                                value="<?= $sucursales[0]['codigo'] ?? '' ?>">
-                        </div>
-                    <?php endif; ?>
-
-                    <!-- NUEVO: Filtro por número de semana (solo para líderes) -->
-                    <?php if ($esContabilidad): ?>
-                        <!-- Botón Exportar (opcional, puedes eliminarlo si no lo quieres) -->
-                        <div style="display:none;" class="filter-group" style="align-self: flex-end;">
+                <!-- Toolbar de exportación (solo para perfiles con permisos de exportación) -->
+                <?php if ($esContabilidad || $esOperaciones): ?>
+                    <div class="toolbar-container"
+                        style="margin-bottom: 10px; display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end;">
+                        <?php if ($esContabilidad): ?>
                             <a href="ver_marcaciones_todas.php?<?= http_build_query([
                                 'modo' => $modoVista,
                                 'sucursal' => $modoVista === 'sucursal' ? $sucursalSeleccionada : '',
@@ -1489,13 +1461,9 @@ function verificarTardanzaYaRegistrada(
                                 'activo' => $filtroActivo,
                                 'operario_id' => $operario_id,
                                 'exportar_excel' => 1
-                            ]) ?>" class="btn">
-                                <i class="fas fa-file-excel"></i> Exportar a Excel
+                            ]) ?>" class="btn btn-sm btn-success" title="Exportar Todo">
+                                <i class="fas fa-file-excel"></i> Todo
                             </a>
-                        </div>
-
-                        <!-- Nuevos botones para Faltas y Tardanzas -->
-                        <div class="filter-group" style="align-self: flex-end; display:none;">
                             <a href="ver_marcaciones_todas.php?<?= http_build_query([
                                 'modo' => $modoVista,
                                 'sucursal' => $modoVista === 'sucursal' ? $sucursalSeleccionada : '',
@@ -1504,12 +1472,9 @@ function verificarTardanzaYaRegistrada(
                                 'activo' => $filtroActivo,
                                 'operario_id' => $operario_id,
                                 'exportar_faltas' => 1
-                            ]) ?>" class="btn" style="background-color: #dc3545;">
-                                <i class="fas fa-file-excel"></i> Faltas
+                            ]) ?>" class="btn btn-sm btn-danger" title="Exportar Faltas">
+                                <i class="fas fa-user-slash"></i> Faltas
                             </a>
-                        </div>
-
-                        <div class="filter-group" style="align-self: flex-end;">
                             <a href="ver_marcaciones_todas.php?<?= http_build_query([
                                 'modo' => $modoVista,
                                 'sucursal' => $modoVista === 'sucursal' ? $sucursalSeleccionada : '',
@@ -1518,13 +1483,9 @@ function verificarTardanzaYaRegistrada(
                                 'activo' => $filtroActivo,
                                 'operario_id' => $operario_id,
                                 'exportar_tardanzas' => 1
-                            ]) ?>" class="btn" style="background-color: #ffc107; color: #000;">
-                                <i class="fas fa-file-excel"></i> Excel Tardanzas
+                            ]) ?>" class="btn btn-sm btn-warning" style="color: #000;" title="Exportar Tardanzas">
+                                <i class="fas fa-clock"></i> Tardanzas
                             </a>
-                        </div>
-
-                        <!-- Botón para exportar tardanzas detalladas -->
-                        <div class="filter-group" style="align-self: flex-end; display:none;">
                             <a href="exportar_tardanzas_detalle.php?<?= http_build_query([
                                 'modo' => $modoVista,
                                 'sucursal' => $modoVista === 'sucursal' ? $sucursalSeleccionada : '',
@@ -1532,27 +1493,12 @@ function verificarTardanzaYaRegistrada(
                                 'hasta' => $fechaHasta,
                                 'activo' => $filtroActivo,
                                 'operario_id' => $operario_id
-                            ]) ?>" class="btn" style="background-color: #17a2b8; color: white;">
-                                <i class="fas fa-file-excel"></i> Tardanzas Detalle
+                            ]) ?>" class="btn btn-sm btn-info" style="color: white;" title="Tardanzas Detalle">
+                                <i class="fas fa-list"></i> Detalle
                             </a>
-                        </div>
-                    <?php endif; ?>
-                </div>
-
-                <div style="display:none; margin-bottom: 0;" class="filter-buttons">
-                    <div class="filter-button <?= $filtroActivo === 'todos' ? 'active' : '' ?>"
-                        onclick="cambiarFiltroActivo('todos')">
-                        Todos los Colaboradores
+                        <?php endif; ?>
                     </div>
-                    <div class="filter-button <?= $filtroActivo === 'activos' ? 'active' : '' ?>"
-                        onclick="cambiarFiltroActivo('activos')">
-                        Solo Activos
-                    </div>
-                    <div class="filter-button <?= $filtroActivo === 'inactivos' ? 'active' : '' ?>"
-                        onclick="cambiarFiltroActivo('inactivos')">
-                        Solo Inactivos
-                    </div>
-                </div>
+                <?php endif; ?>
 
                 <!-- Nota informativa sobre tolerancia -->
                 <div class="alert alert-info"
@@ -1796,343 +1742,7 @@ function verificarTardanzaYaRegistrada(
             </div>
 
             <script>
-                // Datos de operarios para el autocompletado
-                const operariosData = [
-                    <?php if ($esLider): ?>
-                                                                            { id: <?php echo $_SESSION['usuario_id']; ?>, nombre: '' },
-                    <?php else: ?>
-                                                                            { id: 0, nombre: 'Todos los colaboradores' },
-                    <?php endif; ?>
-            <?php foreach ($operarios as $op): ?>
-                                                                            { id: <?php echo $op['CodOperario']; ?>, nombre: '<?php echo addslashes($op['nombre_completo']); ?>' },
-                    <?php endforeach; ?>
-                ];
-
-                // Función para buscar operarios
-                function buscarOperarios(texto) {
-                    if (!texto) {
-                        return operariosData;
-                    }
-                    return operariosData.filter(op =>
-                        op.nombre.toLowerCase().includes(texto.toLowerCase())
-                    );
-                }
-
-                // Manejar el input de operario
-                const operarioInput = document.getElementById('operario');
-                const operarioIdInput = document.getElementById('operario_id');
-                const sugerenciasDiv = document.getElementById('operarios-sugerencias');
-
-                // Solo continuar si los elementos existen
-                if (operarioInput && operarioIdInput && sugerenciasDiv) {
-                    // Modificar el evento input del campo operario
-                    operarioInput.addEventListener('input', function () {
-                        const texto = this.value.trim();
-
-                        // Si el campo está vacío, resetear según el tipo de usuario, en el else es Todos los colaboradores
-                        if (texto === '') {
-                            operarioIdInput.value = '0';
-                            <?php if ($esLider): ?>
-                                this.value = '';
-                                operarioIdInput.value = '<?= $_SESSION['usuario_id'] ?>';
-                            <?php else: ?>
-                                this.value = '';
-                                operarioIdInput.value = '0';
-                            <?php endif; ?>
-                            sugerenciasDiv.style.display = 'none';
-                            return;
-                        }
-
-                        // Si el usuario borra el texto y empieza a escribir, usar búsqueda normal
-                        const resultados = buscarOperarios(texto);
-
-                        sugerenciasDiv.innerHTML = '';
-
-                        if (resultados.length > 0) {
-                            resultados.forEach(op => {
-                                const div = document.createElement('div');
-                                div.textContent = op.nombre;
-                                div.style.padding = '8px';
-                                div.style.cursor = 'pointer';
-                                div.addEventListener('click', function () {
-                                    operarioInput.value = op.nombre;
-                                    operarioIdInput.value = op.id;
-                                    sugerenciasDiv.style.display = 'none';
-                                });
-                                div.addEventListener('mouseover', function () {
-                                    this.style.backgroundColor = '#f5f5f5';
-                                });
-                                div.addEventListener('mouseout', function () {
-                                    this.style.backgroundColor = 'white';
-                                });
-                                sugerenciasDiv.appendChild(div);
-                            });
-                            sugerenciasDiv.style.display = 'block';
-                        } else {
-                            sugerenciasDiv.style.display = 'none';
-                        }
-                    });
-
-                    // Ocultar sugerencias al hacer clic fuera
-                    document.addEventListener('click', function (e) {
-                        if (e.target !== operarioInput) {
-                            sugerenciasDiv.style.display = 'none';
-                        }
-                    });
-
-                    // Manejar tecla Enter en el input
-                    operarioInput.addEventListener('keydown', function (e) {
-                        // Si se presiona Enter, seleccionar el primer resultado
-                        if (e.key === 'Enter') {
-                            const primeraSugerencia = sugerenciasDiv.querySelector('div');
-                            if (primeraSugerencia && sugerenciasDiv.style.display === 'block') {
-                                primeraSugerencia.click();
-                            }
-                        }
-
-                        // Si se presiona Backspace o Delete
-                        if (e.key === 'Backspace' || e.key === 'Delete') {
-                            // Si hay texto seleccionado o el campo no está vacío
-                            if (this.value.length > 0) {
-                                // Prevenir el comportamiento normal (borrar un carácter)
-                                e.preventDefault();
-
-                                // Borrar todo el contenido
-                                this.value = '';
-                                operarioIdInput.value = '0';
-
-                                <?php if ($esLider): ?>
-                                    // Para líderes, mantener su ID
-                                    operarioIdInput.value = '<?= $_SESSION['usuario_id'] ?>';
-                                <?php endif; ?>
-
-                                // Ocultar sugerencias
-                                sugerenciasDiv.style.display = 'none';
-                            }
-                        }
-
-                        if (e.key === 'Enter') {
-                            e.preventDefault();
-                            const texto = this.value.trim();
-                            const resultados = buscarOperarios(texto);
-                            if (resultados.length > 0) {
-                                this.value = resultados[0].nombre;
-                                operarioIdInput.value = resultados[0].id;
-                                sugerenciasDiv.style.display = 'none';
-                                // Aplicar filtros inmediatamente
-                                if (typeof aplicarFiltros === 'function') aplicarFiltros();
-                            }
-                        }
-                    });
-                }
-
-                // Modificar la función aplicarFiltros para incluir el modo
-                function aplicarFiltros() {
-                    let sucursal, modo;
-
-                    <?php if ($esLider): ?>
-                        // Para líderes, usar la primera sucursal asignada
-                        sucursal = '<?= $sucursales[0]['codigo'] ?? '' ?>';
-                        modo = 'sucursal';
-                    <?php else: ?>
-                        // Para otros usuarios, usar el valor del select
-                        sucursal = document.getElementById('sucursal').value;
-                        modo = sucursal === 'todas' ? 'todas' : 'sucursal';
-                    <?php endif; ?>
-
-                    const desde = document.getElementById('desde').value;
-                    const hasta = document.getElementById('hasta').value;
-
-                    <?php if ($esLider): ?>
-                        const operario_id = document.getElementById('operario_id').value;
-                    <?php else: ?>
-                        const operarioInput = document.getElementById('operario');
-                        const operario_id = document.getElementById('operario_id').value;
-                    <?php endif; ?>
-
-                    // Validar fechas
-                    if (new Date(desde) > new Date(hasta)) {
-                        alert('La fecha "Desde" no puede ser mayor a la fecha "Hasta"');
-                        return;
-                    }
-
-                    // Construir parámetros
-                    const params = new URLSearchParams();
-                    params.append('modo', modo);
-
-                    if (modo === 'sucursal') {
-                        params.append('sucursal', sucursal);
-                    }
-
-                    params.append('desde', desde);
-                    params.append('hasta', hasta);
-                    params.append('activo', '<?= $filtroActivo ?>');
-
-                    <?php if ($esLider): ?>
-                        params.append('operario_id', operario_id);
-                    <?php else: ?>
-                        // Si el campo de operario está vacío o dice "Todos los colaboradores", buscar todos
-                        if (operarioInput.value.trim() === '' ||
-                            operarioInput.value === 'Todos los colaboradores' ||
-                            operarioInput.value === '') {
-                            params.append('operario_id', '0');
-                            params.append('operario_vacio', '1'); // Bandera para indicar que se dejó vacío
-                        } else {
-                            params.append('operario_id', operario_id);
-                        }
-                    <?php endif; ?>
-
-                    window.location.href = `ver_marcaciones_todas.php?${params.toString()}`;
-                }
-
-                // Modificar la función cambiarFiltroActivo para incluir el modo
-                function cambiarFiltroActivo(tipo) {
-                    let sucursal, modo;
-
-                    <?php if ($esLider): ?>
-                        // Para líderes, usar la primera sucursal asignada
-                        sucursal = '<?= $sucursales[0]['codigo'] ?? '' ?>';
-                        modo = 'sucursal';
-                    <?php else: ?>
-                        // Para otros usuarios, usar el valor del select
-                        sucursal = document.getElementById('sucursal').value;
-                        modo = sucursal === 'todas' ? 'todas' : 'sucursal';
-                    <?php endif; ?>
-
-                    const desde = document.getElementById('desde').value;
-                    const hasta = document.getElementById('hasta').value;
-                    const operario_id = document.getElementById('operario_id').value;
-
-                    window.location.href = `ver_marcaciones_todas.php?modo=${modo}&sucursal=${sucursal}&desde=${desde}&hasta=${hasta}&activo=${tipo}&operario_id=${operario_id}`;
-                }
-
-                // Función para mostrar notificaciones
-                function mostrarNotificacion(mensaje, tipo = 'info') {
-                    const estilos = {
-                        success: { background: '#d4edda', color: '#155724', icon: 'check-circle' },
-                        error: { background: '#f8d7da', color: '#721c24', icon: 'exclamation-circle' },
-                        info: { background: '#e2e3e5', color: '#383d41', icon: 'info-circle' }
-                    };
-
-                    const estilo = estilos[tipo] || estilos.info;
-
-                    const notificacion = document.createElement('div');
-                    notificacion.style.position = 'fixed';
-                    notificacion.style.top = '20px';
-                    notificacion.style.right = '20px';
-                    notificacion.style.padding = '15px';
-                    notificacion.style.borderRadius = '4px';
-                    notificacion.style.boxShadow = '0 2px 10px rgba(0,0,0,0.1)';
-                    notificacion.style.backgroundColor = estilo.background;
-                    notificacion.style.color = estilo.color;
-                    notificacion.style.zIndex = '1000';
-                    notificacion.style.display = 'flex';
-                    notificacion.style.alignItems = 'center';
-                    notificacion.style.gap = '10px';
-                    notificacion.style.maxWidth = '300px';
-                    notificacion.innerHTML = `
-                <i class="fas fa-${estilo.icon}" style="font-size: 1.2rem;"></i>
-                <span>${mensaje}</span>
-            `;
-
-                    document.body.appendChild(notificacion);
-
-                    setTimeout(() => {
-                        notificacion.style.opacity = '0';
-                        notificacion.style.transition = 'opacity 0.5s ease';
-                        setTimeout(() => notificacion.remove(), 500);
-                    }, 3000);
-                }
-
-                // Mostrar notificaciones si hay en sesión
-                <?php if (isset($_SESSION['exito'])): ?>
-                    mostrarNotificacion('<?= $_SESSION['exito'] ?>', 'success');
-                    <?php unset($_SESSION['exito']); ?>
-                <?php endif; ?>
-
-                <?php if (isset($_SESSION['error'])): ?>
-                    mostrarNotificacion('<?= $_SESSION['error'] ?>', 'error');
-                    <?php unset($_SESSION['error']); ?>
-                <?php endif; ?>
-
-                // Función para limitar fechas en el cliente
-                function limitarFechas() {
-                    const hoy = new Date().toISOString().split('T')[0];
-                    const desdeInput = document.getElementById('desde');
-                    const hastaInput = document.getElementById('hasta');
-
-                    // Solo continuar si los elementos existen
-                    if (!desdeInput || !hastaInput) return;
-
-                    // Establecer máximo hoy
-                    desdeInput.max = hoy;
-                    hastaInput.max = hoy;
-
-                    // Validar al cambiar fechas
-                    desdeInput.addEventListener('change', function () {
-                        if (this.value > hoy) {
-                            this.value = hoy;
-                            mostrarNotificacion('No se pueden seleccionar fechas futuras. Se ajustó al día actual.', 'info');
-                        }
-                        if (this.value > hastaInput.value) {
-                            hastaInput.value = this.value;
-                        }
-                    });
-
-                    hastaInput.addEventListener('change', function () {
-                        if (this.value > hoy) {
-                            this.value = hoy;
-                            mostrarNotificacion('No se pueden seleccionar fechas futuras. Se ajustó al día actual.', 'info');
-                        }
-                        if (this.value < desdeInput.value) {
-                            desdeInput.value = this.value;
-                        }
-                    });
-                }
-
-                // Llamar la función cuando se cargue la página
-                document.addEventListener('DOMContentLoaded', function () {
-                    limitarFechas();
-                });
-
-                // Función para que líderes puedan ver todos los operarios
-                function verTodosOperarios() {
-                    let sucursal, modo;
-
-                    // Para líderes, usar la primera sucursal asignada
-                    sucursal = '<?= $sucursales[0]['codigo'] ?? '' ?>';
-                    modo = 'sucursal';
-
-                    const desdeEl = document.getElementById('desde');
-                    const hastaEl = document.getElementById('hasta');
-                    const desde = desdeEl ? desdeEl.value : '';
-                    const hasta = hastaEl ? hastaEl.value : '';
-
-                    // Resetear operario_id a 0 para ver todos
-                    window.location.href = `ver_marcaciones_todas.php?modo=${modo}&sucursal=${sucursal}&desde=${desde}&hasta=${hasta}&activo=<?= $filtroActivo ?>&operario_id=0`;
-                }
-
-                // Función para limpiar el filtro de operario
-                function limpiarFiltroOperario() {
-                    <?php if ($esLider): ?>
-                        // Para líderes: seleccionar "Mis marcaciones"
-                        const opId = document.getElementById('operario_id');
-                        if (opId) {
-                            opId.value = '<?= $_SESSION['usuario_id'] ?>';
-                            aplicarFiltrosLider();
-                        }
-                    <?php else: ?>
-                        // Para otros usuarios: resetear a "Todos los colaboradores"
-                        const operarioInput = document.getElementById('operario');
-                        const operarioIdInput = document.getElementById('operario_id');
-
-                        if (operarioInput) operarioInput.value = 'Todos los colaboradores';
-                        if (operarioIdInput) operarioIdInput.value = '0';
-
-                        // Aplicar filtros inmediatamente
-                        if (typeof aplicarFiltros === 'function') aplicarFiltros();
-                    <?php endif; ?>
-                }
+                // Las funciones aplicarFiltros, cambiarFiltroActivo y lógica de autocompletado han sido eliminadas por redundancia con el nuevo sistema AJAX.
 
                 // Función para mostrar el modal de tardanza
                 function mostrarModalTardanza(codOperario, nombre, codSucursal, nombreSucursal, fecha, horaProgramada, horaMarcada, codContrato, esTardanza) {
@@ -2475,34 +2085,34 @@ function verificarTardanzaYaRegistrada(
                 // Función para limpiar todos los filtros
                 function limpiarTodosFiltros() {
                     <?php if ($esLider): ?>
-                        // Para líderes
-                        document.getElementById('numero_semana').value = '';
-                        document.getElementById('operario_id').value = '<?= $_SESSION['usuario_id'] ?>';
+                            // Para líderes
+                            document.getElementById('numero_semana').value = '';
+                            document.getElementById('operario_id').value = '<?= $_SESSION['usuario_id'] ?>';
 
-                        // Establecer fecha actual
-                        const hoy = new Date().toISOString().split('T')[0];
-                        const primerDiaMes = hoy.substring(0, 8) + '01';
+                            // Establecer fecha actual
+                            const hoy = new Date().toISOString().split('T')[0];
+                            const primerDiaMes = hoy.substring(0, 8) + '01';
 
-                        document.getElementById('desde').value = primerDiaMes;
-                        document.getElementById('hasta').value = hoy;
+                            document.getElementById('desde').value = primerDiaMes;
+                            document.getElementById('hasta').value = hoy;
 
-                        // Aplicar filtros
-                        aplicarFiltrosLider();
+                            // Aplicar filtros
+                            aplicarFiltrosLider();
                     <?php else: ?>
-                        // Para otros usuarios
-                        document.getElementById('sucursal').value = 'todas';
-                        document.getElementById('operario').value = 'Todos los colaboradores';
-                        document.getElementById('operario_id').value = '0';
+                            // Para otros usuarios
+                            document.getElementById('sucursal').value = 'todas';
+                            document.getElementById('operario').value = 'Todos los colaboradores';
+                            document.getElementById('operario_id').value = '0';
 
-                        // Establecer fecha actual
-                        const hoy = new Date().toISOString().split('T')[0];
-                        const primerDiaMes = hoy.substring(0, 8) + '01';
+                            // Establecer fecha actual
+                            const hoy = new Date().toISOString().split('T')[0];
+                            const primerDiaMes = hoy.substring(0, 8) + '01';
 
-                        document.getElementById('desde').value = primerDiaMes;
-                        document.getElementById('hasta').value = hoy;
+                            document.getElementById('desde').value = primerDiaMes;
+                            document.getElementById('hasta').value = hoy;
 
-                        // Aplicar filtros
-                        aplicarFiltros();
+                            // Aplicar filtros
+                            aplicarFiltros();
                     <?php endif; ?>
                 }
             </script>
