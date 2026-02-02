@@ -1437,71 +1437,71 @@ function verificarTardanzaYaRegistrada(
 
             <div class="container-fluid p-3">
                 <?php if (isset($_SESSION['exito'])): ?>
-                        <div class="alert alert-success alert-dismissible fade show" role="alert">
-                            <?= $_SESSION['exito'] ?>
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                        </div>
-                        <?php unset($_SESSION['exito']); ?>
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <?= $_SESSION['exito'] ?>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                    <?php unset($_SESSION['exito']); ?>
                 <?php endif; ?>
 
                 <?php if (isset($_SESSION['error'])): ?>
-                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                            <?= $_SESSION['error'] ?>
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                        </div>
-                        <?php unset($_SESSION['error']); ?>
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <?= $_SESSION['error'] ?>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                    <?php unset($_SESSION['error']); ?>
                 <?php endif; ?>
 
                 <!-- Toolbar de exportación (solo para perfiles con permisos de exportación) -->
                 <?php if ($esContabilidad || $esOperaciones): ?>
-                        <div class="toolbar-container"
-                            style="margin-bottom: 10px; display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end;">
-                            <?php if ($esContabilidad): ?>
-                                    <a href="ver_marcaciones_todas.php?<?= http_build_query([
-                                        'modo' => $modoVista,
-                                        'sucursal' => $modoVista === 'sucursal' ? $sucursalSeleccionada : '',
-                                        'desde' => $fechaDesde,
-                                        'hasta' => $fechaHasta,
-                                        'activo' => $filtroActivo,
-                                        'operario_id' => $operario_id,
-                                        'exportar_excel' => 1
-                                    ]) ?>" class="btn btn-sm btn-success" title="Exportar Todo">
-                                        <i class="fas fa-file-excel"></i> Todo
-                                    </a>
-                                    <a href="ver_marcaciones_todas.php?<?= http_build_query([
-                                        'modo' => $modoVista,
-                                        'sucursal' => $modoVista === 'sucursal' ? $sucursalSeleccionada : '',
-                                        'desde' => $fechaDesde,
-                                        'hasta' => $fechaHasta,
-                                        'activo' => $filtroActivo,
-                                        'operario_id' => $operario_id,
-                                        'exportar_faltas' => 1
-                                    ]) ?>" class="btn btn-sm btn-danger" title="Exportar Faltas">
-                                        <i class="fas fa-user-slash"></i> Faltas
-                                    </a>
-                                    <a href="ver_marcaciones_todas.php?<?= http_build_query([
-                                        'modo' => $modoVista,
-                                        'sucursal' => $modoVista === 'sucursal' ? $sucursalSeleccionada : '',
-                                        'desde' => $fechaDesde,
-                                        'hasta' => $fechaHasta,
-                                        'activo' => $filtroActivo,
-                                        'operario_id' => $operario_id,
-                                        'exportar_tardanzas' => 1
-                                    ]) ?>" class="btn btn-sm btn-warning" style="color: #000;" title="Exportar Tardanzas">
-                                        <i class="fas fa-clock"></i> Tardanzas
-                                    </a>
-                                    <a href="exportar_tardanzas_detalle.php?<?= http_build_query([
-                                        'modo' => $modoVista,
-                                        'sucursal' => $modoVista === 'sucursal' ? $sucursalSeleccionada : '',
-                                        'desde' => $fechaDesde,
-                                        'hasta' => $fechaHasta,
-                                        'activo' => $filtroActivo,
-                                        'operario_id' => $operario_id
-                                    ]) ?>" class="btn btn-sm btn-info" style="color: white;" title="Tardanzas Detalle">
-                                        <i class="fas fa-list"></i> Detalle
-                                    </a>
-                            <?php endif; ?>
-                        </div>
+                    <div class="toolbar-container"
+                        style="margin-bottom: 10px; display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end;">
+                        <?php if ($esContabilidad): ?>
+                            <a href="ver_marcaciones_todas.php?<?= http_build_query([
+                                'modo' => $modoVista,
+                                'sucursal' => $modoVista === 'sucursal' ? $sucursalSeleccionada : '',
+                                'desde' => $fechaDesde,
+                                'hasta' => $fechaHasta,
+                                'activo' => $filtroActivo,
+                                'operario_id' => $operario_id,
+                                'exportar_excel' => 1
+                            ]) ?>" class="btn btn-sm btn-success" title="Exportar Todo">
+                                <i class="fas fa-file-excel"></i> Todo
+                            </a>
+                            <a href="ver_marcaciones_todas.php?<?= http_build_query([
+                                'modo' => $modoVista,
+                                'sucursal' => $modoVista === 'sucursal' ? $sucursalSeleccionada : '',
+                                'desde' => $fechaDesde,
+                                'hasta' => $fechaHasta,
+                                'activo' => $filtroActivo,
+                                'operario_id' => $operario_id,
+                                'exportar_faltas' => 1
+                            ]) ?>" class="btn btn-sm btn-danger" title="Exportar Faltas">
+                                <i class="fas fa-user-slash"></i> Faltas
+                            </a>
+                            <a href="ver_marcaciones_todas.php?<?= http_build_query([
+                                'modo' => $modoVista,
+                                'sucursal' => $modoVista === 'sucursal' ? $sucursalSeleccionada : '',
+                                'desde' => $fechaDesde,
+                                'hasta' => $fechaHasta,
+                                'activo' => $filtroActivo,
+                                'operario_id' => $operario_id,
+                                'exportar_tardanzas' => 1
+                            ]) ?>" class="btn btn-sm btn-warning" style="color: #000;" title="Exportar Tardanzas">
+                                <i class="fas fa-clock"></i> Tardanzas
+                            </a>
+                            <a href="exportar_tardanzas_detalle.php?<?= http_build_query([
+                                'modo' => $modoVista,
+                                'sucursal' => $modoVista === 'sucursal' ? $sucursalSeleccionada : '',
+                                'desde' => $fechaDesde,
+                                'hasta' => $fechaHasta,
+                                'activo' => $filtroActivo,
+                                'operario_id' => $operario_id
+                            ]) ?>" class="btn btn-sm btn-info" style="color: white;" title="Tardanzas Detalle">
+                                <i class="fas fa-list"></i> Detalle
+                            </a>
+                        <?php endif; ?>
+                    </div>
                 <?php endif; ?>
 
                 <!-- Nota informativa sobre tolerancia -->
@@ -1514,90 +1514,90 @@ function verificarTardanzaYaRegistrada(
 
                 <div class="table-container" style="margin-top: 0;">
                     <?php if (empty($marcaciones)): ?>
-                            <div class="no-results">
-                                No se encontraron marcaciones para los filtros seleccionados.
-                            </div>
+                        <div class="no-results">
+                            No se encontraron marcaciones para los filtros seleccionados.
+                        </div>
                     <?php else: ?>
-                            <table id="tabla-marcaciones">
-                                <thead>
-                                    <tr>
-                                        <th data-column="numero_semana" data-type="number" style="text-align: center;">
-                                            Semana
-                                            <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
-                                        </th>
-                                        <th data-column="nombre_sucursal" data-type="list" style="text-align: center;">
-                                            Sucursal
-                                            <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
-                                        </th>
-                                        <th data-column="nombre_completo" data-type="list" style="text-align: center;">
-                                            Colaborador
-                                            <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
-                                        </th>
-                                        <th data-column="nombre_cargo" data-type="list" style="text-align: center;">
-                                            Cargo
-                                            <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
-                                        </th>
-                                        <th data-column="fecha" data-type="daterange" style="text-align: center;">
-                                            Fecha
-                                            <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
-                                        </th>
-                                        <th data-column="estado_dia" data-type="list" style="text-align: center;">
-                                            Turno Programado
-                                            <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
-                                        </th>
-                                        <th style="text-align: center;">Horario Programado</th>
-                                        <?php if ($esLider): ?>
-                                                <th style="text-align: center;">Horas Programadas</th>
-                                        <?php endif; ?>
-                                        <th style="text-align: center;">Horario Marcado</th>
-                                        <?php if ($esLider): ?>
-                                                <th style="text-align: center;">Horas Trabajadas</th>
-                                        <?php endif; ?>
-                                        <th style="display:none;">Diferencia Entrada</th>
-                                        <th style="display:none;">Diferencia Salida</th>
-                                        <?php if ($esOperaciones): ?>
-                                                <th style="text-align: center;">Total Horas<br>Trabajadas</th>
-                                        <?php endif; ?>
-                                        <th style="text-align: center;">
-                                            <div class="header-actions-container">
-                                                <div style="margin-bottom: 5px;">Acciones</div>
-                                                <div class="tri-state-filter-group">
-                                                    <span class="tri-btn neutral active" onclick="setFiltroIncidencias('todos')"
-                                                        title="Ver Todo">
-                                                        <i class="fas fa-minus-circle"></i>
-                                                    </span>
-                                                    <span class="tri-btn warning" onclick="setFiltroIncidencias('tardanzas')"
-                                                        title="Ver solo TARDANZAS">
-                                                        <i class="fas fa-clock"></i>
-                                                    </span>
-                                                    <span class="tri-btn danger" onclick="setFiltroIncidencias('faltas')"
-                                                        title="Ver solo FALTAS">
-                                                        <i class="fas fa-user-slash"></i>
-                                                    </span>
-                                                </div>
+                        <table id="tabla-marcaciones">
+                            <thead>
+                                <tr>
+                                    <th data-column="numero_semana" data-type="number" style="text-align: center;">
+                                        Semana
+                                        <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                    </th>
+                                    <th data-column="nombre_sucursal" data-type="list" style="text-align: center;">
+                                        Sucursal
+                                        <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                    </th>
+                                    <th data-column="nombre_completo" data-type="list" style="text-align: center;">
+                                        Colaborador
+                                        <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                    </th>
+                                    <th data-column="nombre_cargo" data-type="list" style="text-align: center;">
+                                        Cargo
+                                        <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                    </th>
+                                    <th data-column="fecha" data-type="daterange" style="text-align: center;">
+                                        Fecha
+                                        <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                    </th>
+                                    <th data-column="estado_dia" data-type="list" style="text-align: center;">
+                                        Turno Programado
+                                        <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                    </th>
+                                    <th style="text-align: center;">Horario Programado</th>
+                                    <?php if ($esLider): ?>
+                                        <th style="text-align: center;">Horas Programadas</th>
+                                    <?php endif; ?>
+                                    <th style="text-align: center;">Horario Marcado</th>
+                                    <?php if ($esLider): ?>
+                                        <th style="text-align: center;">Horas Trabajadas</th>
+                                    <?php endif; ?>
+                                    <th style="display:none;">Diferencia Entrada</th>
+                                    <th style="display:none;">Diferencia Salida</th>
+                                    <?php if ($esOperaciones): ?>
+                                        <th style="text-align: center;">Total Horas<br>Trabajadas</th>
+                                    <?php endif; ?>
+                                    <th style="text-align: center;">
+                                        <div class="header-actions-container">
+                                            <div style="margin-bottom: 5px;">Acciones</div>
+                                            <div class="tri-state-filter-group">
+                                                <span class="tri-btn neutral active" onclick="setFiltroIncidencias('todos')"
+                                                    title="Ver Todo">
+                                                    <i class="fas fa-minus-circle"></i>
+                                                </span>
+                                                <span class="tri-btn warning" onclick="setFiltroIncidencias('tardanzas')"
+                                                    title="Ver solo TARDANZAS">
+                                                    <i class="fas fa-clock"></i>
+                                                </span>
+                                                <span class="tri-btn danger" onclick="setFiltroIncidencias('faltas')"
+                                                    title="Ver solo FALTAS">
+                                                    <i class="fas fa-user-slash"></i>
+                                                </span>
                                             </div>
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody id="tablaMarcacionesBody">
-                                    <!-- Datos cargados vía AJAX -->
-                                </tbody>
-                            </table>
+                                        </div>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaMarcacionesBody">
+                                <!-- Datos cargados vía AJAX -->
+                            </tbody>
+                        </table>
 
-                            <!-- Controles de paginación -->
-                            <div class="d-flex justify-content-between align-items-center mt-3">
-                                <div class="d-flex align-items-center gap-2">
-                                    <label class="mb-0">Mostrar:</label>
-                                    <select class="form-select form-select-sm" id="registrosPorPagina" style="width: auto;"
-                                        onchange="cambiarRegistrosPorPagina()">
-                                        <option value="25" selected>25</option>
-                                        <option value="50">50</option>
-                                        <option value="100">100</option>
-                                    </select>
-                                    <span class="mb-0">registros</span>
-                                </div>
-                                <div id="paginacion"></div>
+                        <!-- Controles de paginación -->
+                        <div class="d-flex justify-content-between align-items-center mt-3">
+                            <div class="d-flex align-items-center gap-2">
+                                <label class="mb-0">Mostrar:</label>
+                                <select class="form-select form-select-sm" id="registrosPorPagina" style="width: auto;"
+                                    onchange="cambiarRegistrosPorPagina()">
+                                    <option value="25" selected>25</option>
+                                    <option value="50">50</option>
+                                    <option value="100">100</option>
+                                </select>
+                                <span class="mb-0">registros</span>
                             </div>
+                            <div id="paginacion"></div>
+                        </div>
                     <?php endif; ?>
                 </div>
             </div>
@@ -1878,8 +1878,12 @@ function verificarTardanzaYaRegistrada(
                                 if (data.success) {
                                     alert(data.message);
                                     cerrarModalTardanza();
-                                    // Recargar la página para ver los cambios
-                                    setTimeout(() => location.reload(), 1000);
+                                    // Actualizar la tabla dinámicamente vía AJAX
+                                    if (typeof cargarDatos === 'function') {
+                                        cargarDatos();
+                                    } else {
+                                        setTimeout(() => location.reload(), 1000);
+                                    }
                                 } else {
                                     alert('Error: ' + data.message);
                                 }
@@ -2001,8 +2005,12 @@ function verificarTardanzaYaRegistrada(
                                 if (data.success) {
                                     alert(data.message);
                                     cerrarModalFalta();
-                                    // Recargar la página para ver los cambios
-                                    setTimeout(() => location.reload(), 1000);
+                                    // Actualizar la tabla dinámicamente vía AJAX
+                                    if (typeof cargarDatos === 'function') {
+                                        cargarDatos();
+                                    } else {
+                                        setTimeout(() => location.reload(), 1000);
+                                    }
                                 } else {
                                     alert('Error: ' + data.message);
                                 }
@@ -2040,25 +2048,28 @@ function verificarTardanzaYaRegistrada(
                         return;
                     }
 
-                    // Construir parámetros
-                    const params = new URLSearchParams();
-                    params.append('modo', modo);
+                    // Aplicar filtros al sistema AJAX unificado
+                    if (typeof filtrosActivos !== 'undefined') {
+                        // Mapear los filtros manuales al sistema global de filtros
+                        filtrosActivos['fecha'] = { desde: desde, hasta: hasta };
+                        filtrosActivos['operario_id'] = operario_id;
+                        filtrosActivos['numero_semana'] = numeroSemana;
 
-                    if (modo === 'sucursal') {
-                        params.append('sucursal', sucursal);
+                        // Reiniciar a la primera página y cargar
+                        paginaActual = 1;
+                        cargarDatos();
+                    } else {
+                        // Fallback por si el sistema AJAX no está cargado
+                        const params = new URLSearchParams();
+                        params.append('modo', modo);
+                        if (modo === 'sucursal') params.append('sucursal', sucursal);
+                        params.append('desde', desde);
+                        params.append('hasta', hasta);
+                        params.append('activo', '<?= $filtroActivo ?>');
+                        params.append('operario_id', operario_id);
+                        if (numeroSemana) params.append('numero_semana', numeroSemana);
+                        window.location.href = `ver_marcaciones_todas.php?${params.toString()}`;
                     }
-
-                    params.append('desde', desde);
-                    params.append('hasta', hasta);
-                    params.append('activo', '<?= $filtroActivo ?>');
-                    params.append('operario_id', operario_id);
-
-                    // Si se seleccionó una semana, agregar el parámetro
-                    if (numeroSemana) {
-                        params.append('numero_semana', numeroSemana);
-                    }
-
-                    window.location.href = `ver_marcaciones_todas.php?${params.toString()}`;
                 }
 
                 // Función para seleccionar una semana (solo para líderes)
@@ -2087,34 +2098,34 @@ function verificarTardanzaYaRegistrada(
                 // Función para limpiar todos los filtros
                 function limpiarTodosFiltros() {
                     <?php if ($esLider): ?>
-                            // Para líderes
-                            document.getElementById('numero_semana').value = '';
-                            document.getElementById('operario_id').value = '<?= $_SESSION['usuario_id'] ?>';
+                        // Para líderes
+                        document.getElementById('numero_semana').value = '';
+                        document.getElementById('operario_id').value = '<?= $_SESSION['usuario_id'] ?>';
 
-                            // Establecer fecha actual
-                            const hoy = '<?= $fechaHoy ?>';
-                            const primerDiaMes = hoy.substring(0, 8) + '01';
+                        // Establecer fecha actual
+                        const hoy = '<?= $fechaHoy ?>';
+                        const primerDiaMes = hoy.substring(0, 8) + '01';
 
-                            document.getElementById('desde').value = primerDiaMes;
-                            document.getElementById('hasta').value = hoy;
+                        document.getElementById('desde').value = primerDiaMes;
+                        document.getElementById('hasta').value = hoy;
 
-                            // Aplicar filtros
-                            aplicarFiltrosLider();
+                        // Aplicar filtros
+                        aplicarFiltrosLider();
                     <?php else: ?>
-                            // Para otros usuarios
-                            document.getElementById('sucursal').value = 'todas';
-                            document.getElementById('operario').value = 'Todos los colaboradores';
-                            document.getElementById('operario_id').value = '0';
+                        // Para otros usuarios
+                        document.getElementById('sucursal').value = 'todas';
+                        document.getElementById('operario').value = 'Todos los colaboradores';
+                        document.getElementById('operario_id').value = '0';
 
-                            // Establecer fecha actual
-                            const hoy = '<?= $fechaHoy ?>';
-                            const primerDiaMes = hoy.substring(0, 8) + '01';
+                        // Establecer fecha actual
+                        const hoy = '<?= $fechaHoy ?>';
+                        const primerDiaMes = hoy.substring(0, 8) + '01';
 
-                            document.getElementById('desde').value = primerDiaMes;
-                            document.getElementById('hasta').value = hoy;
+                        document.getElementById('desde').value = primerDiaMes;
+                        document.getElementById('hasta').value = hoy;
 
-                            // Aplicar filtros
-                            aplicarFiltros();
+                        // Aplicar filtros
+                        aplicarFiltros();
                     <?php endif; ?>
                 }
             </script>
