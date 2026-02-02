@@ -163,7 +163,7 @@ function renderizarTabla(datos) {
 
         // Acciones - STATUS TRACKER DE 3 PASOS (BARRA DE PROGRESO)
         let accionesHtml = '';
-        const hoyStr = new Date().toISOString().split('T')[0];
+        const hoyStr = PERMISOS_USUARIO.fechaHoy;
 
         if (row.fecha < hoyStr && (row.hora_entrada_programada || row.tiene_horario)) {
             let esTardanza = false;

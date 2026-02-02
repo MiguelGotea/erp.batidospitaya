@@ -356,7 +356,7 @@ try {
 
                 // Si es hoy, no se considera incidencia aún (día en curso)
                 if ($r['fecha'] === $fechaHoyPHP) {
-                    $tieneIncidencia = false;
+                    return false;
                 } else {
                     if (!empty($r['hora_ingreso']) && !empty($r['hora_entrada_programada'])) {
                         $ingreso = new DateTime($r['hora_ingreso']);
