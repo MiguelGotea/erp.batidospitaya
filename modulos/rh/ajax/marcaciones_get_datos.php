@@ -58,7 +58,8 @@ try {
         s.nombre as nombre_sucursal,
         o.Nombre, o.Apellido, o.Apellido2,
         nc.Nombre as nombre_cargo,
-        nc.CodNivelesCargos as codigo_cargo
+        nc.CodNivelesCargos as codigo_cargo,
+        c.fecha_salida
     FROM HorariosSemanalesOperaciones hso
     JOIN SemanasSistema ss ON hso.id_semana_sistema = ss.id
     JOIN sucursales s ON hso.cod_sucursal = s.codigo
@@ -66,6 +67,12 @@ try {
     LEFT JOIN AsignacionNivelesCargos anc ON o.CodOperario = anc.CodOperario 
         AND (anc.Fin IS NULL OR anc.Fin >= CURDATE())
     LEFT JOIN NivelesCargos nc ON anc.CodNivelesCargos = nc.CodNivelesCargos
+    LEFT JOIN (
+        SELECT cod_operario, MAX(fecha_salida) as fecha_salida 
+        FROM Contratos 
+        WHERE fecha_salida IS NOT NULL
+        GROUP BY cod_operario
+    ) c ON o.CodOperario = c.cod_operario
     WHERE 1=1
     ";
 
@@ -222,6 +229,11 @@ try {
 
             $diaSemana = $fecha->format('N'); // 1=lunes, 7=domingo
             $nombreDia = $diasSemana[$diaSemana];
+
+            // SI YA SALIÓ DE LA EMPRESA, NO MOSTRAR NADA PARA FECHAS POSTERIORES
+            if (!empty($horario['fecha_salida']) && $fechaStr > $horario['fecha_salida']) {
+                continue;
+            }
 
             // Obtener datos del día específico
             $estadoDia = $horario[$nombreDia . '_estado'];
