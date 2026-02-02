@@ -1684,7 +1684,7 @@ function verificarTardanzaYaRegistrada(
             <div class="modal" id="modalFaltaManual" style="display: none;">
                 <div class="modal-content" style="max-width: 500px;">
                     <div class="modal-header">
-                        <h2 class="modal-title">Registrar Falta Manual</h2>
+                        <h2 class="modal-title">Registrar Justificacion de Falta</h2>
                         <button class="modal-close" onclick="cerrarModalFalta()">&times;</button>
                     </div>
                     <form id="formFaltaManual" method="post" enctype="multipart/form-data">
