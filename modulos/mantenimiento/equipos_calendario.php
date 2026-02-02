@@ -1,15 +1,17 @@
 <?php
-require_once '../../includes/auth.php';
+require_once '../../core/auth/auth.php';
 require_once '../../includes/funciones.php';
+require_once '../../core/permissions/permissions.php';
+require_once '../../includes/header_universal.php';
+require_once '../../includes/menu_lateral.php';
 require_once __DIR__ . '/config/database.php';
 
 $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
 
-// Solo líder de infraestructura
-if ($cargoOperario != 35) {
-    header('Location: equipos_lista.php');
-    exit;
+if (!tienePermiso('calendario_mantenimiento', 'vista', $cargoOperario)) {
+    header('Location: /login.php');
+    exit();
 }
 
 // Obtener mes y año actual o del parámetro
@@ -17,8 +19,14 @@ $mes = isset($_GET['mes']) ? intval($_GET['mes']) : date('n');
 $anio = isset($_GET['anio']) ? intval($_GET['anio']) : date('Y');
 
 // Validar mes y año
-if ($mes < 1) { $mes = 12; $anio--; }
-if ($mes > 12) { $mes = 1; $anio++; }
+if ($mes < 1) {
+    $mes = 12;
+    $anio--;
+}
+if ($mes > 12) {
+    $mes = 1;
+    $anio++;
+}
 
 $primerDia = new DateTime("$anio-$mes-01");
 $ultimoDia = clone $primerDia;
@@ -65,7 +73,7 @@ $equiposPreventivo = $db->fetchAll("
 ", [$mes, $anio]);
 
 // Separar en verdes y rojos
-$equiposPreventivo = array_filter($equiposPreventivo, function($eq) {
+$equiposPreventivo = array_filter($equiposPreventivo, function ($eq) {
     return $eq['indicador'] !== null;
 });
 
@@ -120,10 +128,12 @@ foreach ($mantenimientosProgramados as $mant) {
 ?>
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Calendario de Mantenimientos</title>
+    <link rel="stylesheet" href="/core/assets/css/global_tools.css?v=<?php echo mt_rand(1, 10000); ?>">
     <link rel="stylesheet" href="css/equipos_general.css">
     <style>
         .calendario-container {
@@ -138,7 +148,7 @@ foreach ($mantenimientosProgramados as $mant) {
             border-radius: 8px;
             padding: 15px;
             overflow-y: auto;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
         .sidebar-section {
@@ -165,7 +175,7 @@ foreach ($mantenimientosProgramados as $mant) {
 
         .equipo-card:hover {
             transform: translateX(5px);
-            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
         }
 
         .equipo-card.dragging {
@@ -173,9 +183,17 @@ foreach ($mantenimientosProgramados as $mant) {
             cursor: grabbing;
         }
 
-        .equipo-card.preventivo { border-color: #28a745; }
-        .equipo-card.vencido { border-color: #dc3545; }
-        .equipo-card.solicitud { border-color: #ffc107; }
+        .equipo-card.preventivo {
+            border-color: #28a745;
+        }
+
+        .equipo-card.vencido {
+            border-color: #dc3545;
+        }
+
+        .equipo-card.solicitud {
+            border-color: #ffc107;
+        }
 
         .equipo-codigo {
             font-weight: bold;
@@ -202,7 +220,7 @@ foreach ($mantenimientosProgramados as $mant) {
             border-radius: 8px;
             padding: 20px;
             overflow-y: auto;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
         .calendario-header {
@@ -320,139 +338,145 @@ foreach ($mantenimientosProgramados as $mant) {
         }
     </style>
 </head>
+
 <body>
-    <div class="container-main">
-        <div class="page-header">
-            <h1 class="page-title">📅 Calendario de Mantenimientos</h1>
-            <a href="equipos_lista.php" class="btn btn-secondary">← Volver</a>
-        </div>
-
-        <div class="calendario-container">
-            <!-- Sidebar -->
-            <div class="sidebar">
-                <!-- Equipos con preventivo este mes -->
-                <div class="sidebar-section">
-                    <div class="sidebar-title">Mantenimiento Preventivo</div>
-                    <?php 
-                    $tieneEquipos = false;
-                    foreach ($equiposPreventivo as $eq): 
-                        $tieneEquipos = true;
-                        $indicador = $eq['indicador'] == 'verde' ? '🟢' : '🔴';
-                        $claseBorde = $eq['indicador'] == 'verde' ? 'preventivo' : 'vencido';
-                        $mensaje = $eq['indicador'] == 'verde' ? 'Le toca este mes' : 'Vencido - Requiere atención';
-                    ?>
-                    <div class="equipo-card <?= $claseBorde ?>" draggable="true" 
-                         data-equipo-id="<?= $eq['id'] ?>" 
-                         data-tipo="preventivo"
-                         title="<?= $mensaje ?>">
-                        <div class="equipo-codigo"><?= $indicador ?> <?= htmlspecialchars($eq['codigo']) ?></div>
-                        <div class="equipo-info"><?= htmlspecialchars($eq['marca'] . ' ' . $eq['modelo']) ?></div>
-                        <div class="equipo-info" style="font-size: 10px; color: #999;">
-                            <?= $mensaje ?>
-                        </div>
-                        <div class="equipo-ubicacion">📍 <?= htmlspecialchars($eq['ubicacion_actual'] ?? 'Sin ubicación') ?></div>
-                    </div>
-                    <?php endforeach; ?>
-                    <?php if (!$tieneEquipos): ?>
-                        <p style="color: #666; font-size: 12px; padding: 10px;">No hay equipos pendientes</p>
-                    <?php endif; ?>
-                </div>
-
-                <!-- Equipos con solicitud -->
-                <?php if (!empty($equiposSolicitud)): ?>
-                <div class="sidebar-section">
-                    <div class="sidebar-title">⚠️ Con Solicitud Pendiente</div>
-                    <?php foreach ($equiposSolicitud as $eq): ?>
-                    <div class="equipo-card solicitud" draggable="true" 
-                         data-equipo-id="<?= $eq['id'] ?>" 
-                         data-solicitud-id="<?= $eq['solicitud_id'] ?>"
-                         data-tipo="correctivo">
-                        <div class="equipo-codigo"><?= htmlspecialchars($eq['codigo']) ?></div>
-                        <div class="equipo-info"><?= htmlspecialchars($eq['marca'] . ' ' . $eq['modelo']) ?></div>
-                        <div class="equipo-ubicacion">📍 <?= htmlspecialchars($eq['ubicacion_actual'] ?? 'Sin ubicación') ?></div>
-                    </div>
-                    <?php endforeach; ?>
-                </div>
-                <?php endif; ?>
-
-                <!-- Buscador general -->
-                <div class="sidebar-section">
-                    <div class="sidebar-title">🔍 Buscar Equipo</div>
-                    <div class="search-container">
-                        <input type="text" class="search-input" id="buscar-equipo" 
-                               placeholder="Buscar por código..." onkeyup="buscarEquipo()">
-                    </div>
-                    <div id="resultados-busqueda"></div>
-                </div>
+    <?php echo renderMenuLateral($cargoOperario); ?>
+    <div class="main-container">
+        <div class="sub-container">
+            <?php echo renderHeader($usuario, false, 'Calendario de Mantenimiento'); ?>
+            <div class="page-header">
+                <h1 class="page-title">📅 Calendario de Mantenimientos</h1>
+                <a href="equipos_lista.php" class="btn btn-secondary">← Volver</a>
             </div>
 
-            <!-- Calendario -->
-            <div class="calendario">
-                <div class="calendario-header">
-                    <div class="mes-actual">
-                        <?= ucfirst(strftime('%B %Y', $primerDia->getTimestamp())) ?>
+            <div class="calendario-container">
+                <!-- Sidebar -->
+                <div class="sidebar">
+                    <!-- Equipos con preventivo este mes -->
+                    <div class="sidebar-section">
+                        <div class="sidebar-title">Mantenimiento Preventivo</div>
+                        <?php
+                        $tieneEquipos = false;
+                        foreach ($equiposPreventivo as $eq):
+                            $tieneEquipos = true;
+                            $indicador = $eq['indicador'] == 'verde' ? '🟢' : '🔴';
+                            $claseBorde = $eq['indicador'] == 'verde' ? 'preventivo' : 'vencido';
+                            $mensaje = $eq['indicador'] == 'verde' ? 'Le toca este mes' : 'Vencido - Requiere atención';
+                            ?>
+                            <div class="equipo-card <?= $claseBorde ?>" draggable="true" data-equipo-id="<?= $eq['id'] ?>"
+                                data-tipo="preventivo" title="<?= $mensaje ?>">
+                                <div class="equipo-codigo"><?= $indicador ?>     <?= htmlspecialchars($eq['codigo']) ?></div>
+                                <div class="equipo-info"><?= htmlspecialchars($eq['marca'] . ' ' . $eq['modelo']) ?></div>
+                                <div class="equipo-info" style="font-size: 10px; color: #999;">
+                                    <?= $mensaje ?>
+                                </div>
+                                <div class="equipo-ubicacion">📍
+                                    <?= htmlspecialchars($eq['ubicacion_actual'] ?? 'Sin ubicación') ?></div>
+                            </div>
+                        <?php endforeach; ?>
+                        <?php if (!$tieneEquipos): ?>
+                            <p style="color: #666; font-size: 12px; padding: 10px;">No hay equipos pendientes</p>
+                        <?php endif; ?>
                     </div>
-                    <div class="nav-mes">
-                        <a href="?mes=<?= $mes-1 ?>&anio=<?= $anio ?>" class="btn btn-secondary">← Anterior</a>
-                        <a href="?mes=<?= date('n') ?>&anio=<?= date('Y') ?>" class="btn btn-primary">Hoy</a>
-                        <a href="?mes=<?= $mes+1 ?>&anio=<?= $anio ?>" class="btn btn-secondary">Siguiente →</a>
+
+                    <!-- Equipos con solicitud -->
+                    <?php if (!empty($equiposSolicitud)): ?>
+                        <div class="sidebar-section">
+                            <div class="sidebar-title">⚠️ Con Solicitud Pendiente</div>
+                            <?php foreach ($equiposSolicitud as $eq): ?>
+                                <div class="equipo-card solicitud" draggable="true" data-equipo-id="<?= $eq['id'] ?>"
+                                    data-solicitud-id="<?= $eq['solicitud_id'] ?>" data-tipo="correctivo">
+                                    <div class="equipo-codigo"><?= htmlspecialchars($eq['codigo']) ?></div>
+                                    <div class="equipo-info"><?= htmlspecialchars($eq['marca'] . ' ' . $eq['modelo']) ?></div>
+                                    <div class="equipo-ubicacion">📍
+                                        <?= htmlspecialchars($eq['ubicacion_actual'] ?? 'Sin ubicación') ?></div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php endif; ?>
+
+                    <!-- Buscador general -->
+                    <div class="sidebar-section">
+                        <div class="sidebar-title">🔍 Buscar Equipo</div>
+                        <div class="search-container">
+                            <input type="text" class="search-input" id="buscar-equipo"
+                                placeholder="Buscar por código..." onkeyup="buscarEquipo()">
+                        </div>
+                        <div id="resultados-busqueda"></div>
                     </div>
                 </div>
 
-                <div class="calendario-grid">
-                    <!-- Headers días -->
-                    <div class="dia-header">Dom</div>
-                    <div class="dia-header">Lun</div>
-                    <div class="dia-header">Mar</div>
-                    <div class="dia-header">Mié</div>
-                    <div class="dia-header">Jue</div>
-                    <div class="dia-header">Vie</div>
-                    <div class="dia-header">Sáb</div>
-
-                    <?php
-                    // Días del mes
-                    $diaInicio = $primerDia->format('w'); // 0=domingo
-                    $diasMes = $ultimoDia->format('j');
-                    $hoy = date('Y-m-d');
-                    
-                    // Días del mes anterior
-                    $mesAnterior = clone $primerDia;
-                    $mesAnterior->modify('-1 day');
-                    $diasMesAnterior = $mesAnterior->format('j');
-                    
-                    for ($i = $diaInicio - 1; $i >= 0; $i--) {
-                        $dia = $diasMesAnterior - $i;
-                        echo "<div class='dia-cell otro-mes'><div class='dia-numero'>$dia</div></div>";
-                    }
-                    
-                    // Días del mes actual
-                    for ($dia = 1; $dia <= $diasMes; $dia++) {
-                        $fecha = sprintf('%04d-%02d-%02d', $anio, $mes, $dia);
-                        $esHoy = $fecha == $hoy ? 'dia-hoy' : '';
-                        ?>
-                        <div class="dia-cell <?= $esHoy ?>" data-fecha="<?= $fecha ?>">
-                            <div class="dia-numero"><?= $dia ?></div>
-                            <?php if (isset($mantenimientosPorFecha[$fecha])): ?>
-                                <?php foreach ($mantenimientosPorFecha[$fecha] as $mant): ?>
-                                <div class="mantenimiento-card <?= $mant['mantenimiento_realizado_id'] ? 'finalizado' : '' ?>" 
-                                     draggable="<?= $mant['mantenimiento_realizado_id'] ? 'false' : 'true' ?>"
-                                     data-programado-id="<?= $mant['id'] ?>">
-                                    <div class="mantenimiento-header">
-                                        <span class="mantenimiento-codigo"><?= htmlspecialchars($mant['codigo']) ?></span>
-                                        <?php if (!$mant['mantenimiento_realizado_id']): ?>
-                                        <button class="mantenimiento-remove" onclick="desprogramar(<?= $mant['id'] ?>)" title="Desprogramar">×</button>
-                                        <?php endif; ?>
-                                    </div>
-                                    <?php if (!$mant['mantenimiento_realizado_id']): ?>
-                                    <button class="mantenimiento-check" onclick="abrirReporte(<?= $mant['id'] ?>, <?= $mant['equipo_id'] ?>)" title="Completar">✓</button>
-                                    <?php endif; ?>
-                                </div>
-                                <?php endforeach; ?>
-                            <?php endif; ?>
+                <!-- Calendario -->
+                <div class="calendario">
+                    <div class="calendario-header">
+                        <div class="mes-actual">
+                            <?= ucfirst(strftime('%B %Y', $primerDia->getTimestamp())) ?>
                         </div>
+                        <div class="nav-mes">
+                            <a href="?mes=<?= $mes - 1 ?>&anio=<?= $anio ?>" class="btn btn-secondary">← Anterior</a>
+                            <a href="?mes=<?= date('n') ?>&anio=<?= date('Y') ?>" class="btn btn-primary">Hoy</a>
+                            <a href="?mes=<?= $mes + 1 ?>&anio=<?= $anio ?>" class="btn btn-secondary">Siguiente →</a>
+                        </div>
+                    </div>
+
+                    <div class="calendario-grid">
+                        <!-- Headers días -->
+                        <div class="dia-header">Dom</div>
+                        <div class="dia-header">Lun</div>
+                        <div class="dia-header">Mar</div>
+                        <div class="dia-header">Mié</div>
+                        <div class="dia-header">Jue</div>
+                        <div class="dia-header">Vie</div>
+                        <div class="dia-header">Sáb</div>
+
                         <?php
-                    }
-                    ?>
+                        // Días del mes
+                        $diaInicio = $primerDia->format('w'); // 0=domingo
+                        $diasMes = $ultimoDia->format('j');
+                        $hoy = date('Y-m-d');
+
+                        // Días del mes anterior
+                        $mesAnterior = clone $primerDia;
+                        $mesAnterior->modify('-1 day');
+                        $diasMesAnterior = $mesAnterior->format('j');
+
+                        for ($i = $diaInicio - 1; $i >= 0; $i--) {
+                            $dia = $diasMesAnterior - $i;
+                            echo "<div class='dia-cell otro-mes'><div class='dia-numero'>$dia</div></div>";
+                        }
+
+                        // Días del mes actual
+                        for ($dia = 1; $dia <= $diasMes; $dia++) {
+                            $fecha = sprintf('%04d-%02d-%02d', $anio, $mes, $dia);
+                            $esHoy = $fecha == $hoy ? 'dia-hoy' : '';
+                            ?>
+                            <div class="dia-cell <?= $esHoy ?>" data-fecha="<?= $fecha ?>">
+                                <div class="dia-numero"><?= $dia ?></div>
+                                <?php if (isset($mantenimientosPorFecha[$fecha])): ?>
+                                    <?php foreach ($mantenimientosPorFecha[$fecha] as $mant): ?>
+                                        <div class="mantenimiento-card <?= $mant['mantenimiento_realizado_id'] ? 'finalizado' : '' ?>"
+                                            draggable="<?= $mant['mantenimiento_realizado_id'] ? 'false' : 'true' ?>"
+                                            data-programado-id="<?= $mant['id'] ?>">
+                                            <div class="mantenimiento-header">
+                                                <span class="mantenimiento-codigo"><?= htmlspecialchars($mant['codigo']) ?></span>
+                                                <?php if (!$mant['mantenimiento_realizado_id']): ?>
+                                                    <button class="mantenimiento-remove" onclick="desprogramar(<?= $mant['id'] ?>)"
+                                                        title="Desprogramar">×</button>
+                                                <?php endif; ?>
+                                            </div>
+                                            <?php if (!$mant['mantenimiento_realizado_id']): ?>
+                                                <button class="mantenimiento-check"
+                                                    onclick="abrirReporte(<?= $mant['id'] ?>, <?= $mant['equipo_id'] ?>)"
+                                                    title="Completar">✓</button>
+                                            <?php endif; ?>
+                                        </div>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </div>
+                            <?php
+                        }
+                        ?>
+                    </div>
                 </div>
             </div>
         </div>
@@ -461,4 +485,5 @@ foreach ($mantenimientosProgramados as $mant) {
     <script src="js/equipos_funciones.js"></script>
     <script src="js/equipos_calendario.js"></script>
 </body>
+
 </html>

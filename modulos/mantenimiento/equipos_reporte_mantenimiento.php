@@ -1,15 +1,17 @@
 <?php
-require_once '../../includes/auth.php';
+require_once '../../core/auth/auth.php';
 require_once '../../includes/funciones.php';
+require_once '../../core/permissions/permissions.php';
+require_once '../../includes/header_universal.php';
+require_once '../../includes/menu_lateral.php';
 require_once __DIR__ . '/config/database.php';
 
 $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
 
-// Solo líder de infraestructura
-if ($cargoOperario != 35) {
-    header('Location: equipos_lista.php');
-    exit;
+if (!tienePermiso('reportes_mantenimiento', 'vista', $cargoOperario)) {
+    header('Location: /login.php');
+    exit();
 }
 
 $programado_id = $_GET['programado_id'] ?? null;
@@ -53,7 +55,7 @@ $solicitudPendiente = $db->fetchOne("
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         $db->getConnection()->beginTransaction();
-        
+
         // Insertar mantenimiento
         $stmt = $db->query(
             "INSERT INTO mtto_equipos_mantenimientos (
@@ -78,9 +80,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['usuario_id']
             ]
         );
-        
+
         $mantenimiento_id = $db->lastInsertId();
-        
+
         // Guardar repuestos
         if (!empty($_POST['repuestos'])) {
             foreach ($_POST['repuestos'] as $repuesto) {
@@ -100,7 +102,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
         }
-        
+
         // Actualizar estado del programado
         $db->query(
             "UPDATE mtto_equipos_mantenimientos_programados 
@@ -108,20 +110,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
              WHERE id = ?",
             [$programado_id]
         );
-        
+
         // Guardar imágenes si hay
         if (isset($_FILES['imagenes'])) {
             $uploadDir = '../uploads/mantenimientos/';
             if (!file_exists($uploadDir)) {
                 mkdir($uploadDir, 0755, true);
             }
-            
+
             foreach ($_FILES['imagenes']['tmp_name'] as $key => $tmp_name) {
                 if ($_FILES['imagenes']['error'][$key] === 0) {
                     $extension = pathinfo($_FILES['imagenes']['name'][$key], PATHINFO_EXTENSION);
                     $filename = 'mant_' . $mantenimiento_id . '_' . time() . '_' . $key . '.' . $extension;
                     $filepath = $uploadDir . $filename;
-                    
+
                     if (move_uploaded_file($tmp_name, $filepath)) {
                         $db->query(
                             "INSERT INTO mtto_equipos_mantenimientos_fotos (mantenimiento_id, ruta_archivo)
@@ -132,13 +134,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
         }
-        
+
         $db->getConnection()->commit();
-        
+
         $mensaje = "Reporte de mantenimiento guardado exitosamente";
         $tipo_mensaje = "success";
         $redirigir = true;
-        
+
     } catch (Exception $e) {
         $db->getConnection()->rollBack();
         $mensaje = "Error al guardar reporte: " . $e->getMessage();
@@ -148,10 +150,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 ?>
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reporte de Mantenimiento</title>
+    <link rel="stylesheet" href="/core/assets/css/global_tools.css?v=<?php echo mt_rand(1, 10000); ?>">
     <link rel="stylesheet" href="css/equipos_general.css">
     <style>
         .repuestos-container {
@@ -160,7 +164,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             padding: 15px;
             margin-top: 15px;
         }
-        
+
         .repuesto-item {
             display: grid;
             grid-template-columns: 2fr 1fr 1fr 1fr auto;
@@ -168,7 +172,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             margin-bottom: 10px;
             align-items: end;
         }
-        
+
         .costo-referencia {
             font-size: clamp(10px, 1.5vw, 12px) !important;
             color: #666;
@@ -176,134 +180,141 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     </style>
 </head>
+
 <body>
-    <div class="container-main">
-        <div class="page-header">
-            <div>
-                <h1 class="page-title">📝 Reporte de Mantenimiento</h1>
-                <p style="color: #666; margin-top: 5px;">
-                    Equipo: <strong><?= htmlspecialchars($programado['codigo']) ?></strong> - 
-                    <?= htmlspecialchars($programado['marca'] . ' ' . $programado['modelo']) ?>
-                </p>
+    <?php echo renderMenuLateral($cargoOperario); ?>
+    <div class="main-container">
+        <div class="sub-container">
+            <?php echo renderHeader($usuario, false, 'Reporte de Mantenimiento'); ?>
+            <div class="page-header">
+                <div>
+                    <h1 class="page-title">📝 Reporte de Mantenimiento</h1>
+                    <p style="color: #666; margin-top: 5px;">
+                        Equipo: <strong><?= htmlspecialchars($programado['codigo']) ?></strong> -
+                        <?= htmlspecialchars($programado['marca'] . ' ' . $programado['modelo']) ?>
+                    </p>
+                </div>
+                <a href="equipos_calendario.php" class="btn btn-secondary">← Volver al Calendario</a>
             </div>
-            <a href="equipos_calendario.php" class="btn btn-secondary">← Volver al Calendario</a>
-        </div>
 
-        <?php if (isset($mensaje)): ?>
-        <div class="alert alert-<?= $tipo_mensaje ?>">
-            <?= $mensaje ?>
-            <?php if (isset($redirigir)): ?>
-            <script>
-                setTimeout(() => {
-                    window.location.href = 'equipos_calendario.php';
-                }, 2000);
-            </script>
+            <?php if (isset($mensaje)): ?>
+                <div class="alert alert-<?= $tipo_mensaje ?>">
+                    <?= $mensaje ?>
+                    <?php if (isset($redirigir)): ?>
+                        <script>
+                            setTimeout(() => {
+                                window.location.href = 'equipos_calendario.php';
+                            }, 2000);
+                        </script>
+                    <?php endif; ?>
+                </div>
             <?php endif; ?>
-        </div>
-        <?php endif; ?>
 
-        <div class="form-container">
-            <form method="POST" enctype="multipart/form-data" id="form-reporte">
-                <div class="form-group">
-                    <label class="form-label">Tipo de Mantenimiento</label>
-                    <input type="text" class="form-control" value="<?= ucfirst($programado['tipo']) ?>" readonly>
-                </div>
-
-                <?php if ($solicitudPendiente): ?>
-                <div class="alert alert-info">
-                    <strong>📋 Solicitud Vinculada:</strong> Este mantenimiento se vinculará automáticamente con la solicitud 
-                    #<?= $solicitudPendiente['id'] ?> del <?= date('d/m/Y', strtotime($solicitudPendiente['fecha_solicitud'])) ?>
-                </div>
-                <?php endif; ?>
-
-                <div class="form-group">
-                    <label class="form-label">Proveedor de Servicio</label>
-                    <select name="proveedor_servicio_id" class="form-control">
-                        <option value="">Seleccione...</option>
-                        <?php foreach ($proveedores as $prov): ?>
-                        <option value="<?= $prov['id'] ?>"><?= $prov['nombre'] ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label required">Fecha Inicio</label>
-                    <input type="date" name="fecha_inicio" class="form-control" 
-                           value="<?= $programado['fecha_programada'] ?>" required>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Fecha Finalización</label>
-                    <input type="date" name="fecha_finalizacion" class="form-control">
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Problema Encontrado</label>
-                    <textarea name="problema_encontrado" class="form-control" rows="3"></textarea>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label required">Trabajo Realizado</label>
-                    <textarea name="trabajo_realizado" class="form-control" rows="4" required></textarea>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Observaciones</label>
-                    <textarea name="observaciones" class="form-control" rows="3"></textarea>
-                </div>
-
-                <!-- Repuestos -->
-                <div class="form-group">
-                    <label class="form-label">Repuestos Utilizados</label>
-                    <div class="repuestos-container" id="repuestos-container">
-                        <div id="repuestos-lista"></div>
-                        <button type="button" class="btn btn-secondary btn-sm" onclick="agregarRepuesto()">
-                            ➕ Agregar Repuesto
-                        </button>
+            <div class="form-container">
+                <form method="POST" enctype="multipart/form-data" id="form-reporte">
+                    <div class="form-group">
+                        <label class="form-label">Tipo de Mantenimiento</label>
+                        <input type="text" class="form-control" value="<?= ucfirst($programado['tipo']) ?>" readonly>
                     </div>
-                </div>
 
-                <div class="form-group">
-                    <label class="form-label">Costo Mano de Obra</label>
-                    <input type="number" step="0.01" name="costo_mano_de_obra" 
-                           id="costo-mano-obra" class="form-control" value="0.00" 
-                           onchange="calcularCostoTotal()">
-                </div>
+                    <?php if ($solicitudPendiente): ?>
+                        <div class="alert alert-info">
+                            <strong>📋 Solicitud Vinculada:</strong> Este mantenimiento se vinculará automáticamente con la
+                            solicitud
+                            #<?= $solicitudPendiente['id'] ?> del
+                            <?= date('d/m/Y', strtotime($solicitudPendiente['fecha_solicitud'])) ?>
+                        </div>
+                    <?php endif; ?>
 
-                <div class="form-group">
-                    <label class="form-label">Costo Total Repuestos</label>
-                    <input type="number" step="0.01" name="costo_total_repuestos" 
-                           id="costo-total-repuestos" class="form-control" value="0.00" readonly>
-                </div>
+                    <div class="form-group">
+                        <label class="form-label">Proveedor de Servicio</label>
+                        <select name="proveedor_servicio_id" class="form-control">
+                            <option value="">Seleccione...</option>
+                            <?php foreach ($proveedores as $prov): ?>
+                                <option value="<?= $prov['id'] ?>"><?= $prov['nombre'] ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
 
-                <div class="form-group">
-                    <label class="form-label" style="font-weight: bold; color: #0E544C;">Costo Total del Mantenimiento</label>
-                    <input type="text" id="costo-total-final" class="form-control" 
-                           style="font-weight: bold; font-size: 18px; background: #e8f5f3;" readonly>
-                </div>
+                    <div class="form-group">
+                        <label class="form-label required">Fecha Inicio</label>
+                        <input type="date" name="fecha_inicio" class="form-control"
+                            value="<?= $programado['fecha_programada'] ?>" required>
+                    </div>
 
-                <!-- Evidencias fotográficas -->
-                <div class="form-group">
-                    <label class="form-label">Evidencias Fotográficas</label>
-                    <div class="upload-container" id="upload-reporte">
-                        <div class="upload-buttons">
-                            <button type="button" class="btn btn-primary btn-upload-file">
-                                📁 Subir Archivo
-                            </button>
-                            <button type="button" class="btn btn-primary btn-upload-camera">
-                                📷 Tomar Foto
+                    <div class="form-group">
+                        <label class="form-label">Fecha Finalización</label>
+                        <input type="date" name="fecha_finalizacion" class="form-control">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Problema Encontrado</label>
+                        <textarea name="problema_encontrado" class="form-control" rows="3"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label required">Trabajo Realizado</label>
+                        <textarea name="trabajo_realizado" class="form-control" rows="4" required></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Observaciones</label>
+                        <textarea name="observaciones" class="form-control" rows="3"></textarea>
+                    </div>
+
+                    <!-- Repuestos -->
+                    <div class="form-group">
+                        <label class="form-label">Repuestos Utilizados</label>
+                        <div class="repuestos-container" id="repuestos-container">
+                            <div id="repuestos-lista"></div>
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="agregarRepuesto()">
+                                ➕ Agregar Repuesto
                             </button>
                         </div>
-                        <input type="file" class="file-input" name="imagenes[]" accept="image/*" multiple>
-                        <div class="preview-container"></div>
                     </div>
-                </div>
 
-                <div class="form-group mt-2">
-                    <button type="submit" class="btn btn-success">💾 Guardar Reporte y Finalizar</button>
-                    <a href="equipos_calendario.php" class="btn btn-secondary ml-1">Cancelar</a>
-                </div>
-            </form>
+                    <div class="form-group">
+                        <label class="form-label">Costo Mano de Obra</label>
+                        <input type="number" step="0.01" name="costo_mano_de_obra" id="costo-mano-obra"
+                            class="form-control" value="0.00" onchange="calcularCostoTotal()">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Costo Total Repuestos</label>
+                        <input type="number" step="0.01" name="costo_total_repuestos" id="costo-total-repuestos"
+                            class="form-control" value="0.00" readonly>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" style="font-weight: bold; color: #0E544C;">Costo Total del
+                            Mantenimiento</label>
+                        <input type="text" id="costo-total-final" class="form-control"
+                            style="font-weight: bold; font-size: 18px; background: #e8f5f3;" readonly>
+                    </div>
+
+                    <!-- Evidencias fotográficas -->
+                    <div class="form-group">
+                        <label class="form-label">Evidencias Fotográficas</label>
+                        <div class="upload-container" id="upload-reporte">
+                            <div class="upload-buttons">
+                                <button type="button" class="btn btn-primary btn-upload-file">
+                                    📁 Subir Archivo
+                                </button>
+                                <button type="button" class="btn btn-primary btn-upload-camera">
+                                    📷 Tomar Foto
+                                </button>
+                            </div>
+                            <input type="file" class="file-input" name="imagenes[]" accept="image/*" multiple>
+                            <div class="preview-container"></div>
+                        </div>
+                    </div>
+
+                    <div class="form-group mt-2">
+                        <button type="submit" class="btn btn-success">💾 Guardar Reporte y Finalizar</button>
+                        <a href="equipos_calendario.php" class="btn btn-secondary ml-1">Cancelar</a>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 
@@ -312,7 +323,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         const repuestosData = <?= json_encode($repuestos) ?>;
         let contadorRepuestos = 0;
 
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             initFileUpload('upload-reporte');
         });
 
@@ -352,7 +363,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </button>
                 </div>
             `;
-            
+
             document.getElementById('repuestos-lista').appendChild(div);
         }
 
@@ -361,7 +372,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             const costoBase = option.dataset.costo || 0;
             const refDiv = document.getElementById('costo-ref-' + id);
             const precioInput = document.getElementById('precio-unit-' + id);
-            
+
             if (costoBase > 0) {
                 refDiv.textContent = `Costo base de referencia: C$ ${parseFloat(costoBase).toFixed(2)}`;
                 precioInput.value = costoBase;
@@ -374,7 +385,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         function calcularTotalRepuesto(id) {
             const cantidad = document.querySelector(`[name="repuestos[${id}][cantidad]"]`).value;
             const precioUnit = document.getElementById('precio-unit-' + id).value;
-            
+
             if (cantidad && precioUnit) {
                 const total = parseFloat(cantidad) * parseFloat(precioUnit);
                 document.getElementById('precio-total-' + id).value = total.toFixed(2);
@@ -389,7 +400,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 totalRepuestos += valor;
             });
             document.getElementById('costo-total-repuestos').value = totalRepuestos.toFixed(2);
-            
+
             // Calcular total final
             const manoObra = parseFloat(document.getElementById('costo-mano-obra').value) || 0;
             const totalFinal = totalRepuestos + manoObra;
@@ -402,4 +413,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     </script>
 </body>
+
 </html>

@@ -1,14 +1,22 @@
 <?php
-require_once '../../includes/auth.php';
+require_once '../../core/auth/auth.php';
 require_once '../../includes/funciones.php';
+require_once '../../core/permissions/permissions.php';
+require_once '../../includes/header_universal.php';
+require_once '../../includes/menu_lateral.php';
 require_once __DIR__ . '/config/database.php';
 
 $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
 $sucursales = obtenerSucursalesUsuario($_SESSION['usuario_id']);
 
+if (!tienePermiso('movimientos_equipos', 'vista', $cargoOperario)) {
+    header('Location: /login.php');
+    exit();
+}
+
 // Obtener movimientos según el rol
-if ($cargoOperario == 35) {
+if (tienePermiso('movimientos_equipos', 'crear_movimiento', $cargoOperario)) {
     // Líder de infraestructura ve todos
     $movimientos = $db->fetchAll("
         SELECT 
@@ -28,7 +36,7 @@ if ($cargoOperario == 35) {
             CASE m.estado WHEN 'agendado' THEN 1 ELSE 2 END,
             m.fecha_programada DESC
     ");
-    
+
     // Equipos con solicitud pendiente
     $equiposConSolicitud = $db->fetchAll("
         SELECT 
@@ -63,7 +71,7 @@ if ($cargoOperario == 35) {
     // Líderes de sucursal solo ven movimientos de su sucursal
     $codigoSucursal = $sucursales[0]['codigo'];
     $sucursalId = $db->fetchOne("SELECT codigo FROM sucursales WHERE codigo = ?", [$codigoSucursal])['codigo'];
-    
+
     $movimientos = $db->fetchAll("
         SELECT 
             m.*,
@@ -80,7 +88,7 @@ if ($cargoOperario == 35) {
         AND m.estado = 'agendado'
         ORDER BY m.fecha_programada ASC
     ", [$sucursalId, $sucursalId]);
-    
+
     $equiposConSolicitud = [];
 }
 
@@ -111,10 +119,12 @@ $equiposEnCentral = $db->fetchAll("
 ?>
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestión de Movimientos - Sistema de Mantenimiento</title>
+    <link rel="stylesheet" href="/core/assets/css/global_tools.css?v=<?php echo mt_rand(1, 10000); ?>">
     <link rel="stylesheet" href="css/equipos_general.css">
     <style>
         .solicitudes-pendientes {
@@ -124,7 +134,7 @@ $equiposEnCentral = $db->fetchAll("
             padding: 20px;
             margin-bottom: 30px;
         }
-        
+
         .solicitud-card {
             background: white;
             border: 1px solid #ffc107;
@@ -132,112 +142,125 @@ $equiposEnCentral = $db->fetchAll("
             padding: 15px;
             margin-bottom: 15px;
         }
-        
+
         .movimiento-row-agendado {
             background-color: #fff3cd;
         }
-        
+
         .movimiento-row-finalizado {
             background-color: #d4edda;
         }
     </style>
 </head>
-<body>
-    <div class="container-main">
-        <div class="page-header">
-            <h1 class="page-title">🚚 Gestión de Movimientos de Equipos</h1>
-            <div>
-                <?php if ($cargoOperario == 35): ?>
-                <button class="btn btn-primary" onclick="abrirNuevoMovimiento()">
-                    ➕ Nuevo Movimiento
-                </button>
-                <?php endif; ?>
-                <a href="equipos_lista.php" class="btn btn-secondary ml-1">← Volver</a>
-            </div>
-        </div>
 
-        <?php if ($cargoOperario == 35 && !empty($equiposConSolicitud)): ?>
-        <div class="solicitudes-pendientes">
-            <h3 style="color: #856404; margin-bottom: 15px;">⚠️ Equipos con Solicitud de Mantenimiento Pendiente</h3>
-            <p style="margin-bottom: 15px;">Los siguientes equipos tienen solicitudes de mantenimiento sin movimiento programado:</p>
-            
-            <?php foreach ($equiposConSolicitud as $eq): ?>
-            <div class="solicitud-card">
-                <div class="d-flex justify-between align-center">
-                    <div>
-                        <strong>Equipo:</strong> <?= htmlspecialchars($eq['codigo']) ?> - <?= htmlspecialchars($eq['marca'] . ' ' . $eq['modelo']) ?><br>
-                        <strong>Ubicación:</strong> <?= htmlspecialchars($eq['sucursal_actual']) ?><br>
-                        <strong>Problema:</strong> <?= htmlspecialchars(substr($eq['descripcion_problema'], 0, 100)) ?>...
-                    </div>
-                    <button class="btn btn-warning" onclick="abrirMovimientoConSolicitud(<?= $eq['equipo_id'] ?>, <?= $eq['sucursal_actual_id'] ?>, <?= $eq['solicitud_id'] ?>)">
-                        📦 Crear Movimiento
-                    </button>
+<body>
+    <?php echo renderMenuLateral($cargoOperario); ?>
+    <div class="main-container">
+        <div class="sub-container">
+            <?php echo renderHeader($usuario, false, 'Gestión de Movimientos de Equipos'); ?>
+            <div class="page-header">
+                <h1 class="page-title">🚚 Gestión de Movimientos de Equipos</h1>
+                <div>
+                    <?php if (tienePermiso('movimientos_equipos', 'crear_movimiento', $cargoOperario)): ?>
+                        <button class="btn btn-primary" onclick="abrirNuevoMovimiento()">
+                            ➕ Nuevo Movimiento
+                        </button>
+                    <?php endif; ?>
+                    <a href="equipos_lista.php" class="btn btn-secondary ml-1">← Volver</a>
                 </div>
             </div>
-            <?php endforeach; ?>
-        </div>
-        <?php endif; ?>
 
-        <div class="table-container">
-            <div class="table-responsive">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Estado</th>
-                            <th>Equipo</th>
-                            <th>Origen</th>
-                            <th>Destino</th>
-                            <th>Fecha Programada</th>
-                            <?php if ($cargoOperario == 35): ?>
-                            <th>Programado Por</th>
-                            <?php endif; ?>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($movimientos as $mov): ?>
-                        <tr class="movimiento-row-<?= $mov['estado'] ?>">
-                            <td><?= $mov['id'] ?></td>
-                            <td>
-                                <?php if ($mov['estado'] == 'agendado'): ?>
-                                    <span class="badge badge-warning">Agendado</span>
-                                <?php else: ?>
-                                    <span class="badge badge-success">Finalizado</span>
+            <?php if (tienePermiso('movimientos_equipos', 'crear_movimiento', $cargoOperario) && !empty($equiposConSolicitud)): ?>
+                <div class="solicitudes-pendientes">
+                    <h3 style="color: #856404; margin-bottom: 15px;">⚠️ Equipos con Solicitud de Mantenimiento Pendiente
+                    </h3>
+                    <p style="margin-bottom: 15px;">Los siguientes equipos tienen solicitudes de mantenimiento sin
+                        movimiento programado:</p>
+
+                    <?php foreach ($equiposConSolicitud as $eq): ?>
+                        <div class="solicitud-card">
+                            <div class="d-flex justify-between align-center">
+                                <div>
+                                    <strong>Equipo:</strong> <?= htmlspecialchars($eq['codigo']) ?> -
+                                    <?= htmlspecialchars($eq['marca'] . ' ' . $eq['modelo']) ?><br>
+                                    <strong>Ubicación:</strong> <?= htmlspecialchars($eq['sucursal_actual']) ?><br>
+                                    <strong>Problema:</strong>
+                                    <?= htmlspecialchars(substr($eq['descripcion_problema'], 0, 100)) ?>...
+                                </div>
+                                <button class="btn btn-warning"
+                                    onclick="abrirMovimientoConSolicitud(<?= $eq['equipo_id'] ?>, <?= $eq['sucursal_actual_id'] ?>, <?= $eq['solicitud_id'] ?>)">
+                                    📦 Crear Movimiento
+                                </button>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
+
+            <div class="table-container">
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Estado</th>
+                                <th>Equipo</th>
+                                <th>Origen</th>
+                                <th>Destino</th>
+                                <th>Fecha Programada</th>
+                                <?php if (tienePermiso('movimientos_equipos', 'crear_movimiento', $cargoOperario)): ?>
+                                    <th>Programado Por</th>
                                 <?php endif; ?>
-                            </td>
-                            <td>
-                                <strong><?= htmlspecialchars($mov['codigo']) ?></strong><br>
-                                <small><?= htmlspecialchars($mov['marca'] . ' ' . $mov['modelo']) ?></small>
-                            </td>
-                            <td><?= htmlspecialchars($mov['sucursal_origen']) ?></td>
-                            <td><?= htmlspecialchars($mov['sucursal_destino']) ?></td>
-                            <td>
-                                <?= date('d/m/Y', strtotime($mov['fecha_programada'])) ?>
-                                <?php if ($mov['fecha_realizada']): ?>
-                                    <br><small>Realizado: <?= date('d/m/Y', strtotime($mov['fecha_realizada'])) ?></small>
-                                <?php endif; ?>
-                            </td>
-                            <?php if ($cargoOperario == 35): ?>
-                            <td><?= htmlspecialchars($mov['programado_nombre'] . ' ' . $mov['programado_apellido']) ?></td>
-                            <?php endif; ?>
-                            <td>
-                                <?php if ($mov['estado'] == 'agendado'): ?>
-                                    <?php if ($cargoOperario == 5 || $cargoOperario == 43): ?>
-                                    <button class="btn btn-sm btn-success" onclick="finalizarMovimiento(<?= $mov['id'] ?>)">
-                                        ✓ Finalizar
-                                    </button>
-                                    <?php else: ?>
-                                    <span class="badge badge-warning">Pendiente</span>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($movimientos as $mov): ?>
+                                <tr class="movimiento-row-<?= $mov['estado'] ?>">
+                                    <td><?= $mov['id'] ?></td>
+                                    <td>
+                                        <?php if ($mov['estado'] == 'agendado'): ?>
+                                            <span class="badge badge-warning">Agendado</span>
+                                        <?php else: ?>
+                                            <span class="badge badge-success">Finalizado</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td>
+                                        <strong><?= htmlspecialchars($mov['codigo']) ?></strong><br>
+                                        <small><?= htmlspecialchars($mov['marca'] . ' ' . $mov['modelo']) ?></small>
+                                    </td>
+                                    <td><?= htmlspecialchars($mov['sucursal_origen']) ?></td>
+                                    <td><?= htmlspecialchars($mov['sucursal_destino']) ?></td>
+                                    <td>
+                                        <?= date('d/m/Y', strtotime($mov['fecha_programada'])) ?>
+                                        <?php if ($mov['fecha_realizada']): ?>
+                                            <br><small>Realizado:
+                                                <?= date('d/m/Y', strtotime($mov['fecha_realizada'])) ?></small>
+                                        <?php endif; ?>
+                                    </td>
+                                    <?php if ($cargoOperario == 35): ?>
+                                        <td><?= htmlspecialchars($mov['programado_nombre'] . ' ' . $mov['programado_apellido']) ?>
+                                        </td>
                                     <?php endif; ?>
-                                <?php else: ?>
-                                    <span class="badge badge-secondary">Completado</span>
-                                <?php endif; ?>
-                            </td>
-                        </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
+                                    <td>
+                                        <?php if ($mov['estado'] == 'agendado'): ?>
+                                            <?php if (tienePermiso('movimientos_equipos', 'finalizar_movimiento', $cargoOperario)): ?>
+                                                <button class="btn btn-sm btn-success"
+                                                    onclick="finalizarMovimiento(<?= $mov['id'] ?>)">
+                                                    ✓ Finalizar
+                                                </button>
+                                            <?php else: ?>
+                                                <span class="badge badge-warning">Pendiente</span>
+                                            <?php endif; ?>
+                                        <?php else: ?>
+                                            <span class="badge badge-secondary">Completado</span>
+                                        <?php endif; ?>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
@@ -252,18 +275,21 @@ $equiposEnCentral = $db->fetchAll("
             <div class="modal-body">
                 <form id="form-movimiento" onsubmit="guardarMovimiento(event)">
                     <input type="hidden" id="mov-solicitud-id" name="solicitud_id">
-                    
+
                     <div class="form-group">
                         <label class="form-label required">Equipo a Mover</label>
-                        <input type="text" id="mov-equipo-nombre" class="form-control" readonly style="background: #f0f0f0; display: none;">
-                        <select id="mov-equipo-select" name="equipo_id" class="form-control" onchange="actualizarOrigenDesdeSelect()">
+                        <input type="text" id="mov-equipo-nombre" class="form-control" readonly
+                            style="background: #f0f0f0; display: none;">
+                        <select id="mov-equipo-select" name="equipo_id" class="form-control"
+                            onchange="actualizarOrigenDesdeSelect()">
                             <option value="">Seleccione equipo...</option>
                         </select>
                     </div>
 
                     <div class="form-group">
                         <label class="form-label">Sucursal Origen (Ubicación Actual)</label>
-                        <input type="text" id="mov-origen-nombre" class="form-control" readonly style="background: #f0f0f0;">
+                        <input type="text" id="mov-origen-nombre" class="form-control" readonly
+                            style="background: #f0f0f0;">
                         <input type="hidden" id="mov-origen" name="sucursal_origen_id">
                     </div>
 
@@ -272,7 +298,7 @@ $equiposEnCentral = $db->fetchAll("
                         <select name="sucursal_destino_id" id="mov-destino" class="form-control" required>
                             <option value="">Seleccione destino...</option>
                             <?php foreach ($todasSucursales as $suc): ?>
-                            <option value="<?= $suc['codigo'] ?>"><?= htmlspecialchars($suc['nombre']) ?></option>
+                                <option value="<?= $suc['codigo'] ?>"><?= htmlspecialchars($suc['nombre']) ?></option>
                             <?php endforeach; ?>
                         </select>
                     </div>
@@ -303,9 +329,9 @@ $equiposEnCentral = $db->fetchAll("
                                 <select name="equipo_cambio_id" id="equipo-cambio" class="form-control">
                                     <option value="">Seleccione equipo...</option>
                                     <?php foreach ($equiposEnCentral as $eq): ?>
-                                    <option value="<?= $eq['id'] ?>">
-                                        <?= htmlspecialchars($eq['codigo'] . ' - ' . $eq['marca'] . ' ' . $eq['modelo']) ?>
-                                    </option>
+                                        <option value="<?= $eq['id'] ?>">
+                                            <?= htmlspecialchars($eq['codigo'] . ' - ' . $eq['marca'] . ' ' . $eq['modelo']) ?>
+                                        </option>
                                     <?php endforeach; ?>
                                 </select>
                             </div>
@@ -344,13 +370,13 @@ $equiposEnCentral = $db->fetchAll("
             document.getElementById('form-movimiento').reset();
             document.getElementById('mov-solicitud-id').value = '';
             document.getElementById('opcion-cambio').style.display = 'none';
-            
+
             // Habilitar selector de equipos
             const equipoNombre = document.getElementById('mov-equipo-nombre');
             const equipoSelect = document.getElementById('mov-equipo-select');
             equipoNombre.style.display = 'none';
             equipoSelect.style.display = 'block';
-            
+
             // Cargar equipos
             equipoSelect.innerHTML = '<option value="">Seleccione equipo...</option>';
             equiposData.forEach(eq => {
@@ -361,14 +387,14 @@ $equiposEnCentral = $db->fetchAll("
                 option.dataset.ubicacionNombre = eq.ubicacion_nombre;
                 equipoSelect.appendChild(option);
             });
-            
+
             openModal('modal-movimiento');
         }
 
         function actualizarOrigenDesdeSelect() {
             const select = document.getElementById('mov-equipo-select');
             const option = select.options[select.selectedIndex];
-            
+
             if (option.value) {
                 document.getElementById('mov-origen').value = option.dataset.ubicacionCodigo || '';
                 document.getElementById('mov-origen-nombre').value = option.dataset.ubicacionNombre || 'Sin ubicación';
@@ -379,13 +405,13 @@ $equiposEnCentral = $db->fetchAll("
             document.getElementById('form-movimiento').reset();
             document.getElementById('mov-solicitud-id').value = solicitudId;
             document.getElementById('opcion-cambio').style.display = 'block';
-            
+
             // Deshabilitar selector, mostrar campo bloqueado
             const equipoNombre = document.getElementById('mov-equipo-nombre');
             const equipoSelect = document.getElementById('mov-equipo-select');
             equipoNombre.style.display = 'block';
             equipoSelect.style.display = 'none';
-            
+
             // Buscar datos del equipo
             const equipo = equiposData.find(eq => eq.id == equipoId);
             if (equipo) {
@@ -399,15 +425,15 @@ $equiposEnCentral = $db->fetchAll("
                     document.getElementById('form-movimiento').appendChild(hiddenInput);
                 }
                 hiddenInput.value = equipoId;
-                
+
                 document.getElementById('mov-equipo-nombre').value = `${equipo.codigo} - ${equipo.marca} ${equipo.modelo}`;
                 document.getElementById('mov-origen').value = equipo.ubicacion_codigo;
                 document.getElementById('mov-origen-nombre').value = equipo.ubicacion_nombre || 'Sin ubicación';
             }
-            
+
             // Destino por defecto: central (código 0)
             document.getElementById('mov-destino').value = '0';
-            
+
             openModal('modal-movimiento');
         }
 
@@ -415,7 +441,7 @@ $equiposEnCentral = $db->fetchAll("
             const checked = document.getElementById('enviar-cambio').checked;
             const container = document.getElementById('equipo-cambio-container');
             container.style.display = checked ? 'block' : 'none';
-            
+
             if (!checked) {
                 document.getElementById('equipo-cambio').value = '';
             }
@@ -423,60 +449,61 @@ $equiposEnCentral = $db->fetchAll("
 
         function guardarMovimiento(e) {
             e.preventDefault();
-            
+
             const formData = new FormData(e.target);
             showLoading(true);
-            
+
             fetch('ajax/equipos_movimiento_crear.php', {
                 method: 'POST',
                 body: formData
             })
-            .then(response => response.json())
-            .then(result => {
-                showLoading(false);
-                if (result.success) {
-                    showAlert(result.message, 'success');
-                    closeModal('modal-movimiento');
-                    setTimeout(() => location.reload(), 1500);
-                } else {
-                    showAlert(result.message || 'Error al crear movimiento', 'danger');
-                }
-            })
-            .catch(error => {
-                showLoading(false);
-                console.error('Error:', error);
-                showAlert('Error al procesar la solicitud', 'danger');
-            });
+                .then(response => response.json())
+                .then(result => {
+                    showLoading(false);
+                    if (result.success) {
+                        showAlert(result.message, 'success');
+                        closeModal('modal-movimiento');
+                        setTimeout(() => location.reload(), 1500);
+                    } else {
+                        showAlert(result.message || 'Error al crear movimiento', 'danger');
+                    }
+                })
+                .catch(error => {
+                    showLoading(false);
+                    console.error('Error:', error);
+                    showAlert('Error al procesar la solicitud', 'danger');
+                });
         }
 
         function finalizarMovimiento(movimientoId) {
             if (!confirm('¿Confirmar que el movimiento se ha realizado?')) {
                 return;
             }
-            
+
             showLoading(true);
-            
+
             fetch('ajax/equipos_movimiento_finalizar.php', {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({movimiento_id: movimientoId})
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ movimiento_id: movimientoId })
             })
-            .then(response => response.json())
-            .then(result => {
-                showLoading(false);
-                if (result.success) {
-                    showAlert('Movimiento finalizado', 'success');
-                    setTimeout(() => location.reload(), 1000);
-                } else {
-                    showAlert(result.message || 'Error al finalizar movimiento', 'danger');
-                }
-            })
-            .catch(error => {
-                showLoading(false);
-                console.error('Error:', error);
-                showAlert('Error al procesar la solicitud', 'danger');
-            });
+                .then(response => response.json())
+                .then(result => {
+                    showLoading(false);
+                    if (result.success) {
+                        showAlert('Movimiento finalizado', 'success');
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        showAlert(result.message || 'Error al finalizar movimiento', 'danger');
+                    }
+                })
+                .catch(error => {
+                    showLoading(false);
+                    console.error('Error:', error);
+                    showAlert('Error al procesar la solicitud', 'danger');
+                });
         }
     </script>
 </body>
+
 </html>

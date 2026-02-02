@@ -1,15 +1,17 @@
 <?php
-require_once '../../includes/auth.php';
+require_once '../../core/auth/auth.php';
 require_once '../../includes/funciones.php';
+require_once '../../core/permissions/permissions.php';
+require_once '../../includes/header_universal.php';
+require_once '../../includes/menu_lateral.php';
 require_once __DIR__ . '/config/database.php';
 
 $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
 
-// Solo líder de infraestructura
-if ($cargoOperario != 35) {
-    header('Location: equipos_lista.php');
-    exit;
+if (!tienePermiso('solicitudes_mantenimiento', 'vista', $cargoOperario)) {
+    header('Location: /login.php');
+    exit();
 }
 
 // Obtener todas las solicitudes
@@ -37,99 +39,121 @@ $solicitudes = $db->fetchAll("
 ?>
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestión de Solicitudes - Sistema de Mantenimiento</title>
+    <link rel="stylesheet" href="/core/assets/css/global_tools.css?v=<?php echo mt_rand(1, 10000); ?>">
     <link rel="stylesheet" href="css/equipos_general.css">
 </head>
-<body>
-    <div class="container-main">
-        <div class="page-header">
-            <h1 class="page-title">📋 Gestión de Solicitudes de Mantenimiento</h1>
-            <a href="equipos_lista.php" class="btn btn-secondary">← Volver</a>
-        </div>
 
-        <div class="table-container">
-            <div class="table-responsive">
-                <table id="tabla-solicitudes">
-                    <thead>
-                        <tr>
-                            <th class="table-filter-header">
-                                ID
-                                <span class="filter-icon" data-column="0">▼</span>
-                                <div class="filter-dropdown">
-                                    <div class="filter-controls">
-                                        <div class="filter-sort-btns">
-                                            <button class="btn btn-sm btn-secondary" onclick="sortTable(document.getElementById('tabla-solicitudes'), 0, 'asc')">↑ ASC</button>
-                                            <button class="btn btn-sm btn-secondary" onclick="sortTable(document.getElementById('tabla-solicitudes'), 0, 'desc')">↓ DESC</button>
+<body>
+    <?php echo renderMenuLateral($cargoOperario); ?>
+    <div class="main-container">
+        <div class="sub-container">
+            <?php echo renderHeader($usuario, false, 'Gestión de Solicitudes de Mantenimiento'); ?>
+            <div class="page-header">
+                <h1 class="page-title">📋 Gestión de Solicitudes de Mantenimiento</h1>
+                <a href="equipos_lista.php" class="btn btn-secondary">← Volver</a>
+            </div>
+
+            <div class="table-container">
+                <div class="table-responsive">
+                    <table id="tabla-solicitudes">
+                        <thead>
+                            <tr>
+                                <th class="table-filter-header">
+                                    ID
+                                    <span class="filter-icon" data-column="0">▼</span>
+                                    <div class="filter-dropdown">
+                                        <div class="filter-controls">
+                                            <div class="filter-sort-btns">
+                                                <button class="btn btn-sm btn-secondary"
+                                                    onclick="sortTable(document.getElementById('tabla-solicitudes'), 0, 'asc')">↑
+                                                    ASC</button>
+                                                <button class="btn btn-sm btn-secondary"
+                                                    onclick="sortTable(document.getElementById('tabla-solicitudes'), 0, 'desc')">↓
+                                                    DESC</button>
+                                            </div>
+                                            <button class="btn btn-sm btn-danger filter-clear-btn"
+                                                onclick="clearFilter(this.closest('.filter-dropdown'), document.getElementById('tabla-solicitudes'), 0)">Limpiar</button>
+                                            <input type="text" class="filter-search" placeholder="Buscar..."
+                                                oninput="searchFilterOptions(this)">
                                         </div>
-                                        <button class="btn btn-sm btn-danger filter-clear-btn" onclick="clearFilter(this.closest('.filter-dropdown'), document.getElementById('tabla-solicitudes'), 0)">Limpiar</button>
-                                        <input type="text" class="filter-search" placeholder="Buscar..." oninput="searchFilterOptions(this)">
+                                        <div class="filter-options"></div>
                                     </div>
-                                    <div class="filter-options"></div>
-                                </div>
-                            </th>
-                            <th class="table-filter-header">
-                                Estado
-                                <span class="filter-icon" data-column="1">▼</span>
-                                <div class="filter-dropdown">
-                                    <div class="filter-controls">
-                                        <div class="filter-sort-btns">
-                                            <button class="btn btn-sm btn-secondary" onclick="sortTable(document.getElementById('tabla-solicitudes'), 1, 'asc')">↑ ASC</button>
-                                            <button class="btn btn-sm btn-secondary" onclick="sortTable(document.getElementById('tabla-solicitudes'), 1, 'desc')">↓ DESC</button>
+                                </th>
+                                <th class="table-filter-header">
+                                    Estado
+                                    <span class="filter-icon" data-column="1">▼</span>
+                                    <div class="filter-dropdown">
+                                        <div class="filter-controls">
+                                            <div class="filter-sort-btns">
+                                                <button class="btn btn-sm btn-secondary"
+                                                    onclick="sortTable(document.getElementById('tabla-solicitudes'), 1, 'asc')">↑
+                                                    ASC</button>
+                                                <button class="btn btn-sm btn-secondary"
+                                                    onclick="sortTable(document.getElementById('tabla-solicitudes'), 1, 'desc')">↓
+                                                    DESC</button>
+                                            </div>
+                                            <button class="btn btn-sm btn-danger filter-clear-btn"
+                                                onclick="clearFilter(this.closest('.filter-dropdown'), document.getElementById('tabla-solicitudes'), 1)">Limpiar</button>
+                                            <input type="text" class="filter-search" placeholder="Buscar..."
+                                                oninput="searchFilterOptions(this)">
                                         </div>
-                                        <button class="btn btn-sm btn-danger filter-clear-btn" onclick="clearFilter(this.closest('.filter-dropdown'), document.getElementById('tabla-solicitudes'), 1)">Limpiar</button>
-                                        <input type="text" class="filter-search" placeholder="Buscar..." oninput="searchFilterOptions(this)">
+                                        <div class="filter-options"></div>
                                     </div>
-                                    <div class="filter-options"></div>
-                                </div>
-                            </th>
-                            <th>Equipo</th>
-                            <th>Sucursal</th>
-                            <th>Fecha Solicitud</th>
-                            <th>Solicitante</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($solicitudes as $sol): ?>
-                        <tr>
-                            <td><?= $sol['id'] ?></td>
-                            <td>
-                                <?php if ($sol['estado'] == 'solicitado'): ?>
-                                    <span class="badge badge-warning">Pendiente</span>
-                                <?php else: ?>
-                                    <span class="badge badge-success">Finalizado</span>
-                                <?php endif; ?>
-                            </td>
-                            <td>
-                                <strong><?= htmlspecialchars($sol['codigo']) ?></strong><br>
-                                <small><?= htmlspecialchars($sol['marca'] . ' ' . $sol['modelo']) ?></small>
-                            </td>
-                            <td><?= htmlspecialchars($sol['sucursal']) ?></td>
-                            <td><?= date('d/m/Y H:i', strtotime($sol['fecha_solicitud'])) ?></td>
-                            <td><?= htmlspecialchars($sol['solicitante_nombre'] . ' ' . $sol['solicitante_apellido']) ?></td>
-                            <td>
-                                <button class="btn btn-sm btn-primary" onclick="verDetalle(<?= $sol['id'] ?>)">
-                                    👁️ Ver
-                                </button>
-                                <?php if ($sol['estado'] == 'solicitado'): ?>
-                                <button class="btn btn-sm btn-success" onclick="finalizar(<?= $sol['id'] ?>)">
-                                    ✓ Finalizar
-                                </button>
-                                <a href="equipos_calendario.php" class="btn btn-sm btn-warning" title="Programar Mantenimiento">
-                                    📅
-                                </a>
-                                <a href="equipos_movimientos.php?equipo_id=<?= $sol['equipo_id'] ?>" class="btn btn-sm btn-info" title="Gestionar Movimiento">
-                                    🚚
-                                </a>
-                                <?php endif; ?>
-                            </td>
-                        </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
+                                </th>
+                                <th>Equipo</th>
+                                <th>Sucursal</th>
+                                <th>Fecha Solicitud</th>
+                                <th>Solicitante</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($solicitudes as $sol): ?>
+                                <tr>
+                                    <td><?= $sol['id'] ?></td>
+                                    <td>
+                                        <?php if ($sol['estado'] == 'solicitado'): ?>
+                                            <span class="badge badge-warning">Pendiente</span>
+                                        <?php else: ?>
+                                            <span class="badge badge-success">Finalizado</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td>
+                                        <strong><?= htmlspecialchars($sol['codigo']) ?></strong><br>
+                                        <small><?= htmlspecialchars($sol['marca'] . ' ' . $sol['modelo']) ?></small>
+                                    </td>
+                                    <td><?= htmlspecialchars($sol['sucursal']) ?></td>
+                                    <td><?= date('d/m/Y H:i', strtotime($sol['fecha_solicitud'])) ?></td>
+                                    <td><?= htmlspecialchars($sol['solicitante_nombre'] . ' ' . $sol['solicitante_apellido']) ?>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm btn-primary" onclick="verDetalle(<?= $sol['id'] ?>)">
+                                            👁️ Ver
+                                        </button>
+                                        <?php if ($sol['estado'] == 'solicitado'): ?>
+                                            <button class="btn btn-sm btn-success" onclick="finalizar(<?= $sol['id'] ?>)">
+                                                ✓ Finalizar
+                                            </button>
+                                            <a href="equipos_calendario.php" class="btn btn-sm btn-warning"
+                                                title="Programar Mantenimiento">
+                                                📅
+                                            </a>
+                                            <a href="equipos_movimientos.php?equipo_id=<?= $sol['equipo_id'] ?>"
+                                                class="btn btn-sm btn-info" title="Gestionar Movimiento">
+                                                🚚
+                                            </a>
+                                        <?php endif; ?>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
@@ -163,11 +187,11 @@ $solicitudes = $db->fetchAll("
             <div class="modal-body">
                 <form id="form-finalizar" onsubmit="guardarFinalizacion(event)">
                     <input type="hidden" id="finalizar-solicitud-id" name="solicitud_id">
-                    
+
                     <div class="form-group">
                         <label class="form-label">Observaciones de Finalización</label>
-                        <textarea name="observaciones" class="form-control" rows="4" 
-                                  placeholder="Indique si se realizó mantenimiento en sitio, se envió equipo de cambio, etc."></textarea>
+                        <textarea name="observaciones" class="form-control" rows="4"
+                            placeholder="Indique si se realizó mantenimiento en sitio, se envió equipo de cambio, etc."></textarea>
                     </div>
                 </form>
             </div>
@@ -184,20 +208,20 @@ $solicitudes = $db->fetchAll("
     <script>
         function verDetalle(solicitudId) {
             openModal('modal-detalle');
-            
+
             fetch('ajax/equipos_datos.php?accion=detalle_solicitud&id=' + solicitudId)
                 .then(response => response.json())
                 .then(result => {
                     if (result.success) {
                         mostrarDetalle(result.data);
                     } else {
-                        document.getElementById('detalle-content').innerHTML = 
+                        document.getElementById('detalle-content').innerHTML =
                             '<p class="alert alert-danger">Error al cargar detalle</p>';
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    document.getElementById('detalle-content').innerHTML = 
+                    document.getElementById('detalle-content').innerHTML =
                         '<p class="alert alert-danger">Error al cargar detalle</p>';
                 });
         }
@@ -248,7 +272,7 @@ $solicitudes = $db->fetchAll("
                     </div>
                 ` : ''}
             `;
-            
+
             document.getElementById('detalle-content').innerHTML = html;
         }
 
@@ -259,32 +283,33 @@ $solicitudes = $db->fetchAll("
 
         function guardarFinalizacion(e) {
             e.preventDefault();
-            
+
             const formData = new FormData(e.target);
-            
+
             showLoading(true);
-            
+
             fetch('ajax/equipos_solicitud_finalizar.php', {
                 method: 'POST',
                 body: formData
             })
-            .then(response => response.json())
-            .then(result => {
-                showLoading(false);
-                if (result.success) {
-                    showAlert('Solicitud finalizada exitosamente', 'success');
-                    closeModal('modal-finalizar');
-                    setTimeout(() => location.reload(), 1500);
-                } else {
-                    showAlert(result.message || 'Error al finalizar solicitud', 'danger');
-                }
-            })
-            .catch(error => {
-                showLoading(false);
-                console.error('Error:', error);
-                showAlert('Error al procesar la solicitud', 'danger');
-            });
+                .then(response => response.json())
+                .then(result => {
+                    showLoading(false);
+                    if (result.success) {
+                        showAlert('Solicitud finalizada exitosamente', 'success');
+                        closeModal('modal-finalizar');
+                        setTimeout(() => location.reload(), 1500);
+                    } else {
+                        showAlert(result.message || 'Error al finalizar solicitud', 'danger');
+                    }
+                })
+                .catch(error => {
+                    showLoading(false);
+                    console.error('Error:', error);
+                    showAlert('Error al procesar la solicitud', 'danger');
+                });
         }
     </script>
 </body>
+
 </html>
