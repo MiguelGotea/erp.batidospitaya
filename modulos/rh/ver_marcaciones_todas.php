@@ -2152,120 +2152,116 @@ function verificarTardanzaYaRegistrada(
                 };
             </script>
 
-            <!-- Modal Guía de Reglas -->
-            <div class="modal fade" id="modalGuiaReglas" tabindex="-1" aria-labelledby="modalGuiaReglasLabel"
-                aria-hidden="true">
-                <div class="modal-dialog modal-lg">
-                    <div class="modal-content border-0 shadow">
-                        <div class="modal-header bg-primary text-white">
-                            <h5 class="modal-title" id="modalGuiaReglasLabel">
-                                <i class="fas fa-book-reader me-2"></i> Guía de Reglas y Lógica del Sistema
-                            </h5>
-                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-                                aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body p-4">
-                            <div class="row">
-                                <div class="col-md-6 mb-4">
-                                    <div class="card h-100 border-0 bg-light">
-                                        <div class="card-body">
-                                            <h6 class="text-primary border-bottom pb-2 fw-bold">
-                                                <i class="fas fa-clock me-2"></i> Tardanzas
-                                            </h6>
-                                            <p class="small text-muted mb-0">
-                                                Se reporta como <strong>tardanza</strong> cuando la marcación de entrada
-                                                ocurre
-                                                <strong>más de 1 minuto</strong> después de la hora programada.
-                                                <br><br>
-                                                Un día en curso (hoy) no muestra incidencias hasta que el día termina.
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-6 mb-4">
-                                    <div class="card h-100 border-0 bg-light">
-                                        <div class="card-body">
-                                            <h6 class="text-danger border-bottom pb-2 fw-bold">
-                                                <i class="fas fa-user-slash me-2"></i> Faltas
-                                            </h6>
-                                            <p class="small text-muted mb-0">
-                                                El sistema detecta una <strong>falta</strong> si no hay marcación en un
-                                                día programado
-                                                cuyo estado esté configurado como <strong>"Con Marcación"</strong> (ej:
-                                                Activo).
-                                                <br><br>
-                                                Estados como "Libre" o "Subsidio" no generan faltas.
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-6 mb-4">
-                                    <div class="card h-100 border-0 bg-light">
-                                        <div class="card-body">
-                                            <h6 class="text-info border-bottom pb-2 fw-bold">
-                                                <i class="fas fa-users-cog me-2"></i> Equipo de Trabajo
-                                            </h6>
-                                            <p class="small text-muted mb-0">
-                                                Los líderes ven a los colaboradores asignados a su sucursal de equipo.
-                                                <br><br>
-                                                Las marcaciones son válidas sin importar en qué sucursal física se
-                                                realicen, siempre que coincidan con el día programado.
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-6 mb-4">
-                                    <div class="card h-100 border-0 bg-light">
-                                        <div class="card-body">
-                                            <h6 class="text-secondary border-bottom pb-2 fw-bold">
-                                                <i class="fas fa-map-marker-alt me-2"></i> Sucursal Externa
-                                            </h6>
-                                            <p class="small text-muted mb-0">
-                                                Si un colaborador marca en una sucursal distinta a la programada, se
-                                                mostrará un
-                                                <strong>tag gris</strong> bajo el horario indicando el nombre del lugar
-                                                exacto.
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-12">
-                                    <div class="card border-0 bg-light">
-                                        <div class="card-body">
-                                            <h6 class="text-dark border-bottom pb-2 fw-bold">
-                                                <i class="fas fa-stream me-2"></i> Semáforo (Status Tracker)
-                                            </h6>
-                                            <div class="d-flex justify-content-between mt-2">
-                                                <div class="text-center">
-                                                    <span class="badge bg-secondary mb-1">Gris</span>
-                                                    <div class="small text-muted">Pendiente de Revisión</div>
-                                                </div>
-                                                <div class="text-center">
-                                                    <span class="badge bg-success mb-1">Verde</span>
-                                                    <div class="small text-muted">Aprobado / Justificado</div>
-                                                </div>
-                                                <div class="text-center">
-                                                    <span class="badge bg-danger mb-1">Rojo</span>
-                                                    <div class="small text-muted">Rechazado / No Válido</div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="modal-footer border-0">
-                            <button type="button" class="btn btn-primary px-4"
-                                data-bs-dismiss="modal">Entendido</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
+
 
             <!-- Custom filter system -->
             <script src="js/ver_marcaciones_todas.js?v=<?php echo time(); ?>"></script>
         </div>
     </div>
+
+    <!-- Modal Guía de Reglas -->
+    <div class="modal fade" id="modalGuiaReglas" tabindex="-1" aria-labelledby="modalGuiaReglasLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="modalGuiaReglasLabel">
+                        <i class="fas fa-book-reader me-2"></i> Guía de Reglas y Lógica del Sistema
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100 border-0 bg-light">
+                                <div class="card-body">
+                                    <h6 class="text-primary border-bottom pb-2 fw-bold">
+                                        <i class="fas fa-clock me-2"></i> Tardanzas
+                                    </h6>
+                                    <p class="small text-muted mb-0">
+                                        Se reporta como <strong>tardanza</strong> cuando la marcación de entrada ocurre
+                                        <strong>más de 1 minuto</strong> después de la hora programada.
+                                        <br><br>
+                                        Un día en curso (hoy) no muestra incidencias hasta que el día termina.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100 border-0 bg-light">
+                                <div class="card-body">
+                                    <h6 class="text-danger border-bottom pb-2 fw-bold">
+                                        <i class="fas fa-user-slash me-2"></i> Faltas
+                                    </h6>
+                                    <p class="small text-muted mb-0">
+                                        El sistema detecta una <strong>falta</strong> si no hay marcación en un día
+                                        programado
+                                        cuyo estado esté configurado como <strong>"Con Marcación"</strong> (ej: Activo).
+                                        <br><br>
+                                        Estados como "Libre" o "Subsidio" no generan faltas.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100 border-0 bg-light">
+                                <div class="card-body">
+                                    <h6 class="text-info border-bottom pb-2 fw-bold">
+                                        <i class="fas fa-users-cog me-2"></i> Equipo de Trabajo
+                                    </h6>
+                                    <p class="small text-muted mb-0">
+                                        Los líderes ven a los colaboradores asignados a su sucursal de equipo.
+                                        <br><br>
+                                        Las marcaciones son válidas sin importar en qué sucursal física se realicen,
+                                        siempre que coincidan con el día programado.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100 border-0 bg-light">
+                                <div class="card-body">
+                                    <h6 class="text-secondary border-bottom pb-2 fw-bold">
+                                        <i class="fas fa-map-marker-alt me-2"></i> Sucursal Externa
+                                    </h6>
+                                    <p class="small text-muted mb-0">
+                                        Si un colaborador marca en una sucursal distinta a la programada, se mostrará un
+                                        <strong>tag gris</strong> bajo el horario indicando el nombre del lugar exacto.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="card border-0 bg-light">
+                                <div class="card-body">
+                                    <h6 class="text-dark border-bottom pb-2 fw-bold">
+                                        <i class="fas fa-stream me-2"></i> Semáforo (Status Tracker)
+                                    </h6>
+                                    <div class="d-flex justify-content-between mt-2">
+                                        <div class="text-center">
+                                            <span class="badge bg-secondary mb-1">Gris</span>
+                                            <div class="small text-muted">Pendiente de Revisión</div>
+                                        </div>
+                                        <div class="text-center">
+                                            <span class="badge bg-success mb-1">Verde</span>
+                                            <div class="small text-muted">Aprobado / Justificado</div>
+                                        </div>
+                                        <div class="text-center">
+                                            <span class="badge bg-danger mb-1">Rojo</span>
+                                            <div class="small text-muted">Rechazado / No Válido</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-primary px-4" data-bs-dismiss="modal">Entendido</button>
+                </div>
+            </div>
+        </div>
     </div>
 </body>
 
