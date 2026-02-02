@@ -359,10 +359,10 @@ try {
                     $tieneIncidencia = ($esTardanza || $esFalta);
                 }
 
-                if ($incidenciasFiltro === 'con_incidencia') {
-                    return $tieneIncidencia;
-                } else if ($incidenciasFiltro === 'sin_incidencia') {
-                    return !$tieneIncidencia;
+                if ($incidenciasFiltro === 'tardanzas') {
+                    return ($esTardanza || $r['tardanza_solicitada']);
+                } else if ($incidenciasFiltro === 'faltas') {
+                    return ($esFalta || $r['falta_solicitada']);
                 }
                 return true;
             });

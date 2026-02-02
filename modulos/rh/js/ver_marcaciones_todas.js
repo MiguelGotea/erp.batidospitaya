@@ -79,19 +79,16 @@ function renderizarTabla(datos) {
 
     // Aplicar filtro de incidencias localmente si es necesario
     let datosFiltrados = datos;
-    if (filtroIncidencias === 'con_incidencia') {
+    if (filtroIncidencias === 'tardanzas') {
         datosFiltrados = datos.filter(row => {
             const difMin = calcularMinutosDiferencia(row.hora_entrada_programada, row.hora_ingreso);
             const tieneTardanza = (row.hora_entrada_programada && row.hora_ingreso && difMin > 1);
-            const tieneFalta = (!row.tiene_marcacion && row.tiene_horario && ['Activo', 'Otra.Tienda'].includes(row.estado_dia));
-            return tieneTardanza || tieneFalta || row.tardanza_solicitada || row.falta_solicitada;
+            return tieneTardanza || row.tardanza_solicitada;
         });
-    } else if (filtroIncidencias === 'sin_incidencia') {
+    } else if (filtroIncidencias === 'faltas') {
         datosFiltrados = datos.filter(row => {
-            const difMin = calcularMinutosDiferencia(row.hora_entrada_programada, row.hora_ingreso);
-            const tieneTardanza = (row.hora_entrada_programada && row.hora_ingreso && difMin > 1);
-            const tieneFalta = (!row.tiene_marcacion && row.tiene_horario && ['Activo', 'Otra.Tienda'].includes(row.estado_dia));
-            return !tieneTardanza && !tieneFalta && !row.tardanza_solicitada && !row.falta_solicitada;
+            const tieneFalta = (!row.tiene_marcacion && row.tiene_horario && ['Activo', 'Otra.Tienda', 'Vacaciones'].includes(row.estado_dia));
+            return tieneFalta || row.falta_solicitada;
         });
     }
 
@@ -799,7 +796,7 @@ function verDetalle(codOperario, fecha) {
     alert(`Ver detalle de marcación:\nOperario: ${codOperario}\nFecha: ${fecha}`);
 }
 
-// Función para establecer el filtro de incidencias (Tri-state)
+// Función para establecer el filtro de incidencias (Tri-state discriminado)
 function setFiltroIncidencias(estado) {
     filtroIncidencias = estado;
 
@@ -808,10 +805,10 @@ function setFiltroIncidencias(estado) {
 
     if (estado === 'todos') {
         $('.tri-btn.neutral').addClass('active');
-    } else if (estado === 'con_incidencia') {
-        $('.tri-btn.positive').addClass('active');
-    } else if (estado === 'sin_incidencia') {
-        $('.tri-btn.negative').addClass('active');
+    } else if (estado === 'tardanzas') {
+        $('.tri-btn.warning').addClass('active');
+    } else if (estado === 'faltas') {
+        $('.tri-btn.danger').addClass('active');
     }
 
     // Reiniciar a la primera página y recargar desde el servidor para que la paginación sea correcta
