@@ -139,6 +139,15 @@ try {
     $stmtHorarios->execute($paramsHorarios);
     $horariosProgramados = $stmtHorarios->fetchAll(PDO::FETCH_ASSOC);
 
+    // Obtener configuración de estados (Con Marcación / Sin Marcación)
+    $sqlEstadosReg = "SELECT codigo, tipo FROM tipo_estado_horario";
+    $estadosConfig = $conn->query($sqlEstadosReg)->fetchAll(PDO::FETCH_KEY_PAIR);
+    // Asegurar que 'Activo' y 'Otra.Tienda' por defecto requieran marcación si no están en la tabla
+    if (!isset($estadosConfig['Activo']))
+        $estadosConfig['Activo'] = 'con_marcacion';
+    if (!isset($estadosConfig['Otra.Tienda']))
+        $estadosConfig['Otra.Tienda'] = 'con_marcacion';
+
     // PASO 2: Obtener marcaciones reales para los operarios encontrados
     $marcaciones = [];
     if (!empty($horariosProgramados)) {
@@ -268,6 +277,7 @@ try {
                             'estado_dia' => $estadoDia,
                             'tiene_horario' => true,
                             'tiene_marcacion' => true,
+                            'requiere_marcacion' => (($estadosConfig[$estadoDia] ?? 'sin_marcacion') === 'con_marcacion'),
                             'tardanza_solicitada' => false,
                             'falta_solicitada' => false,
                             'tardanza_data' => null,
@@ -312,6 +322,7 @@ try {
                         'estado_dia' => $estadoDia,
                         'tiene_horario' => true,
                         'tiene_marcacion' => false,
+                        'requiere_marcacion' => (($estadosConfig[$estadoDia] ?? 'sin_marcacion') === 'con_marcacion'),
                         'tardanza_solicitada' => false,
                         'falta_solicitada' => ($estadoDia === 'Vacaciones'),
                         'tardanza_data' => null,
@@ -365,7 +376,7 @@ try {
                         }
                     }
 
-                    $esFalta = (!$r['tiene_marcacion'] && in_array($r['estado_dia'], ['Activo', 'Otra.Tienda', 'Vacaciones']));
+                    $esFalta = (!$r['tiene_marcacion'] && ($r['requiere_marcacion'] ?? false));
                     $tieneIncidencia = ($esTardanza || $esFalta);
                 }
 

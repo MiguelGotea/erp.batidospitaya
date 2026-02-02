@@ -190,7 +190,7 @@ function renderizarTabla(datos) {
             if (row.hora_entrada_programada && row.hora_ingreso) {
                 const difMin = calcularMinutosDiferencia(row.hora_entrada_programada, row.hora_ingreso);
                 if (difMin > 1) esTardanza = true;
-            } else if (!row.tiene_marcacion && ['Activo', 'Otra.Tienda', 'Vacaciones'].includes(row.estado_dia)) {
+            } else if (!row.tiene_marcacion && row.requiere_marcacion) {
                 esFalta = true;
             }
 
