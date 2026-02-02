@@ -1,9 +1,8 @@
 <?php
 require_once '../../core/auth/auth.php';
-require_once '../../includes/funciones.php';
 require_once '../../core/permissions/permissions.php';
-require_once '../../includes/header_universal.php';
-require_once '../../includes/menu_lateral.php';
+require_once '../../core/includes/header_universal.php';
+require_once '../../core/includes/menu_lateral.php';
 require_once __DIR__ . '/models/Equipo.php';
 
 $usuario = obtenerUsuarioActual();
@@ -210,7 +209,8 @@ $mantenimientosEnCurso = $db->fetchAll(
                 <div>
                     <h1 class="page-title">📊 Dashboard del Equipo</h1>
                     <p style="color: #666; margin-top: 5px;">Código:
-                        <strong><?= htmlspecialchars($equipo['codigo']) ?></strong></p>
+                        <strong><?= htmlspecialchars($equipo['codigo']) ?></strong>
+                    </p>
                 </div>
                 <a href="equipos_lista.php" class="btn btn-secondary">← Volver</a>
             </div>
@@ -284,7 +284,8 @@ $mantenimientosEnCurso = $db->fetchAll(
                 <div class="stat-card">
                     <div class="stat-label">Costo Total Repuestos</div>
                     <div class="stat-value" style="color: #dc3545;">C$
-                        <?= number_format($estadisticas['costo_total_repuestos'], 2) ?></div>
+                        <?= number_format($estadisticas['costo_total_repuestos'], 2) ?>
+                    </div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-label">Días Fuera de Servicio</div>
@@ -401,6 +402,4 @@ $mantenimientosEnCurso = $db->fetchAll(
     </div>
 
     <script src="js/equipos_funciones.js"></script>
-</body>
-
-</html>
+</body></html>

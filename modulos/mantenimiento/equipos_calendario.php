@@ -1,9 +1,8 @@
 <?php
 require_once '../../core/auth/auth.php';
-require_once '../../includes/funciones.php';
 require_once '../../core/permissions/permissions.php';
-require_once '../../includes/header_universal.php';
-require_once '../../includes/menu_lateral.php';
+require_once '../../core/includes/header_universal.php';
+require_once '../../core/includes/menu_lateral.php';
 require_once __DIR__ . '/config/database.php';
 
 $usuario = obtenerUsuarioActual();
@@ -371,7 +370,8 @@ foreach ($mantenimientosProgramados as $mant) {
                                     <?= $mensaje ?>
                                 </div>
                                 <div class="equipo-ubicacion">📍
-                                    <?= htmlspecialchars($eq['ubicacion_actual'] ?? 'Sin ubicación') ?></div>
+                                    <?= htmlspecialchars($eq['ubicacion_actual'] ?? 'Sin ubicación') ?>
+                                </div>
                             </div>
                         <?php endforeach; ?>
                         <?php if (!$tieneEquipos): ?>
@@ -389,7 +389,8 @@ foreach ($mantenimientosProgramados as $mant) {
                                     <div class="equipo-codigo"><?= htmlspecialchars($eq['codigo']) ?></div>
                                     <div class="equipo-info"><?= htmlspecialchars($eq['marca'] . ' ' . $eq['modelo']) ?></div>
                                     <div class="equipo-ubicacion">📍
-                                        <?= htmlspecialchars($eq['ubicacion_actual'] ?? 'Sin ubicación') ?></div>
+                                        <?= htmlspecialchars($eq['ubicacion_actual'] ?? 'Sin ubicación') ?>
+                                    </div>
                                 </div>
                             <?php endforeach; ?>
                         </div>
