@@ -95,6 +95,18 @@ try {
         $paramsHorarios[] = $fechaDesde;
     }
 
+    // Filtro por sucursal (general)
+    if (isset($filtros['sucursal']) && !empty($filtros['sucursal']) && $filtros['sucursal'] !== 'todas') {
+        $sqlHorarios .= " AND hso.cod_sucursal = ?";
+        $paramsHorarios[] = $filtros['sucursal'];
+    }
+
+    // Filtro por operario
+    if (isset($filtros['operario']) && !empty($filtros['operario']) && $filtros['operario'] !== 'todos') {
+        $sqlHorarios .= " AND hso.cod_operario = ?";
+        $paramsHorarios[] = $filtros['operario'];
+    }
+
     // Aplicar restricciones de permisos para horarios
     if ($esLider) {
         $sucursalesLider = obtenerSucursalesLider($usuario['CodOperario']);
@@ -152,7 +164,7 @@ try {
             $sqlMarcaciones = "
             SELECT 
                 m.id, m.fecha, m.hora_ingreso, m.hora_salida, m.CodOperario, m.sucursal_codigo,
-                s.sucursal as nombre_sucursal
+                s.nombre as nombre_sucursal
             FROM marcaciones m
             JOIN sucursales s ON m.sucursal_codigo = s.codigo
             WHERE m.fecha BETWEEN ? AND ?
