@@ -204,12 +204,12 @@ try {
     $marcaciones = $stmtMarcaciones->fetchAll(PDO::FETCH_ASSOC);
 
     // PASO 2.5: Precargar justificaciones existentes para optimizar
-    $sqlTardanzasExistentes = "SELECT cod_operario, fecha_tardanza, cod_sucursal FROM TardanzasManuales WHERE fecha_tardanza BETWEEN ? AND ?";
+    $sqlTardanzasExistentes = "SELECT cod_operario, fecha_tardanza, cod_sucursal, estado, tipo_justificacion, observaciones FROM TardanzasManuales WHERE fecha_tardanza BETWEEN ? AND ?";
     $stmtTardanzas = $conn->prepare($sqlTardanzasExistentes);
     $stmtTardanzas->execute([$fechaDesdeMarcaciones, $fechaHastaMarcaciones]);
     $tardanzasExistentes = $stmtTardanzas->fetchAll(PDO::FETCH_GROUP | PDO::FETCH_ASSOC);
 
-    $sqlFaltasExistentes = "SELECT cod_operario, fecha_falta, cod_sucursal FROM faltas_manual WHERE fecha_falta BETWEEN ? AND ?";
+    $sqlFaltasExistentes = "SELECT cod_operario, fecha_falta, cod_sucursal, tipo_falta, observaciones_rrhh as observaciones FROM faltas_manual WHERE fecha_falta BETWEEN ? AND ?";
     $stmtFaltasEx = $conn->prepare($sqlFaltasExistentes);
     $stmtFaltasEx->execute([$fechaDesdeMarcaciones, $fechaHastaMarcaciones]);
     $faltasExistentes = $stmtFaltasEx->fetchAll(PDO::FETCH_GROUP | PDO::FETCH_ASSOC);
@@ -278,7 +278,9 @@ try {
                             'tiene_horario' => true,
                             'tiene_marcacion' => true,
                             'tardanza_solicitada' => false,
-                            'falta_solicitada' => false
+                            'falta_solicitada' => false,
+                            'tardanza_data' => null,
+                            'falta_data' => null
                         ];
 
                         // Verificar si hay tardanza solicitada
@@ -287,6 +289,11 @@ try {
                             foreach ($tardanzasExistentes[$op] as $te) {
                                 if ($te['fecha_tardanza'] == $fechaStr && $te['cod_sucursal'] == $horario['cod_sucursal']) {
                                     $resultado[count($resultado) - 1]['tardanza_solicitada'] = true;
+                                    $resultado[count($resultado) - 1]['tardanza_data'] = [
+                                        'estado' => $te['estado'],
+                                        'tipo' => $te['tipo_justificacion'],
+                                        'observaciones' => $te['observaciones']
+                                    ];
                                     break;
                                 }
                             }
@@ -312,7 +319,9 @@ try {
                         'tiene_horario' => true,
                         'tiene_marcacion' => false,
                         'tardanza_solicitada' => false,
-                        'falta_solicitada' => ($estadoDia === 'Vacaciones')
+                        'falta_solicitada' => ($estadoDia === 'Vacaciones'),
+                        'tardanza_data' => null,
+                        'falta_data' => null
                     ];
 
                     // Verificar si hay falta solicitada
@@ -321,6 +330,10 @@ try {
                         foreach ($faltasExistentes[$op] as $fe) {
                             if ($fe['fecha_falta'] == $fechaStr && $fe['cod_sucursal'] == $horario['cod_sucursal']) {
                                 $resultado[count($resultado) - 1]['falta_solicitada'] = true;
+                                $resultado[count($resultado) - 1]['falta_data'] = [
+                                    'tipo' => $fe['tipo_falta'],
+                                    'observaciones' => $fe['observaciones']
+                                ];
                                 break;
                             }
                         }

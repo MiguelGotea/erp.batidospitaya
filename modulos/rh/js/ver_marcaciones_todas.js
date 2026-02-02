@@ -161,60 +161,88 @@ function renderizarTabla(datos) {
             tr.append(`<td class="text-center">-</td>`);
         }
 
-        // Acciones - BOTONES CON MODALES (VISIBLES PARA TODOS, FUNCIONALES PARA LÍDERES)
+        // Acciones - BOTONES CON ICONOS DE ESTADO (VISIBLES PARA TODOS, FUNCIONALES PARA LÍDERES)
         let accionesHtml = '';
         const hoyStr = new Date().toISOString().split('T')[0];
 
-        // 1. Verificar si hay TARDANZA (diferencia de entrada > 1 minuto)
-        if (row.fecha < hoyStr && row.hora_entrada_programada && row.hora_ingreso) {
-            const difMin = calcularMinutosDiferencia(row.hora_entrada_programada, row.hora_ingreso);
-            if (difMin > 1) {
-                if (row.tardanza_solicitada) {
-                    accionesHtml = `<div class="status-rh-icon tardanza-solicitada" title="Tardanza ya solicitada"><i class="fas fa-history"></i></div>`;
-                } else {
-                    const clickHandler = PERMISOS_USUARIO.esLider ? `onclick="mostrarModalTardanza(
-                        ${row.CodOperario},
-                        '${(row.nombre_completo || '').replace(/'/g, "\\'")}',
-                        '${row.sucursal_codigo}',
-                        '${(row.nombre_sucursal || '').replace(/'/g, "\\'")}',
-                        '${row.fecha}',
-                        '${row.hora_entrada_programada}',
-                        '${row.hora_ingreso}',
-                        null,
-                        true
-                    )"` : '';
+        if (row.fecha < hoyStr) {
+            // 1. Lógica para TARDANZA
+            if (row.hora_entrada_programada && row.hora_ingreso) {
+                const difMin = calcularMinutosDiferencia(row.hora_entrada_programada, row.hora_ingreso);
+                if (difMin > 1) {
+                    if (row.tardanza_solicitada && row.tardanza_data) {
+                        const data = row.tardanza_data;
+                        let icon = 'fa-file-medical text-info';
+                        let label = 'Justificación en revisión';
 
-                    accionesHtml = `
-                        <button type="button" class="btn-rh-action tardanza" 
-                                ${clickHandler} title="Justificar Tardanza">
-                            <i class="fas fa-clock"></i>
-                        </button>
-                    `;
+                        if (data.estado === 'Justificado') {
+                            icon = 'fa-check-double text-success';
+                            label = 'Tardanza Justificada (Aceptada)';
+                        } else if (data.estado === 'No Válido') {
+                            icon = 'fa-times-circle text-secondary';
+                            label = 'Tardanza No Válida (Rechazada)';
+                        }
+
+                        const tooltipContent = `<b>${label}</b><br>Tipo: ${data.tipo || 'N/A'}<br>Obs: ${data.observaciones || 'Sin comentarios'}`;
+                        accionesHtml = `<div class="status-rh-icon" title="${label}" data-bs-toggle="tooltip" data-bs-html="true" data-bs-title="${tooltipContent}"><i class="fas ${icon}"></i></div>`;
+                    } else {
+                        const clickHandler = PERMISOS_USUARIO.esLider ? `onclick="mostrarModalTardanza(
+                            ${row.CodOperario},
+                            '${(row.nombre_completo || '').replace(/'/g, "\\'")}',
+                            '${row.sucursal_codigo}',
+                            '${(row.nombre_sucursal || '').replace(/'/g, "\\'")}',
+                            '${row.fecha}',
+                            '${row.hora_entrada_programada}',
+                            '${row.hora_ingreso}',
+                            null,
+                            true
+                        )"` : '';
+
+                        accionesHtml = `
+                            <button type="button" class="btn-rh-action tardanza" 
+                                    ${clickHandler} title="Reportar Tardanza">
+                                <i class="fas fa-exclamation-circle text-warning"></i>
+                            </button>
+                        `;
+                    }
                 }
             }
-        }
 
-        // 2. Verificar si hay FALTA (solo si no se puso nada arriba y no es hoy)
-        if (row.fecha < hoyStr && accionesHtml === '' && !row.tiene_marcacion && row.tiene_horario) {
-            const estadosPermitidos = ['Activo', 'Otra.Tienda', 'Vacaciones'];
-            if (estadosPermitidos.includes(row.estado_dia)) {
-                if (row.falta_solicitada) {
-                    accionesHtml = `<div class="status-rh-icon falta-solicitada" title="Falta ya solicitada"><i class="fas fa-clipboard-check"></i></div>`;
-                } else {
-                    const clickHandler = PERMISOS_USUARIO.esLider ? `onclick="mostrarModalFalta(
-                        ${row.CodOperario},
-                        '${(row.nombre_completo || '').replace(/'/g, "\\'")}',
-                        '${row.sucursal_codigo}',
-                        '${(row.nombre_sucursal || '').replace(/'/g, "\\'")}',
-                        '${row.fecha}'
-                    )"` : '';
+            // 2. Lógica para FALTA (si no se detectó tardanza o ya tiene accionesHtml)
+            if (accionesHtml === '' && !row.tiene_marcacion && row.tiene_horario) {
+                const estadosPermitidos = ['Activo', 'Otra.Tienda', 'Vacaciones'];
+                if (estadosPermitidos.includes(row.estado_dia)) {
+                    if (row.falta_solicitada && row.falta_data) {
+                        const data = row.falta_data;
+                        let icon = 'fa-file-medical text-info';
+                        let label = 'Justificación en revisión';
 
-                    accionesHtml = `
-                        <button type="button" class="btn-rh-action falta" 
-                                ${clickHandler} title="Justificar Falta">
-                            <i class="fas fa-user-slash"></i>
-                        </button>
-                    `;
+                        if (data.tipo === 'No_Pagado') {
+                            icon = 'fa-times-circle text-secondary';
+                            label = 'Falta No Pagada';
+                        } else if (data.tipo !== 'Pendiente') {
+                            icon = 'fa-check-double text-success';
+                            label = 'Falta Justificada';
+                        }
+
+                        const tooltipContent = `<b>${label}</b><br>Tipo: ${data.tipo.replace(/_/g, ' ')}<br>Obs: ${data.observaciones || 'Sin comentarios'}`;
+                        accionesHtml = `<div class="status-rh-icon" title="${label}" data-bs-toggle="tooltip" data-bs-html="true" data-bs-title="${tooltipContent}"><i class="fas ${icon}"></i></div>`;
+                    } else {
+                        const clickHandler = PERMISOS_USUARIO.esLider ? `onclick="mostrarModalFalta(
+                            ${row.CodOperario},
+                            '${(row.nombre_completo || '').replace(/'/g, "\\'")}',
+                            '${row.sucursal_codigo}',
+                            '${(row.nombre_sucursal || '').replace(/'/g, "\\'")}',
+                            '${row.fecha}'
+                        )"` : '';
+
+                        accionesHtml = `
+                            <button type="button" class="btn-rh-action falta" 
+                                    ${clickHandler} title="Reportar Falta">
+                                <i class="fas fa-exclamation-circle text-danger"></i>
+                            </button>
+                        `;
+                    }
                 }
             }
         }
@@ -222,6 +250,12 @@ function renderizarTabla(datos) {
         tr.append(`<td class="text-center"><div class="rh-actions-cell">${accionesHtml}</div></td>`);
 
         tbody.append(tr);
+    });
+
+    // Inicializar tooltips de Bootstrap para los nuevos iconos
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
     });
 }
 
