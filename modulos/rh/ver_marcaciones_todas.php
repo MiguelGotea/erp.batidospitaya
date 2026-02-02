@@ -1510,90 +1510,90 @@ function verificarTardanzaYaRegistrada(
 
                 <div class="table-container" style="margin-top: 0;">
                     <?php if (empty($marcaciones)): ?>
-                            <div class="no-results">
-                                No se encontraron marcaciones para los filtros seleccionados.
-                            </div>
+                        <div class="no-results">
+                            No se encontraron marcaciones para los filtros seleccionados.
+                        </div>
                     <?php else: ?>
-                            <table id="tabla-marcaciones">
-                                <thead>
-                                    <tr>
-                                        <th data-column="numero_semana" data-type="number" style="text-align: center;">
-                                            Semana
-                                            <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
-                                        </th>
-                                        <th data-column="nombre_sucursal" data-type="list" style="text-align: center;">
-                                            Sucursal
-                                            <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
-                                        </th>
-                                        <th data-column="nombre_completo" data-type="list" style="text-align: center;">
-                                            Colaborador
-                                            <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
-                                        </th>
-                                        <th data-column="nombre_cargo" data-type="list" style="text-align: center;">
-                                            Cargo
-                                            <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
-                                        </th>
-                                        <th data-column="fecha" data-type="daterange" style="text-align: center;">
-                                            Fecha
-                                            <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
-                                        </th>
-                                        <th data-column="estado_dia" data-type="list" style="text-align: center;">
-                                            Turno Programado
-                                            <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
-                                        </th>
-                                        <th style="text-align: center;">Horario Programado</th>
-                                        <?php if ($esLider): ?>
-                                                <th style="text-align: center;">Horas Programadas</th>
-                                        <?php endif; ?>
-                                        <th style="text-align: center;">Horario Marcado</th>
-                                        <?php if ($esLider): ?>
-                                                <th style="text-align: center;">Horas Trabajadas</th>
-                                        <?php endif; ?>
-                                        <th style="display:none;">Diferencia Entrada</th>
-                                        <th style="display:none;">Diferencia Salida</th>
-                                        <?php if ($esOperaciones): ?>
-                                                <th style="text-align: center;">Total Horas<br>Trabajadas</th>
-                                        <?php endif; ?>
-                                        <th style="text-align: center;">
-                                            <div class="header-actions-container">
-                                                <div style="margin-bottom: 5px;">Acciones</div>
-                                                <div class="tri-state-filter-group">
-                                                    <span class="tri-btn neutral active" onclick="setFiltroIncidencias('todos')"
-                                                        title="Ver Todo">
-                                                        <i class="fas fa-minus-circle"></i>
-                                                    </span>
-                                                    <span class="tri-btn warning" onclick="setFiltroIncidencias('tardanzas')"
-                                                        title="Ver solo TARDANZAS">
-                                                        <i class="fas fa-clock"></i>
-                                                    </span>
-                                                    <span class="tri-btn danger" onclick="setFiltroIncidencias('faltas')"
-                                                        title="Ver solo FALTAS">
-                                                        <i class="fas fa-user-slash"></i>
-                                                    </span>
-                                                </div>
+                        <table id="tabla-marcaciones">
+                            <thead>
+                                <tr>
+                                    <th data-column="numero_semana" data-type="number" style="text-align: center;">
+                                        Semana
+                                        <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                    </th>
+                                    <th data-column="nombre_sucursal" data-type="list" style="text-align: center;">
+                                        Sucursal
+                                        <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                    </th>
+                                    <th data-column="nombre_completo" data-type="list" style="text-align: center;">
+                                        Colaborador
+                                        <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                    </th>
+                                    <th data-column="nombre_cargo" data-type="list" style="text-align: center;">
+                                        Cargo
+                                        <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                    </th>
+                                    <th data-column="fecha" data-type="daterange" style="text-align: center;">
+                                        Fecha
+                                        <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                    </th>
+                                    <th data-column="estado_dia" data-type="list" style="text-align: center;">
+                                        Turno Programado
+                                        <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                    </th>
+                                    <th style="text-align: center;">Horario Programado</th>
+                                    <?php if ($esLider): ?>
+                                        <th style="text-align: center;">Horas Programadas</th>
+                                    <?php endif; ?>
+                                    <th style="text-align: center;">Horario Marcado</th>
+                                    <?php if ($esLider): ?>
+                                        <th style="text-align: center;">Horas Trabajadas</th>
+                                    <?php endif; ?>
+                                    <th style="display:none;">Diferencia Entrada</th>
+                                    <th style="display:none;">Diferencia Salida</th>
+                                    <?php if ($esOperaciones): ?>
+                                        <th style="text-align: center;">Total Horas<br>Semana</th>
+                                    <?php endif; ?>
+                                    <th style="text-align: center;">
+                                        <div class="header-actions-container">
+                                            <div style="margin-bottom: 5px;">Acciones</div>
+                                            <div class="tri-state-filter-group">
+                                                <span class="tri-btn neutral active" onclick="setFiltroIncidencias('todos')"
+                                                    title="Ver Todo">
+                                                    <i class="fas fa-minus-circle"></i>
+                                                </span>
+                                                <span class="tri-btn warning" onclick="setFiltroIncidencias('tardanzas')"
+                                                    title="Ver solo TARDANZAS">
+                                                    <i class="fas fa-clock"></i>
+                                                </span>
+                                                <span class="tri-btn danger" onclick="setFiltroIncidencias('faltas')"
+                                                    title="Ver solo FALTAS">
+                                                    <i class="fas fa-user-slash"></i>
+                                                </span>
                                             </div>
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody id="tablaMarcacionesBody">
-                                    <!-- Datos cargados vía AJAX -->
-                                </tbody>
-                            </table>
+                                        </div>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaMarcacionesBody">
+                                <!-- Datos cargados vía AJAX -->
+                            </tbody>
+                        </table>
 
-                            <!-- Controles de paginación -->
-                            <div class="d-flex justify-content-between align-items-center mt-3">
-                                <div class="d-flex align-items-center gap-2">
-                                    <label class="mb-0">Mostrar:</label>
-                                    <select class="form-select form-select-sm" id="registrosPorPagina" style="width: auto;"
-                                        onchange="cambiarRegistrosPorPagina()">
-                                        <option value="25" selected>25</option>
-                                        <option value="50">50</option>
-                                        <option value="100">100</option>
-                                    </select>
-                                    <span class="mb-0">registros</span>
-                                </div>
-                                <div id="paginacion"></div>
+                        <!-- Controles de paginación -->
+                        <div class="d-flex justify-content-between align-items-center mt-3">
+                            <div class="d-flex align-items-center gap-2">
+                                <label class="mb-0">Mostrar:</label>
+                                <select class="form-select form-select-sm" id="registrosPorPagina" style="width: auto;"
+                                    onchange="cambiarRegistrosPorPagina()">
+                                    <option value="25" selected>25</option>
+                                    <option value="50">50</option>
+                                    <option value="100">100</option>
+                                </select>
+                                <span class="mb-0">registros</span>
                             </div>
+                            <div id="paginacion"></div>
+                        </div>
                     <?php endif; ?>
                 </div>
             </div>
@@ -2094,34 +2094,34 @@ function verificarTardanzaYaRegistrada(
                 // Función para limpiar todos los filtros
                 function limpiarTodosFiltros() {
                     <?php if ($esLider): ?>
-                            // Para líderes
-                            document.getElementById('numero_semana').value = '';
-                            document.getElementById('operario_id').value = '<?= $_SESSION['usuario_id'] ?>';
+                        // Para líderes
+                        document.getElementById('numero_semana').value = '';
+                        document.getElementById('operario_id').value = '<?= $_SESSION['usuario_id'] ?>';
 
-                            // Establecer fecha actual
-                            const hoy = '<?= $fechaHoy ?>';
-                            const primerDiaMes = hoy.substring(0, 8) + '01';
+                        // Establecer fecha actual
+                        const hoy = '<?= $fechaHoy ?>';
+                        const primerDiaMes = hoy.substring(0, 8) + '01';
 
-                            document.getElementById('desde').value = primerDiaMes;
-                            document.getElementById('hasta').value = hoy;
+                        document.getElementById('desde').value = primerDiaMes;
+                        document.getElementById('hasta').value = hoy;
 
-                            // Aplicar filtros
-                            aplicarFiltrosLider();
+                        // Aplicar filtros
+                        aplicarFiltrosLider();
                     <?php else: ?>
-                            // Para otros usuarios
-                            document.getElementById('sucursal').value = 'todas';
-                            document.getElementById('operario').value = 'Todos los colaboradores';
-                            document.getElementById('operario_id').value = '0';
+                        // Para otros usuarios
+                        document.getElementById('sucursal').value = 'todas';
+                        document.getElementById('operario').value = 'Todos los colaboradores';
+                        document.getElementById('operario_id').value = '0';
 
-                            // Establecer fecha actual
-                            const hoy = '<?= $fechaHoy ?>';
-                            const primerDiaMes = hoy.substring(0, 8) + '01';
+                        // Establecer fecha actual
+                        const hoy = '<?= $fechaHoy ?>';
+                        const primerDiaMes = hoy.substring(0, 8) + '01';
 
-                            document.getElementById('desde').value = primerDiaMes;
-                            document.getElementById('hasta').value = hoy;
+                        document.getElementById('desde').value = primerDiaMes;
+                        document.getElementById('hasta').value = hoy;
 
-                            // Aplicar filtros
-                            aplicarFiltros();
+                        // Aplicar filtros
+                        aplicarFiltros();
                     <?php endif; ?>
                 }
             </script>
@@ -2263,5 +2263,6 @@ function verificarTardanzaYaRegistrada(
                 <div class="modal-footer border-0">
                     <button type="button" class="btn btn-primary px-4" data-bs-dismiss="modal">Entendido</button>
                 </div>
-            </body>
+</body>
+
 </html>

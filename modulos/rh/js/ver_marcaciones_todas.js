@@ -175,7 +175,7 @@ function renderizarTabla(datos) {
 
         // Total Horas (SOLO SI ES OPERACIONES)
         if (PERMISOS_USUARIO.esOperaciones) {
-            tr.append(`<td class="text-center">-</td>`);
+            tr.append(`<td class="text-center" style="font-weight: bold; background-color: #e8f5e9;">${row.total_horas_periodo || '0.00'}</td>`);
         }
 
         // Acciones - STATUS TRACKER DE 3 PASOS (BARRA DE PROGRESO)

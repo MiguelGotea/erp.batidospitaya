@@ -260,6 +260,17 @@ try {
                 if (count($marcacionesDelDia) > 0) {
                     // Crear un registro por cada marcación
                     foreach ($marcacionesDelDia as $marcacion) {
+                        // Calcular horas trabajadas para este registro
+                        $horasTrabajadas = 0;
+                        if ($marcacion['hora_ingreso'] && $marcacion['hora_salida']) {
+                            $inicio = new DateTime($marcacion['hora_ingreso']);
+                            $fin = new DateTime($marcacion['hora_salida']);
+                            if ($fin < $inicio)
+                                $fin->modify('+1 day');
+                            $diff = $fin->diff($inicio);
+                            $horasTrabajadas = $diff->h + ($diff->i / 60);
+                        }
+
                         $resultado[] = [
                             'id' => $marcacion['id'],
                             'fecha' => $fechaStr,
@@ -278,6 +289,7 @@ try {
                             'tiene_horario' => true,
                             'tiene_marcacion' => true,
                             'requiere_marcacion' => (($estadosConfig[$estadoDia] ?? 'sin_marcacion') === 'con_marcacion'),
+                            'horas_trabajadas' => $horasTrabajadas,
                             'tardanza_solicitada' => false,
                             'falta_solicitada' => false,
                             'tardanza_data' => null,
@@ -323,6 +335,7 @@ try {
                         'tiene_horario' => true,
                         'tiene_marcacion' => false,
                         'requiere_marcacion' => (($estadosConfig[$estadoDia] ?? 'sin_marcacion') === 'con_marcacion'),
+                        'horas_trabajadas' => 0,
                         'tardanza_solicitada' => false,
                         'falta_solicitada' => ($estadoDia === 'Vacaciones'),
                         'tardanza_data' => null,
@@ -434,6 +447,22 @@ try {
 
     // Reindexar array después de filtros
     $resultado = array_values($resultado);
+
+    // PASO 4.5: Calcular totales por operario y semana para el periodo filtrado
+    $totalesSemanales = [];
+    foreach ($resultado as $r) {
+        $key = $r['CodOperario'] . '_' . ($r['numero_semana'] ?? '0');
+        if (!isset($totalesSemanales[$key]))
+            $totalesSemanales[$key] = 0;
+        $totalesSemanales[$key] += $r['horas_trabajadas'];
+    }
+
+    // Agregar el total a cada registro
+    foreach ($resultado as &$r) {
+        $key = $r['CodOperario'] . '_' . ($r['numero_semana'] ?? '0');
+        $r['total_horas_periodo'] = number_format($totalesSemanales[$key], 2);
+    }
+    unset($r); // Romper referencia
 
     // PASO 5: Aplicar ordenamiento
     if ($orden['columna']) {
