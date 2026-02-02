@@ -301,14 +301,7 @@ tr:nth-child(even) {
     display: inline-block;
 }
 
-.extended-hours {
-    /* background-color: #fff3cd;
-    color: #856404;
-    border-radius: 4px;
-    padding: 3px;
-    margin: 2px 0;
-    display: inline-block; */
-}
+
 
 .inactive-hours {
     background-color: #53a1fa;
@@ -328,32 +321,11 @@ tr:nth-child(even) {
     display: inline-block;
 }
 
-.horario-nocturno {
-    /* background-color: #343a40;
-    color: white;
-    border-radius: 4px;
-    padding: 3px;
-    margin: 2px 0;
-    display: inline-block; */
-}
 
-.horario-diurno {
-    /* background-color: #d4edda;
-    color: #155724;
-    border-radius: 4px;
-    padding: 3px;
-    margin: 2px 0;
-    display: inline-block; */
-}
 
-.horario-tarde {
-    /* background-color: #ffeeba;
-    color: #856404;
-    border-radius: 4px;
-    padding: 3px;
-    margin: 2px 0;
-    display: inline-block; */
-}
+
+
+
 
 .compact-time {
     white-space: nowrap;
@@ -791,12 +763,13 @@ a.btn {
 }
 
 .filter-action-btn.clear {
-    color: #dc3545;
+    background: #dc3545;
+    color: white;
     border-color: #dc3545;
 }
 
 .filter-action-btn.clear:hover {
-    background: #dc3545;
+    background: #c82333;
     color: white;
 }
 
