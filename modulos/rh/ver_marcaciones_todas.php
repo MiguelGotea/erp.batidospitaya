@@ -2154,7 +2154,19 @@ function verificarTardanzaYaRegistrada(
             <!-- Custom filter system -->
             <script src="js/ver_marcaciones_todas.js?v=<?php echo time(); ?>"></script>
         </div>
-    </div>
+        <!-- sub-container -->
+    </div> <!-- main-container -->
+
+    <style>
+        /* Ajuste de z-index para evitar que el backdrop cubra el modal */
+        #modalGuiaReglas {
+            z-index: 1060 !important;
+        }
+
+        .modal-backdrop {
+            z-index: 1050 !important;
+        }
+    </style>
 
     <!-- Modal Guía de Reglas -->
     <div class="modal fade" id="modalGuiaReglas" tabindex="-1" aria-labelledby="modalGuiaReglasLabel"
@@ -2257,9 +2269,5 @@ function verificarTardanzaYaRegistrada(
                 <div class="modal-footer border-0">
                     <button type="button" class="btn btn-primary px-4" data-bs-dismiss="modal">Entendido</button>
                 </div>
-            </div>
-        </div>
-    </div>
-</body>
-
+            </body>
 </html>
