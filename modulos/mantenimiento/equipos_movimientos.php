@@ -159,42 +159,43 @@ $equiposEnCentral = $db->fetchAll("
         <div class="sub-container">
             <?php echo renderHeader($usuario, false, 'Gestión de Movimientos de Equipos'); ?>
             <div class="page-header">
-                <h1 class="page-title">🚚 Gestión de Movimientos de Equipos</h1>
+
                 <div>
                     <?php if (tienePermiso('movimientos_equipos', 'crear_movimiento', $cargoOperario)): ?>
                         <button class="btn btn-primary" onclick="abrirNuevoMovimiento()">
                             ➕ Nuevo Movimiento
                         </button>
                     <?php endif; ?>
-                    <a href="equipos_lista.php" class="btn btn-secondary ml-1">← Volver</a>
+
+                    
                 </div>
             </div>
 
             <?php if (tienePermiso('movimientos_equipos', 'crear_movimiento', $cargoOperario) && !empty($equiposConSolicitud)): ?>
-                <div class="solicitudes-pendientes">
-                    <h3 style="color: #856404; margin-bottom: 15px;">⚠️ Equipos con Solicitud de Mantenimiento Pendiente
-                    </h3>
-                    <p style="margin-bottom: 15px;">Los siguientes equipos tienen solicitudes de mantenimiento sin
-                        movimiento programado:</p>
+                    <div class="solicitudes-pendientes">
+                        <h3 style="color: #856404; margin-bottom: 15px;">⚠️ Equipos con Solicitud de Mantenimiento Pendiente
+                        </h3>
+                        <p style="margin-bottom: 15px;">Los siguientes equipos tienen solicitudes de mantenimiento sin
+                            movimiento programado:</p>
 
-                    <?php foreach ($equiposConSolicitud as $eq): ?>
-                        <div class="solicitud-card">
-                            <div class="d-flex justify-between align-center">
-                                <div>
-                                    <strong>Equipo:</strong> <?= htmlspecialchars($eq['codigo']) ?> -
-                                    <?= htmlspecialchars($eq['marca'] . ' ' . $eq['modelo']) ?><br>
-                                    <strong>Ubicación:</strong> <?= htmlspecialchars($eq['sucursal_actual']) ?><br>
-                                    <strong>Problema:</strong>
-                                    <?= htmlspecialchars(substr($eq['descripcion_problema'], 0, 100)) ?>...
+                        <?php foreach ($equiposConSolicitud as $eq): ?>
+                                <div class="solicitud-card">
+                                    <div class="d-flex justify-between align-center">
+                                        <div>
+                                            <strong>Equipo:</strong> <?= htmlspecialchars($eq['codigo']) ?> -
+                                            <?= htmlspecialchars($eq['marca'] . ' ' . $eq['modelo']) ?><br>
+                                            <strong>Ubicación:</strong> <?= htmlspecialchars($eq['sucursal_actual']) ?><br>
+                                            <strong>Problema:</strong>
+                                            <?= htmlspecialchars(substr($eq['descripcion_problema'], 0, 100)) ?>...
+                                        </div>
+                                        <button class="btn btn-warning"
+                                            onclick="abrirMovimientoConSolicitud(<?= $eq['equipo_id'] ?>, <?= $eq['sucursal_actual_id'] ?>, <?= $eq['solicitud_id'] ?>)">
+                                            📦 Crear Movimiento
+                                        </button>
+                                    </div>
                                 </div>
-                                <button class="btn btn-warning"
-                                    onclick="abrirMovimientoConSolicitud(<?= $eq['equipo_id'] ?>, <?= $eq['sucursal_actual_id'] ?>, <?= $eq['solicitud_id'] ?>)">
-                                    📦 Crear Movimiento
-                                </button>
-                            </div>
-                        </div>
-                    <?php endforeach; ?>
-                </div>
+                        <?php endforeach; ?>
+                    </div>
             <?php endif; ?>
 
             <div class="table-container">
@@ -209,54 +210,54 @@ $equiposEnCentral = $db->fetchAll("
                                 <th>Destino</th>
                                 <th>Fecha Programada</th>
                                 <?php if (tienePermiso('movimientos_equipos', 'crear_movimiento', $cargoOperario)): ?>
-                                    <th>Programado Por</th>
+                                        <th>Programado Por</th>
                                 <?php endif; ?>
                                 <th>Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php foreach ($movimientos as $mov): ?>
-                                <tr class="movimiento-row-<?= $mov['estado'] ?>">
-                                    <td><?= $mov['id'] ?></td>
-                                    <td>
-                                        <?php if ($mov['estado'] == 'agendado'): ?>
-                                            <span class="badge badge-warning">Agendado</span>
-                                        <?php else: ?>
-                                            <span class="badge badge-success">Finalizado</span>
-                                        <?php endif; ?>
-                                    </td>
-                                    <td>
-                                        <strong><?= htmlspecialchars($mov['codigo']) ?></strong><br>
-                                        <small><?= htmlspecialchars($mov['marca'] . ' ' . $mov['modelo']) ?></small>
-                                    </td>
-                                    <td><?= htmlspecialchars($mov['sucursal_origen']) ?></td>
-                                    <td><?= htmlspecialchars($mov['sucursal_destino']) ?></td>
-                                    <td>
-                                        <?= date('d/m/Y', strtotime($mov['fecha_programada'])) ?>
-                                        <?php if ($mov['fecha_realizada']): ?>
-                                            <br><small>Realizado:
-                                                <?= date('d/m/Y', strtotime($mov['fecha_realizada'])) ?></small>
-                                        <?php endif; ?>
-                                    </td>
-                                    <?php if ($cargoOperario == 35): ?>
-                                        <td><?= htmlspecialchars($mov['programado_nombre'] . ' ' . $mov['programado_apellido']) ?>
-                                        </td>
-                                    <?php endif; ?>
-                                    <td>
-                                        <?php if ($mov['estado'] == 'agendado'): ?>
-                                            <?php if (tienePermiso('movimientos_equipos', 'finalizar_movimiento', $cargoOperario)): ?>
-                                                <button class="btn btn-sm btn-success"
-                                                    onclick="finalizarMovimiento(<?= $mov['id'] ?>)">
-                                                    ✓ Finalizar
-                                                </button>
+                                    <tr class="movimiento-row-<?= $mov['estado'] ?>">
+                                        <td><?= $mov['id'] ?></td>
+                                        <td>
+                                            <?php if ($mov['estado'] == 'agendado'): ?>
+                                                    <span class="badge badge-warning">Agendado</span>
                                             <?php else: ?>
-                                                <span class="badge badge-warning">Pendiente</span>
+                                                    <span class="badge badge-success">Finalizado</span>
                                             <?php endif; ?>
-                                        <?php else: ?>
-                                            <span class="badge badge-secondary">Completado</span>
+                                        </td>
+                                        <td>
+                                            <strong><?= htmlspecialchars($mov['codigo']) ?></strong><br>
+                                            <small><?= htmlspecialchars($mov['marca'] . ' ' . $mov['modelo']) ?></small>
+                                        </td>
+                                        <td><?= htmlspecialchars($mov['sucursal_origen']) ?></td>
+                                        <td><?= htmlspecialchars($mov['sucursal_destino']) ?></td>
+                                        <td>
+                                            <?= date('d/m/Y', strtotime($mov['fecha_programada'])) ?>
+                                            <?php if ($mov['fecha_realizada']): ?>
+                                                    <br><small>Realizado:
+                                                        <?= date('d/m/Y', strtotime($mov['fecha_realizada'])) ?></small>
+                                            <?php endif; ?>
+                                        </td>
+                                        <?php if ($cargoOperario == 35): ?>
+                                                <td><?= htmlspecialchars($mov['programado_nombre'] . ' ' . $mov['programado_apellido']) ?>
+                                                </td>
                                         <?php endif; ?>
-                                    </td>
-                                </tr>
+                                        <td>
+                                            <?php if ($mov['estado'] == 'agendado'): ?>
+                                                    <?php if (tienePermiso('movimientos_equipos', 'finalizar_movimiento', $cargoOperario)): ?>
+                                                            <button class="btn btn-sm btn-success"
+                                                                onclick="finalizarMovimiento(<?= $mov['id'] ?>)">
+                                                                ✓ Finalizar
+                                                            </button>
+                                                    <?php else: ?>
+                                                            <span class="badge badge-warning">Pendiente</span>
+                                                    <?php endif; ?>
+                                            <?php else: ?>
+                                                    <span class="badge badge-secondary">Completado</span>
+                                            <?php endif; ?>
+                                        </td>
+                                    </tr>
                             <?php endforeach; ?>
                         </tbody>
                     </table>
@@ -298,7 +299,7 @@ $equiposEnCentral = $db->fetchAll("
                         <select name="sucursal_destino_id" id="mov-destino" class="form-control" required>
                             <option value="">Seleccione destino...</option>
                             <?php foreach ($todasSucursales as $suc): ?>
-                                <option value="<?= $suc['codigo'] ?>"><?= htmlspecialchars($suc['nombre']) ?></option>
+                                    <option value="<?= $suc['codigo'] ?>"><?= htmlspecialchars($suc['nombre']) ?></option>
                             <?php endforeach; ?>
                         </select>
                     </div>
@@ -329,9 +330,9 @@ $equiposEnCentral = $db->fetchAll("
                                 <select name="equipo_cambio_id" id="equipo-cambio" class="form-control">
                                     <option value="">Seleccione equipo...</option>
                                     <?php foreach ($equiposEnCentral as $eq): ?>
-                                        <option value="<?= $eq['id'] ?>">
-                                            <?= htmlspecialchars($eq['codigo'] . ' - ' . $eq['marca'] . ' ' . $eq['modelo']) ?>
-                                        </option>
+                                            <option value="<?= $eq['id'] ?>">
+                                                <?= htmlspecialchars($eq['codigo'] . ' - ' . $eq['marca'] . ' ' . $eq['modelo']) ?>
+                                            </option>
                                     <?php endforeach; ?>
                                 </select>
                             </div>
