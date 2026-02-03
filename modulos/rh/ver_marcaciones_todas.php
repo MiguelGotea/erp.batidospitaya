@@ -2237,9 +2237,17 @@ function verificarTardanzaYaRegistrada(
                                     <h6 class="text-secondary border-bottom pb-2 fw-bold">
                                         <i class="fas fa-map-marker-alt me-2"></i> Sucursal Externa
                                     </h6>
-                                    <p class="small text-muted mb-0">
+                                    <p class="small text-muted mb-2">
+                                        <strong>Marcación en sucursal diferente:</strong><br>
                                         Si un colaborador marca en una sucursal distinta a la programada, se mostrará un
-                                        <strong>tag gris</strong> bajo el horario indicando el nombre del lugar exacto.
+                                        <strong>tag gris</strong> bajo el horario marcado indicando el nombre del lugar
+                                        exacto.
+                                    </p>
+                                    <p class="small text-muted mb-0">
+                                        <strong>Horario programado en otra tienda:</strong><br>
+                                        Cuando el estado del día es <strong>"Otra.Tienda"</strong>, se muestra un
+                                        <strong>tag gris</strong> bajo el turno programado con el nombre de la sucursal
+                                        donde está asignado ese día.
                                     </p>
                                 </div>
                             </div>
@@ -2250,7 +2258,10 @@ function verificarTardanzaYaRegistrada(
                                     <h6 class="text-dark border-bottom pb-2 fw-bold">
                                         <i class="fas fa-stream me-2"></i> Semáforo (Status Tracker)
                                     </h6>
-                                    <div class="d-flex justify-content-between mt-2">
+                                    <p class="small text-muted mb-2">
+                                        El sistema muestra un semáforo de 3 pasos para el seguimiento de incidencias:
+                                    </p>
+                                    <div class="d-flex justify-content-between mt-2 mb-3">
                                         <div class="text-center">
                                             <span class="badge bg-secondary mb-1">Gris</span>
                                             <div class="small text-muted">Pendiente de Revisión</div>
@@ -2263,6 +2274,14 @@ function verificarTardanzaYaRegistrada(
                                             <span class="badge bg-danger mb-1">Rojo</span>
                                             <div class="small text-muted">Rechazado / No Válido</div>
                                         </div>
+                                    </div>
+                                    <div class="alert alert-info py-2 px-3 mb-0 small">
+                                        <strong><i class="fas fa-info-circle me-1"></i> Ícono Verde Inicial:</strong>
+                                        <br>
+                                        Las inasistencias programadas (ej: Vacaciones, Permisos) que requieren justificación
+                                        se muestran con <strong>ícono verde</strong> desde el inicio para diferenciarlas
+                                        de faltas normales (rojas). Esto indica que es una ausencia planificada pero que
+                                        aún requiere documentación de respaldo.
                                     </div>
                                 </div>
                             </div>
