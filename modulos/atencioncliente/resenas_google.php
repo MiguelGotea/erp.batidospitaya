@@ -1,30 +1,28 @@
 <?php
-//ini_set('display_errors', 1);
-//ini_set('display_startup_errors', 1);
-//error_reporting(E_ALL);
-
-require_once '../../includes/auth.php';
-require_once '../../includes/funciones.php';
+require_once '../../core/auth/auth.php';
+require_once '../../core/permissions/permissions.php';
+require_once '../../core/layout/header_universal.php';
+require_once '../../core/layout/menu_lateral.php';
 
 //******************************Estándar para header******************************
-verificarAutenticacion();
-
 $usuario = obtenerUsuarioActual();
+$cargoOperario = $usuario['CodNivelesCargos'];
 $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
 
-
-if (!verificarAccesoCargo([22, 28, 42, 26, 50]) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
-    header('Location: ../index.php');
+// Verificar acceso
+if (!tienePermiso('resenas_google', 'vista', $cargoOperario)) {
+    header('Location: /login.php');
     exit();
 }
 
-// Obtenemos el cargo principal usando la función de funciones.php
-$cargoUsuario = obtenerCargoPrincipalUsuario($_SESSION['usuario_id']);
-$cargoUsuariocodigo = obtenerCargoCodigoPrincipalUsuario($_SESSION['usuario_id']);
+// Obtenemos el cargo principal
+$cargoUsuario = $usuario['cargo_nombre'] ?? 'Sin cargo';
+$cargoUsuariocodigo = $cargoOperario;
 
 ?>
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -38,25 +36,25 @@ $cargoUsuariocodigo = obtenerCargoCodigoPrincipalUsuario($_SESSION['usuario_id']
             padding: 0;
             font-family: 'Calibri', sans-serif;
         }
-        
+
         body {
             background-color: #F6F6F6;
             color: #333;
             padding: 5px;
         }
-        
+
         .container {
             max-width: 100%;
             margin: 0 auto;
             background: white;
             border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
             padding: 10px;
             height: 100vh;
             display: flex;
             flex-direction: column;
         }
-        
+
         header {
             display: flex;
             justify-content: space-between;
@@ -159,23 +157,23 @@ $cargoUsuariocodigo = obtenerCargoCodigoPrincipalUsuario($_SESSION['usuario_id']
         .btn-logout:hover {
             background: #0E544C;
         }
-        
+
         .alert {
             padding: 10px;
             margin-bottom: 15px;
             border-radius: 4px;
         }
-        
+
         .alert-success {
             background-color: #d4edda;
             color: #155724;
         }
-        
+
         .alert-danger {
             background-color: #f8d7da;
             color: #721c24;
         }
-        
+
         .sucursal-info {
             background-color: #f8f9fa;
             padding: 10px;
@@ -183,7 +181,7 @@ $cargoUsuariocodigo = obtenerCargoCodigoPrincipalUsuario($_SESSION['usuario_id']
             margin-bottom: 15px;
             font-weight: bold;
         }
-        
+
         /* Contenedor del iframe responsivo */
         .iframe-container {
             flex: 1;
@@ -194,21 +192,21 @@ $cargoUsuariocodigo = obtenerCargoCodigoPrincipalUsuario($_SESSION['usuario_id']
             border-radius: 4px;
             overflow: hidden;
         }
-        
+
         .iframe-header {
             background-color: #0E544C;
             color: white;
             padding: 10px 15px;
             font-weight: bold;
         }
-        
+
         .iframe-wrapper {
             flex: 1;
             position: relative;
             width: 100%;
             height: 100%;
         }
-        
+
         .iframe-wrapper iframe {
             position: absolute;
             top: 0;
@@ -217,7 +215,7 @@ $cargoUsuariocodigo = obtenerCargoCodigoPrincipalUsuario($_SESSION['usuario_id']
             height: 100%;
             border: none;
         }
-        
+
         @media (max-width: 768px) {
             .buttons-container {
                 position: static;
@@ -225,12 +223,12 @@ $cargoUsuariocodigo = obtenerCargoCodigoPrincipalUsuario($_SESSION['usuario_id']
                 justify-content: flex-start;
                 margin: 10px 0;
             }
-            
+
             .header-container {
                 flex-direction: column;
                 align-items: flex-start;
             }
-            
+
             .user-info {
                 margin-left: 0;
                 margin-top: 10px;
@@ -238,50 +236,26 @@ $cargoUsuariocodigo = obtenerCargoCodigoPrincipalUsuario($_SESSION['usuario_id']
         }
     </style>
 </head>
+
 <body>
-    <div class="container">
-        <header>
-            <div class="header-container">
-                <div class="logo-container">
-                    <img src="../../assets/img/Logo.svg" alt="Batidos Pitaya" class="logo">
-                </div>
-                
-                <div class="buttons-container">
-                    <a href="resenas_google.php" class="btn-agregar activo">
-                        <i class="fab fa-google"></i> <span class="btn-text">Reseñas Google</span>
-                    </a>
-                </div>
-                
-                <div class="user-info">
-                    <div class="user-avatar">
-                        <?= $esAdmin ? 
-                            strtoupper(substr($usuario['nombre'], 0, 1)) : 
-                            strtoupper(substr($usuario['Nombre'], 0, 1)) ?>
-                    </div>
-                    <div>
-                        <div>
-                            <?= $esAdmin ? 
-                                htmlspecialchars($usuario['nombre']) : 
-                                htmlspecialchars($usuario['Nombre'].' '.$usuario['Apellido']) ?>
-                        </div>
-                        <small>
-                            <?= htmlspecialchars($cargoUsuario) ?>
-                        </small>
-                    </div>
-                    <a href="../../index.php" class="btn-logout">
-                        <i class="fas fa-sign-out-alt"></i>
-                    </a>
-                </div>
-            </div>
-        </header>
-        
+    <!-- Renderizar menú lateral -->
+    <?php echo renderMenuLateral($cargoOperario); ?>
+    
+    <!-- Contenido principal -->
+    <div class="main-container">
+        <div class="sub-container">
+            <!-- Renderizar header universal -->
+            <?php echo renderHeader($usuario, $esAdmin, 'Reseñas de Google'); ?>
+            
+            <div class="container">
+
         <?php if (isset($_SESSION['exito'])): ?>
             <div class="alert alert-success">
                 <?= $_SESSION['exito'] ?>
                 <?php unset($_SESSION['exito']); ?>
             </div>
         <?php endif; ?>
-        
+
         <?php if (isset($_SESSION['error'])): ?>
             <div class="alert alert-danger">
                 <?= $_SESSION['error'] ?>
@@ -294,13 +268,15 @@ $cargoUsuariocodigo = obtenerCargoCodigoPrincipalUsuario($_SESSION['usuario_id']
                 Reseñas de Google - Looker Studio
             </div>
             <div class="iframe-wrapper">
-                <iframe src="https://lookerstudio.google.com/embed/reporting/25224c5e-ffba-4ebf-bd3c-a259d94073da/page/nhZWF" 
-                        frameborder="0" 
-                        allowfullscreen 
-                        sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox">
+                <iframe
+                    src="https://lookerstudio.google.com/embed/reporting/25224c5e-ffba-4ebf-bd3c-a259d94073da/page/nhZWF"
+                    frameborder="0" allowfullscreen
+                    sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox">
                 </iframe>
             </div>
-        </div>
-    </div>
+            </div>
+        </div> <!-- cierre sub-container -->
+    </div> <!-- cierre main-container -->
 </body>
+
 </html>

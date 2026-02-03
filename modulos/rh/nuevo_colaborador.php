@@ -2,20 +2,21 @@
 //ini_set('display_errors', 1);
 //ini_set('display_startup_errors', 1);
 //error_reporting(E_ALL);
-
 require_once '../../core/auth/auth.php';
+require_once '../../core/permissions/permissions.php';
+require_once '../../core/layout/header_universal.php';
+require_once '../../core/layout/menu_lateral.php';
 
 //******************************Estándar para header******************************
 verificarAutenticacion();
 
 $usuario = obtenerUsuarioActual();
+$cargoOperario = $usuario['CodNivelesCargos'];
 $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
 
 // Verificar acceso al módulo
-verificarAccesoCargo([13, 16, 39, 30, 37]);
-
-if (!verificarAccesoCargo([13, 16, 39, 30, 37]) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
-    header('Location: ../index.php');
+if (!tienePermiso('nuevo_colaborador', 'vista', $cargoOperario)) {
+    header('Location: /login.php');
     exit();
 }
 
@@ -480,180 +481,152 @@ function generarClave($nombre, $apellido)
 </head>
 
 <body>
-    <div class="container">
-        <header>
-            <div class="header-container">
-                <div class="logo-container">
-                    <img src="../../assets/img/Logo.svg" alt="Batidos Pitaya" class="logo">
-                </div>
+    <!-- Renderizar menú lateral -->
+    <?php echo renderMenuLateral($cargoOperario); ?>
 
-                <div class="buttons-container">
-                    <a href="colaboradores.php"
-                        class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'colaboradores.php' ? 'activo' : '' ?>">
-                        <i class="fas fa-users"></i> <span class="btn-text">Lista Colaboradores</span>
-                    </a>
+    <!-- Contenido principal -->
+    <div class="main-container">
+        <div class="sub-container">
+            <!-- Renderizar header universal -->
+            <?php echo renderHeader($usuario, $esAdmin, 'Registrar Nuevo Colaborador'); ?>
 
-                    <a href="nuevo_colaborador.php"
-                        class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'nuevo_colaborador.php' ? 'activo' : '' ?>">
-                        <i class="fas fa-user-plus"></i> <span class="btn-text">Agregar</span>
-                    </a>
+            <div class="container">
 
-                    <a href="contactos_colaboradores.php"
-                        class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'contactos_colaboradores.php.php' ? 'activo' : '' ?>">
-                        <i class="fas fa-address-book"></i> <span class="btn-text">Contactos</span>
-                    </a>
-                </div>
+                <div class="form-container">
+                    <h1 style="display:none;" class="title">Registrar Nuevo Colaborador</h1>
 
-                <div class="user-info">
-                    <div class="user-avatar">
-                        <?= $esAdmin ?
-                            strtoupper(substr($usuario['nombre'], 0, 1)) :
-                            strtoupper(substr($usuario['Nombre'], 0, 1)) ?>
-                    </div>
-                    <div>
-                        <div>
-                            <?= $esAdmin ?
-                                htmlspecialchars($usuario['nombre']) :
-                                htmlspecialchars($usuario['Nombre'] . ' ' . $usuario['Apellido']) ?>
+                    <?php if (isset($_SESSION['exito']) && !$exito): ?>
+                        <div class="alert alert-success">
+                            <?= $_SESSION['exito'] ?>
+                            <?php unset($_SESSION['exito']); ?>
                         </div>
-                        <small>
-                            <?= htmlspecialchars($cargoUsuario) ?>
-                        </small>
+                    <?php endif; ?>
+
+                    <?php if (!empty($errores)): ?>
+                        <div class="alert alert-error">
+                            <strong>Errores encontrados:</strong>
+                            <ul>
+                                <?php foreach ($errores as $error): ?>
+                                    <li><?= $error ?></li>
+                                <?php endforeach; ?>
+                            </ul>
+                        </div>
+                    <?php endif; ?>
+
+                    <div style="display:none;" class="info-box">
+                        <p><strong>Información importante:</strong></p>
+                        <p>El sistema generará automáticamente:</p>
+                        <ul>
+                            <li>El código de operario al guardar</li>
+                            <li>El usuario con las primeras 2 letras del nombre + primeras 2 letras del apellido +
+                                últimos 4
+                                dígitos de cédula</li>
+                            <li>La clave con las primeras 2 letras del nombre + primeras 2 letras del apellido + fecha
+                                actual
+                                (ddmmyy)</li>
+                            <li>El estado del colaborador se establecerá como "Activo"</li>
+                            <li>Se registrará que fue creado por:
+                                <?= $esAdmin ? htmlspecialchars($usuario['nombre']) : htmlspecialchars($usuario['Nombre'] . ' ' . $usuario['Apellido']) ?>
+                                (ID: <?= $usuarioActualId ?>)
+                            </li>
+                            <li>Después de guardar, serás redirigido automáticamente a la página de edición del
+                                colaborador</li>
+                        </ul>
                     </div>
-                    <a href="index.php" class="btn-logout">
-                        <i class="fas fa-sign-out-alt"></i>
-                    </a>
-                </div>
-            </div>
-        </header>
 
-        <div class="form-container">
-            <h1 style="display:none;" class="title">Registrar Nuevo Colaborador</h1>
+                    <!-- Caja de previsualización -->
+                    <div class="preview-box">
+                        <h3 style="display:none;">Previsualización de credenciales</h3>
+                        <div class="preview-item">
+                            <span class="preview-label">Código:</span>
+                            <span class="preview-value" id="preview-codigo"><?= $siguienteCodigo ?></span>
+                        </div>
+                        <div style="display:none;" class="registrado-por">
+                            Registrado por:
+                            <?= $esAdmin ? htmlspecialchars($usuario['nombre']) : htmlspecialchars($usuario['Nombre'] . ' ' . $usuario['Apellido']) ?>
+                        </div>
+                    </div>
 
-            <?php if (isset($_SESSION['exito']) && !$exito): ?>
-                <div class="alert alert-success">
-                    <?= $_SESSION['exito'] ?>
-                    <?php unset($_SESSION['exito']); ?>
-                </div>
-            <?php endif; ?>
+                    <form method="post" action="nuevo_colaborador.php">
+                        <div class="form-row">
+                            <div class="form-col">
+                                <div class="form-group">
+                                    <label for="Nombre">Primer Nombre *</label>
+                                    <input type="text" id="Nombre" name="Nombre"
+                                        value="<?= htmlspecialchars($valores['Nombre']) ?>" required>
+                                </div>
+                            </div>
+                            <div class="form-col">
+                                <div class="form-group">
+                                    <label for="Nombre2">Segundo Nombre</label>
+                                    <input type="text" id="Nombre2" name="Nombre2"
+                                        value="<?= htmlspecialchars($valores['Nombre2']) ?>">
+                                </div>
+                            </div>
+                        </div>
 
-            <?php if (!empty($errores)): ?>
-                <div class="alert alert-error">
-                    <strong>Errores encontrados:</strong>
-                    <ul>
-                        <?php foreach ($errores as $error): ?>
-                            <li><?= $error ?></li>
-                        <?php endforeach; ?>
-                    </ul>
-                </div>
-            <?php endif; ?>
+                        <div class="form-row">
+                            <div class="form-col">
+                                <div class="form-group">
+                                    <label for="Apellido">Primer Apellido *</label>
+                                    <input type="text" id="Apellido" name="Apellido"
+                                        value="<?= htmlspecialchars($valores['Apellido']) ?>" required>
+                                </div>
+                            </div>
+                            <div class="form-col">
+                                <div class="form-group">
+                                    <label for="Apellido2">Segundo Apellido</label>
+                                    <input type="text" id="Apellido2" name="Apellido2"
+                                        value="<?= htmlspecialchars($valores['Apellido2']) ?>">
+                                </div>
+                            </div>
+                        </div>
 
-            <div style="display:none;" class="info-box">
-                <p><strong>Información importante:</strong></p>
-                <p>El sistema generará automáticamente:</p>
-                <ul>
-                    <li>El código de operario al guardar</li>
-                    <li>El usuario con las primeras 2 letras del nombre + primeras 2 letras del apellido + últimos 4
-                        dígitos de cédula</li>
-                    <li>La clave con las primeras 2 letras del nombre + primeras 2 letras del apellido + fecha actual
-                        (ddmmyy)</li>
-                    <li>El estado del colaborador se establecerá como "Activo"</li>
-                    <li>Se registrará que fue creado por:
-                        <?= $esAdmin ? htmlspecialchars($usuario['nombre']) : htmlspecialchars($usuario['Nombre'] . ' ' . $usuario['Apellido']) ?>
-                        (ID: <?= $usuarioActualId ?>)</li>
-                    <li>Después de guardar, serás redirigido automáticamente a la página de edición del colaborador</li>
-                </ul>
-            </div>
-
-            <!-- Caja de previsualización -->
-            <div class="preview-box">
-                <h3 style="display:none;">Previsualización de credenciales</h3>
-                <div class="preview-item">
-                    <span class="preview-label">Código:</span>
-                    <span class="preview-value" id="preview-codigo"><?= $siguienteCodigo ?></span>
-                </div>
-                <div style="display:none;" class="registrado-por">
-                    Registrado por:
-                    <?= $esAdmin ? htmlspecialchars($usuario['nombre']) : htmlspecialchars($usuario['Nombre'] . ' ' . $usuario['Apellido']) ?>
-                </div>
-            </div>
-
-            <form method="post" action="nuevo_colaborador.php">
-                <div class="form-row">
-                    <div class="form-col">
                         <div class="form-group">
-                            <label for="Nombre">Primer Nombre *</label>
-                            <input type="text" id="Nombre" name="Nombre"
-                                value="<?= htmlspecialchars($valores['Nombre']) ?>" required>
+                            <label for="Cedula">Cédula *</label>
+                            <input type="text" id="Cedula" name="Cedula"
+                                value="<?= htmlspecialchars($valores['Cedula']) ?>" required
+                                pattern="[0-9]{3}-[0-9]{6}-[0-9]{4}[A-Za-z]?" title="Formato: 001-234567-8910A"
+                                placeholder="001-234567-8910A" maxlength="16">
                         </div>
-                    </div>
-                    <div class="form-col">
+
                         <div class="form-group">
-                            <label for="Nombre2">Segundo Nombre</label>
-                            <input type="text" id="Nombre2" name="Nombre2"
-                                value="<?= htmlspecialchars($valores['Nombre2']) ?>">
+                            <label for="Celular">Celular</label>
+                            <input type="text" id="Celular" name="Celular"
+                                value="<?= htmlspecialchars($valores['Celular']) ?>" placeholder="Número de celular"
+                                maxlength="8">
                         </div>
-                    </div>
-                </div>
 
-                <div class="form-row">
-                    <div class="form-col">
-                        <div class="form-group">
-                            <label for="Apellido">Primer Apellido *</label>
-                            <input type="text" id="Apellido" name="Apellido"
-                                value="<?= htmlspecialchars($valores['Apellido']) ?>" required>
+                        <!-- Mover Usuario y Clave aquí, debajo de Cédula -->
+                        <div class="form-row">
+                            <div class="form-col">
+                                <div class="form-group">
+                                    <label for="usuario">Usuario</label>
+                                    <input readonly type="text" id="usuario" name="usuario"
+                                        value="<?= htmlspecialchars($valores['usuario']) ?>"
+                                        placeholder="Se generará automáticamente">
+                                </div>
+                            </div>
+                            <div class="form-col">
+                                <div class="form-group">
+                                    <label for="clave">Clave</label>
+                                    <input readonly type="text" id="clave" name="clave"
+                                        value="<?= htmlspecialchars($valores['clave']) ?>"
+                                        placeholder="Se generará automáticamente">
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                    <div class="form-col">
-                        <div class="form-group">
-                            <label for="Apellido2">Segundo Apellido</label>
-                            <input type="text" id="Apellido2" name="Apellido2"
-                                value="<?= htmlspecialchars($valores['Apellido2']) ?>">
-                        </div>
-                    </div>
+
+                        <input type="hidden" name="Operativo" value="1">
+
+                        <button type="submit" class="btn-submit">
+                            <i class="fas fa-save"></i> Crear Colaborador
+                        </button>
+                    </form>
                 </div>
-
-                <div class="form-group">
-                    <label for="Cedula">Cédula *</label>
-                    <input type="text" id="Cedula" name="Cedula" value="<?= htmlspecialchars($valores['Cedula']) ?>"
-                        required pattern="[0-9]{3}-[0-9]{6}-[0-9]{4}[A-Za-z]?" title="Formato: 001-234567-8910A"
-                        placeholder="001-234567-8910A" maxlength="16">
-                </div>
-
-                <div class="form-group">
-                    <label for="Celular">Celular</label>
-                    <input type="text" id="Celular" name="Celular" value="<?= htmlspecialchars($valores['Celular']) ?>"
-                        placeholder="Número de celular" maxlength="8">
-                </div>
-
-                <!-- Mover Usuario y Clave aquí, debajo de Cédula -->
-                <div class="form-row">
-                    <div class="form-col">
-                        <div class="form-group">
-                            <label for="usuario">Usuario</label>
-                            <input readonly type="text" id="usuario" name="usuario"
-                                value="<?= htmlspecialchars($valores['usuario']) ?>"
-                                placeholder="Se generará automáticamente">
-                        </div>
-                    </div>
-                    <div class="form-col">
-                        <div class="form-group">
-                            <label for="clave">Clave</label>
-                            <input readonly type="text" id="clave" name="clave"
-                                value="<?= htmlspecialchars($valores['clave']) ?>"
-                                placeholder="Se generará automáticamente">
-                        </div>
-                    </div>
-                </div>
-
-                <input type="hidden" name="Operativo" value="1">
-
-                <button type="submit" class="btn-submit">
-                    <i class="fas fa-save"></i> Crear Colaborador
-                </button>
-            </form>
-        </div>
-    </div>
+            </div> <!-- cierre container -->
+        </div> <!-- cierre sub-container -->
+    </div> <!-- cierre main-container -->
 
     <script>
         // Script para generar automáticamente usuario y clave - VERSIÓN MEJORADA

@@ -1,9 +1,9 @@
 <?php
 // historial_clientes.php
 
-require_once '../../includes/auth.php';
-require_once '../../includes/menu_lateral.php';
-require_once '../../includes/header_universal.php';
+require_once '../../core/auth/auth.php';
+require_once '../../core/layout/menu_lateral.php';
+require_once '../../core/layout/header_universal.php';
 require_once '../../core/permissions/permissions.php';
 
 $usuario = obtenerUsuarioActual();
@@ -17,6 +17,7 @@ if (!tienePermiso('historial_clientes_club', 'vista', $cargoOperario)) {
 ?>
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -27,13 +28,14 @@ if (!tienePermiso('historial_clientes_club', 'vista', $cargoOperario)) {
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="css/historial_clientes.css?v=<?php echo mt_rand(1, 10000); ?>">
 </head>
+
 <body>
     <?php echo renderMenuLateral($cargoOperario); ?>
-    
+
     <div class="main-container">
         <div class="contenedor-principal">
             <?php echo renderHeader($usuario, false, 'Historial de Clientes'); ?>
-            
+
             <div class="container-fluid p-3">
                 <div class="table-responsive">
                     <table class="table table-hover historial-table" id="tablaClientes">
@@ -82,7 +84,8 @@ if (!tienePermiso('historial_clientes_club', 'vista', $cargoOperario)) {
                 <div class="d-flex justify-content-between align-items-center mt-3">
                     <div class="d-flex align-items-center gap-2">
                         <label class="mb-0">Mostrar:</label>
-                        <select class="form-select form-select-sm" id="registrosPorPagina" style="width: auto;" onchange="cambiarRegistrosPorPagina()">
+                        <select class="form-select form-select-sm" id="registrosPorPagina" style="width: auto;"
+                            onchange="cambiarRegistrosPorPagina()">
                             <option value="25" selected>25</option>
                             <option value="50">50</option>
                             <option value="100">100</option>
@@ -99,4 +102,5 @@ if (!tienePermiso('historial_clientes_club', 'vista', $cargoOperario)) {
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="js/historial_clientes.js?v=<?php echo mt_rand(1, 10000); ?>"></script>
 </body>
+
 </html>
