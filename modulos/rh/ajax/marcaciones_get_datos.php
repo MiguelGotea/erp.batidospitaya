@@ -142,14 +142,27 @@ try {
     $stmtHorarios->execute($paramsHorarios);
     $horariosProgramados = $stmtHorarios->fetchAll(PDO::FETCH_ASSOC);
 
-    // Obtener configuración de estados (Con Marcación / Sin Marcación)
-    $sqlEstadosReg = "SELECT codigo, tipo FROM tipo_estado_horario";
-    $estadosConfig = $conn->query($sqlEstadosReg)->fetchAll(PDO::FETCH_KEY_PAIR);
+    // Obtener configuración de estados (Con Marcación / Sin Marcación / Justificación)
+    $sqlEstadosReg = "SELECT codigo, tipo, justificacion FROM tipo_estado_horario";
+    $estadosConfigRaw = $conn->query($sqlEstadosReg)->fetchAll(PDO::FETCH_ASSOC);
+
+    // Crear arrays para tipo y justificación
+    $estadosConfig = [];
+    $estadosJustificacion = [];
+    foreach ($estadosConfigRaw as $estado) {
+        $estadosConfig[$estado['codigo']] = $estado['tipo'];
+        $estadosJustificacion[$estado['codigo']] = (int) $estado['justificacion'];
+    }
+
     // Asegurar que 'Activo' y 'Otra.Tienda' por defecto requieran marcación si no están en la tabla
-    if (!isset($estadosConfig['Activo']))
+    if (!isset($estadosConfig['Activo'])) {
         $estadosConfig['Activo'] = 'con_marcacion';
-    if (!isset($estadosConfig['Otra.Tienda']))
+        $estadosJustificacion['Activo'] = 0;
+    }
+    if (!isset($estadosConfig['Otra.Tienda'])) {
         $estadosConfig['Otra.Tienda'] = 'con_marcacion';
+        $estadosJustificacion['Otra.Tienda'] = 0;
+    }
 
     // PASO 2: Obtener marcaciones reales para los operarios encontrados
     $marcaciones = [];
@@ -297,6 +310,7 @@ try {
                             'tiene_horario' => true,
                             'tiene_marcacion' => true,
                             'requiere_marcacion' => (($estadosConfig[$estadoDia] ?? 'sin_marcacion') === 'con_marcacion'),
+                            'requiere_justificacion' => ($estadosJustificacion[$estadoDia] ?? 0),
                             'horas_trabajadas' => $horasTrabajadas,
                             'tardanza_solicitada' => false,
                             'falta_solicitada' => false,
@@ -343,6 +357,7 @@ try {
                         'tiene_horario' => true,
                         'tiene_marcacion' => false,
                         'requiere_marcacion' => (($estadosConfig[$estadoDia] ?? 'sin_marcacion') === 'con_marcacion'),
+                        'requiere_justificacion' => ($estadosJustificacion[$estadoDia] ?? 0),
                         'horas_trabajadas' => 0,
                         'tardanza_solicitada' => false,
                         'falta_solicitada' => ($estadoDia === 'Vacaciones'),

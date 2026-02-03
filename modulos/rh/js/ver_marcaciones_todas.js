@@ -190,8 +190,13 @@ function renderizarTabla(datos) {
             if (row.hora_entrada_programada && row.hora_ingreso) {
                 const difMin = calcularMinutosDiferencia(row.hora_entrada_programada, row.hora_ingreso);
                 if (difMin > 1) esTardanza = true;
-            } else if (!row.tiene_marcacion && row.requiere_marcacion) {
-                esFalta = true;
+            } else if (!row.tiene_marcacion) {
+                // NUEVA LÓGICA: Considerar requiere_marcacion Y requiere_justificacion
+                // Si requiere_marcacion=true (tipo='con_marcacion'), es falta normal
+                // Si requiere_marcacion=false pero requiere_justificacion=1, es falta programada que requiere justificación
+                if (row.requiere_marcacion || row.requiere_justificacion === 1) {
+                    esFalta = true;
+                }
             }
 
             if (esTardanza || esFalta) {
@@ -203,6 +208,12 @@ function renderizarTabla(datos) {
                 let step1Class = esTardanza ? 'active-warning' : 'active-danger';
                 let step1Icon = esTardanza ? 'fa-clock' : 'fa-user-slash';
                 let step1Title = esTardanza ? 'Tardanza detectada por sistema' : 'Falta detectada por sistema';
+
+                // NUEVA LÓGICA: Si es falta programada con justificación requerida, usar color verde
+                if (esFalta && !row.requiere_marcacion && row.requiere_justificacion === 1) {
+                    step1Class = 'active-success'; // Verde en lugar de rojo
+                    step1Title = 'Inasistencia programada - Requiere justificación';
+                }
 
                 if (solicitada) {
                     step1Class = 'completed';

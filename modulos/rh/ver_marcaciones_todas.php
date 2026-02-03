@@ -2197,13 +2197,22 @@ function verificarTardanzaYaRegistrada(
                                     <h6 class="text-danger border-bottom pb-2 fw-bold">
                                         <i class="fas fa-user-slash me-2"></i> Faltas
                                     </h6>
-                                    <p class="small text-muted mb-0">
+                                    <p class="small text-muted mb-2">
                                         El sistema detecta una <strong>falta</strong> si no hay marcación en un día
                                         programado
                                         cuyo estado esté configurado como <strong>"Con Marcación"</strong> (ej: Activo).
                                         <br><br>
                                         Estados como "Libre" o "Subsidio" no generan faltas.
                                     </p>
+                                    <div class="alert alert-success py-2 px-3 mb-0 small">
+                                        <strong><i class="fas fa-info-circle me-1"></i> Inasistencias
+                                            Programadas:</strong>
+                                        <br>
+                                        Algunos días sin marcación (ej: Vacaciones, Permisos) requieren justificación
+                                        aunque estén programados.
+                                        Estos se muestran con <strong>ícono verde</strong> en lugar de rojo para
+                                        diferenciarlos de faltas normales.
+                                    </div>
                                 </div>
                             </div>
                         </div>
