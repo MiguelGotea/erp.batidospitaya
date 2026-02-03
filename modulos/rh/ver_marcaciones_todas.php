@@ -2153,7 +2153,7 @@ function verificarTardanzaYaRegistrada(
 
     <style>
         /* Ajuste de z-index para evitar que el backdrop cubra el modal */
-        #modalGuiaReglas {
+        #pageHelpModal {
             z-index: 1060 !important;
         }
 
