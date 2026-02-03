@@ -143,6 +143,7 @@ try {
                 ['valor' => 'Activo', 'texto' => 'Activo'],
                 ['valor' => 'Libre', 'texto' => 'Libre'],
                 ['valor' => 'Vacaciones', 'texto' => 'Vacaciones'],
+                ['valor' => 'Subsidio', 'texto' => 'Subsidio'],
                 ['valor' => 'Feriado', 'texto' => 'Feriado'],
                 ['valor' => 'Otra.Tienda', 'texto' => 'Otra Tienda'],
                 ['valor' => 'Inactivo', 'texto' => 'Inactivo']
