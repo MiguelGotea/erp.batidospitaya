@@ -4,6 +4,8 @@
 !/.gitignore
 !/.scripts/
 !/modulos/
+!/Docs/
+!/.agent/
 
 # Excluir todo en modulos EXCEPTO los modulos permitidos (15 en total)
 /modulos/*
