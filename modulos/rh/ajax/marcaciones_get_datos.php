@@ -8,6 +8,9 @@
 require_once '../../../core/auth/auth.php';
 require_once '../../../core/permissions/permissions.php';
 
+// Start output buffering to catch any stray output
+ob_start();
+
 header('Content-Type: application/json');
 
 $usuario = obtenerUsuarioActual();
@@ -262,13 +265,18 @@ try {
                     foreach ($marcacionesDelDia as $marcacion) {
                         // Calcular horas trabajadas para este registro
                         $horasTrabajadas = 0;
-                        if ($marcacion['hora_ingreso'] && $marcacion['hora_salida']) {
-                            $inicio = new DateTime($marcacion['hora_ingreso']);
-                            $fin = new DateTime($marcacion['hora_salida']);
-                            if ($fin < $inicio)
-                                $fin->modify('+1 day');
-                            $diff = $fin->diff($inicio);
-                            $horasTrabajadas = $diff->h + ($diff->i / 60);
+                        if (!empty($marcacion['hora_ingreso']) && !empty($marcacion['hora_salida'])) {
+                            try {
+                                $inicio = new DateTime($marcacion['hora_ingreso']);
+                                $fin = new DateTime($marcacion['hora_salida']);
+                                if ($fin < $inicio)
+                                    $fin->modify('+1 day');
+                                $diff = $fin->diff($inicio);
+                                $horasTrabajadas = $diff->h + ($diff->i / 60);
+                            } catch (Exception $e) {
+                                // Si hay error al parsear fechas, dejar en 0
+                                $horasTrabajadas = 0;
+                            }
                         }
 
                         $resultado[] = [
@@ -489,6 +497,9 @@ try {
     $offset = ($pagina - 1) * $registros_por_pagina;
     $datos_paginados = array_slice($resultado, $offset, $registros_por_pagina);
 
+    // Clean any output that might have been generated
+    ob_end_clean();
+
     echo json_encode([
         'success' => true,
         'datos' => $datos_paginados,
@@ -496,6 +507,9 @@ try {
     ]);
 
 } catch (PDOException $e) {
+    // Clean buffer on error too
+    ob_end_clean();
+
     error_log("Error en marcaciones_get_datos.php: " . $e->getMessage());
     echo json_encode([
         'success' => false,
