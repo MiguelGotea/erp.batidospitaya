@@ -51,13 +51,13 @@ try {
         ss.numero_semana,
         ss.fecha_inicio,
         ss.fecha_fin,
-        hso.lunes_estado, hso.lunes_entrada, hso.lunes_salida,
-        hso.martes_estado, hso.martes_entrada, hso.martes_salida,
-        hso.miercoles_estado, hso.miercoles_entrada, hso.miercoles_salida,
-        hso.jueves_estado, hso.jueves_entrada, hso.jueves_salida,
-        hso.viernes_estado, hso.viernes_entrada, hso.viernes_salida,
-        hso.sabado_estado, hso.sabado_entrada, hso.sabado_salida,
-        hso.domingo_estado, hso.domingo_entrada, hso.domingo_salida,
+        hso.lunes_estado, hso.lunes_entrada, hso.lunes_salida, hso.lunes_sucursal_externa,
+        hso.martes_estado, hso.martes_entrada, hso.martes_salida, hso.martes_sucursal_externa,
+        hso.miercoles_estado, hso.miercoles_entrada, hso.miercoles_salida, hso.miercoles_sucursal_externa,
+        hso.jueves_estado, hso.jueves_entrada, hso.jueves_salida, hso.jueves_sucursal_externa,
+        hso.viernes_estado, hso.viernes_entrada, hso.viernes_salida, hso.viernes_sucursal_externa,
+        hso.sabado_estado, hso.sabado_entrada, hso.sabado_salida, hso.sabado_sucursal_externa,
+        hso.domingo_estado, hso.domingo_entrada, hso.domingo_salida, hso.domingo_sucursal_externa,
         s.nombre as nombre_sucursal,
         o.Nombre, o.Apellido, o.Apellido2,
         nc.Nombre as nombre_cargo,
@@ -164,6 +164,10 @@ try {
         $estadosJustificacion['Otra.Tienda'] = 0;
     }
 
+    // Obtener mapeo de códigos de sucursales a nombres
+    $sqlSucursales = "SELECT codigo, nombre FROM sucursales";
+    $sucursalesMap = $conn->query($sqlSucursales)->fetchAll(PDO::FETCH_KEY_PAIR);
+
     // PASO 2: Obtener marcaciones reales para los operarios encontrados
     $marcaciones = [];
     if (!empty($horariosProgramados)) {
@@ -264,6 +268,7 @@ try {
             $estadoDia = $horario[$nombreDia . '_estado'];
             $horaEntradaProgramada = $horario[$nombreDia . '_entrada'];
             $horaSalidaProgramada = $horario[$nombreDia . '_salida'];
+            $sucursalExternaCodigo = $horario[$nombreDia . '_sucursal_externa'] ?? null;
 
             // Solo incluir días que tienen horario programado
             if (!empty($estadoDia) && $estadoDia !== 'Inactivo') {
@@ -307,6 +312,8 @@ try {
                             'hora_entrada_programada' => $horaEntradaProgramada,
                             'hora_salida_programada' => $horaSalidaProgramada,
                             'estado_dia' => $estadoDia,
+                            'sucursal_externa_codigo' => $sucursalExternaCodigo,
+                            'sucursal_externa_nombre' => $sucursalExternaCodigo ? ($sucursalesMap[$sucursalExternaCodigo] ?? null) : null,
                             'tiene_horario' => true,
                             'tiene_marcacion' => true,
                             'requiere_marcacion' => (($estadosConfig[$estadoDia] ?? 'sin_marcacion') === 'con_marcacion'),
@@ -354,6 +361,8 @@ try {
                         'hora_entrada_programada' => $horaEntradaProgramada,
                         'hora_salida_programada' => $horaSalidaProgramada,
                         'estado_dia' => $estadoDia,
+                        'sucursal_externa_codigo' => $sucursalExternaCodigo,
+                        'sucursal_externa_nombre' => $sucursalExternaCodigo ? ($sucursalesMap[$sucursalExternaCodigo] ?? null) : null,
                         'tiene_horario' => true,
                         'tiene_marcacion' => false,
                         'requiere_marcacion' => (($estadosConfig[$estadoDia] ?? 'sin_marcacion') === 'con_marcacion'),

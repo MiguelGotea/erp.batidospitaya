@@ -108,6 +108,8 @@ function renderizarTabla(datos) {
 
         // Turno Programado (Estado del Día) - CON TAGS
         let estadoHtml = '-';
+        let tagSucursalExterna = '';
+
         if (row.estado_dia) {
             const estado = row.estado_dia;
             if (estado === 'Activo') {
@@ -115,8 +117,15 @@ function renderizarTabla(datos) {
             } else {
                 estadoHtml = `<span class="inactive-hours">${estado}</span>`;
             }
+
+            // Mostrar tag de sucursal externa si el estado es "Otra.Tienda"
+            if (estado === 'Otra.Tienda' && row.sucursal_externa_nombre) {
+                tagSucursalExterna = `<span class="external-branch-tag" title="Programado en: ${row.sucursal_externa_nombre}">
+                    <i class="fas fa-map-marker-alt"></i> ${row.sucursal_externa_nombre}
+                </span>`;
+            }
         }
-        tr.append(`<td class="text-center">${estadoHtml}</td>`);
+        tr.append(`<td class="text-center">${estadoHtml}${tagSucursalExterna}</td>`);
 
         // Horario Programado - FORMATO HH:MM
         let horarioProgramado = '-';
