@@ -3397,10 +3397,8 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
     <?php echo renderMenuLateral($cargoId); ?>
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario); ?>
+            <?php echo renderHeader($usuario, false, 'Editar Colaborador'); ?>
             <div class="container-fluid">
-
-                <h1 style="display:none;" class="title">Editar Colaborador</h1>
 
                 <?php if (isset($_SESSION['exito'])): ?>
                     <div class="alert alert-success">
