@@ -2180,6 +2180,10 @@ function verificarTardanzaYaRegistrada(
                                         <strong>más de 1 minuto</strong> después de la hora programada.
                                         <br><br>
                                         Un día en curso (hoy) no muestra incidencias hasta que el día termina.
+                                        <br><br>
+                                        La verificacion de tardanzas se hara con los horarios programados y los
+                                        ejecutados tanto en casos de horario programado "Otra.Sucursal" y en "Activo"
+                                        con las marcaciones realizadas en cualquier sucursal.
                                     </p>
                                 </div>
                             </div>
