@@ -8563,7 +8563,10 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                             alert('Error al cargar los datos del contrato: ' + error.message);
                         });
                 }
-            </div >
-        </div >
-    </div >
-</body ></html >
+            </script>
+        </div>
+    </div>
+    </div>
+</body>
+
+</html>
