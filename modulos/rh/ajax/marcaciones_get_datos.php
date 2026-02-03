@@ -360,7 +360,7 @@ try {
                         'requiere_justificacion' => ($estadosJustificacion[$estadoDia] ?? 0),
                         'horas_trabajadas' => 0,
                         'tardanza_solicitada' => false,
-                        'falta_solicitada' => ($estadoDia === 'Vacaciones'),
+                        'falta_solicitada' => false, // Se verificará después si existe registro en faltas_manual
                         'tardanza_data' => null,
                         'falta_data' => null
                     ];
