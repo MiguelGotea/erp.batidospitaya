@@ -1501,13 +1501,6 @@ function verificarTardanzaYaRegistrada(
                     </div>
                 <?php endif; ?>
 
-                <div class="d-flex justify-content-end mb-2">
-                    <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal"
-                        data-bs-target="#modalGuiaReglas">
-                        <i class="fas fa-question-circle"></i> Ver Guía de Reglas
-                    </button>
-                </div>
-
                 <div class="table-container" style="margin-top: 0;">
                     <?php if (empty($marcaciones)): ?>
                         <div class="no-results">
