@@ -2163,8 +2163,7 @@ function verificarTardanzaYaRegistrada(
     </style>
 
     <!-- Modal Guía de Reglas -->
-    <div class="modal fade" id="modalGuiaReglas" tabindex="-1" aria-labelledby="modalGuiaReglasLabel"
-        aria-hidden="true">
+    <div class="modal fade" id="pageHelpModal" tabindex="-1" aria-labelledby="pageHelpModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content border-0 shadow">
                 <div class="modal-header bg-primary text-white">
@@ -2278,7 +2277,8 @@ function verificarTardanzaYaRegistrada(
                                     <div class="alert alert-info py-2 px-3 mb-0 small">
                                         <strong><i class="fas fa-info-circle me-1"></i> Ícono Verde Inicial:</strong>
                                         <br>
-                                        Las inasistencias programadas (ej: Vacaciones, Permisos) que requieren justificación
+                                        Las inasistencias programadas (ej: Vacaciones, Permisos) que requieren
+                                        justificación
                                         se muestran con <strong>ícono verde</strong> desde el inicio para diferenciarlas
                                         de faltas normales (rojas). Esto indica que es una ausencia planificada pero que
                                         aún requiere documentación de respaldo.
