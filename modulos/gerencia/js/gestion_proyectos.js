@@ -309,6 +309,7 @@ function renderProyectoBar(p, level, currentEndDate) {
     const isExpandido = parseInt(p.esta_expandido) !== 0;
     const tieneHijos = isPadre && proyectosData.some(hijo => hijo.proyecto_padre_id == p.id);
 
+    let barStyle = `left: ${left}px; width: ${width}px; top: ${top}px;`;
     if (p.color) {
         if (isPadre) {
             barStyle += `background-color: ${p.color}; border-color: rgba(0,0,0,0.2);`;
