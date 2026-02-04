@@ -309,8 +309,6 @@ function renderProyectoBar(p, level, currentEndDate) {
     const isExpandido = parseInt(p.esta_expandido) !== 0;
     const tieneHijos = isPadre && proyectosData.some(hijo => hijo.proyecto_padre_id == p.id);
 
-    // Color logic
-    let barStyle = `left: ${left}px; width: ${width}px; top: ${top}px;`;
     if (p.color) {
         if (isPadre) {
             barStyle += `background-color: ${p.color}; border-color: rgba(0,0,0,0.2);`;
@@ -319,7 +317,7 @@ function renderProyectoBar(p, level, currentEndDate) {
             barStyle += `background-color: ${p.color}66; border-color: ${p.color}; border-style: dashed; color: #333;`;
         }
     }
-    if (isPadre) barStyle += 'cursor: pointer;';
+    if (tieneHijos) barStyle += 'cursor: pointer;';
 
     // Formatear fecha de fin para mostrar al lado derecho
     const fechaFin = new Date(p.fecha_fin);
@@ -353,7 +351,7 @@ function renderProyectoBar(p, level, currentEndDate) {
     const bar = $(`
         <div class="gantt-bar ${p.es_subproyecto == 1 ? 'subproject' : ''}" 
              data-id="${p.id}" 
-             ${isPadre ? `onclick="toggleExpandir(${p.id}, event)"` : ''}
+             ${tieneHijos ? `onclick="toggleExpandir(${p.id}, event)"` : ''}
              style="${barStyle}"
              title="${p.nombre}: ${p.fecha_inicio} al ${p.fecha_fin}">
             <div class="gantt-bar-actions-top">
@@ -518,6 +516,10 @@ async function toggleExpandir(id, event) {
 
     const p = proyectosData.find(item => item.id == id);
     if (!p) return;
+
+    // Safety: ensure this project actually has subprojects to expand
+    const tieneHijos = proyectosData.some(hijo => hijo.proyecto_padre_id == p.id);
+    if (!tieneHijos) return;
 
     const nuevoEstado = parseInt(p.esta_expandido) === 0 ? 1 : 0;
     p.esta_expandido = nuevoEstado;
