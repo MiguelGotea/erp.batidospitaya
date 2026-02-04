@@ -37,6 +37,11 @@ if (!tienePermiso('historial_clientes_club', 'vista', $cargoOperario)) {
             <?php echo renderHeader($usuario, false, 'Historial de Clientes'); ?>
 
             <div class="container-fluid p-3">
+                <div class="d-flex justify-content-end mb-3">
+                    <button class="btn btn-success" onclick="exportarExcel()">
+                        <i class="bi bi-file-earmark-excel"></i> Exportar a Excel
+                    </button>
+                </div>
                 <div class="table-responsive">
                     <table class="table table-hover historial-table" id="tablaClientes">
                         <thead>
@@ -66,6 +71,10 @@ if (!tienePermiso('historial_clientes_club', 'vista', $cargoOperario)) {
                                 </th>
                                 <th data-column="fecha_registro" data-type="daterange">
                                     Fecha Inscripción
+                                    <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                </th>
+                                <th data-column="ultima_compra" data-type="daterange">
+                                    Última Compra
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
                                 <th data-column="nombre_sucursal" data-type="list">

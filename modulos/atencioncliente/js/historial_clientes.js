@@ -8,24 +8,24 @@ let totalRegistros = 0;
 let calendarioActivo = null;
 
 // Inicializar
-$(document).ready(function() {
+$(document).ready(function () {
     cargarDatos();
-    
-    $(document).on('click', function(e) {
+
+    $(document).on('click', function (e) {
         if (!$(e.target).closest('.filter-panel, .filter-icon').length) {
             cerrarTodosFiltros();
         }
     });
-    
-    $('.table-responsive').on('scroll', function() {
+
+    $('.table-responsive').on('scroll', function () {
         cerrarTodosFiltros();
     });
-    
-    $(window).on('scroll', function() {
+
+    $(window).on('scroll', function () {
         cerrarTodosFiltros();
     });
-    
-    $(window).on('resize', function() {
+
+    $(window).on('resize', function () {
         if (panelFiltroAbierto) {
             cerrarTodosFiltros();
         }
@@ -44,7 +44,7 @@ function cargarDatos() {
             orden: JSON.stringify(ordenActivo)
         },
         dataType: 'json',
-        success: function(response) {
+        success: function (response) {
             if (response.success) {
                 totalRegistros = response.total_registros;
                 renderizarTabla(response.datos);
@@ -54,7 +54,7 @@ function cargarDatos() {
                 alert('Error: ' + response.message);
             }
         },
-        error: function() {
+        error: function () {
             alert('Error al cargar los datos');
         }
     });
@@ -64,15 +64,15 @@ function cargarDatos() {
 function renderizarTabla(datos) {
     const tbody = $('#tablaClientesBody');
     tbody.empty();
-    
+
     if (datos.length === 0) {
-        tbody.append('<tr><td colspan="9" class="text-center py-4">No se encontraron registros</td></tr>');
+        tbody.append('<tr><td colspan="10" class="text-center py-4">No se encontraron registros</td></tr>');
         return;
     }
-    
+
     datos.forEach(row => {
         const tr = $('<tr>');
-        
+
         tr.append(`<td>${row.membresia || '-'}</td>`);
         tr.append(`<td>${row.nombre || '-'}</td>`);
         tr.append(`<td>${row.apellido || '-'}</td>`);
@@ -80,8 +80,9 @@ function renderizarTabla(datos) {
         tr.append(`<td>${formatearFecha(row.fecha_nacimiento)}</td>`);
         tr.append(`<td>${row.correo || '-'}</td>`);
         tr.append(`<td>${formatearFecha(row.fecha_registro)}</td>`);
+        tr.append(`<td>${formatearFecha(row.ultima_compra)}</td>`);
         tr.append(`<td>${row.nombre_sucursal || '-'}</td>`);
-        
+
         // Botón de acciones
         const btnAcciones = `
             <button class="btn-accion" onclick="verHistorialProductos('${row.membresia}')">
@@ -89,7 +90,7 @@ function renderizarTabla(datos) {
             </button>
         `;
         tr.append(`<td>${btnAcciones}</td>`);
-        
+
         tbody.append(tr);
     });
 }
@@ -104,12 +105,12 @@ function toggleFilter(icon) {
     const th = $(icon).closest('th');
     const columna = th.data('column');
     const tipo = th.data('type');
-    
+
     if (panelFiltroAbierto === columna) {
         cerrarTodosFiltros();
         return;
     }
-    
+
     cerrarTodosFiltros();
     crearPanelFiltro(th, columna, tipo, icon);
     panelFiltroAbierto = columna;
@@ -120,7 +121,7 @@ function toggleFilter(icon) {
 // Crear panel de filtro
 function crearPanelFiltro(th, columna, tipo, icon) {
     const panel = $('<div class="filter-panel show"></div>');
-    
+
     // Ordenamiento
     panel.append(`
         <div class="filter-section">
@@ -137,7 +138,7 @@ function crearPanelFiltro(th, columna, tipo, icon) {
             </div>
         </div>
     `);
-    
+
     // Botón Limpiar
     panel.append(`
         <div class="filter-actions">
@@ -146,7 +147,7 @@ function crearPanelFiltro(th, columna, tipo, icon) {
             </button>
         </div>
     `);
-    
+
     // Filtros según tipo (después del botón limpiar)
     if (tipo === 'text') {
         const valorActual = filtrosActivos[columna] || '';
@@ -163,7 +164,7 @@ function crearPanelFiltro(th, columna, tipo, icon) {
     } else if (tipo === 'daterange') {
         crearCalendarioDoble(panel, columna);
     }
-    
+
     $('body').append(panel);
     posicionarPanelFiltro(panel, icon);
 }
@@ -172,11 +173,11 @@ function crearPanelFiltro(th, columna, tipo, icon) {
 function crearCalendarioDoble(panel, columna) {
     const fechaDesde = filtrosActivos[columna]?.desde || '';
     const fechaHasta = filtrosActivos[columna]?.hasta || '';
-    
+
     const hoy = new Date();
     const mesActual = hoy.getMonth();
     const añoActual = hoy.getFullYear();
-    
+
     panel.append(`
         <div class="filter-section">
             <span class="filter-section-title">Fecha desde:</span>
@@ -199,7 +200,7 @@ function crearCalendarioDoble(panel, columna) {
             </div>
         </div>
     `);
-    
+
     setTimeout(() => {
         inicializarSelectoresFecha(mesActual, añoActual, fechaDesde, fechaHasta);
         actualizarCalendario('desde', columna);
@@ -209,26 +210,26 @@ function crearCalendarioDoble(panel, columna) {
 
 // Inicializar selectores de mes y año
 function inicializarSelectoresFecha(mesActual, añoActual, fechaDesde, fechaHasta) {
-    const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
-                   'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-    
+    const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+        'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+
     let mesDesdeSeleccionado = mesActual;
     let añoDesdeSeleccionado = añoActual;
     let mesHastaSeleccionado = mesActual;
     let añoHastaSeleccionado = añoActual;
-    
+
     if (fechaDesde) {
         const d = new Date(fechaDesde);
         mesDesdeSeleccionado = d.getMonth();
         añoDesdeSeleccionado = d.getFullYear();
     }
-    
+
     if (fechaHasta) {
         const d = new Date(fechaHasta);
         mesHastaSeleccionado = d.getMonth();
         añoHastaSeleccionado = d.getFullYear();
     }
-    
+
     // Llenar selectores de mes
     const selectMesDesde = $('#mesDesde');
     const selectMesHasta = $('#mesHasta');
@@ -236,7 +237,7 @@ function inicializarSelectoresFecha(mesActual, añoActual, fechaDesde, fechaHast
         selectMesDesde.append(`<option value="${idx}" ${idx === mesDesdeSeleccionado ? 'selected' : ''}>${mes}</option>`);
         selectMesHasta.append(`<option value="${idx}" ${idx === mesHastaSeleccionado ? 'selected' : ''}>${mes}</option>`);
     });
-    
+
     // Llenar selectores de año
     const selectAñoDesde = $('#añoDesde');
     const selectAñoHasta = $('#añoHasta');
@@ -251,29 +252,29 @@ function actualizarCalendario(tipo, columna) {
     const mes = parseInt($(`#mes${tipo.charAt(0).toUpperCase() + tipo.slice(1)}`).val());
     const año = parseInt($(`#año${tipo.charAt(0).toUpperCase() + tipo.slice(1)}`).val());
     const calendarioId = tipo === 'desde' ? '#calendarioDesde' : '#calendarioHasta';
-    
+
     const primerDia = new Date(año, mes, 1).getDay();
     const diasEnMes = new Date(año, mes + 1, 0).getDate();
-    
+
     const diasSemana = ['D', 'L', 'M', 'M', 'J', 'V', 'S'];
     let html = '<div class="daterange-calendar-header">';
     diasSemana.forEach(dia => {
         html += `<div class="daterange-calendar-day-name">${dia}</div>`;
     });
     html += '</div><div class="daterange-calendar-days">';
-    
+
     // Días vacíos al inicio
     for (let i = 0; i < primerDia; i++) {
         html += '<div class="daterange-calendar-day empty"></div>';
     }
-    
+
     // Días del mes
     for (let dia = 1; dia <= diasEnMes; dia++) {
         const fechaStr = `${año}-${String(mes + 1).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
         const clases = obtenerClasesCalendario(fechaStr, columna);
         html += `<div class="daterange-calendar-day ${clases}" onclick="seleccionarFecha('${tipo}', '${fechaStr}', '${columna}')">${dia}</div>`;
     }
-    
+
     html += '</div>';
     $(calendarioId).html(html);
 }
@@ -282,9 +283,9 @@ function actualizarCalendario(tipo, columna) {
 function obtenerClasesCalendario(fecha, columna) {
     const fechaDesde = filtrosActivos[columna]?.desde;
     const fechaHasta = filtrosActivos[columna]?.hasta;
-    
+
     let clases = [];
-    
+
     if (fecha === fechaDesde || fecha === fechaHasta) {
         clases.push('selected');
     } else if (fechaDesde && fechaHasta) {
@@ -292,7 +293,7 @@ function obtenerClasesCalendario(fecha, columna) {
             clases.push('in-range');
         }
     }
-    
+
     return clases.join(' ');
 }
 
@@ -301,13 +302,13 @@ function seleccionarFecha(tipo, fecha, columna) {
     if (!filtrosActivos[columna]) {
         filtrosActivos[columna] = {};
     }
-    
+
     filtrosActivos[columna][tipo] = fecha;
-    
+
     // Actualizar ambos calendarios para mostrar el rango
     actualizarCalendario('desde', columna);
     actualizarCalendario('hasta', columna);
-    
+
     // Solo aplicar filtro si ambas fechas están seleccionadas
     if (filtrosActivos[columna].desde && filtrosActivos[columna].hasta) {
         paginaActual = 1;
@@ -323,13 +324,13 @@ function cargarOpcionesFiltro(panel, columna) {
         method: 'POST',
         data: { columna: columna },
         dataType: 'json',
-        success: function(response) {
+        success: function (response) {
             if (response.success) {
                 let html = '<div class="filter-section">';
                 html += '<span class="filter-section-title">Filtrar por:</span>';
                 html += '<input type="text" class="filter-search" placeholder="Buscar..." onkeyup="buscarEnOpciones(this)">';
                 html += '<div class="filter-options">';
-                
+
                 response.opciones.forEach(opcion => {
                     const checked = filtrosActivos[columna] && filtrosActivos[columna].includes(opcion.valor) ? 'checked' : '';
                     html += `
@@ -340,7 +341,7 @@ function cargarOpcionesFiltro(panel, columna) {
                         </div>
                     `;
                 });
-                
+
                 html += '</div></div>';
                 panel.append(html);
             }
@@ -358,10 +359,10 @@ function posicionarPanelFiltro(panel, icon) {
     const windowWidth = $(window).width();
     const windowHeight = $(window).height();
     const scrollTop = $(window).scrollTop();
-    
+
     let top = iconOffset.top + iconHeight + 5;
     let left = iconOffset.left - panelWidth + iconWidth;
-    
+
     if (left + panelWidth > windowWidth) {
         left = windowWidth - panelWidth - 10;
     }
@@ -375,7 +376,7 @@ function posicionarPanelFiltro(panel, icon) {
         top = scrollTop + 10;
         panel.css('max-height', (windowHeight - 60) + 'px');
     }
-    
+
     panel.css({ top: top + 'px', left: left + 'px' });
 }
 
@@ -384,7 +385,7 @@ function actualizarIndicadoresFiltros() {
     $('.filter-icon').removeClass('has-filter');
     Object.keys(filtrosActivos).forEach(columna => {
         const valor = filtrosActivos[columna];
-        if ((Array.isArray(valor) && valor.length > 0) || 
+        if ((Array.isArray(valor) && valor.length > 0) ||
             (!Array.isArray(valor) && typeof valor === 'object' && (valor.desde || valor.hasta)) ||
             (!Array.isArray(valor) && typeof valor !== 'object' && valor !== '')) {
             $(`th[data-column="${columna}"] .filter-icon`).addClass('has-filter');
@@ -449,7 +450,7 @@ function toggleOpcionFiltro(columna, valor, checked) {
 function buscarEnOpciones(input) {
     const busqueda = input.value.toLowerCase();
     const opciones = $(input).siblings('.filter-options').find('.filter-option');
-    opciones.each(function() {
+    opciones.each(function () {
         const texto = $(this).text().toLowerCase();
         $(this).toggle(texto.includes(busqueda));
     });
@@ -467,35 +468,35 @@ function renderizarPaginacion(totalRegistros) {
     const totalPaginas = Math.ceil(totalRegistros / registrosPorPagina);
     const paginacion = $('#paginacion');
     paginacion.empty();
-    
+
     paginacion.append(`
         <button class="pagination-btn" onclick="cambiarPagina(${paginaActual - 1})" ${paginaActual === 1 ? 'disabled' : ''}>
             <i class="bi bi-chevron-left"></i>
         </button>
     `);
-    
+
     let inicio = Math.max(1, paginaActual - 2);
     let fin = Math.min(totalPaginas, paginaActual + 2);
-    
+
     if (inicio > 1) {
         paginacion.append(`<button class="pagination-btn" onclick="cambiarPagina(1)">1</button>`);
         if (inicio > 2) {
             paginacion.append(`<span class="pagination-btn" disabled>...</span>`);
         }
     }
-    
+
     for (let i = inicio; i <= fin; i++) {
         const activeClass = i === paginaActual ? 'active' : '';
         paginacion.append(`<button class="pagination-btn ${activeClass}" onclick="cambiarPagina(${i})">${i}</button>`);
     }
-    
+
     if (fin < totalPaginas) {
         if (fin < totalPaginas - 1) {
             paginacion.append(`<span class="pagination-btn" disabled>...</span>`);
         }
         paginacion.append(`<button class="pagination-btn" onclick="cambiarPagina(${totalPaginas})">${totalPaginas}</button>`);
     }
-    
+
     paginacion.append(`
         <button class="pagination-btn" onclick="cambiarPagina(${paginaActual + 1})" ${paginaActual === totalPaginas ? 'disabled' : ''}>
             <i class="bi bi-chevron-right"></i>
@@ -512,9 +513,33 @@ function cambiarPagina(pagina) {
 
 // Formatear fecha
 function formatearFecha(fecha) {
-    if (!fecha) return '-';
+    if (!fecha || fecha === '0000-00-00') return '-';
     const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-    const d = new Date(fecha);
+    const d = new Date(fecha + 'T00:00:00'); // Forzar interpretación como fecha local
+    if (isNaN(d.getTime())) return '-';
     const año = String(d.getFullYear()).slice(-2);
     return `${String(d.getDate()).padStart(2, '0')}-${meses[d.getMonth()]}-${año}`;
+}
+
+// Exportar a Excel
+function exportarExcel() {
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = 'ajax/clientes_exportar_excel.php';
+
+    const inputFiltros = document.createElement('input');
+    inputFiltros.type = 'hidden';
+    inputFiltros.name = 'filtros';
+    inputFiltros.value = JSON.stringify(filtrosActivos);
+    form.appendChild(inputFiltros);
+
+    const inputOrden = document.createElement('input');
+    inputOrden.type = 'hidden';
+    inputOrden.name = 'orden';
+    inputOrden.value = JSON.stringify(ordenActivo);
+    form.appendChild(inputOrden);
+
+    document.body.appendChild(form);
+    form.submit();
+    document.body.removeChild(form);
 }

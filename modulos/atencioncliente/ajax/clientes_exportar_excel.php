@@ -1,22 +1,23 @@
 <?php
-//clientes_get_datos.php
-require_once '../../../includes/conexion.php';
+// clientes_exportar_excel.php
+require_once '../../../core/database/conexion.php';
+require_once '../../../core/auth/auth.php';
+require_once '../../../vendor/autoload.php';
 
-header('Content-Type: application/json');
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Style\Border;
 
 try {
-    $pagina = isset($_POST['pagina']) ? (int) $_POST['pagina'] : 1;
-    $registros_por_pagina = isset($_POST['registros_por_pagina']) ? (int) $_POST['registros_por_pagina'] : 25;
     $filtros = isset($_POST['filtros']) ? json_decode($_POST['filtros'], true) : [];
     $orden = isset($_POST['orden']) ? json_decode($_POST['orden'], true) : ['columna' => null, 'direccion' => 'asc'];
 
-    $offset = ($pagina - 1) * $registros_por_pagina;
-
-    // Construir WHERE
+    // Construir WHERE (Reutilizado de clientes_get_datos.php)
     $where = [];
     $params = [];
 
-    // Filtros de texto
     $filtrosTexto = ['membresia', 'nombre', 'apellido', 'celular', 'correo'];
     foreach ($filtrosTexto as $campo) {
         if (isset($filtros[$campo]) && $filtros[$campo] !== '') {
@@ -25,7 +26,6 @@ try {
         }
     }
 
-    // Filtro de lista (sucursal)
     if (isset($filtros['nombre_sucursal']) && is_array($filtros['nombre_sucursal']) && count($filtros['nombre_sucursal']) > 0) {
         $placeholders = [];
         foreach ($filtros['nombre_sucursal'] as $idx => $valor) {
@@ -36,7 +36,6 @@ try {
         $where[] = "nombre_sucursal IN (" . implode(',', $placeholders) . ")";
     }
 
-    // Filtro de rango de fechas de registro
     if (isset($filtros['fecha_registro']) && is_array($filtros['fecha_registro'])) {
         if (!empty($filtros['fecha_registro']['desde'])) {
             $where[] = "fecha_registro >= :fecha_registro_desde";
@@ -48,7 +47,6 @@ try {
         }
     }
 
-    // Filtro de rango de fechas de última compra
     if (isset($filtros['ultima_compra']) && is_array($filtros['ultima_compra'])) {
         if (!empty($filtros['ultima_compra']['desde'])) {
             $where[] = "ultima_compra >= :ultima_compra_desde";
@@ -62,7 +60,6 @@ try {
 
     $whereClause = count($where) > 0 ? 'WHERE ' . implode(' AND ', $where) : '';
 
-    // Construir ORDER BY
     $orderClause = '';
     if ($orden['columna']) {
         $columnas_validas = ['membresia', 'nombre', 'apellido', 'celular', 'fecha_nacimiento', 'correo', 'fecha_registro', 'nombre_sucursal', 'ultima_compra'];
@@ -74,20 +71,7 @@ try {
         $orderClause = "ORDER BY fecha_registro DESC";
     }
 
-    // Consulta de conteo - Usamos una subconsulta para poder filtrar por ultima_compra en el total
-    $sqlCount = "SELECT COUNT(*) as total FROM (
-                    SELECT 
-                        c.*,
-                        (SELECT MAX(v.Fecha) 
-                         FROM VentasGlobalesAccessCSV v 
-                         WHERE v.CodCliente = c.membresia AND v.Anulado = 0) as ultima_compra
-                    FROM clientesclub c
-                ) as t $whereClause";
-    $stmtCount = $conn->prepare($sqlCount);
-    $stmtCount->execute($params);
-    $totalRegistros = $stmtCount->fetch()['total'];
-
-    // Consulta de datos con paginación
+    // Consulta de datos completa (sin LIMIT)
     $sql = "SELECT * FROM (
                 SELECT 
                     membresia,
@@ -104,30 +88,83 @@ try {
                 FROM clientesclub c
             ) as t
             $whereClause
-            $orderClause
-            LIMIT :offset, :limit";
+            $orderClause";
 
     $stmt = $conn->prepare($sql);
-
     foreach ($params as $key => $value) {
         $stmt->bindValue($key, $value);
     }
-    $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
-    $stmt->bindValue(':limit', $registros_por_pagina, PDO::PARAM_INT);
-
     $stmt->execute();
     $datos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    echo json_encode([
-        'success' => true,
-        'datos' => $datos,
-        'total_registros' => $totalRegistros
+    // Crear Excel
+    $spreadsheet = new Spreadsheet();
+    $sheet = $spreadsheet->getActiveSheet();
+    $sheet->setTitle('Historial de Clientes');
+
+    // Encabezados
+    $encabezados = [
+        'A1' => 'Membresía',
+        'B1' => 'Nombre',
+        'C1' => 'Apellido',
+        'D1' => 'Celular',
+        'E1' => 'Fecha Nacimiento',
+        'F1' => 'Correo',
+        'G1' => 'Fecha Inscripción',
+        'H1' => 'Última Compra',
+        'I1' => 'Sucursal'
+    ];
+
+    foreach ($encabezados as $celda => $texto) {
+        $sheet->setCellValue($celda, $texto);
+    }
+
+    // Estilo encabezado
+    $sheet->getStyle('A1:I1')->applyFromArray([
+        'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
+        'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '0E544C']],
+        'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER]
     ]);
 
-} catch (Exception $e) {
-    echo json_encode([
-        'success' => false,
-        'message' => $e->getMessage()
+    // Llenar datos
+    $row = 2;
+    foreach ($datos as $dato) {
+        $sheet->setCellValue('A' . $row, $dato['membresia']);
+        $sheet->setCellValue('B' . $row, $dato['nombre']);
+        $sheet->setCellValue('C' . $row, $dato['apellido']);
+        $sheet->setCellValue('D' . $row, $dato['celular']);
+        $sheet->setCellValue('E' . $row, $dato['fecha_nacimiento']);
+        $sheet->setCellValue('F' . $row, $dato['correo']);
+        $sheet->setCellValue('G' . $row, $dato['fecha_registro']);
+        $sheet->setCellValue('H' . $row, $dato['ultima_compra'] ?: '-');
+        $sheet->setCellValue('I' . $row, $dato['nombre_sucursal']);
+        $row++;
+    }
+
+    // Ajustar columnas
+    foreach (range('A', 'I') as $col) {
+        $sheet->getColumnDimension($col)->setAutoSize(true);
+    }
+
+    // Bordes
+    $sheet->getStyle('A1:I' . ($row - 1))->applyFromArray([
+        'borders' => [
+            'allBorders' => [
+                'borderStyle' => Border::BORDER_THIN,
+                'color' => ['rgb' => '000000']
+            ]
+        ]
     ]);
+
+    // Salida
+    header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    header('Content-Disposition: attachment;filename="HistorialClientes_' . date('Ymd_His') . '.xlsx"');
+    header('Cache-Control: max-age=0');
+
+    $writer = new Xlsx($spreadsheet);
+    $writer->save('php://output');
+    exit();
+
+} catch (Exception $e) {
+    echo "Error al generar el Excel: " . $e->getMessage();
 }
-?>
