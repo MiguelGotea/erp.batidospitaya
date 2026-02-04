@@ -117,6 +117,10 @@ try {
         $paramName = ":val_$campo";
         $setParts[] = "$campo = $paramName";
         $params[$paramName] = ($valor === "") ? null : $valor;
+        // Forzar NULL en subproyectos para el campo color
+        if ($campo === 'color' && $proyecto['es_subproyecto'] == 1) {
+            $params[$paramName] = null;
+        }
     }
     $setParts[] = "modificado_por = :usuario";
 

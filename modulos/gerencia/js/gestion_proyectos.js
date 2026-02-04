@@ -418,6 +418,7 @@ window.editarProyecto = function (id, event) {
         seleccionarColor(p.color || GANTT_COLORS[0]);
     } else {
         $('#colorPickerGroup').hide();
+        $('#editColor').val(''); // Asegurar que no se envíe color para subproyectos a fin de forzar la herencia
     }
 
     $('#modalTitulo').text('Editar Proyecto');

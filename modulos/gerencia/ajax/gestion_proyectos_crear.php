@@ -6,6 +6,7 @@ header('Content-Type: application/json; charset=utf-8');
 require_once '../../../core/auth/auth.php';
 require_once '../../../core/permissions/permissions.php';
 
+
 $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
 $idOperario = $usuario['CodOperario'];
@@ -26,7 +27,12 @@ $fechaInicio = $data['fecha_inicio'] ?? null;
 $fechaFin = $data['fecha_fin'] ?? null;
 $esSubproyecto = (int) ($data['es_subproyecto'] ?? 0);
 $proyectoPadreId = !empty($data['proyecto_padre_id']) ? $data['proyecto_padre_id'] : null;
-$color = $data['color'] ?? null;
+$color = (isset($data['color']) && $data['color'] !== '') ? $data['color'] : null;
+
+// Forzar NULL en subproyectos para asegurar herencia del color del padre
+if ($esSubproyecto) {
+    $color = null;
+}
 
 // Validaciones básicas
 if (!$codNivelesCargos || !$fechaInicio || !$fechaFin) {
