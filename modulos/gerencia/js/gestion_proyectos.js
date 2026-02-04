@@ -243,9 +243,9 @@ function renderGantt(cargosList = []) {
                     currentMinChildLevel = hijoLevel + 1;
                 });
 
-                // Empuje Progresivo: El siguiente proyecto (del mismo color o no)
-                // debe comenzar debajo de todo lo que ya se ha renderizado (padre + hijos expandidos)
-                colorRowStart = levels.length;
+                // Empuje Dinámico: El siguiente proyecto del mismo color podrá usar niveles superiores 
+                // solo si no colisiona con este padre o sus hijos expandidos.
+                // Ya no forzamos colorRowStart = levels.length aquí para permitir "gap filling".
             }
         });
 
@@ -923,27 +923,27 @@ function findBestLevel(p, levels, minLevel = 0) {
 
         if (collidesInLevel) continue;
 
-        // Regla 2: "Earliest on top". Si colocamos P aquí, no debe haber nada en niveles INFERIORES
-        // con lo que colisione. Porque si colisiona con algo en L+1, y P se procesa ahora (con fecha posterior),
-        // P debe estar debajo de ese algo.
-        // Dado que procesamos por fecha_inicio, cualquier cosa ya en levels[j] empezó antes o igual.
-        // Entonces, si P colisiona con algo en un nivel inferior, P DEBE ir más abajo aún.
-        let collidesBelow = false;
+        // Regla 2: Mantener jerarquía cronológica para solapamientos.
+        // Si hay algo en niveles inferiores (j > i) que EMPIEZA ANTES que P y P colisiona con ello,
+        // P debe ir más abajo para no "saltarlo". 
+        // Como procesamos por fecha_inicio, la mayoría de los casos se resuelven solos, 
+        // pero esto previene "montajes" visuales extraños.
+        let overlapsSomethingBelow = false;
         for (let j = i + 1; j < levels.length; j++) {
             if (levels[j].some(item => {
                 const jStart = new Date(item.fecha_inicio);
                 const jEnd = new Date(item.fecha_fin);
                 return (pStart <= jEnd) && (pEnd >= jStart);
             })) {
-                collidesBelow = true;
+                overlapsSomethingBelow = true;
                 break;
             }
         }
 
-        if (!collidesBelow) return i;
+        if (!overlapsSomethingBelow) return i;
     }
 
-    // Si no cabe en ningún nivel existente respetando las reglas, crear niveles hasta minLevel y uno más
+    // Asegurar que existan los niveles hasta minLevel antes de agregar uno nuevo
     while (levels.length <= minLevel) levels.push([]);
     levels.push([]);
     return levels.length - 1;
