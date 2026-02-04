@@ -208,31 +208,36 @@ function renderGantt(cargosList = []) {
 
         padres.forEach(padre => {
             const pColor = padre.color || '';
+            // 2. Agrupación por Color: Un nuevo color siempre empieza debajo de los anteriores
             if (lastColor !== null && pColor !== lastColor) {
-                // Color changed! Start this new color group below all existing rows
                 colorRowStart = levels.length;
             }
             lastColor = pColor;
 
+            // Al colocar el padre, usamos findBestLevel que ahora respeta el "earliest on top"
             let padreLevel = findBestLevel(padre, levels, colorRowStart);
             levels[padreLevel].push(padre);
             content.append(renderProyectoBar(padre, padreLevel, endDate));
 
-            // Si está expandido, procesar sus hijos inmediatamente debajo
+            // Si está expandido, procesar sus hijos inmediatamente debajo del padre
             if (parseInt(padre.esta_expandido) !== 0) {
                 const hijos = proyectosCargo.filter(p => p.proyecto_padre_id == padre.id)
                     .sort((a, b) => new Date(a.fecha_inicio) - new Date(b.fecha_inicio));
 
+                // Los hijos empiezan al menos una línea debajo del padre
                 let currentMinChildLevel = padreLevel + 1;
                 hijos.forEach(hijo => {
-                    // Usar findBestLevel para hijos también para evitar colisiones con otros padres o hijos
                     let hijoLevel = findBestLevel(hijo, levels, currentMinChildLevel);
                     levels[hijoLevel].push(hijo);
                     content.append(renderProyectoBar(hijo, hijoLevel, endDate));
+
+                    // Cada hijo sucesivo debe estar en una línea nueva o debajo para evitar montarse
+                    // si así lo prefiere el diseño de "empuje"
+                    currentMinChildLevel = hijoLevel + 1;
                 });
 
-                // Para "empujar" los siguientes proyectos del cargo, actualizamos el colorRowStart
-                // Esto garantiza que el siguiente padre comience después de este bloque expandido
+                // Empuje Progresivo: El siguiente proyecto (del mismo color o no)
+                // debe comenzar debajo de todo lo que ya se ha renderizado (padre + hijos expandidos)
                 colorRowStart = levels.length;
             }
         });
@@ -895,12 +900,40 @@ function cambiarRegistrosPorPagina() { cargarHistorial(1); }
 function formatDate(d) { if (!d) return ''; const dt = new Date(d); return dt.toISOString().split('T')[0]; }
 
 function findBestLevel(p, levels, minLevel = 0) {
+    const pStart = new Date(p.fecha_inicio);
+    const pEnd = new Date(p.fecha_fin);
+
     for (let i = minLevel; i < levels.length; i++) {
-        const collides = levels[i].some(item => {
-            return (new Date(p.fecha_inicio) <= new Date(item.fecha_fin)) && (new Date(p.fecha_fin) >= new Date(item.fecha_inicio));
+        // Regla 1: No debe colisionar con nada en el nivel actual
+        const collidesInLevel = levels[i].some(item => {
+            const iStart = new Date(item.fecha_inicio);
+            const iEnd = new Date(item.fecha_fin);
+            return (pStart <= iEnd) && (pEnd >= iStart);
         });
-        if (!collides) return i;
+
+        if (collidesInLevel) continue;
+
+        // Regla 2: "Earliest on top". Si colocamos P aquí, no debe haber nada en niveles INFERIORES
+        // con lo que colisione. Porque si colisiona con algo en L+1, y P se procesa ahora (con fecha posterior),
+        // P debe estar debajo de ese algo.
+        // Dado que procesamos por fecha_inicio, cualquier cosa ya en levels[j] empezó antes o igual.
+        // Entonces, si P colisiona con algo en un nivel inferior, P DEBE ir más abajo aún.
+        let collidesBelow = false;
+        for (let j = i + 1; j < levels.length; j++) {
+            if (levels[j].some(item => {
+                const jStart = new Date(item.fecha_inicio);
+                const jEnd = new Date(item.fecha_fin);
+                return (pStart <= jEnd) && (pEnd >= jStart);
+            })) {
+                collidesBelow = true;
+                break;
+            }
+        }
+
+        if (!collidesBelow) return i;
     }
+
+    // Si no cabe en ningún nivel existente respetando las reglas, crear niveles hasta minLevel y uno más
     while (levels.length <= minLevel) levels.push([]);
     levels.push([]);
     return levels.length - 1;
