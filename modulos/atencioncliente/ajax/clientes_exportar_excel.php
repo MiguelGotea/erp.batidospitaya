@@ -2,19 +2,14 @@
 // clientes_exportar_excel.php
 require_once '../../../core/database/conexion.php';
 require_once '../../../core/auth/auth.php';
-require_once '../../../core/vendor/autoload.php';
 
-use PhpOffice\PhpSpreadsheet\Spreadsheet;
-use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
-use PhpOffice\PhpSpreadsheet\Style\Alignment;
-use PhpOffice\PhpSpreadsheet\Style\Fill;
-use PhpOffice\PhpSpreadsheet\Style\Border;
+// No dependemos de vendor/autoload.php ya que usaremos el método HTML
 
 try {
     $filtros = isset($_POST['filtros']) ? json_decode($_POST['filtros'], true) : [];
     $orden = isset($_POST['orden']) ? json_decode($_POST['orden'], true) : ['columna' => null, 'direccion' => 'asc'];
 
-    // Construir WHERE (Reutilizado de clientes_get_datos.php)
+    // Construir WHERE (Idéntico a clientes_get_datos.php)
     $where = [];
     $params = [];
 
@@ -97,72 +92,52 @@ try {
     $stmt->execute();
     $datos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // Crear Excel
-    $spreadsheet = new Spreadsheet();
-    $sheet = $spreadsheet->getActiveSheet();
-    $sheet->setTitle('Historial de Clientes');
-
-    // Encabezados
-    $encabezados = [
-        'A1' => 'Membresía',
-        'B1' => 'Nombre',
-        'C1' => 'Apellido',
-        'D1' => 'Celular',
-        'E1' => 'Fecha Nacimiento',
-        'F1' => 'Correo',
-        'G1' => 'Fecha Inscripción',
-        'H1' => 'Última Compra',
-        'I1' => 'Sucursal'
-    ];
-
-    foreach ($encabezados as $celda => $texto) {
-        $sheet->setCellValue($celda, $texto);
-    }
-
-    // Estilo encabezado
-    $sheet->getStyle('A1:I1')->applyFromArray([
-        'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
-        'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '0E544C']],
-        'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER]
-    ]);
-
-    // Llenar datos
-    $row = 2;
-    foreach ($datos as $dato) {
-        $sheet->setCellValue('A' . $row, $dato['membresia']);
-        $sheet->setCellValue('B' . $row, $dato['nombre']);
-        $sheet->setCellValue('C' . $row, $dato['apellido']);
-        $sheet->setCellValue('D' . $row, $dato['celular']);
-        $sheet->setCellValue('E' . $row, $dato['fecha_nacimiento']);
-        $sheet->setCellValue('F' . $row, $dato['correo']);
-        $sheet->setCellValue('G' . $row, $dato['fecha_registro']);
-        $sheet->setCellValue('H' . $row, $dato['ultima_compra'] ?: '-');
-        $sheet->setCellValue('I' . $row, $dato['nombre_sucursal']);
-        $row++;
-    }
-
-    // Ajustar columnas
-    foreach (range('A', 'I') as $col) {
-        $sheet->getColumnDimension($col)->setAutoSize(true);
-    }
-
-    // Bordes
-    $sheet->getStyle('A1:I' . ($row - 1))->applyFromArray([
-        'borders' => [
-            'allBorders' => [
-                'borderStyle' => Border::BORDER_THIN,
-                'color' => ['rgb' => '000000']
-            ]
-        ]
-    ]);
-
-    // Salida
-    header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    header('Content-Disposition: attachment;filename="HistorialClientes_' . date('Ymd_His') . '.xlsx"');
+    // Configurar headers para descarga de archivo .xls
+    header('Content-Type: application/vnd.ms-excel; charset=utf-8');
+    header('Content-Disposition: attachment; filename="HistorialClientes_' . date('Ymd_His') . '.xls"');
     header('Cache-Control: max-age=0');
 
-    $writer = new Xlsx($spreadsheet);
-    $writer->save('php://output');
+    // Iniciar salida HTML que Excel interpretará
+    echo '<!DOCTYPE html>
+    <html lang="es">
+    <head>
+        <meta charset="UTF-8">
+    </head>
+    <body>
+        <table border="1">
+            <thead>
+                <tr style="background-color: #0E544C; color: #FFFFFF; font-weight: bold;">
+                    <th>Membresía</th>
+                    <th>Nombre</th>
+                    <th>Apellido</th>
+                    <th>Celular</th>
+                    <th>Fecha Nacimiento</th>
+                    <th>Correo</th>
+                    <th>Fecha Inscripción</th>
+                    <th>Última Compra</th>
+                    <th>Sucursal</th>
+                </tr>
+            </thead>
+            <tbody>';
+
+    foreach ($datos as $dato) {
+        echo '<tr>';
+        echo '<td>' . htmlspecialchars($dato['membresia']) . '</td>';
+        echo '<td>' . htmlspecialchars($dato['nombre']) . '</td>';
+        echo '<td>' . htmlspecialchars($dato['apellido']) . '</td>';
+        echo '<td>' . htmlspecialchars($dato['celular']) . '</td>';
+        echo '<td>' . htmlspecialchars($dato['fecha_nacimiento']) . '</td>';
+        echo '<td>' . htmlspecialchars($dato['correo']) . '</td>';
+        echo '<td>' . htmlspecialchars($dato['fecha_registro']) . '</td>';
+        echo '<td>' . htmlspecialchars($dato['ultima_compra'] ?: '-') . '</td>';
+        echo '<td>' . htmlspecialchars($dato['nombre_sucursal']) . '</td>';
+        echo '</tr>';
+    }
+
+    echo '</tbody>
+        </table>
+    </body>
+    </html>';
     exit();
 
 } catch (Exception $e) {
