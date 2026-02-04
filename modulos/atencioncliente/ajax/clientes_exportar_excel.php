@@ -67,16 +67,26 @@ try {
     }
 
     // Consulta de datos completa (sin LIMIT)
-    $sql = "SELECT * FROM (
+    $sql = "SELECT 
+                membresia,
+                nombre,
+                apellido,
+                celular,
+                fecha_nacimiento,
+                correo,
+                fecha_registro,
+                nombre_sucursal,
+                ultima_compra
+            FROM (
                 SELECT 
-                    membresia,
-                    nombre,
-                    apellido,
-                    celular,
-                    fecha_nacimiento,
-                    correo,
-                    fecha_registro,
-                    nombre_sucursal,
+                    c.membresia,
+                    c.nombre,
+                    c.apellido,
+                    c.celular,
+                    c.fecha_nacimiento,
+                    c.correo,
+                    c.fecha_registro,
+                    c.nombre_sucursal,
                     (SELECT MAX(v.Fecha) 
                      FROM VentasGlobalesAccessCSV v 
                      WHERE v.CodCliente = c.membresia AND v.Anulado = 0) as ultima_compra
@@ -101,7 +111,7 @@ try {
     echo '<!DOCTYPE html>
     <html lang="es">
     <head>
-        <meta charset="UTF-8">
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     </head>
     <body>
         <table border="1">
@@ -122,15 +132,15 @@ try {
 
     foreach ($datos as $dato) {
         echo '<tr>';
-        echo '<td>' . htmlspecialchars($dato['membresia']) . '</td>';
-        echo '<td>' . htmlspecialchars($dato['nombre']) . '</td>';
-        echo '<td>' . htmlspecialchars($dato['apellido']) . '</td>';
-        echo '<td>' . htmlspecialchars($dato['celular']) . '</td>';
-        echo '<td>' . htmlspecialchars($dato['fecha_nacimiento']) . '</td>';
-        echo '<td>' . htmlspecialchars($dato['correo']) . '</td>';
-        echo '<td>' . htmlspecialchars($dato['fecha_registro']) . '</td>';
-        echo '<td>' . htmlspecialchars($dato['ultima_compra'] ?: '-') . '</td>';
-        echo '<td>' . htmlspecialchars($dato['nombre_sucursal']) . '</td>';
+        echo '<td>' . htmlspecialchars((string) ($dato['membresia'] ?? '')) . '</td>';
+        echo '<td>' . htmlspecialchars((string) ($dato['nombre'] ?? '')) . '</td>';
+        echo '<td>' . htmlspecialchars((string) ($dato['apellido'] ?? '')) . '</td>';
+        echo '<td>' . htmlspecialchars((string) ($dato['celular'] ?? '')) . '</td>';
+        echo '<td>' . htmlspecialchars((string) ($dato['fecha_nacimiento'] ?? '')) . '</td>';
+        echo '<td>' . htmlspecialchars((string) ($dato['correo'] ?? '')) . '</td>';
+        echo '<td>' . htmlspecialchars((string) ($dato['fecha_registro'] ?? '')) . '</td>';
+        echo '<td>' . htmlspecialchars((string) ($dato['ultima_compra'] ?? '-')) . '</td>';
+        echo '<td>' . htmlspecialchars((string) ($dato['nombre_sucursal'] ?? '')) . '</td>';
         echo '</tr>';
     }
 
