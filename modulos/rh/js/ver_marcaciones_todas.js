@@ -442,61 +442,49 @@ function filtrarNumerico(columna, tipo, valor) {
 
 // Crear calendario para rango de fechas
 function crearCalendarioDoble(panel, columna) {
-    const fechaDesde = filtrosActivos[columna]?.desde || '';
-    const fechaHasta = filtrosActivos[columna]?.hasta || '';
+    const fechaDesdeValue = filtrosActivos[columna]?.desde || '';
+    const fechaHastaValue = filtrosActivos[columna]?.hasta || '';
 
     const hoy = new Date();
     const mesActual = hoy.getMonth();
     const añoActual = hoy.getFullYear();
 
-    let mesInicial = mesActual;
-    let añoInicial = añoActual;
-
-    if (fechaDesde) {
-        const d = new Date(fechaDesde);
-        mesInicial = d.getMonth();
-        añoInicial = d.getFullYear();
-    }
-
     panel.append(`
-        <div class="filter-section" style="margin-top: 8px; margin-bottom: 6px;">
-            <span class="filter-section-title">Seleccionar rango:</span>
-            <div class="daterange-inputs">
-                <div class="daterange-calendar-container">
-                    <div class="daterange-month-selector">
-                        <select id="mesCalendario" onchange="actualizarCalendarioUnico('${columna}')"></select>
-                        <select id="añoCalendario" onchange="actualizarCalendarioUnico('${columna}')"></select>
-                    </div>
-                    <div class="daterange-calendar" id="calendarioUnico"></div>
+        <div class="filter-section" style="margin-top: 8px;">
+            <span class="filter-section-title">Seleccionar Rango:</span>
+            <div class="daterange-calendar-container">
+                <div class="daterange-month-selector">
+                    <select id="mesCalendario" onchange="actualizarCalendarioUnico('${columna}')"></select>
+                    <select id="añoCalendario" onchange="actualizarCalendarioUnico('${columna}')"></select>
                 </div>
+                <div class="daterange-calendar" id="calendarioUnico"></div>
+            </div>
+            <div class="daterange-info mt-2" style="font-size: 0.8rem; color: #666;">
+                <i class="bi bi-info-circle"></i> Haz clic en dos fechas para definir el rango.
             </div>
         </div>
     `);
 
     setTimeout(() => {
-        inicializarSelectoresFechaUnico(mesInicial, añoInicial);
+        const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+            'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+
+        const selectMes = $('#mesCalendario');
+        const selectAño = $('#añoCalendario');
+
+        meses.forEach((mes, idx) => {
+            selectMes.append(`<option value="${idx}" ${idx === mesActual ? 'selected' : ''}>${mes}</option>`);
+        });
+
+        for (let año = añoActual - 10; año <= añoActual + 1; año++) {
+            selectAño.append(`<option value="${año}" ${año === añoActual ? 'selected' : ''}>${año}</option>`);
+        }
+
         actualizarCalendarioUnico(columna);
     }, 50);
 }
 
-// Inicializar selectores de fecha
-function inicializarSelectoresFechaUnico(mesInicial, añoInicial) {
-    const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-        'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-
-    const selectMes = $('#mesCalendario');
-    meses.forEach((mes, idx) => {
-        selectMes.append(`<option value="${idx}" ${idx === mesInicial ? 'selected' : ''}>${mes}</option>`);
-    });
-
-    const selectAño = $('#añoCalendario');
-    const añoActual = new Date().getFullYear();
-    for (let año = añoActual - 5; año <= añoActual + 1; año++) {
-        selectAño.append(`<option value="${año}" ${año === añoInicial ? 'selected' : ''}>${año}</option>`);
-    }
-}
-
-// Actualizar calendario
+// Actualizar calendario único
 function actualizarCalendarioUnico(columna) {
     const mes = parseInt($('#mesCalendario').val());
     const año = parseInt($('#añoCalendario').val());
@@ -528,64 +516,40 @@ function actualizarCalendarioUnico(columna) {
     $(calendarioId).html(html);
 }
 
-// Obtener clases para días del calendario
-function obtenerClasesCalendario(fecha, columna) {
-    const fechaDesde = filtrosActivos[columna]?.desde;
-    const fechaHasta = filtrosActivos[columna]?.hasta;
-
-    let clases = [];
-
-    if (fecha === fechaDesde || fecha === fechaHasta) {
-        clases.push('selected');
-    } else if (fechaDesde && fechaHasta) {
-        if (fecha > fechaDesde && fecha < fechaHasta) {
-            clases.push('in-range');
-        }
-    }
-
-    return clases.join(' ');
-}
-
-// Seleccionar fecha en calendario
+// Seleccionar fecha con lógica de dos clics
 function seleccionarFechaUnico(fecha, columna) {
-    if (window.event) {
-        window.event.stopPropagation();
-    }
+    if (window.event) window.event.stopPropagation();
 
     if (!filtrosActivos[columna]) {
-        filtrosActivos[columna] = {};
+        filtrosActivos[columna] = { desde: null, hasta: null };
     }
 
-    const fechaDesde = filtrosActivos[columna].desde;
-    const fechaHasta = filtrosActivos[columna].hasta;
-
-    if (!fechaDesde && !fechaHasta) {
+    if (!filtrosActivos[columna].desde || (filtrosActivos[columna].desde && filtrosActivos[columna].hasta)) {
+        // Primer clic
         filtrosActivos[columna].desde = fecha;
-    } else if (fechaDesde && !fechaHasta) {
-        if (fecha >= fechaDesde) {
-            filtrosActivos[columna].hasta = fecha;
-        } else {
-            filtrosActivos[columna].desde = fecha;
-        }
-    } else if (fechaDesde && fechaHasta) {
-        if (fecha < fechaDesde) {
-            filtrosActivos[columna].desde = fecha;
-        } else if (fecha > fechaHasta) {
-            filtrosActivos[columna].hasta = fecha;
-        } else {
-            filtrosActivos[columna] = { desde: fecha };
-        }
-    }
+        filtrosActivos[columna].hasta = null;
+    } else {
+        // Segundo clic
+        let f1 = filtrosActivos[columna].desde;
+        let f2 = fecha;
 
-    actualizarCalendarioUnico(columna);
+        if (f2 < f1) {
+            filtrosActivos[columna].desde = f2;
+            filtrosActivos[columna].hasta = f1;
+        } else {
+            filtrosActivos[columna].hasta = f2;
+        }
 
-    if (filtrosActivos[columna].desde && filtrosActivos[columna].hasta) {
         // EXCLUSIÓN MUTUA: Si se filtra por fecha, eliminar filtro de semana
         delete filtrosActivos['numero_semana'];
 
+        // Aplicar filtro
         paginaActual = 1;
         cargarDatos();
+        cerrarTodosFiltros();
     }
+
+    actualizarCalendarioUnico(columna);
 }
 
 // Cargar opciones de filtro
