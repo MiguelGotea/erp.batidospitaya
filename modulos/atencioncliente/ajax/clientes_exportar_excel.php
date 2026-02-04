@@ -2,8 +2,15 @@
 // clientes_exportar_excel.php
 require_once '../../../core/database/conexion.php';
 require_once '../../../core/auth/auth.php';
+require_once '../../../core/permissions/permissions.php';
 
-// No dependemos de vendor/autoload.php ya que usaremos el método HTML
+$usuario = obtenerUsuarioActual();
+$cargoOperario = $usuario['CodNivelesCargos'];
+
+// Verificar permiso de descarga
+if (!tienePermiso('historial_clientes_club', 'descargar', $cargoOperario)) {
+    die("No tienes permiso para descargar este reporte.");
+}
 
 try {
     $filtros = isset($_POST['filtros']) ? json_decode($_POST['filtros'], true) : [];

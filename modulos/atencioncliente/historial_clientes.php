@@ -38,9 +38,11 @@ if (!tienePermiso('historial_clientes_club', 'vista', $cargoOperario)) {
 
             <div class="container-fluid p-3">
                 <div class="d-flex justify-content-end mb-3">
-                    <button class="btn btn-success" onclick="exportarExcel()">
-                        <i class="bi bi-file-earmark-excel"></i> Exportar a Excel
-                    </button>
+                    <?php if (tienePermiso('historial_clientes_club', 'descargar', $cargoOperario)): ?>
+                        <button class="btn btn-success" onclick="exportarExcel()">
+                            <i class="bi bi-file-earmark-excel"></i> Exportar a Excel
+                        </button>
+                    <?php endif; ?>
                 </div>
                 <div class="table-responsive">
                     <table class="table table-hover historial-table" id="tablaClientes">
