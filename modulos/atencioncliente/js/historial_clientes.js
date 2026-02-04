@@ -262,36 +262,49 @@ function obtenerClasesCalendario(fecha, columna) {
     return clases.join(' ');
 }
 
-// Seleccionar fecha con lógica de dos clics
+// Seleccionar fecha con lógica inteligente de actualización de rango
 function seleccionarFecha(tipo, fecha, columna) {
+    if (window.event) window.event.stopPropagation();
+
     if (!filtrosActivos[columna]) {
         filtrosActivos[columna] = { desde: null, hasta: null };
     }
 
-    if (!filtrosActivos[columna].desde || (filtrosActivos[columna].desde && filtrosActivos[columna].hasta)) {
-        // Primer clic (o reinicio si ya había un rango completo)
+    let fDesde = filtrosActivos[columna].desde;
+    let fHasta = filtrosActivos[columna].hasta;
+
+    if (!fDesde) {
+        // Primer clic absoluto
         filtrosActivos[columna].desde = fecha;
-        filtrosActivos[columna].hasta = null;
-    } else {
-        // Segundo clic
-        let f1 = filtrosActivos[columna].desde;
-        let f2 = fecha;
-
-        if (f2 < f1) {
-            // Swap if second date is earlier
-            filtrosActivos[columna].desde = f2;
-            filtrosActivos[columna].hasta = f1;
+    } else if (!fHasta) {
+        // Segundo clic: definir el rango inicial
+        if (fecha < fDesde) {
+            filtrosActivos[columna].desde = fecha;
+            filtrosActivos[columna].hasta = fDesde;
         } else {
-            filtrosActivos[columna].hasta = f2;
+            filtrosActivos[columna].hasta = fecha;
         }
-
-        // Aplicar filtro
-        paginaActual = 1;
-        cargarDatos();
-        cerrarTodosFiltros();
+    } else {
+        // Tercer clic en adelante: actualizar el límite más cercano o el final si está dentro
+        if (fecha < fDesde) {
+            filtrosActivos[columna].desde = fecha;
+        } else if (fecha > fHasta) {
+            filtrosActivos[columna].hasta = fecha;
+        } else {
+            // Si está dentro (o es igual a uno de los límites), actualizamos el "hasta"
+            filtrosActivos[columna].hasta = fecha;
+        }
     }
 
+    // Actualizar el calendario visualmente
     actualizarCalendario('rango', columna);
+
+    // Aplicar filtro si ya tenemos un rango completo
+    if (filtrosActivos[columna].desde && filtrosActivos[columna].hasta) {
+        paginaActual = 1;
+        cargarDatos();
+        // NO cerramos el modal, como pidió el usuario
+    }
 }
 
 // Cargar opciones de filtro
