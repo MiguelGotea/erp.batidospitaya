@@ -203,7 +203,8 @@ function renderGantt(cargosList = []) {
         let colorRowStart = 0;
         let lastColor = null;
 
-        const padres = proyectosCargo.filter(p => p.es_subproyecto == 0);
+        const padres = proyectosCargo.filter(p => p.es_subproyecto == 0)
+            .sort((a, b) => new Date(a.fecha_inicio) - new Date(b.fecha_inicio));
 
         padres.forEach(padre => {
             const pColor = padre.color || '';
@@ -219,25 +220,20 @@ function renderGantt(cargosList = []) {
 
             // Si está expandido, procesar sus hijos inmediatamente debajo
             if (parseInt(padre.esta_expandido) !== 0) {
-                const hijos = proyectosCargo.filter(p => p.proyecto_padre_id == padre.id);
+                const hijos = proyectosCargo.filter(p => p.proyecto_padre_id == padre.id)
+                    .sort((a, b) => new Date(a.fecha_inicio) - new Date(b.fecha_inicio));
 
-                let nextChildLevel = padreLevel + 1;
+                let currentMinChildLevel = padreLevel + 1;
                 hijos.forEach(hijo => {
-                    let hijoLevel = nextChildLevel;
-                    while (levels.length <= hijoLevel) levels.push([]);
-
+                    // Usar findBestLevel para hijos también para evitar colisiones con otros padres o hijos
+                    let hijoLevel = findBestLevel(hijo, levels, currentMinChildLevel);
                     levels[hijoLevel].push(hijo);
                     content.append(renderProyectoBar(hijo, hijoLevel, endDate));
-                    nextChildLevel++;
                 });
 
-                // After subprojects, the next parent in the SAME color group 
-                // should try to fit into rows starting after the LAST subproject row
-                // to avoid overlapping vertically with the subprojects we just added.
-                // However, to be extra safe and keep the grouped look, 
-                // we can update colorRowStart to levels.length if we want them strictly stacked.
-                // For now, let's just update the current "search start" to avoid subproject overlay.
-                // But actually, findBestLevel will already find a free spot.
+                // Para "empujar" los siguientes proyectos del cargo, actualizamos el colorRowStart
+                // Esto garantiza que el siguiente padre comience después de este bloque expandido
+                colorRowStart = levels.length;
             }
         });
 
@@ -260,8 +256,8 @@ function renderGantt(cargosList = []) {
     // Floating Zoom Controls (Bottom Right)
     const floatingControls = $(`
         <div class="gantt-zoom-controls">
-            <button class="gantt-zoom-btn" onclick="zoomGantt(2)" title="Zoom In"><i class="fas fa-plus"></i></button>
-            <button class="gantt-zoom-btn" onclick="zoomGantt(-2)" title="Zoom Out"><i class="fas fa-minus"></i></button>
+            <button class="gantt-zoom-btn" onclick="zoomGantt(4)" title="Zoom In"><i class="fas fa-plus"></i></button>
+            <button class="gantt-zoom-btn" onclick="zoomGantt(-4)" title="Zoom Out"><i class="fas fa-minus"></i></button>
         </div>
     `);
     wrapper.append(floatingControls);
