@@ -204,7 +204,14 @@ function renderGantt(cargosList = []) {
         let lastColor = null;
 
         const padres = proyectosCargo.filter(p => p.es_subproyecto == 0)
-            .sort((a, b) => new Date(a.fecha_inicio) - new Date(b.fecha_inicio));
+            .sort((a, b) => {
+                // 1. Agrupar por Color (usando la prioridad calculada por el servidor)
+                if (a.color_group_priority !== b.color_group_priority) {
+                    return new Date(a.color_group_priority) - new Date(b.color_group_priority);
+                }
+                // 2. Dentro del mismo color, el que empieza antes va arriba (Regla horizontal/vertical)
+                return new Date(a.fecha_inicio) - new Date(b.fecha_inicio);
+            });
 
         padres.forEach(padre => {
             const pColor = padre.color || '';
