@@ -15,6 +15,9 @@ $esOperaciones = tienePermiso('historial_marcaciones_globales', 'permisosoperaci
 $esCDS = tienePermiso('historial_marcaciones_globales', 'permisoscds', $usuario['CodNivelesCargos']);
 $esContabilidad = tienePermiso('historial_marcaciones_globales', 'permisoscontabilidad', $usuario['CodNivelesCargos']);
 
+// Obtener las últimas semanas disponibles para el filtro
+$semanasDisponibles = obtenerUltimasSemanas(10); // Obtener las últimas 10 semanas
+
 // Obtener operarios según el tipo de usuario
 if ($esLider) {
     // Para líderes: solo los operarios de su sucursal
@@ -42,6 +45,8 @@ GROUP BY o.CodOperario
 ORDER BY nombre_completo";
     $operariosFiltro = $conn->query($sql_operarios)->fetchAll();
 }
+
+// El acceso ya se verificó arriba con tienePermiso
 
 // Obtenemos el cargo principal usando la función de funciones.php
 $cargoUsuario = obtenerCargoPrincipalUsuario($_SESSION['usuario_id']);
@@ -1096,7 +1101,7 @@ function generarReporteFaltas($modoVista, $codSucursal, $fechaDesde, $fechaHasta
                             UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) a,
                             (SELECT 0 a UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4
                             UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) b
-                            WHERE DATE(?) + INTERVAL (a.a + (10 * b.a)) DAY <= ? ) h WHERE h.fecha BETWEEN ? AND ? AND h.fecha < CURDATE() AND
+                            WHERE DATE(?) + INTERVAL (a.a + (10 * b.a)) DAY <= ? ) h WHERE h.fecha BETWEEN ? AND ? AND
                                 EXISTS ( SELECT 1 FROM HorariosSemanalesOperaciones hso JOIN SemanasSistema ss ON
                                 hso.id_semana_sistema=ss.id WHERE hso.cod_operario=? AND hso.cod_sucursal=? AND h.fecha
                                 BETWEEN ss.fecha_inicio AND ss.fecha_fin AND ( (DAYOFWEEK(h.fecha)=2 AND
@@ -1126,8 +1131,7 @@ function generarReporteFaltas($modoVista, $codSucursal, $fechaDesde, $fechaHasta
             $sqlFaltasReportadas = "SELECT COUNT(*) as total
                                 FROM faltas_manual
                                 WHERE cod_operario = ?
-                                AND fecha_falta BETWEEN ? AND ?
-                                AND fecha_falta < CURDATE()";
+                                AND fecha_falta BETWEEN ? AND ?";
 
             $stmtReportadas = $conn->prepare($sqlFaltasReportadas);
             $stmtReportadas->execute([$operario['CodOperario'], $fechaDesde, $fechaHasta]);
@@ -1138,7 +1142,6 @@ function generarReporteFaltas($modoVista, $codSucursal, $fechaDesde, $fechaHasta
                                 FROM faltas_manual
                                 WHERE cod_operario = ?
                                 AND fecha_falta BETWEEN ? AND ?
-                                AND fecha_falta < CURDATE()
                                 AND tipo_falta NOT IN ('No_Pagado', 'Pendiente')";
 
             $stmtJustificadas = $conn->prepare($sqlFaltasJustificadas);
@@ -1217,7 +1220,6 @@ function generarReporteTardanzas(
                                 JOIN Operarios o ON tm.cod_operario = o.CodOperario
                                 LEFT JOIN sucursales s ON o.Sucursal = s.codigo
                                 WHERE tm.fecha_tardanza BETWEEN ? AND ?
-                                AND tm.fecha_tardanza < CURDATE()
                                 AND (o.CodOperario NOT IN (
                                 SELECT CodOperario FROM AsignacionNivelesCargos
                                 WHERE CodNivelesCargos = 27 AND (Fin IS NULL OR Fin >= CURDATE())
@@ -1269,7 +1271,6 @@ function generarReporteTardanzas(
                                 WHERE m.CodOperario = ?
                                 AND tm.cod_contrato = ?
                                 AND m.fecha BETWEEN ? AND ?
-                                AND m.fecha < CURDATE()
                                 AND m.hora_ingreso IS NOT NULL
                                 AND EXISTS (
                                 SELECT 1 FROM HorariosSemanalesOperaciones h
@@ -1301,8 +1302,7 @@ function generarReporteTardanzas(
                                 FROM TardanzasManuales
                                 WHERE cod_operario = ?
                                 AND cod_contrato = ?
-                                AND fecha_tardanza BETWEEN ? AND ?
-                                AND fecha_tardanza < CURDATE()";
+                                AND fecha_tardanza BETWEEN ? AND ?";
 
             $stmtReportadas = $conn->prepare($sqlTardanzasReportadas);
             $stmtReportadas->execute([$codOperario, $codContrato, $fechaDesde, $fechaHasta]);
@@ -1317,7 +1317,6 @@ function generarReporteTardanzas(
                                 WHERE cod_operario = ?
                                 AND cod_contrato = ?
                                 AND fecha_tardanza BETWEEN ? AND ?
-                                AND fecha_tardanza < CURDATE()
                                 AND estado = 'Justificado'";
 
             $stmtJustificadas = $conn->prepare($sqlTardanzasJustificadas);
@@ -1449,11 +1448,151 @@ function verificarTardanzaYaRegistrada(
                     <?php unset($_SESSION['error']); ?>
                 <?php endif; ?>
 
-                <!-- Toolbar de exportación (solo para perfiles con permisos de exportación) -->
-                <?php if ($esContabilidad || $esOperaciones): ?>
-                    <div class="toolbar-container"
-                        style="margin-bottom: 10px; display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end;">
-                        <?php if ($esContabilidad): ?>
+                <div class="filters">
+                    <?php if (!$esLider): // Solo mostrar filtro de sucursal si NO es líder ?>
+                        <div class="filter-group">
+                            <label for="sucursal">Sucursal</label>
+                            <select id="sucursal" name="sucursal" onchange="aplicarFiltros()">
+                                <!--Aquellos cargos que no pueden ver la opción de Todas las sucursales-->
+                                <?php if (!$esLider): ?>
+                                    <option value="todas" <?= $modoVista === 'todas' ? 'selected' : '' ?>>Todas las sucursales
+                                    </option>
+                                <?php endif; ?>
+                                <?php foreach ($sucursales as $sucursal): ?>
+                                    <option value="<?= $sucursal['codigo'] ?>" <?= ($modoVista === 'sucursal' && $sucursalSeleccionada == $sucursal['codigo']) ? 'selected' : '' ?>>
+                                        <?= htmlspecialchars($sucursal['nombre']) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                    <?php else: // Para líderes, mostrar información de sucursal asignada ?>
+                        <div class="filter-group" style="display:none;">
+                            <label>Sucursal Asignada</label>
+                            <div
+                                style="padding: 8px; background-color: #e9ecef; border-radius: 4px; border: 1px solid #ddd;">
+                                <?= htmlspecialchars($sucursales[0]['nombre'] ?? 'Sin sucursal asignada') ?>
+                            </div>
+                            <input type="hidden" id="sucursal" name="sucursal"
+                                value="<?= $sucursales[0]['codigo'] ?? '' ?>">
+                        </div>
+                    <?php endif; ?>
+
+                    <!-- NUEVO: Filtro por número de semana (solo para líderes) -->
+                    <?php if ($esLider): ?>
+                        <div class="filter-group">
+                            <label for="numero_semana">Número de Semana</label>
+                            <select id="numero_semana" name="numero_semana" onchange="seleccionarSemana(this.value)"
+                                style="width: 100%;">
+                                <option value="">-- Seleccionar semana --</option>
+                                <?php foreach ($semanasDisponibles as $semana): ?>
+                                    <option value="<?= $semana['numero_semana'] ?>"
+                                        data-fecha-inicio="<?= $semana['fecha_inicio'] ?>"
+                                        data-fecha-fin="<?= $semana['fecha_fin'] ?>" <?= (isset($numeroSemanaSeleccionado) && $numeroSemanaSeleccionado == $semana['numero_semana']) ? 'selected' : '' ?>>
+                                        Semana <?= $semana['numero_semana'] ?>
+                                        (<?= formatoFecha($semana['fecha_inicio']) ?> -
+                                        <?= formatoFecha($semana['fecha_fin']) ?>)
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                            <small style="color: #0E544C; font-style: italic; display:none;">
+                                Selecciona una semana para filtrar automáticamente
+                            </small>
+                        </div>
+                    <?php endif; ?>
+
+                    <div class="filter-group">
+                        <label for="operario">Colaborador</label>
+
+                        <?php if ($esLider): ?>
+                            <!-- Para líderes: SELECT desplegable con solo sus operarios -->
+                            <select id="operario_id" name="operario_id" onchange="aplicarFiltrosLider()"
+                                style="width: 100%;">
+                                <option value="<?= $_SESSION['usuario_id'] ?>" <?= $operario_id == $_SESSION['usuario_id'] ? 'selected' : '' ?>>
+                                    Mis marcaciones
+                                </option>
+                                <option value="0" <?= $operario_id == 0 ? 'selected' : '' ?>>
+                                    Todos los colaboradores de mi sucursal
+                                </option>
+                                <?php foreach ($operariosFiltro as $op):
+                                    if ($op['CodOperario'] != $_SESSION['usuario_id']): // Excluir al líder mismo
+                                        $nombreCompleto = obtenerNombreCompletoOperario($op);
+                                        ?>
+                                        <option value="<?= $op['CodOperario'] ?>" <?= $operario_id == $op['CodOperario'] ? 'selected' : '' ?>>
+                                            <?= htmlspecialchars($nombreCompleto) ?>
+                                        </option>
+                                    <?php endif; endforeach; ?>
+                            </select>
+
+                            <small style="color: #0E544C; font-style: italic; display:none;">
+                                <?php if ($operario_id == $_SESSION['usuario_id']): ?>
+                                    Mostrando tus marcaciones
+                                <?php elseif ($operario_id == 0): ?>
+                                    Mostrando todos los colaboradores de tu sucursal
+                                <?php else: ?>
+                                    Mostrando colaborador específico
+                                <?php endif; ?>
+                            </small>
+
+                        <?php else: ?>
+                            <!-- Para otros usuarios: input con autocompletado normal -->
+                            <div style="display: flex; gap: 5px;">
+                                <input type="text" id="operario" name="operario" placeholder="Escriba para buscar..." value="<?php
+                                if ($operario_id > 0) {
+                                    foreach ($operariosFiltro as $op) {
+                                        if ($op['CodOperario'] == $operario_id) {
+                                            echo htmlspecialchars($op['nombre_completo']);
+                                            break;
+                                        }
+                                    }
+                                } else {
+                                    echo 'Todos los colaboradores';
+                                }
+                                ?>" style="flex: 1;">
+                                <?php if ($operario_id > 0): ?>
+                                    <button type="button" onclick="limpiarFiltroOperario()" title="Limpiar filtro"
+                                        style="padding: 8px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; display:none;">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                <?php endif; ?>
+                            </div>
+                            <input type="hidden" id="operario_id" name="operario_id" value="<?php echo $operario_id; ?>">
+                            <div id="operarios-sugerencias" style="display: none;"></div>
+
+                            <small style="color: #0E544C; font-style: italic; display:none;">
+                                <?php if ($operario_id == 0): ?>
+                                    Mostrando todos los colaboradores
+                                <?php else: ?>
+                                    Mostrando colaborador específico
+                                <?php endif; ?>
+                            </small>
+                        <?php endif; ?>
+                    </div>
+
+                    <div class="filter-group">
+                        <label for="desde">Desde</label>
+                        <input type="date" id="desde" name="desde" value="<?= $fechaDesde ?>"
+                            max="<?= date('Y-m-d') ?>">
+                    </div>
+
+                    <div class="filter-group">
+                        <label for="hasta">Hasta</label>
+                        <input type="date" id="hasta" name="hasta" value="<?= $fechaHasta ?>"
+                            max="<?= date('Y-m-d') ?>">
+                    </div>
+
+                    <div class="filter-group" style="align-self: flex-end;">
+                        <button class="btn" onclick="aplicarFiltros()">
+                            <i class="fas fa-search"></i> Buscar
+                        </button>
+                        <button type="button" class="btn btn-secondary" onclick="limpiarTodosFiltros()"
+                            style="margin-top: 5px; display:none;">
+                            <i class="fas fa-eraser"></i> Limpiar
+                        </button>
+                    </div>
+
+                    <?php if ($esContabilidad): ?>
+                        <!-- Botón Exportar (opcional, puedes eliminarlo si no lo quieres) -->
+                        <div style="display:none;" class="filter-group" style="align-self: flex-end;">
                             <a href="ver_marcaciones_todas.php?<?= http_build_query([
                                 'modo' => $modoVista,
                                 'sucursal' => $modoVista === 'sucursal' ? $sucursalSeleccionada : '',
@@ -1462,9 +1601,13 @@ function verificarTardanzaYaRegistrada(
                                 'activo' => $filtroActivo,
                                 'operario_id' => $operario_id,
                                 'exportar_excel' => 1
-                            ]) ?>" class="btn btn-sm btn-success" title="Exportar Todo">
-                                <i class="fas fa-file-excel"></i> Todo
+                            ]) ?>" class="btn">
+                                <i class="fas fa-file-excel"></i> Exportar a Excel
                             </a>
+                        </div>
+
+                        <!-- Nuevos botones para Faltas y Tardanzas -->
+                        <div class="filter-group" style="align-self: flex-end; display:none;">
                             <a href="ver_marcaciones_todas.php?<?= http_build_query([
                                 'modo' => $modoVista,
                                 'sucursal' => $modoVista === 'sucursal' ? $sucursalSeleccionada : '',
@@ -1473,9 +1616,12 @@ function verificarTardanzaYaRegistrada(
                                 'activo' => $filtroActivo,
                                 'operario_id' => $operario_id,
                                 'exportar_faltas' => 1
-                            ]) ?>" class="btn btn-sm btn-danger" title="Exportar Faltas">
-                                <i class="fas fa-user-slash"></i> Faltas
+                            ]) ?>" class="btn" style="background-color: #dc3545;">
+                                <i class="fas fa-file-excel"></i> Faltas
                             </a>
+                        </div>
+
+                        <div class="filter-group" style="align-self: flex-end;">
                             <a href="ver_marcaciones_todas.php?<?= http_build_query([
                                 'modo' => $modoVista,
                                 'sucursal' => $modoVista === 'sucursal' ? $sucursalSeleccionada : '',
@@ -1484,9 +1630,13 @@ function verificarTardanzaYaRegistrada(
                                 'activo' => $filtroActivo,
                                 'operario_id' => $operario_id,
                                 'exportar_tardanzas' => 1
-                            ]) ?>" class="btn btn-sm btn-warning" style="color: #000;" title="Exportar Tardanzas">
-                                <i class="fas fa-clock"></i> Tardanzas
+                            ]) ?>" class="btn" style="background-color: #ffc107; color: #000;">
+                                <i class="fas fa-file-excel"></i> Excel Tardanzas
                             </a>
+                        </div>
+
+                        <!-- Botón para exportar tardanzas detalladas -->
+                        <div class="filter-group" style="align-self: flex-end; display:none;">
                             <a href="exportar_tardanzas_detalle.php?<?= http_build_query([
                                 'modo' => $modoVista,
                                 'sucursal' => $modoVista === 'sucursal' ? $sucursalSeleccionada : '',
@@ -1494,14 +1644,29 @@ function verificarTardanzaYaRegistrada(
                                 'hasta' => $fechaHasta,
                                 'activo' => $filtroActivo,
                                 'operario_id' => $operario_id
-                            ]) ?>" class="btn btn-sm btn-info" style="color: white;" title="Tardanzas Detalle">
-                                <i class="fas fa-list"></i> Detalle
+                            ]) ?>" class="btn" style="background-color: #17a2b8; color: white;">
+                                <i class="fas fa-file-excel"></i> Tardanzas Detalle
                             </a>
-                        <?php endif; ?>
-                    </div>
-                <?php endif; ?>
+                        </div>
+                    <?php endif; ?>
+                </div>
 
-                <div class="table-container" style="margin-top: 0;">
+                <div style="display:none;" class="filter-buttons">
+                    <div class="filter-button <?= $filtroActivo === 'todos' ? 'active' : '' ?>"
+                        onclick="cambiarFiltroActivo('todos')">
+                        Todos los Colaboradores
+                    </div>
+                    <div class="filter-button <?= $filtroActivo === 'activos' ? 'active' : '' ?>"
+                        onclick="cambiarFiltroActivo('activos')">
+                        Solo Activos
+                    </div>
+                    <div class="filter-button <?= $filtroActivo === 'inactivos' ? 'active' : '' ?>"
+                        onclick="cambiarFiltroActivo('inactivos')">
+                        Solo Inactivos
+                    </div>
+                </div>
+
+                <div class="table-container">
                     <?php if (empty($marcaciones)): ?>
                         <div class="no-results">
                             No se encontraron marcaciones para los filtros seleccionados.
@@ -1510,83 +1675,385 @@ function verificarTardanzaYaRegistrada(
                         <table id="tabla-marcaciones">
                             <thead>
                                 <tr>
-                                    <th data-column="numero_semana" data-type="number" style="text-align: center;">
-                                        Semana
-                                        <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
-                                    </th>
-                                    <th data-column="nombre_sucursal" data-type="list" style="text-align: center;">
-                                        Sucursal
-                                        <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
-                                    </th>
-                                    <th data-column="nombre_completo" data-type="list" style="text-align: center;">
-                                        Colaborador
-                                        <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
-                                    </th>
-                                    <th data-column="nombre_cargo" data-type="list" style="text-align: center;">
-                                        Cargo
-                                        <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
-                                    </th>
-                                    <th data-column="fecha" data-type="daterange" style="text-align: center;">
-                                        Fecha
-                                        <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
-                                    </th>
-                                    <th data-column="estado_dia" data-type="list" style="text-align: center;">
-                                        Turno Programado
-                                        <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
-                                    </th>
-                                    <th style="text-align: center;">Horario Programado</th>
+                                    <th>Semana</th>
+                                    <?php //if ($modoVista === 'todas'): ?>
+                                    <th>Sucursal</th>
+                                    <?php //endif; ?>
+                                    <th>Colaborador/a (Código)</th>
+                                    <th style="display:none;">Estado</th>
+                                    <th>Cargo</th>
+                                    <th>Fecha</th>
+                                    <th>Turno Programado</th>
+                                    <th>Horario Programado</th>
                                     <?php if ($esLider): ?>
-                                        <th style="text-align: center;">Horas Programadas</th>
+                                        <th>Horas Programadas</th>
                                     <?php endif; ?>
-                                    <th style="text-align: center;">Horario Marcado</th>
+                                    <th>Horario Marcado</th>
                                     <?php if ($esLider): ?>
-                                        <th style="text-align: center;">Horas Trabajadas</th>
+                                        <th>Horas Trabajadas</th>
                                     <?php endif; ?>
+                                    <th style="display:none;">Diferencia</th>
                                     <th style="display:none;">Diferencia Entrada</th>
                                     <th style="display:none;">Diferencia Salida</th>
                                     <?php if ($esOperaciones): ?>
-                                        <th style="text-align: center;">Total Horas<br>Semana</th>
+                                        <th>Total Horas<br>Trabajadas</th>
                                     <?php endif; ?>
-                                    <th style="text-align: center;">
-                                        <div class="header-actions-container">
-                                            <div style="margin-bottom: 5px;">Acciones</div>
-                                            <div class="tri-state-filter-group">
-                                                <span class="tri-btn neutral active" onclick="setFiltroIncidencias('todos')"
-                                                    title="Ver Todo">
-                                                    <i class="fas fa-minus-circle"></i>
-                                                </span>
-                                                <span class="tri-btn warning" onclick="setFiltroIncidencias('tardanzas')"
-                                                    title="Ver solo TARDANZAS">
-                                                    <i class="fas fa-clock"></i>
-                                                </span>
-                                                <span class="tri-btn danger" onclick="setFiltroIncidencias('faltas')"
-                                                    title="Ver solo FALTAS">
-                                                    <i class="fas fa-user-slash"></i>
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </th>
+
+                                    <!-- NUEVA COLUMNA: Acciones (solo para cargo 5) -->
+                                    <?php if ($esLider): ?>
+                                        <th style="text-align: center;">Acciones</th>
+                                    <?php endif; ?>
                                 </tr>
                             </thead>
-                            <tbody id="tablaMarcacionesBody">
-                                <!-- Datos cargados vía AJAX -->
+                            <tbody>
+                                <?php foreach ($marcaciones as $marcacion):
+                                    // Calcular diferencia en minutos para entrada
+                                    $diferenciaEntrada = null;
+                                    if ($marcacion['hora_entrada_programada'] && $marcacion['hora_ingreso']) {
+                                        $horaProgramada = new DateTime($marcacion['hora_entrada_programada']);
+                                        $horaReal = new DateTime($marcacion['hora_ingreso']);
+                                        $diferencia = $horaReal->diff($horaProgramada);
+                                        $diferenciaEntrada = ($diferencia->invert ? -1 : 1) * ($diferencia->h * 60 + $diferencia->i);
+                                    }
+
+                                    // Calcular diferencia en minutos para salida
+                                    $diferenciaSalida = null;
+                                    if ($marcacion['hora_salida_programada'] && $marcacion['hora_salida']) {
+                                        $horaProgramada = new DateTime($marcacion['hora_salida_programada']);
+                                        $horaReal = new DateTime($marcacion['hora_salida']);
+                                        $diferencia = $horaReal->diff($horaProgramada);
+                                        $diferenciaSalida = ($diferencia->invert ? -1 : 1) * ($diferencia->h * 60 + $diferencia->i);
+                                    }
+
+                                    // Determinar el tipo de horario para la marcación
+                                    $tipoHorarioEntrada = $marcacion['hora_ingreso'] ? obtenerTipoHorario($marcacion['hora_ingreso']) : 'normal';
+                                    $tipoHorarioSalida = $marcacion['hora_salida'] ? obtenerTipoHorario($marcacion['hora_salida']) : 'normal';
+
+                                    // Si tenemos ambas horas, usar la más tardía para determinar el estilo
+                                    if ($marcacion['hora_ingreso'] && $marcacion['hora_salida']) {
+                                        $entrada = new DateTime($marcacion['hora_ingreso']);
+                                        $salida = new DateTime($marcacion['hora_salida']);
+
+                                        // Si la salida es menor que la entrada, asumimos que es al día siguiente
+                                        if ($salida < $entrada) {
+                                            $salida->add(new DateInterval('P1D'));
+                                        }
+
+                                        // Usar la hora de salida para determinar el estilo (es más representativa)
+                                        $tipoHorarioMarcado = obtenerTipoHorario($marcacion['hora_salida']);
+                                    } else if ($marcacion['hora_ingreso']) {
+                                        // Solo tenemos entrada
+                                        $tipoHorarioMarcado = $tipoHorarioEntrada;
+                                    } else if ($marcacion['hora_salida']) {
+                                        // Solo tenemos salida
+                                        $tipoHorarioMarcado = $tipoHorarioSalida;
+                                    } else {
+                                        // No tenemos marcaciones
+                                        $tipoHorarioMarcado = 'normal';
+                                    }
+
+                                    // Asignar clase CSS según el tipo de horario
+                                    $claseHorario = '';
+                                    switch ($tipoHorarioMarcado) {
+                                        case 'nocturno':
+                                            $claseHorario = 'horario-nocturno';
+                                            break;
+                                        case 'tarde':
+                                            $claseHorario = 'horario-tarde';
+                                            break;
+                                        default:
+                                            $claseHorario = 'horario-diurno';
+                                    }
+
+                                    // Determinar si es horario nocturno para el horario programado (solo para esa columna)
+                                    $esNocturnoProgramado = false;
+                                    if ($marcacion['hora_salida_programada']) {
+                                        $esNocturnoProgramado = esHoraNocturna($marcacion['hora_salida_programada']);
+                                    } elseif ($marcacion['hora_entrada_programada']) {
+                                        $esNocturnoProgramado = esHoraNocturna($marcacion['hora_entrada_programada']);
+                                    }
+
+                                    // Formatear horario programado con estilo según tipo
+                                    $horarioProgramado = '-';
+                                    if ($marcacion['hora_entrada_programada'] || $marcacion['hora_salida_programada']) {
+                                        $entrada = $marcacion['hora_entrada_programada'] ? formatoHoraAmPm($marcacion['hora_entrada_programada']) : '-';
+                                        $salida = $marcacion['hora_salida_programada'] ? formatoHoraAmPm($marcacion['hora_salida_programada']) : '-';
+                                        $horarioProgramado = '<span class="compact-time ' . ($esNocturnoProgramado ? 'horario-nocturno' : 'horario-diurno') . '">' .
+                                            $entrada . ' - ' . $salida . '</span>';
+                                    }
+
+                                    // Formatear horario marcado con estilo según el tipo de horario
+                                    $horarioMarcado = '-';
+                                    if ($marcacion['hora_ingreso'] || $marcacion['hora_salida']) {
+                                        $entrada = $marcacion['hora_ingreso'] ? formatoHoraAmPm($marcacion['hora_ingreso']) : '-';
+                                        $salida = $marcacion['hora_salida'] ? formatoHoraAmPm($marcacion['hora_salida']) : '-';
+
+                                        $horarioMarcado = '<span class="compact-time ' . $claseHorario . '">' . $entrada . ' - ' . $salida . '</span>';
+                                    }
+
+                                    // Calcular horas programadas
+                                    $horasProgramadas = '-';
+                                    if ($marcacion['hora_entrada_programada'] && $marcacion['hora_salida_programada']) {
+                                        $entradaProg = new DateTime($marcacion['hora_entrada_programada']);
+                                        $salidaProg = new DateTime($marcacion['hora_salida_programada']);
+
+                                        // Si la salida programada es menor que la entrada, asumimos que es al día siguiente
+                                        if ($salidaProg < $entradaProg) {
+                                            $salidaProg->add(new DateInterval('P1D'));
+                                        }
+
+                                        $diferenciaProg = $salidaProg->diff($entradaProg);
+                                        $horasProg = $diferenciaProg->h + ($diferenciaProg->i / 60);
+                                        $horasProgramadas = number_format($horasProg, 2) . ' hrs';
+                                    }
+
+                                    // Calcular horas trabajadas
+                                    $horasTrabajadas = '-';
+                                    if ($marcacion['hora_ingreso'] && $marcacion['hora_salida']) {
+                                        $entrada = new DateTime($marcacion['hora_ingreso']);
+                                        $salida = new DateTime($marcacion['hora_salida']);
+
+                                        // Si la salida es menor que la entrada, asumimos que es al día siguiente
+                                        if ($salida < $entrada) {
+                                            $salida->add(new DateInterval('P1D'));
+                                        }
+
+                                        $diferencia = $salida->diff($entrada);
+                                        $horasTrabajadas = $diferencia->h + ($diferencia->i / 60);
+                                        $horasTrabajadas = number_format($horasTrabajadas, 2) . ' hrs';
+                                    }
+
+                                    // Formatear diferencia
+                                    $diferenciaTexto = '-';
+                                    if ($diferenciaEntrada !== null) {
+                                        if ($diferenciaEntrada > 0) {
+                                            $diferenciaTexto = '<span class="diferencia-tarde">+' . $diferenciaEntrada . ' min</span>';
+                                        } elseif ($diferenciaEntrada < 0) {
+                                            $diferenciaTexto = '<span class="diferencia-temprano">' . $diferenciaEntrada . ' min</span>';
+                                        } else {
+                                            $diferenciaTexto = '<span>0 min</span>';
+                                        }
+                                    }
+
+                                    // Obtener el total precalculado para este operario
+                                    $codOperario = $marcacion['CodOperario'];
+                                    $totalOperario = $totalesOperarios[$codOperario] ?? 0;
+                                    ?>
+                                    <!--<tr style="<?= !$marcacion['tiene_marcacion'] ? 'background-color: #fff3cd;' : '' ?><?= !$marcacion['tiene_horario'] ? 'background-color: #ffe6e6;' : '' ?>"> -->
+                                    <tr>
+                                        <td class="text-center" style="font-weight: bold;">
+                                            <?= $marcacion['numero_semana'] ?? 'N/A' ?>
+                                        </td>
+
+                                        <?php //if ($modoVista === 'todas'): ?>
+                                        <td><?= htmlspecialchars($marcacion['nombre_sucursal']) ?>
+                                        </td>
+                                        <?php //endif; ?>
+                                        <td>
+                                            <?= htmlspecialchars(obtenerNombreCompletoOperario($marcacion)) ?>
+                                            <?//= $marcacion['CodOperario'] ?>
+                                        </td>
+                                        <td class="text-center" style="display:none;">
+                                            <span class="status-<?= $marcacion['estado_actual'] ? 'activo' : 'inactivo' ?>">
+                                                <?= $marcacion['estado_actual'] ? 'Activo' : 'Inactivo' ?>
+                                            </span>
+                                        </td>
+                                        <td
+                                            class="<?= ($marcacion['codigo_cargo'] == 2) ? 'cargo-operario' : 'cargo-superior' ?>">
+                                            <?= htmlspecialchars($marcacion['nombre_cargo'] ?? 'Sin cargo asignado') ?>
+                                        </td>
+                                        <td><?= formatoFecha($marcacion['fecha']) ?></td>
+
+                                        <!-- Estado del día -->
+                                        <td class="text-center">
+                                            <?php if ($marcacion['estado_dia'] === 'Activo'): ?>
+                                                <span class="status-activo"><?= htmlspecialchars($marcacion['estado_dia']) ?></span>
+                                            <?php else: ?>
+                                                <span
+                                                    class="inactive-hours"><?= htmlspecialchars($marcacion['estado_dia'] ?? 'Activo') ?></span>
+                                            <?php endif; ?>
+
+                                            <?php //if (!$marcacion['tiene_marcacion'] && $marcacion['tiene_horario']): ?>
+                                            <!-- <br><small style="color: #dc3545;">Sin marcación</small> -->
+                                            <?php //elseif (!$marcacion['tiene_horario'] && $marcacion['tiene_marcacion']): ?>
+                                            <!-- <br><small style="color: #ffc107;">Sin horario programado</small> -->
+                                            <?php //endif; ?>
+                                        </td>
+
+                                        <!-- Horario programado -->
+                                        <td class="text-center"><?= $horarioProgramado ?></td>
+
+                                        <?php if ($esLider): ?>
+                                            <!-- Horas Programadas -->
+                                            <td style="font-weight:bold;" class="text-center">
+                                                <?= $horasProgramadas ?>
+                                            </td>
+                                        <?php endif; ?>
+
+                                        <!-- Horario marcado -->
+                                        <td class="text-center"><?= $horarioMarcado ?></td>
+
+                                        <?php if ($esLider): ?>
+                                            <!-- Horas Trabajadas -->
+                                            <td class="text-center <?=
+                                                ($horasTrabajadas !== '-' && $horasProgramadas !== '-' &&
+                                                    (float) $horasTrabajadas < (float) $horasProgramadas) ? 'horas-excedidas' : 'horas-completadas'
+                                                ?>">
+                                                <?= $horasTrabajadas ?>
+                                            </td>
+                                        <?php endif; ?>
+
+                                        <!-- Diferencia entrada -->
+                                        <td style="display:none;" class="text-center">
+                                            <?php if ($diferenciaEntrada !== null): ?>
+                                                <?php if ($diferenciaEntrada > 0): ?>
+                                                    <span class="diferencia-tarde">+<?= $diferenciaEntrada ?>
+                                                        min</span>
+                                                <?php elseif ($diferenciaEntrada < 0): ?>
+                                                    <span class="diferencia-temprano"><?= $diferenciaEntrada ?>
+                                                        min</span>
+                                                <?php else: ?>
+                                                    <span>0 min</span>
+                                                <?php endif; ?>
+                                            <?php else: ?>
+                                                <span>-</span>
+                                            <?php endif; ?>
+                                        </td>
+
+                                        <!-- Diferencia salida -->
+                                        <td style="display:none;" class="text-center">
+                                            <?php if ($diferenciaSalida !== null): ?>
+                                                <?php if ($diferenciaSalida > 0): ?>
+                                                    <span class="diferencia-tarde">+<?= $diferenciaSalida ?>
+                                                        min</span>
+                                                <?php elseif ($diferenciaSalida < 0): ?>
+                                                    <span class="diferencia-temprano"><?= $diferenciaSalida ?>
+                                                        min</span>
+                                                <?php else: ?>
+                                                    <span>0 min</span>
+                                                <?php endif; ?>
+                                            <?php else: ?>
+                                                <span>-</span>
+                                            <?php endif; ?>
+                                        </td>
+
+                                        <!-- Diferencia -->
+                                        <td style="display:none;" class="text-center">
+                                            <?= $diferenciaTexto ?>
+                                        </td>
+
+                                        <?php if ($esOperaciones): ?>
+                                            <!-- NUEVA CELDA TOTAL HORAS TRABAJADAS - USA EL TOTAL PRECALCULADO -->
+                                            <td class="text-center total-horas-operario" data-operario="<?= $codOperario ?>"
+                                                style="font-weight: bold; background-color: #e8f5e9;">
+                                                <?= number_format($totalOperario, 2) ?>
+                                            </td>
+                                        <?php endif; ?>
+
+                                        <!-- NUEVA CELDA: Acciones solo para líderes -->
+                                        <?php if ($esLider): ?>
+                                            <td class="text-center" style="white-space: nowrap;">
+                                                <?php
+                                                // Opción 1: Botón de TARDANZA (solo si hay >1 minuto de diferencia)
+                                                if ($marcacion['hora_ingreso'] && $marcacion['hora_entrada_programada']):
+                                                    // Verificar si realmente hubo tardanza (más de 1 minuto)
+                                                    $horaProgramada = $marcacion['hora_entrada_programada'];
+                                                    $horaReal = $marcacion['hora_ingreso'];
+
+                                                    // Verificar tardanza con tolerancia (1 minuto) - SOLO >1 minuto
+                                                    $tardanza = verificarTardanzaConTolerancia($horaReal, $horaProgramada);
+
+                                                    // Obtener el último código de contrato
+                                                    $codContrato = obtenerUltimoCodigoContrato($marcacion['CodOperario']);
+
+                                                    // Verificar si ya existe tardanza registrada
+                                                    $tardanzaYaRegistrada = false;
+                                                    if ($tardanza) {
+                                                        $tardanzaYaRegistrada = verificarTardanzaYaRegistrada(
+                                                            $marcacion['CodOperario'],
+                                                            $marcacion['sucursal_codigo'],
+                                                            $marcacion['fecha'],
+                                                            $codContrato
+                                                        );
+                                                    }
+
+                                                    if ($tardanza && !$tardanzaYaRegistrada):  // Solo si es >1 minuto Y no está registrada
+                                                        ?>
+                                                        <button type="button" class="btn-solicitud-tardanza" onclick="mostrarModalTardanza(
+                                                            <?= $marcacion['CodOperario'] ?>,
+                                                            '<?= addslashes(obtenerNombreCompletoOperario($marcacion)) ?>',
+                                                            <?= $marcacion['sucursal_codigo'] ?>,
+                                                            '<?= $marcacion['nombre_sucursal'] ?>',
+                                                            '<?= $marcacion['fecha'] ?>',
+                                                            '<?= $horaProgramada ?>',
+                                                            '<?= $horaReal ?>',
+                                                            <?= $codContrato ?? 'null' ?>,
+                                                            <?= $tardanza ? 'true' : 'false' ?>
+                                                        )" title="Solicitar justificación de tardanza">
+                                                            <i class="fas fa-clock" style="color: #ffc107; display:none;"></i>
+                                                            Justificar Tardanza
+                                                        </button>
+                                                    <?php elseif ($tardanzaYaRegistrada): ?>
+                                                        <!-- Tardanza ya registrada -->
+                                                        <span class="text-muted" style="font-size: 0.8em;">
+                                                            <i class="fas fa-check-circle" style="color: #9C0000;"></i> Tardanza ya
+                                                            solicitada
+                                                        </span>
+                                                    <?php else: ?>
+                                                        <!-- A tiempo o minuto de gracia -->
+                                                        <span class="text-muted" style="font-size: 0.8em;"></span>
+                                                    <?php endif; ?>
+
+                                                    <!-- Opción 2: Botón de FALTA (solo si estado es Activo u Otra.Tienda) -->
+                                                <?php elseif ($marcacion['es_falta_potencial'] && !$marcacion['falta_ya_registrada']):
+                                                    // VERIFICAR SI EL ESTADO DEL DÍA PERMITE FALTA
+                                                    $estadoPermiteFalta = false;
+                                                    if (isset($marcacion['estado_dia'])) {
+                                                        $estadoPermiteFalta = in_array($marcacion['estado_dia'], ['Activo', 'Otra.Tienda']);
+                                                    }
+
+                                                    if ($estadoPermiteFalta): ?>
+                                                        <button type="button" class="btn-solicitud-falta" onclick="mostrarModalFalta(
+                                                            <?= $marcacion['CodOperario'] ?>,
+                                                            '<?= addslashes(obtenerNombreCompletoOperario($marcacion)) ?>',
+                                                            <?= $marcacion['sucursal_codigo'] ?>,
+                                                            '<?= $marcacion['nombre_sucursal'] ?>',
+                                                            '<?= $marcacion['fecha'] ?>',
+                                                            '<?= $marcacion['hora_entrada_programada'] ?>',
+                                                            '<?= $marcacion['hora_salida_programada'] ?>'
+                                                        )" title="Solicitar justificación de falta/ausencia">
+                                                            <i class="fas fa-user-times" style="color: #dc3545; display:none;"></i>
+                                                            Justificar Falta
+                                                        </button>
+                                                    <?php else: ?>
+                                                        <span class="text-muted" style="font-size: 0.8em; display:none;">
+                                                            <?= htmlspecialchars($marcacion['estado_dia'] ?? '') ?>
+                                                        </span>
+                                                    <?php endif; ?>
+
+                                                    <!-- Opción 3: Falta ya registrada -->
+                                                <?php elseif ($marcacion['falta_ya_registrada']): ?>
+                                                    <span class="text-muted" style="font-size: 0.8em;">
+                                                        <i class="fas fa-check-circle" style="color: #9C0000;"></i> Falta ya
+                                                        solicitada
+                                                    </span>
+
+                                                    <!-- Opción 4: Sin horario programado -->
+                                                <?php elseif (!$marcacion['tiene_horario']): ?>
+                                                    <span class="text-muted" style="font-size: 0.8em; display:none;">Sin
+                                                        horario</span>
+
+                                                    <!-- Opción 5: A tiempo o sin acción -->
+                                                <?php else: ?>
+                                                    <span class="text-muted" style="font-size: 0.8em; display:none;">A
+                                                        tiempo</span>
+                                                <?php endif; ?>
+                                            </td>
+                                        <?php endif; ?>
+                                    </tr>
+                                <?php endforeach; ?>
                             </tbody>
                         </table>
-
-                        <!-- Controles de paginación -->
-                        <div class="d-flex justify-content-between align-items-center mt-3">
-                            <div class="d-flex align-items-center gap-2">
-                                <label class="mb-0">Mostrar:</label>
-                                <select class="form-select form-select-sm" id="registrosPorPagina" style="width: auto;"
-                                    onchange="cambiarRegistrosPorPagina()">
-                                    <option value="25" selected>25</option>
-                                    <option value="50">50</option>
-                                    <option value="100">100</option>
-                                </select>
-                                <span class="mb-0">registros</span>
-                            </div>
-                            <div id="paginacion"></div>
-                        </div>
                     <?php endif; ?>
                 </div>
             </div>
@@ -1673,7 +2140,7 @@ function verificarTardanzaYaRegistrada(
             <div class="modal" id="modalFaltaManual" style="display: none;">
                 <div class="modal-content" style="max-width: 500px;">
                     <div class="modal-header">
-                        <h2 class="modal-title">Registrar Justificacion de Falta</h2>
+                        <h2 class="modal-title">Registrar Falta Manual</h2>
                         <button class="modal-close" onclick="cerrarModalFalta()">&times;</button>
                     </div>
                     <form id="formFaltaManual" method="post" enctype="multipart/form-data">
@@ -1733,7 +2200,328 @@ function verificarTardanzaYaRegistrada(
             </div>
 
             <script>
-                // Las funciones aplicarFiltros, cambiarFiltroActivo y lógica de autocompletado han sido eliminadas por redundancia con el nuevo sistema AJAX.
+                // Datos de operarios para el autocompletado
+                const operariosData = [
+                    <?php if ($esLider): ?>
+                                                                                                                                                    { id: <?php echo $_SESSION['usuario_id']; ?>, nombre: '' },
+                    <?php else: ?>
+                                                                                                                                                    { id: 0, nombre: 'Todos los colaboradores' },
+                    <?php endif; ?>
+            <?php foreach ($operarios as $op): ?>
+                                                                                                                                                { id: <?php echo $op['CodOperario']; ?>, nombre: '<?php echo addslashes($op['nombre_completo']); ?>' },
+                    <?php endforeach; ?>
+                ];
+
+                // Función para buscar operarios
+                function buscarOperarios(texto) {
+                    if (!texto) {
+                        return operariosData;
+                    }
+                    return operariosData.filter(op =>
+                        op.nombre.toLowerCase().includes(texto.toLowerCase())
+                    );
+                }
+
+                // Manejar el input de operario
+                const operarioInput = document.getElementById('operario');
+                const operarioIdInput = document.getElementById('operario_id');
+                const sugerenciasDiv = document.getElementById('operarios-sugerencias');
+
+                // Modificar el evento input del campo operario
+                operarioInput.addEventListener('input', function () {
+                    const texto = this.value.trim();
+
+                    // Si el campo está vacío, resetear según el tipo de usuario, en el else es Todos los colaboradores
+                    if (texto === '') {
+                        operarioIdInput.value = '0';
+                        <?php if ($esLider): ?>
+                            this.value = '';
+                            operarioIdInput.value = '<?= $_SESSION['usuario_id'] ?>';
+                        <?php else: ?>
+                            this.value = '';
+                            operarioIdInput.value = '0';
+                        <?php endif; ?>
+                        sugerenciasDiv.style.display = 'none';
+                        return;
+                    }
+
+                    // Si el usuario borra el texto y empieza a escribir, usar búsqueda normal
+                    const resultados = buscarOperarios(texto);
+
+                    sugerenciasDiv.innerHTML = '';
+
+                    if (resultados.length > 0) {
+                        resultados.forEach(op => {
+                            const div = document.createElement('div');
+                            div.textContent = op.nombre;
+                            div.style.padding = '8px';
+                            div.style.cursor = 'pointer';
+                            div.addEventListener('click', function () {
+                                operarioInput.value = op.nombre;
+                                operarioIdInput.value = op.id;
+                                sugerenciasDiv.style.display = 'none';
+                            });
+                            div.addEventListener('mouseover', function () {
+                                this.style.backgroundColor = '#f5f5f5';
+                            });
+                            div.addEventListener('mouseout', function () {
+                                this.style.backgroundColor = 'white';
+                            });
+                            sugerenciasDiv.appendChild(div);
+                        });
+                        sugerenciasDiv.style.display = 'block';
+                    } else {
+                        sugerenciasDiv.style.display = 'none';
+                    }
+                });
+
+                // Ocultar sugerencias al hacer clic fuera
+                document.addEventListener('click', function (e) {
+                    if (e.target !== operarioInput) {
+                        sugerenciasDiv.style.display = 'none';
+                    }
+                });
+
+                // Manejar tecla Enter en el input
+                operarioInput.addEventListener('keydown', function (e) {
+                    // Si se presiona Backspace o Delete
+                    if (e.key === 'Backspace' || e.key === 'Delete') {
+                        // Si hay texto seleccionado o el campo no está vacío
+                        if (this.value.length > 0) {
+                            // Prevenir el comportamiento normal (borrar un carácter)
+                            e.preventDefault();
+
+                            // Borrar todo el contenido
+                            this.value = '';
+                            operarioIdInput.value = '0';
+
+                            <?php if ($esLider): ?>
+                                // Para líderes, mantener su ID
+                                operarioIdInput.value = '<?= $_SESSION['usuario_id'] ?>';
+                            <?php endif; ?>
+
+                            // Ocultar sugerencias
+                            sugerenciasDiv.style.display = 'none';
+
+                            // Mostrar mensaje visual opcional (opcional)
+                            // this.placeholder = 'Campo vacío - Mostrando todos';
+
+                            // Auto-aplicar filtros si quieres (OPCIONAL - descomentar si quieres)
+                            // setTimeout(() => aplicarFiltros(), 300);
+                        }
+                    }
+
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const texto = this.value.trim();
+                        const resultados = buscarOperarios(texto);
+                        if (resultados.length > 0) {
+                            this.value = resultados[0].nombre;
+                            operarioIdInput.value = resultados[0].id;
+                        }
+                        sugerenciasDiv.style.display = 'none';
+                    }
+                });
+
+                // Modificar la función aplicarFiltros para incluir el modo
+                function aplicarFiltros() {
+                    let sucursal, modo;
+
+                    <?php if ($esLider): ?>
+                        // Para líderes, usar la primera sucursal asignada
+                        sucursal = '<?= $sucursales[0]['codigo'] ?? '' ?>';
+                        modo = 'sucursal';
+                    <?php else: ?>
+                        // Para otros usuarios, usar el valor del select
+                        sucursal = document.getElementById('sucursal').value;
+                        modo = sucursal === 'todas' ? 'todas' : 'sucursal';
+                    <?php endif; ?>
+
+                    const desde = document.getElementById('desde').value;
+                    const hasta = document.getElementById('hasta').value;
+
+                    <?php if ($esLider): ?>
+                        const operario_id = document.getElementById('operario_id').value;
+                    <?php else: ?>
+                        const operarioInput = document.getElementById('operario');
+                        const operario_id = document.getElementById('operario_id').value;
+                    <?php endif; ?>
+
+                    // Validar fechas
+                    if (new Date(desde) > new Date(hasta)) {
+                        alert('La fecha "Desde" no puede ser mayor a la fecha "Hasta"');
+                        return;
+                    }
+
+                    // Construir parámetros
+                    const params = new URLSearchParams();
+                    params.append('modo', modo);
+
+                    if (modo === 'sucursal') {
+                        params.append('sucursal', sucursal);
+                    }
+
+                    params.append('desde', desde);
+                    params.append('hasta', hasta);
+                    params.append('activo', '<?= $filtroActivo ?>');
+
+                    <?php if ($esLider): ?>
+                        params.append('operario_id', operario_id);
+                    <?php else: ?>
+                        // Si el campo de operario está vacío o dice "Todos los colaboradores", buscar todos
+                        if (operarioInput.value.trim() === '' ||
+                            operarioInput.value === 'Todos los colaboradores' ||
+                            operarioInput.value === '') {
+                            params.append('operario_id', '0');
+                            params.append('operario_vacio', '1'); // Bandera para indicar que se dejó vacío
+                        } else {
+                            params.append('operario_id', operario_id);
+                        }
+                    <?php endif; ?>
+
+                    window.location.href = `ver_marcaciones_todas.php?${params.toString()}`;
+                }
+
+                // Modificar la función cambiarFiltroActivo para incluir el modo
+                function cambiarFiltroActivo(tipo) {
+                    let sucursal, modo;
+
+                    <?php if ($esLider): ?>
+                        // Para líderes, usar la primera sucursal asignada
+                        sucursal = '<?= $sucursales[0]['codigo'] ?? '' ?>';
+                        modo = 'sucursal';
+                    <?php else: ?>
+                        // Para otros usuarios, usar el valor del select
+                        sucursal = document.getElementById('sucursal').value;
+                        modo = sucursal === 'todas' ? 'todas' : 'sucursal';
+                    <?php endif; ?>
+
+                    const desde = document.getElementById('desde').value;
+                    const hasta = document.getElementById('hasta').value;
+                    const operario_id = document.getElementById('operario_id').value;
+
+                    window.location.href = `ver_marcaciones_todas.php?modo=${modo}&sucursal=${sucursal}&desde=${desde}&hasta=${hasta}&activo=${tipo}&operario_id=${operario_id}`;
+                }
+
+                // Función para mostrar notificaciones
+                function mostrarNotificacion(mensaje, tipo = 'info') {
+                    const estilos = {
+                        success: { background: '#d4edda', color: '#155724', icon: 'check-circle' },
+                        error: { background: '#f8d7da', color: '#721c24', icon: 'exclamation-circle' },
+                        info: { background: '#e2e3e5', color: '#383d41', icon: 'info-circle' }
+                    };
+
+                    const estilo = estilos[tipo] || estilos.info;
+
+                    const notificacion = document.createElement('div');
+                    notificacion.style.position = 'fixed';
+                    notificacion.style.top = '20px';
+                    notificacion.style.right = '20px';
+                    notificacion.style.padding = '15px';
+                    notificacion.style.borderRadius = '4px';
+                    notificacion.style.boxShadow = '0 2px 10px rgba(0,0,0,0.1)';
+                    notificacion.style.backgroundColor = estilo.background;
+                    notificacion.style.color = estilo.color;
+                    notificacion.style.zIndex = '1000';
+                    notificacion.style.display = 'flex';
+                    notificacion.style.alignItems = 'center';
+                    notificacion.style.gap = '10px';
+                    notificacion.style.maxWidth = '300px';
+                    notificacion.innerHTML = `
+                <i class="fas fa-${estilo.icon}" style="font-size: 1.2rem;"></i>
+                <span>${mensaje}</span>
+            `;
+
+                    document.body.appendChild(notificacion);
+
+                    setTimeout(() => {
+                        notificacion.style.opacity = '0';
+                        notificacion.style.transition = 'opacity 0.5s ease';
+                        setTimeout(() => notificacion.remove(), 500);
+                    }, 3000);
+                }
+
+                // Mostrar notificaciones si hay en sesión
+                <?php if (isset($_SESSION['exito'])): ?>
+                    mostrarNotificacion('<?= $_SESSION['exito'] ?>', 'success');
+                    <?php unset($_SESSION['exito']); ?>
+                <?php endif; ?>
+
+                <?php if (isset($_SESSION['error'])): ?>
+                    mostrarNotificacion('<?= $_SESSION['error'] ?>', 'error');
+                    <?php unset($_SESSION['error']); ?>
+                <?php endif; ?>
+
+                // Función para limitar fechas en el cliente
+                function limitarFechas() {
+                    const hoy = new Date().toISOString().split('T')[0];
+                    const desdeInput = document.getElementById('desde');
+                    const hastaInput = document.getElementById('hasta');
+
+                    // Establecer máximo hoy
+                    desdeInput.max = hoy;
+                    hastaInput.max = hoy;
+
+                    // Validar al cambiar fechas
+                    desdeInput.addEventListener('change', function () {
+                        if (this.value > hoy) {
+                            this.value = hoy;
+                            mostrarNotificacion('No se pueden seleccionar fechas futuras. Se ajustó al día actual.', 'info');
+                        }
+                        if (this.value > hastaInput.value) {
+                            hastaInput.value = this.value;
+                        }
+                    });
+
+                    hastaInput.addEventListener('change', function () {
+                        if (this.value > hoy) {
+                            this.value = hoy;
+                            mostrarNotificacion('No se pueden seleccionar fechas futuras. Se ajustó al día actual.', 'info');
+                        }
+                        if (this.value < desdeInput.value) {
+                            desdeInput.value = this.value;
+                        }
+                    });
+                }
+
+                // Llamar la función cuando se cargue la página
+                document.addEventListener('DOMContentLoaded', function () {
+                    limitarFechas();
+                });
+
+                // Función para que líderes puedan ver todos los operarios
+                function verTodosOperarios() {
+                    let sucursal, modo;
+
+                    // Para líderes, usar la primera sucursal asignada
+                    sucursal = '<?= $sucursales[0]['codigo'] ?? '' ?>';
+                    modo = 'sucursal';
+
+                    const desde = document.getElementById('desde').value;
+                    const hasta = document.getElementById('hasta').value;
+
+                    // Resetear operario_id a 0 para ver todos
+                    window.location.href = `ver_marcaciones_todas.php?modo=${modo}&sucursal=${sucursal}&desde=${desde}&hasta=${hasta}&activo=<?= $filtroActivo ?>&operario_id=0`;
+                }
+
+                // Función para limpiar el filtro de operario
+                function limpiarFiltroOperario() {
+                    <?php if ($esLider): ?>
+                        // Para líderes: seleccionar "Mis marcaciones"
+                        document.getElementById('operario_id').value = '<?= $_SESSION['usuario_id'] ?>';
+                        aplicarFiltrosLider();
+                    <?php else: ?>
+                        // Para otros usuarios: resetear a "Todos los colaboradores"
+                        const operarioInput = document.getElementById('operario');
+                        const operarioIdInput = document.getElementById('operario_id');
+
+                        operarioInput.value = 'Todos los colaboradores';
+                        operarioIdInput.value = '0';
+
+                        // Aplicar filtros inmediatamente
+                        aplicarFiltros();
+                    <?php endif; ?>
+                }
 
                 // Función para mostrar el modal de tardanza
                 function mostrarModalTardanza(codOperario, nombre, codSucursal, nombreSucursal, fecha, horaProgramada, horaMarcada, codContrato, esTardanza) {
@@ -1867,12 +2655,8 @@ function verificarTardanzaYaRegistrada(
                                 if (data.success) {
                                     alert(data.message);
                                     cerrarModalTardanza();
-                                    // Actualizar la tabla dinámicamente vía AJAX
-                                    if (typeof cargarDatos === 'function') {
-                                        cargarDatos();
-                                    } else {
-                                        setTimeout(() => location.reload(), 1000);
-                                    }
+                                    // Recargar la página para ver los cambios
+                                    setTimeout(() => location.reload(), 1000);
                                 } else {
                                     alert('Error: ' + data.message);
                                 }
@@ -1994,12 +2778,8 @@ function verificarTardanzaYaRegistrada(
                                 if (data.success) {
                                     alert(data.message);
                                     cerrarModalFalta();
-                                    // Actualizar la tabla dinámicamente vía AJAX
-                                    if (typeof cargarDatos === 'function') {
-                                        cargarDatos();
-                                    } else {
-                                        setTimeout(() => location.reload(), 1000);
-                                    }
+                                    // Recargar la página para ver los cambios
+                                    setTimeout(() => location.reload(), 1000);
                                 } else {
                                     alert('Error: ' + data.message);
                                 }
@@ -2037,28 +2817,25 @@ function verificarTardanzaYaRegistrada(
                         return;
                     }
 
-                    // Aplicar filtros al sistema AJAX unificado
-                    if (typeof filtrosActivos !== 'undefined') {
-                        // Mapear los filtros manuales al sistema global de filtros
-                        filtrosActivos['fecha'] = { desde: desde, hasta: hasta };
-                        filtrosActivos['operario_id'] = operario_id;
-                        filtrosActivos['numero_semana'] = numeroSemana;
+                    // Construir parámetros
+                    const params = new URLSearchParams();
+                    params.append('modo', modo);
 
-                        // Reiniciar a la primera página y cargar
-                        paginaActual = 1;
-                        cargarDatos();
-                    } else {
-                        // Fallback por si el sistema AJAX no está cargado
-                        const params = new URLSearchParams();
-                        params.append('modo', modo);
-                        if (modo === 'sucursal') params.append('sucursal', sucursal);
-                        params.append('desde', desde);
-                        params.append('hasta', hasta);
-                        params.append('activo', '<?= $filtroActivo ?>');
-                        params.append('operario_id', operario_id);
-                        if (numeroSemana) params.append('numero_semana', numeroSemana);
-                        window.location.href = `ver_marcaciones_todas.php?${params.toString()}`;
+                    if (modo === 'sucursal') {
+                        params.append('sucursal', sucursal);
                     }
+
+                    params.append('desde', desde);
+                    params.append('hasta', hasta);
+                    params.append('activo', '<?= $filtroActivo ?>');
+                    params.append('operario_id', operario_id);
+
+                    // Si se seleccionó una semana, agregar el parámetro
+                    if (numeroSemana) {
+                        params.append('numero_semana', numeroSemana);
+                    }
+
+                    window.location.href = `ver_marcaciones_todas.php?${params.toString()}`;
                 }
 
                 // Función para seleccionar una semana (solo para líderes)
@@ -2092,7 +2869,7 @@ function verificarTardanzaYaRegistrada(
                         document.getElementById('operario_id').value = '<?= $_SESSION['usuario_id'] ?>';
 
                         // Establecer fecha actual
-                        const hoy = '<?= $fechaHoy ?>';
+                        const hoy = new Date().toISOString().split('T')[0];
                         const primerDiaMes = hoy.substring(0, 8) + '01';
 
                         document.getElementById('desde').value = primerDiaMes;
@@ -2107,7 +2884,7 @@ function verificarTardanzaYaRegistrada(
                         document.getElementById('operario_id').value = '0';
 
                         // Establecer fecha actual
-                        const hoy = '<?= $fechaHoy ?>';
+                        const hoy = new Date().toISOString().split('T')[0];
                         const primerDiaMes = hoy.substring(0, 8) + '01';
 
                         document.getElementById('desde').value = primerDiaMes;
@@ -2118,177 +2895,9 @@ function verificarTardanzaYaRegistrada(
                     <?php endif; ?>
                 }
             </script>
-
-            <!-- jQuery (required for filter system) -->
-            <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-
-            <!-- Bootstrap 5 Bundle with Popper (required for tooltips) -->
-            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
-            <!-- Permisos del usuario -->
-            <script>
-                const PERMISOS_USUARIO = {
-                    esLider: <?= $esLider ? 'true' : 'false' ?>,
-                    esOperaciones: <?= $esOperaciones ? 'true' : 'false' ?>,
-                    esCDS: <?= $esCDS ? 'true' : 'false' ?>,
-                    esContabilidad: <?= $esContabilidad ? 'true' : 'false' ?>,
-                    fechaHoy: '<?= $fechaHoy ?>'
-                };
-            </script>
-
-
-
-            <!-- Custom filter system -->
-            <script src="js/ver_marcaciones_todas.js?v=<?php echo time(); ?>"></script>
         </div>
-        <!-- sub-container -->
-    </div> <!-- main-container -->
-
-    <style>
-        /* Ajuste de z-index para evitar que el backdrop cubra el modal */
-        #pageHelpModal {
-            z-index: 1060 !important;
-        }
-
-        .modal-backdrop {
-            z-index: 1050 !important;
-        }
-    </style>
-
-    <!-- Modal Guía de Reglas -->
-    <div class="modal fade" id="pageHelpModal" tabindex="-1" aria-labelledby="pageHelpModalLabel" aria-hidden="true"
-        data-bs-backdrop="static" data-bs-keyboard="false">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content border-0 shadow">
-                <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title" id="modalGuiaReglasLabel">
-                        <i class="fas fa-book-reader me-2"></i> Guía de Reglas y Lógica del Sistema
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-                        aria-label="Close"></button>
-                </div>
-                <div class="modal-body p-4">
-                    <div class="row">
-                        <div class="col-md-6 mb-4">
-                            <div class="card h-100 border-0 bg-light">
-                                <div class="card-body">
-                                    <h6 class="text-primary border-bottom pb-2 fw-bold">
-                                        <i class="fas fa-clock me-2"></i> Tardanzas
-                                    </h6>
-                                    <p class="small text-muted mb-0">
-                                        Se reporta como <strong>tardanza</strong> cuando la marcación de entrada ocurre
-                                        <strong>más de 1 minuto</strong> después de la hora programada.
-                                        <br><br>
-                                        Un día en curso (hoy) no muestra incidencias hasta que el día termina. prueba
-                                        <br><br>
-                                        La verificacion de tardanzas se hara con los horarios programados y los
-                                        ejecutados tanto en casos de horario programado "Otra.Sucursal" y en "Activo"
-                                        con las marcaciones realizadas en cualquier sucursal.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6 mb-4">
-                            <div class="card h-100 border-0 bg-light">
-                                <div class="card-body">
-                                    <h6 class="text-danger border-bottom pb-2 fw-bold">
-                                        <i class="fas fa-user-slash me-2"></i> Faltas
-                                    </h6>
-                                    <p class="small text-muted mb-2">
-                                        El sistema detecta una <strong>falta</strong> si no hay marcación en un día
-                                        programado
-                                        cuyo estado esté configurado como <strong>"Con Marcación"</strong> (ej: Activo).
-                                        <br><br>
-                                        Estados como "Libre" o "Subsidio" no generan faltas.
-                                    </p>
-                                    <div class="alert alert-success py-2 px-3 mb-0 small">
-                                        <strong><i class="fas fa-info-circle me-1"></i> Inasistencias
-                                            Programadas:</strong>
-                                        <br>
-                                        Algunos días sin marcación (ej: Vacaciones, Permisos) requieren justificación
-                                        aunque estén programados.
-                                        Estos se muestran con <strong>ícono verde</strong> en lugar de rojo para
-                                        diferenciarlos de faltas normales.
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6 mb-4">
-                            <div class="card h-100 border-0 bg-light">
-                                <div class="card-body">
-                                    <h6 class="text-info border-bottom pb-2 fw-bold">
-                                        <i class="fas fa-users-cog me-2"></i> Equipo de Trabajo
-                                    </h6>
-                                    <p class="small text-muted mb-0">
-                                        Los líderes ven a los colaboradores asignados a su sucursal de equipo.
-                                        <br><br>
-                                        Las marcaciones son válidas sin importar en qué sucursal física se realicen,
-                                        siempre que coincidan con el día programado.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6 mb-4">
-                            <div class="card h-100 border-0 bg-light">
-                                <div class="card-body">
-                                    <h6 class="text-secondary border-bottom pb-2 fw-bold">
-                                        <i class="fas fa-map-marker-alt me-2"></i> Sucursal Externa
-                                    </h6>
-                                    <p class="small text-muted mb-2">
-                                        <strong>Marcación en sucursal diferente:</strong><br>
-                                        Si un colaborador marca en una sucursal distinta a la programada, se mostrará un
-                                        <strong>tag gris</strong> bajo el horario marcado indicando el nombre del lugar
-                                        exacto.
-                                    </p>
-                                    <p class="small text-muted mb-0">
-                                        <strong>Horario programado en otra tienda:</strong><br>
-                                        Cuando el estado del día es <strong>"Otra.Tienda"</strong>, se muestra un
-                                        <strong>tag gris</strong> bajo el turno programado con el nombre de la sucursal
-                                        donde está asignado ese día.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-12">
-                            <div class="card border-0 bg-light">
-                                <div class="card-body">
-                                    <h6 class="text-dark border-bottom pb-2 fw-bold">
-                                        <i class="fas fa-stream me-2"></i> Semáforo (Status Tracker)
-                                    </h6>
-                                    <p class="small text-muted mb-2">
-                                        El sistema muestra un semáforo de 3 pasos para el seguimiento de incidencias:
-                                    </p>
-                                    <div class="d-flex justify-content-between mt-2 mb-3">
-                                        <div class="text-center">
-                                            <span class="badge bg-secondary mb-1">Gris</span>
-                                            <div class="small text-muted">Pendiente de Revisión</div>
-                                        </div>
-                                        <div class="text-center">
-                                            <span class="badge bg-success mb-1">Verde</span>
-                                            <div class="small text-muted">Aprobado / Justificado</div>
-                                        </div>
-                                        <div class="text-center">
-                                            <span class="badge bg-danger mb-1">Rojo</span>
-                                            <div class="small text-muted">Rechazado / No Válido</div>
-                                        </div>
-                                    </div>
-                                    <div class="alert alert-info py-2 px-3 mb-0 small">
-                                        <strong><i class="fas fa-info-circle me-1"></i> Ícono Verde Inicial:</strong>
-                                        <br>
-                                        Las inasistencias programadas (ej: Vacaciones, Permisos) que requieren
-                                        justificación
-                                        se muestran con <strong>ícono verde</strong> desde el inicio para diferenciarlas
-                                        de faltas normales (rojas). Esto indica que es una ausencia planificada pero que
-                                        aún requiere documentación de respaldo.
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer border-0">
-                    <button type="button" class="btn btn-primary px-4" data-bs-dismiss="modal">Entendido</button>
-                </div>
+    </div>
+    </div>
 </body>
 
 </html>
