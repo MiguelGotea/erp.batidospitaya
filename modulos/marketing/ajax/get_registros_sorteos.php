@@ -23,15 +23,63 @@ try {
     $offset = ($page - 1) * $perPage;
 
     // Filtros
+    $filtros = [];
+
+    // Procesar filtros dinámicos
+    foreach ($_GET as $key => $value) {
+        if (strpos($key, 'filter_') === 0) {
+            $columna = substr($key, 7); // Remover 'filter_'
+            $filtros[$columna] = $value;
+        }
+    }
+
+    // Construir WHERE clause
+    $where = [];
+    $params = [];
+
+    // Procesar cada filtro
+    foreach ($filtros as $columna => $valor) {
+        if (is_array($valor)) {
+            // Filtro de lista (tipo_qr, validado_ia)
+            if (!empty($valor)) {
+                $placeholders = implode(',', array_fill(0, count($valor), '?'));
+                $where[] = "$columna IN ($placeholders)";
+                $params = array_merge($params, $valor);
+            }
+        } elseif (is_object($valor) || (is_string($valor) && json_decode($valor))) {
+            // Filtro de rango (numérico o fecha)
+            $rango = is_string($valor) ? json_decode($valor, true) : (array) $valor;
+            if (isset($rango['min']) && $rango['min'] !== '') {
+                $where[] = "$columna >= ?";
+                $params[] = $rango['min'];
+            }
+            if (isset($rango['max']) && $rango['max'] !== '') {
+                $where[] = "$columna <= ?";
+                $params[] = $rango['max'];
+            }
+            if (isset($rango['desde']) && $rango['desde'] !== '') {
+                $where[] = "DATE($columna) >= ?";
+                $params[] = $rango['desde'];
+            }
+            if (isset($rango['hasta']) && $rango['hasta'] !== '') {
+                $where[] = "DATE($columna) <= ?";
+                $params[] = $rango['hasta'];
+            }
+        } else {
+            // Filtro de texto
+            if ($valor !== '') {
+                $where[] = "$columna LIKE ?";
+                $params[] = "%$valor%";
+            }
+        }
+    }
+
+    // Filtros legacy (mantener compatibilidad)
     $search = isset($_GET['search']) ? trim($_GET['search']) : '';
     $fechaInicio = isset($_GET['fecha_inicio']) ? $_GET['fecha_inicio'] : '';
     $fechaFin = isset($_GET['fecha_fin']) ? $_GET['fecha_fin'] : '';
     $tipoQR = isset($_GET['tipo_qr']) ? $_GET['tipo_qr'] : '';
     $validadoIA = isset($_GET['validado_ia']) ? $_GET['validado_ia'] : '';
-
-    // Construir WHERE clause
-    $where = [];
-    $params = [];
 
     if (!empty($search)) {
         $where[] = "(nombre_completo LIKE ? OR numero_factura LIKE ? OR numero_contacto LIKE ?)";
