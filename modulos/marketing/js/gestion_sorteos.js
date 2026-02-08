@@ -193,30 +193,42 @@ function verFoto(id, fotoNombre) {
     });
 }
 
+let registroAEliminar = null;
+
 function eliminarRegistro(id) {
-    if (!confirm('¿Está seguro de eliminar este registro? Esta acción no se puede deshacer.')) {
-        return;
-    }
+    // Guardar el ID y mostrar modal de confirmación
+    registroAEliminar = id;
+    const modal = new bootstrap.Modal(document.getElementById('modalConfirmarEliminar'));
+    modal.show();
+}
+
+// Manejar confirmación de eliminación
+$(document).on('click', '#btnConfirmarEliminar', function () {
+    if (!registroAEliminar) return;
 
     $.ajax({
         url: 'ajax/delete_registro_sorteo.php',
         method: 'POST',
         contentType: 'application/json',
-        data: JSON.stringify({ id: id }),
+        data: JSON.stringify({ id: registroAEliminar }),
         dataType: 'json',
         success: function (response) {
             if (response.success) {
                 mostrarExito(response.message);
                 cargarRegistros();
+                // Cerrar modal
+                bootstrap.Modal.getInstance(document.getElementById('modalConfirmarEliminar')).hide();
             } else {
                 mostrarError(response.message);
             }
+            registroAEliminar = null;
         },
         error: function () {
             mostrarError('Error al eliminar registro');
+            registroAEliminar = null;
         }
     });
-}
+});
 
 function cambiarRegistrosPorPagina() {
     registrosPorPagina = parseInt($('#registrosPorPagina').val());

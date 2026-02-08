@@ -129,6 +129,36 @@ if (!tienePermiso('gestion_sorteos', 'vista', $cargoOperario)) {
         </div>
     </div>
 
+    <!-- Modal de confirmación para eliminar -->
+    <div class="modal fade" id="modalConfirmarEliminar" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        Confirmar Eliminación
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-3">¿Está seguro de que desea eliminar este registro?</p>
+                    <div class="alert alert-warning mb-0">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <strong>Advertencia:</strong> Esta acción no se puede deshacer.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle me-1"></i> Cancelar
+                    </button>
+                    <button type="button" class="btn btn-danger" id="btnConfirmarEliminar">
+                        <i class="bi bi-trash me-1"></i> Eliminar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
@@ -136,7 +166,7 @@ if (!tienePermiso('gestion_sorteos', 'vista', $cargoOperario)) {
         const cargoOperario = <?php echo json_encode($cargoOperario); ?>;
         const tienePermisoVista = <?php echo tienePermiso('gestion_sorteos', 'vista', $cargoOperario) ? 'true' : 'false'; ?>;
         const tienePermisoEdicion = <?php echo tienePermiso('gestion_sorteos', 'edicion', $cargoOperario) ? 'true' : 'false'; ?>;
-        
+
         console.log('Cargo del operario:', cargoOperario);
         console.log('Permiso de vista:', tienePermisoVista);
         console.log('Permiso de edición:', tienePermisoEdicion);
