@@ -16,37 +16,42 @@ function cargarRegistros() {
         ...filtrosActivos
     });
 
+    console.log('Cargando registros con params:', params.toString());
+
     $.ajax({
         url: `ajax/get_registros_sorteos.php?${params}`,
         method: 'GET',
         dataType: 'json',
         success: function (response) {
+            console.log('Respuesta AJAX:', response);
             if (response.success) {
+                console.log('Datos recibidos:', response.data.length, 'registros');
                 renderizarTabla(response.data);
                 renderizarPaginacion(response.total_pages, response.page);
             } else {
-                mostrarError('Error al cargar registros');
+                console.error('Error en respuesta:', response.message);
+                mostrarError('Error al cargar registros: ' + (response.message || 'Error desconocido'));
             }
         },
         error: function (xhr, status, error) {
-            console.error('Error al cargar registros:', error);
+            console.error('Error AJAX:', {
+                status: xhr.status,
+                statusText: xhr.statusText,
+                responseText: xhr.responseText,
+                error: error
+            });
             mostrarError('Error al cargar registros');
         }
     });
 }
 
 function renderizarTabla(registros) {
+    console.log('Renderizando tabla con', registros.length, 'registros');
     const tbody = $('#tablaSorteosBody');
     tbody.empty();
 
-    if (registros.length === 0) {
-        tbody.append(`
-    < tr >
-    <td colspan="12" class="text-center text-muted py-4">
-        No se encontraron registros
-    </td>
-            </tr >
-    `);
+    if (!registros || registros.length === 0) {
+        tbody.append('<tr><td colspan="11" class="text-center py-4">No se encontraron registros</td></tr>');
         return;
     }
 
