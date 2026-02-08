@@ -173,6 +173,15 @@ try {
     $stmt = ejecutarConsulta($sql, $params);
     $registros = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+    // Agregar URL completa de fotos para el subdominio
+    foreach ($registros as &$registro) {
+        if (!empty($registro['foto_factura'])) {
+            $registro['foto_url'] = 'https://pitayalove.batidospitaya.com/uploads/' . $registro['foto_factura'];
+        } else {
+            $registro['foto_url'] = null;
+        }
+    }
+
     $response['success'] = true;
     $response['data'] = $registros;
     $response['total'] = $total;

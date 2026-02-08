@@ -121,7 +121,7 @@ function verFoto(id, fotoNombre) {
                 const registro = response.data[0];
 
                 // Mostrar foto
-                $('#fotoFactura').attr('src', `../PitayaLove/uploads/${fotoNombre}`);
+                $('#fotoFactura').attr('src', `https://pitayalove.batidospitaya.com/uploads/${fotoNombre}`);
 
                 // Convertir fecha a zona horaria de Nicaragua
                 const fechaUTC = new Date(registro.fecha_registro + ' UTC');
