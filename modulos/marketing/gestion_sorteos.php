@@ -133,19 +133,14 @@ if (!tienePermiso('gestion_sorteos', 'vista', $cargoOperario)) {
     <div class="modal fade" id="modalConfirmarEliminar" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered modal-sm">
             <div class="modal-content">
-                <div class="modal-header bg-danger text-white">
-                    <h5 class="modal-title">
-                        <i class="bi bi-trash me-2"></i>
-                        Eliminar Registro
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
                 <div class="modal-body text-center py-4">
-                    <i class="bi bi-exclamation-triangle text-warning" style="font-size: 3rem;"></i>
-                    <p class="mt-3 mb-0">¿Está seguro de eliminar este registro?</p>
-                    <small class="text-muted">Esta acción no se puede deshacer</small>
+                    <button type="button" class="btn-close position-absolute top-0 end-0 m-2" data-bs-dismiss="modal"></button>
+                    <i class="bi bi-exclamation-triangle text-warning" style="font-size: 3.5rem;"></i>
+                    <h5 class="mt-3 mb-2">Eliminar Registro</h5>
+                    <p class="text-muted mb-0">¿Está seguro de eliminar este registro?</p>
+                    <small class="text-muted d-block mt-1">Esta acción no se puede deshacer</small>
                 </div>
-                <div class="modal-footer justify-content-center">
+                <div class="modal-footer justify-content-center border-0 pt-0">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                         Cancelar
                     </button>

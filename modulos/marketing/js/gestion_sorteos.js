@@ -550,7 +550,7 @@ function actualizarIndicadoresFiltros() {
         if ((Array.isArray(valor) && valor.length > 0) ||
             (!Array.isArray(valor) && typeof valor === 'object' && Object.keys(valor).length > 0) ||
             (!Array.isArray(valor) && typeof valor !== 'object' && valor !== '')) {
-            $(`th[data - column= "${columna}"] .filter - icon`).addClass('has-filter');
+            $(`th[data-column="${columna}"] .filter-icon`).addClass('has-filter');
         }
     });
 }
