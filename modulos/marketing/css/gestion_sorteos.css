@@ -1,0 +1,347 @@
+/* Asegurar scroll en la página */
+html {
+    overflow-y: scroll;
+    min-height: 100vh;
+}
+
+body {
+    min-height: 100vh;
+}
+
+/* Tabla de sorteos */
+.sorteos-table {
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    font-size: 0.9rem;
+}
+
+.sorteos-table thead {
+    background-color: #0E544C !important;
+    color: white !important;
+}
+
+.sorteos-table thead th {
+    font-weight: 600;
+    padding: 14px 12px;
+    border: none;
+    border-right: 1px solid rgba(255, 255, 255, 0.2);
+    position: relative;
+    white-space: nowrap;
+    font-size: 14px;
+    background-color: #0E544C !important;
+    color: white !important;
+}
+
+.sorteos-table thead th:last-child {
+    border-right: none;
+}
+
+.sorteos-table tbody tr {
+    border-bottom: 1px solid #e9ecef;
+    transition: background-color 0.2s;
+}
+
+.sorteos-table tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+.sorteos-table tbody td {
+    padding: 12px;
+    vertical-align: middle;
+    font-size: 14px;
+    border-right: 1px solid #e9ecef;
+}
+
+.sorteos-table tbody td:last-child {
+    border-right: none;
+}
+
+/* Badges personalizados */
+.validado-badge {
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    display: inline-block;
+}
+
+.validado-si {
+    background: #d4edda;
+    color: #155724;
+}
+
+.validado-no {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.tipo-qr-badge {
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    display: inline-block;
+}
+
+.tipo-online {
+    background: #cfe2ff;
+    color: #084298;
+}
+
+.tipo-offline {
+    background: #fff3cd;
+    color: #856404;
+}
+
+/* Botones de acción */
+.btn-ver-foto {
+    padding: 4px 8px;
+    font-size: 0.85rem;
+}
+
+/* Iconos de filtro */
+.filter-icon {
+    cursor: pointer;
+    margin-left: 6px;
+    opacity: 0.6;
+    transition: all 0.2s;
+    font-size: 13px;
+    position: relative;
+    display: inline-block;
+}
+
+.filter-icon:hover {
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+.filter-icon.active {
+    opacity: 1;
+    color: #51B8AC;
+}
+
+/* Indicador de filtro activo */
+.filter-icon.has-filter::after {
+    content: '';
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    width: 10px;
+    height: 10px;
+    background-color: #dc3545;
+    border-radius: 50%;
+    border: 2px solid #0E544C;
+}
+
+/* Panel de filtro */
+.filter-panel {
+    position: fixed;
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    padding: 16px;
+    z-index: 1050;
+    min-width: 300px;
+    max-width: 350px;
+    display: none;
+}
+
+.filter-panel.show {
+    display: block;
+}
+
+.filter-section {
+    margin-bottom: 16px;
+}
+
+.filter-section:last-of-type {
+    margin-bottom: 12px;
+}
+
+.filter-section-title {
+    display: block;
+    font-weight: 600;
+    font-size: 13px;
+    color: #0E544C;
+    margin-bottom: 8px;
+}
+
+/* Búsqueda */
+.filter-search {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    font-size: 14px;
+    transition: border-color 0.2s;
+}
+
+.filter-search:focus {
+    outline: none;
+    border-color: #51B8AC;
+}
+
+/* Inputs numéricos y de fecha */
+.numeric-inputs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+/* Opciones de lista */
+.filter-options {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    padding: 4px;
+    margin-top: 8px;
+}
+
+.filter-option {
+    padding: 8px 10px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.filter-option:hover {
+    background-color: #f8f9fa;
+}
+
+.filter-option input[type="checkbox"] {
+    cursor: pointer;
+}
+
+/* Botones de acción del filtro */
+.filter-actions {
+    display: flex;
+    gap: 8px;
+    padding-top: 12px;
+    margin-top: 12px;
+    border-top: 1px solid #e9ecef;
+}
+
+.filter-action-btn {
+    flex: 1;
+    padding: 8px 12px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.filter-action-btn.clear {
+    background-color: #dc3545;
+    color: white;
+}
+
+.filter-action-btn.clear:hover {
+    background-color: #c82333;
+}
+
+/* Paginación */
+#paginacion {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+}
+
+.pagination-btn {
+    padding: 6px 12px;
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s;
+    min-width: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pagination-btn:hover:not(:disabled) {
+    background-color: #f8f9fa;
+    border-color: #51B8AC;
+}
+
+.pagination-btn.active {
+    background-color: #51B8AC;
+    color: white;
+    border-color: #51B8AC;
+}
+
+.pagination-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Modal de foto */
+.modal-xl {
+    max-width: 1200px;
+}
+
+.modal-body img {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Scrollbar personalizada */
+.filter-options::-webkit-scrollbar {
+    width: 6px;
+}
+
+.filter-options::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.filter-options::-webkit-scrollbar-thumb {
+    background: #51B8AC;
+    border-radius: 3px;
+}
+
+.filter-options::-webkit-scrollbar-thumb:hover {
+    background: #0E544C;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .filter-panel {
+        min-width: 260px;
+        max-width: 90vw;
+    }
+
+    .sorteos-table {
+        font-size: 13px;
+    }
+
+    .sorteos-table thead th,
+    .sorteos-table tbody td {
+        padding: 10px 8px;
+    }
+
+    .btn-ver-foto {
+        padding: 3px 6px;
+        font-size: 12px;
+    }
+
+    .validado-badge,
+    .tipo-qr-badge {
+        font-size: 0.75rem;
+        padding: 3px 8px;
+    }
+}

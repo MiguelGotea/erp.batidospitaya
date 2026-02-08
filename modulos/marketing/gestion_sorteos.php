@@ -27,56 +27,7 @@ if (!tienePermiso('gestion_sorteos', 'vista', $cargoOperario)) {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="/core/assets/css/global_tools.css?v=<?php echo mt_rand(1, 10000); ?>">
-    <style>
-        .validado-badge {
-            padding: 4px 12px;
-            border-radius: 12px;
-            font-size: 0.85rem;
-            font-weight: 600;
-        }
-
-        .validado-si {
-            background: #d4edda;
-            color: #155724;
-        }
-
-        .validado-no {
-            background: #f8d7da;
-            color: #721c24;
-        }
-
-        .tipo-qr-badge {
-            padding: 4px 10px;
-            border-radius: 8px;
-            font-size: 0.8rem;
-            font-weight: 500;
-        }
-
-        .tipo-online {
-            background: #cfe2ff;
-            color: #084298;
-        }
-
-        .tipo-offline {
-            background: #fff3cd;
-            color: #856404;
-        }
-
-        .btn-ver-foto {
-            padding: 4px 8px;
-            font-size: 0.85rem;
-        }
-
-        .sorteos-table {
-            font-size: 0.9rem;
-        }
-
-        .sorteos-table th {
-            background: #f8f9fa;
-            font-weight: 600;
-            white-space: nowrap;
-        }
-    </style>
+    <link rel="stylesheet" href="css/gestion_sorteos.css?v=<?php echo mt_rand(1, 10000); ?>">
 </head>
 
 <body>
