@@ -18,7 +18,7 @@ function cargarRegistros() {
     });
 
     $.ajax({
-        url: `ajax / get_registros_sorteos.php ? ${params} `,
+        url: `ajax/get_registros_sorteos.php?${params}`,
         method: 'GET',
         dataType: 'json',
         success: function (response) {
@@ -29,8 +29,9 @@ function cargarRegistros() {
                 mostrarError('Error al cargar registros');
             }
         },
-        error: function () {
-            mostrarError('Error de conexión');
+        error: function (xhr, status, error) {
+            console.error('Error al cargar registros:', error);
+            mostrarError('Error al cargar registros');
         }
     });
 }
