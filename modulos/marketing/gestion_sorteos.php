@@ -21,7 +21,7 @@ if (!tienePermiso('gestion_sorteos', 'vista', $cargoOperario)) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestión de Sorteos - Pitaya Love</title>
+    <title>Gestión de Sorteos</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <link rel="icon" href="../../core/assets/img/icon12.png" type="image/png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -42,10 +42,6 @@ if (!tienePermiso('gestion_sorteos', 'vista', $cargoOperario)) {
                     <table class="table table-hover sorteos-table" id="tablaSorteos">
                         <thead>
                             <tr>
-                                <th data-column="id" data-type="number">
-                                    ID
-                                    <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
-                                </th>
                                 <th data-column="fecha_registro" data-type="daterange">
                                     Fecha Registro
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
@@ -78,14 +74,8 @@ if (!tienePermiso('gestion_sorteos', 'vista', $cargoOperario)) {
                                     Puntos
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
-                                <th data-column="tipo_qr" data-type="list">
-                                    Tipo QR
-                                    <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
-                                </th>
-                                <th data-column="validado_ia" data-type="list">
-                                    Validado IA
-                                    <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
-                                </th>
+                                <th data-column="tipo_qr">Tipo QR</th>
+                                <th data-column="validado_ia">Validado IA</th>
                                 <th style="width: 150px;">Acciones</th>
                             </tr>
                         </thead>

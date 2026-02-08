@@ -58,12 +58,16 @@ function renderizarTabla(registros) {
             ? '<span class="tipo-qr-badge tipo-online">Online</span>'
             : '<span class="tipo-qr-badge tipo-offline">Offline</span>';
 
-        const fecha = new Date(registro.fecha_registro).toLocaleString('es-NI', {
+        // Convertir fecha a zona horaria de Nicaragua (UTC-6)
+        const fechaUTC = new Date(registro.fecha_registro + ' UTC');
+        const fecha = fechaUTC.toLocaleString('es-NI', {
+            timeZone: 'America/Managua',
             year: 'numeric',
             month: '2-digit',
             day: '2-digit',
             hour: '2-digit',
-            minute: '2-digit'
+            minute: '2-digit',
+            hour12: true
         });
 
         const btnEliminar = tienePermisoEdicion
@@ -74,7 +78,6 @@ function renderizarTabla(registros) {
 
         tbody.append(`
             <tr>
-                <td>${registro.id}</td>
                 <td>${fecha}</td>
                 <td>${registro.nombre_completo}</td>
                 <td>${registro.numero_contacto}</td>
