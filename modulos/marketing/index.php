@@ -331,6 +331,13 @@ if (!tienePermiso('index_marketing', 'vista', $cargoOperario)) {
                     </div>
                     <div class="quick-access-title">Cumpleaños Club Pitaya</div>
                 </a>
+
+                <a href="gestion_sorteos.php" class="quick-access-card">
+                    <div class="quick-access-icon">
+                        <i class="fas fa-gift"></i>
+                    </div>
+                    <div class="quick-access-title">Gestión Sorteos</div>
+                </a>
             </div>
         </div>
     </div>
