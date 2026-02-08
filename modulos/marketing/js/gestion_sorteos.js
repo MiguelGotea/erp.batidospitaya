@@ -95,7 +95,7 @@ function renderizarTabla(registros) {
                 <td>${registro.numero_cedula || '-'}</td>
                 <td>${registro.numero_factura}</td>
                 <td>${registro.correo_electronico || '-'}</td>
-                <td>C$ ${parseFloat(registro.monto_factura).toFixed(2)}</td>
+                <td>${parseFloat(registro.monto_factura).toFixed(2)}</td>
                 <td>${registro.puntos_factura}</td>
                 <td>${tipoBadge}</td>
                 <td>${validadoBadge}</td>
@@ -175,7 +175,7 @@ function verFoto(id, fotoNombre) {
                     </div>
                     <div class="info-row">
                         <span class="info-label"><i class="bi bi-currency-dollar"></i> Monto:</span>
-                        <span class="info-value">C$ ${parseFloat(registro.monto_factura).toFixed(2)}</span>
+                        <span class="info-value">${parseFloat(registro.monto_factura).toFixed(2)}</span>
                     </div>
                     <div class="info-row">
                         <span class="info-label"><i class="bi bi-star"></i> Puntos:</span>
