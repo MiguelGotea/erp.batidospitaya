@@ -108,7 +108,7 @@ function renderizarTabla(registros) {
 function verFoto(id, fotoNombre) {
     // Cargar datos del registro
     $.ajax({
-        url: `ajax / get_registros_sorteos.php ? id = ${id} `,
+        url: `ajax/get_registros_sorteos.php?id=${id}`,
         method: 'GET',
         dataType: 'json',
         success: function (response) {
@@ -116,7 +116,7 @@ function verFoto(id, fotoNombre) {
                 const registro = response.data[0];
 
                 // Mostrar foto
-                $('#fotoFactura').attr('src', `../ PitayaLove / uploads / ${fotoNombre} `);
+                $('#fotoFactura').attr('src', `../PitayaLove/uploads/${fotoNombre}`);
 
                 // Convertir fecha a zona horaria de Nicaragua
                 const fechaUTC = new Date(registro.fecha_registro + ' UTC');
