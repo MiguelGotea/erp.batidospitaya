@@ -20,59 +20,87 @@ error_log("GET params: " . print_r($_GET, true));
 $response = ['success' => false, 'data' => [], 'total' => 0];
 
 try {
-    // Parámetros de paginación
+    // Parámetros de paginación y ordenamiento
     $page = isset($_GET['page']) ? (int) $_GET['page'] : 1;
     $perPage = isset($_GET['per_page']) ? (int) $_GET['per_page'] : 50;
     $offset = ($page - 1) * $perPage;
 
-    // Filtros
-    $filtros = [];
+    $ordenColumna = isset($_GET['orden_columna']) ? $_GET['orden_columna'] : 'fecha_registro';
+    $ordenDireccion = isset($_GET['orden_direccion']) ? strtoupper($_GET['orden_direccion']) : 'DESC';
 
-    // Procesar filtros dinámicos
-    foreach ($_GET as $key => $value) {
-        if (strpos($key, 'filter_') === 0) {
-            $columna = substr($key, 7); // Remover 'filter_'
-            $filtros[$columna] = $value;
-        }
+    // Lista de columnas válidas para filtrar y ordenar
+    $columnasValidas = [
+        'nombre_completo',
+        'numero_contacto',
+        'numero_cedula',
+        'numero_factura',
+        'correo_electronico',
+        'monto_factura',
+        'puntos_factura',
+        'tipo_qr',
+        'validado_ia',
+        'fecha_registro'
+    ];
+
+    // Validar columna de ordenamiento
+    if (!in_array($ordenColumna, $columnasValidas)) {
+        $ordenColumna = 'fecha_registro';
+    }
+    if (!in_array($ordenDireccion, ['ASC', 'DESC'])) {
+        $ordenDireccion = 'DESC';
     }
 
     // Construir WHERE clause
     $where = [];
     $params = [];
 
-    // Procesar cada filtro
-    foreach ($filtros as $columna => $valor) {
-        if (is_array($valor)) {
-            // Filtro de lista (tipo_qr, validado_ia)
-            if (!empty($valor)) {
-                $placeholders = implode(',', array_fill(0, count($valor), '?'));
-                $where[] = "$columna IN ($placeholders)";
-                $params = array_merge($params, $valor);
+    // Procesar filtros de cada columna
+    foreach ($_GET as $key => $value) {
+        // Saltar parámetros de sistema
+        if (in_array($key, ['page', 'per_page', 'orden_columna', 'orden_direccion'])) {
+            continue;
+        }
+
+        // Solo procesar columnas válidas
+        if (!in_array($key, $columnasValidas)) {
+            continue;
+        }
+
+        // Filtro de texto simple
+        if (is_string($value) && !empty($value) && $value[0] !== '{' && $value[0] !== '[') {
+            $where[] = "$key LIKE ?";
+            $params[] = "%$value%";
+            continue;
+        }
+
+        // Intentar decodificar JSON para filtros complejos
+        $decoded = json_decode($value, true);
+
+        if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+            // Filtro de rango numérico o fecha
+            if (isset($decoded['min']) && $decoded['min'] !== '') {
+                $where[] = "$key >= ?";
+                $params[] = $decoded['min'];
             }
-        } elseif (is_object($valor) || (is_string($valor) && json_decode($valor))) {
-            // Filtro de rango (numérico o fecha)
-            $rango = is_string($valor) ? json_decode($valor, true) : (array) $valor;
-            if (isset($rango['min']) && $rango['min'] !== '') {
-                $where[] = "$columna >= ?";
-                $params[] = $rango['min'];
+            if (isset($decoded['max']) && $decoded['max'] !== '') {
+                $where[] = "$key <= ?";
+                $params[] = $decoded['max'];
             }
-            if (isset($rango['max']) && $rango['max'] !== '') {
-                $where[] = "$columna <= ?";
-                $params[] = $rango['max'];
+            if (isset($decoded['desde']) && $decoded['desde'] !== '') {
+                $where[] = "DATE($key) >= ?";
+                $params[] = $decoded['desde'];
             }
-            if (isset($rango['desde']) && $rango['desde'] !== '') {
-                $where[] = "DATE($columna) >= ?";
-                $params[] = $rango['desde'];
+            if (isset($decoded['hasta']) && $decoded['hasta'] !== '') {
+                $where[] = "DATE($key) <= ?";
+                $params[] = $decoded['hasta'];
             }
-            if (isset($rango['hasta']) && $rango['hasta'] !== '') {
-                $where[] = "DATE($columna) <= ?";
-                $params[] = $rango['hasta'];
-            }
-        } else {
-            // Filtro de texto
-            if ($valor !== '') {
-                $where[] = "$columna LIKE ?";
-                $params[] = "%$valor%";
+        } elseif (is_array($value) || (is_string($value) && strpos($value, ',') !== false)) {
+            // Filtro de lista (array o string separado por comas)
+            $valores = is_array($value) ? $value : explode(',', $value);
+            if (!empty($valores)) {
+                $placeholders = implode(',', array_fill(0, count($valores), '?'));
+                $where[] = "$key IN ($placeholders)";
+                $params = array_merge($params, $valores);
             }
         }
     }
@@ -136,7 +164,7 @@ try {
                 fecha_registro
             FROM pitaya_love_registros
             $whereClause
-            ORDER BY fecha_registro DESC
+            ORDER BY $ordenColumna $ordenDireccion
             LIMIT ? OFFSET ?";
 
     $params[] = $perPage;
