@@ -1,10 +1,37 @@
 -- Script SQL para configurar permisos de gestion_sorteos
 -- Ejecutar en la base de datos después de crear el módulo
 
--- 1. Insertar la herramienta en tools_erp (si no existe)
-INSERT INTO tools_erp (nombre, descripcion, modulo)
-VALUES ('gestion_sorteos', 'Gestión de Sorteos Pitaya Love', 'marketing')
-ON DUPLICATE KEY UPDATE descripcion = 'Gestión de Sorteos Pitaya Love';
+-- 1. Insertar la herramienta en tools_erp con TODOS los campos requeridos
+INSERT INTO tools_erp (
+    nombre,
+    titulo,
+    tipo_componente,
+    grupo,
+    descripcion,
+    url_real,
+    url_alias,
+    icono,
+    orden,
+    activo
+)
+VALUES (
+    'gestion_sorteos',
+    'Gestión Sorteos',
+    'herramienta',
+    'marketing',
+    'Gestión de registros del sorteo Pitaya Love',
+    '/modulos/marketing/gestion_sorteos.php',
+    'gestion-sorteos',
+    'fas fa-gift',
+    10,
+    1
+)
+ON DUPLICATE KEY UPDATE 
+    titulo = 'Gestión Sorteos',
+    descripcion = 'Gestión de registros del sorteo Pitaya Love',
+    url_real = '/modulos/marketing/gestion_sorteos.php',
+    url_alias = 'gestion-sorteos',
+    icono = 'fas fa-gift';
 
 -- 2. Obtener el ID de la herramienta
 SET @tool_id = (SELECT id FROM tools_erp WHERE nombre = 'gestion_sorteos' LIMIT 1);
@@ -38,10 +65,13 @@ ON DUPLICATE KEY UPDATE permiso = 'allow';
 -- Verificar que se crearon correctamente
 SELECT 
     t.nombre as herramienta,
+    t.titulo,
+    t.grupo,
+    t.url_real,
     a.nombre_accion as accion,
     COUNT(p.id) as cargos_con_permiso
 FROM tools_erp t
 INNER JOIN acciones_tools_erp a ON t.id = a.tool_erp_id
 LEFT JOIN permisos_tools_erp p ON a.id = p.accion_tool_erp_id AND p.permiso = 'allow'
 WHERE t.nombre = 'gestion_sorteos'
-GROUP BY t.nombre, a.nombre_accion;
+GROUP BY t.nombre, t.titulo, t.grupo, t.url_real, a.nombre_accion;
