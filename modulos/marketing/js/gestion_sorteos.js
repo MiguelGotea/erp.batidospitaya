@@ -77,13 +77,13 @@ function renderizarTabla(registros) {
         });
 
         const btnEliminar = tienePermisoEdicion
-            ? `< button class="btn btn-sm btn-danger" onclick = "eliminarRegistro(${registro.id})" title = "Eliminar" >
-    <i class="bi bi-trash"></i>
-               </button > `
+            ? `<button class="btn btn-sm btn-danger" onclick="eliminarRegistro(${registro.id})" title="Eliminar">
+                   <i class="bi bi-trash"></i>
+               </button>`
             : '';
 
         tbody.append(`
-    < tr >
+            <tr>
                 <td>${fecha}</td>
                 <td>${registro.nombre_completo}</td>
                 <td>${registro.numero_contacto}</td>
@@ -100,8 +100,8 @@ function renderizarTabla(registros) {
                     </button>
                     ${btnEliminar}
                 </td>
-            </tr >
-    `);
+            </tr>
+        `);
     });
 }
 
