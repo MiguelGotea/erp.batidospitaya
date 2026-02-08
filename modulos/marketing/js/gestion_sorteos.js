@@ -3,7 +3,7 @@
 let paginaActual = 1;
 let registrosPorPagina = 50;
 let filtrosActivos = {};
-let tienePermisoEdicion = false; // Se establece desde PHP
+// tienePermisoEdicion is set from PHP inline script
 
 $(document).ready(function () {
     cargarRegistros();
