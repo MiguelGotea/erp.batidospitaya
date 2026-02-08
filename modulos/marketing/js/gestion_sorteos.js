@@ -3,9 +3,10 @@
 let paginaActual = 1;
 let registrosPorPagina = 50;
 let filtrosActivos = {};
-let tienePermisoEdicion = false; // Will be set from PHP inline script
+let tienePermisoEdicion = false; // Se establece desde PHP
 
 $(document).ready(function () {
+    console.log('Permiso de edición:', tienePermisoEdicion);
     cargarRegistros();
 });
 
@@ -17,7 +18,7 @@ function cargarRegistros() {
     });
 
     $.ajax({
-        url: `ajax/get_registros_sorteos.php?${params}`,
+        url: `ajax / get_registros_sorteos.php ? ${params} `,
         method: 'GET',
         dataType: 'json',
         success: function (response) {
@@ -40,12 +41,12 @@ function renderizarTabla(registros) {
 
     if (registros.length === 0) {
         tbody.append(`
-            <tr>
-                <td colspan="12" class="text-center text-muted py-4">
-                    No se encontraron registros
-                </td>
-            </tr>
-        `);
+    < tr >
+    <td colspan="12" class="text-center text-muted py-4">
+        No se encontraron registros
+    </td>
+            </tr >
+    `);
         return;
     }
 
@@ -71,13 +72,13 @@ function renderizarTabla(registros) {
         });
 
         const btnEliminar = tienePermisoEdicion
-            ? `<button class="btn btn-sm btn-danger" onclick="eliminarRegistro(${registro.id})" title="Eliminar">
-                   <i class="bi bi-trash"></i>
-               </button>`
+            ? `< button class="btn btn-sm btn-danger" onclick = "eliminarRegistro(${registro.id})" title = "Eliminar" >
+    <i class="bi bi-trash"></i>
+               </button > `
             : '';
 
         tbody.append(`
-            <tr>
+    < tr >
                 <td>${fecha}</td>
                 <td>${registro.nombre_completo}</td>
                 <td>${registro.numero_contacto}</td>
@@ -94,15 +95,15 @@ function renderizarTabla(registros) {
                     </button>
                     ${btnEliminar}
                 </td>
-            </tr>
-        `);
+            </tr >
+    `);
     });
 }
 
 function verFoto(id, fotoNombre) {
     // Cargar datos del registro
     $.ajax({
-        url: `ajax/get_registros_sorteos.php?id=${id}`,
+        url: `ajax / get_registros_sorteos.php ? id = ${id} `,
         method: 'GET',
         dataType: 'json',
         success: function (response) {
@@ -110,25 +111,75 @@ function verFoto(id, fotoNombre) {
                 const registro = response.data[0];
 
                 // Mostrar foto
-                $('#fotoFactura').attr('src', `../PitayaLove/uploads/${fotoNombre}`);
+                $('#fotoFactura').attr('src', `../ PitayaLove / uploads / ${fotoNombre} `);
 
-                // Mostrar datos
-                const validado = registro.validado_ia == 1 ? '✅ Sí' : '❌ No';
-                const fecha = new Date(registro.fecha_registro).toLocaleString('es-NI');
+                // Convertir fecha a zona horaria de Nicaragua
+                const fechaUTC = new Date(registro.fecha_registro + ' UTC');
+                const fecha = fechaUTC.toLocaleString('es-NI', {
+                    timeZone: 'America/Managua',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: true
+                });
+
+                // Badges estilizados
+                const validadoBadge = registro.validado_ia == 1
+                    ? '<span class="badge bg-success"><i class="bi bi-check-circle"></i> Validado por IA</span>'
+                    : '<span class="badge bg-danger"><i class="bi bi-x-circle"></i> No validado</span>';
+
+                const tipoBadge = registro.tipo_qr === 'online'
+                    ? '<span class="badge bg-primary"><i class="bi bi-wifi"></i> Online</span>'
+                    : '<span class="badge bg-warning text-dark"><i class="bi bi-qr-code"></i> Offline</span>';
 
                 $('#datosRegistro').html(`
-                    <div class="mb-2"><strong>ID:</strong> ${registro.id}</div>
-                    <div class="mb-2"><strong>Fecha:</strong> ${fecha}</div>
-                    <div class="mb-2"><strong>Nombre:</strong> ${registro.nombre_completo}</div>
-                    <div class="mb-2"><strong>Contacto:</strong> ${registro.numero_contacto}</div>
-                    <div class="mb-2"><strong>Cédula:</strong> ${registro.numero_cedula || 'N/A'}</div>
-                    <div class="mb-2"><strong>No. Factura:</strong> ${registro.numero_factura}</div>
-                    <div class="mb-2"><strong>Correo:</strong> ${registro.correo_electronico || 'N/A'}</div>
-                    <div class="mb-2"><strong>Monto:</strong> C$ ${parseFloat(registro.monto_factura).toFixed(2)}</div>
-                    <div class="mb-2"><strong>Puntos:</strong> ${registro.puntos_factura}</div>
-                    <div class="mb-2"><strong>Tipo QR:</strong> ${registro.tipo_qr}</div>
-                    <div class="mb-2"><strong>Validado IA:</strong> ${validado}</div>
-                `);
+    < div class="info-row" >
+                        <span class="info-label"><i class="bi bi-hash"></i> ID:</span>
+                        <span class="info-value">${registro.id}</span>
+                    </div >
+                    <div class="info-row">
+                        <span class="info-label"><i class="bi bi-calendar-event"></i> Fecha:</span>
+                        <span class="info-value">${fecha}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label"><i class="bi bi-person"></i> Nombre:</span>
+                        <span class="info-value">${registro.nombre_completo}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label"><i class="bi bi-phone"></i> Contacto:</span>
+                        <span class="info-value">${registro.numero_contacto}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label"><i class="bi bi-card-text"></i> Cédula:</span>
+                        <span class="info-value">${registro.numero_cedula || 'N/A'}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label"><i class="bi bi-receipt"></i> No. Factura:</span>
+                        <span class="info-value">${registro.numero_factura}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label"><i class="bi bi-envelope"></i> Correo:</span>
+                        <span class="info-value">${registro.correo_electronico || 'N/A'}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label"><i class="bi bi-currency-dollar"></i> Monto:</span>
+                        <span class="info-value">C$ ${parseFloat(registro.monto_factura).toFixed(2)}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label"><i class="bi bi-star"></i> Puntos:</span>
+                        <span class="info-value">${registro.puntos_factura}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label"><i class="bi bi-qr-code-scan"></i> Tipo QR:</span>
+                        <span class="info-value">${tipoBadge}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label"><i class="bi bi-robot"></i> Validado IA:</span>
+                        <span class="info-value">${validadoBadge}</span>
+                    </div>
+`);
 
                 // Mostrar modal
                 new bootstrap.Modal(document.getElementById('modalVerFoto')).show();
@@ -177,25 +228,25 @@ function renderizarPaginacion(totalPaginas, paginaActual) {
     let html = '<nav><ul class="pagination pagination-sm mb-0">';
 
     // Botón anterior
-    html += `<li class="page-item ${paginaActual === 1 ? 'disabled' : ''}">
-        <a class="page-link" href="#" onclick="cambiarPagina(${paginaActual - 1}); return false;">Anterior</a>
-    </li>`;
+    html += `< li class="page-item ${paginaActual === 1 ? 'disabled' : ''}" >
+    <a class="page-link" href="#" onclick="cambiarPagina(${paginaActual - 1}); return false;">Anterior</a>
+    </li > `;
 
     // Números de página
     for (let i = 1; i <= totalPaginas; i++) {
         if (i === 1 || i === totalPaginas || (i >= paginaActual - 2 && i <= paginaActual + 2)) {
-            html += `<li class="page-item ${i === paginaActual ? 'active' : ''}">
-                <a class="page-link" href="#" onclick="cambiarPagina(${i}); return false;">${i}</a>
-            </li>`;
+            html += `< li class="page-item ${i === paginaActual ? 'active' : ''}" >
+    <a class="page-link" href="#" onclick="cambiarPagina(${i}); return false;">${i}</a>
+            </li > `;
         } else if (i === paginaActual - 3 || i === paginaActual + 3) {
             html += '<li class="page-item disabled"><span class="page-link">...</span></li>';
         }
     }
 
     // Botón siguiente
-    html += `<li class="page-item ${paginaActual === totalPaginas ? 'disabled' : ''}">
-        <a class="page-link" href="#" onclick="cambiarPagina(${paginaActual + 1}); return false;">Siguiente</a>
-    </li>`;
+    html += `< li class="page-item ${paginaActual === totalPaginas ? 'disabled' : ''}" >
+    <a class="page-link" href="#" onclick="cambiarPagina(${paginaActual + 1}); return false;">Siguiente</a>
+    </li > `;
 
     html += '</ul></nav>';
     paginacion.html(html);
@@ -250,11 +301,11 @@ function crearPanelFiltro(th, columna, tipo, icon) {
 
     // Botones de acción
     panel.append(`
-        <div class="filter-actions">
-            <button class="filter-action-btn clear" onclick="limpiarFiltro('${columna}')">
-                <i class="bi bi-x-circle"></i> Limpiar
-            </button>
-        </div>
+    < div class="filter-actions" >
+        <button class="filter-action-btn clear" onclick="limpiarFiltro('${columna}')">
+            <i class="bi bi-x-circle"></i> Limpiar
+        </button>
+        </div >
     `);
 
     $('body').append(panel);
@@ -263,18 +314,18 @@ function crearPanelFiltro(th, columna, tipo, icon) {
     if (tipo === 'text') {
         const valorActual = filtrosActivos[columna] || '';
         panel.append(`
-            <div class="filter-section" style="margin-top: 12px;">
+    < div class="filter-section" style = "margin-top: 12px;" >
                 <span class="filter-section-title">Buscar:</span>
                 <input type="text" class="filter-search" placeholder="Escribir..." 
                        value="${valorActual}"
                        oninput="filtrarBusqueda('${columna}', this.value)">
             </div>
-        `);
+`);
     } else if (tipo === 'number') {
         const valorMin = filtrosActivos[columna]?.min || '';
         const valorMax = filtrosActivos[columna]?.max || '';
         panel.append(`
-            <div class="filter-section" style="margin-top: 12px;">
+    < div class="filter-section" style = "margin-top: 12px;" >
                 <span class="filter-section-title">Rango:</span>
                 <div class="numeric-inputs">
                     <input type="number" class="filter-search" placeholder="Mínimo" 
@@ -285,10 +336,10 @@ function crearPanelFiltro(th, columna, tipo, icon) {
                            onchange="filtrarNumerico('${columna}', 'max', this.value)">
                 </div>
             </div>
-        `);
+`);
     } else if (tipo === 'list') {
         panel.append(`
-            <div class="filter-section" style="margin-top: 12px;">
+    < div class="filter-section" style = "margin-top: 12px;" >
                 <span class="filter-section-title">Filtrar por:</span>
                 <div class="filter-options">
                     <div class="filter-option">
@@ -304,13 +355,13 @@ function crearPanelFiltro(th, columna, tipo, icon) {
                         <span>Offline</span>
                     </div>
                 </div>
-            </div>
-        `);
+            </div >
+    `);
     } else if (tipo === 'daterange') {
         const fechaDesde = filtrosActivos[columna]?.desde || '';
         const fechaHasta = filtrosActivos[columna]?.hasta || '';
         panel.append(`
-            <div class="filter-section" style="margin-top: 12px;">
+    < div class="filter-section" style = "margin-top: 12px;" >
                 <span class="filter-section-title">Rango de fechas:</span>
                 <div class="numeric-inputs">
                     <input type="date" class="filter-search" 
@@ -321,7 +372,7 @@ function crearPanelFiltro(th, columna, tipo, icon) {
                            onchange="filtrarFecha('${columna}', 'hasta', this.value)">
                 </div>
             </div>
-        `);
+`);
     }
 
     posicionarPanelFiltro(panel, icon);
@@ -359,7 +410,7 @@ function actualizarIndicadoresFiltros() {
         if ((Array.isArray(valor) && valor.length > 0) ||
             (!Array.isArray(valor) && typeof valor === 'object' && Object.keys(valor).length > 0) ||
             (!Array.isArray(valor) && typeof valor !== 'object' && valor !== '')) {
-            $(`th[data-column="${columna}"] .filter-icon`).addClass('has-filter');
+            $(`th[data - column= "${columna}"] .filter - icon`).addClass('has-filter');
         }
     });
 }
