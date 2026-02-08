@@ -296,7 +296,7 @@ body {
 }
 
 .modal-header {
-    background: linear-gradient(135deg, #0E544C 0%, #51B8AC 100%);
+    background: #0E544C;
     color: white;
     border-bottom: none;
 }
@@ -371,24 +371,22 @@ body {
 
 /* Mejorar botones de acción en tabla */
 .btn-ver-foto {
-    background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%);
+    background: #0d6efd;
     border: none;
     color: white;
     padding: 6px 12px;
     border-radius: 6px;
     font-size: 0.875rem;
     font-weight: 500;
-    transition: all 0.3s;
+    transition: all 0.2s;
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    box-shadow: 0 2px 4px rgba(13, 110, 253, 0.3);
 }
 
 .btn-ver-foto:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(13, 110, 253, 0.4);
-    background: linear-gradient(135deg, #0b5ed7 0%, #0a58ca 100%);
+    background: #0b5ed7;
+    transform: translateY(-1px);
 }
 
 .btn-ver-foto i {
@@ -396,16 +394,14 @@ body {
 }
 
 .btn-danger {
-    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    background: #dc3545;
     border: none;
-    transition: all 0.3s;
-    box-shadow: 0 2px 4px rgba(220, 53, 69, 0.3);
+    transition: all 0.2s;
 }
 
 .btn-danger:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(220, 53, 69, 0.4);
-    background: linear-gradient(135deg, #c82333 0%, #bd2130 100%);
+    background: #c82333;
+    transform: translateY(-1px);
 }
 
 /* Scrollbar personalizada */

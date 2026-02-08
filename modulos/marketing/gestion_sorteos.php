@@ -131,28 +131,26 @@ if (!tienePermiso('gestion_sorteos', 'vista', $cargoOperario)) {
 
     <!-- Modal de confirmación para eliminar -->
     <div class="modal fade" id="modalConfirmarEliminar" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
             <div class="modal-content">
                 <div class="modal-header bg-danger text-white">
                     <h5 class="modal-title">
-                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                        Confirmar Eliminación
+                        <i class="bi bi-trash me-2"></i>
+                        Eliminar Registro
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body">
-                    <p class="mb-3">¿Está seguro de que desea eliminar este registro?</p>
-                    <div class="alert alert-warning mb-0">
-                        <i class="bi bi-info-circle me-2"></i>
-                        <strong>Advertencia:</strong> Esta acción no se puede deshacer.
-                    </div>
+                <div class="modal-body text-center py-4">
+                    <i class="bi bi-exclamation-triangle text-warning" style="font-size: 3rem;"></i>
+                    <p class="mt-3 mb-0">¿Está seguro de eliminar este registro?</p>
+                    <small class="text-muted">Esta acción no se puede deshacer</small>
                 </div>
-                <div class="modal-footer">
+                <div class="modal-footer justify-content-center">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                        <i class="bi bi-x-circle me-1"></i> Cancelar
+                        Cancelar
                     </button>
                     <button type="button" class="btn btn-danger" id="btnConfirmarEliminar">
-                        <i class="bi bi-trash me-1"></i> Eliminar
+                        Eliminar
                     </button>
                 </div>
             </div>

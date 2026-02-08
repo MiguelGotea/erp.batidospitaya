@@ -140,10 +140,10 @@ function verFoto(id, fotoNombre) {
                     : '<span class="badge bg-warning text-dark"><i class="bi bi-qr-code"></i> Offline</span>';
 
                 $('#datosRegistro').html(`
-    < div class="info-row" >
+                    <div class="info-row">
                         <span class="info-label"><i class="bi bi-hash"></i> ID:</span>
                         <span class="info-value">${registro.id}</span>
-                    </div >
+                    </div>
                     <div class="info-row">
                         <span class="info-label"><i class="bi bi-calendar-event"></i> Fecha:</span>
                         <span class="info-value">${fecha}</span>
@@ -245,25 +245,25 @@ function renderizarPaginacion(totalPaginas, paginaActual) {
     let html = '<nav><ul class="pagination pagination-sm mb-0">';
 
     // Botón anterior
-    html += `< li class="page-item ${paginaActual === 1 ? 'disabled' : ''}" >
-    <a class="page-link" href="#" onclick="cambiarPagina(${paginaActual - 1}); return false;">Anterior</a>
-    </li > `;
+    html += `<li class="page-item ${paginaActual === 1 ? 'disabled' : ''}">
+        <a class="page-link" href="#" onclick="cambiarPagina(${paginaActual - 1}); return false;">Anterior</a>
+    </li>`;
 
     // Números de página
     for (let i = 1; i <= totalPaginas; i++) {
         if (i === 1 || i === totalPaginas || (i >= paginaActual - 2 && i <= paginaActual + 2)) {
-            html += `< li class="page-item ${i === paginaActual ? 'active' : ''}" >
-    <a class="page-link" href="#" onclick="cambiarPagina(${i}); return false;">${i}</a>
-            </li > `;
+            html += `<li class="page-item ${i === paginaActual ? 'active' : ''}">
+                <a class="page-link" href="#" onclick="cambiarPagina(${i}); return false;">${i}</a>
+            </li>`;
         } else if (i === paginaActual - 3 || i === paginaActual + 3) {
             html += '<li class="page-item disabled"><span class="page-link">...</span></li>';
         }
     }
 
     // Botón siguiente
-    html += `< li class="page-item ${paginaActual === totalPaginas ? 'disabled' : ''}" >
-    <a class="page-link" href="#" onclick="cambiarPagina(${paginaActual + 1}); return false;">Siguiente</a>
-    </li > `;
+    html += `<li class="page-item ${paginaActual === totalPaginas ? 'disabled' : ''}">
+        <a class="page-link" href="#" onclick="cambiarPagina(${paginaActual + 1}); return false;">Siguiente</a>
+    </li>`;
 
     html += '</ul></nav>';
     paginacion.html(html);
@@ -318,11 +318,11 @@ function crearPanelFiltro(th, columna, tipo, icon) {
 
     // Botones de acción
     panel.append(`
-    < div class="filter-actions" >
-        <button class="filter-action-btn clear" onclick="limpiarFiltro('${columna}')">
-            <i class="bi bi-x-circle"></i> Limpiar
-        </button>
-        </div >
+        <div class="filter-actions">
+            <button class="filter-action-btn clear" onclick="limpiarFiltro('${columna}')">
+                <i class="bi bi-x-circle"></i> Limpiar
+            </button>
+        </div>
     `);
 
     $('body').append(panel);
@@ -331,18 +331,18 @@ function crearPanelFiltro(th, columna, tipo, icon) {
     if (tipo === 'text') {
         const valorActual = filtrosActivos[columna] || '';
         panel.append(`
-    < div class="filter-section" style = "margin-top: 12px;" >
+            <div class="filter-section" style="margin-top: 12px;">
                 <span class="filter-section-title">Buscar:</span>
                 <input type="text" class="filter-search" placeholder="Escribir..." 
                        value="${valorActual}"
                        oninput="filtrarBusqueda('${columna}', this.value)">
             </div>
-`);
+        `);
     } else if (tipo === 'number') {
         const valorMin = filtrosActivos[columna]?.min || '';
         const valorMax = filtrosActivos[columna]?.max || '';
         panel.append(`
-    < div class="filter-section" style = "margin-top: 12px;" >
+            <div class="filter-section" style="margin-top: 12px;">
                 <span class="filter-section-title">Rango:</span>
                 <div class="numeric-inputs">
                     <input type="number" class="filter-search" placeholder="Mínimo" 
@@ -353,10 +353,10 @@ function crearPanelFiltro(th, columna, tipo, icon) {
                            onchange="filtrarNumerico('${columna}', 'max', this.value)">
                 </div>
             </div>
-`);
+        `);
     } else if (tipo === 'list') {
         panel.append(`
-    < div class="filter-section" style = "margin-top: 12px;" >
+            <div class="filter-section" style="margin-top: 12px;">
                 <span class="filter-section-title">Filtrar por:</span>
                 <div class="filter-options">
                     <div class="filter-option">
