@@ -3,6 +3,7 @@
 let paginaActual = 1;
 let registrosPorPagina = 50;
 let filtrosActivos = {};
+let ordenActivo = { columna: null, direccion: null };
 // tienePermisoEdicion is set from PHP inline script
 
 $(document).ready(function () {
@@ -13,7 +14,11 @@ function cargarRegistros() {
     const params = new URLSearchParams({
         page: paginaActual,
         per_page: registrosPorPagina,
-        ...filtrosActivos
+        ...filtrosActivos,
+        ...(ordenActivo.columna && {
+            orden_columna: ordenActivo.columna,
+            orden_direccion: ordenActivo.direccion
+        })
     });
 
     console.log('Cargando registros con params:', params.toString());
@@ -315,6 +320,23 @@ function toggleFilter(icon) {
 // Crear panel de filtro
 function crearPanelFiltro(th, columna, tipo, icon) {
     const panel = $('<div class="filter-panel show"></div>');
+
+    // Ordenamiento
+    panel.append(`
+        <div class="filter-section">
+            <span class="filter-section-title">Ordenar:</span>
+            <div class="filter-sort-buttons">
+                <button class="filter-sort-btn ${ordenActivo.columna === columna && ordenActivo.direccion === 'asc' ? 'active' : ''}" 
+                        onclick="aplicarOrden('${columna}', 'asc')">
+                    <i class="bi bi-sort-alpha-down"></i> ASC
+                </button>
+                <button class="filter-sort-btn ${ordenActivo.columna === columna && ordenActivo.direccion === 'desc' ? 'active' : ''}" 
+                        onclick="aplicarOrden('${columna}', 'desc')">
+                    <i class="bi bi-sort-alpha-up"></i> DESC
+                </button>
+            </div>
+        </div>
+    `);
 
     // Botones de acción
     panel.append(`
@@ -634,6 +656,13 @@ function toggleOpcionFiltro(columna, valor, checked) {
             delete filtrosActivos[columna];
         }
     }
+    paginaActual = 1;
+    cargarRegistros();
+}
+
+// Aplicar orden
+function aplicarOrden(columna, direccion) {
+    ordenActivo = { columna, direccion };
     paginaActual = 1;
     cargarRegistros();
 }

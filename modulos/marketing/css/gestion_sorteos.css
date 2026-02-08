@@ -253,6 +253,45 @@ body {
     background-color: #c82333;
 }
 
+/* Botones de ordenamiento */
+.filter-sort-buttons {
+    display: flex;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.filter-sort-btn {
+    flex: 1;
+    padding: 6px 10px;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    background: white;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    color: #495057;
+}
+
+.filter-sort-btn:hover {
+    background-color: #f8f9fa;
+    border-color: #51B8AC;
+}
+
+.filter-sort-btn.active {
+    background-color: #51B8AC;
+    color: white;
+    border-color: #51B8AC;
+}
+
+.filter-sort-btn i {
+    font-size: 13px;
+}
+
 /* Paginación */
 #paginacion {
     display: flex;
