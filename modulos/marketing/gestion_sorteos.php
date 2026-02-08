@@ -133,7 +133,13 @@ if (!tienePermiso('gestion_sorteos', 'vista', $cargoOperario)) {
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // Set permissions from PHP
-        tienePermisoEdicion = <?php echo tienePermiso('gestion_sorteos', 'edicion', $cargoOperario) ? 'true' : 'false'; ?>;
+        const cargoOperario = <?php echo json_encode($cargoOperario); ?>;
+        const tienePermisoVista = <?php echo tienePermiso('gestion_sorteos', 'vista', $cargoOperario) ? 'true' : 'false'; ?>;
+        const tienePermisoEdicion = <?php echo tienePermiso('gestion_sorteos', 'edicion', $cargoOperario) ? 'true' : 'false'; ?>;
+        
+        console.log('Cargo del operario:', cargoOperario);
+        console.log('Permiso de vista:', tienePermisoVista);
+        console.log('Permiso de edición:', tienePermisoEdicion);
     </script>
     <script src="js/gestion_sorteos.js?v=<?php echo mt_rand(1, 10000); ?>"></script>
 </body>

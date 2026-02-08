@@ -6,7 +6,6 @@ let filtrosActivos = {};
 let tienePermisoEdicion = false; // Se establece desde PHP
 
 $(document).ready(function () {
-    console.log('Permiso de edición:', tienePermisoEdicion);
     cargarRegistros();
 });
 

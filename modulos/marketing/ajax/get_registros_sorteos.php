@@ -9,10 +9,13 @@ $cargoOperario = $usuario['CodNivelesCargos'];
 
 // Verificar permiso de vista
 if (!tienePermiso('gestion_sorteos', 'vista', $cargoOperario)) {
+    error_log("Sin permiso de vista para cargo: $cargoOperario");
     http_response_code(403);
     echo json_encode(['success' => false, 'message' => 'Sin permisos']);
     exit;
 }
+
+error_log("GET params: " . print_r($_GET, true));
 
 $response = ['success' => false, 'data' => [], 'total' => 0];
 
