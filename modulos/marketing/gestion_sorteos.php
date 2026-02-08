@@ -9,6 +9,7 @@ require_once '../../core/permissions/permissions.php';
 $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
 
+
 // Verificar acceso
 if (!tienePermiso('gestion_sorteos', 'vista', $cargoOperario)) {
     header('Location: /login.php');
