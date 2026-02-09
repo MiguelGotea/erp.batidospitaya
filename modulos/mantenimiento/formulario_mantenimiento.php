@@ -5,12 +5,12 @@ if (session_status() == PHP_SESSION_NONE) {
 }
 
 require_once 'models/Ticket.php';
-require_once '../../includes/auth.php';
-require_once '../../includes/funciones.php';
+require_once '../../core/auth/auth.php';
+require_once '../../core/helpers/funciones.php';
 // Incluir el menú lateral
-require_once '../../includes/menu_lateral.php';
+require_once '../../core/layout/menu_lateral.php';
 // Incluir el header universal
-require_once '../../includes/header_universal.php';
+require_once '../../core/layout/header_universal.php';
 
 //******************************Estándar para header******************************
 verificarAutenticacion();
