@@ -10,7 +10,6 @@ $vpsUrl = 'http://pitaya-wa.mooo.com';
 echo "<h2>Test de Conexión al VPS WhatsApp</h2>";
 echo "<p>URL: " . htmlspecialchars($vpsUrl) . "</p>";
 echo "<hr>";
-
 // Test cURL
 echo "<h3>Test cURL</h3>";
 
