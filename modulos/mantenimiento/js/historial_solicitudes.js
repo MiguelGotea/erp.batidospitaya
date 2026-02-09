@@ -199,6 +199,9 @@ function renderizarTabla(datos) {
         const fechaAgendadoHTML = renderizarFechaAgendado(row.fecha_inicio, row.status);
         tr.append(`<td class="col-agendado">${fechaAgendadoHTML}</td>`);
 
+        // Tiempo Estimado
+        tr.append(`<td>${renderizarTiempoEstimado(row.id, row.tiempo_estimado)}</td>`);
+
         // Foto
         const tieneFotos = parseInt(row.total_fotos) > 0;
         const btnFoto = tieneFotos
@@ -283,6 +286,61 @@ function cambiarUrgencia(ticketId, nivelActual) {
 
     $('#modalUrgencia').on('hidden.bs.modal', function () {
         $(this).remove();
+    });
+}
+
+// Renderizar tiempo estimado
+function renderizarTiempoEstimado(ticketId, tiempoActual) {
+    const tiempo = tiempoActual || 0;
+    const texto = tiempo > 0 ? `${tiempo} H` : '-';
+
+    // Solo permitir cambiar si tiene permiso cambiar_urgencia
+    const permiteEditar = tienepermiso('cambiar_urgencia');
+    const cursor = permiteEditar ? 'pointer' : 'default';
+    const hoverClass = permiteEditar ? 'tiempo-estimado-editable' : '';
+    const onClick = permiteEditar ? `onclick="cambiarTiempoEstimado(${ticketId}, ${tiempo})"` : '';
+
+    return `
+        <div class="tiempo-estimado-container ${hoverClass}" style="cursor: ${cursor};" ${onClick}>
+            <span class="tiempo-texto">${texto}</span>
+        </div>
+    `;
+}
+
+// Cambiar tiempo estimado
+function cambiarTiempoEstimado(ticketId, tiempoActual) {
+    const nuevoTiempo = prompt("Ingrese el tiempo estimado en horas (entero):", tiempoActual);
+
+    if (nuevoTiempo !== null) {
+        const tiempoInt = parseInt(nuevoTiempo);
+        if (isNaN(tiempoInt) || tiempoInt < 0) {
+            alert("Por favor, ingrese un número entero válido.");
+            return;
+        }
+        actualizarTiempoEstimado(ticketId, tiempoInt);
+    }
+}
+
+// Actualizar tiempo estimado
+function actualizarTiempoEstimado(ticketId, nuevoTiempo) {
+    $.ajax({
+        url: 'ajax/historial_actualizar_tiempo.php',
+        method: 'POST',
+        data: {
+            ticket_id: ticketId,
+            tiempo_estimado: nuevoTiempo
+        },
+        dataType: 'json',
+        success: function (response) {
+            if (response.success) {
+                cargarDatos();
+            } else {
+                alert('Error: ' + response.message);
+            }
+        },
+        error: function () {
+            alert('Error al actualizar el tiempo estimado');
+        }
     });
 }
 

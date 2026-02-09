@@ -75,7 +75,7 @@ try {
 
         if ($columna_orden === 'nombre_sucursal') {
             $order_sql = "ORDER BY s.nombre $direccion";
-        } elseif (in_array($columna_orden, ['created_at', 'titulo', 'descripcion', 'nivel_urgencia', 'status', 'fecha_inicio', 'tipo_formulario'])) {
+        } elseif (in_array($columna_orden, ['created_at', 'titulo', 'descripcion', 'nivel_urgencia', 'status', 'fecha_inicio', 'tipo_formulario', 'tiempo_estimado'])) {
             $order_sql = "ORDER BY t.$columna_orden $direccion";
         }
     } else {

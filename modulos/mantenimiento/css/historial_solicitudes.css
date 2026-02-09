@@ -615,6 +615,35 @@ body {
     background: #0E544C;
 }
 
+/* Tiempo Estimado */
+.tiempo-estimado-container {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 0.75rem;
+    border-radius: 4px;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    min-width: 60px;
+    height: 24px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #495057;
+    transition: all 0.2s;
+}
+
+.tiempo-estimado-editable:hover {
+    background-color: #e9ecef;
+    border-color: #51B8AC;
+    color: #0E544C;
+}
+
+.tiempo-texto {
+    display: block;
+    text-align: center;
+    width: 100%;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .historial-table {
