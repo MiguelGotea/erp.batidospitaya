@@ -59,6 +59,7 @@ function cargarRegistros() {
                 console.log('Datos recibidos:', response.data.length, 'registros');
                 renderizarTabla(response.data);
                 renderizarPaginacion(response.total_pages, response.page);
+                actualizarIndicadoresFiltros(); // Update filter indicators
             } else {
                 console.error('Error en respuesta:', response.message);
                 mostrarError('Error al cargar registros: ' + (response.message || 'Error desconocido'));
