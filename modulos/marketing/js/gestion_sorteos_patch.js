@@ -6,7 +6,6 @@ window.verFoto = function (id) {
     console.log('Tipo:', typeof id);
     console.log('===========================');
 
-
     $.ajax({
         url: `ajax/get_registros_sorteos.php?id=${id}`,
         method: 'GET',
