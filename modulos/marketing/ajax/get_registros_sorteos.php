@@ -67,10 +67,16 @@ try {
             continue;
         }
 
-        // Filtro de texto simple
-        if (is_string($value) && !empty($value) && $value[0] !== '{' && $value[0] !== '[') {
-            $where[] = "$key LIKE ?";
-            $params[] = "%$value%";
+        // Filtro de texto simple (but check for '0' explicitly)
+        if (is_string($value) && $value !== '' && $value[0] !== '{' && $value[0] !== '[') {
+            // For valido column, use exact match instead of LIKE
+            if ($key === 'valido') {
+                $where[] = "$key = ?";
+                $params[] = (int) $value;
+            } else {
+                $where[] = "$key LIKE ?";
+                $params[] = "%$value%";
+            }
             continue;
         }
 

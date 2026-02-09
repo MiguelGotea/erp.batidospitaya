@@ -39,7 +39,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $sql = "UPDATE pitaya_love_registros SET valido = ? WHERE id = ?";
         if (ejecutarConsulta($sql, [$valido, $id])) {
             $response['success'] = true;
-            $response['message'] = $valido === 1 ? 'Registro marcado como válido' : 'Registro marcado como inválido';
         } else {
             $response['message'] = 'Error al actualizar el registro';
         }
