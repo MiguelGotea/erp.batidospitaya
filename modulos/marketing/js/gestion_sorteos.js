@@ -742,6 +742,12 @@ function actualizarIndicadoresFiltros() {
 // Limpiar filtro
 function limpiarFiltro(columna) {
     delete filtrosActivos[columna];
+
+    // Si la columna que se limpia es la que tiene el orden, resetear orden también
+    if (ordenActivo.columna === columna) {
+        ordenActivo = { columna: null, direccion: null };
+    }
+
     cerrarTodosFiltros();
     paginaActual = 1;
     cargarRegistros();
@@ -825,6 +831,22 @@ function toggleOpcionFiltro(columna, valor, checked) {
 // Aplicar orden
 function aplicarOrden(columna, direccion) {
     ordenActivo = { columna, direccion };
+
+    // Actualizar UI de botones inmediatamente
+    $('.filter-sort-btn').removeClass('active');
+    $(`.filter-sort-btn:has(i.bi-sort-alpha-down${direccion === 'asc' ? '' : '-up'})`).addClass('active');
+
+    // Una forma más segura buscando por el texto o icono específico
+    $('.filter-sort-btn').each(function () {
+        const btn = $(this);
+        const icon = btn.find('i');
+        if (direccion === 'asc' && icon.hasClass('bi-sort-alpha-down')) {
+            btn.addClass('active');
+        } else if (direccion === 'desc' && icon.hasClass('bi-sort-alpha-up')) {
+            btn.addClass('active');
+        }
+    });
+
     paginaActual = 1;
     cargarRegistros();
 }
