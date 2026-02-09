@@ -102,57 +102,44 @@ body {
     font-size: 0.85rem;
 }
 
-/* 3-State Toggle Filter for Valido Column */
-.valido-filter-toggle {
-    display: inline-flex;
+/* 3-Circle Filter for Valido Column */
+.valido-filter-circles {
+    display: flex;
+    gap: 8px;
     align-items: center;
-    gap: 6px;
-    padding: 4px 10px;
-    margin-left: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    border-radius: 6px;
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
+    justify-content: center;
+    margin-top: 4px;
+}
+
+.filter-circle {
+    font-size: 16px;
     cursor: pointer;
+    opacity: 0.3;
     transition: all 0.3s ease;
-    font-size: 12px;
-    font-weight: 500;
 }
 
-.valido-filter-toggle:hover {
-    background: rgba(255, 255, 255, 0.2);
-    border-color: rgba(255, 255, 255, 0.5);
+.filter-circle:hover {
+    opacity: 0.6;
+    transform: scale(1.1);
 }
 
-.valido-filter-toggle i {
-    font-size: 14px;
+.filter-circle.active {
+    opacity: 1;
 }
 
-/* Estados del toggle */
-.valido-filter-toggle.state-all {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 255, 255, 0.3);
-}
-
-.valido-filter-toggle.state-all i {
+.filter-circle[data-state="all"] {
     color: #adb5bd;
 }
 
-.valido-filter-toggle.state-valid {
-    background: rgba(40, 167, 69, 0.2);
-    border-color: #28a745;
+.filter-circle[data-state="all"].active {
+    color: #ffffff;
 }
 
-.valido-filter-toggle.state-valid i {
+.filter-circle[data-state="valid"] {
     color: #28a745;
 }
 
-.valido-filter-toggle.state-invalid {
-    background: rgba(220, 53, 69, 0.2);
-    border-color: #dc3545;
-}
-
-.valido-filter-toggle.state-invalid i {
+.filter-circle[data-state="invalid"] {
     color: #dc3545;
 }
 

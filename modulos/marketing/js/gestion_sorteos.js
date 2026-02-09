@@ -70,17 +70,13 @@ function renderizarTabla(registros) {
             ? '<i class="bi bi-check-circle-fill valido-icon valid" title="Válido"></i>'
             : '<i class="bi bi-x-circle-fill valido-icon invalid" title="Inválido"></i>';
 
-        // Convertir fecha a zona horaria de Nicaragua (UTC-6)
+        // Convertir fecha a formato dd/MMM/yy
         const fechaUTC = new Date(registro.fecha_registro + ' UTC');
-        const fecha = fechaUTC.toLocaleString('es-NI', {
-            timeZone: 'America/Managua',
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: true
-        });
+        const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+        const dia = String(fechaUTC.getDate()).padStart(2, '0');
+        const mes = meses[fechaUTC.getMonth()];
+        const año = String(fechaUTC.getFullYear()).slice(-2);
+        const fecha = `${dia}/${mes}/${año}`;
 
         tbody.append(`
             <tr>
@@ -102,6 +98,23 @@ function renderizarTabla(registros) {
         `);
     });
 }
+
+// Circle Filter Function for Valido
+function setValidoFilter(state) {
+    // Update global state
+    validoFilterState = state;
+
+    // Update circle appearances
+    document.querySelectorAll('.filter-circle').forEach(circle => {
+        circle.classList.remove('active');
+    });
+    document.querySelector(`.filter-circle[data-state="${state}"]`).classList.add('active');
+
+    // Reload data with new filter
+    paginaActual = 1;
+    cargarRegistros();
+}
+
 
 // 3-State Toggle Filter Function
 function toggleValidoFilter() {

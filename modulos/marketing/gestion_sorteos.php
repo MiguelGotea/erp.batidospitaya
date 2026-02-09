@@ -77,11 +77,14 @@ if (!tienePermiso('gestion_sorteos', 'vista', $cargoOperario)) {
                                 </th>
                                 <th data-column="valido" data-type="toggle3">
                                     Válido
-                                    <button class="valido-filter-toggle" onclick="toggleValidoFilter()"
-                                        title="Filtrar por estado">
-                                        <i class="bi bi-circle"></i>
-                                        <span>Todos</span>
-                                    </button>
+                                    <div class="valido-filter-circles">
+                                        <i class="bi bi-circle-fill filter-circle active" data-state="all"
+                                            onclick="setValidoFilter('all')" title="Todos"></i>
+                                        <i class="bi bi-check-circle-fill filter-circle" data-state="valid"
+                                            onclick="setValidoFilter('valid')" title="Válidos"></i>
+                                        <i class="bi bi-x-circle-fill filter-circle" data-state="invalid"
+                                            onclick="setValidoFilter('invalid')" title="Inválidos"></i>
+                                    </div>
                                 </th>
                                 <th style="width: 150px;">Acciones</th>
                             </tr>
@@ -136,9 +139,8 @@ if (!tienePermiso('gestion_sorteos', 'vista', $cargoOperario)) {
     </div>
 
     <!-- Modal de Ayuda -->
-    <div class="modal fade" id="pageHelpModal" tabindex="-1" 
-         aria-labelledby="pageHelpModalLabel" aria-hidden="true" 
-         data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal fade" id="pageHelpModal" tabindex="-1" aria-labelledby="pageHelpModalLabel" aria-hidden="true"
+        data-bs-backdrop="static" data-bs-keyboard="false">
         <div class="modal-dialog modal-lg">
             <div class="modal-content border-0 shadow">
                 <div class="modal-header bg-primary text-white">
@@ -146,8 +148,8 @@ if (!tienePermiso('gestion_sorteos', 'vista', $cargoOperario)) {
                         <i class="fas fa-info-circle me-2"></i>
                         Guía de Gestión de Sorteos - Pitaya Love
                     </h5>
-                    <button type="button" class="btn-close btn-close-white" 
-                            data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <div class="row">
@@ -158,7 +160,8 @@ if (!tienePermiso('gestion_sorteos', 'vista', $cargoOperario)) {
                                         <i class="fas fa-robot me-2"></i> Sistema de Validación IA
                                     </h6>
                                     <p class="small text-muted mb-0">
-                                        Cada registro de factura es procesado automáticamente por inteligencia artificial que detecta:
+                                        Cada registro de factura es procesado automáticamente por inteligencia
+                                        artificial que detecta:
                                     </p>
                                     <ul class="small text-muted mt-2 mb-0">
                                         <li><strong>Código de sorteo:</strong> Número identificador del sorteo</li>
@@ -167,7 +170,7 @@ if (!tienePermiso('gestion_sorteos', 'vista', $cargoOperario)) {
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="col-md-6 mb-4">
                             <div class="card h-100 border-0 bg-light">
                                 <div class="card-body">
@@ -199,8 +202,10 @@ if (!tienePermiso('gestion_sorteos', 'vista', $cargoOperario)) {
                                         Dentro del modal de revisión encontrarás un toggle para marcar el registro como:
                                     </p>
                                     <ul class="small text-muted mt-2 mb-0">
-                                        <li><span class="text-success fw-bold">✓ Válido:</span> Registro correcto y verificado</li>
-                                        <li><span class="text-danger fw-bold">✗ Inválido:</span> Registro con errores o fraudulento</li>
+                                        <li><span class="text-success fw-bold">✓ Válido:</span> Registro correcto y
+                                            verificado</li>
+                                        <li><span class="text-danger fw-bold">✗ Inválido:</span> Registro con errores o
+                                            fraudulento</li>
                                     </ul>
                                 </div>
                             </div>
@@ -216,19 +221,23 @@ if (!tienePermiso('gestion_sorteos', 'vista', $cargoOperario)) {
                                         Usa el filtro de la columna "Válido" para ver:
                                     </p>
                                     <ul class="small text-muted mt-2 mb-0">
-                                        <li><i class="bi bi-circle text-secondary"></i> <strong>Todos:</strong> Muestra todos los registros</li>
-                                        <li><i class="bi bi-check-circle text-success"></i> <strong>Válidos:</strong> Solo registros verificados</li>
-                                        <li><i class="bi bi-x-circle text-danger"></i> <strong>Inválidos:</strong> Solo registros rechazados</li>
+                                        <li><i class="bi bi-circle text-secondary"></i> <strong>Todos:</strong> Muestra
+                                            todos los registros</li>
+                                        <li><i class="bi bi-check-circle text-success"></i> <strong>Válidos:</strong>
+                                            Solo registros verificados</li>
+                                        <li><i class="bi bi-x-circle text-danger"></i> <strong>Inválidos:</strong> Solo
+                                            registros rechazados</li>
                                     </ul>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="alert alert-info py-2 px-3 small">
                         <strong><i class="fas fa-info-circle me-1"></i> Nota Importante:</strong>
                         <br>
-                        Los registros inválidos no se eliminan, solo se marcan para mantener un historial completo. Esto permite auditorías y revisiones posteriores.
+                        Los registros inválidos no se eliminan, solo se marcan para mantener un historial completo. Esto
+                        permite auditorías y revisiones posteriores.
                     </div>
                 </div>
             </div>
@@ -240,6 +249,7 @@ if (!tienePermiso('gestion_sorteos', 'vista', $cargoOperario)) {
         #pageHelpModal {
             z-index: 1060 !important;
         }
+
         .modal-backdrop {
             z-index: 1050 !important;
         }
