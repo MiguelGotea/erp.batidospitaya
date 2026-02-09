@@ -9,7 +9,6 @@ require_once __DIR__ . '/../../core/layout/menu_lateral.php';
 require_once __DIR__ . '/../../core/layout/header_universal.php';
 
 $usuario = obtenerUsuarioActual();
-// Obtener cargo del operario para el menú
 $cargoOperario = $usuario['CodNivelesCargos'];
 
 // Verificar acceso a formularios de mantenimiento (Código 14 y 19)
