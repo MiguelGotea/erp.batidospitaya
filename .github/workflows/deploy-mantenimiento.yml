@@ -1,4 +1,4 @@
-name: 🚀 Deploy ERP - 15 Módulos
+name: 🚀 Deploy ERP - 17 Módulos
 
 on:
   push:
@@ -37,6 +37,7 @@ jobs:
           "produccion"
           "rh"
           "sistemas"
+          "sucursales"
           "tecnicodesarrollohumano"
           "ventas"
         )
@@ -80,6 +81,7 @@ jobs:
           "produccion"
           "rh"
           "sistemas"
+          "sucursales"
           "tecnicodesarrollohumano"
           "ventas"
         )
@@ -99,7 +101,7 @@ jobs:
         
     - name: ✅ Verificar deploy
       run: |
-        echo "✅ Deploy completado para los 16 módulos"
+        echo "✅ Deploy completado para los 17 módulos"
         echo "📁 Carpetas 'uploads' excluidas del sync"
         echo "🌐 Sitio: https://erp.batidospitaya.com"
         echo "🖥️ Servidor: ${{ secrets.HOSTINGER_HOST }}:65002"
