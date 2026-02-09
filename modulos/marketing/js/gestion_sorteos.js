@@ -474,10 +474,12 @@ function crearPanelFiltro(th, columna, tipo, icon) {
             <span class="filter-section-title">Ordenar:</span>
             <div class="filter-sort-buttons">
                 <button class="filter-sort-btn ${ordenActivo.columna === columna && ordenActivo.direccion === 'asc' ? 'active' : ''}" 
+                        data-sort="asc"
                         onclick="aplicarOrden('${columna}', 'asc')">
                     <i class="bi bi-sort-alpha-down"></i> ASC
                 </button>
                 <button class="filter-sort-btn ${ordenActivo.columna === columna && ordenActivo.direccion === 'desc' ? 'active' : ''}" 
+                        data-sort="desc"
                         onclick="aplicarOrden('${columna}', 'desc')">
                     <i class="bi bi-sort-alpha-up"></i> DESC
                 </button>
@@ -729,6 +731,8 @@ function seleccionarFechaUnico(fecha, columna) {
 // Actualizar indicadores
 function actualizarIndicadoresFiltros() {
     $('.filter-icon').removeClass('has-filter');
+
+    // Indicadores para filtros activos
     Object.keys(filtrosActivos).forEach(columna => {
         const valor = filtrosActivos[columna];
         if ((Array.isArray(valor) && valor.length > 0) ||
@@ -737,13 +741,18 @@ function actualizarIndicadoresFiltros() {
             $(`th[data-column="${columna}"] .filter-icon`).addClass('has-filter');
         }
     });
+
+    // Indicador para ordenamiento activo (punto rojo en el embudo)
+    if (ordenActivo.columna) {
+        $(`th[data-column="${ordenActivo.columna}"] .filter-icon`).addClass('has-filter');
+    }
 }
 
 // Limpiar filtro
 function limpiarFiltro(columna) {
     delete filtrosActivos[columna];
 
-    // Si la columna que se limpia es la que tiene el orden, resetear orden también
+    // IMPORTANTE: Al limpiar filtro de una columna, también quitamos su orden
     if (ordenActivo.columna === columna) {
         ordenActivo = { columna: null, direccion: null };
     }
@@ -832,20 +841,9 @@ function toggleOpcionFiltro(columna, valor, checked) {
 function aplicarOrden(columna, direccion) {
     ordenActivo = { columna, direccion };
 
-    // Actualizar UI de botones inmediatamente
+    // Actualizar UI de botones inmediatamente en el panel abierto
     $('.filter-sort-btn').removeClass('active');
-    $(`.filter-sort-btn:has(i.bi-sort-alpha-down${direccion === 'asc' ? '' : '-up'})`).addClass('active');
-
-    // Una forma más segura buscando por el texto o icono específico
-    $('.filter-sort-btn').each(function () {
-        const btn = $(this);
-        const icon = btn.find('i');
-        if (direccion === 'asc' && icon.hasClass('bi-sort-alpha-down')) {
-            btn.addClass('active');
-        } else if (direccion === 'desc' && icon.hasClass('bi-sort-alpha-up')) {
-            btn.addClass('active');
-        }
-    });
+    $(`.filter-sort-btn[data-sort="${direccion}"]`).addClass('active');
 
     paginaActual = 1;
     cargarRegistros();
