@@ -350,5 +350,22 @@ class Ticket
 
         return $this->db->fetchAll($sql, [$year]);
     }
+
+    public function getEquipmentChangeStats()
+    {
+        $year = date('Y');
+        $sql = "SELECT s.numero_semana, s.fecha_inicio, s.fecha_fin, 
+                COUNT(t.id) as total_cambios
+                FROM SemanasSistema s
+                LEFT JOIN mtto_tickets t ON t.created_at BETWEEN CONCAT(s.fecha_inicio, ' 00:00:00') AND CONCAT(s.fecha_fin, ' 23:59:59')
+                    AND t.tipo_formulario = 'cambio_equipos'
+                WHERE s.anio = ?
+                AND s.fecha_inicio <= CURDATE() 
+                GROUP BY s.id
+                ORDER BY s.numero_semana DESC
+                LIMIT 8";
+
+        return $this->db->fetchAll($sql, [$year]);
+    }
 }
 ?>

@@ -21,6 +21,7 @@ if (!tienePermiso('planificacion_mantenimiento', 'vista', $cargoOperario)) {
 $ticketModel = new Ticket();
 $tickets = $ticketModel->getTicketsForPlanning();
 $weekly_stats = $ticketModel->getWeeklyReportStats();
+$equipment_stats = $ticketModel->getEquipmentChangeStats();
 
 // Preparar datos para el gráfico de barras (12 semanas)
 $labels_semanas = [];
@@ -33,9 +34,14 @@ foreach (array_reverse($weekly_stats) as $ws) {
     $data_normales[] = $ws['tickets_normales'];
 }
 
-// Preparar datos para el gráfico de tendencia (últimas 8 semanas)
-$labels_tendencia = array_slice($labels_semanas, -8);
-$data_tendencia_criticos = array_slice($data_criticos, -8);
+// Preparar datos para el gráfico de cambio de equipos (8 semanas)
+$labels_equipos = [];
+$data_equipos = [];
+
+foreach (array_reverse($equipment_stats) as $es) {
+    $labels_equipos[] = "Sem " . $es['numero_semana'];
+    $data_equipos[] = $es['total_cambios'];
+}
 
 
 // Configuración de la jornada
@@ -272,8 +278,8 @@ $eficiencia = ($total_h_exec + $total_h_viaje) > 0 ? ($total_h_exec / ($total_h_
                     <div class="col-lg-6">
                         <div class="card shadow-sm border-0 h-100">
                             <div class="card-header bg-white py-3">
-                                <h6 class="mb-0 fw-bold text-danger"><i class="bi bi-graph-up-arrow me-2"></i>Tendencia
-                                    de Críticos</h6>
+                                <h6 class="mb-0 fw-bold text-warning"><i class="bi bi-tools me-2"></i>Cambios de Equipo
+                                </h6>
                                 <p class="small text-muted mb-0">Últimas 8 semanas con línea de tendencia</p>
                             </div>
                             <div class="card-body" style="height: 350px;">
@@ -400,7 +406,21 @@ $eficiencia = ($total_h_exec + $total_h_viaje) > 0 ? ($total_h_exec / ($total_h_
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
+        // Gráfico de barras apiladas con línea de tendencia de críticos
         const ctx = document.getElementById('weeklyChart').getContext('2d');
+        const criticosData = <?php echo json_encode($data_criticos); ?>;
+
+        // Calcular línea de tendencia para críticos (regresión lineal)
+        const n = criticosData.length;
+        const sumX = criticosData.reduce((sum, _, i) => sum + i, 0);
+        const sumY = criticosData.reduce((sum, val) => sum + val, 0);
+        const sumXY = criticosData.reduce((sum, val, i) => sum + (i * val), 0);
+        const sumX2 = criticosData.reduce((sum, _, i) => sum + (i * i), 0);
+
+        const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+        const intercept = (sumY - slope * sumX) / n;
+        const trendLineCriticos = criticosData.map((_, i) => slope * i + intercept);
+
         const weeklyChart = new Chart(ctx, {
             type: 'bar',
             data: {
@@ -409,14 +429,28 @@ $eficiencia = ($total_h_exec + $total_h_viaje) > 0 ? ($total_h_exec / ($total_h_
                     {
                         label: 'Críticos (Urgencia 4)',
                         data: <?php echo json_encode($data_criticos); ?>,
-                        backgroundColor: '#dc3545', // Rojo para críticos
+                        backgroundColor: '#dc3545',
                         borderRadius: 4,
+                        order: 2
                     },
                     {
                         label: 'Resto de Tickets',
                         data: <?php echo json_encode($data_normales); ?>,
-                        backgroundColor: '#51B8AC', // Color principal
+                        backgroundColor: '#51B8AC',
                         borderRadius: 4,
+                        order: 2
+                    },
+                    {
+                        label: 'Tendencia Críticos',
+                        data: trendLineCriticos,
+                        type: 'line',
+                        borderColor: '#fd7e14',
+                        borderWidth: 2,
+                        borderDash: [5, 5],
+                        fill: false,
+                        pointRadius: 0,
+                        pointHoverRadius: 0,
+                        order: 1
                     }
                 ]
             },
@@ -431,14 +465,15 @@ $eficiencia = ($total_h_exec + $total_h_viaje) > 0 ? ($total_h_exec / ($total_h_
                     y: {
                         stacked: true,
                         beginAtZero: true,
-                        grid: { color: '#f0f0f0' }
+                        grid: { color: '#f0f0f0' },
+                        ticks: { precision: 0 }
                     }
                 },
                 plugins: {
                     legend: {
                         display: true,
                         position: 'bottom',
-                        labels: { usePointStyle: true }
+                        labels: { usePointStyle: true, padding: 10 }
                     },
                     tooltip: {
                         mode: 'index',
@@ -448,77 +483,77 @@ $eficiencia = ($total_h_exec + $total_h_viaje) > 0 ? ($total_h_exec / ($total_h_
             }
         });
 
-        // Gráfico de tendencia de críticos
-        const ctxTrend = document.getElementById('trendChart').getContext('2d');
-        const trendData = <?php echo json_encode($data_tendencia_criticos); ?>;
+        // Gráfico de cambios de equipo con tendencia
+        const ctxEquip = document.getElementById('trendChart').getContext('2d');
+        const equipData = <?php echo json_encode($data_equipos); ?>;
 
-        // Calcular línea de tendencia (regresión lineal simple)
-        const n = trendData.length;
-        const sumX = trendData.reduce((sum, _, i) => sum + i, 0);
-        const sumY = trendData.reduce((sum, val) => sum + val, 0);
-        const sumXY = trendData.reduce((sum, val, i) => sum + (i * val), 0);
-        const sumX2 = trendData.reduce((sum, _, i) => sum + (i * i), 0);
+        // Calcular línea de tendencia para equipos
+        const nEquip = equipData.length;
+        const sumXEquip = equipData.reduce((sum, _, i) => sum + i, 0);
+        const sumYEquip = equipData.reduce((sum, val) => sum + val, 0);
+        const sumXYEquip = equipData.reduce((sum, val, i) => sum + (i * val), 0);
+        const sumX2Equip = equipData.reduce((sum, _, i) => sum + (i * i), 0);
 
-        const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
-        const intercept = (sumY - slope * sumX) / n;
-        const trendLine = trendData.map((_, i) => slope * i + intercept);
+        const slopeEquip = (nEquip * sumXYEquip - sumXEquip * sumYEquip) / (nEquip * sumX2Equip - sumXEquip * sumXEquip);
+        const interceptEquip = (sumYEquip - slopeEquip * sumXEquip) / nEquip;
+        const trendLineEquip = equipData.map((_, i) => slopeEquip * i + interceptEquip);
 
-        const trendChart = new Chart(ctxTrend, {
+        const equipChart = new Chart(ctxEquip, {
             type: 'line',
             data: {
-                labels: <?php echo json_encode($labels_tendencia); ?>,
-            datasets: [
-                {
-                    label: 'Tickets Críticos',
-                    data: trendData,
-                    borderColor: '#dc3545',
-                    backgroundColor: 'rgba(220, 53, 69, 0.1)',
-                    borderWidth: 2,
-                    fill: true,
-                    tension: 0.3,
-                    pointRadius: 4,
-                    pointHoverRadius: 6,
-                    pointBackgroundColor: '#dc3545',
-                    pointBorderColor: '#fff',
-                    pointBorderWidth: 2
-                },
-                {
-                    label: 'Tendencia',
-                    data: trendLine,
-                    borderColor: '#fd7e14',
-                    borderWidth: 2,
-                    borderDash: [5, 5],
-                    fill: false,
-                    pointRadius: 0,
-                    pointHoverRadius: 0
-                }
-            ]
-        },
-            options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                x: {
-                    grid: { display: false }
-                },
-                y: {
-                    beginAtZero: true,
-                    grid: { color: '#f0f0f0' },
-                    ticks: { precision: 0 }
-                }
+                labels: <?php echo json_encode($labels_equipos); ?>,
+                datasets: [
+                    {
+                        label: 'Cambios de Equipo',
+                        data: equipData,
+                        borderColor: '#ffc107',
+                        backgroundColor: 'rgba(255, 193, 7, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.3,
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        pointBackgroundColor: '#ffc107',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2
+                    },
+                    {
+                        label: 'Tendencia',
+                        data: trendLineEquip,
+                        borderColor: '#fd7e14',
+                        borderWidth: 2,
+                        borderDash: [5, 5],
+                        fill: false,
+                        pointRadius: 0,
+                        pointHoverRadius: 0
+                    }
+                ]
             },
-            plugins: {
-                legend: {
-                    display: true,
-                    position: 'bottom',
-                    labels: { usePointStyle: true, padding: 10 }
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        grid: { display: false }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: '#f0f0f0' },
+                        ticks: { precision: 0 }
+                    }
                 },
-                tooltip: {
-                    mode: 'index',
-                    intersect: false
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'bottom',
+                        labels: { usePointStyle: true, padding: 10 }
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false
+                    }
                 }
             }
-        }
         });
     </script>
 </body>
