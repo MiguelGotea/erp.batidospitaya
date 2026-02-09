@@ -13,11 +13,7 @@ $cargoOperario = $usuario['CodNivelesCargos'];
 $sucursales = obtenerSucursalesUsuario($_SESSION['usuario_id']);
 $codigo_sucursal_busqueda = $sucursales[0]['nombre'];
 
-// Verificar acceso al módulo (cargos con permiso para ver marcaciones)
-//if (!verificarAccesoCargo([35, 16, 5, 43, 11, 19, 12, 14, 26, 42]) && !$esAdmin) {
-//    header('Location: ../index.php');
-//    exit();
-//}
+
 if (!tienePermiso('historial_solicitudes_mantenimiento', 'vista', $cargoOperario)) {
     header('Location: /login.php');
     exit();
@@ -208,6 +204,13 @@ function getTextoUrgencia($nivel)
         const filtroSucursalBloqueado = <?php echo $filtro_sucursal_bloqueado ? 'true' : 'false'; ?>;
         const codigoSucursalBusqueda = '<?php echo $codigo_sucursal_busqueda; ?>';
         const cargoOperario = <?php echo $cargoOperario; ?>;
+        const permisos = {
+            'cambiar_urgencia': <?php echo tienePermiso('historial_solicitudes_mantenimiento', 'cambiar_urgencia', $cargoOperario) ? 'true' : 'false'; ?>
+        };
+
+        function tienepermiso(accion) {
+            return permisos[accion] === true;
+        }
 
         // Aplicar filtro de sucursal automáticamente si está bloqueado
         $(document).ready(function () {

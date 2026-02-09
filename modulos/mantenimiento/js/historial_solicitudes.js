@@ -216,8 +216,8 @@ function renderizarUrgencia(ticketId, nivelActual) {
     const color = coloresUrgencia[nivel];
     const texto = textosUrgencia[nivel];
 
-    // Solo permitir cambiar si cargoOperario = 35
-    const permiteEditar = (typeof cargoOperario !== 'undefined' && cargoOperario === 35);
+    // Solo permitir cambiar si tiene permiso cambiar_urgencia
+    const permiteEditar = tienepermiso('cambiar_urgencia');
     const cursor = permiteEditar ? 'pointer' : 'default';
     const onClick = permiteEditar ? `onclick="cambiarUrgencia(${ticketId}, ${nivel})"` : '';
 
@@ -231,7 +231,7 @@ function renderizarUrgencia(ticketId, nivelActual) {
 // Cambiar nivel de urgencia
 function cambiarUrgencia(ticketId, nivelActual) {
     // Validar permiso
-    if (typeof cargoOperario === 'undefined' || cargoOperario !== 35) {
+    if (!tienepermiso('cambiar_urgencia')) {
         return;
     }
 
