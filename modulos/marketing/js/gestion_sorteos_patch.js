@@ -52,30 +52,35 @@ window.verFoto = function (id) {
                         <div class="comparison-data-col">
                             <h6><i class="bi bi-database"></i> Datos del Registro</h6>
                             <div class="comparison-data">
-                                <div class="comparison-row">
-                                    <div class="comparison-label">Nombre Completo</div>
-                                    <div class="comparison-value">${registro.nombre_completo}</div>
-                                </div>
+                                <!-- Nombre | Cédula -->
                                 <div class="comparison-row-grid">
                                     <div class="comparison-row-half">
-                                        <div class="comparison-label">Contacto</div>
-                                        <div class="comparison-value">${registro.numero_contacto}</div>
+                                        <div class="comparison-label">Nombre</div>
+                                        <div class="comparison-value">${registro.nombre_completo}</div>
                                     </div>
                                     <div class="comparison-row-half">
                                         <div class="comparison-label">Cédula</div>
                                         <div class="comparison-value">${registro.numero_cedula || 'N/A'}</div>
                                     </div>
                                 </div>
-                                <div class="comparison-row">
-                                    <div class="comparison-label">Correo</div>
-                                    <div class="comparison-value">${registro.correo_electronico || 'N/A'}</div>
-                                </div>
+                                <!-- Contacto | Correo -->
                                 <div class="comparison-row-grid">
                                     <div class="comparison-row-half">
-                                        <div class="comparison-label">Monto</div>
-                                        <div class="comparison-value">C$ ${parseFloat(registro.monto_factura).toFixed(2)}</div>
+                                        <div class="comparison-label">Contacto</div>
+                                        <div class="comparison-value">${registro.numero_contacto}</div>
+                                    </div>
+                                    <div class="comparison-row-half">
+                                        <div class="comparison-label">Correo</div>
+                                        <div class="comparison-value">${registro.correo_electronico || 'N/A'}</div>
                                     </div>
                                 </div>
+                                <!-- Monto (full width) -->
+                                <div class="comparison-row">
+                                    <div class="comparison-label">Monto</div>
+                                    <div class="comparison-value">C$ ${parseFloat(registro.monto_factura).toFixed(2)}</div>
+                                </div>
+                                
+                                <!-- Código Sorteo | Puntos -->
                                 ${compararValores(
                     'Código Sorteo',
                     registro.numero_factura,
