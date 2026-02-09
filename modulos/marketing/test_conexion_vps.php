@@ -119,12 +119,3 @@ echo "</p>";
 echo "<hr>";
 echo "<p><em>Test completado: " . date('Y-m-d H:i:s') . "</em></p>";
 ?>
-```
-
----
-
-### PASO 3: Acceder al archivo de prueba
-
-Abre en tu navegador:
-```
-https://tu-dominio-erp.com/modulos/marketing/test_conexion_vps.php
