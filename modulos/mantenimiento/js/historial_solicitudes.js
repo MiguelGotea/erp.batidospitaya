@@ -192,6 +192,9 @@ function renderizarTabla(datos) {
         // Urgencia
         tr.append(`<td>${renderizarUrgencia(row.id, row.nivel_urgencia)}</td>`);
 
+        // Tiempo Estimado
+        tr.append(`<td>${renderizarTiempoEstimado(row.id, row.tiempo_estimado)}</td>`);
+
         // Estado
         const colorEstado = coloresEstado[row.status] || '#6c757d';
         tr.append(`<td><span class="badge-estado" style="background-color: ${colorEstado};">${row.status}</span></td>`);
@@ -199,9 +202,6 @@ function renderizarTabla(datos) {
         // Agendado - con estilos según estado
         const fechaAgendadoHTML = renderizarFechaAgendado(row.fecha_inicio, row.status);
         tr.append(`<td class="col-agendado">${fechaAgendadoHTML}</td>`);
-
-        // Tiempo Estimado
-        tr.append(`<td>${renderizarTiempoEstimado(row.id, row.tiempo_estimado)}</td>`);
 
         // Foto
         const tieneFotos = parseInt(row.total_fotos) > 0;
@@ -290,36 +290,62 @@ function cambiarUrgencia(ticketId, nivelActual) {
     });
 }
 
-// Renderizar tiempo estimado
+// Renderizar tiempo estimado con edición verdaderamente inline
 function renderizarTiempoEstimado(ticketId, tiempoActual) {
     const tiempo = tiempoActual || 0;
     const texto = tiempo > 0 ? `${tiempo} H` : '-';
-
-    // Solo permitir cambiar si tiene permiso cambiar_urgencia
     const permiteEditar = tienepermiso('cambiar_urgencia');
-    const cursor = permiteEditar ? 'pointer' : 'default';
-    const hoverClass = permiteEditar ? 'tiempo-estimado-editable' : '';
-    const onClick = permiteEditar ? `onclick="cambiarTiempoEstimado(${ticketId}, ${tiempo})"` : '';
+
+    if (!permiteEditar) {
+        return `
+            <div class="tiempo-estimado-container">
+                <span class="tiempo-texto">${texto}</span>
+            </div>
+        `;
+    }
 
     return `
-        <div class="tiempo-estimado-container ${hoverClass}" style="cursor: ${cursor};" ${onClick}>
+        <div class="tiempo-estimado-container tiempo-estimado-editable" 
+             onclick="habilitarEdicionInline(this, ${ticketId}, ${tiempo})">
             <span class="tiempo-texto">${texto}</span>
         </div>
     `;
 }
 
-// Cambiar tiempo estimado
-function cambiarTiempoEstimado(ticketId, tiempoActual) {
-    const nuevoTiempo = prompt("Ingrese el tiempo estimado en horas (entero):", tiempoActual);
+// Habilitar edición inline (cambiar span por input)
+function habilitarEdicionInline(container, ticketId, tiempoActual) {
+    if ($(container).find('input').length > 0) return;
 
-    if (nuevoTiempo !== null) {
-        const tiempoInt = parseInt(nuevoTiempo);
-        if (isNaN(tiempoInt) || tiempoInt < 0) {
-            alert("Por favor, ingrese un número entero válido.");
+    const currentVal = tiempoActual > 0 ? tiempoActual : '';
+    const input = $(`<input type="number" class="form-control form-control-sm input-inline-tiempo" 
+                            value="${currentVal}" min="0" step="1" 
+                            style="width: 60px; text-align: center; height: 26px; padding: 2px;">`);
+
+    $(container).html(input);
+    input.focus().select();
+
+    // Eventos para guardar o cancelar
+    input.on('blur', function () {
+        const nuevoTiempo = $(this).val();
+        if (nuevoTiempo === '' && tiempoActual === 0) {
+            $(container).html(`<span class="tiempo-texto">-</span>`);
             return;
         }
-        actualizarTiempoEstimado(ticketId, tiempoInt);
-    }
+
+        if (nuevoTiempo === '' || parseInt(nuevoTiempo) === tiempoActual) {
+            $(container).html(`<span class="tiempo-texto">${tiempoActual > 0 ? tiempoActual + ' H' : '-'}</span>`);
+        } else {
+            actualizarTiempoEstimado(ticketId, parseInt(nuevoTiempo));
+        }
+    });
+
+    input.on('keyup', function (e) {
+        if (e.key === 'Enter') {
+            $(this).blur();
+        } else if (e.key === 'Escape') {
+            $(container).html(`<span class="tiempo-texto">${tiempoActual > 0 ? tiempoActual + ' H' : '-'}</span>`);
+        }
+    });
 }
 
 // Actualizar tiempo estimado

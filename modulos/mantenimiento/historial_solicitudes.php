@@ -136,16 +136,16 @@ function getTextoUrgencia($nivel)
                                     Urgencia
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
+                                <th data-column="tiempo_estimado" data-type="text" style="width: 100px;">
+                                    Tiempo (H)
+                                    <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                </th>
                                 <th data-column="status" data-type="list">
                                     Estado
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
                                 <th data-column="fecha_inicio" data-type="daterange">
                                     Agendado
-                                    <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
-                                </th>
-                                <th data-column="tiempo_estimado" data-type="text" style="width: 100px;">
-                                    Tiempo (H)
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
                                 <th style="width: 80px;">Foto</th>
