@@ -408,7 +408,9 @@ $eficiencia = ($total_h_exec + $total_h_viaje) > 0 ? ($total_h_exec / ($total_h_
     <script>
         // Gráfico de barras apiladas con línea de tendencia de críticos
         const ctx = document.getElementById('weeklyChart').getContext('2d');
-        const criticosData = <?php echo json_encode($data_criticos); ?>;
+        const criticosData = <?php echo json_encode($data_criticos); ?>.map(Number);
+
+        console.log('Datos críticos:', criticosData);
 
         // Calcular línea de tendencia para críticos (regresión lineal)
         const n = criticosData.length;
@@ -420,6 +422,8 @@ $eficiencia = ($total_h_exec + $total_h_viaje) > 0 ? ($total_h_exec / ($total_h_
         const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
         const intercept = (sumY - slope * sumX) / n;
         const trendLineCriticos = criticosData.map((_, i) => slope * i + intercept);
+
+        console.log('Línea de tendencia:', trendLineCriticos);
 
         const weeklyChart = new Chart(ctx, {
             type: 'bar',
