@@ -8,9 +8,6 @@ require_once __DIR__ . '/../../core/auth/auth.php';
 require_once __DIR__ . '/../../core/layout/menu_lateral.php';
 require_once __DIR__ . '/../../core/layout/header_universal.php';
 
-//******************************Estándar para header******************************
-verificarAutenticacion();
-
 $usuario = obtenerUsuarioActual();
 // Obtener cargo del operario para el menú
 $cargoOperario = $usuario['CodNivelesCargos'];
