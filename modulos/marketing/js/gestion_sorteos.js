@@ -80,16 +80,19 @@ function cargarRegistros() {
 
 // Función para obtener badge de verificación IA
 function getVerificacionBadge(registro) {
+    // Verificar que existan valores de IA para comparar
+    const tieneValoresIA = (registro.codigo_sorteo_ia !== null && registro.codigo_sorteo_ia !== '') ||
+        (registro.puntos_ia !== null && registro.puntos_ia !== '');
+
+    if (!tieneValoresIA) {
+        return '<span class="badge bg-warning text-dark"><i class="bi bi-exclamation-triangle"></i> Revisar</span>';
+    }
+
     // Verificar si los valores de IA coinciden con los guardados
-    const codigoCoincide = !registro.codigo_sorteo_ia ||
-        registro.codigo_sorteo_ia === '' ||
-        registro.numero_factura == registro.codigo_sorteo_ia;
+    const codigoCoincide = registro.numero_factura == registro.codigo_sorteo_ia;
+    const puntosCoinciden = registro.puntos_factura == registro.puntos_ia;
 
-    const puntosCoinciden = !registro.puntos_ia ||
-        registro.puntos_ia === '' ||
-        registro.puntos_factura == registro.puntos_ia;
-
-    // Si ambos coinciden o no hay valores de IA, es "Verificado"
+    // Solo es "Verificado" si AMBOS coinciden exactamente
     if (codigoCoincide && puntosCoinciden) {
         return '<span class="badge bg-success"><i class="bi bi-check-circle"></i> Verificado</span>';
     } else {

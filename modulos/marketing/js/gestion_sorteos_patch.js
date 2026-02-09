@@ -42,7 +42,6 @@ window.verFoto = function (id) {
                 modalBody.html(`
                     <div class="modal-comparison-simple">
                         <div class="comparison-photo-col">
-                            <h6><i class="bi bi-image"></i> Foto de Factura</h6>
                             <img src="https://pitayalove.batidospitaya.com/uploads/${registro.foto_factura}" 
                                  alt="Factura" 
                                  class="comparison-photo"
@@ -50,7 +49,6 @@ window.verFoto = function (id) {
                         </div>
 
                         <div class="comparison-data-col">
-                            <h6><i class="bi bi-database"></i> Datos del Registro</h6>
                             <div class="comparison-data">
                                 <!-- Nombre | Cédula -->
                                 <div class="comparison-row-grid">
@@ -84,15 +82,15 @@ window.verFoto = function (id) {
                                     <div class="comparison-row-half ${registro.numero_factura != registro.codigo_sorteo_ia && registro.codigo_sorteo_ia != null && registro.codigo_sorteo_ia !== '' ? 'highlight-diff' : ''}">
                                         <div class="comparison-label">Código Sorteo</div>
                                         <div class="comparison-inline-compact">
-                                            <div class="stored-value"><strong>G:</strong> ${registro.numero_factura}</div>
-                                            ${registro.codigo_sorteo_ia ? `<div class="ai-value"><strong>IA:</strong> ${registro.codigo_sorteo_ia}</div>` : ''}
+                                            <div class="stored-value"><strong>Registrado:</strong> ${registro.numero_factura}</div>
+                                            ${registro.codigo_sorteo_ia ? `<div class="ai-value"><strong>Foto:</strong> ${registro.codigo_sorteo_ia}</div>` : ''}
                                         </div>
                                     </div>
                                     <div class="comparison-row-half ${registro.puntos_factura != registro.puntos_ia && registro.puntos_ia != null && registro.puntos_ia !== '' ? 'highlight-diff' : ''}">
                                         <div class="comparison-label">Puntos</div>
                                         <div class="comparison-inline-compact">
-                                            <div class="stored-value"><strong>G:</strong> ${registro.puntos_factura}</div>
-                                            ${registro.puntos_ia ? `<div class="ai-value"><strong>IA:</strong> ${registro.puntos_ia}</div>` : ''}
+                                            <div class="stored-value"><strong>Registrado:</strong> ${registro.puntos_factura}</div>
+                                            ${registro.puntos_ia ? `<div class="ai-value"><strong>Foto:</strong> ${registro.puntos_ia}</div>` : ''}
                                         </div>
                                     </div>
                                 </div>
