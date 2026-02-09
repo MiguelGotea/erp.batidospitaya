@@ -268,6 +268,7 @@ if (!tienePermiso('gestion_sorteos', 'vista', $cargoOperario)) {
         console.log('Permiso de edición:', tienePermisoEdicion);
     </script>
     <script src="js/gestion_sorteos.js?v=<?php echo mt_rand(1, 10000); ?>"></script>
+    <script src="js/gestion_sorteos_patch.js?v=<?php echo mt_rand(1, 10000); ?>"></script>
 </body>
 
 </html>
