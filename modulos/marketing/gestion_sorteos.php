@@ -75,8 +75,14 @@ if (!tienePermiso('gestion_sorteos', 'vista', $cargoOperario)) {
                                     Puntos
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
-                                <th data-column="tipo_qr">Tipo QR</th>
-                                <th data-column="validado_ia">Validado IA</th>
+                                <th data-column="valido" data-type="toggle3">
+                                    Válido
+                                    <button class="valido-filter-toggle" onclick="toggleValidoFilter()"
+                                        title="Filtrar por estado">
+                                        <i class="bi bi-circle"></i>
+                                        <span>Todos</span>
+                                    </button>
+                                </th>
                                 <th style="width: 150px;">Acciones</th>
                             </tr>
                         </thead>
@@ -129,28 +135,115 @@ if (!tienePermiso('gestion_sorteos', 'vista', $cargoOperario)) {
         </div>
     </div>
 
-    <!-- Modal de confirmación para eliminar -->
-    <div class="modal fade" id="modalConfirmarEliminar" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered modal-sm">
-            <div class="modal-content">
-                <div class="modal-body text-center py-4">
-                    <button type="button" class="btn-close position-absolute top-0 end-0 m-2" data-bs-dismiss="modal"></button>
-                    <i class="bi bi-exclamation-triangle text-warning" style="font-size: 3.5rem;"></i>
-                    <h5 class="mt-3 mb-2">Eliminar Registro</h5>
-                    <p class="text-muted mb-0">¿Está seguro de eliminar este registro?</p>
-                    <small class="text-muted d-block mt-1">Esta acción no se puede deshacer</small>
+    <!-- Modal de Ayuda -->
+    <div class="modal fade" id="pageHelpModal" tabindex="-1" 
+         aria-labelledby="pageHelpModalLabel" aria-hidden="true" 
+         data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="pageHelpModalLabel">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Guía de Gestión de Sorteos - Pitaya Love
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" 
+                            data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-footer justify-content-center border-0 pt-0">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                        Cancelar
-                    </button>
-                    <button type="button" class="btn btn-danger" id="btnConfirmarEliminar">
-                        Eliminar
-                    </button>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100 border-0 bg-light">
+                                <div class="card-body">
+                                    <h6 class="text-primary border-bottom pb-2 fw-bold">
+                                        <i class="fas fa-robot me-2"></i> Sistema de Validación IA
+                                    </h6>
+                                    <p class="small text-muted mb-0">
+                                        Cada registro de factura es procesado automáticamente por inteligencia artificial que detecta:
+                                    </p>
+                                    <ul class="small text-muted mt-2 mb-0">
+                                        <li><strong>Código de sorteo:</strong> Número identificador del sorteo</li>
+                                        <li><strong>Puntos:</strong> Puntos acumulados en la factura</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100 border-0 bg-light">
+                                <div class="card-body">
+                                    <h6 class="text-success border-bottom pb-2 fw-bold">
+                                        <i class="fas fa-check-circle me-2"></i> Comparación de Datos
+                                    </h6>
+                                    <p class="small text-muted mb-0">
+                                        Al hacer clic en <strong>"Ver"</strong>, podrás comparar lado a lado:
+                                    </p>
+                                    <ul class="small text-muted mt-2 mb-0">
+                                        <li>Foto de la factura</li>
+                                        <li>Datos guardados manualmente</li>
+                                        <li>Datos detectados por la IA</li>
+                                    </ul>
+                                    <p class="small text-muted mt-2 mb-0">
+                                        Las diferencias se resaltan automáticamente.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100 border-0 bg-light">
+                                <div class="card-body">
+                                    <h6 class="text-warning border-bottom pb-2 fw-bold">
+                                        <i class="fas fa-toggle-on me-2"></i> Validar/Invalidar Registros
+                                    </h6>
+                                    <p class="small text-muted mb-0">
+                                        Dentro del modal de revisión encontrarás un toggle para marcar el registro como:
+                                    </p>
+                                    <ul class="small text-muted mt-2 mb-0">
+                                        <li><span class="text-success fw-bold">✓ Válido:</span> Registro correcto y verificado</li>
+                                        <li><span class="text-danger fw-bold">✗ Inválido:</span> Registro con errores o fraudulento</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100 border-0 bg-light">
+                                <div class="card-body">
+                                    <h6 class="text-info border-bottom pb-2 fw-bold">
+                                        <i class="fas fa-filter me-2"></i> Filtros de Estado
+                                    </h6>
+                                    <p class="small text-muted mb-0">
+                                        Usa el filtro de la columna "Válido" para ver:
+                                    </p>
+                                    <ul class="small text-muted mt-2 mb-0">
+                                        <li><i class="bi bi-circle text-secondary"></i> <strong>Todos:</strong> Muestra todos los registros</li>
+                                        <li><i class="bi bi-check-circle text-success"></i> <strong>Válidos:</strong> Solo registros verificados</li>
+                                        <li><i class="bi bi-x-circle text-danger"></i> <strong>Inválidos:</strong> Solo registros rechazados</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info py-2 px-3 small">
+                        <strong><i class="fas fa-info-circle me-1"></i> Nota Importante:</strong>
+                        <br>
+                        Los registros inválidos no se eliminan, solo se marcan para mantener un historial completo. Esto permite auditorías y revisiones posteriores.
+                    </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <style>
+        /* Ajuste de z-index para evitar que el backdrop cubra el modal */
+        #pageHelpModal {
+            z-index: 1060 !important;
+        }
+        .modal-backdrop {
+            z-index: 1050 !important;
+        }
+    </style>
 
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

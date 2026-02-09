@@ -39,6 +39,7 @@ try {
         'puntos_factura',
         'tipo_qr',
         'validado_ia',
+        'valido',
         'fecha_registro'
     ];
 
@@ -161,6 +162,9 @@ try {
                 tipo_qr,
                 foto_factura,
                 validado_ia,
+                codigo_sorteo_ia,
+                puntos_ia,
+                valido,
                 fecha_registro
             FROM pitaya_love_registros
             $whereClause

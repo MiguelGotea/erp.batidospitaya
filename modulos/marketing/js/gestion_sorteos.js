@@ -4,6 +4,7 @@ let paginaActual = 1;
 let registrosPorPagina = 50;
 let filtrosActivos = {};
 let ordenActivo = { columna: null, direccion: null };
+let validoFilterState = 'all'; // 'all', 'valid', 'invalid'
 // tienePermisoEdicion is set from PHP inline script
 
 $(document).ready(function () {
@@ -18,6 +19,9 @@ function cargarRegistros() {
         ...(ordenActivo.columna && {
             orden_columna: ordenActivo.columna,
             orden_direccion: ordenActivo.direccion
+        }),
+        ...(validoFilterState !== 'all' && {
+            valido: validoFilterState === 'valid' ? 1 : 0
         })
     });
 
@@ -56,18 +60,15 @@ function renderizarTabla(registros) {
     tbody.empty();
 
     if (!registros || registros.length === 0) {
-        tbody.append('<tr><td colspan="11" class="text-center py-4">No se encontraron registros</td></tr>');
+        tbody.append('<tr><td colspan="10" class="text-center py-4">No se encontraron registros</td></tr>');
         return;
     }
 
     registros.forEach(registro => {
-        const validadoBadge = registro.validado_ia == 1
-            ? '<span class="validado-badge validado-si">✅ Validado</span>'
-            : '<span class="validado-badge validado-no">❌ No validado</span>';
-
-        const tipoBadge = registro.tipo_qr === 'online'
-            ? '<span class="tipo-qr-badge tipo-online">Online</span>'
-            : '<span class="tipo-qr-badge tipo-offline">Offline</span>';
+        // Icono de válido/inválido
+        const validoIcon = registro.valido == 1
+            ? '<i class="bi bi-check-circle-fill valido-icon valid" title="Válido"></i>'
+            : '<i class="bi bi-x-circle-fill valido-icon invalid" title="Inválido"></i>';
 
         // Convertir fecha a zona horaria de Nicaragua (UTC-6)
         const fechaUTC = new Date(registro.fecha_registro + ' UTC');
@@ -81,12 +82,6 @@ function renderizarTabla(registros) {
             hour12: true
         });
 
-        const btnEliminar = tienePermisoEdicion
-            ? `<button class="btn btn-sm btn-danger" onclick="eliminarRegistro(${registro.id})" title="Eliminar">
-                   <i class="bi bi-trash"></i>
-               </button>`
-            : '';
-
         tbody.append(`
             <tr>
                 <td>${fecha}</td>
@@ -97,21 +92,52 @@ function renderizarTabla(registros) {
                 <td>${registro.correo_electronico || '-'}</td>
                 <td>${parseFloat(registro.monto_factura).toFixed(2)}</td>
                 <td>${registro.puntos_factura}</td>
-                <td>${tipoBadge}</td>
-                <td>${validadoBadge}</td>
+                <td class="text-center">${validoIcon}</td>
                 <td>
-                    <button class="btn btn-sm btn-primary btn-ver-foto" onclick="verFoto(${registro.id}, '${registro.foto_factura}')" title="Ver Foto">
+                    <button class="btn btn-sm btn-primary btn-ver-foto" onclick="verFoto(${registro.id})" title="Ver Detalle">
                         <i class="bi bi-eye"></i> Ver
                     </button>
-                    ${btnEliminar}
                 </td>
             </tr>
         `);
     });
 }
 
-function verFoto(id, fotoNombre) {
-    // Cargar datos del registro
+// 3-State Toggle Filter Function
+function toggleValidoFilter() {
+    const button = document.querySelector('.valido-filter-toggle');
+    const icon = button.querySelector('i');
+    const text = button.querySelector('span');
+
+    // Cycle through states: all -> valid -> invalid -> all
+    if (validoFilterState === 'all') {
+        validoFilterState = 'valid';
+        button.classList.remove('state-all');
+        button.classList.add('state-valid');
+        icon.className = 'bi bi-check-circle';
+        text.textContent = 'Válidos';
+    } else if (validoFilterState === 'valid') {
+        validoFilterState = 'invalid';
+        button.classList.remove('state-valid');
+        button.classList.add('state-invalid');
+        icon.className = 'bi bi-x-circle';
+        text.textContent = 'Inválidos';
+    } else {
+        validoFilterState = 'all';
+        button.classList.remove('state-invalid');
+        button.classList.add('state-all');
+        icon.className = 'bi bi-circle';
+        text.textContent = 'Todos';
+    }
+
+    // Reload data with new filter
+    paginaActual = 1;
+    cargarRegistros();
+}
+
+// Comparison Modal Function
+function verFoto(id) {
+    // Cargar datos del registro incluyendo campos de IA
     $.ajax({
         url: `ajax/get_registros_sorteos.php?id=${id}`,
         method: 'GET',
@@ -119,9 +145,6 @@ function verFoto(id, fotoNombre) {
         success: function (response) {
             if (response.success && response.data.length > 0) {
                 const registro = response.data[0];
-
-                // Mostrar foto
-                $('#fotoFactura').attr('src', `https://pitayalove.batidospitaya.com/uploads/${fotoNombre}`);
 
                 // Convertir fecha a zona horaria de Nicaragua
                 const fechaUTC = new Date(registro.fecha_registro + ' UTC');
@@ -135,105 +158,181 @@ function verFoto(id, fotoNombre) {
                     hour12: true
                 });
 
-                // Badges estilizados
-                const validadoBadge = registro.validado_ia == 1
-                    ? '<span class="badge bg-success"><i class="bi bi-check-circle"></i> Validado por IA</span>'
-                    : '<span class="badge bg-danger"><i class="bi bi-x-circle"></i> No validado</span>';
+                // Helper function to check if values differ
+                const isDifferent = (val1, val2) => {
+                    return val1 != val2 && val2 != null && val2 !== '';
+                };
 
-                const tipoBadge = registro.tipo_qr === 'online'
-                    ? '<span class="badge bg-primary"><i class="bi bi-wifi"></i> Online</span>'
-                    : '<span class="badge bg-warning text-dark"><i class="bi bi-qr-code"></i> Offline</span>';
+                // Build 3-column comparison layout
+                const modalBody = $('.modal-body', '#modalVerFoto');
+                modalBody.html(`
+                    <div class="modal-comparison-container">
+                        <!-- Column 1: Photo -->
+                        <div class="comparison-column">
+                            <h6><i class="bi bi-image"></i> Foto de Factura</h6>
+                            <img src="https://pitayalove.batidospitaya.com/uploads/${registro.foto_factura}" 
+                                 alt="Factura" 
+                                 class="comparison-photo"
+                                 onclick="window.open(this.src, '_blank')">
+                        </div>
 
-                $('#datosRegistro').html(`
-                    <div class="info-row">
-                        <span class="info-label"><i class="bi bi-hash"></i> ID:</span>
-                        <span class="info-value">${registro.id}</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label"><i class="bi bi-calendar-event"></i> Fecha:</span>
-                        <span class="info-value">${fecha}</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label"><i class="bi bi-person"></i> Nombre:</span>
-                        <span class="info-value">${registro.nombre_completo}</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label"><i class="bi bi-phone"></i> Contacto:</span>
-                        <span class="info-value">${registro.numero_contacto}</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label"><i class="bi bi-card-text"></i> Cédula:</span>
-                        <span class="info-value">${registro.numero_cedula || 'N/A'}</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label"><i class="bi bi-receipt"></i> No. Factura:</span>
-                        <span class="info-value">${registro.numero_factura}</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label"><i class="bi bi-envelope"></i> Correo:</span>
-                        <span class="info-value">${registro.correo_electronico || 'N/A'}</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label"><i class="bi bi-currency-dollar"></i> Monto:</span>
-                        <span class="info-value">${parseFloat(registro.monto_factura).toFixed(2)}</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label"><i class="bi bi-star"></i> Puntos:</span>
-                        <span class="info-value">${registro.puntos_factura}</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label"><i class="bi bi-qr-code-scan"></i> Tipo QR:</span>
-                        <span class="info-value">${tipoBadge}</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label"><i class="bi bi-robot"></i> Validado IA:</span>
-                        <span class="info-value">${validadoBadge}</span>
-                    </div>
-`);
+                        <!-- Column 2: Stored Data -->
+                        <div class="comparison-column">
+                            <h6><i class="bi bi-database"></i> Datos Guardados</h6>
+                            <div class="comparison-data">
+                                <div class="comparison-row">
+                                    <div class="comparison-label">ID</div>
+                                    <div class="comparison-value">${registro.id}</div>
+                                </div>
+                                <div class="comparison-row">
+                                    <div class="comparison-label">Fecha Registro</div>
+                                    <div class="comparison-value">${fecha}</div>
+                                </div>
+                                <div class="comparison-row">
+                                    <div class="comparison-label">Nombre Completo</div>
+                                    <div class="comparison-value">${registro.nombre_completo}</div>
+                                </div>
+                                <div class="comparison-row">
+                                    <div class="comparison-label">No. Contacto</div>
+                                    <div class="comparison-value">${registro.numero_contacto}</div>
+                                </div>
+                                <div class="comparison-row">
+                                    <div class="comparison-label">No. Cédula</div>
+                                    <div class="comparison-value">${registro.numero_cedula || 'N/A'}</div>
+                                </div>
+                                <div class="comparison-row ${isDifferent(registro.numero_factura, registro.codigo_sorteo_ia) ? 'highlight-diff' : ''}">
+                                    <div class="comparison-label">No. Factura / Código Sorteo</div>
+                                    <div class="comparison-value">${registro.numero_factura}</div>
+                                </div>
+                                <div class="comparison-row">
+                                    <div class="comparison-label">Correo Electrónico</div>
+                                    <div class="comparison-value">${registro.correo_electronico || 'N/A'}</div>
+                                </div>
+                                <div class="comparison-row">
+                                    <div class="comparison-label">Monto Factura</div>
+                                    <div class="comparison-value">C$ ${parseFloat(registro.monto_factura).toFixed(2)}</div>
+                                </div>
+                                <div class="comparison-row ${isDifferent(registro.puntos_factura, registro.puntos_ia) ? 'highlight-diff' : ''}">
+                                    <div class="comparison-label">Puntos</div>
+                                    <div class="comparison-value">${registro.puntos_factura}</div>
+                                </div>
+                                <div class="comparison-row">
+                                    <div class="comparison-label">Tipo QR</div>
+                                    <div class="comparison-value">${registro.tipo_qr === 'online' ? 'Online' : 'Offline'}</div>
+                                </div>
+                            </div>
+                        </div>
 
-                // Mostrar modal
+                        <!-- Column 3: AI Detected Data -->
+                        <div class="comparison-column">
+                            <h6><i class="bi bi-robot"></i> Datos Detectados por IA</h6>
+                            <div class="comparison-data">
+                                <div class="comparison-row">
+                                    <div class="comparison-label">Estado Validación IA</div>
+                                    <div class="comparison-value">
+                                        ${registro.validado_ia == 1
+                        ? '<span class="badge bg-success"><i class="bi bi-check-circle"></i> Validado</span>'
+                        : '<span class="badge bg-danger"><i class="bi bi-x-circle"></i> No Validado</span>'}
+                                    </div>
+                                </div>
+                                <div class="comparison-row ${isDifferent(registro.numero_factura, registro.codigo_sorteo_ia) ? 'highlight-diff' : ''}">
+                                    <div class="comparison-label">Código Sorteo (IA)</div>
+                                    <div class="comparison-value">${registro.codigo_sorteo_ia || 'No detectado'}</div>
+                                </div>
+                                <div class="comparison-row ${isDifferent(registro.puntos_factura, registro.puntos_ia) ? 'highlight-diff' : ''}">
+                                    <div class="comparison-label">Puntos (IA)</div>
+                                    <div class="comparison-value">${registro.puntos_ia || 'No detectado'}</div>
+                                </div>
+                                ${registro.validado_ia == 0 ? `
+                                    <div class="alert alert-warning mt-3 small">
+                                        <i class="bi bi-exclamation-triangle"></i>
+                                        <strong>Nota:</strong> La IA no pudo validar esta factura automáticamente.
+                                    </div>
+                                ` : ''}
+                                ${(isDifferent(registro.numero_factura, registro.codigo_sorteo_ia) || isDifferent(registro.puntos_factura, registro.puntos_ia)) ? `
+                                    <div class="alert alert-info mt-3 small">
+                                        <i class="bi bi-info-circle"></i>
+                                        <strong>Diferencias detectadas:</strong> Los campos resaltados muestran discrepancias entre los datos guardados y los detectados por la IA.
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Toggle Switch for Valido Status -->
+                    ${tienePermisoEdicion ? `
+                        <div class="valido-toggle-container">
+                            <span class="valido-toggle-label">Estado del Registro:</span>
+                            <label class="toggle-switch">
+                                <input type="checkbox" 
+                                       id="toggleValido" 
+                                       ${registro.valido == 1 ? 'checked' : ''}
+                                       onchange="toggleValidoRegistro(${registro.id}, this.checked)">
+                                <span class="toggle-slider"></span>
+                            </label>
+                            <span class="toggle-status-text ${registro.valido == 1 ? 'valid' : 'invalid'}" id="toggleStatusText">
+                                ${registro.valido == 1 ? '✓ Válido' : '✗ Inválido'}
+                            </span>
+                        </div>
+                    ` : `
+                        <div class="alert alert-secondary text-center mt-3">
+                            <strong>Estado:</strong> 
+                            ${registro.valido == 1
+                        ? '<span class="text-success">✓ Válido</span>'
+                        : '<span class="text-danger">✗ Inválido</span>'}
+                        </div>
+                    `}
+                `);
+
+                // Show modal
                 new bootstrap.Modal(document.getElementById('modalVerFoto')).show();
             }
+        },
+        error: function () {
+            mostrarError('Error al cargar los detalles del registro');
         }
     });
 }
 
-let registroAEliminar = null;
-
-function eliminarRegistro(id) {
-    // Guardar el ID y mostrar modal de confirmación
-    registroAEliminar = id;
-    const modal = new bootstrap.Modal(document.getElementById('modalConfirmarEliminar'));
-    modal.show();
-}
-
-// Manejar confirmación de eliminación
-$(document).on('click', '#btnConfirmarEliminar', function () {
-    if (!registroAEliminar) return;
+// Toggle Valido Status Function
+function toggleValidoRegistro(id, isValid) {
+    const nuevoEstado = isValid ? 1 : 0;
 
     $.ajax({
-        url: 'ajax/delete_registro_sorteo.php',
+        url: 'ajax/toggle_valido_registro.php',
         method: 'POST',
         contentType: 'application/json',
-        data: JSON.stringify({ id: registroAEliminar }),
+        data: JSON.stringify({
+            id: id,
+            valido: nuevoEstado
+        }),
         dataType: 'json',
         success: function (response) {
             if (response.success) {
-                mostrarExito(response.message);
+                // Update status text
+                const statusText = document.getElementById('toggleStatusText');
+                if (statusText) {
+                    statusText.textContent = isValid ? '✓ Válido' : '✗ Inválido';
+                    statusText.className = 'toggle-status-text ' + (isValid ? 'valid' : 'invalid');
+                }
+
+                // Reload table to reflect changes
                 cargarRegistros();
-                // Cerrar modal
-                bootstrap.Modal.getInstance(document.getElementById('modalConfirmarEliminar')).hide();
+
+                mostrarExito(response.message || 'Estado actualizado correctamente');
             } else {
-                mostrarError(response.message);
+                // Revert toggle if failed
+                document.getElementById('toggleValido').checked = !isValid;
+                mostrarError(response.message || 'Error al actualizar el estado');
             }
-            registroAEliminar = null;
         },
         error: function () {
-            mostrarError('Error al eliminar registro');
-            registroAEliminar = null;
+            // Revert toggle if failed
+            document.getElementById('toggleValido').checked = !isValid;
+            mostrarError('Error al actualizar el estado del registro');
         }
     });
-});
+}
 
 function cambiarRegistrosPorPagina() {
     registrosPorPagina = parseInt($('#registrosPorPagina').val());
