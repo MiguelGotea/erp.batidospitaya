@@ -22,7 +22,7 @@ $ticketModel = new Ticket();
 $tickets = $ticketModel->getTicketsForPlanning();
 $weekly_stats = $ticketModel->getWeeklyReportStats();
 
-// Preparar datos para el gráfico
+// Preparar datos para el gráfico de barras (12 semanas)
 $labels_semanas = [];
 $data_criticos = [];
 $data_normales = [];
@@ -32,6 +32,10 @@ foreach (array_reverse($weekly_stats) as $ws) {
     $data_criticos[] = $ws['tickets_criticos'];
     $data_normales[] = $ws['tickets_normales'];
 }
+
+// Preparar datos para el gráfico de tendencia (últimas 8 semanas)
+$labels_tendencia = array_slice($labels_semanas, -8);
+$data_tendencia_criticos = array_slice($data_criticos, -8);
 
 
 // Configuración de la jornada
@@ -251,16 +255,29 @@ $eficiencia = ($total_h_exec + $total_h_viaje) > 0 ? ($total_h_exec / ($total_h_
                     </div>
                 </div>
 
-                <!-- Gráfico de Reportes Semanales -->
+                <!-- Gráficos de Reportes Semanales -->
                 <div class="row mb-4">
-                    <div class="col-12">
-                        <div class="card shadow-sm border-0">
+                    <div class="col-lg-6">
+                        <div class="card shadow-sm border-0 h-100">
                             <div class="card-header bg-white py-3">
                                 <h6 class="mb-0 fw-bold text-primary"><i
-                                        class="bi bi-bar-chart-line-fill me-2"></i>Reportes Generados por Semana</h6>
+                                        class="bi bi-bar-chart-line-fill me-2"></i>Reportes por Semana</h6>
+                                <p class="small text-muted mb-0">Últimas 12 semanas</p>
                             </div>
-                            <div class="card-body">
-                                <canvas id="weeklyChart" height="80"></canvas>
+                            <div class="card-body" style="height: 350px;">
+                                <canvas id="weeklyChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="card shadow-sm border-0 h-100">
+                            <div class="card-header bg-white py-3">
+                                <h6 class="mb-0 fw-bold text-danger"><i class="bi bi-graph-up-arrow me-2"></i>Tendencia
+                                    de Críticos</h6>
+                                <p class="small text-muted mb-0">Últimas 8 semanas con línea de tendencia</p>
+                            </div>
+                            <div class="card-body" style="height: 350px;">
+                                <canvas id="trendChart"></canvas>
                             </div>
                         </div>
                     </div>
@@ -398,34 +415,107 @@ $eficiencia = ($total_h_exec + $total_h_viaje) > 0 ? ($total_h_exec / ($total_h_
                     {
                         label: 'Resto de Tickets',
                         data: <?php echo json_encode($data_normales); ?>,
-                    backgroundColor: '#51B8AC', // Color principal
-                    borderRadius: 4,
+                        backgroundColor: '#51B8AC', // Color principal
+                        borderRadius: 4,
                     }
                 ]
             },
-        options: {
-            responsive: true,
+            options: {
+                responsive: true,
                 maintainAspectRatio: false,
-                    scales: {
-                x: {
-                    stacked: true,
+                scales: {
+                    x: {
+                        stacked: true,
                         grid: { display: false }
+                    },
+                    y: {
+                        stacked: true,
+                        beginAtZero: true,
+                        grid: { color: '#f0f0f0' }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'bottom',
+                        labels: { usePointStyle: true }
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false
+                    }
+                }
+            }
+        });
+
+        // Gráfico de tendencia de críticos
+        const ctxTrend = document.getElementById('trendChart').getContext('2d');
+        const trendData = <?php echo json_encode($data_tendencia_criticos); ?>;
+
+        // Calcular línea de tendencia (regresión lineal simple)
+        const n = trendData.length;
+        const sumX = trendData.reduce((sum, _, i) => sum + i, 0);
+        const sumY = trendData.reduce((sum, val) => sum + val, 0);
+        const sumXY = trendData.reduce((sum, val, i) => sum + (i * val), 0);
+        const sumX2 = trendData.reduce((sum, _, i) => sum + (i * i), 0);
+
+        const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+        const intercept = (sumY - slope * sumX) / n;
+        const trendLine = trendData.map((_, i) => slope * i + intercept);
+
+        const trendChart = new Chart(ctxTrend, {
+            type: 'line',
+            data: {
+                labels: <?php echo json_encode($labels_tendencia); ?>,
+            datasets: [
+                {
+                    label: 'Tickets Críticos',
+                    data: trendData,
+                    borderColor: '#dc3545',
+                    backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.3,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    pointBackgroundColor: '#dc3545',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2
+                },
+                {
+                    label: 'Tendencia',
+                    data: trendLine,
+                    borderColor: '#fd7e14',
+                    borderWidth: 2,
+                    borderDash: [5, 5],
+                    fill: false,
+                    pointRadius: 0,
+                    pointHoverRadius: 0
+                }
+            ]
+        },
+            options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: {
+                    grid: { display: false }
                 },
                 y: {
-                    stacked: true,
-                        beginAtZero: true,
-                            grid: { color: '#f0f0f0' }
+                    beginAtZero: true,
+                    grid: { color: '#f0f0f0' },
+                    ticks: { precision: 0 }
                 }
             },
             plugins: {
                 legend: {
                     display: true,
-                        position: 'bottom',
-                            labels: { usePointStyle: true }
+                    position: 'bottom',
+                    labels: { usePointStyle: true, padding: 10 }
                 },
                 tooltip: {
                     mode: 'index',
-                        intersect: false
+                    intersect: false
                 }
             }
         }
