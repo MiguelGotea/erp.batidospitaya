@@ -19,6 +19,15 @@ if (!tienePermiso('planificacion_mantenimiento', 'vista', $cargoOperario)) {
 
 $ticketModel = new Ticket();
 $tickets = $ticketModel->getTicketsForPlanning();
+$weekly_stats = $ticketModel->getWeeklyReportStats();
+
+// Preparar datos para el gráfico
+$labels_semanas = [];
+$data_tickets = [];
+foreach (array_reverse($weekly_stats) as $ws) {
+    $labels_semanas[] = "Sem " . $ws['numero_semana'];
+    $data_tickets[] = $ws['total_tickets'];
+}
 
 
 // Configuración de la jornada
@@ -153,6 +162,8 @@ $eficiencia = ($total_h_exec + $total_h_viaje) > 0 ? ($total_h_exec / ($total_h_
     <title>Planificación de Mantenimiento</title>
     <link rel="icon" href="../../core/assets/img/icon12.png" type="image/png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="css/planificacion_mantenimiento.css?v=<?php echo mt_rand(1, 10000); ?>">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -231,6 +242,21 @@ $eficiencia = ($total_h_exec + $total_h_viaje) > 0 ? ($total_h_exec / ($total_h_
                                         Prioridad</strong> es más alto, agrupando trabajos locales en Managua para
                                     liberar volumen rápidamente.
                                 </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gráfico de Reportes Semanales -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="card shadow-sm border-0">
+                            <div class="card-header bg-white py-3">
+                                <h6 class="mb-0 fw-bold text-primary"><i
+                                        class="bi bi-bar-chart-line-fill me-2"></i>Reportes Generados por Semana</h6>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="weeklyChart" height="80"></canvas>
                             </div>
                         </div>
                     </div>
@@ -351,6 +377,45 @@ $eficiencia = ($total_h_exec + $total_h_viaje) > 0 ? ($total_h_exec / ($total_h_
 
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        const ctx = document.getElementById('weeklyChart').getContext('2d');
+        const weeklyChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: <?php echo json_encode($labels_semanas); ?>,
+                datasets: [{
+                    label: 'Reportes de Mantenimiento',
+                    data: <?php echo json_encode($data_tickets); ?>,
+                    backgroundColor: 'rgba(81, 184, 172, 0.6)',
+                    borderColor: 'rgba(81, 184, 172, 1)',
+                    borderWidth: 1,
+                    borderRadius: 4,
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: '#f0f0f0'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+    </script>
 </body>
 
 </html>
