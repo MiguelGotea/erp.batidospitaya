@@ -77,6 +77,25 @@ function cargarRegistros() {
     });
 }
 
+// Función para obtener badge de verificación IA
+function getVerificacionBadge(registro) {
+    // Verificar si los valores de IA coinciden con los guardados
+    const codigoCoincide = !registro.codigo_sorteo_ia ||
+        registro.codigo_sorteo_ia === '' ||
+        registro.numero_factura == registro.codigo_sorteo_ia;
+
+    const puntosCoinciden = !registro.puntos_ia ||
+        registro.puntos_ia === '' ||
+        registro.puntos_factura == registro.puntos_ia;
+
+    // Si ambos coinciden o no hay valores de IA, es "Verificado"
+    if (codigoCoincide && puntosCoinciden) {
+        return '<span class="badge bg-success"><i class="bi bi-check-circle"></i> Verificado</span>';
+    } else {
+        return '<span class="badge bg-warning text-dark"><i class="bi bi-exclamation-triangle"></i> Revisar</span>';
+    }
+}
+
 function renderizarTabla(registros) {
     console.log('Renderizando tabla con', registros.length, 'registros');
     const tbody = $('#tablaSorteosBody');
@@ -111,6 +130,7 @@ function renderizarTabla(registros) {
                 <td>${registro.correo_electronico || '-'}</td>
                 <td>${parseFloat(registro.monto_factura).toFixed(2)}</td>
                 <td>${registro.puntos_factura}</td>
+                <td class="text-center">${getVerificacionBadge(registro)}</td>
                 <td class="text-center">${validoIcon}</td>
                 <td>
                     <button class="btn btn-sm btn-primary btn-ver-foto" data-id="${registro.id}" title="Ver Detalle">
@@ -514,18 +534,33 @@ function crearPanelFiltro(th, columna, tipo, icon) {
             <div class="filter-section" style="margin-top: 12px;">
                 <span class="filter-section-title">Filtrar por:</span>
                 <div class="filter-options">
-                    <div class="filter-option">
-                        <input type="checkbox" value="online" 
-                               ${filtrosActivos[columna]?.includes('online') ? 'checked' : ''}
-                               onchange="toggleOpcionFiltro('${columna}', 'online', this.checked)">
-                        <span>Online</span>
-                    </div>
-                    <div class="filter-option">
-                        <input type="checkbox" value="offline" 
-                               ${filtrosActivos[columna]?.includes('offline') ? 'checked' : ''}
-                               onchange="toggleOpcionFiltro('${columna}', 'offline', this.checked)">
-                        <span>Offline</span>
-                    </div>
+                    ${columna === 'tipo_qr' ? `
+                        <div class="filter-option">
+                            <input type="checkbox" value="online" 
+                                   ${filtrosActivos[columna]?.includes('online') ? 'checked' : ''}
+                                   onchange="toggleOpcionFiltro('${columna}', 'online', this.checked)">
+                            <span>Online</span>
+                        </div>
+                        <div class="filter-option">
+                            <input type="checkbox" value="offline" 
+                                   ${filtrosActivos[columna]?.includes('offline') ? 'checked' : ''}
+                                   onchange="toggleOpcionFiltro('${columna}', 'offline', this.checked)">
+                            <span>Offline</span>
+                        </div>
+                    ` : columna === 'verificacion_ia' ? `
+                        <div class="filter-option">
+                            <input type="checkbox" value="verificado" 
+                                   ${filtrosActivos[columna]?.includes('verificado') ? 'checked' : ''}
+                                   onchange="toggleOpcionFiltro('${columna}', 'verificado', this.checked)">
+                            <span>Verificado</span>
+                        </div>
+                        <div class="filter-option">
+                            <input type="checkbox" value="revisar" 
+                                   ${filtrosActivos[columna]?.includes('revisar') ? 'checked' : ''}
+                                   onchange="toggleOpcionFiltro('${columna}', 'revisar', this.checked)">
+                            <span>Revisar</span>
+                        </div>
+                    ` : ''}
                 </div>
             </div>
         `);

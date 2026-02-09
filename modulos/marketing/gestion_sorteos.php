@@ -75,6 +75,10 @@ if (!tienePermiso('gestion_sorteos', 'vista', $cargoOperario)) {
                                     Puntos
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
+                                <th data-column="verificacion_ia" data-type="list">
+                                    Verificación IA
+                                    <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                </th>
                                 <th data-column="valido" data-type="toggle3">
                                     Válido
                                     <div class="valido-filter-circles">
