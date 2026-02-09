@@ -24,10 +24,13 @@ $weekly_stats = $ticketModel->getWeeklyReportStats();
 
 // Preparar datos para el gráfico
 $labels_semanas = [];
-$data_tickets = [];
+$data_criticos = [];
+$data_normales = [];
+
 foreach (array_reverse($weekly_stats) as $ws) {
     $labels_semanas[] = "Sem " . $ws['numero_semana'];
-    $data_tickets[] = $ws['total_tickets'];
+    $data_criticos[] = $ws['tickets_criticos'];
+    $data_normales[] = $ws['tickets_normales'];
 }
 
 
@@ -385,36 +388,47 @@ $eficiencia = ($total_h_exec + $total_h_viaje) > 0 ? ($total_h_exec / ($total_h_
             type: 'bar',
             data: {
                 labels: <?php echo json_encode($labels_semanas); ?>,
-                datasets: [{
-                    label: 'Reportes de Mantenimiento',
-                    data: <?php echo json_encode($data_tickets); ?>,
-                    backgroundColor: 'rgba(81, 184, 172, 0.6)',
-                    borderColor: 'rgba(81, 184, 172, 1)',
-                    borderWidth: 1,
-                    borderRadius: 4,
-                }]
-            },
-            options: {
-                responsive: true,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        grid: {
-                            color: '#f0f0f0'
-                        }
+                datasets: [
+                    {
+                        label: 'Críticos (Urgencia 4)',
+                        data: <?php echo json_encode($data_criticos); ?>,
+                        backgroundColor: '#dc3545', // Rojo para críticos
+                        borderRadius: 4,
                     },
-                    x: {
-                        grid: {
-                            display: false
-                        }
+                    {
+                        label: 'Resto de Tickets',
+                        data: <?php echo json_encode($data_normales); ?>,
+                    backgroundColor: '#51B8AC', // Color principal
+                    borderRadius: 4,
                     }
+                ]
+            },
+        options: {
+            responsive: true,
+                maintainAspectRatio: false,
+                    scales: {
+                x: {
+                    stacked: true,
+                        grid: { display: false }
                 },
-                plugins: {
-                    legend: {
-                        display: false
-                    }
+                y: {
+                    stacked: true,
+                        beginAtZero: true,
+                            grid: { color: '#f0f0f0' }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: true,
+                        position: 'bottom',
+                            labels: { usePointStyle: true }
+                },
+                tooltip: {
+                    mode: 'index',
+                        intersect: false
                 }
             }
+        }
         });
     </script>
 </body>

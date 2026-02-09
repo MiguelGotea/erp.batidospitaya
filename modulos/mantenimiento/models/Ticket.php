@@ -336,14 +336,17 @@ class Ticket
     public function getWeeklyReportStats()
     {
         $year = date('Y');
-        $sql = "SELECT s.numero_semana, s.fecha_inicio, s.fecha_fin, COUNT(t.id) as total_tickets
+        $sql = "SELECT s.numero_semana, s.fecha_inicio, s.fecha_fin, 
+                COUNT(t.id) as total_tickets,
+                SUM(CASE WHEN t.nivel_urgencia = 4 THEN 1 ELSE 0 END) as tickets_criticos,
+                SUM(CASE WHEN t.nivel_urgencia != 4 OR t.nivel_urgencia IS NULL THEN 1 ELSE 0 END) as tickets_normales
                 FROM SemanasSistema s
                 LEFT JOIN mtto_tickets t ON t.created_at BETWEEN CONCAT(s.fecha_inicio, ' 00:00:00') AND CONCAT(s.fecha_fin, ' 23:59:59')
                 WHERE s.anio = ?
                 AND s.fecha_inicio <= CURDATE() 
                 GROUP BY s.id
                 ORDER BY s.numero_semana DESC
-                LIMIT 12"; // Mostrar últimas 12 semanas para no saturar
+                LIMIT 12";
 
         return $this->db->fetchAll($sql, [$year]);
     }
