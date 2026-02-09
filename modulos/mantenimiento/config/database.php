@@ -2,6 +2,7 @@
 // modulos/mantenimiento/config/database.php
 require_once __DIR__ . '/../../../core/database/conexion.php';
 
+
 class Database
 {
     private $connection = null;
