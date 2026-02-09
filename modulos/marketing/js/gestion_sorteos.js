@@ -7,7 +7,6 @@ let ordenActivo = { columna: null, direccion: null };
 let validoFilterState = 'all'; // 'all', 'valid', 'invalid'
 // tienePermisoEdicion is set from PHP inline script
 
-
 $(document).ready(function () {
     cargarRegistros();
 
