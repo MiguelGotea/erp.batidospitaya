@@ -76,9 +76,8 @@ if (!tienePermiso('gestion_sorteos', 'vista', $cargoOperario)) {
                                     Fecha Registro
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
-                                <th data-column="verificacion_ia" data-type="list">
+                                <th data-column="verificacion_ia">
                                     Verificación IA
-                                    <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
                                 <th data-column="valido" data-type="toggle3">
                                     Válido
