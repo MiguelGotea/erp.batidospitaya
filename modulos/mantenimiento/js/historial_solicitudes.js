@@ -1,4 +1,5 @@
 // Posicionar panel de filtro dinámicamente
+
 function posicionarPanelFiltro(panel, icon) {
     const iconOffset = $(icon).offset();
     const iconWidth = $(icon).outerWidth();
