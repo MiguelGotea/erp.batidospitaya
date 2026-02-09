@@ -594,6 +594,30 @@ body {
     }
 }
 
+.comparison-inline-compact {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.comparison-inline-compact .stored-value,
+.comparison-inline-compact .ai-value {
+    font-size: 0.8rem;
+    padding: 2px 4px;
+    border-radius: 4px;
+}
+
+.comparison-inline-compact .stored-value {
+    background: #f8f9fa;
+    border-left: 2px solid #6c757d;
+}
+
+.comparison-inline-compact .ai-value {
+    background: #e7f3ff;
+    border-left: 2px solid #0066cc;
+    color: #0066cc;
+}
+
 /* Compact 2-column grid for short fields */
 .comparison-row-grid {
     display: grid;

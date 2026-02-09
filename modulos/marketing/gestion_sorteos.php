@@ -44,24 +44,16 @@ if (!tienePermiso('gestion_sorteos', 'vista', $cargoOperario)) {
                     <table class="table table-hover sorteos-table" id="tablaSorteos">
                         <thead>
                             <tr>
-                                <th data-column="fecha_registro" data-type="daterange">
-                                    Fecha Registro
-                                    <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
-                                </th>
                                 <th data-column="nombre_completo" data-type="text">
                                     Nombre Completo
-                                    <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
-                                </th>
-                                <th data-column="numero_contacto" data-type="text">
-                                    No. Contacto
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
                                 <th data-column="numero_cedula" data-type="text">
                                     No. Cédula
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
-                                <th data-column="numero_factura" data-type="text">
-                                    No. Factura
+                                <th data-column="numero_contacto" data-type="text">
+                                    No. Contacto
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
                                 <th data-column="correo_electronico" data-type="text">
@@ -72,8 +64,16 @@ if (!tienePermiso('gestion_sorteos', 'vista', $cargoOperario)) {
                                     Monto
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
+                                <th data-column="numero_factura" data-type="text">
+                                    No. Factura
+                                    <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                </th>
                                 <th data-column="puntos_factura" data-type="number">
                                     Puntos
+                                    <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                </th>
+                                <th data-column="fecha_registro" data-type="daterange">
+                                    Fecha Registro
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
                                 <th data-column="verificacion_ia" data-type="list">

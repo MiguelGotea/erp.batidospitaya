@@ -79,24 +79,29 @@ window.verFoto = function (id) {
                                     <div class="comparison-label">Monto</div>
                                     <div class="comparison-value">C$ ${parseFloat(registro.monto_factura).toFixed(2)}</div>
                                 </div>
-                                
-                                <!-- Código Sorteo | Puntos -->
-                                ${compararValores(
-                    'Código Sorteo',
-                    registro.numero_factura,
-                    registro.codigo_sorteo_ia
-                )}
-                                ${compararValores(
-                    'Puntos',
-                    registro.puntos_factura,
-                    registro.puntos_ia
-                )}
+                                <!-- Código Sorteo | Puntos side by side -->
+                                <div class="comparison-row-grid">
+                                    <div class="comparison-row-half ${registro.numero_factura != registro.codigo_sorteo_ia && registro.codigo_sorteo_ia != null && registro.codigo_sorteo_ia !== '' ? 'highlight-diff' : ''}">
+                                        <div class="comparison-label">Código Sorteo</div>
+                                        <div class="comparison-inline-compact">
+                                            <div class="stored-value"><strong>G:</strong> ${registro.numero_factura}</div>
+                                            ${registro.codigo_sorteo_ia ? `<div class="ai-value"><strong>IA:</strong> ${registro.codigo_sorteo_ia}</div>` : ''}
+                                        </div>
+                                    </div>
+                                    <div class="comparison-row-half ${registro.puntos_factura != registro.puntos_ia && registro.puntos_ia != null && registro.puntos_ia !== '' ? 'highlight-diff' : ''}">
+                                        <div class="comparison-label">Puntos</div>
+                                        <div class="comparison-inline-compact">
+                                            <div class="stored-value"><strong>G:</strong> ${registro.puntos_factura}</div>
+                                            ${registro.puntos_ia ? `<div class="ai-value"><strong>IA:</strong> ${registro.puntos_ia}</div>` : ''}
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                             
                             ${registro.validado_ia == 0 ? `
-                                <div class="alert alert-warning mt-2 small">
+                                <div class="alert alert-warning mt-2 small p-2">
                                     <i class="bi bi-exclamation-triangle"></i>
-                                    <strong>Nota:</strong> La IA no pudo validar esta factura.
+                                    <strong>Nota:</strong> IA no pudo validar factura.
                                 </div>
                             ` : ''}
                         </div>

@@ -123,14 +123,14 @@ function renderizarTabla(registros) {
 
         tbody.append(`
             <tr>
-                <td>${fecha}</td>
                 <td>${registro.nombre_completo}</td>
-                <td>${registro.numero_contacto}</td>
                 <td>${registro.numero_cedula || '-'}</td>
-                <td>${registro.numero_factura}</td>
+                <td>${registro.numero_contacto}</td>
                 <td>${registro.correo_electronico || '-'}</td>
                 <td>${parseFloat(registro.monto_factura).toFixed(2)}</td>
+                <td>${registro.numero_factura}</td>
                 <td>${registro.puntos_factura}</td>
+                <td>${fecha}</td>
                 <td class="text-center">${getVerificacionBadge(registro)}</td>
                 <td class="text-center">${validoIcon}</td>
                 <td>
