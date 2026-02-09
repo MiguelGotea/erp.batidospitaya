@@ -11,9 +11,15 @@ $(document).ready(function () {
     cargarRegistros();
 
     // Event delegation for Ver buttons
-    $(document).on('click', '.btn-ver-foto', function () {
+    $(document).on('click', '.btn-ver-foto', function (e) {
+        e.preventDefault();
         const id = $(this).data('id');
-        console.log('Abriendo modal para registro ID:', id);
+        const buttonText = $(this).closest('tr').find('td:first').text();
+        console.log('=== CLICK EN BOTÓN VER ===');
+        console.log('ID del botón:', id);
+        console.log('Tipo de ID:', typeof id);
+        console.log('Primera celda de la fila:', buttonText);
+        console.log('========================');
         verFoto(id);
     });
 });
