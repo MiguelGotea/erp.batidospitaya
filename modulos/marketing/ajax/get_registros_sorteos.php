@@ -15,7 +15,7 @@ if (!tienePermiso('gestion_sorteos', 'vista', $cargoOperario)) {
     exit;
 }
 
-error_log("GET params: " . print_r($_GET, true));
+
 
 $response = ['success' => false, 'data' => [], 'total' => 0];
 

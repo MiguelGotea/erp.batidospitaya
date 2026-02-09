@@ -1,20 +1,17 @@
 // PATCH: Simplified and compact verFoto function
 
 window.verFoto = function (id) {
-    console.log('=== verFoto PATCH LLAMADO ===');
-    console.log('ID recibido:', id);
-    console.log('Tipo:', typeof id);
-    console.log('===========================');
+
 
     $.ajax({
         url: `ajax/get_registros_sorteos.php?id=${id}`,
         method: 'GET',
         dataType: 'json',
         success: function (response) {
-            console.log('Respuesta AJAX para ID', id, ':', response);
+
             if (response.success && response.data.length > 0) {
                 const registro = response.data[0];
-                console.log('Registro cargado - ID:', registro.id, 'Nombre:', registro.nombre_completo);
+
 
                 // Helper function to create inline comparison
                 const compararValores = (label, guardado, ia) => {
@@ -142,4 +139,3 @@ window.verFoto = function (id) {
     });
 };
 
-console.log('✅ verFoto function patched - compact version');

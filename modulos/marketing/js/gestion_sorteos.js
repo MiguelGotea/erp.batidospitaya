@@ -15,11 +15,7 @@ $(document).ready(function () {
         e.preventDefault();
         const id = $(this).data('id');
         const buttonText = $(this).closest('tr').find('td:first').text();
-        console.log('=== CLICK EN BOTÓN VER ===');
-        console.log('ID del botón:', id);
-        console.log('Tipo de ID:', typeof id);
-        console.log('Primera celda de la fila:', buttonText);
-        console.log('========================');
+
         verFoto(id);
     });
 });
@@ -47,31 +43,26 @@ function cargarRegistros() {
         }
     });
 
-    console.log('Cargando registros con params:', params.toString());
+
 
     $.ajax({
         url: `ajax/get_registros_sorteos.php?${params}`,
         method: 'GET',
         dataType: 'json',
         success: function (response) {
-            console.log('Respuesta AJAX:', response);
+
             if (response.success) {
-                console.log('Datos recibidos:', response.data.length, 'registros');
+
                 renderizarTabla(response.data);
                 renderizarPaginacion(response.total_pages, response.page);
                 actualizarIndicadoresFiltros(); // Update filter indicators
             } else {
-                console.error('Error en respuesta:', response.message);
+
                 mostrarError('Error al cargar registros: ' + (response.message || 'Error desconocido'));
             }
         },
         error: function (xhr, status, error) {
-            console.error('Error AJAX:', {
-                status: xhr.status,
-                statusText: xhr.statusText,
-                responseText: xhr.responseText,
-                error: error
-            });
+
             mostrarError('Error al cargar registros');
         }
     });
@@ -100,7 +91,7 @@ function getVerificacionBadge(registro) {
 }
 
 function renderizarTabla(registros) {
-    console.log('Renderizando tabla con', registros.length, 'registros');
+
     const tbody = $('#tablaSorteosBody');
     tbody.empty();
 
