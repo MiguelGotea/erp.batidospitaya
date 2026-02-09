@@ -6,9 +6,7 @@ if (session_status() == PHP_SESSION_NONE) {
 
 require_once __DIR__ . '/models/Ticket.php';
 require_once __DIR__ . '/../../core/auth/auth.php';
-// Incluir el menú lateral
 require_once __DIR__ . '/../../core/layout/menu_lateral.php';
-// Incluir el header universal
 require_once __DIR__ . '/../../core/layout/header_universal.php';
 
 //******************************Estándar para header******************************
