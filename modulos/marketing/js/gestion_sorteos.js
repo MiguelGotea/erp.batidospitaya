@@ -10,6 +10,13 @@ let validoFilterState = 'all'; // 'all', 'valid', 'invalid'
 
 $(document).ready(function () {
     cargarRegistros();
+
+    // Event delegation for Ver buttons
+    $(document).on('click', '.btn-ver-foto', function () {
+        const id = $(this).data('id');
+        console.log('Abriendo modal para registro ID:', id);
+        verFoto(id);
+    });
 });
 
 function cargarRegistros() {
@@ -100,7 +107,7 @@ function renderizarTabla(registros) {
                 <td>${registro.puntos_factura}</td>
                 <td class="text-center">${validoIcon}</td>
                 <td>
-                    <button class="btn btn-sm btn-primary btn-ver-foto" onclick="verFoto(${registro.id})" title="Ver Detalle">
+                    <button class="btn btn-sm btn-primary btn-ver-foto" data-id="${registro.id}" title="Ver Detalle">
                         <i class="bi bi-eye"></i> Ver
                     </button>
                 </td>
