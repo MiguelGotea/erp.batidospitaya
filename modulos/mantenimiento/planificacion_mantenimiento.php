@@ -499,33 +499,28 @@ $eficiencia = ($total_h_exec + $total_h_viaje) > 0 ? ($total_h_exec / ($total_h_
         const trendLineEquip = equipData.map((_, i) => slopeEquip * i + interceptEquip);
 
         const equipChart = new Chart(ctxEquip, {
-            type: 'line',
+            type: 'bar',
             data: {
                 labels: <?php echo json_encode($labels_equipos); ?>,
                 datasets: [
                     {
                         label: 'Cambios de Equipo',
                         data: equipData,
-                        borderColor: '#ffc107',
-                        backgroundColor: 'rgba(255, 193, 7, 0.1)',
-                        borderWidth: 2,
-                        fill: true,
-                        tension: 0.3,
-                        pointRadius: 4,
-                        pointHoverRadius: 6,
-                        pointBackgroundColor: '#ffc107',
-                        pointBorderColor: '#fff',
-                        pointBorderWidth: 2
+                        backgroundColor: '#ffc107',
+                        borderRadius: 4,
+                        order: 2
                     },
                     {
                         label: 'Tendencia',
                         data: trendLineEquip,
+                        type: 'line',
                         borderColor: '#fd7e14',
                         borderWidth: 2,
                         borderDash: [5, 5],
                         fill: false,
                         pointRadius: 0,
-                        pointHoverRadius: 0
+                        pointHoverRadius: 0,
+                        order: 1
                     }
                 ]
             },
