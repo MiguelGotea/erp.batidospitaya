@@ -4,13 +4,12 @@ if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
 
-require_once 'models/Ticket.php';
-require_once '../../core/auth/auth.php';
-require_once '../../core/helpers/funciones.php';
+require_once __DIR__ . '/models/Ticket.php';
+require_once __DIR__ . '/../../core/auth/auth.php';
 // Incluir el header universal
-require_once '../../core/layout/header_universal.php';
+require_once __DIR__ . '/../../core/layout/header_universal.php';
 // Incluir el menú lateral
-require_once '../../core/layout/menu_lateral.php';
+require_once __DIR__ . '/../../core/layout/menu_lateral.php';
 
 //******************************Estándar para header******************************
 verificarAutenticacion();
