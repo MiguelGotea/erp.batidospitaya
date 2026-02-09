@@ -347,8 +347,6 @@ function toggleValidoRegistro(id, isValid) {
 
                 // Reload table to reflect changes
                 cargarRegistros();
-
-                mostrarExito(response.message || 'Estado actualizado correctamente');
             } else {
                 // Revert toggle if failed
                 document.getElementById('toggleValido').checked = !isValid;
