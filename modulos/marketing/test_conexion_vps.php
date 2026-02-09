@@ -6,7 +6,7 @@
 
 header('Content-Type: text/html; charset=utf-8');
 
-$vpsUrl = 'http://192.81.217.146';
+$vpsUrl = 'http://pitaya-wa.mooo.com';
 
 echo "<h2>Test de Conexión al VPS WhatsApp</h2>";
 echo "<hr>";
