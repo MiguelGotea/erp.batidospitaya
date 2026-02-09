@@ -24,6 +24,7 @@ $(document).ready(function () {
     });
 });
 
+
 function cargarRegistros() {
     const params = new URLSearchParams({
         page: paginaActual,
