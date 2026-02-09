@@ -60,6 +60,11 @@ window.verFoto = function (id) {
                                         <div class="comparison-value">${registro.numero_cedula || 'N/A'}</div>
                                     </div>
                                 </div>
+                                <!-- Fecha (full width) -->
+                                <div class="comparison-row">
+                                    <div class="comparison-label">Fecha Registro</div>
+                                    <div class="comparison-value">${new Date(registro.fecha_registro).toLocaleString('es-NI', { hour12: true })}</div>
+                                </div>
                                 <!-- Contacto | Correo -->
                                 <div class="comparison-row-grid">
                                     <div class="comparison-row-half">

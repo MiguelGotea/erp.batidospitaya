@@ -116,8 +116,8 @@ function renderizarTabla(registros) {
             ? '<i class="bi bi-check-circle-fill valido-icon valid" title="Válido"></i>'
             : '<i class="bi bi-x-circle-fill valido-icon invalid" title="Inválido"></i>';
 
-        // Convertir fecha a formato dd/MMM/yy
-        const fechaUTC = new Date(registro.fecha_registro + ' UTC');
+        // Convertir fecha (ahora se guarda en hora local)
+        const fechaUTC = new Date(registro.fecha_registro);
         const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
         const dia = String(fechaUTC.getDate()).padStart(2, '0');
         const mes = meses[fechaUTC.getMonth()];
@@ -206,8 +206,8 @@ function verFoto(id) {
             if (response.success && response.data.length > 0) {
                 const registro = response.data[0];
 
-                // Convertir fecha a zona horaria de Nicaragua
-                const fechaUTC = new Date(registro.fecha_registro + ' UTC');
+                // Convertir fecha (local)
+                const fechaUTC = new Date(registro.fecha_registro);
                 const fecha = fechaUTC.toLocaleString('es-NI', {
                     timeZone: 'America/Managua',
                     year: 'numeric',
