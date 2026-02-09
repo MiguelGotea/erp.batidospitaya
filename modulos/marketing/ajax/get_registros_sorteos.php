@@ -55,6 +55,12 @@ try {
     $where = [];
     $params = [];
 
+    // Filtro especial para ID único (para modal)
+    if (isset($_GET['id']) && $_GET['id'] !== '') {
+        $where[] = "id = ?";
+        $params[] = (int) $_GET['id'];
+    }
+
     // Procesar filtros de cada columna
     foreach ($_GET as $key => $value) {
         // Saltar parámetros de sistema
