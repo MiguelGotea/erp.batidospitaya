@@ -165,6 +165,11 @@ foreach ($agenda_semanal as $d) {
     }
 }
 $eficiencia = ($total_h_exec + $total_h_viaje) > 0 ? ($total_h_exec / ($total_h_exec + $total_h_viaje)) * 100 : 0;
+
+// Filtrar tickets críticos pendientes (Nivel 4)
+$tickets_criticos_pendientes = array_filter($tickets_descartados, function ($ticket) {
+    return $ticket['nivel_urgencia'] == 4;
+});
 ?>
 
 <!DOCTYPE html>
@@ -313,6 +318,41 @@ $eficiencia = ($total_h_exec + $total_h_viaje) > 0 ? ($total_h_exec / ($total_h_
                                                 <div class="text-muted d-flex justify-content-between">
                                                     <span>Urgencia: <?php echo $pt['urgencia']; ?></span>
                                                     <span><?php echo $pt['tiempo_exec']; ?>h</span>
+                                                </div>
+                                            </li>
+                                        <?php endforeach; ?>
+                                    </ul>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+
+                        <!-- Panel de Tickets Críticos Pendientes -->
+                        <div class="card shadow-sm border-0 border-danger border-2 mt-3">
+                            <div class="card-header bg-danger bg-opacity-10 py-3">
+                                <h6 class="mb-0 fw-bold text-danger"><i
+                                        class="bi bi-exclamation-triangle-fill me-2"></i>Críticos Pendientes</h6>
+                                <p class="small text-muted mb-0">Tickets de urgencia 4 sin agendar</p>
+                            </div>
+                            <div class="card-body p-0 overflow-auto" style="max-height: 400px;">
+                                <?php if (empty($tickets_criticos_pendientes)): ?>
+                                    <div class="p-4 text-center text-muted italic">
+                                        <i class="bi bi-check-circle-fill text-success fs-1 d-block mb-2"></i>
+                                        Sin críticos pendientes
+                                    </div>
+                                <?php else: ?>
+                                    <ul class="list-group list-group-flush">
+                                        <?php foreach ($tickets_criticos_pendientes as $tcp): ?>
+                                            <li class="list-group-item small border-start border-3 border-danger">
+                                                <div class="fw-bold text-danger">
+                                                    <?php echo htmlspecialchars($tcp['nombre_sucursal']); ?>
+                                                </div>
+                                                <div class="text-muted d-flex justify-content-between">
+                                                    <span>Urgencia:
+                                                        <?php echo $tcp['urgencia']; ?>
+                                                    </span>
+                                                    <span>
+                                                        <?php echo $tcp['tiempo_exec']; ?>h
+                                                    </span>
                                                 </div>
                                             </li>
                                         <?php endforeach; ?>
