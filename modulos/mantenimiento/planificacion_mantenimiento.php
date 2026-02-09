@@ -20,6 +20,7 @@ if (!tienePermiso('planificacion_mantenimiento', 'vista', $cargoOperario)) {
 $ticketModel = new Ticket();
 $tickets = $ticketModel->getTicketsForPlanning();
 
+
 // Configuración de la jornada
 $horas_jornada = 10;
 $dias_plan = 6;
