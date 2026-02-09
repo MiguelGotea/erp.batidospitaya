@@ -594,6 +594,34 @@ body {
     }
 }
 
+/* Compact 2-column grid for short fields */
+.comparison-row-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.comparison-row-half {
+    background: white;
+    padding: 8px 10px;
+    border-radius: 6px;
+    border-left: 3px solid #51B8AC;
+}
+
+.comparison-row-half .comparison-label {
+    font-weight: 600;
+    color: #0E544C;
+    font-size: 0.85rem;
+    margin-bottom: 4px;
+}
+
+.comparison-row-half .comparison-value {
+    color: #495057;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
 /* Toggle Switch for Valido Status */
 .valido-toggle-container {
     display: flex;

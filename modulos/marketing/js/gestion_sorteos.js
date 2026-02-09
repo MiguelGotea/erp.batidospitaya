@@ -15,7 +15,6 @@ function cargarRegistros() {
     const params = new URLSearchParams({
         page: paginaActual,
         per_page: registrosPorPagina,
-        ...filtrosActivos,
         ...(ordenActivo.columna && {
             orden_columna: ordenActivo.columna,
             orden_direccion: ordenActivo.direccion
@@ -23,6 +22,16 @@ function cargarRegistros() {
         ...(validoFilterState !== 'all' && {
             valido: validoFilterState === 'valid' ? 1 : 0
         })
+    });
+
+    // Add filters with proper JSON serialization
+    Object.keys(filtrosActivos).forEach(key => {
+        const value = filtrosActivos[key];
+        if (typeof value === 'object' && value !== null) {
+            params.append(key, JSON.stringify(value));
+        } else {
+            params.append(key, value);
+        }
     });
 
     console.log('Cargando registros con params:', params.toString());

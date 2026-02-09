@@ -1,6 +1,5 @@
-// PATCH: Simplified verFoto function - Add this AFTER gestion_sorteos.js loads
+// PATCH: Simplified and compact verFoto function
 
-// Override verFoto with simplified version
 window.verFoto = function (id) {
     $.ajax({
         url: `ajax/get_registros_sorteos.php?id=${id}`,
@@ -30,7 +29,7 @@ window.verFoto = function (id) {
                     `;
                 };
 
-                // Build 2-column layout
+                // Build compact 2-column layout
                 const modalBody = $('.modal-body', '#modalVerFoto');
                 modalBody.html(`
                     <div class="modal-comparison-simple">
@@ -49,27 +48,31 @@ window.verFoto = function (id) {
                                     <div class="comparison-label">Nombre Completo</div>
                                     <div class="comparison-value">${registro.nombre_completo}</div>
                                 </div>
-                                <div class="comparison-row">
-                                    <div class="comparison-label">No. Contacto</div>
-                                    <div class="comparison-value">${registro.numero_contacto}</div>
+                                <div class="comparison-row-grid">
+                                    <div class="comparison-row-half">
+                                        <div class="comparison-label">Contacto</div>
+                                        <div class="comparison-value">${registro.numero_contacto}</div>
+                                    </div>
+                                    <div class="comparison-row-half">
+                                        <div class="comparison-label">Cédula</div>
+                                        <div class="comparison-value">${registro.numero_cedula || 'N/A'}</div>
+                                    </div>
                                 </div>
                                 <div class="comparison-row">
-                                    <div class="comparison-label">No. Cédula</div>
-                                    <div class="comparison-value">${registro.numero_cedula || 'N/A'}</div>
+                                    <div class="comparison-label">Correo</div>
+                                    <div class="comparison-value">${registro.correo_electronico || 'N/A'}</div>
+                                </div>
+                                <div class="comparison-row-grid">
+                                    <div class="comparison-row-half">
+                                        <div class="comparison-label">Monto</div>
+                                        <div class="comparison-value">C$ ${parseFloat(registro.monto_factura).toFixed(2)}</div>
+                                    </div>
                                 </div>
                                 ${compararValores(
                     'Código Sorteo',
                     registro.numero_factura,
                     registro.codigo_sorteo_ia
                 )}
-                                <div class="comparison-row">
-                                    <div class="comparison-label">Correo Electrónico</div>
-                                    <div class="comparison-value">${registro.correo_electronico || 'N/A'}</div>
-                                </div>
-                                <div class="comparison-row">
-                                    <div class="comparison-label">Monto Factura</div>
-                                    <div class="comparison-value">C$ ${parseFloat(registro.monto_factura).toFixed(2)}</div>
-                                </div>
                                 ${compararValores(
                     'Puntos',
                     registro.puntos_factura,
@@ -78,9 +81,9 @@ window.verFoto = function (id) {
                             </div>
                             
                             ${registro.validado_ia == 0 ? `
-                                <div class="alert alert-warning mt-3 small">
+                                <div class="alert alert-warning mt-2 small">
                                     <i class="bi bi-exclamation-triangle"></i>
-                                    <strong>Nota:</strong> La IA no pudo validar esta factura automáticamente.
+                                    <strong>Nota:</strong> La IA no pudo validar esta factura.
                                 </div>
                             ` : ''}
                         </div>
@@ -101,7 +104,7 @@ window.verFoto = function (id) {
                             </span>
                         </div>
                     ` : `
-                        <div class="alert alert-secondary text-center mt-3">
+                        <div class="alert alert-secondary text-center mt-2">
                             <strong>Estado:</strong> 
                             ${registro.valido == 1
                         ? '<span class="text-success">✓ Válido</span>'
@@ -119,4 +122,4 @@ window.verFoto = function (id) {
     });
 };
 
-console.log('✅ verFoto function patched with simplified version');
+console.log('✅ verFoto function patched - compact version');

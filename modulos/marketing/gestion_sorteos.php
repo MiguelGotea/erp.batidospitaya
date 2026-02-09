@@ -78,10 +78,10 @@ if (!tienePermiso('gestion_sorteos', 'vista', $cargoOperario)) {
                                 <th data-column="valido" data-type="toggle3">
                                     Válido
                                     <div class="valido-filter-circles">
-                                        <i class="bi bi-circle-fill filter-circle active" data-state="all"
-                                            onclick="setValidoFilter('all')" title="Todos"></i>
                                         <i class="bi bi-check-circle-fill filter-circle" data-state="valid"
                                             onclick="setValidoFilter('valid')" title="Válidos"></i>
+                                        <i class="bi bi-circle-fill filter-circle active" data-state="all"
+                                            onclick="setValidoFilter('all')" title="Todos"></i>
                                         <i class="bi bi-x-circle-fill filter-circle" data-state="invalid"
                                             onclick="setValidoFilter('invalid')" title="Inválidos"></i>
                                     </div>
