@@ -167,8 +167,8 @@ foreach ($agenda_semanal as $d) {
 $eficiencia = ($total_h_exec + $total_h_viaje) > 0 ? ($total_h_exec / ($total_h_exec + $total_h_viaje)) * 100 : 0;
 
 // Filtrar tickets críticos pendientes (Nivel 4)
-$tickets_criticos_pendientes = array_filter($tickets_descartados, function ($ticket) {
-    return $ticket['nivel_urgencia'] == 4;
+$tickets_criticos_pendientes = array_filter($pool_tickets, function ($ticket) {
+    return $ticket['urgencia'] == 4;
 });
 ?>
 

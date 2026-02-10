@@ -1896,7 +1896,8 @@ function actualizarTerminacionContrato($codContrato, $datos)
 
         $sql = "
 UPDATE Contratos
-SET fecha_salida = ?,
+SET fin_contrato = ?,
+fecha_salida = ?,
 fecha_liquidacion = ?,
 motivo = ?,
 cod_tipo_salida = ?,
@@ -1910,6 +1911,7 @@ WHERE CodContrato = ?
 ";
 
         $params = [
+            !empty($datos['fecha_fin_contrato']) ? $datos['fecha_fin_contrato'] : null,
             !empty($datos['fecha_terminacion']) ? $datos['fecha_terminacion'] : null,
             !empty($datos['fecha_liquidacion']) ? $datos['fecha_liquidacion'] : null,
             $datos['motivo_salida'] ?? null,
@@ -2816,13 +2818,22 @@ function agregarAdendum($datos)
             throw new Exception("No se encontró un contrato activo para este colaborador");
         }
 
-        // 2. Obtener el último adendum activo (solo para referencia)
+        // 2. Obtener el último adendum activo para cerrarlo automáticamente
         $ultimoAdendum = obtenerUltimoAdendumActivo($datos['cod_operario']);
 
-        // 3. NO CERRAR AUTOMÁTICAMENTE EL ADENDA ANTERIOR
+        // 3. CERRAR AUTOMÁTICAMENTE EL ADENDA ANTERIOR con fecha un día antes del nuevo
         if ($ultimoAdendum && empty($ultimoAdendum['Fin'])) {
-            error_log("Adenda anterior activa encontrada (ID: {$ultimoAdendum['CodAsignacionNivelesCargos']}), pero no se
-    cerrará automáticamente");
+            // Calcular fecha de cierre: un día antes de la fecha de inicio del nuevo adendum
+            $fechaCierreAnterior = date('Y-m-d', strtotime($datos['fecha_inicio'] . ' -1 day'));
+
+            $stmtCerrar = $conn->prepare("
+                UPDATE AsignacionNivelesCargos
+                SET Fin = ?, fecha_ultima_modificacion = NOW(), usuario_ultima_modificacion = ?
+                WHERE CodAsignacionNivelesCargos = ?
+            ");
+            $stmtCerrar->execute([$fechaCierreAnterior, $_SESSION['usuario_id'], $ultimoAdendum['CodAsignacionNivelesCargos']]);
+
+            error_log("Adenda anterior (ID: {$ultimoAdendum['CodAsignacionNivelesCargos']}) cerrada automáticamente con fecha: {$fechaCierreAnterior}");
         }
 
         // 4. Determinar fecha fin para el nuevo adendum
@@ -2923,11 +2934,9 @@ function obtenerAdendumPorId($idAdendum)
     $stmt = $conn->prepare("
     SELECT
     anc.*,
-    co.NombreCategoria,
     nc.Nombre as nombre_cargo,
     s.nombre as nombre_sucursal
     FROM AsignacionNivelesCargos anc
-    LEFT JOIN CategoriasOperarios co ON anc.CodNivelesCargos = co.idCategoria
     LEFT JOIN NivelesCargos nc ON anc.CodNivelesCargos = nc.CodNivelesCargos
     LEFT JOIN sucursales s ON anc.Sucursal = s.codigo
     WHERE anc.CodAsignacionNivelesCargos = ?
@@ -3428,19 +3437,29 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                                     <input type="file" id="inputFotoPerfil" name="foto_perfil" accept="image/*"
                                         style="display: none;">
 
-                                    <div class="foto-perfil"
-                                        onclick="document.getElementById('inputFotoPerfil').click()">
+                                    <div class="foto-perfil" style="position: relative; cursor: pointer;">
                                         <?php if (!empty($colaborador['foto_perfil'])): ?>
                                             <img src="../../<?= htmlspecialchars($colaborador['foto_perfil']) ?>"
-                                                alt="Foto de perfil" class="foto-img">
+                                                alt="Foto de perfil" class="foto-img"
+                                                onclick="abrirModalVerFoto('../../<?= htmlspecialchars($colaborador['foto_perfil']) ?>')">
                                         <?php else: ?>
                                             <div class="iniciales">
                                                 <?= strtoupper(substr($colaborador['Nombre'], 0, 1)) ?>
                                             </div>
                                         <?php endif; ?>
-                                        <div class="edit-icon">
+                                        <div class="edit-icon"
+                                            onclick="event.stopPropagation(); document.getElementById('inputFotoPerfil').click()"
+                                            title="Cambiar foto de perfil" style="cursor: pointer;">
                                             <i class="fas fa-pencil-alt"></i>
                                         </div>
+                                        <?php if (!empty($colaborador['foto_perfil'])): ?>
+                                            <div class="view-icon"
+                                                onclick="abrirModalVerFoto('../../<?= htmlspecialchars($colaborador['foto_perfil']) ?>')"
+                                                title="Ver foto completa"
+                                                style="position: absolute; bottom: 10px; left: 10px; background: rgba(14, 84, 76, 0.9); color: white; width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; opacity: 0; transition: opacity 0.3s;">
+                                                <i class="fas fa-eye"></i>
+                                            </div>
+                                        <?php endif; ?>
                                     </div>
                                 </form>
                             </div>
@@ -3497,8 +3516,7 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                         <?php endif; ?>
                         <?php if (tienePermiso('editar_colaborador', 'edicion', $cargoId)): ?>
                             <a href="?id=<?= $codOperario ?>&pestaña=adendums"
-                                class="tab-button <?= $pestaña_activa == 'adendums' ? 'active' : '' ?>">Adenda de
-                                Contrato y
+                                class="tab-button <?= $pestaña_activa == 'adendums' ? 'active' : '' ?>">Adenda de Contrato y
                                 Movimientos</a>
                         <?php endif; ?>
                         <?php if (tienePermiso('editar_colaborador', 'edicion', $cargoId)): ?>
@@ -5763,9 +5781,7 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                                                                     <td style="padding: 10px;">
                                                                         <?= htmlspecialchars($adendum['nombre_cargo'] ?? 'No definido') ?>
                                                                     </td>
-                                                                    <td style="padding: 10px; display:none;">
-                                                                        <?= htmlspecialchars($adendum['NombreCategoria'] ?? 'No definido') ?>
-                                                                    </td>
+
                                                                     <td style="padding: 10px;">
                                                                         <?= $adendum['Salario'] ? 'C$ ' . number_format($adendum['Salario'], 2) : 'No definido' ?>
                                                                     </td>
@@ -5782,12 +5798,12 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                                                                     <td style="padding: 10px; text-align: center;">
                                                                         <button style="display:none;" type="button"
                                                                             class="btn-accion btn-editar"
-                                                                            onclick="editarAdendum(<?= $adendum['id'] ?>)">
+                                                                            onclick="editarAdendum(<?= $adendum['CodAsignacionNivelesCargos'] ?>)">
                                                                             <i class="fas fa-edit"></i>
                                                                         </button>
-                                                                        <?php if (empty($adendum['FechaFin'])): ?>
+                                                                        <?php if (empty($adendum['Fin'])): ?>
                                                                             <button type="button" class="btn-accion"
-                                                                                onclick="abrirModalFinalizarAdenda(<?= $adendum['id'] ?>)"
+                                                                                onclick="abrirModalFinalizarAdenda(<?= $adendum['CodAsignacionNivelesCargos'] ?>)"
                                                                                 style="color: #dc3545; display:none;" title="Finalizar Adenda">
                                                                                 <i class="fas fa-flag-checkered"></i>
                                                                             </button>
@@ -7118,12 +7134,12 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                                     break;
                                 }
                             }
-                        } else {
-                            // Para cargos sin categoría predefinida
-                            textoCategoria.textContent = 'Seleccione una categoría manualmente para este cargo';
-                            infoCategoria.style.display = 'block';
-                            selectCategoria.value = ''; // Limpiar selección
-                        }
+                        }// else {
+                        // Para cargos sin categoría predefinida
+                        //textoCategoria.textContent = 'Seleccione una categoría manualmente para este cargo';
+                        //infoCategoria.style.display = 'block';
+                        //selectCategoria.value = ''; // Limpiar selección
+                        //}
                     }
                 }
 
@@ -8562,6 +8578,51 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                             alert('Error al cargar los datos del contrato: ' + error.message);
                         });
                 }
+            </script>
+
+            <!-- Modal para ver foto de perfil en tamaño completo -->
+            <div id="modalVerFoto"
+                style="display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.9); overflow: auto;">
+                <span onclick="cerrarModalVerFoto()"
+                    style="position: absolute; top: 20px; right: 35px; color: #f1f1f1; font-size: 40px; font-weight: bold; cursor: pointer; z-index: 10000;">&times;</span>
+                <img id="imagenFotoCompleta"
+                    style="margin: auto; display: block; max-width: 90%; max-height: 90%; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+            </div>
+
+            <script>
+                // Función para abrir modal de ver foto
+                function abrirModalVerFoto(rutaFoto) {
+                    document.getElementById('modalVerFoto').style.display = 'block';
+                    document.getElementById('imagenFotoCompleta').src = rutaFoto;
+                }
+
+                // Función para cerrar modal de ver foto
+                function cerrarModalVerFoto() {
+                    document.getElementById('modalVerFoto').style.display = 'none';
+                }
+
+                // Cerrar modal al hacer clic fuera de la imagen
+                document.getElementById('modalVerFoto').addEventListener('click', function (e) {
+                    if (e.target === this) {
+                        cerrarModalVerFoto();
+                    }
+                });
+
+                // Mostrar ícono de ver al hacer hover sobre la foto
+                document.addEventListener('DOMContentLoaded', function () {
+                    const fotoContainer = document.querySelector('.foto-perfil');
+                    const viewIcon = document.querySelector('.view-icon');
+
+                    if (fotoContainer && viewIcon) {
+                        fotoContainer.addEventListener('mouseenter', function () {
+                            viewIcon.style.opacity = '1';
+                        });
+
+                        fotoContainer.addEventListener('mouseleave', function () {
+                            viewIcon.style.opacity = '0';
+                        });
+                    }
+                });
             </script>
         </div>
     </div>
