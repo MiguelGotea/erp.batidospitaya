@@ -17,7 +17,6 @@ if (!tienePermiso('planificacion_mantenimiento', 'vista', $cargoOperario)) {
     exit();
 }
 
-
 $ticketModel = new Ticket();
 $tickets = $ticketModel->getTicketsForPlanning();
 $weekly_stats = $ticketModel->getWeeklyReportStats();
