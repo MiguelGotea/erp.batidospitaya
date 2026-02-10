@@ -363,7 +363,7 @@ $solicitudes_criticas = array_filter($tickets, function ($t) {
 
                 <div class="row">
                     <!-- Lista de Tickets sin Agendar (Pool Restante) -->
-                    <div class="col-lg-4">
+                    <div class="col-lg-3">
                         <!-- Panel de Solicitudes Críticas (Prioridad 1) -->
                         <div class="card shadow-sm border-0 border-danger border-2 mb-3">
                             <div class="card-header bg-danger bg-opacity-10 py-3">
@@ -452,7 +452,7 @@ $solicitudes_criticas = array_filter($tickets, function ($t) {
                     </div>
 
                     <!-- Vista de Agenda Dinámica (6 días) -->
-                    <div class="col-lg-8">
+                    <div class="col-lg-9">
                         <div class="card shadow-sm border-0 bg-light-soft">
                             <div
                                 class="card-header bg-transparent py-3 d-flex justify-content-between align-items-center">

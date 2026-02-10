@@ -125,7 +125,8 @@ body {
 
 .visit-item {
     transition: all 0.2s ease;
-    overflow-x: hidden; /* Prevent horizontal scroll in the item itself */
+    overflow-x: hidden;
+    /* Prevent horizontal scroll in the item itself */
 }
 
 .visit-item:hover {
@@ -136,7 +137,12 @@ body {
 .planning-day-card {
     border: 1px solid #edf2f7;
     transition: box-shadow 0.3s ease;
-    overflow-x: hidden; /* Ensure card stays within its bounds */
+    overflow-x: hidden;
+    /* Ensure card stays within its bounds */
+    min-height: 350px;
+    /* Increased height as requested */
+    display: flex;
+    flex-direction: column;
 }
 
 .planning-day-card:hover {
@@ -144,6 +150,8 @@ body {
 }
 
 .day-activities {
-    max-height: 250px;
+    max-height: 400px;
+    /* Increased height as requested */
     overflow-y: auto;
+    flex-grow: 1;
 }
