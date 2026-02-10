@@ -207,13 +207,7 @@ $solicitudes_criticas = array_filter($tickets, function ($t) {
 
     <div class="main-container">
         <div class="sub-container">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <?php echo renderHeader($usuario, false, 'Planificación Semanal'); ?>
-                <button type="button" class="btn btn-outline-info rounded-circle" data-bs-toggle="modal"
-                    data-bs-target="#helpModal" style="width: 40px; height: 40px;">
-                    <i class="bi bi-question-lg"></i>
-                </button>
-            </div>
+            <?php echo renderHeader($usuario, false, 'Planificación Semanal'); ?>
 
             <div class="container-fluid p-4">
                 <div class="row mb-4">
@@ -542,7 +536,7 @@ $solicitudes_criticas = array_filter($tickets, function ($t) {
     </div>
 
     <!-- Modal de Ayuda: Guía del Algoritmo -->
-    <div class="modal fade" id="helpModal" tabindex="-1" aria-labelledby="helpModalLabel" aria-hidden="true">
+    <div class="modal fade" id="pageHelpModal" tabindex="-1" aria-labelledby="helpModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content border-0 shadow-lg">
                 <div class="modal-header bg-info text-white border-0 py-3">
@@ -577,7 +571,8 @@ $solicitudes_criticas = array_filter($tickets, function ($t) {
                                 <h7 class="fw-bold d-block mb-2 text-dark">2. Agrupamiento Logístico</h7>
                                 <p class="small text-muted mb-0">El sistema prefiere visitar una sucursal y resolver
                                     <strong>todos sus tickets pendientes</strong> de una vez para "ahorrar" el tiempo de
-                                    transporte, en lugar de saltar entre múltiples ubicaciones.</p>
+                                    transporte, en lugar de saltar entre múltiples ubicaciones.
+                                </p>
                             </div>
                         </div>
                         <div class="col-md-6">
