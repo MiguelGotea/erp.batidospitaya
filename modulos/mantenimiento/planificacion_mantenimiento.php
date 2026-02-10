@@ -215,52 +215,54 @@ $solicitudes_criticas = array_filter($tickets, function ($t) {
                     <div class="col-md-8">
                         <div class="card stat-card h-100 shadow-sm border-0 border-start border-4 border-primary">
                             <div class="card-body">
-                                <h5 class="card-title text-muted fw-bold small text-uppercase">Algoritmo de Priorización
-                                </h5>
-                                <p class="card-text">
-                                    El sistema analiza los tickets con estado <span
-                                        class="badge bg-secondary">solicitado</span> y <span
-                                        class="badge bg-secondary">agendado</span>,
-                                    calculando el tiempo de transporte según el departamento y priorizando por urgencia
-                                    crítica.
-                                </p>
-                                <div class="d-flex gap-4 mt-3">
-                                    <div class="stat-item">
-                                        <span class="d-block text-muted small">Total Tickets</span>
-                                        <span class="fs-4 fw-bold">
-                                            <?php
-                                            $agendados = 0;
-                                            foreach ($agenda_semanal as $d)
-                                                foreach ($d['visitas'] as $v)
-                                                    $agendados += count($v['tickets']);
-                                            echo count($pool_tickets) + $agendados;
-                                            ?>
-                                        </span>
-                                    </div>
-                                    <div class="stat-item">
-                                        <span class="d-block text-muted small">Agendados</span>
-                                        <span class="fs-4 fw-bold text-success">
-                                            <?php echo $agendados; ?>
-                                        </span>
-                                    </div>
-                                    <div class="stat-item">
-                                        <span class="d-block text-muted small">Eficiencia de Ruta</span>
-                                        <div class="d-flex align-items-center gap-2">
-                                            <span class="fs-4 fw-bold"
-                                                style="color: #0E544C;"><?php echo number_format($eficiencia, 0); ?>%</span>
-                                            <div class="progress flex-grow-1" style="height: 6px; min-width: 60px;">
-                                                <div class="progress-bar"
-                                                    style="width: <?php echo $eficiencia; ?>%; background-color: #0E544C;">
-                                                </div>
-                                            </div>
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h5 class="card-title text-muted fw-bold small text-uppercase mb-0">Rendimiento
+                                        Operativo</h5>
+                                    <i class="bi bi-speedometer2 text-primary"></i>
+                                </div>
+                                <div class="row g-2">
+                                    <div class="col-6 col-lg-3">
+                                        <div
+                                            class="stat-item bg-light p-3 rounded-3 h-100 border-bottom border-3 border-dark text-center">
+                                            <span class="d-block text-muted small fw-bold">TOTAL</span>
+                                            <span class="fs-2 fw-bold text-dark">
+                                                <?php
+                                                $agendados = 0;
+                                                foreach ($agenda_semanal as $d)
+                                                    foreach ($d['visitas'] as $v)
+                                                        $agendados += count($v['tickets']);
+                                                echo count($pool_tickets) + $agendados;
+                                                ?>
+                                            </span>
                                         </div>
                                     </div>
-                                    <div class="stat-item">
-                                        <span class="d-block text-muted small">Sin Cupo</span>
-                                        <span
-                                            class="fs-4 fw-bold <?php echo count($pool_tickets) > 0 ? 'text-danger' : ''; ?>">
-                                            <?php echo count($pool_tickets); ?>
-                                        </span>
+                                    <div class="col-6 col-lg-3">
+                                        <div
+                                            class="stat-item bg-light p-3 rounded-3 h-100 border-bottom border-3 border-success text-center">
+                                            <span class="d-block text-muted small fw-bold">AGENDADOS</span>
+                                            <span class="fs-2 fw-bold text-success">
+                                                <?php echo $agendados; ?>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-lg-3">
+                                        <div
+                                            class="stat-item bg-light p-3 rounded-3 h-100 border-bottom border-3 border-danger text-center">
+                                            <span class="d-block text-muted small fw-bold">SIN CUPO</span>
+                                            <span class="fs-2 fw-bold text-danger">
+                                                <?php echo count($pool_tickets); ?>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-lg-3">
+                                        <div
+                                            class="stat-item bg-light p-3 rounded-3 h-100 border-bottom border-3 border-primary text-center">
+                                            <span class="d-block text-muted small fw-bold">EFICIENCIA</span>
+                                            <div class="d-flex justify-content-center align-items-baseline gap-1">
+                                                <span class="fs-2 fw-bold"
+                                                    style="color: #0E544C;"><?php echo number_format($eficiencia, 0); ?>%</span>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -333,201 +335,199 @@ $solicitudes_criticas = array_filter($tickets, function ($t) {
                     </div>
                 </div>
 
-                <!-- Gráficos de Reportes Semanales -->
-                <div class="row mb-4">
-                    <div class="col-lg-6">
-                        <div class="card shadow-sm border-0 h-100">
-                            <div class="card-header bg-white py-3">
-                                <h6 class="mb-0 fw-bold" style="color: #0E544C;"><i
-                                        class="bi bi-bar-chart-line-fill me-2"></i>Reportes por Semana</h6>
-                            </div>
-                            <div class="card-body" style="height: 350px;">
-                                <canvas id="weeklyChart"></canvas>
-                            </div>
+            <!-- Gráficos de Reportes Semanales -->
+            <div class="row mb-4">
+                <div class="col-lg-6">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-header bg-white py-3">
+                            <h6 class="mb-0 fw-bold" style="color: #0E544C;"><i
+                                    class="bi bi-bar-chart-line-fill me-2"></i>Reportes por Semana</h6>
+                        </div>
+                        <div class="card-body" style="height: 350px;">
+                            <canvas id="weeklyChart"></canvas>
                         </div>
                     </div>
-                    <div class="col-lg-6">
-                        <div class="card shadow-sm border-0 h-100">
-                            <div class="card-header bg-white py-3">
-                                <h6 class="mb-0 fw-bold text-warning"><i class="bi bi-tools me-2"></i>Cambios de Equipo
-                                </h6>
-                            </div>
-                            <div class="card-body" style="height: 350px;">
-                                <canvas id="trendChart"></canvas>
-                            </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-header bg-white py-3">
+                            <h6 class="mb-0 fw-bold text-warning"><i class="bi bi-tools me-2"></i>Cambios de Equipo
+                            </h6>
+                        </div>
+                        <div class="card-body" style="height: 350px;">
+                            <canvas id="trendChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Lista de Tickets sin Agendar (Pool Restante) -->
+                <div class="col-lg-4">
+                    <!-- Panel de Solicitudes Críticas (Prioridad 1) -->
+                    <div class="card shadow-sm border-0 border-danger border-2 mb-3">
+                        <div class="card-header bg-danger bg-opacity-10 py-3">
+                            <h6 class="mb-0 fw-bold text-danger"><i
+                                    class="bi bi-exclamation-triangle-fill me-2"></i>Solicitudes Críticas</h6>
+                        </div>
+                        <div class="card-body p-0 overflow-auto" style="max-height: 280px;">
+                            <?php if (empty($solicitudes_criticas)): ?>
+                                <div class="p-4 text-center text-muted italic">
+                                    <i class="bi bi-check-circle-fill text-success fs-1 d-block mb-2"></i>
+                                    Sin solicitudes críticas
+                                </div>
+                            <?php else: ?>
+                                <ul class="list-group list-group-flush">
+                                    <?php foreach ($solicitudes_criticas as $sc):
+                                        // Verificar si está en el pool (sin cupo) o fue agendado
+                                        $agendado = true;
+                                        foreach ($pool_tickets as $pt) {
+                                            if ($pt['id'] == $sc['id']) {
+                                                $agendado = false;
+                                                break;
+                                            }
+                                        }
+                                        ?>
+                                        <li class="list-group-item small border-start border-3 border-danger p-3">
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <div class="fw-bold text-danger">
+                                                    <?php echo htmlspecialchars($sc['nombre_sucursal']); ?>
+                                                    (<?php echo $sc['tiempo_exec']; ?>h)
+                                                </div>
+                                                <span
+                                                    class="badge <?php echo $agendado ? 'bg-success' : 'bg-warning text-dark'; ?>"
+                                                    style="font-size: 0.6rem;">
+                                                    <?php echo $agendado ? 'AGENDADO' : 'SIN CUPO'; ?>
+                                                </span>
+                                            </div>
+                                            <div class="fw-bold text-dark mb-1">
+                                                <?php echo htmlspecialchars($sc['titulo']); ?>
+                                            </div>
+                                            <div class="text-muted mb-0"
+                                                style="font-size: 0.75rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                                                <?php echo htmlspecialchars($sc['descripcion']); ?>
+                                            </div>
+                                        </li>
+                                    <?php endforeach; ?>
+                                </ul>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+
+                    <!-- Lista de Tickets sin Agendar (Pool Restante) -->
+                    <div class="card shadow-sm border-0 mb-4">
+                        <div class="card-header bg-white py-3">
+                            <h6 class="mb-0 fw-bold"><i class="bi bi-stack me-2"></i>Resto Descartados</h6>
+                        </div>
+                        <div class="card-body p-0 overflow-auto" style="max-height: 280px;">
+                            <?php
+                            // Filtrar pool para no repetir los críticos que ya se muestran arriba
+                            $pool_filtrado = array_filter($pool_tickets, function ($pt) {
+                                return $pt['urgencia'] < 4;
+                            });
+                            ?>
+                            <?php if (empty($pool_filtrado)): ?>
+                                <div class="p-4 text-center text-muted italic">
+                                    <i class="bi bi-check-circle-fill text-success fs-1 d-block mb-2"></i>
+                                    Todo agendado
+                                </div>
+                            <?php else: ?>
+                                <ul class="list-group list-group-flush">
+                                    <?php foreach ($pool_filtrado as $pt): ?>
+                                        <li class="list-group-item small border-start border-3 p-3"
+                                            style="border-left-color: <?php echo getColorUrgencia($pt['urgencia']); ?> !important;">
+                                            <div class="fw-bold fs-7">
+                                                <?php echo htmlspecialchars($pt['nombre_sucursal']); ?>
+                                                (<?php echo $pt['tiempo_exec']; ?>h)
+                                            </div>
+                                            <div class="text-dark small opacity-75">
+                                                <?php echo htmlspecialchars($pt['titulo']); ?>
+                                            </div>
+                                        </li>
+                                    <?php endforeach; ?>
+                                </ul>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </div>
 
-                <div class="row">
-                    <!-- Lista de Tickets sin Agendar (Pool Restante) -->
-                    <div class="col-lg-4">
-                        <!-- Panel de Solicitudes Críticas (Prioridad 1) -->
-                        <div class="card shadow-sm border-0 border-danger border-2 mb-3">
-                            <div class="card-header bg-danger bg-opacity-10 py-3">
-                                <h6 class="mb-0 fw-bold text-danger"><i
-                                        class="bi bi-exclamation-triangle-fill me-2"></i>Solicitudes Críticas</h6>
+                <!-- Vista de Agenda Dinámica (6 días) -->
+                <div class="col-lg-8">
+                    <div class="card shadow-sm border-0 bg-light-soft">
+                        <div class="card-header bg-transparent py-3 d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-0 fw-bold" style="color: #0E544C;">Agenda Semanal Optimizada</h6>
                             </div>
-                            <div class="card-body p-0 overflow-auto" style="max-height: 280px;">
-                                <?php if (empty($solicitudes_criticas)): ?>
-                                    <div class="p-4 text-center text-muted italic">
-                                        <i class="bi bi-check-circle-fill text-success fs-1 d-block mb-2"></i>
-                                        Sin solicitudes críticas
-                                    </div>
-                                <?php else: ?>
-                                    <ul class="list-group list-group-flush">
-                                        <?php foreach ($solicitudes_criticas as $sc):
-                                            // Verificar si está en el pool (sin cupo) o fue agendado
-                                            $agendado = true;
-                                            foreach ($pool_tickets as $pt) {
-                                                if ($pt['id'] == $sc['id']) {
-                                                    $agendado = false;
-                                                    break;
-                                                }
-                                            }
-                                            ?>
-                                            <li class="list-group-item small border-start border-3 border-danger p-3">
-                                                <div class="d-flex justify-content-between align-items-center mb-1">
-                                                    <div class="fw-bold text-danger">
-                                                        <?php echo htmlspecialchars($sc['nombre_sucursal']); ?>
-                                                    </div>
-                                                    <span
-                                                        class="badge <?php echo $agendado ? 'bg-success' : 'bg-warning text-dark'; ?>"
-                                                        style="font-size: 0.6rem;">
-                                                        <?php echo $agendado ? 'AGENDADO' : 'SIN CUPO'; ?>
-                                                    </span>
-                                                </div>
-                                                <div class="fw-bold text-dark mb-1">
-                                                    <?php echo htmlspecialchars($sc['titulo']); ?>
-                                                </div>
-                                                <div class="text-muted mb-2"
-                                                    style="font-size: 0.75rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
-                                                    <?php echo htmlspecialchars($sc['descripcion']); ?>
-                                                </div>
-                                                <div class="text-muted d-flex justify-content-between pt-1 border-top"
-                                                    style="font-size: 0.7rem;">
-                                                    <span><?php echo $sc['tiempo_exec']; ?>h</span>
-                                                </div>
-                                            </li>
-                                        <?php endforeach; ?>
-                                    </ul>
-                                <?php endif; ?>
+                            <div class="text-end">
+                                <span class="badge bg-success"><?php echo $horas_jornada * $dias_plan; ?>h
+                                    Capacidad</span>
                             </div>
                         </div>
-
-                        <!-- Lista de Tickets sin Agendar (Pool Restante) -->
-                        <div class="card shadow-sm border-0 mb-4">
-                            <div class="card-header bg-white py-3">
-                                <h6 class="mb-0 fw-bold"><i class="bi bi-stack me-2"></i>Resto Descartados</h6>
-                            </div>
-                            <div class="card-body p-0 overflow-auto" style="max-height: 280px;">
-                                <?php
-                                // Filtrar pool para no repetir los críticos que ya se muestran arriba
-                                $pool_filtrado = array_filter($pool_tickets, function ($pt) {
-                                    return $pt['urgencia'] < 4;
-                                });
-                                ?>
-                                <?php if (empty($pool_filtrado)): ?>
-                                    <div class="p-4 text-center text-muted italic">
-                                        <i class="bi bi-check-circle-fill text-success fs-1 d-block mb-2"></i>
-                                        Todo agendado
-                                    </div>
-                                <?php else: ?>
-                                    <ul class="list-group list-group-flush">
-                                        <?php foreach ($pool_filtrado as $pt): ?>
-                                            <li class="list-group-item small border-start border-3"
-                                                style="border-left-color: <?php echo getColorUrgencia($pt['urgencia']); ?> !important;">
-                                                <div class="fw-bold"><?php echo htmlspecialchars($pt['nombre_sucursal']); ?>
-                                                </div>
-                                                <div class="text-muted d-flex justify-content-between">
-                                                    <span><?php echo $pt['tiempo_exec']; ?>h</span>
-                                                </div>
-                                            </li>
-                                        <?php endforeach; ?>
-                                    </ul>
-                                <?php endif; ?>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Vista de Agenda Dinámica (6 días) -->
-                    <div class="col-lg-8">
-                        <div class="card shadow-sm border-0 bg-light-soft">
-                            <div
-                                class="card-header bg-transparent py-3 d-flex justify-content-between align-items-center">
-                                <div>
-                                    <h6 class="mb-0 fw-bold" style="color: #0E544C;">Agenda Semanal Optimizada</h6>
-                                </div>
-                                <div class="text-end">
-                                    <span class="badge bg-success"><?php echo $horas_jornada * $dias_plan; ?>h
-                                        Capacidad</span>
-                                </div>
-                            </div>
-                            <div class="card-body pt-0">
-                                <div class="row row-cols-1 row-cols-md-2 g-3">
-                                    <?php foreach ($agenda_semanal as $dia => $data):
-                                        $percent = ($data['tiempo_total'] / $horas_jornada) * 100;
-                                        $color_bar = $percent > 100 ? 'bg-danger' : ($percent > 85 ? 'bg-warning' : 'bg-primary');
-                                        ?>
-                                        <div class="col">
-                                            <div class="planning-day-card h-100 border rounded-3 bg-white shadow-xs p-3">
-                                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                                    <span
-                                                        class="fw-bold text-uppercase small text-muted"><?php echo $dia; ?></span>
-                                                    <span
-                                                        class="small fw-bold <?php echo $percent > 100 ? 'text-danger' : ''; ?>">
-                                                        <?php echo number_format($data['tiempo_total'], 1); ?>/<?php echo $horas_jornada; ?>h
-                                                    </span>
-                                                </div>
-
-                                                <div class="progress mb-3" style="height: 4px;">
-                                                    <div class="progress-bar <?php echo $color_bar; ?>"
-                                                        style="width: <?php echo $percent; ?>%"></div>
-                                                </div>
-
-                                                <?php if (empty($data['visitas'])): ?>
-                                                    <div class="text-center py-4 text-muted small opacity-50">Sin actividades
-                                                    </div>
-                                                <?php else: ?>
-                                                    <div class="day-activities">
-                                                        <?php foreach ($data['visitas'] as $v): ?>
-                                                            <div
-                                                                class="visit-item mb-2 p-2 rounded bg-light border-start border-3 <?php echo ($v['viaje'] > 0) ? 'border-danger' : 'border-info'; ?>">
-                                                                <div class="d-flex justify-content-between">
-                                                                    <div class="fw-bold small">
-                                                                        <?php echo htmlspecialchars($v['nombre']); ?>
-                                                                    </div>
-                                                                    <span class="badge bg-white text-dark border-0 small px-0"
-                                                                        style="font-size: 0.7rem;">
-                                                                        <?php echo $v['horas_exec']; ?>h sitio +
-                                                                        <?php echo $v['viaje']; ?>h viaje
-                                                                    </span>
-                                                                </div>
-                                                                <div class="d-flex gap-1 mt-1">
-                                                                    <?php foreach (array_slice($v['tickets'], 0, 5) as $tk): ?>
-                                                                        <span class="dot-urgency"
-                                                                            style="background-color: <?php echo getColorUrgencia($tk['urgencia']); ?>"
-                                                                            title="Urgencia <?php echo $tk['urgencia']; ?>"></span>
-                                                                    <?php endforeach; ?>
-                                                                    <?php if (count($v['tickets']) > 5): ?>
-                                                                        <span class="small text-muted"
-                                                                            style="font-size: 0.6rem;">+<?php echo count($v['tickets']) - 5; ?></span>
-                                                                    <?php endif; ?>
-                                                                </div>
-                                                            </div>
-                                                        <?php endforeach; ?>
-                                                    </div>
-                                                <?php endif; ?>
+                        <div class="card-body pt-0 px-1 overflow-hidden">
+                            <div class="row g-2 m-0">
+                                <?php foreach ($agenda_semanal as $dia => $data):
+                                    $percent = ($data['tiempo_total'] / $horas_jornada) * 100;
+                                    $color_bar = $percent > 100 ? 'bg-danger' : ($percent > 85 ? 'bg-warning' : 'bg-primary');
+                                    ?>
+                                    <div class="col">
+                                        <div class="planning-day-card h-100 border rounded-3 bg-white shadow-xs p-3">
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <span
+                                                    class="fw-bold text-uppercase small text-muted"><?php echo $dia; ?></span>
+                                                <span
+                                                    class="small fw-bold <?php echo $percent > 100 ? 'text-danger' : ''; ?>">
+                                                    <?php echo number_format($data['tiempo_total'], 1); ?>/<?php echo $horas_jornada; ?>h
+                                                </span>
                                             </div>
+
+                                            <div class="progress mb-3" style="height: 4px;">
+                                                <div class="progress-bar <?php echo $color_bar; ?>"
+                                                    style="width: <?php echo $percent; ?>%"></div>
+                                            </div>
+
+                                            <?php if (empty($data['visitas'])): ?>
+                                                <div class="text-center py-4 text-muted small opacity-50">Sin actividades
+                                                </div>
+                                            <?php else: ?>
+                                                <div class="day-activities">
+                                                    <?php foreach ($data['visitas'] as $v): ?>
+                                                        <div
+                                                            class="visit-item mb-2 p-2 rounded bg-light border-start border-3 <?php echo ($v['viaje'] > 0) ? 'border-danger' : 'border-info'; ?>">
+                                                            <div class="d-flex justify-content-between">
+                                                                <div class="fw-bold small">
+                                                                    <?php echo htmlspecialchars($v['nombre']); ?>
+                                                                </div>
+                                                                <span class="badge bg-white text-dark border-0 small px-0"
+                                                                    style="font-size: 0.7rem;">
+                                                                    <?php echo $v['horas_exec']; ?>h sitio +
+                                                                    <?php echo $v['viaje']; ?>h viaje
+                                                                </span>
+                                                            </div>
+                                                            <div class="d-flex gap-1 mt-1">
+                                                                <?php foreach (array_slice($v['tickets'], 0, 5) as $tk): ?>
+                                                                    <span class="dot-urgency"
+                                                                        style="background-color: <?php echo getColorUrgencia($tk['urgencia']); ?>"
+                                                                        title="Urgencia <?php echo $tk['urgencia']; ?>"></span>
+                                                                <?php endforeach; ?>
+                                                                <?php if (count($v['tickets']) > 5): ?>
+                                                                    <span class="small text-muted"
+                                                                        style="font-size: 0.6rem;">+<?php echo count($v['tickets']) - 5; ?></span>
+                                                                <?php endif; ?>
+                                                            </div>
+                                                        </div>
+                                                    <?php endforeach; ?>
+                                                </div>
+                                            <?php endif; ?>
                                         </div>
-                                    <?php endforeach; ?>
-                                </div>
+                                    </div>
+                                <?php endforeach; ?>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
     </div>
 
     <!-- Modal de Ayuda: Guía del Algoritmo -->
@@ -545,6 +545,11 @@ $solicitudes_criticas = array_filter($tickets, function ($t) {
                     <section class="mb-4">
                         <h6 class="fw-bold text-info"><i class="bi bi-cpu-fill me-2"></i>¿Cómo funciona el cerebro del
                             sistema?</h6>
+                        <p class="text-muted small mb-2">
+                            El sistema analiza los tickets con estado <span class="badge bg-secondary">solicitado</span>
+                            y <span class="badge bg-secondary">agendado</span>, calculando el tiempo de transporte según
+                            el departamento y priorizando por urgencia crítica.
+                        </p>
                         <p class="text-muted small">
                             El algoritmo utiliza una técnica de <strong>Optimización Heurística</strong>. No solo busca
                             atender lo más urgente, sino hacerlo de la manera más eficiente logísticamente.
