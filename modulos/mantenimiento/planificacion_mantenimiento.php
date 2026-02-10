@@ -320,17 +320,20 @@ $solicitudes_criticas = array_filter($tickets, function ($t) {
                                                 }
                                             }
                                             ?>
-                                            <li class="list-group-item small border-start border-3 border-danger">
-                                                <div class="d-flex justify-content-between align-items-center">
+                                            <li class="list-group-item small border-start border-3 border-danger p-3">
+                                                <div class="d-flex justify-content-between align-items-center mb-1">
                                                     <div class="fw-bold text-danger">
-                                                        <?php echo htmlspecialchars($sc['nombre_sucursal']); ?></div>
-                                                    <span
-                                                        class="badge <?php echo $agendado ? 'bg-success' : 'bg-warning text-dark'; ?>"
-                                                        style="font-size: 0.6rem;">
+                                                        <?php echo htmlspecialchars($sc['nombre_sucursal']); ?>
+                                                    </div>
+                                                    <span class="badge <?php echo $agendado ? 'bg-success' : 'bg-warning text-dark'; ?>" style="font-size: 0.6rem;">
                                                         <?php echo $agendado ? 'AGENDADO' : 'SIN CUPO'; ?>
                                                     </span>
                                                 </div>
-                                                <div class="text-muted d-flex justify-content-between mt-1">
+                                                <div class="fw-bold text-dark mb-1"><?php echo htmlspecialchars($sc['titulo']); ?></div>
+                                                <div class="text-muted mb-2" style="font-size: 0.75rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                                                    <?php echo htmlspecialchars($sc['descripcion']); ?>
+                                                </div>
+                                                <div class="text-muted d-flex justify-content-between pt-1 border-top" style="font-size: 0.7rem;">
                                                     <span>Urgencia: <?php echo $sc['urgencia']; ?></span>
                                                     <span><?php echo $sc['tiempo_exec']; ?>h</span>
                                                 </div>
