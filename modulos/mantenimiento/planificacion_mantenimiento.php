@@ -21,6 +21,7 @@ $ticketModel = new Ticket();
 $tickets = $ticketModel->getTicketsForPlanning();
 $weekly_stats = $ticketModel->getWeeklyReportStats();
 $equipment_stats = $ticketModel->getEquipmentChangeStats();
+
 // Preparar datos para el gráfico de barras (12 semanas)
 $labels_semanas = [];
 $data_criticos = [];
@@ -325,15 +326,20 @@ $solicitudes_criticas = array_filter($tickets, function ($t) {
                                                     <div class="fw-bold text-danger">
                                                         <?php echo htmlspecialchars($sc['nombre_sucursal']); ?>
                                                     </div>
-                                                    <span class="badge <?php echo $agendado ? 'bg-success' : 'bg-warning text-dark'; ?>" style="font-size: 0.6rem;">
+                                                    <span
+                                                        class="badge <?php echo $agendado ? 'bg-success' : 'bg-warning text-dark'; ?>"
+                                                        style="font-size: 0.6rem;">
                                                         <?php echo $agendado ? 'AGENDADO' : 'SIN CUPO'; ?>
                                                     </span>
                                                 </div>
-                                                <div class="fw-bold text-dark mb-1"><?php echo htmlspecialchars($sc['titulo']); ?></div>
-                                                <div class="text-muted mb-2" style="font-size: 0.75rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                                                <div class="fw-bold text-dark mb-1">
+                                                    <?php echo htmlspecialchars($sc['titulo']); ?></div>
+                                                <div class="text-muted mb-2"
+                                                    style="font-size: 0.75rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
                                                     <?php echo htmlspecialchars($sc['descripcion']); ?>
                                                 </div>
-                                                <div class="text-muted d-flex justify-content-between pt-1 border-top" style="font-size: 0.7rem;">
+                                                <div class="text-muted d-flex justify-content-between pt-1 border-top"
+                                                    style="font-size: 0.7rem;">
                                                     <span>Urgencia: <?php echo $sc['urgencia']; ?></span>
                                                     <span><?php echo $sc['tiempo_exec']; ?>h</span>
                                                 </div>
@@ -611,8 +617,8 @@ $solicitudes_criticas = array_filter($tickets, function ($t) {
                         intersect: false
                     }
                 }
-        }
- });
+            }
+        });
     </script>
 </body>
 
