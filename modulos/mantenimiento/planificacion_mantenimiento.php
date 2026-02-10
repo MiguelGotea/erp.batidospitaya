@@ -28,7 +28,7 @@ $data_criticos = [];
 $data_normales = [];
 
 foreach (array_reverse($weekly_stats) as $ws) {
-    $labels_semanas[] = "Sem " . $ws['numero_semana'];
+    $labels_semanas[] = $ws['numero_semana'];
     $data_criticos[] = $ws['tickets_criticos'];
     $data_normales[] = $ws['tickets_normales'];
 }
@@ -38,7 +38,7 @@ $labels_equipos = [];
 $data_equipos = [];
 
 foreach (array_reverse($equipment_stats) as $es) {
-    $labels_equipos[] = "Sem " . $es['numero_semana'];
+    $labels_equipos[] = $es['numero_semana'];
     $data_equipos[] = $es['total_cambios'];
 }
 
@@ -245,11 +245,12 @@ $solicitudes_criticas = array_filter($tickets, function ($t) {
                                     <div class="stat-item">
                                         <span class="d-block text-muted small">Eficiencia de Ruta</span>
                                         <div class="d-flex align-items-center gap-2">
-                                            <span
-                                                class="fs-4 fw-bold text-primary"><?php echo number_format($eficiencia, 0); ?>%</span>
+                                            <span class="fs-4 fw-bold"
+                                                style="color: #0E544C;"><?php echo number_format($eficiencia, 0); ?>%</span>
                                             <div class="progress flex-grow-1" style="height: 6px; min-width: 60px;">
-                                                <div class="progress-bar bg-primary"
-                                                    style="width: <?php echo $eficiencia; ?>%"></div>
+                                                <div class="progress-bar"
+                                                    style="width: <?php echo $eficiencia; ?>%; background-color: #0E544C;">
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -336,9 +337,8 @@ $solicitudes_criticas = array_filter($tickets, function ($t) {
                     <div class="col-lg-6">
                         <div class="card shadow-sm border-0 h-100">
                             <div class="card-header bg-white py-3">
-                                <h6 class="mb-0 fw-bold text-primary"><i
+                                <h6 class="mb-0 fw-bold" style="color: #0E544C;"><i
                                         class="bi bi-bar-chart-line-fill me-2"></i>Reportes por Semana</h6>
-                                <p class="small text-muted mb-0">Últimas 12 semanas</p>
                             </div>
                             <div class="card-body" style="height: 350px;">
                                 <canvas id="weeklyChart"></canvas>
@@ -350,7 +350,6 @@ $solicitudes_criticas = array_filter($tickets, function ($t) {
                             <div class="card-header bg-white py-3">
                                 <h6 class="mb-0 fw-bold text-warning"><i class="bi bi-tools me-2"></i>Cambios de Equipo
                                 </h6>
-                                <p class="small text-muted mb-0">Últimas 8 semanas con línea de tendencia</p>
                             </div>
                             <div class="card-body" style="height: 350px;">
                                 <canvas id="trendChart"></canvas>
@@ -367,7 +366,6 @@ $solicitudes_criticas = array_filter($tickets, function ($t) {
                             <div class="card-header bg-danger bg-opacity-10 py-3">
                                 <h6 class="mb-0 fw-bold text-danger"><i
                                         class="bi bi-exclamation-triangle-fill me-2"></i>Solicitudes Críticas</h6>
-                                <p class="small text-muted mb-0">Seguimiento de Urgencia 4</p>
                             </div>
                             <div class="card-body p-0 overflow-auto" style="max-height: 280px;">
                                 <?php if (empty($solicitudes_criticas)): ?>
@@ -407,7 +405,6 @@ $solicitudes_criticas = array_filter($tickets, function ($t) {
                                                 </div>
                                                 <div class="text-muted d-flex justify-content-between pt-1 border-top"
                                                     style="font-size: 0.7rem;">
-                                                    <span>Urgencia: <?php echo $sc['urgencia']; ?></span>
                                                     <span><?php echo $sc['tiempo_exec']; ?>h</span>
                                                 </div>
                                             </li>
@@ -421,7 +418,6 @@ $solicitudes_criticas = array_filter($tickets, function ($t) {
                         <div class="card shadow-sm border-0 mb-4">
                             <div class="card-header bg-white py-3">
                                 <h6 class="mb-0 fw-bold"><i class="bi bi-stack me-2"></i>Resto Descartados</h6>
-                                <p class="small text-muted mb-0">Sin agendar (Capacidad 60h)</p>
                             </div>
                             <div class="card-body p-0 overflow-auto" style="max-height: 280px;">
                                 <?php
@@ -443,7 +439,6 @@ $solicitudes_criticas = array_filter($tickets, function ($t) {
                                                 <div class="fw-bold"><?php echo htmlspecialchars($pt['nombre_sucursal']); ?>
                                                 </div>
                                                 <div class="text-muted d-flex justify-content-between">
-                                                    <span>Urgencia: <?php echo $pt['urgencia']; ?></span>
                                                     <span><?php echo $pt['tiempo_exec']; ?>h</span>
                                                 </div>
                                             </li>
@@ -460,8 +455,7 @@ $solicitudes_criticas = array_filter($tickets, function ($t) {
                             <div
                                 class="card-header bg-transparent py-3 d-flex justify-content-between align-items-center">
                                 <div>
-                                    <h6 class="mb-0 fw-bold text-primary">Agenda Semanal Optimizada</h6>
-                                    <p class="small text-muted mb-0">Prioridad: 1. Urgencia, 2. Logística</p>
+                                    <h6 class="mb-0 fw-bold" style="color: #0E544C;">Agenda Semanal Optimizada</h6>
                                 </div>
                                 <div class="text-end">
                                     <span class="badge bg-success"><?php echo $horas_jornada * $dias_plan; ?>h
@@ -636,16 +630,16 @@ $solicitudes_criticas = array_filter($tickets, function ($t) {
                 labels: <?php echo json_encode($labels_semanas); ?>,
                 datasets: [
                     {
-                        label: 'Críticos (Urgencia 4)',
+                        label: 'Críticos',
                         data: <?php echo json_encode($data_criticos); ?>,
                         backgroundColor: '#dc3545',
                         borderRadius: 4,
                         order: 2
                     },
                     {
-                        label: 'Resto de Tickets',
+                        label: 'Normales',
                         data: <?php echo json_encode($data_normales); ?>,
-                        backgroundColor: '#51B8AC',
+                        backgroundColor: '#0E544C',
                         borderRadius: 4,
                         order: 2
                     },
@@ -653,13 +647,14 @@ $solicitudes_criticas = array_filter($tickets, function ($t) {
                         label: 'Tendencia Críticos',
                         data: trendLineCriticos,
                         type: 'line',
-                        borderColor: '#fd7e14',
+                        borderColor: '#28a745',
                         borderWidth: 2,
                         borderDash: [5, 5],
                         fill: false,
                         pointRadius: 0,
                         pointHoverRadius: 0,
-                        order: 1
+                        order: 1,
+                        displayInLegend: false
                     }
                 ]
             },
@@ -682,7 +677,13 @@ $solicitudes_criticas = array_filter($tickets, function ($t) {
                     legend: {
                         display: true,
                         position: 'bottom',
-                        labels: { usePointStyle: true, padding: 10 }
+                        labels: {
+                            usePointStyle: true,
+                            padding: 10,
+                            filter: function (item, chart) {
+                                return !item.text.includes('Tendencia');
+                            }
+                        }
                     },
                     tooltip: {
                         mode: 'index',
@@ -713,9 +714,9 @@ $solicitudes_criticas = array_filter($tickets, function ($t) {
                 labels: <?php echo json_encode($labels_equipos); ?>,
                 datasets: [
                     {
-                        label: 'Cambios de Equipo',
+                        label: 'Cambios',
                         data: equipData,
-                        backgroundColor: '#ffc107',
+                        backgroundColor: '#0E544C',
                         borderRadius: 4,
                         order: 2
                     },
@@ -723,13 +724,14 @@ $solicitudes_criticas = array_filter($tickets, function ($t) {
                         label: 'Tendencia',
                         data: trendLineEquip,
                         type: 'line',
-                        borderColor: '#fd7e14',
+                        borderColor: '#28a745',
                         borderWidth: 2,
                         borderDash: [5, 5],
                         fill: false,
                         pointRadius: 0,
                         pointHoverRadius: 0,
-                        order: 1
+                        order: 1,
+                        displayInLegend: false
                     }
                 ]
             },
@@ -750,7 +752,13 @@ $solicitudes_criticas = array_filter($tickets, function ($t) {
                     legend: {
                         display: true,
                         position: 'bottom',
-                        labels: { usePointStyle: true, padding: 10 }
+                        labels: {
+                            usePointStyle: true,
+                            padding: 10,
+                            filter: function (item, chart) {
+                                return !item.text.includes('Tendencia');
+                            }
+                        }
                     },
                     tooltip: {
                         mode: 'index',
