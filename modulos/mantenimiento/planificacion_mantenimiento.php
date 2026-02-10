@@ -164,10 +164,11 @@ foreach ($agenda_semanal as $d) {
 }
 $eficiencia = ($total_h_exec + $total_h_viaje) > 0 ? ($total_h_exec / ($total_h_exec + $total_h_viaje)) * 100 : 0;
 
-// Filtrar tickets críticos pendientes (Nivel 4)
-$tickets_criticos_pendientes = array_filter($pool_tickets, function ($ticket) {
-    return $ticket['urgencia'] == 4;
+// Solicitudes Críticas (Urgencia 4) - Todas para seguimiento
+$solicitudes_criticas = array_filter($tickets, function ($t) {
+    return $t['urgencia'] == 4;
 });
+// Debug: Total de críticos encontrados en DB: <?php echo count($solicitudes_criticas); ?>
 ?>
 
 <!DOCTYPE html>
@@ -180,7 +181,6 @@ $tickets_criticos_pendientes = array_filter($pool_tickets, function ($ticket) {
     <link rel="icon" href="../../core/assets/img/icon12.png" type="image/png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="css/planificacion_mantenimiento.css?v=<?php echo mt_rand(1, 10000); ?>">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -295,27 +295,44 @@ $tickets_criticos_pendientes = array_filter($pool_tickets, function ($ticket) {
                 <div class="row">
                     <!-- Lista de Tickets sin Agendar (Pool Restante) -->
                     <div class="col-lg-4">
-                        <div class="card shadow-sm border-0 mb-4 h-100">
-                            <div class="card-header bg-white py-3">
-                                <h6 class="mb-0 fw-bold"><i class="bi bi-stack me-2"></i>Tickets Descartados</h6>
-                                <p class="small text-muted mb-0">No cupieron en la semana de 60h</p>
+                        <!-- Panel de Solicitudes Críticas (Prioridad 1) -->
+                        <div class="card shadow-sm border-0 border-danger border-2 mb-3">
+                            <div class="card-header bg-danger bg-opacity-10 py-3">
+                                <h6 class="mb-0 fw-bold text-danger"><i
+                                        class="bi bi-exclamation-triangle-fill me-2"></i>Solicitudes Críticas</h6>
+                                <p class="small text-muted mb-0">Seguimiento de Urgencia 4</p>
                             </div>
-                            <div class="card-body p-0 overflow-auto" style="max-height: 300px;">
-                                <?php if (empty($pool_tickets)): ?>
+                            <div class="card-body p-0 overflow-auto" style="max-height: 280px;">
+                                <?php if (empty($solicitudes_criticas)): ?>
                                     <div class="p-4 text-center text-muted italic">
                                         <i class="bi bi-check-circle-fill text-success fs-1 d-block mb-2"></i>
-                                        Todo agendado
+                                        Sin solicitudes críticas
                                     </div>
                                 <?php else: ?>
                                     <ul class="list-group list-group-flush">
-                                        <?php foreach ($pool_tickets as $pt): ?>
-                                            <li class="list-group-item small border-start border-3"
-                                                style="border-left-color: <?php echo getColorUrgencia($pt['urgencia']); ?> !important;">
-                                                <div class="fw-bold"><?php echo htmlspecialchars($pt['nombre_sucursal']); ?>
+                                        <?php foreach ($solicitudes_criticas as $sc):
+                                            // Verificar si está en el pool (sin cupo) o fue agendado
+                                            $agendado = true;
+                                            foreach ($pool_tickets as $pt) {
+                                                if ($pt['id'] == $sc['id']) {
+                                                    $agendado = false;
+                                                    break;
+                                                }
+                                            }
+                                            ?>
+                                            <li class="list-group-item small border-start border-3 border-danger">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <div class="fw-bold text-danger">
+                                                        <?php echo htmlspecialchars($sc['nombre_sucursal']); ?></div>
+                                                    <span
+                                                        class="badge <?php echo $agendado ? 'bg-success' : 'bg-warning text-dark'; ?>"
+                                                        style="font-size: 0.6rem;">
+                                                        <?php echo $agendado ? 'AGENDADO' : 'SIN CUPO'; ?>
+                                                    </span>
                                                 </div>
-                                                <div class="text-muted d-flex justify-content-between">
-                                                    <span>Urgencia: <?php echo $pt['urgencia']; ?></span>
-                                                    <span><?php echo $pt['tiempo_exec']; ?>h</span>
+                                                <div class="text-muted d-flex justify-content-between mt-1">
+                                                    <span>Urgencia: <?php echo $sc['urgencia']; ?></span>
+                                                    <span><?php echo $sc['tiempo_exec']; ?>h</span>
                                                 </div>
                                             </li>
                                         <?php endforeach; ?>
@@ -324,33 +341,34 @@ $tickets_criticos_pendientes = array_filter($pool_tickets, function ($ticket) {
                             </div>
                         </div>
 
-                        <!-- Panel de Tickets Críticos Pendientes -->
-                        <div class="card shadow-sm border-0 border-danger border-2 mt-3">
-                            <div class="card-header bg-danger bg-opacity-10 py-3">
-                                <h6 class="mb-0 fw-bold text-danger"><i
-                                        class="bi bi-exclamation-triangle-fill me-2"></i>Críticos Pendientes</h6>
-                                <p class="small text-muted mb-0">Tickets de urgencia 4 sin agendar</p>
+                        <!-- Lista de Tickets sin Agendar (Pool Restante) -->
+                        <div class="card shadow-sm border-0 mb-4">
+                            <div class="card-header bg-white py-3">
+                                <h6 class="mb-0 fw-bold"><i class="bi bi-stack me-2"></i>Resto Descartados</h6>
+                                <p class="small text-muted mb-0">Sin agendar (Capacidad 60h)</p>
                             </div>
-                            <div class="card-body p-0 overflow-auto" style="max-height: 300px;">
-                                <?php if (empty($tickets_criticos_pendientes)): ?>
+                            <div class="card-body p-0 overflow-auto" style="max-height: 280px;">
+                                <?php
+                                // Filtrar pool para no repetir los críticos que ya se muestran arriba
+                                $pool_filtrado = array_filter($pool_tickets, function ($pt) {
+                                    return $pt['urgencia'] < 4;
+                                });
+                                ?>
+                                <?php if (empty($pool_filtrado)): ?>
                                     <div class="p-4 text-center text-muted italic">
                                         <i class="bi bi-check-circle-fill text-success fs-1 d-block mb-2"></i>
-                                        Sin críticos pendientes
+                                        Todo agendado
                                     </div>
                                 <?php else: ?>
                                     <ul class="list-group list-group-flush">
-                                        <?php foreach ($tickets_criticos_pendientes as $tcp): ?>
-                                            <li class="list-group-item small border-start border-3 border-danger">
-                                                <div class="fw-bold text-danger">
-                                                    <?php echo htmlspecialchars($tcp['nombre_sucursal']); ?>
+                                        <?php foreach ($pool_filtrado as $pt): ?>
+                                            <li class="list-group-item small border-start border-3"
+                                                style="border-left-color: <?php echo getColorUrgencia($pt['urgencia']); ?> !important;">
+                                                <div class="fw-bold"><?php echo htmlspecialchars($pt['nombre_sucursal']); ?>
                                                 </div>
                                                 <div class="text-muted d-flex justify-content-between">
-                                                    <span>Urgencia:
-                                                        <?php echo $tcp['urgencia']; ?>
-                                                    </span>
-                                                    <span>
-                                                        <?php echo $tcp['tiempo_exec']; ?>h
-                                                    </span>
+                                                    <span>Urgencia: <?php echo $pt['urgencia']; ?></span>
+                                                    <span><?php echo $pt['tiempo_exec']; ?>h</span>
                                                 </div>
                                             </li>
                                         <?php endforeach; ?>
@@ -590,8 +608,8 @@ $tickets_criticos_pendientes = array_filter($pool_tickets, function ($ticket) {
                         intersect: false
                     }
                 }
-            }
-        });
+        }
+ });
     </script>
 </body>
 
