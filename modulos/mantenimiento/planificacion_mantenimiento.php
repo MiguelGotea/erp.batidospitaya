@@ -302,7 +302,7 @@ $tickets_criticos_pendientes = array_filter($pool_tickets, function ($ticket) {
                                 <h6 class="mb-0 fw-bold"><i class="bi bi-stack me-2"></i>Tickets Descartados</h6>
                                 <p class="small text-muted mb-0">No cupieron en la semana de 60h</p>
                             </div>
-                            <div class="card-body p-0 overflow-auto" style="max-height: 600px;">
+                            <div class="card-body p-0 overflow-auto" style="max-height: 300px;">
                                 <?php if (empty($pool_tickets)): ?>
                                     <div class="p-4 text-center text-muted italic">
                                         <i class="bi bi-check-circle-fill text-success fs-1 d-block mb-2"></i>
@@ -333,7 +333,7 @@ $tickets_criticos_pendientes = array_filter($pool_tickets, function ($ticket) {
                                         class="bi bi-exclamation-triangle-fill me-2"></i>Críticos Pendientes</h6>
                                 <p class="small text-muted mb-0">Tickets de urgencia 4 sin agendar</p>
                             </div>
-                            <div class="card-body p-0 overflow-auto" style="max-height: 400px;">
+                            <div class="card-body p-0 overflow-auto" style="max-height: 300px;">
                                 <?php if (empty($tickets_criticos_pendientes)): ?>
                                     <div class="p-4 text-center text-muted italic">
                                         <i class="bi bi-check-circle-fill text-success fs-1 d-block mb-2"></i>

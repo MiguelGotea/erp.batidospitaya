@@ -172,8 +172,7 @@ class Ticket
                 CASE WHEN s.departamento = 'Managua' THEN 0 ELSE 6 END as tiempo_transporte
                 FROM mtto_tickets t 
                 LEFT JOIN sucursales s ON t.cod_sucursal = s.codigo 
-                WHERE t.tipo_formulario = 'mantenimiento_general'
-                AND t.status IN ('solicitado', 'agendado')
+                WHERE t.status IN ('solicitado', 'agendado')
                 ORDER BY urgencia DESC, (COALESCE(t.tiempo_estimado, 0) + CASE WHEN s.departamento = 'Managua' THEN 0 ELSE 6 END) ASC, t.created_at ASC";
 
         return $this->db->fetchAll($sql);
