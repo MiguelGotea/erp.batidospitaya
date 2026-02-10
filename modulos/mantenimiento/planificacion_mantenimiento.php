@@ -21,7 +21,6 @@ $ticketModel = new Ticket();
 $tickets = $ticketModel->getTicketsForPlanning();
 $weekly_stats = $ticketModel->getWeeklyReportStats();
 $equipment_stats = $ticketModel->getEquipmentChangeStats();
-
 // Preparar datos para el gráfico de barras (12 semanas)
 $labels_semanas = [];
 $data_criticos = [];
