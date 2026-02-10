@@ -125,6 +125,7 @@ body {
 
 .visit-item {
     transition: all 0.2s ease;
+    overflow-x: hidden; /* Prevent horizontal scroll in the item itself */
 }
 
 .visit-item:hover {
@@ -135,6 +136,7 @@ body {
 .planning-day-card {
     border: 1px solid #edf2f7;
     transition: box-shadow 0.3s ease;
+    overflow-x: hidden; /* Ensure card stays within its bounds */
 }
 
 .planning-day-card:hover {
