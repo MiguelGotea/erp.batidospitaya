@@ -19,23 +19,30 @@ const diasSemana = [
 
 // Inicializar
 $(document).ready(function () {
-    calcularSemanaActual();
+    calcularDiasAlrededor();
     cargarProductos();
 });
 
-// Calcular fechas de la semana actual (Lunes a Domingo)
-function calcularSemanaActual() {
+// Calcular días: 3 antes de hoy, hoy, 3 después de hoy
+function calcularDiasAlrededor() {
     const hoy = new Date();
-    const diaSemana = hoy.getDay(); // 0 = Domingo, 1 = Lunes, etc.
-    const diff = diaSemana === 0 ? -6 : 1 - diaSemana; // Ajustar para que Lunes sea el primer día
-
-    const lunes = new Date(hoy);
-    lunes.setDate(hoy.getDate() + diff);
 
     currentWeekDates = [];
-    for (let i = 0; i < 7; i++) {
-        const fecha = new Date(lunes);
-        fecha.setDate(lunes.getDate() + i);
+
+    // 3 días antes de hoy
+    for (let i = 3; i > 0; i--) {
+        const fecha = new Date(hoy);
+        fecha.setDate(hoy.getDate() - i);
+        currentWeekDates.push(fecha);
+    }
+
+    // Hoy
+    currentWeekDates.push(new Date(hoy));
+
+    // 3 días después de hoy
+    for (let i = 1; i <= 3; i++) {
+        const fecha = new Date(hoy);
+        fecha.setDate(hoy.getDate() + i);
         currentWeekDates.push(fecha);
     }
 }
@@ -122,6 +129,12 @@ function agruparPedidos(pedidosArray) {
     return agrupado;
 }
 
+// Obtener día de la semana (1-7) de una fecha
+function getDiaSemana(fecha) {
+    const dia = fecha.getDay();
+    return dia === 0 ? 7 : dia; // Convertir Domingo (0) a 7
+}
+
 // Renderizar tabla de productos
 function renderizarTabla() {
     let tableHtml = `
@@ -130,14 +143,19 @@ function renderizarTabla() {
                 <thead>
                     <tr>
                         <th>Producto</th>
-                        ${diasSemana.map((dia, index) => `
-                            <th>
+                        ${currentWeekDates.map((fecha, index) => {
+        const diaSemana = getDiaSemana(fecha);
+        const diaInfo = diasSemana.find(d => d.num === diaSemana);
+        const esHoy = index === 3; // Hoy está en el índice 3
+        return `
+                            <th ${esHoy ? 'class="today-column"' : ''}>
                                 <div class="day-header">
-                                    <span class="day-name">${dia.nombre}</span>
-                                    <span class="day-date">${formatearFecha(currentWeekDates[index])}</span>
+                                    <span class="day-name">${diaInfo.nombre}${esHoy ? ' (HOY)' : ''}</span>
+                                    <span class="day-date">${formatearFecha(fecha)}</span>
                                 </div>
                             </th>
-                        `).join('')}
+                        `;
+    }).join('')}
                     </tr>
                 </thead>
                 <tbody>
@@ -146,7 +164,7 @@ function renderizarTabla() {
     if (productos.length === 0) {
         tableHtml += `
             <tr>
-                <td colspan="${diasSemana.length + 1}">
+                <td colspan="${currentWeekDates.length + 1}">
                     <div class="no-products-message">
                         <i class="bi bi-inbox"></i>
                         <p>No hay productos configurados para esta sucursal</p>
@@ -163,17 +181,19 @@ function renderizarTabla() {
                         ${producto.nombre_producto}
                         ${isInactive ? '<span class="badge-inactive">Inactivo</span>' : ''}
                     </td>
-                    ${diasSemana.map(dia => {
-                const tieneEntrega = producto.dias_entrega.includes(dia.num);
-                const key = `${producto.id_producto}_${dia.num}`;
+                    ${currentWeekDates.map((fecha, index) => {
+                const diaSemana = getDiaSemana(fecha);
+                const tieneEntrega = producto.dias_entrega.includes(diaSemana);
+                const key = `${producto.id_producto}_${diaSemana}`;
                 const pedido = pedidos[key];
                 const cantidad = pedido ? pedido.cantidad : '';
                 const fechaHora = pedido ? pedido.fecha_hora_reportada : null;
+                const esHoy = index === 3;
 
                 return `
-                            <td class="day-cell ${tieneEntrega && !isInactive ? 'enabled' : 'disabled'} ${cantidad ? 'has-order' : ''}"
+                            <td class="day-cell ${tieneEntrega && !isInactive ? 'enabled' : 'disabled'} ${cantidad ? 'has-order' : ''} ${esHoy ? 'today-column' : ''}"
                                 data-producto-id="${producto.id_producto}"
-                                data-dia="${dia.num}"
+                                data-dia="${diaSemana}"
                                 data-fecha-hora="${fechaHora || ''}"
                                 ${tieneEntrega && !isInactive && puedeEditar ? `onclick="editarCantidad(this)"` : ''}>
                                 ${tieneEntrega && !isInactive ?

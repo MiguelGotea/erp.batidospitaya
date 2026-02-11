@@ -179,6 +179,23 @@ body {
     opacity: 0.8;
 }
 
+/* Resaltar columna de HOY */
+.today-column {
+    background-color: #fff3cd !important;
+    font-weight: 600;
+}
+
+.pedidos-table thead th.today-column {
+    background-color: #0E544C !important;
+    border-left: 3px solid #ffc107;
+    border-right: 3px solid #ffc107;
+}
+
+.pedidos-table tbody td.today-column {
+    border-left: 2px solid #ffc107;
+    border-right: 2px solid #ffc107;
+}
+
 /* Loader */
 .loader-container {
     display: flex;
