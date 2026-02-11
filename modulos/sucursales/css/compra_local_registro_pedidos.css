@@ -1,0 +1,311 @@
+/* ===================================================
+   Registro de Pedidos - Estilos
+   =================================================== */
+
+/* Asegurar scroll en la página */
+html {
+    overflow-y: scroll;
+    min-height: 100vh;
+}
+
+body {
+    min-height: 100vh;
+}
+
+/* Tabla de Productos */
+.pedidos-table {
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    width: 100%;
+}
+
+.pedidos-table thead {
+    background-color: #0E544C !important;
+    color: white !important;
+}
+
+.pedidos-table thead th {
+    font-weight: 600;
+    padding: 14px 12px;
+    border: none;
+    border-right: 1px solid rgba(255, 255, 255, 0.2);
+    position: relative;
+    white-space: nowrap;
+    font-size: 14px;
+    text-align: center;
+    background-color: #0E544C !important;
+    color: white !important;
+}
+
+.pedidos-table thead th:first-child {
+    text-align: left;
+    min-width: 200px;
+}
+
+.pedidos-table thead th:last-child {
+    border-right: none;
+}
+
+.pedidos-table tbody tr {
+    border-bottom: 1px solid #e9ecef;
+    transition: background-color 0.2s;
+}
+
+.pedidos-table tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+.pedidos-table tbody tr.inactive-row {
+    background-color: #f0f0f0;
+    opacity: 0.6;
+}
+
+.pedidos-table tbody td {
+    padding: 12px;
+    vertical-align: middle;
+    font-size: 14px;
+    border-right: 1px solid #e9ecef;
+    text-align: center;
+}
+
+.pedidos-table tbody td:first-child {
+    text-align: left;
+    font-weight: 500;
+}
+
+.pedidos-table tbody td:last-child {
+    border-right: none;
+}
+
+/* Celdas de Días */
+.day-cell {
+    cursor: pointer;
+    width: 80px;
+    height: 50px;
+    position: relative;
+    transition: all 0.2s;
+}
+
+.day-cell.enabled {
+    background-color: #fff;
+}
+
+.day-cell.enabled:hover {
+    background-color: #e3f2fd;
+}
+
+.day-cell.disabled {
+    background-color: #f5f5f5;
+    cursor: not-allowed;
+    color: #ccc;
+}
+
+.day-cell.has-order {
+    background-color: #e8f5e9;
+    font-weight: 600;
+}
+
+.day-cell.has-order:hover {
+    background-color: #c8e6c9;
+}
+
+/* Input de Cantidad */
+.cantidad-input {
+    width: 60px;
+    text-align: center;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 14px;
+    transition: all 0.2s;
+}
+
+.cantidad-input:focus {
+    outline: none;
+    border-color: #51B8AC;
+    box-shadow: 0 0 0 0.25rem rgba(81, 184, 172, 0.25);
+}
+
+.cantidad-input:disabled {
+    background-color: #f5f5f5;
+    cursor: not-allowed;
+}
+
+/* Tooltip personalizado */
+.custom-tooltip {
+    position: absolute;
+    background-color: rgba(0, 0, 0, 0.9);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    z-index: 1000;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.custom-tooltip.show {
+    opacity: 1;
+}
+
+.custom-tooltip::before {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: rgba(0, 0, 0, 0.9);
+}
+
+/* Encabezado de día */
+.day-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.day-name {
+    font-weight: 600;
+    font-size: 13px;
+}
+
+.day-date {
+    font-size: 11px;
+    opacity: 0.8;
+}
+
+/* Loader */
+.loader-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 40px;
+}
+
+.loader {
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #51B8AC;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* Mensaje de Sin Productos */
+.no-products-message {
+    text-align: center;
+    padding: 40px 20px;
+    color: #6c757d;
+}
+
+.no-products-message i {
+    font-size: 48px;
+    margin-bottom: 16px;
+    opacity: 0.5;
+}
+
+/* Badge de Producto Inactivo */
+.badge-inactive {
+    background-color: #dc3545;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    margin-left: 8px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .pedidos-table {
+        font-size: 12px;
+    }
+
+    .pedidos-table thead th,
+    .pedidos-table tbody td {
+        padding: 8px 6px;
+    }
+
+    .day-cell {
+        width: 60px;
+        height: 40px;
+    }
+
+    .cantidad-input {
+        width: 50px;
+        font-size: 12px;
+    }
+
+    .day-name {
+        font-size: 11px;
+    }
+
+    .day-date {
+        font-size: 10px;
+    }
+}
+
+/* Scrollbar personalizada */
+.table-responsive {
+    scrollbar-width: thin;
+    scrollbar-color: #51B8AC #f1f1f1;
+}
+
+.table-responsive::-webkit-scrollbar {
+    height: 8px;
+    width: 8px;
+}
+
+.table-responsive::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+    background: #51B8AC;
+    border-radius: 4px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb:hover {
+    background: #0E544C;
+}
+
+/* Animación de guardado */
+.saving-indicator {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    background-color: #51B8AC;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    z-index: 1050;
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
