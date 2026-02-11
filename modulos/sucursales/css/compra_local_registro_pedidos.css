@@ -196,6 +196,18 @@ body {
     border-right: 2px solid #ffc107;
 }
 
+/* Alert Cell - Sin pedido en fecha próxima */
+.alert-cell {
+    background-color: #fff3cd !important;
+    color: #856404;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.alert-cell:hover {
+    background-color: #ffeaa7 !important;
+}
+
 /* Loader */
 .loader-container {
     display: flex;

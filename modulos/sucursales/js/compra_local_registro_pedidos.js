@@ -71,6 +71,20 @@ function formatearFechaHora(fechaHoraStr) {
     return `${dia}-${mes}-${anio} ${horas}:${minutos}`;
 }
 
+// Verificar si una fecha está a 2 días o menos de hoy
+function estaProximoAHoy(fecha) {
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+
+    const fechaCopia = new Date(fecha);
+    fechaCopia.setHours(0, 0, 0, 0);
+
+    const diffTime = fechaCopia - hoy;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    return diffDays >= 0 && diffDays <= 2;
+}
+
 // Cargar productos configurados para esta sucursal
 function cargarProductos() {
     $.ajax({
@@ -189,9 +203,11 @@ function renderizarTabla() {
                 const cantidad = pedido ? pedido.cantidad : '';
                 const fechaHora = pedido ? pedido.fecha_hora_reportada : null;
                 const esHoy = index === 3;
+                const esProximo = estaProximoAHoy(fecha);
+                const sinPedido = !cantidad && esProximo && tieneEntrega && !isInactive;
 
                 return `
-                            <td class="day-cell ${tieneEntrega && !isInactive ? 'enabled' : 'disabled'} ${cantidad ? 'has-order' : ''} ${esHoy ? 'today-column' : ''}"
+                            <td class="day-cell ${tieneEntrega && !isInactive ? 'enabled' : 'disabled'} ${cantidad ? 'has-order' : ''} ${sinPedido ? 'alert-cell' : ''} ${esHoy ? 'today-column' : ''}"
                                 data-producto-id="${producto.id_producto}"
                                 data-dia="${diaSemana}"
                                 data-fecha-hora="${fechaHora || ''}"
@@ -199,7 +215,7 @@ function renderizarTabla() {
                                 ${tieneEntrega && !isInactive ?
                         (cantidad ?
                             `<span class="cantidad-display">${cantidad}</span>` :
-                            '<span class="text-muted">-</span>')
+                            (sinPedido ? '⚠️' : '<span class="text-muted">-</span>'))
                         : '-'}
                             </td>
                         `;
