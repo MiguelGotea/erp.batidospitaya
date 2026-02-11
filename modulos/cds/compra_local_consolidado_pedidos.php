@@ -41,25 +41,6 @@ $puedeEditar = tienePermiso('compra_local_consolidado_pedidos', 'edicion', $carg
             <?php echo renderHeader($usuario, false, 'Consolidado de Pedidos'); ?>
 
             <div class="container-fluid p-3">
-                <!-- Filtros -->
-                <div class="card mb-3">
-                    <div class="card-body">
-                        <div class="row g-3">
-                            <div class="col-md-8">
-                                <label class="form-label">Sucursal</label>
-                                <select class="form-select" id="filtro-sucursal">
-                                    <option value="">Todas las sucursales</option>
-                                </select>
-                            </div>
-                            <div class="col-md-4 d-flex align-items-end">
-                                <button class="btn btn-primary w-100" onclick="aplicarFiltros()">
-                                    <i class="bi bi-funnel"></i> Aplicar Filtros
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
                 <!-- Tabla Consolidada -->
                 <div id="consolidado-container">
                     <div class="loader-container">

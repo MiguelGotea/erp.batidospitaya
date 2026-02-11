@@ -3,12 +3,8 @@
    =================================================== */
 
 let consolidado = [];
-let sucursales = [];
 let productos = [];
 let currentDates = [];
-let filtros = {
-    sucursal: ''
-};
 let productoActivo = null;
 
 // Días de la semana
@@ -35,7 +31,6 @@ const diasSemanaCorto = {
 // Inicializar
 $(document).ready(function () {
     calcularDiasAlrededor();
-    cargarSucursales();
     cargarConsolidado();
 });
 
@@ -89,39 +84,6 @@ function estaProximoAHoy(fecha) {
     return diffDays >= 0 && diffDays <= 2;
 }
 
-// Cargar lista de sucursales para el filtro
-function cargarSucursales() {
-    $.ajax({
-        url: 'ajax/compra_local_consolidado_pedidos_get_sucursales.php',
-        method: 'GET',
-        dataType: 'json',
-        success: function (response) {
-            if (response.success) {
-                sucursales = response.sucursales;
-                renderizarFiltroSucursales();
-            }
-        },
-        error: function () {
-            console.error('Error al cargar sucursales');
-        }
-    });
-}
-
-// Renderizar opciones del filtro de sucursales
-function renderizarFiltroSucursales() {
-    let options = '<option value="">Todas las sucursales</option>';
-    sucursales.forEach(sucursal => {
-        options += `<option value="${sucursal.codigo}">${sucursal.nombre}</option>`;
-    });
-    $('#filtro-sucursal').html(options);
-}
-
-// Aplicar filtros
-function aplicarFiltros() {
-    filtros.sucursal = $('#filtro-sucursal').val();
-    cargarConsolidado();
-}
-
 // Cargar datos consolidados
 function cargarConsolidado() {
     $('#consolidado-container').html(`
@@ -133,7 +95,7 @@ function cargarConsolidado() {
     $.ajax({
         url: 'ajax/compra_local_consolidado_pedidos_get_datos.php',
         method: 'POST',
-        data: filtros,
+        data: {},
         dataType: 'json',
         success: function (response) {
             if (response.success) {
