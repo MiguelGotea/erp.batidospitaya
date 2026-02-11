@@ -4,9 +4,9 @@
 
 let consolidado = [];
 let sucursales = [];
+let currentDates = [];
 let filtros = {
-    sucursal: '',
-    dia: ''
+    sucursal: ''
 };
 
 // Días de la semana
@@ -20,11 +20,60 @@ const diasSemana = {
     7: 'Domingo'
 };
 
+const diasSemanaCorto = {
+    1: 'Lun',
+    2: 'Mar',
+    3: 'Mié',
+    4: 'Jue',
+    5: 'Vie',
+    6: 'Sáb',
+    7: 'Dom'
+};
+
 // Inicializar
 $(document).ready(function () {
+    calcularDiasAlrededor();
     cargarSucursales();
     cargarConsolidado();
 });
+
+// Calcular días: 3 antes de hoy, hoy, 3 después de hoy
+function calcularDiasAlrededor() {
+    const hoy = new Date();
+
+    currentDates = [];
+
+    // 3 días antes de hoy
+    for (let i = 3; i > 0; i--) {
+        const fecha = new Date(hoy);
+        fecha.setDate(hoy.getDate() - i);
+        currentDates.push(fecha);
+    }
+
+    // Hoy
+    currentDates.push(new Date(hoy));
+
+    // 3 días después de hoy
+    for (let i = 1; i <= 3; i++) {
+        const fecha = new Date(hoy);
+        fecha.setDate(hoy.getDate() + i);
+        currentDates.push(fecha);
+    }
+}
+
+// Obtener día de la semana (1-7) de una fecha
+function getDiaSemana(fecha) {
+    const dia = fecha.getDay();
+    return dia === 0 ? 7 : dia; // Convertir Domingo (0) a 7
+}
+
+// Formatear fecha para mostrar
+function formatearFecha(fecha) {
+    const meses = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+    const dia = fecha.getDate();
+    const mes = meses[fecha.getMonth()];
+    return `${dia}-${mes}`;
+}
 
 // Cargar lista de sucursales para el filtro
 function cargarSucursales() {
@@ -56,7 +105,6 @@ function renderizarFiltroSucursales() {
 // Aplicar filtros
 function aplicarFiltros() {
     filtros.sucursal = $('#filtro-sucursal').val();
-    filtros.dia = $('#filtro-dia').val();
     cargarConsolidado();
 }
 
@@ -93,91 +141,85 @@ function renderizarTabla() {
         $('#consolidado-container').html(`
             <div class="no-data-message">
                 <i class="bi bi-inbox"></i>
-                <p>No hay pedidos registrados con los filtros seleccionados</p>
+                <p>No hay pedidos registrados</p>
             </div>
         `);
         return;
     }
 
-    // Calcular totales
-    const totales = calcularTotales();
+    // Agrupar por producto
+    const productosPedidos = agruparPorProducto();
 
-    // Renderizar resumen
     let html = `
-        <div class="summary-card">
-            <div class="row">
-                <div class="col-md-4 summary-item">
-                    <div class="summary-value">${totales.productos}</div>
-                    <div class="summary-label">Productos</div>
-                </div>
-                <div class="col-md-4 summary-item">
-                    <div class="summary-value">${totales.pedidos}</div>
-                    <div class="summary-label">Pedidos Totales</div>
-                </div>
-                <div class="col-md-4 summary-item">
-                    <div class="summary-value">${totales.sucursales}</div>
-                    <div class="summary-label">Sucursales</div>
-                </div>
-            </div>
-        </div>
-    `;
-
-    // Renderizar tabla
-    html += `
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5 class="mb-0">Detalle de Pedidos</h5>
-            <button class="btn btn-export" onclick="exportarExcel()">
-                <i class="bi bi-file-earmark-excel"></i> Exportar a Excel
-            </button>
-        </div>
         <div class="table-responsive">
             <table class="table consolidado-table">
                 <thead>
                     <tr>
                         <th>Producto</th>
-                        <th>Día</th>
-                        <th>Total Pedido</th>
-                        <th>Sucursales</th>
-                        <th></th>
+                        ${currentDates.map((fecha, index) => {
+        const diaSemana = getDiaSemana(fecha);
+        const diaInfo = diasSemanaCorto[diaSemana];
+        const esHoy = index === 3;
+        return `
+                            <th ${esHoy ? 'class="today-column"' : ''}>
+                                <div class="day-header">
+                                    <span class="day-name">${diaInfo}${esHoy ? ' (HOY)' : ''}</span>
+                                    <span class="day-date">${formatearFecha(fecha)}</span>
+                                </div>
+                            </th>
+                        `;
+    }).join('')}
+                        <th>Total</th>
                     </tr>
                 </thead>
                 <tbody>
     `;
 
-    consolidado.forEach((item, index) => {
+    let totalGeneral = 0;
+    const totalesPorDia = new Array(7).fill(0);
+
+    productosPedidos.forEach(producto => {
+        let totalProducto = 0;
+
         html += `
             <tr>
-                <td>${item.nombre_producto}</td>
-                <td>
-                    <span class="day-badge ${diasSemana[item.dia_entrega].toLowerCase()}">
-                        ${diasSemana[item.dia_entrega]}
-                    </span>
+                <td class="producto-name">${producto.nombre}</td>
+        `;
+
+        currentDates.forEach((fecha, index) => {
+            const diaSemana = getDiaSemana(fecha);
+            const cantidad = producto.cantidadesPorDia[diaSemana] || 0;
+            const esHoy = index === 3;
+
+            totalProducto += cantidad;
+            totalesPorDia[index] += cantidad;
+
+            html += `
+                <td class="data-cell ${cantidad > 0 ? 'has-value' : 'no-value'} ${esHoy ? 'today-column' : ''}"
+                    ${cantidad > 0 ? `onclick="verDetalle('${producto.id}', ${diaSemana})"` : ''}>
+                    ${cantidad > 0 ? cantidad : '-'}
                 </td>
-                <td class="data-cell has-value">${item.total_cantidad}</td>
-                <td>${item.num_sucursales}</td>
-                <td>
-                    <button class="btn-expand" onclick="toggleDetails(${index})" id="btn-expand-${index}">
-                        <i class="bi bi-chevron-down"></i>
-                    </button>
-                </td>
-            </tr>
-            <tr class="details-row" id="details-${index}" style="display: none;">
-                <td colspan="5">
-                    <div class="details-content">
-                        <strong>Desglose por Sucursal:</strong>
-                        <div class="mt-2">
-                            ${item.detalles.map(detalle => `
-                                <div class="branch-detail">
-                                    <span class="branch-name">${detalle.nombre_sucursal}</span>
-                                    <span class="branch-quantity">${detalle.cantidad} unidades</span>
-                                </div>
-                            `).join('')}
-                        </div>
-                    </div>
-                </td>
+            `;
+        });
+
+        totalGeneral += totalProducto;
+
+        html += `
+                <td class="total-cell">${totalProducto}</td>
             </tr>
         `;
     });
+
+    // Fila de totales
+    html += `
+                <tr class="totals-row">
+                    <td><strong>TOTAL</strong></td>
+                    ${totalesPorDia.map((total, index) => `
+                        <td class="${index === 3 ? 'today-column' : ''}"><strong>${total}</strong></td>
+                    `).join('')}
+                    <td><strong>${totalGeneral}</strong></td>
+                </tr>
+    `;
 
     html += `
                 </tbody>
@@ -188,42 +230,57 @@ function renderizarTabla() {
     $('#consolidado-container').html(html);
 }
 
-// Calcular totales
-function calcularTotales() {
-    const productos = new Set();
-    const sucursalesSet = new Set();
-    let totalPedidos = 0;
+// Agrupar consolidado por producto
+function agruparPorProducto() {
+    const productos = {};
 
     consolidado.forEach(item => {
-        productos.add(item.id_producto_presentacion);
-        totalPedidos += parseInt(item.total_cantidad);
-        item.detalles.forEach(detalle => {
-            sucursalesSet.add(detalle.codigo_sucursal);
-        });
+        if (!productos[item.id_producto_presentacion]) {
+            productos[item.id_producto_presentacion] = {
+                id: item.id_producto_presentacion,
+                nombre: item.nombre_producto,
+                cantidadesPorDia: {}
+            };
+        }
+
+        productos[item.id_producto_presentacion].cantidadesPorDia[item.dia_entrega] =
+            parseInt(item.total_cantidad);
     });
 
-    return {
-        productos: productos.size,
-        pedidos: totalPedidos,
-        sucursales: sucursalesSet.size
-    };
+    return Object.values(productos);
 }
 
-// Expandir/contraer detalles
-function toggleDetails(index) {
-    const detailsRow = $(`#details-${index}`);
-    const btn = $(`#btn-expand-${index}`);
+// Ver detalle de pedidos por sucursal
+function verDetalle(productoId, diaSemana) {
+    const item = consolidado.find(c =>
+        c.id_producto_presentacion == productoId && c.dia_entrega == diaSemana
+    );
 
-    if (detailsRow.is(':visible')) {
-        detailsRow.hide();
-        btn.removeClass('expanded');
-    } else {
-        detailsRow.show();
-        btn.addClass('expanded');
+    if (!item || !item.detalles || item.detalles.length === 0) {
+        return;
     }
+
+    let detalleHtml = '<div class="detalle-sucursales">';
+    item.detalles.forEach(detalle => {
+        detalleHtml += `
+            <div class="sucursal-item">
+                <span class="sucursal-nombre">${detalle.nombre_sucursal}</span>
+                <span class="sucursal-cantidad">${detalle.cantidad} unidades</span>
+            </div>
+        `;
+    });
+    detalleHtml += '</div>';
+
+    Swal.fire({
+        title: `${item.nombre_producto} - ${diasSemana[diaSemana]}`,
+        html: detalleHtml,
+        icon: 'info',
+        confirmButtonColor: '#51B8AC',
+        width: '500px'
+    });
 }
 
-// Exportar a Excel (simulado - en producción usar librería como SheetJS)
+// Exportar a Excel (simulado)
 function exportarExcel() {
     Swal.fire({
         icon: 'info',
@@ -231,22 +288,6 @@ function exportarExcel() {
         text: 'Funcionalidad de exportación en desarrollo',
         confirmButtonColor: '#51B8AC'
     });
-
-    // TODO: Implementar exportación real con SheetJS o similar
-    // Por ahora, se puede generar un CSV simple
-    /*
-    let csv = 'Producto,Día,Total Pedido,Sucursales\n';
-    consolidado.forEach(item => {
-        csv += `"${item.nombre_producto}","${diasSemana[item.dia_entrega]}",${item.total_cantidad},${item.num_sucursales}\n`;
-    });
-    
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'consolidado_pedidos.csv';
-    a.click();
-    */
 }
 
 // Mostrar mensaje de error

@@ -50,6 +50,46 @@ body {
     border-right: none;
 }
 
+/* Day Header */
+.day-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.day-name {
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.day-date {
+    font-size: 11px;
+    opacity: 0.9;
+}
+
+/* Resaltar columna de HOY */
+.today-column {
+    background-color: #fff3cd !important;
+    font-weight: 600;
+}
+
+.consolidado-table thead th.today-column {
+    background-color: #0E544C !important;
+    border-left: 3px solid #ffc107;
+    border-right: 3px solid #ffc107;
+}
+
+.consolidado-table tbody td.today-column {
+    border-left: 2px solid #ffc107;
+    border-right: 2px solid #ffc107;
+}
+
+.consolidado-table tfoot td.today-column {
+    border-left: 2px solid #ffc107;
+    border-right: 2px solid #ffc107;
+}
+
 .consolidado-table tbody tr {
     border-bottom: 1px solid #e9ecef;
     transition: background-color 0.2s;
@@ -112,6 +152,56 @@ body {
 
 .data-cell.no-value {
     color: #ccc;
+}
+
+/* Producto Name */
+.producto-name {
+    font-weight: 600;
+    color: #0E544C;
+}
+
+/* Total Cell */
+.total-cell {
+    background-color: #f8f9fa;
+    font-weight: 700;
+    color: #0E544C;
+}
+
+/* Totals Row */
+.totals-row {
+    background-color: #0E544C;
+    color: white;
+    font-weight: 700;
+}
+
+.totals-row td {
+    border-top: 3px solid #0E544C;
+    padding: 14px 12px;
+}
+
+/* Detalle Sucursales (Modal) */
+.detalle-sucursales {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.sucursal-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 15px;
+    margin-bottom: 8px;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    border-left: 3px solid #51B8AC;
+}
+
+.sucursal-nombre {
+    font-weight: 600;
+    color: #0E544C;
+}
+
+.sucursal-cantidad {
+    color: #666;
 }
 
 /* Badge de Día */

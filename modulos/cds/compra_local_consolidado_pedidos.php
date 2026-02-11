@@ -45,23 +45,10 @@ $puedeEditar = tienePermiso('compra_local_consolidado_pedidos', 'edicion', $carg
                 <div class="card mb-3">
                     <div class="card-body">
                         <div class="row g-3">
-                            <div class="col-md-4">
+                            <div class="col-md-8">
                                 <label class="form-label">Sucursal</label>
                                 <select class="form-select" id="filtro-sucursal">
                                     <option value="">Todas las sucursales</option>
-                                </select>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label">Día de la Semana</label>
-                                <select class="form-select" id="filtro-dia">
-                                    <option value="">Todos los días</option>
-                                    <option value="1">Lunes</option>
-                                    <option value="2">Martes</option>
-                                    <option value="3">Miércoles</option>
-                                    <option value="4">Jueves</option>
-                                    <option value="5">Viernes</option>
-                                    <option value="6">Sábado</option>
-                                    <option value="7">Domingo</option>
                                 </select>
                             </div>
                             <div class="col-md-4 d-flex align-items-end">
