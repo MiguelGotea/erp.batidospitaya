@@ -4,6 +4,7 @@ require_once '../../core/layout/header_universal.php';
 require_once '../../core/layout/menu_lateral.php';
 require_once '../../core/permissions/permissions.php';
 
+
 $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
 $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
