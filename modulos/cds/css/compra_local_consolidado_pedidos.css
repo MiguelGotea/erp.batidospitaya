@@ -12,6 +12,63 @@ body {
     min-height: 100vh;
 }
 
+/* Tabs de Productos */
+.productos-tabs {
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.productos-tabs .nav-tabs {
+    border-bottom: 2px solid #0E544C;
+    background-color: #f8f9fa;
+    padding: 10px 10px 0 10px;
+}
+
+.productos-tabs .nav-link {
+    color: #666;
+    border: none;
+    border-radius: 8px 8px 0 0;
+    padding: 12px 20px;
+    margin-right: 4px;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.productos-tabs .nav-link:hover {
+    background-color: #e9ecef;
+    color: #0E544C;
+}
+
+.productos-tabs .nav-link.active {
+    background-color: #0E544C;
+    color: white;
+    font-weight: 600;
+}
+
+.productos-tabs .tab-content {
+    padding: 0;
+}
+
+/* Sucursal Name */
+.sucursal-name {
+    font-weight: 600;
+    color: #0E544C;
+    min-width: 200px;
+}
+
+/* Alert Cell - Sucursal sin pedido en fecha próxima */
+.alert-cell {
+    background-color: #fff3cd !important;
+    color: #856404;
+    font-weight: 700;
+}
+
+.alert-cell:hover {
+    background-color: #ffeaa7 !important;
+}
+
 /* Tabla Consolidada */
 .consolidado-table {
     background: white;
