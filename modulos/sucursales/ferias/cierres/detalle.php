@@ -53,7 +53,7 @@ $ventasMostradas = [];
 
 foreach ($productosVendidos as $producto) {
     $totalProductos += $producto['cantidad'];
-    
+
     // Resumen por producto (usando nombre histórico como clave)
     $nombreProducto = $producto['producto_nombre'];
     if (!isset($resumenProductos[$nombreProducto])) {
@@ -65,18 +65,19 @@ foreach ($productosVendidos as $producto) {
     }
     $resumenProductos[$nombreProducto]['cantidad'] += $producto['cantidad'];
     $resumenProductos[$nombreProducto]['total'] += ($producto['precio_unitario'] * $producto['cantidad']);
-    
+
     // Control de ventas mostradas
     $ventasMostradas[$producto['venta_id']] = true;
 }
 ?>
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Detalle Cierre #<?= $cierreId ?> - Batidos Pitaya</title>
-    <link rel="icon" href="../../icon12.png">
+    <link rel="icon" href="../../../../core/assets/img/icon12.png">
     <style>
         :root {
             --color-primario: #51B8AC;
@@ -84,36 +85,37 @@ foreach ($productosVendidos as $producto) {
             --color-fondo: #F6F6F6;
             --font-size-base: clamp(14px, 2vw, 16px);
         }
-        
+
         body {
             font-family: 'Calibri', Arial, sans-serif;
             background-color: var(--color-fondo);
             margin: 0;
             padding: 0;
             color: #333;
-            font-size: var(--font-size-base); /* Aplicar tamaño base */
+            font-size: var(--font-size-base);
+            /* Aplicar tamaño base */
         }
-        
+
         .container {
             max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
         }
-        
+
         header {
             background-color: white;
             padding: 15px 20px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
             margin-bottom: 10px;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
-        
+
         .logo {
             height: 45px;
         }
-        
+
         .btn {
             display: inline-block;
             padding: 10px 20px;
@@ -121,173 +123,181 @@ foreach ($productosVendidos as $producto) {
             text-decoration: none;
             transition: all 0.3s;
         }
-        
+
         .btn-primary {
             background-color: var(--color-primario);
             color: white;
         }
-        
+
         .btn-secondary {
             background-color: #6c757d;
             color: white;
         }
-        
-        .btn-primary:hover, .btn-secondary:hover {
+
+        .btn-primary:hover,
+        .btn-secondary:hover {
             background-color: var(--color-secundario);
         }
-        
+
         .card {
             background-color: white;
             border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
             padding: 20px;
             margin-bottom: 30px;
         }
-        
+
         .resumen-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
             gap: clamp(10px, 2vw, 15px);
             margin-bottom: clamp(20px, 3vw, 30px);
         }
-        
+
         .resumen-item {
             background-color: #f8f9fa;
             padding: 15px;
             border-radius: 6px;
         }
-        
+
         .resumen-item h3 {
             margin-top: 0;
             color: var(--color-secundario);
             font-size: clamp(14px, 2vw, 16px);
         }
-        
+
         .resumen-item p {
             font-size: clamp(20px, 3vw, 24px);
             margin: 10px 0 0;
             font-weight: bold;
         }
-        
+
         table {
             width: 100%;
             border-collapse: collapse;
             background-color: white;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            font-size: clamp(12px, 1.8vw, 15px); /* Tamaño responsive */
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            font-size: clamp(12px, 1.8vw, 15px);
+            /* Tamaño responsive */
         }
-        
-        th, td {
+
+        th,
+        td {
             padding: clamp(8px, 1.2vw, 12px) clamp(6px, 1vw, 10px);
             text-align: left;
             border-bottom: 1px solid #ddd;
         }
-        
+
         th {
             background-color: var(--color-secundario);
             color: white;
         }
-        
+
         tr:hover {
             background-color: #f5f5f5;
         }
-        
+
         .badge {
             padding: 3px 6px;
             border-radius: 4px;
             font-size: clamp(10px, 1.5vw, 12px);
         }
-        
+
         .badge-efectivo {
             background-color: #e3f2fd;
             color: #0d47a1;
         }
-        
+
         .badge-pos {
             background-color: #e8f5e9;
             color: #2e7d32;
         }
-        
+
         .empty-message {
             text-align: center;
             padding: 30px;
             color: #666;
             font-style: italic;
         }
-        
+
         h1 {
             font-size: clamp(20px, 4vw, 28px);
         }
-        
+
         h2 {
             font-size: clamp(18px, 3vw, 24px);
         }
-        
+
         h3 {
             font-size: clamp(16px, 2.5vw, 20px);
         }
-        
+
         .venta-group {
             margin-bottom: clamp(15px, 2vw, 20px);
             border-bottom: 1px solid #eee;
             padding-bottom: clamp(10px, 1.5vw, 15px);
         }
-        
+
         @media (max-width: 768px) {
-            th, td {
+
+            th,
+            td {
                 padding: 8px 10px;
                 font-size: 14px;
             }
         }
-        
+
         @media (max-width: 768px) {
             .resumen-grid {
                 grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
                 gap: 10px;
             }
-            
+
             .container {
                 padding: 15px;
             }
-            
+
             header {
                 flex-direction: column;
                 gap: 10px;
                 padding: 10px 15px;
             }
-            
+
             .logo {
                 height: 35px;
             }
-            
+
             .btn {
                 padding: 8px 12px;
                 font-size: clamp(12px, 1.8vw, 14px);
             }
         }
-        
+
         @media (max-width: 480px) {
             .resumen-grid {
                 grid-template-columns: 1fr;
             }
-            
+
             /* Ocultar columnas menos importantes */
-            td:nth-child(1), th:nth-child(1) { /* Columna # */
+            td:nth-child(1),
+            th:nth-child(1) {
+                /* Columna # */
                 display: none;
             }
         }
-        
+
         @media (max-width: 360px) {
+
             /* Ajustar padding general */
             .container {
                 padding: 10px;
             }
-            
+
             /* Reducir tamaño de fuente en tablas */
             table {
                 font-size: 11px;
             }
-            
+
             /* Ajustar botones */
             .btn {
                 padding: 6px 8px;
@@ -295,19 +305,20 @@ foreach ($productosVendidos as $producto) {
         }
     </style>
 </head>
+
 <body>
     <header>
-        <img src="/assets/img/Logo.svg" alt="Batidos Pitaya" class="logo">
+        <img src="../../../../core/assets/img/Logo.svg" alt="Batidos Pitaya" class="logo">
         <div>
             <a href="index.php" class="btn btn-secondary">Volver a Cierres</a>
             <button onclick="window.print()" class="btn btn-primary">Imprimir</button>
         </div>
     </header>
-    
+
     <main class="container">
         <h1>Detalle de Cierre #<?= $cierre['id'] ?></h1>
         <p>Fecha: <?= formatearFecha($cierre['fecha_hora']) ?></p>
-        
+
         <div class="resumen-grid">
             <div class="resumen-item">
                 <h3>Total Ventas</h3>
@@ -330,10 +341,10 @@ foreach ($productosVendidos as $producto) {
                 <p><?= $totalProductos ?></p>
             </div>
         </div>
-        
+
         <div class="card">
             <h2>Resumen por Producto</h2>
-            
+
             <?php if (empty($resumenProductos)): ?>
                 <div class="empty-message">
                     <p>No hay productos para resumir</p>
@@ -359,10 +370,10 @@ foreach ($productosVendidos as $producto) {
                 </table>
             <?php endif; ?>
         </div>
-        
+
         <div class="card">
             <h2>Detalle de Productos Vendidos</h2>
-            
+
             <?php if (empty($productosVendidos)): ?>
                 <div class="empty-message">
                     <p>No hay productos registrados para este cierre</p>
@@ -384,7 +395,7 @@ foreach ($productosVendidos as $producto) {
                     $ventasAgrupadas[$ventaId]['productos'][] = $producto;
                 }
                 ?>
-                
+
                 <?php foreach ($ventasAgrupadas as $ventaId => $venta): ?>
                     <div class="venta-group" style="margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 15px;">
                         <h3>Venta #<?= $ventaId ?> - <?= formatearFecha($venta['fecha_venta']) ?>
@@ -392,13 +403,13 @@ foreach ($productosVendidos as $producto) {
                                 <?= $venta['tipo_pago'] ?>
                             </span>
                         </h3>
-                        
+
                         <?php if (!empty($venta['nombre_cliente'])): ?>
                             <p style="margin: 5px 0 10px; color: #0E544C; font-weight: bold; font-size: 15px;">
                                 <strong>Cliente:</strong> <?= htmlspecialchars($venta['nombre_cliente']) ?>
                             </p>
                         <?php endif; ?>
-                        
+
                         <table>
                             <thead>
                                 <tr>
@@ -428,7 +439,7 @@ foreach ($productosVendidos as $producto) {
             <?php endif; ?>
         </div>
     </main>
-    
+
     <script>
         // Reemplazar el script existente por este:
         const style = document.createElement('style');
@@ -472,4 +483,5 @@ foreach ($productosVendidos as $producto) {
         document.head.appendChild(style);
     </script>
 </body>
+
 </html>

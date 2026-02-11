@@ -11,12 +11,13 @@ $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admi
 
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Videos de Aprendizaje - Batidos Pitaya</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-    <link rel="icon" href="../../assets/img/icon12.png" type="image/png">
+    <link rel="icon" href="../../core/assets/img/icon12.png" type="image/png">
     <style>
         * {
             box-sizing: border-box;
@@ -25,18 +26,18 @@ $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admi
             font-family: 'Calibri', sans-serif;
             font-size: clamp(12px, 2vw, 16px) !important;
         }
-        
+
         body {
             background-color: #F6F6F6;
             color: #333;
         }
-        
+
         .container {
             max-width: 1200px;
             margin: 0 auto;
             padding: 10px;
         }
-        
+
         header {
             display: flex;
             justify-content: space-between;
@@ -45,17 +46,17 @@ $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admi
             border-bottom: 1px solid #ddd;
             margin-bottom: 30px;
         }
-        
+
         .logo {
             height: 50px;
         }
-        
+
         .user-info {
             display: flex;
             align-items: center;
             gap: 10px;
         }
-        
+
         .user-avatar {
             width: 40px;
             height: 40px;
@@ -67,7 +68,7 @@ $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admi
             color: white;
             font-weight: bold;
         }
-        
+
         .btn-logout {
             background: #51B8AC;
             color: white;
@@ -77,23 +78,23 @@ $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admi
             cursor: pointer;
             transition: background 0.3s;
         }
-        
+
         .btn-logout:hover {
             background: #0E544C;
         }
-        
+
         .module-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 20px;
         }
-        
+
         .module-title-page {
             color: #51B8AC;
             font-size: 1.8rem !important;
         }
-        
+
         .btn-volver {
             background: #51B8AC;
             color: white;
@@ -105,7 +106,7 @@ $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admi
             gap: 8px;
             transition: background 0.3s;
         }
-        
+
         .btn-volver:hover {
             background: #0E544C;
         }
@@ -116,7 +117,7 @@ $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admi
             border-radius: 8px;
             padding: 20px;
             margin-bottom: 30px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
 
         .search-box {
@@ -198,13 +199,13 @@ $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admi
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
             transition: all 0.3s ease;
             border-left: 4px solid #51B8AC;
         }
 
         .categoria-header:hover {
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
             transform: translateY(-2px);
         }
 
@@ -277,7 +278,7 @@ $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admi
             width: 100%;
             height: 337px;
             border-radius: 8px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
 
         .video-info {
@@ -325,14 +326,14 @@ $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admi
         .imagen-content {
             width: 100%;
             border-radius: 8px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
             cursor: pointer;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
 
         .imagen-content:hover {
             transform: scale(1.02);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
         }
 
         .imagen-info {
@@ -354,21 +355,21 @@ $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admi
             top: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0,0,0,0.9);
+            background-color: rgba(0, 0, 0, 0.9);
             overflow: auto;
             justify-content: center;
             align-items: center;
         }
-        
+
         .modal-content {
             max-width: 90%;
             max-height: 90%;
             margin: auto;
             display: block;
             border-radius: 8px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
         }
-        
+
         .modal-close {
             position: absolute;
             top: 20px;
@@ -380,11 +381,11 @@ $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admi
             cursor: pointer;
             z-index: 1001;
         }
-        
+
         .modal-close:hover {
             color: #51B8AC;
         }
-        
+
         .modal-caption {
             margin: auto;
             display: block;
@@ -401,25 +402,26 @@ $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admi
             .video-iframe {
                 height: 250px;
             }
-            
+
             .categoria-titulo {
                 font-size: 1.2rem !important;
             }
-            
-            .video-titulo, .imagen-titulo {
+
+            .video-titulo,
+            .imagen-titulo {
                 font-size: 1.1rem !important;
             }
-            
+
             header {
                 flex-direction: column;
                 gap: 15px;
                 text-align: center;
             }
-            
+
             .modal-content {
                 max-width: 95%;
             }
-            
+
             .modal-close {
                 top: 10px;
                 right: 20px;
@@ -431,11 +433,12 @@ $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admi
             .video-iframe {
                 height: 200px;
             }
-            
-            .video-item, .imagen-item {
+
+            .video-item,
+            .imagen-item {
                 padding: 15px;
             }
-            
+
             .imagen-content {
                 max-width: 100%;
             }
@@ -466,25 +469,26 @@ $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admi
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <header>
-            <img src="../../assets/img/Logo.svg" alt="Batidos Pitaya" class="logo">
+            <img src="../../core/assets/img/Logo.svg" alt="Batidos Pitaya" class="logo">
             <div class="user-info">
                 <div class="user-avatar">
-                    <?= $esAdmin ? 
-                        strtoupper(substr($usuario['nombre'], 0, 1)) : 
+                    <?= $esAdmin ?
+                        strtoupper(substr($usuario['nombre'], 0, 1)) :
                         strtoupper(substr($usuario['Nombre'], 0, 1)) ?>
                 </div>
                 <div>
                     <div>
-                        <?= $esAdmin ? 
-                            htmlspecialchars($usuario['nombre']) : 
-                            htmlspecialchars($usuario['Nombre'].' '.$usuario['Apellido']) ?>
+                        <?= $esAdmin ?
+                            htmlspecialchars($usuario['nombre']) :
+                            htmlspecialchars($usuario['Nombre'] . ' ' . $usuario['Apellido']) ?>
                     </div>
                     <small>
-                        <?= $esAdmin ? 
-                            'Administrador' : 
+                        <?= $esAdmin ?
+                            'Administrador' :
                             htmlspecialchars($usuario['cargo_nombre'] ?? 'Sin cargo definido') ?>
                     </small>
                 </div>
@@ -493,21 +497,26 @@ $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admi
                 </a>
             </div>
         </header>
-        
+
         <div class="module-header">
             <h1 class="module-title-page">Guía de Procedimientos y Buenas Prácticas - Batidos Pitaya</h1>
         </div>
-        
+
         <div class="search-container">
             <div class="search-results-info" id="searchResultsInfo" style="text-align:left !important;">
-                Esta Guia Operativa reúne de manera clara y ordenada todos los procedimientos, estándares, responsabilidades y lineamientos que rigen el funcionamiento diario de nuestras estaciones de trabajo: caja, batidos, bowls y waffles. Además, define cómo deben estar organizados los equipos, utensilios, áreas frías y secas, a fin de asegurar un flujo de trabajo eficiente, limpio y consistente en todas las sucursales.
+                Esta Guia Operativa reúne de manera clara y ordenada todos los procedimientos, estándares,
+                responsabilidades y lineamientos que rigen el funcionamiento diario de nuestras estaciones de trabajo:
+                caja, batidos, bowls y waffles. Además, define cómo deben estar organizados los equipos, utensilios,
+                áreas frías y secas, a fin de asegurar un flujo de trabajo eficiente, limpio y consistente en
+                todas las sucursales.
             </div>
         </div>
 
         <!-- Buscador -->
         <div class="search-container">
             <div class="search-box">
-                <input type="text" id="searchInput" class="search-input" placeholder="Buscar videos, imágenes, procedimientos...">
+                <input type="text" id="searchInput" class="search-input"
+                    placeholder="Buscar videos, imágenes, procedimientos...">
                 <button class="search-button" onclick="realizarBusqueda()">
                     <i class="fas fa-search"></i>
                 </button>
@@ -516,7 +525,7 @@ $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admi
                 Escribe en el buscador para encontrar contenido específico
             </div>
         </div>
-        
+
         <div class="videos-content" id="videosContent">
             <?php
             // Array de contenido organizado por categorías
@@ -698,7 +707,7 @@ $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admi
                     </div>
                     <div class="videos-container" id="videos-' . $categoriaKey . '">
                 ';
-                
+
                 foreach ($categoria['items'] as $index => $item) {
                     if ($categoria['tipo'] === 'videos') {
                         // Mostrar video
@@ -749,7 +758,7 @@ $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admi
                         ';
                     }
                 }
-                
+
                 echo '
                     </div>
                 </div>
@@ -785,9 +794,9 @@ $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admi
             const resultadosInfo = document.getElementById('searchResultsInfo');
             const noResults = document.getElementById('noResults');
             const videosContent = document.getElementById('videosContent');
-            
+
             terminoBusquedaActual = searchTerm;
-            
+
             if (searchTerm === '') {
                 // Si no hay término de búsqueda, mostrar todo
                 mostrarTodo();
@@ -795,10 +804,10 @@ $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admi
                 noResults.classList.add('hidden');
                 return;
             }
-            
+
             let totalResultados = 0;
             let categoriasConResultados = 0;
-            
+
             // Buscar en todas las categorías
             document.querySelectorAll('.categoria-videos').forEach(categoria => {
                 const categoriaKey = categoria.getAttribute('data-categoria');
@@ -806,36 +815,36 @@ $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admi
                 const videosContainer = categoria.querySelector('.videos-container');
                 const itemCount = categoria.querySelector('.item-count');
                 let resultadosEnCategoria = 0;
-                
+
                 // Buscar en items de la categoría
                 categoria.querySelectorAll('.video-item, .imagen-item').forEach(item => {
                     const titulo = item.getAttribute('data-titulo');
                     const descripcion = item.getAttribute('data-descripcion');
-                    
+
                     const coincideTitulo = titulo.includes(searchTerm);
                     const coincideDescripcion = descripcion.includes(searchTerm);
-                    
+
                     if (coincideTitulo || coincideDescripcion) {
                         item.classList.remove('hidden');
                         resultadosEnCategoria++;
                         totalResultados++;
-                        
+
                         // Resaltar texto coincidente
                         resaltarTextoCoincidente(item, searchTerm);
                     } else {
                         item.classList.add('hidden');
                     }
                 });
-                
+
                 // Mostrar/ocultar categoría según si tiene resultados
                 if (resultadosEnCategoria > 0) {
                     categoria.classList.remove('hidden');
                     categoriasConResultados++;
-                    
+
                     // Actualizar contador de la categoría
-                    itemCount.textContent = resultadosEnCategoria + ' ' + 
+                    itemCount.textContent = resultadosEnCategoria + ' ' +
                         (categoria.querySelector('.video-item') ? 'videos' : 'imágenes') + ' encontrados';
-                    
+
                     // Abrir categoría automáticamente si tiene resultados
                     if (!videosContainer.classList.contains('active')) {
                         videosContainer.classList.add('active');
@@ -847,7 +856,7 @@ $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admi
                     categoria.classList.add('hidden');
                 }
             });
-            
+
             // Mostrar información de resultados
             if (totalResultados > 0) {
                 resultadosInfo.innerHTML = `Se encontraron <strong>${totalResultados}</strong> resultados en <strong>${categoriasConResultados}</strong> categorías para "<span class="search-highlight">${searchTerm}</span>"`;
@@ -859,40 +868,40 @@ $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admi
                 videosContent.classList.add('hidden');
             }
         }
-        
+
         // Función para mostrar todo el contenido (sin filtros)
         function mostrarTodo() {
             document.querySelectorAll('.categoria-videos').forEach(categoria => {
                 categoria.classList.remove('hidden');
                 const itemCount = categoria.querySelector('.item-count');
                 const categoriaOriginal = categoriasOriginales.find(cat => cat.key === categoria.getAttribute('data-categoria'));
-                
+
                 if (categoriaOriginal) {
                     itemCount.textContent = categoriaOriginal.count + ' ' + categoriaOriginal.tipo;
                 }
-                
+
                 categoria.querySelectorAll('.video-item, .imagen-item').forEach(item => {
                     item.classList.remove('hidden');
                     // Quitar resaltado
                     quitarResaltado(item);
                 });
             });
-            
+
             document.getElementById('videosContent').classList.remove('hidden');
         }
-        
+
         // Función para resaltar texto coincidente
         function resaltarTextoCoincidente(item, searchTerm) {
             const tituloElement = item.querySelector('.titulo-texto');
             const descripcionElement = item.querySelector('.descripcion-texto');
-            
+
             if (tituloElement) {
                 const tituloOriginal = tituloElement.getAttribute('data-original') || tituloElement.textContent;
                 tituloElement.setAttribute('data-original', tituloOriginal);
                 const tituloResaltado = resaltarTexto(tituloOriginal, searchTerm);
                 tituloElement.innerHTML = tituloResaltado;
             }
-            
+
             if (descripcionElement) {
                 const descripcionOriginal = descripcionElement.getAttribute('data-original') || descripcionElement.textContent;
                 descripcionElement.setAttribute('data-original', descripcionOriginal);
@@ -900,46 +909,46 @@ $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admi
                 descripcionElement.innerHTML = descripcionResaltada;
             }
         }
-        
+
         // Función para quitar resaltado
         function quitarResaltado(item) {
             const tituloElement = item.querySelector('.titulo-texto');
             const descripcionElement = item.querySelector('.descripcion-texto');
-            
+
             if (tituloElement && tituloElement.getAttribute('data-original')) {
                 tituloElement.textContent = tituloElement.getAttribute('data-original');
                 tituloElement.removeAttribute('data-original');
             }
-            
+
             if (descripcionElement && descripcionElement.getAttribute('data-original')) {
                 descripcionElement.textContent = descripcionElement.getAttribute('data-original');
                 descripcionElement.removeAttribute('data-original');
             }
         }
-        
+
         // Función para resaltar texto en un string
         function resaltarTexto(texto, termino) {
             const regex = new RegExp(`(${termino.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
             return texto.replace(regex, '<span class="search-match">$1</span>');
         }
-        
+
         // Búsqueda en tiempo real
-        document.getElementById('searchInput').addEventListener('input', function() {
+        document.getElementById('searchInput').addEventListener('input', function () {
             clearTimeout(this.searchTimeout);
             this.searchTimeout = setTimeout(() => {
                 realizarBusqueda();
             }, 300);
         });
-        
+
         // Búsqueda al presionar Enter
-        document.getElementById('searchInput').addEventListener('keypress', function(e) {
+        document.getElementById('searchInput').addEventListener('keypress', function (e) {
             if (e.key === 'Enter') {
                 realizarBusqueda();
             }
         });
-        
+
         // Limpiar búsqueda
-        document.getElementById('searchInput').addEventListener('search', function() {
+        document.getElementById('searchInput').addEventListener('search', function () {
             if (this.value === '') {
                 realizarBusqueda();
             }
@@ -959,7 +968,7 @@ $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admi
             const videosContainer = document.getElementById('videos-' + categoriaKey);
             const categoriaHeader = videosContainer.previousElementSibling;
             const toggleIcon = categoriaHeader.querySelector('.categoria-toggle i');
-            
+
             if (categoriaActiva === categoriaKey) {
                 videosContainer.classList.remove('active');
                 categoriaHeader.classList.remove('active');
@@ -971,13 +980,13 @@ $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admi
                     const anteriorContainer = document.getElementById('videos-' + categoriaActiva);
                     const anteriorHeader = anteriorContainer.previousElementSibling;
                     const anteriorToggle = anteriorHeader.querySelector('.categoria-toggle i');
-                    
+
                     anteriorContainer.classList.remove('active');
                     anteriorHeader.classList.remove('active');
                     anteriorToggle.classList.remove('fa-chevron-up');
                     anteriorToggle.classList.add('fa-chevron-down');
                 }
-                
+
                 videosContainer.classList.add('active');
                 categoriaHeader.classList.add('active');
                 toggleIcon.classList.remove('fa-chevron-down');
@@ -990,7 +999,7 @@ $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admi
             const modal = document.getElementById('imageModal');
             const modalImg = document.getElementById('modalImage');
             const caption = document.getElementById('modalCaption');
-            
+
             modal.style.display = 'flex';
             modalImg.src = src;
             caption.innerHTML = titulo;
@@ -1003,17 +1012,18 @@ $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admi
             document.body.style.overflow = 'auto';
         }
 
-        document.getElementById('imageModal').addEventListener('click', function(event) {
+        document.getElementById('imageModal').addEventListener('click', function (event) {
             if (event.target === this) {
                 cerrarModal();
             }
         });
 
-        document.addEventListener('keydown', function(event) {
+        document.addEventListener('keydown', function (event) {
             if (event.key === 'Escape') {
                 cerrarModal();
             }
         });
     </script>
 </body>
+
 </html>
