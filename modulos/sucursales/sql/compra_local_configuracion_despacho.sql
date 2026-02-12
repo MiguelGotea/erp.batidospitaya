@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS compra_local_configuracion_despacho (
     -- Constraints
     UNIQUE KEY unique_config (id_producto_presentacion, codigo_sucursal, dia_entrega),
     FOREIGN KEY (id_producto_presentacion) REFERENCES producto_presentacion(id) ON DELETE CASCADE,
-    FOREIGN KEY (codigo_sucursal) REFERENCES sucursales(codigo) ON DELETE CASCADE,
+    FOREIGN KEY (codigo_sucursal) REFERENCES sucursales(codigo) ON DELETE CASCADE ON UPDATE CASCADE,
     FOREIGN KEY (usuario_creacion) REFERENCES Operarios(CodOperario) ON DELETE SET NULL,
     FOREIGN KEY (usuario_modificacion) REFERENCES Operarios(CodOperario) ON DELETE SET NULL,
     

@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS compra_local_pedidos_historico (
     -- Constraints
     UNIQUE KEY unique_pedido (id_producto_presentacion, codigo_sucursal, fecha_entrega),
     FOREIGN KEY (id_producto_presentacion) REFERENCES producto_presentacion(id) ON DELETE CASCADE,
-    FOREIGN KEY (codigo_sucursal) REFERENCES sucursales(codigo) ON DELETE CASCADE,
+    FOREIGN KEY (codigo_sucursal) REFERENCES sucursales(codigo) ON DELETE CASCADE ON UPDATE CASCADE,
     FOREIGN KEY (usuario_registro) REFERENCES Operarios(CodOperario) ON DELETE SET NULL,
     
     -- Indexes
