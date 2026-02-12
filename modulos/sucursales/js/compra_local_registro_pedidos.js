@@ -348,7 +348,7 @@ function renderizarTabla() {
                 (tieneConfigHoy && !beforeDeadline ? '🔒' : '-') :
                 (cantidadHoy ?
                     `<span class="cantidad-display">${cantidadHoy}</span>` :
-                    (alertaHoy ? '<span class="urgent-badge">⚠️</span><span class="text-muted">-</span>' : '<span class="text-muted">-</span>')
+                    (alertaHoy ? '<span class="urgent-badge">🚨</span><span class="text-muted">-</span>' : '<span class="text-muted">-</span>')
                 )
             }      </td>
                 <td class="day-cell ${habilitadoManana ? 'enabled' : 'disabled'} ${cantidadManana ? 'has-order' : ''}"
