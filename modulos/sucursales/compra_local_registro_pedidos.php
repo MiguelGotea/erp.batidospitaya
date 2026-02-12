@@ -43,6 +43,7 @@ if (!$codigoSucursal) {
     <link rel="stylesheet" href="css/compra_local_registro_pedidos.css?v=<?php echo mt_rand(1, 10000); ?>">
 </head>
 
+
 <body>
     <?php echo renderMenuLateral($cargoOperario); ?>
 

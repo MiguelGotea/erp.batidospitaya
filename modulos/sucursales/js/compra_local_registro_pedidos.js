@@ -221,38 +221,47 @@ function renderizarTabla() {
         return;
     }
 
-    // Generar contador para el encabezado
-    let contadorEncabezado = '';
+    // Generar contador para mostrar arriba de la tabla
+    let contadorHTML = '';
     if (expired) {
-        contadorEncabezado = '<span class="countdown-expired">🔒 BLOQUEADO</span>';
+        contadorHTML = `
+            <div class="countdown-banner countdown-expired-banner">
+                🔒 <strong>BLOQUEADO</strong> - Ya no se pueden registrar pedidos para entrega de mañana
+            </div>
+        `;
     } else {
         const horasStr = String(hours).padStart(2, '0');
         const minutosStr = String(minutes).padStart(2, '0');
         const segundosStr = String(seconds).padStart(2, '0');
 
-        let claseContador = 'countdown-normal';
+        let claseBanner = 'countdown-banner-normal';
         const totalMinutes = hours * 60 + minutes;
         if (totalMinutes < 30) {
-            claseContador = 'countdown-critical';
+            claseBanner = 'countdown-banner-critical';
         } else if (totalMinutes < 120) {
-            claseContador = 'countdown-warning';
+            claseBanner = 'countdown-banner-warning';
         }
 
-        contadorEncabezado = `<span class="${claseContador}">⏰ ${horasStr}:${minutosStr}:${segundosStr}</span>`;
+        contadorHTML = `
+            <div class="countdown-banner ${claseBanner}">
+                ⏰ <strong>Tiempo restante para pedidos de HOY:</strong> 
+                <span class="countdown-time">${horasStr}:${minutosStr}:${segundosStr}</span>
+                <small>(Plazo límite: 12:00 PM)</small>
+            </div>
+        `;
     }
 
-    let html = `
+    let html = contadorHTML + `
         <div class="table-responsive">
             <table class="table table-bordered pedidos-table">
                 <thead>
                     <tr>
-                        <th style="width: 40%">Producto</th>
-                        <th class="text-center column-hoy ${estadoHoy.clase}" style="width: 30%">
+                        <th style="width: 50%">Producto</th>
+                        <th class="text-center column-hoy ${estadoHoy.clase}" style="width: 25%">
                             Pedido HOY<br>
-                            <small>(Llega Mañana)</small><br>
-                            <span class="countdown-header">${contadorEncabezado}</span>
+                            <small>(Llega Mañana)</small>
                         </th>
-                        <th class="text-center column-manana" style="width: 30%">
+                        <th class="text-center column-manana" style="width: 25%">
                             Pedido MAÑANA<br>
                             <small>(Llega Pasado Mañana)</small>
                         </th>
@@ -296,7 +305,7 @@ function renderizarTabla() {
                 (tieneConfigHoy && !beforeDeadline ? '🔒' : '-') :
                 (cantidadHoy ?
                     `<span class="cantidad-display">${cantidadHoy}</span>` :
-                    (alertaHoy ? '<span class="urgent-icon">🚨</span>' : '<span class="text-muted">-</span>')
+                    (alertaHoy ? '<span class="urgent-badge">⚠️</span><span class="text-muted">-</span>' : '<span class="text-muted">-</span>')
                 )
             }      </td>
                 <td class="day-cell ${habilitadoManana ? 'enabled' : 'disabled'} ${cantidadManana ? 'has-order' : ''}"
