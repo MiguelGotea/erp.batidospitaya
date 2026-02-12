@@ -83,9 +83,6 @@ function obtenerEstadoColumnaHoy() {
 
 // Renderizar banner de reglas
 function renderizarBannerReglas() {
-    const { expired, hours, minutes, seconds } = calcularTiempoRestante();
-    const estadoHoy = obtenerEstadoColumnaHoy();
-
     const nombreDias = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
     const nombreMeses = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
 
@@ -98,24 +95,6 @@ function renderizarBannerReglas() {
     const fechaMañanaStr = `${diaManana} ${fechaManana.getDate()}-${nombreMeses[fechaManana.getMonth()]}`;
     const fechaPasadoMañanaStr = `${diaPasadoManana} ${fechaPasadoManana.getDate()}-${nombreMeses[fechaPasadoManana.getMonth()]}`;
 
-    let contadorHTML = '';
-    if (expired) {
-        contadorHTML = `<div class="deadline-status ${estadoHoy.clase}">
-            ${estadoHoy.icono} <strong>BLOQUEADO</strong> - Plazo vencido (12:00 PM)
-        </div>`;
-    } else {
-        const horasStr = String(hours).padStart(2, '0');
-        const minutosStr = String(minutes).padStart(2, '0');
-        const segundosStr = String(seconds).padStart(2, '0');
-
-        contadorHTML = `<div class="deadline-status ${estadoHoy.clase}">
-            ⏰ <strong>Tiempo restante:</strong> 
-            <span class="countdown-display">${horasStr}:${minutosStr}:${segundosStr}</span>
-            <br>
-            <small>⚠️ Plazo límite: 12:00 PM</small>
-        </div>`;
-    }
-
     const html = `
         <div class="reglas-banner mb-3">
             <h5 class="mb-3">
@@ -125,7 +104,9 @@ function renderizarBannerReglas() {
                 <div class="col-md-6 mb-3">
                     <div class="regla-card">
                         <h6>• Pedido de HOY → Llega MAÑANA (${fechaMañanaStr})</h6>
-                        ${contadorHTML}
+                        <div class="deadline-status deadline-normal">
+                            ⚠️ <strong>Plazo límite: 12:00 PM</strong>
+                        </div>
                     </div>
                 </div>
                 <div class="col-md-6 mb-3">
@@ -264,15 +245,37 @@ function agruparPedidos(pedidosArray) {
 function renderizarTabla() {
     const beforeDeadline = verificarHoraLimite();
     const estadoHoy = obtenerEstadoColumnaHoy();
+    const { expired, hours, minutes, seconds } = calcularTiempoRestante();
 
-    if (productos.length === 0) {
+    // Calcular día de la semana de mañana y pasado mañana
+    const diaSemanaManana = fechasEntrega.hoy.getDay() === 0 ? 7 : fechasEntrega.hoy.getDay();
+    const diaSemanaMananaManana = fechasEntrega.manana.getDay() === 0 ? 7 : fechasEntrega.manana.getDay();
+
+    // Filtrar productos que tienen configuración para hoy o mañana
+    const productosFiltrados = productos.filter(producto => {
+        return producto.dias_entrega.includes(diaSemanaManana) ||
+            producto.dias_entrega.includes(diaSemanaMananaManana);
+    });
+
+    if (productosFiltrados.length === 0) {
         $('#productos-container').html(`
             <div class="alert alert-warning">
                 <i class="bi bi-exclamation-triangle"></i>
-                No hay productos configurados para esta sucursal.
+                No hay productos configurados para pedidos de hoy o mañana.
             </div>
         `);
         return;
+    }
+
+    // Generar contador para el encabezado
+    let contadorEncabezado = '';
+    if (expired) {
+        contadorEncabezado = '🔒 BLOQUEADO';
+    } else {
+        const horasStr = String(hours).padStart(2, '0');
+        const minutosStr = String(minutes).padStart(2, '0');
+        const segundosStr = String(seconds).padStart(2, '0');
+        contadorEncabezado = `⏰ ${horasStr}:${minutosStr}:${segundosStr}`;
     }
 
     let html = `
@@ -282,11 +285,12 @@ function renderizarTabla() {
                     <tr>
                         <th style="width: 40%">Producto</th>
                         <th class="text-center column-hoy ${estadoHoy.clase}" style="width: 30%">
-                            ${estadoHoy.icono} Pedido HOY<br>
-                            <small>(Llega Mañana)</small>
+                            Pedido HOY<br>
+                            <small>(Llega Mañana)</small><br>
+                            <span class="countdown-header">${contadorEncabezado}</span>
                         </th>
                         <th class="text-center column-manana" style="width: 30%">
-                            ✅ Pedido MAÑANA<br>
+                            Pedido MAÑANA<br>
                             <small>(Llega Pasado Mañana)</small>
                         </th>
                     </tr>
@@ -294,22 +298,25 @@ function renderizarTabla() {
                 <tbody>
     `;
 
-    productos.forEach(producto => {
+    productosFiltrados.forEach(producto => {
         const isInactive = producto.status === 'inactivo';
+        const tieneConfigHoy = producto.dias_entrega.includes(diaSemanaManana);
+        const tieneConfigManana = producto.dias_entrega.includes(diaSemanaMananaManana);
 
         // Pedido de HOY
         const keyHoy = `${producto.id_producto}_hoy`;
         const pedidoHoy = pedidos[keyHoy];
         const cantidadHoy = pedidoHoy ? pedidoHoy.cantidad : '';
         const fechaHoraHoy = pedidoHoy ? pedidoHoy.fecha_hora_reportada : null;
-        const bloqueadoHoy = !beforeDeadline || isInactive;
-        const alertaHoy = !cantidadHoy && !bloqueadoHoy && estadoHoy.estado === 'advertencia';
+        const habilitadoHoy = tieneConfigHoy && beforeDeadline && !isInactive;
+        const alertaHoy = !cantidadHoy && habilitadoHoy && estadoHoy.estado === 'advertencia';
 
         // Pedido de MAÑANA
         const keyManana = `${producto.id_producto}_manana`;
         const pedidoManana = pedidos[keyManana];
         const cantidadManana = pedidoManana ? pedidoManana.cantidad : '';
         const fechaHoraManana = pedidoManana ? pedidoManana.fecha_hora_reportada : null;
+        const habilitadoManana = tieneConfigManana && !isInactive;
 
         html += `
             <tr ${isInactive ? 'class="inactive-product"' : ''}>
@@ -318,25 +325,25 @@ function renderizarTabla() {
                     ${producto.SKU ? `<br><small class="text-muted">SKU: ${producto.SKU}</small>` : ''}
                     ${isInactive ? '<br><span class="badge bg-secondary">Inactivo</span>' : ''}
                 </td>
-                <td class="day-cell ${bloqueadoHoy ? 'disabled' : 'enabled'} ${cantidadHoy ? 'has-order' : ''} ${alertaHoy ? 'alert-cell' : ''} ${estadoHoy.clase}"
+                <td class="day-cell ${habilitadoHoy ? 'enabled' : 'disabled'} ${cantidadHoy ? 'has-order' : ''} ${alertaHoy ? 'alert-cell' : ''} ${estadoHoy.clase}"
                     data-producto-id="${producto.id_producto}"
                     data-columna="hoy"
                     data-fecha-hora="${fechaHoraHoy || ''}"
-                    ${!bloqueadoHoy && puedeEditar ? `onclick="editarCantidad(this)"` : ''}>
-                    ${bloqueadoHoy ?
-                '🔒' :
+                    ${habilitadoHoy && puedeEditar ? `onclick="editarCantidad(this)"` : ''}>
+                    ${!tieneConfigHoy || !beforeDeadline || isInactive ?
+                (tieneConfigHoy && !beforeDeadline ? '🔒' : '-') :
                 (cantidadHoy ?
                     `<span class="cantidad-display">${cantidadHoy}</span>` :
                     (alertaHoy ? '⚠️' : '<span class="text-muted">-</span>')
                 )
             }
                 </td>
-                <td class="day-cell ${isInactive ? 'disabled' : 'enabled'} ${cantidadManana ? 'has-order' : ''}"
+                <td class="day-cell ${habilitadoManana ? 'enabled' : 'disabled'} ${cantidadManana ? 'has-order' : ''}"
                     data-producto-id="${producto.id_producto}"
                     data-columna="manana"
                     data-fecha-hora="${fechaHoraManana || ''}"
-                    ${!isInactive && puedeEditar ? `onclick="editarCantidad(this)"` : ''}>
-                    ${isInactive ?
+                    ${habilitadoManana && puedeEditar ? `onclick="editarCantidad(this)"` : ''}>
+                    ${!tieneConfigManana || isInactive ?
                 '-' :
                 (cantidadManana ?
                     `<span class="cantidad-display">${cantidadManana}</span>` :

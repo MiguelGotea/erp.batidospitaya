@@ -291,6 +291,16 @@ body {
     color: white;
 }
 
+/* Countdown in Header */
+.countdown-header {
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    display: block;
+    margin-top: 4px;
+}
+
 /* Column Headers */
 .column-hoy {
     background-color: #0E544C !important;
