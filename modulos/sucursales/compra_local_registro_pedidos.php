@@ -10,6 +10,7 @@ require_once '../../core/helpers/funciones.php';
 $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
 
+
 // Verificar acceso
 if (!tienePermiso('compra_local_registro_pedidos', 'vista', $cargoOperario)) {
     header('Location: /login.php');
