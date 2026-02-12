@@ -208,6 +208,111 @@ body {
     background-color: #ffeaa7 !important;
 }
 
+/* ===================================================
+   REGLAS BANNER - Simplified Interface
+   =================================================== */
+
+.reglas-banner {
+    background: linear-gradient(135deg, #0E544C 0%, #51B8AC 100%);
+    color: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.reglas-banner h5 {
+    color: white;
+    font-weight: 600;
+    margin-bottom: 16px;
+}
+
+.regla-card {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 15px;
+    border-radius: 6px;
+    backdrop-filter: blur(10px);
+}
+
+.regla-card h6 {
+    color: white;
+    font-size: 14px;
+    margin-bottom: 10px;
+    font-weight: 500;
+}
+
+/* Deadline Status */
+.deadline-status {
+    padding: 10px;
+    border-radius: 4px;
+    font-size: 13px;
+    margin-top: 8px;
+}
+
+.deadline-status.deadline-normal {
+    background-color: rgba(76, 175, 80, 0.2);
+    border-left: 4px solid #4caf50;
+}
+
+.deadline-status.deadline-warning {
+    background-color: rgba(255, 193, 7, 0.2);
+    border-left: 4px solid #ffc107;
+    animation: pulse 2s infinite;
+}
+
+.deadline-status.deadline-critical {
+    background-color: rgba(244, 67, 54, 0.2);
+    border-left: 4px solid #f44336;
+    animation: pulse 1s infinite;
+}
+
+.deadline-status.deadline-expired {
+    background-color: rgba(158, 158, 158, 0.2);
+    border-left: 4px solid #9e9e9e;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.7;
+    }
+}
+
+/* Countdown Display */
+.countdown-display {
+    font-family: 'Courier New', monospace;
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: white;
+}
+
+/* Column Headers */
+.column-hoy {
+    background-color: #0E544C !important;
+}
+
+.column-hoy.deadline-warning {
+    background-color: #f57c00 !important;
+}
+
+.column-hoy.deadline-critical {
+    background-color: #d32f2f !important;
+}
+
+.column-hoy.deadline-expired {
+    background-color: #757575 !important;
+}
+
+.column-manana {
+    background-color: #0E544C !important;
+}
+
+
 /* Loader */
 .loader-container {
     display: flex;

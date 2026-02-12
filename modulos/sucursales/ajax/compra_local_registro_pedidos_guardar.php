@@ -27,6 +27,16 @@ try {
         throw new Exception('Formato de fecha inválido');
     }
 
+    // Validar restricción de hora para pedidos de mañana
+    $manana = date('Y-m-d', strtotime('+1 day'));
+    if ($fecha_entrega === $manana) {
+        // Este es un pedido para entrega de mañana (pedido de HOY)
+        $hora_actual = date('H:i:s');
+        if ($hora_actual >= '12:00:00') {
+            throw new Exception('Plazo vencido. No se pueden registrar pedidos para entrega de mañana después de las 12:00 PM');
+        }
+    }
+
     // Obtener día de la semana de la fecha (1=Lun, 7=Dom)
     $dia_semana = $fecha_obj->format('N');
     if ($dia_semana == 7)

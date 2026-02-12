@@ -57,6 +57,9 @@ if (!$codigoSucursal) {
                     <?php echo htmlspecialchars($sucursales[0]['nombre']); ?>
                 </div>
 
+                <!-- Banner de Reglas (populated by JavaScript) -->
+                <div id="reglas-banner"></div>
+
                 <!-- Tabla de Productos -->
                 <div id="productos-container">
                     <div class="loader-container">
@@ -86,11 +89,11 @@ if (!$codigoSucursal) {
                             <div class="card h-100 border-0 bg-light">
                                 <div class="card-body">
                                     <h6 class="text-primary border-bottom pb-2 fw-bold">
-                                        <i class="fas fa-calendar-week me-2"></i> Calendario Semanal
+                                        <i class="fas fa-calendar-day me-2"></i> Pedido de HOY
                                     </h6>
                                     <p class="small text-muted mb-0">
-                                        El calendario muestra los días de la semana actual. Solo puede registrar
-                                        pedidos para los días configurados en el plan de despacho.
+                                        Los pedidos registrados HOY llegan MAÑANA. Plazo límite: 12:00 PM.
+                                        Después de esta hora, esta columna se bloqueará automáticamente.
                                     </p>
                                 </div>
                             </div>
@@ -99,24 +102,11 @@ if (!$codigoSucursal) {
                             <div class="card h-100 border-0 bg-light">
                                 <div class="card-body">
                                     <h6 class="text-success border-bottom pb-2 fw-bold">
-                                        <i class="fas fa-edit me-2"></i> Registrar Cantidades
+                                        <i class="fas fa-calendar-plus me-2"></i> Pedido de MAÑANA
                                     </h6>
                                     <p class="small text-muted mb-0">
-                                        Haga clic en las celdas habilitadas para ingresar la cantidad de pedido. Los
-                                        cambios se guardan automáticamente.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6 mb-4">
-                            <div class="card h-100 border-0 bg-light">
-                                <div class="card-body">
-                                    <h6 class="text-info border-bottom pb-2 fw-bold">
-                                        <i class="fas fa-clock me-2"></i> Historial de Cambios
-                                    </h6>
-                                    <p class="small text-muted mb-0">
-                                        Pase el cursor sobre una celda con pedido para ver la fecha y hora de la última
-                                        modificación.
+                                        Los pedidos registrados para MAÑANA llegan PASADO MAÑANA.
+                                        Disponible sin límite de tiempo.
                                     </p>
                                 </div>
                             </div>
@@ -125,11 +115,24 @@ if (!$codigoSucursal) {
                             <div class="card h-100 border-0 bg-light">
                                 <div class="card-body">
                                     <h6 class="text-warning border-bottom pb-2 fw-bold">
-                                        <i class="fas fa-exclamation-triangle me-2"></i> Días Deshabilitados
+                                        <i class="fas fa-clock me-2"></i> Contador Regresivo
                                     </h6>
                                     <p class="small text-muted mb-0">
-                                        Las celdas en gris indican días sin entrega programada. No puede registrar
-                                        pedidos en estos días.
+                                        El contador muestra el tiempo restante para registrar pedidos de HOY.
+                                        Cuando llegue a cero, la columna se bloqueará.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100 border-0 bg-light">
+                                <div class="card-body">
+                                    <h6 class="text-info border-bottom pb-2 fw-bold">
+                                        <i class="fas fa-exclamation-triangle me-2"></i> Alertas
+                                    </h6>
+                                    <p class="small text-muted mb-0">
+                                        ⚠️ aparece cuando falta menos de 2 horas y no has registrado pedido.
+                                        🔒 indica que la columna está bloqueada por plazo vencido.
                                     </p>
                                 </div>
                             </div>
@@ -138,7 +141,7 @@ if (!$codigoSucursal) {
                     <div class="alert alert-info py-2 px-3 small">
                         <strong><i class="fas fa-info-circle me-1"></i> Nota:</strong>
                         <br>
-                        Solo se actualiza la fecha de modificación cuando cambia realmente el valor de la cantidad.
+                        Los cambios se guardan automáticamente al ingresar las cantidades.
                     </div>
                 </div>
             </div>
