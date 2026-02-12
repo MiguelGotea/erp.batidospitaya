@@ -1,6 +1,6 @@
 <?php
 // compra_local_registro_pedidos_guardar.php
-// Guardar cantidad de pedido (solo actualiza fecha_hora_reportada si el valor cambió)
+// Guardar cantidad de pedido con fecha específica
 
 require_once '../../../core/auth/auth.php';
 require_once '../../../core/database/conexion.php';
@@ -14,66 +14,87 @@ try {
     $usuario = obtenerUsuarioActual();
     $codigo_sucursal = $_POST['codigo_sucursal'] ?? '';
     $id_producto = $_POST['id_producto_presentacion'] ?? '';
-    $dia_entrega = $_POST['dia_entrega'] ?? '';
+    $fecha_entrega = $_POST['fecha_entrega'] ?? '';
     $cantidad_pedido = $_POST['cantidad_pedido'] ?? 0;
 
-    if (empty($codigo_sucursal) || empty($id_producto) || empty($dia_entrega)) {
+    if (empty($codigo_sucursal) || empty($id_producto) || empty($fecha_entrega)) {
         throw new Exception('Datos incompletos');
     }
 
-    // Validar día de entrega (1-7)
-    if ($dia_entrega < 1 || $dia_entrega > 7) {
-        throw new Exception('Día de entrega inválido');
+    // Validar formato de fecha
+    $fecha_obj = DateTime::createFromFormat('Y-m-d', $fecha_entrega);
+    if (!$fecha_obj) {
+        throw new Exception('Formato de fecha inválido');
     }
 
-    // Verificar si existe el registro
+    // Obtener día de la semana de la fecha (1=Lun, 7=Dom)
+    $dia_semana = $fecha_obj->format('N');
+    if ($dia_semana == 7)
+        $dia_semana = 7; // Domingo
+
+    // Verificar que este día esté habilitado en la configuración
+    $sql_config = "SELECT id FROM compra_local_configuracion_despacho 
+                   WHERE id_producto_presentacion = ? 
+                   AND codigo_sucursal = ? 
+                   AND dia_entrega = ?
+                   AND status = 'activo'";
+    $stmt_config = $conn->prepare($sql_config);
+    $stmt_config->execute([$id_producto, $codigo_sucursal, $dia_semana]);
+
+    if (!$stmt_config->fetch()) {
+        throw new Exception('Este día no está habilitado para pedidos de este producto');
+    }
+
+    // Verificar si ya existe un pedido para esta fecha
     $sql_check = "SELECT id, cantidad_pedido 
-                  FROM compra_local_productos_despacho 
+                  FROM compra_local_pedidos_historico 
                   WHERE id_producto_presentacion = ? 
                   AND codigo_sucursal = ? 
-                  AND dia_entrega = ?";
+                  AND fecha_entrega = ?";
     $stmt_check = $conn->prepare($sql_check);
-    $stmt_check->execute([$id_producto, $codigo_sucursal, $dia_entrega]);
+    $stmt_check->execute([$id_producto, $codigo_sucursal, $fecha_entrega]);
     $registro = $stmt_check->fetch(PDO::FETCH_ASSOC);
 
-    if (!$registro) {
-        throw new Exception('No existe configuración para este producto y día');
-    }
+    if ($registro) {
+        // Actualizar pedido existente
+        $cantidad_anterior = $registro['cantidad_pedido'] ?? 0;
 
-    // Obtener cantidad anterior
-    $cantidad_anterior = $registro['cantidad_pedido'] ?? 0;
+        // Solo actualizar fecha_hora_reportada si el valor cambió
+        if ($cantidad_anterior != $cantidad_pedido) {
+            $sql = "UPDATE compra_local_pedidos_historico 
+                    SET cantidad_pedido = ?, 
+                        fecha_hora_reportada = NOW(),
+                        usuario_registro = ?
+                    WHERE id = ?";
 
-    // Solo actualizar fecha_hora_reportada si el valor cambió
-    if ($cantidad_anterior != $cantidad_pedido) {
-        $sql = "UPDATE compra_local_productos_despacho 
-                SET cantidad_pedido = ?, 
-                    fecha_hora_reportada = NOW(),
-                    usuario_modificacion = ?
-                WHERE id = ?";
-
-        $stmt = $conn->prepare($sql);
-        $stmt->execute([
-            $cantidad_pedido,
-            $usuario['CodOperario'],
-            $registro['id']
-        ]);
+            $stmt = $conn->prepare($sql);
+            $stmt->execute([
+                $cantidad_pedido,
+                $usuario['CodOperario'],
+                $registro['id']
+            ]);
+        }
     } else {
-        // Si no cambió, solo actualizar usuario_modificacion sin cambiar fecha_hora_reportada
-        $sql = "UPDATE compra_local_productos_despacho 
-                SET usuario_modificacion = ?
-                WHERE id = ?";
+        // Insertar nuevo pedido
+        if ($cantidad_pedido > 0) {
+            $sql = "INSERT INTO compra_local_pedidos_historico 
+                    (id_producto_presentacion, codigo_sucursal, fecha_entrega, cantidad_pedido, usuario_registro, fecha_hora_reportada)
+                    VALUES (?, ?, ?, ?, ?, NOW())";
 
-        $stmt = $conn->prepare($sql);
-        $stmt->execute([
-            $usuario['CodOperario'],
-            $registro['id']
-        ]);
+            $stmt = $conn->prepare($sql);
+            $stmt->execute([
+                $id_producto,
+                $codigo_sucursal,
+                $fecha_entrega,
+                $cantidad_pedido,
+                $usuario['CodOperario']
+            ]);
+        }
     }
 
     echo json_encode([
         'success' => true,
-        'message' => 'Pedido guardado correctamente',
-        'valor_cambio' => $cantidad_anterior != $cantidad_pedido
+        'message' => 'Pedido guardado correctamente'
     ]);
 
 } catch (Exception $e) {

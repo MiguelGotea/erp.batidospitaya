@@ -27,7 +27,7 @@ try {
     }
 
     // Verificar si ya existe este registro
-    $sql_check = "SELECT id FROM compra_local_productos_despacho 
+    $sql_check = "SELECT id FROM compra_local_configuracion_despacho 
                   WHERE id_producto_presentacion = ? 
                   AND codigo_sucursal = ? 
                   AND dia_entrega = ?";
@@ -39,7 +39,7 @@ try {
     }
 
     // Insertar nuevo registro
-    $sql = "INSERT INTO compra_local_productos_despacho 
+    $sql = "INSERT INTO compra_local_configuracion_despacho 
             (id_producto_presentacion, codigo_sucursal, dia_entrega, status, usuario_creacion)
             VALUES (?, ?, ?, 'activo', ?)";
 

@@ -16,15 +16,15 @@ try {
 
     // Obtener productos configurados para esta sucursal con sus días de entrega
     $sql = "SELECT 
-                clpd.id_producto_presentacion as id_producto,
+                clcd.id_producto_presentacion as id_producto,
                 pp.Nombre as nombre_producto,
                 pp.SKU,
-                clpd.status,
-                GROUP_CONCAT(DISTINCT clpd.dia_entrega ORDER BY clpd.dia_entrega) as dias_entrega
-            FROM compra_local_productos_despacho clpd
-            INNER JOIN producto_presentacion pp ON clpd.id_producto_presentacion = pp.id
-            WHERE clpd.codigo_sucursal = ?
-            GROUP BY clpd.id_producto_presentacion, pp.Nombre, pp.SKU, clpd.status
+                clcd.status,
+                GROUP_CONCAT(DISTINCT clcd.dia_entrega ORDER BY clcd.dia_entrega) as dias_entrega
+            FROM compra_local_configuracion_despacho clcd
+            INNER JOIN producto_presentacion pp ON clcd.id_producto_presentacion = pp.id
+            WHERE clcd.codigo_sucursal = ?
+            GROUP BY clcd.id_producto_presentacion, pp.Nombre, pp.SKU, clcd.status
             ORDER BY pp.Nombre";
 
     $stmt = $conn->prepare($sql);

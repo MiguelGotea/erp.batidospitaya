@@ -16,17 +16,16 @@ try {
 
     // Obtener configuración de productos para esta sucursal
     $sql = "SELECT 
-                clpd.id,
-                clpd.id_producto_presentacion,
-                clpd.dia_entrega,
-                clpd.cantidad_pedido,
-                clpd.status,
+                clcd.id,
+                clcd.id_producto_presentacion,
+                clcd.dia_entrega,
+                clcd.status,
                 pp.Nombre as nombre_producto,
                 pp.SKU
-            FROM compra_local_productos_despacho clpd
-            INNER JOIN producto_presentacion pp ON clpd.id_producto_presentacion = pp.id
-            WHERE clpd.codigo_sucursal = ?
-            ORDER BY pp.Nombre, clpd.dia_entrega";
+            FROM compra_local_configuracion_despacho clcd
+            INNER JOIN producto_presentacion pp ON clcd.id_producto_presentacion = pp.id
+            WHERE clcd.codigo_sucursal = ?
+            ORDER BY pp.Nombre, clcd.dia_entrega";
 
     $stmt = $conn->prepare($sql);
     $stmt->execute([$codigo_sucursal]);

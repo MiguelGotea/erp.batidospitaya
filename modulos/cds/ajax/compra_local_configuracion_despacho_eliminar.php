@@ -15,7 +15,7 @@ try {
     }
 
     // Eliminar registro
-    $sql = "DELETE FROM compra_local_productos_despacho WHERE id = ?";
+    $sql = "DELETE FROM compra_local_configuracion_despacho WHERE id = ?";
     $stmt = $conn->prepare($sql);
     $stmt->execute([$id]);
 

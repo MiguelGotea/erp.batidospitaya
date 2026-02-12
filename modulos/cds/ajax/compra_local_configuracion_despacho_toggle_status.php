@@ -26,7 +26,7 @@ try {
     }
 
     // Actualizar status de todos los registros de este producto en esta sucursal
-    $sql = "UPDATE compra_local_productos_despacho 
+    $sql = "UPDATE compra_local_configuracion_despacho 
             SET status = ?, 
                 usuario_modificacion = ?,
                 fecha_modificacion = NOW()

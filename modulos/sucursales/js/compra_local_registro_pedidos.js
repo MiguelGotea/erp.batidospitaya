@@ -85,6 +85,14 @@ function estaProximoAHoy(fecha) {
     return diffDays >= 0 && diffDays <= 2;
 }
 
+// Formatear fecha para SQL (YYYY-MM-DD)
+function formatearFechaSQL(fecha) {
+    const year = fecha.getFullYear();
+    const month = String(fecha.getMonth() + 1).padStart(2, '0');
+    const day = String(fecha.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
 // Cargar productos configurados para esta sucursal
 function cargarProductos() {
     $.ajax({
@@ -108,10 +116,18 @@ function cargarProductos() {
 
 // Cargar pedidos existentes
 function cargarPedidos() {
+    // Calcular rango de fechas (primera y última fecha del calendario)
+    const fecha_inicio = formatearFechaSQL(currentWeekDates[0]);
+    const fecha_fin = formatearFechaSQL(currentWeekDates[6]);
+
     $.ajax({
         url: 'ajax/compra_local_registro_pedidos_get_pedidos.php',
         method: 'POST',
-        data: { codigo_sucursal: codigoSucursal },
+        data: {
+            codigo_sucursal: codigoSucursal,
+            fecha_inicio: fecha_inicio,
+            fecha_fin: fecha_fin
+        },
         dataType: 'json',
         success: function (response) {
             if (response.success) {
@@ -127,16 +143,20 @@ function cargarPedidos() {
     });
 }
 
-// Agrupar pedidos por producto y día
+// Agrupar pedidos por producto y fecha
 function agruparPedidos(pedidosArray) {
     const agrupado = {};
 
     pedidosArray.forEach(pedido => {
-        const key = `${pedido.id_producto_presentacion}_${pedido.dia_entrega}`;
+        // Usar fecha_entrega para agrupar
+        const fecha = new Date(pedido.fecha_entrega + 'T00:00:00');
+        const diaSemana = getDiaSemana(fecha);
+        const key = `${pedido.id_producto_presentacion}_${diaSemana}`;
         agrupado[key] = {
             id: pedido.id,
             cantidad: pedido.cantidad_pedido,
-            fecha_hora_reportada: pedido.fecha_hora_reportada
+            fecha_hora_reportada: pedido.fecha_hora_reportada,
+            fecha_entrega: pedido.fecha_entrega
         };
     });
 
@@ -210,6 +230,7 @@ function renderizarTabla() {
                             <td class="day-cell ${tieneEntrega && !isInactive ? 'enabled' : 'disabled'} ${cantidad ? 'has-order' : ''} ${sinPedido ? 'alert-cell' : ''} ${esHoy ? 'today-column' : ''}"
                                 data-producto-id="${producto.id_producto}"
                                 data-dia="${diaSemana}"
+                                data-fecha-index="${index}"
                                 data-fecha-hora="${fechaHora || ''}"
                                 ${tieneEntrega && !isInactive && puedeEditar ? `onclick="editarCantidad(this)"` : ''}>
                                 ${tieneEntrega && !isInactive ?
@@ -292,6 +313,7 @@ function editarCantidad(cell) {
     const $cell = $(cell);
     const productoId = $cell.data('producto-id');
     const dia = $cell.data('dia');
+    const fechaIndex = $cell.data('fecha-index');
     const cantidadActual = $cell.find('.cantidad-display').text() || '';
 
     // Crear input
@@ -305,7 +327,7 @@ function editarCantidad(cell) {
     input.on('blur keypress', function (e) {
         if (e.type === 'blur' || e.which === 13) {
             const nuevaCantidad = parseInt($(this).val()) || 0;
-            guardarCantidad(productoId, dia, nuevaCantidad, cantidadActual, $cell);
+            guardarCantidad(productoId, dia, fechaIndex, nuevaCantidad, cantidadActual, $cell);
         }
     });
 
@@ -318,12 +340,15 @@ function editarCantidad(cell) {
 }
 
 // Guardar cantidad
-function guardarCantidad(productoId, dia, nuevaCantidad, cantidadAnterior, $cell) {
+function guardarCantidad(productoId, dia, fechaIndex, nuevaCantidad, cantidadAnterior, $cell) {
     // Si no cambió el valor, solo re-renderizar
     if (nuevaCantidad.toString() === cantidadAnterior.toString()) {
         renderizarTabla();
         return;
     }
+
+    // Calcular fecha específica de entrega
+    const fechaEntrega = formatearFechaSQL(currentWeekDates[fechaIndex]);
 
     // Mostrar indicador de guardado
     mostrarGuardando();
@@ -334,7 +359,7 @@ function guardarCantidad(productoId, dia, nuevaCantidad, cantidadAnterior, $cell
         data: {
             codigo_sucursal: codigoSucursal,
             id_producto_presentacion: productoId,
-            dia_entrega: dia,
+            fecha_entrega: fechaEntrega,
             cantidad_pedido: nuevaCantidad
         },
         dataType: 'json',

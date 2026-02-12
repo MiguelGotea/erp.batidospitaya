@@ -1,6 +1,6 @@
 <?php
 // compra_local_consolidado_pedidos_get_datos.php
-// Obtiene datos consolidados de pedidos por producto y día
+// Obtiene datos consolidados de pedidos históricos por producto y día
 
 require_once '../../../core/auth/auth.php';
 require_once '../../../core/database/conexion.php';
@@ -13,47 +13,46 @@ header('Content-Type: application/json');
 try {
     $filtro_sucursal = $_POST['sucursal'] ?? '';
 
-    // Construir query base
+    // Construir query base - consultar historial de pedidos
     $sql = "SELECT 
-                clpd.id_producto_presentacion,
+                clph.id_producto_presentacion,
                 pp.Nombre as nombre_producto,
                 pp.SKU,
-                clpd.dia_entrega,
-                SUM(clpd.cantidad_pedido) as total_cantidad,
-                COUNT(DISTINCT clpd.codigo_sucursal) as num_sucursales,
+                DAYOFWEEK(clph.fecha_entrega) as dia_entrega,
+                SUM(clph.cantidad_pedido) as total_cantidad,
+                COUNT(DISTINCT clph.codigo_sucursal) as num_sucursales,
                 GROUP_CONCAT(
-                    CONCAT(s.codigo, ':', s.nombre, ':', clpd.cantidad_pedido)
+                    CONCAT(s.codigo, ':', s.nombre, ':', clph.cantidad_pedido)
                     SEPARATOR '|'
                 ) as detalles_sucursales
-            FROM compra_local_productos_despacho clpd
-            INNER JOIN producto_presentacion pp ON clpd.id_producto_presentacion = pp.id
-            INNER JOIN sucursales s ON clpd.codigo_sucursal = s.codigo
-            WHERE clpd.cantidad_pedido > 0
-            AND clpd.status = 'activo'";
+            FROM compra_local_pedidos_historico clph
+            INNER JOIN producto_presentacion pp ON clph.id_producto_presentacion = pp.id
+            INNER JOIN sucursales s ON clph.codigo_sucursal = s.codigo
+            WHERE clph.cantidad_pedido > 0
+            AND clph.fecha_entrega >= CURDATE() - INTERVAL 7 DAY
+            AND clph.fecha_entrega <= CURDATE() + INTERVAL 7 DAY";
 
     $params = [];
 
     // Aplicar filtro de sucursal
     if (!empty($filtro_sucursal)) {
-        $sql .= " AND clpd.codigo_sucursal = ?";
+        $sql .= " AND clph.codigo_sucursal = ?";
         $params[] = $filtro_sucursal;
     }
 
-    // Aplicar filtro de día
-    if (!empty($filtro_dia)) {
-        $sql .= " AND clpd.dia_entrega = ?";
-        $params[] = $filtro_dia;
-    }
-
-    $sql .= " GROUP BY clpd.id_producto_presentacion, pp.Nombre, pp.SKU, clpd.dia_entrega
-              ORDER BY pp.Nombre, clpd.dia_entrega";
+    $sql .= " GROUP BY clph.id_producto_presentacion, pp.Nombre, pp.SKU, dia_entrega
+              ORDER BY pp.Nombre, dia_entrega";
 
     $stmt = $conn->prepare($sql);
     $stmt->execute($params);
     $consolidado = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // Procesar detalles de sucursales
+    // Procesar detalles de sucursales y convertir DAYOFWEEK a formato 1-7
     foreach ($consolidado as &$item) {
+        // Convertir DAYOFWEEK (1=Dom, 2=Lun) a nuestro formato (1=Lun, 7=Dom)
+        $dia_mysql = $item['dia_entrega'];
+        $item['dia_entrega'] = ($dia_mysql == 1) ? 7 : ($dia_mysql - 1);
+
         $detalles = [];
         if (!empty($item['detalles_sucursales'])) {
             $sucursales_data = explode('|', $item['detalles_sucursales']);
