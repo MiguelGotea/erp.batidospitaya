@@ -294,11 +294,57 @@ body {
 /* Countdown in Header */
 .countdown-header {
     font-family: 'Courier New', monospace;
-    font-size: 14px;
+    font-size: 18px;
     font-weight: 700;
-    letter-spacing: 1px;
+    letter-spacing: 2px;
     display: block;
-    margin-top: 4px;
+    margin-top: 8px;
+    padding: 8px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+}
+
+.countdown-normal {
+    color: #4caf50;
+    text-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+}
+
+.countdown-warning {
+    color: #ffc107;
+    text-shadow: 0 0 10px rgba(255, 193, 7, 0.5);
+    animation: pulse 2s infinite;
+}
+
+.countdown-critical {
+    color: #f44336;
+    text-shadow: 0 0 10px rgba(244, 67, 54, 0.5);
+    animation: pulse 1s infinite;
+}
+
+.countdown-expired {
+    color: #9e9e9e;
+}
+
+/* Urgent Icon for Empty Cells */
+.urgent-icon {
+    font-size: 24px;
+    animation: shake 0.5s infinite;
+}
+
+@keyframes shake {
+
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+
+    25% {
+        transform: translateX(-2px);
+    }
+
+    75% {
+        transform: translateX(2px);
+    }
 }
 
 /* Column Headers */

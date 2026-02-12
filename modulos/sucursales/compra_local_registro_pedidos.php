@@ -51,16 +51,6 @@ if (!$codigoSucursal) {
             <?php echo renderHeader($usuario, false, 'Registro de Pedidos de Insumos'); ?>
 
             <div class="container-fluid p-3">
-                <!-- Información de Sucursal -->
-                <div class="alert alert-info mb-3">
-                    <i class="bi bi-building"></i>
-                    <strong>Sucursal:</strong>
-                    <?php echo htmlspecialchars($sucursales[0]['nombre']); ?>
-                </div>
-
-                <!-- Banner de Reglas (populated by JavaScript) -->
-                <div id="reglas-banner"></div>
-
                 <!-- Tabla de Productos -->
                 <div id="productos-container">
                     <div class="loader-container">

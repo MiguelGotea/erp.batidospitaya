@@ -10,7 +10,6 @@ let contadorInterval = null;
 // Inicializar al cargar la página
 $(document).ready(function () {
     calcularFechasEntrega();
-    renderizarBannerReglas();
     iniciarContador();
     cargarProductos();
 });
@@ -81,55 +80,10 @@ function obtenerEstadoColumnaHoy() {
     return { estado: 'normal', icono: '✅', clase: 'deadline-normal' };
 }
 
-// Renderizar banner de reglas
-function renderizarBannerReglas() {
-    const nombreDias = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
-    const nombreMeses = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
-
-    const fechaManana = fechasEntrega.hoy;
-    const fechaPasadoManana = fechasEntrega.manana;
-
-    const diaManana = nombreDias[fechaManana.getDay()];
-    const diaPasadoManana = nombreDias[fechaPasadoManana.getDay()];
-
-    const fechaMañanaStr = `${diaManana} ${fechaManana.getDate()}-${nombreMeses[fechaManana.getMonth()]}`;
-    const fechaPasadoMañanaStr = `${diaPasadoManana} ${fechaPasadoManana.getDate()}-${nombreMeses[fechaPasadoManana.getMonth()]}`;
-
-    const html = `
-        <div class="reglas-banner mb-3">
-            <h5 class="mb-3">
-                <i class="bi bi-clipboard-check"></i> REGLAS DE PEDIDOS
-            </h5>
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <div class="regla-card">
-                        <h6>• Pedido de HOY → Llega MAÑANA (${fechaMañanaStr})</h6>
-                        <div class="deadline-status deadline-normal">
-                            ⚠️ <strong>Plazo límite: 12:00 PM</strong>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <div class="regla-card">
-                        <h6>• Pedido de MAÑANA → Llega PASADO MAÑANA (${fechaPasadoMañanaStr})</h6>
-                        <div class="deadline-status deadline-normal">
-                            ✅ <strong>Disponible sin límite de tiempo</strong>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
-
-    $('#reglas-banner').html(html);
-}
-
 // Iniciar contador regresivo
 function iniciarContador() {
     // Actualizar cada segundo
     contadorInterval = setInterval(() => {
-        renderizarBannerReglas();
-
         // Si el plazo expiró, recargar la tabla para bloquear la columna
         const { expired } = calcularTiempoRestante();
         if (expired && contadorInterval) {
@@ -270,12 +224,21 @@ function renderizarTabla() {
     // Generar contador para el encabezado
     let contadorEncabezado = '';
     if (expired) {
-        contadorEncabezado = '🔒 BLOQUEADO';
+        contadorEncabezado = '<span class="countdown-expired">🔒 BLOQUEADO</span>';
     } else {
         const horasStr = String(hours).padStart(2, '0');
         const minutosStr = String(minutes).padStart(2, '0');
         const segundosStr = String(seconds).padStart(2, '0');
-        contadorEncabezado = `⏰ ${horasStr}:${minutosStr}:${segundosStr}`;
+
+        let claseContador = 'countdown-normal';
+        const totalMinutes = hours * 60 + minutes;
+        if (totalMinutes < 30) {
+            claseContador = 'countdown-critical';
+        } else if (totalMinutes < 120) {
+            claseContador = 'countdown-warning';
+        }
+
+        contadorEncabezado = `<span class="${claseContador}">⏰ ${horasStr}:${minutosStr}:${segundosStr}</span>`;
     }
 
     let html = `
@@ -334,10 +297,9 @@ function renderizarTabla() {
                 (tieneConfigHoy && !beforeDeadline ? '🔒' : '-') :
                 (cantidadHoy ?
                     `<span class="cantidad-display">${cantidadHoy}</span>` :
-                    (alertaHoy ? '⚠️' : '<span class="text-muted">-</span>')
+                    (alertaHoy ? '<span class="urgent-icon">🚨</span>' : '<span class="text-muted">-</span>')
                 )
-            }
-                </td>
+            }      </td>
                 <td class="day-cell ${habilitadoManana ? 'enabled' : 'disabled'} ${cantidadManana ? 'has-order' : ''}"
                     data-producto-id="${producto.id_producto}"
                     data-columna="manana"
