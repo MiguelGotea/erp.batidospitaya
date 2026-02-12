@@ -30,7 +30,7 @@ try {
             AND (pp.Nombre LIKE ? OR pp.SKU LIKE ?)
             AND pp.id NOT IN (
                 SELECT DISTINCT id_producto_presentacion 
-                FROM compra_local_productos_despacho 
+                FROM compra_local_configuracion_despacho 
                 WHERE codigo_sucursal = ? AND status = 'activo'
             )
             ORDER BY pp.Nombre
