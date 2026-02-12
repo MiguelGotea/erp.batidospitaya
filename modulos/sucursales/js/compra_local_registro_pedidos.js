@@ -285,7 +285,6 @@ function renderizarTabla() {
             <tr ${isInactive ? 'class="inactive-product"' : ''}>
                 <td>
                     <strong>${producto.nombre_producto}</strong>
-                    ${producto.SKU ? `<br><small class="text-muted">SKU: ${producto.SKU}</small>` : ''}
                     ${isInactive ? '<br><span class="badge bg-secondary">Inactivo</span>' : ''}
                 </td>
                 <td class="day-cell ${habilitadoHoy ? 'enabled' : 'disabled'} ${cantidadHoy ? 'has-order' : ''} ${alertaHoy ? 'alert-cell' : ''} ${estadoHoy.clase}"
