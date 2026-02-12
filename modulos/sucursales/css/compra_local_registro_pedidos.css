@@ -12,6 +12,63 @@ body {
     min-height: 100vh;
 }
 
+/* Countdown Banner (Above Table) */
+.countdown-banner {
+    padding: 15px 20px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    text-align: center;
+    font-size: 16px;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.countdown-banner-normal {
+    background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%);
+    color: white;
+}
+
+.countdown-banner-warning {
+    background: linear-gradient(135deg, #ff9800 0%, #ffa726 100%);
+    color: white;
+    animation: pulse 2s infinite;
+}
+
+.countdown-banner-critical {
+    background: linear-gradient(135deg, #f44336 0%, #e57373 100%);
+    color: white;
+    animation: pulse 1s infinite;
+}
+
+.countdown-expired-banner {
+    background: linear-gradient(135deg, #757575 0%, #9e9e9e 100%);
+    color: white;
+}
+
+.countdown-time {
+    font-family: 'Courier New', monospace;
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    margin: 0 10px;
+    padding: 5px 15px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+    display: inline-block;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.7;
+    }
+}
+
 /* Tabla de Productos */
 .pedidos-table {
     background: white;
@@ -208,142 +265,25 @@ body {
     background-color: #ffeaa7 !important;
 }
 
-/* ===================================================
-   REGLAS BANNER - Simplified Interface
-   =================================================== */
-
-.reglas-banner {
-    background: linear-gradient(135deg, #0E544C 0%, #51B8AC 100%);
-    color: white;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+/* Urgent Badge - Top Right Corner */
+.urgent-badge {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    font-size: 20px;
+    animation: bounce 0.6s infinite;
+    z-index: 10;
 }
 
-.reglas-banner h5 {
-    color: white;
-    font-weight: 600;
-    margin-bottom: 16px;
-}
-
-.regla-card {
-    background: rgba(255, 255, 255, 0.1);
-    padding: 15px;
-    border-radius: 6px;
-    backdrop-filter: blur(10px);
-}
-
-.regla-card h6 {
-    color: white;
-    font-size: 14px;
-    margin-bottom: 10px;
-    font-weight: 500;
-}
-
-/* Deadline Status */
-.deadline-status {
-    padding: 10px;
-    border-radius: 4px;
-    font-size: 13px;
-    margin-top: 8px;
-}
-
-.deadline-status.deadline-normal {
-    background-color: rgba(76, 175, 80, 0.2);
-    border-left: 4px solid #4caf50;
-}
-
-.deadline-status.deadline-warning {
-    background-color: rgba(255, 193, 7, 0.2);
-    border-left: 4px solid #ffc107;
-    animation: pulse 2s infinite;
-}
-
-.deadline-status.deadline-critical {
-    background-color: rgba(244, 67, 54, 0.2);
-    border-left: 4px solid #f44336;
-    animation: pulse 1s infinite;
-}
-
-.deadline-status.deadline-expired {
-    background-color: rgba(158, 158, 158, 0.2);
-    border-left: 4px solid #9e9e9e;
-}
-
-@keyframes pulse {
+@keyframes bounce {
 
     0%,
     100% {
-        opacity: 1;
+        transform: translateY(0) scale(1);
     }
 
     50% {
-        opacity: 0.7;
-    }
-}
-
-/* Countdown Display */
-.countdown-display {
-    font-family: 'Courier New', monospace;
-    font-size: 18px;
-    font-weight: 700;
-    letter-spacing: 2px;
-    color: white;
-}
-
-/* Countdown in Header */
-.countdown-header {
-    font-family: 'Courier New', monospace;
-    font-size: 18px;
-    font-weight: 700;
-    letter-spacing: 2px;
-    display: block;
-    margin-top: 8px;
-    padding: 8px;
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 4px;
-}
-
-.countdown-normal {
-    color: #4caf50;
-    text-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
-}
-
-.countdown-warning {
-    color: #ffc107;
-    text-shadow: 0 0 10px rgba(255, 193, 7, 0.5);
-    animation: pulse 2s infinite;
-}
-
-.countdown-critical {
-    color: #f44336;
-    text-shadow: 0 0 10px rgba(244, 67, 54, 0.5);
-    animation: pulse 1s infinite;
-}
-
-.countdown-expired {
-    color: #9e9e9e;
-}
-
-/* Urgent Icon for Empty Cells */
-.urgent-icon {
-    font-size: 24px;
-    animation: shake 0.5s infinite;
-}
-
-@keyframes shake {
-
-    0%,
-    100% {
-        transform: translateX(0);
-    }
-
-    25% {
-        transform: translateX(-2px);
-    }
-
-    75% {
-        transform: translateX(2px);
+        transform: translateY(-5px) scale(1.1);
     }
 }
 
@@ -367,7 +307,6 @@ body {
 .column-manana {
     background-color: #0E544C !important;
 }
-
 
 /* Loader */
 .loader-container {
