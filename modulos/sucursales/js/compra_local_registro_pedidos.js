@@ -266,8 +266,45 @@ function renderizarTabla() {
         return;
     }
 
+    // Generate countdown banner for today
+    const hoyIndex = fechasEntrega.findIndex(d => d.pedido.toDateString() === hoy.toDateString());
+    let contadorBannerHTML = '';
+
+    if (hoyIndex !== -1) {
+        const beforeDeadline = verificarHoraLimite();
+
+        if (!beforeDeadline) {
+            contadorBannerHTML = `
+                <div class="countdown-banner countdown-expired-banner">
+                    🔒 <strong>BLOQUEADO</strong> - Ya no se pueden registrar pedidos para entrega de mañana
+                </div>
+            `;
+        } else {
+            const { hours, minutes, seconds } = calcularTiempoRestante();
+            const horasStr = String(hours).padStart(2, '0');
+            const minutosStr = String(minutes).padStart(2, '0');
+            const segundosStr = String(seconds).padStart(2, '0');
+
+            const totalMinutes = hours * 60 + minutes;
+            let claseBanner = 'countdown-banner-normal';
+            if (totalMinutes < 30) {
+                claseBanner = 'countdown-banner-critical';
+            } else if (totalMinutes < 120) {
+                claseBanner = 'countdown-banner-warning';
+            }
+
+            contadorBannerHTML = `
+                <div class="countdown-banner ${claseBanner}">
+                    ⏰ <strong>Tiempo restante para pedidos de HOY:</strong> 
+                    <span class="countdown-time">${horasStr}:${minutosStr}:${segundosStr}</span>
+                    <small>(Plazo límite: 12:00 PM)</small>
+                </div>
+            `;
+        }
+    }
+
     // Build table header
-    let html = `
+    let html = contadorBannerHTML + `
         <div class="table-responsive">
             <table class="table table-bordered pedidos-table">
                 <thead>
@@ -281,38 +318,15 @@ function renderizarTabla() {
         const nombreEntrega = nombreDias[(index + 1) % 7];
         const esHoy = diaInfo.pedido.toDateString() === hoy.toDateString();
 
-        let contadorHTML = '';
         let claseColumna = 'day-column';
-
         if (esHoy) {
             claseColumna += ' current-day-column';
-            const beforeDeadline = verificarHoraLimite();
-
-            if (beforeDeadline) {
-                const { hours, minutes, seconds } = calcularTiempoRestante();
-                const horasStr = String(hours).padStart(2, '0');
-                const minutosStr = String(minutes).padStart(2, '0');
-                const segundosStr = String(seconds).padStart(2, '0');
-
-                const totalMinutes = hours * 60 + minutes;
-                let claseContador = 'countdown-normal';
-                if (totalMinutes < 30) {
-                    claseContador = 'countdown-critical';
-                } else if (totalMinutes < 120) {
-                    claseContador = 'countdown-warning';
-                }
-
-                contadorHTML = `<br><small class="countdown-timer ${claseContador}">⏰ ${horasStr}:${minutosStr}:${segundosStr}</small>`;
-            } else {
-                contadorHTML = '<br><small class="countdown-expired">🔒 BLOQUEADO</small>';
-            }
         }
 
         html += `
             <th class="text-center ${claseColumna}">
                 ${nombreDia}<br>
-                <small class="delivery-label">→ ${nombreEntrega}</small>
-                ${contadorHTML}
+                <small class="delivery-label">Llega ${nombreEntrega}</small>
             </th>
         `;
     });
@@ -350,8 +364,16 @@ function renderizarTabla() {
 
             const habilitado = tieneConfig && beforeDeadline && !isInactive;
 
+            // Check if should show urgent icon (today's column, empty, deadline approaching)
+            let mostrarAlerta = false;
+            if (esHoy && !cantidad && habilitado && beforeDeadline) {
+                const { hours, minutes } = calcularTiempoRestante();
+                const totalMinutes = hours * 60 + minutes;
+                mostrarAlerta = totalMinutes < 120; // Show alert if less than 2 hours
+            }
+
             html += `
-                <td class="day-cell ${habilitado ? 'enabled' : 'disabled'} ${cantidad ? 'has-order' : ''}"
+                <td class="day-cell ${habilitado ? 'enabled' : 'disabled'} ${cantidad ? 'has-order' : ''} ${mostrarAlerta ? 'alert-cell' : ''}"
                     data-producto-id="${producto.id_producto}"
                     data-dia-index="${index}"
                     data-fecha-entrega="${fechaEntregaSQL}"
@@ -361,7 +383,7 @@ function renderizarTabla() {
                     (tieneConfig && !beforeDeadline ? '🔒' : '-') :
                     (cantidad ?
                         `<span class="cantidad-display">${cantidad}</span>` :
-                        '<span class="text-muted">-</span>'
+                        (mostrarAlerta ? '<span class="urgent-badge">🚨</span><span class="text-muted">-</span>' : '<span class="text-muted">-</span>')
                     )
                 }
                 </td>
