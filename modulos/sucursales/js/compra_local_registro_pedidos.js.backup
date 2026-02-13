@@ -9,41 +9,27 @@ let contadorInterval = null;
 
 // Inicializar al cargar la página
 $(document).ready(function () {
-    fechasEntrega = calcularSemanaActual();
+    calcularFechasEntrega();
     iniciarContador();
     cargarProductos();
 });
 
-// Calcular semana actual (Lunes a Domingo) con fechas de entrega
-function calcularSemanaActual() {
+// Calcular fechas de entrega (mañana y pasado mañana)
+function calcularFechasEntrega() {
     const hoy = new Date();
-    const diaSemana = hoy.getDay(); // 0=Sunday, 1=Monday, etc.
 
-    // Calculate Monday of current week
-    const lunes = new Date(hoy);
-    const diff = diaSemana === 0 ? -6 : 1 - diaSemana;
-    lunes.setDate(hoy.getDate() + diff);
-    lunes.setHours(0, 0, 0, 0);
+    // Mañana (entrega para pedido de hoy)
+    const manana = new Date(hoy);
+    manana.setDate(manana.getDate() + 1);
 
-    // Generate array of 7 days (Mon-Sun)
-    const semana = [];
-    for (let i = 0; i < 7; i++) {
-        const dia = new Date(lunes);
-        dia.setDate(lunes.getDate() + i);
+    // Pasado mañana (entrega para pedido de mañana)
+    const pasadoManana = new Date(hoy);
+    pasadoManana.setDate(pasadoManana.getDate() + 2);
 
-        // Calculate delivery date (next day)
-        const entrega = new Date(dia);
-        entrega.setDate(dia.getDate() + 1);
-
-        semana.push({
-            pedido: dia,
-            entrega: entrega,
-            diaSemana: dia.getDay() === 0 ? 7 : dia.getDay(),
-            diaSemanaEntrega: entrega.getDay() === 0 ? 7 : entrega.getDay()
-        });
-    }
-
-    return semana;
+    fechasEntrega = {
+        hoy: manana,
+        manana: pasadoManana
+    };
 }
 
 // Verificar si estamos antes de las 12:00 PM
@@ -197,12 +183,8 @@ function cargarProductos() {
 
 // Cargar pedidos existentes
 function cargarPedidos() {
-    // Get first and last day of week
-    const primerDia = fechasEntrega[0].entrega; // Tuesday (Monday's delivery)
-    const ultimoDia = fechasEntrega[6].entrega; // Monday next week (Sunday's delivery)
-
-    const fecha_inicio = formatearFechaSQL(primerDia);
-    const fecha_fin = formatearFechaSQL(ultimoDia);
+    const fecha_inicio = formatearFechaSQL(fechasEntrega.hoy);
+    const fecha_fin = formatearFechaSQL(fechasEntrega.manana);
 
     $.ajax({
         url: 'ajax/compra_local_registro_pedidos_get_pedidos.php',
@@ -227,105 +209,129 @@ function cargarPedidos() {
     });
 }
 
-// Agrupar pedidos por producto y fecha de entrega
+// Agrupar pedidos por producto y columna (hoy/mañana)
 function agruparPedidos(pedidosArray) {
     const agrupado = {};
 
+    const fechaHoySQL = formatearFechaSQL(fechasEntrega.hoy);
+    const fechaMananaSQL = formatearFechaSQL(fechasEntrega.manana);
+
     pedidosArray.forEach(pedido => {
-        const key = `${pedido.id_producto_presentacion}_${pedido.fecha_entrega}`;
-        agrupado[key] = {
-            id: pedido.id,
-            cantidad: pedido.cantidad_pedido,
-            fecha_hora_reportada: pedido.fecha_hora_reportada,
-            fecha_entrega: pedido.fecha_entrega
-        };
+        let columna = '';
+        if (pedido.fecha_entrega === fechaHoySQL) {
+            columna = 'hoy';
+        } else if (pedido.fecha_entrega === fechaMananaSQL) {
+            columna = 'manana';
+        }
+
+        if (columna) {
+            const key = `${pedido.id_producto_presentacion}_${columna}`;
+            agrupado[key] = {
+                id: pedido.id,
+                cantidad: pedido.cantidad_pedido,
+                fecha_hora_reportada: pedido.fecha_hora_reportada,
+                fecha_entrega: pedido.fecha_entrega
+            };
+        }
     });
 
     return agrupado;
 }
 
-// Renderizar tabla semanal (7 columnas: Lunes-Domingo)
+// Renderizar tabla simplificada (2 columnas)
 function renderizarTabla() {
-    const nombreDias = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
-    const hoy = new Date();
-    hoy.setHours(0, 0, 0, 0);
+    const beforeDeadline = verificarHoraLimite();
+    const estadoHoy = obtenerEstadoColumnaHoy();
+    const { expired, hours, minutes, seconds } = calcularTiempoRestante();
 
-    // Filter products that have at least one delivery day configured this week
-    const diasSemanaEntrega = fechasEntrega.map(d => d.diaSemanaEntrega);
+    // Calcular día de la semana de mañana y pasado mañana
+    const diaSemanaManana = fechasEntrega.hoy.getDay() === 0 ? 7 : fechasEntrega.hoy.getDay();
+    const diaSemanaMananaManana = fechasEntrega.manana.getDay() === 0 ? 7 : fechasEntrega.manana.getDay();
+
+    // Filtrar productos que tienen configuración para hoy o mañana
     const productosFiltrados = productos.filter(producto => {
-        return producto.dias_entrega.some(dia => diasSemanaEntrega.includes(dia));
+        return producto.dias_entrega.includes(diaSemanaManana) ||
+            producto.dias_entrega.includes(diaSemanaMananaManana);
     });
 
     if (productosFiltrados.length === 0) {
         $('#productos-container').html(`
             <div class="alert alert-warning">
                 <i class="bi bi-exclamation-triangle"></i>
-                No hay productos configurados para entregas esta semana.
+                No hay productos configurados para pedidos de hoy o mañana.
             </div>
         `);
         return;
     }
 
-    // Build table header
-    let html = `
+    // Generar contador para mostrar arriba de la tabla
+    let contadorHTML = '';
+    if (expired) {
+        contadorHTML = `
+            <div class="countdown-banner countdown-expired-banner">
+                🔒 <strong>BLOQUEADO</strong> - Ya no se pueden registrar pedidos para entrega de mañana
+            </div>
+        `;
+    } else {
+        const horasStr = String(hours).padStart(2, '0');
+        const minutosStr = String(minutes).padStart(2, '0');
+        const segundosStr = String(seconds).padStart(2, '0');
+
+        let claseBanner = 'countdown-banner-normal';
+        const totalMinutes = hours * 60 + minutes;
+        if (totalMinutes < 30) {
+            claseBanner = 'countdown-banner-critical';
+        } else if (totalMinutes < 120) {
+            claseBanner = 'countdown-banner-warning';
+        }
+
+        contadorHTML = `
+            <div class="countdown-banner ${claseBanner}">
+                ⏰ <strong>Tiempo restante para pedidos de HOY:</strong> 
+                <span class="countdown-time">${horasStr}:${minutosStr}:${segundosStr}</span>
+                <small>(Plazo límite: 12:00 PM)</small>
+            </div>
+        `;
+    }
+
+    let html = contadorHTML + `
         <div class="table-responsive">
             <table class="table table-bordered pedidos-table">
                 <thead>
                     <tr>
-                        <th style="width: 20%">Producto</th>
-    `;
-
-    // Generate column headers for each day
-    fechasEntrega.forEach((diaInfo, index) => {
-        const nombreDia = nombreDias[index];
-        const nombreEntrega = nombreDias[(index + 1) % 7];
-        const esHoy = diaInfo.pedido.toDateString() === hoy.toDateString();
-
-        let contadorHTML = '';
-        let claseColumna = 'day-column';
-
-        if (esHoy) {
-            claseColumna += ' current-day-column';
-            const beforeDeadline = verificarHoraLimite();
-
-            if (beforeDeadline) {
-                const { hours, minutes, seconds } = calcularTiempoRestante();
-                const horasStr = String(hours).padStart(2, '0');
-                const minutosStr = String(minutes).padStart(2, '0');
-                const segundosStr = String(seconds).padStart(2, '0');
-
-                const totalMinutes = hours * 60 + minutes;
-                let claseContador = 'countdown-normal';
-                if (totalMinutes < 30) {
-                    claseContador = 'countdown-critical';
-                } else if (totalMinutes < 120) {
-                    claseContador = 'countdown-warning';
-                }
-
-                contadorHTML = `<br><small class="countdown-timer ${claseContador}">⏰ ${horasStr}:${minutosStr}:${segundosStr}</small>`;
-            } else {
-                contadorHTML = '<br><small class="countdown-expired">🔒 BLOQUEADO</small>';
-            }
-        }
-
-        html += `
-            <th class="text-center ${claseColumna}">
-                ${nombreDia}<br>
-                <small class="delivery-label">→ ${nombreEntrega}</small>
-                ${contadorHTML}
-            </th>
-        `;
-    });
-
-    html += `
+                        <th style="width: 50%">Producto</th>
+                        <th class="text-center column-hoy ${estadoHoy.clase}" style="width: 25%">
+                            Pedido HOY<br>
+                            <small>(Llega Mañana)</small>
+                        </th>
+                        <th class="text-center column-manana" style="width: 25%">
+                            Pedido MAÑANA<br>
+                            <small>(Llega Pasado Mañana)</small>
+                        </th>
                     </tr>
                 </thead>
                 <tbody>
     `;
 
-    // Generate rows for each product
     productosFiltrados.forEach(producto => {
         const isInactive = producto.status === 'inactivo';
+        const tieneConfigHoy = producto.dias_entrega.includes(diaSemanaManana);
+        const tieneConfigManana = producto.dias_entrega.includes(diaSemanaMananaManana);
+
+        // Pedido de HOY
+        const keyHoy = `${producto.id_producto}_hoy`;
+        const pedidoHoy = pedidos[keyHoy];
+        const cantidadHoy = pedidoHoy ? pedidoHoy.cantidad : '';
+        const fechaHoraHoy = pedidoHoy ? pedidoHoy.fecha_hora_reportada : null;
+        const habilitadoHoy = tieneConfigHoy && beforeDeadline && !isInactive;
+        const alertaHoy = !cantidadHoy && habilitadoHoy && estadoHoy.estado === 'advertencia';
+
+        // Pedido de MAÑANA
+        const keyManana = `${producto.id_producto}_manana`;
+        const pedidoManana = pedidos[keyManana];
+        const cantidadManana = pedidoManana ? pedidoManana.cantidad : '';
+        const fechaHoraManana = pedidoManana ? pedidoManana.fecha_hora_reportada : null;
+        const habilitadoManana = tieneConfigManana && !isInactive;
 
         html += `
             <tr ${isInactive ? 'class="inactive-product"' : ''}>
@@ -333,42 +339,31 @@ function renderizarTabla() {
                     <strong>${producto.nombre_producto}</strong>
                     ${isInactive ? '<br><span class="badge bg-secondary">Inactivo</span>' : ''}
                 </td>
-        `;
-
-        // Generate cell for each day
-        fechasEntrega.forEach((diaInfo, index) => {
-            const esHoy = diaInfo.pedido.toDateString() === hoy.toDateString();
-            const beforeDeadline = esHoy ? verificarHoraLimite() : true;
-            const tieneConfig = producto.dias_entrega.includes(diaInfo.diaSemanaEntrega);
-
-            // Get existing order for this day
-            const fechaEntregaSQL = formatearFechaSQL(diaInfo.entrega);
-            const key = `${producto.id_producto}_${fechaEntregaSQL}`;
-            const pedido = pedidos[key];
-            const cantidad = pedido ? pedido.cantidad : '';
-            const fechaHora = pedido ? pedido.fecha_hora_reportada : null;
-
-            const habilitado = tieneConfig && beforeDeadline && !isInactive;
-
-            html += `
-                <td class="day-cell ${habilitado ? 'enabled' : 'disabled'} ${cantidad ? 'has-order' : ''}"
+                <td class="day-cell ${habilitadoHoy ? 'enabled' : 'disabled'} ${cantidadHoy ? 'has-order' : ''} ${alertaHoy ? 'alert-cell' : ''} ${estadoHoy.clase}"
                     data-producto-id="${producto.id_producto}"
-                    data-dia-index="${index}"
-                    data-fecha-entrega="${fechaEntregaSQL}"
-                    data-fecha-hora="${fechaHora || ''}"
-                    ${habilitado && puedeEditar ? `onclick="editarCantidad(this)"` : ''}>
-                    ${!tieneConfig || !beforeDeadline || isInactive ?
-                    (tieneConfig && !beforeDeadline ? '🔒' : '-') :
-                    (cantidad ?
-                        `<span class="cantidad-display">${cantidad}</span>` :
-                        '<span class="text-muted">-</span>'
-                    )
-                }
+                    data-columna="hoy"
+                    data-fecha-hora="${fechaHoraHoy || ''}"
+                    ${habilitadoHoy && puedeEditar ? `onclick="editarCantidad(this)"` : ''}>
+                    ${!tieneConfigHoy || !beforeDeadline || isInactive ?
+                (tieneConfigHoy && !beforeDeadline ? '🔒' : '-') :
+                (cantidadHoy ?
+                    `<span class="cantidad-display">${cantidadHoy}</span>` :
+                    (alertaHoy ? '<span class="urgent-badge">🚨</span><span class="text-muted">-</span>' : '<span class="text-muted">-</span>')
+                )
+            }      </td>
+                <td class="day-cell ${habilitadoManana ? 'enabled' : 'disabled'} ${cantidadManana ? 'has-order' : ''}"
+                    data-producto-id="${producto.id_producto}"
+                    data-columna="manana"
+                    data-fecha-hora="${fechaHoraManana || ''}"
+                    ${habilitadoManana && puedeEditar ? `onclick="editarCantidad(this)"` : ''}>
+                    ${!tieneConfigManana || isInactive ?
+                '-' :
+                (cantidadManana ?
+                    `<span class="cantidad-display">${cantidadManana}</span>` :
+                    '<span class="text-muted">-</span>'
+                )
+            }
                 </td>
-            `;
-        });
-
-        html += `
             </tr>
         `;
     });
@@ -381,15 +376,16 @@ function renderizarTabla() {
 
     $('#productos-container').html(html);
 
-    // Add tooltips
+    // Agregar tooltips
     $('.day-cell[data-fecha-hora]').each(function () {
         const fechaHora = $(this).data('fecha-hora');
         if (fechaHora) {
-            $(this).attr('title', `Registrado: ${formatearFechaHora(fechaHora)}`);
+            $(this).on('mouseenter', function (e) {
+                mostrarTooltip(e, fechaHora);
+            }).on('mouseleave', ocultarTooltip);
         }
     });
 }
-
 
 // Mostrar tooltip
 function mostrarTooltip(e, fechaHora) {
