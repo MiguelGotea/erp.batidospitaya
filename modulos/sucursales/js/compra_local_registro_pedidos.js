@@ -325,11 +325,12 @@ function renderizarTabla() {
 
         html += `
             <th class="text-center ${claseColumna}">
-                ${nombreDia}<br>
-                <small class="delivery-label">Llega ${nombreEntrega}</small>
+                <div class="day-name">${nombreDia}</div>
+                <div class="delivery-label">Pedido Llega ${nombreEntrega}</div>
             </th>
         `;
     });
+
 
     html += `
                     </tr>

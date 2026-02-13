@@ -1,0 +1,18 @@
+    // Generate column headers for each day
+    fechasEntrega.forEach((diaInfo, index) => {
+        const nombreDia = nombreDias[index];
+        const nombreEntrega = nombreDias[(index + 1) % 7];
+        const esHoy = diaInfo.pedido.toDateString() === hoy.toDateString();
+
+        let claseColumna = 'day-column';
+        if (esHoy) {
+            claseColumna += ' current-day-column';
+        }
+
+        html += `
+            <th class="text-center ${claseColumna}">
+                <div class="day-name">${nombreDia}</div>
+                <div class="delivery-label">Pedido Llega ${nombreEntrega}</div>
+            </th>
+        `;
+    });

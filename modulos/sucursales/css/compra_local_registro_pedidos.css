@@ -46,13 +46,22 @@ body {
     background: rgba(158, 158, 158, 0.1);
 }
 
-/* Delivery Label */
-.delivery-label {
-    color: #333;
-    font-weight: 600;
+/* Day Name in Header */
+.day-name {
     font-size: 13px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.9);
+    margin-bottom: 4px;
+}
+
+/* Delivery Label - More Prominent */
+.delivery-label {
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 15px;
     display: block;
-    margin-top: 2px;
+    margin-top: 4px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 
