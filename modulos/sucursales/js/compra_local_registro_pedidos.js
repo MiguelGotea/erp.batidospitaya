@@ -348,10 +348,10 @@ function renderizarTabla() {
                     ${isInactive ? '<br><span class="badge bg-secondary">Inactivo</span>' : ''}
                 </td>
         `;
-
         // Generate cell for each day
         fechasEntrega.forEach((diaInfo, index) => {
             const esHoy = diaInfo.pedido.toDateString() === hoy.toDateString();
+            const esPasado = diaInfo.pedido < hoy; // Check if date is in the past
             const beforeDeadline = esHoy ? verificarHoraLimite() : true;
             const tieneConfig = producto.dias_entrega.includes(diaInfo.diaSemanaEntrega);
 
@@ -362,7 +362,8 @@ function renderizarTabla() {
             const cantidad = pedido ? pedido.cantidad : '';
             const fechaHora = pedido ? pedido.fecha_hora_reportada : null;
 
-            const habilitado = tieneConfig && beforeDeadline && !isInactive;
+            // Past dates are always disabled for editing but show as completed
+            const habilitado = !esPasado && tieneConfig && beforeDeadline && !isInactive;
 
             // Check if should show urgent icon (today's column, empty, deadline approaching)
             let mostrarAlerta = false;
@@ -372,21 +373,38 @@ function renderizarTabla() {
                 mostrarAlerta = totalMinutes < 120; // Show alert if less than 2 hours
             }
 
-            html += `
-                <td class="day-cell ${habilitado ? 'enabled' : 'disabled'} ${cantidad ? 'has-order' : ''} ${mostrarAlerta ? 'alert-cell' : ''}"
-                    data-producto-id="${producto.id_producto}"
-                    data-dia-index="${index}"
-                    data-fecha-entrega="${fechaEntregaSQL}"
-                    data-fecha-hora="${fechaHora || ''}"
-                    ${habilitado && puedeEditar ? `onclick="editarCantidad(this)"` : ''}>
-                    ${!tieneConfig || !beforeDeadline || isInactive ?
-                    (tieneConfig && !beforeDeadline ? '🔒' : '-') :
-                    (cantidad ?
-                        `<span class="cantidad-display">${cantidad}</span>` :
-                        (mostrarAlerta ? '<span class="urgent-badge">🚨</span><span class="text-muted">-</span>' : '<span class="text-muted">-</span>')
-                    )
+            // Determine cell content
+            let cellContent = '';
+            if (esPasado) {
+                // Past dates: show quantity with checkmark if exists, otherwise just dash
+                if (cantidad) {
+                    cellContent = `<span class="cantidad-completada">✓ ${cantidad}</span>`;
+                } else {
+                    cellContent = '<span class="text-muted">-</span>';
                 }
-                </td>
+            } else if (!tieneConfig || !beforeDeadline || isInactive) {
+                // Not configured or deadline passed or inactive
+                cellContent = (tieneConfig && !beforeDeadline ? '🔒' : '-');
+            } else if (cantidad) {
+                // Has quantity
+                cellContent = `<span class="cantidad-display">${cantidad}</span>`;
+            } else if (mostrarAlerta) {
+                // Empty with alert
+                cellContent = '<span class="urgent-badge">🚨</span><span class="text-muted">-</span>';
+            } else {
+                // Empty
+                cellContent = '<span class="text-muted">-</span>';
+            }
+
+            html += `
+                <td class="day-cell ${esPasado ? 'past-date' : ''} ${habilitado ? 'enabled' : 'disabled'} ${cantidad ? 'has-order' : ''} ${mostrarAlerta ? 'alert-cell' : ''}"\r
+                    data-producto-id="${producto.id_producto}"\r
+                    data-dia-index="${index}"\r
+                    data-fecha-entrega="${fechaEntregaSQL}"\r
+                    data-fecha-hora="${fechaHora || ''}"\r
+                    ${habilitado && puedeEditar ? `onclick="editarCantidad(this)"` : ''}>\r
+                    ${cellContent}\r
+                </td>\r
             `;
         });
 
