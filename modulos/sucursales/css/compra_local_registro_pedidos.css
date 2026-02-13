@@ -12,6 +12,49 @@ body {
     min-height: 100vh;
 }
 
+/* Countdown Timer in Column Header */
+.countdown-timer {
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 3px;
+    margin-top: 4px;
+}
+
+.countdown-normal {
+    color: #4caf50;
+    background: rgba(76, 175, 80, 0.1);
+}
+
+.countdown-warning {
+    color: #ff9800;
+    background: rgba(255, 152, 0, 0.1);
+    animation: pulse 2s infinite;
+}
+
+.countdown-critical {
+    color: #f44336;
+    background: rgba(244, 67, 54, 0.1);
+    animation: pulse 1s infinite;
+}
+
+.countdown-expired {
+    color: #9e9e9e;
+    background: rgba(158, 158, 158, 0.1);
+}
+
+/* Delivery Label */
+.delivery-label {
+    color: #666;
+    font-weight: normal;
+    font-size: 11px;
+    font-style: italic;
+}
+
+
 /* Countdown Banner (Above Table) */
 .countdown-banner {
     padding: 15px 20px;
@@ -288,8 +331,19 @@ body {
 }
 
 /* Column Headers */
-.column-hoy {
+.day-column {
     background-color: #0E544C !important;
+    color: white !important;
+    min-width: 90px;
+    font-size: 13px;
+}
+
+/* Highlight current day */
+.current-day-column {
+    background-color: #0E544C !important;
+    border-left: 3px solid #ffc107 !important;
+    border-right: 3px solid #ffc107 !important;
+    font-weight: 700;
 }
 
 .column-hoy.deadline-warning {

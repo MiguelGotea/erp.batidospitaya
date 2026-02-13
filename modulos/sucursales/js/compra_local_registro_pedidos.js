@@ -423,7 +423,7 @@ function editarCantidad(cell) {
 
     const $cell = $(cell);
     const productoId = $cell.data('producto-id');
-    const columna = $cell.data('columna');
+    const fechaEntrega = $cell.data('fecha-entrega');
     const cantidadActual = $cell.find('.cantidad-display').text() || '';
 
     // Crear input
@@ -437,7 +437,7 @@ function editarCantidad(cell) {
     input.on('blur keypress', function (e) {
         if (e.type === 'blur' || e.which === 13) {
             const nuevaCantidad = parseInt($(this).val()) || 0;
-            guardarCantidad(productoId, columna, nuevaCantidad, cantidadActual, $cell);
+            guardarCantidad(productoId, fechaEntrega, nuevaCantidad, cantidadActual, $cell);
         }
     });
 
@@ -450,15 +450,22 @@ function editarCantidad(cell) {
 }
 
 // Guardar cantidad
-function guardarCantidad(productoId, columna, nuevaCantidad, cantidadAnterior, $cell) {
+function guardarCantidad(productoId, fechaEntrega, nuevaCantidad, cantidadAnterior, $cell) {
     // Si no cambió el valor, solo re-renderizar
     if (nuevaCantidad.toString() === cantidadAnterior.toString()) {
         renderizarTabla();
         return;
     }
 
-    // Validar hora límite para columna HOY
-    if (columna === 'hoy') {
+    // Validar hora límite para pedidos de hoy
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    const fechaEntregaDate = new Date(fechaEntrega + 'T00:00:00');
+    const manana = new Date(hoy);
+    manana.setDate(hoy.getDate() + 1);
+
+    // Si la entrega es mañana (pedido de hoy), validar hora límite
+    if (fechaEntregaDate.toDateString() === manana.toDateString()) {
         const beforeDeadline = verificarHoraLimite();
         if (!beforeDeadline) {
             mostrarError('Plazo vencido. No se pueden registrar pedidos para entrega de mañana después de las 12:00 PM');
@@ -466,9 +473,6 @@ function guardarCantidad(productoId, columna, nuevaCantidad, cantidadAnterior, $
             return;
         }
     }
-
-    // Calcular fecha específica de entrega
-    const fechaEntrega = formatearFechaSQL(fechasEntrega[columna]);
 
     // Mostrar indicador de guardado
     mostrarGuardando();
