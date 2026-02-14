@@ -310,6 +310,7 @@ function renderizarTabla() {
                 <thead>
                     <tr>
                         <th style="width: 20%">Producto</th>
+                        <th style="width: 5%" class="text-center">Min.</th>
     `;
 
     // Generate column headers for each day
@@ -347,6 +348,9 @@ function renderizarTabla() {
                 <td>
                     <strong>${producto.nombre_producto}</strong>
                     ${isInactive ? '<br><span class="badge bg-secondary">Inactivo</span>' : ''}
+                </td>
+                <td class="text-center">
+                    <span class="badge rounded-pill bg-light text-dark border">${producto.pedido_minimo || 1}</span>
                 </td>
         `;
         // Generate cell for each day

@@ -20,6 +20,7 @@ try {
                 clcd.id_producto_presentacion,
                 clcd.dia_entrega,
                 clcd.status,
+                clcd.pedido_minimo,
                 pp.Nombre as nombre_producto,
                 pp.SKU
             FROM compra_local_configuracion_despacho clcd

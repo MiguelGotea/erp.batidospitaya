@@ -110,15 +110,16 @@ function cargarConfiguracion(codigoSucursal) {
 // Renderizar tabla de configuración
 function renderizarTabla(codigoSucursal) {
     const config = configuraciones[codigoSucursal] || [];
-    
+
     let tableHtml = `
         <div class="table-responsive">
             <table class="table config-table">
                 <thead>
                     <tr>
-                        <th>Producto</th>
+                        <th style="width: 200px;">Producto</th>
+                        <th style="width: 100px;">Pedido Mín.</th>
                         ${diasSemana.map(dia => `<th title="${dia.nombreCompleto}">${dia.nombre}</th>`).join('')}
-                        <th>Estado</th>
+                        <th style="width: 100px;">Estado</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -126,22 +127,31 @@ function renderizarTabla(codigoSucursal) {
 
     // Productos configurados
     const productosAgrupados = agruparPorProducto(config);
-    
+
     for (const [idProducto, datos] of Object.entries(productosAgrupados)) {
         const isInactive = datos.status === 'inactivo';
         tableHtml += `
             <tr class="${isInactive ? 'inactive-row' : ''}" data-producto-id="${idProducto}">
                 <td>${datos.nombre}</td>
+                <td>
+                    <input type="number" 
+                           class="form-control form-control-sm pedido-minimo-input" 
+                           value="${datos.pedido_minimo || 1}" 
+                           min="1" 
+                           step="1"
+                           ${!puedeEditar || isInactive ? 'disabled' : ''}
+                           onchange="updatePedidoMinimo(${idProducto}, '${codigoSucursal}', this.value)">
+                </td>
                 ${diasSemana.map(dia => {
-                    const tieneEntrega = datos.dias.includes(dia.num);
-                    return `
+            const tieneEntrega = datos.dias.includes(dia.num);
+            return `
                         <td class="day-cell ${tieneEntrega ? 'active' : ''} ${!puedeEditar || isInactive ? 'disabled' : ''}" 
                             data-dia="${dia.num}"
                             onclick="${puedeEditar && !isInactive ? `toggleDia(${idProducto}, '${codigoSucursal}', ${dia.num})` : ''}">
                             ${tieneEntrega ? '<i class="bi bi-check-circle-fill"></i>' : ''}
                         </td>
                     `;
-                }).join('')}
+        }).join('')}
                 <td>
                     <label class="toggle-switch">
                         <input type="checkbox" 
@@ -159,7 +169,7 @@ function renderizarTabla(codigoSucursal) {
     if (puedeEditar) {
         tableHtml += `
             <tr class="new-product-row">
-                <td colspan="${diasSemana.length + 2}">
+                <td colspan="${diasSemana.length + 3}">
                     <select class="form-select product-search" 
                             id="product-search-${codigoSucursal}" 
                             style="width: 100%;">
@@ -196,18 +206,19 @@ function renderizarTabla(codigoSucursal) {
 // Agrupar configuración por producto
 function agruparPorProducto(config) {
     const agrupado = {};
-    
+
     config.forEach(item => {
         if (!agrupado[item.id_producto_presentacion]) {
             agrupado[item.id_producto_presentacion] = {
                 nombre: item.nombre_producto,
                 dias: [],
-                status: item.status
+                status: item.status,
+                pedido_minimo: item.pedido_minimo
             };
         }
         agrupado[item.id_producto_presentacion].dias.push(parseInt(item.dia_entrega));
     });
-    
+
     return agrupado;
 }
 
@@ -253,8 +264,8 @@ function toggleDia(idProducto, codigoSucursal, dia) {
     if (!puedeEditar) return;
 
     const config = configuraciones[codigoSucursal] || [];
-    const existe = config.find(c => 
-        c.id_producto_presentacion == idProducto && 
+    const existe = config.find(c =>
+        c.id_producto_presentacion == idProducto &&
         c.dia_entrega == dia
     );
 
@@ -313,7 +324,43 @@ function eliminarDiaEntrega(id, codigoSucursal) {
     });
 }
 
-// Toggle status del producto
+// Actualizar pedido mínimo
+function updatePedidoMinimo(idProducto, codigoSucursal, valor) {
+    if (!puedeEditar) return;
+
+    $.ajax({
+        url: 'ajax/compra_local_configuracion_despacho_update_minimo.php',
+        method: 'POST',
+        data: {
+            id_producto_presentacion: idProducto,
+            codigo_sucursal: codigoSucursal,
+            pedido_minimo: valor
+        },
+        dataType: 'json',
+        success: function (response) {
+            if (response.success) {
+                // Actualizar en el objeto local para no recargar toda la tabla
+                if (configuraciones[codigoSucursal]) {
+                    configuraciones[codigoSucursal].forEach(item => {
+                        if (item.id_producto_presentacion == idProducto) {
+                            item.pedido_minimo = valor;
+                        }
+                    });
+                }
+                mostrarExito('Pedido mínimo actualizado');
+            } else {
+                mostrarError('Error al actualizar pedido mínimo: ' + response.message);
+                cargarConfiguracion(codigoSucursal);
+            }
+        },
+        error: function () {
+            mostrarError('Error de conexión');
+            cargarConfiguracion(codigoSucursal);
+        }
+    });
+}
+
+// Agregar producto nuevo
 function toggleStatus(idProducto, codigoSucursal, activo) {
     if (!puedeEditar) return;
 

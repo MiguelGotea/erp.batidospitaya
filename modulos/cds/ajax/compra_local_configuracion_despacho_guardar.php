@@ -40,8 +40,8 @@ try {
 
     // Insertar nuevo registro
     $sql = "INSERT INTO compra_local_configuracion_despacho 
-            (id_producto_presentacion, codigo_sucursal, dia_entrega, status, usuario_creacion)
-            VALUES (?, ?, ?, 'activo', ?)";
+            (id_producto_presentacion, codigo_sucursal, dia_entrega, status, pedido_minimo, usuario_creacion)
+            VALUES (?, ?, ?, 'activo', 1, ?)";
 
     $stmt = $conn->prepare($sql);
     $stmt->execute([

@@ -20,6 +20,7 @@ try {
                 pp.Nombre as nombre_producto,
                 pp.SKU,
                 clcd.status,
+                MAX(clcd.pedido_minimo) as pedido_minimo,
                 GROUP_CONCAT(DISTINCT clcd.dia_entrega ORDER BY clcd.dia_entrega) as dias_entrega
             FROM compra_local_configuracion_despacho clcd
             INNER JOIN producto_presentacion pp ON clcd.id_producto_presentacion = pp.id
