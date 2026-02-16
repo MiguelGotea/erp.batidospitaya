@@ -5,6 +5,7 @@ let registrosPorPagina = 50;
 let filtrosActivos = {};
 let ordenActivo = { columna: null, direccion: null };
 let validoFilterState = 'all'; // 'all', 'valid', 'invalid'
+let iaFilterState = 'all'; // 'all', 'verified', 'review'
 // tienePermisoEdicion is set from PHP inline script
 
 $(document).ready(function () {
@@ -30,6 +31,9 @@ function cargarRegistros() {
         }),
         ...(validoFilterState !== 'all' && {
             valido: validoFilterState === 'valid' ? 1 : 0
+        }),
+        ...(iaFilterState !== 'all' && {
+            ia_filter: iaFilterState
         })
     });
 
@@ -141,11 +145,27 @@ function setValidoFilter(state) {
     // Update global state
     validoFilterState = state;
 
-    // Update circle appearances
-    document.querySelectorAll('.filter-circle').forEach(circle => {
+    // Update circle appearances for Valido column
+    document.querySelectorAll('th[data-column="valido"] .filter-circle').forEach(circle => {
         circle.classList.remove('active');
     });
-    document.querySelector(`.filter-circle[data-state="${state}"]`).classList.add('active');
+    document.querySelector(`th[data-column="valido"] .filter-circle[data-state="${state}"]`).classList.add('active');
+
+    // Reload data with new filter
+    paginaActual = 1;
+    cargarRegistros();
+}
+
+// Circle Filter Function for Verificacion IA
+function setIAFilter(state) {
+    // Update global state
+    iaFilterState = state;
+
+    // Update circle appearances for IA column
+    document.querySelectorAll('th[data-column="verificacion_ia"] .filter-circle').forEach(circle => {
+        circle.classList.remove('active');
+    });
+    document.querySelector(`th[data-column="verificacion_ia"] .filter-circle[data-state="${state}"]`).classList.add('active');
 
     // Reload data with new filter
     paginaActual = 1;
@@ -542,19 +562,6 @@ function crearPanelFiltro(th, columna, tipo, icon) {
                                    ${filtrosActivos[columna]?.includes('offline') ? 'checked' : ''}
                                    onchange="toggleOpcionFiltro('${columna}', 'offline', this.checked)">
                             <span>Offline</span>
-                        </div>
-                    ` : columna === 'verificacion_ia' ? `
-                        <div class="filter-option">
-                            <input type="checkbox" value="verificado" 
-                                   ${filtrosActivos[columna]?.includes('verificado') ? 'checked' : ''}
-                                   onchange="toggleOpcionFiltro('${columna}', 'verificado', this.checked)">
-                            <span>Verificado</span>
-                        </div>
-                        <div class="filter-option">
-                            <input type="checkbox" value="revisar" 
-                                   ${filtrosActivos[columna]?.includes('revisar') ? 'checked' : ''}
-                                   onchange="toggleOpcionFiltro('${columna}', 'revisar', this.checked)">
-                            <span>Revisar</span>
                         </div>
                     ` : ''}
                 </div>

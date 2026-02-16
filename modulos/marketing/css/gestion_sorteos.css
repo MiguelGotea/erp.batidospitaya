@@ -143,6 +143,30 @@ body {
     color: #dc3545;
 }
 
+/* IA Filter Styles */
+.ia-filter-circles {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    justify-content: center;
+    margin-top: 4px;
+}
+
+.filter-circle[data-state="verified"] {
+    color: #28a745;
+    /* Verde */
+}
+
+.filter-circle[data-state="all"] {
+    color: #adb5bd;
+    /* Gris */
+}
+
+.filter-circle[data-state="review"] {
+    color: #ffc107;
+    /* Amarillo */
+}
+
 /* Valido column icons */
 .valido-icon {
     font-size: 1.2rem;

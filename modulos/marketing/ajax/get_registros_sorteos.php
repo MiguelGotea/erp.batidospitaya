@@ -153,6 +153,14 @@ try {
         $params[] = (int) $validadoIA;
     }
 
+    // Filtro Verificación IA (3 opciones: verified, review, all)
+    $iaFilter = isset($_GET['ia_filter']) ? $_GET['ia_filter'] : '';
+    if ($iaFilter === 'verified') {
+        $where[] = "(codigo_sorteo_ia IS NOT NULL AND codigo_sorteo_ia != '' AND numero_factura = codigo_sorteo_ia AND puntos_factura = puntos_ia)";
+    } elseif ($iaFilter === 'review') {
+        $where[] = "(codigo_sorteo_ia IS NULL OR codigo_sorteo_ia = '' OR numero_factura != codigo_sorteo_ia OR puntos_factura != puntos_ia)";
+    }
+
     $whereClause = !empty($where) ? 'WHERE ' . implode(' AND ', $where) : '';
 
     // Contar total de registros
