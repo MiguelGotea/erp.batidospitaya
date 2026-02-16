@@ -79,11 +79,11 @@ if (!tienePermiso('gestion_sorteos', 'vista', $cargoOperario)) {
                                 <th data-column="verificacion_ia">
                                     Verificación IA
                                     <div class="ia-filter-circles">
-                                        <i class="bi bi-circle-fill filter-circle active" data-state="all"
-                                            onclick="setIAFilter('all')" title="Todos"></i>
-                                        <i class="bi bi-circle-fill filter-circle" data-state="verified"
+                                        <i class="bi bi-check-circle-fill filter-circle" data-state="verified"
                                             onclick="setIAFilter('verified')" title="Verificado"></i>
-                                        <i class="bi bi-circle-fill filter-circle" data-state="review"
+                                        <i class="bi bi-dash-circle-fill filter-circle active" data-state="all"
+                                            onclick="setIAFilter('all')" title="Todos"></i>
+                                        <i class="bi bi-exclamation-triangle-fill filter-circle" data-state="review"
                                             onclick="setIAFilter('review')" title="Revisar"></i>
                                     </div>
                                 </th>
