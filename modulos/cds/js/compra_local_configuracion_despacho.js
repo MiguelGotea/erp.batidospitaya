@@ -1,19 +1,19 @@
-/* ===================================================
-   Configuración de Plan de Despacho - JavaScript
+﻿/* ===================================================
+   Configuraci├│n de Plan de Despacho - JavaScript
    =================================================== */
 
 let sucursales = [];
 let configuraciones = {};
 let currentSucursal = null;
 
-// Días de la semana
+// D├¡as de la semana
 const diasSemana = [
     { num: 1, nombre: 'L', nombreCompleto: 'Lunes' },
     { num: 2, nombre: 'M', nombreCompleto: 'Martes' },
-    { num: 3, nombre: 'Mi', nombreCompleto: 'Miércoles' },
+    { num: 3, nombre: 'Mi', nombreCompleto: 'Mi├⌐rcoles' },
     { num: 4, nombre: 'J', nombreCompleto: 'Jueves' },
     { num: 5, nombre: 'V', nombreCompleto: 'Viernes' },
-    { num: 6, nombre: 'S', nombreCompleto: 'Sábado' },
+    { num: 6, nombre: 'S', nombreCompleto: 'S├íbado' },
     { num: 7, nombre: 'D', nombreCompleto: 'Domingo' }
 ];
 
@@ -41,7 +41,7 @@ function cargarSucursales() {
             }
         },
         error: function () {
-            mostrarError('Error de conexión al cargar sucursales');
+            mostrarError('Error de conexi├│n al cargar sucursales');
         }
     });
 }
@@ -86,9 +86,7 @@ function cambiarSucursal(codigoSucursal) {
     }
 }
 
-let perfiles = [];
-
-// Cargar configuración de una sucursal
+// Cargar configuraci├│n de una sucursal
 function cargarConfiguracion(codigoSucursal) {
     $.ajax({
         url: 'ajax/compra_local_configuracion_despacho_get_configuracion.php',
@@ -98,120 +96,80 @@ function cargarConfiguracion(codigoSucursal) {
         success: function (response) {
             if (response.success) {
                 configuraciones[codigoSucursal] = response.configuracion;
-                perfiles = response.perfiles || [];
                 renderizarTabla(codigoSucursal);
             } else {
-                mostrarError('Error al cargar configuración: ' + response.message);
+                mostrarError('Error al cargar configuraci├│n: ' + response.message);
             }
         },
         error: function () {
-            mostrarError('Error de conexión al cargar configuración');
+            mostrarError('Error de conexi├│n al cargar configuraci├│n');
         }
     });
 }
 
-// Renderizar tabla de configuración
+// Renderizar tabla de configuraci├│n
 function renderizarTabla(codigoSucursal) {
     const config = configuraciones[codigoSucursal] || [];
-    const puedeEditar = true; // Simplificado para el ejemplo, usar el valor real del PHP si es necesario
 
     let tableHtml = `
         <div class="table-responsive">
-            <table class="table config-table align-middle">
+            <table class="table config-table">
                 <thead>
-                    <tr class="table-dark">
+                    <tr>
                         <th style="width: 200px;">Producto</th>
-                        ${diasSemana.map(d => `<th class="text-center" title="${d.nombreCompleto}">${d.nombre}</th>`).join('')}
-                        <th style="width: 80px;" title="Pedido Mínimo">P. Mín.</th>
-                        <th style="width: 60px;" title="Días excedentes de seguridad">Cont.</th>
-                        <th style="width: 60px;" title="Vida útil en días">Vida Útil</th>
-                        <th style="width: 60px;">Estado</th>
+                        <th style="width: 100px;">Pedido M├¡n.</th>
+                        ${diasSemana.map(dia => `<th title="${dia.nombreCompleto}">${dia.nombre}</th>`).join('')}
+                        <th style="width: 100px;">Estado</th>
                     </tr>
                 </thead>
                 <tbody>
     `;
 
-    // Agrupar configuración por producto
-    const agrupado = agruparPorProducto(config);
+    // Productos configurados
+    const productosAgrupados = agruparPorProducto(config);
 
-    Object.keys(agrupado).forEach(idProducto => {
-        const item = agrupado[idProducto];
-        const isInactive = item.status === 'inactivo';
-
+    for (const [idProducto, datos] of Object.entries(productosAgrupados)) {
+        const isInactive = datos.status === 'inactivo';
         tableHtml += `
             <tr class="${isInactive ? 'inactive-row' : ''}" data-producto-id="${idProducto}">
+                <td>${datos.nombre}</td>
                 <td>
-                    <div class="fw-bold text-primary">${item.nombre}</div>
-                    <div class="x-small text-muted">${item.sku || ''}</div>
+                    <input type="number" 
+                           class="form-control form-control-sm pedido-minimo-input" 
+                           value="${datos.pedido_minimo || 1}" 
+                           min="1" 
+                           step="1"
+                           ${!puedeEditar || isInactive ? 'disabled' : ''}
+                           onchange="updatePedidoMinimo(${idProducto}, '${codigoSucursal}', this.value)">
                 </td>
-                ${diasSemana.map(d => {
-            const diaConfig = item.dias[d.num] || { is_delivery: 0, id: null, base_consumption: 0, event_factor: 1 };
-            const isDelivery = diaConfig.is_delivery == 1;
+                ${diasSemana.map(dia => {
+            const tieneEntrega = datos.dias.includes(dia.num);
             return `
-                        <td class="day-config-cell ${isDelivery ? 'delivery-active' : ''}">
-                            <div class="d-flex flex-column gap-1 align-items-center">
-                                <button class="btn btn-sm ${isDelivery ? 'btn-success' : 'btn-outline-secondary'} delivery-toggle"
-                                        onclick="toggleDelivery(${idProducto}, '${codigoSucursal}', ${d.num}, ${isDelivery ? 0 : 1}, ${diaConfig.id})"
-                                        ${!puedeEditar || isInactive ? 'disabled' : ''}
-                                        title="${isDelivery ? 'Despacho activo' : 'Sin despacho'}">
-                                    <i class="fas ${isDelivery ? 'fa-check-circle' : 'fa-circle'}"></i>
-                                </button>
-                                
-                                <div class="input-group input-group-xs" title="Consumo Base">
-                                    <span class="input-group-text">C:</span>
-                                    <input type="number" step="0.01" class="form-control daily-input input-consumption" 
-                                           value="${diaConfig.base_consumption}" 
-                                           ${!puedeEditar || isInactive ? 'disabled' : ''}
-                                           onchange="updateField(${idProducto}, '${codigoSucursal}', 'base_consumption', this.value, ${diaConfig.id})">
-                                </div>
-
-                                <div class="input-group input-group-xs" title="Factor Evento">
-                                    <span class="input-group-text">F:</span>
-                                    <input type="number" step="0.1" class="form-control daily-input input-factor" 
-                                           value="${diaConfig.event_factor}" 
-                                           ${!puedeEditar || isInactive ? 'disabled' : ''}
-                                           onchange="updateField(${idProducto}, '${codigoSucursal}', 'event_factor', this.value, ${diaConfig.id})">
-                                </div>
-                            </div>
+                        <td class="day-cell ${tieneEntrega ? 'active' : ''} ${!puedeEditar || isInactive ? 'disabled' : ''}" 
+                            data-dia="${dia.num}"
+                            onclick="${puedeEditar && !isInactive ? `toggleDia(${idProducto}, '${codigoSucursal}', ${dia.num})` : ''}">
+                            ${tieneEntrega ? '<i class="bi bi-check-circle-fill"></i>' : ''}
                         </td>
                     `;
         }).join('')}
                 <td>
-                    <input type="number" step="1" class="form-control form-control-sm" 
-                           value="${item.pedido_minimo || 1}" 
-                           ${!puedeEditar || isInactive ? 'disabled' : ''}
-                           onchange="updateField(${idProducto}, '${codigoSucursal}', 'pedido_minimo', this.value)">
-                </td>
-                <td>
-                    <input type="number" step="1" class="form-control form-control-sm" 
-                           value="${item.lead_time_days || 0}" 
-                           ${!puedeEditar || isInactive ? 'disabled' : ''}
-                           onchange="updateField(${idProducto}, '${codigoSucursal}', 'lead_time_days', this.value)">
-                </td>
-                <td>
-                    <input type="number" step="1" class="form-control form-control-sm" 
-                           value="${item.shelf_life_days || 7}" 
-                           ${!puedeEditar || isInactive ? 'disabled' : ''}
-                           onchange="updateField(${idProducto}, '${codigoSucursal}', 'shelf_life_days', this.value)">
-                </td>
-                <td class="text-center">
                     <label class="toggle-switch">
                         <input type="checkbox" 
                                ${isInactive ? '' : 'checked'} 
                                ${!puedeEditar ? 'disabled' : ''}
-                               onchange="toggleStatus(${idProducto}, '${codigoSucursal}', this.checked)">
-                        <span class="toggle-slider"></span>
+                               onchange="${puedeEditar ? `toggleStatus(${idProducto}, '${codigoSucursal}', this.checked)` : ''}">
+                        <span class="toggle-slider ${!puedeEditar ? 'disabled' : ''}"></span>
                     </label>
                 </td>
             </tr>
         `;
-    });
+    }
 
     // Fila para agregar nuevo producto
     if (puedeEditar) {
         tableHtml += `
             <tr class="new-product-row">
-                <td colspan="${diasSemana.length + 5}">
+                <td colspan="${diasSemana.length + 3}">
                     <select class="form-select product-search" 
                             id="product-search-${codigoSucursal}" 
                             style="width: 100%;">
@@ -239,13 +197,13 @@ function renderizarTabla(codigoSucursal) {
 
     $(`#table-container-${codigoSucursal}`).html(tableHtml);
 
-    // Inicializar Select2 para búsqueda de productos
+    // Inicializar Select2 para b├║squeda de productos
     if (puedeEditar) {
         inicializarBusquedaProducto(codigoSucursal);
     }
 }
 
-// Agrupar configuración por producto
+// Agrupar configuraci├│n por producto
 function agruparPorProducto(config) {
     const agrupado = {};
 
@@ -253,26 +211,18 @@ function agruparPorProducto(config) {
         if (!agrupado[item.id_producto_presentacion]) {
             agrupado[item.id_producto_presentacion] = {
                 nombre: item.nombre_producto,
-                sku: item.SKU, // Restaurado SKU
-                dias: {},
+                dias: [],
                 status: item.status,
-                lead_time_days: item.lead_time_days,
-                shelf_life_days: item.shelf_life_days,
                 pedido_minimo: item.pedido_minimo
             };
         }
-        agrupado[item.id_producto_presentacion].dias[item.dia_entrega] = {
-            id: item.id,
-            is_delivery: item.is_delivery,
-            base_consumption: item.base_consumption,
-            event_factor: item.event_factor
-        };
+        agrupado[item.id_producto_presentacion].dias.push(parseInt(item.dia_entrega));
     });
 
     return agrupado;
 }
 
-// Inicializar búsqueda de producto con Select2
+// Inicializar b├║squeda de producto con Select2
 function inicializarBusquedaProducto(codigoSucursal) {
     $(`#product-search-${codigoSucursal}`).select2({
         theme: 'bootstrap-5',
@@ -309,51 +259,102 @@ function inicializarBusquedaProducto(codigoSucursal) {
     });
 }
 
-// Toggle día de entrega
-function toggleDelivery(idProducto, codigoSucursal, dia, nuevoEstado, id) {
-    updateField(idProducto, codigoSucursal, 'is_delivery', nuevoEstado, id);
-}
-
-// Actualizar campo de configuración
-function updateField(idProducto, codigoSucursal, campo, valor, id = null) {
+// Toggle d├¡a de entrega
+function toggleDia(idProducto, codigoSucursal, dia) {
     if (!puedeEditar) return;
 
+    const config = configuraciones[codigoSucursal] || [];
+    const existe = config.find(c =>
+        c.id_producto_presentacion == idProducto &&
+        c.dia_entrega == dia
+    );
+
+    if (existe) {
+        // Eliminar
+        eliminarDiaEntrega(existe.id, codigoSucursal);
+    } else {
+        // Agregar
+        agregarDiaEntrega(idProducto, codigoSucursal, dia);
+    }
+}
+
+// Agregar d├¡a de entrega
+function agregarDiaEntrega(idProducto, codigoSucursal, dia) {
     $.ajax({
-        url: 'ajax/compra_local_configuracion_despacho_update_field.php',
+        url: 'ajax/compra_local_configuracion_despacho_guardar.php',
         method: 'POST',
         data: {
-            id: id,
             id_producto_presentacion: idProducto,
             codigo_sucursal: codigoSucursal,
-            campo: campo,
-            valor: valor
+            dia_entrega: dia
         },
         dataType: 'json',
         success: function (response) {
             if (response.success) {
-                // Actualizar en el objeto local
+                cargarConfiguracion(codigoSucursal);
+                mostrarExito('D├¡a de entrega agregado');
+            } else {
+                mostrarError('Error al agregar d├¡a: ' + response.message);
+            }
+        },
+        error: function () {
+            mostrarError('Error de conexi├│n');
+        }
+    });
+}
+
+// Eliminar d├¡a de entrega
+function eliminarDiaEntrega(id, codigoSucursal) {
+    $.ajax({
+        url: 'ajax/compra_local_configuracion_despacho_eliminar.php',
+        method: 'POST',
+        data: { id: id },
+        dataType: 'json',
+        success: function (response) {
+            if (response.success) {
+                cargarConfiguracion(codigoSucursal);
+                mostrarExito('D├¡a de entrega eliminado');
+            } else {
+                mostrarError('Error al eliminar d├¡a: ' + response.message);
+            }
+        },
+        error: function () {
+            mostrarError('Error de conexi├│n');
+        }
+    });
+}
+
+// Actualizar pedido m├¡nimo
+function updatePedidoMinimo(idProducto, codigoSucursal, valor) {
+    if (!puedeEditar) return;
+
+    $.ajax({
+        url: 'ajax/compra_local_configuracion_despacho_update_minimo.php',
+        method: 'POST',
+        data: {
+            id_producto_presentacion: idProducto,
+            codigo_sucursal: codigoSucursal,
+            pedido_minimo: valor
+        },
+        dataType: 'json',
+        success: function (response) {
+            if (response.success) {
+                // Actualizar en el objeto local para no recargar toda la tabla
                 if (configuraciones[codigoSucursal]) {
                     configuraciones[codigoSucursal].forEach(item => {
                         if (item.id_producto_presentacion == idProducto) {
-                            if (id === null || item.id == id) {
-                                item[campo] = valor;
-                            }
+                            item.pedido_minimo = valor;
                         }
                     });
                 }
-                mostrarExito('Configuración actualizada');
-
-                // Si cambiamos is_delivery, refrescamos para actualizar iconos
-                if (campo === 'is_delivery') {
-                    renderizarTabla(codigoSucursal);
-                }
+                mostrarExito('Pedido m├¡nimo actualizado');
             } else {
-                mostrarError('Error al actualizar: ' + response.message);
+                mostrarError('Error al actualizar pedido m├¡nimo: ' + response.message);
                 cargarConfiguracion(codigoSucursal);
             }
         },
         error: function () {
-            mostrarError('Error de conexión');
+            mostrarError('Error de conexi├│n');
             cargarConfiguracion(codigoSucursal);
         }
     });
@@ -384,7 +385,7 @@ function toggleStatus(idProducto, codigoSucursal, activo) {
             }
         },
         error: function () {
-            mostrarError('Error de conexión');
+            mostrarError('Error de conexi├│n');
             cargarConfiguracion(codigoSucursal);
         }
     });
@@ -392,36 +393,36 @@ function toggleStatus(idProducto, codigoSucursal, activo) {
 
 // Agregar producto nuevo
 function agregarProducto(idProducto, codigoSucursal) {
-    // Crear registro inicial sin días de entrega
+    // Crear registro inicial sin d├¡as de entrega
     $.ajax({
         url: 'ajax/compra_local_configuracion_despacho_guardar.php',
         method: 'POST',
         data: {
             id_producto_presentacion: idProducto,
             codigo_sucursal: codigoSucursal,
-            dia_entrega: 1, // Día inicial por defecto
+            dia_entrega: 1, // D├¡a inicial por defecto
             crear_nuevo: true
         },
         dataType: 'json',
         success: function (response) {
             if (response.success) {
                 cargarConfiguracion(codigoSucursal);
-                mostrarExito('Producto agregado. Configure los días de entrega.');
+                mostrarExito('Producto agregado. Configure los d├¡as de entrega.');
             } else {
                 mostrarError('Error al agregar producto: ' + response.message);
             }
         },
         error: function () {
-            mostrarError('Error de conexión');
+            mostrarError('Error de conexi├│n');
         }
     });
 }
 
-// Mostrar mensaje de éxito
+// Mostrar mensaje de ├⌐xito
 function mostrarExito(mensaje) {
     Swal.fire({
         icon: 'success',
-        title: 'Éxito',
+        title: '├ëxito',
         text: mensaje,
         timer: 2000,
         showConfirmButton: false,

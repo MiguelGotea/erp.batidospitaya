@@ -1,8 +1,8 @@
-/* ===================================================
-   Configuración de Plan de Despacho - Estilos
+﻿/* ===================================================
+   Configuraci├│n de Plan de Despacho - Estilos
    =================================================== */
 
-/* Asegurar scroll en la página */
+/* Asegurar scroll en la p├ígina */
 html {
     overflow-y: scroll;
     min-height: 100vh;
@@ -38,7 +38,7 @@ body {
     font-weight: 600;
 }
 
-/* Tabla de Configuración */
+/* Tabla de Configuraci├│n */
 .config-table {
     background: white;
     border-radius: 8px;
@@ -67,7 +67,7 @@ body {
 
 .config-table thead th:first-child {
     text-align: left;
-    min-width: 150px;
+    min-width: 200px;
 }
 
 .config-table thead th:last-child {
@@ -109,71 +109,33 @@ body {
     border-right: none;
 }
 
-/* Celdas de Configuración Diaria */
-.day-config-cell {
-    width: 110px;
-    min-width: 110px;
+/* Celdas de D├¡as */
+.day-cell {
+    cursor: pointer;
+    width: 60px;
+    height: 50px;
+    position: relative;
     transition: all 0.2s;
-    background-color: #fcfcfc;
 }
 
-.day-config-cell.delivery-active {
-    background-color: rgba(81, 184, 172, 0.12) !important;
-    border-bottom: 3px solid #51B8AC !important;
+.day-cell:hover {
+    background-color: #e3f2fd;
 }
 
-.input-group-xs {
-    height: 22px;
+.day-cell.active {
+    background-color: #51B8AC;
+    color: white;
 }
 
-.input-group-xs .input-group-text {
-    padding: 0 4px;
-    font-size: 10px;
-    font-weight: bold;
-    background-color: #f8f9fa;
-    color: #666;
-    min-width: 18px;
-    justify-content: center;
+.day-cell.active:hover {
+    background-color: #0E544C;
 }
 
-.daily-input {
-    text-align: center;
-    font-size: 11px;
-    padding: 2px 4px !important;
-    border-radius: 3px;
-    height: 22px !important;
+.day-cell i {
+    font-size: 18px;
 }
 
-.input-consumption {
-    background-color: #f0fff4 !important;
-    /* Verde muy sutil */
-    border-color: #c6f6d5 !important;
-}
-
-.input-factor {
-    background-color: #fffaf0 !important;
-    /* Amarillo/Naranja muy sutil */
-    border-color: #feebc8 !important;
-}
-
-.daily-input:focus {
-    border-color: #51B8AC !important;
-    box-shadow: none !important;
-    background-color: white !important;
-}
-
-.delivery-toggle {
-    padding: 2px 6px;
-    font-size: 10px;
-    transition: all 0.2s;
-    height: 22px;
-}
-
-.delivery-toggle i {
-    font-size: 12px;
-}
-
-.day-config-cell.disabled {
+.day-cell.disabled {
     cursor: not-allowed;
     opacity: 0.5;
 }
@@ -244,11 +206,11 @@ body {
     border-radius: 50%;
 }
 
-input:checked+.toggle-slider {
+input:checked + .toggle-slider {
     background-color: #51B8AC;
 }
 
-input:checked+.toggle-slider:before {
+input:checked + .toggle-slider:before {
     transform: translateX(26px);
 }
 
@@ -275,13 +237,8 @@ input:checked+.toggle-slider:before {
 }
 
 @keyframes spin {
-    0% {
-        transform: rotate(0deg);
-    }
-
-    100% {
-        transform: rotate(360deg);
-    }
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 
 /* Mensaje de Sin Productos */
@@ -308,13 +265,13 @@ input:checked+.toggle-slider:before {
         padding: 8px 6px;
     }
 
-    .day-config-cell {
-        min-width: 80px;
-        width: 80px;
+    .day-cell {
+        width: 45px;
+        height: 40px;
     }
 
-    .daily-input {
-        width: 55px;
+    .day-cell i {
+        font-size: 14px;
     }
 
     .nav-tabs .nav-link {
@@ -348,14 +305,4 @@ input:checked+.toggle-slider:before {
 
 .nav-tabs::-webkit-scrollbar-thumb:hover {
     background: #0E544C;
-}
-
-/* Utilidades de Texto */
-.x-small {
-    font-size: 0.75rem;
-}
-
-/* Ajustes del Modal de Ayuda */
-#pageHelpModal .modal-dialog {
-    max-width: 650px;
 }

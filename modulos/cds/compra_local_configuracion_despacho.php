@@ -74,26 +74,15 @@ $puedeEditar = tienePermiso('compra_local_configuracion_despacho', 'edicion', $c
                 <div class="modal-body">
                     <!-- Guía rápida de uso -->
                     <div class="row">
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-12 mb-3">
                             <div class="card h-100 border-0 bg-light">
                                 <div class="card-body p-3">
                                     <h6 class="text-primary border-bottom pb-2 fw-bold small">
                                         <i class="fas fa-calendar-alt me-2"></i> Días de Entrega (🚚)
                                     </h6>
                                     <p class="x-small text-muted mb-0">
-                                        Active el icono de camión en los días que la sucursal recibe el producto.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <div class="card h-100 border-0 bg-light">
-                                <div class="card-body p-3">
-                                    <h6 class="text-success border-bottom pb-2 fw-bold small">
-                                        <i class="fas fa-chart-line me-2"></i> Demanda Diaria
-                                    </h6>
-                                    <p class="x-small text-muted mb-0">
-                                        Configure el consumo base y el factor de evento para cada día de la semana.
+                                        Haga clic en el icono de cada día para activar o desactivar la entrega
+                                        programada para esa sucursal. Los cambios se guardan automáticamente.
                                     </p>
                                 </div>
                             </div>
@@ -103,45 +92,11 @@ $puedeEditar = tienePermiso('compra_local_configuracion_despacho', 'edicion', $c
                     <!-- Lógica de Cálculo -->
                     <div class="bg-white border rounded p-3 mb-3">
                         <h6 class="fw-bold text-dark border-bottom pb-2">
-                            <i class="fas fa-calculator me-2 text-secondary"></i> Lógica del Stock Mínimo
+                            <i class="fas fa-clipboard-check me-2 text-secondary"></i> Gestión de Pedidos
                         </h6>
-                        <p class="small mb-2">El <strong>Stock Mín</strong> sugerido en el registro de pedidos se
-                            calcula sumando la demanda proyectada desde el momento del conteo hasta que llegue el
-                            <u>siguiente</u> pedido.
-                        </p>
-
-                        <div class="row g-2">
-                            <div class="col-md-5">
-                                <div class="p-2 border rounded bg-light h-100">
-                                    <span class="badge bg-secondary mb-2">Fórmula Base</span>
-                                    <div class="fw-bold x-small">Demanda (D) = (Consumo × Factor)</div>
-                                    <hr class="my-1">
-                                    <ul class="list-unstyled x-small mb-0">
-                                        <li>• <strong>1. Día en curso:</strong> Demanda de hoy (~85% del día).</li>
-                                        <li>• <strong>2. Días de Despacho:</strong> Demanda entre entregas.</li>
-                                        <li>• <strong>3. Contingencia:</strong> Días extra de seguridad.</li>
-                                        <li>• <strong>Restricción:</strong> Vida Útil limita la suma total.</li>
-                                    </ul>
-                                </div>
-                            </div>
-                            <div class="col-md-7">
-                                <div class="p-2 border rounded bg-info bg-opacity-10 h-100">
-                                    <span class="badge bg-info text-dark mb-2">Ejemplo Práctico</span>
-                                    <div class="x-small">
-                                        <strong>Producto:</strong> Galonera de Leche (Consumo Base: 10)<br>
-                                        <strong>Escenario:</strong> Pedido Lunes (llega Mar). Siguiente: Jue.
-                                        Contingencia: 1.<br>
-                                        <div class="mt-1 p-1 bg-white rounded border">
-                                            1. <strong>Hoy (Lun):</strong> 8.5 gal. (Remanente 9AM-9PM)<br>
-                                            2. <strong>Mar (Factor 1.2):</strong> + 12 gal.<br>
-                                            3. <strong>Mie (Factor 1.0):</strong> + 10 gal.<br>
-                                            4. <strong>Contingencia (1 día):</strong> + 10 gal.<br>
-                                            <strong>Stock Mín:</strong> 8.5 + 12 + 10 + 10 = 40.5 → <strong>41</strong>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        <p class="small mb-0">Esta herramienta define los días en que cada sucursal puede realizar
+                            pedidos de productos locales. Los días marcados con el icono de check verde indican que hay
+                            un despacho programado para ese día.</p>
                     </div>
 
                     <div class="alert alert-info py-2 px-3 small mb-0">
