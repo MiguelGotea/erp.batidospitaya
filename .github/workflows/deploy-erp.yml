@@ -3,8 +3,6 @@ name: 🚀 Deploy ERP - 17 Módulos
 on:
   push:
     branches: [ main ]
-    paths:
-      - 'modulos/**'
 
 jobs:
   deploy:
@@ -74,7 +72,7 @@ jobs:
         rsync -avz \
           -e "ssh -o StrictHostKeyChecking=no -p 65002" \
           ./README.md \
-          ${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_HOST }}:${{ secrets.HOSTINGER_PATH }}/README.md
+          ${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_HOST }}:${{ secrets.HOSTINGER_PATH }}/
           
     - name: 🔧 Configurar permisos
       run: |
