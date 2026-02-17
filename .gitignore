@@ -3,6 +3,7 @@
 !/.gitignore
 !/modulos/
 !/.scripts/
+!/README.md
 # .scripts/ (Versionado en GitHub pero excluido del host)
 /core/
 /docs/
