@@ -107,7 +107,8 @@ $puedeEditar = tienePermiso('compra_local_configuracion_despacho', 'edicion', $c
                         </h6>
                         <p class="small mb-2">El <strong>Stock Mín</strong> sugerido en el registro de pedidos se
                             calcula sumando la demanda proyectada desde el momento del conteo hasta que llegue el
-                            <u>siguiente</u> pedido.</p>
+                            <u>siguiente</u> pedido.
+                        </p>
 
                         <div class="row g-2">
                             <div class="col-md-5">
@@ -116,12 +117,10 @@ $puedeEditar = tienePermiso('compra_local_configuracion_despacho', 'edicion', $c
                                     <div class="fw-bold x-small">Demanda (D) = (Consumo × Factor)</div>
                                     <hr class="my-1">
                                     <ul class="list-unstyled x-small mb-0">
-                                        <li>• <strong>Demanda Hoy:</strong> Se calcula el 85% de D (desde 9 AM al
-                                            cierre).</li>
-                                        <li>• <strong>Cobertura:</strong> Suma de D de todos los días hasta la siguiente
-                                            entrega.</li>
-                                        <li>• <strong>Restricciones:</strong> Lead Time suma días; Vida Útil limita la
-                                            suma.</li>
+                                        <li>• <strong>1. Día en curso:</strong> Demanda de hoy (~85% del día).</li>
+                                        <li>• <strong>2. Días de Despacho:</strong> Demanda entre entregas.</li>
+                                        <li>• <strong>3. Contingencia:</strong> Días extra de seguridad.</li>
+                                        <li>• <strong>Restricción:</strong> Vida Útil limita la suma total.</li>
                                     </ul>
                                 </div>
                             </div>
@@ -129,15 +128,16 @@ $puedeEditar = tienePermiso('compra_local_configuracion_despacho', 'edicion', $c
                                 <div class="p-2 border rounded bg-info bg-opacity-10 h-100">
                                     <span class="badge bg-info text-dark mb-2">Ejemplo Práctico</span>
                                     <div class="x-small">
-                                        <strong>Producto:</strong> Galonera de Leche (Consumo: 10, Factor: 1.2) →
-                                        <strong>D = 12</strong><br>
-                                        <strong>Escenario:</strong> Pedido de Lunes (llega Martes). Siguiente entrega:
-                                        Jueves.<br>
+                                        <strong>Producto:</strong> Galonera de Leche (Consumo: 10) → <strong>D =
+                                            10</strong><br>
+                                        <strong>Escenario:</strong> Pedido Lunes (llega Mar). Siguiente: Jue.
+                                        Contingencia: 1.<br>
                                         <div class="mt-1 p-1 bg-white rounded border">
-                                            1. <strong>Hoy (Lun):</strong> 85% de 12 = <strong>10.2</strong><br>
-                                            2. <strong>Cobertura (Mar+Mie+Jue):</strong> 12 + 12 + 12 =
-                                            <strong>36</strong><br>
-                                            3. <strong>Total:</strong> 10.2 + 36 = 46.2 → <strong>Stock Mín: 47</strong>
+                                            1. <strong>Hoy (Lun):</strong> Remanente del día = <strong>8.5</strong><br>
+                                            2. <strong>Despacho (Mar + Mie):</strong> 10 + 10 = <strong>20</strong><br>
+                                            3. <strong>Contingencia (1 día):</strong> + 10 = <strong>10</strong><br>
+                                            <strong>Total:</strong> 8.5 + 20 + 10 = 38.5 → <strong>Stock Mín:
+                                                39</strong>
                                         </div>
                                     </div>
                                 </div>

@@ -117,7 +117,7 @@ function renderizarTabla(codigoSucursal) {
                 <thead>
                     <tr>
                         <th style="width: 250px;">Producto</th>
-                        <th style="width: 80px;" title="Días de contingencia">Lead Time</th>
+                        <th style="width: 80px;" title="Días excedentes de seguridad">Contingencia</th>
                         <th style="width: 80px;" title="Vida útil en días">Vida Útil</th>
                         ${diasSemana.map(dia => `<th title="${dia.nombreCompleto}" class="text-center">${dia.nombre}</th>`).join('')}
                         <th style="width: 100px;">Estado</th>
@@ -137,7 +137,7 @@ function renderizarTabla(codigoSucursal) {
                 <td>
                     <input type="number" step="1" class="form-control form-control-sm" 
                            value="${datos.lead_time_days || 0}" 
-                           ${!puedeEditar || isInactive ? 'disabled' : ''}
+                           title="Días de Contingencia" ${!puedeEditar || isInactive ? 'disabled' : ''}
                            onchange="updateField(${idProducto}, '${codigoSucursal}', 'lead_time_days', this.value)">
                 </td>
                 <td>
