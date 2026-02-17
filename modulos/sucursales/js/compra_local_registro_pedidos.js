@@ -310,7 +310,6 @@ function renderizarTabla() {
                 <thead>
                     <tr>
                         <th style="width: 20%">Producto</th>
-                        <th style="width: 5%" class="text-center">Min.</th>
     `;
 
     // Generate column headers for each day
@@ -349,9 +348,6 @@ function renderizarTabla() {
                     <strong>${producto.nombre_producto}</strong>
                     ${isInactive ? '<br><span class="badge bg-secondary">Inactivo</span>' : ''}
                 </td>
-                <td class="text-center">
-                    <span class="badge rounded-pill bg-light text-dark border">${producto.pedido_minimo || 1}</span>
-                </td>
         `;
         // Generate cell for each day
         fechasEntrega.forEach((diaInfo, index) => {
@@ -370,16 +366,60 @@ function renderizarTabla() {
             // Past dates are always disabled for editing but show as completed
             const habilitado = !esPasado && tieneConfig && beforeDeadline && !isInactive;
 
-            // Check if should show urgent icon (today's column, empty, deadline approaching)
-            let mostrarAlerta = false;
-            if (esHoy && !cantidad && habilitado && beforeDeadline) {
-                const { hours, minutes } = calcularTiempoRestante();
-                const totalMinutes = hours * 60 + minutes;
-                mostrarAlerta = totalMinutes < 120; // Show alert if less than 2 hours
+            // Calculate Suggested Reorder Point for editable cells
+            let sugeridoHTML = '';
+            if (habilitado && !esPasado && tieneConfig) {
+                // Constants
+                const operatingHours = 14;
+                const fixedCountHour = 9;
+                const closingHour = 21;
+                const dailyWaste = 0; // Merma constante (no especificada como campo aún)
+
+                const base = parseFloat(producto.base_consumption) || 0;
+                const factor = parseFloat(producto.event_factor) || 1;
+                const leadTime = parseInt(producto.lead_time_days) || 0;
+                const shelfLife = parseInt(producto.shelf_life_days) || 7;
+
+                if (base > 0) {
+                    const D = (base * factor) + dailyWaste;
+
+                    // Demanda hoy (9 AM to 9 PM = 12 hours)
+                    const Hr = closingHour - fixedCountHour;
+                    const F = Hr / operatingHours;
+                    const Dhoy = F * D;
+
+                    // Days until subsequent delivery
+                    // We need to look ahead in the product's delivery config
+                    const diasEntrega = producto.dias_entrega; // Array of integers (1-7)
+                    let diasHastaSiguiente = 0;
+
+                    // The current delivery arrives at (diaInfo.entrega)
+                    // We need the gap between THIS delivery and the NEXT one
+                    if (diasEntrega.length > 0) {
+                        const diaActualEntrega = diaInfo.diaSemanaEntrega; // Corrected: this is the day it arrives
+
+                        // Find the next delivery day in the sorted array
+                        let siguienteEntrega = diasEntrega.find(d => d > diaActualEntrega);
+                        if (!siguienteEntrega) siguienteEntrega = diasEntrega[0];
+
+                        // Calculate gap
+                        if (siguienteEntrega > diaActualEntrega) {
+                            diasHastaSiguiente = siguienteEntrega - diaActualEntrega;
+                        } else {
+                            diasHastaSiguiente = (7 - diaActualEntrega) + siguienteEntrega;
+                        }
+                    }
+
+                    const DiasMaximos = Math.min(diasHastaSiguiente + leadTime, shelfLife);
+                    const Dfutura = D * DiasMaximos;
+                    const ReorderPoint = Math.ceil(Dhoy + Dfutura);
+
+                    sugeridoHTML = `<div class="reorder-suggested" title="Stock sugerido al conteo de 9:00 AM">Sugerido: ${ReorderPoint}</div>`;
+                }
             }
 
             // Determine cell content
-            let cellContent = '';
+            let cellContent = sugeridoHTML;
             if (esPasado) {
                 // Past dates: show quantity with checkmark if exists, otherwise just dash
                 if (cantidad) {

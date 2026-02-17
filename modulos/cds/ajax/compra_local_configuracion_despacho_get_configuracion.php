@@ -20,7 +20,10 @@ try {
                 clcd.id_producto_presentacion,
                 clcd.dia_entrega,
                 clcd.status,
-                clcd.pedido_minimo,
+                clcd.base_consumption,
+                clcd.lead_time_days,
+                clcd.shelf_life_days,
+                clcd.event_factor,
                 pp.Nombre as nombre_producto,
                 pp.SKU
             FROM compra_local_configuracion_despacho clcd

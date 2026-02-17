@@ -116,8 +116,11 @@ function renderizarTabla(codigoSucursal) {
             <table class="table config-table">
                 <thead>
                     <tr>
-                        <th style="width: 200px;">Producto</th>
-                        <th style="width: 100px;">Pedido Mín.</th>
+                        <th style="width: 250px;">Producto</th>
+                        <th style="width: 100px;" title="Consumo base diario">Cons. Base</th>
+                        <th style="width: 80px;" title="Días de contingencia">Lead Time</th>
+                        <th style="width: 80px;" title="Vida útil en días">Vida Útil</th>
+                        <th style="width: 80px;" title="Factor de evento">Factor</th>
                         ${diasSemana.map(dia => `<th title="${dia.nombreCompleto}">${dia.nombre}</th>`).join('')}
                         <th style="width: 100px;">Estado</th>
                     </tr>
@@ -134,13 +137,28 @@ function renderizarTabla(codigoSucursal) {
             <tr class="${isInactive ? 'inactive-row' : ''}" data-producto-id="${idProducto}">
                 <td>${datos.nombre}</td>
                 <td>
-                    <input type="number" 
-                           class="form-control form-control-sm pedido-minimo-input" 
-                           value="${datos.pedido_minimo || 1}" 
-                           min="1" 
-                           step="1"
+                    <input type="number" step="0.01" class="form-control form-control-sm" 
+                           value="${datos.base_consumption || 0}" 
                            ${!puedeEditar || isInactive ? 'disabled' : ''}
-                           onchange="updatePedidoMinimo(${idProducto}, '${codigoSucursal}', this.value)">
+                           onchange="updateField(${idProducto}, '${codigoSucursal}', 'base_consumption', this.value)">
+                </td>
+                <td>
+                    <input type="number" step="1" class="form-control form-control-sm" 
+                           value="${datos.lead_time_days || 0}" 
+                           ${!puedeEditar || isInactive ? 'disabled' : ''}
+                           onchange="updateField(${idProducto}, '${codigoSucursal}', 'lead_time_days', this.value)">
+                </td>
+                <td>
+                    <input type="number" step="1" class="form-control form-control-sm" 
+                           value="${datos.shelf_life_days || 7}" 
+                           ${!puedeEditar || isInactive ? 'disabled' : ''}
+                           onchange="updateField(${idProducto}, '${codigoSucursal}', 'shelf_life_days', this.value)">
+                </td>
+                <td>
+                    <input type="number" step="0.1" class="form-control form-control-sm" 
+                           value="${datos.event_factor || 1}" 
+                           ${!puedeEditar || isInactive ? 'disabled' : ''}
+                           onchange="updateField(${idProducto}, '${codigoSucursal}', 'event_factor', this.value)">
                 </td>
                 ${diasSemana.map(dia => {
             const tieneEntrega = datos.dias.includes(dia.num);
@@ -169,7 +187,7 @@ function renderizarTabla(codigoSucursal) {
     if (puedeEditar) {
         tableHtml += `
             <tr class="new-product-row">
-                <td colspan="${diasSemana.length + 3}">
+                <td colspan="${diasSemana.length + 6}">
                     <select class="form-select product-search" 
                             id="product-search-${codigoSucursal}" 
                             style="width: 100%;">
@@ -213,7 +231,10 @@ function agruparPorProducto(config) {
                 nombre: item.nombre_producto,
                 dias: [],
                 status: item.status,
-                pedido_minimo: item.pedido_minimo
+                base_consumption: item.base_consumption,
+                lead_time_days: item.lead_time_days,
+                shelf_life_days: item.shelf_life_days,
+                event_factor: item.event_factor
             };
         }
         agrupado[item.id_producto_presentacion].dias.push(parseInt(item.dia_entrega));
@@ -324,32 +345,33 @@ function eliminarDiaEntrega(id, codigoSucursal) {
     });
 }
 
-// Actualizar pedido mínimo
-function updatePedidoMinimo(idProducto, codigoSucursal, valor) {
+// Actualizar campo de configuración
+function updateField(idProducto, codigoSucursal, campo, valor) {
     if (!puedeEditar) return;
 
     $.ajax({
-        url: 'ajax/compra_local_configuracion_despacho_update_minimo.php',
+        url: 'ajax/compra_local_configuracion_despacho_update_field.php',
         method: 'POST',
         data: {
             id_producto_presentacion: idProducto,
             codigo_sucursal: codigoSucursal,
-            pedido_minimo: valor
+            campo: campo,
+            valor: valor
         },
         dataType: 'json',
         success: function (response) {
             if (response.success) {
-                // Actualizar en el objeto local para no recargar toda la tabla
+                // Actualizar en el objeto local
                 if (configuraciones[codigoSucursal]) {
                     configuraciones[codigoSucursal].forEach(item => {
                         if (item.id_producto_presentacion == idProducto) {
-                            item.pedido_minimo = valor;
+                            item[campo] = valor;
                         }
                     });
                 }
-                mostrarExito('Pedido mínimo actualizado');
+                mostrarExito('Configuración actualizada');
             } else {
-                mostrarError('Error al actualizar pedido mínimo: ' + response.message);
+                mostrarError('Error al actualizar: ' + response.message);
                 cargarConfiguracion(codigoSucursal);
             }
         },
