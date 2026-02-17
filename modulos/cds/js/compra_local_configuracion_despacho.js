@@ -159,18 +159,20 @@ function renderizarTabla(codigoSucursal) {
                                     onclick="toggleDelivery(${idProducto}, '${codigoSucursal}', ${dia.num}, ${isDelivery ? 0 : 1})">
                                 <i class="fas fa-truck text-white"></i>
                             </button>
-                            <input type="number" step="0.01" class="form-control form-control-sm daily-input" 
-                                   value="${configDia.base_consumption || 0}" 
-                                   placeholder="Cons."
-                                   title="Consumo Base"
-                                   ${!puedeEditar || isInactive ? 'disabled' : ''}
-                                   onchange="updateField(${idProducto}, '${codigoSucursal}', 'base_consumption', this.value, ${dia.num})">
-                            <input type="number" step="0.1" class="form-control form-control-sm daily-input" 
-                                   value="${configDia.event_factor || 1}" 
-                                   placeholder="Fact."
-                                   title="Factor Evento"
-                                   ${!puedeEditar || isInactive ? 'disabled' : ''}
-                                   onchange="updateField(${idProducto}, '${codigoSucursal}', 'event_factor', this.value, ${dia.num})">
+                            <div class="input-group input-group-xs mb-1">
+            <span class="input-group-text" title="Consumo Base">C:</span>
+            <input type="number" step="0.01" class="form-control daily-input input-consumption" 
+                   value="${configDia.base_consumption || 0}" 
+                   ${!puedeEditar || isInactive ? 'disabled' : ''}
+                   onchange="updateField(${idProducto}, '${codigoSucursal}', 'base_consumption', this.value, ${dia.num})">
+        </div>
+        <div class="input-group input-group-xs">
+            <span class="input-group-text" title="Factor Evento">F:</span>
+            <input type="number" step="0.1" class="form-control daily-input input-factor" 
+                   value="${configDia.event_factor || 1}" 
+                   ${!puedeEditar || isInactive ? 'disabled' : ''}
+                   onchange="updateField(${idProducto}, '${codigoSucursal}', 'event_factor', this.value, ${dia.num})">
+        </div>
                         </div>
                     </td>
                     `;
