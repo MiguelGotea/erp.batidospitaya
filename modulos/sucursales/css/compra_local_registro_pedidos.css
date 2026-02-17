@@ -299,30 +299,33 @@ body {
 }
 
 .day-name {
-    font-weight: 600;
-    font-size: 13px;
+    font-weight: 700;
+    font-size: 15px;
+    letter-spacing: 0.3px;
+    margin-bottom: 2px;
 }
 
-.day-date {
+.delivery-label {
     font-size: 11px;
-    opacity: 0.8;
+    font-weight: normal;
+    opacity: 0.85;
 }
 
 /* Resaltar columna de HOY */
 .today-column {
-    background-color: #fff3cd !important;
-    font-weight: 600;
+    background-color: rgba(255, 193, 7, 0.1) !important;
 }
 
 .pedidos-table thead th.today-column {
     background-color: #0E544C !important;
-    border-left: 3px solid #ffc107;
-    border-right: 3px solid #ffc107;
+    border-left: 3px solid #ffc107 !important;
+    border-right: 3px solid #ffc107 !important;
+    border-bottom: 4px solid #ffc107 !important;
 }
 
 .pedidos-table tbody td.today-column {
-    border-left: 2px solid #ffc107;
-    border-right: 2px solid #ffc107;
+    border-left: 2px solid rgba(255, 193, 7, 0.3) !important;
+    border-right: 2px solid rgba(255, 193, 7, 0.3) !important;
 }
 
 /* Alert Cell - Sin pedido en fecha próxima */

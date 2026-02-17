@@ -325,7 +325,10 @@ function renderizarTabla() {
 
         html += `
             <th class="text-center ${claseColumna}">
-                <div class="day-name">${nombreDia}</div>
+                <div class="day-name">
+                    ${esHoy ? '<i class="fas fa-star text-warning me-1"></i>' : ''}
+                    ${nombreDia}${esHoy ? ' (HOY)' : ''}
+                </div>
                 <div class="delivery-label">Pedido Llega ${nombreEntrega}</div>
             </th>
         `;

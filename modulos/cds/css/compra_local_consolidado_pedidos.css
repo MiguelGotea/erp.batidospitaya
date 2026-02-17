@@ -115,39 +115,36 @@ body {
 }
 
 .day-name {
-    font-weight: bold;
-    font-size: 13px;
+    font-weight: 700;
+    font-size: 15px;
+    letter-spacing: 0.3px;
+    margin-bottom: 2px;
 }
 
-.day-info {
-    font-size: 10px;
+.delivery-label {
+    font-size: 11px;
     font-weight: normal;
-    color: #666;
+    opacity: 0.85;
 }
 
 /* Resaltar columna de HOY */
 .today-column {
-    background-color: rgba(81, 184, 172, 0.08) !important;
+    background-color: rgba(255, 193, 7, 0.1) !important;
 }
 
 .consolidado-table th.today-column {
-    border-bottom: 3px solid #51B8AC !important;
+    border-bottom: 4px solid #ffc107 !important;
 }
 
 .consolidado-table thead th.today-column {
     background-color: #0E544C !important;
-    border-left: 3px solid #ffc107;
-    border-right: 3px solid #ffc107;
+    border-left: 3px solid #ffc107 !important;
+    border-right: 3px solid #ffc107 !important;
 }
 
 .consolidado-table tbody td.today-column {
-    border-left: 2px solid #ffc107;
-    border-right: 2px solid #ffc107;
-}
-
-.consolidado-table tfoot td.today-column {
-    border-left: 2px solid #ffc107;
-    border-right: 2px solid #ffc107;
+    border-left: 2px solid rgba(255, 193, 7, 0.3) !important;
+    border-right: 2px solid rgba(255, 193, 7, 0.3) !important;
 }
 
 .consolidado-table tbody tr {

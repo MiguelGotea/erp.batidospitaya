@@ -181,8 +181,11 @@ function renderizarTablaProducto(producto) {
         return `
                             <th class="${esHoy ? 'today-column' : ''}">
                                 <div class="day-header">
-                                    <span class="day-name">${dia.nombre}</span>
-                                    <span class="day-info">${dia.info}</span>
+                                    <span class="day-name">
+                                        ${esHoy ? '<i class="fas fa-star text-warning me-1"></i>' : ''}
+                                        ${dia.nombre}${esHoy ? ' (HOY)' : ''}
+                                    </span>
+                                    <span class="delivery-label">${dia.info}</span>
                                 </div>
                             </th>
                         `;
