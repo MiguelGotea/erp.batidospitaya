@@ -419,7 +419,7 @@ function renderizarTabla() {
                     }
 
                     const ReorderPoint = Math.ceil(DhoyRemanente + Dfutura);
-                    sugeridoHTML = `<div class="reorder-suggested" title="Stock sugerido al conteo de 9:00 AM">Sugerido: ${ReorderPoint}</div>`;
+                    sugeridoHTML = `<div class="reorder-suggested" title="Stock sugerido al conteo de 9:00 AM">Stock Mín: ${ReorderPoint}</div>`;
                 }
             }
 
@@ -432,27 +432,29 @@ function renderizarTabla() {
             }
 
             // Determine cell content
-            let cellContent = sugeridoHTML;
-            if (esPasado) {
-                // Past dates: show quantity with checkmark if exists, otherwise just dash
-                if (cantidad) {
-                    cellContent = `<span class="cantidad-completada">✓ ${cantidad}</span>`;
-                } else {
-                    cellContent = '<span class="text-muted">-</span>';
-                }
-            } else if (!tieneConfig || !beforeDeadline || isInactive) {
-                // Not configured or deadline passed or inactive
-                cellContent = (tieneConfig && !beforeDeadline ? '🔒' : '-');
-            } else if (cantidad) {
-                // Has quantity
-                cellContent = `<span class="cantidad-display">${cantidad}</span>`;
-            } else if (mostrarAlerta) {
-                // Empty with alert - show both alert and suggestion
-                cellContent = `<span class="urgent-badge">🚨</span><span class="text-muted">-</span>` + sugeridoHTML;
+            let cellContent = '';
+
+            // 1. Mostrar Cantidad si existe (independiente de si está bloqueado o no)
+            let cantidadHTML = '';
+            if (cantidad) {
+                const checkmark = esPasado ? '✓ ' : '';
+                cantidadHTML = `<span class="${esPasado ? 'cantidad-completada' : 'cantidad-display'}">${checkmark}${cantidad}</span>`;
             } else {
-                // Empty - show only suggestion
-                cellContent = '<span class="text-muted">-</span>' + sugeridoHTML;
+                cantidadHTML = '<span class="text-muted">-</span>';
             }
+
+            // 2. Mostrar icono de bloqueo si aplica
+            let lockHTML = (tieneConfig && !beforeDeadline && !esPasado) ? '<span class="lock-indicator" title="Plazo vencido">🔒</span>' : '';
+
+            // 3. Montar contenido principal
+            if (mostrarAlerta && !cantidad) {
+                cellContent = `<span class="urgent-badge">🚨</span>` + cantidadHTML;
+            } else {
+                cellContent = lockHTML + cantidadHTML;
+            }
+
+            // 4. Agregar siempre el Stock Mínimo si existe config
+            cellContent += sugeridoHTML;
 
             html += `
                 <td class="day-cell ${esPasado ? 'past-date' : ''} ${habilitado ? 'enabled' : 'disabled'} ${cantidad ? 'has-order' : ''} ${mostrarAlerta ? 'alert-cell' : ''}"\r
