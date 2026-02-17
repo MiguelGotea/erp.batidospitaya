@@ -67,6 +67,14 @@ jobs:
             echo "⚠️ Saltando modulos/$MODULE/ (no existe localmente)"
           fi
         done
+        
+    - name: 📤 Sincronizar README raíz
+      run: |
+        echo "🔄 Sincronizando README.md..."
+        rsync -avz \
+          -e "ssh -o StrictHostKeyChecking=no -p 65002" \
+          ./README.md \
+          ${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_HOST }}:${{ secrets.HOSTINGER_PATH }}/README.md
           
     - name: 🔧 Configurar permisos
       run: |

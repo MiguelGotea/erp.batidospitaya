@@ -16,11 +16,12 @@ Para mantener el repositorio limpio y seguro, se aplican las siguientes reglas:
 
 | Carpeta/Archivo | Subir a GitHub | Subir al Host |
 | :--- | :---: | :---: |
-| `.agent/`, `core/`, `docs/` | ❌ No | ❌ No |
 | `.scripts/` | ✅ Sí | ❌ No |
 | `.github/`, `.gitignore` | ✅ Sí | ❌ No |
 | `modulos/` (lógica) | ✅ Sí | ✅ Sí |
+| Raíz (`README.md`) | ✅ Sí | ✅ Sí |
 | `modulos/*/uploads/` | ❌ No | ❌ No |
+| `.agent/`, `core/`, `docs/` | ❌ No | ❌ No |
 
 - 🔧 Permisos automáticos aplicados en cada deploy: 755 para carpetas y 644 para archivos.
 - 📁 Las carpetas `uploads` dentro de cada módulo se crean automáticamente si no existen.
