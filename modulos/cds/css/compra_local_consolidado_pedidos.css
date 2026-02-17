@@ -226,13 +226,13 @@ body {
 
 /* Totals Row */
 .totals-row {
-    background-color: #0E544C;
-    color: white;
+    background-color: white !important;
+    color: #333 !important;
     font-weight: 700;
 }
 
 .totals-row td {
-    border-top: 3px solid #0E544C;
+    border-top: 3px solid #0E544C !important;
     padding: 14px 12px;
 }
 
