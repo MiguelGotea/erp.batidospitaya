@@ -9,6 +9,7 @@ Repositorio central del sistema ERP para Batidos Pitaya.
 - `.scripts/`: Scripts auxiliares de PowerShell.
 - `docs/`: Documentación técnica y de infraestructura.
 
+
 ## 🚀 Deploy Automático
 
 ### Gestión de Archivos (Estandarización)
