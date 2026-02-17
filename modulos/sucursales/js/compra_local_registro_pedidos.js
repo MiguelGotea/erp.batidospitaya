@@ -376,54 +376,51 @@ function renderizarTabla() {
                 const operatingHours = 14;
                 const fixedCountHour = 9;
                 const closingHour = 21;
-                const dailyWaste = 0; // Merma constante (no especificada como campo aún)
+                const dailyWaste = 0;
 
-                const configDiaria = producto.config_diaria;
                 const leadTime = parseInt(producto.lead_time_days) || 0;
                 const shelfLife = parseInt(producto.shelf_life_days) || 7;
 
-                if (configDiaria) {
-                    // 1. Demanda restante para HOY (9 AM a 9 PM)
-                    const diaHoy = diaInfo.diaSemana; // 1-7
-                    const configHoy = configDiaria[diaHoy] || { base_consumption: 0, event_factor: 1 };
-                    const DHoyTotal = (configHoy.base_consumption * configHoy.event_factor) + dailyWaste;
-                    const Hr = closingHour - fixedCountHour;
-                    const F = Hr / operatingHours;
-                    const DhoyRemanente = F * DHoyTotal;
+                // 1. Demanda restante para HOY (9 AM a 9 PM)
+                const diaHoy = diaInfo.diaSemana;
+                const configHoy = producto.config_diaria[diaHoy] || { base_consumption: 0 };
+                const DHoyTotal = configHoy.base_consumption + dailyWaste;
+                const Hr = closingHour - fixedCountHour;
+                const F = Hr / operatingHours;
+                const DhoyRemanente = F * DHoyTotal;
 
-                    // 2. Determinar periodo de cobertura (Días hasta la siguiente entrega)
-                    const diasEntrega = producto.dias_entrega;
-                    let diasHastaSiguiente = 0;
-                    if (diasEntrega.length > 0) {
-                        const diaActualEntrega = diaInfo.diaSemanaEntrega;
-                        let siguienteEntrega = diasEntrega.find(d => d > diaActualEntrega);
-                        if (!siguienteEntrega) siguienteEntrega = diasEntrega[0];
+                // 2. Determinar periodo de cobertura (Días hasta la siguiente entrega)
+                const diasEntrega = producto.dias_entrega;
+                let diasHastaSiguiente = 0;
+                if (diasEntrega.length > 0) {
+                    const diaActualEntrega = diaInfo.diaSemanaEntrega;
+                    let siguienteEntrega = diasEntrega.find(d => d > diaActualEntrega);
+                    if (!siguienteEntrega) siguienteEntrega = diasEntrega[0];
 
-                        if (siguienteEntrega > diaActualEntrega) {
-                            diasHastaSiguiente = siguienteEntrega - diaActualEntrega;
-                        } else {
-                            diasHastaSiguiente = (7 - diaActualEntrega) + siguienteEntrega;
-                        }
+                    if (siguienteEntrega > diaActualEntrega) {
+                        diasHastaSiguiente = siguienteEntrega - diaActualEntrega;
+                    } else {
+                        diasHastaSiguiente = (7 - diaActualEntrega) + siguienteEntrega;
                     }
-
-                    // 3. Sumar demanda de los días de cobertura
-                    // Empezamos desde el día que llega el pedido (diaInfo.entrega)
-                    let Dfutura = 0;
-                    const diasASumar = Math.min(diasHastaSiguiente + leadTime, shelfLife);
-
-                    for (let i = 0; i < diasASumar; i++) {
-                        // Calcular el día de la semana correspondiente a (Entrega + i días)
-                        let diaSemanaSumar = (diaInfo.diaSemanaEntrega + i);
-                        if (diaSemanaSumar > 7) diaSemanaSumar = ((diaSemanaSumar - 1) % 7) + 1;
-
-                        const configSumar = configDiaria[diaSemanaSumar] || { base_consumption: 0, event_factor: 1 };
-                        const demandai = (configSumar.base_consumption * configSumar.event_factor) + dailyWaste;
-                        Dfutura += demandai;
-                    }
-
-                    const ReorderPoint = Math.ceil(DhoyRemanente + Dfutura);
-                    sugeridoHTML = `<div class="reorder-suggested" title="Stock sugerido al conteo de 9:00 AM">Stock Mín: ${ReorderPoint}</div>`;
                 }
+
+                // 3. Sumar demanda de los días de cobertura
+                // Empezamos desde el día que llega el pedido (diaInfo.entrega)
+                let Dfutura = 0;
+                const diasASumar = Math.min(diasHastaSiguiente + leadTime, shelfLife);
+
+                for (let i = 0; i < diasASumar; i++) {
+                    // Calcular el día de la semana correspondiente a (Entrega + i días)
+                    let diaSemanaSumar = (diaInfo.diaSemanaEntrega + i);
+                    if (diaSemanaSumar > 7) diaSemanaSumar = ((diaSemanaSumar - 1) % 7) + 1;
+
+                    const configSumar = producto.config_diaria[diaSemanaSumar] || { base_consumption: 0 };
+                    const demandai = configSumar.base_consumption + dailyWaste;
+                    Dfutura += demandai;
+                }
+
+                const ReorderPoint = Math.ceil(DhoyRemanente + Dfutura);
+                sugeridoHTML = `<div class="reorder-suggested" title="Stock sugerido al conteo de 9:00 AM">Stock Mín: ${ReorderPoint}</div>`;
             }
 
             // Check if should show urgent icon (today's column, empty, deadline approaching)

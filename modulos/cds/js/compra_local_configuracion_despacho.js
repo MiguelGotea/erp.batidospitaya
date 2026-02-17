@@ -86,6 +86,8 @@ function cambiarSucursal(codigoSucursal) {
     }
 }
 
+let perfiles = [];
+
 // Cargar configuración de una sucursal
 function cargarConfiguracion(codigoSucursal) {
     $.ajax({
@@ -96,6 +98,7 @@ function cargarConfiguracion(codigoSucursal) {
         success: function (response) {
             if (response.success) {
                 configuraciones[codigoSucursal] = response.configuracion;
+                perfiles = response.perfiles || [];
                 renderizarTabla(codigoSucursal);
             } else {
                 mostrarError('Error al cargar configuración: ' + response.message);
@@ -110,85 +113,79 @@ function cargarConfiguracion(codigoSucursal) {
 // Renderizar tabla de configuración
 function renderizarTabla(codigoSucursal) {
     const config = configuraciones[codigoSucursal] || [];
+    const puedeEditar = true; // Simplificado para el ejemplo, usar el valor real del PHP si es necesario
 
     let tableHtml = `
         <div class="table-responsive">
-            <table class="table config-table">
+            <table class="table config-table align-middle">
                 <thead>
-                    <tr>
-                        <th style="width: 250px;">Producto</th>
-                        <th style="width: 80px;" title="Días excedentes de seguridad">Contingencia</th>
-                        <th style="width: 80px;" title="Vida útil en días">Vida Útil</th>
-                        ${diasSemana.map(dia => `<th title="${dia.nombreCompleto}" class="text-center">${dia.nombre}</th>`).join('')}
-                        <th style="width: 100px;">Estado</th>
+                    <tr class="table-dark">
+                        <th style="width: 200px;">Producto</th>
+                        ${diasSemana.map(d => `<th class="text-center" style="width: 40px;" title="${d.nombreCompleto}">${d.nombre}</th>`).join('')}
+                        <th style="width: 80px;" title="Consumo base diario">Consumo</th>
+                        <th style="width: 60px;" title="Días excedentes de seguridad">Cont.</th>
+                        <th style="width: 60px;" title="Vida útil en días">Vida Útil</th>
+                        <th style="width: 60px;">Estado</th>
                     </tr>
                 </thead>
                 <tbody>
     `;
 
-    // Productos configurados
-    const productosAgrupados = agruparPorProducto(config);
+    // Agrupar configuración por producto
+    const agrupado = agruparPorProducto(config);
 
-    for (const [idProducto, datos] of Object.entries(productosAgrupados)) {
-        const isInactive = datos.status === 'inactivo';
+    Object.keys(agrupado).forEach(idProducto => {
+        const item = agrupado[idProducto];
+        const isInactive = item.status === 'inactivo';
+
         tableHtml += `
             <tr class="${isInactive ? 'inactive-row' : ''}" data-producto-id="${idProducto}">
-                <td>${datos.nombre}</td>
+                <td>
+                    <div class="fw-bold text-primary">${item.nombre}</div>
+                    <div class="x-small text-muted">${item.sku || ''}</div>
+                </td>
+                ${diasSemana.map(d => {
+            const diaConfig = item.dias[d.num] || { is_delivery: 0, id: null };
+            const isDelivery = diaConfig.is_delivery == 1;
+            return `
+                        <td class="text-center">
+                            <span class="day-dot ${isDelivery ? 'active' : ''} ${!puedeEditar || isInactive ? 'readonly' : ''}" 
+                                  onclick="${puedeEditar && !isInactive ? `toggleDelivery(${idProducto}, '${codigoSucursal}', ${d.num}, ${isDelivery ? 0 : 1}, ${diaConfig.id})` : ''}"
+                                  title="${d.nombreCompleto}: ${isDelivery ? 'Despacho activo' : 'Sin despacho'}">
+                            </span>
+                        </td>
+                    `;
+        }).join('')}
+                <td>
+                    <input type="number" step="0.01" class="form-control form-control-sm" 
+                           value="${item.base_consumption || 0}" 
+                           ${!puedeEditar || isInactive ? 'disabled' : ''}
+                           onchange="updateField(${idProducto}, '${codigoSucursal}', 'base_consumption', this.value)">
+                </td>
                 <td>
                     <input type="number" step="1" class="form-control form-control-sm" 
-                           value="${datos.lead_time_days || 0}" 
-                           title="Días de Contingencia" ${!puedeEditar || isInactive ? 'disabled' : ''}
+                           value="${item.lead_time_days || 0}" 
+                           ${!puedeEditar || isInactive ? 'disabled' : ''}
                            onchange="updateField(${idProducto}, '${codigoSucursal}', 'lead_time_days', this.value)">
                 </td>
                 <td>
                     <input type="number" step="1" class="form-control form-control-sm" 
-                           value="${datos.shelf_life_days || 7}" 
+                           value="${item.shelf_life_days || 7}" 
                            ${!puedeEditar || isInactive ? 'disabled' : ''}
                            onchange="updateField(${idProducto}, '${codigoSucursal}', 'shelf_life_days', this.value)">
                 </td>
-                ${diasSemana.map(dia => {
-            const configDia = datos.dias[dia.num] || { is_delivery: 0, base_consumption: 0, event_factor: 1 };
-            const isDelivery = configDia.is_delivery == 1;
-
-            return `
-                    <td class="day-config-cell ${isDelivery ? 'delivery-active' : ''}">
-                        <div class="d-flex flex-column align-items-center gap-1">
-                            <button class="btn btn-sm ${isDelivery ? 'btn-success' : 'btn-outline-secondary'} delivery-toggle" 
-                                    title="${isDelivery ? 'Día de entrega' : 'No es día de entrega'}"
-                                    ${!puedeEditar || isInactive ? 'disabled' : ''}
-                                    onclick="toggleDelivery(${idProducto}, '${codigoSucursal}', ${dia.num}, ${isDelivery ? 0 : 1})">
-                                <i class="fas fa-truck text-white"></i>
-                            </button>
-                            <div class="input-group input-group-xs mb-1">
-            <span class="input-group-text" title="Consumo Base">C:</span>
-            <input type="number" step="0.01" class="form-control daily-input input-consumption" 
-                   value="${configDia.base_consumption || 0}" 
-                   ${!puedeEditar || isInactive ? 'disabled' : ''}
-                   onchange="updateField(${idProducto}, '${codigoSucursal}', 'base_consumption', this.value, ${dia.num})">
-        </div>
-        <div class="input-group input-group-xs">
-            <span class="input-group-text" title="Factor Evento">F:</span>
-            <input type="number" step="0.1" class="form-control daily-input input-factor" 
-                   value="${configDia.event_factor || 1}" 
-                   ${!puedeEditar || isInactive ? 'disabled' : ''}
-                   onchange="updateField(${idProducto}, '${codigoSucursal}', 'event_factor', this.value, ${dia.num})">
-        </div>
-                        </div>
-                    </td>
-                    `;
-        }).join('')}
-                <td>
+                <td class="text-center">
                     <label class="toggle-switch">
                         <input type="checkbox" 
                                ${isInactive ? '' : 'checked'} 
                                ${!puedeEditar ? 'disabled' : ''}
-                               onchange="${puedeEditar ? `toggleStatus(${idProducto}, '${codigoSucursal}', this.checked)` : ''}">
-                        <span class="toggle-slider ${!puedeEditar ? 'disabled' : ''}"></span>
+                               onchange="toggleStatus(${idProducto}, '${codigoSucursal}', this.checked)">
+                        <span class="toggle-slider"></span>
                     </label>
                 </td>
             </tr>
         `;
-    }
+    });
 
     // Fila para agregar nuevo producto
     if (puedeEditar) {
@@ -291,26 +288,23 @@ function inicializarBusquedaProducto(codigoSucursal) {
 }
 
 // Toggle día de entrega
-function toggleDelivery(idProducto, codigoSucursal, dia, nuevoEstado) {
-    updateField(idProducto, codigoSucursal, 'is_delivery', nuevoEstado, dia);
+function toggleDelivery(idProducto, codigoSucursal, dia, nuevoEstado, id) {
+    updateField(idProducto, codigoSucursal, 'is_delivery', nuevoEstado, id);
 }
 
-// Se eliminan funciones viejas de manejo de días individuales
-
-
 // Actualizar campo de configuración
-function updateField(idProducto, codigoSucursal, campo, valor, diaEntrega = null) {
+function updateField(idProducto, codigoSucursal, campo, valor, id = null) {
     if (!puedeEditar) return;
 
     $.ajax({
         url: 'ajax/compra_local_configuracion_despacho_update_field.php',
         method: 'POST',
         data: {
+            id: id,
             id_producto_presentacion: idProducto,
             codigo_sucursal: codigoSucursal,
             campo: campo,
-            valor: valor,
-            dia_entrega: diaEntrega
+            valor: valor
         },
         dataType: 'json',
         success: function (response) {
@@ -319,7 +313,7 @@ function updateField(idProducto, codigoSucursal, campo, valor, diaEntrega = null
                 if (configuraciones[codigoSucursal]) {
                     configuraciones[codigoSucursal].forEach(item => {
                         if (item.id_producto_presentacion == idProducto) {
-                            if (diaEntrega === null || item.dia_entrega == diaEntrega) {
+                            if (id === null || item.id == id) {
                                 item[campo] = valor;
                             }
                         }

@@ -14,7 +14,7 @@ try {
         throw new Exception('Código de sucursal requerido');
     }
 
-    // Obtener todos los registros de configuración (aseguramos los 7 días por producto)
+    // Obtener configuración
     $sql = "SELECT 
                 clcd.id_producto_presentacion as id_producto,
                 pp.Nombre as nombre_producto,
@@ -23,7 +23,6 @@ try {
                 clcd.dia_entrega,
                 clcd.is_delivery,
                 clcd.base_consumption,
-                clcd.event_factor,
                 clcd.lead_time_days,
                 clcd.shelf_life_days
             FROM compra_local_configuracion_despacho clcd
@@ -44,25 +43,21 @@ try {
                 'nombre_producto' => $row['nombre_producto'],
                 'SKU' => $row['SKU'],
                 'status' => $row['status'],
-                // Campos generales (se toman del primer registro encontrado)
                 'lead_time_days' => intval($row['lead_time_days']),
                 'shelf_life_days' => intval($row['shelf_life_days']),
-                'config_diaria' => [],
-                'dias_entrega' => []
+                'dias_entrega' => [],
+                'config_diaria' => []
             ];
         }
 
-        // Guardar config de este día específico
-        $productos_map[$id]['config_diaria'][$row['dia_entrega']] = [
-            'base_consumption' => floatval($row['base_consumption']),
-            'event_factor' => floatval($row['event_factor']),
-            'is_delivery' => intval($row['is_delivery'])
-        ];
-
-        // Mantener compatibilidad con array de dias_entrega para lógica simple
         if ($row['is_delivery'] == 1) {
             $productos_map[$id]['dias_entrega'][] = intval($row['dia_entrega']);
         }
+
+        $productos_map[$id]['config_diaria'][$row['dia_entrega']] = [
+            'base_consumption' => floatval($row['base_consumption']),
+            'is_delivery' => intval($row['is_delivery'])
+        ];
     }
 
     echo json_encode([

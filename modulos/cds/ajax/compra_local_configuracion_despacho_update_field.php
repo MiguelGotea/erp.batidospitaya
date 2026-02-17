@@ -6,60 +6,47 @@ require_once '../../../core/database/conexion.php';
 header('Content-Type: application/json');
 
 try {
+    $id = $_POST['id'] ?? '';
     $id_producto = $_POST['id_producto_presentacion'] ?? '';
     $codigo_sucursal = $_POST['codigo_sucursal'] ?? '';
     $campo = $_POST['campo'] ?? '';
     $valor = $_POST['valor'] ?? '';
     $usuario = obtenerUsuarioActual();
 
-    if (empty($id_producto) || empty($codigo_sucursal) || empty($campo)) {
+    if ((empty($id) && empty($id_producto)) || empty($codigo_sucursal) || empty($campo)) {
         throw new Exception('Faltan parámetros requeridos');
     }
 
-    // Lista blanca de campos permitidos para evitar SQL Injection
-    $campos_permitidos = ['base_consumption', 'lead_time_days', 'shelf_life_days', 'event_factor', 'is_delivery', 'status'];
+    // Lista blanca de campos permitidos
+    $campos_permitidos = ['is_delivery', 'base_consumption', 'lead_time_days', 'shelf_life_days', 'status'];
     if (!in_array($campo, $campos_permitidos)) {
         throw new Exception('Campo no permitido');
     }
 
-    // Campos que se aplican a nivel general del producto (los 7 días)
-    $campos_generales = ['lead_time_days', 'shelf_life_days', 'status'];
-    $is_general = in_array($campo, $campos_generales);
-
-    // Validar y limpiar valor según el campo
-    if (in_array($campo, ['base_consumption', 'event_factor'])) {
-        $valor = floatval($valor);
+    // Si es is_delivery, actualizamos el registro específico por ID
+    if ($campo == 'is_delivery' && !empty($id)) {
+        $sql = "UPDATE compra_local_configuracion_despacho 
+                SET is_delivery = ?, 
+                    usuario_modificacion = ?, 
+                    fecha_modificacion = CURRENT_TIMESTAMP 
+                WHERE id = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->execute([intval($valor), $usuario['CodOperario'], $id]);
     } else {
-        $valor = ($campo == 'status') ? $valor : intval($valor);
+        // Para los demás campos (consumo, contingencia, etc), actualizamos todos los días del producto
+        $sql = "UPDATE compra_local_configuracion_despacho 
+                SET $campo = ?, 
+                    usuario_modificacion = ?, 
+                    fecha_modificacion = CURRENT_TIMESTAMP 
+                WHERE id_producto_presentacion = ? 
+                AND codigo_sucursal = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->execute([$valor, $usuario['CodOperario'], $id_producto, $codigo_sucursal]);
     }
-
-    // Preparar el WHERE
-    $where_sql = "WHERE id_producto_presentacion = ? AND codigo_sucursal = ?";
-    $params = [$valor, $usuario['CodOperario'], $id_producto, $codigo_sucursal];
-
-    // Si no es general, solo actualizamos el día específico
-    if (!$is_general) {
-        $dia = $_POST['dia_entrega'] ?? '';
-        if (empty($dia)) {
-            throw new Exception('Día no especificado para campo diario');
-        }
-        $where_sql .= " AND dia_entrega = ?";
-        $params[] = $dia;
-    }
-
-    // Actualizar registros
-    $sql = "UPDATE compra_local_configuracion_despacho 
-            SET $campo = ?, 
-                usuario_modificacion = ?, 
-                fecha_modificacion = CURRENT_TIMESTAMP 
-            $where_sql";
-
-    $stmt = $conn->prepare($sql);
-    $stmt->execute($params);
 
     echo json_encode([
         'success' => true,
-        'message' => 'Campo actualizado correctamente'
+        'message' => 'Configuración actualizada'
     ]);
 
 } catch (Exception $e) {
