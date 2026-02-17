@@ -9,13 +9,13 @@ let productoActivo = null;
 
 // Días de la semana para el encabezado (Perspectiva de Pedido)
 const diasConfig = [
-    { num: 1, entrega: 2, nombre: 'Lun', info: 'Llega Martes' },
-    { num: 2, entrega: 3, nombre: 'Mar', info: 'Llega Miércoles' },
-    { num: 3, entrega: 4, nombre: 'Mié', info: 'Llega Jueves' },
-    { num: 4, entrega: 5, nombre: 'Jue', info: 'Llega Viernes' },
-    { num: 5, entrega: 6, nombre: 'Vie', info: 'Llega Sábado' },
-    { num: 6, entrega: 7, nombre: 'Sáb', info: 'Llega Domingo' },
-    { num: 7, entrega: 1, nombre: 'Dom', info: 'Llega Lunes' }
+    { num: 1, entrega: 2, nombre: 'Lun', info: 'Se Despacha Martes' },
+    { num: 2, entrega: 3, nombre: 'Mar', info: 'Se Despacha Miércoles' },
+    { num: 3, entrega: 4, nombre: 'Mié', info: 'Se Despacha Jueves' },
+    { num: 4, entrega: 5, nombre: 'Jue', info: 'Se Despacha Viernes' },
+    { num: 5, entrega: 6, nombre: 'Vie', info: 'Se Despacha Sábado' },
+    { num: 6, entrega: 7, nombre: 'Sáb', info: 'Se Despacha Domingo' },
+    { num: 7, entrega: 1, nombre: 'Dom', info: 'Se Despacha Lunes' }
 ];
 
 // Inicializar
