@@ -7,81 +7,27 @@ let productos = [];
 let currentDates = [];
 let productoActivo = null;
 
-// Días de la semana
-const diasSemana = {
-    1: 'Lunes',
-    2: 'Martes',
-    3: 'Miércoles',
-    4: 'Jueves',
-    5: 'Viernes',
-    6: 'Sábado',
-    7: 'Domingo'
-};
-
-const diasSemanaCorto = {
-    1: 'Lun',
-    2: 'Mar',
-    3: 'Mié',
-    4: 'Jue',
-    5: 'Vie',
-    6: 'Sáb',
-    7: 'Dom'
-};
+// Días de la semana para el encabezado (Perspectiva de Pedido)
+const diasConfig = [
+    { num: 1, entrega: 2, nombre: 'Lun', info: 'Llega Mar' },
+    { num: 2, entrega: 3, nombre: 'Mar', info: 'Llega Mié' },
+    { num: 3, entrega: 4, nombre: 'Mié', info: 'Llega Jue' },
+    { num: 4, entrega: 5, nombre: 'Jue', info: 'Llega Vie' },
+    { num: 5, entrega: 6, nombre: 'Vie', info: 'Llega Sáb' },
+    { num: 6, entrega: 7, nombre: 'Sáb', info: 'Llega Dom' },
+    { num: 7, entrega: 1, nombre: 'Dom', info: 'Llega Lun' }
+];
 
 // Inicializar
 $(document).ready(function () {
-    calcularDiasAlrededor();
     cargarConsolidado();
 });
 
-// Calcular días: 3 antes de hoy, hoy, 3 después de hoy
-function calcularDiasAlrededor() {
+// Determinar qué día es hoy (1-7)
+function getDiaHoy() {
     const hoy = new Date();
-
-    currentDates = [];
-
-    // 3 días antes de hoy
-    for (let i = 3; i > 0; i--) {
-        const fecha = new Date(hoy);
-        fecha.setDate(hoy.getDate() - i);
-        currentDates.push(fecha);
-    }
-
-    // Hoy
-    currentDates.push(new Date(hoy));
-
-    // 3 días después de hoy
-    for (let i = 1; i <= 3; i++) {
-        const fecha = new Date(hoy);
-        fecha.setDate(hoy.getDate() + i);
-        currentDates.push(fecha);
-    }
-}
-
-// Obtener día de la semana (1-7) de una fecha
-function getDiaSemana(fecha) {
-    const dia = fecha.getDay();
-    return dia === 0 ? 7 : dia; // Convertir Domingo (0) a 7
-}
-
-// Formatear fecha para mostrar
-function formatearFecha(fecha) {
-    const meses = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
-    const dia = fecha.getDate();
-    const mes = meses[fecha.getMonth()];
-    return `${dia}-${mes}`;
-}
-
-// Verificar si una fecha está a 2 días o menos de hoy
-function estaProximoAHoy(fecha) {
-    const hoy = new Date();
-    hoy.setHours(0, 0, 0, 0);
-    fecha.setHours(0, 0, 0, 0);
-
-    const diffTime = fecha - hoy;
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-    return diffDays >= 0 && diffDays <= 2;
+    const dia = hoy.getDay();
+    return dia === 0 ? 7 : dia;
 }
 
 // Cargar datos consolidados
@@ -223,21 +169,20 @@ function renderizarTablaProducto(producto) {
         `;
     }
 
+    const diaHoy = getDiaHoy();
     let html = `
-        <div class="table-responsive mt-3">
+        <div class="table-responsive mt-2">
             <table class="table consolidado-table">
                 <thead>
                     <tr>
                         <th>Sucursal</th>
-                        ${currentDates.map((fecha, index) => {
-        const diaSemana = getDiaSemana(fecha);
-        const diaInfo = diasSemanaCorto[diaSemana];
-        const esHoy = index === 3;
+                        ${diasConfig.map(dia => {
+        const esHoy = dia.num === diaHoy;
         return `
-                            <th ${esHoy ? 'class="today-column"' : ''}>
+                            <th class="${esHoy ? 'today-column' : ''}">
                                 <div class="day-header">
-                                    <span class="day-name">${diaInfo}${esHoy ? ' (HOY)' : ''}</span>
-                                    <span class="day-date">${formatearFecha(fecha)}</span>
+                                    <span class="day-name">${dia.nombre}</span>
+                                    <span class="day-info">${dia.info}</span>
                                 </div>
                             </th>
                         `;
@@ -255,20 +200,17 @@ function renderizarTablaProducto(producto) {
                 <td class="sucursal-name">${sucursal.nombre}</td>
         `;
 
-        currentDates.forEach((fecha, index) => {
-            const diaSemana = getDiaSemana(fecha);
-            const cantidad = sucursal.pedidos[diaSemana] || 0;
-            const esHoy = index === 3;
-            const esProximo = estaProximoAHoy(fecha);
-            const sinPedido = cantidad === 0 && esProximo;
+        diasConfig.forEach((dia, index) => {
+            const cantidad = sucursal.pedidos[dia.entrega] || 0;
+            const esHoy = dia.num === diaHoy;
 
             if (cantidad > 0) {
                 totalesPorDia[index] += cantidad;
             }
 
             html += `
-                <td class="data-cell ${cantidad > 0 ? 'has-value' : 'no-value'} ${sinPedido ? 'alert-cell' : ''} ${esHoy ? 'today-column' : ''}">
-                    ${cantidad > 0 ? cantidad : (sinPedido ? '⚠️' : '-')}
+                <td class="data-cell ${cantidad > 0 ? 'has-value' : 'no-value'} ${esHoy ? 'today-column' : ''}">
+                    ${cantidad > 0 ? cantidad : '-'}
                 </td>
             `;
         });
@@ -283,7 +225,9 @@ function renderizarTablaProducto(producto) {
                 <tr class="totals-row">
                     <td><strong>TOTAL</strong></td>
                     ${totalesPorDia.map((total, index) => `
-                        <td class="${index === 3 ? 'today-column' : ''}"><strong>${total}</strong></td>
+                        <td class="${diasConfig[index].num === diaHoy ? 'today-column' : ''}">
+                            <strong>${total}</strong>
+                        </td>
                     `).join('')}
                 </tr>
     `;

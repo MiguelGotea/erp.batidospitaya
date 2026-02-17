@@ -112,23 +112,26 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
 }
 
 .day-name {
+    font-weight: bold;
     font-size: 13px;
-    font-weight: 600;
 }
 
-.day-date {
-    font-size: 11px;
-    opacity: 0.9;
+.day-info {
+    font-size: 10px;
+    font-weight: normal;
+    color: #666;
 }
 
 /* Resaltar columna de HOY */
 .today-column {
-    background-color: #fff3cd !important;
-    font-weight: 600;
+    background-color: rgba(81, 184, 172, 0.08) !important;
+}
+
+.consolidado-table th.today-column {
+    border-bottom: 3px solid #51B8AC !important;
 }
 
 .consolidado-table thead th.today-column {

@@ -66,61 +66,37 @@ $puedeEditar = tienePermiso('compra_local_consolidado_pedidos', 'edicion', $carg
                 </div>
                 <div class="modal-body">
                     <div class="row">
-                        <div class="col-md-6 mb-4">
+                        <div class="col-md-6 mb-3">
                             <div class="card h-100 border-0 bg-light">
-                                <div class="card-body">
-                                    <h6 class="text-primary border-bottom pb-2 fw-bold">
-                                        <i class="fas fa-chart-bar me-2"></i> Vista Consolidada
+                                <div class="card-body p-3">
+                                    <h6 class="text-primary border-bottom pb-2 fw-bold small">
+                                        <i class="fas fa-calendar-alt me-2"></i> Lunes a Domingo
                                     </h6>
-                                    <p class="small text-muted mb-0">
-                                        Visualiza todos los pedidos de todas las sucursales agrupados por producto y día
-                                        de entrega.
+                                    <p class="x-small text-muted mb-0">
+                                        Muestra una cuadrícula fija de los 7 días de la semana, alineada con la vista de
+                                        las sucursales.
                                     </p>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-6 mb-4">
+                        <div class="col-md-6 mb-3">
                             <div class="card h-100 border-0 bg-light">
-                                <div class="card-body">
-                                    <h6 class="text-success border-bottom pb-2 fw-bold">
-                                        <i class="fas fa-filter me-2"></i> Filtros
+                                <div class="card-body p-3">
+                                    <h6 class="text-success border-bottom pb-2 fw-bold small">
+                                        <i class="fas fa-truck me-2"></i> Perspectiva de Pedido
                                     </h6>
-                                    <p class="small text-muted mb-0">
-                                        Use los filtros para ver pedidos de una sucursal específica o de un día en
-                                        particular.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6 mb-4">
-                            <div class="card h-100 border-0 bg-light">
-                                <div class="card-body">
-                                    <h6 class="text-info border-bottom pb-2 fw-bold">
-                                        <i class="fas fa-calculator me-2"></i> Totales
-                                    </h6>
-                                    <p class="small text-muted mb-0">
-                                        Cada fila muestra el total consolidado de pedidos por producto y día de entrega.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6 mb-4">
-                            <div class="card h-100 border-0 bg-light">
-                                <div class="card-body">
-                                    <h6 class="text-warning border-bottom pb-2 fw-bold">
-                                        <i class="fas fa-download me-2"></i> Exportar
-                                    </h6>
-                                    <p class="small text-muted mb-0">
-                                        Puede exportar los datos a Excel para análisis adicional o impresión.
+                                    <p class="x-small text-muted mb-0">
+                                        Los datos muestran el día en que se hizo el pedido (ej: el lunes muestra lo que
+                                        llega el martes).
                                     </p>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="alert alert-info py-2 px-3 small">
+                    <div class="alert alert-info py-2 px-3 small mb-0">
                         <strong><i class="fas fa-info-circle me-1"></i> Nota:</strong>
-                        <br>
-                        Los datos se actualizan en tiempo real conforme las sucursales registran sus pedidos.
+                        Los totales por producto ayudan a planificar la producción y el despacho global del centro de
+                        distribución.
                     </div>
                 </div>
             </div>
