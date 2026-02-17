@@ -2,6 +2,7 @@
 /*
 !/.gitignore
 !/modulos/
+!/.scripts/
 # .scripts/ (Versionado en GitHub pero excluido del host)
 /core/
 /docs/
