@@ -1,0 +1,91 @@
+/* Planificador de Stock - Estilos */
+.planner-search-card {
+    border-left: 5px solid #51B8AC !important;
+}
+
+.planner-table {
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.planner-table thead {
+    background-color: #0E544C;
+    color: white;
+}
+
+.planner-table th {
+    font-weight: 600;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 15px;
+}
+
+.planner-table td {
+    vertical-align: middle;
+    padding: 12px 15px;
+}
+
+.simulation-input {
+    border-radius: 4px;
+    border: 1px solid #dee2e6;
+    text-align: center;
+    font-weight: 600;
+}
+
+.simulation-input:focus {
+    border-color: #51B8AC;
+    box-shadow: 0 0 0 0.2rem rgba(81, 184, 172, 0.25);
+    outline: none;
+}
+
+.result-badge {
+    font-size: 1.1rem;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 700;
+    display: inline-block;
+    min-width: 80px;
+    text-align: center;
+}
+
+.badge-stock {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+    border: 2px solid #a5d6a7;
+}
+
+.row-new {
+    animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.x-small {
+    font-size: 0.75rem;
+}
+
+.btn-remove-row {
+    color: #dc3545;
+    background: none;
+    border: none;
+    font-size: 1.1rem;
+    padding: 0;
+    transition: transform 0.2s;
+}
+
+.btn-remove-row:hover {
+    transform: scale(1.2);
+}

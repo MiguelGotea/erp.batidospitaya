@@ -55,7 +55,33 @@ if (!tienePermiso('index_cds', 'vista', $cargoOperario)) {
                     <i class="fas fa-chart-line"></i> Indicadores de Control
                 </h2>
                 <h2 class="section-title">
-                    <i class="fas fa-bolt"></i> Accesos Rápidos
+                    <i class="fas fa-truck-loading"></i> Gestión de Suministros
+                </h2>
+                <div class="quick-access-grid">
+                    <a href="compra_local_configuracion_despacho.php" class="quick-access-card">
+                        <div class="quick-access-icon">
+                            <i class="fas fa-cogs"></i>
+                        </div>
+                        <div class="quick-access-title">Configuración de Despacho</div>
+                    </a>
+
+                    <a href="compra_local_consolidado_pedidos.php" class="quick-access-card">
+                        <div class="quick-access-icon">
+                            <i class="fas fa-clipboard-list"></i>
+                        </div>
+                        <div class="quick-access-title">Consolidado de Pedidos</div>
+                    </a>
+
+                    <a href="compra_local_planificador_stock.php" class="quick-access-card">
+                        <div class="quick-access-icon">
+                            <i class="fas fa-calculator"></i>
+                        </div>
+                        <div class="quick-access-title">Planificador de Stock</div>
+                    </a>
+                </div>
+
+                <h2 class="section-title">
+                    <i class="fas fa-bolt"></i> Otros Accesos
                 </h2>
                 <div class="quick-access-grid">
                     <a href="../rh/ver_marcaciones_todas.php" class="quick-access-card">
