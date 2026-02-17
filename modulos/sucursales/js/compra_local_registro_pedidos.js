@@ -418,6 +418,14 @@ function renderizarTabla() {
                 }
             }
 
+            // Check if should show urgent icon (today's column, empty, deadline approaching)
+            let mostrarAlerta = false;
+            if (esHoy && !cantidad && habilitado && beforeDeadline) {
+                const { hours, minutes } = calcularTiempoRestante();
+                const totalMinutes = hours * 60 + minutes;
+                mostrarAlerta = totalMinutes < 120; // Show alert if less than 2 hours
+            }
+
             // Determine cell content
             let cellContent = sugeridoHTML;
             if (esPasado) {
@@ -434,11 +442,11 @@ function renderizarTabla() {
                 // Has quantity
                 cellContent = `<span class="cantidad-display">${cantidad}</span>`;
             } else if (mostrarAlerta) {
-                // Empty with alert
-                cellContent = '<span class="urgent-badge">🚨</span><span class="text-muted">-</span>';
+                // Empty with alert - show both alert and suggestion
+                cellContent = `<span class="urgent-badge">🚨</span><span class="text-muted">-</span>` + sugeridoHTML;
             } else {
-                // Empty
-                cellContent = '<span class="text-muted">-</span>';
+                // Empty - show only suggestion
+                cellContent = '<span class="text-muted">-</span>' + sugeridoHTML;
             }
 
             html += `
