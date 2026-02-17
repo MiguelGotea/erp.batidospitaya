@@ -128,16 +128,15 @@ $puedeEditar = tienePermiso('compra_local_configuracion_despacho', 'edicion', $c
                                 <div class="p-2 border rounded bg-info bg-opacity-10 h-100">
                                     <span class="badge bg-info text-dark mb-2">Ejemplo Práctico</span>
                                     <div class="x-small">
-                                        <strong>Producto:</strong> Galonera de Leche (Consumo: 10) → <strong>D =
-                                            10</strong><br>
+                                        <strong>Producto:</strong> Galonera de Leche (Consumo Base: 10)<br>
                                         <strong>Escenario:</strong> Pedido Lunes (llega Mar). Siguiente: Jue.
                                         Contingencia: 1.<br>
                                         <div class="mt-1 p-1 bg-white rounded border">
-                                            1. <strong>Hoy (Lun):</strong> Remanente del día = <strong>8.5</strong><br>
-                                            2. <strong>Despacho (Mar + Mie):</strong> 10 + 10 = <strong>20</strong><br>
-                                            3. <strong>Contingencia (1 día):</strong> + 10 = <strong>10</strong><br>
-                                            <strong>Total:</strong> 8.5 + 20 + 10 = 38.5 → <strong>Stock Mín:
-                                                39</strong>
+                                            1. <strong>Hoy (Lun):</strong> 8.5 gal. (Remanente 9AM-9PM)<br>
+                                            2. <strong>Mar (Factor 1.2):</strong> + 12 gal.<br>
+                                            3. <strong>Mie (Factor 1.0):</strong> + 10 gal.<br>
+                                            4. <strong>Contingencia (1 día):</strong> + 10 gal.<br>
+                                            <strong>Stock Mín:</strong> 8.5 + 12 + 10 + 10 = 40.5 → <strong>41</strong>
                                         </div>
                                     </div>
                                 </div>

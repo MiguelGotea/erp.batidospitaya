@@ -77,63 +77,76 @@ if (!$codigoSucursal) {
                 </div>
                 <div class="modal-body">
                     <div class="row">
-                        <div class="col-md-6 mb-4">
+                        <div class="col-md-6 mb-3">
                             <div class="card h-100 border-0 bg-light">
-                                <div class="card-body">
-                                    <h6 class="text-primary border-bottom pb-2 fw-bold">
+                                <div class="card-body p-3">
+                                    <h6 class="text-primary border-bottom pb-2 fw-bold small">
                                         <i class="fas fa-calendar-day me-2"></i> Pedido de HOY
                                     </h6>
-                                    <p class="small text-muted mb-0">
+                                    <p class="x-small text-muted mb-0">
                                         Los pedidos registrados HOY llegan MAÑANA. Plazo límite: 12:00 PM.
-                                        Después de esta hora, esta columna se bloqueará automáticamente.
+                                        Después de esta hora, la columna se bloquea (🔒).
                                     </p>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-6 mb-4">
+                        <div class="col-md-6 mb-3">
                             <div class="card h-100 border-0 bg-light">
-                                <div class="card-body">
-                                    <h6 class="text-success border-bottom pb-2 fw-bold">
+                                <div class="card-body p-3">
+                                    <h6 class="text-success border-bottom pb-2 fw-bold small">
                                         <i class="fas fa-calendar-plus me-2"></i> Pedido de MAÑANA
                                     </h6>
-                                    <p class="small text-muted mb-0">
-                                        Los pedidos registrados para MAÑANA llegan PASADO MAÑANA.
-                                        Disponible sin límite de tiempo.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6 mb-4">
-                            <div class="card h-100 border-0 bg-light">
-                                <div class="card-body">
-                                    <h6 class="text-warning border-bottom pb-2 fw-bold">
-                                        <i class="fas fa-clock me-2"></i> Contador Regresivo
-                                    </h6>
-                                    <p class="small text-muted mb-0">
-                                        El contador muestra el tiempo restante para registrar pedidos de HOY.
-                                        Cuando llegue a cero, la columna se bloqueará.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6 mb-4">
-                            <div class="card h-100 border-0 bg-light">
-                                <div class="card-body">
-                                    <h6 class="text-info border-bottom pb-2 fw-bold">
-                                        <i class="fas fa-exclamation-triangle me-2"></i> Alertas
-                                    </h6>
-                                    <p class="small text-muted mb-0">
-                                        ⚠️ aparece cuando falta menos de 2 horas y no has registrado pedido.
-                                        🔒 indica que la columna está bloqueada por plazo vencido.
+                                    <p class="x-small text-muted mb-0">
+                                        Vea y registre pedidos para el día siguiente sin límite de tiempo.
                                     </p>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="alert alert-info py-2 px-3 small">
+
+                    <!-- Lógica de Cálculo -->
+                    <div class="bg-white border rounded p-3 mb-3">
+                        <h6 class="fw-bold text-dark border-bottom pb-2">
+                            <i class="fas fa-calculator me-2 text-secondary"></i> Lógica del Stock Mínimo
+                        </h6>
+                        <p class="small mb-2">Se calcula sumando la demanda proyectada desde el conteo actual hasta que
+                            llegue el <u>siguiente</u> despacho.</p>
+
+                        <div class="row g-2">
+                            <div class="col-md-5">
+                                <div class="p-2 border rounded bg-light h-100">
+                                    <span class="badge bg-secondary mb-2">Componentes</span>
+                                    <ul class="list-unstyled x-small mb-0">
+                                        <li>• <strong>1. Día en curso:</strong> Demanda de hoy (~85% del día).</li>
+                                        <li>• <strong>2. Días de Despacho:</strong> Demanda entre entregas.</li>
+                                        <li>• <strong>3. Contingencia:</strong> Días extra de seguridad.</li>
+                                        <li>• <strong>Restricción:</strong> Vida Útil limita la suma total.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="col-md-7">
+                                <div class="p-2 border rounded bg-info bg-opacity-10 h-100">
+                                    <span class="badge bg-info text-dark mb-2">Ejemplo Práctico</span>
+                                    <div class="x-small">
+                                        <strong>Producto:</strong> Galonera de Leche (Consumo Base: 10)<br>
+                                        <strong>Escenario:</strong> Pedido Lunes (llega Mar). Siguiente: Jue.
+                                        Contingencia: 1.<br>
+                                        <div class="mt-1 p-1 bg-white rounded border">
+                                            1. <strong>Hoy (Lun):</strong> 8.5 gal. (Remanente 9AM-9PM)<br>
+                                            2. <strong>Mar (Factor 1.2):</strong> + 12 gal.<br>
+                                            3. <strong>Mie (Factor 1.0):</strong> + 10 gal.<br>
+                                            4. <strong>Contingencia (1 día):</strong> + 10 gal.<br>
+                                            <strong>Stock Mín:</strong> 8.5 + 12 + 10 + 10 = 40.5 → <strong>41</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info py-2 px-3 small mb-0">
                         <strong><i class="fas fa-info-circle me-1"></i> Nota:</strong>
-                        <br>
-                        Los cambios se guardan automáticamente al ingresar las cantidades.
+                        Los pedidos se guardan automáticamente al ingresar la cantidad.
                     </div>
                 </div>
             </div>
