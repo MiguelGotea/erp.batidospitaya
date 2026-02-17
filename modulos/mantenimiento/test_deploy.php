@@ -11,4 +11,5 @@ echo "✅ Deploy automático ERP funcionando correctamente!\n";
 echo "Workflow: deploy-erp.yml\n";
 echo "Fecha de deploy: " . date('Y-m-d H:i:s') . "\n";
 echo "Servidor: ERP Batidos Pitaya\n";
+
 ?>
