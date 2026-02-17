@@ -321,3 +321,13 @@ input:checked+.toggle-slider:before {
 .nav-tabs::-webkit-scrollbar-thumb:hover {
     background: #0E544C;
 }
+
+/* Utilidades de Texto */
+.x-small {
+    font-size: 0.75rem;
+}
+
+/* Ajustes del Modal de Ayuda */
+#pageHelpModal .modal-dialog {
+    max-width: 650px;
+}

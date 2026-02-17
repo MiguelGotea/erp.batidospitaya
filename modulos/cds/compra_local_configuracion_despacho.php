@@ -72,66 +72,82 @@ $puedeEditar = tienePermiso('compra_local_configuracion_despacho', 'edicion', $c
                         aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
+                    <!-- Guía rápida de uso -->
                     <div class="row">
-                        <div class="col-md-6 mb-4">
+                        <div class="col-md-6 mb-3">
                             <div class="card h-100 border-0 bg-light">
-                                <div class="card-body">
-                                    <h6 class="text-primary border-bottom pb-2 fw-bold">
-                                        <i class="fas fa-calendar-alt me-2"></i> Configurar Días de Entrega
+                                <div class="card-body p-3">
+                                    <h6 class="text-primary border-bottom pb-2 fw-bold small">
+                                        <i class="fas fa-calendar-alt me-2"></i> Días de Entrega (🚚)
                                     </h6>
-                                    <p class="small text-muted mb-0">
-                                        Haga clic en las celdas de los días de la semana para activar/desactivar los
-                                        días de entrega de cada producto. Un clic activa, otro clic desactiva.
+                                    <p class="x-small text-muted mb-0">
+                                        Active el icono de camión en los días que la sucursal recibe el producto.
                                     </p>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-6 mb-4">
+                        <div class="col-md-6 mb-3">
                             <div class="card h-100 border-0 bg-light">
-                                <div class="card-body">
-                                    <h6 class="text-success border-bottom pb-2 fw-bold">
-                                        <i class="fas fa-plus-circle me-2"></i> Agregar Productos
+                                <div class="card-body p-3">
+                                    <h6 class="text-success border-bottom pb-2 fw-bold small">
+                                        <i class="fas fa-chart-line me-2"></i> Demanda Diaria
                                     </h6>
-                                    <p class="small text-muted mb-0">
-                                        En la última fila, escriba el nombre o SKU del producto para buscar. Seleccione
-                                        el producto deseado y se agregará automáticamente.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6 mb-4">
-                            <div class="card h-100 border-0 bg-light">
-                                <div class="card-body">
-                                    <h6 class="text-warning border-bottom pb-2 fw-bold">
-                                        <i class="fas fa-toggle-on me-2"></i> Activar/Desactivar
-                                    </h6>
-                                    <p class="small text-muted mb-0">
-                                        Use el botón de toggle en la última columna para activar o desactivar
-                                        completamente un producto en la sucursal. Los productos inactivos se muestran en
-                                        gris.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6 mb-4">
-                            <div class="card h-100 border-0 bg-light">
-                                <div class="card-body">
-                                    <h6 class="text-info border-bottom pb-2 fw-bold">
-                                        <i class="fas fa-search me-2"></i> Búsqueda Inteligente
-                                    </h6>
-                                    <p class="small text-muted mb-0">
-                                        La búsqueda filtra productos activos y excluye los ya configurados. Escriba al
-                                        menos 2 caracteres para ver resultados.
+                                    <p class="x-small text-muted mb-0">
+                                        Configure el consumo base y el factor de evento para cada día de la semana.
                                     </p>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="alert alert-info py-2 px-3 small">
-                        <strong><i class="fas fa-info-circle me-1"></i> Nota:</strong>
-                        <br>
-                        Los cambios se guardan automáticamente al hacer clic en los días o al cambiar el estado del
-                        producto.
+
+                    <!-- Lógica de Cálculo -->
+                    <div class="bg-white border rounded p-3 mb-3">
+                        <h6 class="fw-bold text-dark border-bottom pb-2">
+                            <i class="fas fa-calculator me-2 text-secondary"></i> Lógica del Stock Mínimo
+                        </h6>
+                        <p class="small mb-2">El <strong>Stock Mín</strong> sugerido en el registro de pedidos se
+                            calcula sumando la demanda proyectada desde el momento del conteo hasta que llegue el
+                            <u>siguiente</u> pedido.</p>
+
+                        <div class="row g-2">
+                            <div class="col-md-5">
+                                <div class="p-2 border rounded bg-light h-100">
+                                    <span class="badge bg-secondary mb-2">Fórmula Base</span>
+                                    <div class="fw-bold x-small">Demanda (D) = (Consumo × Factor)</div>
+                                    <hr class="my-1">
+                                    <ul class="list-unstyled x-small mb-0">
+                                        <li>• <strong>Demanda Hoy:</strong> Se calcula el 85% de D (desde 9 AM al
+                                            cierre).</li>
+                                        <li>• <strong>Cobertura:</strong> Suma de D de todos los días hasta la siguiente
+                                            entrega.</li>
+                                        <li>• <strong>Restricciones:</strong> Lead Time suma días; Vida Útil limita la
+                                            suma.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="col-md-7">
+                                <div class="p-2 border rounded bg-info bg-opacity-10 h-100">
+                                    <span class="badge bg-info text-dark mb-2">Ejemplo Práctico</span>
+                                    <div class="x-small">
+                                        <strong>Producto:</strong> Galonera de Leche (Consumo: 10, Factor: 1.2) →
+                                        <strong>D = 12</strong><br>
+                                        <strong>Escenario:</strong> Pedido de Lunes (llega Martes). Siguiente entrega:
+                                        Jueves.<br>
+                                        <div class="mt-1 p-1 bg-white rounded border">
+                                            1. <strong>Hoy (Lun):</strong> 85% de 12 = <strong>10.2</strong><br>
+                                            2. <strong>Cobertura (Mar+Mie+Jue):</strong> 12 + 12 + 12 =
+                                            <strong>36</strong><br>
+                                            3. <strong>Total:</strong> 10.2 + 36 = 46.2 → <strong>Stock Mín: 47</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info py-2 px-3 small mb-0">
+                        <strong><i class="fas fa-info-circle me-1"></i> Importante:</strong>
+                        Los cambios se guardan automáticamente al perder el foco en los campos de entrada.
                     </div>
                 </div>
             </div>
