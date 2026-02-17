@@ -12,8 +12,6 @@ Esta carpeta contiene los scripts para realizar despliegues rápidos de los mód
 .\.scripts\gitpush-gerencia.ps1
 # ... etc
 ```
-
-
 ### Desde cualquier ubicación:
 ```powershell
 cd "c:\Users\migue\Desktop\Sistema\Pitaya Web\VisualCode\erp.batidospitaya.com"
