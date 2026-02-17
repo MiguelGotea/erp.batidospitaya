@@ -1,23 +1,19 @@
 # 📋 **DOCUMENTACIÓN COMPLETA - Sistema de Sincronización Automática**
 
 
-**PROCEDIMIENTO MOVER DE HOST A GITHUB A FUERZA**
 ssh -p 65002 u839374897@145.223.105.42
 ERpPitHay2025$
 
 cd ~/domains/erp.batidospitaya.com/public_html/
 
-/bin/bash ~/sync-mantenimiento-only.sh
 
 ## **🔧Caso Mantenimiento:**
 ### **🔍 0. Herramientas**
 ```bash
-# cron job
-- /bin/bash /home/u839374897/sync-mantenimiento-only.sh\
+
 
 # Manualmente desde hostinger terminal  ejecutar: /bin/bash ~/ , revisar: nano ~/
-#Hostinger -> Github
-- sync-mantenimiento-only.sh
+
 #Github -> Hostinger
 - deploy-erp.sh
 
@@ -25,59 +21,9 @@ cd ~/domains/erp.batidospitaya.com/public_html/
 - .github/workflows/deploy-mantenimiento.yml 
 ```
 
-### **🔍 1. Exploración inicial del servidor**
-```bash
-# Verificar directorio SSH
-ls -la ~/.ssh/
-
-# Resultado: Encontramos 2 pares de claves
-# - id_rsa/id_rsa.pub (RSA, Sep 1)
-# - erp-batidos-deploy/erp-batidos-deploy.pub (Ed25519, Sep 28)
-```
-
-### **🔑 2. Identificación de claves disponibles**
-```bash
-# Ver claves públicas
-ls -la ~/.ssh/*.pub
-
-# Analizar tipo y detalles de cada clave
-ssh-keygen -l -f ~/.ssh/id_rsa.pub
-ssh-keygen -l -f ~/.ssh/erp-batidos-deploy.pub
-
-# Resultado:
-# - id_rsa: RSA 3072 bits
-# - erp-batidos-deploy: Ed25519 256 bits (más segura)
-```
-
-### **📱 3. Ver contenido de claves públicas**
-```bash
-# Clave RSA
-cat ~/.ssh/id_rsa.pub
-# ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDX7DgzolhqZ... u839374897@us-phx-web1059.main-hosting.eu
 
 
-# Clave Ed25519 (recomendada)
-cat ~/.ssh/erp-batidos-deploy.pub  
-# ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAHWWJu9du9uzZKDP5ChDrpCef8QB4uvJMXZ58SkH2XZ erp-deploy@batidospitaya.com
-```
 
-### **🚨 4. Problema detectado: authorized_keys faltante**
-```bash
-# Verificar acceso SSH entrante
-cat ~/.ssh/authorized_keys
-# Error: No such file or directory
-
-# PROBLEMA: Sin este archivo, GitHub no puede conectarse
-```
-
-### **🔧 5. Crear authorized_keys**
-```bash
-# Agregar clave pública para permitir acceso externo
-echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAHWWJu9du9uzZKDP5ChDrpCef8QB4uvJMXZ58SkH2XZ erp-deploy@batidospitaya.com" > ~/.ssh/authorized_keys
-
-# Permisos de seguridad
-chmod 600 ~/.ssh/authorized_keys
-```
 
 ### **✅ 6. Elementos clave del éxito**
 ```bash
@@ -96,54 +42,6 @@ chmod 600 ~/.ssh/authorized_keys
 - HOSTINGER_PATH: /home/u839374897/domains/erp.batidospitaya.com/public_html
 ```
 
-## 🏗️ **ARQUITECTURA DEL SISTEMA NUEVO**
-
-### **Diagrama de Flujo**
-
-## Opción 2: Texto con formato ASCII
-
-```markdown
-┌───────────────────┐    ┌────────────────────┐
-│ Editor en         │    │ Sync automático    │
-│ Hostinger         │───▶│ cada 30min        │──────┐
-└───────────────────┘    └────────────────────┘     │
-                                                    │
-┌───────────────────┐                               │ 
-│ Editor en         │    ┌───────────────────┐      │
-│ VS Code           │───▶│ Push a GitHub     │──────┼──┐
-└───────────────────┘    └───────────────────┘      │  │
-                                                    │  │
-┌───────────────────┐                               │  │
-│ Editor en         │    ┌───────────────────┐      │  │
-│ GitHub Web        │───▶│ Commit directo    │──────┘  │
-└───────────────────┘    └───────────────────┘         │
-                                                       │
-                                ┌──────────────────────┘
-                                │
-                                ▼
-                        ┌───────────────────┐
-                        │ Repositorio       │
-                        │ GitHub            │
-                        └───────────────────┘
-                                │
-                                ▼
-                        ┌───────────────────┐
-                        │ GitHub Actions    │
-                        └───────────────────┘
-                                │
-                                ▼
-                        ┌─────────────────────────────┐
-                        │ Deploy automático           │
-                        │ a Hostinger                 │
-                        └─────────────────────────────┘
-
-### Componentes Técnicos
-- **Hostinger**: Servidor de producción con acceso SSH
-- **GitHub**: Repositorio central y CI/CD
-- **GitHub Actions**: Pipeline de deploy automático
-- **Scripts Bash**: Automatización de sincronización
-- **SSH Keys**: Autenticación segura
----
 
 ## 🔄 **PROCEDIMIENTO PARA REPLICAR EN OTRA CUENTA/CARPETA**
 
