@@ -13,3 +13,4 @@ ADD COLUMN event_factor DECIMAL(10,2) DEFAULT 1.00 AFTER shelf_life_days;
 -- El usuario indicó que pedido_minimo se elimine ya que será calculado
 ALTER TABLE compra_local_configuracion_despacho 
 DROP COLUMN pedido_minimo;
+
