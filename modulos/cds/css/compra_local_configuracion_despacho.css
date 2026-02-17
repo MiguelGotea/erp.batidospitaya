@@ -67,7 +67,7 @@ body {
 
 .config-table thead th:first-child {
     text-align: left;
-    min-width: 200px;
+    min-width: 150px;
 }
 
 .config-table thead th:last-child {
@@ -109,33 +109,43 @@ body {
     border-right: none;
 }
 
-/* Celdas de Días */
-.day-cell {
-    cursor: pointer;
-    width: 60px;
-    height: 50px;
-    position: relative;
+/* Celdas de Configuración Diaria */
+.day-config-cell {
+    width: 90px;
+    min-width: 90px;
+    transition: all 0.2s;
+    background-color: #fcfcfc;
+}
+
+.day-config-cell.delivery-active {
+    background-color: rgba(81, 184, 172, 0.05);
+}
+
+.daily-input {
+    width: 65px;
+    text-align: center;
+    font-size: 11px;
+    padding: 2px 4px;
+    border-radius: 3px;
+    height: 24px;
+}
+
+.daily-input:focus {
+    border-color: #51B8AC;
+    box-shadow: none;
+}
+
+.delivery-toggle {
+    padding: 2px 6px;
+    font-size: 11px;
     transition: all 0.2s;
 }
 
-.day-cell:hover {
-    background-color: #e3f2fd;
+.delivery-toggle i {
+    font-size: 12px;
 }
 
-.day-cell.active {
-    background-color: #51B8AC;
-    color: white;
-}
-
-.day-cell.active:hover {
-    background-color: #0E544C;
-}
-
-.day-cell i {
-    font-size: 18px;
-}
-
-.day-cell.disabled {
+.day-config-cell.disabled {
     cursor: not-allowed;
     opacity: 0.5;
 }
@@ -206,11 +216,11 @@ body {
     border-radius: 50%;
 }
 
-input:checked + .toggle-slider {
+input:checked+.toggle-slider {
     background-color: #51B8AC;
 }
 
-input:checked + .toggle-slider:before {
+input:checked+.toggle-slider:before {
     transform: translateX(26px);
 }
 
@@ -237,8 +247,13 @@ input:checked + .toggle-slider:before {
 }
 
 @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
 }
 
 /* Mensaje de Sin Productos */
@@ -265,13 +280,13 @@ input:checked + .toggle-slider:before {
         padding: 8px 6px;
     }
 
-    .day-cell {
-        width: 45px;
-        height: 40px;
+    .day-config-cell {
+        min-width: 80px;
+        width: 80px;
     }
 
-    .day-cell i {
-        font-size: 14px;
+    .daily-input {
+        width: 55px;
     }
 
     .nav-tabs .nav-link {

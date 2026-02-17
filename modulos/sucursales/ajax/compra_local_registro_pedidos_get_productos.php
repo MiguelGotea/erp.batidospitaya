@@ -14,37 +14,60 @@ try {
         throw new Exception('Código de sucursal requerido');
     }
 
-    // Obtener productos configurados para esta sucursal con sus días de entrega
+    // Obtener todos los registros de configuración (aseguramos los 7 días por producto)
     $sql = "SELECT 
                 clcd.id_producto_presentacion as id_producto,
                 pp.Nombre as nombre_producto,
                 pp.SKU,
                 clcd.status,
-                MAX(clcd.base_consumption) as base_consumption,
-                MAX(clcd.lead_time_days) as lead_time_days,
-                MAX(clcd.shelf_life_days) as shelf_life_days,
-                MAX(clcd.event_factor) as event_factor,
-                GROUP_CONCAT(DISTINCT clcd.dia_entrega ORDER BY clcd.dia_entrega) as dias_entrega
+                clcd.dia_entrega,
+                clcd.is_delivery,
+                clcd.base_consumption,
+                clcd.event_factor,
+                clcd.lead_time_days,
+                clcd.shelf_life_days
             FROM compra_local_configuracion_despacho clcd
             INNER JOIN producto_presentacion pp ON clcd.id_producto_presentacion = pp.id
             WHERE clcd.codigo_sucursal = ?
-            GROUP BY clcd.id_producto_presentacion, pp.Nombre, pp.SKU, clcd.status
-            ORDER BY pp.Nombre";
+            ORDER BY pp.Nombre, clcd.dia_entrega";
 
     $stmt = $conn->prepare($sql);
     $stmt->execute([$codigo_sucursal]);
-    $productos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // Convertir dias_entrega de string a array
-    foreach ($productos as &$producto) {
-        $producto['dias_entrega'] = !empty($producto['dias_entrega'])
-            ? array_map('intval', explode(',', $producto['dias_entrega']))
-            : [];
+    $productos_map = [];
+    foreach ($rows as $row) {
+        $id = $row['id_producto'];
+        if (!isset($productos_map[$id])) {
+            $productos_map[$id] = [
+                'id_producto' => $id,
+                'nombre_producto' => $row['nombre_producto'],
+                'SKU' => $row['SKU'],
+                'status' => $row['status'],
+                // Campos generales (se toman del primer registro encontrado)
+                'lead_time_days' => intval($row['lead_time_days']),
+                'shelf_life_days' => intval($row['shelf_life_days']),
+                'config_diaria' => [],
+                'dias_entrega' => []
+            ];
+        }
+
+        // Guardar config de este día específico
+        $productos_map[$id]['config_diaria'][$row['dia_entrega']] = [
+            'base_consumption' => floatval($row['base_consumption']),
+            'event_factor' => floatval($row['event_factor']),
+            'is_delivery' => intval($row['is_delivery'])
+        ];
+
+        // Mantener compatibilidad con array de dias_entrega para lógica simple
+        if ($row['is_delivery'] == 1) {
+            $productos_map[$id]['dias_entrega'][] = intval($row['dia_entrega']);
+        }
     }
 
     echo json_encode([
         'success' => true,
-        'productos' => $productos
+        'productos' => array_values($productos_map)
     ]);
 
 } catch (Exception $e) {

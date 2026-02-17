@@ -375,34 +375,27 @@ function renderizarTabla() {
                 const closingHour = 21;
                 const dailyWaste = 0; // Merma constante (no especificada como campo aún)
 
-                const base = parseFloat(producto.base_consumption) || 0;
-                const factor = parseFloat(producto.event_factor) || 1;
+                const configDiaria = producto.config_diaria;
                 const leadTime = parseInt(producto.lead_time_days) || 0;
                 const shelfLife = parseInt(producto.shelf_life_days) || 7;
 
-                if (base > 0) {
-                    const D = (base * factor) + dailyWaste;
-
-                    // Demanda hoy (9 AM to 9 PM = 12 hours)
+                if (configDiaria) {
+                    // 1. Demanda restante para HOY (9 AM a 9 PM)
+                    const diaHoy = diaInfo.diaSemana; // 1-7
+                    const configHoy = configDiaria[diaHoy] || { base_consumption: 0, event_factor: 1 };
+                    const DHoyTotal = (configHoy.base_consumption * configHoy.event_factor) + dailyWaste;
                     const Hr = closingHour - fixedCountHour;
                     const F = Hr / operatingHours;
-                    const Dhoy = F * D;
+                    const DhoyRemanente = F * DHoyTotal;
 
-                    // Days until subsequent delivery
-                    // We need to look ahead in the product's delivery config
-                    const diasEntrega = producto.dias_entrega; // Array of integers (1-7)
+                    // 2. Determinar periodo de cobertura (Días hasta la siguiente entrega)
+                    const diasEntrega = producto.dias_entrega;
                     let diasHastaSiguiente = 0;
-
-                    // The current delivery arrives at (diaInfo.entrega)
-                    // We need the gap between THIS delivery and the NEXT one
                     if (diasEntrega.length > 0) {
-                        const diaActualEntrega = diaInfo.diaSemanaEntrega; // Corrected: this is the day it arrives
-
-                        // Find the next delivery day in the sorted array
+                        const diaActualEntrega = diaInfo.diaSemanaEntrega;
                         let siguienteEntrega = diasEntrega.find(d => d > diaActualEntrega);
                         if (!siguienteEntrega) siguienteEntrega = diasEntrega[0];
 
-                        // Calculate gap
                         if (siguienteEntrega > diaActualEntrega) {
                             diasHastaSiguiente = siguienteEntrega - diaActualEntrega;
                         } else {
@@ -410,10 +403,22 @@ function renderizarTabla() {
                         }
                     }
 
-                    const DiasMaximos = Math.min(diasHastaSiguiente + leadTime, shelfLife);
-                    const Dfutura = D * DiasMaximos;
-                    const ReorderPoint = Math.ceil(Dhoy + Dfutura);
+                    // 3. Sumar demanda de los días de cobertura
+                    // Empezamos desde el día que llega el pedido (diaInfo.entrega)
+                    let Dfutura = 0;
+                    const diasASumar = Math.min(diasHastaSiguiente + leadTime, shelfLife);
 
+                    for (let i = 0; i < diasASumar; i++) {
+                        // Calcular el día de la semana correspondiente a (Entrega + i días)
+                        let diaSemanaSumar = (diaInfo.diaSemanaEntrega + i);
+                        if (diaSemanaSumar > 7) diaSemanaSumar = ((diaSemanaSumar - 1) % 7) + 1;
+
+                        const configSumar = configDiaria[diaSemanaSumar] || { base_consumption: 0, event_factor: 1 };
+                        const demandai = (configSumar.base_consumption * configSumar.event_factor) + dailyWaste;
+                        Dfutura += demandai;
+                    }
+
+                    const ReorderPoint = Math.ceil(DhoyRemanente + Dfutura);
                     sugeridoHTML = `<div class="reorder-suggested" title="Stock sugerido al conteo de 9:00 AM">Sugerido: ${ReorderPoint}</div>`;
                 }
             }
