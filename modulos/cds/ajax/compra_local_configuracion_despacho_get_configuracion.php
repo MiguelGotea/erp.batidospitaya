@@ -22,6 +22,7 @@ try {
                 clcd.lead_time_days,
                 clcd.shelf_life_days,
                 clcd.event_factor,
+                clcd.pedido_minimo,
                 pp.Nombre as nombre_producto,
                 pp.SKU
             FROM compra_local_configuracion_despacho clcd

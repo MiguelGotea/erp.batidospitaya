@@ -18,22 +18,25 @@ try {
     }
 
     // Lista blanca de campos permitidos
-    $campos_permitidos = ['is_delivery', 'base_consumption', 'lead_time_days', 'shelf_life_days', 'status'];
+    $campos_permitidos = ['is_delivery', 'base_consumption', 'event_factor', 'lead_time_days', 'shelf_life_days', 'status', 'pedido_minimo'];
     if (!in_array($campo, $campos_permitidos)) {
         throw new Exception('Campo no permitido');
     }
 
-    // Si es is_delivery, actualizamos el registro específico por ID
-    if ($campo == 'is_delivery' && !empty($id)) {
+    // Campos que se pueden actualizar por día (ID específico)
+    $campos_diarios = ['is_delivery', 'base_consumption', 'event_factor'];
+
+    if (in_array($campo, $campos_diarios) && !empty($id)) {
+        // Actualizamos el registro específico por ID
         $sql = "UPDATE compra_local_configuracion_despacho 
-                SET is_delivery = ?, 
+                SET $campo = ?, 
                     usuario_modificacion = ?, 
                     fecha_modificacion = CURRENT_TIMESTAMP 
                 WHERE id = ?";
         $stmt = $conn->prepare($sql);
-        $stmt->execute([intval($valor), $usuario['CodOperario'], $id]);
+        $stmt->execute([$valor, $usuario['CodOperario'], $id]);
     } else {
-        // Para los demás campos (consumo, contingencia, etc), actualizamos todos los días del producto
+        // Para los demás campos (lead_time, shelf_life, status), actualizamos todos los días del producto
         $sql = "UPDATE compra_local_configuracion_despacho 
                 SET $campo = ?, 
                     usuario_modificacion = ?, 

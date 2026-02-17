@@ -121,8 +121,8 @@ function renderizarTabla(codigoSucursal) {
                 <thead>
                     <tr class="table-dark">
                         <th style="width: 200px;">Producto</th>
-                        ${diasSemana.map(d => `<th class="text-center" style="width: 40px;" title="${d.nombreCompleto}">${d.nombre}</th>`).join('')}
-                        <th style="width: 80px;" title="Consumo base diario">Consumo</th>
+                        ${diasSemana.map(d => `<th class="text-center" title="${d.nombreCompleto}">${d.nombre}</th>`).join('')}
+                        <th style="width: 80px;" title="Pedido Mínimo">P. Mín.</th>
                         <th style="width: 60px;" title="Días excedentes de seguridad">Cont.</th>
                         <th style="width: 60px;" title="Vida útil en días">Vida Útil</th>
                         <th style="width: 60px;">Estado</th>
@@ -145,22 +145,42 @@ function renderizarTabla(codigoSucursal) {
                     <div class="x-small text-muted">${item.sku || ''}</div>
                 </td>
                 ${diasSemana.map(d => {
-            const diaConfig = item.dias[d.num] || { is_delivery: 0, id: null };
+            const diaConfig = item.dias[d.num] || { is_delivery: 0, id: null, base_consumption: 0, event_factor: 1 };
             const isDelivery = diaConfig.is_delivery == 1;
             return `
-                        <td class="text-center">
-                            <span class="day-dot ${isDelivery ? 'active' : ''} ${!puedeEditar || isInactive ? 'readonly' : ''}" 
-                                  onclick="${puedeEditar && !isInactive ? `toggleDelivery(${idProducto}, '${codigoSucursal}', ${d.num}, ${isDelivery ? 0 : 1}, ${diaConfig.id})` : ''}"
-                                  title="${d.nombreCompleto}: ${isDelivery ? 'Despacho activo' : 'Sin despacho'}">
-                            </span>
+                        <td class="day-config-cell ${isDelivery ? 'delivery-active' : ''}">
+                            <div class="d-flex flex-column gap-1 align-items-center">
+                                <button class="btn btn-sm ${isDelivery ? 'btn-success' : 'btn-outline-secondary'} delivery-toggle"
+                                        onclick="toggleDelivery(${idProducto}, '${codigoSucursal}', ${d.num}, ${isDelivery ? 0 : 1}, ${diaConfig.id})"
+                                        ${!puedeEditar || isInactive ? 'disabled' : ''}
+                                        title="${isDelivery ? 'Despacho activo' : 'Sin despacho'}">
+                                    <i class="fas ${isDelivery ? 'fa-check-circle' : 'fa-circle'}"></i>
+                                </button>
+                                
+                                <div class="input-group input-group-xs" title="Consumo Base">
+                                    <span class="input-group-text">C:</span>
+                                    <input type="number" step="0.01" class="form-control daily-input input-consumption" 
+                                           value="${diaConfig.base_consumption}" 
+                                           ${!puedeEditar || isInactive ? 'disabled' : ''}
+                                           onchange="updateField(${idProducto}, '${codigoSucursal}', 'base_consumption', this.value, ${diaConfig.id})">
+                                </div>
+
+                                <div class="input-group input-group-xs" title="Factor Evento">
+                                    <span class="input-group-text">F:</span>
+                                    <input type="number" step="0.1" class="form-control daily-input input-factor" 
+                                           value="${diaConfig.event_factor}" 
+                                           ${!puedeEditar || isInactive ? 'disabled' : ''}
+                                           onchange="updateField(${idProducto}, '${codigoSucursal}', 'event_factor', this.value, ${diaConfig.id})">
+                                </div>
+                            </div>
                         </td>
                     `;
         }).join('')}
                 <td>
-                    <input type="number" step="0.01" class="form-control form-control-sm" 
-                           value="${item.base_consumption || 0}" 
+                    <input type="number" step="1" class="form-control form-control-sm" 
+                           value="${item.pedido_minimo || 1}" 
                            ${!puedeEditar || isInactive ? 'disabled' : ''}
-                           onchange="updateField(${idProducto}, '${codigoSucursal}', 'base_consumption', this.value)">
+                           onchange="updateField(${idProducto}, '${codigoSucursal}', 'pedido_minimo', this.value)">
                 </td>
                 <td>
                     <input type="number" step="1" class="form-control form-control-sm" 
@@ -191,7 +211,7 @@ function renderizarTabla(codigoSucursal) {
     if (puedeEditar) {
         tableHtml += `
             <tr class="new-product-row">
-                <td colspan="${diasSemana.length + 4}">
+                <td colspan="${diasSemana.length + 5}">
                     <select class="form-select product-search" 
                             id="product-search-${codigoSucursal}" 
                             style="width: 100%;">
@@ -233,10 +253,12 @@ function agruparPorProducto(config) {
         if (!agrupado[item.id_producto_presentacion]) {
             agrupado[item.id_producto_presentacion] = {
                 nombre: item.nombre_producto,
-                dias: {}, // Ahora es objeto dia -> config
+                sku: item.SKU, // Restaurado SKU
+                dias: {},
                 status: item.status,
                 lead_time_days: item.lead_time_days,
-                shelf_life_days: item.shelf_life_days
+                shelf_life_days: item.shelf_life_days,
+                pedido_minimo: item.pedido_minimo
             };
         }
         agrupado[item.id_producto_presentacion].dias[item.dia_entrega] = {
