@@ -56,6 +56,10 @@ jobs:
               --delete \
               --exclude='uploads/' \
               --exclude='.gitignore' \
+              --exclude='.agent/' \
+              --exclude='core/' \
+              --exclude='.scripts/' \
+              --exclude='docs/' \
               -e "ssh -o StrictHostKeyChecking=no -p 65002" \
               ./modulos/$MODULE/ \
               ${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_HOST }}:${{ secrets.HOSTINGER_PATH }}/modulos/$MODULE/
