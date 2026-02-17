@@ -2,6 +2,7 @@
 /*
 !/.gitignore
 !/modulos/
+/.scripts/
 
 # Excluir todo en modulos EXCEPTO los modulos permitidos (15 en total)
 /modulos/*

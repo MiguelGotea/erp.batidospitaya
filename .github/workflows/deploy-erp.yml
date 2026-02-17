@@ -55,6 +55,7 @@ jobs:
             rsync -avz \
               --delete \
               --exclude='uploads/' \
+              --exclude='.gitignore' \
               -e "ssh -o StrictHostKeyChecking=no -p 65002" \
               ./modulos/$MODULE/ \
               ${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_HOST }}:${{ secrets.HOSTINGER_PATH }}/modulos/$MODULE/
