@@ -11,9 +11,27 @@ date_default_timezone_set('America/Managua');
 header('Content-Type: application/json');
 
 try {
+    $fecha_inicio = $_POST['fecha_inicio'] ?? '';
+    $fecha_fin = $_POST['fecha_fin'] ?? '';
     $filtro_sucursal = $_POST['sucursal'] ?? '';
 
-    // Construir query base - consultar historial de pedidos
+    $params = [];
+    if (empty($fecha_inicio) || empty($fecha_fin)) {
+        // Fallback a ventana de 14 días si no hay parámetros
+        $filtro_fechas = "clph.fecha_entrega >= CURDATE() - INTERVAL 7 DAY AND clph.fecha_entrega <= CURDATE() + INTERVAL 7 DAY";
+    } else {
+        $filtro_fechas = "clph.fecha_entrega >= ? AND clph.fecha_entrega <= ?";
+        $params[] = $fecha_inicio;
+        $params[] = $fecha_fin;
+    }
+
+    $where_sucursal = "";
+    if (!empty($filtro_sucursal)) {
+        $where_sucursal = " AND clph.codigo_sucursal = ?";
+        $params[] = $filtro_sucursal;
+    }
+
+    // Construir query base - consultar historial de pedidos con agregación por sucursal
     $sql = "SELECT 
                 clph.id_producto_presentacion,
                 pp.Nombre as nombre_producto,
@@ -22,26 +40,27 @@ try {
                 SUM(clph.cantidad_pedido) as total_cantidad,
                 COUNT(DISTINCT clph.codigo_sucursal) as num_sucursales,
                 GROUP_CONCAT(
-                    CONCAT(s.codigo, ':', s.nombre, ':', clph.cantidad_pedido)
-                    SEPARATOR '|'
+                    detalles.info_suc SEPARATOR '|'
                 ) as detalles_sucursales
             FROM compra_local_pedidos_historico clph
             INNER JOIN producto_presentacion pp ON clph.id_producto_presentacion = pp.id
-            INNER JOIN sucursales s ON clph.codigo_sucursal = s.codigo
+            INNER JOIN (
+                SELECT 
+                    id_producto_presentacion, 
+                    fecha_entrega, 
+                    codigo_sucursal,
+                    CONCAT(s.codigo, ':', s.nombre, ':', SUM(cantidad_pedido)) as info_suc
+                FROM compra_local_pedidos_historico clph_sub
+                INNER JOIN sucursales s ON clph_sub.codigo_sucursal = s.codigo
+                WHERE clph_sub.cantidad_pedido > 0
+                GROUP BY id_producto_presentacion, fecha_entrega, codigo_sucursal
+            ) detalles ON clph.id_producto_presentacion = detalles.id_producto_presentacion 
+                       AND clph.fecha_entrega = detalles.fecha_entrega 
+                       AND clph.codigo_sucursal = detalles.codigo_sucursal
             WHERE clph.cantidad_pedido > 0
-            AND clph.fecha_entrega >= CURDATE() - INTERVAL 7 DAY
-            AND clph.fecha_entrega <= CURDATE() + INTERVAL 7 DAY";
-
-    $params = [];
-
-    // Aplicar filtro de sucursal
-    if (!empty($filtro_sucursal)) {
-        $sql .= " AND clph.codigo_sucursal = ?";
-        $params[] = $filtro_sucursal;
-    }
-
-    $sql .= " GROUP BY clph.id_producto_presentacion, pp.Nombre, pp.SKU, dia_entrega
-              ORDER BY pp.Nombre, dia_entrega";
+            AND $filtro_fechas $where_sucursal
+            GROUP BY clph.id_producto_presentacion, pp.Nombre, pp.SKU, dia_entrega
+            ORDER BY pp.Nombre, dia_entrega";
 
     $stmt = $conn->prepare($sql);
     $stmt->execute($params);

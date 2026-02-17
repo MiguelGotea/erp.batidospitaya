@@ -32,6 +32,23 @@ function getDiaHoy() {
 
 // Cargar datos consolidados
 function cargarConsolidado() {
+    const hoy = new Date();
+    const diaHoy = hoy.getDay();
+    const diffLunes = diaHoy === 0 ? -6 : 1 - diaHoy;
+
+    // Fecha inicio: Lunes de esta semana + 1 día (Llega Martes)
+    const lunes = new Date(hoy);
+    lunes.setDate(hoy.getDate() + diffLunes);
+    lunes.setHours(0, 0, 0, 0);
+
+    // El rango de FECHA_ENTREGA para los 7 pedidos de esta semana
+    // Desde el pedido del Lunes (llega Mar) hasta el del Domingo (llega Lun siguiente)
+    const fechaInicio = new Date(lunes);
+    fechaInicio.setDate(lunes.getDate() + 1); // Martes
+
+    const fechaFin = new Date(lunes);
+    fechaFin.setDate(lunes.getDate() + 7); // Lunes siguiente
+
     $('#consolidado-container').html(`
         <div class="loader-container">
             <div class="loader"></div>
@@ -41,7 +58,10 @@ function cargarConsolidado() {
     $.ajax({
         url: 'ajax/compra_local_consolidado_pedidos_get_datos.php',
         method: 'POST',
-        data: {},
+        data: {
+            fecha_inicio: fechaInicio.toISOString().split('T')[0],
+            fecha_fin: fechaFin.toISOString().split('T')[0]
+        },
         dataType: 'json',
         success: function (response) {
             if (response.success) {
@@ -81,7 +101,9 @@ function procesarDatos() {
                 };
             }
 
-            productosMap[item.id_producto_presentacion].sucursales[detalle.codigo_sucursal].pedidos[item.dia_entrega] = detalle.cantidad;
+            // Sumar si ya existe (por seguridad)
+            const cantActual = productosMap[item.id_producto_presentacion].sucursales[detalle.codigo_sucursal].pedidos[item.dia_entrega] || 0;
+            productosMap[item.id_producto_presentacion].sucursales[detalle.codigo_sucursal].pedidos[item.dia_entrega] = cantActual + detalle.cantidad;
         });
     });
 
