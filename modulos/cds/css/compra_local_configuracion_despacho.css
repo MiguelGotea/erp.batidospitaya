@@ -118,7 +118,8 @@ body {
 }
 
 .day-config-cell.delivery-active {
-    background-color: rgba(81, 184, 172, 0.05);
+    background-color: rgba(81, 184, 172, 0.12) !important;
+    border-bottom: 3px solid #51B8AC !important;
 }
 
 .input-group-xs {
