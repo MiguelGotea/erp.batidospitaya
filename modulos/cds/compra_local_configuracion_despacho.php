@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // compra_local_configuracion_despacho.php
 
 require_once '../../core/auth/auth.php';
@@ -16,7 +16,7 @@ if (!tienePermiso('compra_local_configuracion_despacho', 'vista', $cargoOperario
 }
 
 
-// Verificar permiso de edición
+// Verificar permiso de edici├│n
 $puedeEditar = tienePermiso('compra_local_configuracion_despacho', 'edicion', $cargoOperario);
 ?>
 <!DOCTYPE html>
@@ -25,7 +25,7 @@ $puedeEditar = tienePermiso('compra_local_configuracion_despacho', 'edicion', $c
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Configuración de Plan de Despacho</title>
+    <title>Configuraci├│n de Plan de Despacho</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <link rel="icon" href="../../assets/img/icon12.png" type="image/png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -42,17 +42,17 @@ $puedeEditar = tienePermiso('compra_local_configuracion_despacho', 'edicion', $c
 
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, 'Configuración de Plan de Despacho'); ?>
+            <?php echo renderHeader($usuario, false, 'Configuraci├│n de Plan de Despacho'); ?>
 
             <div class="container-fluid p-3">
                 <!-- Tabs de Sucursales -->
                 <ul class="nav nav-tabs mb-3" id="sucursalesTabs" role="tablist">
-                    <!-- Tabs generadas dinámicamente -->
+                    <!-- Tabs generadas din├ímicamente -->
                 </ul>
 
                 <!-- Contenido de Tabs -->
                 <div class="tab-content" id="sucursalesTabContent">
-                    <!-- Contenido generado dinámicamente -->
+                    <!-- Contenido generado din├ímicamente -->
                 </div>
             </div>
         </div>
@@ -66,42 +66,72 @@ $puedeEditar = tienePermiso('compra_local_configuracion_despacho', 'edicion', $c
                 <div class="modal-header bg-primary text-white">
                     <h5 class="modal-title" id="pageHelpModalLabel">
                         <i class="fas fa-info-circle me-2"></i>
-                        Guía de Configuración de Plan de Despacho
+                        Gu├¡a de Configuraci├│n de Plan de Despacho
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
                         aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <!-- Guía rápida de uso -->
                     <div class="row">
-                        <div class="col-md-12 mb-3">
+                        <div class="col-md-6 mb-4">
                             <div class="card h-100 border-0 bg-light">
-                                <div class="card-body p-3">
-                                    <h6 class="text-primary border-bottom pb-2 fw-bold small">
-                                        <i class="fas fa-calendar-alt me-2"></i> Días de Entrega (🚚)
+                                <div class="card-body">
+                                    <h6 class="text-primary border-bottom pb-2 fw-bold">
+                                        <i class="fas fa-calendar-alt me-2"></i> Configurar D├¡as de Entrega
                                     </h6>
-                                    <p class="x-small text-muted mb-0">
-                                        Haga clic en el icono de cada día para activar o desactivar la entrega
-                                        programada para esa sucursal. Los cambios se guardan automáticamente.
+                                    <p class="small text-muted mb-0">
+                                        Haga clic en las celdas de los d├¡as de la semana para activar/desactivar los
+                                        d├¡as de entrega de cada producto. Un clic activa, otro clic desactiva.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100 border-0 bg-light">
+                                <div class="card-body">
+                                    <h6 class="text-success border-bottom pb-2 fw-bold">
+                                        <i class="fas fa-plus-circle me-2"></i> Agregar Productos
+                                    </h6>
+                                    <p class="small text-muted mb-0">
+                                        En la ├║ltima fila, escriba el nombre o SKU del producto para buscar. Seleccione
+                                        el producto deseado y se agregar├í autom├íticamente.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100 border-0 bg-light">
+                                <div class="card-body">
+                                    <h6 class="text-warning border-bottom pb-2 fw-bold">
+                                        <i class="fas fa-toggle-on me-2"></i> Activar/Desactivar
+                                    </h6>
+                                    <p class="small text-muted mb-0">
+                                        Use el bot├│n de toggle en la ├║ltima columna para activar o desactivar
+                                        completamente un producto en la sucursal. Los productos inactivos se muestran en
+                                        gris.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100 border-0 bg-light">
+                                <div class="card-body">
+                                    <h6 class="text-info border-bottom pb-2 fw-bold">
+                                        <i class="fas fa-search me-2"></i> B├║squeda Inteligente
+                                    </h6>
+                                    <p class="small text-muted mb-0">
+                                        La b├║squeda filtra productos activos y excluye los ya configurados. Escriba al
+                                        menos 2 caracteres para ver resultados.
                                     </p>
                                 </div>
                             </div>
                         </div>
                     </div>
-
-                    <!-- Lógica de Cálculo -->
-                    <div class="bg-white border rounded p-3 mb-3">
-                        <h6 class="fw-bold text-dark border-bottom pb-2">
-                            <i class="fas fa-clipboard-check me-2 text-secondary"></i> Gestión de Pedidos
-                        </h6>
-                        <p class="small mb-0">Esta herramienta define los días en que cada sucursal puede realizar
-                            pedidos de productos locales. Los días marcados con el icono de check verde indican que hay
-                            un despacho programado para ese día.</p>
-                    </div>
-
-                    <div class="alert alert-info py-2 px-3 small mb-0">
-                        <strong><i class="fas fa-info-circle me-1"></i> Importante:</strong>
-                        Los cambios se guardan automáticamente al perder el foco en los campos de entrada.
+                    <div class="alert alert-info py-2 px-3 small">
+                        <strong><i class="fas fa-info-circle me-1"></i> Nota:</strong>
+                        <br>
+                        Los cambios se guardan autom├íticamente al hacer clic en los d├¡as o al cambiar el estado del
+                        producto.
                     </div>
                 </div>
             </div>

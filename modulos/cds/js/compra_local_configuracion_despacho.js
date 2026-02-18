@@ -117,8 +117,10 @@ function renderizarTabla(codigoSucursal) {
                 <thead>
                     <tr>
                         <th style="width: 200px;">Producto</th>
-                        <th style="width: 100px;">Pedido M├¡n.</th>
-                        ${diasSemana.map(dia => `<th title="${dia.nombreCompleto}">${dia.nombre}</th>`).join('')}
+                        <th style="width: 80px;" title="Pedido Mínimo">P. Mín.</th>
+                        <th style="width: 60px;" title="Días excedentes de seguridad">Cont.</th>
+                        <th style="width: 60px;" title="Vida útil en días">Vida Útil</th>
+                        ${diasSemana.map(dia => `<th title="${dia.nombreCompleto}" class="text-center">${dia.nombre}</th>`).join('')}
                         <th style="width: 100px;">Estado</th>
                     </tr>
                 </thead>
@@ -132,24 +134,55 @@ function renderizarTabla(codigoSucursal) {
         const isInactive = datos.status === 'inactivo';
         tableHtml += `
             <tr class="${isInactive ? 'inactive-row' : ''}" data-producto-id="${idProducto}">
-                <td>${datos.nombre}</td>
                 <td>
-                    <input type="number" 
-                           class="form-control form-control-sm pedido-minimo-input" 
+                    <div class="fw-bold text-primary">${datos.nombre}</div>
+                    <div class="x-small text-muted">${datos.sku || ''}</div>
+                </td>
+                <td>
+                    <input type="number" step="1" class="form-control form-control-sm" 
                            value="${datos.pedido_minimo || 1}" 
-                           min="1" 
-                           step="1"
                            ${!puedeEditar || isInactive ? 'disabled' : ''}
-                           onchange="updatePedidoMinimo(${idProducto}, '${codigoSucursal}', this.value)">
+                           onchange="updateField(${idProducto}, '${codigoSucursal}', 'pedido_minimo', this.value)">
+                </td>
+                <td>
+                    <input type="number" step="1" class="form-control form-control-sm" 
+                           value="${datos.lead_time_days || 0}" 
+                           ${!puedeEditar || isInactive ? 'disabled' : ''}
+                           onchange="updateField(${idProducto}, '${codigoSucursal}', 'lead_time_days', this.value)">
+                </td>
+                <td>
+                    <input type="number" step="1" class="form-control form-control-sm" 
+                           value="${datos.shelf_life_days || 7}" 
+                           ${!puedeEditar || isInactive ? 'disabled' : ''}
+                           onchange="updateField(${idProducto}, '${codigoSucursal}', 'shelf_life_days', this.value)">
                 </td>
                 ${diasSemana.map(dia => {
-            const tieneEntrega = datos.dias.includes(dia.num);
+            const configDia = datos.dias[dia.num] || { is_delivery: 0, base_consumption: 0, event_factor: 1 };
+            const isDelivery = configDia.is_delivery == 1;
+
             return `
-                        <td class="day-cell ${tieneEntrega ? 'active' : ''} ${!puedeEditar || isInactive ? 'disabled' : ''}" 
-                            data-dia="${dia.num}"
-                            onclick="${puedeEditar && !isInactive ? `toggleDia(${idProducto}, '${codigoSucursal}', ${dia.num})` : ''}">
-                            ${tieneEntrega ? '<i class="bi bi-check-circle-fill"></i>' : ''}
-                        </td>
+                    <td class="day-config-cell ${isDelivery ? 'delivery-active' : ''}">
+                        <div class="d-flex flex-column align-items-center gap-1">
+                            <button class="btn btn-sm ${isDelivery ? 'btn-success' : 'btn-outline-secondary'} delivery-toggle" 
+                                    title="${isDelivery ? 'D├¡a de entrega' : 'No es d├¡a de entrega'}"
+                                    ${!puedeEditar || isInactive ? 'disabled' : ''}
+                                    onclick="toggleDelivery(${idProducto}, '${codigoSucursal}', ${dia.num}, ${isDelivery ? 0 : 1})">
+                                <i class="fas fa-truck text-white"></i>
+                            </button>
+                            <input type="number" step="0.01" class="form-control form-control-sm daily-input" 
+                                   value="${configDia.base_consumption || 0}" 
+                                   placeholder="Cons."
+                                   title="Consumo Base"
+                                   ${!puedeEditar || isInactive ? 'disabled' : ''}
+                                   onchange="updateField(${idProducto}, '${codigoSucursal}', 'base_consumption', this.value, ${dia.num})">
+                            <input type="number" step="0.1" class="form-control form-control-sm daily-input" 
+                                   value="${configDia.event_factor || 1}" 
+                                   placeholder="Fact."
+                                   title="Factor Evento"
+                                   ${!puedeEditar || isInactive ? 'disabled' : ''}
+                                   onchange="updateField(${idProducto}, '${codigoSucursal}', 'event_factor', this.value, ${dia.num})">
+                        </div>
+                    </td>
                     `;
         }).join('')}
                 <td>
@@ -169,7 +202,7 @@ function renderizarTabla(codigoSucursal) {
     if (puedeEditar) {
         tableHtml += `
             <tr class="new-product-row">
-                <td colspan="${diasSemana.length + 3}">
+                <td colspan="${diasSemana.length + 5}">
                     <select class="form-select product-search" 
                             id="product-search-${codigoSucursal}" 
                             style="width: 100%;">
@@ -211,12 +244,20 @@ function agruparPorProducto(config) {
         if (!agrupado[item.id_producto_presentacion]) {
             agrupado[item.id_producto_presentacion] = {
                 nombre: item.nombre_producto,
-                dias: [],
+                sku: item.SKU,
+                dias: {}, // Ahora es objeto dia -> config
                 status: item.status,
+                lead_time_days: item.lead_time_days,
+                shelf_life_days: item.shelf_life_days,
                 pedido_minimo: item.pedido_minimo
             };
         }
-        agrupado[item.id_producto_presentacion].dias.push(parseInt(item.dia_entrega));
+        agrupado[item.id_producto_presentacion].dias[item.dia_entrega] = {
+            id: item.id,
+            is_delivery: item.is_delivery,
+            base_consumption: item.base_consumption,
+            event_factor: item.event_factor
+        };
     });
 
     return agrupado;
@@ -260,96 +301,48 @@ function inicializarBusquedaProducto(codigoSucursal) {
 }
 
 // Toggle d├¡a de entrega
-function toggleDia(idProducto, codigoSucursal, dia) {
-    if (!puedeEditar) return;
-
-    const config = configuraciones[codigoSucursal] || [];
-    const existe = config.find(c =>
-        c.id_producto_presentacion == idProducto &&
-        c.dia_entrega == dia
-    );
-
-    if (existe) {
-        // Eliminar
-        eliminarDiaEntrega(existe.id, codigoSucursal);
-    } else {
-        // Agregar
-        agregarDiaEntrega(idProducto, codigoSucursal, dia);
-    }
+function toggleDelivery(idProducto, codigoSucursal, dia, nuevoEstado) {
+    updateField(idProducto, codigoSucursal, 'is_delivery', nuevoEstado, dia);
 }
 
-// Agregar d├¡a de entrega
-function agregarDiaEntrega(idProducto, codigoSucursal, dia) {
+// Se eliminan funciones viejas de manejo de d├¡as individuales
+
+
+// Actualizar campo de configuraci├│n
+function updateField(idProducto, codigoSucursal, campo, valor, diaEntrega = null) {
+    if (!puedeEditar) return;
+
     $.ajax({
-        url: 'ajax/compra_local_configuracion_despacho_guardar.php',
+        url: 'ajax/compra_local_configuracion_despacho_update_field.php',
         method: 'POST',
         data: {
             id_producto_presentacion: idProducto,
             codigo_sucursal: codigoSucursal,
-            dia_entrega: dia
+            campo: campo,
+            valor: valor,
+            dia_entrega: diaEntrega
         },
         dataType: 'json',
         success: function (response) {
             if (response.success) {
-                cargarConfiguracion(codigoSucursal);
-                mostrarExito('D├¡a de entrega agregado');
-            } else {
-                mostrarError('Error al agregar d├¡a: ' + response.message);
-            }
-        },
-        error: function () {
-            mostrarError('Error de conexi├│n');
-        }
-    });
-}
-
-// Eliminar d├¡a de entrega
-function eliminarDiaEntrega(id, codigoSucursal) {
-    $.ajax({
-        url: 'ajax/compra_local_configuracion_despacho_eliminar.php',
-        method: 'POST',
-        data: { id: id },
-        dataType: 'json',
-        success: function (response) {
-            if (response.success) {
-                cargarConfiguracion(codigoSucursal);
-                mostrarExito('D├¡a de entrega eliminado');
-            } else {
-                mostrarError('Error al eliminar d├¡a: ' + response.message);
-            }
-        },
-        error: function () {
-            mostrarError('Error de conexi├│n');
-        }
-    });
-}
-
-// Actualizar pedido m├¡nimo
-function updatePedidoMinimo(idProducto, codigoSucursal, valor) {
-    if (!puedeEditar) return;
-
-    $.ajax({
-        url: 'ajax/compra_local_configuracion_despacho_update_minimo.php',
-        method: 'POST',
-        data: {
-            id_producto_presentacion: idProducto,
-            codigo_sucursal: codigoSucursal,
-            pedido_minimo: valor
-        },
-        dataType: 'json',
-        success: function (response) {
-            if (response.success) {
-                // Actualizar en el objeto local para no recargar toda la tabla
+                // Actualizar en el objeto local
                 if (configuraciones[codigoSucursal]) {
                     configuraciones[codigoSucursal].forEach(item => {
                         if (item.id_producto_presentacion == idProducto) {
-                            item.pedido_minimo = valor;
+                            if (diaEntrega === null || item.dia_entrega == diaEntrega) {
+                                item[campo] = valor;
+                            }
                         }
                     });
                 }
-                mostrarExito('Pedido m├¡nimo actualizado');
+                mostrarExito('Configuraci├│n actualizada');
+
+                // Si cambiamos is_delivery, refrescamos para actualizar iconos
+                if (campo === 'is_delivery') {
+                    renderizarTabla(codigoSucursal);
+                }
             } else {
-                mostrarError('Error al actualizar pedido m├¡nimo: ' + response.message);
+                mostrarError('Error al actualizar: ' + response.message);
                 cargarConfiguracion(codigoSucursal);
             }
         },
