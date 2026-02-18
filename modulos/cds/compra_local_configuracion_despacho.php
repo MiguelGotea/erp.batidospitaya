@@ -42,7 +42,7 @@ $puedeEditar = tienePermiso('compra_local_configuracion_despacho', 'edicion', $c
 
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, 'Configuraci├│n de Plan de Despacho'); ?>
+            <?php echo renderHeader($usuario, false, 'Configuracion de Plan de Despacho'); ?>
 
             <div class="container-fluid p-3">
                 <!-- Tabs de Sucursales -->
