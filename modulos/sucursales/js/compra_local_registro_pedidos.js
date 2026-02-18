@@ -52,14 +52,14 @@ function verificarHoraLimite() {
     const currentHour = now.getHours();
     const currentMinute = now.getMinutes();
 
-    return (currentHour < 17) || (currentHour === 17 && currentMinute === 0);
+    return (currentHour < 12) || (currentHour === 12 && currentMinute === 0);
 }
 
 // Calcular tiempo restante hasta las 12:00 PM
 function calcularTiempoRestante() {
     const now = new Date();
     const deadline = new Date(now);
-    deadline.setHours(17, 0, 0, 0);
+    deadline.setHours(12, 0, 0, 0);
 
     if (now >= deadline) {
         return { expired: true, hours: 0, minutes: 0, seconds: 0 };
