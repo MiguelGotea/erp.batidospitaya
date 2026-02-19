@@ -10,7 +10,6 @@ use PHPMailer\PHPMailer\Exception;
 
 require_once __DIR__ . '/../../../core/vendor/autoload.php';
 
-
 // UID Fijo para la prueba (en la realidad lo guardarías en DB)
 $uid_fijo = "PRUEBA-ACTUALIZACION-UID-12345@batidospitaya.com";
 
