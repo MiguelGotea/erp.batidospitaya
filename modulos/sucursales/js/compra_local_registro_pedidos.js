@@ -527,7 +527,7 @@ function editarCantidad(cell) {
     const cantidadActual = $cell.find('.cantidad-display').text() || '';
 
     // Crear input
-    const input = $(`<input type="number" class="cantidad-input" value="${cantidadActual}" min="0" step="1">`);
+    const input = $(`<input type="number" class="cantidad-input" value="${cantidadActual}" min="0" step="0.1">`);
 
     // Reemplazar contenido
     $cell.html(input);
@@ -536,7 +536,7 @@ function editarCantidad(cell) {
     // Guardar al perder foco o presionar Enter
     input.on('blur keypress', function (e) {
         if (e.type === 'blur' || e.which === 13) {
-            const nuevaCantidad = parseInt($(this).val()) || 0;
+            const nuevaCantidad = parseFloat($(this).val()) || 0;
             guardarCantidad(productoId, fechaEntrega, nuevaCantidad, cantidadActual, $cell);
         }
     });
