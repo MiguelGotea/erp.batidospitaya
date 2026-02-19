@@ -17,7 +17,7 @@ $descripcion = "Esta es una reunión de prueba enviada automáticamente desde el
 $ubicacion = "Oficina Central / Google Meet";
 $organizador_nombre = "Miguel Gotea";
 $organizador_email = "mgotea@batidospitaya.com";
-$asistente_email = "mgotea@batidospitaya.com"; // Cambiado a hotmail para evitar rebotes de spam por envío a sí mismo
+$asistente_email = "mantenimiento@batidospitaya.com"; // Cambiado a otro corporativo para prueba de spam
 
 
 $fecha_inicio = date('Ymd\THis', strtotime('+24 hour')); // Programado para mañana para que parezca más real
