@@ -17,10 +17,10 @@ $descripcion = "Esta es una reunión de prueba enviada automáticamente desde el
 $ubicacion = "Oficina Central / Google Meet";
 $organizador_nombre = "Miguel Gotea";
 $organizador_email = "mgotea@batidospitaya.com";
-$asistente_email = "mgotea@batidospitaya.com"; // Enviándoselo a sí mismo para la prueba
+$asistente_email = "miguel_gotea@hotmail.com"; // Cambiado a hotmail para evitar rebotes de spam por envío a sí mismo
 
-$fecha_inicio = date('Ymd\THis', strtotime('+1 hour')); // En 1 hora
-$fecha_fin = date('Ymd\THis', strtotime('+2 hours')); // 2 horas después
+$fecha_inicio = date('Ymd\THis', strtotime('+24 hour')); // Programado para mañana para que parezca más real
+$fecha_fin = date('Ymd\THis', strtotime('+25 hours'));
 
 // Generar contenido ICS
 $ics_content = "BEGIN:VCALENDAR\r\n" .
@@ -28,7 +28,7 @@ $ics_content = "BEGIN:VCALENDAR\r\n" .
     "PRODID:-//Batidos Pitaya//ERP//ES\r\n" .
     "METHOD:REQUEST\r\n" .
     "BEGIN:VEVENT\r\n" .
-    "UID:" . uniqid() . "@batidospitaya.com\r\n" .
+    "UID:" . date('YmdHis') . "-" . uniqid() . "@batidospitaya.com\r\n" .
     "DTSTAMP:" . date('Ymd\THis\Z') . "\r\n" .
     "DTSTART:" . $fecha_inicio . "\r\n" .
     "DTEND:" . $fecha_fin . "\r\n" .
@@ -36,7 +36,10 @@ $ics_content = "BEGIN:VCALENDAR\r\n" .
     "DESCRIPTION:" . $descripcion . "\r\n" .
     "LOCATION:" . $ubicacion . "\r\n" .
     "ORGANIZER;CN=" . $organizador_nombre . ":MAILTO:" . $organizador_email . "\r\n" .
-    "ATTENDEE;RSVP=TRUE;CN=" . $organizador_nombre . ":MAILTO:" . $asistente_email . "\r\n" .
+    "ATTENDEE;RSVP=TRUE;CN=Invitado:MAILTO:" . $asistente_email . "\r\n" .
+    "SEQUENCE:0\r\n" .
+    "STATUS:CONFIRMED\r\n" .
+    "TRANSP:OPAQUE\r\n" .
     "END:VEVENT\r\n" .
     "END:VCALENDAR";
 
@@ -54,20 +57,28 @@ try {
     $mail->CharSet = 'UTF-8';
 
     // Destinatarios
-    $mail->setFrom('mgotea@batidospitaya.com', 'Sistema ERP Pitaya');
+    $mail->setFrom('mgotea@batidospitaya.com', 'Miguel Gotea - ERP Pitaya');
     $mail->addAddress($asistente_email);
+    $mail->addReplyTo('mgotea@batidospitaya.com', 'Miguel Gotea');
 
     // Contenido del correo
     $mail->isHTML(true);
-    $mail->Subject = 'Invitación: ' . $resumen;
-    $mail->Body = "Hola,<br><br>Se ha generado una nueva invitación para una reunión.<br><br>" .
-        "<b>Asunto:</b> " . $resumen . "<br>" .
-        "<b>Fecha:</b> " . date('d/m/Y H:i', strtotime($fecha_inicio)) . "<br><br>" .
-        "Por favor, revisa el archivo adjunto para agendar la reunión.";
-    $mail->AltBody = "Hola,\n\nSe ha generado una nueva invitación para una reunión.\n\n" .
-        "Asunto: " . $resumen . "\n" .
-        "Fecha: " . date('d/m/Y H:i', strtotime($fecha_inicio)) . "\n\n" .
-        "Por favor, revisa el archivo adjunto para agendar la reunión.";
+    $mail->Subject = 'Confirmación de Reunión: ' . $resumen;
+    $mail->Body = "Estimado usuario,<br><br>" .
+        "Le informamos que se ha programado una nueva sesión de trabajo en el sistema ERP.<br><br>" .
+        "<b>Detalles de la sesión:</b><br>" .
+        "• <b>Asunto:</b> " . $resumen . "<br>" .
+        "• <b>Fecha y Hora:</b> " . date('d/m/Y H:i', strtotime($fecha_inicio)) . "<br>" .
+        "• <b>Ubicación:</b> " . $ubicacion . "<br><br>" .
+        "Por favor, acepte la invitación adjunta para sincronizarla con su calendario.<br><br>" .
+        "Saludos cordiales,<br><b>Equipo de Sistemas Batidos Pitaya</b>";
+    $mail->AltBody = "Estimado usuario,\n\nLe informamos que se ha programado una nueva sesión de trabajo en el sistema ERP.\n\n" .
+        "Detalles de la sesión:\n" .
+        "- Asunto: " . $resumen . "\n" .
+        "- Fecha y Hora: " . date('d/m/Y H:i', strtotime($fecha_inicio)) . "\n" .
+        "- Ubicación: " . $ubicacion . "\n\n" .
+        "Por favor, acepte la invitación adjunta para sincronizarla con su calendario.\n\n" .
+        "Saludos cordiales,\nEquipo de Sistemas Batidos Pitaya";
 
     // Adjuntar el archivo ICS
     // Es importante usar el método Ical para que algunos clientes (como Outlook) lo reconozcan mejor como invitación
