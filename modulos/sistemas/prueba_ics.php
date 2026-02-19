@@ -17,13 +17,12 @@ $descripcion = "Esta es una reunión de prueba enviada automáticamente desde el
 $ubicacion = "Oficina Central / Google Meet";
 $organizador_nombre = "Miguel Gotea";
 $organizador_email = "mgotea@batidospitaya.com";
-$asistente_email = "mantenimiento@batidospitaya.com"; // Cambiado a otro corporativo para prueba de spam
+$asistente_email = "mantenimiento@batidospitaya.com";
 
-
-$fecha_inicio = date('Ymd\THis', strtotime('+24 hour')); // Programado para mañana para que parezca más real
+$fecha_inicio = date('Ymd\THis', strtotime('+24 hour'));
 $fecha_fin = date('Ymd\THis', strtotime('+25 hours'));
 
-// Generar contenido ICS
+// Generar contenido ICS (Formato más estricto)
 $ics_content = "BEGIN:VCALENDAR\r\n" .
     "VERSION:2.0\r\n" .
     "PRODID:-//Batidos Pitaya//ERP//ES\r\n" .
@@ -37,7 +36,7 @@ $ics_content = "BEGIN:VCALENDAR\r\n" .
     "DESCRIPTION:" . $descripcion . "\r\n" .
     "LOCATION:" . $ubicacion . "\r\n" .
     "ORGANIZER;CN=" . $organizador_nombre . ":MAILTO:" . $organizador_email . "\r\n" .
-    "ATTENDEE;RSVP=TRUE;CN=Invitado:MAILTO:" . $asistente_email . "\r\n" .
+    "ATTENDEE;RSVP=TRUE;PARTSTAT=NEEDS-ACTION;CN=Invitado:MAILTO:" . $asistente_email . "\r\n" .
     "SEQUENCE:0\r\n" .
     "STATUS:CONFIRMED\r\n" .
     "TRANSP:OPAQUE\r\n" .
@@ -58,42 +57,37 @@ try {
     $mail->CharSet = 'UTF-8';
 
     // Destinatarios
-    $mail->setFrom('mgotea@batidospitaya.com', 'Miguel Gotea - ERP Pitaya');
+    $mail->setFrom('mgotea@batidospitaya.com', 'Miguel Gotea');
     $mail->addAddress($asistente_email);
-    $mail->addReplyTo('mgotea@batidospitaya.com', 'Miguel Gotea');
 
     // Contenido del correo
     $mail->isHTML(true);
-    $mail->Subject = 'Confirmación de Reunión: ' . $resumen;
-    $mail->Body = "Estimado usuario,<br><br>" .
-        "Le informamos que se ha programado una nueva sesión de trabajo en el sistema ERP.<br><br>" .
-        "<b>Detalles de la sesión:</b><br>" .
-        "• <b>Asunto:</b> " . $resumen . "<br>" .
-        "• <b>Fecha y Hora:</b> " . date('d/m/Y H:i', strtotime($fecha_inicio)) . "<br>" .
-        "• <b>Ubicación:</b> " . $ubicacion . "<br><br>" .
-        "Por favor, acepte la invitación adjunta para sincronizarla con su calendario.<br><br>" .
-        "Saludos cordiales,<br><b>Equipo de Sistemas Batidos Pitaya</b>";
-    $mail->AltBody = "Estimado usuario,\n\nLe informamos que se ha programado una nueva sesión de trabajo en el sistema ERP.\n\n" .
-        "Detalles de la sesión:\n" .
-        "- Asunto: " . $resumen . "\n" .
-        "- Fecha y Hora: " . date('d/m/Y H:i', strtotime($fecha_inicio)) . "\n" .
-        "- Ubicación: " . $ubicacion . "\n\n" .
-        "Por favor, acepte la invitación adjunta para sincronizarla con su calendario.\n\n" .
-        "Saludos cordiales,\nEquipo de Sistemas Batidos Pitaya";
+    $mail->Subject = 'Invitación a Sesión: ' . $resumen;
+    $mail->Body = "Estimado equipo,<br><br>" .
+        "Se ha programado una nueva sesión de coordinación en el sistema ERP.<br><br>" .
+        "<b>Asunto:</b> " . $resumen . "<br>" .
+        "<b>Fecha:</b> " . date('d/m/Y H:i', strtotime($fecha_inicio)) . "<br><br>" .
+        "Por favor, confirme su asistencia a través del calendario adjunto.<br><br>" .
+        "Atentamente,<br>Sistemas Batidos Pitaya";
 
-    // Adjuntar el archivo ICS
-    // Es importante usar el método Ical para que algunos clientes (como Outlook) lo reconozcan mejor como invitación
-    $mail->addStringAttachment($ics_content, 'reunion.ics', 'base64', 'text/calendar; charset=utf-8; method=REQUEST');
+    $mail->AltBody = "Estimado equipo,\n\nSe ha programado una nueva sesión de coordinación en el sistema ERP.\n\n" .
+        "Asunto: " . $resumen . "\n" .
+        "Fecha: " . date('d/m/Y H:i', strtotime($fecha_inicio)) . "\n\n" .
+        "Por favor, confirme su asistencia a través del calendario adjunto.";
 
-    // También podemos agregar el header específico para que se muestre como invitación interactiva
-    $mail->addCustomHeader('Content-Type: text/calendar; charset=utf-8; method=REQUEST');
+    // Método específico de PHPMailer para iCal (Mejor compatibilidad con Outlook/Gmail)
+    $mail->Ical = $ics_content;
+
+    // También lo enviamos como adjunto tradicional por si acaso, pero con codificación 8bit
+    $mail->addStringAttachment($ics_content, 'invite.ics', '8bit', 'text/calendar; charset=utf-8; method=REQUEST');
 
     $mail->send();
-    echo "<h1>Prueba Exitosa</h1>";
-    echo "<p>El mensaje ha sido enviado exitosamente a $asistente_email.</p>";
-    echo "<p>Por favor verifica tu bandeja de entrada (y la carpeta de Spam por si acaso).</p>";
+    echo "<h1>Envío corporativo intentado</h1>";
+    echo "<p>Correo enviado a $asistente_email.</p>";
+    echo "<p>Si falla de nuevo, es posible que el servidor de Hostinger esté bloqueando archivos .ics internos por políticas de seguridad estrictas.</p>";
 
 } catch (Exception $e) {
-    echo "<h1>Error en el envío</h1>";
-    echo "<p>El mensaje no pudo ser enviado. PHPMailer Error: {$mail->ErrorInfo}</p>";
+    echo "<h1>Error</h1>";
+    echo "<p>Error: {$mail->ErrorInfo}</p>";
 }
+?>
