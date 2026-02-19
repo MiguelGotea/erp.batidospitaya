@@ -19,6 +19,7 @@ $organizador_nombre = "Miguel Gotea";
 $organizador_email = "mgotea@batidospitaya.com";
 $asistente_email = "miguel_gotea@hotmail.com"; // Cambiado a hotmail para evitar rebotes de spam por envío a sí mismo
 
+
 $fecha_inicio = date('Ymd\THis', strtotime('+24 hour')); // Programado para mañana para que parezca más real
 $fecha_fin = date('Ymd\THis', strtotime('+25 hours'));
 
