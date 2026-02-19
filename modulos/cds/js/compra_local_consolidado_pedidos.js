@@ -23,6 +23,15 @@ $(document).ready(function () {
     cargarConsolidado();
 });
 
+// Formatear cantidad para mostrar decimales de forma limpia
+function formatCantidad(valor) {
+    if (valor === undefined || valor === null || valor === 0) return '-';
+    const num = parseFloat(valor);
+    if (isNaN(num)) return '-';
+    // Si es entero, mostrar sin decimales. Si tiene decimales, mostrar hasta 2.
+    return Number.isInteger(num) ? num.toString() : parseFloat(num.toFixed(2)).toString();
+}
+
 // Determinar qué día es hoy (1-7)
 function getDiaHoy() {
     const hoy = new Date();
@@ -235,7 +244,7 @@ function renderizarTablaProducto(producto) {
 
             html += `
                 <td class="data-cell ${cantidad > 0 ? 'has-value' : 'no-value'} ${esHoy ? 'today-column' : ''}">
-                    ${cantidad > 0 ? cantidad : '-'}
+                    ${formatCantidad(cantidad)}
                 </td>
             `;
         });
@@ -251,7 +260,7 @@ function renderizarTablaProducto(producto) {
                     <td><strong>TOTAL</strong></td>
                     ${totalesPorDia.map((total, index) => `
                         <td class="${diasConfig[index].num === diaHoy ? 'today-column' : ''}">
-                            <strong>${total}</strong>
+                            <strong>${formatCantidad(total)}</strong>
                         </td>
                     `).join('')}
                 </tr>

@@ -80,7 +80,7 @@ try {
                 $detalles[] = [
                     'codigo_sucursal' => $codigo,
                     'nombre_sucursal' => $nombre,
-                    'cantidad' => intval($cantidad)
+                    'cantidad' => floatval($cantidad)
                 ];
             }
         }
