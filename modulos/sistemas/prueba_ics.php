@@ -22,6 +22,7 @@ $asistente_email = "mantenimiento@batidospitaya.com";
 $fecha_inicio = date('Ymd\THis', strtotime('+24 hour'));
 $fecha_fin = date('Ymd\THis', strtotime('+25 hours'));
 
+
 // Generar contenido ICS (Formato más estricto)
 $ics_content = "BEGIN:VCALENDAR\r\n" .
     "VERSION:2.0\r\n" .
