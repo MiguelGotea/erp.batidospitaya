@@ -15,9 +15,9 @@ require_once __DIR__ . '/../../core/vendor/autoload.php';
 $resumen = "Reunión de Prueba - Agenda ERP Batidos Pitaya";
 $descripcion = "Esta es una reunión de prueba enviada automáticamente desde el ERP.";
 $ubicacion = "Oficina Central / Google Meet";
-$organizador_nombre = "Miguel Gotea";
-$organizador_email = "mgotea@batidospitaya.com";
-$asistente_email = "mantenimiento@batidospitaya.com";
+$organizador_nombre = "Mantenimiento Pitaya";
+$organizador_email = "mantenimiento@batidospitaya.com";
+$asistente_email = "mgotea@batidospitaya.com";
 
 $fecha_inicio = date('Ymd\THis', strtotime('+24 hour'));
 $fecha_fin = date('Ymd\THis', strtotime('+25 hours'));
@@ -51,14 +51,14 @@ try {
     $mail->isSMTP();
     $mail->Host = 'smtp.hostinger.com';
     $mail->SMTPAuth = true;
-    $mail->Username = 'mgotea@batidospitaya.com';
+    $mail->Username = 'mantenimiento@batidospitaya.com';
     $mail->Password = 'Nihonk03#';
     $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
     $mail->Port = 587;
     $mail->CharSet = 'UTF-8';
 
     // Destinatarios
-    $mail->setFrom('mgotea@batidospitaya.com', 'Miguel Gotea');
+    $mail->setFrom('mantenimiento@batidospitaya.com', 'Mantenimiento Pitaya');
     $mail->addAddress($asistente_email);
 
     // Contenido del correo
