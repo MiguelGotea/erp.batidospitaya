@@ -456,7 +456,6 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                         opt.textContent = (inactivo ? '⛔ ' : '') + b.Nombre
                             + (b.Medida ? ` (${b.Medida})` : '');
                         if (inactivo) opt.style.color = '#c0392b';
-                        sel.appendChild(opt);
                         selBat.appendChild(opt);
                     });
                     selBat.disabled = false;
