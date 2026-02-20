@@ -49,7 +49,7 @@ VALUES (
     'herramienta',
     'sistemas',
     'Herramienta para mapear productos del sistema antiguo (Access) con productos del nuevo ERP',
-    '/modulos/sistemas/diccionario_productos.php',
+    '/modulos/sistemas/accessantiguo_diccionario_productos.php',
     'diccionario-productos',
     'fas fa-exchange-alt',
     50,

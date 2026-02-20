@@ -463,7 +463,7 @@ $puedeEditar = tienePermiso('diccionario_productos', 'edicion', $cargoOperario);
                 por_pagina: state.porPagina,
             });
 
-            fetch(BASE + 'get_productos_antiguos.php?' + params)
+            fetch(BASE + 'accessantiguo_get_productos_antiguos.php?' + params)
                 .then(r => r.json())
                 .then(res => {
                     if (!res.success) { mostrarToast(res.message || 'Error', 'danger'); return; }
@@ -630,7 +630,7 @@ $puedeEditar = tienePermiso('diccionario_productos', 'edicion', $cargoOperario);
             if (q.length < 2) { list.style.display = 'none'; return; }
 
             acTimer = setTimeout(() => {
-                fetch(BASE + 'buscar_productos_nuevos.php?q=' + encodeURIComponent(q))
+                fetch(BASE + 'accessantiguo_buscar_productos_nuevos.php?q=' + encodeURIComponent(q))
                     .then(r => r.json())
                     .then(res => {
                         if (!res.success || !res.data.length) {
@@ -698,7 +698,7 @@ $puedeEditar = tienePermiso('diccionario_productos', 'edicion', $cargoOperario);
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
 
-            fetch(BASE + 'guardar_mapeo.php', { method: 'POST', body: fd })
+            fetch(BASE + 'accessantiguo_guardar_mapeo.php', { method: 'POST', body: fd })
                 .then(r => r.json())
                 .then(res => {
                     if (res.success) {
@@ -731,7 +731,7 @@ $puedeEditar = tienePermiso('diccionario_productos', 'edicion', $cargoOperario);
             fd.append('CodCotizacion', cod);
             fd.append('eliminar', '1');
 
-            fetch(BASE + 'guardar_mapeo.php', { method: 'POST', body: fd })
+            fetch(BASE + 'accessantiguo_guardar_mapeo.php', { method: 'POST', body: fd })
                 .then(r => r.json())
                 .then(res => {
                     if (res.success) {
@@ -745,7 +745,7 @@ $puedeEditar = tienePermiso('diccionario_productos', 'edicion', $cargoOperario);
 
         // ── Exportar CSV ─────────────────────────────────────────────────────
         document.getElementById('btnExportar').addEventListener('click', () => {
-            window.open(BASE + 'get_productos_antiguos.php?filtro=mapeados&por_pagina=9999&formato=csv', '_blank');
+            window.open(BASE + 'accessantiguo_get_productos_antiguos.php?filtro=mapeados&por_pagina=9999&formato=csv', '_blank');
         });
 
         // ── Filtros y búsqueda ───────────────────────────────────────────────

@@ -25,7 +25,7 @@ VALUES (
     'herramienta',
     'sistemas',
     'Visualización de recetas del sistema antiguo con traducción al nuevo ERP de productos',
-    '/modulos/sistemas/visor_recetas.php',
+    '/modulos/sistemas/accessantiguo_visor_recetas.php',
     'visor-recetas',
     'fas fa-blender',
     55,

@@ -407,7 +407,7 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
 
         // ── Cargar grupos ─────────────────────────────────────────────────────
         function cargarGrupos() {
-            fetch(BASE + 'get_grupos_batidos.php')
+            fetch(BASE + 'accessantiguo_get_grupos_batidos.php')
                 .then(r => r.json())
                 .then(res => {
                     if (!res.success) return;
@@ -437,7 +437,7 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                 return;
             }
 
-            fetch(BASE + 'get_batidos_por_grupo.php?cod_grupo=' + encodeURIComponent(cod))
+            fetch(BASE + 'accessantiguo_get_batidos_por_grupo.php?cod_grupo=' + encodeURIComponent(cod))
                 .then(r => r.json())
                 .then(res => {
                     selBat.innerHTML = '<option value="">— Selecciona un producto —</option>';
@@ -477,7 +477,7 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
             hide('panelEmpty');
             document.getElementById('spinnerReceta').style.display = 'block';
 
-            fetch(BASE + 'get_detalle_receta.php?cod_batido=' + encodeURIComponent(codBatido))
+            fetch(BASE + 'accessantiguo_get_detalle_receta.php?cod_batido=' + encodeURIComponent(codBatido))
                 .then(r => r.json())
                 .then(res => {
                     document.getElementById('spinnerReceta').style.display = 'none';
