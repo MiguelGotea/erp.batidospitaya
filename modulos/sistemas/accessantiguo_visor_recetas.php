@@ -319,20 +319,37 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
             <!-- Selectores -->
             <div class="panel-selector">
                 <div class="row g-3 align-items-end">
-                    <div class="col-md-4">
-                        <label><i class="fas fa-layer-group me-1"></i> Grupo de productos</label>
+                    <div class="col-md-3">
+                        <label><i class="fas fa-layer-group me-1"></i> Grupo</label>
                         <select class="form-select" id="selectGrupo">
                             <option value="">— Selecciona un grupo —</option>
                         </select>
                     </div>
-                    <div class="col-md-5">
+                    <div class="col-md-3">
                         <label><i class="fas fa-box me-1"></i> Producto</label>
-                        <select class="form-select" id="selectBatido" disabled>
-                            <option value="">— Selecciona un grupo primero —</option>
+                        <select class="form-select" id="selectNombre" disabled>
+                            <option value="">— Elige grupo primero —</option>
                         </select>
                     </div>
                     <div class="col-md-3">
-                        <button class="btn btn-success w-100" id="btnVerReceta" disabled>
+                        <label><i class="fas fa-tag me-1"></i> Versión / Tamaño</label>
+                        <select class="form-select" id="selectVersion" disabled>
+                            <option value="">— Elige producto primero —</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 d-flex flex-column gap-2">
+                        <label><i class="fas fa-filter me-1"></i> Estado</label>
+                        <div class="d-flex gap-2 align-items-center">
+                            <div class="btn-group btn-group-sm flex-grow-1" role="group" id="toggleEstado">
+                                <input type="radio" class="btn-check" name="estadoBatido" id="estadoTodos" value="todos" checked>
+                                <label class="btn btn-outline-secondary" for="estadoTodos">Todos</label>
+                                <input type="radio" class="btn-check" name="estadoBatido" id="estadoActivos" value="activos">
+                                <label class="btn btn-outline-success" for="estadoActivos">Activos</label>
+                                <input type="radio" class="btn-check" name="estadoBatido" id="estadoInactivos" value="inactivos">
+                                <label class="btn btn-outline-danger" for="estadoInactivos">Inactivos</label>
+                            </div>
+                        </div>
+                        <button class="btn btn-success" id="btnVerReceta" disabled>
                             <i class="fas fa-eye me-2"></i>Ver receta
                         </button>
                     </div>
@@ -367,10 +384,9 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                                 <th style="width:40px">Orden</th>
                                 <th>Ingrediente</th>
                                 <th style="width:80px">Cantidad</th>
-                                <th style="width:70px">Tipo</th>
-                                <th style="width:80px">Servido</th>
+                                <th style="width:55px">Tipo</th>
                                 <th style="width:80px">Porción</th>
-                                <th style="width:80px">Cotización</th>
+                                <th style="width:160px">Cotización</th>
                                 <th class="col-traduccion">Producto Nuevo (ERP)</th>
                             </tr>
                         </thead>
@@ -401,9 +417,9 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
         function hide(id) { document.getElementById(id).classList.add('d-none'); }
         function show(id) { document.getElementById(id).classList.remove('d-none'); }
 
-        // ── Colores por tipo ──────────────────────────────────────────────────
-        const TIPO_COLOR = { B: 'tipo-B', L: 'tipo-L', P: 'tipo-P' };
-        const TIPO_LABEL = { B: 'Base', L: 'Líquido', P: 'Porcionado' };
+        // ── Estado global ─────────────────────────────────────────────────────
+        let allBatidos  = [];   // todos los productos del grupo actual
+        let estadoFiltro = 'todos'; // 'todos' | 'activos' | 'inactivos'
 
         // ── Cargar grupos ─────────────────────────────────────────────────────
         function cargarGrupos() {
@@ -421,55 +437,135 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                 });
         }
 
-        // ── Al cambiar grupo → cargar batidos ─────────────────────────────────
-        document.getElementById('selectGrupo').addEventListener('change', function () {
-            const selBat = document.getElementById('selectBatido');
-            const btnVer = document.getElementById('btnVerReceta');
-            selBat.innerHTML = '<option value="">Cargando…</option>';
-            selBat.disabled = true;
-            btnVer.disabled = true;
+        // ── Helpers cascade ───────────────────────────────────────────────────
+        function esActivo(b) { return parseInt(b.Vigencia) === 1; }
 
+        function batidosFiltrados() {
+            if (estadoFiltro === 'activos')   return allBatidos.filter(b =>  esActivo(b));
+            if (estadoFiltro === 'inactivos') return allBatidos.filter(b => !esActivo(b));
+            return allBatidos;
+        }
+
+        function poblaNombres() {
+            const selNom = document.getElementById('selectNombre');
+            const selVer = document.getElementById('selectVersion');
+            const btnVer = document.getElementById('btnVerReceta');
+
+            // Nombres únicos del subconjunto filtrado
+            const nombres = [...new Set(batidosFiltrados().map(b => b.Nombre))].sort();
+
+            selNom.innerHTML = '<option value="">— Selecciona un producto —</option>';
+            nombres.forEach(n => {
+                const opt = document.createElement('option');
+                opt.value = n;
+                opt.textContent = n;
+                selNom.appendChild(opt);
+            });
+            selNom.disabled = !nombres.length;
+
+            selVer.innerHTML = '<option value="">— Elige producto primero —</option>';
+            selVer.disabled = true;
+            btnVer.disabled = true;
+        }
+
+        function poblaVersiones(nombre) {
+            const selVer = document.getElementById('selectVersion');
+            const btnVer = document.getElementById('btnVerReceta');
+
+            const versiones = batidosFiltrados().filter(b => b.Nombre === nombre);
+
+            selVer.innerHTML = '<option value="">— Selecciona versión —</option>';
+            versiones.forEach(b => {
+                const opt = document.createElement('option');
+                opt.value = b.CodBatido;
+                const inactivo = !esActivo(b);
+                const prefijo = inactivo ? '⛔ ' : '';
+                opt.textContent = `${prefijo}${b.CodBatido}${b.Medida ? ' · ' + b.Medida : ''}`;
+                if (inactivo) opt.style.color = '#c0392b';
+                selVer.appendChild(opt);
+            });
+            selVer.disabled = !versiones.length;
+            btnVer.disabled = true;
+        }
+
+        // ── Evento: cambio de grupo ──────────────────────────────────────────
+        document.getElementById('selectGrupo').addEventListener('change', function () {
+            const selNom = document.getElementById('selectNombre');
+            const selVer = document.getElementById('selectVersion');
+            const btnVer = document.getElementById('btnVerReceta');
+
+            selNom.innerHTML = '<option value="">Cargando…</option>';
+            selNom.disabled  = true;
+            selVer.innerHTML = '<option value="">— Elige producto primero —</option>';
+            selVer.disabled  = true;
+            btnVer.disabled  = true;
+            allBatidos = [];
             resetVista();
 
             const cod = this.value;
             if (!cod) {
-                selBat.innerHTML = '<option value="">— Selecciona un grupo primero —</option>';
+                selNom.innerHTML = '<option value="">— Elige grupo primero —</option>';
                 return;
             }
 
             fetch(BASE + 'accessantiguo_get_batidos_por_grupo.php?cod_grupo=' + encodeURIComponent(cod))
                 .then(r => r.json())
                 .then(res => {
-                    selBat.innerHTML = '<option value="">— Selecciona un producto —</option>';
                     if (!res.success || !res.data.length) {
-                        selBat.innerHTML = '<option value="">Sin productos en este grupo</option>';
+                        selNom.innerHTML = '<option value="">Sin productos en este grupo</option>';
                         return;
                     }
-                    res.data.forEach(b => {
-                        const opt = document.createElement('option');
-                        opt.value = b.CodBatido;
-                        opt.dataset.activo = b.Vigencia;
-                        opt.dataset.medida = b.Medida || '';
-                        opt.dataset.precio = b.Precio || '';
-                        opt.dataset.marca = b.Marca || '';
-                        const inactivo = (b.Vigencia === 0 || b.Vigencia === '0');
-                        opt.textContent = (inactivo ? '⛔ ' : '') + b.Nombre
-                            + (b.Medida ? ` (${b.Medida})` : '');
-                        if (inactivo) opt.style.color = '#c0392b';
-                        selBat.appendChild(opt);
-                    });
-                    selBat.disabled = false;
+                    allBatidos = res.data;
+                    poblaNombres();
                 });
         });
 
-        document.getElementById('selectBatido').addEventListener('change', function () {
+        // ── Evento: cambio de nombre ──────────────────────────────────────────
+        document.getElementById('selectNombre').addEventListener('change', function () {
+            resetVista();
+            document.getElementById('btnVerReceta').disabled = true;
+            if (!this.value) {
+                const selVer = document.getElementById('selectVersion');
+                selVer.innerHTML = '<option value="">— Elige producto primero —</option>';
+                selVer.disabled = true;
+                return;
+            }
+            poblaVersiones(this.value);
+        });
+
+        // ── Evento: cambio de versión ─────────────────────────────────────────
+        document.getElementById('selectVersion').addEventListener('change', function () {
             document.getElementById('btnVerReceta').disabled = !this.value;
             resetVista();
         });
 
+        // ── Evento: toggle estado ─────────────────────────────────────────────
+        document.querySelectorAll('input[name="estadoBatido"]').forEach(r => {
+            r.addEventListener('change', function () {
+                estadoFiltro = this.value;
+                // Repoblar nombres manteniendo selección actual si sigue disponible
+                const nombreActual  = document.getElementById('selectNombre').value;
+                const versionActual = document.getElementById('selectVersion').value;
+                poblaNombres();
+                // Restaurar nombre si todavía está disponible
+                const selNom = document.getElementById('selectNombre');
+                if (nombreActual) {
+                    selNom.value = nombreActual;
+                    if (selNom.value === nombreActual) {
+                        poblaVersiones(nombreActual);
+                        // Restaurar versión si todavía está disponible
+                        const selVer = document.getElementById('selectVersion');
+                        selVer.value = versionActual;
+                        document.getElementById('btnVerReceta').disabled = !selVer.value;
+                    }
+                }
+                resetVista();
+            });
+        });
+
         // ── Ver receta ────────────────────────────────────────────────────────
         document.getElementById('btnVerReceta').addEventListener('click', function () {
-            const codBatido = document.getElementById('selectBatido').value;
+            const codBatido = document.getElementById('selectVersion').value;
             if (!codBatido) return;
 
             resetVista();
@@ -480,10 +576,7 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                 .then(r => r.json())
                 .then(res => {
                     document.getElementById('spinnerReceta').style.display = 'none';
-                    if (!res.success) {
-                        show('panelEmpty');
-                        return;
-                    }
+                    if (!res.success) { show('panelEmpty'); return; }
                     renderCardBatido(res.batido);
                     renderResumen(res.ingredientes);
                     renderTabla(res.ingredientes);
@@ -524,30 +617,18 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
 
         // ── Resumen de traducción ────────────────────────────────────────────
         function renderResumen(ingredientes) {
-            const total = ingredientes.length;
-            const conCot = ingredientes.filter(i => i.cotizacion).length;
+            const total      = ingredientes.length;
+            const conCot     = ingredientes.filter(i => i.cotizacion).length;
             const traducidos = ingredientes.filter(i => i.nuevo_producto).length;
-            const sinMapeo = conCot - traducidos;
-            const sinCot = total - conCot;
+            const sinMapeo   = conCot - traducidos;
+            const sinCot     = total - conCot;
 
             document.getElementById('resumenBar').innerHTML = `
-        <div class="resumen-item">
-            <span class="num">${total}</span>
-            <span class="text-muted ms-1">ingredientes</span>
-        </div>
+        <div class="resumen-item"><span class="num">${total}</span><span class="text-muted ms-1">ingredientes</span></div>
         <div class="vr"></div>
-        <div class="resumen-item text-success">
-            <span class="num">${traducidos}</span>
-            <span class="ms-1">traducidos al nuevo ERP</span>
-        </div>
-        <div class="resumen-item text-warning">
-            <span class="num">${sinMapeo}</span>
-            <span class="ms-1">con cotización pero sin mapeo</span>
-        </div>
-        <div class="resumen-item text-danger">
-            <span class="num">${sinCot}</span>
-            <span class="ms-1">sin cotización resuelta</span>
-        </div>
+        <div class="resumen-item text-success"><span class="num">${traducidos}</span><span class="ms-1">traducidos al nuevo ERP</span></div>
+        <div class="resumen-item text-warning"><span class="num">${sinMapeo}</span><span class="ms-1">con cotización pero sin mapeo</span></div>
+        <div class="resumen-item text-danger"><span class="num">${sinCot}</span><span class="ms-1">sin cotización resuelta</span></div>
     `;
             show('resumenBar');
         }
@@ -557,30 +638,30 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
             const tbody = document.getElementById('tbodyReceta');
 
             if (!ingredientes.length) {
-                tbody.innerHTML = `<tr><td colspan="8" class="text-center text-muted py-5">
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center text-muted py-5">
             <i class="fas fa-exclamation-circle me-2"></i>Esta receta no tiene ingredientes registrados.</td></tr>`;
                 show('panelReceta');
                 return;
             }
 
             tbody.innerHTML = ingredientes.map((ingr, idx) => {
-                const tipo = ingr.Tipo || '?';
-                const tipoClass = TIPO_COLOR[tipo] || 'tipo-otro';
+                const tipo      = ingr.Tipo || '—';
                 const filaClass = `fila-${tipo}`;
 
-                // Nombre ingrediente
-                const vigente = parseInt(ingr.VigenteIngrediente) !== 0;
-                const nomClass = vigente ? '' : 'ingr-inactivo';
-                const nomBadge = vigente ? '' : `<span style="font-size:.65rem;background:#fdd;color:#c0392b;border-radius:3px;padding:1px 5px;margin-left:4px">INACTIVO</span>`;
+                // Ingrediente: nombre + unidad
+                const vigente    = parseInt(ingr.VigenteIngrediente) !== 0;
+                const nomClass   = vigente ? '' : 'ingr-inactivo';
+                const nomBadge   = vigente ? '' : `<span style="font-size:.65rem;background:#fdd;color:#c0392b;border-radius:3px;padding:1px 5px;margin-left:4px">INACTIVO</span>`;
                 const insumoChip = ingr.InsumoClave ? `<span class="chip-clave ms-1">Clave</span>` : '';
+                const unidad     = ingr.UnidadIngrediente ? `<small class="text-muted"> ${esc(ingr.UnidadIngrediente)}</small>` : '';
 
-                // Cotización resuelta
+                // Cotización (sin número)
                 const cot = ingr.cotizacion;
                 const cotHTML = cot
-                    ? `<span style="font-size:.72rem;color:#1a6fad;font-weight:700">#${cot.CodCotizacion}</span>
-               <div style="font-size:.7rem;color:#777">${[cot.Marca, cot.Linea, cot.Capacidad].filter(Boolean).join(' · ')}</div>
-               ${ingr.codporcion ? '<span style="font-size:.65rem;background:#e3f2fd;color:#1565c0;border-radius:3px;padding:1px 5px">por porción</span>'
-                        : '<span style="font-size:.65rem;background:#f3e5f5;color:#6a1b9a;border-radius:3px;padding:1px 5px">Conversión=1</span>'}`
+                    ? `<div style="font-size:.75rem;color:#333">${[cot.Marca, cot.Linea, cot.Capacidad].filter(Boolean).join(' · ')}</div>
+                       ${ingr.codporcion
+                           ? '<span style="font-size:.65rem;background:#e3f2fd;color:#1565c0;border-radius:3px;padding:1px 5px">por porción</span>'
+                           : '<span style="font-size:.65rem;background:#f3e5f5;color:#6a1b9a;border-radius:3px;padding:1px 5px">Conversión=1</span>'}`
                     : `<span class="sin-cot">Sin cotización</span>`;
 
                 // Traducción nuevo ERP
@@ -590,35 +671,28 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                     const activoTag = np.activoNuevo === 'NO'
                         ? `<span style="font-size:.65rem;background:#fdd;color:#c0392b;border-radius:3px;padding:1px 5px;margin-left:4px">INACTIVO</span>` : '';
                     tradHTML = `<div class="traduccion-ok">
-                <div class="d-flex align-items-center gap-1 mb-1">
-                    <span class="sku-tag">${esc(np.SKU)}</span>${activoTag}
-                </div>
-                <div class="nom-nuevo">${esc(np.NombreNuevo)}</div>
-                <div class="uni-nuevo">${esc(np.unidadNueva || '')}${np.cantidad ? ' · ' + np.cantidad : ''} ${esc(np.productoMaestro || '')}</div>
-            </div>`;
+                        <div class="d-flex align-items-center gap-1 mb-1"><span class="sku-tag">${esc(np.SKU)}</span>${activoTag}</div>
+                        <div class="nom-nuevo">${esc(np.NombreNuevo)}</div>
+                        <div class="uni-nuevo">${esc(np.unidadNueva || '')}${np.cantidad ? ' · ' + np.cantidad : ''} ${esc(np.productoMaestro || '')}</div>
+                    </div>`;
                 } else if (cot) {
-                    tradHTML = `<span class="traduccion-na"><i class="fas fa-exclamation-triangle me-1 text-warning"></i>Sin mapeo en diccionario</span>`;
+                    tradHTML = `<span class="traduccion-na"><i class="fas fa-exclamation-triangle me-1 text-warning"></i>Sin mapeo</span>`;
                 } else {
-                    tradHTML = `<span class="traduccion-na text-danger"><i class="fas fa-times-circle me-1"></i>No se pudo resolver</span>`;
+                    tradHTML = `<span class="traduccion-na text-danger"><i class="fas fa-times-circle me-1"></i>No resuelto</span>`;
                 }
 
                 return `<tr class="${filaClass}">
-            <td class="text-center text-muted">${ingr.ordenreceta ?? idx + 1}</td>
-            <td>
-                <div class="${nomClass}">${esc(ingr.NombreIngrediente || ingr.CodIngrediente)}${nomBadge}${insumoChip}</div>
-                <small class="text-muted">${esc(ingr.CodIngrediente)}</small>
-            </td>
-            <td class="text-center fw-semibold">${ingr.Cantidad ?? '—'}</td>
-            <td class="text-center">
-                <span class="badge" style="background:${tipoClass === 'tipo-B' ? '#4e73df' : tipoClass === 'tipo-L' ? '#f6c23e' : '#858796'};color:#fff;font-size:.72rem">
-                    ${esc(TIPO_LABEL[tipo] || tipo)}
-                </span>
-            </td>
-            <td class="text-center text-muted">${esc(ingr.tiposervido || '—')}</td>
-            <td class="text-center text-muted">${ingr.codporcion ? '#' + ingr.codporcion : '—'}</td>
-            <td>${cotHTML}</td>
-            <td class="col-traduccion">${tradHTML}</td>
-        </tr>`;
+                    <td class="text-center text-muted">${ingr.ordenreceta ?? idx + 1}</td>
+                    <td>
+                        <div class="${nomClass}">${esc(ingr.NombreIngrediente || ingr.CodIngrediente)}${unidad}${nomBadge}${insumoChip}</div>
+                        <small class="text-muted">${esc(ingr.CodIngrediente)}</small>
+                    </td>
+                    <td class="text-center fw-semibold">${ingr.Cantidad ?? '—'}</td>
+                    <td class="text-center"><span class="badge bg-secondary">${esc(tipo)}</span></td>
+                    <td class="text-center text-muted">${ingr.codporcion ? '#' + ingr.codporcion : '—'}</td>
+                    <td>${cotHTML}</td>
+                    <td class="col-traduccion">${tradHTML}</td>
+                </tr>`;
             }).join('');
 
             show('panelReceta');
