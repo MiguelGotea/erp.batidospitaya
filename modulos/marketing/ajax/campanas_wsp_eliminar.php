@@ -27,19 +27,16 @@ if (!$id) {
 }
 
 try {
-    // Solo permite eliminar en estados seguros
     $stmt = $conn->prepare("
         DELETE FROM wsp_campanas_
-        WHERE id = ? AND estado IN ('borrador', 'cancelada')
+        WHERE id = :id AND estado IN ('borrador', 'cancelada')
     ");
-    $stmt->bind_param('i', $id);
-    $stmt->execute();
+    $stmt->execute([':id' => $id]);
 
-    if ($stmt->affected_rows === 0) {
+    if ($stmt->rowCount() === 0) {
         echo json_encode(['error' => 'No se puede eliminar una campaña en estado activo']);
         exit;
     }
-    $stmt->close();
 
     echo json_encode(['success' => true]);
 

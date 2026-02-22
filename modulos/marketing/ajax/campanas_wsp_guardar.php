@@ -19,7 +19,6 @@ if (!tienePermiso('campanas_wsp', 'nueva_campana', $cargoOperario)) {
 }
 
 $body = json_decode(file_get_contents('php://input'), true);
-
 $nombre = trim($body['nombre'] ?? '');
 $mensaje = trim($body['mensaje'] ?? '');
 $fechaEnvio = $body['fecha_envio'] ?? '';
@@ -52,60 +51,63 @@ try {
             echo json_encode(['error' => 'La imagen supera el límite de 5MB']);
             exit;
         }
-
         file_put_contents($uploadDir . $nombreArchivo, $datosImg);
         $imagenUrl = '/modulos/marketing/uploads/wsp_imagenes/' . $nombreArchivo;
     }
 
-    $conn->begin_transaction();
+    $conn->beginTransaction();
 
     // ── Insertar campaña ──
-    $stmt = $conn->prepare("
-        INSERT INTO wsp_campanas_ 
-            (nombre, mensaje, imagen_url, fecha_envio, estado, total_destinatarios, usuario_creacion, fecha_creacion)
-        VALUES (?, ?, ?, ?, 'programada', ?, ?, CONVERT_TZ(NOW(),'+00:00','-06:00'))
-    ");
     $totalDest = count($destinatarios);
     $codOp = $usuario['CodOperario'];
-    $stmt->bind_param('ssssis', $nombre, $mensaje, $imagenUrl, $fechaEnvio, $totalDest, $codOp);
-    $stmt->execute();
-    $campanaId = $conn->insert_id;
-    $stmt->close();
+
+    $stmt = $conn->prepare("
+        INSERT INTO wsp_campanas_
+            (nombre, mensaje, imagen_url, fecha_envio, estado, total_destinatarios, usuario_creacion, fecha_creacion)
+        VALUES (:nombre, :mensaje, :imagen_url, :fecha_envio, 'programada', :total, :usuario, CONVERT_TZ(NOW(),'+00:00','-06:00'))
+    ");
+    $stmt->execute([
+        ':nombre' => $nombre,
+        ':mensaje' => $mensaje,
+        ':imagen_url' => $imagenUrl,
+        ':fecha_envio' => $fechaEnvio,
+        ':total' => $totalDest,
+        ':usuario' => $codOp
+    ]);
+    $campanaId = (int) $conn->lastInsertId();
 
     // ── Insertar destinatarios ──
     $stmtDest = $conn->prepare("
         INSERT INTO wsp_destinatarios_ (campana_id, id_cliente, nombre, telefono, sucursal)
-        VALUES (?, ?, ?, ?, ?)
+        VALUES (:campana_id, :id_cliente, :nombre, :telefono, :sucursal)
     ");
 
     foreach ($destinatarios as $dest) {
         $idCliente = (int) ($dest['id'] ?? 0);
-        $nombre_d = trim($dest['nombre'] ?? '');
+        $nom = trim($dest['nombre'] ?? '');
         $telefono = formatearTelefonoNi($dest['telefono'] ?? '');
         $sucursal = trim($dest['sucursal'] ?? '');
 
         if (!$idCliente || !$telefono)
             continue;
 
-        $stmtDest->bind_param('iisss', $campanaId, $idCliente, $nombre_d, $telefono, $sucursal);
-        $stmtDest->execute();
+        $stmtDest->execute([
+            ':campana_id' => $campanaId,
+            ':id_cliente' => $idCliente,
+            ':nombre' => $nom,
+            ':telefono' => $telefono,
+            ':sucursal' => $sucursal
+        ]);
     }
-    $stmtDest->close();
 
     $conn->commit();
-
     echo json_encode(['success' => true, 'campana_id' => $campanaId]);
 
 } catch (Exception $e) {
-    $conn->rollback();
+    $conn->rollBack();
     echo json_encode(['error' => 'Error al guardar: ' . $e->getMessage()]);
 }
 
-/**
- * Formatea el teléfono para Nicaragua:
- * 8 dígitos → +505XXXXXXXX
- * Ya tiene prefijo → lo deja como está con +
- */
 function formatearTelefonoNi($cel)
 {
     $limpio = preg_replace('/\D/', '', $cel);

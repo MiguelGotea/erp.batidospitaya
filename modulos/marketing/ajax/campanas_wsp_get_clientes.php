@@ -23,60 +23,48 @@ $accion = $_GET['accion'] ?? 'buscar';
 
 try {
     if ($accion === 'sucursales') {
-        // Lista de sucursales únicas con clientes con celular
-        $result = $conn->query("
+        $stmt = $conn->query("
             SELECT DISTINCT nombre_sucursal
             FROM clientesclub
             WHERE celular IS NOT NULL AND celular <> ''
             ORDER BY nombre_sucursal ASC
         ");
-        $sucursales = $result->fetch_all(MYSQLI_ASSOC);
-        echo json_encode(['success' => true, 'sucursales' => $sucursales]);
+        echo json_encode(['success' => true, 'sucursales' => $stmt->fetchAll()]);
         exit;
     }
 
-    // Búsqueda de clientes
-    $busqueda = '%' . trim($_GET['q'] ?? '') . '%';
+    // ── Búsqueda de clientes ──
+    $q = '%' . trim($_GET['q'] ?? '') . '%';
     $sucursal = trim($_GET['sucursal'] ?? '');
-    $limite = 100;
+    $params = [':q1' => $q, ':q2' => $q];
 
     $condSucursal = '';
     if ($sucursal !== '') {
-        $condSucursal = ' AND nombre_sucursal = ?';
+        $condSucursal = ' AND nombre_sucursal = :sucursal';
+        $params[':sucursal'] = $sucursal;
     }
 
-    $sql = "
-        SELECT 
-            id_clienteclub          AS id,
+    $stmt = $conn->prepare("
+        SELECT
+            id_clienteclub AS id,
             CONCAT(TRIM(COALESCE(nombre,'')), ' ', TRIM(COALESCE(apellido,''))) AS nombre,
-            celular                 AS telefono_raw,
-            nombre_sucursal         AS sucursal
+            celular        AS telefono_raw,
+            nombre_sucursal AS sucursal
         FROM clientesclub
-        WHERE celular IS NOT NULL 
+        WHERE celular IS NOT NULL
           AND celular <> ''
           AND LENGTH(REGEXP_REPLACE(celular, '[^0-9]','')) >= 8
           AND (
-              CONCAT(COALESCE(nombre,''), ' ', COALESCE(apellido,'')) LIKE ?
-              OR celular LIKE ?
+              CONCAT(COALESCE(nombre,''), ' ', COALESCE(apellido,'')) LIKE :q1
+              OR celular LIKE :q2
           )
           $condSucursal
         ORDER BY nombre ASC
-        LIMIT $limite
-    ";
+        LIMIT 100
+    ");
+    $stmt->execute($params);
+    $rows = $stmt->fetchAll();
 
-    if ($sucursal !== '') {
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param('sss', $busqueda, $busqueda, $sucursal);
-    } else {
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param('ss', $busqueda, $busqueda);
-    }
-
-    $stmt->execute();
-    $rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-    $stmt->close();
-
-    // Formatear teléfono
     $clientes = array_map(function ($c) {
         $c['telefono'] = formatearTelefonoNi($c['telefono_raw']);
         $c['nombre'] = trim($c['nombre']);

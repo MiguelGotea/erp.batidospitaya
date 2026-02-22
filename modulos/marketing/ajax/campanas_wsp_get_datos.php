@@ -23,26 +23,27 @@ $rpp = in_array((int) ($_GET['rpp'] ?? 25), [25, 50, 100]) ? (int) $_GET['rpp'] 
 $offset = ($pagina - 1) * $rpp;
 
 try {
-    // Total
-    $total = $conn->query("SELECT COUNT(*) c FROM wsp_campanas_")->fetch_assoc()['c'];
+    // Total de campañas
+    $total = (int) $conn->query("SELECT COUNT(*) FROM wsp_campanas_")->fetchColumn();
 
     // Datos paginados
     $stmt = $conn->prepare("
-        SELECT 
+        SELECT
             id, nombre, mensaje, imagen_url,
-            DATE_FORMAT(fecha_envio, '%Y-%m-%d %H:%i') AS fecha_envio,
-            estado, total_destinatarios, total_enviados, total_errores,
-            DATE_FORMAT(fecha_creacion, '%d-%b-%y') AS fecha_creacion
+            DATE_FORMAT(fecha_envio, '%Y-%m-%d %H:%i')  AS fecha_envio,
+            estado,
+            total_destinatarios, total_enviados, total_errores,
+            DATE_FORMAT(fecha_creacion, '%d-%b-%y')     AS fecha_creacion
         FROM wsp_campanas_
         ORDER BY fecha_creacion DESC
-        LIMIT ? OFFSET ?
+        LIMIT :lim OFFSET :off
     ");
-    $stmt->bind_param('ii', $rpp, $offset);
+    $stmt->bindValue(':lim', $rpp, PDO::PARAM_INT);
+    $stmt->bindValue(':off', $offset, PDO::PARAM_INT);
     $stmt->execute();
-    $campanas = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-    $stmt->close();
+    $campanas = $stmt->fetchAll();
 
-    echo json_encode(['success' => true, 'campanas' => $campanas, 'total' => (int) $total]);
+    echo json_encode(['success' => true, 'campanas' => $campanas, 'total' => $total]);
 
 } catch (Exception $e) {
     echo json_encode(['error' => $e->getMessage()]);
