@@ -51,6 +51,19 @@ try {
     $stmt->execute([':q' => $like, ':q2' => $like, ':q3' => $like]);
     $resultados = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+    // Fetch varieties for each result
+    foreach ($resultados as &$res) {
+        $stmtVar = $conn->prepare("
+            SELECT id, nombre, principal
+            FROM variedad_producto_presentacion
+            WHERE id_presentacion_producto = :idp
+            ORDER BY principal DESC, nombre ASC
+        ");
+        $stmtVar->execute([':idp' => $res['id']]);
+        $res['variedades'] = $stmtVar->fetchAll(PDO::FETCH_ASSOC);
+    }
+    unset($res);
+
     echo json_encode(['success' => true, 'data' => $resultados]);
 
 } catch (Exception $e) {

@@ -95,6 +95,7 @@ try {
             i.Vigente,
             d.id                            AS mapeo_id,
             d.id_producto_presentacion,
+            d.id_variedad_producto,
             pp.SKU                          AS nuevo_sku,
             pp.Nombre                       AS nuevo_nombre,
             d.notas                         AS mapeo_notas

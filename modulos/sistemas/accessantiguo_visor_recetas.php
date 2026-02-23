@@ -341,11 +341,14 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                         <label><i class="fas fa-filter me-1"></i> Estado</label>
                         <div class="d-flex gap-2 align-items-center">
                             <div class="btn-group btn-group-sm flex-grow-1" role="group" id="toggleEstado">
-                                <input type="radio" class="btn-check" name="estadoBatido" id="estadoTodos" value="todos" checked>
+                                <input type="radio" class="btn-check" name="estadoBatido" id="estadoTodos" value="todos"
+                                    checked>
                                 <label class="btn btn-outline-secondary" for="estadoTodos">Todos</label>
-                                <input type="radio" class="btn-check" name="estadoBatido" id="estadoActivos" value="activos">
+                                <input type="radio" class="btn-check" name="estadoBatido" id="estadoActivos"
+                                    value="activos">
                                 <label class="btn btn-outline-success" for="estadoActivos">Activos</label>
-                                <input type="radio" class="btn-check" name="estadoBatido" id="estadoInactivos" value="inactivos">
+                                <input type="radio" class="btn-check" name="estadoBatido" id="estadoInactivos"
+                                    value="inactivos">
                                 <label class="btn btn-outline-danger" for="estadoInactivos">Inactivos</label>
                             </div>
                         </div>
@@ -418,7 +421,7 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
         function show(id) { document.getElementById(id).classList.remove('d-none'); }
 
         // ── Estado global ─────────────────────────────────────────────────────
-        let allBatidos  = [];   // todos los productos del grupo actual
+        let allBatidos = [];   // todos los productos del grupo actual
         let estadoFiltro = 'todos'; // 'todos' | 'activos' | 'inactivos'
 
         // ── Cargar grupos ─────────────────────────────────────────────────────
@@ -441,7 +444,7 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
         function esActivo(b) { return parseInt(b.Vigencia) === 1; }
 
         function batidosFiltrados() {
-            if (estadoFiltro === 'activos')   return allBatidos.filter(b =>  esActivo(b));
+            if (estadoFiltro === 'activos') return allBatidos.filter(b => esActivo(b));
             if (estadoFiltro === 'inactivos') return allBatidos.filter(b => !esActivo(b));
             return allBatidos;
         }
@@ -495,10 +498,10 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
             const btnVer = document.getElementById('btnVerReceta');
 
             selNom.innerHTML = '<option value="">Cargando…</option>';
-            selNom.disabled  = true;
+            selNom.disabled = true;
             selVer.innerHTML = '<option value="">— Elige producto primero —</option>';
-            selVer.disabled  = true;
-            btnVer.disabled  = true;
+            selVer.disabled = true;
+            btnVer.disabled = true;
             allBatidos = [];
             resetVista();
 
@@ -544,7 +547,7 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
             r.addEventListener('change', function () {
                 estadoFiltro = this.value;
                 // Repoblar nombres manteniendo selección actual si sigue disponible
-                const nombreActual  = document.getElementById('selectNombre').value;
+                const nombreActual = document.getElementById('selectNombre').value;
                 const versionActual = document.getElementById('selectVersion').value;
                 poblaNombres();
                 // Restaurar nombre si todavía está disponible
@@ -617,11 +620,11 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
 
         // ── Resumen de traducción ────────────────────────────────────────────
         function renderResumen(ingredientes) {
-            const total      = ingredientes.length;
-            const conCot     = ingredientes.filter(i => i.cotizacion).length;
+            const total = ingredientes.length;
+            const conCot = ingredientes.filter(i => i.cotizacion).length;
             const traducidos = ingredientes.filter(i => i.nuevo_producto).length;
-            const sinMapeo   = conCot - traducidos;
-            const sinCot     = total - conCot;
+            const sinMapeo = conCot - traducidos;
+            const sinCot = total - conCot;
 
             document.getElementById('resumenBar').innerHTML = `
         <div class="resumen-item"><span class="num">${total}</span><span class="text-muted ms-1">ingredientes</span></div>
@@ -645,23 +648,23 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
             }
 
             tbody.innerHTML = ingredientes.map((ingr, idx) => {
-                const tipo      = ingr.Tipo || '—';
+                const tipo = ingr.Tipo || '—';
                 const filaClass = `fila-${tipo}`;
 
                 // Ingrediente: nombre + unidad
-                const vigente    = parseInt(ingr.VigenteIngrediente) !== 0;
-                const nomClass   = vigente ? '' : 'ingr-inactivo';
-                const nomBadge   = vigente ? '' : `<span style="font-size:.65rem;background:#fdd;color:#c0392b;border-radius:3px;padding:1px 5px;margin-left:4px">INACTIVO</span>`;
+                const vigente = parseInt(ingr.VigenteIngrediente) !== 0;
+                const nomClass = vigente ? '' : 'ingr-inactivo';
+                const nomBadge = vigente ? '' : `<span style="font-size:.65rem;background:#fdd;color:#c0392b;border-radius:3px;padding:1px 5px;margin-left:4px">INACTIVO</span>`;
                 const insumoChip = ingr.InsumoClave ? `<span class="chip-clave ms-1">Clave</span>` : '';
-                const unidad     = ingr.UnidadIngrediente ? `<small class="text-muted"> ${esc(ingr.UnidadIngrediente)}</small>` : '';
+                const unidad = ingr.UnidadIngrediente ? `<small class="text-muted"> ${esc(ingr.UnidadIngrediente)}</small>` : '';
 
                 // Cotización (sin número)
                 const cot = ingr.cotizacion;
                 const cotHTML = cot
                     ? `<div style="font-size:.75rem;color:#333">${[cot.Marca, cot.Linea, cot.Capacidad].filter(Boolean).join(' · ')}</div>
                        ${ingr.codporcion
-                           ? '<span style="font-size:.65rem;background:#e3f2fd;color:#1565c0;border-radius:3px;padding:1px 5px">por porción</span>'
-                           : '<span style="font-size:.65rem;background:#f3e5f5;color:#6a1b9a;border-radius:3px;padding:1px 5px">Conversión=1</span>'}`
+                        ? '<span style="font-size:.65rem;background:#e3f2fd;color:#1565c0;border-radius:3px;padding:1px 5px">por porción</span>'
+                        : '<span style="font-size:.65rem;background:#f3e5f5;color:#6a1b9a;border-radius:3px;padding:1px 5px">Conversión=1</span>'}`
                     : `<span class="sin-cot">Sin cotización</span>`;
 
                 // Traducción nuevo ERP
@@ -670,10 +673,26 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                 if (np) {
                     const activoTag = np.activoNuevo === 'NO'
                         ? `<span style="font-size:.65rem;background:#fdd;color:#c0392b;border-radius:3px;padding:1px 5px;margin-left:4px">INACTIVO</span>` : '';
+
+                    // Variedades
+                    let variedadesHTML = '';
+                    if (np.variedades && np.variedades.length > 0) {
+                        variedadesHTML = `
+                            <select class="form-select form-select-sm mt-1" style="font-size: .75rem; padding: 2px 5px; height: auto;">
+                                ${np.variedades.map(v => `
+                                    <option value="${v.id}" ${v.principal == 1 ? 'selected' : ''}>
+                                        ${esc(v.nombre)} ${v.principal == 1 ? '(Principal)' : ''}
+                                    </option>
+                                `).join('')}
+                            </select>
+                        `;
+                    }
+
                     tradHTML = `<div class="traduccion-ok">
                         <div class="d-flex align-items-center gap-1 mb-1"><span class="sku-tag">${esc(np.SKU)}</span>${activoTag}</div>
                         <div class="nom-nuevo">${esc(np.NombreNuevo)}</div>
-                        <div class="uni-nuevo">${esc(np.unidadNueva || '')}${np.cantidad ? ' · ' + np.cantidad : ''} ${esc(np.productoMaestro || '')}</div>
+                        ${variedadesHTML}
+                        <div class="uni-nuevo mt-1">${esc(np.unidadNueva || '')}${np.cantidad ? ' · ' + np.cantidad : ''} ${esc(np.productoMaestro || '')}</div>
                     </div>`;
                 } else if (cot) {
                     tradHTML = `<span class="traduccion-na"><i class="fas fa-exclamation-triangle me-1 text-warning"></i>Sin mapeo</span>`;

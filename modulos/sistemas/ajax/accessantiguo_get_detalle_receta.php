@@ -129,7 +129,21 @@ try {
                 LIMIT 1
             ");
             $stmtDic->execute([':cot' => $codCotizacion]);
-            $ingr['nuevo_producto'] = $stmtDic->fetch(PDO::FETCH_ASSOC) ?: null;
+            $nuevoProducto = $stmtDic->fetch(PDO::FETCH_ASSOC);
+
+            if ($nuevoProducto) {
+                // 3) Obtener variedades vinculadas
+                $stmtVar = $conn->prepare("
+                    SELECT id, nombre, principal
+                    FROM variedad_producto_presentacion
+                    WHERE id_presentacion_producto = :idp
+                    ORDER BY principal DESC, nombre ASC
+                ");
+                $stmtVar->execute([':idp' => $nuevoProducto['id_presentacion']]);
+                $nuevoProducto['variedades'] = $stmtVar->fetchAll(PDO::FETCH_ASSOC);
+            }
+
+            $ingr['nuevo_producto'] = $nuevoProducto ?: null;
         }
     }
     unset($ingr); // romper referencia

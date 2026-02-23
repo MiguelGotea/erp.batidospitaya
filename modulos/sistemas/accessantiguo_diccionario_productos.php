@@ -437,7 +437,7 @@ $puedeEditar = tienePermiso('diccionario_productos', 'edicion', $cargoOperario);
             totalPaginas: 1,
         };
 
-        // Mapa: CodCotizacion → { id_producto_presentacion, sku, nombre }
+        // Mapa: CodCotizacion → { id_producto_presentacion, id_variedad, sku, nombre, variedades }
         const mapaSeleccionados = {};
 
         // ── Bootstrap Toast ──────────────────────────────────────────────────
@@ -520,9 +520,9 @@ $puedeEditar = tienePermiso('diccionario_productos', 'edicion', $cargoOperario);
                 if (PUEDE_EDITAR) {
                     const valActual = mapeado
                         ? `<div class="valor-mapeado mb-1">
-                       <span class="sku-tag">${esc(p.nuevo_sku)}</span>
-                       <span>${esc(p.nuevo_nombre)}</span>
-                   </div>` : '';
+                               <span class="sku-tag">${esc(p.nuevo_sku)}</span>
+                               <span>${esc(p.nuevo_nombre)}</span>
+                           </div>` : '';
 
                     colNuevo = `
                 <td>
@@ -535,6 +535,7 @@ $puedeEditar = tienePermiso('diccionario_productos', 'edicion', $cargoOperario);
                             placeholder="Buscar en nuevo ERP…"
                             autocomplete="off">
                         <div class="autocomplete-list" id="aclist-${p.CodCotizacion}"></div>
+                        <div id="variedad-container-${p.CodCotizacion}"></div>
                     </div>
                 </td>
                 <td>
@@ -615,7 +616,7 @@ $puedeEditar = tienePermiso('diccionario_productos', 'edicion', $cargoOperario);
             addBtn('»', totalPags, pagina === totalPags);
         }
 
-        // ── Autocomplete ─────────────────────────────────────────────────────
+        // ── Autocomplete Search ──────────────────────────────────────────────
         let acTimer = null;
         document.addEventListener('input', function (e) {
             if (!e.target.matches('.input-buscar-nuevo')) return;
@@ -625,6 +626,8 @@ $puedeEditar = tienePermiso('diccionario_productos', 'edicion', $cargoOperario);
             const q = inp.value.trim();
 
             delete mapaSeleccionados[cod];
+            const varContainer = document.getElementById('variedad-container-' + cod);
+            if (varContainer) varContainer.innerHTML = '';
 
             clearTimeout(acTimer);
             if (q.length < 2) { list.style.display = 'none'; return; }
@@ -638,20 +641,21 @@ $puedeEditar = tienePermiso('diccionario_productos', 'edicion', $cargoOperario);
                             list.style.display = 'block';
                             return;
                         }
-                        list.innerHTML = res.data.map(p =>
-                            `<div class="autocomplete-item"
-                         data-id="${p.id}" data-sku="${esc(p.SKU)}" data-nom="${esc(p.Nombre)}">
-                        <span class="sku">${esc(p.SKU)}</span>
-                        <span class="nom"> – ${esc(p.Nombre)}</span>
-                        <div class="extra">${[p.unidad, p.cantidad ? p.cantidad + ' u.' : ''].filter(Boolean).join(' | ')}</div>
-                    </div>`
-                        ).join('');
+                        list.innerHTML = res.data.map(p => {
+                            const varsAttr = btoa(JSON.stringify(p.variedades || []));
+                            return `<div class="autocomplete-item"
+                                 data-id="${p.id}" data-sku="${esc(p.SKU)}" data-nom="${esc(p.Nombre)}" data-vars="${varsAttr}">
+                                <span class="sku">${esc(p.SKU)}</span>
+                                <span class="nom"> – ${esc(p.Nombre)}</span>
+                                <div class="extra">${[p.unidad, p.cantidad ? p.cantidad + ' u.' : ''].filter(Boolean).join(' | ')}</div>
+                            </div>`;
+                        }).join('');
                         list.style.display = 'block';
                     });
             }, 280);
         });
 
-        // Seleccionar opción del autocomplete
+        // ── Selection and Variety Handling ────────────────────────────────────
         document.addEventListener('click', function (e) {
             const item = e.target.closest('.autocomplete-item');
             if (item) {
@@ -663,16 +667,43 @@ $puedeEditar = tienePermiso('diccionario_productos', 'edicion', $cargoOperario);
                 const id = item.dataset.id;
                 const sku = item.dataset.sku;
                 const nom = item.dataset.nom;
+                const variedades = JSON.parse(atob(item.dataset.vars));
 
-                mapaSeleccionados[cod] = { id, sku, nombre: nom };
+                mapaSeleccionados[cod] = { id, sku, nombre: nom, variedades, id_variedad: 0 };
                 inp.value = `${sku} – ${nom}`;
                 list.style.display = 'none';
+
+                const varContainer = document.getElementById('variedad-container-' + cod);
+                if (variedades.length > 0) {
+                    varContainer.innerHTML = `
+                        <select class="form-select form-select-sm mt-1 select-variedad" data-cod="${cod}">
+                            <option value="0">Sin variedad específica</option>
+                            ${variedades.map(v => `
+                                <option value="${v.id}" ${v.principal == 1 ? 'selected' : ''}>
+                                    ${esc(v.nombre)} ${v.principal == 1 ? '(Principal)' : ''}
+                                </option>
+                            `).join('')}
+                        </select>
+                    `;
+                    const principal = variedades.find(v => v.principal == 1);
+                    if (principal) mapaSeleccionados[cod].id_variedad = principal.id;
+                } else {
+                    varContainer.innerHTML = '';
+                }
                 return;
             }
 
-            // Cerrar listas abiertas al clic fuera
             if (!e.target.closest('.autocomplete-wrap')) {
                 document.querySelectorAll('.autocomplete-list').forEach(l => l.style.display = 'none');
+            }
+        });
+
+        document.addEventListener('change', function (e) {
+            if (e.target.matches('.select-variedad')) {
+                const cod = e.target.dataset.cod;
+                if (mapaSeleccionados[cod]) {
+                    mapaSeleccionados[cod].id_variedad = e.target.value;
+                }
             }
         });
 
@@ -694,6 +725,7 @@ $puedeEditar = tienePermiso('diccionario_productos', 'edicion', $cargoOperario);
             fd.append('CodIngrediente', ingr);
             fd.append('CodCotizacion', cod);
             fd.append('id_producto_presentacion', sel.id);
+            fd.append('id_variedad_producto', sel.id_variedad || 0);
 
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
@@ -704,7 +736,6 @@ $puedeEditar = tienePermiso('diccionario_productos', 'edicion', $cargoOperario);
                     if (res.success) {
                         mostrarToast('✓ ' + res.message, 'success');
                         delete mapaSeleccionados[cod];
-                        // Pequeña pausa para mostrar el toast antes de recargar
                         setTimeout(() => cargarProductos(), 800);
                     } else {
                         mostrarToast(res.message || 'Error al guardar', 'danger');

@@ -48,6 +48,7 @@ try {
     // ── Guardar / actualizar mapeo ──────────────────────────────────────────
     $codIngrediente = trim($_POST['CodIngrediente'] ?? '');
     $idProductoPresentacion = intval($_POST['id_producto_presentacion'] ?? 0);
+    $idVariedadProducto = intval($_POST['id_variedad_producto'] ?? 0);
     $notas = trim($_POST['notas'] ?? '');
 
     if (!$codIngrediente || $idProductoPresentacion <= 0) {
@@ -66,12 +67,13 @@ try {
     // INSERT ON DUPLICATE KEY UPDATE (clave única: CodCotizacion)
     $stmt = $conn->prepare("
         INSERT INTO diccionario_productos_legado
-            (CodIngrediente, CodCotizacion, id_producto_presentacion, notas, usuario_mapeo)
+            (CodIngrediente, CodCotizacion, id_producto_presentacion, id_variedad_producto, notas, usuario_mapeo)
         VALUES
-            (:ingr, :cot, :pp, :notas, :usr)
+            (:ingr, :cot, :pp, :var, :notas, :usr)
         ON DUPLICATE KEY UPDATE
             CodIngrediente          = VALUES(CodIngrediente),
             id_producto_presentacion = VALUES(id_producto_presentacion),
+            id_variedad_producto    = VALUES(id_variedad_producto),
             notas                   = VALUES(notas),
             usuario_mapeo           = VALUES(usuario_mapeo)
     ");
@@ -79,6 +81,7 @@ try {
         ':ingr' => $codIngrediente,
         ':cot' => $codCotizacion,
         ':pp' => $idProductoPresentacion,
+        ':var' => $idVariedadProducto ?: null,
         ':notas' => $notas ?: null,
         ':usr' => $usuario['CodOperario'],
     ]);
