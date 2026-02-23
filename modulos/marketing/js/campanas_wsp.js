@@ -384,10 +384,24 @@ function renderListaSeleccionados() {
 //  RESUMEN Y ENVÍO
 // ════════════════════════════════════════════
 
+const GRUPO_SIZE = 100;  // destinatarios por sub-campaña
+const GRUPO_HORAS = 2;    // horas entre cada grupo
+
 function actualizarResumen() {
     document.getElementById('resNombre').textContent = document.getElementById('campNombre').value;
     document.getElementById('resDestinatarios').textContent = clientesSeleccionados.length;
     document.getElementById('resImagen').textContent = imagenBase64 ? 'Sí' : 'No';
+
+    // Info de grupos
+    const numGrupos = Math.ceil(clientesSeleccionados.length / GRUPO_SIZE);
+    const necesitaGrupos = clientesSeleccionados.length > GRUPO_SIZE;
+    document.getElementById('resGruposRow').classList.toggle('d-none', !necesitaGrupos);
+    document.getElementById('alertaGrupos').classList.toggle('d-none', !necesitaGrupos);
+    if (necesitaGrupos) {
+        document.getElementById('resGrupos').textContent = `${numGrupos} grupos de máx. ${GRUPO_SIZE} c/u`;
+        document.getElementById('alertaNumGrupos').textContent = numGrupos;
+    }
+
     // Fecha mínima = ahora + 5 min
     const ahora = new Date();
     ahora.setMinutes(ahora.getMinutes() + 5);
@@ -409,36 +423,56 @@ async function guardarCampana() {
 
     const btnGuardar = document.getElementById('btnGuardar');
     btnGuardar.disabled = true;
-    btnGuardar.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Guardando...';
+
+    // Dividir destinatarios en grupos de GRUPO_SIZE
+    const grupos = [];
+    for (let i = 0; i < clientesSeleccionados.length; i += GRUPO_SIZE) {
+        grupos.push(clientesSeleccionados.slice(i, i + GRUPO_SIZE));
+    }
+
+    const totalGrupos = grupos.length;
+    const fechaBase = new Date(fecha);
+    let errores = 0;
 
     try {
-        const payload = {
-            nombre,
-            mensaje,
-            fecha_envio: fecha,
-            imagen_base64: imagenBase64 || null,
-            destinatarios: clientesSeleccionados
-        };
+        for (let g = 0; g < totalGrupos; g++) {
+            const esSolo = totalGrupos === 1;
+            const nomGrupo = esSolo ? nombre : `${nombre} - Grupo ${g + 1}`;
 
-        const resp = await fetch('ajax/campanas_wsp_guardar.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
-        const data = await resp.json();
+            // Fecha escalonada: primera a la hora elegida, cada grupo +2h
+            const fechaGrupo = new Date(fechaBase);
+            fechaGrupo.setHours(fechaGrupo.getHours() + (g * GRUPO_HORAS));
+            const fechaStr = fechaGrupo.toISOString().slice(0, 16).replace('T', ' ');
 
-        if (data.success) {
-            bootstrap.Modal.getInstance(document.getElementById('modalNuevaCampana')).hide();
-            Swal.fire({
-                icon: 'success',
-                title: '¡Campaña programada!',
-                text: `${clientesSeleccionados.length} destinatarios. Se enviará el ${formatearFecha(fecha)}.`,
-                timer: 3000
+            btnGuardar.innerHTML = `<span class="spinner-border spinner-border-sm me-1"></span> Guardando grupo ${g + 1}/${totalGrupos}...`;
+
+            const resp = await fetch('/modulos/marketing/ajax/campanas_wsp_guardar.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    nombre: nomGrupo,
+                    mensaje,
+                    fecha_envio: fechaStr,
+                    imagen_base64: imagenBase64 || null,
+                    destinatarios: grupos[g]
+                })
             });
-            cargarCampanas(1);
-        } else {
-            throw new Error(data.error || 'Error desconocido');
+            const data = await resp.json();
+            if (!data.success) errores++;
         }
+
+        bootstrap.Modal.getInstance(document.getElementById('modalNuevaCampana')).hide();
+
+        if (errores === 0) {
+            const msg = totalGrupos > 1
+                ? `${clientesSeleccionados.length} destinatarios divididos en ${totalGrupos} grupos. El primero se enviará el ${formatearFecha(fecha)}.`
+                : `${clientesSeleccionados.length} destinatarios. Se enviará el ${formatearFecha(fecha)}.`;
+            Swal.fire({ icon: 'success', title: '¡Campaña programada!', text: msg, timer: 4000 });
+        } else {
+            Swal.fire({ icon: 'warning', title: 'Guardado parcial', text: `${errores} de ${totalGrupos} grupos no se guardaron correctamente.` });
+        }
+        cargarCampanas(1);
+
     } catch (err) {
         Swal.fire({ icon: 'error', title: 'Error', text: err.message });
     } finally {
