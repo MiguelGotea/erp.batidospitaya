@@ -81,3 +81,59 @@ INSERT INTO bot_intents (intent_name, keywords, response_templates, priority) VA
  '',
  '["No entendí muy bien tu mensaje 😅. ¿Puedes contarme más?","Hmm, no estoy seguro de entenderte 🤔. ¿Puedes reformular tu pregunta?","Disculpa {{nombre}}, no entendí. ¿Quieres hablar con un asesor?"]',
  0);
+
+-- ============================================================
+-- REGISTRO EN ERP
+-- Tablas: tools_erp → acciones_tools_erp → permisos_tools_erp
+-- El id de la herramienta en tools_erp es 95
+-- ============================================================
+
+-- 1. Herramienta principal CRM Bot (verificar que id=95 ya existe)
+INSERT INTO tools_erp (
+    nombre, titulo, tipo_componente, grupo, descripcion,
+    url_real, url_alias, icono, orden, activo
+) VALUES (
+    'crm_bot',
+    'CRM Bot WhatsApp',
+    'herramienta',
+    'sistemas',
+    'Bot híbrido de WhatsApp: conversaciones, intenciones y control humano',
+    '/modulos/sistemas/crm_bot.php',
+    'crm-bot',
+    'fas fa-robot',
+    30,
+    1
+) ON DUPLICATE KEY UPDATE
+    titulo      = VALUES(titulo),
+    descripcion = VALUES(descripcion),
+    url_real    = VALUES(url_real),
+    icono       = VALUES(icono),
+    activo      = 1;
+
+-- 2. Acciones de la herramienta (tool_erp_id = 95)
+INSERT INTO acciones_tools_erp (tool_erp_id, nombre_accion, descripcion) VALUES
+(95, 'vista',             'Ver lista de conversaciones y historial del bot'),
+(95, 'responder',         'Enviar mensajes manuales a clientes desde el ERP'),
+(95, 'cambiar_estado',    'Cambiar conversación entre modo bot y modo humano'),
+(95, 'gestionar_intents', 'Crear, editar y eliminar intenciones del bot'),
+(95, 'resetear_sesion',   'Solicitar cambio de número QR del bot');
+
+-- 3. Permisos por cargo (IDs obtenidos dinámicamente con variables de sesión)
+SET @id_vista             = (SELECT id FROM acciones_tools_erp WHERE tool_erp_id = 95 AND nombre_accion = 'vista'             LIMIT 1);
+SET @id_responder         = (SELECT id FROM acciones_tools_erp WHERE tool_erp_id = 95 AND nombre_accion = 'responder'         LIMIT 1);
+SET @id_cambiar_estado    = (SELECT id FROM acciones_tools_erp WHERE tool_erp_id = 95 AND nombre_accion = 'cambiar_estado'    LIMIT 1);
+SET @id_gestionar_intents = (SELECT id FROM acciones_tools_erp WHERE tool_erp_id = 95 AND nombre_accion = 'gestionar_intents' LIMIT 1);
+SET @id_resetear_sesion   = (SELECT id FROM acciones_tools_erp WHERE tool_erp_id = 95 AND nombre_accion = 'resetear_sesion'   LIMIT 1);
+
+-- Líder TI (CodNivelesCargos = 15) y Gerencia (16)
+INSERT INTO permisos_tools_erp (accion_tool_erp_id, CodNivelesCargos, permiso) VALUES
+(@id_vista,             15, 'allow'),
+(@id_responder,         15, 'allow'),
+(@id_cambiar_estado,    15, 'allow'),
+(@id_gestionar_intents, 15, 'allow'),
+(@id_resetear_sesion,   15, 'allow'),
+(@id_vista,             16, 'allow'),
+(@id_responder,         16, 'allow'),
+(@id_cambiar_estado,    16, 'allow'),
+(@id_gestionar_intents, 16, 'allow'),
+(@id_resetear_sesion,   16, 'allow');
