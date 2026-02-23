@@ -65,6 +65,11 @@ $puedeReset = tienePermiso('crm_bot', 'resetear_sesion', $cargoOperario);
                     </div>
 
                     <div class="d-flex gap-2 flex-wrap">
+                        <?php if ($puedeResponder): ?>
+                            <button class="btn btn-sm btn-success" onclick="abrirModalNuevaConv()">
+                                <i class="bi bi-plus-circle me-1"></i> Nueva Conversación
+                            </button>
+                        <?php endif; ?>
                         <?php if ($puedeGestionarBot): ?>
                             <a href="crm_bot_intents.php" class="btn btn-sm btn-outline-secondary">
                                 <i class="bi bi-robot me-1"></i> Gestionar Intenciones
@@ -118,6 +123,53 @@ $puedeReset = tienePermiso('crm_bot', 'resetear_sesion', $cargoOperario);
 
                 </div><!-- /crm-layout -->
 
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Nueva Conversación -->
+    <div class="modal fade" id="modalNuevaConv" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header" style="background:#0E544C;color:#fff">
+                    <h6 class="modal-title mb-0"><i class="bi bi-plus-circle me-1"></i> Nueva Conversación</h6>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Instancia WhatsApp</label>
+                        <select id="ncInstancia" class="form-select">
+                            <option value="wsp-crmbot">🤖 CRM Bot</option>
+                            <option value="wsp-clientes">📣 Clientes</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Número de teléfono <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text">+</span>
+                            <input type="text" id="ncNumero" class="form-control"
+                                placeholder="50582345678 (incluye código país)" maxlength="20"
+                                oninput="buscarClientePorNumero(this.value)">
+                        </div>
+                        <small class="text-muted">Solo dígitos, ej: 50582345678</small>
+                    </div>
+                    <!-- Búsqueda clientesclub -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Buscar en clientesclub</label>
+                        <input type="text" id="ncBuscarCliente" class="form-control"
+                            placeholder="🔍 Nombre o celular del cliente..."
+                            oninput="buscarClientePorNombre(this.value)">
+                        <div id="ncResultadosClientes" class="mt-2" style="max-height:160px;overflow-y:auto;"></div>
+                    </div>
+                    <!-- Preview del contacto encontrado -->
+                    <div id="ncContactoPreview" class="d-none alert alert-success py-2 small"></div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button class="btn btn-success" onclick="iniciarConversacion()">
+                        <i class="bi bi-chat-dots me-1"></i> Iniciar Conversación
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -238,10 +290,17 @@ $puedeReset = tienePermiso('crm_bot', 'resetear_sesion', $cargoOperario);
     <!-- Pasar permisos al JS -->
     <script>
         const CRM_PERMISOS = {
-            responder:     <?= $puedeResponder ? 'true' : 'false' ?>,
+            responder: <?= $puedeResponder ? 'true' : 'false' ?>,
             cambiarEstado: <?= $puedeCambiarEstado ? 'true' : 'false' ?>,
-            reset:         <?= $puedeReset ? 'true' : 'false' ?>
+            reset: <?= $puedeReset ? 'true' : 'false' ?>
         };
+        // Sync filtroInstancia con modal al cambiar
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('filtroInstancia')?.addEventListener('change', function () {
+                const nc = document.getElementById('ncInstancia');
+                if (nc) nc.value = this.value;
+            });
+        });
     </script>
 
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>

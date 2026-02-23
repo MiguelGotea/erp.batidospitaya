@@ -342,3 +342,103 @@ function handleEnter(e) {
         enviarManual();
     }
 }
+
+// ══════════════════════════════════════════════════════════
+// NUEVA CONVERSACIÓN — Modal
+// ══════════════════════════════════════════════════════════
+function abrirModalNuevaConv() {
+    // Sincronizar instancia con el filtro activo
+    const instActual = document.getElementById('filtroInstancia')?.value || 'wsp-crmbot';
+    document.getElementById('ncInstancia').value = instActual;
+    document.getElementById('ncNumero').value = '';
+    document.getElementById('ncBuscarCliente').value = '';
+    document.getElementById('ncResultadosClientes').innerHTML = '';
+    document.getElementById('ncContactoPreview').classList.add('d-none');
+    new bootstrap.Modal(document.getElementById('modalNuevaConv')).show();
+    setTimeout(() => document.getElementById('ncNumero').focus(), 300);
+}
+
+// Busca en clientesclub por nombre (debounced)
+let _busqTimer = null;
+function buscarClientePorNombre(q) {
+    clearTimeout(_busqTimer);
+    const res = document.getElementById('ncResultadosClientes');
+    if (q.trim().length < 2) { res.innerHTML = ''; return; }
+    res.innerHTML = '<div class="text-muted small">Buscando...</div>';
+    _busqTimer = setTimeout(async () => {
+        const resp = await fetch(`ajax/crm_bot_buscar_cliente.php?q=${encodeURIComponent(q)}`);
+        const data = await resp.json();
+        res.innerHTML = '';
+        if (!data.success || !data.clientes?.length) {
+            res.innerHTML = '<div class="text-muted small px-1">Sin resultados en clientesclub</div>'; return;
+        }
+        data.clientes.forEach(c => {
+            const div = document.createElement('div');
+            div.className = 'py-1 px-2 border-bottom crm-cliente-item';
+            div.style.cssText = 'cursor:pointer;font-size:13px;border-radius:4px;';
+            div.onmouseover = () => div.style.background = '#e6f7f5';
+            div.onmouseout = () => div.style.background = '';
+            div.innerHTML = `<strong>${escHtml(c.nombre)} ${escHtml(c.apellido || '')}</strong>
+                <span class="text-muted ms-2">${c.celular}</span>`;
+            div.onclick = () => seleccionarCliente(c);
+            res.appendChild(div);
+        });
+    }, 400);
+}
+
+// Cuando el agente escribe directamente en el número, busca si hay coincidencia
+function buscarClientePorNumero(num) {
+    const numLimpio = num.replace(/\D/g, '');
+    const prev = document.getElementById('ncContactoPreview');
+    if (numLimpio.length < 7) { prev.classList.add('d-none'); return; }
+    // Simple búsqueda local: si ya está en resultados, ignorar
+    // (se puede ampliar a una búsqueda AJAX si se desea)
+    prev.classList.add('d-none');
+}
+
+function seleccionarCliente(c) {
+    const numLimpio = String(c.celular || '').replace(/\D/g, '');
+    document.getElementById('ncNumero').value = numLimpio;
+    document.getElementById('ncResultadosClientes').innerHTML = '';
+    document.getElementById('ncBuscarCliente').value = '';
+    document.getElementById('ncContactoPreview').className = 'alert alert-success py-2 small';
+    document.getElementById('ncContactoPreview').innerHTML =
+        `<i class="bi bi-person-check me-1"></i> <strong>${escHtml(c.nombre)} ${escHtml(c.apellido || '')}</strong> — ${numLimpio}`;
+}
+
+async function iniciarConversacion() {
+    const instancia = document.getElementById('ncInstancia').value;
+    const numero = document.getElementById('ncNumero').value.replace(/\D/g, '');
+    if (!numero || numero.length < 7) {
+        Swal.fire('Número inválido', 'Ingresa un número de teléfono válido (mínimo 7 dígitos).', 'warning');
+        return;
+    }
+
+    const resp = await fetch('ajax/crm_bot_iniciar_conversacion.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ instancia, numero_cliente: numero })
+    });
+    const data = await resp.json();
+
+    if (data.success) {
+        bootstrap.Modal.getInstance(document.getElementById('modalNuevaConv'))?.hide();
+        // Sincronizar filtro con instancia elegida
+        const filtroInst = document.getElementById('filtroInstancia');
+        if (filtroInst) filtroInst.value = instancia;
+
+        // Abrir conversación en chat
+        abrirConversacion(data.conversacion);
+        cargarConversaciones();
+
+        if (data.nueva) {
+            Swal.fire({
+                icon: 'success', title: 'Conversación iniciada',
+                text: `Nueva conversación con +${numero}. Modo humano activado.`,
+                timer: 3000, showConfirmButton: false
+            });
+        }
+    } else {
+        Swal.fire('Error', data.error || 'No se pudo iniciar la conversación', 'error');
+    }
+}
