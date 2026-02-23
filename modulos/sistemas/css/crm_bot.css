@@ -1,0 +1,275 @@
+/* ============================================================
+   crm_bot.css — CRM Bot WhatsApp ERP Tool
+   ============================================================ */
+
+:root {
+    --crm-principal: #51B8AC;
+    --crm-header-tabla: #0E544C;
+    --crm-bg: #f5f6fa;
+    --crm-panel-bg: #ffffff;
+    --crm-border: #e0e0e0;
+    --crm-msg-in: #f0f0f0;
+    --crm-msg-out-bot: #d4edda;
+    --crm-msg-out-agent: #cce5ff;
+    --crm-msg-out-campaign: #fff3cd;
+    --crm-humano-color: #dc3545;
+    --crm-bot-color: #51B8AC;
+}
+
+/* ── Layout principal tipo chat ── */
+.crm-layout {
+    display: flex;
+    height: calc(100vh - 120px);
+    min-height: 500px;
+    gap: 0;
+    border: 1px solid var(--crm-border);
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--crm-panel-bg);
+}
+
+/* ── Panel izquierdo: lista conversaciones ── */
+.crm-sidebar {
+    width: 320px;
+    min-width: 280px;
+    border-right: 1px solid var(--crm-border);
+    display: flex;
+    flex-direction: column;
+    background: #fafafa;
+}
+
+.crm-sidebar-header {
+    padding: 12px;
+    background: var(--crm-header-tabla);
+    color: #fff;
+}
+
+.crm-sidebar-header h6 { margin: 0; font-size: 14px; }
+
+.crm-sidebar-filters {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--crm-border);
+    background: #fff;
+}
+
+.crm-sidebar-filters input,
+.crm-sidebar-filters select {
+    font-size: 12px;
+    height: 30px;
+}
+
+.crm-conv-list {
+    flex: 1;
+    overflow-y: auto;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.crm-conv-item {
+    padding: 10px 12px;
+    border-bottom: 1px solid #f0f0f0;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.crm-conv-item:hover { background: #f0fafa; }
+.crm-conv-item.activo { background: #e6f7f5; border-left: 3px solid var(--crm-principal); }
+
+.crm-conv-numero {
+    font-weight: bold;
+    font-size: 13px;
+    color: #333;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.crm-conv-preview {
+    font-size: 11px;
+    color: #888;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 240px;
+    margin-top: 2px;
+}
+
+.crm-conv-time {
+    font-size: 10px;
+    color: #aaa;
+    white-space: nowrap;
+}
+
+.badge-bot    { background: var(--crm-bot-color); }
+.badge-humano { background: var(--crm-humano-color); }
+
+/* ── Panel derecho: chat ── */
+.crm-chat {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: #ece5dd url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23c5b8a8' fill-opacity='0.08'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+
+.crm-chat-header {
+    padding: 10px 16px;
+    background: var(--crm-header-tabla);
+    color: #fff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    min-height: 52px;
+}
+
+.crm-chat-header h6 { margin: 0; font-size: 13px; }
+
+.crm-mensajes {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+/* ── Burbujas de mensajes ── */
+.crm-burbuja {
+    max-width: 72%;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    line-height: 1.4;
+    position: relative;
+    word-break: break-word;
+}
+
+.crm-burbuja.in {
+    align-self: flex-start;
+    background: var(--crm-msg-in);
+    border-bottom-left-radius: 2px;
+}
+
+.crm-burbuja.out-bot {
+    align-self: flex-end;
+    background: var(--crm-msg-out-bot);
+    border-bottom-right-radius: 2px;
+}
+
+.crm-burbuja.out-agent {
+    align-self: flex-end;
+    background: var(--crm-msg-out-agent);
+    border-bottom-right-radius: 2px;
+}
+
+.crm-burbuja.out-campaign {
+    align-self: flex-end;
+    background: var(--crm-msg-out-campaign);
+    border-bottom-right-radius: 2px;
+}
+
+.crm-burbuja-meta {
+    font-size: 10px;
+    color: #999;
+    margin-top: 3px;
+    text-align: right;
+}
+
+.crm-burbuja-label {
+    font-size: 9px;
+    font-weight: bold;
+    text-transform: uppercase;
+    color: #777;
+    margin-bottom: 2px;
+}
+
+/* ── Input de respuesta ── */
+.crm-input-area {
+    padding: 10px 12px;
+    background: #f0f0f0;
+    border-top: 1px solid var(--crm-border);
+    display: flex;
+    gap: 8px;
+    align-items: flex-end;
+}
+
+.crm-input-area textarea {
+    flex: 1;
+    border-radius: 20px;
+    border: 1px solid #ccc;
+    padding: 8px 14px;
+    font-size: 13px;
+    resize: none;
+    min-height: 40px;
+    max-height: 120px;
+    font-family: 'Calibri', sans-serif;
+}
+
+.btn-enviar-crm {
+    background: var(--crm-principal);
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    font-size: 16px;
+}
+
+.btn-enviar-crm:hover { background: var(--crm-header-tabla); }
+
+/* ── Estado vacío ── */
+.crm-empty {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #bbb;
+    font-size: 16px;
+    gap: 12px;
+}
+
+.crm-empty i { font-size: 56px; color: #ddd; }
+
+/* ── Badge de estado VPS (igual que campanas) ── */
+.wsp-dot {
+    display: inline-block;
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    margin-right: 6px;
+    background: #ccc;
+}
+
+.wsp-dot.conectado     { background: #28a745; animation: pulsar 1.4s infinite; }
+.wsp-dot.qr_pendiente  { background: #ffc107; animation: pulsar 1s infinite; }
+.wsp-dot.desconectado  { background: #dc3545; }
+.wsp-dot.reset_pendiente { background: #6f42c1; }
+
+@keyframes pulsar {
+    0%,100% { box-shadow: 0 0 0 0 currentColor; }
+    50%      { box-shadow: 0 0 0 4px transparent; }
+}
+
+/* ── Loader de conversaciones ── */
+.crm-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    color: #aaa;
+    font-size: 13px;
+    gap: 8px;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+    .crm-layout { flex-direction: column; height: auto; }
+    .crm-sidebar { width: 100%; min-width: unset; border-right: none; border-bottom: 1px solid var(--crm-border); max-height: 250px; }
+    .crm-chat   { min-height: 400px; }
+    .crm-burbuja { max-width: 90%; }
+}
