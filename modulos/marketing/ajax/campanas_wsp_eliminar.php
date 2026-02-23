@@ -27,17 +27,26 @@ if (!$id) {
 }
 
 try {
+    $conn->beginTransaction();
+
+    // 1. Eliminar destinatarios asociados
+    $stmtDest = $conn->prepare("DELETE FROM wsp_destinatarios_ WHERE campana_id = :id");
+    $stmtDest->execute([':id' => $id]);
+
+    // 2. Eliminar la campaña (solo si está en estado borrador, cancelada, programada o fallida)
     $stmt = $conn->prepare("
         DELETE FROM wsp_campanas_
-        WHERE id = :id AND estado IN ('borrador', 'cancelada')
+        WHERE id = :id AND estado IN ('borrador', 'cancelada', 'programada', 'fallida')
     ");
     $stmt->execute([':id' => $id]);
 
     if ($stmt->rowCount() === 0) {
-        echo json_encode(['error' => 'No se puede eliminar una campaña en estado activo']);
+        $conn->rollBack();
+        echo json_encode(['error' => 'No se puede eliminar la campaña en su estado actual (o ya fue eliminada)']);
         exit;
     }
 
+    $conn->commit();
     echo json_encode(['success' => true]);
 
 } catch (Exception $e) {
