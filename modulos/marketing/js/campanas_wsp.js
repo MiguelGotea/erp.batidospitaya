@@ -20,7 +20,11 @@ document.addEventListener('DOMContentLoaded', () => {
 //  STATUS DEL VPS
 // ════════════════════════════════════════════
 
+// Bloquea el polling automático mientras hay un reset en curso
+let resetEnCurso = false;
+
 async function verificarStatusVPS() {
+    if (resetEnCurso) return; // no sobrescribir el badge de reset
     try {
         const resp = await fetch('ajax/campanas_wsp_get_status.php');
         const data = await resp.json();
@@ -38,7 +42,8 @@ function actualizarBadgeVPS(estado) {
     const textos = {
         conectado: '✅ WhatsApp Conectado',
         qr_pendiente: '📷 QR Pendiente — clic para escanear',
-        desconectado: '🔴 Servicio Desconectado'
+        desconectado: '🔴 Servicio Desconectado',
+        reset_pendiente: '🔄 Pendiente de cambio de número...'
     };
     texto.textContent = textos[estado] || '⏳ Verificando...';
 }

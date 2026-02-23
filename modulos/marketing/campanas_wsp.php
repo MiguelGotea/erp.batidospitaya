@@ -440,21 +440,31 @@ require_once '../../core/layout/header_universal.php';
 
                 Swal.fire({ title: 'Solicitando reset...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
-                $.post('ajax/campanas_wsp_reset_sesion.php', {}, function (resp) {
+                $.post('ajax/campanas_wsp_reset_sesion.php', {}, function(resp) {
                     if (resp.success) {
+                        // 1. Actualizar badge inmediatamente sin esperar al VPS
+                        resetEnCurso = true;
+                        actualizarBadgeVPS('reset_pendiente');
+
                         Swal.fire({
-                            icon: 'success',
-                            title: 'Reset solicitado',
-                            text: resp.mensaje,
-                            confirmButtonText: 'Entendido'
-                        }).then(() => {
-                            // Esperar ~15s y verificar el QR nuevo
-                            setTimeout(verificarQR, 15000);
+                            icon: 'info',
+                            title: 'Cambio de número en proceso',
+                            html: 'El servicio cerrará la sesión actual en los próximos 60 segundos.<br>' +
+                                  '<small class="text-muted">Prepara el teléfono nuevo para escanear el QR.</small>',
+                            timer: 5000,
+                            timerProgressBar: true
                         });
+
+                        // 2. Después de ~65s el VPS ya ejecutó el reset — verificar el QR nuevo
+                        setTimeout(() => {
+                            resetEnCurso = false;
+                            verificarQR();
+                        }, 65_000);
+
                     } else {
                         Swal.fire('Error', resp.error || 'No se pudo solicitar el reset', 'error');
                     }
-                }, 'json').fail(function () {
+                }, 'json').fail(function() {
                     Swal.fire('Error', 'No se pudo contactar el servidor', 'error');
                 });
             });

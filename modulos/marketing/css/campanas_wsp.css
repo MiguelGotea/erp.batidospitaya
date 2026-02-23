@@ -42,9 +42,18 @@
     background: #adb5bd;
     animation: pulseDot 2s infinite;
 }
-.wsp-dot.conectado   { background: var(--wsp-verde); }
-.wsp-dot.qr_pendiente { background: #ffc107; }
-.wsp-dot.desconectado { background: #dc3545; animation: none; }
+.wsp-dot.conectado      { background: var(--wsp-verde); }
+.wsp-dot.qr_pendiente   { background: #ffc107; }
+.wsp-dot.desconectado   { background: #dc3545; animation: none; }
+.wsp-dot.reset_pendiente {
+    background: #fd7e14;
+    animation: spinDot 1s linear infinite;
+}
+
+@keyframes spinDot {
+    from { transform: rotate(0deg) scale(1.15); }
+    to   { transform: rotate(360deg) scale(1.15); }
+}
 
 @keyframes pulseDot {
     0%, 100% { transform: scale(1); opacity: 1; }
