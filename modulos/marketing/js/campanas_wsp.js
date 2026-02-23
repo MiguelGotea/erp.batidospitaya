@@ -357,15 +357,16 @@ function agregarTodosVisibles() {
     if (items.length === 0) return;
 
     items.forEach(item => {
-        // Obtenemos los datos del atributo onclick para no duplicar lógica
-        // El onclick es: agregarCliente(id, 'nombre', 'tel', 'suc', 'memb')
-        // Al disparar el click(), se llama a agregarCliente con noRefrescar=false por defecto.
-        // Para optimizar, podríamos cambiar agregarCliente, pero lo más sencillo es 
-        // desactivar temporalmente el refresco o simplemente confiar en el control de concurrencia.
+        // Disparamos el click para cada uno. agregarCliente ya está optimizado para 
+        // no refrescar individualmente si le pasamos el flag, o podemos simplemente
+        // dejar que el debouncer/concurrencia lo maneje. 
+        // Pero para cumplir con el pedido de "limpiar inmediatamente":
         item.click();
     });
-    // Forzamos un solo refresco al final
-    _buscarClientes(true);
+
+    // Limpieza visual inmediata
+    document.getElementById('listaDisponibles').innerHTML = '<div class="text-center text-muted py-3 small">Sin resultados</div>';
+    document.getElementById('contDisponibles').textContent = 0;
 }
 
 function quitarCliente(id) {
