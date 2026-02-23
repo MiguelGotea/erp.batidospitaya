@@ -68,14 +68,11 @@ require_once '../../core/layout/header_universal.php';
 
                 <!-- ── Tabla de campañas ── -->
                 <div class="card border-0 shadow-sm">
-                    <div class="card-header wsp-card-header">
-                        <i class="bi bi-whatsapp me-2"></i> Campañas de Mensajería
-                    </div>
                     <div class="card-body p-0">
                         <div class="table-responsive">
                             <table class="table table-hover mb-0" id="tablaCampanas">
                                 <thead>
-                                    <tr>
+                                    <tr class="wsp-card-header">
                                         <th>Nombre</th>
                                         <th>Fecha Envío</th>
                                         <th class="text-center">Destinatarios</th>
