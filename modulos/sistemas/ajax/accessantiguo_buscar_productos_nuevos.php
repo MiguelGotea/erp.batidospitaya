@@ -55,10 +55,10 @@ try {
     // Fetch varieties for each result
     foreach ($resultados as &$res) {
         $stmtVar = $conn->prepare("
-            SELECT id, nombre, principal
+            SELECT id, nombre, es_principal
             FROM variedad_producto_presentacion
             WHERE id_presentacion_producto = :idp
-            ORDER BY principal DESC, nombre ASC
+            ORDER BY es_principal DESC, nombre ASC
         ");
         $stmtVar->execute([':idp' => $res['id']]);
         $res['variedades'] = $stmtVar->fetchAll(PDO::FETCH_ASSOC);

@@ -694,13 +694,13 @@ $puedeEditar = tienePermiso('diccionario_productos', 'edicion', $cargoOperario);
                         <select class="form-select form-select-sm mt-1 select-variedad" data-cod="${cod}">
                             <option value="0">Sin variedad específica</option>
                             ${variedades.map(v => `
-                                <option value="${v.id}" ${v.principal == 1 ? 'selected' : ''}>
-                                    ${esc(v.nombre)} ${v.principal == 1 ? '(Principal)' : ''}
+                                <option value="${v.id}" ${v.es_principal == 1 ? 'selected' : ''}>
+                                    ${esc(v.nombre)} ${v.es_principal == 1 ? '(Principal)' : ''}
                                 </option>
                             `).join('')}
                         </select>
                     `;
-                    const principal = variedades.find(v => v.principal == 1);
+                    const principal = variedades.find(v => v.es_principal == 1);
                     if (principal) mapaSeleccionados[cod].id_variedad = principal.id;
                 } else {
                     varContainer.innerHTML = '';
