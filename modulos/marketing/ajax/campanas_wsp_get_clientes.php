@@ -107,7 +107,6 @@ try {
           $condSucursal
           $condUltimaCompra
         ORDER BY cc.nombre ASC
-        LIMIT 300
     ";
 
     $stmt = $conn->prepare($sql);

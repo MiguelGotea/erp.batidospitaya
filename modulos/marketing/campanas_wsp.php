@@ -286,6 +286,10 @@ require_once '../../core/layout/header_universal.php';
                                             <th>Destinatarios:</th>
                                             <td id="resDestinatarios">0</td>
                                         </tr>
+                                        <tr id="resGruposRow" class="d-none">
+                                            <th>Grupos:</th>
+                                            <td id="resGrupos">—</td>
+                                        </tr>
                                         <tr>
                                             <th>Tiene imagen:</th>
                                             <td id="resImagen">No</td>
@@ -296,9 +300,16 @@ require_once '../../core/layout/header_universal.php';
                                         </tr>
                                     </table>
 
+                                    <div id="alertaGrupos" class="alert alert-info py-2 small d-none">
+                                        <i class="bi bi-layers me-1"></i>
+                                        <strong>Campaña dividida en grupos:</strong>
+                                        Se crearán <strong id="alertaNumGrupos">—</strong> sub-campañas de máx. 100 destinatarios,
+                                        programadas con <strong>2 horas</strong> de diferencia entre cada grupo para evitar baneo.
+                                    </div>
+
                                     <div class="alert alert-warning py-2 small">
                                         <i class="bi bi-exclamation-triangle me-1"></i>
-                                        <strong>Anti-ban:</strong> Delays de 8–25s. Máximo 150/día.
+                                        <strong>Anti-ban:</strong> Delays de 8–25s. Máx. 100/día por grupo.
                                         <br><strong>Horario:</strong> 7:00 AM - 10:00 PM.
                                     </div>
                                 </div>
