@@ -37,12 +37,16 @@ try {
         $puertos = ['wsp-clientes' => 3001, 'wsp-crmbot' => 3003];
         $puerto = $puertos[$instancia] ?? null;
         if ($puerto) {
-            $ctx = stream_context_create(['http' => ['timeout' => 3]]);
+            $ctx = stream_context_create(['http' => ['timeout' => 4]]);
             $raw = @file_get_contents("http://198.211.97.243:{$puerto}/qr", false, $ctx);
             if ($raw) {
                 $vpsData = json_decode($raw, true);
                 $qr = $vpsData['qr'] ?? null;
             }
+        }
+        // Fallback: usar el QR de la base de datos si el live falló
+        if (!$qr && !empty($sesion['qr_base64'])) {
+            $qr = $sesion['qr_base64'];
         }
     }
 
