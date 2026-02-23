@@ -401,8 +401,9 @@ require_once '../../core/layout/header_universal.php';
                     </div>
                     <div class="alert alert-info py-2 px-3 small">
                         <strong><i class="fas fa-info-circle me-1"></i> Horario de envío:</strong>
-                        Los mensajes se envían entre 8:00 AM y 8:00 PM (hora Nicaragua). Las campañas programadas fuera
-                        de ese horario esperarán hasta las 8am.
+                        Los mensajes se envían habitualmente entre 8:00 AM y 8:00 PM. <br>
+                        <span class="badge bg-warning text-dark">MODO PRUEBA:</span> El horario está liberado para
+                        pruebas 24/7.
                     </div>
                 </div>
             </div>
@@ -440,7 +441,7 @@ require_once '../../core/layout/header_universal.php';
 
                 Swal.fire({ title: 'Solicitando reset...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
-                $.post('ajax/campanas_wsp_reset_sesion.php', {}, function(resp) {
+                $.post('ajax/campanas_wsp_reset_sesion.php', {}, function (resp) {
                     if (resp.success) {
                         // 1. Actualizar badge inmediatamente sin esperar al VPS
                         resetEnCurso = true;
@@ -450,7 +451,7 @@ require_once '../../core/layout/header_universal.php';
                             icon: 'info',
                             title: 'Cambio de número en proceso',
                             html: 'El servicio cerrará la sesión actual en los próximos 60 segundos.<br>' +
-                                  '<small class="text-muted">Prepara el teléfono nuevo para escanear el QR.</small>',
+                                '<small class="text-muted">Prepara el teléfono nuevo para escanear el QR.</small>',
                             timer: 5000,
                             timerProgressBar: true
                         });
@@ -464,7 +465,7 @@ require_once '../../core/layout/header_universal.php';
                     } else {
                         Swal.fire('Error', resp.error || 'No se pudo solicitar el reset', 'error');
                     }
-                }, 'json').fail(function() {
+                }, 'json').fail(function () {
                     Swal.fire('Error', 'No se pudo contactar el servidor', 'error');
                 });
             });
