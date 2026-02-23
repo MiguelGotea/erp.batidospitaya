@@ -1,17 +1,15 @@
 <?php
 /**
  * ajax/crm_bot_get_mensajes.php
- * Proxy ERP → API para obtener mensajes de una conversación
+ * Consulta la BD directamente
  */
 require_once '../../../core/auth/auth.php';
 require_once '../../../core/permissions/permissions.php';
+require_once '../../../core/database/conexion.php';
 
 header('Content-Type: application/json; charset=utf-8');
-
 $usuario = obtenerUsuarioActual();
-$cargoOperario = $usuario['CodNivelesCargos'];
-
-if (!tienePermiso('crm_bot', 'vista', $cargoOperario)) {
+if (!tienePermiso('crm_bot', 'vista', $usuario['CodNivelesCargos'])) {
     http_response_code(403);
     echo json_encode(['success' => false, 'error' => 'Sin permiso']);
     exit;
@@ -19,16 +17,50 @@ if (!tienePermiso('crm_bot', 'vista', $cargoOperario)) {
 
 $convId = (int) ($_GET['conversation_id'] ?? 0);
 $page = max(1, (int) ($_GET['page'] ?? 1));
-$per_page = (int) ($_GET['per_page'] ?? 50);
+$perPage = min(200, max(10, (int) ($_GET['per_page'] ?? 100)));
+$offset = ($page - 1) * $perPage;
 
 if (!$convId) {
     echo json_encode(['success' => false, 'error' => 'conversation_id requerido']);
     exit;
 }
 
-$token = 'c5b155ba8f6877a2eefca0183ab18e37fe9a6accde340cf5c88af724822cbf50';
-$params = http_build_query(['conversation_id' => $convId, 'page' => $page, 'per_page' => $per_page]);
-$ctx = stream_context_create(['http' => ['header' => "X-WSP-Token: {$token}\r\n", 'timeout' => 10]]);
+try {
+    // Datos de la conversación
+    $stmtC = $conn->prepare("
+        SELECT id, instancia, numero_cliente, numero_remitente, status, last_intent,
+               DATE_FORMAT(last_interaction_at,'%Y-%m-%d %H:%i:%s') AS last_interaction_at,
+               DATE_FORMAT(created_at,'%Y-%m-%d %H:%i:%s') AS created_at
+        FROM conversations WHERE id = :id LIMIT 1
+    ");
+    $stmtC->execute([':id' => $convId]);
+    $conv = $stmtC->fetch();
+    if (!$conv) {
+        echo json_encode(['success' => false, 'error' => 'Conversación no encontrada']);
+        exit;
+    }
 
-$raw = @file_get_contents("https://api.batidospitaya.com/api/crm/get_mensajes.php?{$params}", false, $ctx);
-echo $raw ?: json_encode(['success' => false, 'error' => 'No se pudo conectar a la API']);
+    // Mensajes
+    $stmt = $conn->prepare("
+        SELECT id, conversation_id, direction, sender_type, message_text, message_type, enviado_ok,
+               DATE_FORMAT(created_at,'%Y-%m-%d %H:%i:%s') AS created_at
+        FROM messages
+        WHERE conversation_id = :cid
+        ORDER BY id ASC
+        LIMIT :lim OFFSET :off
+    ");
+    $stmt->bindValue(':cid', $convId, PDO::PARAM_INT);
+    $stmt->bindValue(':lim', $perPage, PDO::PARAM_INT);
+    $stmt->bindValue(':off', $offset, PDO::PARAM_INT);
+    $stmt->execute();
+
+    echo json_encode([
+        'success' => true,
+        'conversacion' => $conv,
+        'mensajes' => $stmt->fetchAll(),
+        'page' => $page,
+        'per_page' => $perPage
+    ]);
+} catch (Exception $e) {
+    echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+}

@@ -1,16 +1,16 @@
 <?php
 /**
  * ajax/crm_bot_cambiar_estado.php
- * Cambia estado de conversación bot ↔ humano
+ * Cambia status de una conversación directamente en BD
+ * POST — body: { conversation_id, nuevo_status }
  */
 require_once '../../../core/auth/auth.php';
 require_once '../../../core/permissions/permissions.php';
+require_once '../../../core/database/conexion.php';
 
 header('Content-Type: application/json; charset=utf-8');
 $usuario = obtenerUsuarioActual();
-$cargo = $usuario['CodNivelesCargos'];
-
-if (!tienePermiso('crm_bot', 'cambiar_estado', $cargo)) {
+if (!tienePermiso('crm_bot', 'cambiar_estado', $usuario['CodNivelesCargos'])) {
     http_response_code(403);
     echo json_encode(['success' => false, 'error' => 'Sin permiso']);
     exit;
@@ -25,15 +25,14 @@ if (!$convId || !in_array($nuevo, ['bot', 'humano'])) {
     exit;
 }
 
-$token = 'c5b155ba8f6877a2eefca0183ab18e37fe9a6accde340cf5c88af724822cbf50';
-$ctx = stream_context_create([
-    'http' => [
-        'method' => 'POST',
-        'header' => "X-WSP-Token: {$token}\r\nContent-Type: application/json\r\n",
-        'content' => json_encode(['conversation_id' => $convId, 'nuevo_status' => $nuevo]),
-        'timeout' => 10
-    ]
-]);
-
-$raw = @file_get_contents('https://api.batidospitaya.com/api/crm/cambiar_estado.php', false, $ctx);
-echo $raw ?: json_encode(['success' => false, 'error' => 'No se pudo conectar a la API']);
+try {
+    $stmt = $conn->prepare("
+        UPDATE conversations
+        SET status = :s, updated_at = CONVERT_TZ(NOW(),'+00:00','-06:00')
+        WHERE id = :id
+    ");
+    $stmt->execute([':s' => $nuevo, ':id' => $convId]);
+    echo json_encode(['success' => true, 'nuevo_status' => $nuevo]);
+} catch (Exception $e) {
+    echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+}
