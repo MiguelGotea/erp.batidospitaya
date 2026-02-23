@@ -12,7 +12,86 @@ body {
     min-height: 100vh;
 }
 
+/* ===================================================
+   Navegación de Semana
+   =================================================== */
+
+.semana-nav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 12px 16px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    margin-bottom: 12px;
+}
+
+.semana-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 200px;
+    justify-content: center;
+}
+
+.semana-label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #888;
+    font-weight: 600;
+}
+
+.semana-rango {
+    font-size: 16px;
+    font-weight: 700;
+    color: #0E544C;
+}
+
+.badge-actual {
+    background-color: #0E544C;
+    color: white;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+.btn-semana {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: 2px solid #0E544C;
+    background: white;
+    color: #0E544C;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+
+.btn-semana:hover:not(:disabled) {
+    background-color: #0E544C;
+    color: white;
+}
+
+.btn-semana:disabled,
+.btn-semana.disabled {
+    border-color: #ccc;
+    color: #ccc;
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
 /* Tabs de Productos */
+
 .productos-tabs {
     background: white;
     border-radius: 8px;

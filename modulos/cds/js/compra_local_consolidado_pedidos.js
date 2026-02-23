@@ -6,6 +6,7 @@ let consolidado = [];
 let productos = [];
 let currentDates = [];
 let productoActivo = null;
+let semanaOffset = 0; // 0 = semana actual, -1 = semana pasada, etc.
 
 // Días de la semana para el encabezado (Perspectiva de Pedido)
 const diasConfig = [
@@ -17,6 +18,33 @@ const diasConfig = [
     { num: 6, entrega: 7, nombre: 'Sáb', info: 'Se Despacha Domingo' },
     { num: 7, entrega: 1, nombre: 'Dom', info: 'Se Despacha Lunes' }
 ];
+
+// Obtener el lunes de la semana actual
+function getLunesSemanaActual() {
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    const diaHoy = hoy.getDay();
+    const diffLunes = diaHoy === 0 ? -6 : 1 - diaHoy;
+    const lunes = new Date(hoy);
+    lunes.setDate(hoy.getDate() + diffLunes);
+    return lunes;
+}
+
+// Formatear fecha como DD/MMM
+function formatFechaCorta(fecha) {
+    const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
+        'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+    return `${fecha.getDate()}/${meses[fecha.getMonth()]}`;
+}
+
+// Cambiar semana
+function cambiarSemana(delta) {
+    semanaOffset += delta;
+    // No permitir avanzar más allá de la semana actual
+    if (semanaOffset > 0) semanaOffset = 0;
+    productoActivo = null; // Resetear tab activo al cambiar semana
+    cargarConsolidado();
+}
 
 // Inicializar
 $(document).ready(function () {
@@ -41,24 +69,44 @@ function getDiaHoy() {
 
 // Cargar datos consolidados
 function cargarConsolidado() {
-    const hoy = new Date();
-    const diaHoy = hoy.getDay();
-    const diffLunes = diaHoy === 0 ? -6 : 1 - diaHoy;
+    // Calcular el lunes de la semana activa según el offset
+    const lunesSemanaActual = getLunesSemanaActual();
+    const lunes = new Date(lunesSemanaActual);
+    lunes.setDate(lunesSemanaActual.getDate() + semanaOffset * 7);
 
-    // Fecha inicio: Lunes de esta semana + 1 día (Llega Martes)
-    const lunes = new Date(hoy);
-    lunes.setDate(hoy.getDate() + diffLunes);
-    lunes.setHours(0, 0, 0, 0);
+    // El domingo de esa semana
+    const domingo = new Date(lunes);
+    domingo.setDate(lunes.getDate() + 6);
 
-    // El rango de FECHA_ENTREGA para los 7 pedidos de esta semana
-    // Desde el pedido del Lunes (llega Mar) hasta el del Domingo (llega Lun siguiente)
+    // Rango de FECHA_ENTREGA: Martes de esa semana → Lunes de la siguiente
     const fechaInicio = new Date(lunes);
     fechaInicio.setDate(lunes.getDate() + 1); // Martes
 
     const fechaFin = new Date(lunes);
     fechaFin.setDate(lunes.getDate() + 7); // Lunes siguiente
 
+    // Texto del rango de la semana (Lun DD/MMM – Dom DD/MMM)
+    const rangoTexto = `${formatFechaCorta(lunes)} – ${formatFechaCorta(domingo)}`;
+    const esSemanaActual = semanaOffset === 0;
+
+    // Renderizar el encabezado de navegación de semana + loader
     $('#consolidado-container').html(`
+        <div class="semana-nav">
+            <button class="btn-semana prev" onclick="cambiarSemana(-1)" title="Semana anterior">
+                <i class="bi bi-chevron-left"></i>
+            </button>
+            <div class="semana-info">
+                <span class="semana-label">Semana</span>
+                <span class="semana-rango">${rangoTexto}</span>
+                ${esSemanaActual ? '<span class="badge-actual">Actual</span>' : ''}
+            </div>
+            <button class="btn-semana next ${esSemanaActual ? 'disabled' : ''}"
+                    onclick="${esSemanaActual ? 'void(0)' : 'cambiarSemana(1)'}"
+                    title="Semana siguiente"
+                    ${esSemanaActual ? 'disabled' : ''}>
+                <i class="bi bi-chevron-right"></i>
+            </button>
+        </div>
         <div class="loader-container">
             <div class="loader"></div>
         </div>
@@ -76,7 +124,7 @@ function cargarConsolidado() {
             if (response.success) {
                 consolidado = response.consolidado;
                 procesarDatos();
-                renderizarTabs();
+                renderizarTabs(rangoTexto, esSemanaActual);
             } else {
                 mostrarError('Error al cargar datos: ' + response.message);
             }
@@ -125,9 +173,29 @@ function procesarDatos() {
 }
 
 // Renderizar tabs de productos
-function renderizarTabs() {
+function renderizarTabs(rangoTexto, esSemanaActual) {
+    const navHtml = `
+        <div class="semana-nav">
+            <button class="btn-semana prev" onclick="cambiarSemana(-1)" title="Semana anterior">
+                <i class="bi bi-chevron-left"></i>
+            </button>
+            <div class="semana-info">
+                <span class="semana-label">Semana</span>
+                <span class="semana-rango">${rangoTexto}</span>
+                ${esSemanaActual ? '<span class="badge-actual">Actual</span>' : ''}
+            </div>
+            <button class="btn-semana next ${esSemanaActual ? 'disabled' : ''}"
+                    onclick="${esSemanaActual ? 'void(0)' : 'cambiarSemana(1)'}"
+                    title="Semana siguiente"
+                    ${esSemanaActual ? 'disabled' : ''}>
+                <i class="bi bi-chevron-right"></i>
+            </button>
+        </div>
+    `;
+
     if (productos.length === 0) {
         $('#consolidado-container').html(`
+            ${navHtml}
             <div class="no-data-message">
                 <i class="bi bi-inbox"></i>
                 <p>No hay productos con pedidos registrados</p>
@@ -136,14 +204,14 @@ function renderizarTabs() {
         return;
     }
 
-    let html = `
+    let tabsHtml = `
         <div class="productos-tabs">
             <ul class="nav nav-tabs" role="tablist">
     `;
 
     productos.forEach((producto, index) => {
         const isActive = producto.id === productoActivo;
-        html += `
+        tabsHtml += `
             <li class="nav-item" role="presentation">
                 <button class="nav-link ${isActive ? 'active' : ''}" 
                         id="tab-${producto.id}" 
@@ -158,14 +226,14 @@ function renderizarTabs() {
         `;
     });
 
-    html += `
+    tabsHtml += `
             </ul>
             <div class="tab-content">
     `;
 
     productos.forEach((producto, index) => {
         const isActive = producto.id === productoActivo;
-        html += `
+        tabsHtml += `
             <div class="tab-pane fade ${isActive ? 'show active' : ''}" 
                  id="content-${producto.id}" 
                  role="tabpanel">
@@ -174,12 +242,12 @@ function renderizarTabs() {
         `;
     });
 
-    html += `
+    tabsHtml += `
             </div>
         </div>
     `;
 
-    $('#consolidado-container').html(html);
+    $('#consolidado-container').html(navHtml + tabsHtml);
 }
 
 // Cambiar producto activo
