@@ -331,3 +331,24 @@
 .badge-cancelada {
     background: #adb5bd;
 }
+
+/* ── Botones de acción en tabla ── */
+.btn-accion {
+    border: none;
+    background: transparent;
+    padding: 5px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 1rem;
+}
+
+.btn-eliminar {
+    color: #dc3545;
+}
+
+.btn-eliminar:hover {
+    background-color: #fee2e2;
+    color: #b91c1c;
+    transform: scale(1.1);
+}

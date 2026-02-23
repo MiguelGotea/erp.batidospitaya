@@ -122,7 +122,7 @@ async function cargarCampanas(pagina = 1, mostrarLoader = true) {
 
             const acciones = PUEDE_ELIMINAR && ['borrador', 'cancelada', 'programada', 'fallida'].includes(c.estado)
                 ? `<button class="btn-accion btn-eliminar" onclick="eliminarCampana(${c.id})" title="Eliminar">
-                       <i class="bi bi-trash"></i>
+                       <i class="bi bi-trash3-fill"></i>
                    </button>` : '';
 
             return `<tr>
