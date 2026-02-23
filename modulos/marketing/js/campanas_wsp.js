@@ -303,18 +303,18 @@ async function _buscarClientes() {
         const resp = await fetch(`ajax/campanas_wsp_get_clientes.php?${params}`);
         const data = await resp.json();
 
-        document.getElementById('contDisponibles').textContent = data.clientes?.length || 0;
-
         if (!data.clientes || data.clientes.length === 0) {
+            document.getElementById('contDisponibles').textContent = 0;
             lista.innerHTML = '<div class="text-center text-muted py-3 small">Sin resultados</div>';
             return;
         }
 
-        lista.innerHTML = data.clientes.map(c => {
-            const yaSeleccionado = clientesSeleccionados.some(s => s.id === c.id);
-            if (yaSeleccionado) return '';
+        const items = data.clientes.filter(c => !clientesSeleccionados.some(s => s.id === c.id));
+        document.getElementById('contDisponibles').textContent = items.length;
+
+        lista.innerHTML = items.map(c => {
             const etiqueta = c.membresia
-                ? `<span class="wsp-membresia">#${escHtml(c.membresia)}</span> ${escHtml(c.nombre)}`
+                ? `<span class="wsp-membresia">${escHtml(c.membresia)}</span> ${escHtml(c.nombre)}`
                 : escHtml(c.nombre);
             return `<div class="wsp-cliente-item" onclick="agregarCliente(${c.id}, '${escHtml(c.nombre).replace(/'/g, "\\'")}', '${c.telefono}', '${escHtml(c.sucursal || '').replace(/'/g, "\\'")}', '${escHtml(String(c.membresia || '')).replace(/'/g, "\\'")}')">
                 <div>
@@ -366,7 +366,7 @@ function renderListaSeleccionados() {
     }
     lista.innerHTML = clientesSeleccionados.map(c => {
         const etiqueta = c.membresia
-            ? `<span class="wsp-membresia">#${escHtml(c.membresia)}</span> ${escHtml(c.nombre)}`
+            ? `<span class="wsp-membresia">${escHtml(c.membresia)}</span> ${escHtml(c.nombre)}`
             : escHtml(c.nombre);
         return `<div class="wsp-cliente-item">
             <div>
