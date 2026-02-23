@@ -52,7 +52,7 @@ CREATE TABLE IF NOT EXISTS wsp_logs_ (
 -- Tabla 4: Estado del servicio VPS (siempre 1 fila)
 CREATE TABLE IF NOT EXISTS wsp_sesion_vps_ (
     id          INT AUTO_INCREMENT PRIMARY KEY,
-    estado      ENUM('desconectado','qr_pendiente','conectado') DEFAULT 'desconectado',
+    estado      ENUM('desconectado','qr_pendiente','conectado','inicializando','error') DEFAULT 'desconectado',
     qr_base64   MEDIUMTEXT  NULL,
     ultimo_ping DATETIME    NULL,
     ip_vps      VARCHAR(50) NULL
