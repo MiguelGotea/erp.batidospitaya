@@ -303,8 +303,10 @@ require_once '../../core/layout/header_universal.php';
                                     <div id="alertaGrupos" class="alert alert-info py-2 small d-none">
                                         <i class="bi bi-layers me-1"></i>
                                         <strong>Campaña dividida en grupos:</strong>
-                                        Se crearán <strong id="alertaNumGrupos">—</strong> sub-campañas de máx. 100 destinatarios,
-                                        programadas con <strong>2 horas</strong> de diferencia entre cada grupo para evitar baneo.
+                                        Se crearán <strong id="alertaNumGrupos">—</strong> sub-campañas de máx. 100
+                                        destinatarios,
+                                        programadas con <strong>2 horas</strong> de diferencia entre cada grupo para
+                                        evitar baneo.
                                     </div>
 
                                     <div class="alert alert-warning py-2 small">
@@ -390,8 +392,11 @@ require_once '../../core/layout/header_universal.php';
                                         <i class="bi bi-shield-exclamation me-2"></i> Anti-Ban
                                     </h6>
                                     <p class="small text-muted mb-0">
-                                        El sistema envía con delays de 8–25 segundos entre mensajes y un máximo de 150
-                                        mensajes por día para evitar bloqueos de WhatsApp.
+                                        El sistema envía con delays de 8–25 segundos entre mensajes. Si la campaña es
+                                        masiva,
+                                        se divide automáticamente en grupos de 100 enviados cada 2 horas, limitando a
+                                        300 mensajes/día
+                                        para una protección máxima contra baneos.
                                     </p>
                                 </div>
                             </div>

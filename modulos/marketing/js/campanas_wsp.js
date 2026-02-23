@@ -386,6 +386,7 @@ function renderListaSeleccionados() {
 
 const GRUPO_SIZE = 100;  // destinatarios por sub-campaña
 const GRUPO_HORAS = 2;    // horas entre cada grupo
+const GRUPOS_POR_DIA = 3;    // grupos por día para evitar baneo (300 msgs/día)
 
 function actualizarResumen() {
     document.getElementById('resNombre').textContent = document.getElementById('campNombre').value;
@@ -395,11 +396,27 @@ function actualizarResumen() {
     // Info de grupos
     const numGrupos = Math.ceil(clientesSeleccionados.length / GRUPO_SIZE);
     const necesitaGrupos = clientesSeleccionados.length > GRUPO_SIZE;
+    const numDias = Math.ceil(numGrupos / GRUPOS_POR_DIA);
+
     document.getElementById('resGruposRow').classList.toggle('d-none', !necesitaGrupos);
     document.getElementById('alertaGrupos').classList.toggle('d-none', !necesitaGrupos);
+
     if (necesitaGrupos) {
-        document.getElementById('resGrupos').textContent = `${numGrupos} grupos de máx. ${GRUPO_SIZE} c/u`;
+        let textoGrupos = `${numGrupos} grupos de máx. ${GRUPO_SIZE} c/u`;
+        if (numDias > 1) {
+            textoGrupos += ` (distribuidos en ${numDias} días)`;
+        }
+        document.getElementById('resGrupos').textContent = textoGrupos;
         document.getElementById('alertaNumGrupos').textContent = numGrupos;
+
+        const alertaText = document.getElementById('alertaGrupos');
+        alertaText.innerHTML = `
+            <i class="bi bi-layers me-1"></i>
+            <strong>Campaña dividida en grupos:</strong>
+            Se crearán <strong>${numGrupos}</strong> sub-campañas programadas con <strong>${GRUPO_HORAS} horas</strong> de diferencia.
+            <br><i class="bi bi-calendar-event me-1"></i> <strong>Duración estimada:</strong> 
+            La distribución tomará <strong>${numDias} días</strong> (máx. ${GRUPOS_POR_DIA * GRUPO_SIZE} mensajes/día).
+        `;
     }
 
     // Fecha mínima = ahora + 5 min
@@ -439,9 +456,14 @@ async function guardarCampana() {
             const esSolo = totalGrupos === 1;
             const nomGrupo = esSolo ? nombre : `${nombre} - Grupo ${g + 1}`;
 
-            // Fecha escalonada: primera a la hora elegida, cada grupo +2h
+            // Distribución multi-día: 3 grupos por día, cada uno con 2h de diferencia
+            const diaOffset = Math.floor(g / GRUPOS_POR_DIA);
+            const grupoEnDia = g % GRUPOS_POR_DIA;
+
             const fechaGrupo = new Date(fechaBase);
-            fechaGrupo.setHours(fechaGrupo.getHours() + (g * GRUPO_HORAS));
+            fechaGrupo.setDate(fechaGrupo.getDate() + diaOffset);
+            fechaGrupo.setHours(fechaGrupo.getHours() + (grupoEnDia * GRUPO_HORAS));
+
             const fechaStr = fechaGrupo.toISOString().slice(0, 16).replace('T', ' ');
 
             btnGuardar.innerHTML = `<span class="spinner-border spinner-border-sm me-1"></span> Guardando grupo ${g + 1}/${totalGrupos}...`;
