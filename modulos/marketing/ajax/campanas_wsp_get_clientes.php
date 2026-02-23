@@ -76,8 +76,8 @@ try {
                 GROUP BY CodCliente
             ) v ON v.CodCliente = cc.membresia
         ";
-        $condUltimaCompra = "AND v.ultima_compra >= CURDATE() - INTERVAL :dias DAY";
-        $params[':dias'] = $ultimaCompra;
+        $condUltimaCompra = "AND v.ultima_compra >= CURDATE() - INTERVAL {$ultimaCompra} DAY";
+
     } elseif ($ultimaCompra === -1) {
         // Clientes sin ninguna compra registrada
         $joinVentas = "

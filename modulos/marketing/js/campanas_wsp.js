@@ -275,7 +275,7 @@ function previsualizarImagen(input) {
 
 async function cargarSucursalesDisponibles() {
     try {
-        const resp = await fetch('ajax/campanas_wsp_get_clientes.php?accion=sucursales');
+        const resp = await fetch('/modulos/marketing/ajax/campanas_wsp_get_clientes.php?accion=sucursales');
         const data = await resp.json();
         const sel = document.getElementById('filtroSucursal');
         sel.innerHTML = '<option value="">— Todas —</option>' +
@@ -300,7 +300,7 @@ async function _buscarClientes() {
 
     try {
         const params = new URLSearchParams({ accion: 'buscar', sucursal, q: busqueda, ultima_compra: ultimaCompra });
-        const resp = await fetch(`ajax/campanas_wsp_get_clientes.php?${params}`);
+        const resp = await fetch(`/modulos/marketing/ajax/campanas_wsp_get_clientes.php?${params}`);
         const data = await resp.json();
 
         if (!data.clientes || data.clientes.length === 0) {
