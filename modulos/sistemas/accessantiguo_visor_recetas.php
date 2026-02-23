@@ -680,8 +680,8 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                         variedadesHTML = `
                             <select class="form-select form-select-sm mt-1" style="font-size: .75rem; padding: 2px 5px; height: auto;">
                                 ${np.variedades.map(v => `
-                                    <option value="${v.id}" ${v.principal == 1 ? 'selected' : ''}>
-                                        ${esc(v.nombre)} ${v.principal == 1 ? '(Principal)' : ''}
+                                    <option value="${v.id}" ${v.es_principal == 1 ? 'selected' : ''}>
+                                        ${esc(v.nombre)} ${v.es_principal == 1 ? '(Principal)' : ''}
                                     </option>
                                 `).join('')}
                             </select>
