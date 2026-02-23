@@ -47,8 +47,9 @@ try {
     if ($qRaw === '') {
         $condBusqueda = '1=1';
     } elseif ($esSoloNumero) {
-        $condBusqueda = 'cc.membresia = :membresia';
-        $params[':membresia'] = $qRaw;
+        $q = '%' . $qRaw . '%';
+        $condBusqueda = 'cc.membresia LIKE :membresia';
+        $params[':membresia'] = $q;
     } else {
         $q = '%' . $qRaw . '%';
         $condBusqueda = "(CONCAT(COALESCE(cc.nombre,''), ' ', COALESCE(cc.apellido,'')) LIKE :q1 OR cc.celular LIKE :q2)";
@@ -106,7 +107,7 @@ try {
           $condSucursal
           $condUltimaCompra
         ORDER BY cc.nombre ASC
-        LIMIT 100
+        LIMIT 300
     ";
 
     $stmt = $conn->prepare($sql);
