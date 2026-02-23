@@ -69,7 +69,7 @@ try {
                     'method' => 'POST',
                     'header' => "Content-Type: application/json\r\nX-WSP-Token: {$token}\r\n",
                     'content' => $payload,
-                    'timeout' => 5
+                    'timeout' => 8
                 ]
             ]);
             $resp = @file_get_contents("http://198.211.97.243:{$puerto}/send", false, $ctx);
