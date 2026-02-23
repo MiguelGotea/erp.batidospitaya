@@ -25,6 +25,7 @@ try {
     }
 
     $q = trim($_GET['q'] ?? '');
+    file_put_contents('debug_search.txt', "Query: $q\n", FILE_APPEND);
 
     if (strlen($q) < 2) {
         echo json_encode(['success' => true, 'data' => []]);

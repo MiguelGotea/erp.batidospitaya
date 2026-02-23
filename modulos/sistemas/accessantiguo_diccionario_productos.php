@@ -642,7 +642,10 @@ $puedeEditar = tienePermiso('diccionario_productos', 'edicion', $cargoOperario);
                             return;
                         }
                         list.innerHTML = res.data.map(p => {
-                            const varsAttr = btoa(JSON.stringify(p.variedades || []));
+                            // Safe UTF-8 encoding for btoa
+                            const jsonStr = JSON.stringify(p.variedades || []);
+                            const varsAttr = btoa(unescape(encodeURIComponent(jsonStr)));
+
                             return `<div class="autocomplete-item"
                                  data-id="${p.id}" data-sku="${esc(p.SKU)}" data-nom="${esc(p.Nombre)}" data-vars="${varsAttr}">
                                 <span class="sku">${esc(p.SKU)}</span>
@@ -650,6 +653,11 @@ $puedeEditar = tienePermiso('diccionario_productos', 'edicion', $cargoOperario);
                                 <div class="extra">${[p.unidad, p.cantidad ? p.cantidad + ' u.' : ''].filter(Boolean).join(' | ')}</div>
                             </div>`;
                         }).join('');
+                        list.style.display = 'block';
+                    })
+                    .catch(err => {
+                        console.error('Error fetching products:', err);
+                        list.innerHTML = `<div class="autocomplete-item text-danger">Error al buscar</div>`;
                         list.style.display = 'block';
                     });
             }, 280);
@@ -667,7 +675,14 @@ $puedeEditar = tienePermiso('diccionario_productos', 'edicion', $cargoOperario);
                 const id = item.dataset.id;
                 const sku = item.dataset.sku;
                 const nom = item.dataset.nom;
-                const variedades = JSON.parse(atob(item.dataset.vars));
+
+                // Safe UTF-8 decoding for atob
+                let variedades = [];
+                try {
+                    variedades = JSON.parse(decodeURIComponent(escape(atob(item.dataset.vars))));
+                } catch (e) {
+                    console.error('Error parsing varieties:', e);
+                }
 
                 mapaSeleccionados[cod] = { id, sku, nombre: nom, variedades, id_variedad: 0 };
                 inp.value = `${sku} – ${nom}`;
