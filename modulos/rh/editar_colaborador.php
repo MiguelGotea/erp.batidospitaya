@@ -949,7 +949,7 @@ if (isset($_POST['accion_contacto'])) {
 
 // Procesar acciones de archivos adjuntos
 if (isset($_POST['accion_adjunto'])) {
-    if ($_POST['accion_adjunto'] == 'agregar' && !empty($_FILES['archivo_adjunto']['name'])) {
+    if ($_POST['accion_adjunto'] == 'agregar' && (!empty($_FILES['archivo_adjunto']['name']) || !empty($_POST['capturas_camara']))) {
 
         // DEBUG: Verificar datos del POST
         error_log("Datos recibidos del formulario adjunto:");
@@ -960,8 +960,9 @@ if (isset($_POST['accion_adjunto'])) {
             'pestaña' => $_POST['pestaña_adjunto'],
             'tipo_documento' => $_POST['tipo_documento'] ?? null,
             'descripcion' => $_POST['descripcion_adjunto'] ?? '',
-            'cod_usuario_subio' => $_SESSION['usuario_id']
-        ], $_FILES['archivo_adjunto']);
+            'cod_usuario_subio' => $_SESSION['usuario_id'],
+            'capturas_camara' => $_POST['capturas_camara'] ?? '[]'
+        ], $_FILES['archivo_adjunto'] ?? null);
 
         if ($resultado['exito']) {
             $_SESSION['exito'] = $resultado['mensaje'];
@@ -2153,21 +2154,27 @@ function obtenerArchivosAdjuntos($codOperario, $pestaña)
 /**
  * Agrega un nuevo archivo adjunto con lógica de contrato asociado - CORREGIDA
  */
-function agregarArchivoAdjunto($datos, $archivo)
+function agregarArchivoAdjunto($datos, $archivo = null)
 {
     global $conn;
 
     try {
-        // Validar que sea un PDF
-        $tipoArchivo = $archivo['type'];
-        if ($tipoArchivo != 'application/pdf') {
-            return ['exito' => false, 'mensaje' => 'Solo se permiten archivos PDF'];
-        }
+        $resultadosExito = [];
+        $resultadosError = [];
 
-        // Validar tamaño (máximo 10MB)
-        $tamañoMaximo = 10 * 1024 * 1024;
-        if ($archivo['size'] > $tamañoMaximo) {
-            return ['exito' => false, 'mensaje' => 'El archivo no puede ser mayor a 10MB'];
+        // 1. Procesar archivo PDF si existe
+        if ($archivo && !empty($archivo['name'])) {
+            // Validar que sea un PDF
+            $tipoArchivo = $archivo['type'];
+            if ($tipoArchivo != 'application/pdf') {
+                return ['exito' => false, 'mensaje' => 'Solo se permiten archivos PDF'];
+            }
+
+            // Validar tamaño (máximo 10MB)
+            $tamañoMaximo = 10 * 1024 * 1024;
+            if ($archivo['size'] > $tamañoMaximo) {
+                return ['exito' => false, 'mensaje' => 'El archivo no puede ser mayor a 10MB'];
+            }
         }
 
         // Determinar si se debe asociar a un contrato o adendum
@@ -2180,11 +2187,9 @@ function agregarArchivoAdjunto($datos, $archivo)
             if ($contratoActual) {
                 $codContratoAsociado = $contratoActual['CodContrato'];
 
-                // Si es la pestaña de adendums y tenemos un ID de adendum
                 if ($datos['pestaña'] == 'adendums' && !empty($datos['cod_adendum_asociado'])) {
                     $codAdendumAsociado = $datos['cod_adendum_asociado'];
                 } elseif ($datos['pestaña'] == 'adendums') {
-                    // Si no se proporciona ID de adendum, buscar el último adendum activo automáticamente
                     $ultimoAdendum = obtenerUltimoAdendumActivo($datos['cod_operario']);
                     if ($ultimoAdendum) {
                         $codAdendumAsociado = $ultimoAdendum['CodAsignacionNivelesCargos'];
@@ -2197,7 +2202,7 @@ function agregarArchivoAdjunto($datos, $archivo)
             }
         }
 
-        // Validar tipo de documento si se proporciona - CORRECCIÓN APLICADA
+        // Validar tipo de documento si se proporciona
         if (!empty($datos['tipo_documento'])) {
             $tiposPermitidos = obtenerTiposDocumentosPorPestaña($datos['pestaña']);
             $todosTipos = array_merge(
@@ -2205,24 +2210,17 @@ function agregarArchivoAdjunto($datos, $archivo)
                 array_keys($tiposPermitidos['opcionales'])
             );
 
-            // PERMITIR SIEMPRE EL TIPO "otro" INDEPENDIENTEMENTE DE LA CONFIGURACIÓN
             if (!in_array($datos['tipo_documento'], $todosTipos) && $datos['tipo_documento'] !== 'otro') {
                 return ['exito' => false, 'mensaje' => 'Tipo de documento no válido para esta pestaña'];
             }
 
-            // Verificar si ya existe un archivo del mismo tipo (para obligatorios)
-            // EXCLUIR "otro" DE ESTA VERIFICACIÓN PARA PERMITIR MÚLTIPLES ARCHIVOS "otro"
-            if (
-                in_array($datos['tipo_documento'], array_keys($tiposPermitidos['obligatorios'])) && $datos['tipo_documento'] !==
-                'otro'
-            ) {
+            // Verificar si ya existe un archivo del mismo tipo (solo si es obligatorio y NO es "otro")
+            if (in_array($datos['tipo_documento'], array_keys($tiposPermitidos['obligatorios'])) && $datos['tipo_documento'] !== 'otro') {
                 $stmtCheck = $conn->prepare("
-    SELECT COUNT(*) FROM ArchivosAdjuntos
-    WHERE cod_operario = ?
-    AND pestaña = ?
-    AND tipo_documento = ?
-    AND (cod_contrato_asociado = ? OR ? IS NULL)
-    ");
+                    SELECT COUNT(*) FROM ArchivosAdjuntos
+                    WHERE cod_operario = ? AND pestaña = ? AND tipo_documento = ?
+                    AND (cod_contrato_asociado = ? OR ? IS NULL)
+                ");
                 $stmtCheck->execute([
                     $datos['cod_operario'],
                     $datos['pestaña'],
@@ -2232,73 +2230,124 @@ function agregarArchivoAdjunto($datos, $archivo)
                 ]);
 
                 if ($stmtCheck->fetchColumn() > 0) {
-                    return [
-                        'exito' => false,
-                        'mensaje' => 'Ya existe un archivo de este tipo. Elimine el existente antes de subir uno
-    nuevo.'
-                    ];
+                    return ['exito' => false, 'mensaje' => 'Ya existe un archivo de este tipo. Elimine el existente antes de subir uno nuevo.'];
                 }
             }
         }
 
-        // Resto del código sin cambios...
         // Crear directorio si no existe
         $directorio = "../../uploads/adjuntos/" . $datos['cod_operario'] . "/";
         if (!file_exists($directorio)) {
             mkdir($directorio, 0777, true);
         }
 
-        // Generar nombre único para el archivo
-        $nombreArchivo = uniqid() . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '_', $archivo['name']);
-        $rutaCompleta = $directorio . $nombreArchivo;
+        // PROCESAR ARCHIVO PDF (CASO 1)
+        if ($archivo && !empty($archivo['name'])) {
+            $nombreArchivo = uniqid() . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '_', $archivo['name']);
+            $rutaCompleta = $directorio . $nombreArchivo;
 
-        // Mover el archivo
-        if (!move_uploaded_file($archivo['tmp_name'], $rutaCompleta)) {
-            return ['exito' => false, 'mensaje' => 'Error al subir el archivo'];
-        }
+            if (move_uploaded_file($archivo['tmp_name'], $rutaCompleta)) {
+                $obligatorio = 0;
+                $categoria = 'opcional';
+                if (!empty($datos['tipo_documento'])) {
+                    $tiposPermitidos = obtenerTiposDocumentosPorPestaña($datos['pestaña']);
+                    if (in_array($datos['tipo_documento'], array_keys($tiposPermitidos['obligatorios'])) && $datos['tipo_documento'] !== 'otro') {
+                        $obligatorio = 1;
+                        $categoria = 'obligatorio';
+                    }
+                }
 
-        // Determinar si es obligatorio
-        $obligatorio = 0;
-        $categoria = 'opcional';
-
-        if (!empty($datos['tipo_documento'])) {
-            $tiposPermitidos = obtenerTiposDocumentosPorPestaña($datos['pestaña']);
-            if (
-                in_array($datos['tipo_documento'], array_keys($tiposPermitidos['obligatorios'])) && $datos['tipo_documento'] !==
-                'otro'
-            ) {
-                $obligatorio = 1;
-                $categoria = 'obligatorio';
+                $stmt = $conn->prepare("
+                    INSERT INTO ArchivosAdjuntos
+                    (cod_operario, cod_contrato_asociado, cod_adendum_asociado, pestaña, tipo_documento, obligatorio, categoria,
+                    nombre_archivo, descripcion, tamaño, ruta_archivo, cod_usuario_subio)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ");
+                $stmt->execute([
+                    $datos['cod_operario'],
+                    $codContratoAsociado,
+                    $codAdendumAsociado,
+                    $datos['pestaña'],
+                    $datos['tipo_documento'] ?? null,
+                    $obligatorio,
+                    $categoria,
+                    $archivo['name'],
+                    $datos['descripcion'] ?? '',
+                    $archivo['size'],
+                    $rutaCompleta,
+                    $datos['cod_usuario_subio']
+                ]);
+                $resultadosExito[] = "PDF subido correctamente";
+            } else {
+                $resultadosError[] = "Error al mover el archivo PDF";
             }
         }
 
-        // Guardar en la base de datos
-        $stmt = $conn->prepare("
-    INSERT INTO ArchivosAdjuntos
-    (cod_operario, cod_contrato_asociado, cod_adendum_asociado, pestaña, tipo_documento, obligatorio, categoria,
-    nombre_archivo, descripcion, tamaño, ruta_archivo, cod_usuario_subio)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    ");
+        // PROCESAR CAPTURAS DE CÁMARA (CASO 2)
+        if (!empty($datos['capturas_camara'])) {
+            $capturas = json_decode($datos['capturas_camara'], true);
+            if (is_array($capturas) && count($capturas) > 0) {
+                $tiposPermitidos = obtenerTiposDocumentosPorPestaña($datos['pestaña']);
+                $obligatorio = 0;
+                $categoria = 'opcional';
+                if (!empty($datos['tipo_documento'])) {
+                    if (in_array($datos['tipo_documento'], array_keys($tiposPermitidos['obligatorios'])) && $datos['tipo_documento'] !== 'otro') {
+                        $obligatorio = 1;
+                        $categoria = 'obligatorio';
+                    }
+                }
 
-        $stmt->execute([
-            $datos['cod_operario'],
-            $codContratoAsociado,
-            $codAdendumAsociado,
-            $datos['pestaña'],
-            $datos['tipo_documento'] ?? null,
-            $obligatorio,
-            $categoria,
-            $archivo['name'],
-            $datos['descripcion'] ?? '',
-            $archivo['size'],
-            $rutaCompleta,
-            $datos['cod_usuario_subio']
-        ]);
+                foreach ($capturas as $index => $base64) {
+                    if (preg_match('/^data:image\/(\w+);base64,/', $base64, $type)) {
+                        $imgData = substr($base64, strpos($base64, ',') + 1);
+                        $extension = strtolower($type[1]); // jpg, png, etc.
+                        $imgData = base64_decode($imgData);
 
-        return ['exito' => true, 'mensaje' => 'Archivo subido correctamente'];
+                        $nombreOriginal = "captura_" . ($index + 1) . "." . $extension;
+                        $nombreArchivo = uniqid() . "_" . $nombreOriginal;
+                        $rutaCompleta = $directorio . $nombreArchivo;
+
+                        if (file_put_contents($rutaCompleta, $imgData)) {
+                            $stmt = $conn->prepare("
+                                INSERT INTO ArchivosAdjuntos
+                                (cod_operario, cod_contrato_asociado, cod_adendum_asociado, pestaña, tipo_documento, obligatorio, categoria,
+                                nombre_archivo, descripcion, tamaño, ruta_archivo, cod_usuario_subio)
+                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                            ");
+                            $stmt->execute([
+                                $datos['cod_operario'],
+                                $codContratoAsociado,
+                                $codAdendumAsociado,
+                                $datos['pestaña'],
+                                $datos['tipo_documento'] ?? null,
+                                $obligatorio,
+                                $categoria,
+                                $nombreOriginal,
+                                $datos['descripcion'] ?? ('Captura cámara ' . ($index + 1)),
+                                strlen($imgData),
+                                $rutaCompleta,
+                                $datos['cod_usuario_subio']
+                            ]);
+                            $resultadosExito[] = "Foto " . ($index + 1) . " guardada";
+                        } else {
+                            $resultadosError[] = "Error al guardar foto " . ($index + 1);
+                        }
+                    }
+                }
+            }
+        }
+
+        if (count($resultadosExito) > 0) {
+            return ['exito' => true, 'mensaje' => implode(", ", $resultadosExito)];
+        } elseif (count($resultadosError) > 0) {
+            return ['exito' => false, 'mensaje' => implode(", ", $resultadosError)];
+        } else {
+            return ['exito' => false, 'mensaje' => 'No se proporcionó ningún archivo o captura'];
+        }
+
     } catch (Exception $e) {
         error_log("Error en agregarArchivoAdjunto: " . $e->getMessage());
-        return ['exito' => false, 'mensaje' => 'Error al subir el archivo: ' . $e->getMessage()];
+        return ['exito' => false, 'mensaje' => 'Error al procesar: ' . $e->getMessage()];
     }
 }
 
@@ -6262,103 +6311,104 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                                                                         </td>
                                                                         <td style="padding: 12px; text-align: center;">
                                                                             <?php if ($archivo['tipo'] !== 'faltante'): ?>
-                                                                                <a href="<?= htmlspecialchars($archivo['ruta_archivo']) ?>"
-                                                                                    target="_blank" class="btn-accion btn-editar"
-                                                                                    title="Ver documento">
-                                                                                    <i class="fas fa-eye"></i>
-                                                                                </a>
-                                                                            <?php else: ?>
-                                                                                <span style="color: #6c757d;">-</span>
-                                                                            <?php endif; ?>
-                                                                        </td>
-                                                                    </tr>
+                                                                                <a href="javascript:void(0)" 
+                                                                                                            onclick="visualizarAdjunto('<?= htmlspecialchars($archivo['ruta_archivo']) ?>')"
+                                                                                                            class="btn-accion btn-editar"
+                                                                                                            title="Ver documento">
+                                                                                                            <i class="fas fa-eye"></i>
+                                                                                                        </a>
+                                                                                                <?php else: ?>
+                                                                                                        <span style="color: #6c757d;">-</span>
+                                                                                                <?php endif; ?>
+                                                                                            </td>
+                                                                                        </tr>
+                                                                                <?php endforeach; ?>
+                                                                            </tbody>
+                                                                        </table>
                                                                 <?php endforeach; ?>
-                                                            </tbody>
-                                                        </table>
-                                                    <?php endforeach; ?>
+                                                            </div>
+                                                        </div>
+                                                <?php endforeach; ?>
+                                        <?php else: ?>
+                                                <div style="text-align: center; padding: 40px; color: #6c757d;">
+                                                    <i class="fas fa-folder-open" style="font-size: 3rem; margin-bottom: 15px;"></i>
+                                                    <p>No hay documentos en el expediente digital</p>
                                                 </div>
-                                            </div>
-                                        <?php endforeach; ?>
-                                    <?php else: ?>
-                                        <div style="text-align: center; padding: 40px; color: #6c757d;">
-                                            <i class="fas fa-folder-open" style="font-size: 3rem; margin-bottom: 15px;"></i>
-                                            <p>No hay documentos en el expediente digital</p>
-                                        </div>
-                                    <?php endif; ?>
+                                        <?php endif; ?>
+                                    </div>
                                 </div>
-                            </div>
                         <?php endif; ?>
 
                         <!-- Pestaña de Bitácora -->
                         <?php if (tienePermiso('editar_colaborador', 'edicion', $cargoId)): ?>
-                            <div id="bitacora" class="tab-pane <?= $pestaña_activa == 'bitacora' ? 'active' : '' ?>">
-                                <div style="margin-bottom: 30px;">
-                                    <h3 style="color: #0E544C; margin-bottom: 15px;">Nueva Anotación</h3>
+                                <div id="bitacora" class="tab-pane <?= $pestaña_activa == 'bitacora' ? 'active' : '' ?>">
+                                    <div style="margin-bottom: 30px;">
+                                        <h3 style="color: #0E544C; margin-bottom: 15px;">Nueva Anotación</h3>
 
-                                    <form method="POST" action="">
-                                        <input type="hidden" name="accion_bitacora" value="agregar">
-                                        <input type="hidden" name="pestaña" value="bitacora">
+                                        <form method="POST" action="">
+                                            <input type="hidden" name="accion_bitacora" value="agregar">
+                                            <input type="hidden" name="pestaña" value="bitacora">
 
-                                        <div class="form-group">
-                                            <label for="anotacion">Anotación *</label>
-                                            <textarea id="anotacion" name="anotacion" class="form-control" rows="5"
-                                                placeholder="Escriba aquí cualquier nota, observación o comentario sobre el colaborador..."
-                                                required></textarea>
-                                            <small style="color: #6c757d;">
-                                                Esta anotación quedará registrada permanentemente y no podrá ser editada
-                                                ni
-                                                eliminada.
-                                            </small>
-                                        </div>
+                                            <div class="form-group">
+                                                <label for="anotacion">Anotación *</label>
+                                                <textarea id="anotacion" name="anotacion" class="form-control" rows="5"
+                                                    placeholder="Escriba aquí cualquier nota, observación o comentario sobre el colaborador..."
+                                                    required></textarea>
+                                                <small style="color: #6c757d;">
+                                                    Esta anotación quedará registrada permanentemente y no podrá ser editada
+                                                    ni
+                                                    eliminada.
+                                                </small>
+                                            </div>
 
-                                        <button type="submit" class="btn-submit">
-                                            <i class="fas fa-save"></i> Guardar Anotación
-                                        </button>
-                                    </form>
-                                </div>
+                                            <button type="submit" class="btn-submit">
+                                                <i class="fas fa-save"></i> Guardar Anotación
+                                            </button>
+                                        </form>
+                                    </div>
 
-                                <div style="border-top: 2px solid #0E544C; padding-top: 20px;">
-                                    <h3 style="color: #0E544C; margin-bottom: 15px;">
-                                        Historial de Bitácora
-                                        <span style="font-size: 0.8em; color: #6c757d;">(<?= count($bitacoraColaborador) ?>
-                                            anotaciones)</span>
-                                    </h3>
+                                    <div style="border-top: 2px solid #0E544C; padding-top: 20px;">
+                                        <h3 style="color: #0E544C; margin-bottom: 15px;">
+                                            Historial de Bitácora
+                                            <span style="font-size: 0.8em; color: #6c757d;">(<?= count($bitacoraColaborador) ?>
+                                                anotaciones)</span>
+                                        </h3>
 
-                                    <?php if (count($bitacoraColaborador) > 0): ?>
-                                        <div style="display: flex; flex-direction: column; gap: 15px;">
-                                            <?php foreach ($bitacoraColaborador as $anotacion): ?>
-                                                <div
-                                                    style="background: #f8f9fa; border-left: 4px solid #0E544C; padding: 15px; border-radius: 4px;">
-                                                    <div
-                                                        style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
-                                                        <div>
-                                                            <strong style="color: #0E544C;">
-                                                                <i class="fas fa-user"></i>
-                                                                <?= htmlspecialchars($anotacion['nombre_usuario']) ?>
-                                                            </strong>
-                                                        </div>
-                                                        <div style="color: #6c757d; font-size: 0.9em;">
-                                                            <i class="fas fa-calendar"></i>
-                                                            <?= date('d/m/Y H:i', strtotime($anotacion['fecha_registro'])) ?>
-                                                        </div>
-                                                    </div>
-                                                    <div style="color: #333; line-height: 1.6; white-space: pre-wrap;">
-                                                        <?= htmlspecialchars($anotacion['anotacion']) ?>
-                                                    </div>
+                                        <?php if (count($bitacoraColaborador) > 0): ?>
+                                                <div style="display: flex; flex-direction: column; gap: 15px;">
+                                                    <?php foreach ($bitacoraColaborador as $anotacion): ?>
+                                                            <div
+                                                                style="background: #f8f9fa; border-left: 4px solid #0E544C; padding: 15px; border-radius: 4px;">
+                                                                <div
+                                                                    style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
+                                                                    <div>
+                                                                        <strong style="color: #0E544C;">
+                                                                            <i class="fas fa-user"></i>
+                                                                            <?= htmlspecialchars($anotacion['nombre_usuario']) ?>
+                                                                        </strong>
+                                                                    </div>
+                                                                    <div style="color: #6c757d; font-size: 0.9em;">
+                                                                        <i class="fas fa-calendar"></i>
+                                                                        <?= date('d/m/Y H:i', strtotime($anotacion['fecha_registro'])) ?>
+                                                                    </div>
+                                                                </div>
+                                                                <div style="color: #333; line-height: 1.6; white-space: pre-wrap;">
+                                                                    <?= htmlspecialchars($anotacion['anotacion']) ?>
+                                                                </div>
+                                                            </div>
+                                                    <?php endforeach; ?>
                                                 </div>
-                                            <?php endforeach; ?>
-                                        </div>
-                                    <?php else: ?>
-                                        <div style="text-align: center; padding: 40px; color: #6c757d;">
-                                            <i class="fas fa-clipboard"
-                                                style="font-size: 3rem; margin-bottom: 15px; opacity: 0.3;"></i>
-                                            <p>No hay anotaciones en la bitácora</p>
-                                            <p style="font-size: 0.9em;">Las anotaciones aparecerán aquí una vez que se
-                                                registren</p>
-                                        </div>
-                                    <?php endif; ?>
+                                        <?php else: ?>
+                                                <div style="text-align: center; padding: 40px; color: #6c757d;">
+                                                    <i class="fas fa-clipboard"
+                                                        style="font-size: 3rem; margin-bottom: 15px; opacity: 0.3;"></i>
+                                                    <p>No hay anotaciones en la bitácora</p>
+                                                    <p style="font-size: 0.9em;">Las anotaciones aparecerán aquí una vez que se
+                                                        registren</p>
+                                                </div>
+                                        <?php endif; ?>
+                                    </div>
                                 </div>
-                            </div>
                         <?php endif; ?>
                     </div>
                 </div>
@@ -6504,9 +6554,9 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                                 <?php
                                 $tiposSalida = obtenerTiposSalida();
                                 foreach ($tiposSalida as $tipo): ?>
-                                    <option value="<?= $tipo['CodTipoSalida'] ?>">
-                                        <?= htmlspecialchars($tipo['nombre']) ?>
-                                    </option>
+                                        <option value="<?= $tipo['CodTipoSalida'] ?>">
+                                            <?= htmlspecialchars($tipo['nombre']) ?>
+                                        </option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
@@ -6633,7 +6683,42 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                         <div class="form-group">
                             <label for="archivo_adjunto">Archivo PDF (máximo 10MB) *</label>
                             <input type="file" id="archivo_adjunto" name="archivo_adjunto" class="form-control"
-                                accept=".pdf" required>
+                                accept=".pdf">
+                        </div>
+
+                        <!-- Sección de Cámara (Solo visible en algunas pestañas) -->
+                        <div id="seccionCamara"
+                            style="display: none; border: 1px dashed #51B8AC; padding: 15px; border-radius: 8px; margin-bottom: 20px; background: #f0f9f8;">
+                            <div
+                                style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px;">
+                                <h4 style="margin: 0; color: #0E544C; font-size: 1rem;"><i class="fas fa-camera"></i>
+                                    Capturar Fotos</h4>
+                                <button type="button" id="btnToggleCamara" class="btn-submit"
+                                    style="background-color: #51B8AC; font-size: 0.85rem; padding: 5px 15px; width: auto;"
+                                    onclick="toggleCamara()">
+                                    Iniciar Cámara
+                                </button>
+                            </div>
+
+                            <div id="contenedorVideo"
+                                style="display: none; position: relative; margin-bottom: 15px; text-align: center; border-radius: 8px; overflow: hidden; background: #000;">
+                                <video id="videoCaptura"
+                                    style="width: 100%; max-width: 400px; display: block; margin: 0 auto;"></video>
+                                <button type="button" onclick="capturarFoto()"
+                                    style="position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); background: #0E544C; color: white; border: none; border-radius: 50%; width: 50px; height: 50px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">
+                                    <i class="fas fa-camera" style="font-size: 1.5rem;"></i>
+                                </button>
+                                <canvas id="canvasAuxiliar" style="display: none;"></canvas>
+                            </div>
+
+                            <div id="galeriaCapturas" class="galeria-capturas"
+                                style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px;">
+                                <!-- Aquí aparecerán las miniaturas de las fotos capturadas -->
+                            </div>
+                            <input type="hidden" name="capturas_camara" id="capturasCamaraInput" value="[]">
+                            <small id="ayudaCamara" style="color: #6c757d; display: block; margin-top: 10px;">
+                                Use esta opción si desea adjuntar fotos directamente desde su cámara.
+                            </small>
                         </div>
 
                         <div class="form-group">
@@ -6655,7 +6740,7 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                         <div style="display: flex; justify-content: space-between; margin-top: 20px;">
                             <button type="button" class="btn-submit" onclick="cerrarModalAdjunto()"
                                 style="background-color: #6c757d;">Cancelar</button>
-                            <button type="submit" class="btn-submit">Subir Archivo</button>
+                            <button type="submit" class="btn-submit" id="btnSubirAdjunto">Subir Archivo</button>
                         </div>
                     </form>
                 </div>
@@ -6711,9 +6796,9 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                             <select id="edit_cod_cargo" name="cod_cargo" class="form-control" required>
                                 <option value="">Seleccionar cargo...</option>
                                 <?php foreach ($cargosDisponibles as $cargo): ?>
-                                    <option value="<?= $cargo['CodNivelesCargos'] ?>">
-                                        <?= htmlspecialchars($cargo['Nombre']) ?>
-                                    </option>
+                                        <option value="<?= $cargo['CodNivelesCargos'] ?>">
+                                            <?= htmlspecialchars($cargo['Nombre']) ?>
+                                        </option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
@@ -6723,9 +6808,9 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                             <select id="edit_sucursal" name="sucursal" class="form-control" required>
                                 <option value="">Seleccionar sucursal...</option>
                                 <?php foreach ($sucursales as $sucursal): ?>
-                                    <option value="<?= $sucursal['codigo'] ?>">
-                                        <?= htmlspecialchars($sucursal['nombre']) ?>
-                                    </option>
+                                        <option value="<?= $sucursal['codigo'] ?>">
+                                            <?= htmlspecialchars($sucursal['nombre']) ?>
+                                        </option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
@@ -6808,10 +6893,10 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                             <select id="edit_id_categoria" name="id_categoria" class="form-control" required>
                                 <option value="">Seleccionar categoría...</option>
                                 <?php foreach ($todasCategorias as $categoria): ?>
-                                    <option value="<?= $categoria['idCategoria'] ?>">
-                                        <?= htmlspecialchars($categoria['NombreCategoria']) ?>
-                                        (Peso: <?= $categoria['Peso'] ?>)
-                                    </option>
+                                        <option value="<?= $categoria['idCategoria'] ?>">
+                                            <?= htmlspecialchars($categoria['NombreCategoria']) ?>
+                                            (Peso: <?= $categoria['Peso'] ?>)
+                                        </option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
@@ -6864,9 +6949,9 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                                     <select id="edit_cod_cargo_adendum" name="cod_cargo" class="form-control">
                                         <option value="">Seleccionar cargo...</option>
                                         <?php foreach ($cargosDisponibles as $cargo): ?>
-                                            <option value="<?= $cargo['CodNivelesCargos'] ?>">
-                                                <?= htmlspecialchars($cargo['Nombre']) ?>
-                                            </option>
+                                                <option value="<?= $cargo['CodNivelesCargos'] ?>">
+                                                    <?= htmlspecialchars($cargo['Nombre']) ?>
+                                                </option>
                                         <?php endforeach; ?>
                                     </select>
                                 </div>
@@ -6876,9 +6961,9 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                                     <select id="edit_sucursal_adendum" name="sucursal" class="form-control">
                                         <option value="">Seleccionar sucursal...</option>
                                         <?php foreach ($sucursales as $sucursal): ?>
-                                            <option value="<?= $sucursal['codigo'] ?>">
-                                                <?= htmlspecialchars($sucursal['nombre']) ?>
-                                            </option>
+                                                <option value="<?= $sucursal['codigo'] ?>">
+                                                    <?= htmlspecialchars($sucursal['nombre']) ?>
+                                                </option>
                                         <?php endforeach; ?>
                                     </select>
                                 </div>
@@ -6890,10 +6975,10 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                                     <select id="edit_id_categoria_adendum" name="id_categoria" class="form-control">
                                         <option value="">Seleccionar categoría...</option>
                                         <?php foreach ($todasCategorias as $categoria): ?>
-                                            <option value="<?= $categoria['idCategoria'] ?>">
-                                                <?= htmlspecialchars($categoria['NombreCategoria']) ?>
-                                                (Peso: <?= $categoria['Peso'] ?>)
-                                            </option>
+                                                <option value="<?= $categoria['idCategoria'] ?>">
+                                                    <?= htmlspecialchars($categoria['NombreCategoria']) ?>
+                                                    (Peso: <?= $categoria['Peso'] ?>)
+                                                </option>
                                         <?php endforeach; ?>
                                     </select>
                                 </div>
@@ -7551,6 +7636,16 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                     document.getElementById('pestañaAdjunto').value = pestaña;
                     document.getElementById('formAdjunto').reset();
 
+                    // Limpiar datos de cámara previos
+                    detenerCamara();
+                    document.getElementById('galeriaCapturas').innerHTML = '';
+                    document.getElementById('capturasCamaraInput').value = '[]';
+                    document.getElementById('contenedorVideo').style.display = 'none';
+                    document.getElementById('btnToggleCamara').textContent = 'Iniciar Cámara';
+
+                    // Mostrar sección de cámara para todas las pestañas
+                    document.getElementById('seccionCamara').style.display = 'block';
+
                     // Limpiar y llenar el select de tipos de documento
                     const selectTipo = document.getElementById('tipo_documento_adjunto');
                     selectTipo.innerHTML = '<option value="">Seleccionar tipo de documento...</option>';
@@ -7670,6 +7765,126 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                     }
                 }
 
+                // --- LÓGICA DE CÁMARA PARA ADJUNTOS ---
+                let streamCamara = null;
+
+                function toggleCamara() {
+                    const video = document.getElementById('videoCaptura');
+                    const contenedor = document.getElementById('contenedorVideo');
+                    const btn = document.getElementById('btnToggleCamara');
+
+                    if (streamCamara) {
+                        detenerCamara();
+                    } else {
+                        navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false })
+                            .then(function (stream) {
+                                streamCamara = stream;
+                                video.srcObject = stream;
+                                video.play();
+                                contenedor.style.display = 'block';
+                                btn.textContent = 'Detener Cámara';
+                                btn.style.backgroundColor = '#dc3545';
+                            })
+                            .catch(function (err) {
+                                alert("No se pudo acceder a la cámara: " + err);
+                            });
+                    }
+                }
+
+                function detenerCamara() {
+                    const video = document.getElementById('videoCaptura');
+                    const contenedor = document.getElementById('contenedorVideo');
+                    const btn = document.getElementById('btnToggleCamara');
+
+                    if (streamCamara) {
+                        streamCamara.getTracks().forEach(track => track.stop());
+                        streamCamara = null;
+                        video.srcObject = null;
+                    }
+                    if (contenedor) contenedor.style.display = 'none';
+                    if (btn) {
+                        btn.textContent = 'Iniciar Cámara';
+                        btn.style.backgroundColor = '#51B8AC';
+                    }
+                }
+
+                function capturarFoto() {
+                    const video = document.getElementById('videoCaptura');
+                    const canvas = document.getElementById('canvasAuxiliar');
+                    const context = canvas.getContext('2d');
+
+                    // Establecer dimensiones del canvas iguales al video
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+
+                    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                    // Convertir a base64 (calidad 0.8 para no saturar)
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+
+                    const capturasInput = document.getElementById('capturasCamaraInput');
+                    let capturas = JSON.parse(capturasInput.value);
+                    capturas.push(dataUrl);
+                    capturasInput.value = JSON.stringify(capturas);
+
+                    renderizarGaleria();
+                }
+
+                function renderizarGaleria() {
+                    const container = document.getElementById('galeriaCapturas');
+                    const capturasInput = document.getElementById('capturasCamaraInput');
+                    let capturas = JSON.parse(capturasInput.value);
+
+                    container.innerHTML = '';
+                    capturas.forEach((foto, index) => {
+                        const div = document.createElement('div');
+                        div.style.position = 'relative';
+                        div.style.width = '80px';
+                        div.style.height = '80px';
+                        div.style.borderRadius = '4px';
+                        div.style.overflow = 'hidden';
+                        div.style.border = '2px solid #51B8AC';
+
+                        div.innerHTML = `
+                            <img src="${foto}" style="width: 100%; height: 100%; object-fit: cover;">
+                            <button type="button" onclick="eliminarFoto(${index})" style="position: absolute; top: 2px; right: 2px; background: rgba(220, 53, 69, 0.8); color: white; border: none; border-radius: 50%; width: 20px; height: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 10px;">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        `;
+                        container.appendChild(div);
+                    });
+                }
+
+                function eliminarFoto(index) {
+                    const capturasInput = document.getElementById('capturasCamaraInput');
+                    let capturas = JSON.parse(capturasInput.value);
+                    capturas.splice(index, 1);
+                    capturasInput.value = JSON.stringify(capturas);
+                    renderizarGaleria();
+                }
+
+                function cerrarModalAdjunto() {
+                    detenerCamara();
+                    document.getElementById('modalAdjunto').style.display = 'none';
+                }
+
+                // Validar envío del formulario para fotos
+                document.getElementById('formAdjunto').addEventListener('submit', function (e) {
+                    const archivo = document.getElementById('archivo_adjunto').files.length;
+                    const capturas = JSON.parse(document.getElementById('capturasCamaraInput').value).length;
+                    const selectTipo = document.getElementById('tipo_documento_adjunto');
+
+                    if (selectTipo.required && selectTipo.value === "") {
+                        // El navegador ya valida esto, pero por si acaso
+                        return;
+                    }
+
+                    if (archivo === 0 && capturas === 0) {
+                        alert('Debe seleccionar un archivo PDF o capturar al menos una foto.');
+                        e.preventDefault();
+                    }
+                });
+
                 // Función para actualizar los íconos de estado en las pestañas
                 function actualizarIconosEstadoPestanas() {
                     const pestañas = ['datos-personales', 'inss', 'contrato', 'contactos-emergencia',
@@ -7714,10 +7929,6 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                 document.addEventListener('DOMContentLoaded', function () {
                     actualizarIconosEstadoPestanas();
                 });
-
-                function cerrarModalAdjunto() {
-                    document.getElementById('modalAdjunto').style.display = 'none';
-                }
 
                 // Cerrar modal al hacer clic fuera
                 //document.getElementById('modalAdjunto').addEventListener('click', function(e) {
@@ -8623,6 +8834,17 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                         });
                     }
                 });
+            // Función para ver adjuntos (imágenes en modal, PDFs en nueva pestaña)
+                function visualizarAdjunto(url) {
+                    const extension = url.split('.').pop().toLowerCase();
+                    const esImagen = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'].includes(extension);
+
+                    if (esImagen) {
+                        abrirModalVerFoto(url);
+                    } else {
+                        window.open(url, '_blank');
+                    }
+                }
             </script>
         </div>
     </div>
