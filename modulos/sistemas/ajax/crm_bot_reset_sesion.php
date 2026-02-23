@@ -16,16 +16,18 @@ if (!tienePermiso('crm_bot', 'resetear_sesion', $usuario['CodNivelesCargos'])) {
 }
 
 try {
+    $instancia = $_POST['instancia'] ?? $_GET['instancia'] ?? 'wsp-crmbot';
+
     $stmt = $conn->prepare("
         INSERT INTO wsp_sesion_vps_ (instancia, estado, reset_solicitado)
-        VALUES ('wsp-crmbot', 'desconectado', 1)
+        VALUES (:inst, 'desconectado', 1)
         ON DUPLICATE KEY UPDATE reset_solicitado = 1
     ");
-    $stmt->execute();
+    $stmt->execute([':inst' => $instancia]);
 
     echo json_encode([
         'success' => true,
-        'mensaje' => 'Reset solicitado. El bot cerrará la sesión en el próximo ciclo y mostrará un QR nuevo.',
+        'mensaje' => "Reset solicitado para $instancia. El bot cerrará la sesión en el próximo ciclo y mostrará un QR nuevo.",
         'hora' => date('Y-m-d H:i:s')
     ]);
 } catch (Exception $e) {

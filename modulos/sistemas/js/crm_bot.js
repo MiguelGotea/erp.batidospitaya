@@ -92,7 +92,8 @@ async function resetearSesion() {
 
     actualizarBadgeVPS('reset_pendiente');
     try {
-        const resp = await fetch('ajax/crm_bot_reset_sesion.php', { method: 'POST' });
+        const instancia = $('#filtroInstancia').val() || 'wsp-crmbot';
+        const resp = await fetch(`ajax/crm_bot_reset_sesion.php?instancia=${instancia}`, { method: 'POST' });
         const data = await resp.json();
         if (data.success) {
             Swal.fire({ icon: 'success', title: 'Reset solicitado', text: data.mensaje, timer: 4000 });
