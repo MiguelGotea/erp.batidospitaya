@@ -3886,9 +3886,9 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                                                                 <?php endif; ?>
                                                             </td>
                                                             <td style="padding: 10px; text-align: center;">
-                                                                <a href="<?= htmlspecialchars($archivo['ruta_archivo']) ?>"
-                                                                    target="_blank" class="btn-accion btn-editar"
-                                                                    title="Ver archivo">
+                                                                <a href="javascript:void(0)"
+                                                                    onclick="visualizarAdjunto('<?= htmlspecialchars($archivo['ruta_archivo']) ?>')"
+                                                                    class="btn-accion btn-editar" title="Ver archivo">
                                                                     <i class="fas fa-eye"></i>
                                                                 </a>
                                                                 <form method="POST" action="" style="display: inline;">
@@ -4151,9 +4151,9 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                                                                 <?php endif; ?>
                                                             </td>
                                                             <td style="padding: 10px; text-align: center;">
-                                                                <a href="<?= htmlspecialchars($archivo['ruta_archivo']) ?>"
-                                                                    target="_blank" class="btn-accion btn-editar"
-                                                                    title="Ver archivo">
+                                                                <a href="javascript:void(0)"
+                                                                    onclick="visualizarAdjunto('<?= htmlspecialchars($archivo['ruta_archivo']) ?>')"
+                                                                    class="btn-accion btn-editar" title="Ver archivo">
                                                                     <i class="fas fa-eye"></i>
                                                                 </a>
                                                                 <form method="POST" action="" style="display: inline;">
@@ -4766,9 +4766,9 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                                                                 <?php endif; ?>
                                                             </td>
                                                             <td style="padding: 10px; text-align: center;">
-                                                                <a href="<?= htmlspecialchars($archivo['ruta_archivo']) ?>"
-                                                                    target="_blank" class="btn-accion btn-editar"
-                                                                    title="Ver archivo">
+                                                                <a href="javascript:void(0)"
+                                                                    onclick="visualizarAdjunto('<?= htmlspecialchars($archivo['ruta_archivo']) ?>')"
+                                                                    class="btn-accion btn-editar" title="Ver archivo">
                                                                     <i class="fas fa-eye"></i>
                                                                 </a>
                                                                 <form method="POST" action="" style="display: inline;">
@@ -4972,9 +4972,9 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                                                                 <?php endif; ?>
                                                             </td>
                                                             <td style="padding: 10px; text-align: center;">
-                                                                <a href="<?= htmlspecialchars($archivo['ruta_archivo']) ?>"
-                                                                    target="_blank" class="btn-accion btn-editar"
-                                                                    title="Ver archivo">
+                                                                <a href="javascript:void(0)"
+                                                                    onclick="visualizarAdjunto('<?= htmlspecialchars($archivo['ruta_archivo']) ?>')"
+                                                                    class="btn-accion btn-editar" title="Ver archivo">
                                                                     <i class="fas fa-eye"></i>
                                                                 </a>
                                                                 <form method="POST" action="" style="display: inline;">
@@ -5297,9 +5297,9 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                                                                 <?php endif; ?>
                                                             </td>
                                                             <td style="padding: 10px; text-align: center;">
-                                                                <a href="<?= htmlspecialchars($archivo['ruta_archivo']) ?>"
-                                                                    target="_blank" class="btn-accion btn-editar"
-                                                                    title="Ver archivo">
+                                                                <a href="javascript:void(0)"
+                                                                    onclick="visualizarAdjunto('<?= htmlspecialchars($archivo['ruta_archivo']) ?>')"
+                                                                    class="btn-accion btn-editar" title="Ver archivo">
                                                                     <i class="fas fa-eye"></i>
                                                                 </a>
                                                                 <form method="POST" action="" style="display: inline;">
@@ -5641,9 +5641,9 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                                                                 <?php endif; ?>
                                                             </td>
                                                             <td style="padding: 10px; text-align: center;">
-                                                                <a href="<?= htmlspecialchars($archivo['ruta_archivo']) ?>"
-                                                                    target="_blank" class="btn-accion btn-editar"
-                                                                    title="Ver archivo">
+                                                                <a href="javascript:void(0)"
+                                                                    onclick="visualizarAdjunto('<?= htmlspecialchars($archivo['ruta_archivo']) ?>')"
+                                                                    class="btn-accion btn-editar" title="Ver archivo">
                                                                     <i class="fas fa-eye"></i>
                                                                 </a>
                                                                 <form method="POST" action="" style="display: inline;">
@@ -6195,6 +6195,9 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                                     <?php
                                     // Obtener todos los documentos esperados (incluyendo faltantes)
                                     $expedienteCompletoConFaltantes = obtenerExpedienteCompletoConFaltantes($codOperario);
+
+                                    // Preparar arreglo para el carrusel de imágenes
+                                    $imagenesParaCarrusel = [];
                                     ?>
 
                                     <?php if (!empty($expedienteCompletoConFaltantes)): ?>
@@ -6237,28 +6240,41 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                                                 <div class="contenido-categoria"
                                                     style="border: 1px solid #dee2e6; border-top: none; border-radius: 0 0 5px 5px; padding: 0;">
                                                     <?php foreach ($subcategorias as $subcategoria => $archivos): ?>
-                                                        <!-- Tabla de documentos -->
+                                                        <!-- Tabla de documentos agrupados -->
                                                         <table style="width: 100%; border-collapse: collapse;">
                                                             <tbody>
-                                                                <?php foreach ($archivos as $archivo): ?>
+                                                                <?php
+                                                                // Agrupar archivos por tipo_documento dentro de esta subcategoría
+                                                                $archivosAgrupadosPorTipo = [];
+                                                                foreach ($archivos as $archivo) {
+                                                                    $tipoKey = $archivo['tipo'] === 'faltante' ? ('faltante_' . $archivo['nombre_archivo']) : ($archivo['tipo_documento'] ?: 'sin_especificar');
+                                                                    if (!isset($archivosAgrupadosPorTipo[$tipoKey])) {
+                                                                        $archivosAgrupadosPorTipo[$tipoKey] = [];
+                                                                    }
+                                                                    $archivosAgrupadosPorTipo[$tipoKey][] = $archivo;
+                                                                }
+
+                                                                foreach ($archivosAgrupadosPorTipo as $tipoKey => $grupoArchivos):
+                                                                    $primerArchivo = $grupoArchivos[0];
+                                                                    $totalEnGrupo = count($grupoArchivos);
+                                                                    ?>
                                                                     <tr style="border-bottom: 1px solid #dee2e6;">
-                                                                        <td style="padding: 12px;">
-                                                                            <?php if ($archivo['tipo'] === 'faltante'): ?>
+                                                                        <!-- Columna Estado -->
+                                                                        <td style="padding: 12px; width: 15%;">
+                                                                            <?php if ($primerArchivo['tipo'] === 'faltante'): ?>
                                                                                 <span
-                                                                                    style="display: inline-block; padding: 3px 8px; background: #dc3545; color: white; border-radius: 12px; font-size: 0.8em;">
-                                                                                    FALTANTE
-                                                                                </span>
+                                                                                    style="display: inline-block; padding: 3px 8px; background: #dc3545; color: white; border-radius: 12px; font-size: 0.8em;">FALTANTE</span>
                                                                             <?php else: ?>
-                                                                                <?php if (!empty($archivo['tipo_documento'])): ?>
+                                                                                <?php if (!empty($primerArchivo['tipo_documento'])): ?>
                                                                                     <?php
-                                                                                    $tiposDocumentos = obtenerTiposDocumentosPorPestaña($archivo['pestaña']);
+                                                                                    $tiposDocumentos = obtenerTiposDocumentosPorPestaña($primerArchivo['pestaña']);
                                                                                     $todosTipos = array_merge($tiposDocumentos['obligatorios'], $tiposDocumentos['opcionales']);
-                                                                                    $nombreTipo = $todosTipos[$archivo['tipo_documento']] ?? $archivo['tipo_documento'];
+                                                                                    $nombreTipo = $todosTipos[$primerArchivo['tipo_documento']] ?? $primerArchivo['tipo_documento'];
                                                                                     ?>
                                                                                     <span
-                                                                                        style="display: inline-block; padding: 3px 8px; background: <?= $archivo['obligatorio'] ? '#28a745' : '#6c757d' ?>; color: white; border-radius: 12px; font-size: 0.8em;">
+                                                                                        style="display: inline-block; padding: 3px 8px; background: <?= $primerArchivo['obligatorio'] ? '#28a745' : '#6c757d' ?>; color: white; border-radius: 12px; font-size: 0.8em;">
                                                                                         <?= htmlspecialchars($nombreTipo) ?>
-                                                                                        <?= $archivo['obligatorio'] ? ' *' : '' ?>
+                                                                                        <?= $primerArchivo['obligatorio'] ? ' *' : '' ?>
                                                                                     </span>
                                                                                 <?php else: ?>
                                                                                     <span style="color: #6c757d; font-style: italic;">Sin
@@ -6266,59 +6282,112 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                                                                                 <?php endif; ?>
                                                                             <?php endif; ?>
                                                                         </td>
-                                                                        <td style="padding: 12px;">
-                                                                            <?php if ($archivo['tipo'] === 'faltante'): ?>
-                                                                                <div style="font-weight: 500; color: #dc3545;">
-                                                                                    <i class="fas fa-exclamation-circle"></i>
-                                                                                    <?= htmlspecialchars($archivo['nombre_archivo']) ?>
-                                                                                </div>
-                                                                            <?php else: ?>
-                                                                                <div style="font-weight: 500;">
-                                                                                    <?= htmlspecialchars($archivo['nombre_archivo']) ?>
-                                                                                </div>
-                                                                                <?php if (!empty($archivo['descripcion'])): ?>
-                                                                                    <div
-                                                                                        style="font-size: 0.9em; color: #6c757d; margin-top: 3px; display:none;">
-                                                                                        <?= htmlspecialchars($archivo['descripcion']) ?>
-                                                                                    </div>
+
+                                                                        <!-- Columna Documento -->
+                                                                        <td style="padding: 12px; width: 25%;">
+                                                                            <div
+                                                                                style="font-weight: 500; <?= $primerArchivo['tipo'] === 'faltante' ? 'color: #dc3545;' : '' ?>">
+                                                                                <?= $primerArchivo['tipo'] === 'faltante' ? '<i class="fas fa-exclamation-circle"></i> ' : '' ?>
+                                                                                <?= htmlspecialchars($primerArchivo['nombre_archivo']) ?>
+                                                                                <?php if ($totalEnGrupo > 1): ?>
+                                                                                    <span
+                                                                                        style="background: #0E544C; color: white; border-radius: 10px; padding: 2px 6px; font-size: 0.75em; margin-left: 5px;">
+                                                                                        <?= $totalEnGrupo ?> archivos
+                                                                                    </span>
                                                                                 <?php endif; ?>
+                                                                            </div>
+                                                                        </td>
+
+                                                                        <!-- Columna Descripción -->
+                                                                        <td style="padding: 12px; width: 25%;">
+                                                                            <?php
+                                                                            $descripciones = [];
+                                                                            foreach ($grupoArchivos as $a) {
+                                                                                if (!empty($a['descripcion']))
+                                                                                    $descripciones[] = $a['descripcion'];
+                                                                            }
+                                                                            if (!empty($descripciones)):
+                                                                                ?>
+                                                                                <div style="font-size: 0.9em; color: #6c757d;">
+                                                                                    <?= htmlspecialchars(implode(' | ', array_unique($descripciones))) ?>
+                                                                                </div>
+                                                                            <?php elseif ($primerArchivo['tipo'] === 'faltante'): ?>
+                                                                                <div style="color: #dc3545;"><i
+                                                                                        class="fas fa-exclamation-circle"></i></div>
                                                                             <?php endif; ?>
                                                                         </td>
-                                                                        <td style="padding: 12px;">
-                                                                            <?php if ($archivo['tipo'] === 'faltante'): ?>
-                                                                                <div style="font-weight: 500; color: #dc3545;">
-                                                                                    <i class="fas fa-exclamation-circle"></i>
-                                                                                </div>
-                                                                            <?php else: ?>
-                                                                                <?php if (!empty($archivo['descripcion'])): ?>
-                                                                                    <div style="font-size: 0.9em; color: #6c757d; margin-top: 3px;">
-                                                                                        <?= htmlspecialchars($archivo['descripcion']) ?>
-                                                                                    </div>
-                                                                                <?php endif; ?>
-                                                                            <?php endif; ?>
-                                                                        </td>
-                                                                        <td style="padding: 12px;">
+
+                                                                        <!-- Columna Pestaña -->
+                                                                        <td style="padding: 12px; width: 15%;">
                                                                             <span
                                                                                 style="display: inline-block; padding: 3px 8px; background: #e9ecef; color: #495057; border-radius: 12px; font-size: 0.8em;">
-                                                                                <?= obtenerNombrePestaña($archivo['pestaña']) ?>
+                                                                                <?= obtenerNombrePestaña($primerArchivo['pestaña']) ?>
                                                                             </span>
                                                                         </td>
-                                                                        <td style="padding: 12px;">
-                                                                            <?= $archivo['tipo'] === 'faltante' ? 'No subido' : htmlspecialchars($archivo['nombre_usuario'] . ' ' . $archivo['apellido_usuario']) ?>
+
+                                                                        <!-- Columna Subido por -->
+                                                                        <td style="padding: 12px; width: 20%;">
+                                                                            <?php
+                                                                            if ($primerArchivo['tipo'] === 'faltante') {
+                                                                                echo 'No subido';
+                                                                            } else {
+                                                                                $usuarios = [];
+                                                                                foreach ($grupoArchivos as $a) {
+                                                                                    $usuarios[] = $a['nombre_usuario'] . ' ' . $a['apellido_usuario'];
+                                                                                }
+                                                                                echo htmlspecialchars(implode(', ', array_unique($usuarios)));
+                                                                            }
+                                                                            ?>
                                                                         </td>
-                                                                        <td style="padding: 12px;">
-                                                                            <?= $archivo['tipo'] === 'faltante' ? 'Pendiente' : date('d/m/Y H:i', strtotime($archivo['fecha_subida'])) ?>
-                                                                        </td>
-                                                                        <td style="padding: 12px; text-align: center;">
-                                                                            <?php if ($archivo['tipo'] !== 'faltante'): ?>
-                                                                                <a href="javascript:void(0)"
-                                                                                    onclick="visualizarAdjunto('<?= htmlspecialchars($archivo['ruta_archivo']) ?>')"
-                                                                                    class="btn-accion btn-editar" title="Ver documento">
-                                                                                    <i class="fas fa-eye"></i>
-                                                                                </a>
+
+                                                                        <!-- Columna Fecha -->
+                                                                        <td style="padding: 12px; width: 15%;">
+                                                                            <?php if ($primerArchivo['tipo'] === 'faltante'): ?>
+                                                                                Pendiente
                                                                             <?php else: ?>
-                                                                                <span style="color: #6c757d;">-</span>
+                                                                                <?php
+                                                                                // Mostrar la fecha más reciente
+                                                                                $fechas = array_map(function ($a) {
+                                                                                    return strtotime($a['fecha_subida']);
+                                                                                }, $grupoArchivos);
+                                                                                echo date('d/m/Y H:i', max($fechas));
+                                                                                ?>
                                                                             <?php endif; ?>
+                                                                        </td>
+
+                                                                        <!-- Columna Acciones -->
+                                                                        <td style="padding: 12px; text-align: center; width: 10%;">
+                                                                            <div
+                                                                                style="display: flex; gap: 5px; justify-content: center; flex-wrap: wrap;">
+                                                                                <?php if ($primerArchivo['tipo'] !== 'faltante'): ?>
+                                                                                    <?php foreach ($grupoArchivos as $descArchivo): ?>
+                                                                                        <?php
+                                                                                        $esImagen = false;
+                                                                                        if (!empty($descArchivo['ruta_archivo'])) {
+                                                                                            $ext = strtolower(pathinfo($descArchivo['ruta_archivo'], PATHINFO_EXTENSION));
+                                                                                            if (in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'])) {
+                                                                                                $esImagen = true;
+                                                                                                $imagenesParaCarrusel[] = [
+                                                                                                    'url' => htmlspecialchars($descArchivo['ruta_archivo']),
+                                                                                                    'nombre' => htmlspecialchars($descArchivo['nombre_archivo']),
+                                                                                                    'categoria' => htmlspecialchars($descArchivo['pestaña'] ?? '')
+                                                                                                ];
+                                                                                                $indiceImagen = count($imagenesParaCarrusel) - 1;
+                                                                                            }
+                                                                                        }
+                                                                                        ?>
+                                                                                        <a href="javascript:void(0)"
+                                                                                            onclick="<?= $esImagen ? "visualizarCarrusel($indiceImagen)" : "visualizarAdjunto('" . htmlspecialchars($descArchivo['ruta_archivo']) . "')" ?>"
+                                                                                            class="btn-accion btn-editar"
+                                                                                            title="Ver <?= $esImagen ? 'imagen' : 'documento' ?>">
+                                                                                            <i
+                                                                                                class="fas <?= $esImagen ? 'fa-image' : 'fa-file-pdf' ?>"></i>
+                                                                                        </a>
+                                                                                    <?php endforeach; ?>
+                                                                                <?php else: ?>
+                                                                                    <span style="color: #6c757d;">-</span>
+                                                                                <?php endif; ?>
+                                                                            </div>
                                                                         </td>
                                                                     </tr>
                                                                 <?php endforeach; ?>
@@ -9009,35 +9078,178 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                 }
             </script>
 
-            <!-- Modal para ver foto de perfil en tamaño completo -->
+            <!-- Modal para ver foto de perfil en tamaño completo y Carrusel -->
             <div id="modalVerFoto"
-                style="display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.9); overflow: auto;">
+                style="display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.95); overflow: hidden; user-select: none;">
+
+                <!-- Botón Cerrar -->
                 <span onclick="cerrarModalVerFoto()"
-                    style="position: absolute; top: 20px; right: 35px; color: #f1f1f1; font-size: 40px; font-weight: bold; cursor: pointer; z-index: 10000;">&times;</span>
-                <img id="imagenFotoCompleta"
-                    style="margin: auto; display: block; max-width: 90%; max-height: 90%; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+                    style="position: absolute; top: 20px; right: 35px; color: #f1f1f1; font-size: 40px; font-weight: bold; cursor: pointer; z-index: 10001; transition: 0.3s;"
+                    onmouseover="this.style.color='#bbb'" onmouseout="this.style.color='#f1f1f1'">&times;</span>
+
+                <!-- Contenedor de Imagen -->
+                <div
+                    style="width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative;">
+
+                    <!-- Botón Anterior -->
+                    <div id="btnPrevCarrusel" onclick="navegarCarrusel(-1)"
+                        style="position: absolute; left: 20px; color: white; font-size: 50px; cursor: pointer; z-index: 10000; padding: 20px; display: none;">
+                        <i class="fas fa-chevron-left"></i>
+                    </div>
+
+                    <!-- Imagen -->
+                    <div id="contenedorImagenModal" style="position: relative; max-width: 90%; max-height: 80%; display: flex; justify-content: center; align-items: center;">
+                        <!-- Spinner de Carga -->
+                        <div id="spinnerCargaModal" style="display: none; position: absolute; color: white; flex-direction: column; align-items: center; justify-content: center;">
+                            <i class="fas fa-spinner fa-spin" style="font-size: 3rem; margin-bottom: 10px;"></i>
+                            <span>Cargando imagen...</span>
+                        </div>
+
+                        <!-- Mensaje de Error -->
+                        <div id="errorCargaModal" style="display: none; position: absolute; color: #ff6b6b; flex-direction: column; align-items: center; justify-content: center; text-align: center;">
+                            <i class="fas fa-exclamation-triangle" style="font-size: 3rem; margin-bottom: 10px;"></i>
+                            <div style="font-size: 1.2rem; margin-bottom: 15px;">No se pudo cargar la imagen</div>
+                            <button onclick="reintentarCargaImagen()" style="background: #ff6b6b; color: white; border: none; padding: 8px 20px; border-radius: 5px; cursor: pointer; font-weight: bold;">
+                                <i class="fas fa-sync-alt"></i> Reintentar
+                            </button>
+                        </div>
+
+                        <img id="imagenFotoCompleta"
+                            onload="onImagenCargada()"
+                            onerror="onImagenError()"
+                            style="max-width: 100%; max-height: 100%; object-fit: contain; box-shadow: 0 0 20px rgba(0,0,0,0.5); transition: transform 0.3s ease; display: none;">
+                    </div>
+
+                    <!-- Pie de foto / Título -->
+                    <div id="infoCarrusel"
+                        style="color: white; margin-top: 20px; text-align: center; font-family: sans-serif;">
+                        <div id="tituloImagenCarrusel" style="font-size: 1.2rem; margin-bottom: 5px; font-weight: 500;">
+                        </div>
+                        <div id="contadorCarrusel" style="font-size: 1rem; color: #ccc;"></div>
+                    </div>
+
+                    <!-- Botón Siguiente -->
+                    <div id="btnNextCarrusel" onclick="navegarCarrusel(1)"
+                        style="position: absolute; right: 20px; color: white; font-size: 50px; cursor: pointer; z-index: 10000; padding: 20px; display: none;">
+                        <i class="fas fa-chevron-right"></i>
+                    </div>
+                </div>
             </div>
 
             <script>
-                // Función para abrir modal de ver foto
-                function abrirModalVerFoto(rutaFoto) {
+                // Lista de imágenes para el carrusel exportada desde PHP
+                const listaImagenesAdjuntas = <?= json_encode($imagenesParaCarrusel) ?>;
+                let indiceImagenActual = -1;
+
+                // Función para abrir modal de ver foto (caso simple, e.g. foto de perfil)
+                function abrirModalVerFoto(rutaFoto, titulo = "") {
+                    indiceImagenActual = -1; // No es carrusel
                     document.getElementById('modalVerFoto').style.display = 'block';
-                    document.getElementById('imagenFotoCompleta').src = rutaFoto;
+                    document.body.style.overflow = 'hidden'; // Bloquear scroll
+                    
+                    cargarImagenEnModal(rutaFoto, titulo, "");
+                }
+
+                // Función para abrir el carrusel en una posición específica
+                function visualizarCarrusel(indice) {
+                    if (indice < 0 || indice >= listaImagenesAdjuntas.length) return;
+
+                    indiceImagenActual = indice;
+                    const img = listaImagenesAdjuntas[indice];
+
+                    document.getElementById('modalVerFoto').style.display = 'block';
+                    document.body.style.overflow = 'hidden';
+
+                    // Mostrar botones de navegación si hay más de una imagen
+                    const displayNav = listaImagenesAdjuntas.length > 1 ? 'block' : 'none';
+                    document.getElementById('btnPrevCarrusel').style.display = displayNav;
+                    document.getElementById('btnNextCarrusel').style.display = displayNav;
+
+                    const titulo = img.nombre + (img.categoria ? " (" + img.categoria + ")" : "");
+                    const contador = (indice + 1) + " de " + listaImagenesAdjuntas.length;
+                    
+                    cargarImagenEnModal(img.url, titulo, contador);
+                }
+
+                // Nueva función centralizada para cargar imagen con estados
+                function cargarImagenEnModal(url, titulo, contador) {
+                    const imgElement = document.getElementById('imagenFotoCompleta');
+                    const spinner = document.getElementById('spinnerCargaModal');
+                    const errorMsg = document.getElementById('errorCargaModal');
+
+                    // Resetear estados
+                    imgElement.style.display = 'none';
+                    errorMsg.style.display = 'none';
+                    spinner.style.display = 'flex';
+                    
+                    // Actualizar textos
+                    document.getElementById('tituloImagenCarrusel').textContent = titulo;
+                    document.getElementById('contadorCarrusel').textContent = contador;
+
+                    // Asignar URL (esto dispara onload o onerror)
+                    imgElement.src = url;
+                }
+
+                function onImagenCargada() {
+                    document.getElementById('spinnerCargaModal').style.display = 'none';
+                    document.getElementById('errorCargaModal').style.display = 'none';
+                    document.getElementById('imagenFotoCompleta').style.display = 'block';
+                }
+
+                function onImagenError() {
+                    document.getElementById('spinnerCargaModal').style.display = 'none';
+                    document.getElementById('imagenFotoCompleta').style.display = 'none';
+                    document.getElementById('errorCargaModal').style.display = 'flex';
+                }
+
+                function reintentarCargaImagen() {
+                    const imgElement = document.getElementById('imagenFotoCompleta');
+                    const currentSrc = imgElement.src;
+                    
+                    // Forzar recarga limpiando el src momentáneamente
+                    imgElement.src = "";
+                    setTimeout(() => {
+                        onImagenCargada(); // Reset visual
+                        cargarImagenEnModal(currentSrc, document.getElementById('tituloImagenCarrusel').textContent, document.getElementById('contadorCarrusel').textContent);
+                    }, 50);
+                }
+
+                // Navegar por el carrusel
+                function navegarCarrusel(direccion) {
+                    if (indiceImagenActual === -1 || listaImagenesAdjuntas.length <= 1) return;
+
+                    let nuevoIndice = indiceImagenActual + direccion;
+
+                    // Bucle infinito
+                    if (nuevoIndice < 0) nuevoIndice = listaImagenesAdjuntas.length - 1;
+                    if (nuevoIndice >= listaImagenesAdjuntas.length) nuevoIndice = 0;
+
+                    visualizarCarrusel(nuevoIndice);
                 }
 
                 // Función para cerrar modal de ver foto
                 function cerrarModalVerFoto() {
                     document.getElementById('modalVerFoto').style.display = 'none';
+                    document.body.style.overflow = 'auto'; // Restaurar scroll
                 }
 
-                // Cerrar modal al hacer clic fuera de la imagen
+                // Cerrar modal al hacer clic fuera de la imagen (en el fondo oscuro)
                 document.getElementById('modalVerFoto').addEventListener('click', function (e) {
-                    if (e.target === this) {
+                    if (e.target === this || e.target.parentElement === this) {
                         cerrarModalVerFoto();
                     }
                 });
 
-                // Mostrar ícono de ver al hacer hover sobre la foto
+                // Soporte para flechas de teclado
+                document.addEventListener('keydown', function (e) {
+                    if (document.getElementById('modalVerFoto').style.display === 'block') {
+                        if (e.key === 'ArrowLeft') navegarCarrusel(-1);
+                        if (e.key === 'ArrowRight') navegarCarrusel(1);
+                        if (e.key === 'Escape') cerrarModalVerFoto();
+                    }
+                });
+
+                // Mostrar ícono de ver al hacer hover sobre la foto de perfil
                 document.addEventListener('DOMContentLoaded', function () {
                     const fotoContainer = document.querySelector('.foto-perfil');
                     const viewIcon = document.querySelector('.view-icon');
@@ -9052,13 +9264,20 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                         });
                     }
                 });
+
                 // Función para ver adjuntos (imágenes en modal, PDFs en nueva pestaña)
                 function visualizarAdjunto(url) {
                     const extension = url.split('.').pop().toLowerCase();
                     const esImagen = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'].includes(extension);
 
                     if (esImagen) {
-                        abrirModalVerFoto(url);
+                        // Buscar si está en la lista de imágenes para abrir el carrusel en esa posición
+                        const index = listaImagenesAdjuntas.findIndex(img => img.url === url);
+                        if (index !== -1) {
+                            visualizarCarrusel(index);
+                        } else {
+                            abrirModalVerFoto(url);
+                        }
                     } else {
                         window.open(url, '_blank');
                     }
