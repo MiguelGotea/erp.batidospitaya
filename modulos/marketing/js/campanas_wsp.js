@@ -5,6 +5,7 @@ let pasoActual = 1;
 const TOTAL_PASOS = 3;
 let clientesSeleccionados = [];   // [{id, nombre, telefono, sucursal}, ...]
 let imagenBase64 = null;
+let lastSearchId = 0; // Control de concurrencia para búsquedas
 
 // ── Al cargar la página ──
 document.addEventListener('DOMContentLoaded', () => {
@@ -291,17 +292,26 @@ function buscarClientes() {
     busquedaTimer = setTimeout(_buscarClientes, 400);
 }
 
-async function _buscarClientes() {
+async function _buscarClientes(silencioso = false) {
     const sucursal = document.getElementById('filtroSucursal').value;
     const busqueda = document.getElementById('buscarClienteInput').value.trim();
     const ultimaCompra = document.getElementById('filtroUltimaCompra').value;
     const lista = document.getElementById('listaDisponibles');
-    lista.innerHTML = '<div class="text-center py-3"><span class="spinner-border spinner-border-sm"></span></div>';
+
+    // Control de concurrencia
+    const currentSearchId = ++lastSearchId;
+
+    if (!silencioso) {
+        lista.innerHTML = '<div class="text-center py-3"><span class="spinner-border spinner-border-sm"></span></div>';
+    }
 
     try {
         const params = new URLSearchParams({ accion: 'buscar', sucursal, q: busqueda, ultima_compra: ultimaCompra });
         const resp = await fetch(`/modulos/marketing/ajax/campanas_wsp_get_clientes.php?${params}`);
         const data = await resp.json();
+
+        // Si llegó una búsqueda más reciente, ignorar esta
+        if (currentSearchId !== lastSearchId) return;
 
         if (!data.clientes || data.clientes.length === 0) {
             document.getElementById('contDisponibles').textContent = 0;
@@ -309,7 +319,7 @@ async function _buscarClientes() {
             return;
         }
 
-        const items = data.clientes.filter(c => !clientesSeleccionados.some(s => s.id === c.id));
+        const items = data.clientes.filter(c => !clientesSeleccionados.some(s => Number(s.id) == Number(c.id)));
         document.getElementById('contDisponibles').textContent = items.length;
 
         lista.innerHTML = items.map(c => {
@@ -327,33 +337,47 @@ async function _buscarClientes() {
             </div>`;
         }).join('');
 
-    } catch {
-        lista.innerHTML = '<div class="text-muted text-center py-3 small">Error al buscar</div>';
+    } catch (e) {
+        if (currentSearchId === lastSearchId) {
+            lista.innerHTML = '<div class="text-muted text-center py-3 small">Error al buscar</div>';
+            console.error(e);
+        }
     }
 }
 
-function agregarCliente(id, nombre, telefono, sucursal, membresia = '') {
-    if (clientesSeleccionados.some(c => c.id === id)) return;
+function agregarCliente(id, nombre, telefono, sucursal, membresia = '', silencioso = true, noRefrescar = false) {
+    if (clientesSeleccionados.some(c => Number(c.id) == Number(id))) return;
     clientesSeleccionados.push({ id, nombre, telefono, sucursal, membresia });
     renderListaSeleccionados();
-    _buscarClientes(); // refrescar disponibles
+    if (!noRefrescar) _buscarClientes(silencioso); // refrescar disponibles
 }
 
 function agregarTodosVisibles() {
     const items = document.querySelectorAll('#listaDisponibles .wsp-cliente-item');
-    items.forEach(item => item.click());
+    if (items.length === 0) return;
+
+    items.forEach(item => {
+        // Obtenemos los datos del atributo onclick para no duplicar lógica
+        // El onclick es: agregarCliente(id, 'nombre', 'tel', 'suc', 'memb')
+        // Al disparar el click(), se llama a agregarCliente con noRefrescar=false por defecto.
+        // Para optimizar, podríamos cambiar agregarCliente, pero lo más sencillo es 
+        // desactivar temporalmente el refresco o simplemente confiar en el control de concurrencia.
+        item.click();
+    });
+    // Forzamos un solo refresco al final
+    _buscarClientes(true);
 }
 
 function quitarCliente(id) {
-    clientesSeleccionados = clientesSeleccionados.filter(c => c.id !== id);
+    clientesSeleccionados = clientesSeleccionados.filter(c => Number(c.id) != Number(id));
     renderListaSeleccionados();
-    _buscarClientes();
+    _buscarClientes(true);
 }
 
 function limpiarSeleccion() {
     clientesSeleccionados = [];
     renderListaSeleccionados();
-    _buscarClientes();
+    _buscarClientes(true);
 }
 
 function renderListaSeleccionados() {
