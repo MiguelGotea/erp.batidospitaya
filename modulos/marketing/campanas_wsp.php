@@ -12,6 +12,7 @@ if (!tienePermiso('campanas_wsp', 'vista', $cargoOperario)) {
 
 $puedeCrear = tienePermiso('campanas_wsp', 'nueva_campana', $cargoOperario);
 $puedeEliminar = tienePermiso('campanas_wsp', 'eliminar_campana', $cargoOperario);
+$puedeResetSesion = tienePermiso('campanas_wsp', 'resetear_sesion', $cargoOperario);
 
 require_once '../../core/layout/menu_lateral.php';
 require_once '../../core/layout/header_universal.php';
@@ -49,12 +50,20 @@ require_once '../../core/layout/header_universal.php';
                         <span id="vpsStatusTexto">Verificando servicio...</span>
                     </div>
 
-                    <!-- Botón nueva campaña -->
-                    <?php if ($puedeCrear): ?>
-                        <button class="btn btn-success" onclick="abrirModalNueva()">
-                            <i class="bi bi-plus-circle me-1"></i> Nueva Campaña
-                        </button>
-                    <?php endif; ?>
+                    <!-- Botones de acción -->
+                    <div class="d-flex gap-2">
+                        <?php if ($puedeResetSesion): ?>
+                            <button class="btn btn-outline-warning" onclick="confirmarResetSesion()"
+                                title="Cambiar número de WhatsApp vinculado">
+                                <i class="bi bi-arrow-repeat me-1"></i> Cambiar Número
+                            </button>
+                        <?php endif; ?>
+                        <?php if ($puedeCrear): ?>
+                            <button class="btn btn-success" onclick="abrirModalNueva()">
+                                <i class="bi bi-plus-circle me-1"></i> Nueva Campaña
+                            </button>
+                        <?php endif; ?>
+                    </div>
                 </div>
 
                 <!-- ── Tabla de campañas ── -->
@@ -414,6 +423,42 @@ require_once '../../core/layout/header_universal.php';
         // Variables PHP → JS
         const PUEDE_CREAR = <?php echo $puedeCrear ? 'true' : 'false'; ?>;
         const PUEDE_ELIMINAR = <?php echo $puedeEliminar ? 'true' : 'false'; ?>;
+        const PUEDE_RESET_SESION = <?php echo $puedeResetSesion ? 'true' : 'false'; ?>;
+
+        function confirmarResetSesion() {
+            Swal.fire({
+                title: '¿Cambiar número de WhatsApp?',
+                html: 'Esto <strong>cerrará la sesión actual</strong> y generará un QR nuevo para vincular un número diferente.<br><br>El servicio dejará de enviar mensajes hasta que escanees el nuevo QR.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: '<i class="bi bi-arrow-repeat"></i> Sí, cambiar número',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (!result.isConfirmed) return;
+
+                Swal.fire({ title: 'Solicitando reset...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+                $.post('ajax/campanas_wsp_reset_sesion.php', {}, function (resp) {
+                    if (resp.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Reset solicitado',
+                            text: resp.mensaje,
+                            confirmButtonText: 'Entendido'
+                        }).then(() => {
+                            // Esperar ~15s y verificar el QR nuevo
+                            setTimeout(verificarQR, 15000);
+                        });
+                    } else {
+                        Swal.fire('Error', resp.error || 'No se pudo solicitar el reset', 'error');
+                    }
+                }, 'json').fail(function () {
+                    Swal.fire('Error', 'No se pudo contactar el servidor', 'error');
+                });
+            });
+        }
     </script>
 
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
