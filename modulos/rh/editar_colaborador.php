@@ -6311,104 +6311,103 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                                                                         </td>
                                                                         <td style="padding: 12px; text-align: center;">
                                                                             <?php if ($archivo['tipo'] !== 'faltante'): ?>
-                                                                                <a href="javascript:void(0)" 
-                                                                                                            onclick="visualizarAdjunto('<?= htmlspecialchars($archivo['ruta_archivo']) ?>')"
-                                                                                                            class="btn-accion btn-editar"
-                                                                                                            title="Ver documento">
-                                                                                                            <i class="fas fa-eye"></i>
-                                                                                                        </a>
-                                                                                                <?php else: ?>
-                                                                                                        <span style="color: #6c757d;">-</span>
-                                                                                                <?php endif; ?>
-                                                                                            </td>
-                                                                                        </tr>
-                                                                                <?php endforeach; ?>
-                                                                            </tbody>
-                                                                        </table>
+                                                                                <a href="javascript:void(0)"
+                                                                                    onclick="visualizarAdjunto('<?= htmlspecialchars($archivo['ruta_archivo']) ?>')"
+                                                                                    class="btn-accion btn-editar" title="Ver documento">
+                                                                                    <i class="fas fa-eye"></i>
+                                                                                </a>
+                                                                            <?php else: ?>
+                                                                                <span style="color: #6c757d;">-</span>
+                                                                            <?php endif; ?>
+                                                                        </td>
+                                                                    </tr>
                                                                 <?php endforeach; ?>
-                                                            </div>
-                                                        </div>
-                                                <?php endforeach; ?>
-                                        <?php else: ?>
-                                                <div style="text-align: center; padding: 40px; color: #6c757d;">
-                                                    <i class="fas fa-folder-open" style="font-size: 3rem; margin-bottom: 15px;"></i>
-                                                    <p>No hay documentos en el expediente digital</p>
+                                                            </tbody>
+                                                        </table>
+                                                    <?php endforeach; ?>
                                                 </div>
-                                        <?php endif; ?>
-                                    </div>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    <?php else: ?>
+                                        <div style="text-align: center; padding: 40px; color: #6c757d;">
+                                            <i class="fas fa-folder-open" style="font-size: 3rem; margin-bottom: 15px;"></i>
+                                            <p>No hay documentos en el expediente digital</p>
+                                        </div>
+                                    <?php endif; ?>
                                 </div>
+                            </div>
                         <?php endif; ?>
 
                         <!-- Pestaña de Bitácora -->
                         <?php if (tienePermiso('editar_colaborador', 'edicion', $cargoId)): ?>
-                                <div id="bitacora" class="tab-pane <?= $pestaña_activa == 'bitacora' ? 'active' : '' ?>">
-                                    <div style="margin-bottom: 30px;">
-                                        <h3 style="color: #0E544C; margin-bottom: 15px;">Nueva Anotación</h3>
+                            <div id="bitacora" class="tab-pane <?= $pestaña_activa == 'bitacora' ? 'active' : '' ?>">
+                                <div style="margin-bottom: 30px;">
+                                    <h3 style="color: #0E544C; margin-bottom: 15px;">Nueva Anotación</h3>
 
-                                        <form method="POST" action="">
-                                            <input type="hidden" name="accion_bitacora" value="agregar">
-                                            <input type="hidden" name="pestaña" value="bitacora">
+                                    <form method="POST" action="">
+                                        <input type="hidden" name="accion_bitacora" value="agregar">
+                                        <input type="hidden" name="pestaña" value="bitacora">
 
-                                            <div class="form-group">
-                                                <label for="anotacion">Anotación *</label>
-                                                <textarea id="anotacion" name="anotacion" class="form-control" rows="5"
-                                                    placeholder="Escriba aquí cualquier nota, observación o comentario sobre el colaborador..."
-                                                    required></textarea>
-                                                <small style="color: #6c757d;">
-                                                    Esta anotación quedará registrada permanentemente y no podrá ser editada
-                                                    ni
-                                                    eliminada.
-                                                </small>
-                                            </div>
+                                        <div class="form-group">
+                                            <label for="anotacion">Anotación *</label>
+                                            <textarea id="anotacion" name="anotacion" class="form-control" rows="5"
+                                                placeholder="Escriba aquí cualquier nota, observación o comentario sobre el colaborador..."
+                                                required></textarea>
+                                            <small style="color: #6c757d;">
+                                                Esta anotación quedará registrada permanentemente y no podrá ser editada
+                                                ni
+                                                eliminada.
+                                            </small>
+                                        </div>
 
-                                            <button type="submit" class="btn-submit">
-                                                <i class="fas fa-save"></i> Guardar Anotación
-                                            </button>
-                                        </form>
-                                    </div>
-
-                                    <div style="border-top: 2px solid #0E544C; padding-top: 20px;">
-                                        <h3 style="color: #0E544C; margin-bottom: 15px;">
-                                            Historial de Bitácora
-                                            <span style="font-size: 0.8em; color: #6c757d;">(<?= count($bitacoraColaborador) ?>
-                                                anotaciones)</span>
-                                        </h3>
-
-                                        <?php if (count($bitacoraColaborador) > 0): ?>
-                                                <div style="display: flex; flex-direction: column; gap: 15px;">
-                                                    <?php foreach ($bitacoraColaborador as $anotacion): ?>
-                                                            <div
-                                                                style="background: #f8f9fa; border-left: 4px solid #0E544C; padding: 15px; border-radius: 4px;">
-                                                                <div
-                                                                    style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
-                                                                    <div>
-                                                                        <strong style="color: #0E544C;">
-                                                                            <i class="fas fa-user"></i>
-                                                                            <?= htmlspecialchars($anotacion['nombre_usuario']) ?>
-                                                                        </strong>
-                                                                    </div>
-                                                                    <div style="color: #6c757d; font-size: 0.9em;">
-                                                                        <i class="fas fa-calendar"></i>
-                                                                        <?= date('d/m/Y H:i', strtotime($anotacion['fecha_registro'])) ?>
-                                                                    </div>
-                                                                </div>
-                                                                <div style="color: #333; line-height: 1.6; white-space: pre-wrap;">
-                                                                    <?= htmlspecialchars($anotacion['anotacion']) ?>
-                                                                </div>
-                                                            </div>
-                                                    <?php endforeach; ?>
-                                                </div>
-                                        <?php else: ?>
-                                                <div style="text-align: center; padding: 40px; color: #6c757d;">
-                                                    <i class="fas fa-clipboard"
-                                                        style="font-size: 3rem; margin-bottom: 15px; opacity: 0.3;"></i>
-                                                    <p>No hay anotaciones en la bitácora</p>
-                                                    <p style="font-size: 0.9em;">Las anotaciones aparecerán aquí una vez que se
-                                                        registren</p>
-                                                </div>
-                                        <?php endif; ?>
-                                    </div>
+                                        <button type="submit" class="btn-submit">
+                                            <i class="fas fa-save"></i> Guardar Anotación
+                                        </button>
+                                    </form>
                                 </div>
+
+                                <div style="border-top: 2px solid #0E544C; padding-top: 20px;">
+                                    <h3 style="color: #0E544C; margin-bottom: 15px;">
+                                        Historial de Bitácora
+                                        <span style="font-size: 0.8em; color: #6c757d;">(<?= count($bitacoraColaborador) ?>
+                                            anotaciones)</span>
+                                    </h3>
+
+                                    <?php if (count($bitacoraColaborador) > 0): ?>
+                                        <div style="display: flex; flex-direction: column; gap: 15px;">
+                                            <?php foreach ($bitacoraColaborador as $anotacion): ?>
+                                                <div
+                                                    style="background: #f8f9fa; border-left: 4px solid #0E544C; padding: 15px; border-radius: 4px;">
+                                                    <div
+                                                        style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
+                                                        <div>
+                                                            <strong style="color: #0E544C;">
+                                                                <i class="fas fa-user"></i>
+                                                                <?= htmlspecialchars($anotacion['nombre_usuario']) ?>
+                                                            </strong>
+                                                        </div>
+                                                        <div style="color: #6c757d; font-size: 0.9em;">
+                                                            <i class="fas fa-calendar"></i>
+                                                            <?= date('d/m/Y H:i', strtotime($anotacion['fecha_registro'])) ?>
+                                                        </div>
+                                                    </div>
+                                                    <div style="color: #333; line-height: 1.6; white-space: pre-wrap;">
+                                                        <?= htmlspecialchars($anotacion['anotacion']) ?>
+                                                    </div>
+                                                </div>
+                                            <?php endforeach; ?>
+                                        </div>
+                                    <?php else: ?>
+                                        <div style="text-align: center; padding: 40px; color: #6c757d;">
+                                            <i class="fas fa-clipboard"
+                                                style="font-size: 3rem; margin-bottom: 15px; opacity: 0.3;"></i>
+                                            <p>No hay anotaciones en la bitácora</p>
+                                            <p style="font-size: 0.9em;">Las anotaciones aparecerán aquí una vez que se
+                                                registren</p>
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
                         <?php endif; ?>
                     </div>
                 </div>
@@ -6554,9 +6553,9 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                                 <?php
                                 $tiposSalida = obtenerTiposSalida();
                                 foreach ($tiposSalida as $tipo): ?>
-                                        <option value="<?= $tipo['CodTipoSalida'] ?>">
-                                            <?= htmlspecialchars($tipo['nombre']) ?>
-                                        </option>
+                                    <option value="<?= $tipo['CodTipoSalida'] ?>">
+                                        <?= htmlspecialchars($tipo['nombre']) ?>
+                                    </option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
@@ -6698,12 +6697,21 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                                     onclick="toggleCamara()">
                                     Iniciar Cámara
                                 </button>
+                                <button type="button" id="btnCambiarCamara" class="btn-submit"
+                                    style="background-color: #6c757d; font-size: 0.85rem; padding: 5px 15px; width: auto; display: none;"
+                                    onclick="cambiarCamara()">
+                                    <i class="fas fa-sync"></i> Cambiar Cámara
+                                </button>
                             </div>
 
                             <div id="contenedorVideo"
                                 style="display: none; position: relative; margin-bottom: 15px; text-align: center; border-radius: 8px; overflow: hidden; background: #000;">
                                 <video id="videoCaptura"
                                     style="width: 100%; max-width: 400px; display: block; margin: 0 auto;"></video>
+                                <button type="button" id="btnFlash" onclick="toggleFlash()"
+                                    style="display: none; position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.5); color: white; border: none; border-radius: 50%; width: 40px; height: 40px; cursor: pointer; align-items: center; justify-content: center; z-index: 10;">
+                                    <i class="fas fa-bolt"></i>
+                                </button>
                                 <button type="button" onclick="capturarFoto()"
                                     style="position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); background: #0E544C; color: white; border: none; border-radius: 50%; width: 50px; height: 50px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">
                                     <i class="fas fa-camera" style="font-size: 1.5rem;"></i>
@@ -6796,9 +6804,9 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                             <select id="edit_cod_cargo" name="cod_cargo" class="form-control" required>
                                 <option value="">Seleccionar cargo...</option>
                                 <?php foreach ($cargosDisponibles as $cargo): ?>
-                                        <option value="<?= $cargo['CodNivelesCargos'] ?>">
-                                            <?= htmlspecialchars($cargo['Nombre']) ?>
-                                        </option>
+                                    <option value="<?= $cargo['CodNivelesCargos'] ?>">
+                                        <?= htmlspecialchars($cargo['Nombre']) ?>
+                                    </option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
@@ -6808,9 +6816,9 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                             <select id="edit_sucursal" name="sucursal" class="form-control" required>
                                 <option value="">Seleccionar sucursal...</option>
                                 <?php foreach ($sucursales as $sucursal): ?>
-                                        <option value="<?= $sucursal['codigo'] ?>">
-                                            <?= htmlspecialchars($sucursal['nombre']) ?>
-                                        </option>
+                                    <option value="<?= $sucursal['codigo'] ?>">
+                                        <?= htmlspecialchars($sucursal['nombre']) ?>
+                                    </option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
@@ -6893,10 +6901,10 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                             <select id="edit_id_categoria" name="id_categoria" class="form-control" required>
                                 <option value="">Seleccionar categoría...</option>
                                 <?php foreach ($todasCategorias as $categoria): ?>
-                                        <option value="<?= $categoria['idCategoria'] ?>">
-                                            <?= htmlspecialchars($categoria['NombreCategoria']) ?>
-                                            (Peso: <?= $categoria['Peso'] ?>)
-                                        </option>
+                                    <option value="<?= $categoria['idCategoria'] ?>">
+                                        <?= htmlspecialchars($categoria['NombreCategoria']) ?>
+                                        (Peso: <?= $categoria['Peso'] ?>)
+                                    </option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
@@ -6949,9 +6957,9 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                                     <select id="edit_cod_cargo_adendum" name="cod_cargo" class="form-control">
                                         <option value="">Seleccionar cargo...</option>
                                         <?php foreach ($cargosDisponibles as $cargo): ?>
-                                                <option value="<?= $cargo['CodNivelesCargos'] ?>">
-                                                    <?= htmlspecialchars($cargo['Nombre']) ?>
-                                                </option>
+                                            <option value="<?= $cargo['CodNivelesCargos'] ?>">
+                                                <?= htmlspecialchars($cargo['Nombre']) ?>
+                                            </option>
                                         <?php endforeach; ?>
                                     </select>
                                 </div>
@@ -6961,9 +6969,9 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                                     <select id="edit_sucursal_adendum" name="sucursal" class="form-control">
                                         <option value="">Seleccionar sucursal...</option>
                                         <?php foreach ($sucursales as $sucursal): ?>
-                                                <option value="<?= $sucursal['codigo'] ?>">
-                                                    <?= htmlspecialchars($sucursal['nombre']) ?>
-                                                </option>
+                                            <option value="<?= $sucursal['codigo'] ?>">
+                                                <?= htmlspecialchars($sucursal['nombre']) ?>
+                                            </option>
                                         <?php endforeach; ?>
                                     </select>
                                 </div>
@@ -6975,10 +6983,10 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                                     <select id="edit_id_categoria_adendum" name="id_categoria" class="form-control">
                                         <option value="">Seleccionar categoría...</option>
                                         <?php foreach ($todasCategorias as $categoria): ?>
-                                                <option value="<?= $categoria['idCategoria'] ?>">
-                                                    <?= htmlspecialchars($categoria['NombreCategoria']) ?>
-                                                    (Peso: <?= $categoria['Peso'] ?>)
-                                                </option>
+                                            <option value="<?= $categoria['idCategoria'] ?>">
+                                                <?= htmlspecialchars($categoria['NombreCategoria']) ?>
+                                                (Peso: <?= $categoria['Peso'] ?>)
+                                            </option>
                                         <?php endforeach; ?>
                                     </select>
                                 </div>
@@ -7767,27 +7775,198 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
 
                 // --- LÓGICA DE CÁMARA PARA ADJUNTOS ---
                 let streamCamara = null;
+                let trackCamara = null;
+                let flashActivo = false;
 
-                function toggleCamara() {
+                let dispositivosVideo = [];
+                let indiceCamaraActual = 0;
+
+                async function obtenerDispositivosVideo() {
+                    try {
+                        const devices = await navigator.mediaDevices.enumerateDevices();
+                        dispositivosVideo = devices.filter(device => device.kind === 'videoinput');
+                        console.log("Cámaras encontradas:", dispositivosVideo);
+
+                        // Mostrar botón de cambio si hay más de una cámara
+                        const btnCambiar = document.getElementById('btnCambiarCamara');
+                        if (dispositivosVideo.length > 1) {
+                            btnCambiar.style.display = 'inline-block';
+                        } else {
+                            btnCambiar.style.display = 'none';
+                        }
+                    } catch (err) {
+                        console.error("Error al enumerar cámaras:", err);
+                    }
+                }
+
+                async function toggleCamara(deviceId = null) {
                     const video = document.getElementById('videoCaptura');
                     const contenedor = document.getElementById('contenedorVideo');
                     const btn = document.getElementById('btnToggleCamara');
 
-                    if (streamCamara) {
+                    if (streamCamara && !deviceId) {
                         detenerCamara();
                     } else {
-                        navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false })
-                            .then(function (stream) {
-                                streamCamara = stream;
-                                video.srcObject = stream;
+                        if (streamCamara) detenerCamara(); // Detener actual si estamos cambiando
+
+                        try {
+                            // Si no se pasó deviceId, intentar obtener la lista y buscar la trasera
+                            if (!deviceId) {
+                                await obtenerDispositivosVideo();
+                                // Preferir cámara con "back" o "rear" en el label
+                                const trasera = dispositivosVideo.find(d =>
+                                    d.label.toLowerCase().includes('back') ||
+                                    d.label.toLowerCase().includes('rear') ||
+                                    d.label.toLowerCase().includes('trasera')
+                                );
+                                if (trasera) {
+                                    deviceId = trasera.deviceId;
+                                    indiceCamaraActual = dispositivosVideo.indexOf(trasera);
+                                }
+                            }
+
+                            const constraints = {
+                                video: deviceId ? { deviceId: { exact: deviceId } } : { facingMode: { ideal: "environment" } },
+                                audio: false
+                            };
+
+                            const stream = await navigator.mediaDevices.getUserMedia(constraints);
+                            streamCamara = stream;
+                            trackCamara = stream.getVideoTracks()[0];
+                            video.srcObject = stream;
+
+                            // Actualizar lista de dispositivos (ahora con labels porque ya hay permiso)
+                            await obtenerDispositivosVideo();
+
+                            video.onloadedmetadata = () => {
                                 video.play();
                                 contenedor.style.display = 'block';
                                 btn.textContent = 'Detener Cámara';
                                 btn.style.backgroundColor = '#dc3545';
-                            })
-                            .catch(function (err) {
-                                alert("No se pudo acceder a la cámara: " + err);
-                            });
+                                detectarCapacidadesFlash();
+                            };
+                        } catch (err) {
+                            console.error("Error al acceder a la cámara:", err);
+                            if (deviceId && dispositivosVideo.length > 1) {
+                                console.log("Reintentando con constraints genéricos...");
+                                toggleCamara(); // Reintentar sin id específico
+                            } else {
+                                alert("No se pudo acceder a la cámara. Verifique los permisos.\n\nError: " + err.name);
+                            }
+                        }
+                    }
+                }
+
+                async function cambiarCamara() {
+                    if (dispositivosVideo.length < 2) return;
+                    
+                    indiceCamaraActual = (indiceCamaraActual + 1) % dispositivosVideo.length;
+                    const proximoDispositivo = dispositivosVideo[indiceCamaraActual];
+                    
+                    console.log("Cambiando a cámara:", proximoDispositivo.label);
+                    await toggleCamara(proximoDispositivo.deviceId);
+                }
+
+                async function detectarCapacidadesFlash() {
+                    if (!trackCamara) return;
+
+                    const btnFlash = document.getElementById('btnFlash');
+                    btnFlash.style.display = 'none'; // Ocultar por defecto
+
+                    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+                    // Pequeño retardo para dar tiempo a que el track se estabilice en algunos navegadores
+                    await new Promise(r => setTimeout(r, 300));
+
+                    let hasTorch = false;
+
+                    // 1. Intento estándar con getCapabilities
+                    if (typeof trackCamara.getCapabilities === 'function') {
+                        const cap = trackCamara.getCapabilities();
+                        if (cap.torch) hasTorch = true;
+                    }
+
+                    // 2. Si no reporta torch pero es móvil y cámara trasera, mostrar de todos modos (iOS fallback)
+                    if (!hasTorch && isMobile) {
+                        const settings = trackCamara.getSettings ? trackCamara.getSettings() : {};
+                        if (settings.facingMode === 'environment') {
+                            hasTorch = true;
+                        }
+                    }
+
+                    if (hasTorch) {
+                        btnFlash.style.display = 'flex';
+                    } else {
+                        console.log("Cámara actual no reporta soporte para Flash/Torch.");
+                        // Si tenemos más cámaras y esta no tiene flash, podríamos sugerir cambiar
+                        if (dispositivosVideo.length > 1) {
+                             console.log("Sugerencia: Intente cambiar de cámara para buscar soporte de flash.");
+                        }
+                    }
+                }
+
+                async function toggleFlash() {
+                    if (!trackCamara) {
+                        alert("Inicie la cámara primero para usar el flash.");
+                        return;
+                    }
+
+                    const btnFlash = document.getElementById('btnFlash');
+
+                    // Intentar activar/desactivar
+                    const nuevoEstado = !flashActivo;
+
+                    try {
+                        // Verificar si applyConstraints existe
+                        if (typeof trackCamara.applyConstraints !== 'function') {
+                            throw new Error("Su navegador no permite controlar el flash de la cámara.");
+                        }
+
+                        // Aplicar restricción
+                        await trackCamara.applyConstraints({
+                            advanced: [{ torch: nuevoEstado }]
+                        });
+
+                        flashActivo = nuevoEstado;
+
+                        // Actualizar UI
+                        if (flashActivo) {
+                            btnFlash.style.color = '#ffc107';
+                            btnFlash.style.backgroundColor = 'rgba(255, 255, 255, 0.2)';
+                        } else {
+                            btnFlash.style.color = 'white';
+                            btnFlash.style.backgroundColor = 'rgba(0,0,0,0.5)';
+                        }
+
+                    } catch (err) {
+                        console.error("Error al controlar el flash:", err);
+
+                        let msg = "No se pudo cambiar el estado del flash.";
+
+                        if (err.name === 'OverconstrainedError' || err.name === 'NotSupportedError') {
+                            msg = "Esta cámara no permite el uso del flash en este momento o está siendo bloqueada por otra página.";
+                        } else if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
+                            msg = "El flash requiere una conexión segura (HTTPS).";
+                        }
+
+                        // Información de diagnóstico detallada
+                        let diagnostic = `\n\nInfo: ${err.name}`;
+                        try {
+                            const cap = trackCamara.getCapabilities ? trackCamara.getCapabilities() : {};
+                            const settings = trackCamara.getSettings ? trackCamara.getSettings() : {};
+                            diagnostic += `\nTorch compatible: ${!!cap.torch}`;
+                            diagnostic += `\nID: ${settings.deviceId ? settings.deviceId.substring(0, 8) + '...' : 'N/A'}`;
+                            const currentDevice = dispositivosVideo.find(d => d.deviceId === settings.deviceId);
+                            diagnostic += `\nEtiqueta: ${currentDevice ? currentDevice.label : 'N/A'}`;
+                        } catch (e) { }
+
+                        alert(msg + diagnostic);
+                        flashActivo = false;
+
+                        // Si falla catastróficamente, ocultar el botón
+                        if (err.name === 'OverconstrainedError') {
+                            btnFlash.style.display = 'none';
+                        }
                     }
                 }
 
@@ -7799,7 +7978,14 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                     if (streamCamara) {
                         streamCamara.getTracks().forEach(track => track.stop());
                         streamCamara = null;
+                        trackCamara = null;
+                        flashActivo = false;
                         video.srcObject = null;
+
+                        const btnFlash = document.getElementById('btnFlash');
+                        btnFlash.style.display = 'none';
+                        btnFlash.style.color = 'white';
+                        btnFlash.style.backgroundColor = 'rgba(0,0,0,0.5)';
                     }
                     if (contenedor) contenedor.style.display = 'none';
                     if (btn) {
@@ -8834,7 +9020,7 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                         });
                     }
                 });
-            // Función para ver adjuntos (imágenes en modal, PDFs en nueva pestaña)
+                // Función para ver adjuntos (imágenes en modal, PDFs en nueva pestaña)
                 function visualizarAdjunto(url) {
                     const extension = url.split('.').pop().toLowerCase();
                     const esImagen = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'].includes(extension);
