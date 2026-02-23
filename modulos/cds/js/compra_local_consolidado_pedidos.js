@@ -268,7 +268,8 @@ function renderizarTablaProducto(producto) {
         `;
     }
 
-    const diaHoy = getDiaHoy();
+    // Solo resaltar "hoy" si estamos viendo la semana actual
+    const diaHoy = semanaOffset === 0 ? getDiaHoy() : -1;
     let html = `
         <div class="table-responsive mt-2">
             <table class="table consolidado-table">
