@@ -284,9 +284,8 @@ require_once '../../core/layout/header_universal.php';
 
                                     <div class="alert alert-warning py-2 small">
                                         <i class="bi bi-exclamation-triangle me-1"></i>
-                                        <strong>Anti-ban:</strong> El servicio enviará con delays de 8–25s entre
-                                        mensajes.
-                                        Máximo 150 mensajes por día.
+                                        <strong>Anti-ban:</strong> Delays de 8–25s. Máximo 150/día.
+                                        <br><strong>Horario:</strong> 7:00 AM - 10:00 PM.
                                     </div>
                                 </div>
                             </div>
@@ -401,9 +400,8 @@ require_once '../../core/layout/header_universal.php';
                     </div>
                     <div class="alert alert-info py-2 px-3 small">
                         <strong><i class="fas fa-info-circle me-1"></i> Horario de envío:</strong>
-                        Los mensajes se envían habitualmente entre 8:00 AM y 8:00 PM. <br>
-                        <span class="badge bg-warning text-dark">MODO PRUEBA:</span> El horario está liberado para
-                        pruebas 24/7.
+                        Los mensajes se envían automáticamente entre <strong>7:00 AM y 10:00 PM</strong> (Hora
+                        Nicaragua).
                     </div>
                 </div>
             </div>
