@@ -28,19 +28,30 @@ async function verificarStatusVPS() {
     try {
         const resp = await fetch('ajax/campanas_wsp_get_status.php');
         const data = await resp.json();
-        actualizarBadgeVPS(data.estado);
+        actualizarBadgeVPS(data.estado, data.numero);
     } catch {
         actualizarBadgeVPS('desconectado');
     }
 }
 
-function actualizarBadgeVPS(estado) {
+function actualizarBadgeVPS(estado, numero = null) {
     const dot = document.getElementById('vpsDot');
     const texto = document.getElementById('vpsStatusTexto');
     dot.className = 'wsp-dot ' + estado;
 
+    // Formatear número: 50588888888 → ☏ +505 8888-8888
+    let numStr = '';
+    if (estado === 'conectado' && numero) {
+        const n = String(numero);
+        if (n.startsWith('505') && n.length === 11) {
+            numStr = ` (☏ +505 ${n.slice(3, 7)}-${n.slice(7)})`;
+        } else {
+            numStr = ` (☏ +${n})`;
+        }
+    }
+
     const textos = {
-        conectado: '✅ WhatsApp Conectado',
+        conectado: `✅ WhatsApp Conectado${numStr}`,
         qr_pendiente: '📷 QR Pendiente — clic para escanear',
         desconectado: '🔴 Servicio Desconectado',
         reset_pendiente: '🔄 Pendiente de cambio de número...'

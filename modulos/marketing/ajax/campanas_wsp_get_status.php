@@ -18,8 +18,8 @@ if (!tienePermiso('campanas_wsp', 'vista', $cargoOperario)) {
     exit;
 }
 
-// URL del endpoint público de la API
-$apiUrl = 'https://api.batidospitaya.com/api/wsp/status.php';
+// URL del endpoint público de la API — siempre filtrar por instancia
+$apiUrl = 'https://api.batidospitaya.com/api/wsp/status.php?instancia=wsp-clientes';
 
 try {
     $ctx = stream_context_create([

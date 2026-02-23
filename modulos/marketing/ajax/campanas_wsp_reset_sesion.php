@@ -21,20 +21,14 @@ if (!tienePermiso('campanas_wsp', 'resetear_sesion', $cargoOperario)) {
 }
 
 try {
-    // Escribir el flag directamente en la BD
-    // El VPS detecta el flag en el próximo ciclo de pendientes.php (máx. 60s)
+    // Activar el flag de reset para la instancia de este módulo
+    // El VPS lo detecta en el próximo ciclo de pendientes.php (máx. 60s)
     $stmt = $conn->prepare("
-        UPDATE wsp_sesion_vps_
-        SET reset_solicitado = 1
-        ORDER BY id DESC
-        LIMIT 1
+        INSERT INTO wsp_sesion_vps_ (instancia, estado, reset_solicitado)
+        VALUES ('wsp-clientes', 'desconectado', 1)
+        ON DUPLICATE KEY UPDATE reset_solicitado = 1
     ");
     $stmt->execute();
-
-    if ($stmt->rowCount() === 0) {
-        // No hay fila aún — insertar una
-        $conn->exec("INSERT INTO wsp_sesion_vps_ (estado, reset_solicitado) VALUES ('desconectado', 1)");
-    }
 
     echo json_encode([
         'success' => true,
