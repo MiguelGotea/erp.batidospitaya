@@ -16,6 +16,7 @@ INSERT INTO `tools_erp` (`nombre_tool`, `accion`, `CodNivelesCargos`, `permitido
 VALUES ('campanas_wsp', 'resetear_sesion', 1, 1)
 ON DUPLICATE KEY UPDATE `permitido` = 1;
 
+
 -- NOTA: Cambia el valor 1 de CodNivelesCargos por el código del cargo del
 --       usuario específico que debe tener este permiso.
 --       Puedes consultar los cargos en:
