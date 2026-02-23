@@ -57,6 +57,7 @@ function actualizarBadgeVPS(estado, numero = null) {
 
     const textos = {
         conectado: `✅ CRM Bot Conectado${numStr}`,
+        inicializando: '⏳ Inicializando... paciencia (1 min)',
         qr_pendiente: '📷 QR Pendiente — clic Ver QR',
         desconectado: '🔴 Bot Desconectado',
         reset_pendiente: '🔄 Esperando reinicio...'
