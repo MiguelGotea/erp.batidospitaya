@@ -32,9 +32,11 @@
     cursor: pointer;
     transition: all .2s;
 }
+
 .wsp-status-badge:hover {
     background: #e9ecef;
 }
+
 .wsp-dot {
     width: 10px;
     height: 10px;
@@ -42,28 +44,54 @@
     background: #adb5bd;
     animation: pulseDot 2s infinite;
 }
-.wsp-dot.conectado      { background: var(--wsp-verde); }
-.wsp-dot.qr_pendiente   { background: #ffc107; }
-.wsp-dot.desconectado   { background: #dc3545; animation: none; }
+
+.wsp-dot.conectado {
+    background: var(--wsp-verde);
+}
+
+.wsp-dot.qr_pendiente {
+    background: #ffc107;
+}
+
+.wsp-dot.desconectado {
+    background: #dc3545;
+    animation: none;
+}
+
 .wsp-dot.reset_pendiente {
     background: #fd7e14;
     animation: spinDot 1s linear infinite;
 }
 
 @keyframes spinDot {
-    from { transform: rotate(0deg) scale(1.15); }
-    to   { transform: rotate(360deg) scale(1.15); }
+    from {
+        transform: rotate(0deg) scale(1.15);
+    }
+
+    to {
+        transform: rotate(360deg) scale(1.15);
+    }
 }
 
 @keyframes pulseDot {
-    0%, 100% { transform: scale(1); opacity: 1; }
-    50%       { transform: scale(1.3); opacity: .7; }
+
+    0%,
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    50% {
+        transform: scale(1.3);
+        opacity: .7;
+    }
 }
 
 /* ── Wizard de pasos ── */
 .wsp-modal-header {
     background: var(--pitaya-dark);
 }
+
 .wsp-wizard-steps {
     display: flex;
     align-items: center;
@@ -72,6 +100,7 @@
     background: #f8f9fa;
     border-bottom: 1px solid #dee2e6;
 }
+
 .wsp-step {
     display: flex;
     flex-direction: column;
@@ -80,8 +109,15 @@
     opacity: .4;
     transition: opacity .3s;
 }
-.wsp-step.active { opacity: 1; }
-.wsp-step.done   { opacity: .8; }
+
+.wsp-step.active {
+    opacity: 1;
+}
+
+.wsp-step.done {
+    opacity: .8;
+}
+
 .wsp-step-num {
     width: 28px;
     height: 28px;
@@ -94,10 +130,28 @@
     font-size: .8rem;
     color: #495057;
 }
-.wsp-step.active .wsp-step-num { background: var(--pitaya-dark); color: #fff; }
-.wsp-step.done   .wsp-step-num { background: var(--wsp-verde); color: #fff; }
-.wsp-step-label  { font-size: .72rem; color: #495057; }
-.wsp-step-line   { flex: 1; height: 2px; background: #dee2e6; min-width: 40px; }
+
+.wsp-step.active .wsp-step-num {
+    background: var(--pitaya-dark);
+    color: #fff;
+}
+
+.wsp-step.done .wsp-step-num {
+    background: var(--wsp-verde);
+    color: #fff;
+}
+
+.wsp-step-label {
+    font-size: .72rem;
+    color: #495057;
+}
+
+.wsp-step-line {
+    flex: 1;
+    height: 2px;
+    background: #dee2e6;
+    min-width: 40px;
+}
 
 /* ── Variable chips ── */
 .wsp-var-chip {
@@ -110,7 +164,10 @@
     border: 1px solid #a5d6a7;
     margin-left: 2px;
 }
-.wsp-var-chip:hover { background: #c8e6c9; }
+
+.wsp-var-chip:hover {
+    background: #c8e6c9;
+}
 
 /* ── Preview de WhatsApp ── */
 .wsp-preview {
@@ -120,6 +177,7 @@
     border: 1px solid #dee2e6;
     min-height: 250px;
 }
+
 .wsp-preview-header {
     background: var(--wsp-verde-oscuro);
     color: white;
@@ -129,16 +187,18 @@
     padding: 8px 12px;
     font-size: .85rem;
 }
+
 .wsp-preview-avatar {
     width: 34px;
     height: 34px;
     border-radius: 50%;
-    background: rgba(255,255,255,.2);
+    background: rgba(255, 255, 255, .2);
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 1.1rem;
 }
+
 .wsp-preview-bubble {
     background: #fff;
     margin: 12px;
@@ -147,14 +207,16 @@
     font-size: .85rem;
     white-space: pre-wrap;
     word-break: break-word;
-    box-shadow: 0 1px 2px rgba(0,0,0,.1);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, .1);
     min-height: 50px;
 }
+
 .wsp-preview-img-container {
     margin: 0 12px 12px;
     border-radius: 8px;
     overflow: hidden;
 }
+
 .wsp-preview-img-container img {
     width: 100%;
     max-height: 200px;
@@ -169,6 +231,7 @@
     overflow-y: auto;
     background: #fff;
 }
+
 .wsp-cliente-item {
     display: flex;
     justify-content: space-between;
@@ -179,9 +242,20 @@
     cursor: pointer;
     transition: background .15s;
 }
-.wsp-cliente-item:hover { background: #f8f9fa; }
-.wsp-cliente-item .nombre { font-weight: 500; }
-.wsp-cliente-item .telefono { color: #6c757d; font-size: .75rem; }
+
+.wsp-cliente-item:hover {
+    background: #f8f9fa;
+}
+
+.wsp-cliente-item .nombre {
+    font-weight: 500;
+}
+
+.wsp-cliente-item .telefono {
+    color: #6c757d;
+    font-size: .75rem;
+}
+
 .wsp-cliente-item .btn-accion-mini {
     border: none;
     background: transparent;
@@ -190,8 +264,27 @@
     padding: 2px 5px;
     border-radius: 4px;
 }
-.wsp-cliente-item .btn-agregar  { color: var(--wsp-verde); }
-.wsp-cliente-item .btn-quitar   { color: #dc3545; }
+
+.wsp-cliente-item .btn-agregar {
+    color: var(--wsp-verde);
+}
+
+.wsp-cliente-item .btn-quitar {
+    color: #dc3545;
+}
+
+.wsp-membresia {
+    display: inline-block;
+    background: #e8f5e9;
+    color: #1b5e20;
+    border: 1px solid #a5d6a7;
+    border-radius: 10px;
+    padding: 0px 6px;
+    font-size: .7rem;
+    font-weight: 600;
+    margin-right: 3px;
+    vertical-align: middle;
+}
 
 /* ── Barra de progreso en tabla ── */
 .wsp-progreso {
@@ -200,15 +293,34 @@
     gap: 6px;
     font-size: .8rem;
 }
+
 .wsp-progreso .progress {
     flex: 1;
     height: 8px;
 }
 
 /* ── Badges de estado ── */
-.badge-borrador    { background: #6c757d; }
-.badge-programada  { background: #0d6efd; }
-.badge-enviando    { background: #ffc107; color: #000; }
-.badge-completada  { background: #198754; }
-.badge-fallida     { background: #dc3545; }
-.badge-cancelada   { background: #adb5bd; }
+.badge-borrador {
+    background: #6c757d;
+}
+
+.badge-programada {
+    background: #0d6efd;
+}
+
+.badge-enviando {
+    background: #ffc107;
+    color: #000;
+}
+
+.badge-completada {
+    background: #198754;
+}
+
+.badge-fallida {
+    background: #dc3545;
+}
+
+.badge-cancelada {
+    background: #adb5bd;
+}

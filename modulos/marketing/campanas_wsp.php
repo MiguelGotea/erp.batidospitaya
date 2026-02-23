@@ -208,9 +208,26 @@ require_once '../../core/layout/header_universal.php';
                                     <option value="">— Todas —</option>
                                 </select>
 
+                                <label class="form-label fw-bold mt-3">Última compra</label>
+                                <select class="form-select" id="filtroUltimaCompra" onchange="buscarClientes()">
+                                    <option value="">— Cualquier fecha —</option>
+                                    <option value="7">Hace ≤ 1 semana</option>
+                                    <option value="14">Hace ≤ 2 semanas</option>
+                                    <option value="30">Hace ≤ 1 mes</option>
+                                    <option value="60">Hace ≤ 2 meses</option>
+                                    <option value="90">Hace ≤ 3 meses</option>
+                                    <option value="120">Hace ≤ 4 meses</option>
+                                    <option value="150">Hace ≤ 5 meses</option>
+                                    <option value="180">Hace ≤ 6 meses</option>
+                                    <option value="365">Hace ≤ 1 año</option>
+                                    <option value="730">Hace ≤ 2 años</option>
+                                    <option value="1095">Hace ≤ 3 años</option>
+                                    <option value="-1">Sin compras registradas</option>
+                                </select>
+
                                 <label class="form-label fw-bold mt-3">Buscar cliente</label>
                                 <input type="text" class="form-control" id="buscarClienteInput"
-                                    placeholder="Nombre o celular..." oninput="buscarClientes()">
+                                    placeholder="Nombre, celular o membresía..." oninput="buscarClientes()">
 
                                 <div class="mt-3">
                                     <button class="btn btn-sm btn-outline-success w-100"

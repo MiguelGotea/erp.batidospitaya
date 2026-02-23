@@ -34,34 +34,82 @@ try {
     }
 
     // ── Búsqueda de clientes ──
-    $q = '%' . trim($_GET['q'] ?? '') . '%';
+    $qRaw = trim($_GET['q'] ?? '');
     $sucursal = trim($_GET['sucursal'] ?? '');
-    $params = [':q1' => $q, ':q2' => $q];
+    $ultimaCompra = (int) ($_GET['ultima_compra'] ?? 0); // días; -1 = sin compras
 
+    // Detectar si la búsqueda es numérica (membresía)
+    $esSoloNumero = ($qRaw !== '' && ctype_digit($qRaw));
+
+    $params = [];
+
+    // --- Condición de búsqueda ---
+    if ($qRaw === '') {
+        $condBusqueda = '1=1';
+    } elseif ($esSoloNumero) {
+        $condBusqueda = 'cc.membresia = :membresia';
+        $params[':membresia'] = $qRaw;
+    } else {
+        $q = '%' . $qRaw . '%';
+        $condBusqueda = "(CONCAT(COALESCE(cc.nombre,''), ' ', COALESCE(cc.apellido,'')) LIKE :q1 OR cc.celular LIKE :q2)";
+        $params[':q1'] = $q;
+        $params[':q2'] = $q;
+    }
+
+    // --- Condición de sucursal ---
     $condSucursal = '';
     if ($sucursal !== '') {
-        $condSucursal = ' AND nombre_sucursal = :sucursal';
+        $condSucursal = 'AND cc.nombre_sucursal = :sucursal';
         $params[':sucursal'] = $sucursal;
     }
 
-    $stmt = $conn->prepare("
+    // --- Condición de última compra ---
+    $condUltimaCompra = '';
+    $joinVentas = '';
+
+    if ($ultimaCompra > 0) {
+        // Sólo clientes cuya última compra esté dentro del rango de días
+        $joinVentas = "
+            LEFT JOIN (
+                SELECT CodCliente, MAX(Fecha) AS ultima_compra
+                FROM VentasGlobalesAccessCSV
+                GROUP BY CodCliente
+            ) v ON v.CodCliente = cc.membresia
+        ";
+        $condUltimaCompra = "AND v.ultima_compra >= CURDATE() - INTERVAL :dias DAY";
+        $params[':dias'] = $ultimaCompra;
+    } elseif ($ultimaCompra === -1) {
+        // Clientes sin ninguna compra registrada
+        $joinVentas = "
+            LEFT JOIN (
+                SELECT CodCliente, MAX(Fecha) AS ultima_compra
+                FROM VentasGlobalesAccessCSV
+                GROUP BY CodCliente
+            ) v ON v.CodCliente = cc.membresia
+        ";
+        $condUltimaCompra = "AND v.ultima_compra IS NULL";
+    }
+
+    $sql = "
         SELECT
-            id_clienteclub AS id,
-            CONCAT(TRIM(COALESCE(nombre,'')), ' ', TRIM(COALESCE(apellido,''))) AS nombre,
-            celular        AS telefono_raw,
-            nombre_sucursal AS sucursal
-        FROM clientesclub
-        WHERE celular IS NOT NULL
-          AND celular <> ''
-          AND LENGTH(REGEXP_REPLACE(celular, '[^0-9]','')) >= 8
-          AND (
-              CONCAT(COALESCE(nombre,''), ' ', COALESCE(apellido,'')) LIKE :q1
-              OR celular LIKE :q2
-          )
+            cc.id_clienteclub           AS id,
+            TRIM(CONCAT(COALESCE(cc.nombre,''), ' ', COALESCE(cc.apellido,''))) AS nombre,
+            cc.celular                  AS telefono_raw,
+            cc.nombre_sucursal          AS sucursal,
+            cc.membresia                AS membresia
+        FROM clientesclub cc
+        $joinVentas
+        WHERE cc.celular IS NOT NULL
+          AND cc.celular <> ''
+          AND LENGTH(REGEXP_REPLACE(cc.celular, '[^0-9]','')) >= 8
+          AND $condBusqueda
           $condSucursal
-        ORDER BY nombre ASC
+          $condUltimaCompra
+        ORDER BY cc.nombre ASC
         LIMIT 100
-    ");
+    ";
+
+    $stmt = $conn->prepare($sql);
     $stmt->execute($params);
     $rows = $stmt->fetchAll();
 

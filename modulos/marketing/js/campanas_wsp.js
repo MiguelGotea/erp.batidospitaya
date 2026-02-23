@@ -294,11 +294,12 @@ function buscarClientes() {
 async function _buscarClientes() {
     const sucursal = document.getElementById('filtroSucursal').value;
     const busqueda = document.getElementById('buscarClienteInput').value.trim();
+    const ultimaCompra = document.getElementById('filtroUltimaCompra').value;
     const lista = document.getElementById('listaDisponibles');
     lista.innerHTML = '<div class="text-center py-3"><span class="spinner-border spinner-border-sm"></span></div>';
 
     try {
-        const params = new URLSearchParams({ accion: 'buscar', sucursal, q: busqueda });
+        const params = new URLSearchParams({ accion: 'buscar', sucursal, q: busqueda, ultima_compra: ultimaCompra });
         const resp = await fetch(`ajax/campanas_wsp_get_clientes.php?${params}`);
         const data = await resp.json();
 
@@ -312,9 +313,12 @@ async function _buscarClientes() {
         lista.innerHTML = data.clientes.map(c => {
             const yaSeleccionado = clientesSeleccionados.some(s => s.id === c.id);
             if (yaSeleccionado) return '';
-            return `<div class="wsp-cliente-item" onclick="agregarCliente(${c.id}, '${escHtml(c.nombre).replace(/'/g, "\\'")}', '${c.telefono}', '${escHtml(c.sucursal || '').replace(/'/g, "\\'")}')">
+            const etiqueta = c.membresia
+                ? `<span class="wsp-membresia">#${escHtml(c.membresia)}</span> ${escHtml(c.nombre)}`
+                : escHtml(c.nombre);
+            return `<div class="wsp-cliente-item" onclick="agregarCliente(${c.id}, '${escHtml(c.nombre).replace(/'/g, "\\'")}', '${c.telefono}', '${escHtml(c.sucursal || '').replace(/'/g, "\\'")}', '${escHtml(String(c.membresia || '')).replace(/'/g, "\\'")}')">
                 <div>
-                    <div class="nombre">${escHtml(c.nombre)}</div>
+                    <div class="nombre">${etiqueta}</div>
                     <div class="telefono">${c.telefono}</div>
                 </div>
                 <button class="btn-accion-mini btn-agregar" title="Agregar">
@@ -328,9 +332,9 @@ async function _buscarClientes() {
     }
 }
 
-function agregarCliente(id, nombre, telefono, sucursal) {
+function agregarCliente(id, nombre, telefono, sucursal, membresia = '') {
     if (clientesSeleccionados.some(c => c.id === id)) return;
-    clientesSeleccionados.push({ id, nombre, telefono, sucursal });
+    clientesSeleccionados.push({ id, nombre, telefono, sucursal, membresia });
     renderListaSeleccionados();
     _buscarClientes(); // refrescar disponibles
 }
@@ -360,17 +364,20 @@ function renderListaSeleccionados() {
         lista.innerHTML = '<div class="text-center text-muted py-3 small">Sin destinatarios aún</div>';
         return;
     }
-    lista.innerHTML = clientesSeleccionados.map(c =>
-        `<div class="wsp-cliente-item">
+    lista.innerHTML = clientesSeleccionados.map(c => {
+        const etiqueta = c.membresia
+            ? `<span class="wsp-membresia">#${escHtml(c.membresia)}</span> ${escHtml(c.nombre)}`
+            : escHtml(c.nombre);
+        return `<div class="wsp-cliente-item">
             <div>
-                <div class="nombre">${escHtml(c.nombre)}</div>
+                <div class="nombre">${etiqueta}</div>
                 <div class="telefono">${c.telefono}</div>
             </div>
             <button class="btn-accion-mini btn-quitar" title="Quitar" onclick="quitarCliente(${c.id})">
                 <i class="bi bi-x-circle-fill"></i>
             </button>
-        </div>`
-    ).join('');
+        </div>`;
+    }).join('');
 }
 
 // ════════════════════════════════════════════
