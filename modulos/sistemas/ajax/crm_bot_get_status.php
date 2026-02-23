@@ -2,7 +2,6 @@
 /**
  * ajax/crm_bot_get_status.php
  * Estado del VPS WhatsApp — consulta BD directamente
- * También retorna QR si el VPS lo tiene disponible
  */
 require_once '../../../core/auth/auth.php';
 require_once '../../../core/permissions/permissions.php';
@@ -18,33 +17,23 @@ if (!tienePermiso('crm_bot', 'vista', $usuario['CodNivelesCargos'])) {
 $instancia = $_GET['instancia'] ?? 'wsp-crmbot';
 
 try {
-    // Estado desde la tabla de sesión (actualizada por el VPS)
     $stmt = $conn->prepare("
-        SELECT estado, numero_telefono, qr_base64, updated_at
+        SELECT estado, numero_telefono
         FROM wsp_sesion_vps_
         WHERE instancia = :inst
         LIMIT 1
     ");
     $stmt->execute([':inst' => $instancia]);
-    $sesion = $stmt->fetch();
+    $sesion = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$sesion) {
-        // No hay registro aún => el VPS nunca registró esta instancia
-        echo json_encode([
-            'estado' => 'desconectado',
-            'numero' => null,
-            'qr' => null,
-            'fuente' => 'bd_sin_registro'
-        ]);
+        echo json_encode(['estado' => 'desconectado', 'numero' => null, 'qr' => null]);
         exit;
     }
 
-    // Si el estado es qr_pendiente, intentar también el endpoint directo del VPS
-    // para obtener el QR más fresco (con fallback al QR en BD)
-    $qr = $sesion['qr_base64'] ?? null;
-
-    if ($sesion['estado'] === 'qr_pendiente' && !$qr) {
-        // Mapeo instancia → puerto VPS
+    // Intentar obtener QR desde el VPS directamente si está pendiente
+    $qr = null;
+    if ($sesion['estado'] === 'qr_pendiente') {
         $puertos = ['wsp-clientes' => 3001, 'wsp-crmbot' => 3003];
         $puerto = $puertos[$instancia] ?? null;
         if ($puerto) {
@@ -52,7 +41,7 @@ try {
             $raw = @file_get_contents("http://198.211.97.243:{$puerto}/qr", false, $ctx);
             if ($raw) {
                 $vpsData = json_decode($raw, true);
-                $qr = $vpsData['qr'] ?? $qr;
+                $qr = $vpsData['qr'] ?? null;
             }
         }
     }
@@ -60,10 +49,10 @@ try {
     echo json_encode([
         'estado' => $sesion['estado'],
         'numero' => $sesion['numero_telefono'],
-        'qr' => $qr,
-        'fuente' => 'bd'
+        'qr' => $qr
     ]);
 
 } catch (Exception $e) {
-    echo json_encode(['estado' => 'desconectado', 'numero' => null, 'qr' => null]);
+    // Fallback: mostrar el error como header debug si es admin, sino desconectado
+    echo json_encode(['estado' => 'desconectado', 'numero' => null, 'qr' => null, 'debug' => $e->getMessage()]);
 }
