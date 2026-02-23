@@ -2,6 +2,7 @@
 /**
  * campanas_wsp_reset_sesion.php
  * Solicita el reinicio de la sesión WhatsApp (cambio de número)
+ * El ERP escribe directamente en la BD — el VPS lo detecta en el próximo ciclo (60s)
  * Solo accesible si el usuario tiene permiso 'resetear_sesion' en campanas_wsp
  */
 require_once '../../../core/auth/auth.php';
@@ -20,47 +21,26 @@ if (!tienePermiso('campanas_wsp', 'resetear_sesion', $cargoOperario)) {
 }
 
 try {
-    // Llamar al endpoint de la API bridge para solicitar el reset
-    $apiUrl = 'https://api.batidospitaya.com/api/wsp/reset_sesion.php';
-    $token = defined('WSP_TOKEN_ERP') ? WSP_TOKEN_ERP : '';
+    // Escribir el flag directamente en la BD
+    // El VPS detecta el flag en el próximo ciclo de pendientes.php (máx. 60s)
+    $stmt = $conn->prepare("
+        UPDATE wsp_sesion_vps_
+        SET reset_solicitado = 1
+        ORDER BY id DESC
+        LIMIT 1
+    ");
+    $stmt->execute();
 
-    // Leer token del archivo de config de la API (mismo que usa auth.php de la API)
-    $tokenFile = __DIR__ . '/../../../core/config/wsp_token.php';
-    if (file_exists($tokenFile)) {
-        require_once $tokenFile;
+    if ($stmt->rowCount() === 0) {
+        // No hay fila aún — insertar una
+        $conn->exec("INSERT INTO wsp_sesion_vps_ (estado, reset_solicitado) VALUES ('desconectado', 1)");
     }
 
-    $ch = curl_init($apiUrl);
-    curl_setopt_array($ch, [
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_POST => true,
-        CURLOPT_POSTFIELDS => json_encode(['accion' => 'reset']),
-        CURLOPT_HTTPHEADER => [
-            'Content-Type: application/json',
-            'X-WSP-Token: ' . (defined('WSP_TOKEN_ERP') ? WSP_TOKEN_ERP : '')
-        ],
-        CURLOPT_TIMEOUT => 10,
-        CURLOPT_SSL_VERIFYPEER => true,
+    echo json_encode([
+        'success' => true,
+        'mensaje' => 'Reset solicitado. El VPS cerrará la sesión en el próximo ciclo (máx. 60s) y mostrará un QR nuevo.',
+        'hora' => date('Y-m-d H:i:s')
     ]);
-
-    $respuesta = curl_exec($ch);
-    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    curl_close($ch);
-
-    if ($httpCode === 200) {
-        $data = json_decode($respuesta, true);
-        echo json_encode([
-            'success' => true,
-            'mensaje' => 'Reset solicitado. El VPS cerrará la sesión en el próximo ciclo (máx. 60s) y mostrará un QR nuevo.',
-            'api' => $data
-        ]);
-    } else {
-        echo json_encode([
-            'success' => false,
-            'error' => "Error al contactar la API (HTTP $httpCode)",
-            'detalle' => $respuesta
-        ]);
-    }
 
 } catch (Exception $e) {
     http_response_code(500);
