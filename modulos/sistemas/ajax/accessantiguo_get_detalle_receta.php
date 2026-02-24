@@ -14,6 +14,7 @@
 
 require_once '../../../core/auth/auth.php';
 require_once '../../../core/permissions/permissions.php';
+require_once 'accessantiguo_unidades_homologacion.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -164,23 +165,8 @@ try {
             $idMaestro = $masterInfo['id_producto_maestro'] ?? null;
 
             if ($idMaestro) {
-                // Homologación de unidades
-                $unidadOriginal = strtolower(trim($ingr['UnidadIngrediente'] ?? ''));
-                $mapUnidades = [
-                    'oz' => ['oz', 'fl oz', 'wt oz', 'onzas', 'onzas liquidas', 'onza'],
-                    'ml' => ['ml', 'mL', 'Mililitros', 'ml.', 'mls'],
-                    'mL' => ['ml', 'mL', 'Mililitros', 'ml.', 'mls'],
-                    'gr' => ['g', 'gr', 'gramos', 'Gramos', 'g.', 'grs'],
-                    'g' => ['g', 'gr', 'gramos', 'Gramos', 'g.', 'grs'],
-                    'kg' => ['kg', 'Kg', 'kilogramos', 'Kilogramos', 'kg.'],
-                    'Kg' => ['kg', 'Kg', 'kilogramos', 'Kilogramos', 'kg.'],
-                    'Lt' => ['Lt', 'litros', 'Litros', 'L', 'lt', 'l.'],
-                    'L' => ['Lt', 'litros', 'Litros', 'L', 'lt', 'l.'],
-                    'pieza' => ['u', 'unidad', 'unidad(es)', 'pieza', 'piezas', 'pz'],
-                    'unidad' => ['u', 'unidad', 'unidad(es)', 'pieza', 'piezas', 'pz'],
-                    'u' => ['u', 'unidad', 'unidad(es)', 'pieza', 'piezas', 'pz'],
-                ];
-                $unidadesBusqueda = $mapUnidades[$unidadOriginal] ?? [$unidadOriginal];
+                // Homologación de unidades vía librería
+                $unidadesBusqueda = obtenerUnidadesERPSimilares($ingr['UnidadIngrediente']);
 
                 // Paso 4: Buscar presentación por Maestro + Unidad (que no sea receta)
                 $placeholders = implode(',', array_fill(0, count($unidadesBusqueda), '?'));
