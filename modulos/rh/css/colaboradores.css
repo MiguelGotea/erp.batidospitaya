@@ -503,14 +503,21 @@ html {
     gap: 8px;
     align-items: center;
     justify-content: center;
-    margin-top: 4px;
+    margin-top: 6px;
 }
 
 .filter-circle {
-    font-size: 16px;
+    width: 28px;
+    height: 28px;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-size: 14px;
     cursor: pointer;
     opacity: 0.3;
     transition: all 0.3s ease;
+    color: white !important;
 }
 
 .filter-circle:hover {
@@ -520,20 +527,21 @@ html {
 
 .filter-circle.active {
     opacity: 1;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .filter-circle[data-state="all"] {
-    color: #adb5bd;
+    background-color: #adb5bd;
 }
 
 .filter-circle[data-state="all"].active {
-    color: #ffffff;
+    background-color: #6c757d;
 }
 
 .filter-circle[data-state="1"] {
-    color: #28a745;
+    background-color: #28a745;
 }
 
 .filter-circle[data-state="0"] {
-    color: #dc3545;
+    background-color: #dc3545;
 }
