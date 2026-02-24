@@ -593,52 +593,30 @@ function formatearFechaLarga(fecha) {
     return `${String(d.getDate()).padStart(2, '0')} ${meses[d.getMonth()]} ${d.getFullYear()}`;
 }
 
-// Lógica para toggle de estado en el encabezado
-function ciclarEstadoFiltro(event) {
-    if (event) event.stopPropagation();
 
-    const estados = [
-        { key: '1' },
-        { key: 'all' },
-        { key: '0' }
-    ];
-
-    let currentKey = 'all';
-    if (filtrosActivos['Operativo'] && filtrosActivos['Operativo'].length > 0) {
-        currentKey = filtrosActivos['Operativo'][0];
-    }
-
-    const currentIndex = estados.findIndex(e => e.key === currentKey);
-    const nextIndex = (currentIndex + 1) % estados.length;
-    const nextEstado = estados[nextIndex];
-
-    if (nextEstado.key === 'all') {
+// Lógica para filtro de círculos (Estilo Marketing)
+function setEstadoFilter(state) {
+    if (state === 'all') {
         delete filtrosActivos['Operativo'];
     } else {
-        filtrosActivos['Operativo'] = [nextEstado.key];
+        filtrosActivos['Operativo'] = [state];
     }
 
+    actualizarVisualToggle();
     paginaActual = 1;
     cargarDatos();
-    actualizarVisualToggle();
 }
 
 function actualizarVisualToggle() {
-    const toggle = $('#triStateToggle');
-    const text = $('#statusText');
-
     let currentKey = 'all';
     if (filtrosActivos['Operativo'] && filtrosActivos['Operativo'].length > 0) {
         currentKey = filtrosActivos['Operativo'][0];
     }
 
-    toggle.attr('data-state', currentKey);
+    document.querySelectorAll('.estado-filter-circles .filter-circle').forEach(circle => {
+        circle.classList.remove('active');
+    });
 
-    if (currentKey === '1') {
-        text.text('Activos');
-    } else if (currentKey === '0') {
-        text.text('Inactivos');
-    } else {
-        text.text('Todos');
-    }
+    const activeCircle = document.querySelector(`.estado-filter-circles .filter-circle[data-state="${currentKey}"]`);
+    if (activeCircle) activeCircle.classList.add('active');
 }

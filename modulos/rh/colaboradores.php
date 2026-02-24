@@ -74,12 +74,15 @@ if (!tienePermiso('gestion_colaboradores', 'vista', $cargoOperario)) {
                                     Teléfonos
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
-                                <th data-column="Operativo" class="status-header">
-                                    <div class="status-toggle-wrapper" onclick="ciclarEstadoFiltro(event)">
-                                        <div id="triStateToggle" class="tri-state-toggle" data-state="1">
-                                            <div class="tri-state-handle"></div>
-                                        </div>
-                                        <span id="statusText" class="status-toggle-text">Activos</span>
+                                <th data-column="Operativo">
+                                    Estado
+                                    <div class="estado-filter-circles">
+                                        <i class="bi bi-check-circle-fill filter-circle active" data-state="1"
+                                            onclick="setEstadoFilter('1')" title="Activos"></i>
+                                        <i class="bi bi-dash-circle-fill filter-circle" data-state="all"
+                                            onclick="setEstadoFilter('all')" title="Todos"></i>
+                                        <i class="bi bi-x-circle-fill filter-circle" data-state="0"
+                                            onclick="setEstadoFilter('0')" title="Inactivos"></i>
                                     </div>
                                 </th>
                                 <th data-column="nombre_sucursal" data-type="list">
