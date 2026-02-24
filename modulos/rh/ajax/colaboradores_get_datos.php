@@ -109,15 +109,15 @@ try {
         }
     }
 
-    // Filtro de fecha fin contrato (rango)
-    if (isset($filtros['fecha_fin_ultimo_contrato']) && is_array($filtros['fecha_fin_ultimo_contrato'])) {
-        if (!empty($filtros['fecha_fin_ultimo_contrato']['desde'])) {
-            $where[] = "uc.fin_contrato >= :fecha_fin_desde";
-            $params[':fecha_fin_desde'] = $filtros['fecha_fin_ultimo_contrato']['desde'];
+    // Filtro de fecha fin contrato (rango) - ELIMINADO de UI pero mantenemos lógica por si acaso o lo cambiamos a fecha_salida
+    if (isset($filtros['fecha_salida_ultimo']) && is_array($filtros['fecha_salida_ultimo'])) {
+        if (!empty($filtros['fecha_salida_ultimo']['desde'])) {
+            $where[] = "uc.fecha_salida >= :fecha_salida_desde";
+            $params[':fecha_salida_desde'] = $filtros['fecha_salida_ultimo']['desde'];
         }
-        if (!empty($filtros['fecha_fin_ultimo_contrato']['hasta'])) {
-            $where[] = "uc.fin_contrato <= :fecha_fin_hasta";
-            $params[':fecha_fin_hasta'] = $filtros['fecha_fin_ultimo_contrato']['hasta'];
+        if (!empty($filtros['fecha_salida_ultimo']['hasta'])) {
+            $where[] = "uc.fecha_salida <= :fecha_salida_hasta";
+            $params[':fecha_salida_hasta'] = $filtros['fecha_salida_ultimo']['hasta'];
         }
     }
 
@@ -206,10 +206,9 @@ try {
             'Operativo',
             'nombre_sucursal',
             'fecha_inicio_ultimo_contrato',
-            'fecha_fin_ultimo_contrato',
+            'fecha_salida_ultimo',
             'tiempo_trabajado_dias',
-            'ultima_fecha_laborada',
-            'tiempo_restante_categoria'
+            'ultima_fecha_laborada'
         ];
         if (in_array($orden['columna'], $columnas_validas)) {
             $direccion = strtoupper($orden['direccion']) === 'DESC' ? 'DESC' : 'ASC';
@@ -244,8 +243,8 @@ try {
                 $orderClause = "ORDER BY s.nombre $direccion";
             } elseif ($orden['columna'] === 'fecha_inicio_ultimo_contrato') {
                 $orderClause = "ORDER BY uc.inicio_contrato $direccion";
-            } elseif ($orden['columna'] === 'fecha_fin_ultimo_contrato') {
-                $orderClause = "ORDER BY uc.fin_contrato $direccion";
+            } elseif ($orden['columna'] === 'fecha_salida_ultimo') {
+                $orderClause = "ORDER BY uc.fecha_salida $direccion";
             } elseif ($orden['columna'] === 'ultima_fecha_laborada') {
                 $orderClause = "ORDER BY m.fecha $direccion";
             } elseif ($orden['columna'] === 'tiempo_trabajado_dias') {

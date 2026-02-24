@@ -95,8 +95,8 @@ if (!tienePermiso('gestion_colaboradores', 'vista', $cargoOperario)) {
                                     Inicio Contrato
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
-                                <th data-column="fecha_fin_ultimo_contrato" data-type="daterange">
-                                    Fin Contrato
+                                <th data-column="fecha_salida_ultimo" data-type="daterange">
+                                    Fecha de Salida
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
                                 <th data-column="tiempo_trabajado_dias" data-type="list">
@@ -104,11 +104,7 @@ if (!tienePermiso('gestion_colaboradores', 'vista', $cargoOperario)) {
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
                                 <th data-column="ultima_fecha_laborada" data-type="daterange">
-                                    Última Día Laborado
-                                    <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
-                                </th>
-                                <th data-column="tiempo_restante_categoria" data-type="list">
-                                    Tiempo Restante
+                                    Último Día Marcado
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
                                 <th style="width: 80px;">Acciones</th>

@@ -80,7 +80,7 @@ function renderizarTabla(datos) {
     tbody.empty();
 
     if (datos.length === 0) {
-        tbody.append('<tr><td colspan="12" class="text-center py-4">No se encontraron registros</td></tr>');
+        tbody.append('<tr><td colspan="11" class="text-center py-4">No se encontraron registros</td></tr>');
         return;
     }
 
@@ -125,18 +125,14 @@ function renderizarTabla(datos) {
         // Inicio Contrato
         tr.append(`<td>${formatearFecha(row.fecha_inicio_ultimo_contrato)}</td>`);
 
-        // Fin Contrato
-        const fechaFinTexto = row.fecha_fin_display || formatearFecha(row.fecha_fin_ultimo_contrato);
-        tr.append(`<td>${fechaFinTexto}</td>`);
+        // Fecha de Salida
+        tr.append(`<td>${formatearFecha(row.fecha_salida_ultimo)}</td>`);
 
         // Tiempo Trabajado
         tr.append(`<td>${row.tiempo_trabajado_texto || '-'}</td>`);
 
-        // Última Día Laborado
+        // Último Día Marcado
         tr.append(`<td>${formatearFecha(row.ultima_fecha_laborada)}</td>`);
-
-        // Tiempo Restante (con HTML de estado)
-        tr.append(`<td>${row.tiempo_restante_html || '-'}</td>`);
 
         // Acciones
         tr.append(`
