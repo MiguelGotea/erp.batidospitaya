@@ -151,7 +151,7 @@ try {
 
             // Pasos 1 y 2: Buscar Maestro vía cualquier cotización mapeada
             $stmtMaster = $conn->prepare("
-                SELECT pp.id_producto_maestro
+                SELECT pp.id_producto_maestro, pp.Nombre as nombre_mapeado
                 FROM Cotizaciones c
                 INNER JOIN diccionario_productos_legado d ON d.CodCotizacion = c.CodCotizacion
                 INNER JOIN producto_presentacion pp       ON pp.id = d.id_producto_presentacion
@@ -160,24 +160,25 @@ try {
                 LIMIT 1
             ");
             $stmtMaster->execute([':ci' => $codIngrediente]);
-            $idMaestro = $stmtMaster->fetchColumn();
+            $masterInfo = $stmtMaster->fetch(PDO::FETCH_ASSOC);
+            $idMaestro = $masterInfo['id_producto_maestro'] ?? null;
 
             if ($idMaestro) {
                 // Homologación de unidades
                 $unidadOriginal = strtolower(trim($ingr['UnidadIngrediente'] ?? ''));
                 $mapUnidades = [
-                    'oz' => ['oz', 'fl oz', 'wt oz', 'onzas'],
-                    'ml' => ['ml', 'mL', 'Mililitros'],
-                    'mL' => ['ml', 'mL', 'Mililitros'],
-                    'gr' => ['g', 'gr', 'gramos', 'Gramos'],
-                    'g' => ['g', 'gr', 'gramos', 'Gramos'],
-                    'kg' => ['kg', 'Kg', 'kilogramos', 'Kilogramos'],
-                    'Kg' => ['kg', 'Kg', 'kilogramos', 'Kilogramos'],
-                    'Lt' => ['Lt', 'litros', 'Litros', 'L'],
-                    'L' => ['Lt', 'litros', 'Litros', 'L'],
-                    'pieza' => ['u', 'unidad', 'unidad(es)', 'pieza', 'piezas'],
-                    'unidad' => ['u', 'unidad', 'unidad(es)', 'pieza', 'piezas'],
-                    'u' => ['u', 'unidad', 'unidad(es)', 'pieza', 'piezas'],
+                    'oz' => ['oz', 'fl oz', 'wt oz', 'onzas', 'onzas liquidas', 'onza'],
+                    'ml' => ['ml', 'mL', 'Mililitros', 'ml.', 'mls'],
+                    'mL' => ['ml', 'mL', 'Mililitros', 'ml.', 'mls'],
+                    'gr' => ['g', 'gr', 'gramos', 'Gramos', 'g.', 'grs'],
+                    'g' => ['g', 'gr', 'gramos', 'Gramos', 'g.', 'grs'],
+                    'kg' => ['kg', 'Kg', 'kilogramos', 'Kilogramos', 'kg.'],
+                    'Kg' => ['kg', 'Kg', 'kilogramos', 'Kilogramos', 'kg.'],
+                    'Lt' => ['Lt', 'litros', 'Litros', 'L', 'lt', 'l.'],
+                    'L' => ['Lt', 'litros', 'Litros', 'L', 'lt', 'l.'],
+                    'pieza' => ['u', 'unidad', 'unidad(es)', 'pieza', 'piezas', 'pz'],
+                    'unidad' => ['u', 'unidad', 'unidad(es)', 'pieza', 'piezas', 'pz'],
+                    'u' => ['u', 'unidad', 'unidad(es)', 'pieza', 'piezas', 'pz'],
                 ];
                 $unidadesBusqueda = $mapUnidades[$unidadOriginal] ?? [$unidadOriginal];
 
@@ -208,7 +209,11 @@ try {
                 if ($resAuto) {
                     $ingr['nuevo_producto'] = $resAuto;
                     $ingr['metodo_resolucion'] = 'maestro';
+                } else {
+                    error_log("AUTO-RES FAIL: No presentation found for Master $idMaestro with units " . implode(',', $unidadesBusqueda));
                 }
+            } else {
+                error_log("AUTO-RES FAIL: No master found for Ingredient $codIngrediente via mapped cotizaciones");
             }
         }
 
