@@ -495,3 +495,57 @@ html {
         padding: 10px 8px;
     }
 }
+
+/* Status Toggle in Header */
+.status-header {
+    cursor: pointer;
+    user-select: none;
+    min-width: 110px;
+}
+
+.status-toggle-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 6px 12px;
+    border-radius: 20px;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.status-toggle-container:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-1px);
+}
+
+.status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.status-dot.active {
+    background-color: #28a745;
+    box-shadow: 0 0 8px #28a745;
+}
+
+.status-dot.inactive {
+    background-color: #dc3545;
+    box-shadow: 0 0 8px #dc3545;
+}
+
+.status-dot.all {
+    background-color: #ffc107;
+    box-shadow: 0 0 8px #ffc107;
+}
+
+.status-toggle-text {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: white;
+}

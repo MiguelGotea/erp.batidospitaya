@@ -74,9 +74,11 @@ if (!tienePermiso('gestion_colaboradores', 'vista', $cargoOperario)) {
                                     Teléfonos
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
-                                <th data-column="Operativo" data-type="list">
-                                    Estado
-                                    <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                <th data-column="Operativo" class="status-header" onclick="ciclarEstadoFiltro(event)">
+                                    <div class="status-toggle-container">
+                                        <span id="statusDot" class="status-dot"></span>
+                                        <span id="statusText" class="status-toggle-text">Cargando...</span>
+                                    </div>
                                 </th>
                                 <th data-column="nombre_sucursal" data-type="list">
                                     Tienda/Área

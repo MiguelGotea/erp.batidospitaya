@@ -9,6 +9,10 @@ let windowWidthInicial = $(window).width();
 
 // Inicializar
 $(document).ready(function () {
+    // Por defecto, filtrar por Activos
+    filtrosActivos['Operativo'] = ['1'];
+    actualizarVisualToggle();
+
     cargarDatos();
 
     // Cerrar filtros al hacer clic fuera
@@ -587,4 +591,57 @@ function formatearFechaLarga(fecha) {
     const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
     const d = new Date(fecha + 'T00:00:00');
     return `${String(d.getDate()).padStart(2, '0')} ${meses[d.getMonth()]} ${d.getFullYear()}`;
+}
+
+// Lógica para toggle de estado en el encabezado
+function ciclarEstadoFiltro(event) {
+    if (event) event.stopPropagation();
+
+    const estados = [
+        { key: '1', class: 'active', text: 'Activos' },
+        { key: '0', class: 'inactive', text: 'Inactivos' },
+        { key: 'all', class: 'all', text: 'Todos' }
+    ];
+
+    let currentKey = 'all';
+    if (filtrosActivos['Operativo'] && filtrosActivos['Operativo'].length > 0) {
+        currentKey = filtrosActivos['Operativo'][0];
+    }
+
+    const currentIndex = estados.findIndex(e => e.key === currentKey);
+    const nextIndex = (currentIndex + 1) % estados.length;
+    const nextEstado = estados[nextIndex];
+
+    if (nextEstado.key === 'all') {
+        delete filtrosActivos['Operativo'];
+    } else {
+        filtrosActivos['Operativo'] = [nextEstado.key];
+    }
+
+    paginaActual = 1;
+    cargarDatos();
+    actualizarVisualToggle();
+}
+
+function actualizarVisualToggle() {
+    const dot = $('#statusDot');
+    const text = $('#statusText');
+
+    let currentKey = 'all';
+    if (filtrosActivos['Operativo'] && filtrosActivos['Operativo'].length > 0) {
+        currentKey = filtrosActivos['Operativo'][0];
+    }
+
+    dot.removeClass('active inactive all');
+
+    if (currentKey === '1') {
+        dot.addClass('active');
+        text.text('Activos');
+    } else if (currentKey === '0') {
+        dot.addClass('inactive');
+        text.text('Inactivos');
+    } else {
+        dot.addClass('all');
+        text.text('Todos');
+    }
 }
