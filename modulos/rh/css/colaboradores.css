@@ -498,6 +498,18 @@ html {
 
 
 /* 3-Circle Filter for Estado Column (Unified Pill Style) */
+.status-header-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+.status-label {
+    font-size: 13px;
+    font-weight: 600;
+}
+
 .estado-filter-circles {
     display: inline-flex;
     gap: 4px;

@@ -75,14 +75,16 @@ if (!tienePermiso('gestion_colaboradores', 'vista', $cargoOperario)) {
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
                                 <th data-column="Operativo">
-                                    Estado
-                                    <div class="estado-filter-circles">
-                                        <i class="bi bi-person-check-fill filter-circle active" data-state="1"
-                                            onclick="setEstadoFilter('1')" title="Activos"></i>
-                                        <i class="bi bi-people-fill filter-circle" data-state="all"
-                                            onclick="setEstadoFilter('all')" title="Todos"></i>
-                                        <i class="bi bi-person-x-fill filter-circle" data-state="0"
-                                            onclick="setEstadoFilter('0')" title="Inactivos"></i>
+                                    <div class="status-header-content">
+                                        <span class="status-label">Estado</span>
+                                        <div class="estado-filter-circles">
+                                            <i class="bi bi-person-check-fill filter-circle active" data-state="1"
+                                                onclick="setEstadoFilter('1')" title="Activos"></i>
+                                            <i class="bi bi-people-fill filter-circle" data-state="all"
+                                                onclick="setEstadoFilter('all')" title="Todos"></i>
+                                            <i class="bi bi-person-x-fill filter-circle" data-state="0"
+                                                onclick="setEstadoFilter('0')" title="Inactivos"></i>
+                                        </div>
                                     </div>
                                 </th>
                                 <th data-column="nombre_sucursal" data-type="list">
