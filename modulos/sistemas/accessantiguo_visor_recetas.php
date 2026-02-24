@@ -689,7 +689,7 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                     }
 
                     tradHTML = `<div class="traduccion-ok">
-                        <div class="d-flex align-items-center gap-1 mb-1"><span class="sku-tag">${esc(np.SKU)}</span>${activoTag}</div>
+                        <div class="d-flex align-items-center gap-1 mb-1">${activoTag}</div>
                         <div class="nom-nuevo">${esc(np.NombreNuevo)}</div>
                         ${variedadesHTML}
                         <div class="uni-nuevo mt-1">${esc(np.unidadNueva || '')}${np.cantidad ? ' · ' + np.cantidad : ''} ${esc(np.productoMaestro || '')}</div>
@@ -708,7 +708,7 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                     </td>
                     <td class="text-center fw-semibold">${ingr.Cantidad ?? '—'}</td>
                     <td class="text-center"><span class="badge bg-secondary">${esc(tipo)}</span></td>
-                    <td class="text-center text-muted">${ingr.codporcion ? '#' + ingr.codporcion : '—'}</td>
+                    <td class="text-center text-muted">${ingr.codporcion || '—'}</td>
                     <td>${cotHTML}</td>
                     <td class="col-traduccion">${tradHTML}</td>
                 </tr>`;
