@@ -97,13 +97,13 @@ function renderizarTabla(datos) {
         const telefonoCorporativo = row.telefono_corporativo || '-';
         tr.append(`
             <td>
-                <div style="font-size: 12px !important; text-align: center;">
-                    <div style="margin-bottom: 5px;">
-                        <i class="fas fa-mobile-alt" style="color: #0E544C; margin-right: 5px;" title="Teléfono Personal"></i>
+                <div style="font-size: 11px !important; display: flex; flex-direction: column; gap: 4px; align-items: flex-start;">
+                    <div style="display: flex; align-items: center; white-space: nowrap;">
+                        <i class="fas fa-mobile-alt" style="color: #0E544C; width: 15px; margin-right: 5px;" title="Teléfono Personal"></i>
                         ${telefonoPersonal !== '-' ? telefonoPersonal : '<span style="color: #999;">-</span>'}
                     </div>
-                    <div>
-                        <i class="fas fa-building" style="color: #51B8AC; margin-right: 5px;" title="Teléfono Corporativo"></i>
+                    <div style="display: flex; align-items: center; white-space: nowrap;">
+                        <i class="fas fa-building" style="color: #51B8AC; width: 15px; margin-right: 5px;" title="Teléfono Corporativo"></i>
                         ${telefonoCorporativo !== '-' ? telefonoCorporativo : '<span style="color: #999;">-</span>'}
                     </div>
                 </div>
