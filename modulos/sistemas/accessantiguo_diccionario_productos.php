@@ -518,46 +518,50 @@ $puedeEditar = tienePermiso('diccionario_productos', 'edicion', $cargoOperario);
 
                 let colNuevo = '';
                 if (PUEDE_EDITAR) {
-                    const valActual = mapeado
-                        ? `<div class="valor-mapeado mb-1">
-                               <span class="sku-tag">${esc(p.nuevo_sku)}</span>
-                               <span>${esc(p.nuevo_nombre)}</span>
-                           </div>` : '';
-
-                    colNuevo = `
-                <td>
-                    <div class="autocomplete-wrap" id="wrap-${p.CodCotizacion}">
-                        ${valActual}
-                        <input type="text"
-                            class="form-control form-control-sm input-buscar-nuevo"
+                    if (mapeado) {
+                        const vName = p.nuevo_variedad_nombre ? ` | <span class="text-primary font-monospace" style="font-size:0.85em">${esc(p.nuevo_variedad_nombre)}</span>` : '';
+                        colNuevo = `
+                    <td>
+                        <div class="valor-mapeado">
+                            <span class="fw-semibold">${esc(p.nuevo_nombre)}</span>${vName}
+                        </div>
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-danger btn-quitar-mapeo"
+                            data-cod="${p.CodCotizacion}"
+                            title="Quitar mapeo">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </td>`;
+                    } else {
+                        colNuevo = `
+                    <td>
+                        <div class="autocomplete-wrap" id="wrap-${p.CodCotizacion}">
+                            <input type="text"
+                                class="form-control form-control-sm input-buscar-nuevo"
+                                data-cod="${p.CodCotizacion}"
+                                data-ingr="${esc(p.CodIngrediente)}"
+                                placeholder="Buscar en nuevo ERP…"
+                                autocomplete="off">
+                            <div class="autocomplete-list" id="aclist-${p.CodCotizacion}"></div>
+                            <div id="variedad-container-${p.CodCotizacion}"></div>
+                        </div>
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-primary btn-guardar-mapeo"
                             data-cod="${p.CodCotizacion}"
                             data-ingr="${esc(p.CodIngrediente)}"
-                            placeholder="Buscar en nuevo ERP…"
-                            autocomplete="off">
-                        <div class="autocomplete-list" id="aclist-${p.CodCotizacion}"></div>
-                        <div id="variedad-container-${p.CodCotizacion}"></div>
-                    </div>
-                </td>
-                <td>
-                    <button class="btn btn-sm btn-primary btn-guardar-mapeo"
-                        data-cod="${p.CodCotizacion}"
-                        data-ingr="${esc(p.CodIngrediente)}"
-                        title="Guardar mapeo">
-                        <i class="fas fa-save"></i>
-                    </button>
-                    ${mapeado ? `
-                    <button class="btn btn-sm btn-outline-danger btn-quitar-mapeo ms-1"
-                        data-cod="${p.CodCotizacion}"
-                        title="Quitar mapeo">
-                        <i class="fas fa-times"></i>
-                    </button>` : ''}
-                </td>`;
+                            title="Guardar mapeo">
+                            <i class="fas fa-save"></i>
+                        </button>
+                    </td>`;
+                    }
                 } else {
+                    const vName = (mapeado && p.nuevo_variedad_nombre) ? ` | <span class="text-primary opacity-75">${esc(p.nuevo_variedad_nombre)}</span>` : '';
                     colNuevo = `<td>
                 ${mapeado
                             ? `<div class="valor-mapeado">
-                           <span class="sku-tag">${esc(p.nuevo_sku)}</span>
-                           <span>${esc(p.nuevo_nombre)}</span>
+                           <span class="fw-semibold">${esc(p.nuevo_nombre)}</span>${vName}
                        </div>`
                             : '<span class="text-muted">—</span>'}
             </td>`;
@@ -648,8 +652,7 @@ $puedeEditar = tienePermiso('diccionario_productos', 'edicion', $cargoOperario);
 
                             return `<div class="autocomplete-item"
                                  data-id="${p.id}" data-sku="${esc(p.SKU)}" data-nom="${esc(p.Nombre)}" data-vars="${varsAttr}">
-                                <span class="sku">${esc(p.SKU)}</span>
-                                <span class="nom"> – ${esc(p.Nombre)}</span>
+                                <span class="nom">${esc(p.Nombre)}</span>
                                 <div class="extra">${[p.unidad, p.cantidad ? p.cantidad + ' u.' : ''].filter(Boolean).join(' | ')}</div>
                             </div>`;
                         }).join('');

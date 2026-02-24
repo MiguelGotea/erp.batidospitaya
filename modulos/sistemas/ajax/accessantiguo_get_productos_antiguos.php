@@ -70,6 +70,7 @@ try {
         INNER JOIN DBIngredientes i ON c.CodIngrediente = i.CodIngrediente
         LEFT JOIN diccionario_productos_legado d ON d.CodCotizacion = c.CodCotizacion
         LEFT JOIN producto_presentacion pp ON pp.id = d.id_producto_presentacion
+        LEFT JOIN variedad_producto_presentacion v ON v.id = d.id_variedad_producto
         $whereSQL
     ";
 
@@ -98,6 +99,7 @@ try {
             d.id_variedad_producto,
             pp.SKU                          AS nuevo_sku,
             pp.Nombre                       AS nuevo_nombre,
+            v.nombre                        AS nuevo_variedad_nombre,
             d.notas                         AS mapeo_notas
         $baseSql
         ORDER BY i.Nombre ASC, c.Marca ASC
