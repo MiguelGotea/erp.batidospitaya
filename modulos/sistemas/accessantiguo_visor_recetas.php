@@ -636,6 +636,7 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
             show('resumenBar');
         }
 
+
         // ── Tabla de ingredientes ────────────────────────────────────────────
         function renderTabla(ingredientes) {
             const tbody = document.getElementById('tbodyReceta');
