@@ -535,18 +535,14 @@ html {
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
 }
 
-.filter-circle[data-state="all"] {
-    background-color: #adb5bd;
-}
-
 .filter-circle[data-state="all"].active {
     background-color: #6c757d;
 }
 
-.filter-circle[data-state="1"] {
+.filter-circle[data-state="1"].active {
     background-color: #28a745;
 }
 
-.filter-circle[data-state="0"] {
+.filter-circle[data-state="0"].active {
     background-color: #dc3545;
 }
