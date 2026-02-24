@@ -128,11 +128,11 @@ function renderizarTabla(datos) {
         // Fecha de Salida
         tr.append(`<td>${formatearFecha(row.fecha_salida_ultimo)}</td>`);
 
-        // Tiempo Trabajado
-        tr.append(`<td>${row.tiempo_trabajado_texto || '-'}</td>`);
-
         // Último Día Marcado
         tr.append(`<td>${formatearFecha(row.ultima_fecha_laborada)}</td>`);
+
+        // Tiempo Trabajado
+        tr.append(`<td>${row.tiempo_trabajado_texto || '-'}</td>`);
 
         // Acciones
         tr.append(`

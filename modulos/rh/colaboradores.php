@@ -99,12 +99,12 @@ if (!tienePermiso('gestion_colaboradores', 'vista', $cargoOperario)) {
                                     Fecha de Salida
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
-                                <th data-column="tiempo_trabajado_dias" data-type="list">
-                                    Tiempo Trabajado
-                                    <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
-                                </th>
                                 <th data-column="ultima_fecha_laborada" data-type="daterange">
                                     Último Día Marcado
+                                    <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                </th>
+                                <th data-column="tiempo_trabajado_dias" data-type="list">
+                                    Tiempo Trabajado
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
                                 <th style="width: 80px;">Acciones</th>
