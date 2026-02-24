@@ -77,11 +77,11 @@ if (!tienePermiso('gestion_colaboradores', 'vista', $cargoOperario)) {
                                 <th data-column="Operativo">
                                     Estado
                                     <div class="estado-filter-circles">
-                                        <i class="bi bi-check-circle-fill filter-circle active" data-state="1"
+                                        <i class="bi bi-person-check-fill filter-circle active" data-state="1"
                                             onclick="setEstadoFilter('1')" title="Activos"></i>
-                                        <i class="bi bi-dash-circle-fill filter-circle" data-state="all"
+                                        <i class="bi bi-people-fill filter-circle" data-state="all"
                                             onclick="setEstadoFilter('all')" title="Todos"></i>
-                                        <i class="bi bi-x-circle-fill filter-circle" data-state="0"
+                                        <i class="bi bi-person-x-fill filter-circle" data-state="0"
                                             onclick="setEstadoFilter('0')" title="Inactivos"></i>
                                     </div>
                                 </th>
