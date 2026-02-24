@@ -97,19 +97,26 @@ function renderizarTabla(datos) {
         tr.append(`<td>${row.cargo_nombre}</td>`);
 
         // Teléfonos
-        const telefonoPersonal = row.Celular || '-';
-        const telefonoCorporativo = row.telefono_corporativo || '-';
+        let telefonosHTML = '';
+        if (row.Celular && row.Celular !== '-' && row.Celular.trim() !== '') {
+            telefonosHTML += `
+                <div style="display: flex; align-items: center; white-space: nowrap;">
+                    <i class="fas fa-mobile-alt" style="color: #0E544C; width: 15px; margin-right: 5px;" title="Teléfono Personal"></i>
+                    ${row.Celular}
+                </div>`;
+        }
+        if (row.telefono_corporativo && row.telefono_corporativo !== '-' && row.telefono_corporativo.trim() !== '') {
+            telefonosHTML += `
+                <div style="display: flex; align-items: center; white-space: nowrap;">
+                    <i class="fas fa-building" style="color: #51B8AC; width: 15px; margin-right: 5px;" title="Teléfono Corporativo"></i>
+                    ${row.telefono_corporativo}
+                </div>`;
+        }
+
         tr.append(`
             <td>
                 <div style="font-size: 11px !important; display: flex; flex-direction: column; gap: 4px; align-items: flex-start;">
-                    <div style="display: flex; align-items: center; white-space: nowrap;">
-                        <i class="fas fa-mobile-alt" style="color: #0E544C; width: 15px; margin-right: 5px;" title="Teléfono Personal"></i>
-                        ${telefonoPersonal !== '-' ? telefonoPersonal : '<span style="color: #999;">-</span>'}
-                    </div>
-                    <div style="display: flex; align-items: center; white-space: nowrap;">
-                        <i class="fas fa-building" style="color: #51B8AC; width: 15px; margin-right: 5px;" title="Teléfono Corporativo"></i>
-                        ${telefonoCorporativo !== '-' ? telefonoCorporativo : '<span style="color: #999;">-</span>'}
-                    </div>
+                    ${telefonosHTML || '<span style="color: #999;">-</span>'}
                 </div>
             </td>
         `);
