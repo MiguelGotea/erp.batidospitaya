@@ -496,56 +496,75 @@ html {
     }
 }
 
-/* Status Toggle in Header */
+/* Status Toggle Redesign (3-state) */
 .status-header {
     cursor: pointer;
     user-select: none;
-    min-width: 110px;
+    min-width: 100px;
+    vertical-align: middle !important;
 }
 
-.status-toggle-container {
+.status-toggle-wrapper {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: center;
-    gap: 8px;
-    background: rgba(255, 255, 255, 0.1);
-    padding: 6px 12px;
-    border-radius: 20px;
-    transition: all 0.3s ease;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    gap: 4px;
 }
 
-.status-toggle-container:hover {
-    background: rgba(255, 255, 255, 0.2);
-    transform: translateY(-1px);
+.tri-state-toggle {
+    width: 60px;
+    height: 24px;
+    background: #ccc;
+    border-radius: 12px;
+    position: relative;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    box-sizing: content-box;
 }
 
-.status-dot {
-    width: 10px;
-    height: 10px;
+.tri-state-handle {
+    width: 20px;
+    height: 20px;
+    background: white;
     border-radius: 50%;
-    display: inline-block;
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
-.status-dot.active {
+/* States Logic */
+.tri-state-toggle[data-state="1"] {
     background-color: #28a745;
-    box-shadow: 0 0 8px #28a745;
 }
 
-.status-dot.inactive {
+.tri-state-toggle[data-state="1"] .tri-state-handle {
+    left: 2px;
+}
+
+.tri-state-toggle[data-state="all"] {
+    background-color: #9e9e9e;
+}
+
+.tri-state-toggle[data-state="all"] .tri-state-handle {
+    left: 20px;
+}
+
+.tri-state-toggle[data-state="0"] {
     background-color: #dc3545;
-    box-shadow: 0 0 8px #dc3545;
 }
 
-.status-dot.all {
-    background-color: #ffc107;
-    box-shadow: 0 0 8px #ffc107;
+.tri-state-toggle[data-state="0"] .tri-state-handle {
+    left: 38px;
 }
 
 .status-toggle-text {
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.5px;
     color: white;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }

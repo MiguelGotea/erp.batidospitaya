@@ -598,9 +598,9 @@ function ciclarEstadoFiltro(event) {
     if (event) event.stopPropagation();
 
     const estados = [
-        { key: '1', class: 'active', text: 'Activos' },
-        { key: '0', class: 'inactive', text: 'Inactivos' },
-        { key: 'all', class: 'all', text: 'Todos' }
+        { key: '1' },
+        { key: 'all' },
+        { key: '0' }
     ];
 
     let currentKey = 'all';
@@ -624,7 +624,7 @@ function ciclarEstadoFiltro(event) {
 }
 
 function actualizarVisualToggle() {
-    const dot = $('#statusDot');
+    const toggle = $('#triStateToggle');
     const text = $('#statusText');
 
     let currentKey = 'all';
@@ -632,16 +632,13 @@ function actualizarVisualToggle() {
         currentKey = filtrosActivos['Operativo'][0];
     }
 
-    dot.removeClass('active inactive all');
+    toggle.attr('data-state', currentKey);
 
     if (currentKey === '1') {
-        dot.addClass('active');
         text.text('Activos');
     } else if (currentKey === '0') {
-        dot.addClass('inactive');
         text.text('Inactivos');
     } else {
-        dot.addClass('all');
         text.text('Todos');
     }
 }
