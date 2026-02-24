@@ -574,9 +574,9 @@ function buscarEnOpciones(input) {
 
 // Formatear fecha
 function formatearFecha(fecha) {
-    if (!fecha || fecha === '0000-000-00') return '-';
+    if (!fecha || fecha === '0000-00-00' || fecha === '0000-000-00') return '-';
     const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-    const d = new Date(fecha);
+    const d = new Date(fecha + 'T00:00:00');
     const año = String(d.getFullYear()).slice(-2);
     return `${String(d.getDate()).padStart(2, '0')}-${meses[d.getMonth()]}-${año}`;
 }
@@ -585,6 +585,6 @@ function formatearFecha(fecha) {
 function formatearFechaLarga(fecha) {
     if (!fecha) return '-';
     const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-    const d = new Date(fecha);
+    const d = new Date(fecha + 'T00:00:00');
     return `${String(d.getDate()).padStart(2, '0')} ${meses[d.getMonth()]} ${d.getFullYear()}`;
 }
