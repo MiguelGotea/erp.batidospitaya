@@ -108,8 +108,11 @@ try {
         $ingr['cotizacion'] = $cotizacion ?: null;
         $codCotizacion = $cotizacion['CodCotizacion'] ?? null;
 
-        // 2) Traducción al nuevo ERP via diccionario_productos_legado
+        // 2) Traducción al nuevo ERP
         $ingr['nuevo_producto'] = null;
+        $ingr['metodo_resolucion'] = 'ninguno';
+
+        // Intentar resolución directa primero (si hay CodCotizacion)
         if ($codCotizacion) {
             $stmtDic = $conn->prepare("
                 SELECT
@@ -120,6 +123,7 @@ try {
                     pp.cantidad,
                     pp.Activo   AS activoNuevo,
                     u.Nombre    AS unidadNueva,
+                    pm.id       AS id_maestro,
                     pm.Nombre   AS productoMaestro
                 FROM diccionario_productos_legado d
                 INNER JOIN producto_presentacion pp ON pp.id = d.id_producto_presentacion
@@ -129,21 +133,95 @@ try {
                 LIMIT 1
             ");
             $stmtDic->execute([':cot' => $codCotizacion]);
-            $nuevoProducto = $stmtDic->fetch(PDO::FETCH_ASSOC);
-
-            if ($nuevoProducto) {
-                // 3) Obtener variedades vinculadas
-                $stmtVar = $conn->prepare("
-                    SELECT id, nombre, es_principal
-                    FROM variedad_producto_presentacion
-                    WHERE id_presentacion_producto = :idp
-                    ORDER BY es_principal DESC, nombre ASC
-                ");
-                $stmtVar->execute([':idp' => $nuevoProducto['id_presentacion']]);
-                $nuevoProducto['variedades'] = $stmtVar->fetchAll(PDO::FETCH_ASSOC);
+            $res = $stmtDic->fetch(PDO::FETCH_ASSOC);
+            if ($res) {
+                $ingr['nuevo_producto'] = $res;
+                $ingr['metodo_resolucion'] = 'directo';
             }
+        }
 
-            $ingr['nuevo_producto'] = $nuevoProducto ?: null;
+        // Si no se resolvió directo (o no había codporcion), intentar rastreo por Maestro + Unidad
+        if (!$ingr['nuevo_producto']) {
+            /**
+             * LÓGICA DE RASTREO AUTOMÁTICO:
+             * 1. Buscar cualquier Cotización del CodIngrediente que esté mapeada a un producto NO receta.
+             * 2. Obtener el id_producto_maestro de ese producto.
+             * 3. Buscar en el nuevo ERP una presentación de ese Maestro con la misma unidad (homologada).
+             */
+
+            // Pasos 1 y 2: Buscar Maestro vía cualquier cotización mapeada
+            $stmtMaster = $conn->prepare("
+                SELECT pp.id_producto_maestro
+                FROM Cotizaciones c
+                INNER JOIN diccionario_productos_legado d ON d.CodCotizacion = c.CodCotizacion
+                INNER JOIN producto_presentacion pp       ON pp.id = d.id_producto_presentacion
+                WHERE c.CodIngrediente = :ci 
+                  AND pp.Id_receta_producto IS NULL
+                LIMIT 1
+            ");
+            $stmtMaster->execute([':ci' => $codIngrediente]);
+            $idMaestro = $stmtMaster->fetchColumn();
+
+            if ($idMaestro) {
+                // Homologación de unidades
+                $unidadOriginal = strtolower(trim($ingr['UnidadIngrediente'] ?? ''));
+                $mapUnidades = [
+                    'oz' => ['oz', 'fl oz', 'wt oz', 'onzas'],
+                    'ml' => ['ml', 'mL', 'Mililitros'],
+                    'mL' => ['ml', 'mL', 'Mililitros'],
+                    'gr' => ['g', 'gr', 'gramos', 'Gramos'],
+                    'g' => ['g', 'gr', 'gramos', 'Gramos'],
+                    'kg' => ['kg', 'Kg', 'kilogramos', 'Kilogramos'],
+                    'Kg' => ['kg', 'Kg', 'kilogramos', 'Kilogramos'],
+                    'Lt' => ['Lt', 'litros', 'Litros', 'L'],
+                    'L' => ['Lt', 'litros', 'Litros', 'L'],
+                    'pieza' => ['u', 'unidad', 'unidad(es)', 'pieza', 'piezas'],
+                    'unidad' => ['u', 'unidad', 'unidad(es)', 'pieza', 'piezas'],
+                    'u' => ['u', 'unidad', 'unidad(es)', 'pieza', 'piezas'],
+                ];
+                $unidadesBusqueda = $mapUnidades[$unidadOriginal] ?? [$unidadOriginal];
+
+                // Paso 4: Buscar presentación por Maestro + Unidad (que no sea receta)
+                $placeholders = implode(',', array_fill(0, count($unidadesBusqueda), '?'));
+                $sqlFinal = "
+                    SELECT 
+                        pp.id       AS id_presentacion,
+                        pp.SKU,
+                        pp.Nombre   AS NombreNuevo,
+                        pp.cantidad,
+                        pp.Activo   AS activoNuevo,
+                        u.Nombre    AS unidadNueva,
+                        pm.Nombre   AS productoMaestro
+                    FROM producto_presentacion pp
+                    INNER JOIN producto_maestro pm ON pm.id = pp.id_producto_maestro
+                    LEFT JOIN unidad_producto u    ON u.id = pp.id_unidad_producto
+                    WHERE pp.id_producto_maestro = ?
+                      AND u.Nombre IN ($placeholders)
+                      AND pp.Id_receta_producto IS NULL
+                      AND pp.Activo = 'SI'
+                    LIMIT 1
+                ";
+                $stmtFinal = $conn->prepare($sqlFinal);
+                $stmtFinal->execute(array_merge([$idMaestro], $unidadesBusqueda));
+                $resAuto = $stmtFinal->fetch(PDO::FETCH_ASSOC);
+
+                if ($resAuto) {
+                    $ingr['nuevo_producto'] = $resAuto;
+                    $ingr['metodo_resolucion'] = 'maestro';
+                }
+            }
+        }
+
+        // 3) Obtener variedades si se encontró producto
+        if ($ingr['nuevo_producto']) {
+            $stmtVar = $conn->prepare("
+                SELECT id, nombre, es_principal
+                FROM variedad_producto_presentacion
+                WHERE id_presentacion_producto = :idp
+                ORDER BY es_principal DESC, nombre ASC
+            ");
+            $stmtVar->execute([':idp' => $ingr['nuevo_producto']['id_presentacion']]);
+            $ingr['nuevo_producto']['variedades'] = $stmtVar->fetchAll(PDO::FETCH_ASSOC);
         }
     }
     unset($ingr); // romper referencia

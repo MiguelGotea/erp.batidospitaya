@@ -673,6 +673,8 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                 if (np) {
                     const activoTag = np.activoNuevo === 'NO'
                         ? `<span style="font-size:.65rem;background:#fdd;color:#c0392b;border-radius:3px;padding:1px 5px;margin-left:4px">INACTIVO</span>` : '';
+                    const autoTag = ingr.metodo_resolucion === 'maestro'
+                        ? `<span style="font-size:.65rem;background:#e8f5e9;color:#2e7d32;border-radius:3px;padding:1px 5px;margin-left:4px" title="Resuelto automáticamente por maestro + unidad">AUTO</span>` : '';
 
                     // Variedades
                     let variedadesHTML = '';
@@ -689,7 +691,7 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                     }
 
                     tradHTML = `<div class="traduccion-ok">
-                        <div class="d-flex align-items-center gap-1 mb-1">${activoTag}</div>
+                        <div class="d-flex align-items-center gap-1 mb-1">${activoTag}${autoTag}</div>
                         <div class="nom-nuevo">${esc(np.NombreNuevo)}</div>
                         ${variedadesHTML}
                         <div class="uni-nuevo mt-1">${esc(np.unidadNueva || '')}${np.cantidad ? ' · ' + np.cantidad : ''} ${esc(np.productoMaestro || '')}</div>
