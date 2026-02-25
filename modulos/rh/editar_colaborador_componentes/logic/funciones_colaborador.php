@@ -3529,7 +3529,9 @@ function obtenerRequerimientosPestaña($pestaña)
 
         case 'inss':
             $requerimientos['campos'] = [
-                ['columna' => 'codigo_inss', 'nombre' => 'Número de Seguro INSS']
+                ['columna' => 'codigo_inss', 'nombre' => 'Número de Seguro INSS'],
+                ['columna' => 'numero_planilla', 'nombre' => 'Número de Planilla', 'tabla' => 'Contratos'],
+                ['columna' => 'hospital_inss', 'nombre' => 'Hospital Asociado', 'tabla' => 'Contratos']
             ];
             break;
 
@@ -3540,6 +3542,10 @@ function obtenerRequerimientosPestaña($pestaña)
                 ['columna' => 'codigo_manual_contrato', 'nombre' => 'Código de Contrato', 'tabla' => 'Contratos'],
                 ['columna' => 'cod_sucursal_contrato', 'nombre' => 'Sucursal', 'tabla' => 'Contratos']
             ];
+            break;
+
+        case 'adendums':
+            // Verificamos si hay documentos subidos para esta pestaña
             break;
 
         case 'contactos-emergencia':
@@ -3642,13 +3648,20 @@ function calcularPorcentajeCumplimiento($codOperario, $pestaña)
     if (!empty($requerimientos['tablas'])) {
         foreach ($requerimientos['tablas'] as $tablaInfo) {
             $tabla = $tablaInfo['tabla'];
-            $idCol = 'cod_operario';
-            if ($tabla == 'AsignacionNivelesCargos')
-                $idCol = 'CodOperario';
-            if ($tabla == 'OperariosCategorias')
-                $idCol = 'CodOperario';
 
-            $stmt = $conn->prepare("SELECT COUNT(*) FROM $tabla WHERE $idCol = ?");
+            if ($tabla == 'SalarioOperario') {
+                // Caso especial: Salarios se vinculan vía contrato
+                $sql = "SELECT COUNT(*) FROM SalarioOperario so JOIN Contratos c ON so.cod_contrato = c.CodContrato WHERE c.cod_operario = ?";
+            } else {
+                $idCol = 'cod_operario';
+                if ($tabla == 'AsignacionNivelesCargos')
+                    $idCol = 'CodOperario';
+                if ($tabla == 'OperariosCategorias')
+                    $idCol = 'CodOperario';
+                $sql = "SELECT COUNT(*) FROM $tabla WHERE $idCol = ?";
+            }
+
+            $stmt = $conn->prepare($sql);
             $stmt->execute([$codOperario]);
             $count = $stmt->fetchColumn();
 
