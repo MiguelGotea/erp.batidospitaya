@@ -862,21 +862,18 @@ if (isset($_POST['accion_contacto'])) {
 
 // Procesar acciones de archivos adjuntos
 if (isset($_POST['accion_adjunto'])) {
-    if ($_POST['accion_adjunto'] == 'agregar' && (!empty($_FILES['archivo_adjunto']['name']) || !empty($_POST['capturas_camara']))) {
-
-        // DEBUG: Verificar datos del POST
-        error_log("Datos recibidos del formulario adjunto:");
-        error_log(print_r($_POST, true));
+    if ($_POST['accion_adjunto'] == 'agregar' && !empty($_POST['adjuntos_unificados_json']) && $_POST['adjuntos_unificados_json'] !== '[]') {
 
         $resultado = agregarArchivoAdjunto([
             'cod_operario' => $codOperario,
             'pestaña' => $_POST['pestaña_adjunto'],
-            'tipo_documento' => $_POST['tipo_documento'] ?? null,
+            'tipo_documento' => $_POST['tipo_documento_adjunto_hidden'] ?? ($_POST['tipo_documento'] ?? null),
             'fecha_vencimiento' => $_POST['fecha_vencimiento'] ?? null,
             'descripcion' => $_POST['descripcion_adjunto'] ?? '',
             'cod_usuario_subio' => $_SESSION['usuario_id'],
-            'capturas_camara' => $_POST['capturas_camara'] ?? '[]'
-        ], $_FILES['archivo_adjunto'] ?? null);
+            'cod_adendum_asociado' => $_POST['cod_adendum_asociado'] ?? null,
+            'adjuntos_unificados_json' => $_POST['adjuntos_unificados_json']
+        ]);
 
         if ($resultado['exito']) {
             $_SESSION['exito'] = $resultado['mensaje'];
@@ -2105,29 +2102,51 @@ function agregarArchivoAdjunto($datos)
             }
         }
 
-        // Validar tipo de documento si se proporciona
-        $tiposPermitidos = obtenerTiposDocumentosPorPestaña($datos['pestaña']);
-        if (!empty($datos['tipo_documento'])) {
-            $todosTipos = array_merge(
-                array_keys($tiposPermitidos['obligatorios']),
-                array_keys($tiposPermitidos['opcionales'])
-            );
+        // Resolver tipo de documento: puede venir como ID numérico o como clave de texto
+        $id_tipo_documento_raw = !empty($datos['tipo_documento']) ? $datos['tipo_documento'] : null;
+        $id_tipo_documento = null;
+        $obligatorio = 0;
+        $categoria = 'opcional';
+        $clave_tipo_documento = null; // la clave de texto guardada en tipo_documento de la tabla
 
-            if (!in_array($datos['tipo_documento'], $todosTipos) && $datos['tipo_documento'] !== 'otro') {
-                return ['exito' => false, 'mensaje' => 'Tipo de documento no válido para esta pestaña'];
+        if (!empty($id_tipo_documento_raw)) {
+            // Intentar obtener info del tipo de documento por ID numérico
+            if (is_numeric($id_tipo_documento_raw)) {
+                $stmtTipo = $conn->prepare("SELECT id, nombre_clave, es_obligatorio FROM contratos_tiposDocumentos WHERE id = ? AND activo = 1");
+                $stmtTipo->execute([$id_tipo_documento_raw]);
+                $tipoInfo = $stmtTipo->fetch();
+                if ($tipoInfo) {
+                    $id_tipo_documento = $tipoInfo['id'];
+                    $clave_tipo_documento = $tipoInfo['nombre_clave'];
+                    if ($tipoInfo['es_obligatorio']) {
+                        $obligatorio = 1;
+                        $categoria = 'obligatorio';
+                    }
+                }
+            } elseif ($id_tipo_documento_raw !== 'otro') {
+                // es una clave textual (compatibilidad con código viejo si existiera)
+                $tiposPermitidos = obtenerTiposDocumentosPorPestaña($datos['pestaña']);
+                if (isset($tiposPermitidos['ids'][$id_tipo_documento_raw])) {
+                    $id_tipo_documento = $tiposPermitidos['ids'][$id_tipo_documento_raw];
+                    $clave_tipo_documento = $id_tipo_documento_raw;
+                    if (in_array($id_tipo_documento_raw, array_keys($tiposPermitidos['obligatorios']))) {
+                        $obligatorio = 1;
+                        $categoria = 'obligatorio';
+                    }
+                }
             }
 
-            // Verificar si ya existe un archivo del mismo tipo (solo si es obligatorio y NO es "otro")
-            if (in_array($datos['tipo_documento'], array_keys($tiposPermitidos['obligatorios'])) && $datos['tipo_documento'] !== 'otro') {
+            // Verificar si ya existe un archivo del mismo tipo (solo si es obligatorio)
+            if ($id_tipo_documento && $obligatorio) {
                 $stmtCheck = $conn->prepare("
                     SELECT COUNT(*) FROM ArchivosAdjuntos
-                    WHERE cod_operario = ? AND pestaña = ? AND tipo_documento = ?
+                    WHERE cod_operario = ? AND pestaña = ? AND id_tipo_documento = ?
                     AND (cod_contrato_asociado = ? OR ? IS NULL)
                 ");
                 $stmtCheck->execute([
                     $datos['cod_operario'],
                     $datos['pestaña'],
-                    $datos['tipo_documento'],
+                    $id_tipo_documento,
                     $codContratoAsociado,
                     $codContratoAsociado
                 ]);
@@ -2136,21 +2155,6 @@ function agregarArchivoAdjunto($datos)
                     return ['exito' => false, 'mensaje' => 'Ya existe un archivo de este tipo. Elimine el existente antes de subir uno nuevo.'];
                 }
             }
-        }
-
-        // Lógica de Categorización
-        $obligatorio = 0;
-        $categoria = 'opcional';
-        if (!empty($datos['tipo_documento'])) {
-            if (in_array($datos['tipo_documento'], array_keys($tiposPermitidos['obligatorios'])) && $datos['tipo_documento'] !== 'otro') {
-                $obligatorio = 1;
-                $categoria = 'obligatorio';
-            }
-        }
-
-        $id_tipo_documento = null;
-        if (!empty($datos['tipo_documento'])) {
-            $id_tipo_documento = $tiposPermitidos['ids'][$datos['tipo_documento']] ?? null;
         }
 
         // Crear directorio si no existe
@@ -2188,7 +2192,7 @@ function agregarArchivoAdjunto($datos)
                                 $codContratoAsociado,
                                 $codAdendumAsociado,
                                 $datos['pestaña'],
-                                $datos['tipo_documento'] ?? null,
+                                $clave_tipo_documento, // nombre_clave resuelto desde el ID o clave de texto
                                 $id_tipo_documento,
                                 $obligatorio,
                                 $categoria,
