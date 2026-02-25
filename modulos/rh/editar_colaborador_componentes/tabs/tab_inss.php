@@ -97,7 +97,7 @@
             <div class="form-row">
                 <div class="form-col">
                     <div class="form-group">
-                        <label for="codigo_inss">Número de Seguro INSS</label>
+                        <label for="codigo_inss">Número de Seguro INSS *</label>
                         <input type="text" id="codigo_inss" name="codigo_inss" class="form-control"
                             value="<?= htmlspecialchars($colaborador['codigo_inss'] ?? '') ?>">
                     </div>
@@ -112,7 +112,7 @@
 
                 <div class="form-col">
                     <div class="form-group">
-                        <label for="numero_planilla">Número de Planilla</label>
+                        <label for="numero_planilla">Número de Planilla *</label>
                         <select id="numero_planilla" name="numero_planilla" class="form-control">
                             <option value="">Seleccionar planilla...</option>
                             <?php foreach ($planillasPatronales as $planilla): ?>
@@ -124,7 +124,7 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="hospital_inss">Hospital Asociado</label>
+                        <label for="hospital_inss">Hospital Asociado *</label>
                         <input type="text" id="hospital_inss" name="hospital_inss" class="form-control"
                             value="<?= $contratoConINSS ? htmlspecialchars($contratoConINSS['hospital_inss'] ?? '') : '' ?>">
                     </div>
