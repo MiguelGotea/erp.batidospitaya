@@ -1432,9 +1432,9 @@ $imagenesParaCarrusel = [];
 
 
                         // Función para abrir el modal de adjuntos con los tipos de documentos
-                        function abrirModalAdjunto(pestaña, codAdendum = null) {
+                        function abrirModalAdjunto(pestaña, codAdendum = null, idTipoDocumento = null) {
                             // Verificar si requiere contrato y si existe
-                            const pestañasRequierenContrato = ['contrato', 'adendums', 'inss', 'salario', 'movimientos', 'categoria'];
+                            const pestañasRequierenContrato = ['contrato', 'adendums', 'inss', 'salario', 'movimientos', 'categoria', 'expediente-digital'];
                             const tieneContrato = <?= tieneContratoActivo($codOperario) ? 'true' : 'false' ?>;
 
                             if (pestañasRequierenContrato.includes(pestaña) && !tieneContrato) {
@@ -1456,10 +1456,9 @@ $imagenesParaCarrusel = [];
                                 document.getElementById('codAdendumAsociado').value = codAdendum;
                             } else if (pestaña === 'adendums') {
                                 // Si no se proporciona código, intentar obtener el último adendum activo
-                                const ultimoAdendumId = obtenerUltimoAdendumActivoId();
-                                if (ultimoAdendumId) {
-                                    document.getElementById('codAdendumAsociado').value = ultimoAdendumId;
-                                }
+                                obtenerUltimoAdendumActivoId().then(id => {
+                                    if (id) document.getElementById('codAdendumAsociado').value = id;
+                                });
                             }
 
                             document.getElementById('modalAdjunto').style.display = 'block';
@@ -1479,37 +1478,50 @@ $imagenesParaCarrusel = [];
                             // Limpiar y llenar el select de tipos de documento
                             const selectTipo = document.getElementById('tipo_documento_adjunto');
                             selectTipo.innerHTML = '<option value="">Seleccionar tipo de documento...</option>';
+                            selectTipo.disabled = false; // Habilitar por defecto
 
                             const documentosPestaña = tiposDocumentos[pestaña] || { obligatorios: [], opcionales: [] };
 
-                            // Agregar documentos obligatorios
-                            if (documentosPestaña.obligatorios.length > 0) {
-                                const optGroupObligatorios = document.createElement('optgroup');
-                                optGroupObligatorios.label = 'Documentos Obligatorios';
-                                documentosPestaña.obligatorios.forEach(doc => {
-                                    const option = document.createElement('option');
-                                    option.value = doc.valor;
-                                    option.textContent = doc.texto;
-                                    option.setAttribute('data-obligatorio', '1');
-                                    option.setAttribute('data-vencimiento', documentosPestaña.vencimientos[doc.valor] || '0');
-                                    optGroupObligatorios.appendChild(option);
-                                });
-                                selectTipo.appendChild(optGroupObligatorios);
-                            }
+                            // Función auxiliar para agregar opciones
+                            const agregarOpciones = (lista, label) => {
+                                if (lista.length > 0) {
+                                    const optGroup = document.createElement('optgroup');
+                                    optGroup.label = label;
+                                    lista.forEach(doc => {
+                                        const option = document.createElement('option');
+                                        option.value = doc.valor;
+                                        option.textContent = doc.texto;
+                                        option.setAttribute('data-obligatorio', label === 'Documentos Obligatorios' ? '1' : '0');
+                                        option.setAttribute('data-vencimiento', documentosPestaña.vencimientos[doc.valor] || '0');
+                                        optGroup.appendChild(option);
+                                    });
+                                    selectTipo.appendChild(optGroup);
+                                }
+                            };
 
-                            // Agregar documentos opcionales
-                            if (documentosPestaña.opcionales.length > 0) {
-                                const optGroupOpcionales = document.createElement('optgroup');
-                                optGroupOpcionales.label = 'Documentos Opcionales';
-                                documentosPestaña.opcionales.forEach(doc => {
-                                    const option = document.createElement('option');
-                                    option.value = doc.valor;
-                                    option.textContent = doc.texto;
-                                    option.setAttribute('data-obligatorio', '0');
-                                    option.setAttribute('data-vencimiento', documentosPestaña.vencimientos[doc.valor] || '0');
-                                    optGroupOpcionales.appendChild(option);
-                                });
-                                selectTipo.appendChild(optGroupOpcionales);
+                            agregarOpciones(documentosPestaña.obligatorios, 'Documentos Obligatorios');
+                            agregarOpciones(documentosPestaña.opcionales, 'Documentos Opcionales');
+
+                            // Si se proporciona un ID de tipo, seleccionarlo y bloquear el select
+                            if (idTipoDocumento) {
+                                selectTipo.value = idTipoDocumento;
+                                selectTipo.disabled = true;
+                                // Disparar manualmente la lógica de UI (vencimiento, descripción, etc.)
+                                actualizarDescripcionPorTipo();
+
+                                // Crear un input hidden temporal para enviar el valor si el select está disabled
+                                let hiddenInput = document.getElementById('hidden_id_tipo_documento');
+                                if (!hiddenInput) {
+                                    hiddenInput = document.createElement('input');
+                                    hiddenInput.type = 'hidden';
+                                    hiddenInput.id = 'hidden_id_tipo_documento';
+                                    hiddenInput.name = 'tipo_documento_adjunto_hidden';
+                                    document.getElementById('formAdjunto').appendChild(hiddenInput);
+                                }
+                                hiddenInput.value = idTipoDocumento;
+                            } else {
+                                const hiddenInput = document.getElementById('hidden_id_tipo_documento');
+                                if (hiddenInput) hiddenInput.value = '';
                             }
 
                             // Ocultar/mostrar sección de obligatorios

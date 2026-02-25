@@ -197,7 +197,8 @@
                                                     </div>
                                                 <?php endif; ?>
                                             <?php else: ?>
-                                                <button onclick="abrirModalAdjunto('<?= $pestanaClave ?>')"
+                                                <button
+                                                    onclick="abrirModalAdjunto('<?= $pestanaClave ?>', null, '<?= $doc['id_tipo'] ?>')"
                                                     style="background: #0E544C; color: white; border: none; padding: 4px 10px; border-radius: 6px; font-size: 0.7rem; font-weight: 800; cursor: pointer; transition: all 0.2s; text-transform: uppercase;"
                                                     onmouseover="this.style.background='#1a9083'; this.style.boxShadow='0 2px 8px rgba(26,144,131,0.2)'"
                                                     onmouseout="this.style.background='#0E544C'; this.style.boxShadow='none'">
