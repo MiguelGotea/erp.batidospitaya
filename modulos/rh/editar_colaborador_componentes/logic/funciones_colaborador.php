@@ -3575,8 +3575,45 @@ function calcularPorcentajeCumplimiento($codOperario, $pestaña)
 {
     global $conn;
 
-    if ($pestaña == 'expediente-digital' || $pestaña == 'expediente' || $pestaña == 'global') {
+    if ($pestaña == 'expediente' || $pestaña == 'global') {
         return calcularCumplimientoGlobal($codOperario);
+    }
+
+    // Caso Especial: Expediente Digital (Cálculo Global de Documentos)
+    if ($pestaña == 'expediente-digital') {
+        // Obtenemos todos los tipos de documentos obligatorios del sistema
+        $stmt = $conn->prepare("SELECT id FROM contratos_tiposDocumentos WHERE es_obligatorio = 1 AND activo = 1");
+        $stmt->execute();
+        $docsObligatorios = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+        $completados = 0;
+        $totalDocs = count($docsObligatorios);
+
+        if ($totalDocs > 0) {
+            $placeholders = str_repeat('?,', $totalDocs - 1) . '?';
+            $stmt = $conn->prepare("
+                SELECT id_tipo_documento, COUNT(*) as cantidad
+                FROM ArchivosAdjuntos
+                WHERE cod_operario = ? AND id_tipo_documento IN ($placeholders)
+                GROUP BY id_tipo_documento
+            ");
+            $stmt->execute(array_merge([$codOperario], $docsObligatorios));
+            $subidos = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
+
+            foreach ($docsObligatorios as $idDoc) {
+                if (isset($subidos[$idDoc]) && $subidos[$idDoc] > 0) {
+                    $completados++;
+                }
+            }
+        }
+
+        $porcentaje = $totalDocs > 0 ? round(($completados / $totalDocs) * 100) : 100;
+        return [
+            'porcentaje' => $porcentaje,
+            'completados' => $completados,
+            'total' => $totalDocs,
+            'detalles' => []
+        ];
     }
 
     $requerimientos = obtenerRequerimientosPestaña($pestaña);
@@ -3672,37 +3709,6 @@ function calcularPorcentajeCumplimiento($codOperario, $pestaña)
         }
     }
 
-    // 4. Caso Especial: Expediente Digital (Cálculo Global de Documentos)
-    if ($pestaña == 'expediente-digital') {
-        // Obtenemos todos los tipos de documentos obligatorios del sistema
-        $stmt = $conn->prepare("SELECT id FROM contratos_tiposDocumentos WHERE es_obligatorio = 1 AND activo = 1");
-        $stmt->execute();
-        $docsObligatorios = $stmt->fetchAll(PDO::FETCH_COLUMN);
-
-        if (!empty($docsObligatorios)) {
-            $placeholders = str_repeat('?,', count($docsObligatorios) - 1) . '?';
-            $stmt = $conn->prepare("
-                SELECT id_tipo_documento, COUNT(*) as cantidad
-                FROM ArchivosAdjuntos
-                WHERE cod_operario = ? AND id_tipo_documento IN ($placeholders)
-                GROUP BY id_tipo_documento
-            ");
-            $stmt->execute(array_merge([$codOperario], $docsObligatorios));
-            $subidos = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
-
-            // Reiniciamos contadores para que sea puramente documental
-            $totalRequerimientos = count($docsObligatorios);
-            $completados = 0;
-            $detalles = [];
-
-            foreach ($docsObligatorios as $idDoc) {
-                $pasa = isset($subidos[$idDoc]) && $subidos[$idDoc] > 0;
-                if ($pasa)
-                    $completados++;
-                // No llenamos detalles aquí para no saturar, o podríamos obtener nombres si fuera necesario
-            }
-        }
-    }
 
     $porcentaje = $totalRequerimientos > 0 ? round(($completados / $totalRequerimientos) * 100) : 100;
 
@@ -3719,7 +3725,7 @@ function calcularPorcentajeCumplimiento($codOperario, $pestaña)
  */
 function calcularCumplimientoGlobal($codOperario)
 {
-    $pestanas = ['datos-personales', 'datos-contacto', 'inss', 'contrato', 'contactos-emergencia', 'salario', 'movimientos', 'categoria', 'expediente-digital'];
+    $pestanas = ['datos-personales', 'datos-contacto', 'inss', 'contrato', 'contactos-emergencia', 'salario', 'movimientos', 'categoria'];
 
     $totalG = 0;
     $completadosG = 0;

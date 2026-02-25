@@ -202,10 +202,6 @@ $imagenesParaCarrusel = [];
                             <a href="?id=<?= $codOperario ?>&pestaña=expediente-digital"
                                 class="tab-button <?= $pestaña_activa == 'expediente-digital' ? 'active' : '' ?>">
                                 Expediente Digital
-                                <?php
-                                $estadoExpediente = verificarEstadoDocumentosObligatorios($codOperario, 'global');
-                                echo obtenerIconoEstadoDocumentos($estadoExpediente);
-                                ?>
                             </a>
                         <?php endif; ?>
                         <?php if (tienePermiso('editar_colaborador', 'edicion', $cargoId)): ?>
@@ -2062,9 +2058,8 @@ $imagenesParaCarrusel = [];
                                     .then(data => {
                                         const tabButton = document.querySelector(`.tab-button[href*="pestaña=${pestaña}"]`);
                                         if (tabButton) {
-                                            // 1. ELIMINAR ícono de estado antiguo
-                                            let iconoExistente = tabButton.querySelector('.estado-documentos');
-                                            if (iconoExistente) iconoExistente.remove();
+                                            // 1. ELIMINAR ícono y contenedores de estado antiguos
+                                            tabButton.querySelectorAll('.estado-documentos, i.fas, i.far').forEach(el => el.remove());
 
                                             // 2. Manejar el porcentaje de cumplimiento (CÍRCULO)
                                             if (data.porcentaje !== undefined) {
@@ -3037,7 +3032,7 @@ $imagenesParaCarrusel = [];
                     </div>
 
                     <script>
-                        // Mostrar ícono de ver al hacer hover sobre la foto               de perfil
+                     // Mostrar ícono de ver al hacer hover sobre la foto               de perfil
                         document.addEventListener('DOMContentLoaded', function () {
                             const fotoContainer = document.querySelector('.foto-perfil');
                             const viewIcon = document.querySelector('.view-icon');
