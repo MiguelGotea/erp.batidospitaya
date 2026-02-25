@@ -3264,6 +3264,7 @@ function obtenerDocumentosFaltantes($codOperario)
  */
 function obtenerNombrePestaña($pestaña)
 {
+    $pestaña = $pestaña ?? ''; // Evitar error de str_replace con null en PHP 8.1+
     $nombres = [
         'datos-personales' => 'Datos Personales',
         'inss' => 'INSS',
