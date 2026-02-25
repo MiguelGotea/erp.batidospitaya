@@ -2257,11 +2257,16 @@ function agregarArchivoAdjunto($datos, $archivo = null)
                     }
                 }
 
+                $id_tipo_documento = null;
+                if (!empty($datos['tipo_documento'])) {
+                    $id_tipo_documento = $tiposPermitidos['ids'][$datos['tipo_documento']] ?? null;
+                }
+
                 $stmt = $conn->prepare("
                     INSERT INTO ArchivosAdjuntos
-                    (cod_operario, cod_contrato_asociado, cod_adendum_asociado, pestaña, tipo_documento, obligatorio, categoria,
+                    (cod_operario, cod_contrato_asociado, cod_adendum_asociado, pestaña, tipo_documento, id_tipo_documento, obligatorio, categoria,
                     nombre_archivo, descripcion, tamaño, ruta_archivo, cod_usuario_subio)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ");
                 $stmt->execute([
                     $datos['cod_operario'],
@@ -2269,6 +2274,7 @@ function agregarArchivoAdjunto($datos, $archivo = null)
                     $codAdendumAsociado,
                     $datos['pestaña'],
                     $datos['tipo_documento'] ?? null,
+                    $id_tipo_documento,
                     $obligatorio,
                     $categoria,
                     $archivo['name'],
@@ -2308,11 +2314,16 @@ function agregarArchivoAdjunto($datos, $archivo = null)
                         $rutaCompleta = $directorio . $nombreArchivo;
 
                         if (file_put_contents($rutaCompleta, $imgData)) {
+                            $id_tipo_documento = null;
+                            if (!empty($datos['tipo_documento'])) {
+                                $id_tipo_documento = $tiposPermitidos['ids'][$datos['tipo_documento']] ?? null;
+                            }
+
                             $stmt = $conn->prepare("
                                 INSERT INTO ArchivosAdjuntos
-                                (cod_operario, cod_contrato_asociado, cod_adendum_asociado, pestaña, tipo_documento, obligatorio, categoria,
+                                (cod_operario, cod_contrato_asociado, cod_adendum_asociado, pestaña, tipo_documento, id_tipo_documento, obligatorio, categoria,
                                 nombre_archivo, descripcion, tamaño, ruta_archivo, cod_usuario_subio)
-                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                             ");
                             $stmt->execute([
                                 $datos['cod_operario'],
@@ -2320,6 +2331,7 @@ function agregarArchivoAdjunto($datos, $archivo = null)
                                 $codAdendumAsociado,
                                 $datos['pestaña'],
                                 $datos['tipo_documento'] ?? null,
+                                $id_tipo_documento,
                                 $obligatorio,
                                 $categoria,
                                 $nombreOriginal,
@@ -7612,78 +7624,43 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                     }
                 });
 
-                // Configuración de tipos de documentos por pestaña
-                const tiposDocumentos = {
-                    'datos-personales': {
-                        obligatorios: [
-                            { valor: 'record_ley_510', texto: 'Récord Ley 510' },
-                            { valor: 'certificado_salud', texto: 'Certificado de Salud' },
-                            { valor: 'constancia_judicial', texto: 'Constancia Judicial' },
-                            { valor: 'soportes_estudios', texto: 'Soportes de Estudios' },
-                            { valor: 'historial_inss', texto: 'Historial de INSS' },
-                            { valor: 'cedula', texto: 'Cédula' }
-                        ],
-                        opcionales: [
-                            { valor: 'hoja_vida', texto: 'Hoja de Vida' },
-                            { valor: 'cartas_recomendacion', texto: 'Cartas de Recomendación Personal' },
-                            { valor: 'soportes_empleos_anteriores', texto: 'Soportes de Empleos Anteriores' },
-                            { valor: 'otro', texto: 'Otro Documento' }
-                        ]
-                    },
-                    'inss': {
-                        obligatorios: [
-                            { valor: 'hoja_inscripcion_inss', texto: 'Hoja de Inscripción INSS' },
-                        ],
-                        opcionales: [
-                            { valor: 'colilla_inss', texto: 'Colilla INSS' },
-                            { valor: 'otro', texto: 'Otro Documento INSS' }
-                        ]
-                    },
-                    'contrato': {
-                        obligatorios: [
-                            { valor: 'contrato_firmado', texto: 'Contrato Firmado' }
-                        ],
-                        opcionales: [
-                            { valor: 'anexos_contrato', texto: 'Anexos del Contrato' },
-                            { valor: 'otro', texto: 'Otro Documento' }
-                        ]
-                    },
-                    'contactos-emergencia': {
-                        obligatorios: [],
-                        opcionales: [
-                            { valor: 'formulario_contactos', texto: 'Formulario de Contactos de Emergencia' },
-                            { valor: 'otro', texto: 'Otro Documento' }
-                        ]
-                    },
-                    'salario': {
-                        obligatorios: [],
-                        opcionales: [
-                            { valor: 'escalas_salariales', texto: 'Escalas Salariales' },
-                            { valor: 'otro', texto: 'Otro Documento' }
-                        ]
-                    },
-                    'movimientos': {
-                        obligatorios: [],
-                        opcionales: [
-                            { valor: 'documentos_movimiento', texto: 'Documentos de Movimiento' },
-                            { valor: 'otro', texto: 'Otro Documento' }
-                        ]
-                    },
-                    'categoria': {
-                        obligatorios: [],
-                        opcionales: [
-                            { valor: 'certificaciones', texto: 'Certificaciones' },
-                            { valor: 'otro', texto: 'Otro Documento' }
-                        ]
-                    },
-                    'adendums': {
-                        obligatorios: [],
-                        opcionales: [
-                            { valor: 'adendums_firmados', texto: 'Adendums Firmados' },
-                            { valor: 'otro', texto: 'Otro Documento' }
-                        ]
+                // Configuración de tipos de documentos por pestaña (Cargados desde la Base de Datos)
+                <?php
+                $pestañasJS = [
+                    'datos-personales',
+                    'inss',
+                    'contrato',
+                    'contactos-emergencia',
+                    'salario',
+                    'movimientos',
+                    'categoria',
+                    'adendums'
+                ];
+                $tiposDocumentosPHP = [];
+                foreach ($pestañasJS as $p) {
+                    $tipos = obtenerTiposDocumentosPorPestaña($p);
+                    $tiposDocumentosPHP[$p] = [
+                        'obligatorios' => [],
+                        'opcionales' => []
+                    ];
+                    foreach ($tipos['obligatorios'] as $valor => $texto) {
+                        $tiposDocumentosPHP[$p]['obligatorios'][] = [
+                            'id' => $tipos['ids'][$valor] ?? null,
+                            'valor' => $valor,
+                            'texto' => $texto
+                        ];
                     }
-                };
+                    foreach ($tipos['opcionales'] as $valor => $texto) {
+                        $tiposDocumentosPHP[$p]['opcionales'][] = [
+                            'id' => $tipos['ids'][$valor] ?? null,
+                            'valor' => $valor,
+                            'texto' => $texto
+                        ];
+                    }
+                }
+                ?>
+                const tiposDocumentos = <?= json_encode($tiposDocumentosPHP) ?>;
+
 
                 // Función para abrir el modal de adjuntos con los tipos de documentos
                 function abrirModalAdjunto(pestaña, codAdendum = null) {
@@ -9069,7 +9046,7 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                             // Cambiar el texto del botón
                             const btnSubmit = form.querySelector('button[type="submit"]');
                             btnSubmit.textContent = 'Guardar Cambios';
-                            btnSubmit.style.backgroundColor = '#0E544C'; // Color verde en lugar de rojo
+                            btnSubmit.style.backgroundColor = ' #0E544C'; // Color verde en lugar de rojo
                         })
                         .catch(error => {
                             console.error('Error:', error);
@@ -9098,25 +9075,27 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                     </div>
 
                     <!-- Imagen -->
-                    <div id="contenedorImagenModal" style="position: relative; max-width: 90%; max-height: 80%; display: flex; justify-content: center; align-items: center;">
+                    <div id="contenedorImagenModal"
+                        style="position: relative; max-width: 90%; max-height: 80%; display: flex; justify-content: center; align-items: center;">
                         <!-- Spinner de Carga -->
-                        <div id="spinnerCargaModal" style="display: none; position: absolute; color: white; flex-direction: column; align-items: center; justify-content: center;">
+                        <div id="spinnerCargaModal"
+                            style="display: none; position: absolute; color: white; flex-direction: column; align-items: center; justify-content: center;">
                             <i class="fas fa-spinner fa-spin" style="font-size: 3rem; margin-bottom: 10px;"></i>
                             <span>Cargando imagen...</span>
                         </div>
 
                         <!-- Mensaje de Error -->
-                        <div id="errorCargaModal" style="display: none; position: absolute; color: #ff6b6b; flex-direction: column; align-items: center; justify-content: center; text-align: center;">
+                        <div id="errorCargaModal"
+                            style="display: none; position: absolute; color: #ff6b6b; flex-direction: column; align-items: center; justify-content: center; text-align: center;">
                             <i class="fas fa-exclamation-triangle" style="font-size: 3rem; margin-bottom: 10px;"></i>
                             <div style="font-size: 1.2rem; margin-bottom: 15px;">No se pudo cargar la imagen</div>
-                            <button onclick="reintentarCargaImagen()" style="background: #ff6b6b; color: white; border: none; padding: 8px 20px; border-radius: 5px; cursor: pointer; font-weight: bold;">
+                            <button onclick="reintentarCargaImagen()"
+                                style="background: #ff6b6b; color: white; border: none; padding: 8px 20px; border-radius: 5px; cursor: pointer; font-weight: bold;">
                                 <i class="fas fa-sync-alt"></i> Reintentar
                             </button>
                         </div>
 
-                        <img id="imagenFotoCompleta"
-                            onload="onImagenCargada()"
-                            onerror="onImagenError()"
+                        <img id="imagenFotoCompleta" onload="onImagenCargada()" onerror="onImagenError()"
                             style="max-width: 100%; max-height: 100%; object-fit: contain; box-shadow: 0 0 20px rgba(0,0,0,0.5); transition: transform 0.3s ease; display: none;">
                     </div>
 
@@ -9146,7 +9125,7 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                     indiceImagenActual = -1; // No es carrusel
                     document.getElementById('modalVerFoto').style.display = 'block';
                     document.body.style.overflow = 'hidden'; // Bloquear scroll
-                    
+
                     cargarImagenEnModal(rutaFoto, titulo, "");
                 }
 
@@ -9167,7 +9146,7 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
 
                     const titulo = img.nombre + (img.categoria ? " (" + img.categoria + ")" : "");
                     const contador = (indice + 1) + " de " + listaImagenesAdjuntas.length;
-                    
+
                     cargarImagenEnModal(img.url, titulo, contador);
                 }
 
@@ -9181,7 +9160,7 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                     imgElement.style.display = 'none';
                     errorMsg.style.display = 'none';
                     spinner.style.display = 'flex';
-                    
+
                     // Actualizar textos
                     document.getElementById('tituloImagenCarrusel').textContent = titulo;
                     document.getElementById('contadorCarrusel').textContent = contador;
@@ -9205,7 +9184,7 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                 function reintentarCargaImagen() {
                     const imgElement = document.getElementById('imagenFotoCompleta');
                     const currentSrc = imgElement.src;
-                    
+
                     // Forzar recarga limpiando el src momentáneamente
                     imgElement.src = "";
                     setTimeout(() => {
