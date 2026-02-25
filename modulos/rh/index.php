@@ -31,8 +31,15 @@ function obtenerCantidadOperariosIncompletos()
 {
     global $conn;
 
-    // Pestañas que tienen documentos obligatorios
-    $pestañasConObligatorios = ['datos-personales', 'inss', 'contrato'];
+    // Obtener las pestañas que tienen al menos un documento obligatorio configurado
+    try {
+        $stmt = $conn->query("SELECT DISTINCT pestaña FROM contratos_tiposDocumentos WHERE es_obligatorio = 1 AND activo = 1");
+        $pestañasConObligatorios = $stmt->fetchAll(PDO::FETCH_COLUMN);
+    } catch (Exception $e) {
+        error_log("Error al obtener pestañas con obligatorios en index.php: " . $e->getMessage());
+        $pestañasConObligatorios = ['datos-personales', 'inss', 'contrato'];
+    }
+
     $operariosIncompletos = [];
 
     // Obtener todos los operarios activos
