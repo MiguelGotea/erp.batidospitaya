@@ -924,6 +924,7 @@ if (isset($_POST['accion_adjunto'])) {
             'cod_operario' => $codOperario,
             'pestaña' => $_POST['pestaña_adjunto'],
             'tipo_documento' => $_POST['tipo_documento'] ?? null,
+            'fecha_vencimiento' => $_POST['fecha_vencimiento'] ?? null,
             'descripcion' => $_POST['descripcion_adjunto'] ?? '',
             'cod_usuario_subio' => $_SESSION['usuario_id'],
             'capturas_camara' => $_POST['capturas_camara'] ?? '[]'
@@ -2129,6 +2130,7 @@ function agregarArchivoAdjunto($datos, $archivo = null)
     try {
         $resultadosExito = [];
         $resultadosError = [];
+        $fechaVencimiento = !empty($datos['fecha_vencimiento']) ? $datos['fecha_vencimiento'] : null;
 
         // 1. Procesar archivo PDF si existe
         if ($archivo && !empty($archivo['name'])) {
@@ -2233,8 +2235,8 @@ function agregarArchivoAdjunto($datos, $archivo = null)
                 $stmt = $conn->prepare("
                     INSERT INTO ArchivosAdjuntos
                     (cod_operario, cod_contrato_asociado, cod_adendum_asociado, pestaña, tipo_documento, id_tipo_documento, obligatorio, categoria,
-                    nombre_archivo, descripcion, tamaño, ruta_archivo, cod_usuario_subio)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    nombre_archivo, descripcion, tamaño, ruta_archivo, cod_usuario_subio, fecha_vencimiento)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ");
                 $stmt->execute([
                     $datos['cod_operario'],
@@ -2249,7 +2251,8 @@ function agregarArchivoAdjunto($datos, $archivo = null)
                     $datos['descripcion'] ?? '',
                     $archivo['size'],
                     $rutaCompleta,
-                    $datos['cod_usuario_subio']
+                    $datos['cod_usuario_subio'],
+                    $fechaVencimiento
                 ]);
                 $resultadosExito[] = "PDF subido correctamente";
             } else {
@@ -2290,8 +2293,8 @@ function agregarArchivoAdjunto($datos, $archivo = null)
                             $stmt = $conn->prepare("
                                 INSERT INTO ArchivosAdjuntos
                                 (cod_operario, cod_contrato_asociado, cod_adendum_asociado, pestaña, tipo_documento, id_tipo_documento, obligatorio, categoria,
-                                nombre_archivo, descripcion, tamaño, ruta_archivo, cod_usuario_subio)
-                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                nombre_archivo, descripcion, tamaño, ruta_archivo, cod_usuario_subio, fecha_vencimiento)
+                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                             ");
                             $stmt->execute([
                                 $datos['cod_operario'],
@@ -2306,7 +2309,8 @@ function agregarArchivoAdjunto($datos, $archivo = null)
                                 $datos['descripcion'] ?? ('Captura cámara ' . ($index + 1)),
                                 strlen($imgData),
                                 $rutaCompleta,
-                                $datos['cod_usuario_subio']
+                                $datos['cod_usuario_subio'],
+                                $fechaVencimiento
                             ]);
                             $resultadosExito[] = "Foto " . ($index + 1) . " guardada";
                         } else {
@@ -3222,6 +3226,121 @@ function obtenerDocumentosFaltantes($codOperario)
     }
 
     return $documentosFaltantes;
+}
+
+/**
+ * Obtiene el expediente completo agrupado por pestaña, incluyendo documentos faltantes
+ */
+function obtenerExpedienteCompletoConFaltantes($codOperario)
+{
+    global $conn;
+
+    // 1. Obtener todos los tipos de documentos activos
+    $stmt = $conn->prepare("
+        SELECT id, pestaña, nombre_clave, nombre_descriptivo, es_obligatorio, tiene_vencimiento
+        FROM contratos_tiposDocumentos
+        WHERE activo = 1
+        ORDER BY pestaña ASC, es_obligatorio DESC, nombre_descriptivo ASC
+    ");
+    $stmt->execute();
+    $tiposConfig = $stmt->fetchAll();
+
+    // 2. Obtener todos los archivos subidos del colaborador
+    $stmt = $conn->prepare("
+        SELECT a.*, o.Nombre as nombre_usuario, o.Apellido as apellido_usuario
+        FROM ArchivosAdjuntos a
+        JOIN Operarios o ON a.cod_usuario_subio = o.CodOperario
+        WHERE a.cod_operario = ?
+        ORDER BY a.fecha_subida DESC
+    ");
+    $stmt->execute([$codOperario]);
+    $archivosSubidos = $stmt->fetchAll();
+
+    // 3. Organizar archivos subidos por tipo y pestaña
+    $subidosMap = [];
+    foreach ($archivosSubidos as $archivo) {
+        $clave = $archivo['id_tipo_documento'] ?: $archivo['tipo_documento'];
+        $pestana = $archivo['pestaña'];
+        if (!isset($subidosMap[$pestana]))
+            $subidosMap[$pestana] = [];
+        if (!isset($subidosMap[$pestana][$clave]))
+            $subidosMap[$pestana][$clave] = [];
+        $subidosMap[$pestana][$clave][] = $archivo;
+    }
+
+    // 4. Construir la estructura final agrupada por pestaña
+    $expediente = [];
+
+    // Agrupar tipos por pestaña
+    foreach ($tiposConfig as $tipo) {
+        $p = $tipo['pestaña'];
+        if (!isset($expediente[$p])) {
+            $expediente[$p] = [
+                'nombre' => obtenerNombrePestaña($p),
+                'documentos' => [],
+                'stats' => ['total_obligatorios' => 0, 'subidos_obligatorios' => 0, 'porcentaje' => 100]
+            ];
+        }
+
+        $tipoClave = $tipo['nombre_clave'];
+        $idTipo = $tipo['id'];
+
+        $subidos = [];
+        // Buscar por ID primero, luego por nombre_clave (compatibilidad)
+        if (isset($subidosMap[$p][$idTipo])) {
+            $subidos = $subidosMap[$p][$idTipo];
+            unset($subidosMap[$p][$idTipo]); // Marcamos como procesado
+        } elseif (isset($subidosMap[$p][$tipoClave])) {
+            $subidos = $subidosMap[$p][$tipoClave];
+            unset($subidosMap[$p][$tipoClave]); // Marcamos como procesado
+        }
+
+        if ($tipo['es_obligatorio']) {
+            $expediente[$p]['stats']['total_obligatorios']++;
+            if (!empty($subidos)) {
+                $expediente[$p]['stats']['subidos_obligatorios']++;
+            }
+        }
+
+        $expediente[$p]['documentos'][] = [
+            'tipo' => 'configurado',
+            'id_tipo' => $idTipo,
+            'nombre' => $tipo['nombre_descriptivo'],
+            'obligatorio' => $tipo['es_obligatorio'],
+            'tiene_vencimiento' => $tipo['tiene_vencimiento'],
+            'archivos' => $subidos
+        ];
+    }
+
+    // 5. Agregar archivos que no tienen un tipo configurado (huérfanos o personalizados)
+    foreach ($subidosMap as $p => $tiposHuerfanos) {
+        if (!isset($expediente[$p])) {
+            $expediente[$p] = [
+                'nombre' => obtenerNombrePestaña($p),
+                'documentos' => [],
+                'stats' => ['total_obligatorios' => 0, 'subidos_obligatorios' => 0, 'porcentaje' => 100]
+            ];
+        }
+        foreach ($tiposHuerfanos as $clave => $archivos) {
+            $expediente[$p]['documentos'][] = [
+                'tipo' => 'personalizado',
+                'id_tipo' => null,
+                'nombre' => $clave,
+                'obligatorio' => 0,
+                'tiene_vencimiento' => 0,
+                'archivos' => $archivos
+            ];
+        }
+    }
+
+    // 6. Calcular porcentajes finales
+    foreach ($expediente as $p => &$info) {
+        if ($info['stats']['total_obligatorios'] > 0) {
+            $info['stats']['porcentaje'] = round(($info['stats']['subidos_obligatorios'] / $info['stats']['total_obligatorios']) * 100);
+        }
+    }
+
+    return $expediente;
 }
 
 /**

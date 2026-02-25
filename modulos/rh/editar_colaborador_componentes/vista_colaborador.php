@@ -494,7 +494,15 @@
                                     </small>
                                 </div>
 
+                                <div class="form-group" id="grupo_fecha_vencimiento" style="display: none;">
+                                    <label for="fecha_vencimiento_adjunto">Fecha de Vencimiento *</label>
+                                    <input type="date" id="fecha_vencimiento_adjunto" name="fecha_vencimiento"
+                                        class="form-control">
+                                    <small style="color: #6c757d;">Este documento requiere fecha de vencimiento</small>
+                                </div>
+
                                 <div class="form-group">
+
                                     <label for="descripcion_adjunto">Descripción (opcional)</label>
                                     <textarea id="descripcion_adjunto" name="descripcion_adjunto" class="form-control"
                                         rows="3" placeholder="Breve descripción del archivo"></textarea>
@@ -1404,6 +1412,7 @@
                                     option.value = doc.valor;
                                     option.textContent = doc.texto;
                                     option.setAttribute('data-obligatorio', '1');
+                                    option.setAttribute('data-vencimiento', documentosPestaña.vencimientos[doc.valor] || '0');
                                     optGroupObligatorios.appendChild(option);
                                 });
                                 selectTipo.appendChild(optGroupObligatorios);
@@ -1418,6 +1427,7 @@
                                     option.value = doc.valor;
                                     option.textContent = doc.texto;
                                     option.setAttribute('data-obligatorio', '0');
+                                    option.setAttribute('data-vencimiento', documentosPestaña.vencimientos[doc.valor] || '0');
                                     optGroupOpcionales.appendChild(option);
                                 });
                                 selectTipo.appendChild(optGroupOpcionales);
@@ -1480,8 +1490,21 @@
 
                             const valorSeleccionado = selectTipo.value;
                             const esObligatorio = selectTipo.options[selectTipo.selectedIndex]?.getAttribute('data-obligatorio') === '1';
+                            const tieneVencimiento = selectTipo.options[selectTipo.selectedIndex]?.getAttribute('data-vencimiento') === '1';
+                            const grupoVencimiento = document.getElementById('grupo_fecha_vencimiento');
+                            const inputVencimiento = document.getElementById('fecha_vencimiento_adjunto');
 
                             if (valorSeleccionado) {
+                                // Mostrar/Ocultar campo de vencimiento
+                                if (tieneVencimiento) {
+                                    grupoVencimiento.style.display = 'block';
+                                    inputVencimiento.required = true;
+                                } else {
+                                    grupoVencimiento.style.display = 'none';
+                                    inputVencimiento.required = false;
+                                    inputVencimiento.value = '';
+                                }
+
                                 if (esObligatorio) {
                                     infoObligatorio.style.display = 'block';
                                     textoObligatorio.textContent = 'Este documento es requerido para completar la información del colaborador.';
@@ -1504,6 +1527,9 @@
                             } else {
                                 infoObligatorio.style.display = 'none';
                                 ayudaTipo.style.display = 'none';
+                                grupoVencimiento.style.display = 'none';
+                                inputVencimiento.required = false;
+                                inputVencimiento.value = '';
                                 descripcionInput.value = '';
                             }
                         }
