@@ -2124,6 +2124,8 @@ function obtenerArchivosAdjuntos($codOperario, $pestaña)
     $stmt = $conn->prepare("
     SELECT
     a.*,
+    COALESCE(t.pestaña, a.pestaña) as pestaña,
+    COALESCE(t.nombre_clave, a.tipo_documento) as tipo_documento,
     o.Nombre as nombre_usuario,
     o.Apellido as apellido_usuario,
     c.codigo_manual_contrato,
@@ -2135,13 +2137,14 @@ function obtenerArchivosAdjuntos($codOperario, $pestaña)
     nc.Nombre as nombre_cargo_adendum,
     co.NombreCategoria as nombre_categoria_adendum
     FROM ArchivosAdjuntos a
+    LEFT JOIN contratos_tiposDocumentos t ON a.id_tipo_documento = t.id
     JOIN Operarios o ON a.cod_usuario_subio = o.CodOperario
     LEFT JOIN Contratos c ON a.cod_contrato_asociado = c.CodContrato
     LEFT JOIN TipoContrato tc ON c.cod_tipo_contrato = tc.CodTipoContrato
     LEFT JOIN AsignacionNivelesCargos anc ON a.cod_adendum_asociado = anc.CodAsignacionNivelesCargos
     LEFT JOIN NivelesCargos nc ON anc.CodNivelesCargos = nc.CodNivelesCargos
     LEFT JOIN CategoriasOperarios co ON anc.CodNivelesCargos = co.idCategoria
-    WHERE a.cod_operario = ? AND a.pestaña = ?
+    WHERE a.cod_operario = ? AND COALESCE(t.pestaña, a.pestaña) = ?
     ORDER BY
     a.cod_adendum_asociado DESC,
     a.obligatorio DESC,
@@ -3094,6 +3097,8 @@ function obtenerExpedienteDigitalCompleto($codOperario)
     $stmt = $conn->prepare("
     SELECT
     a.*,
+    COALESCE(t.pestaña, a.pestaña) as pestaña,
+    COALESCE(t.nombre_clave, a.tipo_documento) as tipo_documento,
     o.Nombre as nombre_usuario,
     o.Apellido as apellido_usuario,
     c.codigo_manual_contrato,
@@ -3118,6 +3123,7 @@ function obtenerExpedienteDigitalCompleto($codOperario)
     ELSE 'Otros Documentos'
     END as subcategoria
     FROM ArchivosAdjuntos a
+    LEFT JOIN contratos_tiposDocumentos t ON a.id_tipo_documento = t.id
     JOIN Operarios o ON a.cod_usuario_subio = o.CodOperario
     LEFT JOIN Contratos c ON a.cod_contrato_asociado = c.CodContrato
     LEFT JOIN TipoContrato tc ON c.cod_tipo_contrato = tc.CodTipoContrato
