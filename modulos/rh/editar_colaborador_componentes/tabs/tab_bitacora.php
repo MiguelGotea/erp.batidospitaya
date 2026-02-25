@@ -1,4 +1,6 @@
-﻿                            <div id="bitacora" class="tab-pane <?= $pestaña_activa == 'bitacora' ? 'active' : '' ?>">
+﻿                        <!-- Pestaña de Bitácora -->
+                        <?php if (tienePermiso('editar_colaborador', 'edicion', $cargoId)): ?>
+                            <div id="bitacora" class="tab-pane <?= $pestaña_activa == 'bitacora' ? 'active' : '' ?>">
                                 <div style="margin-bottom: 30px;">
                                     <h3 style="color: #0E544C; margin-bottom: 15px;">Nueva Anotación</h3>
 
@@ -67,3 +69,4 @@
                                 </div>
                             </div>
                         <?php endif; ?>
+                    </div>

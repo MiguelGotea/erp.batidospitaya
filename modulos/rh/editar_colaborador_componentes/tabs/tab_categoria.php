@@ -1,4 +1,6 @@
-﻿                            <div id="categoria" class="tab-pane <?= $pestaña_activa == 'categoria' ? 'active' : '' ?>">
+﻿                        <!-- Pestaña de Categoría -->
+                        <?php if (tienePermiso('editar_colaborador', 'edicion', $cargoId)): ?>
+                            <div id="categoria" class="tab-pane <?= $pestaña_activa == 'categoria' ? 'active' : '' ?>">
                                 <form method="POST" action="">
                                     <input type="hidden" name="accion_categoria" value="agregar">
                                     <input type="hidden" name="pestaña" value="categoria">

@@ -1,4 +1,5 @@
-﻿                            <div id="expediente-digital"
+﻿                        <?php if (tienePermiso('editar_colaborador', 'edicion', $cargoId)): ?>
+                            <div id="expediente-digital"
                                 class="tab-pane <?= $pestaña_activa == 'expediente-digital' ? 'active' : '' ?>">
                                 <?php
                                 $expedienteCompleto = obtenerExpedienteDigitalCompleto($codOperario);

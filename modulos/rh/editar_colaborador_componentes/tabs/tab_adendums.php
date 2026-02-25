@@ -1,4 +1,6 @@
-﻿                            <div id="adendums" class="tab-pane <?= $pestaña_activa == 'adendums' ? 'active' : '' ?>">
+﻿                        <!-- Pestaña de Adendums -->
+                        <?php if (tienePermiso('editar_colaborador', 'edicion', $cargoId)): ?>
+                            <div id="adendums" class="tab-pane <?= $pestaña_activa == 'adendums' ? 'active' : '' ?>">
                                 <?php if (tienePermiso('editar_colaborador', 'edicion', $cargoId)): ?>
                                     <?php if (!tieneContratoActivo($codOperario)): ?>
                                         <div class="alert alert-warning">
@@ -386,4 +388,3 @@
                         <?php endif; ?>
 
                         <!-- Pestaña de Expediente Digital -->
-                        <?php if (tienePermiso('editar_colaborador', 'edicion', $cargoId)): ?>

@@ -1,4 +1,6 @@
-﻿                            <div id="salario" class="tab-pane <?= $pestaña_activa == 'salario' ? 'active' : '' ?>">
+﻿                        <!-- Pestaña de Salario -->
+                        <?php if (tienePermiso('editar_colaborador', 'edicion', $cargoId)): ?>
+                            <div id="salario" class="tab-pane <?= $pestaña_activa == 'salario' ? 'active' : '' ?>">
                                 <div
                                     style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                                     <h3 style="color: #0E544C; margin: 0;">Historial de Salarios</h3>

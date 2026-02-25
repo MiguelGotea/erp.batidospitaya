@@ -1,4 +1,6 @@
-﻿                            <div id="movimientos" class="tab-pane <?= $pestaña_activa == 'movimientos' ? 'active' : '' ?>">
+﻿                        <!-- Pestaña de Movimientos -->
+                        <?php if (tienePermiso('editar_colaborador', 'edicion', $cargoId)): ?>
+                            <div id="movimientos" class="tab-pane <?= $pestaña_activa == 'movimientos' ? 'active' : '' ?>">
                                 <?php
                                 $historialCargos = obtenerHistorialCargos($codOperario);
                                 $cargosDisponibles = obtenerTodosCargos();

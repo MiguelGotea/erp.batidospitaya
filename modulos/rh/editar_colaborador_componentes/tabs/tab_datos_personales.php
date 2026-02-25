@@ -1,5 +1,4 @@
-﻿                        <!-- Pestaña de Datos Personales -->
-                        <?php if (tienePermiso('editar_colaborador', 'edicion', $cargoId)): ?>
+﻿                        <?php if (tienePermiso('editar_colaborador', 'edicion', $cargoId)): ?>
                             <div id="datos-personales"
                                 class="tab-pane <?= $pestaña_activa == 'datos-personales' ? 'active' : '' ?>">
                                 <!-- Sección de Documentos Obligatorios Faltantes -->
@@ -329,3 +328,4 @@
                                 </div>
                             </div>
                         <?php endif; ?>
+

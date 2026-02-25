@@ -198,4 +198,3 @@
                             </div>
                         <?php endif; ?>
 
-                        <!-- Pestaña de Contrato -->
