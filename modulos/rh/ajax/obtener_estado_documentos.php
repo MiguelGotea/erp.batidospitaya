@@ -18,7 +18,7 @@ verificarAutenticacion();
 $usuario = obtenerUsuarioActual();
 $cargoId = $usuario['CodNivelesCargos'] ?? 0;
 
-require_once '../editar_colaborador_componentes/logic/funciones_colaborador.php';
+require_once '../editar_colaborador_componentes/logic/compliance_logic.php';
 
 ob_clean();
 header('Content-Type: application/json');

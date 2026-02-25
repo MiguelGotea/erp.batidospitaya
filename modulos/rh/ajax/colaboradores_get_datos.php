@@ -360,7 +360,7 @@ try {
     $stmt->execute();
     $datos = $stmt->fetchAll();
 
-    require_once '../editar_colaborador_componentes/logic/funciones_colaborador.php';
+    require_once '../editar_colaborador_componentes/logic/compliance_logic.php';
 
     // Procesar datos para agregar campos calculados
     foreach ($datos as &$row) {

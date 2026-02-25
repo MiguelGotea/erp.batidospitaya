@@ -43,12 +43,13 @@ $imagenesParaCarrusel = [];
             font-size: 0.62rem;
             font-weight: 900;
             margin-left: 8px;
-            width: 22px;
-            height: 22px;
+            padding: 2px 6px;
+            min-width: 28px;
+            height: 18px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            border-radius: 50%;
+            border-radius: 4px;
             background: #eee;
             color: white !important;
             flex-shrink: 0;
@@ -2968,7 +2969,7 @@ $imagenesParaCarrusel = [];
 
                                     // Mostrar campo de persona si aplica devolución
                                     if (contrato.devolucion_herramientas_trabajo == '1') {
-                                    document.getElementById('grupoPersonaHerramientas').style.display = 'block';
+                                        document.getElementById('grupoPersonaHerramientas').style.display = 'block';
                                     }
 
                                     // Cambiar el texto del botón
@@ -3047,7 +3048,7 @@ $imagenesParaCarrusel = [];
                     </div>
 
                     <script>
-                     // Mostrar ícono de ver al hacer hover sobre la foto               de perfil
+                        // Mostrar ícono de ver al hacer hover sobre la foto               de perfil
                         document.addEventListener('DOMContentLoaded', function () {
                             const fotoContainer = document.querySelector('.foto-perfil');
                             const viewIcon = document.querySelector('.view-icon');
