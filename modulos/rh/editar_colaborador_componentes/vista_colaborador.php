@@ -1607,9 +1607,7 @@ $imagenesParaCarrusel = [];
                                 if (esObligatorio) {
                                     infoObligatorio.style.display = 'block';
                                     textoObligatorio.textContent = 'Este documento es requerido para completar la información del colaborador.';
-                                    ayudaTipo.style.display = 'block';
-                                    ayudaTipo.textContent = 'Documento obligatorio - solo puede subir uno de este tipo';
-                                    ayudaTipo.style.color = '#0E544C';
+                                    ayudaTipo.style.display = 'none';
                                 } else {
                                     infoObligatorio.style.display = 'none';
                                     ayudaTipo.style.display = 'block';
@@ -1865,7 +1863,7 @@ $imagenesParaCarrusel = [];
                                         adjuntosSesion.push({
                                             tipo: 'pdf',
                                             nombre: file.name,
-                                            tamaño: file.size,
+                                             tamaño: file.size,
                                             data: e.target.result
                                         });
                                         actualizarListaAdjuntosUI();
@@ -1884,7 +1882,7 @@ $imagenesParaCarrusel = [];
                                         adjuntosSesion.push({
                                             tipo: 'imagen',
                                             nombre: file.name,
-                                            tamaño: file.size,
+                                             tamaño: file.size,
                                             data: e.target.result
                                         });
                                         actualizarListaAdjuntosUI();
@@ -2956,7 +2954,7 @@ $imagenesParaCarrusel = [];
                     </div>
 
                     <script>
-                        // Mostrar ícono de ver al hacer hover sobre la foto de perfil
+                        // Mostrar ícono de ver al hacer hover sobre la foto               de perfil
                         document.addEventListener('DOMContentLoaded', function () {
                             const fotoContainer = document.querySelector('.foto-perfil');
                             const viewIcon = document.querySelector('.view-icon');
