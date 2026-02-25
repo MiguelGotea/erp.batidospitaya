@@ -3051,6 +3051,7 @@ $imagenesParaCarrusel = [];
                             visualizarCarrusel(nuevoIndice, window.listaCarruselActual);
                         }
 
+
                         // Función para cerrar modal de ver foto
                         function cerrarModalVerFoto() {
                             document.getElementById('modalVerFoto').style.display = 'none';
