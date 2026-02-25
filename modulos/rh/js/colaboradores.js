@@ -80,7 +80,7 @@ function renderizarTabla(datos) {
     tbody.empty();
 
     if (datos.length === 0) {
-        tbody.append('<tr><td colspan="11" class="text-center py-4">No se encontraron registros</td></tr>');
+        tbody.append('<tr><td colspan="12" class="text-center py-4">No se encontraron registros</td></tr>');
         return;
     }
 
@@ -140,6 +140,25 @@ function renderizarTabla(datos) {
 
         // Tiempo Trabajado
         tr.append(`<td>${row.tiempo_trabajado_texto || '-'}</td>`);
+
+        // Llenado (Compliance)
+        const porcLlenado = row.porcentaje_llenado || 0;
+        let colorLlenado = '#dc3545'; // Rojo
+        if (porcLlenado == 100) colorLlenado = '#28a745'; // Verde
+        else if (porcLlenado >= 50) colorLlenado = '#ffc107'; // Amarillo
+
+        tr.append(`
+            <td style="text-align: center;">
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 2px;">
+                    <div style="width: 80px; height: 12px; background: #e9ecef; border-radius: 6px; overflow: hidden; position: relative;">
+                        <div style="width: ${porcLlenado}%; height: 100%; background: ${colorLlenado}; transition: width 0.3s;"></div>
+                    </div>
+                    <span style="font-weight: bold; color: ${colorLlenado}; font-size: 11px;">
+                        ${porcLlenado}%
+                    </span>
+                </div>
+            </td>
+        `);
 
         // Acciones
         tr.append(`

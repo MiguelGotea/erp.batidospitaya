@@ -360,8 +360,13 @@ try {
     $stmt->execute();
     $datos = $stmt->fetchAll();
 
+    require_once '../editar_colaborador_componentes/logic/funciones_colaborador.php';
+
     // Procesar datos para agregar campos calculados
     foreach ($datos as &$row) {
+        // Calcular porcentaje de llenado global (DP, DC, Contrato, INSS)
+        $llenado = calcularPorcentajeLlenadoGlobal($row['CodOperario']);
+        $row['porcentaje_llenado'] = $llenado['porcentaje'];
         // Calcular tiempo trabajado texto
         $row['tiempo_trabajado_texto'] = calcularTiempoTrabajadoTexto(
             $row['fecha_inicio_ultimo_contrato'],

@@ -2050,7 +2050,9 @@ $imagenesParaCarrusel = [];
                         // Función para actualizar los íconos de estado y porcentajes en las pestañas
                         function actualizarIconosEstadoPestanas() {
                             const pestañas = ['datos-personales', 'datos-contacto', 'inss', 'contrato', 'contactos-emergencia',
-                                'salario', 'movimientos', 'categoria', 'adendums', 'expediente-digital'];
+                                'salario', 'movimientos', 'categoria', 'adendums', 'expediente-digital', 'bitacora'];
+
+                            const exentas = ['contactos-emergencia', 'adendums', 'movimientos', 'bitacora'];
 
                             pestañas.forEach(pestaña => {
                                 fetch(`ajax/obtener_estado_documentos.php?cod_operario=<?= $codOperario ?>&pestaña=${pestaña}`)
@@ -2061,6 +2063,8 @@ $imagenesParaCarrusel = [];
                                             // 1. ELIMINAR ícono y contenedores de estado antiguos
                                             tabButton.querySelectorAll('.estado-documentos, i.fas, i.far').forEach(el => el.remove());
 
+                                            const esExenta = exentas.includes(pestaña);
+
                                             // 2. Manejar el porcentaje de cumplimiento (CÍRCULO)
                                             if (data.porcentaje !== undefined) {
                                                 let percentLabel = tabButton.querySelector('.tab-percentage');
@@ -2069,14 +2073,19 @@ $imagenesParaCarrusel = [];
                                                     percentLabel.className = 'tab-percentage';
                                                     tabButton.appendChild(percentLabel);
                                                 }
-                                                percentLabel.textContent = `${data.porcentaje}`;
-                                                percentLabel.style.display = 'inline-flex';
 
-                                                // Aplicar color de FONDO según semáforo
-                                                percentLabel.classList.remove('bg-red', 'bg-yellow', 'bg-green');
-                                                if (data.porcentaje < 50) percentLabel.classList.add('bg-red');
-                                                else if (data.porcentaje < 100) percentLabel.classList.add('bg-yellow');
-                                                else percentLabel.classList.add('bg-green');
+                                                if (esExenta) {
+                                                    percentLabel.style.display = 'none';
+                                                } else {
+                                                    percentLabel.textContent = `${data.porcentaje}%`;
+                                                    percentLabel.style.display = 'inline-flex';
+
+                                                    // Aplicar color de FONDO según semáforo
+                                                    percentLabel.classList.remove('bg-red', 'bg-yellow', 'bg-green');
+                                                    if (data.porcentaje < 50) percentLabel.classList.add('bg-red');
+                                                    else if (data.porcentaje < 100) percentLabel.classList.add('bg-yellow');
+                                                    else percentLabel.classList.add('bg-green');
+                                                }
 
                                                 // 3. Manejar la barra de progreso (SIEMPRE VERDE INSTITUCIONAL)
                                                 let progressCont = tabButton.querySelector('.tab-progress-container');
@@ -2089,7 +2098,13 @@ $imagenesParaCarrusel = [];
                                                 progressCont.style.display = 'block';
 
                                                 const progressBar = progressCont.querySelector('.tab-progress-bar');
-                                                progressBar.style.width = `${data.porcentaje}%`;
+
+                                                // Si es exenta, forzar 100% verde
+                                                if (esExenta) {
+                                                    progressBar.style.width = `100%`;
+                                                } else {
+                                                    progressBar.style.width = `${data.porcentaje}%`;
+                                                }
 
                                                 // Color UNIFICADO
                                                 progressBar.classList.remove('bg-red', 'bg-yellow', 'bg-green');
@@ -2953,7 +2968,7 @@ $imagenesParaCarrusel = [];
 
                                     // Mostrar campo de persona si aplica devolución
                                     if (contrato.devolucion_herramientas_trabajo == '1') {
-                                        document.getElementById('grupoPersonaHerramientas').style.display = 'block';
+                                    document.getElementById('grupoPersonaHerramientas').style.display = 'block';
                                     }
 
                                     // Cambiar el texto del botón

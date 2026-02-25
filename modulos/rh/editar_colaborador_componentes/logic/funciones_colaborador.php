@@ -3744,4 +3744,30 @@ function calcularCumplimientoGlobal($codOperario)
         'total' => $totalG
     ];
 }
+
+/**
+ * Calcula el porcentaje de llenado considerando solo las 4 pestañas solicitadas:
+ * Datos Personales, Datos del Contacto, Contrato e INSS.
+ */
+function calcularPorcentajeLlenadoGlobal($codOperario)
+{
+    $pestanas = ['datos-personales', 'datos-contacto', 'contrato', 'inss'];
+
+    $totalG = 0;
+    $completadosG = 0;
+
+    foreach ($pestanas as $p) {
+        $res = calcularPorcentajeCumplimiento($codOperario, $p);
+        $totalG += $res['total'];
+        $completadosG += $res['completados'];
+    }
+
+    $porcentaje = $totalG > 0 ? round(($completadosG / $totalG) * 100) : 100;
+
+    return [
+        'porcentaje' => $porcentaje,
+        'completados' => $completadosG,
+        'total' => $totalG
+    ];
+}
 ?>
