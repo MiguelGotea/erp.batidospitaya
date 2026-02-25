@@ -2123,7 +2123,7 @@ function obtenerArchivosAdjuntos($codOperario, $pestaña)
 /**
  * Agrega un nuevo archivo adjunto con lógica de contrato asociado - CORREGIDA
  */
-function agregarArchivoAdjunto($datos, $archivo = null)
+function agregarArchivoAdjunto($datos)
 {
     global $conn;
 
@@ -2132,25 +2132,10 @@ function agregarArchivoAdjunto($datos, $archivo = null)
         $resultadosError = [];
         $fechaVencimiento = !empty($datos['fecha_vencimiento']) ? $datos['fecha_vencimiento'] : null;
 
-        // 1. Procesar archivo PDF si existe
-        if ($archivo && !empty($archivo['name'])) {
-            // Validar que sea un PDF
-            $tipoArchivo = $archivo['type'];
-            if ($tipoArchivo != 'application/pdf') {
-                return ['exito' => false, 'mensaje' => 'Solo se permiten archivos PDF'];
-            }
-
-            // Validar tamaño (máximo 10MB)
-            $tamañoMaximo = 10 * 1024 * 1024;
-            if ($archivo['size'] > $tamañoMaximo) {
-                return ['exito' => false, 'mensaje' => 'El archivo no puede ser mayor a 10MB'];
-            }
-        }
-
         // Determinar si se debe asociar a un contrato o adendum
         $codContratoAsociado = null;
         $codAdendumAsociado = null;
-        $pestañasConContrato = ['contrato', 'adendums', 'inss', 'salario', 'movimientos', 'categoria'];
+        $pestañasConContrato = ['contrato', 'adendums', 'inss', 'salario', 'movimientos', 'categoria', 'expediente-digital'];
 
         if (in_array($datos['pestaña'], $pestañasConContrato)) {
             $contratoActual = obtenerContratoActual($datos['cod_operario']);
@@ -2173,8 +2158,8 @@ function agregarArchivoAdjunto($datos, $archivo = null)
         }
 
         // Validar tipo de documento si se proporciona
+        $tiposPermitidos = obtenerTiposDocumentosPorPestaña($datos['pestaña']);
         if (!empty($datos['tipo_documento'])) {
-            $tiposPermitidos = obtenerTiposDocumentosPorPestaña($datos['pestaña']);
             $todosTipos = array_merge(
                 array_keys($tiposPermitidos['obligatorios']),
                 array_keys($tiposPermitidos['opcionales'])
@@ -2205,91 +2190,45 @@ function agregarArchivoAdjunto($datos, $archivo = null)
             }
         }
 
+        // Lógica de Categorización
+        $obligatorio = 0;
+        $categoria = 'opcional';
+        if (!empty($datos['tipo_documento'])) {
+            if (in_array($datos['tipo_documento'], array_keys($tiposPermitidos['obligatorios'])) && $datos['tipo_documento'] !== 'otro') {
+                $obligatorio = 1;
+                $categoria = 'obligatorio';
+            }
+        }
+
+        $id_tipo_documento = null;
+        if (!empty($datos['tipo_documento'])) {
+            $id_tipo_documento = $tiposPermitidos['ids'][$datos['tipo_documento']] ?? null;
+        }
+
         // Crear directorio si no existe
         $directorio = "../../uploads/adjuntos/" . $datos['cod_operario'] . "/";
         if (!file_exists($directorio)) {
             mkdir($directorio, 0777, true);
         }
 
-        // PROCESAR ARCHIVO PDF (CASO 1)
-        if ($archivo && !empty($archivo['name'])) {
-            $nombreArchivo = uniqid() . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '_', $archivo['name']);
-            $rutaCompleta = $directorio . $nombreArchivo;
+        // PROCESAR COLA UNIFICADA (JSON de Base64)
+        if (!empty($datos['adjuntos_unificados_json'])) {
+            $adjuntos = json_decode($datos['adjuntos_unificados_json'], true);
+            if (is_array($adjuntos) && count($adjuntos) > 0) {
+                foreach ($adjuntos as $index => $item) {
+                    $base64 = $item['data'];
+                    if (preg_match('/^data:(image\/(\w+)|application\/pdf);base64,/', $base64, $match)) {
+                        $fullType = $match[1];
+                        $extension = ($fullType === 'application/pdf') ? 'pdf' : strtolower($match[3]);
 
-            if (move_uploaded_file($archivo['tmp_name'], $rutaCompleta)) {
-                $obligatorio = 0;
-                $categoria = 'opcional';
-                if (!empty($datos['tipo_documento'])) {
-                    $tiposPermitidos = obtenerTiposDocumentosPorPestaña($datos['pestaña']);
-                    if (in_array($datos['tipo_documento'], array_keys($tiposPermitidos['obligatorios'])) && $datos['tipo_documento'] !== 'otro') {
-                        $obligatorio = 1;
-                        $categoria = 'obligatorio';
-                    }
-                }
-
-                $id_tipo_documento = null;
-                if (!empty($datos['tipo_documento'])) {
-                    $id_tipo_documento = $tiposPermitidos['ids'][$datos['tipo_documento']] ?? null;
-                }
-
-                $stmt = $conn->prepare("
-                    INSERT INTO ArchivosAdjuntos
-                    (cod_operario, cod_contrato_asociado, cod_adendum_asociado, pestaña, tipo_documento, id_tipo_documento, obligatorio, categoria,
-                    nombre_archivo, descripcion, tamaño, ruta_archivo, cod_usuario_subio, fecha_vencimiento)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                ");
-                $stmt->execute([
-                    $datos['cod_operario'],
-                    $codContratoAsociado,
-                    $codAdendumAsociado,
-                    $datos['pestaña'],
-                    $datos['tipo_documento'] ?? null,
-                    $id_tipo_documento,
-                    $obligatorio,
-                    $categoria,
-                    $archivo['name'],
-                    $datos['descripcion'] ?? '',
-                    $archivo['size'],
-                    $rutaCompleta,
-                    $datos['cod_usuario_subio'],
-                    $fechaVencimiento
-                ]);
-                $resultadosExito[] = "PDF subido correctamente";
-            } else {
-                $resultadosError[] = "Error al mover el archivo PDF";
-            }
-        }
-
-        // PROCESAR CAPTURAS DE CÁMARA (CASO 2)
-        if (!empty($datos['capturas_camara'])) {
-            $capturas = json_decode($datos['capturas_camara'], true);
-            if (is_array($capturas) && count($capturas) > 0) {
-                $tiposPermitidos = obtenerTiposDocumentosPorPestaña($datos['pestaña']);
-                $obligatorio = 0;
-                $categoria = 'opcional';
-                if (!empty($datos['tipo_documento'])) {
-                    if (in_array($datos['tipo_documento'], array_keys($tiposPermitidos['obligatorios'])) && $datos['tipo_documento'] !== 'otro') {
-                        $obligatorio = 1;
-                        $categoria = 'obligatorio';
-                    }
-                }
-
-                foreach ($capturas as $index => $base64) {
-                    if (preg_match('/^data:image\/(\w+);base64,/', $base64, $type)) {
                         $imgData = substr($base64, strpos($base64, ',') + 1);
-                        $extension = strtolower($type[1]); // jpg, png, etc.
                         $imgData = base64_decode($imgData);
 
-                        $nombreOriginal = "captura_" . ($index + 1) . "." . $extension;
-                        $nombreArchivo = uniqid() . "_" . $nombreOriginal;
-                        $rutaCompleta = $directorio . $nombreArchivo;
+                        $nombreOriginal = $item['nombre'];
+                        $nombreArchivoLocal = uniqid() . "_" . preg_replace('/[^a-zA-Z0-9._-]/', '_', $nombreOriginal);
+                        $rutaCompleta = $directorio . $nombreArchivoLocal;
 
                         if (file_put_contents($rutaCompleta, $imgData)) {
-                            $id_tipo_documento = null;
-                            if (!empty($datos['tipo_documento'])) {
-                                $id_tipo_documento = $tiposPermitidos['ids'][$datos['tipo_documento']] ?? null;
-                            }
-
                             $stmt = $conn->prepare("
                                 INSERT INTO ArchivosAdjuntos
                                 (cod_operario, cod_contrato_asociado, cod_adendum_asociado, pestaña, tipo_documento, id_tipo_documento, obligatorio, categoria,
@@ -2306,15 +2245,15 @@ function agregarArchivoAdjunto($datos, $archivo = null)
                                 $obligatorio,
                                 $categoria,
                                 $nombreOriginal,
-                                $datos['descripcion'] ?? ('Captura cámara ' . ($index + 1)),
+                                $datos['descripcion'] ?? '',
                                 strlen($imgData),
                                 $rutaCompleta,
                                 $datos['cod_usuario_subio'],
                                 $fechaVencimiento
                             ]);
-                            $resultadosExito[] = "Foto " . ($index + 1) . " guardada";
+                            $resultadosExito[] = "Archivo '" . $nombreOriginal . "' guardado";
                         } else {
-                            $resultadosError[] = "Error al guardar foto " . ($index + 1);
+                            $resultadosError[] = "Error al guardar '" . $nombreOriginal . "'";
                         }
                     }
                 }
@@ -2322,11 +2261,11 @@ function agregarArchivoAdjunto($datos, $archivo = null)
         }
 
         if (count($resultadosExito) > 0) {
-            return ['exito' => true, 'mensaje' => implode(", ", $resultadosExito)];
+            return ['exito' => true, 'mensaje' => "Se subieron " . count($resultadosExito) . " archivo(s) correctamente."];
         } elseif (count($resultadosError) > 0) {
             return ['exito' => false, 'mensaje' => implode(", ", $resultadosError)];
         } else {
-            return ['exito' => false, 'mensaje' => 'No se proporcionó ningún archivo o captura'];
+            return ['exito' => false, 'mensaje' => 'No se seleccionaron archivos para subir'];
         }
 
     } catch (Exception $e) {

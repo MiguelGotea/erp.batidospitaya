@@ -439,6 +439,26 @@ $imagenesParaCarrusel = [];
                                     <small id="ayudaTipoDocumento" style="color: #6c757d; display: none;"></small>
                                 </div>
 
+                                <div class="form-group" id="grupo_fecha_vencimiento" style="display: none;">
+                                    <label for="fecha_vencimiento_adjunto">Fecha de Vencimiento *</label>
+                                    <input type="date" id="fecha_vencimiento_adjunto" name="fecha_vencimiento"
+                                        class="form-control">
+                                    <small style="color: #6c757d;">Este documento requiere fecha de vencimiento</small>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="descripcion_adjunto">Descripción (opcional)</label>
+                                    <textarea id="descripcion_adjunto" name="descripcion_adjunto" class="form-control"
+                                        rows="2" placeholder="Breve descripción del archivo"></textarea>
+                                </div>
+
+                                <div id="infoDocumentoObligatorio"
+                                    style="display: none; background-color: #e8f5e8; padding: 10px; border-radius: 4px; margin-bottom: 15px;">
+                                    <i class="fas fa-info-circle" style="color: #0E544C;"></i>
+                                    <span style="color: #0E544C; font-weight: bold;">Documento Obligatorio</span>
+                                    <p style="margin: 5px 0 0 0; color: #2d5016;" id="textoObligatorio"></p>
+                                </div>
+
                                 <!-- Zona Unificada de Adjuntos -->
                                 <div id="zonaAdjuntos"
                                     style="border: 2px dashed #51B8AC; padding: 12px; border-radius: 12px; margin-bottom: 20px; background: #f8fbfb;">
@@ -456,12 +476,8 @@ $imagenesParaCarrusel = [];
                                                 onclick="document.getElementById('archivo_adjunto').click()">
                                                 <i class="fas fa-file-pdf"></i> PDF
                                             </button>
-                                            <input type="file" id="archivo_adjunto" name="archivo_adjunto"
-                                                style="display: none;" accept=".pdf"
-                                                onchange="actualizarNombreArchivo(this, 'nombrePDF')">
-                                            <div id="nombrePDF"
-                                                style="font-size: 0.6rem; color: #1a9083; margin-top: 4px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                                            </div>
+                                            <input type="file" id="archivo_adjunto" style="display: none;" accept=".pdf"
+                                                multiple onchange="manejarSeleccionPDF(this)">
                                         </div>
 
                                         <!-- 2. Seleccionar Foto -->
@@ -504,29 +520,13 @@ $imagenesParaCarrusel = [];
                                         <canvas id="canvasAuxiliar" style="display: none;"></canvas>
                                     </div>
 
-                                    <div id="galeriaCapturas" class="galeria-capturas"
-                                        style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px;"></div>
-                                    <input type="hidden" name="capturas_camara" id="capturasCamaraInput" value="[]">
-                                </div>
-
-                                <div class="form-group" id="grupo_fecha_vencimiento" style="display: none;">
-                                    <label for="fecha_vencimiento_adjunto">Fecha de Vencimiento *</label>
-                                    <input type="date" id="fecha_vencimiento_adjunto" name="fecha_vencimiento"
-                                        class="form-control">
-                                    <small style="color: #6c757d;">Este documento requiere fecha de vencimiento</small>
-                                </div>
-
-                                <div class="form-group">
-                                    <label for="descripcion_adjunto">Descripción (opcional)</label>
-                                    <textarea id="descripcion_adjunto" name="descripcion_adjunto" class="form-control"
-                                        rows="3" placeholder="Breve descripción del archivo"></textarea>
-                                </div>
-
-                                <div id="infoDocumentoObligatorio"
-                                    style="display: none; background-color: #e8f5e8; padding: 10px; border-radius: 4px; margin-bottom: 15px;">
-                                    <i class="fas fa-info-circle" style="color: #0E544C;"></i>
-                                    <span style="color: #0E544C; font-weight: bold;">Documento Obligatorio</span>
-                                    <p style="margin: 5px 0 0 0; color: #2d5016;" id="textoObligatorio"></p>
+                                    <!-- Lista Unificada de Adjuntos -->
+                                    <div id="listaAdjuntosUnificada"
+                                        style="margin-top: 15px; display: flex; flex-direction: column; gap: 8px;">
+                                        <!-- Se llenará dinámicamente -->
+                                    </div>
+                                    <input type="hidden" name="adjuntos_unificados_json" id="adjuntosUnificadosInput"
+                                        value="[]">
                                 </div>
 
                                 <div style="display: flex; justify-content: space-between; margin-top: 20px;">
@@ -1473,10 +1473,10 @@ $imagenesParaCarrusel = [];
                             document.getElementById('pestañaAdjunto').value = pestaña;
                             document.getElementById('formAdjunto').reset();
 
-                            // Limpiar datos de cámara previos
+                            // Limpiar datos de adjuntos unificados
                             detenerCamara();
-                            document.getElementById('galeriaCapturas').innerHTML = '';
-                            document.getElementById('capturasCamaraInput').value = '[]';
+                            adjuntosSesion = [];
+                            actualizarListaAdjuntosUI();
                             document.getElementById('contenedorVideo').style.display = 'none';
                             document.getElementById('btnToggleCamara').textContent = 'Iniciar Cámara';
 
@@ -1854,84 +1854,123 @@ $imagenesParaCarrusel = [];
                             }
                         }
 
+                        // --- LÓGICA DE COLA UNIFICADA DE ADJUNTOS ---
+                        let adjuntosSesion = [];
+
+                        function manejarSeleccionPDF(input) {
+                            if (input.files && input.files.length > 0) {
+                                Array.from(input.files).forEach(file => {
+                                    const reader = new FileReader();
+                                    reader.onload = function (e) {
+                                        adjuntosSesion.push({
+                                            tipo: 'pdf',
+                                            nombre: file.name,
+                                            tamaño: file.size,
+                                            data: e.target.result
+                                        });
+                                        actualizarListaAdjuntosUI();
+                                    };
+                                    reader.readAsDataURL(file);
+                                });
+                                input.value = '';
+                            }
+                        }
+
+                        function manejarSeleccionFotos(input) {
+                            if (input.files && input.files.length > 0) {
+                                Array.from(input.files).forEach(file => {
+                                    const reader = new FileReader();
+                                    reader.onload = function (e) {
+                                        adjuntosSesion.push({
+                                            tipo: 'imagen',
+                                            nombre: file.name,
+                                            tamaño: file.size,
+                                            data: e.target.result
+                                        });
+                                        actualizarListaAdjuntosUI();
+                                    };
+                                    reader.readAsDataURL(file);
+                                });
+                                input.value = '';
+                            }
+                        }
+
                         function capturarFoto() {
                             const video = document.getElementById('videoCaptura');
                             const canvas = document.getElementById('canvasAuxiliar');
                             const context = canvas.getContext('2d');
 
-                            // Establecer dimensiones del canvas iguales al video
                             canvas.width = video.videoWidth;
                             canvas.height = video.videoHeight;
-
                             context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-                            // Convertir a base64 (calidad 0.8 para no saturar)
                             const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+                            const index = adjuntosSesion.filter(a => a.tipo === 'captura').length + 1;
 
-                            const capturasInput = document.getElementById('capturasCamaraInput');
-                            let capturas = JSON.parse(capturasInput.value);
-                            capturas.push(dataUrl);
-                            capturasInput.value = JSON.stringify(capturas);
+                            adjuntosSesion.push({
+                                tipo: 'captura',
+                                nombre: `captura_${index}.jpg`,
+                                tamaño: Math.round((dataUrl.length * 3) / 4), // Estimación tamaño base64
+                                data: dataUrl
+                            });
 
-                            renderizarGaleria();
+                            actualizarListaAdjuntosUI();
                         }
 
-                        function manejarSeleccionFotos(input) {
-                            if (input.files && input.files.length > 0) {
-                                const capturasInput = document.getElementById('capturasCamaraInput');
-                                let capturas = JSON.parse(capturasInput.value);
-                                let procesados = 0;
-                                const total = input.files.length;
-
-                                Array.from(input.files).forEach(file => {
-                                    const reader = new FileReader();
-                                    reader.onload = function (e) {
-                                        capturas.push(e.target.result);
-                                        procesados++;
-                                        if (procesados === total) {
-                                            capturasInput.value = JSON.stringify(capturas);
-                                            renderizarGaleria();
-                                        }
-                                    };
-                                    reader.readAsDataURL(file);
-                                });
-
-                                // Limpiar el input para permitir seleccionar las mismas fotos de nuevo si se desea
-                                input.value = '';
-                            }
-                        }
-
-                        function renderizarGaleria() {
-                            const container = document.getElementById('galeriaCapturas');
-                            const capturasInput = document.getElementById('capturasCamaraInput');
-                            let capturas = JSON.parse(capturasInput.value);
+                        function actualizarListaAdjuntosUI() {
+                            const container = document.getElementById('listaAdjuntosUnificada');
+                            const inputOculto = document.getElementById('adjuntosUnificadosInput');
 
                             container.innerHTML = '';
-                            capturas.forEach((foto, index) => {
-                                const div = document.createElement('div');
-                                div.style.position = 'relative';
-                                div.style.width = '80px';
-                                div.style.height = '80px';
-                                div.style.borderRadius = '4px';
-                                div.style.overflow = 'hidden';
-                                div.style.border = '2px solid #51B8AC';
+                            inputOculto.value = JSON.stringify(adjuntosSesion);
 
-                                div.innerHTML = `
-                            <img src="${foto}" style="width: 100%; height: 100%; object-fit: cover;">
-                            <button type="button" onclick="eliminarFoto(${index})" style="position: absolute; top: 2px; right: 2px; background: rgba(220, 53, 69, 0.8); color: white; border: none; border-radius: 50%; width: 20px; height: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 10px;">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        `;
-                                container.appendChild(div);
+                            if (adjuntosSesion.length === 0) {
+                                container.innerHTML = '<div style="text-align: center; color: #6c757d; font-size: 0.75rem; font-style: italic; padding: 10px;">No hay archivos seleccionados</div>';
+                                return;
+                            }
+
+                            adjuntosSesion.forEach((adjunto, index) => {
+                                const item = document.createElement('div');
+                                item.style.display = 'flex';
+                                item.style.alignItems = 'center';
+                                item.style.justifyContent = 'space-between';
+                                item.style.padding = '8px 12px';
+                                item.style.background = 'white';
+                                item.style.borderRadius = '8px';
+                                item.style.border = '1px solid #e0e6e5';
+                                item.style.boxShadow = '0 1px 3px rgba(0,0,0,0.05)';
+
+                                let icono = 'fa-file-alt';
+                                let color = '#6c757d';
+
+                                if (adjunto.tipo === 'pdf') { icono = 'fa-file-pdf'; color = '#0E544C'; }
+                                else if (adjunto.tipo === 'imagen' || adjunto.tipo === 'captura') { icono = 'fa-file-image'; color = '#51B8AC'; }
+
+                                item.innerHTML = `
+                                    <div style="display: flex; align-items: center; gap: 10px; overflow: hidden; flex: 1;">
+                                        <i class="fas ${icono}" style="color: ${color}; font-size: 1rem;"></i>
+                                        <div style="overflow: hidden;">
+                                            <div style="font-size: 0.75rem; font-weight: 700; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${adjunto.nombre}</div>
+                                            <div style="font-size: 0.65rem; color: #666;">${(adjunto.tamaño / 1024).toFixed(1)} KB</div>
+                                        </div>
+                                    </div>
+                                    <button type="button" onclick="eliminarAdjunto(${index})" style="background: #fff0f0; color: #dc3545; border: none; border-radius: 4px; width: 24px; height: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                `;
+
+                                // Hover effect for remove button
+                                const btnX = item.querySelector('button');
+                                btnX.onmouseover = () => { btnX.style.background = '#fde2e2'; };
+                                btnX.onmouseout = () => { btnX.style.background = '#fff0f0'; };
+
+                                container.appendChild(item);
                             });
                         }
 
-                        function eliminarFoto(index) {
-                            const capturasInput = document.getElementById('capturasCamaraInput');
-                            let capturas = JSON.parse(capturasInput.value);
-                            capturas.splice(index, 1);
-                            capturasInput.value = JSON.stringify(capturas);
-                            renderizarGaleria();
+                        function eliminarAdjunto(index) {
+                            adjuntosSesion.splice(index, 1);
+                            actualizarListaAdjuntosUI();
                         }
 
                         function cerrarModalAdjunto() {
@@ -1939,19 +1978,10 @@ $imagenesParaCarrusel = [];
                             document.getElementById('modalAdjunto').style.display = 'none';
                         }
 
-                        // Validar envío del formulario para fotos
+                        // Validar envío del formulario unificado
                         document.getElementById('formAdjunto').addEventListener('submit', function (e) {
-                            const archivo = document.getElementById('archivo_adjunto').files.length;
-                            const capturas = JSON.parse(document.getElementById('capturasCamaraInput').value).length;
-                            const selectTipo = document.getElementById('tipo_documento_adjunto');
-
-                            if (selectTipo.required && selectTipo.value === "") {
-                                // El navegador ya valida esto, pero por si acaso
-                                return;
-                            }
-
-                            if (archivo === 0 && capturas === 0) {
-                                alert('Debe seleccionar un archivo PDF o capturar al menos una foto.');
+                            if (adjuntosSesion.length === 0) {
+                                alert('Debe adjuntar al menos un archivo (PDF, Imagen o Captura).');
                                 e.preventDefault();
                             }
                         });
