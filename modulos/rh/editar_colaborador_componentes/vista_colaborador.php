@@ -3,9 +3,6 @@
 <?php
 $imagenesParaCarrusel = [];
 ?>
-<?php
-$imagenesParaCarrusel = [];
-?>
 
 
 <head>
@@ -2896,118 +2893,6 @@ $imagenesParaCarrusel = [];
                     </div>
 
                     <script>
-                        // Lista de imágenes para el carrusel exportada desde PHP
-                        const listaImagenesAdjuntas = <?= json_encode($imagenesParaCarrusel) ?>;
-                        let indiceImagenActual = -1;
-
-                        // Función para abrir modal de ver foto (caso simple, e.g. foto de perfil)
-                        function abrirModalVerFoto(rutaFoto, titulo = "") {
-                            indiceImagenActual = -1; // No es carrusel
-                            document.getElementById('modalVerFoto').style.display = 'block';
-                            document.body.style.overflow = 'hidden'; // Bloquear scroll
-
-                            cargarImagenEnModal(rutaFoto, titulo, "");
-                        }
-
-                        // Función para abrir el carrusel en una posición específica
-                        function visualizarCarrusel(indice) {
-                            if (indice < 0 || indice >= listaImagenesAdjuntas.length) return;
-
-                            indiceImagenActual = indice;
-                            const img = listaImagenesAdjuntas[indice];
-
-                            document.getElementById('modalVerFoto').style.display = 'block';
-                            document.body.style.overflow = 'hidden';
-
-                            // Mostrar botones de navegación si hay más de una imagen
-                            const displayNav = listaImagenesAdjuntas.length > 1 ? 'block' : 'none';
-                            document.getElementById('btnPrevCarrusel').style.display = displayNav;
-                            document.getElementById('btnNextCarrusel').style.display = displayNav;
-
-                            const titulo = img.nombre + (img.categoria ? " (" + img.categoria + ")" : "");
-                            const contador = (indice + 1) + " de " + listaImagenesAdjuntas.length;
-
-                            cargarImagenEnModal(img.url, titulo, contador);
-                        }
-
-                        // Nueva función centralizada para cargar imagen con estados
-                        function cargarImagenEnModal(url, titulo, contador) {
-                            const imgElement = document.getElementById('imagenFotoCompleta');
-                            const spinner = document.getElementById('spinnerCargaModal');
-                            const errorMsg = document.getElementById('errorCargaModal');
-
-                            // Resetear estados
-                            imgElement.style.display = 'none';
-                            errorMsg.style.display = 'none';
-                            spinner.style.display = 'flex';
-
-                            // Actualizar textos
-                            document.getElementById('tituloImagenCarrusel').textContent = titulo;
-                            document.getElementById('contadorCarrusel').textContent = contador;
-
-                            // Asignar URL (esto dispara onload o onerror)
-                            imgElement.src = url;
-                        }
-
-                        function onImagenCargada() {
-                            document.getElementById('spinnerCargaModal').style.display = 'none';
-                            document.getElementById('errorCargaModal').style.display = 'none';
-                            document.getElementById('imagenFotoCompleta').style.display = 'block';
-                        }
-
-                        function onImagenError() {
-                            document.getElementById('spinnerCargaModal').style.display = 'none';
-                            document.getElementById('imagenFotoCompleta').style.display = 'none';
-                            document.getElementById('errorCargaModal').style.display = 'flex';
-                        }
-
-                        function reintentarCargaImagen() {
-                            const imgElement = document.getElementById('imagenFotoCompleta');
-                            const currentSrc = imgElement.src;
-
-                            // Forzar recarga limpiando el src momentáneamente
-                            imgElement.src = "";
-                            setTimeout(() => {
-                                onImagenCargada(); // Reset visual
-                                cargarImagenEnModal(currentSrc, document.getElementById('tituloImagenCarrusel').textContent, document.getElementById('contadorCarrusel').textContent);
-                            }, 50);
-                        }
-
-                        // Navegar por el carrusel
-                        function navegarCarrusel(direccion) {
-                            if (indiceImagenActual === -1 || listaImagenesAdjuntas.length <= 1) return;
-
-                            let nuevoIndice = indiceImagenActual + direccion;
-
-                            // Bucle infinito
-                            if (nuevoIndice < 0) nuevoIndice = listaImagenesAdjuntas.length - 1;
-                            if (nuevoIndice >= listaImagenesAdjuntas.length) nuevoIndice = 0;
-
-                            visualizarCarrusel(nuevoIndice);
-                        }
-
-                        // Función para cerrar modal de ver foto
-                        function cerrarModalVerFoto() {
-                            document.getElementById('modalVerFoto').style.display = 'none';
-                            document.body.style.overflow = 'auto'; // Restaurar scroll
-                        }
-
-                        // Cerrar modal al hacer clic fuera de la imagen (en el fondo oscuro)
-                        document.getElementById('modalVerFoto').addEventListener('click', function (e) {
-                            if (e.target === this || e.target.parentElement === this) {
-                                cerrarModalVerFoto();
-                            }
-                        });
-
-                        // Soporte para flechas de teclado
-                        document.addEventListener('keydown', function (e) {
-                            if (document.getElementById('modalVerFoto').style.display === 'block') {
-                                if (e.key === 'ArrowLeft') navegarCarrusel(-1);
-                                if (e.key === 'ArrowRight') navegarCarrusel(1);
-                                if (e.key === 'Escape') cerrarModalVerFoto();
-                            }
-                        });
-
                         // Mostrar ícono de ver al hacer hover sobre la foto de perfil
                         document.addEventListener('DOMContentLoaded', function () {
                             const fotoContainer = document.querySelector('.foto-perfil');
