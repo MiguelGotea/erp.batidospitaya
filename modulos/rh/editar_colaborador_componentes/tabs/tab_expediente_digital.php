@@ -74,21 +74,21 @@
                     <!-- Tabla del Bloque -->
                     <table style="width: 100%; border-collapse: collapse; font-size: 0.88rem;">
                         <thead>
-                            <tr style="background: white; border-bottom: 2px solid #f8f9fa;">
+                            <tr style="border-bottom: 1px solid #f1f3f5;">
                                 <th
-                                    style="padding: 12px 20px; text-align: left; color: #94a3b8; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1px; font-weight: 800; width: 35%;">
+                                    style="padding: 10px 20px; text-align: left; color: #8899a6; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.8px; font-weight: 800; width: 35%; background: #ffffff;">
                                     Documento</th>
                                 <th
-                                    style="padding: 12px 15px; text-align: left; color: #94a3b8; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1px; font-weight: 800; width: 15%;">
+                                    style="padding: 10px 15px; text-align: left; color: #8899a6; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.8px; font-weight: 800; width: 15%; background: #ffffff;">
                                     Estado</th>
                                 <th
-                                    style="padding: 12px 15px; text-align: center; color: #94a3b8; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1px; font-weight: 800; width: 15%;">
+                                    style="padding: 10px 15px; text-align: center; color: #8899a6; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.8px; font-weight: 800; width: 15%; background: #ffffff;">
                                     Vencimiento</th>
                                 <th
-                                    style="padding: 12px 15px; text-align: left; color: #94a3b8; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1px; font-weight: 800; width: 20%;">
+                                    style="padding: 10px 15px; text-align: left; color: #8899a6; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.8px; font-weight: 800; width: 20%; background: #ffffff;">
                                     Subido Por</th>
                                 <th
-                                    style="padding: 12px 20px; text-align: center; color: #94a3b8; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1px; font-weight: 800; width: 15%;">
+                                    style="padding: 10px 20px; text-align: center; color: #8899a6; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.8px; font-weight: 800; width: 15%; background: #ffffff;">
                                     Acción</th>
                             </tr>
                         </thead>
