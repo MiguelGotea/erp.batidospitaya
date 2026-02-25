@@ -1525,7 +1525,7 @@ $imagenesParaCarrusel = [];
                                 selectTipo.value = idTipoDocumento;
                                 selectTipo.disabled = true;
                                 // Disparar manualmente la lógica de UI (vencimiento, descripción, etc.)
-                                actualizarDesc                   ripcionPorTipo();
+                                actualizarDescripcionPorTipo();
 
                                 // Crear un input hidden temporal para enviar el valor si el select está disabled
                                 let hiddenInput = document.getElementById('hidden_id_tipo_documento');
