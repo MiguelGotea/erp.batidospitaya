@@ -1382,36 +1382,49 @@ $imagenesParaCarrusel = [];
 
                         // Configuración de tipos de documentos por pestaña (Cargados desde la Base de Datos)
                         <?php
-                        $pestañasJS = [
-                            'datos-personales',
-                            'inss',
-                            'contrato',
-                            'contactos-emergencia',
-                            'salario',
-                            'movimientos',
-                            'categoria',
-                            'adendums'
-                        ];
+                        // Obtener todas las pestañas que tienen documentos configurados dinámicamente
+                        try {
+                            $stmtPestanas = $conn->query("SELECT DISTINCT pestaña FROM contratos_tiposDocumentos WHERE activo = 1");
+                            $pestañasJS = $stmtPestanas->fetchAll(PDO::FETCH_COLUMN);
+
+                            // Asegurar que las pestañas básicas siempre estén si por alguna razón no tienen tipos configurados aún
+                            $pestañasBasicas = ['datos-personales', 'inss', 'contrato', 'contactos-emergencia', 'salario', 'movimientos', 'categoria', 'adendums', 'expediente-digital'];
+                            $pestañasJS = array_unique(array_merge($pestañasJS, $pestañasBasicas));
+                        } catch (Exception $e) {
+                            $pestañasJS = ['datos-personales', 'inss', 'contrato', 'contactos-emergencia', 'salario', 'movimientos', 'categoria', 'adendums', 'expediente-digital'];
+                        }
+
                         $tiposDocumentosPHP = [];
                         foreach ($pestañasJS as $p) {
                             $tipos = obtenerTiposDocumentosPorPestaña($p);
-                            $tiposDocumentosPHP[$p] = [
-                                'obligatorios' => [],
-                                'opcionales' => []
-                            ];
-                            foreach ($tipos['obligatorios'] as $valor => $texto) {
-                                $tiposDocumentosPHP[$p]['obligatorios'][] = [
-                                    'id' => $tipos['ids'][$valor] ?? null,
-                                    'valor' => $valor,
-                                    'texto' => $texto
+                            if (!empty($tipos['obligatorios']) || !empty($tipos['opcionales'])) {
+                                $tiposDocumentosPHP[$p] = [
+                                    'obligatorios' => [],
+                                    'opcionales' => [],
+                                    'vencimientos' => []
                                 ];
-                            }
-                            foreach ($tipos['opcionales'] as $valor => $texto) {
-                                $tiposDocumentosPHP[$p]['opcionales'][] = [
-                                    'id' => $tipos['ids'][$valor] ?? null,
-                                    'valor' => $valor,
-                                    'texto' => $texto
-                                ];
+
+                                // Mapear vencimientos por ID
+                                foreach ($tipos['vencimientos'] as $cl => $tieneVenc) {
+                                    $idReal = $tipos['ids'][$cl];
+                                    $tiposDocumentosPHP[$p]['vencimientos'][$idReal] = $tieneVenc;
+                                }
+
+                                foreach ($tipos['obligatorios'] as $clave => $nombre) {
+                                    $tiposDocumentosPHP[$p]['obligatorios'][] = [
+                                        'valor' => $tipos['ids'][$clave], // Usar el ID como valor para el select
+                                        'texto' => $nombre,
+                                        'clave' => $clave
+                                    ];
+                                }
+
+                                foreach ($tipos['opcionales'] as $clave => $nombre) {
+                                    $tiposDocumentosPHP[$p]['opcionales'][] = [
+                                        'valor' => $tipos['ids'][$clave], // Usar el ID como valor para el select
+                                        'texto' => $nombre,
+                                        'clave' => $clave
+                                    ];
+                                }
                             }
                         }
                         ?>
@@ -2923,24 +2936,32 @@ $imagenesParaCarrusel = [];
                         }
 
                         // Función para abrir el carrusel en una posición específica
-                        function visualizarCarrusel(indice) {
-                            if (indice < 0 || indice >= listaImagenesAdjuntas.length) return;
+                        function visualizarCarrusel(indice, listaCustom = null) {
+                            const listaReferencia = listaCustom || listaImagenesAdjuntas;
+                            if (indice < 0 || indice >= listaReferencia.length) return;
 
                             indiceImagenActual = indice;
-                            const img = listaImagenesAdjuntas[indice];
+                            const img = listaReferencia[indice];
 
                             document.getElementById('modalVerFoto').style.display = 'block';
                             document.body.style.overflow = 'hidden';
 
                             // Mostrar botones de navegación si hay más de una imagen
-                            const displayNav = listaImagenesAdjuntas.length > 1 ? 'block' : 'none';
+                            const displayNav = listaReferencia.length > 1 ? 'block' : 'none';
                             document.getElementById('btnPrevCarrusel').style.display = displayNav;
                             document.getElementById('btnNextCarrusel').style.display = displayNav;
 
                             const titulo = img.nombre + (img.categoria ? " (" + img.categoria + ")" : "");
-                            const contador = (indice + 1) + " de " + listaImagenesAdjuntas.length;
+                            const contador = (indice + 1) + " de " + listaReferencia.length;
 
                             cargarImagenEnModal(img.url, titulo, contador);
+
+                            // Guardar la lista actual para la navegación por flechas si es una lista customizada
+                            if (listaCustom) {
+                                window.listaCarruselActual = listaCustom;
+                            } else {
+                                window.listaCarruselActual = listaImagenesAdjuntas;
+                            }
                         }
 
                         // Nueva función centralizada para cargar imagen con estados
@@ -2988,21 +3009,23 @@ $imagenesParaCarrusel = [];
 
                         // Navegar por el carrusel
                         function navegarCarrusel(direccion) {
-                            if (indiceImagenActual === -1 || listaImagenesAdjuntas.length <= 1) return;
+                            const listaReferencia = window.listaCarruselActual || listaImagenesAdjuntas;
+                            if (indiceImagenActual === -1 || listaReferencia.length <= 1) return;
 
                             let nuevoIndice = indiceImagenActual + direccion;
 
                             // Bucle infinito
-                            if (nuevoIndice < 0) nuevoIndice = listaImagenesAdjuntas.length - 1;
-                            if (nuevoIndice >= listaImagenesAdjuntas.length) nuevoIndice = 0;
+                            if (nuevoIndice < 0) nuevoIndice = listaReferencia.length - 1;
+                            if (nuevoIndice >= listaReferencia.length) nuevoIndice = 0;
 
-                            visualizarCarrusel(nuevoIndice);
+                            visualizarCarrusel(nuevoIndice, window.listaCarruselActual);
                         }
 
                         // Función para cerrar modal de ver foto
                         function cerrarModalVerFoto() {
                             document.getElementById('modalVerFoto').style.display = 'none';
                             document.body.style.overflow = 'auto'; // Restaurar scroll
+                            window.listaCarruselActual = null;
                         }
 
                         // Cerrar modal al hacer clic fuera de la imagen (en el fondo oscuro)
@@ -3022,15 +3045,16 @@ $imagenesParaCarrusel = [];
                         });
 
                         // Función para ver adjuntos (imágenes en modal, PDFs en nueva pestaña)
-                        function visualizarAdjunto(url) {
+                        function visualizarAdjunto(url, listaCustom = null) {
                             const extension = url.split('.').pop().toLowerCase();
                             const esImagen = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'].includes(extension);
 
                             if (esImagen) {
-                                // Buscar si está en la lista de imágenes para abrir el carrusel en esa posición
-                                const index = listaImagenesAdjuntas.findIndex(img => img.url === url);
+                                // Buscar si está en la lista proporcionada o en la global
+                                const listaReferencia = listaCustom || listaImagenesAdjuntas;
+                                const index = listaReferencia.findIndex(img => img.url === url);
                                 if (index !== -1) {
-                                    visualizarCarrusel(index);
+                                    visualizarCarrusel(index, listaCustom);
                                 } else {
                                     abrirModalVerFoto(url);
                                 }

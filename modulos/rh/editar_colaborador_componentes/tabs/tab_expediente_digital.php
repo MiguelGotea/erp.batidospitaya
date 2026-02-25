@@ -99,60 +99,66 @@
                                     <th
                                         style="padding: 15px 20px; text-align: left; font-size: 0.8rem; text-transform: uppercase; color: #7f8c8d; letter-spacing: 0.5px; width: 30%;">
                                         Documento</th>
-                                    <th
-                                        style="padding: 15px 15px; text-align: center; font-size: 0.8rem; text-transform: uppercase; color: #7f8c8d; letter-spacing: 0.5px; width: 12%;">
-                                        Estado</th>
-                                    <th
-                                        style="padding: 15px 15px; text-align: center; font-size: 0.8rem; text-transform: uppercase; color: #7f8c8d; letter-spacing: 0.5px; width: 18%;">
+                                    <th style="padding: 15px 20px; color: #0E544C; font-weight: 700; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #eef2f3;">
+                                        Archivos Subidos</th>
+                                    <th style="padding: 15px 15px; color: #0E544C; font-weight: 700; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #eef2f3; text-align: center;">
                                         Vencimiento</th>
-                                    <th
-                                        style="padding: 15px 15px; text-align: left; font-size: 0.8rem; text-transform: uppercase; color: #7f8c8d; letter-spacing: 0.5px; width: 20%;">
-                                        Subido / Fecha</th>
-                                    <th
-                                        style="padding: 15px 20px; text-align: center; font-size: 0.8rem; text-transform: uppercase; color: #7f8c8d; letter-spacing: 0.5px; width: 20%;">
-                                        Acciones</th>
+                                    <th style="padding: 15px 15px; color: #0E544C; font-weight: 700; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #eef2f3;">
+                                        Subido Por</th>
+                                    <th style="padding: 15px 20px; color: #0E544C; font-weight: 700; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #eef2f3; text-align: center;">
+                                        Acción</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <?php foreach ($pestana['documentos'] as $doc):
                                     $estaVacio = empty($doc['archivos']);
-                                    $trStyle = $estaVacio && $doc['obligatorio'] ? 'background-color: #fff9f9;' : '';
+                                    $claseFaltante = (!$estaVacio) ? '' : ($doc['obligatorio'] ? 'style="background-color: #fff9f9;"' : '');
+
+                                    // Preparar lista de imágenes para este documento específico (para el carrusel restringido)
+                                    $imagenesDocumento = [];
+                                    foreach ($doc['archivos'] as $arch) {
+                                        $ext = strtolower(pathinfo($arch['ruta_archivo'], PATHINFO_EXTENSION));
+                                        if (in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'])) {
+                                            $imagenesDocumento[] = [
+                                                'url' => $arch['ruta_archivo'],
+                                                'nombre' => $doc['nombre'],
+                                                'categoria' => $pestana['nombre']
+                                            ];
+                                        }
+                                    }
+                                    $jsonImagenesDoc = json_encode($imagenesDocumento);
                                     ?>
-                                    <tr style="border-bottom: 1px solid #f8f9fa; transition: background 0.2s; <?= $trStyle ?>"
-                                        onmouseover="this.style.backgroundColor='#fcfcfc'"
-                                        onmouseout="this.style.backgroundColor='<?= $estaVacio && $doc['obligatorio'] ? '#fff9f9' : 'transparent' ?>'">
-                                        <td style="padding: 18px 20px;">
-                                            <div
-                                                style="font-weight: 600; color: #2c3e50; font-size: 0.95rem; display: flex; align-items: center; gap: 8px;">
-                                                <?= htmlspecialchars($doc['nombre']) ?>
-                                                <?php if ($doc['obligatorio']): ?>
-                                                    <span
-                                                        style="background: #e74c3c; color: white; font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; font-weight: 800; text-transform: uppercase;">Obligatorio</span>
-                                                <?php endif; ?>
-                                            </div>
-                                            <?php if (!$estaVacio && count($doc['archivos']) > 1): ?>
-                                                <div style="font-size: 0.75rem; color: #1a9083; margin-top: 5px; font-weight: 500;">
-                                                    <i class="fas fa-layer-group"></i> <?= count($doc['archivos']) ?> versiones
-                                                    disponibles
+                                    <tr <?= $claseFaltante ?>>
+                                        <td style="padding: 18px 20px; border-bottom: 1px solid #f8f9fa;">
+                                            <div style="display: flex; align-items: center; gap: 12px;">
+                                                <div
+                                                    style="width: 36px; height: 36px; border-radius: 8px; background: <?= $estaVacio ? '#f1f3f5' : '#eafaf1' ?>; display: flex; align-items: center; justify-content: center; color: <?= $estaVacio ? '#adb5bd' : '#27ae60' ?>; font-size: 1.1rem; border: 1px solid <?= $estaVacio ? '#dee2e6' : '#27ae6033' ?>;">
+                                                    <i class="fas <?= $estaVacio ? 'fa-file-alt' : 'fa-check-circle' ?>"></i>
                                                 </div>
-                                            <?php endif; ?>
+                                                <div>
+                                                    <div style="font-weight: 700; color: #2c3e50; font-size: 0.95rem;">
+                                                        <?= htmlspecialchars($doc['nombre']) ?>
+                                                    </div>
+                                                    <?php if ($doc['obligatorio']): ?>
+                                                        <span
+                                                            style="display: inline-block; background: #e74c3c; color: white; font-size: 0.6rem; padding: 1px 4px; border-radius: 3px; font-weight: 800; text-transform: uppercase; margin-top: 3px; vertical-align: middle; letter-spacing: 0.5px;">OBLIGATORIO</span>
+                                                    <?php endif; ?>
+                                                </div>
+                                            </div>
                                         </td>
 
-                                        <td style="padding: 18px 15px; text-align: center;">
+                                        <td style="padding: 18px 20px; border-bottom: 1px solid #f8f9fa;">
                                             <?php if ($estaVacio): ?>
-                                                <div
-                                                    style="display: inline-flex; align-items: center; gap: 5px; color: #95a5a6; font-size: 0.85rem; font-weight: 500;">
-                                                    <i class="fas fa-clock"></i> Pendiente
-                                                </div>
+                                                <span style="color: #adb5bd; font-size: 0.85rem; font-style: italic;">No subido</span>
                                             <?php else: ?>
                                                 <div
-                                                    style="display: inline-flex; align-items: center; gap: 5px; color: #2ecc71; font-size: 0.85rem; font-weight: 600;">
+                                                    style="display: flex; align-items: center; gap: 6px; color: #27ae60; font-weight: 700; font-size: 0.85rem; background: #eafaf1; padding: 4px 10px; border-radius: 20px; width: fit-content; border: 1px solid #27ae6033;">
                                                     <i class="fas fa-check-circle"></i> Subido
                                                 </div>
                                             <?php endif; ?>
                                         </td>
 
-                                        <td style="padding: 18px 15px; text-align: center;">
+                                        <td style="padding: 18px 15px; text-align: center; border-bottom: 1px solid #f8f9fa;">
                                             <?php
                                             if (!$estaVacio && $doc['tiene_vencimiento']) {
                                                 $fechaVenc = null;
@@ -183,7 +189,7 @@
                                             ?>
                                         </td>
 
-                                        <td style="padding: 18px 15px;">
+                                        <td style="padding: 18px 15px; border-bottom: 1px solid #f8f9fa;">
                                             <?php if (!$estaVacio): ?>
                                                 <div style="font-size: 0.85rem; color: #34495e; font-weight: 500;">
                                                     <?= htmlspecialchars($doc['archivos'][0]['nombre_usuario']) ?></div>
@@ -194,7 +200,7 @@
                                             <?php endif; ?>
                                         </td>
 
-                                        <td style="padding: 18px 20px; text-align: center;">
+                                        <td style="padding: 18px 20px; text-align: center; border-bottom: 1px solid #f8f9fa;">
                                             <div style="display: flex; gap: 8px; justify-content: center;">
                                                 <?php if (!$estaVacio): ?>
                                                     <?php foreach ($doc['archivos'] as $idx => $arch):
@@ -207,7 +213,8 @@
                                                         $isImg = in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp']);
                                                         ?>
                                                         <a href="javascript:void(0)"
-                                                            onclick="visualizarAdjunto('<?= htmlspecialchars($arch['ruta_archivo']) ?>')"
+                                                            onclick='visualizarAdjunto("<?= htmlspecialchars($arch['ruta_archivo']) ?>", <?= $jsonImagenesDoc ?>)'
+
                                                             style="display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; background: #eef2f3; border-radius: 8px; color: #34495e; text-decoration: none; transition: all 0.2s;"
                                                             title="Ver <?= htmlspecialchars($arch['nombre_archivo']) ?>"
                                                             onmouseover="this.style.background='#0E544C'; this.style.color='white'"
