@@ -40,39 +40,42 @@ $imagenesParaCarrusel = [];
         }
 
         .tab-percentage {
-            font-size: 0.75rem;
-            font-weight: 700;
-            margin-left: 6px;
-            padding: 2px 5px;
-            border-radius: 4px;
-            background: rgba(0, 0, 0, 0.05);
+            font-size: 0.62rem;
+            font-weight: 900;
+            margin-left: 8px;
+            width: 22px;
+            height: 22px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: #eee;
+            color: white !important;
+            flex-shrink: 0;
             display: none;
             /* Se muestra vía JS */
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
         /* Colores del sistema de semáforo */
         .bg-red {
-            background-color: #dc3545 !important;
+            background-color: #e74c3c !important;
         }
 
         .bg-yellow {
-            background-color: #ffc107 !important;
+            background-color: #f1c40f !important;
+            color: #856404 !important;
+            /* Texto oscuro para mejor contraste en amarillo */
         }
 
         .bg-green {
-            background-color: #28a745 !important;
+            background-color: #27ae60 !important;
         }
 
-        .text-red {
-            color: #dc3545 !important;
-        }
-
-        .text-yellow {
-            color: #856404 !important;
-        }
-
-        .text-green {
-            color: #28a745 !important;
+        /* Color institucional para la barra */
+        .bg-institucional {
+            background-color: #0E544C !important;
         }
     </style>
 </head>
@@ -2059,38 +2062,28 @@ $imagenesParaCarrusel = [];
                                     .then(data => {
                                         const tabButton = document.querySelector(`.tab-button[href*="pestaña=${pestaña}"]`);
                                         if (tabButton) {
-                                            // 1. Manejar el ícono de estado
-                                            if (data.estado && data.estado !== 'no_aplica') {
-                                                let iconoExistente = tabButton.querySelector('.estado-documentos');
-                                                if (!iconoExistente) {
-                                                    iconoExistente = document.createElement('span');
-                                                    iconoExistente.className = 'estado-documentos';
-                                                    tabButton.appendChild(iconoExistente);
-                                                }
-                                                iconoExistente.innerHTML = obtenerIconoPorEstado(data.estado);
-                                            }
+                                            // 1. ELIMINAR ícono de estado antiguo
+                                            let iconoExistente = tabButton.querySelector('.estado-documentos');
+                                            if (iconoExistente) iconoExistente.remove();
 
-                                            // 2. Manejar el porcentaje de cumplimiento
+                                            // 2. Manejar el porcentaje de cumplimiento (CÍRCULO)
                                             if (data.porcentaje !== undefined) {
                                                 let percentLabel = tabButton.querySelector('.tab-percentage');
                                                 if (!percentLabel) {
                                                     percentLabel = document.createElement('span');
                                                     percentLabel.className = 'tab-percentage';
-                                                    // Insertar antes del ícono si existe, o al final
-                                                    const icon = tabButton.querySelector('.estado-documentos');
-                                                    if (icon) tabButton.insertBefore(percentLabel, icon);
-                                                    else tabButton.appendChild(percentLabel);
+                                                    tabButton.appendChild(percentLabel);
                                                 }
-                                                percentLabel.textContent = `${data.porcentaje}%`;
-                                                percentLabel.style.display = 'inline-block';
+                                                percentLabel.textContent = `${data.porcentaje}`;
+                                                percentLabel.style.display = 'inline-flex';
 
-                                                // Aplicar color según semáforo
-                                                percentLabel.classList.remove('text-red', 'text-yellow', 'text-green');
-                                                if (data.porcentaje < 50) percentLabel.classList.add('text-red');
-                                                else if (data.porcentaje < 100) percentLabel.classList.add('text-yellow');
-                                                else percentLabel.classList.add('text-green');
+                                                // Aplicar color de FONDO según semáforo
+                                                percentLabel.classList.remove('bg-red', 'bg-yellow', 'bg-green');
+                                                if (data.porcentaje < 50) percentLabel.classList.add('bg-red');
+                                                else if (data.porcentaje < 100) percentLabel.classList.add('bg-yellow');
+                                                else percentLabel.classList.add('bg-green');
 
-                                                // 3. Manejar la barra de progreso
+                                                // 3. Manejar la barra de progreso (SIEMPRE VERDE INSTITUCIONAL)
                                                 let progressCont = tabButton.querySelector('.tab-progress-container');
                                                 if (!progressCont) {
                                                     progressCont = document.createElement('div');
@@ -2103,11 +2096,9 @@ $imagenesParaCarrusel = [];
                                                 const progressBar = progressCont.querySelector('.tab-progress-bar');
                                                 progressBar.style.width = `${data.porcentaje}%`;
 
-                                                // Aplicar color a la barra
+                                                // Color UNIFICADO
                                                 progressBar.classList.remove('bg-red', 'bg-yellow', 'bg-green');
-                                                if (data.porcentaje < 50) progressBar.classList.add('bg-red');
-                                                else if (data.porcentaje < 100) progressBar.classList.add('bg-yellow');
-                                                else progressBar.classList.add('bg-green');
+                                                progressBar.classList.add('bg-institucional');
                                             }
                                         }
                                     })
@@ -2115,15 +2106,6 @@ $imagenesParaCarrusel = [];
                             });
                         }
 
-                        // Función auxiliar para obtener el ícono según el estado
-                        function obtenerIconoPorEstado(estado) {
-                            const iconos = {
-                                'completo': '<i class="fas fa-check-circle" style="color: #28a745; margin-left: 5px;"></i>',
-                                'parcial': '<i class="fas fa-clock" style="color: #ffc107; margin-left: 5px;"></i>',
-                                'pendiente': '<i class="fas fa-exclamation-circle" style="color: #dc3545; margin-left: 5px;"></i>'
-                            };
-                            return iconos[estado] || '';
-                        }
 
                         // Llamar a la función cuando se cargue la página
                         document.addEventListener('DOMContentLoaded', function () {

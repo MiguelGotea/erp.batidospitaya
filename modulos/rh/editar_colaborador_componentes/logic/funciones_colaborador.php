@@ -3672,7 +3672,39 @@ function calcularPorcentajeCumplimiento($codOperario, $pestaña)
         }
     }
 
-    $porcentaje = round(($completados / $totalRequerimientos) * 100);
+    // 4. Caso Especial: Expediente Digital (Cálculo Global de Documentos)
+    if ($pestaña == 'expediente-digital') {
+        // Obtenemos todos los tipos de documentos obligatorios del sistema
+        $stmt = $conn->prepare("SELECT id FROM contratos_tiposDocumentos WHERE es_obligatorio = 1 AND activo = 1");
+        $stmt->execute();
+        $docsObligatorios = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+        if (!empty($docsObligatorios)) {
+            $placeholders = str_repeat('?,', count($docsObligatorios) - 1) . '?';
+            $stmt = $conn->prepare("
+                SELECT id_tipo_documento, COUNT(*) as cantidad
+                FROM ArchivosAdjuntos
+                WHERE cod_operario = ? AND id_tipo_documento IN ($placeholders)
+                GROUP BY id_tipo_documento
+            ");
+            $stmt->execute(array_merge([$codOperario], $docsObligatorios));
+            $subidos = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
+
+            // Reiniciamos contadores para que sea puramente documental
+            $totalRequerimientos = count($docsObligatorios);
+            $completados = 0;
+            $detalles = [];
+
+            foreach ($docsObligatorios as $idDoc) {
+                $pasa = isset($subidos[$idDoc]) && $subidos[$idDoc] > 0;
+                if ($pasa)
+                    $completados++;
+                // No llenamos detalles aquí para no saturar, o podríamos obtener nombres si fuera necesario
+            }
+        }
+    }
+
+    $porcentaje = $totalRequerimientos > 0 ? round(($completados / $totalRequerimientos) * 100) : 100;
 
     return [
         'porcentaje' => $porcentaje,
@@ -3687,7 +3719,7 @@ function calcularPorcentajeCumplimiento($codOperario, $pestaña)
  */
 function calcularCumplimientoGlobal($codOperario)
 {
-    $pestanas = ['datos-personales', 'datos-contacto', 'inss', 'contrato', 'contactos-emergencia', 'salario', 'movimientos', 'categoria'];
+    $pestanas = ['datos-personales', 'datos-contacto', 'inss', 'contrato', 'contactos-emergencia', 'salario', 'movimientos', 'categoria', 'expediente-digital'];
 
     $totalG = 0;
     $completadosG = 0;
