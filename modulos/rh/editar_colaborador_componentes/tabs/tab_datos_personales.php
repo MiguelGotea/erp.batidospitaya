@@ -46,20 +46,20 @@
                                     <div class="form-row">
                                         <div class="form-col">
                                             <div class="form-group">
-                                                <label for="nombre">Primer Nombre</label>
+                                                <label for="nombre">Primer Nombre *</label>
                                                 <input type="text" id="nombre" name="nombre" class="form-control"
                                                     value="<?= htmlspecialchars($colaborador['Nombre'] ?? '') ?>" required>
                                             </div>
 
                                             <div class="form-group">
-                                                <label for="apellido">Primer Apellido</label>
+                                                <label for="apellido">Primer Apellido *</label>
                                                 <input type="text" id="apellido" name="apellido" class="form-control"
                                                     value="<?= htmlspecialchars($colaborador['Apellido'] ?? '') ?>"
                                                     required>
                                             </div>
 
                                             <div class="form-group">
-                                                <label for="cedula">Cédula</label>
+                                                <label for="cedula">Cédula *</label>
                                                 <input type="text" id="cedula" name="cedula" class="form-control"
                                                     value="<?= htmlspecialchars($colaborador['Cedula'] ?? '') ?>"
                                                     placeholder="Ej: XXX-XXXXXX-XXXX"
