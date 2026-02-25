@@ -418,7 +418,7 @@ if (isset($_GET['editar'])) {
 
             function editarFeriado(id) {
                 // Hacer una petición AJAX para obtener los datos del feriado
-                fetch(`obtener_feriado.php?id=${id}`)
+                fetch(`ajax/obtener_feriado.php?id=${id}`)
                     .then(response => response.json())
                     .then(data => {
                         if (data) {

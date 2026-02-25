@@ -7517,7 +7517,7 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
 
                 function editarCuenta(idCuenta) {
                     // Hacer una solicitud AJAX para obtener los datos de la cuenta
-                    fetch(`obtener_cuenta.php?id=${idCuenta}`)
+                    fetch(`ajax/obtener_cuenta.php?id=${idCuenta}`)
                         .then(response => response.json())
                         .then(cuenta => {
                             document.getElementById('modalCuenta').style.display = 'block';
@@ -7551,7 +7551,7 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
 
                 function editarContacto(idContacto) {
                     // Hacer una solicitud AJAX para obtener los datos del contacto
-                    fetch(`obtener_contacto.php?id=${idContacto}`)
+                    fetch(`ajax/obtener_contacto.php?id=${idContacto}`)
                         .then(response => response.json())
                         .then(contacto => {
                             document.getElementById('modalContacto').style.display = 'block';
@@ -7588,7 +7588,7 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
 
                 function editarSalario(idSalario) {
                     // Hacer una solicitud AJAX para obtener los datos del salario
-                    fetch(`obtener_salario.php?id=${idSalario}`)
+                    fetch(`ajax/obtener_salario.php?id=${idSalario}`)
                         .then(response => response.json())
                         .then(salario => {
                             document.getElementById('modalSalario').style.display = 'block';
@@ -7755,7 +7755,7 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                 // Función mejorada para obtener el último adendum activo via AJAX
                 function obtenerUltimoAdendumActivoId() {
                     return new Promise((resolve, reject) => {
-                        fetch(`obtener_ultimo_adendum.php?cod_operario=<?= $codOperario ?>`)
+                        fetch(`ajax/obtener_ultimo_adendum.php?cod_operario=<?= $codOperario ?>`)
                             .then(response => response.json())
                             .then(data => {
                                 if (data.exito && data.adendum) {
@@ -8162,7 +8162,7 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                         'salario', 'movimientos', 'categoria', 'adendums'];
 
                     pestañas.forEach(pestaña => {
-                        fetch(`obtener_estado_documentos.php?cod_operario=<?= $codOperario ?>&pestaña=${pestaña}`)
+                        fetch(`ajax/obtener_estado_documentos.php?cod_operario=<?= $codOperario ?>&pestaña=${pestaña}`)
                             .then(response => response.json())
                             .then(data => {
                                 if (data.estado && data.estado !== 'no_aplica') {
@@ -8421,7 +8421,7 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                     }
                     loadingIndicator.style.display = 'inline-block';
 
-                    fetch(`validar_codigo_contrato.php?codigo=${encodeURIComponent(codigo)}&excluir=${idContratoActual}`)
+                    fetch(`ajax/validar_codigo_contrato.php?codigo=${encodeURIComponent(codigo)}&excluir=${idContratoActual}`)
                         .then(response => response.json())
                         .then(data => {
                             // Ocultar indicador de carga
@@ -8477,7 +8477,7 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                 // Funciones para el modal de movimientos
                 function editarMovimiento(idMovimiento) {
                     // Hacer una solicitud AJAX para obtener los datos del movimiento
-                    fetch(`obtener_movimiento.php?id=${idMovimiento}`)
+                    fetch(`ajax/obtener_movimiento.php?id=${idMovimiento}`)
                         .then(response => {
                             if (!response.ok) {
                                 throw new Error('Error en la respuesta del servidor');
@@ -8517,7 +8517,7 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                 });
 
                 function editarSalarioINSS(idSalarioINSS) {
-                    fetch(`obtener_salario_inss.php?id=${idSalarioINSS}`)
+                    fetch(`ajax/obtener_salario_inss.php?id=${idSalarioINSS}`)
                         .then(response => {
                             if (!response.ok) {
                                 throw new Error('Error en la respuesta del servidor');
@@ -8571,7 +8571,7 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                     modal.style.display = 'block';
 
                     // Hacer una solicitud AJAX para obtener los datos de la categoría
-                    fetch(`obtener_categoria.php?id=${idCategoria}`)
+                    fetch(`ajax/obtener_categoria.php?id=${idCategoria}`)
                         .then(response => {
                             if (!response.ok) {
                                 throw new Error('Error en la respuesta del servidor: ' + response.status);
@@ -8730,7 +8730,7 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                 // Función para editar adendum
                 function editarAdendum(idAdendum) {
                     // Hacer una solicitud AJAX para obtener los datos del adendum
-                    fetch(`obtener_adendum.php?id=${idAdendum}`)
+                    fetch(`ajax/obtener_adendum.php?id=${idAdendum}`)
                         .then(response => {
                             if (!response.ok) {
                                 throw new Error('Error en la respuesta del servidor');
@@ -9005,7 +9005,7 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                 // Función para editar terminación de contrato del historial
                 function abrirModalEditarTerminacion(idContrato) {
                     // Cargar datos del contrato vía AJAX
-                    fetch(`obtener_contrato_terminacion.php?id=${idContrato}`)
+                    fetch(`ajax/obtener_contrato_terminacion.php?id=${idContrato}`)
                         .then(response => response.json())
                         .then(contrato => {
                             document.getElementById('modalTerminacion').style.display = 'block';

@@ -2646,7 +2646,7 @@ function verificarTardanzaYaRegistrada(
                         }
 
                         // Enviar la solicitud
-                        fetch('procesar_tardanza_marcacion.php', {
+                        fetch('ajax/procesar_tardanza_marcacion.php', {
                             method: 'POST',
                             body: formData
                         })
@@ -2769,7 +2769,7 @@ function verificarTardanzaYaRegistrada(
                         }
 
                         // Enviar la solicitud
-                        fetch('procesar_falta_marcacion.php', {
+                        fetch('ajax/procesar_falta_marcacion.php', {
                             method: 'POST',
                             body: formData
                         })

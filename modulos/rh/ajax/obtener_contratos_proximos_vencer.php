@@ -1,5 +1,5 @@
 <?php
-require_once '../../core/auth/auth.php';
+require_once '../../../core/auth/auth.php';
 
 header('Content-Type: application/json');
 

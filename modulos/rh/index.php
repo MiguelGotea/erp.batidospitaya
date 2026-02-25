@@ -2053,7 +2053,7 @@ function obtenerDetalleAusenciasColaboradoresModal()
 
         // Cargar contratos próximos a vencer
         function cargarContratosProximos() {
-            fetch('obtener_contratos_proximos_vencer.php')
+            fetch('ajax/obtener_contratos_proximos_vencer.php')
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
@@ -2213,7 +2213,7 @@ function obtenerDetalleAusenciasColaboradoresModal()
 
         // Cargar faltas pendientes
         function cargarFaltasPendientes() {
-            fetch('obtener_faltas_pendientes.php')
+            fetch('ajax/obtener_faltas_pendientes.php')
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
@@ -2349,7 +2349,7 @@ function obtenerDetalleAusenciasColaboradoresModal()
 
         // Cargar ausencias colaboradores
         function cargarAusenciasColaboradores() {
-            fetch('obtener_ausencias_colaboradores.php')
+            fetch('ajax/obtener_ausencias_colaboradores.php')
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {

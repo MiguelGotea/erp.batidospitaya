@@ -1,5 +1,5 @@
 <?php
-require_once '../../core/auth/auth.php';
+require_once '../../../core/auth/auth.php';
 
 // Verificar acceso al módulo (solo cargo nivel 13 - RH)
 if (!verificarAccesoCargo(13)) {

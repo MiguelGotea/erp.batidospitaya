@@ -3,7 +3,7 @@
 //ini_set('display_startup_errors', 1);
 //error_reporting(E_ALL);
 // obtiene_ausencias_colaboradores.php
-require_once '../../core/auth/auth.php';
+require_once '../../../core/auth/auth.php';
 
 //session_start();
 
