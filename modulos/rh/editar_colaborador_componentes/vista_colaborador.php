@@ -441,82 +441,72 @@ $imagenesParaCarrusel = [];
 
                                 <!-- Zona Unificada de Adjuntos -->
                                 <div id="zonaAdjuntos"
-                                    style="border: 2px dashed #51B8AC; padding: 20px; border-radius: 12px; margin-bottom: 20px; background: #f8fbfb;">
+                                    style="border: 2px dashed #51B8AC; padding: 12px; border-radius: 12px; margin-bottom: 20px; background: #f8fbfb;">
                                     <h4
-                                        style="margin: 0 0 15px 0; color: #0E544C; font-size: 0.9rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">
+                                        style="margin: 0 0 10px 0; color: #0E544C; font-size: 0.8rem; font-weight: 800; text-transform: uppercase;">
                                         <i class="fas fa-paperclip"></i> Zona de Adjuntos
                                     </h4>
 
                                     <!-- Botones de Acción -->
-                                    <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px;">
+                                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
                                         <!-- 1. Seleccionar PDF -->
-                                        <div style="flex: 1; min-width: 140px;">
+                                        <div style="flex: 1; min-width: 120px;">
                                             <button type="button" class="btn-submit"
-                                                style="background-color: #0E544C; font-size: 0.8rem; padding: 8px 12px; width: 100%; border-radius: 8px;"
+                                                style="background-color: #0E544C; font-size: 0.75rem; padding: 6px 10px; width: 100%; border-radius: 8px;"
                                                 onclick="document.getElementById('archivo_adjunto').click()">
-                                                <i class="fas fa-file-pdf"></i> Seleccionar PDF
+                                                <i class="fas fa-file-pdf"></i> PDF
                                             </button>
                                             <input type="file" id="archivo_adjunto" name="archivo_adjunto"
                                                 style="display: none;" accept=".pdf"
                                                 onchange="actualizarNombreArchivo(this, 'nombrePDF')">
                                             <div id="nombrePDF"
-                                                style="font-size: 0.65rem; color: #1a9083; margin-top: 4px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                                style="font-size: 0.6rem; color: #1a9083; margin-top: 4px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                                             </div>
                                         </div>
 
                                         <!-- 2. Seleccionar Foto -->
-                                        <div style="flex: 1; min-width: 140px;">
+                                        <div style="flex: 1; min-width: 120px;">
                                             <button type="button" class="btn-submit"
-                                                style="background-color: #51B8AC; font-size: 0.8rem; padding: 8px 12px; width: 100%; border-radius: 8px;"
+                                                style="background-color: #51B8AC; font-size: 0.75rem; padding: 6px 10px; width: 100%; border-radius: 8px;"
                                                 onclick="document.getElementById('inputSeleccionarFotos').click()">
-                                                <i class="fas fa-images"></i> Seleccionar Foto
+                                                <i class="fas fa-images"></i> Foto
                                             </button>
                                             <input type="file" id="inputSeleccionarFotos" style="display: none;"
                                                 multiple accept="image/*" onchange="manejarSeleccionFotos(this)">
                                         </div>
 
                                         <!-- 3. Iniciar Cámara -->
-                                        <div style="flex: 1; min-width: 140px;">
+                                        <div style="flex: 1; min-width: 120px;">
                                             <button type="button" id="btnToggleCamara" class="btn-submit"
-                                                style="background-color: #1a9083; font-size: 0.8rem; padding: 8px 12px; width: 100%; border-radius: 8px;"
+                                                style="background-color: #1a9083; font-size: 0.75rem; padding: 6px 10px; width: 100%; border-radius: 8px;"
                                                 onclick="toggleCamara()">
-                                                <i class="fas fa-camera"></i> Iniciar Cámara
+                                                <i class="fas fa-camera"></i> Cámara
                                             </button>
                                             <button type="button" id="btnCambiarCamara" class="btn-submit"
-                                                style="background-color: #6c757d; font-size: 0.8rem; padding: 8px 12px; width: 100%; border-radius: 8px; display: none; margin-top: 5px;"
+                                                style="background-color: #6c757d; font-size: 0.75rem; padding: 6px 10px; width: 100%; border-radius: 8px; display: none; margin-top: 4px;"
                                                 onclick="cambiarCamara()">
                                                 <i class="fas fa-sync"></i> Cambiar
                                             </button>
                                         </div>
                                     </div>
 
-                                    <!-- Elementos de Cámara (Ocultos inicialmente) -->
+                                    <!-- Contenedor Video Cámara -->
                                     <div id="contenedorVideo"
-                                        style="display: none; position: relative; margin-bottom: 15px; text-align: center; border-radius: 12px; overflow: hidden; background: #000; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+                                        style="display: none; position: relative; margin-top: 15px; text-align: center; border-radius: 12px; overflow: hidden; background: #000; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
                                         <video id="videoCaptura"
                                             style="width: 100%; max-width: 400px; display: block; margin: 0 auto;"></video>
                                         <button type="button" id="btnFlash" onclick="toggleFlash()"
-                                            style="display: none; position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.5); color: white; border: none; border-radius: 50%; width: 40px; height: 40px; cursor: pointer; align-items: center; justify-content: center; z-index: 10;">
-                                            <i class="fas fa-bolt"></i>
-                                        </button>
+                                            style="display: none; position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.5); color: white; border: none; border-radius: 50%; width: 40px; height: 40px; cursor: pointer; align-items: center; justify-content: center; z-index: 10;"><i
+                                                class="fas fa-bolt"></i></button>
                                         <button type="button" onclick="capturarFoto()"
-                                            style="position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%); background: #fff; color: #0E544C; border: 4px solid #0E544C; border-radius: 50%; width: 60px; height: 60px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.3); transition: all 0.2s;"
-                                            onmouseover="this.style.transform='translateX(-50%) scale(1.1)'"
-                                            onmouseout="this.style.transform='translateX(-50%) scale(1)'">
-                                            <i class="fas fa-camera" style="font-size: 1.8rem;"></i>
-                                        </button>
+                                            style="position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%); background: #fff; color: #0E544C; border: 4px solid #0E544C; border-radius: 50%; width: 50px; height: 50px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.3); transition: all 0.2s;"><i
+                                                class="fas fa-camera" style="font-size: 1.5rem;"></i></button>
                                         <canvas id="canvasAuxiliar" style="display: none;"></canvas>
                                     </div>
 
-                                    <!-- Galería de Capturas -->
                                     <div id="galeriaCapturas" class="galeria-capturas"
-                                        style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px;"></div>
+                                        style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px;"></div>
                                     <input type="hidden" name="capturas_camara" id="capturasCamaraInput" value="[]">
-
-                                    <div style="margin-top: 15px; padding-top: 10px; border-top: 1px solid #e0e6e5;">
-                                        <small style="color: #6c757d; font-style: italic;">Sube archivos PDF o
-                                            Captura/Selecciona fotos del documento.</small>
-                                    </div>
                                 </div>
 
                                 <div class="form-group" id="grupo_fecha_vencimiento" style="display: none;">
@@ -1490,8 +1480,8 @@ $imagenesParaCarrusel = [];
                             document.getElementById('contenedorVideo').style.display = 'none';
                             document.getElementById('btnToggleCamara').textContent = 'Iniciar Cámara';
 
-                            // Mostrar sección de cámara para todas las pestañas
-                            document.getElementById('seccionCamara').style.display = 'block';
+                            // Mostrar zona de adjuntos para todas las pestañas
+                            document.getElementById('zonaAdjuntos').style.display = 'block';
 
                             // Limpiar y llenar el select de tipos de documento
                             const selectTipo = document.getElementById('tipo_documento_adjunto');
