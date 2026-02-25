@@ -120,6 +120,3 @@
                             </div>
                         <?php endif; ?>
 
-                        <!-- Pestaña de Categoría -->
-                        <?php if (tienePermiso('editar_colaborador', 'edicion', $cargoId)): ?>
-                            <div id="categoria" class="tab-pane <?= $pestaña_activa == 'categoria' ? 'active' : '' ?>">

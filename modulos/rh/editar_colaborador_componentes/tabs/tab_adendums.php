@@ -387,4 +387,3 @@
 
                         <!-- Pestaña de Expediente Digital -->
                         <?php if (tienePermiso('editar_colaborador', 'edicion', $cargoId)): ?>
-                            <div id="expediente-digital"

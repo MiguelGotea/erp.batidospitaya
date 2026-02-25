@@ -342,6 +342,3 @@
                             </div>
                         <?php endif; ?>
 
-                        <!-- Pestaña de Bitácora -->
-                        <?php if (tienePermiso('editar_colaborador', 'edicion', $cargoId)): ?>
-                            <div id="bitacora" class="tab-pane <?= $pestaña_activa == 'bitacora' ? 'active' : '' ?>">

@@ -613,6 +613,3 @@
                             </div>
                         <?php endif; ?>
 
-                        <!-- Pestaña de Salario -->
-                        <?php if (tienePermiso('editar_colaborador', 'edicion', $cargoId)): ?>
-                            <div id="salario" class="tab-pane <?= $pestaña_activa == 'salario' ? 'active' : '' ?>">

@@ -202,6 +202,3 @@
                             </div>
                         <?php endif; ?>
 
-                        <!-- Pestaña de INSS -->
-                        <?php if (tienePermiso('editar_colaborador', 'edicion', $cargoId)): ?>
-                            <div id="inss" class="tab-pane <?= $pestaña_activa == 'inss' ? 'active' : '' ?>">

@@ -321,6 +321,3 @@
                             </div>
                         <?php endif; ?>
 
-                        <!-- Pestaña de Movimientos -->
-                        <?php if (tienePermiso('editar_colaborador', 'edicion', $cargoId)): ?>
-                            <div id="movimientos" class="tab-pane <?= $pestaña_activa == 'movimientos' ? 'active' : '' ?>">

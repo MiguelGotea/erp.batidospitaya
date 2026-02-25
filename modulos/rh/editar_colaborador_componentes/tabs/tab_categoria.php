@@ -216,6 +216,3 @@
                             </div>
                         <?php endif; ?>
 
-                        <!-- Pestaña de Adendums -->
-                        <?php if (tienePermiso('editar_colaborador', 'edicion', $cargoId)): ?>
-                            <div id="adendums" class="tab-pane <?= $pestaña_activa == 'adendums' ? 'active' : '' ?>">
