@@ -13,7 +13,70 @@ $imagenesParaCarrusel = [];
     <link rel="icon" href="../../core/assets/img/icon12.png" type="image/png">
     <link rel="stylesheet" href="/core/assets/css/global_tools.css?v=<?php echo mt_rand(1, 10000); ?>">
     <link rel="stylesheet" href="css/editar_colaborador.css?v=<?php echo mt_rand(1, 10000); ?>">
+    <style>
+        /* Estilos para las barras de progreso en las pestañas */
+        .tab-button {
+            position: relative;
+            padding-bottom: 12px !important;
+        }
+
+        .tab-progress-container {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: #f1f3f5;
+            border-radius: 0 0 4px 4px;
+            overflow: hidden;
+            display: none;
+            /* Se muestra vía JS */
+        }
+
+        .tab-progress-bar {
+            height: 100%;
+            transition: width 0.5s ease, background-color 0.5s ease;
+            width: 0%;
+        }
+
+        .tab-percentage {
+            font-size: 0.75rem;
+            font-weight: 700;
+            margin-left: 6px;
+            padding: 2px 5px;
+            border-radius: 4px;
+            background: rgba(0, 0, 0, 0.05);
+            display: none;
+            /* Se muestra vía JS */
+        }
+
+        /* Colores del sistema de semáforo */
+        .bg-red {
+            background-color: #dc3545 !important;
+        }
+
+        .bg-yellow {
+            background-color: #ffc107 !important;
+        }
+
+        .bg-green {
+            background-color: #28a745 !important;
+        }
+
+        .text-red {
+            color: #dc3545 !important;
+        }
+
+        .text-yellow {
+            color: #856404 !important;
+        }
+
+        .text-green {
+            color: #28a745 !important;
+        }
+    </style>
 </head>
+
 
 <body>
     <?php echo renderMenuLateral($cargoId); ?>
@@ -1863,7 +1926,7 @@ $imagenesParaCarrusel = [];
                                         adjuntosSesion.push({
                                             tipo: 'pdf',
                                             nombre: file.name,
-                                             tamaño: file.size,
+                                            tamaño: file.size,
                                             data: e.target.result
                                         });
                                         actualizarListaAdjuntosUI();
@@ -1882,7 +1945,7 @@ $imagenesParaCarrusel = [];
                                         adjuntosSesion.push({
                                             tipo: 'imagen',
                                             nombre: file.name,
-                                             tamaño: file.size,
+                                            tamaño: file.size,
                                             data: e.target.result
                                         });
                                         actualizarListaAdjuntosUI();
@@ -1985,32 +2048,70 @@ $imagenesParaCarrusel = [];
                         });
 
                         // Función para actualizar los íconos de estado en las pestañas
+                        // Función para actualizar los íconos de estado y porcentajes en las pestañas
                         function actualizarIconosEstadoPestanas() {
-                            const pestañas = ['datos-personales', 'inss', 'contrato', 'contactos-emergencia',
-                                'salario', 'movimientos', 'categoria', 'adendums'];
+                            const pestañas = ['datos-personales', 'datos-contacto', 'inss', 'contrato', 'contactos-emergencia',
+                                'salario', 'movimientos', 'categoria', 'adendums', 'expediente-digital'];
 
                             pestañas.forEach(pestaña => {
                                 fetch(`ajax/obtener_estado_documentos.php?cod_operario=<?= $codOperario ?>&pestaña=${pestaña}`)
                                     .then(response => response.json())
                                     .then(data => {
-                                        if (data.estado && data.estado !== 'no_aplica') {
-                                            const tabButton = document.querySelector(`.tab-button[href*="pestaña=${pestaña}"]`);
-                                            if (tabButton) {
-                                                // Remover ícono existente
-                                                const iconoExistente = tabButton.querySelector('.estado-documentos');
-                                                if (iconoExistente) {
-                                                    iconoExistente.remove();
+                                        const tabButton = document.querySelector(`.tab-button[href*="pestaña=${pestaña}"]`);
+                                        if (tabButton) {
+                                            // 1. Manejar el ícono de estado
+                                            if (data.estado && data.estado !== 'no_aplica') {
+                                                let iconoExistente = tabButton.querySelector('.estado-documentos');
+                                                if (!iconoExistente) {
+                                                    iconoExistente = document.createElement('span');
+                                                    iconoExistente.className = 'estado-documentos';
+                                                    tabButton.appendChild(iconoExistente);
                                                 }
+                                                iconoExistente.innerHTML = obtenerIconoPorEstado(data.estado);
+                                            }
 
-                                                // Agregar nuevo ícono
-                                                const icono = document.createElement('span');
-                                                icono.className = 'estado-documentos';
-                                                icono.innerHTML = obtenerIconoPorEstado(data.estado);
-                                                tabButton.appendChild(icono);
+                                            // 2. Manejar el porcentaje de cumplimiento
+                                            if (data.porcentaje !== undefined) {
+                                                let percentLabel = tabButton.querySelector('.tab-percentage');
+                                                if (!percentLabel) {
+                                                    percentLabel = document.createElement('span');
+                                                    percentLabel.className = 'tab-percentage';
+                                                    // Insertar antes del ícono si existe, o al final
+                                                    const icon = tabButton.querySelector('.estado-documentos');
+                                                    if (icon) tabButton.insertBefore(percentLabel, icon);
+                                                    else tabButton.appendChild(percentLabel);
+                                                }
+                                                percentLabel.textContent = `${data.porcentaje}%`;
+                                                percentLabel.style.display = 'inline-block';
+
+                                                // Aplicar color según semáforo
+                                                percentLabel.classList.remove('text-red', 'text-yellow', 'text-green');
+                                                if (data.porcentaje < 50) percentLabel.classList.add('text-red');
+                                                else if (data.porcentaje < 100) percentLabel.classList.add('text-yellow');
+                                                else percentLabel.classList.add('text-green');
+
+                                                // 3. Manejar la barra de progreso
+                                                let progressCont = tabButton.querySelector('.tab-progress-container');
+                                                if (!progressCont) {
+                                                    progressCont = document.createElement('div');
+                                                    progressCont.className = 'tab-progress-container';
+                                                    progressCont.innerHTML = '<div class="tab-progress-bar"></div>';
+                                                    tabButton.appendChild(progressCont);
+                                                }
+                                                progressCont.style.display = 'block';
+
+                                                const progressBar = progressCont.querySelector('.tab-progress-bar');
+                                                progressBar.style.width = `${data.porcentaje}%`;
+
+                                                // Aplicar color a la barra
+                                                progressBar.classList.remove('bg-red', 'bg-yellow', 'bg-green');
+                                                if (data.porcentaje < 50) progressBar.classList.add('bg-red');
+                                                else if (data.porcentaje < 100) progressBar.classList.add('bg-yellow');
+                                                else progressBar.classList.add('bg-green');
                                             }
                                         }
                                     })
-                                    .catch(error => console.error('Error al obtener estado:', error));
+                                    .catch(error => console.error('Error al obtener estado para ' + pestaña + ':', error));
                             });
                         }
 
