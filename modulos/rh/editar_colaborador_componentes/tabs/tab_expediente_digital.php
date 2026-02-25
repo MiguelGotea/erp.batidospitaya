@@ -2,12 +2,27 @@
     <div id="expediente-digital" class="tab-pane <?= $pestaña_activa == 'expediente-digital' ? 'active' : '' ?>">
         <?php
         $expedienteCompleto = obtenerExpedienteCompletoConFaltantes($codOperario);
+        $imagenesParaCarrusel = [];
 
         $totalObligatorios = 0;
         $totalSubidos = 0;
         foreach ($expedienteCompleto as $pestana) {
             $totalObligatorios += $pestana['stats']['total_obligatorios'];
             $totalSubidos += $pestana['stats']['subidos_obligatorios'];
+
+            // Recolectar imágenes para el carrusel
+            foreach ($pestana['documentos'] as $doc) {
+                foreach ($doc['archivos'] as $arch) {
+                    $ext = strtolower(pathinfo($arch['ruta_archivo'], PATHINFO_EXTENSION));
+                    if (in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'])) {
+                        $imagenesParaCarrusel[] = [
+                            'url' => $arch['ruta_archivo'],
+                            'nombre' => $doc['nombre'],
+                            'categoria' => $pestana['nombre']
+                        ];
+                    }
+                }
+            }
         }
         $porcentajeGlobal = $totalObligatorios > 0 ? round(($totalSubidos / $totalObligatorios) * 100) : 100;
         ?>
