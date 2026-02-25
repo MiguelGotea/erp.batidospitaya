@@ -13,13 +13,7 @@ if (!tienePermiso('editar_colaborador', 'vista', $cargoId)) {
     exit();
 }
 
-// Cargar funciones, lógica POST y datos del colaborador
-require_once 'editar_colaborador_componentes/logic/funciones_colaborador.php';
-
-// Obtenemos el cargo principal usando la función de funciones.php
-$cargoUsuario = $usuario['cargo_nombre'] ?? 'No definido';
-
-// Verificar si se recibió un ID de colaborador
+// 1. Obtener parámetros básicos
 if (!isset($_GET['id']) || empty($_GET['id'])) {
     $_SESSION['error'] = 'No se ha especificado un colaborador para editar';
     header('Location: colaboradores.php');
@@ -27,8 +21,12 @@ if (!isset($_GET['id']) || empty($_GET['id'])) {
 }
 
 $codOperario = intval($_GET['id']);
+$pestaña_activa = isset($_GET['pestaña']) ? $_GET['pestaña'] : 'datos-personales';
 
-// Obtener datos del colaborador
+// 2. Cargar funciones y lógica (ya tienen acceso a $codOperario y $pestaña_activa)
+require_once 'editar_colaborador_componentes/logic/funciones_colaborador.php';
+
+// 3. Obtener datos del colaborador
 $colaborador = obtenerColaboradorPorId($codOperario);
 
 if (!$colaborador) {
@@ -37,8 +35,8 @@ if (!$colaborador) {
     exit();
 }
 
-// Determinar qué pestaña está activa (por defecto datos-personales)
-$pestaña_activa = isset($_GET['pestaña']) ? $_GET['pestaña'] : 'datos-personales';
+$cargoUsuario = $usuario['cargo_nombre'] ?? 'No definido';
+
 
 
 // Renderizar la vista
