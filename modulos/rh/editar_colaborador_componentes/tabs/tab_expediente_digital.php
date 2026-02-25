@@ -47,43 +47,48 @@
             <?php foreach ($expedienteCompleto as $pestanaClave => $pestana): ?>
                 <div class="categoria-block"
                     style="background: white; border-radius: 12px; border: 1px solid #e9ecef; overflow: hidden; box-shadow: 0 5px 20px rgba(0,0,0,0.03);">
-                    <!-- Header del Bloque -->
+                    <!-- Header del Bloque (AHORA PROTAGONISTA) -->
                     <div
-                        style="padding: 10px 20px; background: #f8fbfb; border-bottom: 2px solid #eef2f3; display: flex; justify-content: space-between; align-items: center;">
+                        style="padding: 12px 20px; background: #0E544C; border-bottom: 1px solid #083c36; display: flex; justify-content: space-between; align-items: center;">
                         <h4
-                            style="margin: 0; color: #0E544C; font-weight: 800; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 0.5px; display: flex; align-items: center; gap: 10px;">
-                            <i class="fas fa-folder" style="opacity: 0.7;"></i>
+                            style="margin: 0; color: white; font-weight: 800; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 1px; display: flex; align-items: center; gap: 12px;">
+                            <div
+                                style="width: 30px; height: 30px; background: rgba(255,255,255,0.15); border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-folder" style="font-size: 0.9rem;"></i>
+                            </div>
                             <?= htmlspecialchars($pestana['nombre']) ?>
                         </h4>
                         <div
-                            style="display: flex; align-items: center; gap: 12px; background: white; padding: 3px 10px; border-radius: 12px; border: 1px solid #d1d8d7;">
-                            <div style="width: 60px; height: 4px; background: #eef2f3; border-radius: 2px; overflow: hidden;">
-                                <div style="width: <?= $pestana['stats']['porcentaje'] ?>%; height: 100%; background: #1a9083;">
+                            style="display: flex; align-items: center; gap: 15px; background: rgba(255,255,255,0.1); padding: 5px 15px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.2);">
+                            <div
+                                style="width: 80px; height: 6px; background: rgba(255,255,255,0.2); border-radius: 3px; overflow: hidden;">
+                                <div
+                                    style="width: <?= $pestana['stats']['porcentaje'] ?>%; height: 100%; background: #27ae60; box-shadow: 0 0 10px rgba(39,174,96,0.5);">
                                 </div>
                             </div>
                             <span
-                                style="font-size: 0.7rem; font-weight: 800; color: #1a9083;"><?= $pestana['stats']['porcentaje'] ?>%</span>
+                                style="font-size: 0.8rem; font-weight: 900; color: white;"><?= $pestana['stats']['porcentaje'] ?>%</span>
                         </div>
                     </div>
 
                     <!-- Tabla del Bloque -->
                     <table style="width: 100%; border-collapse: collapse; font-size: 0.88rem;">
                         <thead>
-                            <tr style="background: #0E544C;">
+                            <tr style="background: #f8f9fa; border-bottom: 2px solid #eef2f3;">
                                 <th
-                                    style="padding: 10px 20px; text-align: left; color: white; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.8px; font-weight: 700; width: 35%;">
+                                    style="padding: 12px 20px; text-align: left; color: #495057; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 800; width: 35%;">
                                     Documento</th>
                                 <th
-                                    style="padding: 10px 15px; text-align: left; color: white; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.8px; font-weight: 700; width: 15%;">
+                                    style="padding: 12px 15px; text-align: left; color: #495057; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 800; width: 15%;">
                                     Estado</th>
                                 <th
-                                    style="padding: 10px 15px; text-align: center; color: white; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.8px; font-weight: 700; width: 15%;">
+                                    style="padding: 12px 15px; text-align: center; color: #495057; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 800; width: 15%;">
                                     Vencimiento</th>
                                 <th
-                                    style="padding: 10px 15px; text-align: left; color: white; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.8px; font-weight: 700; width: 20%;">
+                                    style="padding: 12px 15px; text-align: left; color: #495057; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 800; width: 20%;">
                                     Subido Por</th>
                                 <th
-                                    style="padding: 10px 20px; text-align: center; color: white; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.8px; font-weight: 700; width: 15%;">
+                                    style="padding: 12px 20px; text-align: center; color: #495057; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 800; width: 15%;">
                                     Acción</th>
                             </tr>
                         </thead>
