@@ -3235,7 +3235,6 @@ function obtenerExpedienteCompletoConFaltantes($codOperario)
             continue;
         }
 
-
         if (!isset($expediente[$p])) {
             $expediente[$p] = [
                 'nombre' => obtenerNombrePestaña($p),
