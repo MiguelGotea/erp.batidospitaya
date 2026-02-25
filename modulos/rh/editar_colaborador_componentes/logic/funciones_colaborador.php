@@ -3235,7 +3235,7 @@ function obtenerExpedienteCompletoConFaltantes($codOperario)
 {
     global $conn;
 
-    // 1. Obtener todos los tipos de documentos activos
+    // 1. Obtener todos los tipos de documentos activos (configuración)
     $stmt = $conn->prepare("
         SELECT id, pestaña, nombre_clave, nombre_descriptivo, es_obligatorio, tiene_vencimiento
         FROM contratos_tiposDocumentos
@@ -3245,10 +3245,18 @@ function obtenerExpedienteCompletoConFaltantes($codOperario)
     $stmt->execute();
     $tiposConfig = $stmt->fetchAll();
 
-    // 2. Obtener todos los archivos subidos del colaborador
+    // 2. Obtener todos los archivos subidos del colaborador con su configuración actual
+    // Usamos el join para obtener los datos reales de la configuración
     $stmt = $conn->prepare("
-        SELECT a.*, o.Nombre as nombre_usuario, o.Apellido as apellido_usuario
+        SELECT a.*, 
+               td.pestaña as cfg_pestana, 
+               td.nombre_clave as cfg_clave, 
+               td.nombre_descriptivo as cfg_nombre, 
+               td.es_obligatorio as cfg_obligatorio,
+               o.Nombre as nombre_usuario, 
+               o.Apellido as apellido_usuario
         FROM ArchivosAdjuntos a
+        LEFT JOIN contratos_tiposDocumentos td ON a.id_tipo_documento = td.id
         JOIN Operarios o ON a.cod_usuario_subio = o.CodOperario
         WHERE a.cod_operario = ?
         ORDER BY a.fecha_subida DESC
@@ -3256,43 +3264,44 @@ function obtenerExpedienteCompletoConFaltantes($codOperario)
     $stmt->execute([$codOperario]);
     $archivosSubidos = $stmt->fetchAll();
 
-    // 3. Organizar archivos subidos por tipo y pestaña
+    // 3. Organizar archivos subidos en un mapa
     $subidosMap = [];
     foreach ($archivosSubidos as $archivo) {
-        $clave = $archivo['id_tipo_documento'] ?: $archivo['tipo_documento'];
-        $pestana = $archivo['pestaña'];
+        $idTipo = $archivo['id_tipo_documento'];
+        $pestana = !empty($archivo['cfg_pestana']) ? $archivo['cfg_pestana'] : (!empty($archivo['pestaña']) ? $archivo['pestaña'] : 'sin_pestana');
+        $clave = !empty($idTipo) ? $idTipo : (!empty($archivo['tipo_documento']) ? $archivo['tipo_documento'] : 'sin_tipo');
+
         if (!isset($subidosMap[$pestana]))
             $subidosMap[$pestana] = [];
         if (!isset($subidosMap[$pestana][$clave]))
             $subidosMap[$pestana][$clave] = [];
+
         $subidosMap[$pestana][$clave][] = $archivo;
     }
 
-    // 4. Construir la estructura final agrupada por pestaña
+    // 4. Construir la estructura final recorriendo la configuración
     $expediente = [];
 
-    // Agrupar tipos por pestaña
     foreach ($tiposConfig as $tipo) {
         $p = $tipo['pestaña'];
+        $id = $tipo['id'];
+
+        // Buscar archivos subidos para este tipo
+        $subidos = isset($subidosMap[$p][$id]) ? $subidosMap[$p][$id] : [];
+        if (isset($subidosMap[$p][$id]))
+            unset($subidosMap[$p][$id]);
+
+        // FILTRO: si no es obligatorio y no tiene archivos, NO LO ENLISTAMOS
+        if (!$tipo['es_obligatorio'] && empty($subidos)) {
+            continue;
+        }
+
         if (!isset($expediente[$p])) {
             $expediente[$p] = [
                 'nombre' => obtenerNombrePestaña($p),
                 'documentos' => [],
                 'stats' => ['total_obligatorios' => 0, 'subidos_obligatorios' => 0, 'porcentaje' => 100]
             ];
-        }
-
-        $tipoClave = $tipo['nombre_clave'];
-        $idTipo = $tipo['id'];
-
-        $subidos = [];
-        // Buscar por ID primero, luego por nombre_clave (compatibilidad)
-        if (isset($subidosMap[$p][$idTipo])) {
-            $subidos = $subidosMap[$p][$idTipo];
-            unset($subidosMap[$p][$idTipo]); // Marcamos como procesado
-        } elseif (isset($subidosMap[$p][$tipoClave])) {
-            $subidos = $subidosMap[$p][$tipoClave];
-            unset($subidosMap[$p][$tipoClave]); // Marcamos como procesado
         }
 
         if ($tipo['es_obligatorio']) {
@@ -3304,7 +3313,7 @@ function obtenerExpedienteCompletoConFaltantes($codOperario)
 
         $expediente[$p]['documentos'][] = [
             'tipo' => 'configurado',
-            'id_tipo' => $idTipo,
+            'id_tipo' => $id,
             'nombre' => $tipo['nombre_descriptivo'],
             'obligatorio' => $tipo['es_obligatorio'],
             'tiene_vencimiento' => $tipo['tiene_vencimiento'],
@@ -3312,7 +3321,7 @@ function obtenerExpedienteCompletoConFaltantes($codOperario)
         ];
     }
 
-    // 5. Agregar archivos que no tienen un tipo configurado (huérfanos o personalizados)
+    // 5. Agregar archivos que quedaron en el mapa (legacy o sin ID de tipo configurado)
     foreach ($subidosMap as $p => $tiposHuerfanos) {
         if (!isset($expediente[$p])) {
             $expediente[$p] = [
@@ -3321,11 +3330,12 @@ function obtenerExpedienteCompletoConFaltantes($codOperario)
                 'stats' => ['total_obligatorios' => 0, 'subidos_obligatorios' => 0, 'porcentaje' => 100]
             ];
         }
+
         foreach ($tiposHuerfanos as $clave => $archivos) {
             $expediente[$p]['documentos'][] = [
-                'tipo' => 'personalizado',
+                'tipo' => 'otro',
                 'id_tipo' => null,
-                'nombre' => $clave,
+                'nombre' => $clave === 'sin_tipo' ? 'Archivo sin tipo clasificado' : $clave,
                 'obligatorio' => 0,
                 'tiene_vencimiento' => 0,
                 'archivos' => $archivos
@@ -3333,11 +3343,11 @@ function obtenerExpedienteCompletoConFaltantes($codOperario)
         }
     }
 
-    // 6. Calcular porcentajes finales
-    foreach ($expediente as $p => &$info) {
-        if ($info['stats']['total_obligatorios'] > 0) {
-            $info['stats']['porcentaje'] = round(($info['stats']['subidos_obligatorios'] / $info['stats']['total_obligatorios']) * 100);
-        }
+    // Recalcular porcentajes finales por pestaña
+    foreach ($expediente as &$pestana) {
+        $total = $pestana['stats']['total_obligatorios'];
+        $subidos = $pestana['stats']['subidos_obligatorios'];
+        $pestana['stats']['porcentaje'] = $total > 0 ? round(($subidos / $total) * 100) : 100;
     }
 
     return $expediente;
