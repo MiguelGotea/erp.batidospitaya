@@ -65,7 +65,6 @@
             <?php else: ?>
                 <input type="hidden" name="accion_contrato" value="guardar">
                 <input type="hidden" name="id_contrato" value="<?= $contratoActual['CodContrato'] ?>">
-                <h3 style="color: #0E544C; margin-bottom: 15px;">Editar Contrato Actual</h3>
 
                 <!-- Campos ocultos para selects deshabilitados (para que viajen en el POST) -->
                 <?php if (!$puedeEditarTodo): ?>
@@ -249,13 +248,9 @@
                                 </th>
                                 <th style="padding: 10px; text-align: left;">Inicio</th>
                                 <th style="padding: 10px; text-align: left;">Fin</th>
-                                <th style="padding: 10px; text-align: left;">Tiempo Restante</th>
-                                <th style="padding: 10px; text-align: left;">Duración</th>
                                 <th style="padding: 10px; text-align: left;">Estado</th>
                                 <th style="padding: 10px; text-align: left;">Fecha Salida</th>
                                 <th style="padding: 10px; text-align: left;">Fecha Liquidación</th>
-                                <th style="padding: 10px; text-align: center;">% Docs Obligatorios
-                                </th>
                                 <th style="padding: 10px; text-align: center;"></th>
                             </tr>
                         </thead>
@@ -280,26 +275,6 @@
                                 // Obtener categoría del contrato desde CategoriasOperarios
                                 $categoriaContrato = obtenerCategoriaPorContrato($contrato['CodContrato']);
 
-                                // Calcular duración
-                                $inicio = new DateTime($contrato['inicio_contrato']);
-
-                                // Para la duración, usar fecha_salida si existe, sino fecha fin, sino fecha actual
-                                if ($estaFinalizado && !empty($contrato['fecha_salida'])) {
-                                    $fin = new DateTime($contrato['fecha_salida']);
-                                } elseif (!empty($contrato['fin_contrato']) && $contrato['fin_contrato'] != '0000-00-00') {
-                                    $fin = new DateTime($contrato['fin_contrato']);
-                                } else {
-                                    $fin = new DateTime(); // Fecha actual para contratos activos
-                                }
-
-                                $intervalo = $inicio->diff($fin);
-                                $duracion = $intervalo->format('%y años, %m meses, %d días');
-
-                                // Calcular tiempo restante usando tu función existente
-                                $tiempoRestante = calcularTiempoRestanteContrato(
-                                    $contrato['fin_contrato'],
-                                    $estaActivo
-                                );
                                 ?>
                                 <tr style="border-bottom: 1px solid #ddd; <?= $estiloFila ?>">
                                     <td style="padding: 10px;">
@@ -325,8 +300,6 @@
                                             date('d/m/Y', strtotime($contrato['fin_contrato'])) :
                                             '<span style="color: #28a745; font-style: italic;">Indefinido</span>' ?>
                                     </td>
-                                    <td style="padding: 10px;"><?= $tiempoRestante ?></td>
-                                    <td style="padding: 10px;"><?= $duracion ?></td>
                                     <td style="padding: 10px;"><?= $estado ?></td>
                                     <td style="padding: 10px;">
                                         <?= !empty($contrato['fecha_salida']) && $contrato['fecha_salida'] != '0000-00-00' ?
@@ -337,36 +310,6 @@
                                         <?= !empty($contrato['fecha_liquidacion']) && $contrato['fecha_liquidacion'] != '0000-00-00' ?
                                             date('d/m/Y', strtotime($contrato['fecha_liquidacion'])) :
                                             '<span style="color: #6c757d; font-style: italic;">No definida</span>' ?>
-                                    </td>
-                                    <td style="padding: 10px; text-align: center;">
-                                        <?php
-                                        $porcentajeDocs = calcularPorcentajeDocumentosObligatoriosContrato($codOperario, $contrato['CodContrato']);
-                                        $porcentaje = $porcentajeDocs['porcentaje'];
-                                        $completados = $porcentajeDocs['completados'];
-                                        $total = $porcentajeDocs['total'];
-
-                                        // Determinar color según porcentaje
-                                        $color = '#dc3545'; // Rojo por defecto
-                                        if ($porcentaje == 100) {
-                                            $color = '#28a745'; // Verde
-                                        } elseif ($porcentaje >= 50) {
-                                            $color = '#ffc107'; // Amarillo
-                                        }
-                                        ?>
-                                        <div style="display: flex; align-items: center; justify-content: center; gap: 5px;">
-                                            <div
-                                                style="width: 60px; height: 20px; background: #e9ecef; border-radius: 10px; overflow: hidden; position: relative;">
-                                                <div
-                                                    style="width: <?= $porcentaje ?>%; height: 100%; background: <?= $color ?>; transition: width 0.3s;">
-                                                </div>
-                                            </div>
-                                            <span style="font-weight: bold; color: <?= $color ?>; font-size: 0.9em;">
-                                                <?= $porcentaje ?>%
-                                            </span>
-                                        </div>
-                                        <small style="color: #6c757d; font-size: 0.8em;">
-                                            (<?= $completados ?>/<?= $total ?>)
-                                        </small>
                                     </td>
                                     <td style="padding: 10px; text-align: center;">
                                         <?php if (!empty($contrato['foto'])): ?>
