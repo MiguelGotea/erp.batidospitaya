@@ -525,6 +525,11 @@ function actualizarColaborador($codOperario, $datos, $pestaña)
                     $valoresContrato[] = $datos['numero_planilla'];
                 }
 
+                if (isset($datos['numero_nomina'])) {
+                    $camposContrato[] = 'numero_nomina = ?';
+                    $valoresContrato[] = $datos['numero_nomina'];
+                }
+
                 if (isset($datos['hospital_inss'])) {
                     $camposContrato[] = 'hospital_inss = ?';
                     $valoresContrato[] = $datos['hospital_inss'];

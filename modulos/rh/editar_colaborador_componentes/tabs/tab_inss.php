@@ -66,16 +66,24 @@
                         </div>
 
                         <div class="form-col">
-                            <div class="form-group">
-                                <label for="numero_planilla">Registro Patronal *</label>
-                                <select id="numero_planilla" name="numero_planilla" class="form-control">
-                                    <option value="">Seleccionar planilla...</option>
-                                    <?php foreach ($planillasPatronales as $planilla): ?>
-                                        <option value="<?= $planilla['CodPlanilla'] ?>" <?= ($contratoConINSS && $contratoConINSS['numero_planilla'] == $planilla['CodPlanilla']) ? 'selected' : '' ?>>
-                                            <?= htmlspecialchars($planilla['nombre_planilla']) ?>
-                                        </option>
-                                    <?php endforeach; ?>
-                                </select>
+                            <div style="display: flex; gap: 10px;">
+                                <div class="form-group" style="flex: 1;">
+                                    <label for="numero_planilla">Registro Patronal *</label>
+                                    <select id="numero_planilla" name="numero_planilla" class="form-control">
+                                        <option value="">Seleccionar planilla...</option>
+                                        <?php foreach ($planillasPatronales as $planilla): ?>
+                                            <option value="<?= $planilla['CodPlanilla'] ?>" <?= ($contratoConINSS && $contratoConINSS['numero_planilla'] == $planilla['CodPlanilla']) ? 'selected' : '' ?>>
+                                                <?= htmlspecialchars($planilla['nombre_planilla']) ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+
+                                <div class="form-group" style="flex: 1;">
+                                    <label for="numero_nomina">Número de Nómina</label>
+                                    <input type="number" id="numero_nomina" name="numero_nomina" class="form-control"
+                                        value="<?= $contratoConINSS ? htmlspecialchars($contratoConINSS['numero_nomina'] ?? '') : '' ?>">
+                                </div>
                             </div>
 
                             <div class="form-group">
@@ -111,16 +119,24 @@
                 </div>
 
                 <div class="form-col">
-                    <div class="form-group">
-                        <label for="numero_planilla">Registro Patronal *</label>
-                        <select id="numero_planilla" name="numero_planilla" class="form-control">
-                            <option value="">Seleccionar planilla...</option>
-                            <?php foreach ($planillasPatronales as $planilla): ?>
-                                <option value="<?= $planilla['CodPlanilla'] ?>" <?= ($contratoConINSS && $contratoConINSS['numero_planilla'] == $planilla['CodPlanilla']) ? 'selected' : '' ?>>
-                                    <?= htmlspecialchars($planilla['nombre_planilla']) ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
+                    <div style="display: flex; gap: 10px;">
+                        <div class="form-group" style="flex: 1;">
+                            <label for="numero_planilla">Registro Patronal *</label>
+                            <select id="numero_planilla" name="numero_planilla" class="form-control">
+                                <option value="">Seleccionar planilla...</option>
+                                <?php foreach ($planillasPatronales as $planilla): ?>
+                                    <option value="<?= $planilla['CodPlanilla'] ?>" <?= ($contratoConINSS && $contratoConINSS['numero_planilla'] == $planilla['CodPlanilla']) ? 'selected' : '' ?>>
+                                        <?= htmlspecialchars($planilla['nombre_planilla']) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+
+                        <div class="form-group" style="flex: 1;">
+                            <label for="numero_nomina">Número de Nómina</label>
+                            <input type="number" id="numero_nomina" name="numero_nomina" class="form-control"
+                                value="<?= $contratoConINSS ? htmlspecialchars($contratoConINSS['numero_nomina'] ?? '') : '' ?>">
+                        </div>
                     </div>
 
                     <div class="form-group">
