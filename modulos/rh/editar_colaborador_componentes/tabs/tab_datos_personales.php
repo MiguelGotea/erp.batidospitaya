@@ -128,7 +128,7 @@
                                         <h3 style="color: #0E544C; margin: 0;">Cuentas Bancarias</h3>
                                         <button type="button" class="btn-submit" onclick="abrirModalCuenta()"
                                             style="margin: 0;">
-                                            <i class="fas fa-plus"></i> Agregar
+                                            <i class="fas fa-plus"></i> Agregar Cuenta Bancaria
                                         </button>
                                     </div>
 
