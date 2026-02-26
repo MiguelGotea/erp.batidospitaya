@@ -34,6 +34,22 @@ html {
     border-right: none;
 }
 
+.col-tienda {
+    white-space: normal !important;
+    min-width: 100px;
+    max-width: 120px;
+    text-align: center;
+    line-height: 1.2;
+}
+
+.colaboradores-table tbody td:nth-child(6),
+.colaboradores-table tbody td:nth-child(7) {
+    white-space: normal;
+    word-wrap: break-word;
+    max-width: 120px;
+    text-align: center;
+}
+
 .colaboradores-table tbody tr {
     border-bottom: 1px solid #e9ecef;
     transition: background-color 0.2s;

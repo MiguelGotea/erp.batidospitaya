@@ -87,12 +87,12 @@ if (!tienePermiso('gestion_colaboradores', 'vista', $cargoOperario)) {
                                         </div>
                                     </div>
                                 </th>
-                                <th data-column="nombre_sucursal" data-type="list">
-                                    Tienda/Área Contrato
+                                <th data-column="nombre_sucursal" data-type="list" class="col-tienda">
+                                    Tienda/Área<br>Contrato
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
-                                <th data-column="sucursal_actual_nombre" data-type="list">
-                                    Tienda/Area Actual
+                                <th data-column="sucursal_actual_nombre" data-type="list" class="col-tienda">
+                                    Tienda/Area<br>Actual
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
                                 <th data-column="fecha_inicio_ultimo_contrato" data-type="daterange">

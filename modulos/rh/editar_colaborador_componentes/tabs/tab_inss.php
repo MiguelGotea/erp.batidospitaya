@@ -67,7 +67,7 @@
 
                         <div class="form-col">
                             <div class="form-group">
-                                <label for="numero_planilla">Número de Planilla *</label>
+                                <label for="numero_planilla">Registro Patronal *</label>
                                 <select id="numero_planilla" name="numero_planilla" class="form-control">
                                     <option value="">Seleccionar planilla...</option>
                                     <?php foreach ($planillasPatronales as $planilla): ?>
@@ -112,7 +112,7 @@
 
                 <div class="form-col">
                     <div class="form-group">
-                        <label for="numero_planilla">Número de Planilla *</label>
+                        <label for="numero_planilla">Registro Patronal *</label>
                         <select id="numero_planilla" name="numero_planilla" class="form-control">
                             <option value="">Seleccionar planilla...</option>
                             <?php foreach ($planillasPatronales as $planilla): ?>
