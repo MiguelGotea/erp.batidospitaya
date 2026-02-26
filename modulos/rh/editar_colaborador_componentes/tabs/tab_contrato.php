@@ -140,11 +140,8 @@
                     <?php if (!empty($contratoActual['cod_tipo_contrato'])): ?>
                         <input type="hidden" name="cod_tipo_contrato" value="<?= $contratoActual['cod_tipo_contrato'] ?>">
                     <?php endif; ?>
-                    <?php if (!empty($contratoActual['frecuencia_pago'])): ?>
-                        <input type="hidden" name="frecuencia_pago" value="<?= $contratoActual['frecuencia_pago'] ?>">
-                    <?php endif; ?>
                 <?php endif; ?>
-            <?php endif; ?>
+<?php endif; ?>
 
             <div class="form-row">
                 <div class="form-col">
@@ -285,13 +282,11 @@
                             <?php endforeach; ?>
                         </select>
                     </div>
-                    <div class="form-group">
+                    <div class="form-group" style="display: none;">
                         <label for="frecuencia_pago">Frecuencia de Pago *</label>
-                        <select id="frecuencia_pago" name="frecuencia_pago" class="form-control" required <?= $bloquearSelect($contratoActual['frecuencia_pago'] ?? '') ?>>
-                            <option value="quincenal" <?= (!$mostrarFormularioNuevoContrato && $contratoActual && ($contratoActual['frecuencia_pago'] ?? 'quincenal') == 'quincenal') ? 'selected' : '' ?>>
-                                Quincenal
-                            </option>
-                            <option value="mensual" <?= (!$mostrarFormularioNuevoContrato && $contratoActual && ($contratoActual['frecuencia_pago'] ?? '') == 'mensual') ? 'selected' : '' ?>>Mensual</option>
+                        <select id="frecuencia_pago" name="frecuencia_pago" class="form-control" required>
+                            <option value="quincenal" selected>Quincenal</option>
+                            <option value="mensual">Mensual</option>
                         </select>
                     </div>
 
