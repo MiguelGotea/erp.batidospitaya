@@ -82,6 +82,7 @@
 <?php endif; ?>
 
             <div class="form-row">
+                <!-- Columna Izquierda: Información Administrativa -->
                 <div class="form-col">
                     <div class="form-group">
                         <label for="codigo_manual_contrato">Código de Contrato *</label>
@@ -97,20 +98,6 @@
                             style="display: none; font-size: 12px; margin-top: 5px;">
                             ✅ Código disponible
                         </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="cod_sucursal_contrato">Sucursal *</label>
-                        <select id="sucursal_contrato" name="sucursal" class="form-control" required <?= $bloquearSelect($contratoActual['cod_sucursal_contrato'] ?? '') ?>>
-                            <option value="">Seleccionar sucursal...</option>
-                            <?php
-                            $sucursales = obtenerTodasSucursales();
-                            foreach ($sucursales as $sucursal): ?>
-                                <option value="<?= $sucursal['codigo'] ?>" <?= (!$mostrarFormularioNuevoContrato && $contratoActual && $contratoActual['cod_sucursal_contrato'] == $sucursal['codigo']) ? 'selected' : '' ?>>
-                                    <?= htmlspecialchars($sucursal['nombre']) ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
                     </div>
 
                     <div class="form-group">
@@ -138,38 +125,6 @@
                         </select>
                     </div>
 
-                    <div class="form-group" style="display: none;">
-                        <label for="id_categoria">Categoría</label>
-                        <select id="id_categoria" name="id_categoria" class="form-control">
-                            <option value="">Seleccionar categoría...</option>
-                            <?php
-                            $categorias = obtenerTodasCategorias();
-                            foreach ($categorias as $categoria): ?>
-                                <option value="<?= $categoria['idCategoria'] ?>" <?= (!$mostrarFormularioNuevoContrato && $categoriaActual && $categoriaActual['idCategoria'] == $categoria['idCategoria']) ? 'selected' : '' ?>>
-                                    <?= htmlspecialchars($categoria['NombreCategoria']) ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="ciudad">Departamento/Ciudad de Contrato *</label>
-                        <input type="text" id="ciudad" name="ciudad" class="form-control"
-                            value="<?= (!$mostrarFormularioNuevoContrato && $contratoActual) ? htmlspecialchars($contratoActual['ciudad']) : '' ?>"
-                            <?= $bloquearCampo($contratoActual['ciudad'] ?? '') ?>
-                            required>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="inicio_contrato">Fecha de Inicio *</label>
-                        <input type="date" id="inicio_contrato" name="inicio_contrato" class="form-control"
-                            value="<?= (!$mostrarFormularioNuevoContrato && $contratoActual) ? $contratoActual['inicio_contrato'] : date('Y-m-d') ?>"
-                            <?= $bloquearCampo($contratoActual['inicio_contrato'] ?? '') ?>
-                            required>
-                    </div>
-                </div>
-
-                <div class="form-col">
                     <div class="form-group">
                         <label for="cod_tipo_contrato">Tipo de Contrato *</label>
                         <select id="cod_tipo_contrato" name="cod_tipo_contrato" class="form-control" required <?= $bloquearSelect($contratoActual['cod_tipo_contrato'] ?? '') ?>>
@@ -184,22 +139,21 @@
                         </select>
                     </div>
 
-                    <div class="form-col">
-                        <div class="form-group">
-                            <label for="monto_salario">Salario Básico *</label>
-                            <input type="number" id="monto_salario" name="monto_salario" class="form-control" step="0.01"
-                                min="0"
-                                value="<?= (!$mostrarFormularioNuevoContrato && $contratoActual) ? ($contratoActual['salario_inicial'] ?? '') : '' ?>"
-                                <?= $bloquearCampo($contratoActual['salario_inicial'] ?? '') ?>
-                                required>
-                        </div>
-
-
+                    <div class="form-group">
+                        <label for="monto_salario">Salario Básico *</label>
+                        <input type="number" id="monto_salario" name="monto_salario" class="form-control" step="0.01"
+                            min="0"
+                            value="<?= (!$mostrarFormularioNuevoContrato && $contratoActual) ? ($contratoActual['salario_inicial'] ?? '') : '' ?>"
+                            <?= $bloquearCampo($contratoActual['salario_inicial'] ?? '') ?>
+                            required>
                     </div>
+                </div>
 
-                    <div class="form-group" style="display:none;">
-                        <label for="sucursal">Tienda / Área *</label>
-                        <select id="sucursal_area" name="sucursal_area_redundante" class="form-control" required>
+                <!-- Columna Derecha: Ubicación y Fechas -->
+                <div class="form-col">
+                    <div class="form-group">
+                        <label for="sucursal_contrato">Area / Tienda *</label>
+                        <select id="sucursal_contrato" name="sucursal" class="form-control" required <?= $bloquearSelect($contratoActual['cod_sucursal_contrato'] ?? '') ?>>
                             <option value="">Seleccionar sucursal...</option>
                             <?php
                             $sucursales = obtenerTodasSucursales();
@@ -210,22 +164,27 @@
                             <?php endforeach; ?>
                         </select>
                     </div>
-                    <div class="form-group" style="display: none;">
-                        <label for="frecuencia_pago">Frecuencia de Pago *</label>
-                        <select id="frecuencia_pago" name="frecuencia_pago" class="form-control" required>
-                            <option value="quincenal" selected>Quincenal</option>
-                            <option value="mensual">Mensual</option>
+
+                    <div class="form-group">
+                        <label for="ciudad">Departamento *</label>
+                        <select id="ciudad" name="ciudad" class="form-control" required <?= $bloquearSelect($contratoActual['ciudad'] ?? '') ?>>
+                            <option value="">Seleccionar departamento...</option>
+                            <?php
+                            $departamentos = obtenerTodosDepartamentos();
+                            foreach ($departamentos as $dep): ?>
+                                <option value="<?= htmlspecialchars($dep['nombre']) ?>" <?= (!$mostrarFormularioNuevoContrato && $contratoActual && $contratoActual['ciudad'] == $dep['nombre']) ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars($dep['nombre']) ?>
+                                </option>
+                            <?php endforeach; ?>
                         </select>
                     </div>
 
-                    <div class="form-group" style="display: none;">
-                        <label for="foto_contrato">Foto del Contrato</label>
-                        <input type="file" id="foto_contrato" name="foto_contrato" class="form-control"
-                            accept="image/*,.pdf">
-                        <?php if (!$mostrarFormularioNuevoContrato && $contratoActual && !empty($contratoActual['foto'])): ?>
-                            <small style="color: green;">Ya existe un archivo subido:
-                                <?= htmlspecialchars(basename($contratoActual['foto'])) ?></small>
-                        <?php endif; ?>
+                    <div class="form-group">
+                        <label for="inicio_contrato">Fecha de Inicio *</label>
+                        <input type="date" id="inicio_contrato" name="inicio_contrato" class="form-control"
+                            value="<?= (!$mostrarFormularioNuevoContrato && $contratoActual) ? $contratoActual['inicio_contrato'] : date('Y-m-d') ?>"
+                            <?= $bloquearCampo($contratoActual['inicio_contrato'] ?? '') ?>
+                            required>
                     </div>
 
                     <div class="form-group" id="grupo_fecha_fin_contrato">
