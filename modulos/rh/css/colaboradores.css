@@ -575,66 +575,131 @@ html {
     background-color: #dc3545;
 }
 
-/* Modales (Traído de editar_colaborador.css) */
+/* Modales Modernizados */
 .modal-backdrop {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: rgba(15, 23, 42, 0.6);
+    /* Color pizarra oscuro semitransparente */
+    backdrop-filter: blur(4px);
+    /* Efecto desdibujado moderno */
     z-index: 2000;
     display: none;
     align-items: center;
     justify-content: center;
+    transition: all 0.3s ease;
 }
 
 .modal-content {
-    background: white;
-    padding: 25px;
-    border-radius: 12px;
+    background: #ffffff;
+    padding: 30px;
+    border-radius: 16px;
+    /* Bordes más redondeados */
     width: 95%;
-    max-width: 550px;
+    max-width: 500px;
     max-height: 90vh;
     overflow-y: auto;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
     position: relative;
-    border: none;
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    transform: translateY(0);
+    animation: modalSlideUp 0.3s ease-out;
+}
+
+@keyframes modalSlideUp {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
 }
 
 .modal-content h3 {
     margin-top: 0;
-    font-weight: 700;
-    font-size: 1.4rem;
-    border-bottom: 2px solid #f0f0f0;
-    padding-bottom: 12px;
-    margin-bottom: 20px;
+    font-weight: 800;
+    font-size: 1.5rem;
+    color: #1e293b;
+    border-bottom: 2px solid #f1f5f9;
+    padding-bottom: 15px;
+    margin-bottom: 25px;
+    letter-spacing: -0.025em;
 }
 
-/* Botón Terminar Compacto */
+/* Botones Modernos para Modales */
+.btn-modern {
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    outline: none;
+}
+
+.btn-modern-secondary {
+    background-color: #f1f5f9;
+    color: #475569;
+}
+
+.btn-modern-secondary:hover {
+    background-color: #e2e8f0;
+    color: #1e293b;
+    transform: translateY(-1px);
+}
+
+.btn-modern-danger {
+    background-color: #ef4444;
+    color: white;
+    box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.2);
+}
+
+.btn-modern-danger:hover {
+    background-color: #dc2626;
+    box-shadow: 0 10px 15px -3px rgba(239, 68, 68, 0.3);
+    transform: translateY(-1px);
+}
+
+.btn-modern:active {
+    transform: translateY(0);
+}
+
+/* Botón Terminar Compacto (Lista) */
 .btn-terminar-compact {
     background-color: transparent !important;
-    color: #dc3545 !important;
-    border: 1px solid #dc3545 !important;
-    border-radius: 4px !important;
-    padding: 2px 8px !important;
-    font-size: 10px !important;
-    font-weight: 600 !important;
-    transition: all 0.2s !important;
+    color: #ef4444 !important;
+    border: 1px solid #fee2e2 !important;
+    border-radius: 6px !important;
+    padding: 4px 10px !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    transition: all 0.2s ease !important;
     cursor: pointer !important;
     display: inline-flex !important;
     align-items: center !important;
-    gap: 4px !important;
-    margin-top: 5px !important;
+    gap: 5px !important;
+    margin-top: 6px !important;
     white-space: nowrap !important;
     text-decoration: none !important;
 }
 
 .btn-terminar-compact:hover {
-    background-color: #dc3545 !important;
-    color: white !important;
+    background-color: #fef2f2 !important;
+    border-color: #fecaca !important;
+    color: #dc2626 !important;
 }
 
 .btn-terminar-compact i {
-    font-size: 9px !important;
+    font-size: 10px !important;
 }

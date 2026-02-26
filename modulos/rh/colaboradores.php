@@ -151,12 +151,11 @@ if (!tienePermiso('gestion_colaboradores', 'vista', $cargoOperario)) {
                         style="background-color: #f8f9fa;">
                 </div>
 
-                <!-- Fecha Fin de Contrato - SOLO LECTURA -->
-                <div class="form-group mb-3">
-                    <label for="fecha_fin_contrato" class="form-label fw-bold">Fecha Fin de Contrato (solo lectura)</label>
-                    <input type="date" id="fecha_fin_contrato" name="fecha_fin_contrato" class="form-control"
-                        readonly style="background-color: #f8f9fa;">
-                    <small style="color: #6c757d;">Esta fecha no se puede modificar al terminar el contrato</small>
+                <!-- Fecha Fin de Contrato - OCULTO -->
+                <div class="form-group mb-3" style="display: none;">
+                    <label for="fecha_fin_contrato" class="form-label fw-bold">Fecha Fin de Contrato</label>
+                    <input type="date" id="fecha_fin_contrato" name="fecha_fin_contrato" class="form-control" readonly
+                        style="background-color: #f8f9fa;">
                 </div>
 
                 <div class="form-group mb-3">
@@ -165,10 +164,10 @@ if (!tienePermiso('gestion_colaboradores', 'vista', $cargoOperario)) {
                         value="<?php echo date('Y-m-d'); ?>" required>
                 </div>
 
-                <div class="form-group mb-3">
-                    <label for="fecha_liquidacion" class="form-label fw-bold">Fecha de Liquidación (opcional - puede asignarse después)</label>
+                <!-- Fecha de Liquidación - OCULTO -->
+                <div class="form-group mb-3" style="display: none;">
+                    <label for="fecha_liquidacion" class="form-label fw-bold">Fecha de Liquidación</label>
                     <input type="date" id="fecha_liquidacion" name="fecha_liquidacion" class="form-control">
-                    <small style="color: #6c757d; display:none;">Fecha cuando se realizará el pago de liquidación</small>
                 </div>
 
                 <div class="form-group mb-3">
@@ -201,7 +200,8 @@ if (!tienePermiso('gestion_colaboradores', 'vista', $cargoOperario)) {
                 </div>
 
                 <div class="form-group mb-3" id="grupoPersonaHerramientas" style="display: none;">
-                    <label for="persona_recibe_herramientas" class="form-label fw-bold">Persona que Recibe Herramientas</label>
+                    <label for="persona_recibe_herramientas" class="form-label fw-bold">Persona que Recibe
+                        Herramientas</label>
                     <input type="text" id="persona_recibe_herramientas" name="persona_recibe_herramientas"
                         class="form-control">
                 </div>
@@ -219,10 +219,13 @@ if (!tienePermiso('gestion_colaboradores', 'vista', $cargoOperario)) {
                     <small style="color: #6c757d;">Monto en córdobas (opcional)</small>
                 </div>
 
-                <div style="display: flex; justify-content: space-between; margin-top: 20px;">
-                    <button type="button" class="btn-submit" onclick="cerrarModalTerminacion()"
-                        style="background-color: #6c757d;">Cancelar</button>
-                    <button type="submit" class="btn-submit" style="background-color: #dc3545;">Confirmar solo Terminación de Contrato</button>
+                <div style="display: flex; justify-content: space-between; margin-top: 30px;">
+                    <button type="button" class="btn-modern btn-modern-secondary" onclick="cerrarModalTerminacion()">
+                        <i class="fas fa-times"></i> Cancelar
+                    </button>
+                    <button type="submit" class="btn-modern btn-modern-danger">
+                        <i class="fas fa-check"></i> Confirmar Terminación
+                    </button>
                 </div>
             </form>
         </div>
