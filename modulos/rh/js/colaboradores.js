@@ -80,7 +80,7 @@ function renderizarTabla(datos) {
     tbody.empty();
 
     if (datos.length === 0) {
-        tbody.append('<tr><td colspan="13" class="text-center py-4">No se encontraron registros</td></tr>');
+        tbody.append('<tr><td colspan="12" class="text-center py-4">No se encontraron registros</td></tr>');
         return;
     }
 
@@ -151,8 +151,14 @@ function renderizarTabla(datos) {
             </td>
         `);
 
+        // Tienda/Área Contrato
+        tr.append(`<td>${row.nombre_sucursal || '-'}</td>`);
+
         // Tienda/Área Actual
         tr.append(`<td>${row.sucursal_actual_nombre || '-'}</td>`);
+
+        // Inicio Contrato
+        tr.append(`<td>${formatearFecha(row.fecha_inicio_ultimo_contrato)}</td>`);
 
         // Último Día Marcado
         tr.append(`<td>${formatearFecha(row.ultima_fecha_laborada)}</td>`);
