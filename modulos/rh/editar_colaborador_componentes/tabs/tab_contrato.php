@@ -2,36 +2,27 @@
 <?php if (tienePermiso('editar_colaborador', 'edicion', $cargoId)): ?>
     <div id="contrato" class="tab-pane <?= $pestaña_activa == 'contrato' ? 'active' : '' ?>">
         <!-- Sección de Documentos Obligatorios Faltantes -->
-        <div style="margin: 20px 0; padding: 15px; background: #fff3cd; border-radius: 8px; border: 1px solid #ffeaa7;">
-            <h4 style="color: #856404; margin-bottom: 15px;">
-                <i class="fas fa-exclamation-triangle"></i> Documentos Obligatorios Faltantes -
-                <?= obtenerNombrePestaña($pestaña_activa) ?>
-            </h4>
-
-            <?php
-            $documentosFaltantesPestana = obtenerDocumentosFaltantesPestana($codOperario, $pestaña_activa);
-            ?>
-
-            <?php if (!empty($documentosFaltantesPestana)): ?>
+        <?php
+        $documentosFaltantesPestana = obtenerDocumentosFaltantesPestana($codOperario, $pestaña_activa);
+        if (!empty($documentosFaltantesPestana)): ?>
+            <div style="margin: 20px 0; padding: 15px; background: #fff3cd; border-radius: 8px; border: 1px solid #ffeaa7;">
+                <h4 style="color: #856404; margin-bottom: 15px;">
+                    <i class="fas fa-exclamation-triangle"></i> Documentos Obligatorios Faltantes - <?= obtenerNombrePestaña($pestaña_activa) ?>
+                </h4>
                 <ul style="color: #856404; margin: 0; padding-left: 20px;">
                     <?php foreach ($documentosFaltantesPestana as $documento): ?>
                         <li><?= htmlspecialchars($documento) ?></li>
                     <?php endforeach; ?>
                 </ul>
-
                 <p style="color: #856404; margin: 15px 0 0 0; font-style: italic;">
-                    <i class="fas fa-info-circle"></i> Estos documentos deben ser subidos para
-                    completar la
-                    información.
+                    <i class="fas fa-info-circle"></i> Estos documentos deben ser subidos para completar la información.
                 </p>
-            <?php else: ?>
-                <div style="color: #155724; background: #d4edda; padding: 10px; border-radius: 4px;">
-                    <i class="fas fa-check-circle"></i> Todos los documentos obligatorios están
-                    completos para
-                    esta pestaña.
-                </div>
-            <?php endif; ?>
-        </div>
+            </div>
+        <?php else: ?>
+            <div style="margin: 20px 0; padding: 15px; background: #d4edda; border-radius: 8px; border: 1px solid #c3e6cb; color: #155724;">
+                <i class="fas fa-check-circle"></i> Todos los documentos obligatorios están completos para <?= obtenerNombrePestaña($pestaña_activa) ?>.
+            </div>
+        <?php endif; ?>
 
         <?php
         // Obtener datos del contrato actual
