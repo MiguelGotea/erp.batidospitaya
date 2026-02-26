@@ -92,7 +92,7 @@ try {
         }
     }
 
-    // Filtro de sucursal (lista)
+    // Filtro de sucursal contrato (lista)
     if (isset($filtros['nombre_sucursal']) && is_array($filtros['nombre_sucursal']) && count($filtros['nombre_sucursal']) > 0) {
         $placeholders = [];
         foreach ($filtros['nombre_sucursal'] as $idx => $valor) {
@@ -101,6 +101,28 @@ try {
             $params[$key] = $valor;
         }
         $where[] = "COALESCE(s.nombre, 'Sin tienda') IN (" . implode(',', $placeholders) . ")";
+    }
+
+    // Filtro de sucursal actual (lista)
+    if (isset($filtros['sucursal_actual_nombre']) && is_array($filtros['sucursal_actual_nombre']) && count($filtros['sucursal_actual_nombre']) > 0) {
+        $placeholders = [];
+        foreach ($filtros['sucursal_actual_nombre'] as $idx => $valor) {
+            $key = ":suc_act_$idx";
+            $placeholders[] = $key;
+            $params[$key] = $valor;
+        }
+
+        $subquerySucursalActual = "
+            (SELECT s2.nombre 
+             FROM AsignacionNivelesCargos anc2
+             JOIN sucursales s2 ON anc2.Sucursal = s2.codigo
+             WHERE anc2.CodOperario = o.CodOperario 
+             AND (anc2.Fin IS NULL OR anc2.Fin >= CURDATE())
+             ORDER BY anc2.Fecha DESC, anc2.CodAsignacionNivelesCargos DESC
+             LIMIT 1)
+        ";
+
+        $where[] = "COALESCE($subquerySucursalActual, 'Sin tienda') IN (" . implode(',', $placeholders) . ")";
     }
 
     // Filtro de fecha inicio contrato (rango)
@@ -250,6 +272,17 @@ try {
                 $orderClause = "ORDER BY $subqueryCargo $direccion";
             } elseif ($orden['columna'] === 'nombre_sucursal') {
                 $orderClause = "ORDER BY s.nombre $direccion";
+            } elseif ($orden['columna'] === 'sucursal_actual_nombre') {
+                $subquerySucursalActual = "
+                    (SELECT s2.nombre 
+                     FROM AsignacionNivelesCargos anc2
+                     JOIN sucursales s2 ON anc2.Sucursal = s2.codigo
+                     WHERE anc2.CodOperario = o.CodOperario 
+                     AND (anc2.Fin IS NULL OR anc2.Fin >= CURDATE())
+                     ORDER BY anc2.Fecha DESC, anc2.CodAsignacionNivelesCargos DESC
+                     LIMIT 1)
+                ";
+                $orderClause = "ORDER BY $subquerySucursalActual $direccion";
             } elseif ($orden['columna'] === 'fecha_inicio_ultimo_contrato') {
                 $orderClause = "ORDER BY uc.inicio_contrato $direccion";
             } elseif ($orden['columna'] === 'fecha_salida_ultimo') {
@@ -327,6 +360,16 @@ try {
                 'Sin cargo definido'
             ) as cargo_nombre,
             COALESCE(s.nombre, 'Sin tienda') as nombre_sucursal,
+            COALESCE(
+                (SELECT s2.nombre 
+                 FROM AsignacionNivelesCargos anc2
+                 JOIN sucursales s2 ON anc2.Sucursal = s2.codigo
+                 WHERE anc2.CodOperario = o.CodOperario 
+                 AND (anc2.Fin IS NULL OR anc2.Fin >= CURDATE())
+                 ORDER BY anc2.Fecha DESC, anc2.CodAsignacionNivelesCargos DESC
+                 LIMIT 1),
+                'Sin tienda'
+            ) as sucursal_actual_nombre,
             uc.inicio_contrato as fecha_inicio_ultimo_contrato,
             uc.fin_contrato as fecha_fin_ultimo_contrato,
             uc.fecha_salida as fecha_salida_ultimo,

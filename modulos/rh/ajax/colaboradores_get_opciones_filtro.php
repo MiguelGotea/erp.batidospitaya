@@ -54,7 +54,7 @@ try {
         }
     }
 
-    // Filtro de sucursal
+    // Filtro de sucursal contrato
     elseif ($columna === 'nombre_sucursal') {
         $sql = "SELECT DISTINCT 
                     COALESCE(s.nombre, 'Sin tienda') as nombre_sucursal
@@ -81,6 +81,38 @@ try {
             $opciones[] = [
                 'valor' => $row['nombre_sucursal'],
                 'texto' => $row['nombre_sucursal']
+            ];
+        }
+    }
+
+    // Filtro de sucursal actual
+    elseif ($columna === 'sucursal_actual_nombre') {
+        $sql = "SELECT DISTINCT 
+                    COALESCE(s.nombre, 'Sin tienda') as sucursal_actual
+                FROM Operarios o
+                LEFT JOIN (
+                    SELECT anc1.CodOperario, anc1.Sucursal
+                    FROM AsignacionNivelesCargos anc1
+                    WHERE anc1.CodAsignacionNivelesCargos = (
+                        SELECT CodAsignacionNivelesCargos 
+                        FROM AsignacionNivelesCargos anc2 
+                        WHERE anc2.CodOperario = anc1.CodOperario 
+                        AND (anc2.Fin IS NULL OR anc2.Fin >= CURDATE())
+                        ORDER BY anc2.Fecha DESC, anc2.CodAsignacionNivelesCargos DESC 
+                        LIMIT 1
+                    )
+                ) asignacion_actual ON asignacion_actual.CodOperario = o.CodOperario
+                LEFT JOIN sucursales s ON asignacion_actual.Sucursal = s.codigo
+                ORDER BY sucursal_actual";
+
+        $stmt = $conn->prepare($sql);
+        $stmt->execute();
+        $resultados = $stmt->fetchAll();
+
+        foreach ($resultados as $row) {
+            $opciones[] = [
+                'valor' => $row['sucursal_actual'],
+                'texto' => $row['sucursal_actual']
             ];
         }
     }
