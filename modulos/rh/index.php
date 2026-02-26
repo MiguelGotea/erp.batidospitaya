@@ -823,6 +823,14 @@ function obtenerFaltasPendientesRH()
         INNER JOIN SemanasSistema ss ON hso.id_semana_sistema = ss.id
         INNER JOIN sucursales s ON hso.cod_sucursal = s.codigo
         INNER JOIN Operarios o ON hso.cod_operario = o.CodOperario
+        LEFT JOIN Contratos uc ON uc.cod_operario = o.CodOperario 
+            AND uc.CodContrato = (
+                SELECT CodContrato 
+                FROM Contratos 
+                WHERE cod_operario = o.CodOperario
+                ORDER BY inicio_contrato DESC, CodContrato DESC
+                LIMIT 1
+            )
         WHERE h.fecha BETWEEN ? AND ?
         AND h.fecha BETWEEN ss.fecha_inicio AND ss.fecha_fin
         AND (
@@ -847,7 +855,7 @@ function obtenerFaltasPendientesRH()
             AND fm.fecha_falta = h.fecha
             AND fm.cod_sucursal = hso.cod_sucursal
         )
-        AND o.Operativo = 1
+        AND (uc.fecha_salida IS NULL OR uc.fecha_salida > CURDATE())
         AND EXISTS (
             SELECT 1 FROM AsignacionNivelesCargos anc
             WHERE anc.CodOperario = o.CodOperario
@@ -1011,7 +1019,15 @@ function obtenerAusenciasColaboradores()
         LEFT JOIN AsignacionNivelesCargos anc ON o.CodOperario = anc.CodOperario 
             AND (anc.Fin IS NULL OR anc.Fin >= CURDATE())
         LEFT JOIN sucursales s ON anc.Sucursal = s.codigo
-        WHERE o.Operativo = 1
+        LEFT JOIN Contratos uc ON uc.cod_operario = o.CodOperario 
+            AND uc.CodContrato = (
+                SELECT CodContrato 
+                FROM Contratos 
+                WHERE cod_operario = o.CodOperario
+                ORDER BY inicio_contrato DESC, CodContrato DESC
+                LIMIT 1
+            )
+        WHERE (uc.fecha_salida IS NULL OR uc.fecha_salida > CURDATE())
         AND o.CodOperario NOT IN (
             SELECT DISTINCT anc2.CodOperario 
             FROM AsignacionNivelesCargos anc2
@@ -1764,35 +1780,35 @@ function obtenerDetalleAusenciasColaboradoresModal()
 
                 <!-- NUEVO: Indicador de Ausencias Colaboradores (3+ días sin marcar con estado Activo/Otra.Tienda) -->
                 <?php if ($esAdmin || verificarAccesoCargo([13, 16, 39, 30, 37])): ?>
-                    <div class="indicator-container" onclick="mostrarModalAusenciasColaboradores()"
-                        style="cursor: pointer;">
-                        <div class="indicator-header">
-                            <div class="indicator-icon">
-                                <i class="fas fa-stopwatch"></i>
-                            </div>
-                        </div>
-
-                        <div class="indicator-count" id="ausenciasColabCount">
-                            <?= $totalAusenciasColaboradores ?>
-                        </div>
-                        <div class="indicator-info">
-                            <div class="indicator-titulo">
-                                Ausencias Colaboradores
+                        <div class="indicator-container" onclick="mostrarModalAusenciasColaboradores()"
+                            style="cursor: pointer;">
+                            <div class="indicator-header">
+                                <div class="indicator-icon">
+                                    <i class="fas fa-stopwatch"></i>
+                                </div>
                             </div>
 
-                            <div class="indicator-meta">
-                                <span>
-                                    <span class="indicator-status <?= $colorIndicadorAusenciasColab ?>"
-                                        id="ausenciasColabFecha">
-                                        (3+ días Activo/Otra.Tienda sin marcar)
+                            <div class="indicator-count" id="ausenciasColabCount">
+                                <?= $totalAusenciasColaboradores ?>
+                            </div>
+                            <div class="indicator-info">
+                                <div class="indicator-titulo">
+                                    Ausencias Colaboradores
+                                </div>
+
+                                <div class="indicator-meta">
+                                    <span>
+                                        <span class="indicator-status <?= $colorIndicadorAusenciasColab ?>"
+                                            id="ausenciasColabFecha">
+                                            (3+ días Activo/Otra.Tienda sin marcar)
+                                        </span>
                                     </span>
-                                </span>
-                                <span class="indicator-action">
-                                    <i class="fas fa-arrow-right"></i>
-                                </span>
+                                    <span class="indicator-action">
+                                        <i class="fas fa-arrow-right"></i>
+                                    </span>
+                                </div>
                             </div>
                         </div>
-                    </div>
                 <?php endif; ?>
 
             </div>
@@ -1860,58 +1876,58 @@ function obtenerDetalleAusenciasColaboradoresModal()
                         </div>
 
                         <?php if (empty($tardanzasPendientesRH['detalles'])): ?>
-                            <div style="text-align: center; padding: 40px; color: #666;">
-                                <i class="fas fa-check-circle"
-                                    style="font-size: 3rem; color: #28a745; margin-bottom: 15px;"></i>
-                                <h4>No hay tardanzas pendientes de reportar</h4>
-                                <p>Todas las tardanzas han sido reportadas correctamente.</p>
-                            </div>
+                                <div style="text-align: center; padding: 40px; color: #666;">
+                                    <i class="fas fa-check-circle"
+                                        style="font-size: 3rem; color: #28a745; margin-bottom: 15px;"></i>
+                                    <h4>No hay tardanzas pendientes de reportar</h4>
+                                    <p>Todas las tardanzas han sido reportadas correctamente.</p>
+                                </div>
                         <?php else: ?>
-                            <div style="overflow-x: auto; max-height: 60vh;">
-                                <table style="width: 100%; border-collapse: collapse;">
-                                    <thead>
-                                        <tr style="background: #0E544C; Color: white;">
-                                            <th style="padding: 12px; text-align: left;">Colaborador</th>
-                                            <th style="padding: 12px; text-align: center;">Sucursal</th>
-                                            <th style="padding: 12px; text-align: center;">Fecha</th>
-                                            <th style="padding: 12px; text-align: center;">Horario Programado</th>
-                                            <th style="padding: 12px; text-align: center;">Hora Marcada</th>
-                                            <th style="padding: 12px; text-align: center;">Minutos de Tardanza</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <?php foreach ($tardanzasPendientesRH['detalles'] as $index => $tardanza): ?>
-                                            <tr style="background: <?= $index % 2 === 0 ? '#f8f9fa' : 'white' ?>;">
-                                                <td style="padding: 10px; border-bottom: 1px solid #dee2e6;">
-                                                    <strong><?= htmlspecialchars($tardanza['nombre_completo']) ?></strong>
-                                                </td>
-                                                <td
-                                                    style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">
-                                                    <?= htmlspecialchars($tardanza['sucursal_nombre']) ?>
-                                                </td>
-                                                <td
-                                                    style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">
-                                                    <?= formatoFecha($tardanza['fecha']) ?>
-                                                </td>
-                                                <td
-                                                    style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">
-                                                    <?= $tardanza['hora_programada'] ? formatoHoraAmPm($tardanza['hora_programada']) : 'N/A' ?>
-                                                </td>
-                                                <td
-                                                    style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">
-                                                    <?= formatoHoraAmPm($tardanza['hora_ingreso']) ?>
-                                                </td>
-                                                <td
-                                                    style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">
-                                                    <span style="color: #dc3545; font-weight: bold;">
-                                                        +<?= $tardanza['minutos_tardanza'] ?> min
-                                                    </span>
-                                                </td>
+                                <div style="overflow-x: auto; max-height: 60vh;">
+                                    <table style="width: 100%; border-collapse: collapse;">
+                                        <thead>
+                                            <tr style="background: #0E544C; Color: white;">
+                                                <th style="padding: 12px; text-align: left;">Colaborador</th>
+                                                <th style="padding: 12px; text-align: center;">Sucursal</th>
+                                                <th style="padding: 12px; text-align: center;">Fecha</th>
+                                                <th style="padding: 12px; text-align: center;">Horario Programado</th>
+                                                <th style="padding: 12px; text-align: center;">Hora Marcada</th>
+                                                <th style="padding: 12px; text-align: center;">Minutos de Tardanza</th>
                                             </tr>
-                                        <?php endforeach; ?>
-                                    </tbody>
-                                </table>
-                            </div>
+                                        </thead>
+                                        <tbody>
+                                            <?php foreach ($tardanzasPendientesRH['detalles'] as $index => $tardanza): ?>
+                                                    <tr style="background: <?= $index % 2 === 0 ? '#f8f9fa' : 'white' ?>;">
+                                                        <td style="padding: 10px; border-bottom: 1px solid #dee2e6;">
+                                                            <strong><?= htmlspecialchars($tardanza['nombre_completo']) ?></strong>
+                                                        </td>
+                                                        <td
+                                                            style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">
+                                                            <?= htmlspecialchars($tardanza['sucursal_nombre']) ?>
+                                                        </td>
+                                                        <td
+                                                            style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">
+                                                            <?= formatoFecha($tardanza['fecha']) ?>
+                                                        </td>
+                                                        <td
+                                                            style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">
+                                                            <?= $tardanza['hora_programada'] ? formatoHoraAmPm($tardanza['hora_programada']) : 'N/A' ?>
+                                                        </td>
+                                                        <td
+                                                            style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">
+                                                            <?= formatoHoraAmPm($tardanza['hora_ingreso']) ?>
+                                                        </td>
+                                                        <td
+                                                            style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">
+                                                            <span style="color: #dc3545; font-weight: bold;">
+                                                                +<?= $tardanza['minutos_tardanza'] ?> min
+                                                            </span>
+                                                        </td>
+                                                    </tr>
+                                            <?php endforeach; ?>
+                                        </tbody>
+                                    </table>
+                                </div>
                         <?php endif; ?>
                     </div>
                 </div>
@@ -1940,55 +1956,55 @@ function obtenerDetalleAusenciasColaboradoresModal()
                         </div>
 
                         <?php if (empty($faltasPendientesRH['detalles'])): ?>
-                            <div style="text-align: center; padding: 40px; color: #666;">
-                                <i class="fas fa-check-circle"
-                                    style="font-size: 3rem; color: #28a745; margin-bottom: 15px;"></i>
-                                <h4>No hay faltas pendientes de reportar</h4>
-                                <p>Todas las ausencias han sido reportadas correctamente.</p>
-                            </div>
+                                <div style="text-align: center; padding: 40px; color: #666;">
+                                    <i class="fas fa-check-circle"
+                                        style="font-size: 3rem; color: #28a745; margin-bottom: 15px;"></i>
+                                    <h4>No hay faltas pendientes de reportar</h4>
+                                    <p>Todas las ausencias han sido reportadas correctamente.</p>
+                                </div>
                         <?php else: ?>
-                            <div style="overflow-x: auto; max-height: 60vh;">
-                                <table style="width: 100%; border-collapse: collapse;">
-                                    <thead>
-                                        <tr style="background: #0E544C; Color: white;">
-                                            <th style="padding: 12px; text-align: left;">Colaborador</th>
-                                            <th style="padding: 12px; text-align: center;">Sucursal</th>
-                                            <th style="padding: 12px; text-align: center;">Fecha</th>
-                                            <th style="padding: 12px; text-align: center;">Horario Programado</th>
-                                            <th style="padding: 12px; text-align: center;">Estado Día</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <?php foreach ($faltasPendientesRH['detalles'] as $index => $falta): ?>
-                                            <tr style="background: <?= $index % 2 === 0 ? '#f8f9fa' : 'white' ?>;">
-                                                <td style="padding: 10px; border-bottom: 1px solid #dee2e6;">
-                                                    <strong><?= htmlspecialchars($falta['nombre_completo']) ?></strong>
-                                                </td>
-                                                <td
-                                                    style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">
-                                                    <?= htmlspecialchars($falta['sucursal_nombre']) ?>
-                                                </td>
-                                                <td
-                                                    style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">
-                                                    <?= formatoFecha($falta['fecha']) ?>
-                                                </td>
-                                                <td
-                                                    style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">
-                                                    <?= $falta['hora_entrada_programada'] ? formatoHoraAmPm($falta['hora_entrada_programada']) : 'N/A' ?>
-                                                    -
-                                                    <?= $falta['hora_salida_programada'] ? formatoHoraAmPm($falta['hora_salida_programada']) : 'N/A' ?>
-                                                </td>
-                                                <td
-                                                    style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">
-                                                    <span style="color: #dc3545; font-weight: bold;">
-                                                        Ausente
-                                                    </span>
-                                                </td>
+                                <div style="overflow-x: auto; max-height: 60vh;">
+                                    <table style="width: 100%; border-collapse: collapse;">
+                                        <thead>
+                                            <tr style="background: #0E544C; Color: white;">
+                                                <th style="padding: 12px; text-align: left;">Colaborador</th>
+                                                <th style="padding: 12px; text-align: center;">Sucursal</th>
+                                                <th style="padding: 12px; text-align: center;">Fecha</th>
+                                                <th style="padding: 12px; text-align: center;">Horario Programado</th>
+                                                <th style="padding: 12px; text-align: center;">Estado Día</th>
                                             </tr>
-                                        <?php endforeach; ?>
-                                    </tbody>
-                                </table>
-                            </div>
+                                        </thead>
+                                        <tbody>
+                                            <?php foreach ($faltasPendientesRH['detalles'] as $index => $falta): ?>
+                                                    <tr style="background: <?= $index % 2 === 0 ? '#f8f9fa' : 'white' ?>;">
+                                                        <td style="padding: 10px; border-bottom: 1px solid #dee2e6;">
+                                                            <strong><?= htmlspecialchars($falta['nombre_completo']) ?></strong>
+                                                        </td>
+                                                        <td
+                                                            style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">
+                                                            <?= htmlspecialchars($falta['sucursal_nombre']) ?>
+                                                        </td>
+                                                        <td
+                                                            style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">
+                                                            <?= formatoFecha($falta['fecha']) ?>
+                                                        </td>
+                                                        <td
+                                                            style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">
+                                                            <?= $falta['hora_entrada_programada'] ? formatoHoraAmPm($falta['hora_entrada_programada']) : 'N/A' ?>
+                                                            -
+                                                            <?= $falta['hora_salida_programada'] ? formatoHoraAmPm($falta['hora_salida_programada']) : 'N/A' ?>
+                                                        </td>
+                                                        <td
+                                                            style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">
+                                                            <span style="color: #dc3545; font-weight: bold;">
+                                                                Ausente
+                                                            </span>
+                                                        </td>
+                                                    </tr>
+                                            <?php endforeach; ?>
+                                        </tbody>
+                                    </table>
+                                </div>
                         <?php endif; ?>
                     </div>
                 </div>
@@ -1997,24 +2013,24 @@ function obtenerDetalleAusenciasColaboradoresModal()
             <!-- Mostrar tarjetas de pendientes solo si hay alguna -->
             <div style="display:none;" class="indicator-container">
                 <?php if ($faltasPendientes > 0): ?>
-                    <a href="../lideres/faltas_manual.php" class="indicator-status">
-                        <div style="display:none;" class="module-icon">
-                            <i class="fas fa-user-times"></i>
-                        </div>
-                        <div class="indicator-count"><?= $faltasPendientes ?></div>
-                        <div class="indicator-titulo">Faltas pendientes</div>
-                    </a>
+                        <a href="../lideres/faltas_manual.php" class="indicator-status">
+                            <div style="display:none;" class="module-icon">
+                                <i class="fas fa-user-times"></i>
+                            </div>
+                            <div class="indicator-count"><?= $faltasPendientes ?></div>
+                            <div class="indicator-titulo">Faltas pendientes</div>
+                        </a>
                 <?php endif; ?>
 
                 <?php if ($tardanzasPendientes > 0): ?>
-                    <a href="../operaciones/tardanzas_manual.php" class="indicator-status">
-                        <div style="display:none;" class="module-icon">
-                            <i class="fas fa-clock"></i>
-                        </div>
-                        <div class="indicator-count"><?= $tardanzasPendientes ?></div>
-                        <div class="indicator-titulo">Tardanzas pendientes</div>
-                        <small style="display:none;" class="indicator-action">Haz clic para registrar</small>
-                    </a>
+                        <a href="../operaciones/tardanzas_manual.php" class="indicator-status">
+                            <div style="display:none;" class="module-icon">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div class="indicator-count"><?= $tardanzasPendientes ?></div>
+                            <div class="indicator-titulo">Tardanzas pendientes</div>
+                            <small style="display:none;" class="indicator-action">Haz clic para registrar</small>
+                        </a>
                 <?php endif; ?>
             </div>
 

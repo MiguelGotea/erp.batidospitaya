@@ -435,7 +435,15 @@ if ($filtroEstado === 'activos') {
                         ELSE 0
                     END as esta_activo
                 FROM Operarios o
-                WHERE o.Operativo = 1
+                LEFT JOIN Contratos uc ON uc.cod_operario = o.CodOperario 
+                    AND uc.CodContrato = (
+                        SELECT CodContrato 
+                        FROM Contratos 
+                        WHERE cod_operario = o.CodOperario
+                        ORDER BY inicio_contrato DESC, CodContrato DESC
+                        LIMIT 1
+                    )
+                WHERE (uc.fecha_salida IS NULL OR uc.fecha_salida > CURDATE())
                 AND (o.Celular IS NOT NULL OR o.telefono_corporativo IS NOT NULL)
                 -- EXCLUIR OPERARIOS CON CARGO 27 ACTIVO
                 AND o.CodOperario NOT IN (

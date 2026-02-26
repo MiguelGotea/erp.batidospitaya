@@ -64,10 +64,18 @@ try {
                             CONCAT(TRIM(o.Nombre), ' ', TRIM(IFNULL(o.Apellido, '')), ' (', o.CodOperario, ')') as texto
                         FROM Operarios o
                         INNER JOIN AsignacionNivelesCargos anc ON o.CodOperario = anc.CodOperario
+                        LEFT JOIN Contratos uc ON uc.cod_operario = o.CodOperario 
+                            AND uc.CodContrato = (
+                                SELECT CodContrato 
+                                FROM Contratos 
+                                WHERE cod_operario = o.CodOperario
+                                ORDER BY inicio_contrato DESC, CodContrato DESC
+                                LIMIT 1
+                            )
                         WHERE anc.Sucursal = ?
                         AND (anc.Fin IS NULL OR anc.Fin >= CURDATE())
                         AND anc.CodNivelesCargos != 27
-                        AND o.Operativo = 1
+                        AND (uc.fecha_salida IS NULL OR uc.fecha_salida > CURDATE())
                         ORDER BY o.Nombre, o.Apellido
                     ");
                     $stmt->execute([$sucursalLider]);
@@ -81,10 +89,18 @@ try {
                         CONCAT(TRIM(o.Nombre), ' ', TRIM(IFNULL(o.Apellido, '')), ' (', o.CodOperario, ')') as texto
                     FROM Operarios o
                     INNER JOIN AsignacionNivelesCargos anc ON o.CodOperario = anc.CodOperario
+                    LEFT JOIN Contratos uc ON uc.cod_operario = o.CodOperario 
+                        AND uc.CodContrato = (
+                            SELECT CodContrato 
+                            FROM Contratos 
+                            WHERE cod_operario = o.CodOperario
+                            ORDER BY inicio_contrato DESC, CodContrato DESC
+                            LIMIT 1
+                        )
                     WHERE anc.Sucursal = '6'
                     AND anc.CodNivelesCargos IN (23, 20, 34)
                     AND (anc.Fin IS NULL OR anc.Fin >= CURDATE())
-                    AND o.Operativo = 1
+                    AND (uc.fecha_salida IS NULL OR uc.fecha_salida > CURDATE())
                     ORDER BY o.Nombre, o.Apellido
                 ");
                 $opciones = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -95,7 +111,15 @@ try {
                         o.CodOperario as valor,
                         CONCAT(TRIM(o.Nombre), ' ', TRIM(IFNULL(o.Apellido, '')), ' (', o.CodOperario, ')') as texto
                     FROM Operarios o
-                    WHERE o.Operativo = 1
+                    LEFT JOIN Contratos uc ON uc.cod_operario = o.CodOperario 
+                        AND uc.CodContrato = (
+                            SELECT CodContrato 
+                            FROM Contratos 
+                            WHERE cod_operario = o.CodOperario
+                            ORDER BY inicio_contrato DESC, CodContrato DESC
+                            LIMIT 1
+                        )
+                    WHERE (uc.fecha_salida IS NULL OR uc.fecha_salida > CURDATE())
                     ORDER BY o.Nombre, o.Apellido
                 ");
                 $opciones = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -126,8 +150,16 @@ try {
                 FROM NivelesCargos nc
                 INNER JOIN AsignacionNivelesCargos anc ON nc.CodNivelesCargos = anc.CodNivelesCargos
                 INNER JOIN Operarios o ON anc.CodOperario = o.CodOperario
+                LEFT JOIN Contratos uc ON uc.cod_operario = o.CodOperario 
+                    AND uc.CodContrato = (
+                        SELECT CodContrato 
+                        FROM Contratos 
+                        WHERE cod_operario = o.CodOperario
+                        ORDER BY inicio_contrato DESC, CodContrato DESC
+                        LIMIT 1
+                    )
                 INNER JOIN sucursales s ON anc.Sucursal = s.codigo
-                WHERE o.Operativo = 1
+                WHERE (uc.fecha_salida IS NULL OR uc.fecha_salida > CURDATE())
                 AND (anc.Fin IS NULL OR anc.Fin >= CURDATE())
                 AND nc.CodNivelesCargos != 27
                 $whereCargos
