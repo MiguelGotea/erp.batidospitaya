@@ -209,7 +209,7 @@
             </div>
 
             <button type="submit" class="btn-submit">
-                <?= $mostrarFormularioNuevoContrato ? 'Crear Nuevo Contrato' : 'Actualizar Contrato' ?>
+                <?= $mostrarFormularioNuevoContrato ? 'Crear solo nuevo Contrato' : 'Guardar solo datos de Contrato' ?>
             </button>
 
             <!-- Sección de Terminación de Contrato -->

@@ -118,7 +118,7 @@
                                         </div>
                                     </div>
 
-                                    <button type="submit" class="btn-submit">Guardar Cambios</button>
+                                    <button type="submit" class="btn-submit">Guardar solo Datos Personales</button>
                                 </form>
 
                                 <!-- Sección de Cuentas Bancarias -->

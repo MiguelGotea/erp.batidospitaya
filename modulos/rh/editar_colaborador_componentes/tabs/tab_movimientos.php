@@ -63,7 +63,7 @@
                     </div>
                 </div>
 
-                <button type="submit" class="btn-submit">Agregar Cargo</button>
+                <button type="submit" class="btn-submit">Guardar solo este Cargo</button>
             </form>
         </div>
 

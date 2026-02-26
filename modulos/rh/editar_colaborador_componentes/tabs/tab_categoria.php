@@ -30,7 +30,7 @@
                 </div>
             </div>
 
-            <button type="submit" class="btn-submit">Agregar Categoría</button>
+            <button type="submit" class="btn-submit">Guardar solo esta Categoría</button>
         </form>
 
         <div style="margin-top: 40px; border-top: 2px solid #0E544C; padding-top: 20px;">

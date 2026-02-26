@@ -3,7 +3,7 @@
     <div id="contactos-emergencia" class="tab-pane <?= $pestaña_activa == 'contactos-emergencia' ? 'active' : '' ?>">
         <div style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 20px;">
             <button type="button" class="btn-submit" onclick="abrirModalContacto()" style="margin: 0;">
-                <i class="fas fa-plus"></i> Agregar
+                <i class="fas fa-plus"></i> Guardar solo este Contacto
             </button>
         </div>
 

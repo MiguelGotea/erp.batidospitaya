@@ -88,7 +88,7 @@
                         </div>
                     </div>
 
-                    <button type="submit" class="btn-submit">Guardar Cambios INSS</button>
+                    <button type="submit" class="btn-submit">Guardar solo datos de INSS</button>
                 </form>
             </div>
         <?php endif; ?>
@@ -141,7 +141,7 @@
                 </div>
             </div>
 
-            <button type="submit" class="btn-submit">Guardar Cambios INSS</button>
+            <button type="submit" class="btn-submit">Guardar solo datos de INSS</button>
         </form>
 
         <div

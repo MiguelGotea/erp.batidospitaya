@@ -271,7 +271,7 @@ $imagenesParaCarrusel = [];
                                 <div style="display: flex; justify-content: space-between; margin-top: 20px;">
                                     <button type="button" class="btn-submit" onclick="cerrarModalCuenta()"
                                         style="background-color: #6c757d;">Cancelar</button>
-                                    <button type="submit" class="btn-submit">Guardar</button>
+                                    <button type="submit" class="btn-submit">Guardar solo esta Cuenta</button>
                                 </div>
                             </form>
                         </div>
@@ -322,7 +322,7 @@ $imagenesParaCarrusel = [];
                                 <div style="display: flex; justify-content: space-between; margin-top: 20px;">
                                     <button type="button" class="btn-submit" onclick="cerrarModalContacto()"
                                         style="background-color: #6c757d;">Cancelar</button>
-                                    <button type="submit" class="btn-submit">Guardar</button>
+                                    <button type="submit" class="btn-submit">Guardar solo este Contacto</button>
                                 </div>
                             </form>
                         </div>
@@ -423,8 +423,8 @@ $imagenesParaCarrusel = [];
                                     <button type="button" class="btn-submit" onclick="cerrarModalTerminacion()"
                                         style="background-color: #6c757d;">Cancelar</button>
                                     <button type="submit" class="btn-submit"
-                                        style="background-color: #dc3545;">Confirmar
-                                        Terminación</button>
+                                        style="background-color: #dc3545;">Confirmar solo Terminación de
+                                        Contrato</button>
                                 </div>
                             </form>
                         </div>
@@ -476,7 +476,7 @@ $imagenesParaCarrusel = [];
                                 <div style="display: flex; justify-content: space-between; margin-top: 20px;">
                                     <button type="button" class="btn-submit" onclick="cerrarModalSalario()"
                                         style="background-color: #6c757d;">Cancelar</button>
-                                    <button type="submit" class="btn-submit">Guardar</button>
+                                    <button type="submit" class="btn-submit">Guardar solo este Salario</button>
                                 </div>
                             </form>
                         </div>
@@ -595,7 +595,8 @@ $imagenesParaCarrusel = [];
                                 <div style="display: flex; justify-content: space-between; margin-top: 20px;">
                                     <button type="button" class="btn-submit" onclick="cerrarModalAdjunto()"
                                         style="background-color: #6c757d;">Cancelar</button>
-                                    <button type="submit" class="btn-submit" id="btnSubirAdjunto">Subir Archivo</button>
+                                    <button type="submit" class="btn-submit" id="btnSubirAdjunto">Subir solo este
+                                        Archivo</button>
                                 </div>
                             </form>
                         </div>
@@ -631,7 +632,7 @@ $imagenesParaCarrusel = [];
                                 <div style="display: flex; justify-content: space-between; margin-top: 20px;">
                                     <button type="button" class="btn-submit" onclick="cerrarModalSalarioINSS()"
                                         style="background-color: #6c757d;">Cancelar</button>
-                                    <button type="submit" class="btn-submit">Guardar</button>
+                                    <button type="submit" class="btn-submit">Guardar solo datos de INSS</button>
                                 </div>
                             </form>
                         </div>
@@ -688,7 +689,7 @@ $imagenesParaCarrusel = [];
                                 <div style="display: flex; justify-content: space-between; margin-top: 20px;">
                                     <button type="button" class="btn-submit" onclick="cerrarModalMovimiento()"
                                         style="background-color: #6c757d;">Cancelar</button>
-                                    <button type="submit" class="btn-submit">Guardar Cambios</button>
+                                    <button type="submit" class="btn-submit">Guardar solo este Movimiento</button>
                                 </div>
                             </form>
                         </div>
@@ -728,7 +729,7 @@ $imagenesParaCarrusel = [];
                                     <button type="button" class="btn-submit" onclick="cerrarModalFinalizarAdenda()"
                                         style="background-color: #6c757d;">Cancelar</button>
                                     <button type="submit" class="btn-submit" style="background-color: #dc3545;">
-                                        Finalizar Adenda
+                                        Finalizar solo esta Adenda
                                     </button>
                                 </div>
                             </form>
@@ -1084,7 +1085,7 @@ $imagenesParaCarrusel = [];
 
                             // Restaurar texto del botón
                             const btnSubmit = form.querySelector('button[type="submit"]');
-                            btnSubmit.textContent = 'Confirmar Terminación';
+                            btnSubmit.textContent = 'Confirmar solo Terminación de Contrato';
                             btnSubmit.style.backgroundColor = '#dc3545'; // Restaurar color rojo
 
                             // Cerrar modal

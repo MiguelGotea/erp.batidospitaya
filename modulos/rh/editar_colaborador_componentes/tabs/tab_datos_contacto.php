@@ -53,7 +53,7 @@
                 </div>
             </div>
 
-            <button type="submit" class="btn-submit">Guardar Cambios</button>
+            <button type="submit" class="btn-submit">Guardar solo Datos de Contacto</button>
         </form>
     </div>
 <?php endif; ?>
