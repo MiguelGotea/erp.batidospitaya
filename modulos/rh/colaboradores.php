@@ -100,7 +100,7 @@ if (!tienePermiso('gestion_colaboradores', 'vista', $cargoOperario)) {
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
                                 <th data-column="ultima_fecha_laborada" data-type="daterange">
-                                    Último Día Marcado
+                                    Último Día<br>Marcado
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
                                 <th data-column="tiempo_trabajado_dias" data-type="list">
@@ -219,6 +219,9 @@ if (!tienePermiso('gestion_colaboradores', 'vista', $cargoOperario)) {
 
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const canFinalize = <?= tienePermiso('gestion_colaboradores', 'finalizar_contrato', $cargoOperario) ? 'true' : 'false' ?>;
+    </script>
     <script src="js/colaboradores.js?v=<?php echo mt_rand(1, 10000); ?>"></script>
 </body>
 

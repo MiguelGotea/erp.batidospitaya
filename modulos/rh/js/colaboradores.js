@@ -128,13 +128,15 @@ function renderizarTabla(datos) {
 
         let contractActionHTML = '';
         if (estaActivo) {
-            contractActionHTML = `
-                <div style="margin-top: 5px;">
-                    <button class="btn btn-sm btn-outline-danger" style="font-size: 10px; padding: 2px 5px;" 
-                            onclick="abrirModalTerminar(${row.CodContrato}, ${row.CodOperario}, '${row.nombre_completo}')">
-                        <i class="fas fa-user-slash"></i> Terminar Contrato
-                    </button>
-                </div>`;
+            if (typeof canFinalize !== 'undefined' && canFinalize) {
+                contractActionHTML = `
+                    <div style="margin-top: 5px;">
+                        <button class="btn-terminar-compact" 
+                                onclick="abrirModalTerminar(${row.CodContrato}, ${row.CodOperario}, '${row.nombre_completo}')">
+                            <i class="fas fa-user-slash"></i> Terminar
+                        </button>
+                    </div>`;
+            }
         } else if (row.fecha_salida_ultimo) {
             contractActionHTML = `
                 <div style="margin-top: 5px; font-size: 11px; color: #666;">

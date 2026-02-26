@@ -212,8 +212,8 @@
                 <?= $mostrarFormularioNuevoContrato ? 'Crear solo nuevo Contrato' : 'Guardar solo datos de Contrato' ?>
             </button>
 
-            <!-- Sección de Terminación de Contrato -->
-            <?php if (!$mostrarFormularioNuevoContrato && $contratoActual): ?>
+            <!-- Sección de Terminación de Contrato (Oculto: Gestionado desde la lista de colaboradores) -->
+            <?php /* if (!$mostrarFormularioNuevoContrato && $contratoActual): ?>
                 <?php if (empty($contratoActual['fin_contrato']) || $contratoActual['fin_contrato'] >= date('Y-m-d')): ?>
                     <button type="button" class="btn-submit" onclick="abrirModalTerminacion()"
                         style="background-color: #dc3545; margin-left: 10px;">
@@ -222,7 +222,7 @@
                 <?php else: ?>
                     <span style="color: #6c757d; font-style: italic;">Contrato ya finalizado</span>
                 <?php endif; ?>
-            <?php endif; ?>
+            <?php endif; */ ?>
         </form>
 
         <!-- Sección de Historial de Contratos -->

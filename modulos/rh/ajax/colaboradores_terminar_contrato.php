@@ -11,8 +11,8 @@ try {
     $cargoId = $usuario['CodNivelesCargos'] ?? 0;
 
     // Verificar permisos
-    if (!tienePermiso('editar_colaborador', 'edicion', $cargoId)) {
-        throw new Exception('No tiene permisos para realizar esta acción');
+    if (!tienePermiso('gestion_colaboradores', 'finalizar_contrato', $cargoId)) {
+        throw new Exception('No tiene permisos para finalizar contratos');
     }
 
     if (!isset($_POST['id_contrato']) || empty($_POST['id_contrato'])) {
