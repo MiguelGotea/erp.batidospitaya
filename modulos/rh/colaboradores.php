@@ -151,6 +151,14 @@ if (!tienePermiso('gestion_colaboradores', 'vista', $cargoOperario)) {
                         style="background-color: #f8f9fa;">
                 </div>
 
+                <!-- Fecha Fin de Contrato - SOLO LECTURA -->
+                <div class="form-group mb-3">
+                    <label for="fecha_fin_contrato" class="form-label fw-bold">Fecha Fin de Contrato (solo lectura)</label>
+                    <input type="date" id="fecha_fin_contrato" name="fecha_fin_contrato" class="form-control"
+                        readonly style="background-color: #f8f9fa;">
+                    <small style="color: #6c757d;">Esta fecha no se puede modificar al terminar el contrato</small>
+                </div>
+
                 <div class="form-group mb-3">
                     <label for="fecha_terminacion" class="form-label fw-bold">Fecha de Salida/Terminación *</label>
                     <input type="date" id="fecha_terminacion" name="fecha_terminacion" class="form-control"
@@ -158,8 +166,9 @@ if (!tienePermiso('gestion_colaboradores', 'vista', $cargoOperario)) {
                 </div>
 
                 <div class="form-group mb-3">
-                    <label for="fecha_liquidacion" class="form-label fw-bold">Fecha de Liquidación (opcional)</label>
+                    <label for="fecha_liquidacion" class="form-label fw-bold">Fecha de Liquidación (opcional - puede asignarse después)</label>
                     <input type="date" id="fecha_liquidacion" name="fecha_liquidacion" class="form-control">
+                    <small style="color: #6c757d; display:none;">Fecha cuando se realizará el pago de liquidación</small>
                 </div>
 
                 <div class="form-group mb-3">
@@ -182,7 +191,7 @@ if (!tienePermiso('gestion_colaboradores', 'vista', $cargoOperario)) {
                     <textarea id="motivo_salida" name="motivo_salida" class="form-control" rows="3" required></textarea>
                 </div>
 
-                <div class="form-group mb-3">
+                <div style="display:none;" class="form-group mb-3">
                     <label for="devolucion_herramientas" class="form-label fw-bold">Devolución de Herramientas</label>
                     <select id="devolucion_herramientas" name="devolucion_herramientas" class="form-control"
                         onchange="togglePersonaHerramientasList(this.value)">
@@ -192,26 +201,28 @@ if (!tienePermiso('gestion_colaboradores', 'vista', $cargoOperario)) {
                 </div>
 
                 <div class="form-group mb-3" id="grupoPersonaHerramientas" style="display: none;">
-                    <label for="persona_recibe_herramientas" class="form-label fw-bold">Persona que Recibe</label>
+                    <label for="persona_recibe_herramientas" class="form-label fw-bold">Persona que Recibe Herramientas</label>
                     <input type="text" id="persona_recibe_herramientas" name="persona_recibe_herramientas"
                         class="form-control">
                 </div>
 
-                <div class="form-group mb-3">
+                <div style="display:none;" class="form-group mb-3">
                     <label for="dias_trabajados" class="form-label fw-bold">Días Trabajados *</label>
                     <input type="number" id="dias_trabajados" name="dias_trabajados" class="form-control" min="1"
                         required>
                 </div>
 
-                <div class="form-group mb-3">
-                    <label for="monto_indemnizacion" class="form-label fw-bold">Indemnización (C$)</label>
+                <div style="display:none;" class="form-group mb-3">
+                    <label for="monto_indemnizacion" class="form-label fw-bold">Indemnización</label>
                     <input type="number" id="monto_indemnizacion" name="monto_indemnizacion" class="form-control"
                         step="0.01" min="0" value="0">
+                    <small style="color: #6c757d;">Monto en córdobas (opcional)</small>
                 </div>
 
-                <div class="d-flex justify-content-between mt-4">
-                    <button type="button" class="btn btn-secondary" onclick="cerrarModalTerminacion()">Cancelar</button>
-                    <button type="submit" class="btn btn-danger">Confirmar Terminación</button>
+                <div style="display: flex; justify-content: space-between; margin-top: 20px;">
+                    <button type="button" class="btn-submit" onclick="cerrarModalTerminacion()"
+                        style="background-color: #6c757d;">Cancelar</button>
+                    <button type="submit" class="btn-submit" style="background-color: #dc3545;">Confirmar solo Terminación de Contrato</button>
                 </div>
             </form>
         </div>
