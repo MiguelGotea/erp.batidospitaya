@@ -173,10 +173,18 @@ function obtenerAusenciasColaboradores()
             s.nombre as sucursal_nombre,
             s.codigo as sucursal_codigo
         FROM Operarios o
+        LEFT JOIN Contratos uc ON uc.cod_operario = o.CodOperario 
+            AND uc.CodContrato = (
+                SELECT CodContrato 
+                FROM Contratos 
+                WHERE cod_operario = o.CodOperario
+                ORDER BY inicio_contrato DESC, CodContrato DESC
+                LIMIT 1
+            )
         LEFT JOIN AsignacionNivelesCargos anc ON o.CodOperario = anc.CodOperario 
             AND (anc.Fin IS NULL OR anc.Fin >= CURDATE())
         LEFT JOIN sucursales s ON anc.Sucursal = s.codigo
-        WHERE o.Operativo = 1
+        WHERE (uc.fecha_salida IS NULL OR uc.fecha_salida > CURDATE())
         AND o.CodOperario NOT IN (
             SELECT DISTINCT anc2.CodOperario 
             FROM AsignacionNivelesCargos anc2

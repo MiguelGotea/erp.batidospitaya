@@ -116,6 +116,7 @@ function obtenerTardanzasDetalladas($modoVista, $codSucursal, $fechaDesde, $fech
                 hso.domingo_estado,
                 nc.Nombre as nombre_cargo,
                 c.CodContrato,
+                uc.fecha_salida as fecha_salida_ultimo,
                 -- Obtener información de tardanza manual
                 tm.id as tardanza_manual_id,
                 tm.estado as estado_tardanza,
@@ -125,6 +126,14 @@ function obtenerTardanzasDetalladas($modoVista, $codSucursal, $fechaDesde, $fech
             FROM marcaciones m
             JOIN Operarios o ON m.CodOperario = o.CodOperario
             JOIN sucursales s ON m.sucursal_codigo = s.codigo
+            LEFT JOIN Contratos uc ON uc.cod_operario = o.CodOperario 
+                AND uc.CodContrato = (
+                    SELECT CodContrato 
+                    FROM Contratos 
+                    WHERE cod_operario = o.CodOperario
+                    ORDER BY inicio_contrato DESC, CodContrato DESC
+                    LIMIT 1
+                )
             LEFT JOIN HorariosSemanalesOperaciones hso ON m.CodOperario = hso.cod_operario 
                 AND m.sucursal_codigo = hso.cod_sucursal
             LEFT JOIN SemanasSistema ss ON hso.id_semana_sistema = ss.id 
@@ -164,9 +173,9 @@ function obtenerTardanzasDetalladas($modoVista, $codSucursal, $fechaDesde, $fech
 
         // Filtro de activos/inactivos
         if ($filtroActivo === 'activos') {
-            $sql .= " AND o.Operativo = 1";
+            $sql .= " AND (uc.fecha_salida IS NULL OR uc.fecha_salida > CURDATE())";
         } elseif ($filtroActivo === 'inactivos') {
-            $sql .= " AND o.Operativo = 0";
+            $sql .= " AND (uc.fecha_salida IS NOT NULL AND uc.fecha_salida <= CURDATE())";
         }
 
         // Excluir cargos 27
@@ -282,7 +291,7 @@ function obtenerTardanzasDetalladas($modoVista, $codSucursal, $fechaDesde, $fech
                     'fecha_registro_tardanza' => $marcacion['fecha_registro'] ?? '',
                     'observaciones_tardanza' => $marcacion['observaciones_tardanza'] ?? '',
                     'tipo_justificacion' => $marcacion['tipo_justificacion'] ?? '',
-                    'estado_operario' => $marcacion['Operativo'] ? 'Activo' : 'Inactivo'
+                    'estado_operario' => ($marcacion['fecha_salida_ultimo'] === null || $marcacion['fecha_salida_ultimo'] > date('Y-m-d')) ? 'Activo' : 'Inactivo'
                 ];
             }
         }
@@ -671,11 +680,14 @@ function formatoHoraExcel($hora)
                             <td style="text-align: center; font-weight: bold;"><?= $totalesColaborador['tardanzas_totales'] ?>
                             </td>
                             <td style="text-align: center; font-weight: bold;">
-                                <?= $totalesColaborador['tardanzas_reportadas'] ?></td>
+                                <?= $totalesColaborador['tardanzas_reportadas'] ?>
+                            </td>
                             <td style="text-align: center; font-weight: bold;">
-                                <?= $totalesColaborador['tardanzas_justificadas'] ?></td>
+                                <?= $totalesColaborador['tardanzas_justificadas'] ?>
+                            </td>
                             <td style="text-align: center; font-weight: bold;">
-                                <?= $totalesColaborador['tardanzas_ejecutadas'] ?></td>
+                                <?= $totalesColaborador['tardanzas_ejecutadas'] ?>
+                            </td>
                             <td style="text-align: center; font-weight: bold;">
                                 <?= $totalesColaborador['tardanzas_totales'] > 0 ?
                                     round(($totalesColaborador['tardanzas_ejecutadas'] / $totalesColaborador['tardanzas_totales']) * 100, 2) : 0 ?>%

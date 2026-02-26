@@ -75,15 +75,21 @@ try {
         $where[] = "$subqueryCargo IN (" . implode(',', $placeholders) . ")";
     }
 
-    // Filtro de estado (lista)
+    // Filtro de estado (según la nueva lógica de contratos)
     if (isset($filtros['Operativo']) && is_array($filtros['Operativo']) && count($filtros['Operativo']) > 0) {
-        $placeholders = [];
-        foreach ($filtros['Operativo'] as $idx => $valor) {
-            $key = ":operativo_$idx";
-            $placeholders[] = $key;
-            $params[$key] = $valor;
+        $statusConds = [];
+        foreach ($filtros['Operativo'] as $valor) {
+            if ($valor == '1') {
+                // Activo: Sin fecha de salida o fecha de salida futura
+                $statusConds[] = "(uc.fecha_salida IS NULL OR uc.fecha_salida > CURDATE())";
+            } else if ($valor == '0') {
+                // Inactivo: Con fecha de salida hoy o en el pasado
+                $statusConds[] = "(uc.fecha_salida IS NOT NULL AND uc.fecha_salida <= CURDATE())";
+            }
         }
-        $where[] = "o.Operativo IN (" . implode(',', $placeholders) . ")";
+        if (!empty($statusConds)) {
+            $where[] = "(" . implode(' OR ', $statusConds) . ")";
+        }
     }
 
     // Filtro de sucursal (lista)
@@ -213,8 +219,11 @@ try {
         if (in_array($orden['columna'], $columnas_validas)) {
             $direccion = strtoupper($orden['direccion']) === 'DESC' ? 'DESC' : 'ASC';
 
-            // Usar el alias correcto de la columna
-            if ($orden['columna'] === 'nombre_completo') {
+            // Usar el alias correcto de la columna o la expresión calculada
+            if ($orden['columna'] === 'Operativo') {
+                // Ordenar por el estado calculado: 1 (Activo) o 0 (Inactivo)
+                $orderClause = "ORDER BY (CASE WHEN uc.fecha_salida IS NULL OR uc.fecha_salida > CURDATE() THEN 1 ELSE 0 END) $direccion";
+            } elseif ($orden['columna'] === 'nombre_completo') {
                 $orderClause = "ORDER BY nombre_completo $direccion";
             } elseif ($orden['columna'] === 'cargo_nombre') {
                 // Subconsulta para ordenar por cargo
@@ -263,9 +272,11 @@ try {
         FROM Operarios o
         LEFT JOIN Contratos uc ON uc.cod_operario = o.CodOperario 
             AND uc.CodContrato = (
-                SELECT MAX(CodContrato) 
+                SELECT CodContrato 
                 FROM Contratos 
                 WHERE cod_operario = o.CodOperario
+                ORDER BY inicio_contrato DESC, CodContrato DESC
+                LIMIT 1
             )
         LEFT JOIN sucursales s ON uc.cod_sucursal_contrato = s.codigo
         LEFT JOIN marcaciones m ON m.CodOperario = o.CodOperario 
@@ -295,7 +306,8 @@ try {
             ) as nombre_completo,
             o.Celular,
             o.telefono_corporativo,
-            o.Operativo,
+            -- Estado calculado basado en el último contrato
+            IF(uc.fecha_salida IS NULL OR uc.fecha_salida > CURDATE(), 1, 0) as Operativo,
             COALESCE(
                 (SELECT nc.Nombre 
                  FROM AsignacionNivelesCargos anc

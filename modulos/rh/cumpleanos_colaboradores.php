@@ -49,11 +49,19 @@ o.Cedula,
 o.fecha_hora_regsys,
 GROUP_CONCAT(DISTINCT s.nombre SEPARATOR ', ') as sucursales
 FROM Operarios o
+LEFT JOIN Contratos uc ON uc.cod_operario = o.CodOperario 
+    AND uc.CodContrato = (
+        SELECT CodContrato 
+        FROM Contratos 
+        WHERE cod_operario = o.CodOperario
+        ORDER BY inicio_contrato DESC, CodContrato DESC
+        LIMIT 1
+    )
 LEFT JOIN AsignacionNivelesCargos anc ON o.CodOperario = anc.CodOperario
 AND (anc.Fin IS NULL OR anc.Fin >= CURDATE())
 LEFT JOIN sucursales s ON anc.Sucursal = s.codigo
 WHERE MONTH(o.Cumpleanos) = :mes
-AND o.Operativo = 1
+AND (uc.fecha_salida IS NULL OR uc.fecha_salida > CURDATE())
 GROUP BY o.CodOperario
 ORDER BY DAY(o.Cumpleanos), o.Nombre, o.Apellido
 ";

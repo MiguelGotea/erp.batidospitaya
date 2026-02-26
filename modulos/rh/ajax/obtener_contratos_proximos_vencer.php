@@ -44,14 +44,22 @@ function obtenerContratosProximosVencer()
             DATEDIFF(c.fin_contrato, CURDATE()) as dias_restantes
         FROM Contratos c
         JOIN Operarios o ON c.cod_operario = o.CodOperario
+        LEFT JOIN Contratos uc ON uc.cod_operario = o.CodOperario 
+            AND uc.CodContrato = (
+                SELECT CodContrato 
+                FROM Contratos 
+                WHERE cod_operario = o.CodOperario
+                ORDER BY inicio_contrato DESC, CodContrato DESC
+                LIMIT 1
+            )
         LEFT JOIN AsignacionNivelesCargos anc ON o.CodOperario = anc.CodOperario AND (anc.Fin IS NULL OR anc.Fin >= CURDATE())
         LEFT JOIN sucursales s ON anc.Sucursal = s.codigo
         WHERE c.fin_contrato IS NOT NULL 
         AND c.fin_contrato != '0000-00-00'
         AND c.fin_contrato >= CURDATE() -- Que no hayan vencido
         AND c.fin_contrato <= ? -- Que venzan en menos de 1 mes
-        AND o.Operativo = 1 -- Solo colaboradores activos
-        AND (c.fecha_salida IS NULL OR c.fecha_salida = '0000-00-00') -- Que no tengan fecha de salida
+        AND (uc.fecha_salida IS NULL OR uc.fecha_salida > CURDATE()) -- Solo colaboradores considerados activos hoy
+        AND (c.fecha_salida IS NULL OR c.fecha_salida = '0000-00-00') -- Que el contrato específico no tenga fecha de salida
         GROUP BY c.codigo_manual_contrato
         ORDER BY c.fin_contrato ASC
     ";

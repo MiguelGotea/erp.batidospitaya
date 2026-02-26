@@ -44,9 +44,17 @@ function obtenerCantidadOperariosIncompletos()
 
     // Obtener todos los operarios activos
     $stmt = $conn->prepare("
-        SELECT DISTINCT CodOperario 
+        SELECT DISTINCT o.CodOperario 
         FROM Operarios o 
-        WHERE o.Operativo = 1
+        LEFT JOIN Contratos uc ON uc.cod_operario = o.CodOperario 
+            AND uc.CodContrato = (
+                SELECT CodContrato 
+                FROM Contratos 
+                WHERE cod_operario = o.CodOperario
+                ORDER BY inicio_contrato DESC, CodContrato DESC
+                LIMIT 1
+            )
+        WHERE (uc.fecha_salida IS NULL OR uc.fecha_salida > CURDATE())
         AND o.CodOperario NOT IN (
             SELECT DISTINCT anc2.CodOperario 
             FROM AsignacionNivelesCargos anc2
@@ -148,8 +156,16 @@ function obtenerOperariosSucursalEnRango($codSucursal, $fechaDesde, $fechaHasta)
         FROM Operarios o
         JOIN AsignacionNivelesCargos anc ON o.CodOperario = anc.CodOperario
         JOIN sucursales s ON anc.Sucursal = s.codigo
+        LEFT JOIN Contratos uc ON uc.cod_operario = o.CodOperario 
+            AND uc.CodContrato = (
+                SELECT CodContrato 
+                FROM Contratos 
+                WHERE cod_operario = o.CodOperario
+                ORDER BY inicio_contrato DESC, CodContrato DESC
+                LIMIT 1
+            )
         WHERE anc.Sucursal = ?
-        AND o.Operativo = 1
+        AND (uc.fecha_salida IS NULL OR uc.fecha_salida > CURDATE())
         AND (anc.Fin IS NULL OR anc.Fin >= ?)
         AND anc.Fecha <= ?
         ORDER BY o.Nombre, o.Apellido
@@ -375,13 +391,21 @@ function obtenerContratosProximosVencer()
             DATEDIFF(c.fin_contrato, CURDATE()) as dias_restantes
         FROM Contratos c
         JOIN Operarios o ON c.cod_operario = o.CodOperario
+        LEFT JOIN Contratos uc ON uc.cod_operario = o.CodOperario 
+            AND uc.CodContrato = (
+                SELECT CodContrato 
+                FROM Contratos 
+                WHERE cod_operario = o.CodOperario
+                ORDER BY inicio_contrato DESC, CodContrato DESC
+                LIMIT 1
+            )
         LEFT JOIN AsignacionNivelesCargos anc ON o.CodOperario = anc.CodOperario AND (anc.Fin IS NULL OR anc.Fin >= CURDATE())
         LEFT JOIN sucursales s ON anc.Sucursal = s.codigo
         WHERE c.fin_contrato IS NOT NULL 
         AND c.fin_contrato != '0000-00-00'
         AND c.fin_contrato >= CURDATE()
         AND c.fin_contrato <= ?
-        AND o.Operativo = 1
+        AND (uc.fecha_salida IS NULL OR uc.fecha_salida > CURDATE())
         AND (c.fecha_salida IS NULL OR c.fecha_salida = '0000-00-00')
         GROUP BY c.codigo_manual_contrato
         ORDER BY c.fin_contrato ASC

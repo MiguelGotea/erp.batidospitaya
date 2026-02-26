@@ -332,6 +332,8 @@ function obtenerColaboradorPorId($codOperario)
     $stmt = $conn->prepare("
 SELECT
 o.*,
+-- Estado calculado basado en el último contrato
+IF(uc.fecha_salida IS NULL OR uc.fecha_salida > CURDATE(), 1, 0) as Operativo,
 -- Campos existentes...
 o.usuario,
 o.clave, -- Texto plano
@@ -364,6 +366,14 @@ LIMIT 1),
 'Sin cargo definido'
 ) as cargo_nombre
 FROM Operarios o
+LEFT JOIN Contratos uc ON uc.cod_operario = o.CodOperario 
+    AND uc.CodContrato = (
+        SELECT CodContrato 
+        FROM Contratos 
+        WHERE cod_operario = o.CodOperario
+        ORDER BY inicio_contrato DESC, CodContrato DESC
+        LIMIT 1
+    )
 WHERE o.CodOperario = ?
 ");
     $stmt->execute([$codOperario]);

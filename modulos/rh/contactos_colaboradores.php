@@ -31,30 +31,29 @@ function obtenerContactosColaboradores()
             o.Apellido2,
             o.Celular,
             o.telefono_corporativo,
-            -- Obtener el primer cargo encontrado (no mostrar múltiples cargos)
+            -- Obtener el primer cargo encontrado
             COALESCE(
                 (SELECT nc.Nombre 
                  FROM AsignacionNivelesCargos anc
                  JOIN NivelesCargos nc ON anc.CodNivelesCargos = nc.CodNivelesCargos
                  WHERE anc.CodOperario = o.CodOperario 
-                 AND (anc.Fin IS NULL OR anc.Fin > CURDATE())
+                 AND (anc.Fin IS NULL OR anc.Fin >= CURDATE())
                  ORDER BY anc.CodNivelesCargos DESC
                  LIMIT 1),
                 'Sin cargo definido'
             ) as cargo_nombre,
-            -- Verificar si está activo (sin fecha_liquidacion o fecha_liquidacion futura)
-            CASE 
-                WHEN EXISTS (
-                    SELECT 1 FROM Contratos c 
-                    WHERE c.cod_operario = o.CodOperario 
-                    AND (c.fecha_liquidacion IS NULL OR c.fecha_liquidacion = '0000-00-00' OR c.fecha_liquidacion > CURDATE())
-                    -- AND (c.fin_contrato IS NULL OR c.fin_contrato >= CURDATE())
-                ) THEN 1
-                ELSE 0
-            END as esta_activo
+            -- Verificar si está activo (nueva lógica: último contrato sin fecha de salida o fecha de salida futura)
+            IF(uc.fecha_salida IS NULL OR uc.fecha_salida > CURDATE(), 1, 0) as esta_activo
         FROM Operarios o
-        WHERE o.Operativo = 1
-        AND (o.Celular IS NOT NULL OR o.telefono_corporativo IS NOT NULL)
+        LEFT JOIN Contratos uc ON uc.cod_operario = o.CodOperario 
+            AND uc.CodContrato = (
+                SELECT CodContrato 
+                FROM Contratos 
+                WHERE cod_operario = o.CodOperario
+                ORDER BY inicio_contrato DESC, CodContrato DESC
+                LIMIT 1
+            )
+        WHERE (o.Celular IS NOT NULL OR o.telefono_corporativo IS NOT NULL)
         ORDER BY o.Nombre, o.Apellido
     ";
 
