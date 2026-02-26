@@ -1,4 +1,4 @@
-let paginaActual = 1;
+锘縧et paginaActual = 1;
 let registrosPorPagina = 25;
 let filtrosActivos = {};
 let ordenActivo = { columna: null, direccion: 'asc' };
@@ -125,7 +125,7 @@ function renderizarTabla(datos) {
         const estaActivo = row.Operativo == 1;
         const estadoClass = estaActivo ? 'status-activo' : 'status-inactivo';
         const estadoTexto = estaActivo ? 'Activo' : 'Inactivo';
-        
+
         let contractActionHTML = '';
         if (estaActivo) {
             contractActionHTML = `
@@ -661,58 +661,59 @@ function actualizarVisualToggle() {
     const activeCircle = document.querySelector(`.estado-filter-circles .filter-circle[data-state="${currentKey}"]`);
     if (activeCircle) activeCircle.classList.add('active');
 }
-// L骻ica de Terminaci髇 de Contrato (Tra韉a y adaptada de editar_colaborador.php)
+
+// L贸gica de Terminaci贸n de Contrato (Tra铆da y adaptada de editar_colaborador.php)
 function abrirModalTerminar(codContrato, codOperario, nombre) {
-    #idContratoTerminar.val(codContrato);
-    #codOperarioTerminar.val(codOperario);
-    #nombreColaboradorTerminar.val(nombre);
-    #modalTerminacion.css('display', 'flex').hide().fadeIn(200);
+    $('#idContratoTerminar').val(codContrato);
+    $('#codOperarioTerminar').val(codOperario);
+    $('#nombreColaboradorTerminar').val(nombre);
+    $('#modalTerminacion').css('display', 'flex').hide().fadeIn(200);
 }
 
 function cerrarModalTerminacion() {
-    #modalTerminacion.fadeOut(200);
+    $('#modalTerminacion').fadeOut(200);
 }
 
 function togglePersonaHerramientasList(valor) {
     if (valor == '1') {
-        #grupoPersonaHerramientas.slideDown();
+        $('#grupoPersonaHerramientas').slideDown();
     } else {
-        #grupoPersonaHerramientas.slideUp();
+        $('#grupoPersonaHerramientas').slideUp();
     }
 }
 
-// Manejar env韔 del formulario de terminaci髇
-.ready(function() {
-    #formTerminacion.on('submit', function(e) {
+// Manejar env铆o del formulario de terminaci贸n
+$(document).ready(function () {
+    $('#formTerminacion').on('submit', function (e) {
         e.preventDefault();
-        
-        const btn = .find('button[type="submit"]');
+
+        const btn = $(this).find('button[type="submit"]');
         const originalText = btn.text();
         btn.prop('disabled', true).text('Procesando...');
 
         $.ajax({
             url: 'ajax/colaboradores_terminar_contrato.php',
             method: 'POST',
-            data: .serialize(),
+            data: $(this).serialize(),
             dataType: 'json',
-            success: function(response) {
+            success: function (response) {
                 if (response.success) {
                     cerrarModalTerminacion();
                     // Limpiar formulario
-                    #formTerminacion[0].reset();
-                    #grupoPersonaHerramientas.hide();
+                    $('#formTerminacion')[0].reset();
+                    $('#grupoPersonaHerramientas').hide();
                     // Recargar datos
                     cargarDatos();
-                    // Mostrar mensaje de 閤ito
+                    // Mostrar mensaje de 茅xito
                     alert(response.mensaje);
                 } else {
                     alert('Error: ' + response.mensaje);
                 }
             },
-            error: function() {
-                alert('Error en la comunicaci髇 con el servidor');
+            error: function () {
+                alert('Error en la comunicaci贸n con el servidor');
             },
-            complete: function() {
+            complete: function () {
                 btn.prop('disabled', false).text(originalText);
             }
         });
