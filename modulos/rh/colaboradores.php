@@ -125,7 +125,7 @@ if (!tienePermiso('gestion_colaboradores', 'vista', $cargoOperario)) {
     </div>
 
     <!-- Modal para terminación de contrato (Traído de editar_colaborador.php) -->
-    <div id="modalTerminacion" class="modal-backdrop">
+    <div id="modalTerminacion" class="modal-backdrop" style="display: none;">
         <div class="modal-content">
             <h3 style="color: #dc3545; margin-bottom: 20px;">Terminar Contrato</h3>
 
