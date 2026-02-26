@@ -371,6 +371,7 @@ try {
                 'Sin tienda'
             ) as sucursal_actual_nombre,
             uc.CodContrato,
+            uc.codigo_manual_contrato,
             uc.inicio_contrato as fecha_inicio_ultimo_contrato,
             uc.fin_contrato as fecha_fin_ultimo_contrato,
             uc.fecha_salida as fecha_salida_ultimo,

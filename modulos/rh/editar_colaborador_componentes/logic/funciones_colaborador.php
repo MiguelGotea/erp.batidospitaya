@@ -1571,6 +1571,7 @@ dias_trabajados = ?,
 monto_indemnizacion = ?,
 devolucion_herramientas_trabajo = ?,
 persona_recibe_herramientas_trabajo = ?,
+Finalizado = 1,
 fecha_ultima_modificacion = NOW(),
 usuario_ultima_modificacion = ?
 WHERE CodContrato = ?

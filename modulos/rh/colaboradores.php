@@ -146,6 +146,12 @@ if (!tienePermiso('gestion_colaboradores', 'vista', $cargoOperario)) {
                 <input type="hidden" name="cod_operario" id="codOperarioTerminar" value="">
 
                 <div class="form-group mb-3">
+                    <label class="form-label fw-bold">N° Contrato</label>
+                    <input type="text" id="codigoManualTerminar" class="form-control" readonly
+                        style="background-color: #f8f9fa;">
+                </div>
+
+                <div class="form-group mb-3">
                     <label class="form-label fw-bold">Colaborador</label>
                     <input type="text" id="nombreColaboradorTerminar" class="form-control" readonly
                         style="background-color: #f8f9fa;">

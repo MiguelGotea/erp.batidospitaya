@@ -132,7 +132,7 @@ function renderizarTabla(datos) {
                 contractActionHTML = `
                     <div style="margin-top: 5px;">
                         <button class="btn-terminar-compact" 
-                                onclick="abrirModalTerminar(${row.CodContrato}, ${row.CodOperario}, '${row.nombre_completo}', '${row.fecha_fin_ultimo_contrato || ''}', ${row.tiempo_trabajado_dias || 0})">
+                                onclick="abrirModalTerminar(${row.CodContrato}, ${row.CodOperario}, '${row.nombre_completo}', '${row.fecha_fin_ultimo_contrato || ''}', ${row.tiempo_trabajado_dias || 0}, '${row.codigo_manual_contrato || ''}')">
                             <i class="fas fa-user-slash"></i> Terminar
                         </button>
                     </div>`;
@@ -671,10 +671,11 @@ function actualizarVisualToggle() {
 }
 
 // Lógica de Terminación de Contrato (Traída y adaptada de editar_colaborador.php)
-function abrirModalTerminar(codContrato, codOperario, nombre, fechaFin, diasTrabajados) {
+function abrirModalTerminar(codContrato, codOperario, nombre, fechaFin, diasTrabajados, codigoManual) {
     $('#idContratoTerminar').val(codContrato);
     $('#codOperarioTerminar').val(codOperario);
     $('#nombreColaboradorTerminar').val(nombre);
+    $('#codigoManualTerminar').val(codigoManual || 'Sin código');
     $('#fecha_fin_contrato').val(fechaFin || '');
     $('#dias_trabajados').val(diasTrabajados || 0);
     $('#modalTerminacion').css('display', 'flex').hide().fadeIn(200);
