@@ -44,6 +44,22 @@
 
         // NUEVO: Determinar si debemos mostrar el formulario para nuevo contrato
         $mostrarFormularioNuevoContrato = !$contratoActual || $estaFinalizado;
+
+        // NUEVO: Permiso específico para editar datos ya guardados
+        $puedeEditarTodo = tienePermiso('editar_colaborador', 'editar_contrato', $cargoId);
+
+        // Función auxiliar para determinar si un campo debe estar bloqueado
+        $bloquearCampo = function ($valorActual) use ($puedeEditarTodo, $mostrarFormularioNuevoContrato) {
+            if ($mostrarFormularioNuevoContrato) return ''; // En nuevo contrato todo es editable
+            if ($puedeEditarTodo) return ''; // Si tiene permiso especial puede editar todo
+            return (!empty($valorActual) || $valorActual === '0' || $valorActual === 0) ? 'readonly onclick="return false;" style="background-color: #f1f3f5; cursor: not-allowed;"' : '';
+        };
+
+        $bloquearSelect = function ($valorActual) use ($puedeEditarTodo, $mostrarFormularioNuevoContrato) {
+            if ($mostrarFormularioNuevoContrato) return '';
+            if ($puedeEditarTodo) return '';
+            return (!empty($valorActual) || $valorActual === '0' || $valorActual === 0) ? 'disabled style="background-color: #f1f3f5; cursor: not-allowed;"' : '';
+        };
         ?>
 
         <?php if ($contratoActual && $estaActivo): ?>
@@ -112,6 +128,22 @@
                 <input type="hidden" name="accion_contrato" value="guardar">
                 <input type="hidden" name="id_contrato" value="<?= $contratoActual['CodContrato'] ?>">
                 <h3 style="color: #0E544C; margin-bottom: 15px;">Editar Contrato Actual</h3>
+
+                <!-- Campos ocultos para selects deshabilitados (para que viajen en el POST) -->
+                <?php if (!$puedeEditarTodo): ?>
+                    <?php if (!empty($contratoActual['cod_sucursal_contrato'])): ?>
+                        <input type="hidden" name="sucursal" value="<?= $contratoActual['cod_sucursal_contrato'] ?>">
+                    <?php endif; ?>
+                    <?php if (!empty($asignacionCargoActual['CodNivelesCargos'])): ?>
+                        <input type="hidden" name="cod_cargo" value="<?= $asignacionCargoActual['CodNivelesCargos'] ?>">
+                    <?php endif; ?>
+                    <?php if (!empty($contratoActual['cod_tipo_contrato'])): ?>
+                        <input type="hidden" name="cod_tipo_contrato" value="<?= $contratoActual['cod_tipo_contrato'] ?>">
+                    <?php endif; ?>
+                    <?php if (!empty($contratoActual['frecuencia_pago'])): ?>
+                        <input type="hidden" name="frecuencia_pago" value="<?= $contratoActual['frecuencia_pago'] ?>">
+                    <?php endif; ?>
+                <?php endif; ?>
             <?php endif; ?>
 
             <div class="form-row">
@@ -120,6 +152,7 @@
                         <label for="codigo_manual_contrato">Código de Contrato *</label>
                         <input type="text" id="codigo_manual_contrato" name="codigo_manual_contrato" class="form-control"
                             value="<?= (!$mostrarFormularioNuevoContrato && $contratoActual) ? htmlspecialchars($contratoActual['codigo_manual_contrato'] ?? '') : '' ?>"
+                            <?= $bloquearCampo($contratoActual['codigo_manual_contrato'] ?? '') ?>
                             onblur="validarCodigoContrato(this.value)">
                         <div id="codigo-contrato-error" class="text-danger"
                             style="display: none; font-size: 12px; margin-top: 5px;">
@@ -133,7 +166,7 @@
 
                     <div class="form-group">
                         <label for="cod_sucursal_contrato">Sucursal *</label>
-                        <select id="sucursal" name="sucursal" class="form-control" required>
+                        <select id="sucursal_contrato" name="sucursal" class="form-control" required <?= $bloquearSelect($contratoActual['cod_sucursal_contrato'] ?? '') ?>>
                             <option value="">Seleccionar sucursal...</option>
                             <?php
                             $sucursales = obtenerTodasSucursales();
@@ -148,6 +181,7 @@
                     <div class="form-group">
                         <label for="cod_cargo">Cargo *</label>
                         <select id="cod_cargo" name="cod_cargo" class="form-control" required
+                            <?= $bloquearSelect($asignacionCargoActual['CodNivelesCargos'] ?? '') ?>
                             onchange="actualizarCategoriaYMostrar()">
                             <option value="">Seleccionar cargo...</option>
                             <?php
@@ -197,6 +231,7 @@
                         <label for="ciudad">Departamento/Ciudad de Contrato *</label>
                         <input type="text" id="ciudad" name="ciudad" class="form-control"
                             value="<?= (!$mostrarFormularioNuevoContrato && $contratoActual) ? htmlspecialchars($contratoActual['ciudad']) : '' ?>"
+                            <?= $bloquearCampo($contratoActual['ciudad'] ?? '') ?>
                             required>
                     </div>
 
@@ -204,6 +239,7 @@
                         <label for="inicio_contrato">Fecha de Inicio *</label>
                         <input type="date" id="inicio_contrato" name="inicio_contrato" class="form-control"
                             value="<?= (!$mostrarFormularioNuevoContrato && $contratoActual) ? $contratoActual['inicio_contrato'] : date('Y-m-d') ?>"
+                            <?= $bloquearCampo($contratoActual['inicio_contrato'] ?? '') ?>
                             required>
                     </div>
                 </div>
@@ -211,7 +247,7 @@
                 <div class="form-col">
                     <div class="form-group">
                         <label for="cod_tipo_contrato">Tipo de Contrato *</label>
-                        <select id="cod_tipo_contrato" name="cod_tipo_contrato" class="form-control" required>
+                        <select id="cod_tipo_contrato" name="cod_tipo_contrato" class="form-control" required <?= $bloquearSelect($contratoActual['cod_tipo_contrato'] ?? '') ?>>
                             <option value="">Seleccionar tipo de contrato...</option>
                             <?php
                             $tiposContrato = obtenerTiposContrato();
@@ -229,15 +265,16 @@
                             <input type="number" id="monto_salario" name="monto_salario" class="form-control" step="0.01"
                                 min="0"
                                 value="<?= (!$mostrarFormularioNuevoContrato && $contratoActual) ? ($contratoActual['salario_inicial'] ?? '') : '' ?>"
+                                <?= $bloquearCampo($contratoActual['salario_inicial'] ?? '') ?>
                                 required>
                         </div>
 
 
                     </div>
 
-                    <div class="form-group">
+                    <div class="form-group" style="display:none;">
                         <label for="sucursal">Tienda / Área *</label>
-                        <select id="sucursal" name="sucursal" class="form-control" required>
+                        <select id="sucursal_area" name="sucursal_area_redundante" class="form-control" required>
                             <option value="">Seleccionar sucursal...</option>
                             <?php
                             $sucursales = obtenerTodasSucursales();
@@ -250,7 +287,7 @@
                     </div>
                     <div class="form-group">
                         <label for="frecuencia_pago">Frecuencia de Pago *</label>
-                        <select id="frecuencia_pago" name="frecuencia_pago" class="form-control" required>
+                        <select id="frecuencia_pago" name="frecuencia_pago" class="form-control" required <?= $bloquearSelect($contratoActual['frecuencia_pago'] ?? '') ?>>
                             <option value="quincenal" <?= (!$mostrarFormularioNuevoContrato && $contratoActual && ($contratoActual['frecuencia_pago'] ?? 'quincenal') == 'quincenal') ? 'selected' : '' ?>>
                                 Quincenal
                             </option>
@@ -277,6 +314,7 @@
                         </label>
                         <input type="date" id="fin_contrato" name="fin_contrato" class="form-control"
                             value="<?= (!$mostrarFormularioNuevoContrato && $contratoActual) ? ($contratoActual['fin_contrato'] ?? '') : '' ?>"
+                            <?= $bloquearCampo($contratoActual['fin_contrato'] ?? '') ?>
                             <?= (!$mostrarFormularioNuevoContrato && $contratoActual && $contratoActual['cod_tipo_contrato'] != 1) ? 'disabled' : '' ?>>
                     </div>
                 </div>
@@ -285,6 +323,7 @@
             <div class="form-group">
                 <label for="observaciones">Observaciones</label>
                 <textarea id="observaciones" name="observaciones" class="form-control"
+                    <?= $bloquearCampo($contratoActual['observaciones'] ?? '') ?>
                     rows="3"><?= (!$mostrarFormularioNuevoContrato && $contratoActual) ? htmlspecialchars($contratoActual['observaciones']) : '' ?></textarea>
             </div>
 
