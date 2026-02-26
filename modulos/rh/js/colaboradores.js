@@ -121,22 +121,38 @@ function renderizarTabla(datos) {
             </td>
         `);
 
-        // Estado
-        const estadoClass = row.Operativo == 1 ? 'status-activo' : 'status-inactivo';
-        const estadoTexto = row.Operativo == 1 ? 'Activo' : 'Inactivo';
-        tr.append(`<td><span class="${estadoClass}">${estadoTexto}</span></td>`);
-
-        // Tienda/√Årea Contrato
-        tr.append(`<td>${row.nombre_sucursal || '-'}</td>`);
+        // Estado / Contrato Unificado
+        const estaActivo = row.Operativo == 1;
+        const estadoClass = estaActivo ? 'status-activo' : 'status-inactivo';
+        const estadoTexto = estaActivo ? 'Activo' : 'Inactivo';
         
-        // Tienda/Area Actual
+        let contractActionHTML = '';
+        if (estaActivo) {
+            contractActionHTML = `
+                <div style="margin-top: 5px;">
+                    <button class="btn btn-sm btn-outline-danger" style="font-size: 10px; padding: 2px 5px;" 
+                            onclick="abrirModalTerminar(${row.CodContrato}, ${row.CodOperario}, '${row.nombre_completo}')">
+                        <i class="fas fa-user-slash"></i> Terminar Contrato
+                    </button>
+                </div>`;
+        } else if (row.fecha_salida_ultimo) {
+            contractActionHTML = `
+                <div style="margin-top: 5px; font-size: 11px; color: #666;">
+                    <strong>Salida:</strong> ${formatearFecha(row.fecha_salida_ultimo)}
+                </div>`;
+        }
+
+        tr.append(`
+            <td>
+                <div style="display: flex; flex-direction: column; align-items: flex-start;">
+                    <span class="${estadoClass}">${estadoTexto}</span>
+                    ${contractActionHTML}
+                </div>
+            </td>
+        `);
+
+        // Tienda/√Årea Actual
         tr.append(`<td>${row.sucursal_actual_nombre || '-'}</td>`);
-
-        // Inicio Contrato
-        tr.append(`<td>${formatearFecha(row.fecha_inicio_ultimo_contrato)}</td>`);
-
-        // Fecha de Salida
-        tr.append(`<td>${formatearFecha(row.fecha_salida_ultimo)}</td>`);
 
         // √öltimo D√≠a Marcado
         tr.append(`<td>${formatearFecha(row.ultima_fecha_laborada)}</td>`);
@@ -645,3 +661,60 @@ function actualizarVisualToggle() {
     const activeCircle = document.querySelector(`.estado-filter-circles .filter-circle[data-state="${currentKey}"]`);
     if (activeCircle) activeCircle.classList.add('active');
 }
+// LÛgica de TerminaciÛn de Contrato (TraÌda y adaptada de editar_colaborador.php)
+function abrirModalTerminar(codContrato, codOperario, nombre) {
+    #idContratoTerminar.val(codContrato);
+    #codOperarioTerminar.val(codOperario);
+    #nombreColaboradorTerminar.val(nombre);
+    #modalTerminacion.css('display', 'flex').hide().fadeIn(200);
+}
+
+function cerrarModalTerminacion() {
+    #modalTerminacion.fadeOut(200);
+}
+
+function togglePersonaHerramientasList(valor) {
+    if (valor == '1') {
+        #grupoPersonaHerramientas.slideDown();
+    } else {
+        #grupoPersonaHerramientas.slideUp();
+    }
+}
+
+// Manejar envÌo del formulario de terminaciÛn
+.ready(function() {
+    #formTerminacion.on('submit', function(e) {
+        e.preventDefault();
+        
+        const btn = .find('button[type="submit"]');
+        const originalText = btn.text();
+        btn.prop('disabled', true).text('Procesando...');
+
+        $.ajax({
+            url: 'ajax/colaboradores_terminar_contrato.php',
+            method: 'POST',
+            data: .serialize(),
+            dataType: 'json',
+            success: function(response) {
+                if (response.success) {
+                    cerrarModalTerminacion();
+                    // Limpiar formulario
+                    #formTerminacion[0].reset();
+                    #grupoPersonaHerramientas.hide();
+                    // Recargar datos
+                    cargarDatos();
+                    // Mostrar mensaje de Èxito
+                    alert(response.mensaje);
+                } else {
+                    alert('Error: ' + response.mensaje);
+                }
+            },
+            error: function() {
+                alert('Error en la comunicaciÛn con el servidor');
+            },
+            complete: function() {
+                btn.prop('disabled', false).text(originalText);
+            }
+        });
+    });
+});

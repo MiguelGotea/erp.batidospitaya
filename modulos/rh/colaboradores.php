@@ -76,7 +76,7 @@ if (!tienePermiso('gestion_colaboradores', 'vista', $cargoOperario)) {
                                 </th>
                                 <th data-column="Operativo">
                                     <div class="status-header-content">
-                                        <span class="status-label">Estado</span>
+                                        <span class="status-label">Estado / Contrato</span>
                                         <div class="estado-filter-circles">
                                             <i class="bi bi-person-check-fill filter-circle active" data-state="1"
                                                 onclick="setEstadoFilter('1')" title="Activos"></i>
@@ -86,22 +86,6 @@ if (!tienePermiso('gestion_colaboradores', 'vista', $cargoOperario)) {
                                                 onclick="setEstadoFilter('0')" title="Inactivos"></i>
                                         </div>
                                     </div>
-                                </th>
-                                <th data-column="nombre_sucursal" data-type="list" class="col-tienda">
-                                    Tienda/Área<br>Contrato
-                                    <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
-                                </th>
-                                <th data-column="sucursal_actual_nombre" data-type="list" class="col-tienda">
-                                    Tienda/Area<br>Actual
-                                    <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
-                                </th>
-                                <th data-column="fecha_inicio_ultimo_contrato" data-type="daterange">
-                                    Inicio Contrato
-                                    <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
-                                </th>
-                                <th data-column="fecha_salida_ultimo" data-type="daterange">
-                                    Fecha de Salida
-                                    <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
                                 <th data-column="ultima_fecha_laborada" data-type="daterange">
                                     Último Día Marcado
@@ -137,6 +121,87 @@ if (!tienePermiso('gestion_colaboradores', 'vista', $cargoOperario)) {
                     <div id="paginacion"></div>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Modal para terminación de contrato (Traído de editar_colaborador.php) -->
+    <div id="modalTerminacion" class="modal-backdrop">
+        <div class="modal-content">
+            <h3 style="color: #dc3545; margin-bottom: 20px;">Terminar Contrato</h3>
+
+            <form id="formTerminacion">
+                <input type="hidden" name="id_contrato" id="idContratoTerminar" value="">
+                <input type="hidden" name="cod_operario" id="codOperarioTerminar" value="">
+
+                <div class="form-group mb-3">
+                    <label class="form-label fw-bold">Colaborador</label>
+                    <input type="text" id="nombreColaboradorTerminar" class="form-control" readonly
+                        style="background-color: #f8f9fa;">
+                </div>
+
+                <div class="form-group mb-3">
+                    <label for="fecha_terminacion" class="form-label fw-bold">Fecha de Salida/Terminación *</label>
+                    <input type="date" id="fecha_terminacion" name="fecha_terminacion" class="form-control"
+                        value="<?php echo date('Y-m-d'); ?>" required>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label for="fecha_liquidacion" class="form-label fw-bold">Fecha de Liquidación (opcional)</label>
+                    <input type="date" id="fecha_liquidacion" name="fecha_liquidacion" class="form-control">
+                </div>
+
+                <div class="form-group mb-3">
+                    <label for="tipo_salida" class="form-label fw-bold">Tipo de Salida *</label>
+                    <select id="tipo_salida" name="tipo_salida" class="form-control" required>
+                        <option value="">Seleccionar tipo de salida...</option>
+                        <?php
+                        require_once 'editar_colaborador_componentes/logic/funciones_colaborador.php';
+                        $tiposSalida = obtenerTiposSalida();
+                        foreach ($tiposSalida as $tipo): ?>
+                            <option value="<?= $tipo['CodTipoSalida'] ?>">
+                                <?= htmlspecialchars($tipo['nombre']) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label for="motivo_salida" class="form-label fw-bold">Motivo de Salida *</label>
+                    <textarea id="motivo_salida" name="motivo_salida" class="form-control" rows="3" required></textarea>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label for="devolucion_herramientas" class="form-label fw-bold">Devolución de Herramientas</label>
+                    <select id="devolucion_herramientas" name="devolucion_herramientas" class="form-control"
+                        onchange="togglePersonaHerramientasList(this.value)">
+                        <option value="0">No aplica</option>
+                        <option value="1">Sí aplica</option>
+                    </select>
+                </div>
+
+                <div class="form-group mb-3" id="grupoPersonaHerramientas" style="display: none;">
+                    <label for="persona_recibe_herramientas" class="form-label fw-bold">Persona que Recibe</label>
+                    <input type="text" id="persona_recibe_herramientas" name="persona_recibe_herramientas"
+                        class="form-control">
+                </div>
+
+                <div class="form-group mb-3">
+                    <label for="dias_trabajados" class="form-label fw-bold">Días Trabajados *</label>
+                    <input type="number" id="dias_trabajados" name="dias_trabajados" class="form-control" min="1"
+                        required>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label for="monto_indemnizacion" class="form-label fw-bold">Indemnización (C$)</label>
+                    <input type="number" id="monto_indemnizacion" name="monto_indemnizacion" class="form-control"
+                        step="0.01" min="0" value="0">
+                </div>
+
+                <div class="d-flex justify-content-between mt-4">
+                    <button type="button" class="btn btn-secondary" onclick="cerrarModalTerminacion()">Cancelar</button>
+                    <button type="submit" class="btn btn-danger">Confirmar Terminación</button>
+                </div>
+            </form>
         </div>
     </div>
 
