@@ -53,59 +53,6 @@
         };
         ?>
 
-        <?php if ($contratoActual && $estaActivo): ?>
-            <div style="margin-bottom: 20px;">
-                <h3 style="color: #0E544C; margin-bottom: 15px;">Información de Contrato Actual</h3>
-                <div class="readonly-info">
-                    <p><strong>Estado:</strong> <span style="color: green;">Contrato Activo</span>
-                    </p>
-                    <p><strong>Fecha Inicio:</strong>
-                        <?= !empty($contratoActual['inicio_contrato']) ? date('d/m/Y', strtotime($contratoActual['inicio_contrato'])) : 'No definida' ?>
-                    </p>
-                    <p><strong>Tipo de Contrato:</strong>
-                        <?= htmlspecialchars(obtenerNombreTipoContrato($contratoActual['cod_tipo_contrato'])) ?>
-                    </p>
-                    <p><strong>Cargo:</strong>
-                        <?= htmlspecialchars(obtenerNombreCargo($asignacionCargoActual['CodNivelesCargos'])) ?>
-                    </p>
-                    <p><strong>Salario:</strong>
-                        <?= $salarioActual ? number_format($salarioActual['monto'], 2) : 'No definido' ?>
-                    </p>
-                    <?php if (!empty($contratoActual['fin_contrato']) && $contratoActual['fin_contrato'] != '0000-00-00'): ?>
-                        <p><strong>Fecha Fin:</strong>
-                            <?= date('d/m/Y', strtotime($contratoActual['fin_contrato'])) ?></p>
-                        <p><strong>Tiempo Restante:</strong>
-                            <?= calcularTiempoRestanteContrato($contratoActual['fin_contrato'], $estaActivo) ?>
-                        </p>
-                    <?php endif; ?>
-                </div>
-            </div>
-        <?php elseif ($contratoActual && $estaFinalizado): ?>
-            <div style="margin-bottom: 20px;">
-                <div class="readonly-info" style="background-color: #f8d7da; border-color: #f5c6cb;">
-                    <p><strong>Estado:</strong> <span style="color: #721c24;">Contrato
-                            Finalizado</span></p>
-                    <p><strong>Fecha Salida:</strong>
-                        <?= !empty($contratoActual['fecha_salida']) ? date('d/m/Y', strtotime($contratoActual['fecha_salida'])) : 'No definida' ?>
-                    </p>
-                    <p><strong>Motivo:</strong>
-                        <?= htmlspecialchars($contratoActual['motivo'] ?? 'No especificado') ?></p>
-                    <p><strong>Puede crear un nuevo contrato:</strong> Complete el formulario
-                        inferior para
-                        registrar un nuevo contrato.</p>
-                </div>
-            </div>
-        <?php else: ?>
-            <div style="margin-bottom: 20px;">
-                <div class="readonly-info" style="background-color: #fff3cd; border-color: #ffeaa7;">
-                    <p><strong>Estado:</strong> <span style="color: #856404;">Sin contrato
-                            activo</span></p>
-                    <p>Este colaborador no tiene un contrato activo registrado en el sistema.
-                        Complete el
-                        formulario para crear uno nuevo.</p>
-                </div>
-            </div>
-        <?php endif; ?>
 
         <!-- FORMULARIO DE CONTRATO -->
         <form method="POST" action="" enctype="multipart/form-data">
@@ -175,30 +122,20 @@
                             <?php
                             $cargos = obtenerTodosCargos();
                             foreach ($cargos as $cargo):
-                                // Determinar la categoría sugerida para este cargo
-                                $categoriaSugerida = '';
+                                // Determinar la categoría sugerida para este cargo (se mantiene en data-categoria pero no se muestra)
                                 $idCategoriaSugerida = '';
-
                                 if ($cargo['CodNivelesCargos'] == 2) {
-                                    $categoriaSugerida = ' (Categoría: Training)';
-                                    $idCategoriaSugerida = 5; // ID de la categoría Operario en CategoriasOperarios
+                                    $idCategoriaSugerida = 5;
                                 } elseif ($cargo['CodNivelesCargos'] == 5) {
-                                    $categoriaSugerida = ' (Categoría: Líder)';
-                                    $idCategoriaSugerida = 1; // ID de la categoría Líder en CategoriasOperarios
+                                    $idCategoriaSugerida = 1;
                                 }
                                 ?>
                                 <option value="<?= $cargo['CodNivelesCargos'] ?>" data-categoria="<?= $idCategoriaSugerida ?>"
                                     <?= (!$mostrarFormularioNuevoContrato && $asignacionCargoActual && $asignacionCargoActual['CodNivelesCargos'] == $cargo['CodNivelesCargos']) ? 'selected' : '' ?>>
                                     <?= htmlspecialchars($cargo['Nombre']) ?>
-                                    <?= $categoriaSugerida ?>
                                 </option>
                             <?php endforeach; ?>
                         </select>
-                        <div id="infoCategoria" class="categoria-info" style="display: none;">
-                            <i class="fas fa-info-circle"></i> <span id="textoCategoria">Categoría
-                                asignada
-                                automáticamente</span>
-                        </div>
                     </div>
 
                     <div class="form-group" style="display: none;">
