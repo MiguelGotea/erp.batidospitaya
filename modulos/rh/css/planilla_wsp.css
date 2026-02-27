@@ -1,0 +1,173 @@
+/* ======================================================
+   planilla_wsp.css — Estilos para Notificaciones WSP Planilla
+   Sigue la misma identidad visual que campanas_wsp.css
+   ====================================================== */
+
+/* ── Variables ── */
+:root {
+    --wsp-verde:   #25D366;
+    --wsp-dark:    #0E544C;
+    --wsp-teal:    #51B8AC;
+    --wsp-card-bg: #f8fffe;
+}
+
+/* ── Badge de estado VPS ── */
+.wsp-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    border-radius: 50px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: 2px solid #dee2e6;
+    background: #fff;
+    transition: all 0.2s;
+    user-select: none;
+}
+.wsp-status-badge:hover { background: #f0f0f0; }
+
+.wsp-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #aaa;
+    display: inline-block;
+    transition: background 0.3s;
+}
+.wsp-dot.conectado    { background: var(--wsp-verde); box-shadow: 0 0 6px var(--wsp-verde); }
+.wsp-dot.qr_pendiente { background: #ffc107; }
+.wsp-dot.desconectado { background: #dc3545; }
+.wsp-dot.reset_pendiente {
+    background: #fd7e14;
+    animation: spin-dot 1s linear infinite;
+}
+@keyframes spin-dot {
+    0%   { opacity: 1; }
+    50%  { opacity: 0.3; }
+    100% { opacity: 1; }
+}
+
+/* ── Header de tarjeta ── */
+.wsp-card-header th {
+    background: var(--wsp-dark);
+    color: #fff;
+    font-weight: 600;
+    font-size: 0.82rem;
+    padding: 10px 12px;
+}
+
+/* ── Sección expandible de planilla ── */
+.planilla-row-header {
+    cursor: pointer;
+    transition: background 0.15s;
+}
+.planilla-row-header:hover { background: #f0faf9; }
+
+.planilla-detail-row td {
+    background: #f8fffe;
+    padding: 0 !important;
+}
+.planilla-detail-inner {
+    padding: 12px 20px;
+    border-left: 4px solid var(--wsp-teal);
+}
+
+/* ── Badge de estado de programación ── */
+.badge-programada  { background: #0d6efd; }
+.badge-enviando    { background: #fd7e14; }
+.badge-completada  { background: #198754; }
+.badge-cancelada   { background: #6c757d; }
+
+/* ── Tabla de destinatarios interna ── */
+.tabla-destinatarios {
+    font-size: 0.82rem;
+    max-height: 250px;
+    overflow-y: auto;
+}
+.tabla-destinatarios th { color: #0E544C; font-weight: 700; }
+
+/* ── Modal de programación ── */
+.wsp-modal-header { background: var(--wsp-dark); }
+
+/* ── Preview de mensaje ── */
+.wsp-preview {
+    background: #e5ddd5;
+    border-radius: 8px;
+    padding: 16px;
+    min-height: 180px;
+}
+.wsp-preview-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--wsp-dark);
+    color: white;
+    padding: 10px 12px;
+    border-radius: 8px 8px 0 0;
+    margin: -16px -16px 12px -16px;
+}
+.wsp-preview-avatar {
+    width: 38px;
+    height: 38px;
+    background: var(--wsp-verde);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+}
+.wsp-preview-bubble {
+    background: white;
+    border-radius: 0 8px 8px 8px;
+    padding: 10px 14px;
+    max-width: 90%;
+    white-space: pre-wrap;
+    word-break: break-word;
+    line-height: 1.5;
+    box-shadow: 0 1px 2px rgba(0,0,0,.1);
+}
+.wsp-preview-img-container img {
+    width: 100%;
+    border-radius: 6px;
+    margin-top: 8px;
+}
+
+/* ── Chips de variables ── */
+.wsp-var-chip {
+    background: #e8f5e9;
+    border: 1px solid var(--wsp-verde);
+    color: #1b5e20;
+    border-radius: 4px;
+    padding: 1px 6px;
+    cursor: pointer;
+    font-size: 0.78rem;
+    transition: background 0.15s;
+}
+.wsp-var-chip:hover { background: #c8e6c9; }
+
+/* ── Barra de progreso de envío ── */
+.prog-bar-container { font-size: 0.78rem; }
+.prog-bar-inner {
+    height: 6px;
+    border-radius: 3px;
+    background: var(--wsp-verde);
+}
+
+/* ── Botones de acción ── */
+.btn-accion {
+    border: none;
+    background: none;
+    padding: 4px 7px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background 0.15s;
+}
+.btn-programar { color: var(--wsp-verde); }
+.btn-programar:hover { background: #d4edda; }
+.btn-editar    { color: #0d6efd; }
+.btn-editar:hover    { background: #dbeafe; }
+.btn-eliminar  { color: #dc3545; }
+.btn-eliminar:hover  { background: #f8d7da; }
