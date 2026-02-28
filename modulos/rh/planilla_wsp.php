@@ -191,7 +191,7 @@ require_once '../../core/layout/header_universal.php';
                                 </table>
                                 <div class="alert alert-warning py-2 small mt-2 mb-0">
                                     <i class="bi bi-shield-check me-1"></i>
-                                    <strong>Anti-ban:</strong> Delays 8–25s entre mensajes. Horario: 7AM–8PM.
+                                    <strong>Anti-ban:</strong> Delays 8–25s entre mensajes. Sin restricción de horario.
                                 </div>
                             </div>
                         </div>
@@ -305,10 +305,8 @@ require_once '../../core/layout/header_universal.php';
                     </div>
                     <div class="alert alert-info py-2 px-3 small mt-2">
                         <strong><i class="fas fa-info-circle me-1"></i> Horario de envío:</strong>
-                        Los mensajes se envían automáticamente entre <strong>7:00 AM y 8:00 PM</strong> (Hora
-                        Nicaragua).
-                        Si programa un envío fuera de ese horario, se ejecutará al inicio del siguiente período
-                        permitido.
+                        Las notificaciones de planilla se envían <strong>sin restricción de horario</strong> — el envío
+                        comienza en la fecha y hora programada.
                     </div>
                 </div>
             </div>

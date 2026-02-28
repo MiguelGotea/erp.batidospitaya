@@ -430,8 +430,8 @@ require_once '../../core/layout/header_universal.php';
                     </div>
                     <div class="alert alert-info py-2 px-3 small">
                         <strong><i class="fas fa-info-circle me-1"></i> Horario de envío:</strong>
-                        Los mensajes se envían automáticamente entre <strong>7:00 AM y 10:00 PM</strong> (Hora
-                        Nicaragua).
+                        Las campañas se envían <strong>sin restricción de horario</strong> — el envío comienza en la
+                        fecha y hora programada.
                     </div>
                 </div>
             </div>
