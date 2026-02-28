@@ -199,6 +199,66 @@ if (!tienePermiso('crm_bot', 'gestionar_intents', $cargoOperario)) {
         </div>
     </div>
 
+    <!-- Modal Ayuda -->
+    <div class="modal fade" id="pageHelpModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title"><i class="bi bi-info-circle me-2"></i>Guía: Motor de Inteligencia del Bot
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <h6>¿Cómo funciona el cerebro del Bot? (Embeddings y NLP)</h6>
+                    <p>El bot no busca únicamente coincidencias exactas y rígidas. Al guardar una intención, el sistema
+                        usa un motor matemático (Vectores TF-IDF) para agrupar todas tus <strong>Keywords</strong> y
+                        generar una red de entendimiento. Cuando el cliente escribe, el bot evalúa la "similitud"
+                        matemática del mensaje con este entrenamiento.</p>
+
+                    <h6 class="mt-4 text-primary">El poder de la Prioridad</h6>
+                    <p>Si el cliente escribe una frase que mezcla palabras clave de varias intenciones distintas, el bot
+                        elegirá la ganadora basándose en su <strong>Prioridad</strong>. A mayor número, más poder tiene
+                        la intención para imponerse.</p>
+                    <div class="alert alert-secondary mb-3">
+                        <strong>Ejemplo práctico:</strong>
+                        <ul class="mb-0 mt-2">
+                            <li>Tienes una intención general <code>sucursales</code> con prioridad <strong>10</strong>
+                                (keywords: direccion, ubicacion).</li>
+                            <li>Tienes una intención específica <code>dir_leon</code> con prioridad <strong>12</strong>
+                                (keywords: leon).</li>
+                            <li>Si el cliente escribe <em>"Cual es la direccion"</em>, gana la general (10).</li>
+                            <li>Pero si escribe <em>"Cual es la direccion de leon"</em>, aunque ambas coincidan, ganará
+                                inmediatamente <code>dir_leon</code> porque su peso <strong>12</strong> es superior.
+                            </li>
+                        </ul>
+                    </div>
+
+                    <hr>
+
+                    <h6>Mejores Prácticas de Configuración:</h6>
+                    <ul>
+                        <li><i class="bi bi-check-circle-fill text-success me-1"></i> <strong>Keywords:</strong> Escribe
+                            solo términos clave o raíces separados por coma (ej:
+                            <code>precio, costo, cuanto vale</code>). Evita artículos o palabras vacías (la, el, de,
+                            en).
+                        </li>
+                        <li><i class="bi bi-check-circle-fill text-success me-1"></i> <strong>Jerarquía de
+                                prioridades:</strong> Usa <code>5</code> para charla general, <code>10</code> para
+                            productos, y <code>12 a 15</code> para casos súper específicos, ramas directas (ej. hablar
+                            con un humano) o rutas de cierre.</li>
+                        <li><i class="bi bi-check-circle-fill text-success me-1"></i> <strong>Variedad:</strong> Ofrece
+                            al menos 2 o 3 opciones en los <em>Templates de respuesta</em>. El bot escogerá una
+                            aleatoriamente haciendo que el chat se sienta orgánico y natural.</li>
+                    </ul>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Entendido</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <style>
         .spin {
             animation: spin 1s linear infinite;
