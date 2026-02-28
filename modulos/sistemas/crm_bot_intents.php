@@ -158,6 +158,18 @@ if (!tienePermiso('crm_bot', 'gestionar_intents', $cargoOperario)) {
                             </select>
                         </div>
                         <div class="col-12 mb-3">
+                            <label class="form-label fw-bold">Imagen Adjunta (Opcional)</label>
+                            <input type="file" id="intentMedia" class="form-control" accept="image/*,application/pdf">
+                            <div id="mediaPreviewContainer" class="mt-2 d-none">
+                                <a id="mediaPreviewLink" href="#" target="_blank"
+                                    class="badge bg-info text-decoration-none p-2"><i class="bi bi-image"></i> Ver
+                                    archivo actual</a>
+                                <button type="button" class="btn btn-sm btn-outline-danger ms-2"
+                                    onclick="removerMediaUI()"><i class="bi bi-trash"></i> Quitar imagen</button>
+                                <input type="hidden" id="removeMediaFlag" value="0">
+                            </div>
+                        </div>
+                        <div class="col-12 mb-3">
                             <label class="form-label fw-bold">Keywords (separadas por coma)</label>
                             <textarea id="intentKeywords" class="form-control" rows="2"
                                 placeholder="hola, buenos días, buenas tardes, hey..."></textarea>
@@ -254,6 +266,7 @@ if (!tienePermiso('crm_bot', 'gestionar_intents', $cargoOperario)) {
                 </div>
                 <div class="p-3">
                     <div class="mb-2"><strong>Keywords:</strong> ${kws || '<span class="text-muted small">Ninguna</span>'}</div>
+                    ${i.media_url ? `<div class="mb-2"><a href="${escapeHtml(i.media_url)}" target="_blank" class="badge bg-info text-decoration-none"><i class="bi bi-image"></i> Media/Imagen asociada</a></div>` : ''}
                     <div><strong>Templates:</strong><br>${templHtml}
                         ${tmpl.length > 2 ? `<small class="text-muted">...y ${tmpl.length - 2} más</small>` : ''}
                     </div>
@@ -272,6 +285,9 @@ if (!tienePermiso('crm_bot', 'gestionar_intents', $cargoOperario)) {
             document.getElementById('intentPrioridad').value = 5;
             document.getElementById('intentActivo').value = 1;
             document.getElementById('intentKeywords').value = '';
+            document.getElementById('intentMedia').value = '';
+            document.getElementById('mediaPreviewContainer').classList.add('d-none');
+            document.getElementById('removeMediaFlag').value = '0';
             document.getElementById('templatesList').innerHTML = '';
             document.getElementById('modalIntentTitle').textContent = 'Nueva Intención';
             agregarTemplate(); agregarTemplate();
@@ -284,12 +300,29 @@ if (!tienePermiso('crm_bot', 'gestionar_intents', $cargoOperario)) {
             document.getElementById('intentPrioridad').value = i.priority;
             document.getElementById('intentActivo').value = i.is_active;
             document.getElementById('intentKeywords').value = i.keywords || '';
+            document.getElementById('intentMedia').value = '';
+            document.getElementById('removeMediaFlag').value = '0';
+
+            const pCont = document.getElementById('mediaPreviewContainer');
+            const pLink = document.getElementById('mediaPreviewLink');
+            if (i.media_url) {
+                pLink.href = i.media_url;
+                pCont.classList.remove('d-none');
+            } else {
+                pCont.classList.add('d-none');
+            }
+
             document.getElementById('modalIntentTitle').textContent = 'Editar: ' + i.intent_name;
             const tmpl = JSON.parse(i.response_templates || '[]');
             document.getElementById('templatesList').innerHTML = '';
             tmpl.forEach(t => agregarTemplate(t));
             if (!tmpl.length) agregarTemplate();
             new bootstrap.Modal(document.getElementById('modalIntent')).show();
+        }
+
+        function removerMediaUI() {
+            document.getElementById('removeMediaFlag').value = '1';
+            document.getElementById('mediaPreviewContainer').classList.add('d-none');
         }
 
         function agregarTemplate(val = '') {
@@ -306,16 +339,32 @@ if (!tienePermiso('crm_bot', 'gestionar_intents', $cargoOperario)) {
             const prioridad = parseInt(document.getElementById('intentPrioridad').value) || 5;
             const activo = parseInt(document.getElementById('intentActivo').value);
             const keywords = document.getElementById('intentKeywords').value.trim();
+            const removeMedia = document.getElementById('removeMediaFlag').value;
+            const fileInput = document.getElementById('intentMedia');
+            const file = fileInput.files[0];
+
             const templates = [...document.querySelectorAll('.template-txt')]
                 .map(t => t.value.trim()).filter(Boolean);
 
             if (!nombre) return Swal.fire('Error', 'El nombre es requerido', 'error');
             if (!templates.length) return Swal.fire('Error', 'Agrega al menos un template de respuesta', 'error');
 
+            const formData = new FormData();
+            formData.append('id', id);
+            formData.append('intent_name', nombre);
+            formData.append('priority', prioridad);
+            formData.append('is_active', activo);
+            formData.append('keywords', keywords);
+            formData.append('response_templates', JSON.stringify(templates));
+            formData.append('remove_media', removeMedia);
+
+            if (file) {
+                formData.append('media', file);
+            }
+
             const resp = await fetch('ajax/crm_bot_guardar_intent.php', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id: id || null, intent_name: nombre, keywords, response_templates: templates, priority: prioridad, is_active: activo })
+                body: formData
             });
             const data = await resp.json();
             if (data.success) {

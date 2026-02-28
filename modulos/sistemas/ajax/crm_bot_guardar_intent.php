@@ -14,40 +14,73 @@ if (!tienePermiso('crm_bot', 'gestionar_intents', $usuario['CodNivelesCargos']))
     exit;
 }
 
-$body = json_decode(file_get_contents('php://input'), true) ?? [];
-$id = (int) ($body['id'] ?? 0);
-$nombre = trim($body['intent_name'] ?? '');
-$keywords = trim($body['keywords'] ?? '');
-$templates = $body['response_templates'] ?? [];
-$prioridad = (int) ($body['priority'] ?? 5);
-$activo = (int) ($body['is_active'] ?? 1);
+$id = (int) ($_POST['id'] ?? 0);
+$nombre = trim($_POST['intent_name'] ?? '');
+$keywords = trim($_POST['keywords'] ?? '');
+$prioridad = (int) ($_POST['priority'] ?? 5);
+$activo = (int) ($_POST['is_active'] ?? 1);
+$templatesStr = $_POST['response_templates'] ?? '[]';
+$templates = json_decode($templatesStr, true);
+$removeMedia = (int) ($_POST['remove_media'] ?? 0);
 
 if (!$nombre) {
     echo json_encode(['success' => false, 'error' => 'nombre requerido']);
     exit;
 }
-if (!$templates) {
+if (!$templates || !is_array($templates)) {
     echo json_encode(['success' => false, 'error' => 'templates requeridos']);
     exit;
 }
 
 $templatesJson = json_encode($templates, JSON_UNESCAPED_UNICODE);
+$mediaUrl = null;
+
+if ($id > 0) {
+    $stmtC = $conn->prepare("SELECT media_url FROM bot_intents WHERE id = :id");
+    $stmtC->execute([':id' => $id]);
+    $curr = $stmtC->fetch();
+    $mediaUrl = $curr ? $curr['media_url'] : null;
+}
+
+if ($removeMedia === 1) {
+    $mediaUrl = null;
+}
+
+if (isset($_FILES['media']) && $_FILES['media']['error'] === UPLOAD_ERR_OK) {
+    $uploadDir = __DIR__ . '/../../uploads/crm_intents/';
+    if (!is_dir($uploadDir)) {
+        mkdir($uploadDir, 0755, true);
+    }
+
+    $fileInfo = pathinfo($_FILES['media']['name']);
+    $ext = strtolower($fileInfo['extension'] ?? '');
+    if (in_array($ext, ['jpg', 'jpeg', 'png', 'webp', 'pdf'])) {
+        $filename = uniqid('intent_') . '.' . $ext;
+        $dest = $uploadDir . $filename;
+        if (move_uploaded_file($_FILES['media']['tmp_name'], $dest)) {
+            $mediaUrl = 'https://erp.batidospitaya.com/modulos/sistemas/uploads/crm_intents/' . $filename;
+        }
+    } else {
+        echo json_encode(['success' => false, 'error' => 'Formato no permitido. Usa JPG, PNG, WEBP o PDF.']);
+        exit;
+    }
+}
 
 try {
     if ($id) {
         $stmt = $conn->prepare("
             UPDATE bot_intents
             SET intent_name = :n, keywords = :k, response_templates = :t,
-                priority = :p, is_active = :a, updated_at = CONVERT_TZ(NOW(),'+00:00','-06:00')
+                priority = :p, is_active = :a, media_url = :m, updated_at = CONVERT_TZ(NOW(),'+00:00','-06:00')
             WHERE id = :id
         ");
-        $stmt->execute([':n' => $nombre, ':k' => $keywords, ':t' => $templatesJson, ':p' => $prioridad, ':a' => $activo, ':id' => $id]);
+        $stmt->execute([':n' => $nombre, ':k' => $keywords, ':t' => $templatesJson, ':p' => $prioridad, ':a' => $activo, ':m' => $mediaUrl, ':id' => $id]);
     } else {
         $stmt = $conn->prepare("
-            INSERT INTO bot_intents (intent_name, keywords, response_templates, priority, is_active, created_at, updated_at)
-            VALUES (:n, :k, :t, :p, :a, CONVERT_TZ(NOW(),'+00:00','-06:00'), CONVERT_TZ(NOW(),'+00:00','-06:00'))
+            INSERT INTO bot_intents (intent_name, keywords, response_templates, priority, is_active, media_url, created_at, updated_at)
+            VALUES (:n, :k, :t, :p, :a, :m, CONVERT_TZ(NOW(),'+00:00','-06:00'), CONVERT_TZ(NOW(),'+00:00','-06:00'))
         ");
-        $stmt->execute([':n' => $nombre, ':k' => $keywords, ':t' => $templatesJson, ':p' => $prioridad, ':a' => $activo]);
+        $stmt->execute([':n' => $nombre, ':k' => $keywords, ':t' => $templatesJson, ':p' => $prioridad, ':a' => $activo, ':m' => $mediaUrl]);
         $id = $conn->lastInsertId();
     }
 
