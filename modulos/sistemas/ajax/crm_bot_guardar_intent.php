@@ -47,7 +47,7 @@ if ($removeMedia === 1) {
 }
 
 if (isset($_FILES['media']) && $_FILES['media']['error'] === UPLOAD_ERR_OK) {
-    $uploadDir = __DIR__ . '/../../uploads/crm_intents/';
+    $uploadDir = __DIR__ . '/../uploads/crm_intents/';
     if (!is_dir($uploadDir)) {
         mkdir($uploadDir, 0755, true);
     }
