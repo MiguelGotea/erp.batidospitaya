@@ -1,7 +1,8 @@
 <?php
 /**
  * planilla_wsp_eliminar.php
- * Elimina una programación de planilla (solo si está en estado 'programada').
+ * Elimina una programación (solo si estado=programada)
+ * y limpia las columnas wsp_* en BoletaPago.
  */
 require_once '../../../core/auth/auth.php';
 require_once '../../../core/permissions/permissions.php';
@@ -27,7 +28,6 @@ if (!$progId) {
 }
 
 try {
-    // Solo se puede eliminar si está 'programada' (no en proceso de envío)
     $stmtCheck = $conn->prepare("SELECT estado FROM wsp_planilla_programaciones_ WHERE id = :id LIMIT 1");
     $stmtCheck->execute([':id' => $progId]);
     $prog = $stmtCheck->fetch();
@@ -41,12 +41,26 @@ try {
         exit;
     }
 
-    // Eliminar (CASCADE elimina los destinatarios)
-    $stmt = $conn->prepare("DELETE FROM wsp_planilla_programaciones_ WHERE id = :id");
-    $stmt->execute([':id' => $progId]);
+    $conn->beginTransaction();
 
+    // Limpiar columnas WSP en las boletas asociadas
+    $conn->prepare("
+        UPDATE BoletaPago
+        SET wsp_programacion_id = NULL,
+            wsp_enviado         = 0,
+            wsp_error           = NULL,
+            wsp_fecha_envio     = NULL
+        WHERE wsp_programacion_id = :pid
+    ")->execute([':pid' => $progId]);
+
+    // Eliminar la programación
+    $conn->prepare("DELETE FROM wsp_planilla_programaciones_ WHERE id = :id")
+        ->execute([':id' => $progId]);
+
+    $conn->commit();
     echo json_encode(['success' => true]);
 
 } catch (Exception $e) {
+    $conn->rollBack();
     echo json_encode(['error' => $e->getMessage()]);
 }

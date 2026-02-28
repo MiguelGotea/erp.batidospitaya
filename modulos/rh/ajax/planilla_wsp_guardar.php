@@ -2,7 +2,8 @@
 /**
  * planilla_wsp_guardar.php
  * Crea o actualiza una programación de envío WSP para una fecha_planilla.
- * Inserta los destinatarios (operarios con boleta para esa fecha).
+ * En lugar de usar una tabla auxiliar, marca directamente las boletas en BoletaPago
+ * con wsp_programacion_id y resetea wsp_enviado=0.
  */
 require_once '../../../core/auth/auth.php';
 require_once '../../../core/permissions/permissions.php';
@@ -24,14 +25,13 @@ $fechaPlanilla = trim($body['fecha_planilla'] ?? '');
 $fechaEnvio = trim($body['fecha_envio'] ?? '');
 $mensaje = trim($body['mensaje'] ?? '');
 $imagenB64 = $body['imagen_base64'] ?? null;
-$progId = (int) ($body['prog_id'] ?? 0); // Si > 0 es edición
+$progId = (int) ($body['prog_id'] ?? 0);
 
 if (!$fechaPlanilla || !$fechaEnvio || !$mensaje) {
     echo json_encode(['error' => 'fecha_planilla, fecha_envio y mensaje son requeridos']);
     exit;
 }
 
-// Validar que la fecha_envio es futura
 if (strtotime($fechaEnvio) <= time()) {
     echo json_encode(['error' => 'La fecha y hora de envío debe ser futura']);
     exit;
@@ -39,7 +39,7 @@ if (strtotime($fechaEnvio) <= time()) {
 
 function formatearTelefonoNi($cel)
 {
-    $limpio = preg_replace('/\D/', '', $cel);
+    $limpio = preg_replace('/\D/', '', $cel ?? '');
     if (strlen($limpio) === 8)
         return '+505' . $limpio;
     if (str_starts_with($limpio, '505') && strlen($limpio) === 11)
@@ -50,6 +50,25 @@ function formatearTelefonoNi($cel)
 }
 
 try {
+    // ── Contar boletas con teléfono para esta fecha_planilla ──
+    $stmtCount = $conn->prepare("
+        SELECT COUNT(*) AS total
+        FROM BoletaPago b
+        INNER JOIN Operarios o ON o.CodOperario = b.cod_operario
+        WHERE b.fecha_planilla = :fp
+          AND (
+              NULLIF(TRIM(o.telefono_corporativo), '') IS NOT NULL
+              OR NULLIF(TRIM(o.Celular), '') IS NOT NULL
+          )
+    ");
+    $stmtCount->execute([':fp' => $fechaPlanilla]);
+    $totalDest = (int) $stmtCount->fetchColumn();
+
+    if ($totalDest === 0) {
+        echo json_encode(['error' => 'No hay colaboradores con teléfono para esta fecha de planilla']);
+        exit;
+    }
+
     // ── Guardar imagen si la hay ──
     $imagenUrl = null;
     if ($imagenB64 && str_contains($imagenB64, 'base64,')) {
@@ -73,63 +92,38 @@ try {
         $imagenUrl = '/modulos/rh/uploads/planilla_wsp/' . $nombreArchivo;
     }
 
-    // ── Obtener todos los destinatarios de esta fecha_planilla ──
-    $stmtDest = $conn->prepare("
-        SELECT
-            b.id_boleta,
-            b.cod_operario,
-            CONCAT(
-                COALESCE(o.Nombre, ''), ' ',
-                COALESCE(o.Nombre2, ''), ' ',
-                COALESCE(o.Apellido, ''), ' ',
-                COALESCE(o.Apellido2, '')
-            ) AS nombre_completo,
-            COALESCE(
-                NULLIF(TRIM(o.telefono_corporativo), ''),
-                NULLIF(TRIM(o.Celular), '')
-            ) AS telefono
-        FROM BoletaPago b
-        INNER JOIN Operarios o ON o.CodOperario = b.cod_operario
-        WHERE b.fecha_planilla = :fp
-          AND (
-              NULLIF(TRIM(o.telefono_corporativo), '') IS NOT NULL
-              OR NULLIF(TRIM(o.Celular), '') IS NOT NULL
-          )
-    ");
-    $stmtDest->execute([':fp' => $fechaPlanilla]);
-    $destinatarios = $stmtDest->fetchAll();
-
-    if (empty($destinatarios)) {
-        echo json_encode(['error' => 'No hay colaboradores con teléfono para esta fecha de planilla']);
-        exit;
-    }
-
-    $totalDest = count($destinatarios);
+    $conn->beginTransaction();
     $codOp = $usuario['CodOperario'];
 
-    $conn->beginTransaction();
-
     if ($progId > 0) {
-        // ── Edición: actualizar solo campos editables (si aún está programada) ──
-        $stmtUpd = $conn->prepare("
+        // ── Edición: limpiar la asociación anterior en BoletaPago ──
+        $conn->prepare("
+            UPDATE BoletaPago
+            SET wsp_programacion_id = NULL,
+                wsp_enviado         = 0,
+                wsp_error           = NULL,
+                wsp_fecha_envio     = NULL
+            WHERE wsp_programacion_id = :pid
+        ")->execute([':pid' => $progId]);
+
+        // Actualizar la programación
+        $conn->prepare("
             UPDATE wsp_planilla_programaciones_
             SET mensaje             = :mensaje,
                 imagen_url          = COALESCE(:imagen_url, imagen_url),
                 fecha_envio         = :fecha_envio,
-                total_destinatarios = :total
+                total_destinatarios = :total,
+                total_enviados      = 0,
+                total_errores       = 0,
+                estado              = 'programada'
             WHERE id = :id AND estado = 'programada'
-        ");
-        $stmtUpd->execute([
-            ':mensaje' => $mensaje,
-            ':imagen_url' => $imagenUrl,
-            ':fecha_envio' => $fechaEnvio,
-            ':total' => $totalDest,
-            ':id' => $progId
-        ]);
-
-        // Borrar destinatarios anteriores y reinsertarlos frescos
-        $conn->prepare("DELETE FROM wsp_planilla_destinatarios_ WHERE programacion_id = :pid")
-            ->execute([':pid' => $progId]);
+        ")->execute([
+                    ':mensaje' => $mensaje,
+                    ':imagen_url' => $imagenUrl,
+                    ':fecha_envio' => $fechaEnvio,
+                    ':total' => $totalDest,
+                    ':id' => $progId
+                ]);
 
         $campanaId = $progId;
 
@@ -137,10 +131,11 @@ try {
         // ── Nuevo ──
         $stmtIns = $conn->prepare("
             INSERT INTO wsp_planilla_programaciones_
-                (fecha_planilla, mensaje, imagen_url, fecha_envio, estado, total_destinatarios, usuario_creacion, fecha_creacion)
+                (fecha_planilla, mensaje, imagen_url, fecha_envio, estado,
+                 total_destinatarios, usuario_creacion, fecha_creacion)
             VALUES
-                (:fp, :mensaje, :imagen_url, :fecha_envio, 'programada', :total, :usuario,
-                 CONVERT_TZ(NOW(),'+00:00','-06:00'))
+                (:fp, :mensaje, :imagen_url, :fecha_envio, 'programada',
+                 :total, :usuario, CONVERT_TZ(NOW(),'+00:00','-06:00'))
         ");
         $stmtIns->execute([
             ':fp' => $fechaPlanilla,
@@ -153,24 +148,21 @@ try {
         $campanaId = (int) $conn->lastInsertId();
     }
 
-    // ── Insertar destinatarios ──
-    $stmtDestIns = $conn->prepare("
-        INSERT INTO wsp_planilla_destinatarios_
-            (programacion_id, id_boleta, cod_operario, nombre, telefono)
-        VALUES (:pid, :id_boleta, :cod_op, :nombre, :telefono)
-    ");
-    foreach ($destinatarios as $d) {
-        $tel = formatearTelefonoNi($d['telefono'] ?? '');
-        if (!$tel)
-            continue;
-        $stmtDestIns->execute([
-            ':pid' => $campanaId,
-            ':id_boleta' => (int) $d['id_boleta'],
-            ':cod_op' => (int) $d['cod_operario'],
-            ':nombre' => trim($d['nombre_completo']),
-            ':telefono' => $tel
-        ]);
-    }
+    // ── Asociar boletas de esa fecha con esta programación ──
+    // Solo las que tienen teléfono en Operarios
+    $conn->prepare("
+        UPDATE BoletaPago b
+        INNER JOIN Operarios o ON o.CodOperario = b.cod_operario
+        SET b.wsp_programacion_id = :pid,
+            b.wsp_enviado         = 0,
+            b.wsp_error           = NULL,
+            b.wsp_fecha_envio     = NULL
+        WHERE b.fecha_planilla = :fp
+          AND (
+              NULLIF(TRIM(o.telefono_corporativo), '') IS NOT NULL
+              OR NULLIF(TRIM(o.Celular), '') IS NOT NULL
+          )
+    ")->execute([':pid' => $campanaId, ':fp' => $fechaPlanilla]);
 
     $conn->commit();
     echo json_encode(['success' => true, 'prog_id' => $campanaId, 'total' => $totalDest]);
