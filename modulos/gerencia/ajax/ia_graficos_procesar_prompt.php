@@ -53,8 +53,8 @@ try {
     $contexto = cargarContextoNegocio($conn);
     $systemPrompt = construirSystemPromptGraficos($contexto);
 
-    // Estrategia de reintento en cascada entre proveedores
-    $proveedores = ['google', 'openai', 'deepseek', 'cerebras', 'groq'];
+    // Estrategia de reintento en cascada entre proveedores (8 opciones en total)
+    $proveedores = ['google', 'openai', 'deepseek', 'mistral', 'cerebras', 'openrouter', 'huggingface', 'groq'];
     $respuestaTexto = null;
     $aiService = null;
     $erroresAcumulados = [];
