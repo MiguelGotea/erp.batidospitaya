@@ -9,56 +9,19 @@ require_once '../../core/permissions/permissions.php';
 $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'] ?? null;
 
-// Verificar acceso (SIEMPRE debe existir permiso 'vista')
+// Verificar acceso
 if (!tienePermiso('configuracion_ia_provedores', 'vista', $cargoOperario)) {
     header('Location: /login.php');
     exit();
 }
 
-$mensaje = '';
-$tipoMensaje = 'success';
-
-// Procesar Guardado
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $accion = $_POST['accion'] ?? '';
-
-    if ($accion === 'guardar') {
-        $id = $_POST['id'] ?? null;
-        $proveedor = $_POST['proveedor'];
-        $apiKey = $_POST['api_key'];
-        $password = $_POST['password'] ?? null;
-        $activa = isset($_POST['activa']) ? 1 : 0;
-
-        try {
-            if ($id) {
-                $stmt = $conn->prepare("UPDATE ia_proveedores_api SET proveedor = ?, api_key = ?, password = ?, activa = ? WHERE id = ?");
-                $stmt->execute([$proveedor, $apiKey, $password, $activa, $id]);
-                $mensaje = "Proveedor actualizado correctamente";
-            } else {
-                $stmt = $conn->prepare("INSERT INTO ia_proveedores_api (proveedor, api_key, password, activa) VALUES (?, ?, ?, ?)");
-                $stmt->execute([$proveedor, $apiKey, $password, $activa]);
-                $mensaje = "Nuevo proveedor registrado correctamente";
-            }
-        } catch (Exception $e) {
-            $mensaje = "Error: " . $e->getMessage();
-            $tipoMensaje = 'error';
-        }
-    } elseif ($accion === 'eliminar') {
-        $id = $_POST['id'];
-        try {
-            $stmt = $conn->prepare("DELETE FROM ia_proveedores_api WHERE id = ?");
-            $stmt->execute([$id]);
-            $mensaje = "Proveedor eliminado";
-        } catch (Exception $e) {
-            $mensaje = "Error: " . $e->getMessage();
-            $tipoMensaje = 'error';
-        }
-    }
-}
-
 // Consultar Proveedores
 $stmt = $conn->query("SELECT * FROM ia_proveedores_api ORDER BY proveedor ASC, activa DESC");
 $proveedores = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Manejo de mensajes vía GET
+$mensaje = $_GET['msg'] ?? '';
+$tipoMensaje = ($_GET['status'] ?? '') === 'success' ? 'success' : 'danger';
 
 // Enlaces de ayuda
 $links = [
@@ -84,303 +47,7 @@ $links = [
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="/core/assets/css/global_tools.css?v=<?php echo mt_rand(1, 10000); ?>">
-    <style>
-        :root {
-            --color-principal: #51B8AC;
-            --color-header-tabla: #0E544C;
-            --btn-nuevo: #218838;
-            --btn-nuevo-hover: #1d6f42;
-            --bg: #f4f7f6;
-            --text: #333;
-            --text-dim: #666;
-            --success: #218838;
-            --danger: #dc3545;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Calibri', sans-serif;
-            font-size: clamp(12px, 2vw, 18px);
-            background-color: var(--bg);
-            color: var(--text);
-            min-height: 100vh;
-        }
-
-        .main-container {
-            margin-left: 260px;
-            /* Ajuste para menú lateral */
-            transition: all 0.3s;
-        }
-
-        .sub-container {
-            padding: 0;
-            min-height: 100vh;
-        }
-
-        .content-padding {
-            padding: 30px;
-        }
-
-        /* Card Style */
-        .card {
-            background: white;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            padding: 25px;
-            margin-bottom: 25px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-        }
-
-        .card-title {
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: var(--color-header-tabla);
-            margin-bottom: 20px;
-            border-bottom: 2px solid var(--color-principal);
-            padding-bottom: 10px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        /* Form Controls */
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-bottom: 25px;
-        }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .form-group label {
-            color: var(--text-dim);
-            font-size: 0.9rem;
-            font-weight: 500;
-        }
-
-        input,
-        select {
-            background: rgba(0, 0, 0, 0.2);
-            border: 1px solid var(--glass-border);
-            border-radius: 12px;
-            padding: 12px 16px;
-            color: var(--text);
-            font-size: 1rem;
-            transition: all 0.3s;
-        }
-
-        input:focus,
-        select:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
-        }
-
-        .btn {
-            padding: 12px 24px;
-            border-radius: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            border: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 1rem;
-        }
-
-        .btn-primary {
-            background: var(--primary);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: var(--primary-dark);
-            transform: translateY(-2px);
-        }
-
-        .btn-danger {
-            background: rgba(239, 68, 68, 0.1);
-            color: var(--danger);
-            border: 1px solid rgba(239, 68, 68, 0.2);
-        }
-
-        .btn-danger:hover {
-            background: var(--danger);
-            color: white;
-        }
-
-        /* Table Style */
-        .table-container {
-            overflow-x: auto;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-        }
-
-        th {
-            text-align: left;
-            padding: 15px;
-            color: var(--text-dim);
-            font-size: 0.85rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            border-bottom: 1px solid var(--glass-border);
-        }
-
-        td {
-            padding: 15px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            vertical-align: middle;
-        }
-
-        .badge {
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 600;
-        }
-
-        .badge-success {
-            background: rgba(34, 197, 94, 0.1);
-            color: var(--success);
-        }
-
-        .badge-warning {
-            background: rgba(234, 179, 8, 0.1);
-            color: #eab308;
-        }
-
-        .provider-icon {
-            text-transform: capitalize;
-            font-weight: 600;
-            color: #60a5fa;
-        }
-
-        .api-key-hidden {
-            font-family: monospace;
-            color: var(--text-dim);
-            font-size: 0.9rem;
-        }
-
-        .action-btns {
-            display: flex;
-            gap: 10px;
-        }
-
-        .alert {
-            padding: 15px 20px;
-            border-radius: 12px;
-            margin-bottom: 25px;
-            animation: slideIn 0.3s ease-out;
-        }
-
-        .alert-success {
-            background: rgba(34, 197, 94, 0.1);
-            border: 1px solid rgba(34, 197, 94, 0.2);
-            color: var(--success);
-        }
-
-        .alert-error {
-            background: rgba(239, 68, 68, 0.1);
-            border: 1px solid rgba(239, 68, 68, 0.2);
-            color: var(--danger);
-        }
-
-        @keyframes slideIn {
-            from {
-                transform: translateY(-10px);
-                opacity: 0;
-            }
-
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
-        }
-
-        .helper-links {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 10px;
-        }
-
-        .helper-link {
-            background: rgba(255, 255, 255, 0.05);
-            padding: 8px 15px;
-            border-radius: 50px;
-            font-size: 0.8rem;
-            text-decoration: none;
-            color: var(--text-dim);
-            border: 1px solid var(--glass-border);
-            transition: all 0.3s;
-        }
-
-        .helper-link:hover {
-            border-color: var(--primary);
-            color: var(--primary);
-            background: rgba(59, 130, 246, 0.05);
-        }
-
-        .toggle-switch {
-            position: relative;
-            display: inline-block;
-            width: 50px;
-            height: 24px;
-        }
-
-        .toggle-switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(255, 255, 255, 0.1);
-            transition: .4s;
-            border-radius: 34px;
-        }
-
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 18px;
-            width: 18px;
-            left: 3px;
-            bottom: 3px;
-            background-color: var(--text);
-            transition: .4s;
-            border-radius: 50%;
-        }
-
-        input:checked+.slider {
-            background-color: var(--success);
-        }
-
-        input:checked+.slider:before {
-            transform: translateX(26px);
-        }
-    </style>
+    <link rel="stylesheet" href="css/ia_config_api.css?v=<?php echo mt_rand(1, 10000); ?>">
 </head>
 
 <body>
@@ -392,17 +59,16 @@ $links = [
 
             <div class="content-padding">
                 <?php if ($mensaje): ?>
-                    <div
-                        class="alert alert-<?php echo $tipoMensaje === 'success' ? 'success' : 'danger'; ?> alert-dismissible fade show">
-                        <?php echo $mensaje; ?>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <div class="alert alert-<?php echo $tipoMensaje; ?> alert-dismissible fade show">
+                        <?php echo htmlspecialchars($mensaje); ?>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
                 <?php endif; ?>
 
                 <!-- Formulario Registro / Edición -->
                 <div class="card" id="formCard">
                     <h2 class="card-title" id="formTitle">Registro de Proveedor</h2>
-                    <form method="POST">
+                    <form method="POST" action="ajax/ia_config_api_handler.php">
                         <input type="hidden" name="accion" value="guardar">
                         <input type="hidden" name="id" id="editId">
 
@@ -464,12 +130,12 @@ $links = [
                                 <?php foreach ($proveedores as $p): ?>
                                     <tr>
                                         <td class="provider-icon">
-                                            <?php echo $p['proveedor']; ?>
+                                            <?php echo htmlspecialchars($p['proveedor']); ?>
                                         </td>
                                         <td class="api-key-hidden">
                                             <?php
                                             $part = substr($p['api_key'], 0, 8);
-                                            echo $part . "..." . substr($p['api_key'], -4);
+                                            echo htmlspecialchars($part) . "..." . htmlspecialchars(substr($p['api_key'], -4));
                                             ?>
                                         </td>
                                         <td class="api-key-hidden">
@@ -481,24 +147,24 @@ $links = [
                                             <?php elseif ($p['activa']): ?>
                                                 <span class="badge badge-success">ACTIVA</span>
                                             <?php else: ?>
-                                                <span class="badge"
-                                                    style="background: rgba(255,255,255,0.05); color: var(--text-dim);">INACTIVA</span>
+                                                <span class="badge" style="background: #eee; color: #666;">INACTIVA</span>
                                             <?php endif; ?>
                                         </td>
-                                        <td style="font-size: 0.85rem; color: var(--text-dim);">
+                                        <td style="font-size: 0.85rem; color: #666;">
                                             <?php echo $p['ultimo_uso'] ? date('d/m/Y H:i', strtotime($p['ultimo_uso'])) : 'Nunca usado'; ?>
                                         </td>
                                         <td>
                                             <div class="action-btns">
-                                                <button class="btn"
-                                                    style="padding: 8px; background: rgba(255,255,255,0.05);"
-                                                    onclick='editar(<?php echo json_encode($p); ?>)'>
+                                                <button class="btn" style="padding: 8px; background: rgba(0,0,0,0.05);"
+                                                    onclick='editar(<?php echo json_encode($p); ?>)' title="Editar">
                                                     ✏️
                                                 </button>
-                                                <form method="POST" onsubmit="return confirm('¿Eliminar este proveedor?')">
+                                                <form method="POST" action="ajax/ia_config_api_handler.php"
+                                                    onsubmit="return confirmarEliminacion()">
                                                     <input type="hidden" name="accion" value="eliminar">
                                                     <input type="hidden" name="id" value="<?php echo $p['id']; ?>">
-                                                    <button type="submit" class="btn btn-danger" style="padding: 8px;">
+                                                    <button type="submit" class="btn btn-danger" style="padding: 8px;"
+                                                        title="Eliminar">
                                                         🗑️
                                                     </button>
                                                 </form>
@@ -508,7 +174,7 @@ $links = [
                                 <?php endforeach; ?>
                                 <?php if (empty($proveedores)): ?>
                                     <tr>
-                                        <td colspan="6" style="text-align: center; padding: 40px; color: var(--text-dim);">
+                                        <td colspan="6" style="text-align: center; padding: 40px; color: #666;">
                                             No hay llaves registradas. Añade una arriba.
                                         </td>
                                     </tr>
@@ -556,7 +222,7 @@ $links = [
                             <div class="card h-100 border-0 bg-light">
                                 <div class="card-body">
                                     <h6 class="text-warning border-bottom pb-2 fw-bold">
-                                        <i class="fas fa-key me-2"></i> Seguridad
+                                        <i class="fas fa-key me-1"></i> Seguridad
                                     </h6>
                                     <p class="small text-muted mb-0">
                                         Las llaves se guardan de forma segura en la base de datos empresarial. El campo
@@ -598,39 +264,9 @@ $links = [
         </div>
     </div>
 
-    <style>
-        /* Ajuste de z-index para evitar que el backdrop cubra el modal */
-        #pageHelpModal {
-            z-index: 1060 !important;
-        }
-
-        .modal-backdrop {
-            z-index: 1050 !important;
-        }
-    </style>
-
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        function editar(data) {
-            document.getElementById('formTitle').textContent = "Editar Proveedor: " + data.proveedor.toUpperCase();
-            document.getElementById('editId').value = data.id;
-            document.getElementById('editProveedor').value = data.proveedor;
-            document.getElementById('editKey').value = data.api_key;
-            document.getElementById('editPassword').value = data.password || '';
-            document.getElementById('editActiva').checked = data.activa == 1;
-
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
-        function limpiarForm() {
-            document.getElementById('formTitle').textContent = "Registro de Proveedor";
-            document.getElementById('editId').value = '';
-            document.getElementById('editKey').value = '';
-            document.getElementById('editPassword').value = '';
-            document.getElementById('editActiva').checked = true;
-        }
-    </script>
+    <script src="js/ia_config_api.js?v=<?php echo mt_rand(1, 10000); ?>"></script>
 </body>
 
 </html>
