@@ -214,10 +214,12 @@ PROMPT;
      */
     private function extraerJSON($content)
     {
-        // Limpiar posibles backticks
-        $content = preg_replace('/```json\s*/i', '', $content);
-        $content = preg_replace('/```\s*$/i', '', $content);
-        $content = trim($content);
+        // Buscar el primer '{' y el último '}'
+        $start = strpos($content, '{');
+        $end = strrpos($content, '}');
+        if ($start !== false && $end !== false) {
+            $content = substr($content, $start, $end - $start + 1);
+        }
 
         // Intentar decodificar
         $decoded = json_decode($content, true);
