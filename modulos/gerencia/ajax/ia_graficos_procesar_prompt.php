@@ -1,7 +1,7 @@
 <?php
 @session_start();
 require_once '../../../core/database/conexion.php';
-require_once '../../../core/ai/GroqService.php';
+require_once '../../../core/ai/AIService.php';
 
 header('Content-Type: application/json');
 
@@ -48,11 +48,11 @@ try {
     $contexto = cargarContextoNegocio($conn);
     $systemPrompt = construirSystemPromptGraficos($contexto);
 
-    // Procesar con IA
-    $groqService = new GroqService($conn);
-    // GroqService Core returns the text response instead of parsed data, so we must parse it
-    $respuestaTexto = $groqService->procesarPrompt($systemPrompt, $prompt);
-    $estructura = $groqService->extraerJSON($respuestaTexto);
+    // Procesar con IA usando proveedor 'groq' por defecto
+    $aiService = new AIService($conn, 'groq');
+    // AIService Core returns the text response instead of parsed data, so we must parse it
+    $respuestaTexto = $aiService->procesarPrompt($systemPrompt, $prompt);
+    $estructura = $aiService->extraerJSON($respuestaTexto);
 
     // Validar estructura
     $validacion = validarEstructura($estructura, $conn);
