@@ -1,7 +1,7 @@
 <?php
 @session_start();
 require_once '../../../core/database/conexion.php';
-require_once 'GroqService.php';
+require_once '../../../core/ai/GroqService.php';
 
 header('Content-Type: application/json');
 
@@ -46,15 +46,18 @@ try {
 
     // Cargar contexto de negocio
     $contexto = cargarContextoNegocio($conn);
+    $systemPrompt = construirSystemPromptGraficos($contexto);
 
     // Procesar con IA
     $groqService = new GroqService();
-    $estructura = $groqService->procesarPrompt($prompt, $contexto);
+    // GroqService Core returns the text response instead of parsed data, so we must parse it
+    $respuestaTexto = $groqService->procesarPrompt($systemPrompt, $prompt);
+    $estructura = $groqService->extraerJSON($respuestaTexto);
 
     // Validar estructura
     $validacion = validarEstructura($estructura, $conn);
     if (!$validacion['valido']) {
-        throw new Exception('Estructura inválida: ' . implode(', ', $validacion['errores']));
+        throw new Exception('Estructura inválida generada por la IA: ' . implode(', ', $validacion['errores']));
     }
 
     // Guardar en caché
@@ -185,5 +188,100 @@ function existeColumna($columna, $conn)
     $stmt->execute([$columna]);
     $result = $stmt->fetch();
     return $result['total'] > 0;
+}
+/**
+ * Construir system prompt con contexto
+ */
+function construirSystemPromptGraficos($contexto)
+{
+    return <<<PROMPT
+Eres un asistente especializado en analizar consultas de ventas y convertirlas en estructuras de datos para gráficos.
+
+**TU OBJETIVO:**
+Interpretar el prompt del usuario y devolver ÚNICAMENTE un objeto JSON válido con la estructura requerida.
+
+**CONTEXTO DE NEGOCIO:**
+{$contexto['diccionario_columnas']}
+
+**MÉTRICAS DISPONIBLES:**
+{$contexto['metricas_predefinidas']}
+
+**FILTROS CONCEPTUALES:**
+{$contexto['filtros_conceptuales']}
+
+**REGLAS ESTRICTAS:**
+1. SOLO devuelve JSON válido, sin texto adicional
+2. SOLO usa columnas que existen en el diccionario
+3. SOLO usa métricas predefinidas
+4. Aplica filtros conceptuales cuando corresponda
+5. El tipo de gráfico debe ser: "lineal", "barras", "circular", "area" o "columnas"
+6. Siempre incluye una descripción clara del gráfico
+
+**ESTRUCTURA JSON REQUERIDA:**
+```json
+{
+    "tipo_grafico": "tipo del gráfico",
+    "metrica_nombre": "nombre de la métrica",
+    "metrica_columna": "columna de BD",
+    "metrica_funcion": "función SQL (SUM, AVG, COUNT, etc)",
+    "formato_metrica": "moneda|numero|porcentaje",
+    "dimension_nombre": "nombre de la dimensión",
+    "dimension_columna": "columna para agrupar",
+    "dimension_tipo": "temporal|categorica",
+    "rango_temporal": {
+        "tipo": "dias|semanas|meses",
+        "cantidad": numero,
+        "descripcion": "descripción legible"
+    },
+    "filtros": [
+        {
+            "columna": "nombre columna",
+            "operador": "=|>|<|LIKE|IN",
+            "valor": "valor",
+            "descripcion": "descripción del filtro"
+        }
+    ],
+    "descripcion_grafico": "descripción completa de lo que muestra el gráfico",
+    "observaciones": "notas adicionales si aplica"
+}
+```
+
+**EJEMPLOS:**
+
+Prompt: "gráfico lineal de ventas diarias de las últimas dos semanas"
+```json
+{
+    "tipo_grafico": "lineal",
+    "metrica_nombre": "total de ventas",
+    "metrica_columna": "Precio",
+    "metrica_funcion": "SUM",
+    "formato_metrica": "moneda",
+    "dimension_nombre": "fecha de venta",
+    "dimension_columna": "Fecha",
+    "dimension_tipo": "temporal",
+    "rango_temporal": {
+        "tipo": "dias",
+        "cantidad": 14,
+        "descripcion": "últimas 2 semanas"
+    },
+    "filtros": [
+        {
+            "columna": "Anulado",
+            "operador": "=",
+            "valor": "0",
+            "descripcion": "ventas válidas"
+        }
+    ],
+    "descripcion_grafico": "Evolución de ventas totales por día durante las últimas dos semanas",
+    "observaciones": null
+}
+```
+
+**IMPORTANTE:**
+- Devuelve SOLO el JSON, sin ```json ni explicaciones
+- Valida que las columnas existan en el diccionario
+- Si algo no está claro, usa valores por defecto razonables
+- Siempre aplica filtro de "Anulado = 0" para ventas válidas
+PROMPT;
 }
 ?>

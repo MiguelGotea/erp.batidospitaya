@@ -8,6 +8,7 @@
 /core/
 /docs/
 /.agent/
+/.env
 
 # Excluir todo en modulos EXCEPTO los modulos permitidos (15 en total)
 /modulos/*
@@ -18,7 +19,6 @@
 !/modulos/diseno/
 !/modulos/experienciadigital/
 !/modulos/gerencia/
-/modulos/gerencia/env.php
 !/modulos/infraestructura/
 !/modulos/legal/
 !/modulos/mantenimiento/
