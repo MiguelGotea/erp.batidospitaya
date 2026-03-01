@@ -6,6 +6,7 @@
  */
 
 // Configuración
+
 class GeminiConfig
 {
     // Reemplaza con tu API key de Google AI Studio
