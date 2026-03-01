@@ -57,23 +57,25 @@ try {
     $proveedores = ['google', 'openai', 'deepseek', 'cerebras', 'groq'];
     $respuestaTexto = null;
     $aiService = null;
-    $ultimoErrorMsg = '';
+    $erroresAcumulados = [];
 
     foreach ($proveedores as $prov) {
         try {
-            $aiService = new AIService($conn, $prov);
-            $respuestaTexto = $aiService->procesarPrompt($systemPrompt, $prompt);
-            if ($respuestaTexto)
+            $aiServiceSelection = new AIService($conn, $prov);
+            $respuestaTexto = $aiServiceSelection->procesarPrompt($systemPrompt, $prompt);
+            if ($respuestaTexto) {
+                $aiService = $aiServiceSelection;
                 break; // Éxito
+            }
         } catch (Exception $e) {
-            $ultimoErrorMsg = $e->getMessage();
-            error_log("Fallo proveedor $prov: " . $ultimoErrorMsg);
+            $erroresAcumulados[] = strtoupper($prov) . ": " . $e->getMessage();
+            error_log("Fallo proveedor $prov: " . $e->getMessage());
             continue; // Probar siguiente proveedor
         }
     }
 
     if (!$respuestaTexto) {
-        throw new Exception("Ningún proveedor de IA pudo procesar la solicitud. Último error: " . $ultimoErrorMsg);
+        throw new Exception("Ningún proveedor de IA pudo procesar la solicitud. Detalles:\n" . implode("\n", $erroresAcumulados));
     }
 
     $estructura = $aiService->extraerJSON($respuestaTexto);
