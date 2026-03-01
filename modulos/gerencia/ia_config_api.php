@@ -103,16 +103,13 @@ $links = [
                                             <?php echo $p['password'] ? '••••••••' : '-'; ?>
                                         </td>
                                         <td>
-                                            <div class="d-flex align-items-center gap-2">
-                                                <?php if ($p['limite_alcanzado_hoy']): ?>
-                                                    <span class="badge badge-warning">LÍMITE DIARIO</span>
-                                                <?php elseif ($p['activa']): ?>
-                                                    <span class="badge badge-success">ACTIVA</span>
-                                                <?php else: ?>
-                                                    <span class="badge" style="background: #eee; color: #666;">INACTIVA</span>
-                                                <?php endif; ?>
-                                                <div id="status-test-<?php echo $p['id']; ?>"></div>
-                                            </div>
+                                            <?php if ($p['limite_alcanzado_hoy']): ?>
+                                                <span class="badge badge-warning">LÍMITE DIARIO</span>
+                                            <?php elseif ($p['activa']): ?>
+                                                <span class="badge badge-success">ACTIVA</span>
+                                            <?php else: ?>
+                                                <span class="badge" style="background: #eee; color: #666;">INACTIVA</span>
+                                            <?php endif; ?>
                                         </td>
                                         <td style="font-size: 0.85rem; color: #666;">
                                             <?php echo $p['ultimo_uso'] ? date('d/m/Y H:i', strtotime($p['ultimo_uso'])) : 'Nunca usado'; ?>
@@ -293,6 +290,27 @@ $links = [
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Resultado Ping -->
+    <div class="modal fade" id="pingResultModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header border-0" id="pingModalHeader">
+                    <h5 class="modal-title fw-bold text-white">Prueba de Conexión</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4 text-center">
+                    <div id="pingModalIcon" class="mb-3" style="font-size: 3rem;"></div>
+                    <h5 id="pingModalTitle" class="fw-bold mb-2"></h5>
+                    <p id="pingModalMessage" class="text-muted mb-0"></p>
+                </div>
+                <div class="modal-footer bg-light border-0 justify-content-center">
+                    <button type="button" class="btn btn-secondary px-5" data-bs-dismiss="modal">Entendido</button>
                 </div>
             </div>
         </div>

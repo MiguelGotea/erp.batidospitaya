@@ -62,11 +62,12 @@ function confirmarEliminacion() {
  * Ejecuta una prueba de conexión (Ping) para un proveedor específico
  */
 function probarConexion(id) {
-    const statusDiv = document.getElementById(`status-test-${id}`);
-    if (!statusDiv) return;
+    const btn = event.currentTarget;
+    const originalIcon = btn.innerHTML;
 
-    // Mostrar loading
-    statusDiv.innerHTML = '<i class="fas fa-spinner ping-loading" title="Probando..."></i>';
+    // Mostrar loading en el botón
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    btn.disabled = true;
 
     $.ajax({
         url: 'ajax/ia_config_api_handler.php',
@@ -77,14 +78,40 @@ function probarConexion(id) {
         },
         dataType: 'json',
         success: function (response) {
-            if (response.success) {
-                statusDiv.innerHTML = `<i class="fas fa-check-circle ping-success" title="${response.message}"></i>`;
-            } else {
-                statusDiv.innerHTML = `<i class="fas fa-times-circle ping-error" title="${response.message}"></i>`;
-            }
+            mostrarModalResultado(response.success, response.message);
         },
         error: function () {
-            statusDiv.innerHTML = '<i class="fas fa-exclamation-triangle ping-error" title="Error de comunicación"></i>';
+            mostrarModalResultado(false, 'Error de comunicación con el servidor');
+        },
+        complete: function () {
+            // Revertir estado del botón
+            btn.innerHTML = originalIcon;
+            btn.disabled = false;
         }
     });
+}
+
+/**
+ * Muestra el modal de resultado con estilo dinámico
+ */
+function mostrarModalResultado(success, message) {
+    const header = document.getElementById('pingModalHeader');
+    const iconDiv = document.getElementById('pingModalIcon');
+    const title = document.getElementById('pingModalTitle');
+    const msg = document.getElementById('pingModalMessage');
+
+    if (success) {
+        header.className = 'modal-header border-0 bg-success';
+        iconDiv.innerHTML = '<i class="fas fa-check-circle text-success pulse"></i>';
+        title.textContent = '¡Conexión Exitosa!';
+    } else {
+        header.className = 'modal-header border-0 bg-danger';
+        iconDiv.innerHTML = '<i class="fas fa-times-circle text-danger shake"></i>';
+        title.textContent = 'Error de Conexión';
+    }
+
+    msg.textContent = message;
+
+    const modal = new bootstrap.Modal(document.getElementById('pingResultModal'));
+    modal.show();
 }
