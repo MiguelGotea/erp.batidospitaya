@@ -8,7 +8,7 @@
 class DeepSeekConfig
 {
     // Reemplaza con tu API key de DeepSeek
-    const API_KEY = 'TU_API_KEY_DEEPSEEK_AQUI';
+    const API_KEY = 'sk-5b2ba9f0d22e4a438c166ea1f96f0ee5';
 
     // Modelos disponibles (febrero 2026)
     const MODEL_V4 = 'deepseek-v4';           // Modelo principal recomendado
