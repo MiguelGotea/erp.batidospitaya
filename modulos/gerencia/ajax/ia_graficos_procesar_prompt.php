@@ -52,8 +52,8 @@ try {
     $contexto = cargarContextoNegocio($conn);
     $systemPrompt = construirSystemPromptGraficos($contexto);
 
-    // Procesar con IA usando proveedor 'groq' por defecto
-    $aiService = new AIService($conn, 'groq');
+    // Procesar con IA usando proveedor 'openai' por defecto
+    $aiService = new AIService($conn, 'openai');
     // AIService Core returns the text response instead of parsed data, so we must parse it
     $respuestaTexto = $aiService->procesarPrompt($systemPrompt, $prompt);
     $estructura = $aiService->extraerJSON($respuestaTexto);
