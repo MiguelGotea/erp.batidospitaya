@@ -47,6 +47,7 @@ try {
         exit();
     }
 
+
     // Cargar contexto de negocio
     $contexto = cargarContextoNegocio($conn);
     $systemPrompt = construirSystemPromptGraficos($contexto);
