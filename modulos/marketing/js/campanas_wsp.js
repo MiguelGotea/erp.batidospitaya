@@ -489,7 +489,8 @@ async function guardarCampana() {
             fechaGrupo.setDate(fechaGrupo.getDate() + diaOffset);
             fechaGrupo.setHours(fechaGrupo.getHours() + (grupoEnDia * GRUPO_HORAS));
 
-            const fechaStr = fechaGrupo.toISOString().slice(0, 16).replace('T', ' ');
+            const pad = (n) => String(n).padStart(2, '0');
+            const fechaStr = `${fechaGrupo.getFullYear()}-${pad(fechaGrupo.getMonth() + 1)}-${pad(fechaGrupo.getDate())} ${pad(fechaGrupo.getHours())}:${pad(fechaGrupo.getMinutes())}:00`;
 
             btnGuardar.innerHTML = `<span class="spinner-border spinner-border-sm me-1"></span> Guardando grupo ${g + 1}/${totalGrupos}...`;
 
