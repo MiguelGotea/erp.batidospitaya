@@ -54,7 +54,7 @@ try {
     $systemPrompt = construirSystemPromptGraficos($contexto);
 
     // Estrategia de reintento en cascada entre proveedores
-    $proveedores = ['openai', 'deepseek', 'groq'];
+    $proveedores = ['google', 'openai', 'deepseek', 'cerebras', 'groq'];
     $respuestaTexto = null;
     $aiService = null;
     $ultimoErrorMsg = '';

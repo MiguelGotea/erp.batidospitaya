@@ -522,6 +522,8 @@ function mostrarInterpretacion(estructura, proveedor = 'desconocido') {
     if (proveedor.includes('openai')) badgeClass = 'bg-success';
     if (proveedor.includes('groq')) badgeClass = 'bg-primary';
     if (proveedor.includes('deepseek')) badgeClass = 'bg-info text-dark';
+    if (proveedor.includes('google')) badgeClass = 'bg-danger';
+    if (proveedor.includes('cerebras')) badgeClass = 'bg-warning text-dark';
     if (proveedor.includes('cache')) badgeClass = 'bg-dark text-white';
 
     let html = `
