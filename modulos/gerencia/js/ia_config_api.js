@@ -30,6 +30,7 @@ function editar(data) {
     document.getElementById('apiModalLabel').textContent = "Editar Proveedor: " + data.proveedor.toUpperCase();
     document.getElementById('editId').value = data.id;
     document.getElementById('editProveedor').value = data.proveedor;
+    document.getElementById('editEmail').value = data.cuenta_correo || '';
     document.getElementById('editKey').value = data.api_key;
     document.getElementById('editPassword').value = data.password || '';
 

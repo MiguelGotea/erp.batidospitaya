@@ -26,18 +26,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($accion === 'guardar') {
         $id = $_POST['id'] ?? null;
         $proveedor = $_POST['proveedor'];
+        $cuentaCorreo = $_POST['cuenta_correo'] ?? null;
         $apiKey = $_POST['api_key'];
         $password = $_POST['password'] ?? null;
         $activa = isset($_POST['activa']) ? 1 : 0;
 
         try {
             if ($id) {
-                $stmt = $conn->prepare("UPDATE ia_proveedores_api SET proveedor = ?, api_key = ?, password = ?, activa = ? WHERE id = ?");
-                $stmt->execute([$proveedor, $apiKey, $password, $activa, $id]);
+                $stmt = $conn->prepare("UPDATE ia_proveedores_api SET proveedor = ?, cuenta_correo = ?, api_key = ?, password = ?, activa = ? WHERE id = ?");
+                $stmt->execute([$proveedor, $cuentaCorreo, $apiKey, $password, $activa, $id]);
                 $mensaje = "Proveedor actualizado correctamente";
             } else {
-                $stmt = $conn->prepare("INSERT INTO ia_proveedores_api (proveedor, api_key, password, activa) VALUES (?, ?, ?, ?)");
-                $stmt->execute([$proveedor, $apiKey, $password, $activa]);
+                $stmt = $conn->prepare("INSERT INTO ia_proveedores_api (proveedor, cuenta_correo, api_key, password, activa) VALUES (?, ?, ?, ?, ?)");
+                $stmt->execute([$proveedor, $cuentaCorreo, $apiKey, $password, $activa]);
                 $mensaje = "Nuevo proveedor registrado correctamente";
             }
             header("Location: ../ia_config_api.php?status=success&msg=" . urlencode($mensaje));

@@ -80,6 +80,7 @@ $links = [
                             <thead>
                                 <tr>
                                     <th>Proveedor</th>
+                                    <th>Correo</th>
                                     <th>API Key</th>
                                     <th>Password</th>
                                     <th>Estado</th>
@@ -92,6 +93,9 @@ $links = [
                                     <tr id="row-<?php echo $p['id']; ?>">
                                         <td class="provider-icon">
                                             <?php echo htmlspecialchars($p['proveedor']); ?>
+                                        </td>
+                                        <td style="font-size: 0.9rem; color: var(--text-dim);">
+                                            <?php echo htmlspecialchars($p['cuenta_correo'] ?? '-'); ?>
                                         </td>
                                         <td class="api-key-hidden">
                                             <?php
@@ -192,6 +196,13 @@ $links = [
                                             id="editActiva" checked>
                                         <label class="form-check-label" for="editActiva" id="editActivaLabel">Si</label>
                                     </div>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="form-group-modal">
+                                    <label class="form-label fw-bold">Correo Vinculado</label>
+                                    <input type="email" name="cuenta_correo" id="editEmail" class="form-control"
+                                        placeholder="ejemplo@correo.com">
                                 </div>
                             </div>
                             <div class="col-12">
