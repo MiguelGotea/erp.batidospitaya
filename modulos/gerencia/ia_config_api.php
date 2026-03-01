@@ -93,7 +93,11 @@ $links = [
             --danger: #dc3545;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
         body {
             font-family: 'Calibri', sans-serif;
@@ -104,7 +108,8 @@ $links = [
         }
 
         .main-container {
-            margin-left: 260px; /* Ajuste para menú lateral */
+            margin-left: 260px;
+            /* Ajuste para menú lateral */
             transition: all 0.3s;
         }
 
@@ -428,22 +433,10 @@ $links = [
                             </div>
                         </div>
 
-                        <div style="display: flex; justify-content: space-between; align-items: flex-end;">
-                            <div class="helper-links-container">
-                                <label style="font-size: 0.8rem; color: var(--text-dim);">Obtener llaves aquí:</label>
-                                <div class="helper-links">
-                                    <?php foreach ($links as $name => $url): ?>
-                                        <a href="<?php echo $url; ?>" target="_blank" class="helper-link">
-                                            <?php echo ucfirst($name); ?>
-                                        </a>
-                                    <?php endforeach; ?>
-                                </div>
-                            </div>
-                            <div class="action-btns">
-                                <button type="button" class="btn" style="background: rgba(255,255,255,0.05);"
-                                    onclick="limpiarForm()">Cancelar</button>
-                                <button type="submit" class="btn btn-primary">Guardar Configuración</button>
-                            </div>
+                        <div class="action-btns" style="width: 100%; justify-content: flex-end;">
+                            <button type="button" class="btn" style="background: rgba(0,0,0,0.05); color: #666;"
+                                onclick="limpiarForm()">Cancelar</button>
+                            <button type="submit" class="btn btn-primary">Guardar Configuración</button>
                         </div>
                     </form>
                 </div>
@@ -566,6 +559,31 @@ $links = [
                                         "Contraseña" es opcional y se utiliza para identificar cuentas registradas con
                                         credenciales personalizadas fuera de SSO.
                                     </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="card border-0 bg-light">
+                                <div class="card-body">
+                                    <h6 class="text-info border-bottom pb-2 fw-bold">
+                                        <i class="fas fa-external-link-alt me-2"></i> Obtener Credenciales
+                                    </h6>
+                                    <p class="small text-muted mb-3">
+                                        Haz clic en cada proveedor para ir a su consola oficial y generar tus API Keys:
+                                    </p>
+                                    <div class="helper-links">
+                                        <?php foreach ($links as $name => $url): ?>
+                                            <a href="<?php echo $url; ?>" target="_blank" class="helper-link">
+                                                <i class="fas fa-external-link-square-alt me-1"></i>
+                                                <?php echo ucfirst($name); ?>
+                                            </a>
+                                        <?php endforeach; ?>
+                                    </div>
+                                    <div class="alert alert-info py-2 px-3 small mt-3 mb-0">
+                                        <strong><i class="fas fa-info-circle me-1"></i> Nota:</strong>
+                                        <br>
+                                        Para Mistral AI, recomendamos usar el modelo <strong>medium</strong> para la generación de gráficos de ventas por su equilibrio entre precisión y costo.
+                                    </div>
                                 </div>
                             </div>
                         </div>
