@@ -1,13 +1,18 @@
 <?php
 require_once '../../core/database/conexion.php';
 require_once '../../core/auth/auth.php';
+require_once '../../core/layout/menu_lateral.php';
+require_once '../../core/layout/header_universal.php';
 require_once '../../core/permissions/permissions.php';
 
 // Validar permisos
 $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'] ?? null;
-if (!tienePermiso('ia_graficos_ventas', 'especial', $cargoOperario)) {
-    die('Acceso denegado: Se requiere permiso especial para configurar APIs');
+
+// Verificar acceso (SIEMPRE debe existir permiso 'vista')
+if (!tienePermiso('configuracion_ia_provedores', 'vista', $cargoOperario)) {
+    header('Location: /login.php');
+    exit();
 }
 
 $mensaje = '';
@@ -77,74 +82,58 @@ $links = [
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #3b82f6;
-            --primary-dark: #2563eb;
-            --bg: #0f172a;
-            --card-bg: rgba(255, 255, 255, 0.05);
-            --text: #f8fafc;
-            --text-dim: #94a3b8;
-            --success: #22c55e;
-            --danger: #ef4444;
-            --glass: rgba(255, 255, 255, 0.03);
-            --glass-border: rgba(255, 255, 255, 0.1);
+            --color-principal: #51B8AC;
+            --color-header-tabla: #0E544C;
+            --btn-nuevo: #218838;
+            --btn-nuevo-hover: #1d6f42;
+            --bg: #f4f7f6;
+            --text: #333;
+            --text-dim: #666;
+            --success: #218838;
+            --danger: #dc3545;
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Calibri', sans-serif;
+            font-size: clamp(12px, 2vw, 18px);
             background-color: var(--bg);
-            background-image:
-                radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.15) 0px, transparent 50%),
-                radial-gradient(at 100% 0%, rgba(239, 68, 68, 0.1) 0px, transparent 50%);
             color: var(--text);
             min-height: 100vh;
-            padding: 40px 20px;
         }
 
-        .container {
-            max-width: 1100px;
-            margin: 0 auto;
+        .main-container {
+            margin-left: 260px; /* Ajuste para menú lateral */
+            transition: all 0.3s;
         }
 
-        .header {
-            text-align: center;
-            margin-bottom: 50px;
+        .sub-container {
+            padding: 0;
+            min-height: 100vh;
         }
 
-        .header h1 {
-            font-size: 2.5rem;
-            font-weight: 700;
-            background: linear-gradient(to right, #60a5fa, #f472b6);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 10px;
-        }
-
-        .header p {
-            color: var(--text-dim);
-            font-size: 1.1rem;
+        .content-padding {
+            padding: 30px;
         }
 
         /* Card Style */
         .card {
-            background: var(--card-bg);
-            backdrop-filter: blur(12px);
-            border: 1px solid var(--glass-border);
-            border-radius: 24px;
-            padding: 30px;
-            margin-bottom: 30px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
         }
 
         .card-title {
-            font-size: 1.25rem;
-            font-weight: 600;
-            margin-bottom: 25px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--color-header-tabla);
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--color-principal);
+            padding-bottom: 10px;
             display: flex;
             align-items: center;
             gap: 10px;
@@ -386,149 +375,218 @@ $links = [
 </head>
 
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>⚙️ Central AI API</h1>
-            <p>Gestiona todas las llaves y motores de inteligencia artificial</p>
-        </div>
+    <?php echo renderMenuLateral($cargoOperario); ?>
 
-        <?php if ($mensaje): ?>
-            <div class="alert alert-<?php echo $tipoMensaje; ?>">
-                <?php echo $mensaje; ?>
-            </div>
-        <?php endif; ?>
+    <div class="main-container">
+        <div class="sub-container">
+            <?php echo renderHeader($usuario, false, 'Configuración de APIs IA'); ?>
 
-        <!-- Formulario Registro / Edición -->
-        <div class="card" id="formCard">
-            <h2 class="card-title" id="formTitle">Registro de Proveedor</h2>
-            <form method="POST">
-                <input type="hidden" name="accion" value="guardar">
-                <input type="hidden" name="id" id="editId">
+            <div class="content-padding">
+                <?php if ($mensaje): ?>
+                    <div
+                        class="alert alert-<?php echo $tipoMensaje === 'success' ? 'success' : 'danger'; ?> alert-dismissible fade show">
+                        <?php echo $mensaje; ?>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                <?php endif; ?>
 
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label>Proveedor</label>
-                        <select name="proveedor" id="editProveedor" required>
-                            <option value="google">Google Gemini</option>
-                            <option value="openai">OpenAI</option>
-                            <option value="deepseek">DeepSeek</option>
-                            <option value="mistral">Mistral AI</option>
-                            <option value="openrouter">OpenRouter</option>
-                            <option value="huggingface">Hugging Face</option>
-                            <option value="cerebras">Cerebras</option>
-                            <option value="groq">Groq</option>
-                        </select>
-                    </div>
-                    <div class="form-group" style="flex: 2;">
-                        <label>API Key</label>
-                        <input type="text" name="api_key" id="editKey" placeholder="sk-..." required>
-                    </div>
-                    <div class="form-group">
-                        <label>Contraseña (Opcional)</label>
-                        <input type="password" name="password" id="editPassword" placeholder="Clave de cuenta">
-                    </div>
-                    <div class="form-group" style="align-items: center; justify-content: flex-end;">
-                        <label>¿Activa?</label>
-                        <label class="toggle-switch">
-                            <input type="checkbox" name="activa" id="editActiva" checked>
-                            <span class="slider"></span>
-                        </label>
-                    </div>
+                <!-- Formulario Registro / Edición -->
+                <div class="card" id="formCard">
+                    <h2 class="card-title" id="formTitle">Registro de Proveedor</h2>
+                    <form method="POST">
+                        <input type="hidden" name="accion" value="guardar">
+                        <input type="hidden" name="id" id="editId">
+
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Proveedor</label>
+                                <select name="proveedor" id="editProveedor" required>
+                                    <option value="google">Google Gemini</option>
+                                    <option value="openai">OpenAI</option>
+                                    <option value="deepseek">DeepSeek</option>
+                                    <option value="mistral">Mistral AI</option>
+                                    <option value="openrouter">OpenRouter</option>
+                                    <option value="huggingface">Hugging Face</option>
+                                    <option value="cerebras">Cerebras</option>
+                                    <option value="groq">Groq</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="flex: 2;">
+                                <label>API Key</label>
+                                <input type="text" name="api_key" id="editKey" placeholder="sk-..." required>
+                            </div>
+                            <div class="form-group">
+                                <label>Contraseña (Opcional)</label>
+                                <input type="password" name="password" id="editPassword" placeholder="Clave de cuenta">
+                            </div>
+                            <div class="form-group" style="align-items: center; justify-content: flex-end;">
+                                <label>¿Activa?</label>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" name="activa" id="editActiva" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; justify-content: space-between; align-items: flex-end;">
+                            <div class="helper-links-container">
+                                <label style="font-size: 0.8rem; color: var(--text-dim);">Obtener llaves aquí:</label>
+                                <div class="helper-links">
+                                    <?php foreach ($links as $name => $url): ?>
+                                        <a href="<?php echo $url; ?>" target="_blank" class="helper-link">
+                                            <?php echo ucfirst($name); ?>
+                                        </a>
+                                    <?php endforeach; ?>
+                                </div>
+                            </div>
+                            <div class="action-btns">
+                                <button type="button" class="btn" style="background: rgba(255,255,255,0.05);"
+                                    onclick="limpiarForm()">Cancelar</button>
+                                <button type="submit" class="btn btn-primary">Guardar Configuración</button>
+                            </div>
+                        </div>
+                    </form>
                 </div>
 
-                <div style="display: flex; justify-content: space-between; align-items: flex-end;">
-                    <div class="helper-links-container">
-                        <label style="font-size: 0.8rem; color: var(--text-dim);">Obtener llaves aquí:</label>
-                        <div class="helper-links">
-                            <?php foreach ($links as $name => $url): ?>
-                                <a href="<?php echo $url; ?>" target="_blank" class="helper-link">
-                                    <?php echo ucfirst($name); ?>
-                                </a>
-                            <?php endforeach; ?>
+                <!-- Listado de LLaves -->
+                <div class="card">
+                    <h2 class="card-title">Llaves Registradas</h2>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Proveedor</th>
+                                    <th>API Key</th>
+                                    <th>Password</th>
+                                    <th>Estado</th>
+                                    <th>Último Uso</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($proveedores as $p): ?>
+                                    <tr>
+                                        <td class="provider-icon">
+                                            <?php echo $p['proveedor']; ?>
+                                        </td>
+                                        <td class="api-key-hidden">
+                                            <?php
+                                            $part = substr($p['api_key'], 0, 8);
+                                            echo $part . "..." . substr($p['api_key'], -4);
+                                            ?>
+                                        </td>
+                                        <td class="api-key-hidden">
+                                            <?php echo $p['password'] ? '••••••••' : '-'; ?>
+                                        </td>
+                                        <td>
+                                            <?php if ($p['limite_alcanzado_hoy']): ?>
+                                                <span class="badge badge-warning">LÍMITE DIARIO</span>
+                                            <?php elseif ($p['activa']): ?>
+                                                <span class="badge badge-success">ACTIVA</span>
+                                            <?php else: ?>
+                                                <span class="badge"
+                                                    style="background: rgba(255,255,255,0.05); color: var(--text-dim);">INACTIVA</span>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td style="font-size: 0.85rem; color: var(--text-dim);">
+                                            <?php echo $p['ultimo_uso'] ? date('d/m/Y H:i', strtotime($p['ultimo_uso'])) : 'Nunca usado'; ?>
+                                        </td>
+                                        <td>
+                                            <div class="action-btns">
+                                                <button class="btn"
+                                                    style="padding: 8px; background: rgba(255,255,255,0.05);"
+                                                    onclick='editar(<?php echo json_encode($p); ?>)'>
+                                                    ✏️
+                                                </button>
+                                                <form method="POST" onsubmit="return confirm('¿Eliminar este proveedor?')">
+                                                    <input type="hidden" name="accion" value="eliminar">
+                                                    <input type="hidden" name="id" value="<?php echo $p['id']; ?>">
+                                                    <button type="submit" class="btn btn-danger" style="padding: 8px;">
+                                                        🗑️
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                                <?php if (empty($proveedores)): ?>
+                                    <tr>
+                                        <td colspan="6" style="text-align: center; padding: 40px; color: var(--text-dim);">
+                                            No hay llaves registradas. Añade una arriba.
+                                        </td>
+                                    </tr>
+                                <?php endif; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div> <!-- Cierre content-padding -->
+    </div> <!-- Cierre sub-container -->
+    </div> <!-- Cierre main-container -->
+
+    <!-- Modal de Ayuda -->
+    <div class="modal fade" id="pageHelpModal" tabindex="-1" aria-labelledby="pageHelpModalLabel" aria-hidden="true"
+        data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="pageHelpModalLabel">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Guía de Configuración de APIs IA
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100 border-0 bg-light">
+                                <div class="card-body">
+                                    <h6 class="text-primary border-bottom pb-2 fw-bold">
+                                        <i class="fas fa-robot me-2"></i> Propósito
+                                    </h6>
+                                    <p class="small text-muted mb-0">
+                                        Esta herramienta permite centralizar todas las API Keys de los distintos
+                                        proveedores de IA (Google, OpenAI, Mistral, etc.). El sistema utiliza estas
+                                        llaves en cascada para garantizar que las herramientas de IA siempre funcionen,
+                                        incluso si una cuenta agota su saldo.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100 border-0 bg-light">
+                                <div class="card-body">
+                                    <h6 class="text-warning border-bottom pb-2 fw-bold">
+                                        <i class="fas fa-key me-2"></i> Seguridad
+                                    </h6>
+                                    <p class="small text-muted mb-0">
+                                        Las llaves se guardan de forma segura en la base de datos empresarial. El campo
+                                        "Contraseña" es opcional y se utiliza para identificar cuentas registradas con
+                                        credenciales personalizadas fuera de SSO.
+                                    </p>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="action-btns">
-                        <button type="button" class="btn" style="background: rgba(255,255,255,0.05);"
-                            onclick="limpiarForm()">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">Guardar Configuración</button>
-                    </div>
                 </div>
-            </form>
-        </div>
-
-        <!-- Listado de LLaves -->
-        <div class="card">
-            <h2 class="card-title">Llaves Registradas</h2>
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Proveedor</th>
-                            <th>API Key</th>
-                            <th>Password</th>
-                            <th>Estado</th>
-                            <th>Último Uso</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($proveedores as $p): ?>
-                            <tr>
-                                <td class="provider-icon">
-                                    <?php echo $p['proveedor']; ?>
-                                </td>
-                                <td class="api-key-hidden">
-                                    <?php
-                                    $part = substr($p['api_key'], 0, 8);
-                                    echo $part . "..." . substr($p['api_key'], -4);
-                                    ?>
-                                </td>
-                                <td class="api-key-hidden">
-                                    <?php echo $p['password'] ? '••••••••' : '-'; ?>
-                                </td>
-                                <td>
-                                    <?php if ($p['limite_alcanzado_hoy']): ?>
-                                        <span class="badge badge-warning">LÍMITE DIARIO</span>
-                                    <?php elseif ($p['activa']): ?>
-                                        <span class="badge badge-success">ACTIVA</span>
-                                    <?php else: ?>
-                                        <span class="badge"
-                                            style="background: rgba(255,255,255,0.05); color: var(--text-dim);">INACTIVA</span>
-                                    <?php endif; ?>
-                                </td>
-                                <td style="font-size: 0.85rem; color: var(--text-dim);">
-                                    <?php echo $p['ultimo_uso'] ? date('d/m/Y H:i', strtotime($p['ultimo_uso'])) : 'Nunca usado'; ?>
-                                </td>
-                                <td>
-                                    <div class="action-btns">
-                                        <button class="btn" style="padding: 8px; background: rgba(255,255,255,0.05);"
-                                            onclick='editar(<?php echo json_encode($p); ?>)'>
-                                            ✏️
-                                        </button>
-                                        <form method="POST" onsubmit="return confirm('¿Eliminar este proveedor?')">
-                                            <input type="hidden" name="accion" value="eliminar">
-                                            <input type="hidden" name="id" value="<?php echo $p['id']; ?>">
-                                            <button type="submit" class="btn btn-danger" style="padding: 8px;">
-                                                🗑️
-                                            </button>
-                                        </form>
-                                    </div>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                        <?php if (empty($proveedores)): ?>
-                            <tr>
-                                <td colspan="6" style="text-align: center; padding: 40px; color: var(--text-dim);">
-                                    No hay llaves registradas. Añade una arriba.
-                                </td>
-                            </tr>
-                        <?php endif; ?>
-                    </tbody>
-                </table>
             </div>
         </div>
     </div>
 
+    <style>
+        #pageHelpModal {
+            z-index: 1060 !important;
+        }
+
+        .modal-backdrop {
+            z-index: 1050 !important;
+        }
+    </style>
+
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         function editar(data) {
             document.getElementById('formTitle').textContent = "Editar Proveedor: " + data.proveedor.toUpperCase();
