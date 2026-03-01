@@ -5,6 +5,7 @@
  * Optimizado para mínimo consumo de tokens y generación precisa de SQL
  */
 
+
 class DeepSeekConfig
 {
     // Reemplaza con tu API key de DeepSeek
