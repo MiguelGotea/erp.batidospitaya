@@ -5,6 +5,7 @@
  * Interfaz web para generar consultas SQL desde lenguaje natural
  */
 
+
 class DeepSeekConfig
 {
     // Reemplaza con tu API key de DeepSeek
