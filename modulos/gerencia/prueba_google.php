@@ -10,7 +10,7 @@ class GeminiConfig
 {
     // Reemplaza con tu API key de Google AI Studio
     const API_KEY = 'AIzaSyDuH_tIYexDItYyDswnoYf6hG2BFVsHg6Q';
-    const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent';
+    const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
 }
 
 /**
