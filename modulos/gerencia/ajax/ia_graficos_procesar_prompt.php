@@ -49,7 +49,7 @@ try {
     $systemPrompt = construirSystemPromptGraficos($contexto);
 
     // Procesar con IA
-    $groqService = new GroqService();
+    $groqService = new GroqService($conn);
     // GroqService Core returns the text response instead of parsed data, so we must parse it
     $respuestaTexto = $groqService->procesarPrompt($systemPrompt, $prompt);
     $estructura = $groqService->extraerJSON($respuestaTexto);
