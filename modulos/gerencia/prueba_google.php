@@ -9,7 +9,7 @@
 class GeminiConfig
 {
     // Reemplaza con tu API key de Google AI Studio
-    const API_KEY = 'AIzaSyDuH_tIYexDItYyDswnoYf6hG2BFVsHg6Q';
+    const API_KEY = 'AIzaSyBdeesXtEUZeX-QGKAwtiYROJ75W-Aohxo';
 
     // Opción 1: Gemini 2.5 Flash (recomendado - versión estable actual)
     const MODEL_STABLE = 'gemini-2.5-flash';
