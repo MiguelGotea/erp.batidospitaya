@@ -11,6 +11,7 @@ require_once '../../core/layout/header_universal.php';
 //******************************Estándar para header******************************
 verificarAutenticacion();
 
+
 $usuario = obtenerUsuarioActual();
 $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
 
