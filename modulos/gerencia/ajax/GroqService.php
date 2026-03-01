@@ -13,7 +13,8 @@ class GroqService
 
     public function __construct()
     {
-        $this->apiKey = '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';
+        $env = file_exists(__DIR__ . '/../env.php') ? require __DIR__ . '/../env.php' : [];
+        $this->apiKey = isset($env['GROQ_API_KEY']) ? $env['GROQ_API_KEY'] : '';
     }
 
     /**

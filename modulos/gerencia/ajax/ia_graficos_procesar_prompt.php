@@ -65,6 +65,10 @@ try {
         INSERT INTO ia_graficos_cache 
         (prompt_hash, prompt_original, estructura_json, usuario_id, expires_at)
         VALUES (?, ?, ?, ?, ?)
+        ON DUPLICATE KEY UPDATE 
+        estructura_json = VALUES(estructura_json),
+        expires_at = VALUES(expires_at),
+        usuario_id = VALUES(usuario_id)
     ");
     $insertStmt->execute([
         $promptHash,
