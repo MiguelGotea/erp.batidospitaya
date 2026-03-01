@@ -53,10 +53,29 @@ try {
     $contexto = cargarContextoNegocio($conn);
     $systemPrompt = construirSystemPromptGraficos($contexto);
 
-    // Procesar con IA usando proveedor 'deepseek' por defecto
-    $aiService = new AIService($conn, 'deepseek');
-    // AIService Core returns the text response instead of parsed data, so we must parse it
-    $respuestaTexto = $aiService->procesarPrompt($systemPrompt, $prompt);
+    // Estrategia de reintento en cascada entre proveedores
+    $proveedores = ['openai', 'deepseek', 'groq'];
+    $respuestaTexto = null;
+    $aiService = null;
+    $ultimoErrorMsg = '';
+
+    foreach ($proveedores as $prov) {
+        try {
+            $aiService = new AIService($conn, $prov);
+            $respuestaTexto = $aiService->procesarPrompt($systemPrompt, $prompt);
+            if ($respuestaTexto)
+                break; // Éxito
+        } catch (Exception $e) {
+            $ultimoErrorMsg = $e->getMessage();
+            error_log("Fallo proveedor $prov: " . $ultimoErrorMsg);
+            continue; // Probar siguiente proveedor
+        }
+    }
+
+    if (!$respuestaTexto) {
+        throw new Exception("Ningún proveedor de IA pudo procesar la solicitud. Último error: " . $ultimoErrorMsg);
+    }
+
     $estructura = $aiService->extraerJSON($respuestaTexto);
 
     // Validar estructura
