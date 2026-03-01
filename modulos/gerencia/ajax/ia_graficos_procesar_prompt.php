@@ -42,6 +42,7 @@ try {
         echo json_encode([
             'success' => true,
             'data' => json_decode($cache['estructura_json'], true),
+            'proveedor' => 'cache de memoria',
             'from_cache' => true
         ]);
         exit();
@@ -88,6 +89,7 @@ try {
     echo json_encode([
         'success' => true,
         'data' => $estructura,
+        'proveedor' => $aiService->getProveedor(),
         'from_cache' => false
     ]);
 
