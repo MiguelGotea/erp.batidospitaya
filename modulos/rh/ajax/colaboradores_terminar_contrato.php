@@ -1,4 +1,6 @@
 <?php
+ob_start(); // Capturar toda salida para evitar que warnings rompan el JSON
+
 require_once '../../../core/auth/auth.php';
 require_once '../editar_colaborador_componentes/logic/funciones_colaborador.php';
 
@@ -35,18 +37,16 @@ try {
 
     $resultado = terminarContrato($idContrato, $datos);
 
-    // Limpiar cualquier salida accidental (warnings/notice) antes del JSON
-    if (ob_get_length())
-        ob_clean();
+    // Limpiar cualquier salida acumulada antes de enviar el JSON
+    ob_end_clean();
 
     echo json_encode([
         'success' => $resultado['exito'] ?? $resultado['success'] ?? false,
-        'mensaje' => $resultado['mensaje'] ?? ($resultado['success'] || $resultado['exito'] ? 'Operación exitosa' : 'Error desconocido')
+        'mensaje' => $resultado['mensaje'] ?? ($resultado['exito'] || $resultado['success'] ? 'Operación exitosa' : 'Error desconocido')
     ]);
 
 } catch (Exception $e) {
-    if (ob_get_length())
-        ob_clean();
+    ob_end_clean();
     echo json_encode([
         'success' => false,
         'mensaje' => $e->getMessage()
