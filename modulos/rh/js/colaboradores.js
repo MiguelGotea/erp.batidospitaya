@@ -721,10 +721,8 @@ $(document).ready(function () {
                     alert('Error: ' + response.mensaje);
                 }
             },
-            error: function (xhr, status, errorThrown) {
-                console.error('AJAX Error:', status, errorThrown);
-                console.error('Response:', xhr.responseText);
-                alert('Error en la comunicación con el servidor.\nDetalles: ' + (xhr.responseText ? xhr.responseText.substring(0, 300) : status));
+            error: function () {
+                alert('Error en la comunicación con el servidor');
             },
             complete: function () {
                 btn.prop('disabled', false).text(originalText);
