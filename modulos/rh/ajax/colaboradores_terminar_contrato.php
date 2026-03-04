@@ -2,6 +2,7 @@
 ob_start(); // Capturar toda salida para evitar que warnings rompan el JSON
 
 require_once '../../../core/auth/auth.php';
+require_once '../../../core/permissions/permissions.php';
 require_once '../editar_colaborador_componentes/logic/funciones_colaborador.php';
 
 header('Content-Type: application/json');

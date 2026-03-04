@@ -915,13 +915,15 @@ if (isset($_POST['accion_adjunto'])) {
 }
 
 // Obtener cuentas bancarias del colaborador
-$cuentasBancarias = obtenerCuentasBancarias($codOperario);
+if (isset($codOperario)) {
+    $cuentasBancarias = obtenerCuentasBancarias($codOperario);
 
-// Obtener contactos de emergencia del colaborador
-$contactosEmergencia = obtenerContactosEmergencia($codOperario);
+    // Obtener contactos de emergencia del colaborador
+    $contactosEmergencia = obtenerContactosEmergencia($codOperario);
 
-// Obtener salarios del colaborador
-$salarios = obtenerSalarios($codOperario);
+    // Obtener salarios del colaborador
+    $salarios = obtenerSalarios($codOperario);
+}
 
 // Procesar acciones de salarios
 if (isset($_POST['accion_salario'])) {
@@ -972,9 +974,11 @@ if (isset($_POST['accion_salario'])) {
 }
 
 // Obtener salarios INSS del colaborador
-$salariosINSS = obtenerSalariosINSS($codOperario);
-$salarioINSSActual = obtenerSalarioINSSActual($codOperario);
-$planillasPatronales = obtenerPlanillasPatronales();
+if (isset($codOperario)) {
+    $salariosINSS = obtenerSalariosINSS($codOperario);
+    $salarioINSSActual = obtenerSalarioINSSActual($codOperario);
+    $planillasPatronales = obtenerPlanillasPatronales();
+}
 
 /**
  * Obtiene el contrato actual de un colaborador
@@ -2042,7 +2046,9 @@ AND DATE(anc.Fecha) <= c.inicio_contrato AND (anc.Fin IS NULL OR DATE(anc.Fin)>=
 }
 
 // Obtener historial de contratos
-$historialContratos = obtenerHistorialContratos($codOperario);
+if (isset($codOperario)) {
+    $historialContratos = obtenerHistorialContratos($codOperario);
+}
 
 /**
  * Obtiene los archivos adjuntos de un colaborador por pestaña ordenados por adendum y fecha
@@ -2273,10 +2279,12 @@ function eliminarArchivoAdjunto($idArchivo)
 }
 
 // Obtener archivos adjuntos de la pestaña actual
-$archivosAdjuntos = obtenerArchivosAdjuntos($codOperario, $pestaña_activa);
+if (isset($codOperario)) {
+    $archivosAdjuntos = obtenerArchivosAdjuntos($codOperario, $pestaña_activa ?? null);
 
-// Obtener bitácora del colaborador
-$bitacoraColaborador = obtenerBitacoraColaborador($codOperario);
+    // Obtener bitácora del colaborador
+    $bitacoraColaborador = obtenerBitacoraColaborador($codOperario);
+}
 
 function obtenerContratoConINSS($codOperario)
 {
