@@ -1626,7 +1626,7 @@ WHERE CodContrato = ?
         }
 
         error_log("Terminación de contrato completada exitosamente");
-        return ['success' => true, 'mensaje' => 'Contrato terminado y baja completa realizada correctamente'];
+        return ['exito' => true, 'mensaje' => 'Contrato terminado y baja completa realizada correctamente'];
 
     } catch (Exception $e) {
         error_log("Error en terminarContrato: " . $e->getMessage());
@@ -1636,7 +1636,7 @@ WHERE CodContrato = ?
             $conn->rollBack();
         }
 
-        return ['success' => false, 'mensaje' => 'Error al terminar el contrato: ' . $e->getMessage()];
+        return ['exito' => false, 'mensaje' => 'Error al terminar el contrato: ' . $e->getMessage()];
     }
 }
 
@@ -2457,11 +2457,11 @@ function darDeBajaCompleta($codOperario, $fechaSalida, $motivo = '')
 
         // NO hacer commit aquí - se maneja en la función principal
         error_log("Baja completa ejecutada exitosamente");
-        return ['success' => true, 'mensaje' => 'Baja completa realizada correctamente'];
+        return ['exito' => true, 'mensaje' => 'Baja completa realizada correctamente'];
 
     } catch (Exception $e) {
         error_log("Error en darDeBajaCompleta: " . $e->getMessage());
-        return ['success' => false, 'mensaje' => 'Error al realizar la baja completa: ' . $e->getMessage()];
+        return ['exito' => false, 'mensaje' => 'Error al realizar la baja completa: ' . $e->getMessage()];
     }
 }
 

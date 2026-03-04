@@ -35,12 +35,18 @@ try {
 
     $resultado = terminarContrato($idContrato, $datos);
 
+    // Limpiar cualquier salida accidental (warnings/notice) antes del JSON
+    if (ob_get_length())
+        ob_clean();
+
     echo json_encode([
-        'success' => $resultado['success'] ?? false,
-        'mensaje' => $resultado['mensaje'] ?? ($resultado['success'] ? 'Operación exitosa' : 'Error desconocido')
+        'success' => $resultado['exito'] ?? $resultado['success'] ?? false,
+        'mensaje' => $resultado['mensaje'] ?? ($resultado['success'] || $resultado['exito'] ? 'Operación exitosa' : 'Error desconocido')
     ]);
 
 } catch (Exception $e) {
+    if (ob_get_length())
+        ob_clean();
     echo json_encode([
         'success' => false,
         'mensaje' => $e->getMessage()
