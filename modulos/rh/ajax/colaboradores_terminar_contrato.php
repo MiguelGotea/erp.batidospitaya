@@ -35,7 +35,10 @@ try {
 
     $resultado = terminarContrato($idContrato, $datos);
 
-    echo json_encode($resultado);
+    echo json_encode([
+        'success' => $resultado['success'] ?? false,
+        'mensaje' => $resultado['mensaje'] ?? ($resultado['success'] ? 'Operación exitosa' : 'Error desconocido')
+    ]);
 
 } catch (Exception $e) {
     echo json_encode([

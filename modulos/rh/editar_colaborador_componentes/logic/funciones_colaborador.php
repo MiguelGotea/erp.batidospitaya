@@ -7,7 +7,8 @@ require_once 'compliance_logic.php';
  */
 
 // Procesar el formulario cuando se envía (para todas las pestañas)
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['pestaña'])) {
+// Evitar procesamiento si es una solicitud AJAX (se maneja en los scripts orientados a AJAX)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['pestaña']) && (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) != 'xmlhttprequest')) {
     $pestaña = $_POST['pestaña'];
 
     // VERIFICAR SI ES UNA SOLICITUD DE TERMINACIÓN DE CONTRATO - DEBE ESTAR AL INICIO
@@ -564,8 +565,10 @@ function actualizarColaborador($codOperario, $datos, $pestaña)
 }
 
 // Obtener adendums del colaborador
-$adendumsColaborador = obtenerAdendumsColaborador($codOperario);
-$adendumActual = obtenerAdendumActual($codOperario);
+if (isset($codOperario)) {
+    $adendumsColaborador = obtenerAdendumsColaborador($codOperario);
+    $adendumActual = obtenerAdendumActual($codOperario);
+}
 
 /**
  * Obtiene la última cuenta bancaria activa de un colaborador
@@ -1623,7 +1626,7 @@ WHERE CodContrato = ?
         }
 
         error_log("Terminación de contrato completada exitosamente");
-        return ['exito' => true, 'mensaje' => 'Contrato terminado y baja completa realizada correctamente'];
+        return ['success' => true, 'mensaje' => 'Contrato terminado y baja completa realizada correctamente'];
 
     } catch (Exception $e) {
         error_log("Error en terminarContrato: " . $e->getMessage());
@@ -1633,7 +1636,7 @@ WHERE CodContrato = ?
             $conn->rollBack();
         }
 
-        return ['exito' => false, 'mensaje' => 'Error al terminar el contrato: ' . $e->getMessage()];
+        return ['success' => false, 'mensaje' => 'Error al terminar el contrato: ' . $e->getMessage()];
     }
 }
 
@@ -2454,11 +2457,11 @@ function darDeBajaCompleta($codOperario, $fechaSalida, $motivo = '')
 
         // NO hacer commit aquí - se maneja en la función principal
         error_log("Baja completa ejecutada exitosamente");
-        return ['exito' => true, 'mensaje' => 'Baja completa realizada correctamente'];
+        return ['success' => true, 'mensaje' => 'Baja completa realizada correctamente'];
 
     } catch (Exception $e) {
         error_log("Error en darDeBajaCompleta: " . $e->getMessage());
-        return ['exito' => false, 'mensaje' => 'Error al realizar la baja completa: ' . $e->getMessage()];
+        return ['success' => false, 'mensaje' => 'Error al realizar la baja completa: ' . $e->getMessage()];
     }
 }
 
