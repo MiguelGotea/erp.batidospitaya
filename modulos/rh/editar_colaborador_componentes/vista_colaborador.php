@@ -1093,7 +1093,7 @@ $imagenesParaCarrusel = [];
                         }
 
                         // Asignar el evento de confirmación al formulario
-                        document.getElementById('formTerminacion').addEventListener('submit', function (e) {
+                        document.getElementById('formTerminacion').addEventListener('submit', function(e) {
                             if (!confirmarTerminacion()) {
                                 e.preventDefault();
                             }
@@ -1143,7 +1143,7 @@ $imagenesParaCarrusel = [];
                                             break;
                                         }
                                     }
-                                }// else {
+                                } // else {
                                 // Para cargos sin categoría predefinida
                                 //textoCategoria.textContent = 'Seleccione una categoría manualmente para este cargo';
                                 //infoCategoria.style.display = 'block';
@@ -1153,7 +1153,7 @@ $imagenesParaCarrusel = [];
                         }
 
                         // También mostrar la categoría actual al cargar la página
-                        document.addEventListener('DOMContentLoaded', function () {
+                        document.addEventListener('DOMContentLoaded', function() {
                             const codCargo = document.getElementById('cod_cargo');
                             if (codCargo && codCargo.value) {
                                 actualizarCategoriaYMostrar();
@@ -1161,8 +1161,14 @@ $imagenesParaCarrusel = [];
 
                             // Mapeo de cargos a categorías para referencia
                             window.mapaCargosCategorias = {
-                                '2': { id: 5, nombre: 'Operario' },    // Cargo Operario -> Categoría Operario (id 5)
-                                '5': { id: 1, nombre: 'Líder' }        // Cargo Líder -> Categoría Líder (id 1)
+                                '2': {
+                                    id: 5,
+                                    nombre: 'Operario'
+                                }, // Cargo Operario -> Categoría Operario (id 5)
+                                '5': {
+                                    id: 1,
+                                    nombre: 'Líder'
+                                } // Cargo Líder -> Categoría Líder (id 1)
                                 // Agregar más mapeos según necesites
                             };
                         });
@@ -1197,20 +1203,20 @@ $imagenesParaCarrusel = [];
                         }
 
                         // Mostrar/ocultar campo de persona que recibe herramientas
-                        document.getElementById('devolucion_herramientas').addEventListener('change', function () {
+                        document.getElementById('devolucion_herramientas').addEventListener('change', function() {
                             const grupoPersona = document.getElementById('grupoPersonaHerramientas');
                             grupoPersona.style.display = this.value == '1' ? 'block' : 'none';
                         });
 
                         // Cerrar modal al hacer clic fuera
-                        document.getElementById('modalTerminacion').addEventListener('click', function (e) {
+                        document.getElementById('modalTerminacion').addEventListener('click', function(e) {
                             if (e.target === this) {
                                 cerrarModalTerminacion();
                             }
                         });
 
                         // Ejecutar cuando el documento esté cargado
-                        document.addEventListener('DOMContentLoaded', function () {
+                        document.addEventListener('DOMContentLoaded', function() {
                             ocultarMensajesAutomaticamente();
 
                             const toggleButton = document.getElementById('toggleClave');
@@ -1237,7 +1243,7 @@ $imagenesParaCarrusel = [];
 
                                 // AGREGAR ESTE CÓDIGO NUEVO:
                                 // Detectar cuando cambia a tipo 2 (indefinido) y limpiar fecha fin
-                                selectTipoContrato.addEventListener('change', function () {
+                                selectTipoContrato.addEventListener('change', function() {
                                     if (this.value == '2') {
                                         const inputFechaFin = document.getElementById('fin_contrato');
                                         inputFechaFin.value = ''; // Limpiar visualmente
@@ -1251,7 +1257,7 @@ $imagenesParaCarrusel = [];
                             // También permitir cerrar mensajes haciendo clic en ellos
                             document.querySelectorAll('.alert').forEach(mensaje => {
                                 mensaje.style.cursor = 'pointer';
-                                mensaje.addEventListener('click', function () {
+                                mensaje.addEventListener('click', function() {
                                     this.style.transition = 'opacity 0.5s ease';
                                     this.style.opacity = '0';
                                     setTimeout(() => {
@@ -1262,11 +1268,11 @@ $imagenesParaCarrusel = [];
                         });
 
                         // Script para formatear automáticamente la cédula con guiones
-                        document.addEventListener('DOMContentLoaded', function () {
+                        document.addEventListener('DOMContentLoaded', function() {
                             const cedulaInput = document.getElementById('cedula');
 
                             if (cedulaInput) {
-                                cedulaInput.addEventListener('input', function () {
+                                cedulaInput.addEventListener('input', function() {
                                     // Obtener valor sin guiones y mantener cualquier letra al final
                                     let value = this.value.replace(/-/g, '');
 
@@ -1433,20 +1439,20 @@ $imagenesParaCarrusel = [];
                         }
 
                         // Cerrar modal de salario al hacer clic fuera del contenido
-                        document.getElementById('modalSalario').addEventListener('click', function (e) {
+                        document.getElementById('modalSalario').addEventListener('click', function(e) {
                             if (e.target === this) {
                                 cerrarModalSalario();
                             }
                         });
 
                         // Cerrar modales al hacer clic fuera del contenido
-                        document.getElementById('modalCuenta').addEventListener('click', function (e) {
+                        document.getElementById('modalCuenta').addEventListener('click', function(e) {
                             if (e.target === this) {
                                 cerrarModalCuenta();
                             }
                         });
 
-                        document.getElementById('modalContacto').addEventListener('click', function (e) {
+                        document.getElementById('modalContacto').addEventListener('click', function(e) {
                             if (e.target === this) {
                                 cerrarModalContacto();
                             }
@@ -1552,7 +1558,10 @@ $imagenesParaCarrusel = [];
                             selectTipo.innerHTML = '<option value="">Seleccionar tipo de documento...</option>';
                             selectTipo.disabled = false; // Habilitar por defecto
 
-                            const documentosPestaña = tiposDocumentos[pestaña] || { obligatorios: [], opcionales: [] };
+                            const documentosPestaña = tiposDocumentos[pestaña] || {
+                                obligatorios: [],
+                                opcionales: []
+                            };
 
                             // Función auxiliar para agregar opciones
                             const agregarOpciones = (lista, label) => {
@@ -1624,14 +1633,20 @@ $imagenesParaCarrusel = [];
                             const tieneContrato = <?= tieneContratoActivo($codOperario) ? 'true' : 'false' ?>;
 
                             if (!tieneContrato) {
-                                return { puede: false, motivo: 'No hay contrato activo' };
+                                return {
+                                    puede: false,
+                                    motivo: 'No hay contrato activo'
+                                };
                             }
 
-                            return { puede: true, motivo: '' };
+                            return {
+                                puede: true,
+                                motivo: ''
+                            };
                         }
 
                         // Actualizar estado del formulario de adendum al cargar la página
-                        document.addEventListener('DOMContentLoaded', function () {
+                        document.addEventListener('DOMContentLoaded', function() {
                             const estado = verificarPuedeCrearAdendum();
                             const formAdendum = document.querySelector('form[action*="pestaña=adendums"]');
                             const btnSubmit = formAdendum ? formAdendum.querySelector('button[type="submit"]') : null;
@@ -1748,7 +1763,15 @@ $imagenesParaCarrusel = [];
                                     }
 
                                     const constraints = {
-                                        video: deviceId ? { deviceId: { exact: deviceId } } : { facingMode: { ideal: "environment" } },
+                                        video: deviceId ? {
+                                            deviceId: {
+                                                exact: deviceId
+                                            }
+                                        } : {
+                                            facingMode: {
+                                                ideal: "environment"
+                                            }
+                                        },
                                         audio: false
                                     };
 
@@ -1846,7 +1869,9 @@ $imagenesParaCarrusel = [];
 
                                 // Aplicar restricción
                                 await trackCamara.applyConstraints({
-                                    advanced: [{ torch: nuevoEstado }]
+                                    advanced: [{
+                                        torch: nuevoEstado
+                                    }]
                                 });
 
                                 flashActivo = nuevoEstado;
@@ -1880,7 +1905,7 @@ $imagenesParaCarrusel = [];
                                     diagnostic += `\nID: ${settings.deviceId ? settings.deviceId.substring(0, 8) + '...' : 'N/A'}`;
                                     const currentDevice = dispositivosVideo.find(d => d.deviceId === settings.deviceId);
                                     diagnostic += `\nEtiqueta: ${currentDevice ? currentDevice.label : 'N/A'}`;
-                                } catch (e) { }
+                                } catch (e) {}
 
                                 alert(msg + diagnostic);
                                 flashActivo = false;
@@ -1923,7 +1948,7 @@ $imagenesParaCarrusel = [];
                             if (input.files && input.files.length > 0) {
                                 Array.from(input.files).forEach(file => {
                                     const reader = new FileReader();
-                                    reader.onload = function (e) {
+                                    reader.onload = function(e) {
                                         adjuntosSesion.push({
                                             tipo: 'pdf',
                                             nombre: file.name,
@@ -1942,7 +1967,7 @@ $imagenesParaCarrusel = [];
                             if (input.files && input.files.length > 0) {
                                 Array.from(input.files).forEach(file => {
                                     const reader = new FileReader();
-                                    reader.onload = function (e) {
+                                    reader.onload = function(e) {
                                         adjuntosSesion.push({
                                             tipo: 'imagen',
                                             nombre: file.name,
@@ -2005,8 +2030,13 @@ $imagenesParaCarrusel = [];
                                 let icono = 'fa-file-alt';
                                 let color = '#6c757d';
 
-                                if (adjunto.tipo === 'pdf') { icono = 'fa-file-pdf'; color = '#0E544C'; }
-                                else if (adjunto.tipo === 'imagen' || adjunto.tipo === 'captura') { icono = 'fa-file-image'; color = '#51B8AC'; }
+                                if (adjunto.tipo === 'pdf') {
+                                    icono = 'fa-file-pdf';
+                                    color = '#0E544C';
+                                } else if (adjunto.tipo === 'imagen' || adjunto.tipo === 'captura') {
+                                    icono = 'fa-file-image';
+                                    color = '#51B8AC';
+                                }
 
                                 item.innerHTML = `
                                     <div style="display: flex; align-items: center; gap: 10px; overflow: hidden; flex: 1;">
@@ -2023,8 +2053,12 @@ $imagenesParaCarrusel = [];
 
                                 // Hover effect for remove button
                                 const btnX = item.querySelector('button');
-                                btnX.onmouseover = () => { btnX.style.background = '#fde2e2'; };
-                                btnX.onmouseout = () => { btnX.style.background = '#fff0f0'; };
+                                btnX.onmouseover = () => {
+                                    btnX.style.background = '#fde2e2';
+                                };
+                                btnX.onmouseout = () => {
+                                    btnX.style.background = '#fff0f0';
+                                };
 
                                 container.appendChild(item);
                             });
@@ -2041,7 +2075,7 @@ $imagenesParaCarrusel = [];
                         }
 
                         // Validar envío del formulario unificado
-                        document.getElementById('formAdjunto').addEventListener('submit', function (e) {
+                        document.getElementById('formAdjunto').addEventListener('submit', function(e) {
                             if (adjuntosSesion.length === 0) {
                                 alert('Debe adjuntar al menos un archivo (PDF, Imagen o Captura).');
                                 e.preventDefault();
@@ -2052,7 +2086,8 @@ $imagenesParaCarrusel = [];
                         // Función para actualizar los íconos de estado y porcentajes en las pestañas
                         function actualizarIconosEstadoPestanas() {
                             const pestañas = ['datos-personales', 'datos-contacto', 'inss', 'contrato', 'contactos-emergencia',
-                                'salario', 'movimientos', 'categoria', 'adendums', 'expediente-digital', 'bitacora'];
+                                'salario', 'movimientos', 'categoria', 'adendums', 'expediente-digital', 'bitacora'
+                            ];
 
                             const exentas = ['contactos-emergencia', 'adendums', 'movimientos', 'bitacora'];
 
@@ -2120,7 +2155,7 @@ $imagenesParaCarrusel = [];
 
 
                         // Llamar a la función cuando se cargue la página
-                        document.addEventListener('DOMContentLoaded', function () {
+                        document.addEventListener('DOMContentLoaded', function() {
                             actualizarIconosEstadoPestanas();
                         });
 
@@ -2154,7 +2189,7 @@ $imagenesParaCarrusel = [];
                         }
 
                         // Cerrar modal al hacer clic fuera
-                        document.getElementById('modalSalarioINSS').addEventListener('click', function (e) {
+                        document.getElementById('modalSalarioINSS').addEventListener('click', function(e) {
                             if (e.target === this) {
                                 cerrarModalSalarioINSS();
                             }
@@ -2164,16 +2199,16 @@ $imagenesParaCarrusel = [];
                         let imagenTemporal = null;
 
                         // Cuando el documento esté cargado
-                        document.addEventListener('DOMContentLoaded', function () {
+                        document.addEventListener('DOMContentLoaded', function() {
                             // Configurar el evento change del input file
                             const inputFoto = document.getElementById('inputFotoPerfil');
                             if (inputFoto) {
-                                inputFoto.addEventListener('change', function (e) {
+                                inputFoto.addEventListener('change', function(e) {
                                     if (this.files && this.files[0]) {
                                         imagenTemporal = this.files[0];
                                         const reader = new FileReader();
 
-                                        reader.onload = function (e) {
+                                        reader.onload = function(e) {
                                             // Mostrar la previsualización
                                             document.getElementById('previewImage').src = e.target.result;
                                             document.getElementById('previewModal').classList.add('active');
@@ -2187,11 +2222,11 @@ $imagenesParaCarrusel = [];
                         });
 
                         // Función para previsualizar la foto antes de subir
-                        document.getElementById('inputFotoPerfil').addEventListener('change', function (e) {
+                        document.getElementById('inputFotoPerfil').addEventListener('change', function(e) {
                             if (this.files && this.files[0]) {
                                 imagenTemporal = this.files[0]; // Guardar archivo temporalmente
                                 const reader = new FileReader();
-                                reader.onload = function (e) {
+                                reader.onload = function(e) {
                                     mostrarPreview(e.target.result);
                                 }
                                 reader.readAsDataURL(this.files[0]);
@@ -2216,9 +2251,9 @@ $imagenesParaCarrusel = [];
 
                             // Enviar con Fetch API
                             fetch('', {
-                                method: 'POST',
-                                body: formData
-                            })
+                                    method: 'POST',
+                                    body: formData
+                                })
                                 .then(response => {
                                     if (!response.ok) {
                                         throw new Error('Error en la respuesta del servidor');
@@ -2269,21 +2304,21 @@ $imagenesParaCarrusel = [];
                         }
 
                         // Cerrar modal al hacer clic fuera del contenido
-                        document.getElementById('previewModal').addEventListener('click', function (e) {
+                        document.getElementById('previewModal').addEventListener('click', function(e) {
                             if (e.target === this) {
                                 cancelarPreview();
                             }
                         });
 
                         // Cerrar modal con la tecla Escape
-                        document.addEventListener('keydown', function (e) {
+                        document.addEventListener('keydown', function(e) {
                             if (e.key === 'Escape') {
                                 cancelarPreview();
                             }
                         });
 
                         // Tooltip para la foto de perfil
-                        document.querySelector('.foto-perfil').addEventListener('mouseenter', function () {
+                        document.querySelector('.foto-perfil').addEventListener('mouseenter', function() {
                             const tooltip = document.createElement('div');
                             tooltip.className = 'tooltip';
                             tooltip.textContent = 'Haz clic para cambiar la foto';
@@ -2309,7 +2344,7 @@ $imagenesParaCarrusel = [];
                             }, 2000);
                         });
 
-                        document.querySelector('.foto-perfil').addEventListener('mouseleave', function () {
+                        document.querySelector('.foto-perfil').addEventListener('mouseleave', function() {
                             const tooltip = this.querySelector('.tooltip');
                             if (tooltip) {
                                 this.removeChild(tooltip);
@@ -2381,7 +2416,7 @@ $imagenesParaCarrusel = [];
 
                         // También validar cuando el usuario escribe (pero con debounce para no hacer muchas peticiones)
                         let timeoutId;
-                        document.getElementById('codigo_manual_contrato').addEventListener('input', function (e) {
+                        document.getElementById('codigo_manual_contrato').addEventListener('input', function(e) {
                             clearTimeout(timeoutId);
                             timeoutId = setTimeout(() => {
                                 validarCodigoContrato(this.value);
@@ -2389,7 +2424,7 @@ $imagenesParaCarrusel = [];
                         });
 
                         // Validar antes de enviar el formulario
-                        document.querySelector('form').addEventListener('submit', function (e) {
+                        document.querySelector('form').addEventListener('submit', function(e) {
                             if (!codigoEsValido) {
                                 e.preventDefault();
                                 alert('No puede guardar el contrato con un código que ya existe. Por favor, use un código único.');
@@ -2433,7 +2468,7 @@ $imagenesParaCarrusel = [];
                         }
 
                         // Cerrar modal al hacer clic fuera
-                        document.getElementById('modalMovimiento').addEventListener('click', function (e) {
+                        document.getElementById('modalMovimiento').addEventListener('click', function(e) {
                             if (e.target === this) {
                                 cerrarModalMovimiento();
                             }
@@ -2548,7 +2583,7 @@ $imagenesParaCarrusel = [];
                                     document.getElementById('edit_fecha_fin').value = categoria.FechaFin || '';
 
                                     // Reasignar el event listener al modal
-                                    document.getElementById('modalCategoria').addEventListener('click', function (e) {
+                                    document.getElementById('modalCategoria').addEventListener('click', function(e) {
                                         if (e.target === this) {
                                             cerrarModalCategoria();
                                         }
@@ -2572,7 +2607,7 @@ $imagenesParaCarrusel = [];
                         }
 
                         // Cerrar modal al hacer clic fuera
-                        document.getElementById('modalCategoria').addEventListener('click', function (e) {
+                        document.getElementById('modalCategoria').addEventListener('click', function(e) {
                             if (e.target === this) {
                                 cerrarModalCategoria();
                             }
@@ -2629,6 +2664,15 @@ $imagenesParaCarrusel = [];
                                     grupoSalario.style.display = 'block';
 
                                     salarioInput.required = true;
+                                    break;
+
+                                case 'movimiento':
+                                    grupoCargo.style.display = 'none';
+                                    grupoSucursal.style.display = 'block';
+                                    grupoCategoria.style.display = 'none';
+                                    grupoSalario.style.display = 'none';
+
+                                    sucursalInput.required = true;
                                     break;
 
                                 case 'ambos':
@@ -2709,10 +2753,10 @@ $imagenesParaCarrusel = [];
                         }
 
                         // Ejecutar cuando se abra cualquier modal
-                        document.addEventListener('DOMContentLoaded', function () {
+                        document.addEventListener('DOMContentLoaded', function() {
                             // Observar cambios en los modales
-                            const observer = new MutationObserver(function (mutations) {
-                                mutations.forEach(function (mutation) {
+                            const observer = new MutationObserver(function(mutations) {
+                                mutations.forEach(function(mutation) {
                                     if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
                                         const modal = mutation.target;
                                         if (modal.style.display === 'block') {
@@ -2725,7 +2769,9 @@ $imagenesParaCarrusel = [];
                             // Observar todos los modales
                             const modales = document.querySelectorAll('.modal-backdrop');
                             modales.forEach(modal => {
-                                observer.observe(modal, { attributes: true });
+                                observer.observe(modal, {
+                                    attributes: true
+                                });
                             });
                         });
 
@@ -2751,7 +2797,7 @@ $imagenesParaCarrusel = [];
                                 const formularios = document.querySelectorAll('form');
                                 formularios.forEach(form => {
                                     if (!form.id.includes('Terminacion')) {
-                                        form.addEventListener('submit', function (e) {
+                                        form.addEventListener('submit', function(e) {
                                             e.preventDefault();
                                             alert('No se puede realizar esta acción porque el colaborador no tiene un contrato activo.');
                                         });
@@ -2824,10 +2870,10 @@ $imagenesParaCarrusel = [];
                         //});
 
                         // Agregar evento al cambiar el cargo en adendums
-                        document.addEventListener('DOMContentLoaded', function () {
+                        document.addEventListener('DOMContentLoaded', function() {
                             const cargoSelectAdendum = document.getElementById('cod_cargo_adendum');
                             if (cargoSelectAdendum) {
-                                cargoSelectAdendum.addEventListener('change', function () {
+                                cargoSelectAdendum.addEventListener('change', function() {
                                     actualizarCamposAdendum();
                                 });
                             }
@@ -2835,7 +2881,7 @@ $imagenesParaCarrusel = [];
                             // También para la edición
                             const cargoSelectEditAdendum = document.getElementById('edit_cod_cargo_adendum');
                             if (cargoSelectEditAdendum) {
-                                cargoSelectEditAdendum.addEventListener('change', function () {
+                                cargoSelectEditAdendum.addEventListener('change', function() {
                                     actualizarCamposEdicionAdendum();
                                 });
                             }
@@ -2844,7 +2890,7 @@ $imagenesParaCarrusel = [];
                         // Función para actualizar el comportamiento del campo fecha fin
                         function actualizarComportamientoFechaFin() {
                             const fechaFinInput = document.getElementById('fecha_fin_adendum');
-                            if (!fechaFinInput) return; // Guard: el elemento no existe en el DOM
+                            if (!fechaFinInput) return; // Salir si el elemento no existe (ej: colaborador sin contrato)
 
                             const ayudaFechaFin = document.createElement('small');
                             ayudaFechaFin.style.color = '#6c757d';
@@ -2864,7 +2910,7 @@ $imagenesParaCarrusel = [];
                         }
 
                         // Llamar al cargar la página
-                        document.addEventListener('DOMContentLoaded', function () {
+                        document.addEventListener('DOMContentLoaded', function() {
                             actualizarComportamientoFechaFin();
                         });
 
@@ -2888,14 +2934,14 @@ $imagenesParaCarrusel = [];
                         }
 
                         // Cerrar modal al hacer clic fuera
-                        document.getElementById('modalLiquidacion').addEventListener('click', function (e) {
+                        document.getElementById('modalLiquidacion').addEventListener('click', function(e) {
                             if (e.target === this) {
                                 cerrarModalLiquidacion();
                             }
                         });
 
                         // Validación del formulario de liquidación
-                        document.getElementById('formLiquidacion').addEventListener('submit', function (e) {
+                        document.getElementById('formLiquidacion').addEventListener('submit', function(e) {
                             const fechaLiquidacion = document.getElementById('fecha_liquidacion_modal').value;
 
                             if (!fechaLiquidacion) {
@@ -2921,7 +2967,7 @@ $imagenesParaCarrusel = [];
                         }
 
                         // Cerrar modal al hacer clic fuera
-                        document.getElementById('modalFinalizarAdenda').addEventListener('click', function (e) {
+                        document.getElementById('modalFinalizarAdenda').addEventListener('click', function(e) {
                             if (e.target === this) {
                                 cerrarModalFinalizarAdenda();
                             }
@@ -3052,16 +3098,16 @@ $imagenesParaCarrusel = [];
 
                     <script>
                         // Mostrar ícono de ver al hacer hover sobre la foto               de perfil
-                        document.addEventListener('DOMContentLoaded', function () {
+                        document.addEventListener('DOMContentLoaded', function() {
                             const fotoContainer = document.querySelector('.foto-perfil');
                             const viewIcon = document.querySelector('.view-icon');
 
                             if (fotoContainer && viewIcon) {
-                                fotoContainer.addEventListener('mouseenter', function () {
+                                fotoContainer.addEventListener('mouseenter', function() {
                                     viewIcon.style.opacity = '1';
                                 });
 
-                                fotoContainer.addEventListener('mouseleave', function () {
+                                fotoContainer.addEventListener('mouseleave', function() {
                                     viewIcon.style.opacity = '0';
                                 });
                             }
@@ -3175,14 +3221,14 @@ $imagenesParaCarrusel = [];
                         }
 
                         // Cerrar modal al hacer clic fuera de la imagen (en el fondo oscuro)
-                        document.getElementById('modalVerFoto').addEventListener('click', function (e) {
+                        document.getElementById('modalVerFoto').addEventListener('click', function(e) {
                             if (e.target === this || e.target.parentElement === this) {
                                 cerrarModalVerFoto();
                             }
                         });
 
                         // Soporte para flechas de teclado
-                        document.addEventListener('keydown', function (e) {
+                        document.addEventListener('keydown', function(e) {
                             if (document.getElementById('modalVerFoto').style.display === 'block') {
                                 if (e.key === 'ArrowLeft') navegarCarrusel(-1);
                                 if (e.key === 'ArrowRight') navegarCarrusel(1);

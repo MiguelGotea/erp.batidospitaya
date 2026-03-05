@@ -29,6 +29,7 @@
                                         <option value="cargo">Cambio de Cargo</option>
                                         <option value="salario">Ajuste Salarial</option>
                                         <option value="ambos">Cambio de Cargo y Salario</option>
+                                        <option value="movimiento">Movimiento de Tienda</option>
                                     </select>
                                 </div>
 
@@ -144,9 +145,10 @@
                                         $tipoTexto = [
                                             'cargo' => 'Cambio Cargo',
                                             'salario' => 'Ajuste Salarial',
-                                            'ambos' => 'Cargo y Salario'
+                                            'ambos' => 'Cargo y Salario',
+                                            'movimiento' => 'Movimiento de Tienda'
                                         ];
-                                        ?>
+                                    ?>
                                         <tr style="border-bottom: 1px solid #ddd;">
                                             <td style="padding: 10px;">
                                                 <?= $tipoTexto[$adendum['TipoAdendum']] ?? 'No definido' ?>
@@ -285,7 +287,7 @@
                                             } else {
                                                 $tamañoFormateado = round($tamaño / 1048576, 2) . ' MB';
                                             }
-                                            ?>
+                                        ?>
                                             <tr style="border-bottom: 1px solid #ddd;">
                                                 <td style="padding: 10px;">
                                                     <?= htmlspecialchars($archivo['nombre_archivo']) ?>
@@ -321,7 +323,7 @@
                                                     // Mostrar información del contrato usando codigo_manual_contrato
                                                     $pestañasConContrato = ['contrato', 'adendums', 'inss', 'salario', 'movimientos', 'categoria'];
                                                     if (in_array($pestaña_activa, $pestañasConContrato) && !empty($archivo['codigo_manual_contrato'])):
-                                                        ?>
+                                                    ?>
                                                         <span
                                                             style="font-weight: 500;"><?= htmlspecialchars($archivo['codigo_manual_contrato']) ?></span>
                                                         <br>

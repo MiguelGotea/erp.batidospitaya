@@ -7,8 +7,8 @@ require_once 'compliance_logic.php';
  */
 
 // Procesar el formulario cuando se envía (para todas las pestañas)
-// La condición excluye solicitudes AJAX puras (no-formulario) que tienen su propio manejador
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['pestaña']) && empty($_SERVER['HTTP_X_REQUESTED_WITH'])) {
+// Evitar procesamiento si es una solicitud AJAX (se maneja en los scripts orientados a AJAX)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['pestaña']) && (empty($_SERVER['HTTP_X_REQUESTED_WITH']) || strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) != 'xmlhttprequest')) {
     $pestaña = $_POST['pestaña'];
 
     // VERIFICAR SI ES UNA SOLICITUD DE TERMINACIÓN DE CONTRATO - DEBE ESTAR AL INICIO
@@ -43,9 +43,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['pestaña']) && empty(
     // MANEJO ESPECIAL PARA LA PESTAÑA DE CONTRATO
     if ($pestaña == 'contrato' && isset($_POST['accion_contrato'])) {
         // El procesamiento del contrato se maneja en otra sección del código
-// (más abajo con isset($_POST['accion_contrato']))
-// Procesar acciones de contrato
-//if (isset($_POST['accion_contrato'])) {
+        // (más abajo con isset($_POST['accion_contrato']))
+        // Procesar acciones de contrato
+        //if (isset($_POST['accion_contrato'])) {
         if ($_POST['accion_contrato'] == 'guardar') {
             // Determinar si es edición o creación
             $contratoActual = obtenerContratoActual($codOperario);
@@ -58,7 +58,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['pestaña']) && empty(
             } else {
                 $_SESSION['error'] = $resultado['mensaje'];
             }
-
         } elseif ($_POST['accion_contrato'] == 'terminar' && isset($_POST['id_contrato'])) {
             $resultado = terminarContrato($_POST['id_contrato'], $_POST);
 
@@ -81,9 +80,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['pestaña']) && empty(
         header("Location: editar_colaborador.php?id=$codOperario&pestaña=contrato");
         exit();
         //}
-// Solo redirigimos aquí
-//header("Location: editar_colaborador.php?id=$codOperario&pestaña=$pestaña");
-//exit();
+        // Solo redirigimos aquí
+        //header("Location: editar_colaborador.php?id=$codOperario&pestaña=$pestaña");
+        //exit();
     }
 
     // MANEJO ESPECIAL PARA LA PESTAÑA DE INSS
@@ -115,7 +114,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['pestaña']) && empty(
             } else {
                 $_SESSION['error'] = $resultado['mensaje'];
             }
-
         } elseif ($_POST['accion_inss'] == 'editar' && isset($_POST['id_salario_inss'])) {
             $resultado = actualizarSalarioINSS($_POST['id_salario_inss'], [
                 'monto_salario_inss' => $_POST['monto_salario_inss'],
@@ -154,7 +152,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['pestaña']) && empty(
             } else {
                 $_SESSION['error'] = $resultado['mensaje'];
             }
-
         } elseif ($_POST['accion_adendum'] == 'editar' && isset($_POST['id_adendum'])) {
             $resultado = actualizarAdendum($_POST['id_adendum'], [
                 'tipo_adendum' => $_POST['tipo_adendum'],
@@ -223,7 +220,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['pestaña']) && empty(
             } else {
                 $_SESSION['error'] = $resultado['mensaje'];
             }
-
         } elseif ($_POST['accion_categoria'] == 'editar' && isset($_POST['id_categoria_edit'])) {
             $resultado = actualizarCategoriaColaborador($_POST['id_categoria_edit'], [
                 'id_categoria' => $_POST['id_categoria'],
@@ -258,7 +254,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['pestaña']) && empty(
             } else {
                 $_SESSION['error'] = $resultado['mensaje'];
             }
-
         } elseif ($_POST['accion_movimiento'] == 'editar' && isset($_POST['id_movimiento'])) {
             $resultado = editarMovimientoCargo($_POST['id_movimiento'], [
                 'cod_cargo' => $_POST['cod_cargo'],
@@ -305,7 +300,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['pestaña']) && empty(
         }
     } else {
         // Para todas las demás pestañas (EXCEPTO CONTRATO)
-// Solo procesar si no es la pestaña de contrato
+        // Solo procesar si no es la pestaña de contrato
         if ($pestaña != 'contrato') {
             $resultado = actualizarColaborador($codOperario, $_POST, $pestaña);
 
@@ -799,7 +794,6 @@ if (isset($_POST['accion_cuenta'])) {
         } else {
             $_SESSION['error'] = $resultado['mensaje'];
         }
-
     } elseif ($_POST['accion_cuenta'] == 'editar' && isset($_POST['id_cuenta'])) {
         $resultado = actualizarCuentaBancaria($_POST['id_cuenta'], [
             'numero_cuenta' => $_POST['numero_cuenta'],
@@ -814,7 +808,6 @@ if (isset($_POST['accion_cuenta'])) {
         } else {
             $_SESSION['error'] = $resultado['mensaje'];
         }
-
     } elseif ($_POST['accion_cuenta'] == 'eliminar' && isset($_POST['id_cuenta'])) {
         $resultado = eliminarCuentaBancaria($_POST['id_cuenta']);
 
@@ -847,7 +840,6 @@ if (isset($_POST['accion_contacto'])) {
         } else {
             $_SESSION['error'] = $resultado['mensaje'];
         }
-
     } elseif ($_POST['accion_contacto'] == 'editar' && isset($_POST['id_contacto'])) {
         $resultado = actualizarContactoEmergencia($_POST['id_contacto'], [
             'nombre_contacto' => $_POST['nombre_contacto'],
@@ -862,7 +854,6 @@ if (isset($_POST['accion_contacto'])) {
         } else {
             $_SESSION['error'] = $resultado['mensaje'];
         }
-
     } elseif ($_POST['accion_contacto'] == 'eliminar' && isset($_POST['id_contacto'])) {
         $resultado = eliminarContactoEmergencia($_POST['id_contacto']);
 
@@ -898,7 +889,6 @@ if (isset($_POST['accion_adjunto'])) {
         } else {
             $_SESSION['error'] = $resultado['mensaje'];
         }
-
     } elseif ($_POST['accion_adjunto'] == 'eliminar' && isset($_POST['id_adjunto'])) {
         $resultado = eliminarArchivoAdjunto($_POST['id_adjunto']);
 
@@ -942,7 +932,6 @@ if (isset($_POST['accion_salario'])) {
         } else {
             $_SESSION['error'] = $resultado['mensaje'];
         }
-
     } elseif ($_POST['accion_salario'] == 'editar' && isset($_POST['id_salario'])) {
         $resultado = actualizarSalario($_POST['id_salario'], [
             'monto' => $_POST['monto'],
@@ -957,7 +946,6 @@ if (isset($_POST['accion_salario'])) {
         } else {
             $_SESSION['error'] = $resultado['mensaje'];
         }
-
     } elseif ($_POST['accion_salario'] == 'eliminar' && isset($_POST['id_salario'])) {
         $resultado = eliminarSalario($_POST['id_salario']);
 
@@ -1259,7 +1247,7 @@ function guardarContrato($codOperario, $datos, $esEdicion = false, $idContrato =
         // VERIFICAR SI EL CÓDIGO MANUAL DE CONTRATO YA EXISTE (solo si se proporciona)
         if (!empty($datos['codigo_manual_contrato'])) {
             // Determinar si estamos realmente editando un contrato existente
-// Buscar si hay un contrato activo para este operario
+            // Buscar si hay un contrato activo para este operario
             $stmtContratoExistente = $conn->prepare("
 SELECT CodContrato, codigo_manual_contrato
 FROM Contratos
@@ -1274,7 +1262,7 @@ LIMIT 1
 
             if ($contratoExistente) {
                 // Si estamos editando un contrato existente
-// Solo validar si el código manual está cambiando
+                // Solo validar si el código manual está cambiando
                 if ($datos['codigo_manual_contrato'] !== $contratoExistente['codigo_manual_contrato']) {
                     $stmtCheck = $conn->prepare("
 SELECT CodContrato FROM Contratos
@@ -1359,12 +1347,12 @@ fecha_ultima_modificacion = NOW(), usuario_ultima_modificacion = ?
             ];
 
             // Solo actualizar fin_contrato si se proporciona explícitamente un nuevo valor
-// y el tipo de contrato es temporal (1)
-//if (isset($datos['fin_contrato']) && !empty($datos['fin_contrato']) && $datos['cod_tipo_contrato'] == 1) {
-// $sqlContrato .= ", fin_contrato = ?";
-// $params[] = $datos['fin_contrato'];
-//}
-// Si no se proporciona y es contrato temporal, mantener el valor existente
+            // y el tipo de contrato es temporal (1)
+            //if (isset($datos['fin_contrato']) && !empty($datos['fin_contrato']) && $datos['cod_tipo_contrato'] == 1) {
+            // $sqlContrato .= ", fin_contrato = ?";
+            // $params[] = $datos['fin_contrato'];
+            //}
+            // Si no se proporciona y es contrato temporal, mantener el valor existente
 
             // MODIFICACIÓN AQUÍ: Manejar fin_contrato según tipo de contrato
             if ($datos['cod_tipo_contrato'] == 2) {
@@ -1378,7 +1366,7 @@ fecha_ultima_modificacion = NOW(), usuario_ultima_modificacion = ?
             // Si no cumple ninguna condición, no modificar fin_contrato
 
             // Eliminada esta sección del código ya que ahora es por archivo adjunto por pestaña, no una foto:
-/*
+            /*
 // Manejar la subida de archivos si se proporciona uno nuevo
 if (!empty($_FILES['foto_contrato']['name'])) {
 $fotoNombre = subirArchivo($_FILES['foto_contrato'], 'contratos');
@@ -1410,10 +1398,9 @@ WHERE CodContrato = ?
                     $idContrato
                 ]);
             }
-
         } else {
             // MODO CREACIÓN - Nuevo contrato (mantener código original)
-// 1. Guardar en AsignacionNivelesCargos - USAR LA FECHA DE INICIO DEL CONTRATO
+            // 1. Guardar en AsignacionNivelesCargos - USAR LA FECHA DE INICIO DEL CONTRATO
             $stmtAsignacion = $conn->prepare("
 INSERT INTO AsignacionNivelesCargos (CodOperario, CodNivelesCargos, Fecha, Sucursal, CodTipoContrato,
 cod_usuario_creador)
@@ -1499,7 +1486,6 @@ VALUES (?, ?, ?)
 
         $conn->commit();
         return ['exito' => true, 'mensaje' => 'Contrato ' . ($esEdicionReal ? 'actualizado' : 'guardado') . ' correctamente'];
-
     } catch (Exception $e) {
         $conn->rollBack();
         return [
@@ -1631,7 +1617,6 @@ WHERE CodContrato = ?
 
         error_log("Terminación de contrato completada exitosamente");
         return ['exito' => true, 'mensaje' => 'Contrato terminado y baja completa realizada correctamente'];
-
     } catch (Exception $e) {
         error_log("Error en terminarContrato: " . $e->getMessage());
 
@@ -1730,7 +1715,6 @@ VALUES (?, ?, ?, ?, ?, ?)
         ]);
 
         return ['exito' => true, 'mensaje' => 'Salario adicional agregado correctamente'];
-
     } catch (Exception $e) {
         return ['exito' => false, 'mensaje' => 'Error al agregar salario adicional: ' . $e->getMessage()];
     }
@@ -1873,7 +1857,6 @@ WHERE CodContrato = ?
 
         $conn->commit();
         return ['exito' => true, 'mensaje' => 'Información de terminación actualizada correctamente'];
-
     } catch (Exception $e) {
         $conn->rollBack();
         return ['exito' => false, 'mensaje' => 'Error al actualizar: ' . $e->getMessage()];
@@ -2244,7 +2227,6 @@ function agregarArchivoAdjunto($datos)
         } else {
             return ['exito' => false, 'mensaje' => 'No se seleccionaron archivos para subir'];
         }
-
     } catch (Exception $e) {
         error_log("Error en agregarArchivoAdjunto: " . $e->getMessage());
         return ['exito' => false, 'mensaje' => 'Error al procesar: ' . $e->getMessage()];
@@ -2466,7 +2448,6 @@ function darDeBajaCompleta($codOperario, $fechaSalida, $motivo = '')
         // NO hacer commit aquí - se maneja en la función principal
         error_log("Baja completa ejecutada exitosamente");
         return ['exito' => true, 'mensaje' => 'Baja completa realizada correctamente'];
-
     } catch (Exception $e) {
         error_log("Error en darDeBajaCompleta: " . $e->getMessage());
         return ['exito' => false, 'mensaje' => 'Error al realizar la baja completa: ' . $e->getMessage()];
@@ -2520,7 +2501,6 @@ function actualizarFechasFinAutomaticamente($codOperario, $nuevaFechaInicio, $ti
     AND so.CodSalarioOperario != ?
     ");
             $stmt->execute([$fechaFinAnterior, $codOperario, $idRegistroNuevo]);
-
         } elseif ($tipo == 'salario_inss') {
             // Finalizar salario INSS anterior
             $stmt = $conn->prepare("
@@ -2532,7 +2512,6 @@ function actualizarFechasFinAutomaticamente($codOperario, $nuevaFechaInicio, $ti
     AND si.id != ?
     ");
             $stmt->execute([$fechaFinAnterior, $codOperario, $idRegistroNuevo]);
-
         } elseif ($tipo == 'cargo') {
             // Finalizar cargo anterior
             $stmt = $conn->prepare("
@@ -2543,7 +2522,6 @@ function actualizarFechasFinAutomaticamente($codOperario, $nuevaFechaInicio, $ti
     AND CodAsignacionNivelesCargos != ?
     ");
             $stmt->execute([$fechaFinAnterior, $codOperario, $idRegistroNuevo]);
-
         } elseif ($tipo == 'categoria') {
             // Finalizar categoría anterior
             $stmt = $conn->prepare("
@@ -2565,7 +2543,6 @@ function actualizarFechasFinAutomaticamente($codOperario, $nuevaFechaInicio, $ti
     WHERE CodSalarioOperario = ?
     ");
                 $stmt->execute([$fechaFinContrato, $idRegistroNuevo]);
-
             } elseif ($tipo == 'salario_inss') {
                 $stmt = $conn->prepare("
     UPDATE SalarioINSS
@@ -2582,7 +2559,6 @@ function actualizarFechasFinAutomaticamente($codOperario, $nuevaFechaInicio, $ti
         }
 
         return true;
-
     } catch (Exception $e) {
         // Solo hacer rollback si iniciamos la transacción
         if (!$transaccionActiva && $conn->inTransaction()) {
@@ -2787,7 +2763,24 @@ function agregarAdendum($datos)
             error_log("Adenda anterior (ID: {$ultimoAdendum['CodAsignacionNivelesCargos']}) cerrada automáticamente con fecha: {$fechaCierreAnterior}");
         }
 
-        // 4. Determinar fecha fin para el nuevo adendum
+        // 4. Obtener el último registro de AsignacionNivelesCargos para clonar campos si es necesario
+        $stmtUltimaAsignacion = $conn->prepare("
+            SELECT CodNivelesCargos, Sucursal, CodTipoContrato, Salario
+            FROM AsignacionNivelesCargos
+            WHERE CodOperario = ?
+            ORDER BY Fecha DESC, CodAsignacionNivelesCargos DESC
+            LIMIT 1
+        ");
+        $stmtUltimaAsignacion->execute([$datos['cod_operario']]);
+        $ultimaAsignacion = $stmtUltimaAsignacion->fetch();
+
+        // 5. Clonar campos si no vienen en los datos (para Ajuste Salarial o Movimiento de Tienda)
+        $codCargo = !empty($datos['cod_cargo']) ? $datos['cod_cargo'] : ($ultimaAsignacion['CodNivelesCargos'] ?? $contratoActual['CodNivelesCargos'] ?? null);
+        $sucursal = !empty($datos['sucursal']) ? $datos['sucursal'] : ($ultimaAsignacion['Sucursal'] ?? $contratoActual['cod_sucursal_contrato'] ?? null);
+        $salario = isset($datos['salario']) && $datos['salario'] !== '' ? $datos['salario'] : ($ultimaAsignacion['Salario'] ?? $contratoActual['salario_inicial'] ?? 0.00);
+        $codTipoContrato = !empty($datos['cod_tipo_contrato']) ? $datos['cod_tipo_contrato'] : ($ultimaAsignacion['CodTipoContrato'] ?? $contratoActual['cod_tipo_contrato'] ?? null);
+
+        // 6. Determinar fecha fin para el nuevo adendum
         $fechaFinNuevo = null;
         if (!empty($datos['fecha_fin'])) {
             $fechaFinNuevo = $datos['fecha_fin'];
@@ -2799,27 +2792,28 @@ function agregarAdendum($datos)
             // Si no hay fecha fin de contrato, se queda como NULL (adendum indefinido)
         }
 
-        // 5. Insertar el nuevo adendum en AsignacionNivelesCargos
+        // 7. Insertar el nuevo adendum en AsignacionNivelesCargos
         $stmt = $conn->prepare("
-    INSERT INTO AsignacionNivelesCargos (
-    CodOperario, CodContrato, codigo_contrato_asociado,
-    TipoAdendum, CodNivelesCargos, Sucursal,
-    Fecha, Fin, Observaciones, Salario, es_activo,
-    cod_usuario_creador
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)
-    ");
+            INSERT INTO AsignacionNivelesCargos (
+                CodOperario, CodContrato, codigo_contrato_asociado,
+                TipoAdendum, CodNivelesCargos, Sucursal, CodTipoContrato,
+                Fecha, Fin, Observaciones, Salario, es_activo,
+                cod_usuario_creador
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)
+        ");
 
         $stmt->execute([
             $datos['cod_operario'],
             $contratoActual['CodContrato'],
             $contratoActual['codigo_manual_contrato'],
             $datos['tipo_adendum'],
-            $datos['cod_cargo'],
-            $datos['sucursal'],
+            $codCargo,
+            $sucursal,
+            $codTipoContrato,
             $datos['fecha_inicio'],
             $fechaFinNuevo, // Puede ser NULL
             $datos['observaciones'],
-            $datos['salario'] ?? 0.00,
+            $salario,
             $_SESSION['usuario_id']
         ]);
 
@@ -2827,7 +2821,6 @@ function agregarAdendum($datos)
 
         $conn->commit();
         return ['exito' => true, 'mensaje' => 'Adendum agregado correctamente', 'id' => $idAdendum];
-
     } catch (Exception $e) {
         $conn->rollBack();
         return ['exito' => false, 'mensaje' => 'Error al agregar adendum: ' . $e->getMessage()];
@@ -3400,5 +3393,3 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
     header("Location: editar_colaborador.php?id=$codOperario&pestaña=contrato");
     exit();
 }
-
-?>
