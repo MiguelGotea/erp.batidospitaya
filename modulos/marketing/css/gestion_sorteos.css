@@ -908,3 +908,15 @@ input:checked+.toggle-slider:before {
 .comparison-row.highlight-diff-colab .comparison-label {
     color: #b35a00;
 }
+
+/* ── Columna Correo: permitir salto de línea ─────────────────────────────── */
+.col-correo {
+    max-width: 130px;
+    word-break: break-all;
+    white-space: normal;
+}
+
+/* ── Columna Pts. Globales ───────────────────────────────────────────────── */
+th[data-column="puntos_globales"] {
+    white-space: nowrap;
+}

@@ -270,10 +270,16 @@ try {
                 codigo_sorteo_ia,
                 puntos_ia,
                 valido,
-                fecha_registro
+                fecha_registro,
+                (
+                    SELECT SUM(p2.puntos_factura)
+                    FROM pitaya_love_registros p2
+                    WHERE LOWER(TRIM(p2.nombre_completo)) = LOWER(TRIM(pitaya_love_registros.nombre_completo))
+                ) AS puntos_globales
             FROM pitaya_love_registros
             $whereClause
             ORDER BY $ordenColumna $ordenDireccion";
+
 
     if ($collabFilter !== '') {
         // ── Filtro colaborador activo: traer TODOS para matching PHP correcto ──

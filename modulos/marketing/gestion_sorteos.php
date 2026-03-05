@@ -40,6 +40,13 @@ if (!tienePermiso('gestion_sorteos', 'vista', $cargoOperario)) {
             <?php echo renderHeader($usuario, false, 'Gestión de Sorteos - Pitaya Love'); ?>
 
             <div class="container-fluid p-3">
+                <!-- Barra de acciones -->
+                <div class="d-flex justify-content-end mb-2">
+                    <button class="btn btn-success btn-sm" onclick="descargarConcursantesValidos()"
+                        title="Descarga todos los concursantes válidos (valido=1) sin columnas de verificación">
+                        <i class="bi bi-download me-1"></i> Descargar Concursantes
+                    </button>
+                </div>
                 <div class="table-responsive">
                     <table class="table table-hover sorteos-table" id="tablaSorteos">
                         <thead>
@@ -56,7 +63,7 @@ if (!tienePermiso('gestion_sorteos', 'vista', $cargoOperario)) {
                                     No. Contacto
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
-                                <th data-column="correo_electronico" data-type="text">
+                                <th data-column="correo_electronico" data-type="text" style="max-width:130px;">
                                     Correo
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
@@ -70,6 +77,11 @@ if (!tienePermiso('gestion_sorteos', 'vista', $cargoOperario)) {
                                 </th>
                                 <th data-column="puntos_factura" data-type="number">
                                     Puntos
+                                    <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                </th>
+                                <th data-column="puntos_globales" data-type="number"
+                                    title="Suma total de puntos de todas las participaciones de este mismo nombre">
+                                    Pts. Globales
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
                                 <th data-column="fecha_registro" data-type="daterange">

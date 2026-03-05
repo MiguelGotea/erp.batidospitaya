@@ -1,4 +1,4 @@
-// PATCH: Verificación Colaborador + funciones actualizadas
+// PATCH: Verificación Colaborador + Puntos Globales + Descarga
 
 // ── Estado global de filtro colaborador ──────────────────────────────────────
 let colabFilterState = 'all'; // 'all', 'verified', 'review'
@@ -51,6 +51,22 @@ window.cargarRegistros = function () {
     });
 };
 
+// ── Badge de verificación IA ──────────────────────────────────────────────────
+// (Redefine getVerificacionBadge para asegurar que esté disponible)
+window.getVerificacionBadge = function (registro) {
+    const tieneValoresIA = (registro.codigo_sorteo_ia !== null && registro.codigo_sorteo_ia !== '') ||
+        (registro.puntos_ia !== null && registro.puntos_ia !== '');
+    if (!tieneValoresIA) {
+        return '<span class="badge bg-warning text-dark"><i class="bi bi-exclamation-triangle"></i> Revisar</span>';
+    }
+    const codigoCoincide = registro.numero_factura == registro.codigo_sorteo_ia;
+    const puntosCoinciden = registro.puntos_factura == registro.puntos_ia;
+    if (codigoCoincide && puntosCoinciden) {
+        return '<span class="badge bg-success"><i class="bi bi-check-circle"></i> Verificado</span>';
+    }
+    return '<span class="badge bg-warning text-dark"><i class="bi bi-exclamation-triangle"></i> Revisar</span>';
+};
+
 // ── Badge de verificación colaborador ────────────────────────────────────────
 function getColaboradorBadge(registro) {
     if (registro.colaborador_sospechoso == 1) {
@@ -59,13 +75,13 @@ function getColaboradorBadge(registro) {
     return '<span class="badge bg-success"><i class="bi bi-check-circle"></i> Verificado</span>';
 }
 
-// ── Override renderizarTabla (11 columnas) ───────────────────────────────────
+// ── Override renderizarTabla (12 columnas) ───────────────────────────────────
 window.renderizarTabla = function (registros) {
     const tbody = $('#tablaSorteosBody');
     tbody.empty();
 
     if (!registros || registros.length === 0) {
-        tbody.append('<tr><td colspan="11" class="text-center py-4">No se encontraron registros</td></tr>');
+        tbody.append('<tr><td colspan="12" class="text-center py-4">No se encontraron registros</td></tr>');
         return;
     }
 
@@ -81,15 +97,23 @@ window.renderizarTabla = function (registros) {
         const año = String(fechaUTC.getFullYear()).slice(-2);
         const fecha = `${dia}/${mes}/${año}`;
 
+        // Puntos globales: destacar si hay más de 1 participación
+        const ptsGlobales = parseInt(registro.puntos_globales) || parseInt(registro.puntos_factura);
+        const esRepetido = ptsGlobales > parseInt(registro.puntos_factura);
+        const ptsGlobalesHtml = esRepetido
+            ? `<span class="badge bg-info text-dark" title="Participante con múltiples registros">${ptsGlobales} <i class="bi bi-layers-fill"></i></span>`
+            : `<span>${ptsGlobales}</span>`;
+
         tbody.append(`
             <tr>
                 <td>${registro.nombre_completo}</td>
                 <td>${registro.numero_cedula || '-'}</td>
                 <td>${registro.numero_contacto}</td>
-                <td>${registro.correo_electronico || '-'}</td>
+                <td class="col-correo">${registro.correo_electronico || '-'}</td>
                 <td>${parseFloat(registro.monto_factura).toFixed(2)}</td>
                 <td>${registro.numero_factura}</td>
                 <td>${registro.puntos_factura}</td>
+                <td class="text-center">${ptsGlobalesHtml}</td>
                 <td>${fecha}</td>
                 <td class="text-center">${getVerificacionBadge(registro)}</td>
                 <td class="text-center">${getColaboradorBadge(registro)}</td>
@@ -107,14 +131,80 @@ window.renderizarTabla = function (registros) {
 // ── Filtro de columna Verificación Colaborador ───────────────────────────────
 function setColabFilter(state) {
     colabFilterState = state;
-
     document.querySelectorAll('th[data-column="verificacion_colaborador"] .filter-circle').forEach(circle => {
         circle.classList.remove('active');
     });
     document.querySelector(`th[data-column="verificacion_colaborador"] .filter-circle[data-state="${state}"]`).classList.add('active');
-
     paginaActual = 1;
     cargarRegistros();
+}
+
+// ── Descarga CSV de concursantes válidos ──────────────────────────────────────
+function descargarConcursantesValidos() {
+    const btn = document.querySelector('button[onclick="descargarConcursantesValidos()"]');
+    const textoOriginal = btn.innerHTML;
+    btn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i> Descargando...';
+    btn.disabled = true;
+
+    // Trae TODOS los válidos sin paginación
+    const params = new URLSearchParams({
+        valido: 1,
+        page: 1,
+        per_page: 99999,
+        orden_columna: 'fecha_registro',
+        orden_direccion: 'ASC'
+    });
+
+    fetch(`ajax/get_registros_sorteos.php?${params}`)
+        .then(r => r.json())
+        .then(response => {
+            if (!response.success || !response.data.length) {
+                alert('No hay concursantes válidos para descargar.');
+                return;
+            }
+
+            const cols = [
+                { key: 'nombre_completo', label: 'Nombre Completo' },
+                { key: 'numero_cedula', label: 'No. Cédula' },
+                { key: 'numero_contacto', label: 'No. Contacto' },
+                { key: 'correo_electronico', label: 'Correo' },
+                { key: 'monto_factura', label: 'Monto' },
+                { key: 'numero_factura', label: 'No. Factura' },
+                { key: 'puntos_factura', label: 'Puntos' },
+                { key: 'puntos_globales', label: 'Pts. Globales' },
+                { key: 'fecha_registro', label: 'Fecha Registro' },
+            ];
+
+            let csv = cols.map(c => `"${c.label}"`).join(',') + '\n';
+
+            response.data.forEach(r => {
+                const fila = cols.map(c => {
+                    let val = r[c.key] ?? '';
+                    if (c.key === 'monto_factura') val = parseFloat(val).toFixed(2);
+                    if (c.key === 'fecha_registro') {
+                        const d = new Date(val);
+                        val = d.toLocaleString('es-NI', { hour12: true });
+                    }
+                    // Escapar comillas dobles en CSV
+                    return `"${String(val).replace(/"/g, '""')}"`;
+                });
+                csv += fila.join(',') + '\n';
+            });
+
+            // Trigger descarga
+            const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `concursantes_validos_${new Date().toISOString().slice(0, 10)}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+        })
+        .catch(() => alert('Error al generar el CSV.'))
+        .finally(() => {
+            btn.innerHTML = textoOriginal;
+            btn.disabled = false;
+        });
 }
 
 // ── Override verFoto: muestra colaborador sospechoso debajo del nombre ───────
@@ -129,27 +219,7 @@ window.verFoto = function (id) {
             if (response.success && response.data.length > 0) {
                 const registro = response.data[0];
 
-                // Helper para comparación inline
-                const compararValores = (label, guardado, ia) => {
-                    const diferente = guardado != ia && ia != null && ia !== '';
-                    return `
-                        <div class="comparison-row ${diferente ? 'highlight-diff' : ''}">
-                            <div class="comparison-label">${label}</div>
-                            <div class="comparison-inline">
-                                <div class="stored-value">
-                                    <strong>Guardado:</strong> ${guardado || 'N/A'}
-                                </div>
-                                ${ia ? `
-                                    <div class="ai-value">
-                                        <strong>IA detectó:</strong> ${ia}
-                                    </div>
-                                ` : ''}
-                            </div>
-                        </div>
-                    `;
-                };
-
-                // Bloque de alerta de colaborador sospechoso (debajo del nombre)
+                // Bloque de alerta de colaborador sospechoso
                 const bloqueColaborador = registro.colaborador_sospechoso == 1 ? `
                     <div class="comparison-row highlight-diff-colab">
                         <div class="comparison-label">
@@ -188,7 +258,7 @@ window.verFoto = function (id) {
                                     </div>
                                 </div>
                                 ${bloqueColaborador}
-                                <!-- Fecha (full width) -->
+                                <!-- Fecha -->
                                 <div class="comparison-row">
                                     <div class="comparison-label">Fecha Registro</div>
                                     <div class="comparison-value">${new Date(registro.fecha_registro).toLocaleString('es-NI', { hour12: true })}</div>
@@ -204,7 +274,7 @@ window.verFoto = function (id) {
                                         <div class="comparison-value">${registro.correo_electronico || 'N/A'}</div>
                                     </div>
                                 </div>
-                                <!-- Monto (full width) -->
+                                <!-- Monto -->
                                 <div class="comparison-row">
                                     <div class="comparison-label">Monto</div>
                                     <div class="comparison-value">C$ ${parseFloat(registro.monto_factura).toFixed(2)}</div>
@@ -226,6 +296,13 @@ window.verFoto = function (id) {
                                         </div>
                                     </div>
                                 </div>
+                                <!-- Puntos Globales -->
+                                ${registro.puntos_globales > registro.puntos_factura ? `
+                                <div class="comparison-row">
+                                    <div class="comparison-label"><i class="bi bi-layers-fill text-info"></i> Puntos Globales (todas sus participaciones)</div>
+                                    <div class="comparison-value"><span class="badge bg-info text-dark fs-6">${registro.puntos_globales} pts</span></div>
+                                </div>
+                                ` : ''}
                             </div>
                             
                             ${registro.validado_ia == 0 ? `
