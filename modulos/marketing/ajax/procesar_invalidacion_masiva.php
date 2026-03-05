@@ -79,13 +79,19 @@ try {
         $invalidoIA = false;
         $invalidoColab = false;
 
-        // Lógica IA: Mismatch de código o puntos, o código nulo
-        if (
-            empty($reg['codigo_sorteo_ia']) ||
-            $reg['numero_factura'] != $reg['codigo_sorteo_ia'] ||
-            (int) $reg['puntos_factura'] != (int) $reg['puntos_ia']
-        ) {
+        // Lógica IA: Imitar comportamiento SQL (NULL handling)
+        // SQL: codigo_sorteo_ia IS NULL OR numero_factura != codigo_sorteo_ia OR puntos_factura != puntos_ia
+        $invalidoIA = false;
+
+        if ($reg['codigo_sorteo_ia'] === null) {
             $invalidoIA = true;
+        } elseif ($reg['numero_factura'] != $reg['codigo_sorteo_ia']) {
+            $invalidoIA = true;
+        } elseif ($reg['puntos_ia'] !== null && (int) $reg['puntos_factura'] != (int) $reg['puntos_ia']) {
+            $invalidoIA = true;
+        }
+
+        if ($invalidoIA) {
             $conteoIA++;
         }
 
