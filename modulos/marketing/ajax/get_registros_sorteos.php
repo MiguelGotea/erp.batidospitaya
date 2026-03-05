@@ -163,6 +163,67 @@ try {
 
     $whereClause = !empty($where) ? 'WHERE ' . implode(' AND ', $where) : '';
 
+    // ── Cargar colaboradores activos una sola vez ──────────────────────────────
+    // Colaborador activo = contrato con Finalizado=0
+    $sqlColabs = "SELECT 
+                      o.CodOperario,
+                      TRIM(CONCAT_WS(' ',
+                          COALESCE(o.Nombre, ''),
+                          COALESCE(o.Nombre2, ''),
+                          COALESCE(o.Apellido, ''),
+                          COALESCE(o.Apellido2, '')
+                      )) AS nombre_completo_colab
+                  FROM Operarios o
+                  INNER JOIN Contratos c ON c.cod_operario = o.CodOperario
+                  WHERE c.Finalizado = 0
+                  GROUP BY o.CodOperario";
+    $stmtColabs = ejecutarConsulta($sqlColabs, []);
+    $colaboradoresActivos = $stmtColabs->fetchAll(PDO::FETCH_ASSOC);
+
+    /**
+     * Compara las palabras (≥3 caracteres) de dos nombres y devuelve
+     * true si hay al menos 2 coincidencias (case-insensitive).
+     * Retorna el nombre del colaborador encontrado o null si no hay match.
+     */
+    function encontrarColaboradorSospechoso(string $nombreConcursante, array $colaboradores): ?string
+    {
+        // Normalizar: minúsculas, quitar tildes básicas
+        $normalizar = function (string $str): string {
+            $str = mb_strtolower($str, 'UTF-8');
+            $str = str_replace(
+                ['á', 'é', 'í', 'ó', 'ú', 'ü', 'ñ'],
+                ['a', 'e', 'i', 'o', 'u', 'u', 'n'],
+                $str
+            );
+            return $str;
+        };
+
+        $palabrasConcursante = array_filter(
+            explode(' ', $normalizar($nombreConcursante)),
+            fn($p) => mb_strlen($p) >= 3
+        );
+
+        if (count($palabrasConcursante) < 2) {
+            return null; // No hay suficientes palabras para comparar
+        }
+
+        foreach ($colaboradores as $colab) {
+            $palabrasColab = array_filter(
+                explode(' ', $normalizar($colab['nombre_completo_colab'])),
+                fn($p) => mb_strlen($p) >= 3
+            );
+
+            $coincidencias = count(array_intersect($palabrasConcursante, $palabrasColab));
+            if ($coincidencias >= 2) {
+                return $colab['nombre_completo_colab'];
+            }
+        }
+        return null;
+    }
+
+    // Parámetro de filtro por verificación colaborador
+    $collabFilter = isset($_GET['collab_filter']) ? $_GET['collab_filter'] : '';
+
     // Contar total de registros
     $countSql = "SELECT COUNT(*) as total FROM pitaya_love_registros $whereClause";
     $countStmt = ejecutarConsulta($countSql, $params);
@@ -197,13 +258,30 @@ try {
     $stmt = ejecutarConsulta($sql, $params);
     $registros = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // Agregar URL completa de fotos para el subdominio
+    // Agregar URL completa de fotos y resultado de verificación colaborador
     foreach ($registros as &$registro) {
         if (!empty($registro['foto_factura'])) {
             $registro['foto_url'] = 'https://pitayalove.batidospitaya.com/uploads/' . $registro['foto_factura'];
         } else {
             $registro['foto_url'] = null;
         }
+
+        // Verificar si el concursante podría ser un colaborador activo
+        $nombreMatchColab = encontrarColaboradorSospechoso(
+            $registro['nombre_completo'],
+            $colaboradoresActivos
+        );
+        $registro['colaborador_sospechoso'] = $nombreMatchColab !== null ? 1 : 0;
+        $registro['nombre_colaborador'] = $nombreMatchColab ?? '';
+    }
+
+    // Aplicar filtro de verificación colaborador (post-matching)
+    if ($collabFilter === 'verified') {
+        // Solo los que NO son sospechosos
+        $registros = array_values(array_filter($registros, fn($r) => $r['colaborador_sospechoso'] == 0));
+    } elseif ($collabFilter === 'review') {
+        // Solo los sospechosos
+        $registros = array_values(array_filter($registros, fn($r) => $r['colaborador_sospechoso'] == 1));
     }
 
     $response['success'] = true;

@@ -889,3 +889,22 @@ input:checked+.toggle-slider:before {
         padding: 3px 8px;
     }
 }
+
+/* ── Verificación Colaborador ────────────────────────────────────────────── */
+.colab-filter-circles {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    justify-content: center;
+    margin-top: 4px;
+}
+
+/* Fila sospechosa en modal: borde naranja */
+.comparison-row.highlight-diff-colab {
+    background: #fff0e0;
+    border-left-color: #fd7e14;
+}
+
+.comparison-row.highlight-diff-colab .comparison-label {
+    color: #b35a00;
+}

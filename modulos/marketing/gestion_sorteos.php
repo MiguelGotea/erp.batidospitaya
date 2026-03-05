@@ -87,6 +87,17 @@ if (!tienePermiso('gestion_sorteos', 'vista', $cargoOperario)) {
                                             onclick="setIAFilter('review')" title="Revisar"></i>
                                     </div>
                                 </th>
+                                <th data-column="verificacion_colaborador">
+                                    Verificación Colaborador
+                                    <div class="colab-filter-circles">
+                                        <i class="bi bi-check-circle-fill filter-circle" data-state="verified"
+                                            onclick="setColabFilter('verified')" title="Verificado"></i>
+                                        <i class="bi bi-dash-circle-fill filter-circle active" data-state="all"
+                                            onclick="setColabFilter('all')" title="Todos"></i>
+                                        <i class="bi bi-exclamation-triangle-fill filter-circle" data-state="review"
+                                            onclick="setColabFilter('review')" title="Revisar"></i>
+                                    </div>
+                                </th>
                                 <th data-column="valido" data-type="toggle3">
                                     Válido
                                     <div class="valido-filter-circles">
@@ -219,6 +230,30 @@ if (!tienePermiso('gestion_sorteos', 'vista', $cargoOperario)) {
                                         <li><span class="text-danger fw-bold">✗ Inválido:</span> Registro con errores o
                                             fraudulento</li>
                                     </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100 border-0 bg-light">
+                                <div class="card-body">
+                                    <h6 class="text-warning border-bottom pb-2 fw-bold">
+                                        <i class="fas fa-user-secret me-2"></i> Verificación Colaborador
+                                    </h6>
+                                    <p class="small text-muted mb-0">
+                                        El sistema compara automáticamente el nombre de cada concursante con la
+                                        base de datos de <strong>colaboradores activos</strong> (contrato vigente).
+                                    </p>
+                                    <ul class="small text-muted mt-2 mb-0">
+                                        <li><span class="text-success fw-bold">✓ Verificado:</span> Sin coincidencia con
+                                            colaboradores</li>
+                                        <li><span class="text-warning fw-bold">⚠ Revisar:</span> Al menos 2 palabras del
+                                            nombre coinciden con un colaborador activo</li>
+                                    </ul>
+                                    <p class="small text-muted mt-2 mb-0">
+                                        En el modal de detalle se muestra el nombre del colaborador sospechoso para
+                                        facilitar la revisión.
+                                    </p>
                                 </div>
                             </div>
                         </div>
