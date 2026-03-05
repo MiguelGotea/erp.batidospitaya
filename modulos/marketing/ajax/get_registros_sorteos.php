@@ -181,12 +181,41 @@ try {
     $colaboradoresActivos = $stmtColabs->fetchAll(PDO::FETCH_ASSOC);
 
     /**
-     * Compara las palabras (≥3 caracteres) de dos nombres y devuelve
-     * true si hay al menos 2 coincidencias (case-insensitive).
-     * Retorna el nombre del colaborador encontrado o null si no hay match.
+     * Compara las palabras significativas de dos nombres y retorna el nombre del
+     * colaborador activo que coincide en ≥2 palabras, o null si no hay match.
+     *
+     * Se excluyen palabras de enlace típicas (artículos, preposiciones, conjunciones)
+     * para evitar falsos positivos como "de", "los", "del", "las", etc.
      */
     function encontrarColaboradorSospechoso(string $nombreConcursante, array $colaboradores): ?string
     {
+        // Palabras de enlace a ignorar en la comparación de nombres
+        $stopwords = [
+            'de',
+            'del',
+            'la',
+            'las',
+            'lo',
+            'los',
+            'el',
+            'los',
+            'los',
+            'una',
+            'uno',
+            'unos',
+            'unas',
+            'por',
+            'para',
+            'con',
+            'sin',
+            'san',
+            'santa',
+            'y',
+            'e',
+            'o',
+            'u',
+        ];
+
         // Normalizar: minúsculas, quitar tildes básicas
         $normalizar = function (string $str): string {
             $str = mb_strtolower($str, 'UTF-8');
@@ -198,20 +227,22 @@ try {
             return $str;
         };
 
-        $palabrasConcursante = array_filter(
-            explode(' ', $normalizar($nombreConcursante)),
-            fn($p) => mb_strlen($p) >= 3
-        );
+        // Extraer palabras significativas: ≥3 chars Y no es stopword
+        $extraerPalabras = function (string $nombre) use ($normalizar, $stopwords): array {
+            return array_values(array_filter(
+                explode(' ', $normalizar($nombre)),
+                fn($p) => mb_strlen($p) >= 3 && !in_array($p, $stopwords, true)
+            ));
+        };
+
+        $palabrasConcursante = $extraerPalabras($nombreConcursante);
 
         if (count($palabrasConcursante) < 2) {
-            return null; // No hay suficientes palabras para comparar
+            return null; // Nombre sin suficientes palabras significativas
         }
 
         foreach ($colaboradores as $colab) {
-            $palabrasColab = array_filter(
-                explode(' ', $normalizar($colab['nombre_completo_colab'])),
-                fn($p) => mb_strlen($p) >= 3
-            );
+            $palabrasColab = $extraerPalabras($colab['nombre_completo_colab']);
 
             $coincidencias = count(array_intersect($palabrasConcursante, $palabrasColab));
             if ($coincidencias >= 2) {
