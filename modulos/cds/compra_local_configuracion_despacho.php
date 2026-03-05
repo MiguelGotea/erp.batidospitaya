@@ -16,7 +16,7 @@ if (!tienePermiso('compra_local_configuracion_despacho', 'vista', $cargoOperario
 }
 
 
-// Verificar permiso de edici├│n
+// Verificar permiso de edición
 $puedeEditar = tienePermiso('compra_local_configuracion_despacho', 'edicion', $cargoOperario);
 ?>
 <!DOCTYPE html>
@@ -25,7 +25,7 @@ $puedeEditar = tienePermiso('compra_local_configuracion_despacho', 'edicion', $c
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Configuraci├│n de Plan de Despacho</title>
+    <title>Configuración de Plan de Despacho</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <link rel="icon" href="../../assets/img/icon12.png" type="image/png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -47,12 +47,12 @@ $puedeEditar = tienePermiso('compra_local_configuracion_despacho', 'edicion', $c
             <div class="container-fluid p-3">
                 <!-- Tabs de Sucursales -->
                 <ul class="nav nav-tabs mb-3" id="sucursalesTabs" role="tablist">
-                    <!-- Tabs generadas din├ímicamente -->
+                    <!-- Tabs generadas dinámicamente -->
                 </ul>
 
                 <!-- Contenido de Tabs -->
                 <div class="tab-content" id="sucursalesTabContent">
-                    <!-- Contenido generado din├ímicamente -->
+                    <!-- Contenido generado dinámicamente -->
                 </div>
             </div>
         </div>
@@ -66,7 +66,7 @@ $puedeEditar = tienePermiso('compra_local_configuracion_despacho', 'edicion', $c
                 <div class="modal-header bg-primary text-white">
                     <h5 class="modal-title" id="pageHelpModalLabel">
                         <i class="fas fa-info-circle me-2"></i>
-                        Gu├¡a de Configuraci├│n de Plan de Despacho
+                        Guía de Configuración de Plan de Despacho
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
                         aria-label="Close"></button>
@@ -77,11 +77,11 @@ $puedeEditar = tienePermiso('compra_local_configuracion_despacho', 'edicion', $c
                             <div class="card h-100 border-0 bg-light">
                                 <div class="card-body">
                                     <h6 class="text-primary border-bottom pb-2 fw-bold">
-                                        <i class="fas fa-calendar-alt me-2"></i> Configurar D├¡as de Entrega
+                                        <i class="fas fa-calendar-alt me-2"></i> Configurar Días de Entrega
                                     </h6>
                                     <p class="small text-muted mb-0">
                                         Haga clic en las celdas de los d├¡as de la semana para activar/desactivar los
-                                        d├¡as de entrega de cada producto. Un clic activa, otro clic desactiva.
+                                        días de entrega de cada producto. Un clic activa, otro clic desactiva.
                                     </p>
                                 </div>
                             </div>
@@ -94,7 +94,7 @@ $puedeEditar = tienePermiso('compra_local_configuracion_despacho', 'edicion', $c
                                     </h6>
                                     <p class="small text-muted mb-0">
                                         En la ├║ltima fila, escriba el nombre o SKU del producto para buscar. Seleccione
-                                        el producto deseado y se agregar├í autom├íticamente.
+                                        el producto deseado y se agregará automáticamente.
                                     </p>
                                 </div>
                             </div>
@@ -117,10 +117,10 @@ $puedeEditar = tienePermiso('compra_local_configuracion_despacho', 'edicion', $c
                             <div class="card h-100 border-0 bg-light">
                                 <div class="card-body">
                                     <h6 class="text-info border-bottom pb-2 fw-bold">
-                                        <i class="fas fa-search me-2"></i> B├║squeda Inteligente
+                                        <i class="fas fa-search me-2"></i> Búsqueda Inteligente
                                     </h6>
                                     <p class="small text-muted mb-0">
-                                        La b├║squeda filtra productos activos y excluye los ya configurados. Escriba al
+                                        La búsqueda filtra productos activos y excluye los ya configurados. Escriba al
                                         menos 2 caracteres para ver resultados.
                                     </p>
                                 </div>
@@ -130,7 +130,7 @@ $puedeEditar = tienePermiso('compra_local_configuracion_despacho', 'edicion', $c
                     <div class="alert alert-info py-2 px-3 small">
                         <strong><i class="fas fa-info-circle me-1"></i> Nota:</strong>
                         <br>
-                        Los cambios se guardan autom├íticamente al hacer clic en los d├¡as o al cambiar el estado del
+                        Los cambios se guardan automáticamente al hacer clic en los días o al cambiar el estado del
                         producto.
                     </div>
                 </div>

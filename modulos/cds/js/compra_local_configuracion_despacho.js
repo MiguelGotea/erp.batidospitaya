@@ -1,19 +1,19 @@
 ﻿/* ===================================================
-   Configuraci├│n de Plan de Despacho - JavaScript
+   Configuración de Plan de Despacho - JavaScript
    =================================================== */
 
 let sucursales = [];
 let configuraciones = {};
 let currentSucursal = null;
 
-// D├¡as de la semana
+// Días de la semana
 const diasSemana = [
     { num: 1, nombre: 'L', nombreCompleto: 'Lunes' },
     { num: 2, nombre: 'M', nombreCompleto: 'Martes' },
-    { num: 3, nombre: 'Mi', nombreCompleto: 'Mi├⌐rcoles' },
+    { num: 3, nombre: 'Mi', nombreCompleto: 'Miércoles' },
     { num: 4, nombre: 'J', nombreCompleto: 'Jueves' },
     { num: 5, nombre: 'V', nombreCompleto: 'Viernes' },
-    { num: 6, nombre: 'S', nombreCompleto: 'S├íbado' },
+    { num: 6, nombre: 'S', nombreCompleto: 'Sábado' },
     { num: 7, nombre: 'D', nombreCompleto: 'Domingo' }
 ];
 
@@ -41,7 +41,7 @@ function cargarSucursales() {
             }
         },
         error: function () {
-            mostrarError('Error de conexi├│n al cargar sucursales');
+            mostrarError('Error de conexión al cargar sucursales');
         }
     });
 }
@@ -86,7 +86,7 @@ function cambiarSucursal(codigoSucursal) {
     }
 }
 
-// Cargar configuraci├│n de una sucursal
+// Cargar configuración de una sucursal
 function cargarConfiguracion(codigoSucursal) {
     $.ajax({
         url: 'ajax/compra_local_configuracion_despacho_get_configuracion.php',
@@ -98,16 +98,16 @@ function cargarConfiguracion(codigoSucursal) {
                 configuraciones[codigoSucursal] = response.configuracion;
                 renderizarTabla(codigoSucursal);
             } else {
-                mostrarError('Error al cargar configuraci├│n: ' + response.message);
+                mostrarError('Error al cargar configuración: ' + response.message);
             }
         },
         error: function () {
-            mostrarError('Error de conexi├│n al cargar configuraci├│n');
+            mostrarError('Error de conexión al cargar configuración');
         }
     });
 }
 
-// Renderizar tabla de configuraci├│n
+// Renderizar tabla de configuración
 function renderizarTabla(codigoSucursal) {
     const config = configuraciones[codigoSucursal] || [];
 
@@ -234,13 +234,13 @@ function renderizarTabla(codigoSucursal) {
 
     $(`#table-container-${codigoSucursal}`).html(tableHtml);
 
-    // Inicializar Select2 para b├║squeda de productos
+    // Inicializar Select2 para búsqueda de productos
     if (puedeEditar) {
         inicializarBusquedaProducto(codigoSucursal);
     }
 }
 
-// Agrupar configuraci├│n por producto
+// Agrupar configuración por producto
 function agruparPorProducto(config) {
     const agrupado = {};
 
@@ -267,7 +267,7 @@ function agruparPorProducto(config) {
     return agrupado;
 }
 
-// Inicializar b├║squeda de producto con Select2
+// Inicializar búsqueda de producto con Select2
 function inicializarBusquedaProducto(codigoSucursal) {
     $(`#product-search-${codigoSucursal}`).select2({
         theme: 'bootstrap-5',
@@ -304,7 +304,7 @@ function inicializarBusquedaProducto(codigoSucursal) {
     });
 }
 
-// Toggle d├¡a de entrega
+// Toggle día de entrega
 function toggleDelivery(idProducto, codigoSucursal, dia, nuevoEstado, id = null) {
     updateField(idProducto, codigoSucursal, 'is_delivery', nuevoEstado, dia, id);
 }
@@ -312,7 +312,7 @@ function toggleDelivery(idProducto, codigoSucursal, dia, nuevoEstado, id = null)
 // Se eliminan funciones viejas de manejo de d├¡as individuales
 
 
-// Actualizar campo de configuraci├│n
+// Actualizar campo de configuración
 function updateField(idProducto, codigoSucursal, campo, valor, diaEntrega = null, id = null) {
     if (!puedeEditar) return;
 
@@ -340,7 +340,7 @@ function updateField(idProducto, codigoSucursal, campo, valor, diaEntrega = null
                         }
                     });
                 }
-                mostrarExito('Configuraci├│n actualizada');
+                mostrarExito('Configuración actualizada');
 
                 // Si cambiamos is_delivery, refrescamos para actualizar iconos
                 if (campo === 'is_delivery') {
@@ -352,7 +352,7 @@ function updateField(idProducto, codigoSucursal, campo, valor, diaEntrega = null
             }
         },
         error: function () {
-            mostrarError('Error de conexi├│n');
+            mostrarError('Error de conexión');
             cargarConfiguracion(codigoSucursal);
         }
     });
@@ -383,7 +383,7 @@ function toggleStatus(idProducto, codigoSucursal, activo) {
             }
         },
         error: function () {
-            mostrarError('Error de conexi├│n');
+            mostrarError('Error de conexión');
             cargarConfiguracion(codigoSucursal);
         }
     });
@@ -411,16 +411,16 @@ function agregarProducto(idProducto, codigoSucursal) {
             }
         },
         error: function () {
-            mostrarError('Error de conexi├│n');
+            mostrarError('Error de conexión');
         }
     });
 }
 
-// Mostrar mensaje de ├⌐xito
+// Mostrar mensaje de éxito
 function mostrarExito(mensaje) {
     Swal.fire({
         icon: 'success',
-        title: '├ëxito',
+        title: 'Éxito',
         text: mensaje,
         timer: 2000,
         showConfirmButton: false,
