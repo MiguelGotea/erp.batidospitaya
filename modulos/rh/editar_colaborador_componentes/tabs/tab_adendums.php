@@ -91,7 +91,7 @@
                                         value="<?= date('Y-m-d') ?>" required>
                                 </div>
 
-                                <div class="form-group" style="display:none;">
+                                <div class="form-group">
                                     <label for="fecha_fin_adendum">Fecha de Fin (opcional)</label>
                                     <input type="date" id="fecha_fin_adendum" name="fecha_fin" class="form-control">
                                     <small style="color: #6c757d;">

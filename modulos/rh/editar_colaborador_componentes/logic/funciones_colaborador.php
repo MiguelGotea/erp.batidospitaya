@@ -7,8 +7,8 @@ require_once 'compliance_logic.php';
  */
 
 // Procesar el formulario cuando se envía (para todas las pestañas)
-// Evitar procesamiento si es una solicitud AJAX (se maneja en los scripts orientados a AJAX)
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['pestaña']) && (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) != 'xmlhttprequest')) {
+// La condición excluye solicitudes AJAX puras (no-formulario) que tienen su propio manejador
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['pestaña']) && empty($_SERVER['HTTP_X_REQUESTED_WITH'])) {
     $pestaña = $_POST['pestaña'];
 
     // VERIFICAR SI ES UNA SOLICITUD DE TERMINACIÓN DE CONTRATO - DEBE ESTAR AL INICIO

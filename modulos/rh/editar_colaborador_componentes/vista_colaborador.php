@@ -2844,6 +2844,8 @@ $imagenesParaCarrusel = [];
                         // Función para actualizar el comportamiento del campo fecha fin
                         function actualizarComportamientoFechaFin() {
                             const fechaFinInput = document.getElementById('fecha_fin_adendum');
+                            if (!fechaFinInput) return; // Guard: el elemento no existe en el DOM
+
                             const ayudaFechaFin = document.createElement('small');
                             ayudaFechaFin.style.color = '#6c757d';
                             ayudaFechaFin.style.display = 'block';
