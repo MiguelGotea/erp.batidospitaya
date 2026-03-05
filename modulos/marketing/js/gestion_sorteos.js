@@ -8,6 +8,7 @@ let validoFilterState = 'all'; // 'all', 'valid', 'invalid'
 let iaFilterState = 'all'; // 'all', 'verified', 'review'
 // tienePermisoEdicion is set from PHP inline script
 
+
 $(document).ready(function () {
     cargarRegistros();
 
