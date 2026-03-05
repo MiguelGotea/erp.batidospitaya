@@ -224,14 +224,7 @@ try {
     // Parámetro de filtro por verificación colaborador
     $collabFilter = isset($_GET['collab_filter']) ? $_GET['collab_filter'] : '';
 
-    // Contar total de registros
-    $countSql = "SELECT COUNT(*) as total FROM pitaya_love_registros $whereClause";
-    $countStmt = ejecutarConsulta($countSql, $params);
-    $totalResult = $countStmt->fetch(PDO::FETCH_ASSOC);
-    $total = $totalResult['total'];
-
-    // Obtener registros paginados
-    $sql = "SELECT 
+    $sqlSelect = "SELECT 
                 id,
                 nombre_completo,
                 numero_contacto,
@@ -249,39 +242,61 @@ try {
                 fecha_registro
             FROM pitaya_love_registros
             $whereClause
-            ORDER BY $ordenColumna $ordenDireccion
-            LIMIT ? OFFSET ?";
+            ORDER BY $ordenColumna $ordenDireccion";
 
-    $params[] = $perPage;
-    $params[] = $offset;
+    if ($collabFilter !== '') {
+        // ── Filtro colaborador activo: traer TODOS para matching PHP correcto ──
+        // (no se puede paginar en SQL porque el total real depende del matching)
+        $stmtAll = ejecutarConsulta($sqlSelect, $params);
+        $todosRegistros = $stmtAll->fetchAll(PDO::FETCH_ASSOC);
 
-    $stmt = ejecutarConsulta($sql, $params);
-    $registros = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        // Hacer matching en todos los registros
+        foreach ($todosRegistros as &$reg) {
+            if (!empty($reg['foto_factura'])) {
+                $reg['foto_url'] = 'https://pitayalove.batidospitaya.com/uploads/' . $reg['foto_factura'];
+            } else {
+                $reg['foto_url'] = null;
+            }
+            $match = encontrarColaboradorSospechoso($reg['nombre_completo'], $colaboradoresActivos);
+            $reg['colaborador_sospechoso'] = $match !== null ? 1 : 0;
+            $reg['nombre_colaborador'] = $match ?? '';
+        }
+        unset($reg);
 
-    // Agregar URL completa de fotos y resultado de verificación colaborador
-    foreach ($registros as &$registro) {
-        if (!empty($registro['foto_factura'])) {
-            $registro['foto_url'] = 'https://pitayalove.batidospitaya.com/uploads/' . $registro['foto_factura'];
-        } else {
-            $registro['foto_url'] = null;
+        // Aplicar filtro colaborador
+        if ($collabFilter === 'review') {
+            $todosRegistros = array_values(array_filter($todosRegistros, fn($r) => $r['colaborador_sospechoso'] == 1));
+        } elseif ($collabFilter === 'verified') {
+            $todosRegistros = array_values(array_filter($todosRegistros, fn($r) => $r['colaborador_sospechoso'] == 0));
         }
 
-        // Verificar si el concursante podría ser un colaborador activo
-        $nombreMatchColab = encontrarColaboradorSospechoso(
-            $registro['nombre_completo'],
-            $colaboradoresActivos
-        );
-        $registro['colaborador_sospechoso'] = $nombreMatchColab !== null ? 1 : 0;
-        $registro['nombre_colaborador'] = $nombreMatchColab ?? '';
-    }
+        // Total real y paginación en PHP
+        $total = count($todosRegistros);
+        $registros = array_slice($todosRegistros, $offset, $perPage);
 
-    // Aplicar filtro de verificación colaborador (post-matching)
-    if ($collabFilter === 'verified') {
-        // Solo los que NO son sospechosos
-        $registros = array_values(array_filter($registros, fn($r) => $r['colaborador_sospechoso'] == 0));
-    } elseif ($collabFilter === 'review') {
-        // Solo los sospechosos
-        $registros = array_values(array_filter($registros, fn($r) => $r['colaborador_sospechoso'] == 1));
+    } else {
+        // ── Sin filtro colaborador: flujo normal (COUNT + SELECT paginado) ──
+        $countSql = "SELECT COUNT(*) as total FROM pitaya_love_registros $whereClause";
+        $countStmt = ejecutarConsulta($countSql, $params);
+        $total = $countStmt->fetch(PDO::FETCH_ASSOC)['total'];
+
+        $params[] = $perPage;
+        $params[] = $offset;
+        $stmt = ejecutarConsulta($sqlSelect . " LIMIT ? OFFSET ?", $params);
+        $registros = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Matching colaborador para mostrar badge (sin filtrar)
+        foreach ($registros as &$registro) {
+            if (!empty($registro['foto_factura'])) {
+                $registro['foto_url'] = 'https://pitayalove.batidospitaya.com/uploads/' . $registro['foto_factura'];
+            } else {
+                $registro['foto_url'] = null;
+            }
+            $match = encontrarColaboradorSospechoso($registro['nombre_completo'], $colaboradoresActivos);
+            $registro['colaborador_sospechoso'] = $match !== null ? 1 : 0;
+            $registro['nombre_colaborador'] = $match ?? '';
+        }
+        unset($registro);
     }
 
     $response['success'] = true;
