@@ -10,6 +10,7 @@ try {
     $id_producto = $_POST['id_producto_presentacion'] ?? '';
     $codigo_sucursal = $_POST['codigo_sucursal'] ?? '';
     $campo = $_POST['campo'] ?? '';
+    $valor = $_POST['valor'] ?? '';
     $dia_entrega = $_POST['dia_entrega'] ?? '';
     $usuario = obtenerUsuarioActual();
 
