@@ -326,6 +326,8 @@ if (!tienePermiso('gestion_sorteos', 'vista', $cargoOperario)) {
         console.log('Permiso de vista:', tienePermisoVista);
         console.log('Permiso de edición:', tienePermisoEdicion);
     </script>
+    <!-- SheetJS para exportar Excel (.xlsx) -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
     <script src="js/gestion_sorteos.js?v=<?php echo mt_rand(1, 10000); ?>"></script>
     <script src="js/gestion_sorteos_patch.js?v=<?php echo mt_rand(1, 10000); ?>"></script>
 </body>

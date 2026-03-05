@@ -37,13 +37,18 @@ try {
         'correo_electronico',
         'monto_factura',
         'puntos_factura',
+        'puntos_globales',  // columna virtual (subquery alias)
         'tipo_qr',
         'validado_ia',
         'valido',
         'fecha_registro'
     ];
 
+    // Columnas virtuales (subconsultas): sólo ORDER BY y HAVING, nunca WHERE
+    $columnasVirtuales = ['puntos_globales'];
+
     // Validar columna de ordenamiento
+    // MySQL permite ORDER BY con alias de subquery en el SELECT
     if (!in_array($ordenColumna, $columnasValidas)) {
         $ordenColumna = 'fecha_registro';
     }
@@ -53,7 +58,9 @@ try {
 
     // Construir WHERE clause
     $where = [];
+    $having = []; // Para columnas virtuales (subquery aliases)
     $params = [];
+    $havingParams = [];
 
     // Filtro especial para ID único (para modal)
     if (isset($_GET['id']) && $_GET['id'] !== '') {
@@ -68,7 +75,23 @@ try {
             continue;
         }
 
-        // Solo procesar columnas válidas
+        // Columnas virtuales: manejar con HAVING
+        if (in_array($key, $columnasVirtuales)) {
+            $decoded = json_decode($value, true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                if (isset($decoded['min']) && $decoded['min'] !== '') {
+                    $having[] = "$key >= ?";
+                    $havingParams[] = $decoded['min'];
+                }
+                if (isset($decoded['max']) && $decoded['max'] !== '') {
+                    $having[] = "$key <= ?";
+                    $havingParams[] = $decoded['max'];
+                }
+            }
+            continue;
+        }
+
+        // Solo procesar columnas válidas reales
         if (!in_array($key, $columnasValidas)) {
             continue;
         }
@@ -255,6 +278,9 @@ try {
     // Parámetro de filtro por verificación colaborador
     $collabFilter = isset($_GET['collab_filter']) ? $_GET['collab_filter'] : '';
 
+    // Cláusula HAVING para columnas virtuales (puntos_globales, etc.)
+    $havingClause = !empty($having) ? 'HAVING ' . implode(' AND ', $having) : '';
+
     $sqlSelect = "SELECT 
                 id,
                 nombre_completo,
@@ -278,13 +304,15 @@ try {
                 ) AS puntos_globales
             FROM pitaya_love_registros
             $whereClause
+            $havingClause
             ORDER BY $ordenColumna $ordenDireccion";
 
+    // Los params del HAVING se añaden después de los del WHERE (mismo orden que la query)
+    $paramsConHaving = array_merge($params, $havingParams);
 
     if ($collabFilter !== '') {
         // ── Filtro colaborador activo: traer TODOS para matching PHP correcto ──
-        // (no se puede paginar en SQL porque el total real depende del matching)
-        $stmtAll = ejecutarConsulta($sqlSelect, $params);
+        $stmtAll = ejecutarConsulta($sqlSelect, $paramsConHaving);
         $todosRegistros = $stmtAll->fetchAll(PDO::FETCH_ASSOC);
 
         // Hacer matching en todos los registros
@@ -313,13 +341,18 @@ try {
 
     } else {
         // ── Sin filtro colaborador: flujo normal (COUNT + SELECT paginado) ──
-        $countSql = "SELECT COUNT(*) as total FROM pitaya_love_registros $whereClause";
-        $countStmt = ejecutarConsulta($countSql, $params);
+        // Para COUNT con HAVING usamos subquery envolvente
+        if (!empty($having)) {
+            $countSql = "SELECT COUNT(*) as total FROM ($sqlSelect) AS sub";
+            $countStmt = ejecutarConsulta($countSql, $paramsConHaving);
+        } else {
+            $countSql = "SELECT COUNT(*) as total FROM pitaya_love_registros $whereClause";
+            $countStmt = ejecutarConsulta($countSql, $params);
+        }
         $total = $countStmt->fetch(PDO::FETCH_ASSOC)['total'];
 
-        $params[] = $perPage;
-        $params[] = $offset;
-        $stmt = ejecutarConsulta($sqlSelect . " LIMIT ? OFFSET ?", $params);
+        $pagParams = array_merge($paramsConHaving, [$perPage, $offset]);
+        $stmt = ejecutarConsulta($sqlSelect . " LIMIT ? OFFSET ?", $pagParams);
         $registros = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         // Matching colaborador para mostrar badge (sin filtrar)

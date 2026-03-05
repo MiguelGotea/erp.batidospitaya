@@ -139,14 +139,13 @@ function setColabFilter(state) {
     cargarRegistros();
 }
 
-// ── Descarga CSV de concursantes válidos ──────────────────────────────────────
+// ── Descarga XLSX de concursantes válidos (SheetJS) ───────────────────────
 function descargarConcursantesValidos() {
     const btn = document.querySelector('button[onclick="descargarConcursantesValidos()"]');
     const textoOriginal = btn.innerHTML;
     btn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i> Descargando...';
     btn.disabled = true;
 
-    // Trae TODOS los válidos sin paginación
     const params = new URLSearchParams({
         valido: 1,
         page: 1,
@@ -168,39 +167,42 @@ function descargarConcursantesValidos() {
                 { key: 'numero_cedula', label: 'No. Cédula' },
                 { key: 'numero_contacto', label: 'No. Contacto' },
                 { key: 'correo_electronico', label: 'Correo' },
-                { key: 'monto_factura', label: 'Monto' },
+                { key: 'monto_factura', label: 'Monto (C$)' },
                 { key: 'numero_factura', label: 'No. Factura' },
                 { key: 'puntos_factura', label: 'Puntos' },
                 { key: 'puntos_globales', label: 'Pts. Globales' },
                 { key: 'fecha_registro', label: 'Fecha Registro' },
             ];
 
-            let csv = cols.map(c => `"${c.label}"`).join(',') + '\n';
-
+            // Construir array de arrays para SheetJS
+            const aoa = [cols.map(c => c.label)];
             response.data.forEach(r => {
-                const fila = cols.map(c => {
+                aoa.push(cols.map(c => {
                     let val = r[c.key] ?? '';
-                    if (c.key === 'monto_factura') val = parseFloat(val).toFixed(2);
+                    if (c.key === 'monto_factura') return parseFloat(val) || 0;
+                    if (c.key === 'puntos_factura' || c.key === 'puntos_globales') return parseInt(val) || 0;
                     if (c.key === 'fecha_registro') {
-                        const d = new Date(val);
-                        val = d.toLocaleString('es-NI', { hour12: true });
+                        return new Date(val).toLocaleString('es-NI', { hour12: true });
                     }
-                    // Escapar comillas dobles en CSV
-                    return `"${String(val).replace(/"/g, '""')}"`;
-                });
-                csv += fila.join(',') + '\n';
+                    return val === null ? '' : String(val);
+                }));
             });
 
-            // Trigger descarga
-            const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `concursantes_validos_${new Date().toISOString().slice(0, 10)}.csv`;
-            a.click();
-            URL.revokeObjectURL(url);
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.aoa_to_sheet(aoa);
+
+            // Ajustar ancho de columnas automáticamente
+            ws['!cols'] = cols.map((_, ci) => ({
+                wch: Math.max(
+                    cols[ci].label.length,
+                    ...aoa.slice(1).map(row => String(row[ci] ?? '').length)
+                ) + 2
+            }));
+
+            XLSX.utils.book_append_sheet(wb, ws, 'Concursantes');
+            XLSX.writeFile(wb, `concursantes_validos_${new Date().toISOString().slice(0, 10)}.xlsx`);
         })
-        .catch(() => alert('Error al generar el CSV.'))
+        .catch(() => alert('Error al generar el Excel.'))
         .finally(() => {
             btn.innerHTML = textoOriginal;
             btn.disabled = false;
@@ -208,6 +210,7 @@ function descargarConcursantesValidos() {
 }
 
 // ── Override verFoto: muestra colaborador sospechoso debajo del nombre ───────
+
 window.verFoto = function (id) {
 
     $.ajax({
