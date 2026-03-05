@@ -27,6 +27,7 @@ try {
     // Campos que se pueden actualizar por día (ID específico o por día)
     $campos_diarios = ['is_delivery', 'base_consumption', 'event_factor'];
 
+
     if (in_array($campo, $campos_diarios)) {
         if (!empty($id)) {
             // Actualizamos el registro específico por ID
