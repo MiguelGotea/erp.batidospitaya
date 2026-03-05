@@ -156,37 +156,38 @@ function renderizarTabla(codigoSucursal) {
                            onchange="updateField(${idProducto}, '${codigoSucursal}', 'shelf_life_days', this.value)">
                 </td>
                 ${diasSemana.map(dia => {
-            const configDia = datos.dias[dia.num] || { is_delivery: 0, base_consumption: 0, event_factor: 1 };
+            const configDia = datos.dias[dia.num] || { id: null, is_delivery: 0, base_consumption: 0, event_factor: 1 };
             const isDelivery = configDia.is_delivery == 1;
+            const configId = configDia.id;
 
             return `
-                    <td class="day-config-cell ${isDelivery ? 'delivery-active' : ''}">
-                        <div class="d-flex flex-column align-items-center gap-1">
-                            <button class="btn btn-sm ${isDelivery ? 'btn-success' : 'btn-outline-secondary'} delivery-toggle" 
-                                    title="${isDelivery ? 'Día de entrega' : 'No es día de entrega'}"
-                                    ${!puedeEditar || isInactive ? 'disabled' : ''}
-                                    onclick="toggleDelivery(${idProducto}, '${codigoSucursal}', ${dia.num}, ${isDelivery ? 0 : 1})">
-                                <i class="fas fa-truck text-white"></i>
-                            </button>
-                            
-                            <div class="input-group input-group-xs" title="Consumo Base">
-                                <span class="input-group-text">C:</span>
-                                <input type="number" step="0.01" class="form-control daily-input input-consumption" 
-                                       value="${configDia.base_consumption || 0}" 
-                                       ${!puedeEditar || isInactive ? 'disabled' : ''}
-                                       onchange="updateField(${idProducto}, '${codigoSucursal}', 'base_consumption', this.value, ${dia.num})">
-                            </div>
-
-                            <div class="input-group input-group-xs" title="Factor Evento">
-                                <span class="input-group-text">F:</span>
-                                <input type="number" step="0.1" class="form-control daily-input input-factor" 
-                                       value="${configDia.event_factor || 1}" 
-                                       ${!puedeEditar || isInactive ? 'disabled' : ''}
-                                       onchange="updateField(${idProducto}, '${codigoSucursal}', 'event_factor', this.value, ${dia.num})">
-                            </div>
-                        </div>
-                    </td>
-                    `;
+                     <td class="day-config-cell ${isDelivery ? 'delivery-active' : ''}">
+                         <div class="d-flex flex-column align-items-center gap-1">
+                             <button class="btn btn-sm ${isDelivery ? 'btn-success' : 'btn-outline-secondary'} delivery-toggle" 
+                                     title="${isDelivery ? 'Día de entrega' : 'No es día de entrega'}"
+                                     ${!puedeEditar || isInactive ? 'disabled' : ''}
+                                     onclick="toggleDelivery(${idProducto}, '${codigoSucursal}', ${dia.num}, ${isDelivery ? 0 : 1}, ${configId})">
+                                 <i class="fas fa-truck text-white"></i>
+                             </button>
+                             
+                             <div class="input-group input-group-xs" title="Consumo Base">
+                                 <span class="input-group-text">C:</span>
+                                 <input type="number" step="0.01" class="form-control daily-input input-consumption" 
+                                        value="${configDia.base_consumption || 0}" 
+                                        ${!puedeEditar || isInactive ? 'disabled' : ''}
+                                        onchange="updateField(${idProducto}, '${codigoSucursal}', 'base_consumption', this.value, ${dia.num}, ${configId})">
+                             </div>
+ 
+                             <div class="input-group input-group-xs" title="Factor Evento">
+                                 <span class="input-group-text">F:</span>
+                                 <input type="number" step="0.1" class="form-control daily-input input-factor" 
+                                        value="${configDia.event_factor || 1}" 
+                                        ${!puedeEditar || isInactive ? 'disabled' : ''}
+                                        onchange="updateField(${idProducto}, '${codigoSucursal}', 'event_factor', this.value, ${dia.num}, ${configId})">
+                             </div>
+                         </div>
+                     </td>
+                     `;
         }).join('')}
                 <td>
                     <label class="toggle-switch">
@@ -304,21 +305,22 @@ function inicializarBusquedaProducto(codigoSucursal) {
 }
 
 // Toggle d├¡a de entrega
-function toggleDelivery(idProducto, codigoSucursal, dia, nuevoEstado) {
-    updateField(idProducto, codigoSucursal, 'is_delivery', nuevoEstado, dia);
+function toggleDelivery(idProducto, codigoSucursal, dia, nuevoEstado, id = null) {
+    updateField(idProducto, codigoSucursal, 'is_delivery', nuevoEstado, dia, id);
 }
 
 // Se eliminan funciones viejas de manejo de d├¡as individuales
 
 
 // Actualizar campo de configuraci├│n
-function updateField(idProducto, codigoSucursal, campo, valor, diaEntrega = null) {
+function updateField(idProducto, codigoSucursal, campo, valor, diaEntrega = null, id = null) {
     if (!puedeEditar) return;
 
     $.ajax({
         url: 'ajax/compra_local_configuracion_despacho_update_field.php',
         method: 'POST',
         data: {
+            id: id,
             id_producto_presentacion: idProducto,
             codigo_sucursal: codigoSucursal,
             campo: campo,
