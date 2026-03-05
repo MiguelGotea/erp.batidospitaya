@@ -8,11 +8,16 @@ try {
     $usuario = obtenerUsuarioActual();
     $cargoOperario = $usuario['CodNivelesCargos'];
 
-    // Verificar permiso de edición para invalidación masiva
-    if (!tienePermiso('gestion_sorteos', 'edicion', $cargoOperario)) {
-        echo json_encode(['success' => false, 'message' => 'Sin permisos para realizar esta acción']);
+    // Verificar permiso específico para invalidación masiva
+    if (!tienePermiso('gestion_sorteos', 'invalidacion_masiva', $cargoOperario)) {
+        echo json_encode(['success' => false, 'message' => 'Sin permisos para realizar la invalidación masiva']);
         exit;
     }
+
+    // ── 0. RESET GLOBAL ──
+    // Antes de procesar, ponemos todos los registros como Válidos (valido = 1)
+    $sqlReset = "UPDATE pitaya_love_registros SET valido = 1";
+    ejecutarConsulta($sqlReset, []);
 
     // ── 1. Cargar colaboradores activos ──
     $sqlColabs = "SELECT 

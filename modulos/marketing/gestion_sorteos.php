@@ -42,10 +42,11 @@ if (!tienePermiso('gestion_sorteos', 'vista', $cargoOperario)) {
             <div class="container-fluid p-3">
                 <!-- Barra de acciones -->
                 <div class="d-flex justify-content-end mb-2 gap-2">
-                    <?php if (tienePermiso('gestion_sorteos', 'edicion', $cargoOperario)): ?>
-                    <button class="btn btn-outline-danger btn-sm" onclick="ejecutarInvalidacionMasiva()" title="Invalida automáticamente los registros por IA o Colaboradores (lógica completa)">
-                        <i class="bi bi-shield-slash me-1"></i> Invalidación Masiva
-                    </button>
+                    <?php if (tienePermiso('gestion_sorteos', 'invalidacion_masiva', $cargoOperario)): ?>
+                        <button class="btn btn-outline-danger btn-sm" onclick="ejecutarInvalidacionMasiva()"
+                            title="Invalida automáticamente los registros por IA o Colaboradores (lógica completa)">
+                            <i class="bi bi-shield-slash me-1"></i> Invalidación Masiva
+                        </button>
                     <?php endif; ?>
                     <button class="btn btn-success btn-sm" onclick="descargarConcursantesValidos()"
                         title="Descarga todos los concursantes válidos (valido=1) sin columnas de verificación">
@@ -318,7 +319,7 @@ if (!tienePermiso('gestion_sorteos', 'vista', $cargoOperario)) {
             z-index: 1050 !important;
         }
     </style>
-    
+
     <!-- Modal Resultados Invalidación Masiva -->
     <div class="modal fade" id="modalResultadoInvalidacion" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
@@ -335,7 +336,8 @@ if (!tienePermiso('gestion_sorteos', 'vista', $cargoOperario)) {
                     </div>
                     <div class="card bg-light border-0 mb-3">
                         <div class="card-body p-3">
-                            <h6 class="card-title text-uppercase small fw-bold text-muted mb-3">Desglose por lógica:</h6>
+                            <h6 class="card-title text-uppercase small fw-bold text-muted mb-3">Desglose por lógica:
+                            </h6>
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <span><i class="bi bi-robot me-2 text-primary"></i> Por Verificación IA:</span>
                                 <span class="badge bg-primary fs-6" id="cntIA">0</span>
@@ -347,7 +349,8 @@ if (!tienePermiso('gestion_sorteos', 'vista', $cargoOperario)) {
                         </div>
                     </div>
                     <div class="alert alert-info small mb-0">
-                        <i class="bi bi-info-circle me-1"></i> Recuerde que algunos registros pueden haber coincidido en ambas lógicas simultáneamente.
+                        <i class="bi bi-info-circle me-1"></i> Recuerde que algunos registros pueden haber coincidido en
+                        ambas lógicas simultáneamente.
                     </div>
                 </div>
                 <div class="modal-footer border-0">
@@ -364,10 +367,12 @@ if (!tienePermiso('gestion_sorteos', 'vista', $cargoOperario)) {
         const cargoOperario = <?php echo json_encode($cargoOperario); ?>;
         const tienePermisoVista = <?php echo tienePermiso('gestion_sorteos', 'vista', $cargoOperario) ? 'true' : 'false'; ?>;
         const tienePermisoEdicion = <?php echo tienePermiso('gestion_sorteos', 'edicion', $cargoOperario) ? 'true' : 'false'; ?>;
+        const tienePermisoInvalidacion = <?php echo tienePermiso('gestion_sorteos', 'invalidacion_masiva', $cargoOperario) ? 'true' : 'false'; ?>;
 
         console.log('Cargo del operario:', cargoOperario);
         console.log('Permiso de vista:', tienePermisoVista);
         console.log('Permiso de edición:', tienePermisoEdicion);
+        console.log('Permiso de invalidación masiva:', tienePermisoInvalidacion);
     </script>
     <!-- SheetJS para exportar Excel (.xlsx) -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
