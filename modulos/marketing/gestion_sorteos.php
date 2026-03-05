@@ -41,7 +41,12 @@ if (!tienePermiso('gestion_sorteos', 'vista', $cargoOperario)) {
 
             <div class="container-fluid p-3">
                 <!-- Barra de acciones -->
-                <div class="d-flex justify-content-end mb-2">
+                <div class="d-flex justify-content-end mb-2 gap-2">
+                    <?php if (tienePermiso('gestion_sorteos', 'edicion', $cargoOperario)): ?>
+                    <button class="btn btn-outline-danger btn-sm" onclick="ejecutarInvalidacionMasiva()" title="Invalida automáticamente los registros por IA o Colaboradores (lógica completa)">
+                        <i class="bi bi-shield-slash me-1"></i> Invalidación Masiva
+                    </button>
+                    <?php endif; ?>
                     <button class="btn btn-success btn-sm" onclick="descargarConcursantesValidos()"
                         title="Descarga todos los concursantes válidos (valido=1) sin columnas de verificación">
                         <i class="bi bi-download me-1"></i> Descargar Concursantes
@@ -313,6 +318,44 @@ if (!tienePermiso('gestion_sorteos', 'vista', $cargoOperario)) {
             z-index: 1050 !important;
         }
     </style>
+    
+    <!-- Modal Resultados Invalidación Masiva -->
+    <div class="modal fade" id="modalResultadoInvalidacion" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title"><i class="bi bi-shield-slash me-2"></i> Resultado de Invalidación</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="text-center mb-4">
+                        <i class="bi bi-check-circle-fill text-success" style="font-size: 3rem;"></i>
+                        <h4 class="mt-2" id="msgTotalActualizados">0 Registros Actualizados</h4>
+                        <p class="text-muted">La base de datos ha sido actualizada con éxito.</p>
+                    </div>
+                    <div class="card bg-light border-0 mb-3">
+                        <div class="card-body p-3">
+                            <h6 class="card-title text-uppercase small fw-bold text-muted mb-3">Desglose por lógica:</h6>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span><i class="bi bi-robot me-2 text-primary"></i> Por Verificación IA:</span>
+                                <span class="badge bg-primary fs-6" id="cntIA">0</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span><i class="bi bi-people me-2 text-warning"></i> Por Colaboradores:</span>
+                                <span class="badge bg-warning text-dark fs-6" id="cntColab">0</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="alert alert-info small mb-0">
+                        <i class="bi bi-info-circle me-1"></i> Recuerde que algunos registros pueden haber coincidido en ambas lógicas simultáneamente.
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-secondary w-100" data-bs-dismiss="modal">Entendido</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

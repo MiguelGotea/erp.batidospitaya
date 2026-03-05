@@ -139,6 +139,48 @@ function setColabFilter(state) {
     cargarRegistros();
 }
 
+// ── Ejecutar Invalidación Masiva ─────────────────────────────────────────────
+function ejecutarInvalidacionMasiva() {
+    if (!confirm('¿Está seguro de ejecutar la invalidación masiva? \n\nEsto marcará como Inválidos (valido=0) todos los registros que no cumplan la verificación de IA o de Colaboradores usando la lógica completa del sistema.')) {
+        return;
+    }
+
+    const btn = document.querySelector('button[onclick="ejecutarInvalidacionMasiva()"]');
+    const originalHtml = btn.innerHTML;
+    btn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i> Procesando...';
+    btn.disabled = true;
+
+    $.ajax({
+        url: 'ajax/procesar_invalidacion_masiva.php',
+        method: 'POST',
+        dataType: 'json',
+        success: function (response) {
+            if (response.success) {
+                // Llenar datos en el modal
+                $('#msgTotalActualizados').text(`${response.counts.total} Registros Actualizados`);
+                $('#cntIA').text(response.counts.ia);
+                $('#cntColab').text(response.counts.colab);
+
+                // Mostrar modal
+                const modal = new bootstrap.Modal(document.getElementById('modalResultadoInvalidacion'));
+                modal.show();
+
+                // Recargar tabla
+                cargarRegistros();
+            } else {
+                alert('Error: ' + (response.message || 'Ocurrió un error al procesar.'));
+            }
+        },
+        error: function () {
+            alert('Error crítico al conectar con el servidor.');
+        },
+        complete: function () {
+            btn.innerHTML = originalHtml;
+            btn.disabled = false;
+        }
+    });
+}
+
 // ── Descarga XLSX de concursantes válidos (SheetJS) ───────────────────────
 function descargarConcursantesValidos() {
     const btn = document.querySelector('button[onclick="descargarConcursantesValidos()"]');

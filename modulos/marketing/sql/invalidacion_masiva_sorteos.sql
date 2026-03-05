@@ -11,12 +11,20 @@
 --             Esta operación NO elimina registros, solo cambia valido → 0.
 -- =============================================================================
 
--- ─── OPCIÓN A: Invalidar por IA no validada ───────────────────────────────
--- Todos los registros donde la IA no pudo validar la factura se marcan inválidos.
+-- ─── OPCIÓN A: Invalidar por IA "Revisar" ───────────────────────────────
+-- Todos los registros que el sistema clasifica como "Revisar" por la IA
+-- (IA fallida, códigos no coinciden o puntos no coinciden).
 UPDATE pitaya_love_registros
 SET valido = 0
-WHERE validado_ia = 0
-  AND valido = 1; -- Solo actualiza los que aún están marcados como válidos
+WHERE valido = 1
+  AND (
+      validado_ia = 0 
+      OR codigo_sorteo_ia IS NULL 
+      OR codigo_sorteo_ia = '' 
+      OR numero_factura != codigo_sorteo_ia 
+      OR puntos_ia IS NULL 
+      OR puntos_factura != puntos_ia
+  );
 
 -- ─── OPCIÓN B: Invalidar por similitud de nombre con colaborador activo ────
 --
@@ -88,7 +96,7 @@ WHERE plr.valido = 1
 -- ─── Verificación post-ejecución ─────────────────────────────────────────
 SELECT 
     COUNT(*) AS total_invalidados,
-    SUM(CASE WHEN validado_ia = 0 THEN 1 ELSE 0 END) AS por_ia_no_validada,
-    SUM(CASE WHEN validado_ia = 1 THEN 1 ELSE 0 END) AS por_coincidencia_colaborador
+    SUM(CASE WHEN (validado_ia = 0 OR codigo_sorteo_ia IS NULL OR codigo_sorteo_ia = '' OR numero_factura != codigo_sorteo_ia OR puntos_ia IS NULL OR puntos_factura != puntos_ia) THEN 1 ELSE 0 END) AS por_ia_revisar,
+    SUM(CASE WHEN (valido = 0 AND NOT (validado_ia = 0 OR codigo_sorteo_ia IS NULL OR codigo_sorteo_ia = '' OR numero_factura != codigo_sorteo_ia OR puntos_ia IS NULL OR puntos_factura != puntos_ia)) THEN 1 ELSE 0 END) AS por_coincidencia_colaborador
 FROM pitaya_love_registros
 WHERE valido = 0;
