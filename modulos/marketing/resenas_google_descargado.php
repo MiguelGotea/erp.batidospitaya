@@ -48,20 +48,13 @@ $puedeActualizar = tienePermiso('resenas_google_descargado', 'actualizacion', $c
             <?php echo renderHeader($usuario, false, 'Reseñas de Google'); ?>
             
             <div class="container-fluid p-4">
-                <div class="row mb-4 align-items-center">
-                    <div class="col-md-6">
-                        <h4 class="mb-1 text-dark fw-bold">Historial de Reseñas</h4>
-                        <p class="text-muted small mb-0">Visualiza las calificaciones y comentarios de tus clientes en Google Business.</p>
-                    </div>
-                    <div class="col-md-6 text-md-end">
+                <div class="row mb-4">
+                    <div class="col-12 text-end">
                         <?php if ($puedeActualizar): ?>
                         <button class="btn btn-primary px-4 py-2" id="btnActualizar" onclick="actualizarResenas()">
                             <i class="fas fa-sync-alt me-2"></i> Actualizar Datos
                         </button>
                         <?php endif; ?>
-                        <button class="btn btn-outline-secondary px-4 py-2" onclick="cargarResenas()">
-                            <i class="fas fa-redo"></i>
-                        </button>
                     </div>
                 </div>
 
