@@ -29,9 +29,16 @@ try {
         foreach ($filtros as $columna => $valor) {
             if (empty($valor)) continue;
 
-            if ($columna === 'nombre_sucursal') {
-                $whereClauses[] = "s.nombre LIKE :sucursal";
-                $params[':sucursal'] = "%$valor%";
+            if ($columna === 'locationId') {
+                if (is_array($valor) && !empty($valor)) {
+                    $placeholders = [];
+                    foreach ($valor as $i => $v) {
+                        $p = ":loc_$i";
+                        $placeholders[] = $p;
+                        $params[$p] = $v;
+                    }
+                    $whereClauses[] = "r.locationId IN (" . implode(',', $placeholders) . ")";
+                }
             } elseif ($columna === 'reviewerName') {
                 $whereClauses[] = "r.reviewerName LIKE :reviewer";
                 $params[':reviewer'] = "%$valor%";
@@ -73,10 +80,10 @@ try {
     $totalRegistros = $stmtCount->fetch(PDO::FETCH_ASSOC)['total'];
 
     // Validar orden dinámico
-    $columnasPermitidas = ['createTime', 'starRating', 'reviewerName', 'nombre_sucursal', 'comment'];
+    $columnasPermitidas = ['createTime', 'starRating', 'reviewerName', 'locationId', 'comment'];
     $orderBy = 'r.createTime';
     if (in_array($orden['columna'], $columnasPermitidas)) {
-        if ($orden['columna'] === 'nombre_sucursal') $orderBy = 's.nombre';
+        if ($orden['columna'] === 'locationId') $orderBy = 's.nombre';
         else $orderBy = 'r.' . $orden['columna'];
     }
     $direction = (strtoupper($orden['direccion']) === 'ASC') ? 'ASC' : 'DESC';
@@ -111,7 +118,7 @@ try {
         
         if (!empty($r['createTime'])) {
             $date = new DateTime($r['createTime']);
-            $r['fechaFormateada'] = $date->format('d-m-Y');
+            $r['fechaFormateada'] = $date->format('d-M-y');
         } else {
             $r['fechaFormateada'] = 'N/A';
         }

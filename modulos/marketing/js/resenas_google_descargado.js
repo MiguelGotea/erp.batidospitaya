@@ -82,7 +82,7 @@ function renderizarTabla(data) {
         
         const row = `
             <tr>
-                <td><span class="badge sucursal-badge">${item.SucursalNombre}</span></td>
+                <td class="fw-bold" style="color: #0E544C;">${item.SucursalNombre}</td>
                 <td class="reviewer-name">${item.reviewerName}</td>
                 <td class="text-center">${estrellas}</td>
                 <td><div class="review-comment">${item.comment || '<span class="text-muted italic">Sin comentario</span>'}</div></td>
@@ -231,6 +231,18 @@ function cargarOpcionesFiltro(panel, columna, icon) {
             { valor: 'ONE', texto: '1 Estrella' }
         ];
         renderOpcionesFiltro(panel, columna, opciones, icon);
+    } else if (columna === 'locationId') {
+        $.ajax({
+            url: 'ajax/resenas_google_descargado_get_opciones_filtro.php',
+            method: 'POST',
+            data: { columna: columna },
+            dataType: 'json',
+            success: function (response) {
+                if (response.success) {
+                    renderOpcionesFiltro(panel, columna, response.opciones, icon);
+                }
+            }
+        });
     } else {
         panel.append('<div class="p-2 small text-muted">Cargando opciones...</div>');
     }

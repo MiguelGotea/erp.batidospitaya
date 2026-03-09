@@ -71,7 +71,7 @@ $puedeActualizar = tienePermiso('resenas_google_descargado', 'actualizacion', $c
                             <table class="table table-hover table-resenas mb-0" id="tablaResenasGoogle">
                                 <thead>
                                     <tr>
-                                        <th style="width: 20%;" data-column="nombre_sucursal" data-type="text">
+                                        <th style="width: 20%;" data-column="locationId" data-type="list">
                                             Sucursal
                                             <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                         </th>
