@@ -12,9 +12,76 @@ if (!tienePermiso('resenas_google_descargado', 'vista', $cargoOperario)) {
     exit;
 }
 
+// Obtener parámetros
+$pagina = isset($_POST['pagina']) ? (int)$_POST['pagina'] : 1;
+$registrosPorPagina = isset($_POST['registros_por_pagina']) ? (int)$_POST['registros_por_pagina'] : 25;
+$filtros = isset($_POST['filtros']) ? json_decode($_POST['filtros'], true) : [];
+$orden = isset($_POST['orden']) ? json_decode($_POST['orden'], true) : ['columna' => 'createTime', 'direccion' => 'desc'];
+
+$offset = ($pagina - 1) * $registrosPorPagina;
+
 try {
-    // Consulta para obtener las reseñas unidas con la tabla de sucursales
-    // Se usa cod_googlebusiness para enlazar con locationId
+    $whereClauses = ["1=1"];
+    $params = [];
+
+    // Procesar filtros
+    if (!empty($filtros)) {
+        foreach ($filtros as $columna => $valor) {
+            if (empty($valor)) continue;
+
+            if ($columna === 'nombre_sucursal') {
+                $whereClauses[] = "s.nombre LIKE :sucursal";
+                $params[':sucursal'] = "%$valor%";
+            } elseif ($columna === 'reviewerName') {
+                $whereClauses[] = "r.reviewerName LIKE :reviewer";
+                $params[':reviewer'] = "%$valor%";
+            } elseif ($columna === 'comment') {
+                $whereClauses[] = "r.comment LIKE :comment";
+                $params[':comment'] = "%$valor%";
+            } elseif ($columna === 'starRating') {
+                if (is_array($valor) && !empty($valor)) {
+                    $placeholders = [];
+                    foreach ($valor as $i => $v) {
+                        $p = ":star_$i";
+                        $placeholders[] = $p;
+                        $params[$p] = $v;
+                    }
+                    $whereClauses[] = "r.starRating IN (" . implode(',', $placeholders) . ")";
+                }
+            } elseif ($columna === 'createTime') {
+                if (!empty($valor['desde'])) {
+                    $whereClauses[] = "DATE(r.createTime) >= :desde";
+                    $params[':desde'] = $valor['desde'];
+                }
+                if (!empty($valor['hasta'])) {
+                    $whereClauses[] = "DATE(r.createTime) <= :hasta";
+                    $params[':hasta'] = $valor['hasta'];
+                }
+            }
+        }
+    }
+
+    $whereSql = implode(" AND ", $whereClauses);
+
+    // Obtener total de registros para paginación
+    $countSql = "SELECT COUNT(*) as total 
+                 FROM ResenasGoogle r 
+                 LEFT JOIN sucursales s ON r.locationId = s.cod_googlebusiness
+                 WHERE $whereSql";
+    $stmtCount = $conn->prepare($countSql);
+    $stmtCount->execute($params);
+    $totalRegistros = $stmtCount->fetch(PDO::FETCH_ASSOC)['total'];
+
+    // Validar orden dinámico
+    $columnasPermitidas = ['createTime', 'starRating', 'reviewerName', 'nombre_sucursal', 'comment'];
+    $orderBy = 'r.createTime';
+    if (in_array($orden['columna'], $columnasPermitidas)) {
+        if ($orden['columna'] === 'nombre_sucursal') $orderBy = 's.nombre';
+        else $orderBy = 'r.' . $orden['columna'];
+    }
+    $direction = (strtoupper($orden['direccion']) === 'ASC') ? 'ASC' : 'DESC';
+
+    // Consulta final
     $sql = "SELECT 
                 r.locationId,
                 r.reviewerName,
@@ -24,26 +91,24 @@ try {
                 s.nombre AS SucursalNombre
             FROM ResenasGoogle r
             LEFT JOIN sucursales s ON r.locationId = s.cod_googlebusiness
-            ORDER BY r.createTime DESC";
+            WHERE $whereSql
+            ORDER BY $orderBy $direction
+            LIMIT :limit OFFSET :offset";
 
     $stmt = $conn->prepare($sql);
+    foreach ($params as $key => $val) {
+        $stmt->bindValue($key, $val);
+    }
+    $stmt->bindValue(':limit', $registrosPorPagina, PDO::PARAM_INT);
+    $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
     $stmt->execute();
     $resenas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // Procesar datos para el formato de la tabla
+    // Procesar datos para estrellas y fechas
+    $ratingMap = ['ONE' => 1, 'TWO' => 2, 'THREE' => 3, 'FOUR' => 4, 'FIVE' => 5];
     foreach ($resenas as &$r) {
-        // Convertir starRating a número (ONE -> 1, TWO -> 2, etc.)
-        $ratingMap = [
-            'ONE' => 1,
-            'TWO' => 2,
-            'THREE' => 3,
-            'FOUR' => 4,
-            'FIVE' => 5
-        ];
         $r['starRatingNum'] = isset($ratingMap[$r['starRating']]) ? $ratingMap[$r['starRating']] : 0;
         
-        // Formatear fecha (solo fecha si es posible)
-        // El formato de createTime suele ser ISO 8601 (2024-03-09T12:00:00Z)
         if (!empty($r['createTime'])) {
             $date = new DateTime($r['createTime']);
             $r['fechaFormateada'] = $date->format('d-m-Y');
@@ -51,7 +116,6 @@ try {
             $r['fechaFormateada'] = 'N/A';
         }
         
-        // Asegurar que el nombre de la sucursal no sea nulo
         if (empty($r['SucursalNombre'])) {
             $r['SucursalNombre'] = 'Desconocida (' . $r['locationId'] . ')';
         }
@@ -59,7 +123,8 @@ try {
 
     echo json_encode([
         'success' => true,
-        'data' => $resenas
+        'data' => $resenas,
+        'total_registros' => (int)$totalRegistros
     ]);
 
 } catch (Exception $e) {

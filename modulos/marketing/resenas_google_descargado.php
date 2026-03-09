@@ -68,14 +68,29 @@ $puedeActualizar = tienePermiso('resenas_google_descargado', 'actualizacion', $c
                 <div class="card border-0 shadow-sm resenas-container">
                     <div class="card-body p-0">
                         <div class="table-responsive">
-                            <table class="table table-hover table-resenas mb-0">
+                            <table class="table table-hover table-resenas mb-0" id="tablaResenasGoogle">
                                 <thead>
                                     <tr>
-                                        <th style="width: 15%;">Sucursal</th>
-                                        <th style="width: 15%;">Usuario</th>
-                                        <th style="width: 15%;" class="text-center">Calificación</th>
-                                        <th style="width: 40%;">Comentario</th>
-                                        <th style="width: 15%;" class="text-center">Fecha</th>
+                                        <th style="width: 20%;" data-column="nombre_sucursal" data-type="text">
+                                            Sucursal
+                                            <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                        </th>
+                                        <th style="width: 20%;" data-column="reviewerName" data-type="text">
+                                            Usuario
+                                            <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                        </th>
+                                        <th style="width: 15%;" class="text-center" data-column="starRating" data-type="list">
+                                            Calificación
+                                            <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                        </th>
+                                        <th style="width: 30%;" data-column="comment" data-type="text">
+                                            Comentario
+                                            <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                        </th>
+                                        <th style="width: 15%;" class="text-center" data-column="createTime" data-type="daterange">
+                                            Fecha
+                                            <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                        </th>
                                     </tr>
                                 </thead>
                                 <tbody id="tbodyResenas">
@@ -91,6 +106,21 @@ $puedeActualizar = tienePermiso('resenas_google_descargado', 'actualizacion', $c
                             </table>
                         </div>
                     </div>
+                </div>
+
+                <!-- Paginación Estándar -->
+                <div class="d-flex justify-content-between align-items-center mt-3">
+                    <div class="d-flex align-items-center gap-2">
+                        <label class="mb-0">Mostrar:</label>
+                        <select class="form-select form-select-sm" id="registrosPorPagina" 
+                                style="width: auto;" onchange="cambiarRegistrosPorPagina()">
+                            <option value="25" selected>25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                        <span class="mb-0">registros</span>
+                    </div>
+                    <div id="paginacion"></div>
                 </div>
             </div>
         </div>
@@ -116,11 +146,11 @@ $puedeActualizar = tienePermiso('resenas_google_descargado', 'actualizacion', $c
                             <div class="card h-100 border-0 bg-light">
                                 <div class="card-body">
                                     <h6 class="text-primary border-bottom pb-2 fw-bold">
-                                        <i class="fas fa-list-ul me-2"></i> Visualización
+                                        <i class="fas fa-list-ul me-2"></i> Visualización y Filtros
                                     </h6>
                                     <p class="small text-muted mb-0">
-                                        Muestra el historial de reseñas descargadas desde Google Business. 
-                                        Puedes ver qué sucursal recibió la reseña, quién la escribió y su comentario.
+                                        Puedes filtrar las reseñas por sucursal, usuario, calificación o fecha usando los iconos de embudo en los encabezados. 
+                                        Usa la paginación inferior para navegar entre registros.
                                     </p>
                                 </div>
                             </div>

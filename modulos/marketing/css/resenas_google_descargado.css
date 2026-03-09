@@ -1,5 +1,11 @@
 /* Estilos para la herramienta de Reseñas de Google */
 
+:root {
+    --color-principal: #51B8AC;
+    --color-header-tabla: #0E544C;
+    --btn-nuevo: #218838;
+}
+
 .resenas-container {
     background-color: #fff;
     border-radius: 8px;
@@ -13,6 +19,26 @@
     text-transform: uppercase;
     font-size: 0.85rem;
     vertical-align: middle;
+    padding: 14px 12px;
+    border: none;
+    border-right: 1px solid rgba(255, 255, 255, 0.2);
+    position: relative;
+    white-space: nowrap;
+}
+
+.table-resenas thead th:last-child {
+    border-right: none;
+}
+
+.table-resenas tbody td {
+    padding: 12px;
+    vertical-align: middle;
+    font-size: 14px;
+    border-right: 1px solid #e9ecef;
+}
+
+.table-resenas tbody td:last-child {
+    border-right: none;
 }
 
 .star-rating {
@@ -39,27 +65,242 @@
 }
 
 .sucursal-badge {
-    background-color: var(--color-principal);
-    color: white;
+    background-color: var(--color-principal) !important;
+    color: white !important;
     font-size: 0.8rem;
     padding: 0.4em 0.8em;
+    display: inline-block;
+    border-radius: 4px;
 }
 
-.btn-actualizar-wrapper {
-    margin-bottom: 20px;
+/* Iconos de filtro */
+.filter-icon {
+    cursor: pointer;
+    margin-left: 6px;
+    opacity: 0.7;
+    transition: all 0.2s;
+    font-size: 13px;
+    position: relative;
+    display: inline-block;
 }
 
-.last-extraction-info {
-    font-size: 0.85rem;
-    color: #888;
-    margin-top: 10px;
+.filter-icon:hover {
+    opacity: 1;
+    transform: scale(1.1);
 }
 
-/* Modal de ayuda custom */
-#pageHelpModal .card {
-    transition: transform 0.2s;
+.filter-icon.active {
+    opacity: 1;
+    color: #51B8AC;
 }
 
-#pageHelpModal .card:hover {
-    transform: translateY(-5px);
+/* Indicador de filtro activo */
+.filter-icon.has-filter::after {
+    content: '';
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    width: 10px;
+    height: 10px;
+    background-color: #dc3545;
+    border-radius: 50%;
+    border: 2px solid var(--color-header-tabla);
+}
+
+/* Panel de filtro */
+.filter-panel {
+    position: fixed;
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    padding: 16px;
+    z-index: 1050;
+    min-width: 300px;
+    max-width: 350px;
+    display: none;
+}
+
+.filter-panel.show {
+    display: block;
+}
+
+.filter-section {
+    margin-bottom: 16px;
+}
+
+.filter-section-title {
+    display: block;
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--color-header-tabla);
+    margin-bottom: 8px;
+}
+
+.filter-search {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    font-size: 14px;
+    transition: border-color 0.2s;
+}
+
+.filter-search:focus {
+    outline: none;
+    border-color: var(--color-principal);
+}
+
+/* Inputs numéricos */
+.numeric-inputs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+/* Rango de fechas (Calendario) */
+.daterange-calendar-container {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    width: 100%;
+}
+
+.daterange-month-selector {
+    display: flex;
+    gap: 4px;
+}
+
+.daterange-month-selector select {
+    flex: 1;
+    padding: 3px 4px;
+    border: 1px solid #dee2e6;
+    border-radius: 3px;
+    font-size: 11px;
+    background-color: white;
+}
+
+.daterange-calendar {
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    padding: 4px;
+    background-color: #fafafa;
+}
+
+.daterange-calendar-header {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+    margin-bottom: 2px;
+}
+
+.daterange-calendar-day-name {
+    text-align: center;
+    font-size: 9px;
+    font-weight: 600;
+    color: #6c757d;
+}
+
+.daterange-calendar-days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+}
+
+.daterange-calendar-day {
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    border-radius: 3px;
+    cursor: pointer;
+    background-color: white;
+    padding: 14px;
+}
+
+.daterange-calendar-day.selected {
+    background-color: var(--color-principal);
+    color: white;
+    font-weight: 600;
+}
+
+.daterange-calendar-day.in-range {
+    background-color: rgba(81, 184, 172, 0.2);
+}
+
+/* Botones de orden */
+.filter-sort-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+}
+
+.filter-sort-btn {
+    padding: 8px 12px;
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.filter-sort-btn.active {
+    background-color: var(--color-principal);
+    color: white;
+    border-color: var(--color-principal);
+}
+
+/* Botones de acción del panel */
+.filter-actions {
+    display: flex;
+    gap: 8px;
+    padding-top: 12px;
+    margin-top: 12px;
+    border-top: 1px solid #e9ecef;
+}
+
+.filter-action-btn {
+    flex: 1;
+    padding: 8px 12px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.filter-action-btn.clear {
+    background-color: #dc3545;
+    color: white;
+}
+
+/* Paginación */
+.pagination-btn {
+    padding: 6px 12px;
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    min-width: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pagination-btn.active {
+    background-color: var(--color-principal);
+    color: white;
+    border-color: var(--color-principal);
 }
