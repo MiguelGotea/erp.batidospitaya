@@ -285,6 +285,13 @@
 }
 
 /* Paginación */
+#paginacion {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
 .pagination-btn {
     padding: 6px 12px;
     background: white;
