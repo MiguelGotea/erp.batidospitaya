@@ -16,6 +16,7 @@ try {
     // Consulta para obtener las reseñas unidas con la tabla de sucursales
     // Se usa cod_googlebusiness para enlazar con locationId
     $sql = "SELECT 
+                r.locationId,
                 r.reviewerName,
                 r.starRating,
                 r.comment,
