@@ -26,7 +26,7 @@ $puedeActualizar = tienePermiso('resenas_google_descargado', 'actualizacion', $c
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reseñas de Google - Marketing</title>
+    <title>Reseñas de Google - Historial</title>
 
 
     <!-- CSS Standard -->
@@ -48,7 +48,7 @@ $puedeActualizar = tienePermiso('resenas_google_descargado', 'actualizacion', $c
 
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, 'Reseñas de Google'); ?>
+            <?php echo renderHeader($usuario, false, 'Reseñas de Google - Historial'); ?>
 
             <div class="container-fluid p-4">
                 <div class="row mb-4">
