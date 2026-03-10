@@ -285,7 +285,6 @@ if (isset($_GET['editar'])) {
         <div id="feriadoModal" class="modal-backdrop">
             <div class="modal-content">
                 <h3 id="modalTitulo">Agregar Nuevo Feriado</h3>
-                <span class="close" onclick="cerrarModal()">&times;</span>
                 <form method="POST" id="feriadoForm">
                     <input type="hidden" name="id" id="feriadoId" value="">
 
