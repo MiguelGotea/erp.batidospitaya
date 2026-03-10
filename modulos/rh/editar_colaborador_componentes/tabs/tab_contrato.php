@@ -1,4 +1,4 @@
-﻿<!-- Pestaña de Contrato -->
+<!-- Pestaña de Contrato -->
 <?php if (tienePermiso('editar_colaborador', 'edicion', $cargoId)): ?>
     <div id="contrato" class="tab-pane <?= $pestaña_activa == 'contrato' ? 'active' : '' ?>">
         <!-- Sección de Documentos Obligatorios Faltantes -->
@@ -330,12 +330,13 @@
                                             <i class="fas fa-calendar-alt"></i>
                                         </button>
 
-                                        <!-- NUEVO BOTÓN -->
-                                        <button type="button" class="btn-accion"
-                                            onclick="abrirModalEditarTerminacion(<?= $contrato['CodContrato'] ?>)"
-                                            title="Editar Información de Terminación" style="color: #0E544C;">
-                                            <i class="fas fa-edit"></i>
-                                        </button>
+                                        <?php if (!$estaActivo): ?>
+                                            <button type="button" class="btn-accion"
+                                                onclick="abrirModalEditarTerminacion(<?= $contrato['CodContrato'] ?>)"
+                                                title="Editar Información de Terminación" style="color: #0E544C;">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                        <?php endif; ?>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
