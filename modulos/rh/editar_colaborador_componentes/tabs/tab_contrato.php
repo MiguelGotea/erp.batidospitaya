@@ -324,13 +324,6 @@
                                                 <i class="fas fa-file-alt"></i>
                                             </a>
                                         <?php endif; ?>
-                                        <?php if (!$estaActivo): ?>
-                                            <button type="button" class="btn-accion btn-editar"
-                                                onclick="abrirModalLiquidacion(<?= $contrato['CodContrato'] ?>, '<?= $contrato['fecha_liquidacion'] ?? '' ?>')"
-                                                title="Asignar/Editar Fecha de Liquidación">
-                                                <i class="fas fa-calendar-alt"></i>
-                                            </button>
-                                        <?php endif; ?>
 
                                         <?php if (!$estaActivo): ?>
                                             <button type="button" class="btn-accion"

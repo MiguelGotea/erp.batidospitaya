@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // Este archivo es incluido desde editar_colaborador.php
 require_once 'compliance_logic.php';
 
@@ -3357,39 +3357,3 @@ function obtenerTodasCategoriasCompletas()
     return $stmt->fetchAll();
 }
 
-/**
- * Asigna o actualiza la fecha de liquidación de un contrato
- */
-function asignarFechaLiquidacion($codContrato, $fechaLiquidacion)
-{
-    global $conn;
-
-    try {
-        $stmt = $conn->prepare("
-    UPDATE Contratos
-    SET fecha_liquidacion = ?
-    WHERE CodContrato = ?
-    ");
-
-        $stmt->execute([$fechaLiquidacion, $codContrato]);
-
-        return ['exito' => true, 'mensaje' => 'Fecha de liquidación asignada correctamente'];
-    } catch (Exception $e) {
-        return ['exito' => false, 'mensaje' => 'Error al asignar fecha de liquidación: ' . $e->getMessage()];
-    }
-}
-
-// Procesar asignación de fecha de liquidación
-if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asignar') {
-    $resultado = asignarFechaLiquidacion($_POST['id_contrato_liquidacion'], $_POST['fecha_liquidacion']);
-
-    if ($resultado['exito']) {
-        $_SESSION['exito'] = $resultado['mensaje'];
-    } else {
-        $_SESSION['error'] = $resultado['mensaje'];
-    }
-
-    // Redirigir para evitar reenvío del formulario
-    header("Location: editar_colaborador.php?id=$codOperario&pestaña=contrato");
-    exit();
-}

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <?php
 $imagenesParaCarrusel = [];
@@ -942,31 +942,6 @@ $imagenesParaCarrusel = [];
                         </div>
                     </div>
 
-                    <!-- Modal para asignar fecha de liquidación -->
-                    <div id="modalLiquidacion" class="modal-backdrop">
-                        <div class="modal-content">
-                            <h3 style="color: #0E544C; margin-bottom: 20px;">Asignar Fecha de Liquidación</h3>
-
-                            <form method="POST" action="" id="formLiquidacion">
-                                <input type="hidden" name="accion_liquidacion" value="asignar">
-                                <input type="hidden" name="id_contrato_liquidacion" id="idContratoLiquidacion" value="">
-
-                                <div class="form-group">
-                                    <label for="fecha_liquidacion_modal">Fecha de Liquidación *</label>
-                                    <input type="date" id="fecha_liquidacion_modal" name="fecha_liquidacion"
-                                        class="form-control" required>
-                                    <small style="color: #6c757d;">Asigne la fecha cuando se realizará el pago de
-                                        liquidación</small>
-                                </div>
-
-                                <div style="display: flex; justify-content: space-between; margin-top: 20px;">
-                                    <button type="button" class="btn-submit" onclick="cerrarModalLiquidacion()"
-                                        style="background-color: #6c757d;">Cancelar</button>
-                                    <button type="submit" class="btn-submit">Guardar Fecha</button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
 
                     <script>
                         // Función para ocultar mensajes automáticamente después de 5 segundos
@@ -2914,46 +2889,6 @@ $imagenesParaCarrusel = [];
                             actualizarComportamientoFechaFin();
                         });
 
-                        // Función para abrir modal de liquidación
-                        function abrirModalLiquidacion(idContrato, fechaLiquidacionActual = '') {
-                            document.getElementById('modalLiquidacion').style.display = 'block';
-                            document.getElementById('idContratoLiquidacion').value = idContrato;
-
-                            // Si hay una fecha actual, establecerla
-                            if (fechaLiquidacionActual) {
-                                document.getElementById('fecha_liquidacion_modal').value = fechaLiquidacionActual;
-                            } else {
-                                // Establecer fecha actual por defecto
-                                document.getElementById('fecha_liquidacion_modal').valueAsDate = new Date();
-                            }
-                        }
-
-                        // Función para cerrar modal de liquidación
-                        function cerrarModalLiquidacion() {
-                            document.getElementById('modalLiquidacion').style.display = 'none';
-                        }
-
-                        // Cerrar modal al hacer clic fuera
-                        document.getElementById('modalLiquidacion').addEventListener('click', function(e) {
-                            if (e.target === this) {
-                                cerrarModalLiquidacion();
-                            }
-                        });
-
-                        // Validación del formulario de liquidación
-                        document.getElementById('formLiquidacion').addEventListener('submit', function(e) {
-                            const fechaLiquidacion = document.getElementById('fecha_liquidacion_modal').value;
-
-                            if (!fechaLiquidacion) {
-                                e.preventDefault();
-                                alert('Por favor seleccione una fecha de liquidación.');
-                                return;
-                            }
-
-                            if (!confirm('¿Está seguro de que desea asignar esta fecha de liquidación?')) {
-                                e.preventDefault();
-                            }
-                        });
 
                         // Funciones para el modal de finalizar adenda
                         function abrirModalFinalizarAdenda(idAdendum) {
