@@ -6,6 +6,7 @@
 require_once '../../core/auth/auth.php';
 require_once '../../core/database/conexion.php';
 require_once '../../core/ai/AIService.php';
+require_once '../../core/utils/DocumentParser.php';
 require_once '../../core/layout/menu_lateral.php';
 require_once '../../core/layout/header_universal.php';
 require_once '../../core/permissions/permissions.php';
@@ -21,7 +22,7 @@ if (!$usuario) {
 }
 
 // Configuración de límites
-define('MAX_PDF_SIZE', 50 * 1024 * 1024); // 50MB
+define('MAX_FILE_SIZE', 50 * 1024 * 1024); // 50MB
 
 // Procesar el formulario cuando se envía
 $resultado = null;
@@ -32,36 +33,50 @@ $nombre_archivo = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['cv_pdf']) && isset($_POST['perfil'])) {
     $perfil_puesto = trim($_POST['perfil']);
     $archivo = $_FILES['cv_pdf'];
+    $mimeType = $archivo['type'];
+    $extension = strtolower(pathinfo($archivo['name'], PATHINFO_EXTENSION));
 
     // Validaciones básicas
+    $formatosPermitidos = ['pdf', 'docx', 'jpg', 'jpeg', 'png', 'webp'];
+    
     if (empty($perfil_puesto)) {
         $error = "Por favor, escribe el perfil del puesto";
     } elseif ($archivo['error'] !== UPLOAD_ERR_OK) {
         $error = "Error al subir el archivo. Código: " . $archivo['error'];
-    } elseif ($archivo['size'] > MAX_PDF_SIZE) {
+    } elseif ($archivo['size'] > MAX_FILE_SIZE) {
         $error = "El archivo es demasiado grande (máx 50MB)";
-    } elseif ($archivo['type'] !== 'application/pdf') {
-        $error = "Solo se permiten archivos PDF";
+    } elseif (!in_array($extension, $formatosPermitidos)) {
+        $error = "Formato no soportado. Use PDF, Word (.docx) o Imágenes (JPG, PNG, WebP)";
     } else {
         try {
-            // Leer el PDF y convertirlo a base64
-            $pdf_content = file_get_contents($archivo['tmp_name']);
-            $base64_pdf = base64_encode($pdf_content);
             $nombre_archivo = $archivo['name'];
+            $extraParts = [];
+            $promptExtra = "";
+
+            // Lógica según tipo de archivo
+            if ($extension === 'docx') {
+                // Para Word, extraemos texto
+                $textoExtraido = DocumentParser::docxToText($archivo['tmp_name']);
+                if (empty($textoExtraido)) {
+                    throw new Exception("No se pudo extraer texto del archivo Word. ¿Está vacío?");
+                }
+                $promptExtra = "\n\nCONTENIDO DEL CV (TEXTO EXTRAÍDO DEL DOCUMENTO WORD):\n\"\"\"$textoExtraido\"\"\"";
+            } else {
+                // Para PDF e Imágenes, usamos inline_data (Vision/Native support)
+                $fileContent = file_get_contents($archivo['tmp_name']);
+                $extraParts = [
+                    [
+                        'inline_data' => [
+                            'mime_type' => $mimeType,
+                            'data' => base64_encode($fileContent)
+                        ]
+                    ]
+                ];
+            }
 
             // Construir el prompt para Gemini
-            $systemPrompt = "Eres un reclutador experto con 15 años de experiencia en selección de personal.";
-            $prompt = construirPromptAnalisis($perfil_puesto);
-
-            // Preparar partes extra para Gemini
-            $extraParts = [
-                [
-                    'inline_data' => [
-                        'mime_type' => 'application/pdf',
-                        'data' => $base64_pdf
-                    ]
-                ]
-            ];
+            $systemPrompt = "Eres un reclutador experto con 15 años de experiencia en selección de personal. Analiza el CV adjunto (ya sea en PDF, Imagen o Texto) y compáralo con el perfil solicitado.";
+            $prompt = construirPromptAnalisis($perfil_puesto) . $promptExtra;
 
             // Usar AIService con rotación de llaves (proveedor google)
             $aiService = new AIService($conn, 'google');
@@ -383,8 +398,8 @@ function parsearRespuesta($texto)
             <div class="container-fluid p-3">
                 <div class="container">
                     <div class="header">
-                        <h1>📄 Analizador de CV con Gemini</h1>
-                        <p>Sube un CV en PDF, escribe el perfil del puesto y obtén el % de compatibilidad</p>
+                        <h1>📄 Analizador de CV Multi-formato</h1>
+                        <p>Sube un CV (PDF, Word, Imagen) y obtén el % de compatibilidad con el perfil</p>
                     </div>
                     <div class="card">
                         <?php
@@ -404,10 +419,10 @@ function parsearRespuesta($texto)
                                     required><?php echo htmlspecialchars($perfil_puesto); ?></textarea>
                             </div>
                             <div class="form-group">
-                                <label>📎 CV del candidato (PDF):</label>
-                                <input type="file" name="cv_pdf" id="cv_pdf" accept=".pdf" required style="display:none"
+                                <label>📎 CV del candidato (PDF, Word o Imagen):</label>
+                                <input type="file" name="cv_pdf" id="cv_pdf" accept=".pdf,.docx,.jpg,.jpeg,.png,.webp" required style="display:none"
                                     onchange="updateFileName(this)">
-                                <label for="cv_pdf" class="file-label"><span>📁</span> Seleccionar archivo PDF</label>
+                                <label for="cv_pdf" class="file-label"><span>📁</span> Seleccionar archivo (PDF, Word, PNG, JPG)</label>
                                 <div class="file-name" id="file-name">Ningún archivo seleccionado</div>
                             </div>
                             <button type="submit" id="submitBtn">🔍 Analizar compatibilidad</button>
@@ -415,7 +430,7 @@ function parsearRespuesta($texto)
 
                         <div class="loading" id="loading">
                             <div class="spinner"></div>
-                            <p>Gemini está analizando el CV...</p>
+                            <p>Gemini está analizando el documento... (esto puede tomar 5-10 segundos)</p>
                         </div>
 
                         <?php if ($error): ?>
