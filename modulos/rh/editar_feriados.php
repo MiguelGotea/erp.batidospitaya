@@ -141,8 +141,9 @@ if (isset($_GET['editar'])) {
     <title>Gestión de Feriados</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <link rel="icon" href="../../assets/img/icon12.png" type="image/png">
-    <link rel="stylesheet" href="../../core/assets/css/global_tools.css">
-    <link rel="stylesheet" href="css/editar_feriados.css">
+    <link rel="stylesheet" href="/core/assets/css/global_tools.css?v=<?php echo mt_rand(1, 10000); ?>">
+    <link rel="stylesheet" href="/core/assets/css/modales_premium.css?v=<?php echo mt_rand(1, 10000); ?>">
+    <link rel="stylesheet" href="css/editar_feriados.css?v=<?php echo mt_rand(1, 10000); ?>">
 </head>
 
 <body>
@@ -280,13 +281,11 @@ if (isset($_GET['editar'])) {
             </div>
         </div>
 
-        <!-- Modal para agregar/editar feriados -->
-        <div id="feriadoModal" class="modal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3 class="modal-title" id="modalTitulo">Agregar Nuevo Feriado</h3>
-                    <span class="close" onclick="cerrarModal()">&times;</span>
-                </div>
+        <!-- Modal para Agregar/Editar Feriado -->
+    <div id="feriadoModal" class="modal-backdrop">
+        <div class="modal-content">
+            <h3 id="modalTitle">Agregar Feriado</h3>
+            <span class="close" onclick="cerrarModal()">&times;</span>
                 <form method="POST" id="feriadoForm">
                     <input type="hidden" name="id" id="feriadoId" value="">
 
@@ -331,12 +330,14 @@ if (isset($_GET['editar'])) {
                         </label>
                     </div>
 
-                    <div class="actions">
-                        <button type="button" class="btn btn-secondary" onclick="cerrarModal()">Cancelar</button>
-                        <button type="submit" class="btn">
-                            <i class="fas fa-save"></i> Guardar
-                        </button>
-                    </div>
+                    <div style="display: flex; justify-content: space-between; gap: 10px; margin-top: 25px;">
+                    <button type="button" class="btn-modern btn-modern-secondary" onclick="cerrarModal()">
+                        <i class="fas fa-times"></i> Cancelar
+                    </button>
+                    <button type="submit" class="btn-modern btn-modern-primary">
+                        <i class="fas fa-save"></i> Guardar
+                    </button>
+                </div>
                 </form>
             </div>
         </div>
