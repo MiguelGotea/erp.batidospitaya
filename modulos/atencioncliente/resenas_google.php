@@ -10,10 +10,10 @@ $cargoOperario = $usuario['CodNivelesCargos'];
 $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
 
 // Verificar acceso
-if (!tienePermiso('resenas_google', 'vista', $cargoOperario)) {
-    header('Location: /login.php');
-    exit();
-}
+//if (!tienePermiso('resenas_google', 'vista', $cargoOperario)) {
+//    header('Location: /login.php');
+//    exit();
+//}
 
 // Obtenemos el cargo principal
 $cargoUsuario = $usuario['cargo_nombre'] ?? 'Sin cargo';
@@ -240,43 +240,43 @@ $cargoUsuariocodigo = $cargoOperario;
 <body>
     <!-- Renderizar menú lateral -->
     <?php echo renderMenuLateral($cargoOperario); ?>
-    
+
     <!-- Contenido principal -->
     <div class="main-container">
         <div class="sub-container">
             <!-- Renderizar header universal -->
             <?php echo renderHeader($usuario, $esAdmin, 'Reseñas de Google'); ?>
-            
+
             <div class="container">
 
-        <?php if (isset($_SESSION['exito'])): ?>
-            <div class="alert alert-success">
-                <?= $_SESSION['exito'] ?>
-                <?php unset($_SESSION['exito']); ?>
-            </div>
-        <?php endif; ?>
+                <?php if (isset($_SESSION['exito'])): ?>
+                    <div class="alert alert-success">
+                        <?= $_SESSION['exito'] ?>
+                        <?php unset($_SESSION['exito']); ?>
+                    </div>
+                <?php endif; ?>
 
-        <?php if (isset($_SESSION['error'])): ?>
-            <div class="alert alert-danger">
-                <?= $_SESSION['error'] ?>
-                <?php unset($_SESSION['error']); ?>
-            </div>
-        <?php endif; ?>
+                <?php if (isset($_SESSION['error'])): ?>
+                    <div class="alert alert-danger">
+                        <?= $_SESSION['error'] ?>
+                        <?php unset($_SESSION['error']); ?>
+                    </div>
+                <?php endif; ?>
 
-        <div class="iframe-container">
-            <div style="display:none;" class="iframe-header">
-                Reseñas de Google - Looker Studio
-            </div>
-            <div class="iframe-wrapper">
-                <iframe
-                    src="https://lookerstudio.google.com/embed/reporting/25224c5e-ffba-4ebf-bd3c-a259d94073da/page/nhZWF"
-                    frameborder="0" allowfullscreen
-                    sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox">
-                </iframe>
-            </div>
-            </div>
-        </div> <!-- cierre sub-container -->
-    </div> <!-- cierre main-container -->
+                <div class="iframe-container">
+                    <div style="display:none;" class="iframe-header">
+                        Reseñas de Google - Looker Studio
+                    </div>
+                    <div class="iframe-wrapper">
+                        <iframe
+                            src="https://lookerstudio.google.com/embed/reporting/25224c5e-ffba-4ebf-bd3c-a259d94073da/page/nhZWF"
+                            frameborder="0" allowfullscreen
+                            sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox">
+                        </iframe>
+                    </div>
+                </div>
+            </div> <!-- cierre sub-container -->
+        </div> <!-- cierre main-container -->
 </body>
 
 </html>
