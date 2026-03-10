@@ -268,12 +268,14 @@ $imagenesParaCarrusel = [];
                                     <input type="date" id="desde_modal" name="desde" class="form-control" required>
                                 </div>
 
-                                <div style="display: flex; justify-content: space-between; gap: 10px; margin-top: 25px;">
-                                    <button type="button" class="btn-modern btn-modern-secondary" onclick="cerrarModalCuenta()">
+                                <div
+                                    style="display: flex; justify-content: space-between; gap: 10px; margin-top: 25px;">
+                                    <button type="button" class="btn-modern btn-modern-secondary"
+                                        onclick="cerrarModalCuenta()">
                                         <i class="fas fa-times"></i> Cancelar
                                     </button>
                                     <button type="submit" class="btn-modern btn-modern-primary">
-                                        <i class="fas fa-save"></i> Guardar Cuenta
+                                        <i class="fas fa-save"></i> Guardar solo esta Cuenta
                                     </button>
                                 </div>
                             </form>
@@ -322,12 +324,14 @@ $imagenesParaCarrusel = [];
                                         class="form-control">
                                 </div>
 
-                                <div style="display: flex; justify-content: space-between; gap: 10px; margin-top: 25px;">
-                                    <button type="button" class="btn-modern btn-modern-secondary" onclick="cerrarModalContacto()">
+                                <div
+                                    style="display: flex; justify-content: space-between; gap: 10px; margin-top: 25px;">
+                                    <button type="button" class="btn-modern btn-modern-secondary"
+                                        onclick="cerrarModalContacto()">
                                         <i class="fas fa-times"></i> Cancelar
                                     </button>
                                     <button type="submit" class="btn-modern btn-modern-primary">
-                                        <i class="fas fa-save"></i> Guardar Contacto
+                                        <i class="fas fa-save"></i> Guardar solo este Contacto
                                     </button>
                                 </div>
                             </form>
@@ -425,12 +429,15 @@ $imagenesParaCarrusel = [];
                                     <small style="color: #6c757d;">Monto en córdobas (opcional)</small>
                                 </div>
 
-                                <div style="display: flex; justify-content: space-between; gap: 10px; margin-top: 25px;">
-                                    <button type="button" class="btn-modern btn-modern-secondary" onclick="cerrarModalTerminacion()">
+                                <div
+                                    style="display: flex; justify-content: space-between; gap: 10px; margin-top: 25px;">
+                                    <button type="button" class="btn-modern btn-modern-secondary"
+                                        onclick="cerrarModalTerminacion()">
                                         <i class="fas fa-times"></i> Cancelar
                                     </button>
                                     <button type="submit" class="btn-modern btn-modern-danger">
-                                        <i class="fas fa-user-slash"></i> Terminar Contrato
+                                        <i class="fas fa-user-slash"></i> Confirmar solo Terminación de
+                                        Contrato
                                     </button>
                                 </div>
                             </form>
@@ -480,12 +487,14 @@ $imagenesParaCarrusel = [];
                                         rows="3"></textarea>
                                 </div>
 
-                                <div style="display: flex; justify-content: space-between; gap: 10px; margin-top: 25px;">
-                                    <button type="button" class="btn-modern btn-modern-secondary" onclick="cerrarModalSalario()">
+                                <div
+                                    style="display: flex; justify-content: space-between; gap: 10px; margin-top: 25px;">
+                                    <button type="button" class="btn-modern btn-modern-secondary"
+                                        onclick="cerrarModalSalario()">
                                         <i class="fas fa-times"></i> Cancelar
                                     </button>
                                     <button type="submit" class="btn-modern btn-modern-primary">
-                                        <i class="fas fa-save"></i> Guardar Salario
+                                        <i class="fas fa-save"></i> Guardar solo este Salario
                                     </button>
                                 </div>
                             </form>
@@ -602,12 +611,15 @@ $imagenesParaCarrusel = [];
                                         value="[]">
                                 </div>
 
-                                <div style="display: flex; justify-content: space-between; gap: 10px; margin-top: 25px;">
-                                    <button type="button" class="btn-modern btn-modern-secondary" onclick="cerrarModalAdjunto()">
+                                <div
+                                    style="display: flex; justify-content: space-between; gap: 10px; margin-top: 25px;">
+                                    <button type="button" class="btn-modern btn-modern-secondary"
+                                        onclick="cerrarModalAdjunto()">
                                         <i class="fas fa-times"></i> Cancelar
                                     </button>
                                     <button type="submit" class="btn-modern btn-modern-primary" id="btnSubirAdjunto">
-                                        <i class="fas fa-upload"></i> Subir Archivo
+                                        <i class="fas fa-upload"></i> Subir solo este
+                                        Archivo
                                     </button>
                                 </div>
                             </form>
@@ -641,12 +653,14 @@ $imagenesParaCarrusel = [];
                                         class="form-control" rows="3"></textarea>
                                 </div>
 
-                                <div style="display: flex; justify-content: space-between; gap: 10px; margin-top: 25px;">
-                                    <button type="button" class="btn-modern btn-modern-secondary" onclick="cerrarModalSalarioINSS()">
+                                <div
+                                    style="display: flex; justify-content: space-between; gap: 10px; margin-top: 25px;">
+                                    <button type="button" class="btn-modern btn-modern-secondary"
+                                        onclick="cerrarModalSalarioINSS()">
                                         <i class="fas fa-times"></i> Cancelar
                                     </button>
                                     <button type="submit" class="btn-modern btn-modern-primary">
-                                        <i class="fas fa-save"></i> Guardar Datos
+                                        <i class="fas fa-save"></i> Guardar solo datos de INSS
                                     </button>
                                 </div>
                             </form>
@@ -701,12 +715,14 @@ $imagenesParaCarrusel = [];
                                 <!-- Tipo de contrato oculto, no se muestra ni edita -->
                                 <input type="hidden" name="tipo_contrato" id="edit_tipo_contrato" value="">
 
-                                <div style="display: flex; justify-content: space-between; gap: 10px; margin-top: 25px;">
-                                    <button type="button" class="btn-modern btn-modern-secondary" onclick="cerrarModalMovimiento()">
+                                <div
+                                    style="display: flex; justify-content: space-between; gap: 10px; margin-top: 25px;">
+                                    <button type="button" class="btn-modern btn-modern-secondary"
+                                        onclick="cerrarModalMovimiento()">
                                         <i class="fas fa-times"></i> Cancelar
                                     </button>
                                     <button type="submit" class="btn-modern btn-modern-primary">
-                                        <i class="fas fa-save"></i> Guardar Movimiento
+                                        <i class="fas fa-save"></i> Guardar solo este Movimiento
                                     </button>
                                 </div>
                             </form>
@@ -719,7 +735,8 @@ $imagenesParaCarrusel = [];
                             <h3 class="preview-title">Previsualización de foto de perfil</h3>
                             <img id="previewImage" class="preview-image" src="" alt="Vista previa">
                             <p>¿Deseas usar esta imagen como tu foto de perfil?</p>
-                            <div class="preview-buttons" style="display: flex; justify-content: center; gap: 15px; margin-top: 25px;">
+                            <div class="preview-buttons"
+                                style="display: flex; justify-content: center; gap: 15px; margin-top: 25px;">
                                 <button class="btn-modern btn-modern-secondary" onclick="cancelarPreview()">
                                     <i class="fas fa-times"></i> Cancelar
                                 </button>
@@ -747,12 +764,14 @@ $imagenesParaCarrusel = [];
                                     <small style="color: #6c757d;">Fecha cuando finaliza esta adenda</small>
                                 </div>
 
-                                <div style="display: flex; justify-content: space-between; gap: 10px; margin-top: 25px;">
-                                    <button type="button" class="btn-modern btn-modern-secondary" onclick="cerrarModalFinalizarAdenda()">
+                                <div
+                                    style="display: flex; justify-content: space-between; gap: 10px; margin-top: 25px;">
+                                    <button type="button" class="btn-modern btn-modern-secondary"
+                                        onclick="cerrarModalFinalizarAdenda()">
                                         <i class="fas fa-times"></i> Cancelar
                                     </button>
                                     <button type="submit" class="btn-modern btn-modern-danger">
-                                        <i class="fas fa-check-circle"></i> Finalizar Adenda
+                                        <i class="fas fa-check-circle"></i> Finalizar solo esta Adenda
                                     </button>
                                 </div>
                             </form>
@@ -857,8 +876,10 @@ $imagenesParaCarrusel = [];
                                     <small style="color: #6c757d;">Dejar vacío si es la categoría actual</small>
                                 </div>
 
-                                <div style="display: flex; justify-content: space-between; gap: 10px; margin-top: 25px;">
-                                    <button type="button" class="btn-modern btn-modern-secondary" onclick="cerrarModalCategoria()">
+                                <div
+                                    style="display: flex; justify-content: space-between; gap: 10px; margin-top: 25px;">
+                                    <button type="button" class="btn-modern btn-modern-secondary"
+                                        onclick="cerrarModalCategoria()">
                                         <i class="fas fa-times"></i> Cancelar
                                     </button>
                                     <button type="submit" class="btn-modern btn-modern-primary">
@@ -959,8 +980,10 @@ $imagenesParaCarrusel = [];
                                         rows="3"></textarea>
                                 </div>
 
-                                <div style="display: flex; justify-content: space-between; gap: 10px; margin-top: 25px;">
-                                    <button type="button" class="btn-modern btn-modern-secondary" onclick="cerrarModalAdendum()">
+                                <div
+                                    style="display: flex; justify-content: space-between; gap: 10px; margin-top: 25px;">
+                                    <button type="button" class="btn-modern btn-modern-secondary"
+                                        onclick="cerrarModalAdendum()">
                                         <i class="fas fa-times"></i> Cancelar
                                     </button>
                                     <button type="submit" class="btn-modern btn-modern-primary">
@@ -1097,7 +1120,7 @@ $imagenesParaCarrusel = [];
                         }
 
                         // Asignar el evento de confirmación al formulario
-                        document.getElementById('formTerminacion').addEventListener('submit', function(e) {
+                        document.getElementById('formTerminacion').addEventListener('submit', function (e) {
                             if (!confirmarTerminacion()) {
                                 e.preventDefault();
                             }
@@ -1157,7 +1180,7 @@ $imagenesParaCarrusel = [];
                         }
 
                         // También mostrar la categoría actual al cargar la página
-                        document.addEventListener('DOMContentLoaded', function() {
+                        document.addEventListener('DOMContentLoaded', function () {
                             const codCargo = document.getElementById('cod_cargo');
                             if (codCargo && codCargo.value) {
                                 actualizarCategoriaYMostrar();
@@ -1207,20 +1230,20 @@ $imagenesParaCarrusel = [];
                         }
 
                         // Mostrar/ocultar campo de persona que recibe herramientas
-                        document.getElementById('devolucion_herramientas').addEventListener('change', function() {
+                        document.getElementById('devolucion_herramientas').addEventListener('change', function () {
                             const grupoPersona = document.getElementById('grupoPersonaHerramientas');
                             grupoPersona.style.display = this.value == '1' ? 'block' : 'none';
                         });
 
                         // Cerrar modal al hacer clic fuera
-                        document.getElementById('modalTerminacion').addEventListener('click', function(e) {
+                        document.getElementById('modalTerminacion').addEventListener('click', function (e) {
                             if (e.target === this) {
                                 cerrarModalTerminacion();
                             }
                         });
 
                         // Ejecutar cuando el documento esté cargado
-                        document.addEventListener('DOMContentLoaded', function() {
+                        document.addEventListener('DOMContentLoaded', function () {
                             ocultarMensajesAutomaticamente();
 
                             const toggleButton = document.getElementById('toggleClave');
@@ -1247,7 +1270,7 @@ $imagenesParaCarrusel = [];
 
                                 // AGREGAR ESTE CÓDIGO NUEVO:
                                 // Detectar cuando cambia a tipo 2 (indefinido) y limpiar fecha fin
-                                selectTipoContrato.addEventListener('change', function() {
+                                selectTipoContrato.addEventListener('change', function () {
                                     if (this.value == '2') {
                                         const inputFechaFin = document.getElementById('fin_contrato');
                                         inputFechaFin.value = ''; // Limpiar visualmente
@@ -1261,7 +1284,7 @@ $imagenesParaCarrusel = [];
                             // También permitir cerrar mensajes haciendo clic en ellos
                             document.querySelectorAll('.alert').forEach(mensaje => {
                                 mensaje.style.cursor = 'pointer';
-                                mensaje.addEventListener('click', function() {
+                                mensaje.addEventListener('click', function () {
                                     this.style.transition = 'opacity 0.5s ease';
                                     this.style.opacity = '0';
                                     setTimeout(() => {
@@ -1272,11 +1295,11 @@ $imagenesParaCarrusel = [];
                         });
 
                         // Script para formatear automáticamente la cédula con guiones
-                        document.addEventListener('DOMContentLoaded', function() {
+                        document.addEventListener('DOMContentLoaded', function () {
                             const cedulaInput = document.getElementById('cedula');
 
                             if (cedulaInput) {
-                                cedulaInput.addEventListener('input', function() {
+                                cedulaInput.addEventListener('input', function () {
                                     // Obtener valor sin guiones y mantener cualquier letra al final
                                     let value = this.value.replace(/-/g, '');
 
@@ -1443,20 +1466,20 @@ $imagenesParaCarrusel = [];
                         }
 
                         // Cerrar modal de salario al hacer clic fuera del contenido
-                        document.getElementById('modalSalario').addEventListener('click', function(e) {
+                        document.getElementById('modalSalario').addEventListener('click', function (e) {
                             if (e.target === this) {
                                 cerrarModalSalario();
                             }
                         });
 
                         // Cerrar modales al hacer clic fuera del contenido
-                        document.getElementById('modalCuenta').addEventListener('click', function(e) {
+                        document.getElementById('modalCuenta').addEventListener('click', function (e) {
                             if (e.target === this) {
                                 cerrarModalCuenta();
                             }
                         });
 
-                        document.getElementById('modalContacto').addEventListener('click', function(e) {
+                        document.getElementById('modalContacto').addEventListener('click', function (e) {
                             if (e.target === this) {
                                 cerrarModalContacto();
                             }
@@ -1650,7 +1673,7 @@ $imagenesParaCarrusel = [];
                         }
 
                         // Actualizar estado del formulario de adendum al cargar la página
-                        document.addEventListener('DOMContentLoaded', function() {
+                        document.addEventListener('DOMContentLoaded', function () {
                             const estado = verificarPuedeCrearAdendum();
                             const formAdendum = document.querySelector('form[action*="pestaña=adendums"]');
                             const btnSubmit = formAdendum ? formAdendum.querySelector('button[type="submit"]') : null;
@@ -1909,7 +1932,7 @@ $imagenesParaCarrusel = [];
                                     diagnostic += `\nID: ${settings.deviceId ? settings.deviceId.substring(0, 8) + '...' : 'N/A'}`;
                                     const currentDevice = dispositivosVideo.find(d => d.deviceId === settings.deviceId);
                                     diagnostic += `\nEtiqueta: ${currentDevice ? currentDevice.label : 'N/A'}`;
-                                } catch (e) {}
+                                } catch (e) { }
 
                                 alert(msg + diagnostic);
                                 flashActivo = false;
@@ -1952,7 +1975,7 @@ $imagenesParaCarrusel = [];
                             if (input.files && input.files.length > 0) {
                                 Array.from(input.files).forEach(file => {
                                     const reader = new FileReader();
-                                    reader.onload = function(e) {
+                                    reader.onload = function (e) {
                                         adjuntosSesion.push({
                                             tipo: 'pdf',
                                             nombre: file.name,
@@ -1971,7 +1994,7 @@ $imagenesParaCarrusel = [];
                             if (input.files && input.files.length > 0) {
                                 Array.from(input.files).forEach(file => {
                                     const reader = new FileReader();
-                                    reader.onload = function(e) {
+                                    reader.onload = function (e) {
                                         adjuntosSesion.push({
                                             tipo: 'imagen',
                                             nombre: file.name,
@@ -2079,7 +2102,7 @@ $imagenesParaCarrusel = [];
                         }
 
                         // Validar envío del formulario unificado
-                        document.getElementById('formAdjunto').addEventListener('submit', function(e) {
+                        document.getElementById('formAdjunto').addEventListener('submit', function (e) {
                             if (adjuntosSesion.length === 0) {
                                 alert('Debe adjuntar al menos un archivo (PDF, Imagen o Captura).');
                                 e.preventDefault();
@@ -2159,7 +2182,7 @@ $imagenesParaCarrusel = [];
 
 
                         // Llamar a la función cuando se cargue la página
-                        document.addEventListener('DOMContentLoaded', function() {
+                        document.addEventListener('DOMContentLoaded', function () {
                             actualizarIconosEstadoPestanas();
                         });
 
@@ -2193,7 +2216,7 @@ $imagenesParaCarrusel = [];
                         }
 
                         // Cerrar modal al hacer clic fuera
-                        document.getElementById('modalSalarioINSS').addEventListener('click', function(e) {
+                        document.getElementById('modalSalarioINSS').addEventListener('click', function (e) {
                             if (e.target === this) {
                                 cerrarModalSalarioINSS();
                             }
@@ -2203,16 +2226,16 @@ $imagenesParaCarrusel = [];
                         let imagenTemporal = null;
 
                         // Cuando el documento esté cargado
-                        document.addEventListener('DOMContentLoaded', function() {
+                        document.addEventListener('DOMContentLoaded', function () {
                             // Configurar el evento change del input file
                             const inputFoto = document.getElementById('inputFotoPerfil');
                             if (inputFoto) {
-                                inputFoto.addEventListener('change', function(e) {
+                                inputFoto.addEventListener('change', function (e) {
                                     if (this.files && this.files[0]) {
                                         imagenTemporal = this.files[0];
                                         const reader = new FileReader();
 
-                                        reader.onload = function(e) {
+                                        reader.onload = function (e) {
                                             // Mostrar la previsualización
                                             document.getElementById('previewImage').src = e.target.result;
                                             document.getElementById('previewModal').classList.add('active');
@@ -2226,11 +2249,11 @@ $imagenesParaCarrusel = [];
                         });
 
                         // Función para previsualizar la foto antes de subir
-                        document.getElementById('inputFotoPerfil').addEventListener('change', function(e) {
+                        document.getElementById('inputFotoPerfil').addEventListener('change', function (e) {
                             if (this.files && this.files[0]) {
                                 imagenTemporal = this.files[0]; // Guardar archivo temporalmente
                                 const reader = new FileReader();
-                                reader.onload = function(e) {
+                                reader.onload = function (e) {
                                     mostrarPreview(e.target.result);
                                 }
                                 reader.readAsDataURL(this.files[0]);
@@ -2255,9 +2278,9 @@ $imagenesParaCarrusel = [];
 
                             // Enviar con Fetch API
                             fetch('', {
-                                    method: 'POST',
-                                    body: formData
-                                })
+                                method: 'POST',
+                                body: formData
+                            })
                                 .then(response => {
                                     if (!response.ok) {
                                         throw new Error('Error en la respuesta del servidor');
@@ -2308,21 +2331,21 @@ $imagenesParaCarrusel = [];
                         }
 
                         // Cerrar modal al hacer clic fuera del contenido
-                        document.getElementById('previewModal').addEventListener('click', function(e) {
+                        document.getElementById('previewModal').addEventListener('click', function (e) {
                             if (e.target === this) {
                                 cancelarPreview();
                             }
                         });
 
                         // Cerrar modal con la tecla Escape
-                        document.addEventListener('keydown', function(e) {
+                        document.addEventListener('keydown', function (e) {
                             if (e.key === 'Escape') {
                                 cancelarPreview();
                             }
                         });
 
                         // Tooltip para la foto de perfil
-                        document.querySelector('.foto-perfil').addEventListener('mouseenter', function() {
+                        document.querySelector('.foto-perfil').addEventListener('mouseenter', function () {
                             const tooltip = document.createElement('div');
                             tooltip.className = 'tooltip';
                             tooltip.textContent = 'Haz clic para cambiar la foto';
@@ -2348,7 +2371,7 @@ $imagenesParaCarrusel = [];
                             }, 2000);
                         });
 
-                        document.querySelector('.foto-perfil').addEventListener('mouseleave', function() {
+                        document.querySelector('.foto-perfil').addEventListener('mouseleave', function () {
                             const tooltip = this.querySelector('.tooltip');
                             if (tooltip) {
                                 this.removeChild(tooltip);
@@ -2420,7 +2443,7 @@ $imagenesParaCarrusel = [];
 
                         // También validar cuando el usuario escribe (pero con debounce para no hacer muchas peticiones)
                         let timeoutId;
-                        document.getElementById('codigo_manual_contrato').addEventListener('input', function(e) {
+                        document.getElementById('codigo_manual_contrato').addEventListener('input', function (e) {
                             clearTimeout(timeoutId);
                             timeoutId = setTimeout(() => {
                                 validarCodigoContrato(this.value);
@@ -2428,7 +2451,7 @@ $imagenesParaCarrusel = [];
                         });
 
                         // Validar antes de enviar el formulario
-                        document.querySelector('form').addEventListener('submit', function(e) {
+                        document.querySelector('form').addEventListener('submit', function (e) {
                             if (!codigoEsValido) {
                                 e.preventDefault();
                                 alert('No puede guardar el contrato con un código que ya existe. Por favor, use un código único.');
@@ -2472,7 +2495,7 @@ $imagenesParaCarrusel = [];
                         }
 
                         // Cerrar modal al hacer clic fuera
-                        document.getElementById('modalMovimiento').addEventListener('click', function(e) {
+                        document.getElementById('modalMovimiento').addEventListener('click', function (e) {
                             if (e.target === this) {
                                 cerrarModalMovimiento();
                             }
@@ -2587,7 +2610,7 @@ $imagenesParaCarrusel = [];
                                     document.getElementById('edit_fecha_fin').value = categoria.FechaFin || '';
 
                                     // Reasignar el event listener al modal
-                                    document.getElementById('modalCategoria').addEventListener('click', function(e) {
+                                    document.getElementById('modalCategoria').addEventListener('click', function (e) {
                                         if (e.target === this) {
                                             cerrarModalCategoria();
                                         }
@@ -2611,7 +2634,7 @@ $imagenesParaCarrusel = [];
                         }
 
                         // Cerrar modal al hacer clic fuera
-                        document.getElementById('modalCategoria').addEventListener('click', function(e) {
+                        document.getElementById('modalCategoria').addEventListener('click', function (e) {
                             if (e.target === this) {
                                 cerrarModalCategoria();
                             }
@@ -2757,10 +2780,10 @@ $imagenesParaCarrusel = [];
                         }
 
                         // Ejecutar cuando se abra cualquier modal
-                        document.addEventListener('DOMContentLoaded', function() {
+                        document.addEventListener('DOMContentLoaded', function () {
                             // Observar cambios en los modales
-                            const observer = new MutationObserver(function(mutations) {
-                                mutations.forEach(function(mutation) {
+                            const observer = new MutationObserver(function (mutations) {
+                                mutations.forEach(function (mutation) {
                                     if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
                                         const modal = mutation.target;
                                         if (modal.style.display === 'block') {
@@ -2801,7 +2824,7 @@ $imagenesParaCarrusel = [];
                                 const formularios = document.querySelectorAll('form');
                                 formularios.forEach(form => {
                                     if (!form.id.includes('Terminacion')) {
-                                        form.addEventListener('submit', function(e) {
+                                        form.addEventListener('submit', function (e) {
                                             e.preventDefault();
                                             alert('No se puede realizar esta acción porque el colaborador no tiene un contrato activo.');
                                         });
@@ -2874,10 +2897,10 @@ $imagenesParaCarrusel = [];
                         //});
 
                         // Agregar evento al cambiar el cargo en adendums
-                        document.addEventListener('DOMContentLoaded', function() {
+                        document.addEventListener('DOMContentLoaded', function () {
                             const cargoSelectAdendum = document.getElementById('cod_cargo_adendum');
                             if (cargoSelectAdendum) {
-                                cargoSelectAdendum.addEventListener('change', function() {
+                                cargoSelectAdendum.addEventListener('change', function () {
                                     actualizarCamposAdendum();
                                 });
                             }
@@ -2885,7 +2908,7 @@ $imagenesParaCarrusel = [];
                             // También para la edición
                             const cargoSelectEditAdendum = document.getElementById('edit_cod_cargo_adendum');
                             if (cargoSelectEditAdendum) {
-                                cargoSelectEditAdendum.addEventListener('change', function() {
+                                cargoSelectEditAdendum.addEventListener('change', function () {
                                     actualizarCamposEdicionAdendum();
                                 });
                             }
@@ -2914,7 +2937,7 @@ $imagenesParaCarrusel = [];
                         }
 
                         // Llamar al cargar la página
-                        document.addEventListener('DOMContentLoaded', function() {
+                        document.addEventListener('DOMContentLoaded', function () {
                             actualizarComportamientoFechaFin();
                         });
 
@@ -2931,7 +2954,7 @@ $imagenesParaCarrusel = [];
                         }
 
                         // Cerrar modal al hacer clic fuera
-                        document.getElementById('modalFinalizarAdenda').addEventListener('click', function(e) {
+                        document.getElementById('modalFinalizarAdenda').addEventListener('click', function (e) {
                             if (e.target === this) {
                                 cerrarModalFinalizarAdenda();
                             }
@@ -3062,16 +3085,16 @@ $imagenesParaCarrusel = [];
 
                     <script>
                         // Mostrar ícono de ver al hacer hover sobre la foto               de perfil
-                        document.addEventListener('DOMContentLoaded', function() {
+                        document.addEventListener('DOMContentLoaded', function () {
                             const fotoContainer = document.querySelector('.foto-perfil');
                             const viewIcon = document.querySelector('.view-icon');
 
                             if (fotoContainer && viewIcon) {
-                                fotoContainer.addEventListener('mouseenter', function() {
+                                fotoContainer.addEventListener('mouseenter', function () {
                                     viewIcon.style.opacity = '1';
                                 });
 
-                                fotoContainer.addEventListener('mouseleave', function() {
+                                fotoContainer.addEventListener('mouseleave', function () {
                                     viewIcon.style.opacity = '0';
                                 });
                             }
@@ -3185,14 +3208,14 @@ $imagenesParaCarrusel = [];
                         }
 
                         // Cerrar modal al hacer clic fuera de la imagen (en el fondo oscuro)
-                        document.getElementById('modalVerFoto').addEventListener('click', function(e) {
+                        document.getElementById('modalVerFoto').addEventListener('click', function (e) {
                             if (e.target === this || e.target.parentElement === this) {
                                 cerrarModalVerFoto();
                             }
                         });
 
                         // Soporte para flechas de teclado
-                        document.addEventListener('keydown', function(e) {
+                        document.addEventListener('keydown', function (e) {
                             if (document.getElementById('modalVerFoto').style.display === 'block') {
                                 if (e.key === 'ArrowLeft') navegarCarrusel(-1);
                                 if (e.key === 'ArrowRight') navegarCarrusel(1);
