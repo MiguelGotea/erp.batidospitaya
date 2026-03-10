@@ -283,6 +283,7 @@ function parsearRespuesta($texto)
             font-size: 0.95em;
         }
 
+        
         button {
             width: 100%;
             padding: 18px;
