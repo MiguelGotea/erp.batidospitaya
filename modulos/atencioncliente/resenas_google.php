@@ -15,6 +15,7 @@ $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admi
 //    exit();
 //}
 
+
 // Obtenemos el cargo principal
 $cargoUsuario = $usuario['cargo_nombre'] ?? 'Sin cargo';
 $cargoUsuariocodigo = $cargoOperario;
