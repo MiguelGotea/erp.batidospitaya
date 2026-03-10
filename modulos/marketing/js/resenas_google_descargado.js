@@ -73,7 +73,7 @@ function renderizarTabla(data) {
     tbody.empty();
 
     if (!data || data.length === 0) {
-        tbody.append('<tr><td colspan="5" class="text-center py-4 text-muted">No se encontraron reseñas registradas con los filtros aplicados.</td></tr>');
+        tbody.append('<tr><td colspan="8" class="text-center py-4 text-muted">No se encontraron reseñas registradas con los filtros aplicados.</td></tr>');
         return;
     }
 
@@ -87,6 +87,9 @@ function renderizarTabla(data) {
                 <td class="text-center">${estrellas}</td>
                 <td><div class="review-comment">${item.comment || '<span class="text-muted italic">Sin comentario</span>'}</div></td>
                 <td class="text-center">${item.fechaFormateada}</td>
+                <td class="text-center">${item.horaFormateada}</td>
+                <td><div class="review-comment">${item.reviewReplyComment || '<span class="text-muted italic">Sin respuesta</span>'}</div></td>
+                <td class="text-center">${item.fechaRptaFormateada}</td>
             </tr>
         `;
         tbody.append(row);
@@ -216,6 +219,8 @@ function crearPanelFiltro(th, columna, tipo, icon) {
         cargarOpcionesFiltro(panel, columna, icon);
     } else if (tipo === 'daterange') {
         crearCalendarioDoble(panel, columna);
+    } else if (tipo === 'sort-only') {
+        // No se agrega sección de búsqueda o lista, solo quedan los botones de orden
     }
 
     posicionarPanelFiltro(panel, icon);

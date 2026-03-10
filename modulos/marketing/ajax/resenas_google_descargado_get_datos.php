@@ -80,7 +80,7 @@ try {
     $totalRegistros = $stmtCount->fetch(PDO::FETCH_ASSOC)['total'];
 
     // Validar orden dinámico
-    $columnasPermitidas = ['createTime', 'starRating', 'reviewerName', 'locationId', 'comment'];
+    $columnasPermitidas = ['createTime', 'starRating', 'reviewerName', 'locationId', 'comment', 'reviewReplyUpdateTime'];
     $orderBy = 'r.createTime';
     if (in_array($orden['columna'], $columnasPermitidas)) {
         if ($orden['columna'] === 'locationId') $orderBy = 's.nombre';
@@ -95,6 +95,8 @@ try {
                 r.starRating,
                 r.comment,
                 r.createTime,
+                r.reviewReplyComment,
+                r.reviewReplyUpdateTime,
                 s.nombre AS SucursalNombre
             FROM ResenasGoogle r
             LEFT JOIN sucursales s ON r.locationId = s.cod_googlebusiness
@@ -119,8 +121,17 @@ try {
         if (!empty($r['createTime'])) {
             $date = new DateTime($r['createTime']);
             $r['fechaFormateada'] = $date->format('d-M-y');
+            $r['horaFormateada'] = $date->format('H:i:s');
         } else {
             $r['fechaFormateada'] = 'N/A';
+            $r['horaFormateada'] = 'N/A';
+        }
+
+        if (!empty($r['reviewReplyUpdateTime'])) {
+            $dateRpta = new DateTime($r['reviewReplyUpdateTime']);
+            $r['fechaRptaFormateada'] = $dateRpta->format('d-M-y');
+        } else {
+            $r['fechaRptaFormateada'] = 'N/A';
         }
         
         if (empty($r['SucursalNombre'])) {

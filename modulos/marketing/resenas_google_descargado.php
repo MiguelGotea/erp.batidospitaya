@@ -64,24 +64,36 @@ $puedeActualizar = tienePermiso('resenas_google_descargado', 'actualizacion', $c
                             <table class="table table-hover table-resenas mb-0" id="tablaResenasGoogle">
                                 <thead>
                                     <tr>
-                                        <th style="width: 20%;" data-column="locationId" data-type="list">
+                                        <th style="width: 12%;" data-column="locationId" data-type="list">
                                             Sucursal
                                             <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                         </th>
-                                        <th style="width: 20%;" data-column="reviewerName" data-type="text">
+                                        <th style="width: 10%;" data-column="reviewerName" data-type="text">
                                             Usuario
                                             <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                         </th>
-                                        <th style="width: 15%;" class="text-center" data-column="starRating" data-type="list">
-                                            Calificación
+                                        <th style="width: 8%;" class="text-center" data-column="starRating" data-type="list">
+                                            Calif.
                                             <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                         </th>
-                                        <th style="width: 30%;" data-column="comment" data-type="text">
+                                        <th style="width: 20%;" data-column="comment" data-type="text">
                                             Comentario
                                             <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                         </th>
-                                        <th style="width: 15%;" class="text-center" data-column="createTime" data-type="daterange">
+                                        <th style="width: 10%;" class="text-center" data-column="createTime" data-type="daterange">
                                             Fecha
+                                            <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                        </th>
+                                        <th style="width: 8%;" class="text-center" data-column="createTime" data-type="sort-only">
+                                            Hora
+                                            <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                        </th>
+                                        <th style="width: 20%;" data-column="reviewReplyComment" data-type="text">
+                                            Respuesta
+                                            <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                        </th>
+                                        <th style="width: 12%;" class="text-center" data-column="reviewReplyUpdateTime" data-type="daterange">
+                                            Fecha Rpta
                                             <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                         </th>
                                     </tr>
@@ -89,7 +101,7 @@ $puedeActualizar = tienePermiso('resenas_google_descargado', 'actualizacion', $c
                                 <tbody id="tbodyResenas">
                                     <!-- Datos cargados via AJAX -->
                                     <tr>
-                                        <td colspan="5" class="text-center py-5">
+                                        <td colspan="8" class="text-center py-5">
                                             <div class="spinner-border text-primary" role="status" id="loaderResenas">
                                                 <span class="visually-hidden">Cargando...</span>
                                             </div>
