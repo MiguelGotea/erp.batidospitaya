@@ -268,10 +268,13 @@ $imagenesParaCarrusel = [];
                                     <input type="date" id="desde_modal" name="desde" class="form-control" required>
                                 </div>
 
-                                <div style="display: flex; justify-content: space-between; margin-top: 20px;">
-                                    <button type="button" class="btn-submit" onclick="cerrarModalCuenta()"
-                                        style="background-color: #6c757d;">Cancelar</button>
-                                    <button type="submit" class="btn-submit">Guardar solo esta Cuenta</button>
+                                <div style="display: flex; justify-content: space-between; gap: 10px; margin-top: 25px;">
+                                    <button type="button" class="btn-modern btn-modern-secondary" onclick="cerrarModalCuenta()">
+                                        <i class="fas fa-times"></i> Cancelar
+                                    </button>
+                                    <button type="submit" class="btn-modern btn-modern-primary">
+                                        <i class="fas fa-save"></i> Guardar Cuenta
+                                    </button>
                                 </div>
                             </form>
                         </div>
@@ -319,10 +322,13 @@ $imagenesParaCarrusel = [];
                                         class="form-control">
                                 </div>
 
-                                <div style="display: flex; justify-content: space-between; margin-top: 20px;">
-                                    <button type="button" class="btn-submit" onclick="cerrarModalContacto()"
-                                        style="background-color: #6c757d;">Cancelar</button>
-                                    <button type="submit" class="btn-submit">Guardar solo este Contacto</button>
+                                <div style="display: flex; justify-content: space-between; gap: 10px; margin-top: 25px;">
+                                    <button type="button" class="btn-modern btn-modern-secondary" onclick="cerrarModalContacto()">
+                                        <i class="fas fa-times"></i> Cancelar
+                                    </button>
+                                    <button type="submit" class="btn-modern btn-modern-primary">
+                                        <i class="fas fa-save"></i> Guardar Contacto
+                                    </button>
                                 </div>
                             </form>
                         </div>
@@ -419,12 +425,13 @@ $imagenesParaCarrusel = [];
                                     <small style="color: #6c757d;">Monto en córdobas (opcional)</small>
                                 </div>
 
-                                <div style="display: flex; justify-content: space-between; margin-top: 20px;">
-                                    <button type="button" class="btn-submit" onclick="cerrarModalTerminacion()"
-                                        style="background-color: #6c757d;">Cancelar</button>
-                                    <button type="submit" class="btn-submit"
-                                        style="background-color: #dc3545;">Confirmar solo Terminación de
-                                        Contrato</button>
+                                <div style="display: flex; justify-content: space-between; gap: 10px; margin-top: 25px;">
+                                    <button type="button" class="btn-modern btn-modern-secondary" onclick="cerrarModalTerminacion()">
+                                        <i class="fas fa-times"></i> Cancelar
+                                    </button>
+                                    <button type="submit" class="btn-modern btn-modern-danger">
+                                        <i class="fas fa-user-slash"></i> Terminar Contrato
+                                    </button>
                                 </div>
                             </form>
                         </div>
@@ -473,10 +480,13 @@ $imagenesParaCarrusel = [];
                                         rows="3"></textarea>
                                 </div>
 
-                                <div style="display: flex; justify-content: space-between; margin-top: 20px;">
-                                    <button type="button" class="btn-submit" onclick="cerrarModalSalario()"
-                                        style="background-color: #6c757d;">Cancelar</button>
-                                    <button type="submit" class="btn-submit">Guardar solo este Salario</button>
+                                <div style="display: flex; justify-content: space-between; gap: 10px; margin-top: 25px;">
+                                    <button type="button" class="btn-modern btn-modern-secondary" onclick="cerrarModalSalario()">
+                                        <i class="fas fa-times"></i> Cancelar
+                                    </button>
+                                    <button type="submit" class="btn-modern btn-modern-primary">
+                                        <i class="fas fa-save"></i> Guardar Salario
+                                    </button>
                                 </div>
                             </form>
                         </div>
@@ -592,11 +602,13 @@ $imagenesParaCarrusel = [];
                                         value="[]">
                                 </div>
 
-                                <div style="display: flex; justify-content: space-between; margin-top: 20px;">
-                                    <button type="button" class="btn-submit" onclick="cerrarModalAdjunto()"
-                                        style="background-color: #6c757d;">Cancelar</button>
-                                    <button type="submit" class="btn-submit" id="btnSubirAdjunto">Subir solo este
-                                        Archivo</button>
+                                <div style="display: flex; justify-content: space-between; gap: 10px; margin-top: 25px;">
+                                    <button type="button" class="btn-modern btn-modern-secondary" onclick="cerrarModalAdjunto()">
+                                        <i class="fas fa-times"></i> Cancelar
+                                    </button>
+                                    <button type="submit" class="btn-modern btn-modern-primary" id="btnSubirAdjunto">
+                                        <i class="fas fa-upload"></i> Subir Archivo
+                                    </button>
                                 </div>
                             </form>
                         </div>
@@ -629,10 +641,13 @@ $imagenesParaCarrusel = [];
                                         class="form-control" rows="3"></textarea>
                                 </div>
 
-                                <div style="display: flex; justify-content: space-between; margin-top: 20px;">
-                                    <button type="button" class="btn-submit" onclick="cerrarModalSalarioINSS()"
-                                        style="background-color: #6c757d;">Cancelar</button>
-                                    <button type="submit" class="btn-submit">Guardar solo datos de INSS</button>
+                                <div style="display: flex; justify-content: space-between; gap: 10px; margin-top: 25px;">
+                                    <button type="button" class="btn-modern btn-modern-secondary" onclick="cerrarModalSalarioINSS()">
+                                        <i class="fas fa-times"></i> Cancelar
+                                    </button>
+                                    <button type="submit" class="btn-modern btn-modern-primary">
+                                        <i class="fas fa-save"></i> Guardar Datos
+                                    </button>
                                 </div>
                             </form>
                         </div>
@@ -686,10 +701,13 @@ $imagenesParaCarrusel = [];
                                 <!-- Tipo de contrato oculto, no se muestra ni edita -->
                                 <input type="hidden" name="tipo_contrato" id="edit_tipo_contrato" value="">
 
-                                <div style="display: flex; justify-content: space-between; margin-top: 20px;">
-                                    <button type="button" class="btn-submit" onclick="cerrarModalMovimiento()"
-                                        style="background-color: #6c757d;">Cancelar</button>
-                                    <button type="submit" class="btn-submit">Guardar solo este Movimiento</button>
+                                <div style="display: flex; justify-content: space-between; gap: 10px; margin-top: 25px;">
+                                    <button type="button" class="btn-modern btn-modern-secondary" onclick="cerrarModalMovimiento()">
+                                        <i class="fas fa-times"></i> Cancelar
+                                    </button>
+                                    <button type="submit" class="btn-modern btn-modern-primary">
+                                        <i class="fas fa-save"></i> Guardar Movimiento
+                                    </button>
                                 </div>
                             </form>
                         </div>
@@ -701,9 +719,13 @@ $imagenesParaCarrusel = [];
                             <h3 class="preview-title">Previsualización de foto de perfil</h3>
                             <img id="previewImage" class="preview-image" src="" alt="Vista previa">
                             <p>¿Deseas usar esta imagen como tu foto de perfil?</p>
-                            <div class="preview-buttons">
-                                <button class="btn-cancel" onclick="cancelarPreview()">Cancelar</button>
-                                <button class="btn-confirm" onclick="confirmarFoto()">Sí, usar esta foto</button>
+                            <div class="preview-buttons" style="display: flex; justify-content: center; gap: 15px; margin-top: 25px;">
+                                <button class="btn-modern btn-modern-secondary" onclick="cancelarPreview()">
+                                    <i class="fas fa-times"></i> Cancelar
+                                </button>
+                                <button class="btn-modern btn-modern-primary" onclick="confirmarFoto()">
+                                    <i class="fas fa-check"></i> Sí, usar esta foto
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -725,11 +747,12 @@ $imagenesParaCarrusel = [];
                                     <small style="color: #6c757d;">Fecha cuando finaliza esta adenda</small>
                                 </div>
 
-                                <div style="display: flex; justify-content: space-between; margin-top: 20px;">
-                                    <button type="button" class="btn-submit" onclick="cerrarModalFinalizarAdenda()"
-                                        style="background-color: #6c757d;">Cancelar</button>
-                                    <button type="submit" class="btn-submit" style="background-color: #dc3545;">
-                                        Finalizar solo esta Adenda
+                                <div style="display: flex; justify-content: space-between; gap: 10px; margin-top: 25px;">
+                                    <button type="button" class="btn-modern btn-modern-secondary" onclick="cerrarModalFinalizarAdenda()">
+                                        <i class="fas fa-times"></i> Cancelar
+                                    </button>
+                                    <button type="submit" class="btn-modern btn-modern-danger">
+                                        <i class="fas fa-check-circle"></i> Finalizar Adenda
                                     </button>
                                 </div>
                             </form>
@@ -802,7 +825,7 @@ $imagenesParaCarrusel = [];
                     <!-- Modal para editar categoría -->
                     <div id="modalCategoria" class="modal-backdrop">
                         <div class="modal-content">
-                            <h3 style="color: #0E544C; margin-bottom: 20px;">Editar Categoría</h3>
+                            <h3>Editar Categoría</h3>
 
                             <form method="POST" action="" id="formCategoria">
                                 <input type="hidden" name="accion_categoria" value="editar">
@@ -834,10 +857,13 @@ $imagenesParaCarrusel = [];
                                     <small style="color: #6c757d;">Dejar vacío si es la categoría actual</small>
                                 </div>
 
-                                <div style="display: flex; justify-content: space-between; margin-top: 20px;">
-                                    <button type="button" class="btn-submit" onclick="cerrarModalCategoria()"
-                                        style="background-color: #6c757d;">Cancelar</button>
-                                    <button type="submit" class="btn-submit">Guardar Cambios</button>
+                                <div style="display: flex; justify-content: space-between; gap: 10px; margin-top: 25px;">
+                                    <button type="button" class="btn-modern btn-modern-secondary" onclick="cerrarModalCategoria()">
+                                        <i class="fas fa-times"></i> Cancelar
+                                    </button>
+                                    <button type="submit" class="btn-modern btn-modern-primary">
+                                        <i class="fas fa-save"></i> Guardar Cambios
+                                    </button>
                                 </div>
                             </form>
                         </div>
@@ -846,7 +872,7 @@ $imagenesParaCarrusel = [];
                     <!-- Modal para editar adendum -->
                     <div id="modalAdendum" class="modal-backdrop">
                         <div class="modal-content">
-                            <h3 style="color: #0E544C; margin-bottom: 20px;">Editar Adendum</h3>
+                            <h3>Editar Adendum</h3>
 
                             <form method="POST" action="" id="formAdendum">
                                 <input type="hidden" name="accion_adendum" value="editar">
@@ -933,10 +959,13 @@ $imagenesParaCarrusel = [];
                                         rows="3"></textarea>
                                 </div>
 
-                                <div style="display: flex; justify-content: space-between; margin-top: 20px;">
-                                    <button type="button" class="btn-submit" onclick="cerrarModalAdendum()"
-                                        style="background-color: #6c757d;">Cancelar</button>
-                                    <button type="submit" class="btn-submit">Guardar Cambios</button>
+                                <div style="display: flex; justify-content: space-between; gap: 10px; margin-top: 25px;">
+                                    <button type="button" class="btn-modern btn-modern-secondary" onclick="cerrarModalAdendum()">
+                                        <i class="fas fa-times"></i> Cancelar
+                                    </button>
+                                    <button type="submit" class="btn-modern btn-modern-primary">
+                                        <i class="fas fa-save"></i> Guardar Cambios
+                                    </button>
                                 </div>
                             </form>
                         </div>
