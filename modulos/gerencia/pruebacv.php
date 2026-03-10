@@ -217,8 +217,10 @@ function parsearRespuesta($texto)
                     </div>
                     <div class="card">
                         <?php 
-                        $aiServiceKeys = new AIService($conn, 'google');
-                        if (empty($aiServiceKeys->apiKeys) && $_SERVER['REQUEST_METHOD'] !== 'POST'): ?>
+                        if (!isset($aiService)) {
+                            $aiService = new AIService($conn, 'google');
+                        }
+                        if (!$aiService->hasAvailableKeys() && $_SERVER['REQUEST_METHOD'] !== 'POST'): ?>
                             <div class="api-warning">
                                 <strong>⚠️ Error de configuración:</strong> No se encontraron API Keys activas para Google.
                             </div>
