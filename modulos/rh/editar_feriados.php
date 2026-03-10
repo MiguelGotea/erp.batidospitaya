@@ -282,10 +282,10 @@ if (isset($_GET['editar'])) {
         </div>
 
         <!-- Modal para Agregar/Editar Feriado -->
-    <div id="feriadoModal" class="modal-backdrop">
-        <div class="modal-content">
-            <h3 id="modalTitle">Agregar Feriado</h3>
-            <span class="close" onclick="cerrarModal()">&times;</span>
+        <div id="feriadoModal" class="modal-backdrop">
+            <div class="modal-content">
+                <h3 id="modalTitulo">Agregar Nuevo Feriado</h3>
+                <span class="close" onclick="cerrarModal()">&times;</span>
                 <form method="POST" id="feriadoForm">
                     <input type="hidden" name="id" id="feriadoId" value="">
 
@@ -331,13 +331,13 @@ if (isset($_GET['editar'])) {
                     </div>
 
                     <div style="display: flex; justify-content: space-between; gap: 10px; margin-top: 25px;">
-                    <button type="button" class="btn-modern btn-modern-secondary" onclick="cerrarModal()">
-                        <i class="fas fa-times"></i> Cancelar
-                    </button>
-                    <button type="submit" class="btn-modern btn-modern-primary">
-                        <i class="fas fa-save"></i> Guardar
-                    </button>
-                </div>
+                        <button type="button" class="btn-modern btn-modern-secondary" onclick="cerrarModal()">
+                            <i class="fas fa-times"></i> Cancelar
+                        </button>
+                        <button type="submit" class="btn-modern btn-modern-primary">
+                            <i class="fas fa-save"></i> Guardar
+                        </button>
+                    </div>
                 </form>
             </div>
         </div>
