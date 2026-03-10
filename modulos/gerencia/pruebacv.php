@@ -13,6 +13,7 @@ require_once '../../core/permissions/permissions.php';
 $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'] ?? null;
 
+
 // Verificar acceso
 if (!$usuario) {
     header('Location: /login.php');
@@ -171,39 +172,209 @@ function parsearRespuesta($texto)
 ?>
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Analizador de CV con Gemini</title>
     <link rel="stylesheet" href="/assets/css/global_tools.css?v=<?php echo mt_rand(1, 10000); ?>">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
-        body { background: #f4f7f6; min-height: 100vh; }
-        .container { max-width: 800px; margin: 0 auto; }
-        .header { text-align: center; color: #333; margin-bottom: 30px; }
-        .header h1 { font-size: 2.5em; margin-bottom: 10px; }
-        .card { background: white; border-radius: 20px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1); padding: 30px; margin-bottom: 20px; }
-        .api-warning { background: #fff3cd; border-left: 5px solid #ffc107; padding: 15px; border-radius: 10px; margin-bottom: 25px; font-size: 0.95em; }
-        .form-group { margin-bottom: 25px; }
-        .form-group label { display: block; margin-bottom: 8px; font-weight: 600; color: #333; font-size: 1.1em; }
-        .form-group textarea { width: 100%; padding: 15px; border: 2px solid #e0e0e0; border-radius: 12px; font-size: 16px; min-height: 120px; resize: vertical; }
-        .file-label { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 15px; background: #f8f9fa; border: 2px dashed #667eea; border-radius: 12px; cursor: pointer; color: #667eea; }
-        .file-name { margin-top: 10px; padding: 8px; background: #e9ecef; border-radius: 8px; font-size: 0.95em; }
-        button { width: 100%; padding: 18px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 12px; font-size: 1.2em; font-weight: 600; cursor: pointer; }
-        .loading { display: none; text-align: center; padding: 30px; }
-        .loading.active { display: block; }
-        .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #667eea; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin: 0 auto 15px; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .score-circle { width: 120px; height: 120px; margin: 0 auto 20px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; font-size: 2.5em; font-weight: bold; color: white; }
-        .recommendation-badge { display: inline-block; padding: 8px 20px; border-radius: 30px; font-weight: bold; margin-bottom: 20px; }
-        .recommendation-badge.contratar { background: #d4edda; color: #155724; border-left: 5px solid #28a745; }
-        .recommendation-badge.entrevistar { background: #fff3cd; color: #856404; border-left: 5px solid #ffc107; }
-        .recommendation-badge.descartar { background: #f8d7da; color: #721c24; border-left: 5px solid #dc3545; }
-        .list-item { padding: 8px 15px; background: #f8f9fa; border-radius: 8px; margin-bottom: 5px; }
-        .explicacion { background: #e9ecef; padding: 15px; border-radius: 10px; font-style: italic; line-height: 1.5; }
-        .error-box { background: #f8d7da; border-left: 5px solid #dc3545; padding: 15px; border-radius: 10px; color: #721c24; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            background: #f4f7f6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            margin-bottom: 20px;
+        }
+
+        .api-warning {
+            background: #fff3cd;
+            border-left: 5px solid #ffc107;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            font-size: 0.95em;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            font-size: 1.1em;
+        }
+
+        .form-group textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 16px;
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .file-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            padding: 15px;
+            background: #f8f9fa;
+            border: 2px dashed #667eea;
+            border-radius: 12px;
+            cursor: pointer;
+            color: #667eea;
+        }
+
+        .file-name {
+            margin-top: 10px;
+            padding: 8px;
+            background: #e9ecef;
+            border-radius: 8px;
+            font-size: 0.95em;
+        }
+
+        button {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.2em;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 30px;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .score-circle {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5em;
+            font-weight: bold;
+            color: white;
+        }
+
+        .recommendation-badge {
+            display: inline-block;
+            padding: 8px 20px;
+            border-radius: 30px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .recommendation-badge.contratar {
+            background: #d4edda;
+            color: #155724;
+            border-left: 5px solid #28a745;
+        }
+
+        .recommendation-badge.entrevistar {
+            background: #fff3cd;
+            color: #856404;
+            border-left: 5px solid #ffc107;
+        }
+
+        .recommendation-badge.descartar {
+            background: #f8d7da;
+            color: #721c24;
+            border-left: 5px solid #dc3545;
+        }
+
+        .list-item {
+            padding: 8px 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 5px;
+        }
+
+        .explicacion {
+            background: #e9ecef;
+            padding: 15px;
+            border-radius: 10px;
+            font-style: italic;
+            line-height: 1.5;
+        }
+
+        .error-box {
+            background: #f8d7da;
+            border-left: 5px solid #dc3545;
+            padding: 15px;
+            border-radius: 10px;
+            color: #721c24;
+        }
     </style>
 </head>
+
 <body>
     <?php echo renderMenuLateral($cargoOperario); ?>
     <div class="main-container">
@@ -216,7 +387,7 @@ function parsearRespuesta($texto)
                         <p>Sube un CV en PDF, escribe el perfil del puesto y obtén el % de compatibilidad</p>
                     </div>
                     <div class="card">
-                        <?php 
+                        <?php
                         if (!isset($aiService)) {
                             $aiService = new AIService($conn, 'google');
                         }
@@ -229,11 +400,13 @@ function parsearRespuesta($texto)
                         <form method="POST" enctype="multipart/form-data" onsubmit="showLoading()">
                             <div class="form-group">
                                 <label>📋 Perfil del puesto:</label>
-                                <textarea name="perfil" required><?php echo htmlspecialchars($perfil_puesto); ?></textarea>
+                                <textarea name="perfil"
+                                    required><?php echo htmlspecialchars($perfil_puesto); ?></textarea>
                             </div>
                             <div class="form-group">
                                 <label>📎 CV del candidato (PDF):</label>
-                                <input type="file" name="cv_pdf" id="cv_pdf" accept=".pdf" required style="display:none" onchange="updateFileName(this)">
+                                <input type="file" name="cv_pdf" id="cv_pdf" accept=".pdf" required style="display:none"
+                                    onchange="updateFileName(this)">
                                 <label for="cv_pdf" class="file-label"><span>📁</span> Seleccionar archivo PDF</label>
                                 <div class="file-name" id="file-name">Ningún archivo seleccionado</div>
                             </div>
@@ -246,7 +419,8 @@ function parsearRespuesta($texto)
                         </div>
 
                         <?php if ($error): ?>
-                            <div class="error-box" style="margin-top:20px"><strong>❌ Error:</strong> <?php echo htmlspecialchars($error); ?></div>
+                            <div class="error-box" style="margin-top:20px"><strong>❌ Error:</strong>
+                                <?php echo htmlspecialchars($error); ?></div>
                         <?php endif; ?>
 
                         <?php if ($resultado && $resultado['success']): ?>
@@ -255,11 +429,14 @@ function parsearRespuesta($texto)
                                 <?php
                                 $rec = strtolower($resultado['parsed']['recomendacion']);
                                 $badge = 'entrevistar';
-                                if (strpos($rec, 'contratar') !== false) $badge = 'contratar';
-                                if (strpos($rec, 'descartar') !== false) $badge = 'descartar';
+                                if (strpos($rec, 'contratar') !== false)
+                                    $badge = 'contratar';
+                                if (strpos($rec, 'descartar') !== false)
+                                    $badge = 'descartar';
                                 ?>
                                 <div class="recommendation-badge <?php echo $badge; ?>">
-                                    <strong>Recomendación:</strong> <?php echo htmlspecialchars($resultado['parsed']['recomendacion']); ?>
+                                    <strong>Recomendación:</strong>
+                                    <?php echo htmlspecialchars($resultado['parsed']['recomendacion']); ?>
                                 </div>
                                 <div class="section">
                                     <h3>✅ Fortalezas:</h3>
@@ -275,7 +452,8 @@ function parsearRespuesta($texto)
                                 </div>
                                 <div class="section">
                                     <h3>💬 Explicación:</h3>
-                                    <div class="explicacion"><?php echo nl2br(htmlspecialchars($resultado['parsed']['explicacion'])); ?></div>
+                                    <div class="explicacion">
+                                        <?php echo nl2br(htmlspecialchars($resultado['parsed']['explicacion'])); ?></div>
                                 </div>
                             </div>
                         <?php endif; ?>
@@ -288,8 +466,9 @@ function parsearRespuesta($texto)
         function updateFileName(input) { document.getElementById('file-name').textContent = input.files[0] ? '📄 ' + input.files[0].name : 'Ningún archivo seleccionado'; }
         function showLoading() { document.getElementById('loading').classList.add('active'); document.getElementById('submitBtn').disabled = true; }
         <?php if ($resultado || $error): ?>
-        window.onload = function() { document.getElementById('loading').classList.remove('active'); document.getElementById('submitBtn').disabled = false; }
+            window.onload = function () { document.getElementById('loading').classList.remove('active'); document.getElementById('submitBtn').disabled = false; }
         <?php endif; ?>
     </script>
 </body>
+
 </html>
