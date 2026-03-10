@@ -667,6 +667,7 @@ $imagenesParaCarrusel = [];
                         </div>
                     </div>
 
+
                     <!-- Modal para editar movimiento de cargo -->
                     <div id="modalMovimiento" class="modal-backdrop">
                         <div class="modal-content">
