@@ -3,7 +3,7 @@
  * Batidos Pitaya ERP
  */
 
-const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxBLL010Mer3x5CwjTqJjTJ8DFKcLYPZoqBXu0tJ3wEOOjAsZcZnGfNPAZQIKAeclnWJQ/exec';
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwMM2g7hdJSAkTDbteBUHC65EW0kJA8ZA_N5aOU8BcmKpaVM0uql0IStPOhLXFM3ERHPg/exec';
 
 let paginaActual = 1;
 let registrosPorPagina = 25;
@@ -13,7 +13,7 @@ let panelFiltroAbierto = null;
 let totalRegistros = 0;
 let scrollTopInicial = 0;
 
-$(document).ready(function() {
+$(document).ready(function () {
     cargarResenas();
 
     // Cerrar filtros solo si se hace clic fuera del panel Y del icono
@@ -35,7 +35,7 @@ $(document).ready(function() {
  */
 async function cargarResenas() {
     mostrarCargando(true);
-    
+
     try {
         const response = await $.ajax({
             url: 'ajax/resenas_google_descargado_get_datos.php',
@@ -79,7 +79,7 @@ function renderizarTabla(data) {
 
     data.forEach(item => {
         const estrellas = generarEstrellas(item.starRatingNum);
-        
+
         const row = `
             <tr>
                 <td class="fw-bold" style="color: #0E544C;">${item.SucursalNombre}</td>
@@ -136,7 +136,7 @@ async function actualizarResenas() {
 
         try {
             await fetch(GOOGLE_SCRIPT_URL, { mode: 'no-cors' });
-            
+
             setTimeout(() => {
                 Swal.fire({
                     title: 'Proceso Iniciado',
@@ -217,7 +217,7 @@ function crearPanelFiltro(th, columna, tipo, icon) {
     } else if (tipo === 'daterange') {
         crearCalendarioDoble(panel, columna);
     }
-    
+
     posicionarPanelFiltro(panel, icon);
 }
 
@@ -400,13 +400,13 @@ function actualizarCalendarioUnico(columna) {
     const primerDia = new Date(año, mes, 1).getDay();
     const diasEnMes = new Date(año, mes + 1, 0).getDate();
     const diasSemana = ['D', 'L', 'M', 'M', 'J', 'V', 'S'];
-    
+
     let html = '<div class="daterange-calendar-header d-grid" style="grid-template-columns: repeat(7, 1fr); text-align: center; font-size: 10px; font-weight: bold; color: #666;">';
     diasSemana.forEach(dia => html += `<div>${dia}</div>`);
     html += '</div><div class="daterange-calendar-days d-grid" style="grid-template-columns: repeat(7, 1fr); gap: 2px; margin-top: 5px;">';
 
     for (let i = 0; i < primerDia; i++) html += '<div class="empty"></div>';
-    
+
     for (let dia = 1; dia <= diasEnMes; dia++) {
         const fechaStr = `${año}-${String(mes + 1).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
         const clases = obtenerClasesCalendario(fechaStr, columna);
