@@ -3,6 +3,9 @@ require_once '../../../core/auth/auth.php';
 require_once '../../../core/database/conexion.php';
 require_once '../../../core/permissions/permissions.php';
 
+// Sincronizar zona horaria de MySQL para este script
+$conn->query("SET time_zone = '-06:00'");
+
 $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
 
