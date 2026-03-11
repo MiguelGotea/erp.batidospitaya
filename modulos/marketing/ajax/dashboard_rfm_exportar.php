@@ -14,7 +14,6 @@ $fecha_inicio = $_GET['fecha_inicio'] ?? date('Y-m-d', strtotime('-90 days'));
 $fecha_fin = $_GET['fecha_fin'] ?? date('Y-m-d');
 $sucursal = $_GET['sucursal'] ?? null;
 
-
 try {
     $where = "WHERE Anulado = 0 AND CodCliente > 0 AND Fecha BETWEEN :f_inicio AND :f_fin";
     $params = [':f_inicio' => $fecha_inicio, ':f_fin' => $fecha_fin];
