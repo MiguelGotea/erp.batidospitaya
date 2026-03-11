@@ -44,12 +44,15 @@ try {
         ),
         RFM_Raw AS (
             SELECT 
-                CodCliente,
-                DATEDIFF(CURDATE(), MAX(Fecha)) as Recency,
-                COUNT(CodPedido) as Frequency,
-                SUM(TotalPedido) as Monetary
-            FROM ResumenPedidos
-            GROUP BY CodCliente
+                r.CodCliente,
+                DATEDIFF(CURDATE(), MAX(r.Fecha)) as Recency,
+                COUNT(r.CodPedido) as Frequency,
+                SUM(r.TotalPedido) as Monetary,
+                MAX(CONCAT(COALESCE(c.nombres,''), ' ', COALESCE(c.apellidos, ''))) as ClienteNombre,
+                MAX(c.fecha_registro) as FechaRegistro
+            FROM ResumenPedidos r
+            LEFT JOIN clientesclub c ON r.CodCliente = c.membresia
+            GROUP BY r.CodCliente
         )
         SELECT * FROM RFM_Raw
     ";
@@ -131,6 +134,15 @@ try {
     $total_clientes_club = count($rfm_data);
     $activos_60d = count(array_filter($rfm_data, fn($x) => $x['Recency'] <= 60));
     $churn_rate = ($total_clientes_club > 0) ? (count(array_filter($rfm_data, fn($x) => $x['Recency'] > 60)) / $total_clientes_club) * 100 : 0;
+    
+    // Antigüedad Promedio (días)
+    $antiguedades = array_filter(array_map(fn($x) => $x['FechaRegistro'] ? (strtotime('now') - strtotime($x['FechaRegistro'])) / (60*60*24) : null, $rfm_data));
+    $antiguedad_promedio = count($antiguedades) > 0 ? array_sum($antiguedades) / count($antiguedades) : 0;
+
+    // Top 10 Clientes por LTV
+    $top_10 = $rfm_data;
+    usort($top_10, fn($a, $b) => $b['Monetary'] <=> $a['Monetary']);
+    $top_10 = array_slice($top_10, 0, 10);
 
     // 4. Hábitos (Query separada para mayor precisión por línea)
     // Para evitar el error de número de parámetros inválido al repetir el mismo placeholder, 
@@ -201,9 +213,11 @@ try {
             'activos' => $activos_60d,
             'churn_rate' => round($churn_rate, 2),
             'ticket_promedio' => count($monetaries) > 0 ? array_sum($monetaries) / array_sum($frequencies) : 0,
-            'ltv_total' => array_sum($monetaries)
+            'ltv_total' => array_sum($monetaries),
+            'antiguedad_promedio' => round($antiguedad_promedio)
         ],
         'segments' => $segments_dist,
+        'top_10' => $top_10,
         'habits' => [
             'fav_product' => $habits['FavProduct'] ?? 'N/A',
             'fav_size' => $habits['FavSize'] ?? 'N/A',

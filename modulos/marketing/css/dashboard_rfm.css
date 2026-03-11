@@ -1,41 +1,137 @@
 /* Dashboard RFM Custom Styles */
 :root {
     --color-principal: #51B8AC;
-    --color-header-tabla: #0E544C;
+    --color-secundario: #45a094;
     --glass-bg: rgba(255, 255, 255, 0.7);
-    --glass-border: rgba(255, 255, 255, 0.3);
+    --glass-border: rgba(255, 255, 255, 0.4);
+    --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+}
+
+body {
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    min-height: 100vh;
 }
 
 .glass-card {
     background: var(--glass-bg);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: 20px;
     border: 1px solid var(--glass-border);
-    border-radius: 15px;
+    box-shadow: var(--glass-shadow);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    height: 100%;
+}
+
+.container-fluid {
+    padding: 2rem;
+}
+
+.main-header {
+    background: linear-gradient(90deg, var(--color-principal), #3498db);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 800;
 }
 
 .kpi-card {
-    padding: 20px;
-    display: flex;
-    align-items: center;
-    transition: transform 0.3s ease;
+    padding: 1.5rem;
+    position: relative;
+    overflow: hidden;
 }
 
-.kpi-card:hover { rotate: -1deg; transform: scale(1.02); }
+.kpi-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.1);
+}
 
-.kpi-icon {
-    width: 60px;
-    height: 60px;
+.kpi-card i {
+    position: absolute;
+    right: -10px;
+    bottom: -10px;
+    font-size: 5rem;
+    opacity: 0.05;
+}
+
+.kpi-card h2 {
+    font-size: 2.2rem;
+    font-weight: 700;
+    margin-bottom: 0;
+}
+
+.card-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #6c757d;
+}
+
+.chart-container {
+    padding: 1rem;
+    position: relative;
+    height: 300px;
+}
+
+/* Premium Tables */
+.premium-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 8px;
+}
+
+.premium-table thead th {
+    background: transparent;
+    border: none;
+    padding: 12px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #495057;
+    text-transform: uppercase;
+}
+
+.premium-table tbody tr {
+    transition: all 0.2s;
+    background: rgba(255,255,255,0.4);
+}
+
+.premium-table tbody td {
+    padding: 12px;
+    border: none;
+}
+
+.premium-table tbody tr td:first-child { border-radius: 10px 0 0 10px; }
+.premium-table tbody tr td:last-child { border-radius: 0 10px 10px 0; }
+
+.premium-table tbody tr:hover {
+    background: rgba(255,255,255,0.9);
+    transform: scale(1.01);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+/* Segment Legend Premium */
+.segment-legend {
+    padding: 10px 15px;
     border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 24px;
-    margin-right: 15px;
-    color: white;
+    background: rgba(255,255,255,0.4);
+    margin-bottom: 10px;
+    border: 1px solid rgba(255,255,255,0.2);
+    font-size: 0.85rem;
 }
 
-.color-1 .kpi-icon { background: linear-gradient(135deg, #0d6efd, #0b5ed7); }
+.segment-legend .badge {
+    width: 85px;
+    font-weight: 600;
+}
+
+.bg-teal { background: var(--color-principal); }
+.bg-orange { background: #fd7e14; color: white; }
+
+.scroll-y { overflow-y: auto; }
+.scroller::-webkit-scrollbar { width: 4px; }
+.scroller::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 10px; }
+.kpi-icon { background: linear-gradient(135deg, #0d6efd, #0b5ed7); }
 .color-2 .kpi-icon { background: linear-gradient(135deg, #51B8AC, #3a8a81); }
 .color-3 .kpi-icon { background: linear-gradient(135deg, #dc3545, #bb2d3b); }
 .color-4 .kpi-icon { background: linear-gradient(135deg, #6610f2, #520dc2); }
