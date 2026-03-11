@@ -144,6 +144,10 @@ body {
 }
 
 /* Scroller */
+.scroller {
+    overflow-y: auto;
+    overflow-x: hidden;
+}
 .scroller::-webkit-scrollbar { width: 5px; }
 .scroller::-webkit-scrollbar-track { background: transparent; }
 .scroller::-webkit-scrollbar-thumb { background: #cbd5e0; border-radius: 10px; }
