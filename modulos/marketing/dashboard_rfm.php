@@ -1,0 +1,256 @@
+<?php
+require_once '../../core/auth/auth.php';
+require_once '../../core/layout/menu_lateral.php';
+require_once '../../core/layout/header_universal.php';
+require_once '../../core/permissions/permissions.php';
+
+$usuario = obtenerUsuarioActual();
+$cargoOperario = $usuario['CodNivelesCargos'];
+
+// Verificar acceso
+if (!tienePermiso('dashboard_rfm', 'vista', $cargoOperario)) {
+    header('Location: /login.php');
+    exit();
+}
+?>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard RFM - Batidos Pitaya</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="icon" href="../../assets/img/icon12.png" type="image/png">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/assets/css/global_tools.css?v=<?php echo mt_rand(1, 10000); ?>">
+    <link rel="stylesheet" href="/core/assets/css/modales_premium.css?v=<?php echo mt_rand(1, 10000); ?>">
+    <link rel="stylesheet" href="css/dashboard_rfm.css?v=<?php echo mt_rand(1, 10000); ?>">
+</head>
+<body>
+    <?php echo renderMenuLateral($cargoOperario); ?>
+    
+    <div class="main-container">
+        <div class="sub-container">
+            <?php echo renderHeader($usuario, false, 'Dashboard RFM & Segmentación'); ?>
+            
+            <div class="container-fluid p-4">
+                <!-- Filtros -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="card border-0 shadow-sm glass-card">
+                            <div class="card-body d-flex flex-wrap gap-3 align-items-center">
+                                <div class="filter-group">
+                                    <label class="small fw-bold text-muted mb-1">Periodo</label>
+                                    <div class="input-group input-group-sm">
+                                        <input type="date" id="fecha_inicio" class="form-control" value="<?php echo date('Y-m-d', strtotime('-90 days')); ?>">
+                                        <span class="input-group-text">a</span>
+                                        <input type="date" id="fecha_fin" class="form-control" value="<?php echo date('Y-m-d'); ?>">
+                                    </div>
+                                </div>
+                                <div class="filter-group">
+                                    <label class="small fw-bold text-muted mb-1">Sucursal</label>
+                                    <select id="filtro_sucursal" class="form-select form-select-sm">
+                                        <option value="">Todas las sucursales</option>
+                                        <!-- Se cargará dinámicamente -->
+                                    </select>
+                                </div>
+                                <div class="ms-auto pt-3">
+                                    <button class="btn btn-primary btn-sm px-4" onclick="cargarDatos()">
+                                        <i class="fas fa-sync-alt me-2"></i>Actualizar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Resumen Global -->
+                <div class="row g-3 mb-4">
+                    <div class="col-md-3">
+                        <div class="kpi-card glass-card color-1">
+                            <div class="kpi-icon"><i class="fas fa-users"></i></div>
+                            <div class="kpi-info">
+                                <h4 id="kpi_total_club">0</h4>
+                                <p>Clientes Club Totales</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="kpi-card glass-card color-2">
+                            <div class="kpi-icon"><i class="fas fa-user-check"></i></div>
+                            <div class="kpi-info">
+                                <h4 id="kpi_activos">0</h4>
+                                <p>Clientes Activos (60d)</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="kpi-card glass-card color-3">
+                            <div class="kpi-icon"><i class="fas fa-percentage"></i></div>
+                            <div class="kpi-info">
+                                <h4 id="kpi_churn">0%</h4>
+                                <p>Tasa de Churn</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="kpi-card glass-card color-4">
+                            <div class="kpi-icon"><i class="fas fa-receipt"></i></div>
+                            <div class="kpi-info">
+                                <h4 id="kpi_ticket">C$ 0.00</h4>
+                                <p>Ticket Promedio</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gráficos Principales -->
+                <div class="row g-4">
+                    <div class="col-lg-8">
+                        <div class="card border-0 shadow-sm glass-card h-100">
+                            <div class="card-header bg-transparent border-0 pt-4 px-4">
+                                <h5 class="fw-bold mb-0">Distribución de Segmentos RFM</h5>
+                                <p class="small text-muted mb-0">Comportamiento según Recencia, Frecuencia y Monto</p>
+                            </div>
+                            <div class="card-body p-4">
+                                <canvas id="chart_segmentos" style="max-height: 350px;"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="card border-0 shadow-sm glass-card h-100">
+                            <div class="card-header bg-transparent border-0 pt-4 px-4">
+                                <h5 class="fw-bold mb-0">Hábitos de Compra</h5>
+                            </div>
+                            <div class="card-body p-4">
+                                <div class="habit-item mb-4">
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <span class="text-muted small">Producto Favorito</span>
+                                        <span class="fw-bold" id="habit_fav_product">-</span>
+                                    </div>
+                                    <div class="progress" style="height: 6px;">
+                                        <div class="progress-bar bg-success" style="width: 100%;"></div>
+                                    </div>
+                                </div>
+                                <div class="habit-item mb-4">
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <span class="text-muted small">Medida Preferida</span>
+                                        <span class="fw-bold" id="habit_fav_size">-</span>
+                                    </div>
+                                    <div class="progress" style="height: 6px;">
+                                        <div class="progress-bar bg-info" style="width: 100%;"></div>
+                                    </div>
+                                </div>
+                                <div class="habit-item mb-4">
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <span class="text-muted small">Modalidad</span>
+                                        <span class="fw-bold" id="habit_fav_modalidad">-</span>
+                                    </div>
+                                    <div class="progress" style="height: 6px;">
+                                        <div class="progress-bar bg-warning" style="width: 100%;"></div>
+                                    </div>
+                                </div>
+                                <hr class="my-4 opacity-10">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <div>
+                                        <p class="mb-0 small text-muted">Uso de Promociones</p>
+                                        <h5 class="mb-0 fw-bold" id="habit_perc_promo">0%</h5>
+                                    </div>
+                                    <div class="icon-circle bg-primary-light text-primary">
+                                        <i class="fas fa-tag"></i>
+                                    </div>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <p class="mb-0 small text-muted">Canjes de Puntos</p>
+                                        <h5 class="mb-0 fw-bold" id="habit_redenciones">0</h5>
+                                    </div>
+                                    <div class="icon-circle bg-danger-light text-danger">
+                                        <i class="fas fa-gift"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Comparativa Club vs General -->
+                <div class="row g-4 mt-2">
+                    <div class="col-md-6">
+                        <div class="card border-0 shadow-sm glass-card">
+                            <div class="card-body p-4">
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="icon-square bg-teal me-3">
+                                        <i class="fas fa-hand-holding-usd"></i>
+                                    </div>
+                                    <div>
+                                        <h5 class="fw-bold mb-0">Ingresos Totales (LTV)</h5>
+                                        <p class="small text-muted mb-0">Club vs Clientes Generales</p>
+                                    </div>
+                                </div>
+                                <canvas id="chart_ingresos" style="max-height: 250px;"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card border-0 shadow-sm glass-card h-100">
+                             <div class="card-header bg-transparent border-0 pt-4 px-4">
+                                <h5 class="fw-bold mb-0">Explicación de Segmentos</h5>
+                            </div>
+                            <div class="card-body p-4 scroll-y" style="max-height: 250px;">
+                                <div class="segment-legend mb-2">
+                                    <span class="badge bg-success me-2">Campeones</span> Compraron recientemente, con mucha frecuencia y alto gasto.
+                                </div>
+                                <div class="segment-legend mb-2">
+                                    <span class="badge bg-primary me-2">Loyal</span> Clientes constantes con buen valor.
+                                </div>
+                                <div class="segment-legend mb-2">
+                                    <span class="badge bg-warning text-dark me-2">At Risk</span> Hace tiempo que no compran, pero solían ser frecuentes.
+                                </div>
+                                <div class="segment-legend mb-2">
+                                    <span class="badge bg-danger me-2">Lost</span> Clientes con baja frecuencia y que no han vuelto en mucho tiempo.
+                                </div>
+                                <div class="segment-legend mb-2">
+                                    <span class="badge bg-info me-2">New</span> Clientes que han realizado su primera compra recientemente.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Ayuda -->
+    <div class="modal fade" id="pageHelpModal" tabindex="-1" data-bs-backdrop="static">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-info-circle me-2"></i>Guía del Dashboard RFM</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <h6>¿Qué es RFM?</h6>
+                    <p>Es una técnica de segmentación de clientes basada en su comportamiento de compra:</p>
+                    <ul>
+                        <li><strong>Recencia:</strong> Días desde la última compra.</li>
+                        <li><strong>Frecuencia:</strong> Número total de pedidos realizados.</li>
+                        <li><strong>Monto:</strong> Valor total gastado por el cliente.</li>
+                    </ul>
+                    <hr>
+                    <h6>Métricas Principales</h6>
+                    <p><strong>Clientes Activos:</strong> Aquellos con al menos una compra en los últimos 60 días.</p>
+                    <p><strong>Tasa de Churn:</strong> Porcentaje de clientes club que han dejado de comprar hace más de 60 días.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="js/dashboard_rfm.js?v=<?php echo mt_rand(1, 10000); ?>"></script>
+</body>
+</html>
