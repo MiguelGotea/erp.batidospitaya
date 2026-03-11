@@ -14,6 +14,7 @@ if (!tienePermiso('dashboard_rfm', 'descargar', $cargoOperario)) {
     exit('No tiene permiso para descargar reportes.');
 }
 
+
 $fecha_inicio = $_GET['fecha_inicio'] ?? date('Y-m-d', strtotime('-90 days'));
 $fecha_fin = $_GET['fecha_fin'] ?? date('Y-m-d');
 $sucursal = $_GET['sucursal'] ?? 'todas';
@@ -102,7 +103,7 @@ try {
             $seg = 'Hibernando';
 
         $ticket = ($row['Frequency'] > 0) ? $row['Monetary'] / $row['Frequency'] : 0;
-        $antiguedad = $row['FechaRegistro'] ? (int)floor((time() - strtotime($row['FechaRegistro'])) / 86400) : 0;
+        $antiguedad = $row['FechaRegistro'] ? (int) floor((time() - strtotime($row['FechaRegistro'])) / 86400) : 0;
 
         fputcsv($output, [
             $row['CodCliente'],
