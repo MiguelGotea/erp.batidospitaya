@@ -185,6 +185,47 @@ if (!tienePermiso('dashboard_rfm', 'vista', $cargoOperario)) {
             </div>
         </div>
 
+        <!-- Comportamiento de Membresía -->
+        <div class="row g-4 mt-2">
+            <div class="col-12">
+                <div class="glass-card p-4">
+                    <h5 class="fw-bold mb-4 text-teal"><i class="fas fa-chart-line me-2"></i>Comportamiento de Membresía</h5>
+                    <div class="row g-4">
+                        <div class="col-md-3 col-sm-6">
+                            <div class="membership-kpi">
+                                <span class="text-muted small">Tasa de Retención</span>
+                                <h3 id="memRetention">- %</h3>
+                                <div class="progress" style="height: 4px;">
+                                    <div class="progress-bar bg-success" id="barRetention" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-sm-6">
+                            <div class="membership-kpi">
+                                <span class="text-muted small">Frecuencia Mensual</span>
+                                <h3 id="memFreq">-</h3>
+                                <p class="small text-muted mb-0">Visitas por mes</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-sm-6">
+                            <div class="membership-kpi">
+                                <span class="text-muted small">Antigüedad Promedio</span>
+                                <h3 id="memAntiquity">-</h3>
+                                <p class="small text-muted mb-0">Días suscritos</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-sm-6">
+                            <div class="membership-kpi">
+                                <span class="text-muted small">Tiempo entre Visitas</span>
+                                <h3 id="memGap">-</h3>
+                                <p class="small text-muted mb-0">Días promedio</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Top Clientes y Otros Rankings -->
         <div class="row g-4 mt-2">
             <div class="col-lg-8">
@@ -214,10 +255,12 @@ if (!tienePermiso('dashboard_rfm', 'vista', $cargoOperario)) {
                     <div class="p-4 rounded-4 bg-teal text-white mb-3">
                         <div class="small opacity-75">Ingresos Club</div>
                         <h3 class="fw-bold mb-0" id="ingresoClub">$ 0.00</h3>
+                        <div class="small mt-1 opacity-75">Ticket Prom: <b id="ticketClub">$0.00</b></div>
                     </div>
                     <div class="p-4 rounded-4 bg-secondary text-white border-white border-opacity-25">
                         <div class="small opacity-75">Ingresos General</div>
                         <h3 class="fw-bold mb-0" id="ingresoGeneral">$ 0.00</h3>
+                        <div class="small mt-1 opacity-75">Ticket Prom: <b id="ticketGeneral">$0.00</b></div>
                     </div>
                     <div class="mt-4 p-3 border border-white border-opacity-50 rounded-4">
                         <div class="d-flex justify-content-between align-items-center mb-1">

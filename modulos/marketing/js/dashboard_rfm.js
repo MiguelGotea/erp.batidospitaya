@@ -50,13 +50,21 @@ function updateDashboard(data) {
     const summary = data.summary;
     const habits = data.habits;
     const ingresos = data.ingresos;
+    const membership = data.membership;
 
-    // Actualizar KPIs
+    // Actualizar KPIs Principales
     animateValue('kpiTotalClub', summary.total_club);
     animateValue('kpiActivos', summary.activos);
     animateValue('kpiTicket', summary.ticket_promedio, true);
     animateValue('kpiAntiguedad', summary.antiguedad_promedio);
     animateValue('kpiChurn', summary.churn_rate, false, '%');
+
+    // Comportamiento de Membresía (Panel Nuevo)
+    animateValue('memRetention', membership.retention_rate, false, '%');
+    animateValue('memFreq', membership.avg_freq_month);
+    animateValue('memAntiquity', summary.antiguedad_promedio);
+    animateValue('memGap', membership.avg_time_between);
+    $('#barRetention').css('width', membership.retention_rate + '%');
 
     // Gráfico de Segmentos
     updateSegmentsChart(data.segments);
@@ -67,14 +75,17 @@ function updateDashboard(data) {
     $('#habitModalidad').text(habits.fav_modalidad);
     $('#habitPromo').text(habits.perc_promo + '%');
 
-    // Ingresos
+    // Ingresos y Tickets Promedio
     const club = parseFloat(ingresos.IngresosClub || 0);
     const general = parseFloat(ingresos.IngresosGeneral || 0);
     const total = club + general;
     const perc = total > 0 ? (club / total) * 100 : 0;
 
     $('#ingresoClub').text(fmt(club));
+    $('#ticketClub').text(fmt(membership.ticket_club));
     $('#ingresoGeneral').text(fmt(general));
+    $('#ticketGeneral').text(fmt(membership.ticket_general));
+    
     $('#percClub').text(perc.toFixed(1) + '%');
     $('#progressClub').css('width', perc + '%');
 

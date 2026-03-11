@@ -144,6 +144,64 @@ try {
     usort($top_10, fn($a, $b) => $b['Monetary'] <=> $a['Monetary']);
     $top_10 = array_slice($top_10, 0, 10);
 
+    // 3.5. Comportamiento de Membresía (Nuevas Metricas)
+    // Obtener todas las visitas para calcular retención y tiempo entre visitas
+    $sqlVisitas = "
+        SELECT CodCliente, Fecha 
+        FROM VentasGlobalesAccessCSV 
+        $where 
+        GROUP BY CodCliente, CodPedido, Fecha
+        ORDER BY Fecha ASC
+    ";
+    $stmtV = $conn->prepare($sqlVisitas);
+    $stmtV->execute($params);
+    $all_visitas = $stmtV->fetchAll(PDO::FETCH_ASSOC);
+
+    $user_visits = [];
+    foreach ($all_visitas as $v) {
+        $user_visits[$v['CodCliente']][] = strtotime($v['Fecha']);
+    }
+
+    // A. Tasa de Retención (Regresaron en la 2da mitad del periodo)
+    $ts_inicio = strtotime($fecha_inicio);
+    $ts_fin = strtotime($fecha_fin);
+    $ts_mitad = $ts_inicio + ($ts_fin - $ts_inicio) / 2;
+
+    $users_h1 = 0;
+    $users_h1_returned = 0;
+
+    foreach ($user_visits as $cid => $dates) {
+        $has_h1 = false;
+        $has_h2 = false;
+        foreach ($dates as $d) {
+            if ($d <= $ts_mitad) $has_h1 = true;
+            if ($d > $ts_mitad) $has_h2 = true;
+        }
+        if ($has_h1) {
+            $users_h1++;
+            if ($has_h2) $users_h1_returned++;
+        }
+    }
+    $retention_rate = ($users_h1 > 0) ? ($users_h1_returned / $users_h1) * 100 : 0;
+
+    // B. Tiempo promedio entre visitas
+    $gaps = [];
+    foreach ($user_visits as $cid => $dates) {
+        if (count($dates) > 1) {
+            $user_gaps = [];
+            for ($i = 1; $i < count($dates); $i++) {
+                $user_gaps[] = ($dates[$i] - $dates[$i-1]) / (60*60*24);
+            }
+            $gaps[] = array_sum($user_gaps) / count($user_gaps);
+        }
+    }
+    $avg_time_between = count($gaps) > 0 ? array_sum($gaps) / count($gaps) : 0;
+
+    // C. Frecuencia Mensual
+    $diff_days = ($ts_fin - $ts_inicio) / (60*60*24);
+    $meses = max(1, $diff_days / 30);
+    $avg_freq_month = ($total_clientes_club > 0) ? (count($all_visitas) / $total_clientes_club) / $meses : 0;
+
     // 4. Hábitos (Query separada para mayor precisión por línea)
     // Para evitar el error de número de parámetros inválido al repetir el mismo placeholder, 
     // desactivamos temporalmente el chequeo estricto si el driver lo permite o usamos parámetros únicos.
@@ -205,6 +263,13 @@ try {
     $stmtI->execute($paramsI);
     $ingresos = $stmtI->fetch(PDO::FETCH_ASSOC);
 
+    // 5.5 Conteo de Pedidos Generales para Ticket Promedio
+    $sqlPedidosGen = "SELECT COUNT(DISTINCT CodPedido) as TotalPedidosGen FROM VentasGlobalesAccessCSV WHERE Anulado = 0 AND CodCliente = 0 AND Fecha BETWEEN :fi AND :ff " . ($sucursal ? " AND Sucursal_Nombre = :suc" : "");
+    $stmtPG = $conn->prepare($sqlPedidosGen);
+    $stmtPG->execute($paramsI);
+    $pedidosGen = $stmtPG->fetch(PDO::FETCH_ASSOC);
+    $total_pedidos_gen = $pedidosGen['TotalPedidosGen'] ?? 0;
+
     // 6. Formatear Respuesta
     echo json_encode([
         'success' => true,
@@ -225,7 +290,14 @@ try {
             'perc_promo' => ($habits['TotalOrders'] > 0) ? round(($habits['PromoOrders'] / $habits['TotalOrders']) * 100, 2) : 0,
             'redenciones' => $habits['RedemptionLines']
         ],
-        'ingresos' => $ingresos
+        'ingresos' => $ingresos,
+        'membership' => [
+            'retention_rate' => round($retention_rate, 2),
+            'avg_time_between' => round($avg_time_between, 1),
+            'avg_freq_month' => round($avg_freq_month, 2),
+            'ticket_club' => $total_clientes_club > 0 ? $ingresos['IngresosClub'] / array_sum($frequencies) : 0,
+            'ticket_general' => $total_pedidos_gen > 0 ? $ingresos['IngresosGeneral'] / $total_pedidos_gen : 0
+        ]
     ]);
 
 } catch (Exception $e) {
