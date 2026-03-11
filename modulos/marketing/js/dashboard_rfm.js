@@ -365,7 +365,7 @@ function renderDonut(id, data, chartRef) {
     return new Chart(ctx, {
         type: 'doughnut',
         data: { labels: labels, datasets: [{ data: values, backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#f97316', '#ef4444', '#64748b'], borderWidth: 0 }] },
-        options: { cutout: '60%', plugins: { legend: { position: 'right', labels: { boxWidth: 10, font: { size: 9 } } } }, maintainAspectRatio: false }
+        options: { cutout: '60%', plugins: { legend: { position: 'right', labels: { boxWidth: 10, font: { size: 8 } } } }, maintainAspectRatio: false }
     });
 }
 

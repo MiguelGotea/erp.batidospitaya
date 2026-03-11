@@ -95,9 +95,9 @@ try {
         )
         SELECT 
             r.CodCliente,
-            MAX(r.Sucursal) as Sucursal,
+            COALESCE(NULLIF(MAX(c.nombre_sucursal), ''), MAX(r.Sucursal)) as Sucursal,
             DATEDIFF(CURDATE(), MAX(r.Fecha)) as Recency,
-            COUNT(r.CodPedido) as Frequency,
+            COUNT(r.CodCliente) as Frequency,
             SUM(r.TotalPedido) as Monetary,
             MAX(CONCAT(COALESCE(c.nombre,''), ' ', COALESCE(c.apellido, ''))) as ClienteNombre,
             MAX(c.fecha_registro) as FechaRegistro

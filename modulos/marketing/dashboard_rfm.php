@@ -284,19 +284,25 @@ $puedeDescargar = tienePermiso('dashboard_rfm', 'descargar', $cargoOperario);
                     <div class="col-lg-4">
                         <div class="glass-card p-4">
                             <h6 class="fw-bold mb-4">Distribución por Medida</h6>
-                            <canvas id="chartHabitMeasure"></canvas>
+                            <div style="height: 200px; position: relative;">
+                                <canvas id="chartHabitMeasure"></canvas>
+                            </div>
                         </div>
                     </div>
                     <div class="col-lg-4">
                         <div class="glass-card p-4">
                             <h6 class="fw-bold mb-4">Distribución por Modalidad</h6>
-                            <canvas id="chartHabitModality"></canvas>
+                            <div style="height: 200px; position: relative;">
+                                <canvas id="chartHabitModality"></canvas>
+                            </div>
                         </div>
                     </div>
                     <div class="col-lg-4">
                         <div class="glass-card p-4">
                             <h6 class="fw-bold mb-4">Uso de Promociones</h6>
-                            <canvas id="chartHabitPromo"></canvas>
+                            <div style="height: 200px; position: relative;">
+                                <canvas id="chartHabitPromo"></canvas>
+                            </div>
                         </div>
                     </div>
                 </div>
