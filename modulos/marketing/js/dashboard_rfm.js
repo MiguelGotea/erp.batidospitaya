@@ -111,9 +111,9 @@ function updateKPIs(summary) {
     // Tooltips
     const umbral = $('#umbral_perdido').val();
     
-    $('#tipClubActivos').attr('title', `<div class="tooltip-data-row"><span>Criterio:</span> <span>< ${umbral} días</span></div><div class="tooltip-data-row"><span>Total:</span> <span>${summary.total_club}</span></div><div class="tooltip-formula">Socios con al menos una compra en el periodo.</div>`);
+    $('#tipClubActivos').attr('title', `<div class="tooltip-data-row"><span>Criterio:</span> <span><= ${umbral} días</span></div><div class="tooltip-data-row"><span>Total:</span> <span>${summary.total_club}</span></div><div class="tooltip-formula">Socios con al menos una compra en el periodo.</div>`);
     $('#tipNuevos').attr('title', `<div class="tooltip-data-row"><span>Registros:</span> <span>${summary.nuevos}</span></div><div class="tooltip-data-row"><span>Previo:</span> <span>${summary.prev_nuevos}</span></div><div class="tooltip-formula">Comparado contra el periodo anterior equivalente.</div>`);
-    $('#tipEnRiesgo').attr('title', `<div class="tooltip-data-row"><span>Criterio:</span> <span>${umbral/2}-${umbral} días</span></div><div class="tooltip-formula">Socios enfriándose.</div>`);
+    $('#tipEnRiesgo').attr('title', `<div class="tooltip-data-row"><span>Criterio:</span> <span>${Math.floor(umbral/2)}-${umbral} días</span></div><div class="tooltip-formula">Socios enfriándose.</div>`);
     $('#tipPerdidos').attr('title', `<div class="tooltip-data-row"><span>Criterio:</span> <span>> ${umbral} días</span></div><div class="tooltip-formula">Inactivos totales.</div>`);
     $('#tipTicket').attr('title', `<div class="tooltip-data-row"><span>Ventas:</span> <span>${fmt(summary.raw.total_ingresos)}</span></div><div class="tooltip-data-row"><span>Pedidos:</span> <span>${summary.raw.total_pedidos}</span></div>`);
     $('#tipRetention').attr('title', `<div class="tooltip-data-row"><span>H1 → H2:</span> <span>${summary.retention_metrics.h2} de ${summary.retention_metrics.h1}</span></div>`);
@@ -337,7 +337,8 @@ function renderPaginatedTable() {
     }
 
     paginatedItems.forEach(c => {
-        const rColor = c.Recency > umbral ? 'text-danger' : '';
+        const rColor = c.Recency >= umbral ? 'text-danger' : 
+                      (c.Recency >= (umbral / 2) ? 'text-warning' : '');
         $body.append(`
             <tr>
                 <td>

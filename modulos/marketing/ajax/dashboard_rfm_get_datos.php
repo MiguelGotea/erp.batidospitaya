@@ -121,6 +121,8 @@ try {
         'At Risk' => 0, 'Hibernating' => 0, 'Lost' => 0
     ];
 
+    $activos = 0; $en_riesgo = 0; $perdidos = 0;
+
     foreach ($raw_data as &$row) {
         $row['R_Score'] = $get_q($row['Recency'], $recencies, true);
         $row['F_Score'] = $get_q($row['Frequency'], $frequencies);
@@ -128,12 +130,24 @@ try {
         $row['ScoreTotal'] = $row['R_Score'] + $row['F_Score'] + $row['M_Score'];
 
         $r = $row['R_Score']; $f = $row['F_Score'];
-        if ($r >= 4 && $f >= 4) $seg = 'Champions';
-        elseif ($r >= 3 && $f >= 3) $seg = 'Loyal';
-        elseif ($r <= 2 && $f >= 3) $seg = 'At Risk';
-        elseif ($r <= 2 && $f <= 2) $seg = 'Lost';
-        elseif ($r >= 4 && $f <= 2) $seg = 'New';
-        else $seg = 'Hibernating';
+        $recency = $row['Recency'];
+
+        // Lógica de Segmentos y Contadores basada en Umbral
+        if ($recency > $umbral_perdido) {
+            $seg = 'Lost'; 
+            $perdidos++;
+        } elseif ($recency > ($umbral_perdido / 2)) {
+            $seg = 'At Risk';
+            $en_riesgo++;
+            $activos++; // Sigue siendo activo hasta que pase el umbral total
+        } else {
+            // Segmentación RFM Tradicional para los que NO son perdidos/riesgo por umbral
+            if ($r >= 4 && $f >= 4) $seg = 'Champions';
+            elseif ($r >= 3 && $f >= 3) $seg = 'Loyal';
+            elseif ($r >= 4 && $f <= 2) $seg = 'New';
+            else $seg = 'Hibernating';
+            $activos++;
+        }
 
         $row['Segment'] = $seg;
         $segments[$seg]++;
