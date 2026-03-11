@@ -151,7 +151,7 @@ function updateEvolutionChart(evolution) {
     chartEvolution = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: evolution.map(e => 'Sem ' + e.Semana.split('-')[1]),
+            labels: evolution.map(e => 'Sem ' + e.Semana),
             datasets: [{
                 label: 'Pedidos por Semana',
                 data: evolution.map(e => e.Pedidos),

@@ -127,13 +127,34 @@ try {
     $sum_f = array_sum($frequencies);
     $ticket_club = $sum_f > 0 ? $sum_m / $sum_f : 0;
 
-    // 4. Evolución de Segmentos (Temporal) - Usamos el histórico real
+    // 4. Evolución de Segmentos (Temporal) - Usamos el histórico real y SemanasSistema
     $sqlEvol = "
-        SELECT DATE_FORMAT(Fecha, '%x-%v') as Semana, COUNT(DISTINCT CodPedido) as Pedidos
-        FROM VentasGlobalesAccessCSV
-        $whereSimple
-        GROUP BY Semana ORDER BY Semana ASC
+        SELECT S.numero_semana as Semana, COUNT(DISTINCT V.CodPedido) as Pedidos
+        FROM VentasGlobalesAccessCSV V
+        INNER JOIN SemanasSistema S ON V.Fecha BETWEEN S.fecha_inicio AND S.fecha_fin
+        " . str_replace('WHERE', 'AND', $whereSimple) . "
+        WHERE V.Anulado = 0 AND V.Fecha BETWEEN :f_inicio AND :f_fin
+        GROUP BY S.id, S.numero_semana 
+        ORDER BY S.fecha_inicio ASC
     ";
+    // Nota: Reajustamos el whereSimple para el join si es necesario, o usamos uno limpio
+    $sqlEvol = "
+        SELECT S.numero_semana as Semana, COUNT(DISTINCT V.CodPedido) as Pedidos
+        FROM VentasGlobalesAccessCSV V
+        JOIN SemanasSistema S ON V.Fecha BETWEEN S.fecha_inicio AND S.fecha_fin
+        WHERE V.Anulado = 0 AND V.Fecha BETWEEN :f_inicio AND :f_fin
+    ";
+    if ($sucursal && $sucursal !== 'todas') {
+        $sqlEvol .= " AND V.Sucursal_Nombre = :sucursal";
+    }
+    if ($tipo_cliente === 'club') {
+        $sqlEvol .= " AND V.CodCliente > 0";
+    } elseif ($tipo_cliente === 'general') {
+        $sqlEvol .= " AND V.CodCliente = 0";
+    }
+
+    $sqlEvol .= " GROUP BY S.numero_semana, S.fecha_inicio ORDER BY S.fecha_inicio ASC";
+
     $evol_data = $conn->prepare($sqlEvol);
     $evol_data->execute($params);
     $evolution = $evol_data->fetchAll(PDO::FETCH_ASSOC);
