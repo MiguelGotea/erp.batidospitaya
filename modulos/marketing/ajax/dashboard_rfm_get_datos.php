@@ -274,9 +274,14 @@ try {
 
     $h_medida = []; $h_modalidad = []; $h_promo = ['si' => 0, 'no' => 0];
     foreach ($habits_raw as $hr) {
-        if ($hr['Medida']) $h_medida[$hr['Medida']] = ($h_medida[$hr['Medida']] ?? 0) + $hr['Count'];
-        if ($hr['Modalidad']) $h_modalidad[$hr['Modalidad']] = ($h_modalidad[$hr['Modalidad']] ?? 0) + $hr['Count'];
-        if ($hr['EsPromo']) $h_promo['si'] += $hr['Count']; else $h_promo['no'] += $hr['Count'];
+        $m = ($hr['Medida'] && trim($hr['Medida']) !== '') ? $hr['Medida'] : 'No especificada';
+        $mod = ($hr['Modalidad'] && trim($hr['Modalidad']) !== '') ? $hr['Modalidad'] : 'General';
+        
+        $h_medida[$m] = ($h_medida[$m] ?? 0) + $hr['Count'];
+        $h_modalidad[$mod] = ($h_modalidad[$mod] ?? 0) + $hr['Count'];
+        
+        if ($hr['EsPromo']) $h_promo['si'] += $hr['Count']; 
+        else $h_promo['no'] += $hr['Count'];
     }
 
     $sqlHeatmap = "SELECT HOUR(Hora) as Hour, CASE WHEN DAYOFWEEK(Fecha) = 1 THEN 7 ELSE DAYOFWEEK(Fecha) - 1 END as Day, COUNT(*) as Count FROM VentasGlobalesAccessCSV $whereSimple GROUP BY Hour, Day";

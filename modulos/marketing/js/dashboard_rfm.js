@@ -283,11 +283,19 @@ function updateHabitSection(habits) {
         type: 'bubble',
         data: {
             datasets: [{
-                data: habits.heatmap.map(h => ({ x: h.Hour, y: h.Day, r: Math.sqrt(h.Count) * 2 + 2 })),
+                data: habits.heatmap.map(h => ({ x: h.Hour, y: h.Day, r: 8 })),
                 backgroundColor: habits.heatmap.map(h => {
                     const i = h.Count / maxVal;
-                    return i > 0.8 ? 'rgba(239, 68, 68, 0.8)' : (i > 0.4 ? 'rgba(249, 115, 22, 0.7)' : 'rgba(59, 130, 246, 0.6)');
-                })
+                    if (i > 0.85) return 'rgba(220, 38, 38, 0.9)'; // Rojo intenso
+                    if (i > 0.70) return 'rgba(239, 68, 68, 0.8)'; // Rojo suave
+                    if (i > 0.55) return 'rgba(249, 115, 22, 0.8)'; // Naranja fuerte
+                    if (i > 0.40) return 'rgba(251, 146, 60, 0.7)'; // Naranja suave
+                    if (i > 0.25) return 'rgba(59, 130, 246, 0.6)'; // Azul medio
+                    if (i > 0.10) return 'rgba(96, 165, 250, 0.5)'; // Azul suave
+                    return 'rgba(219, 234, 254, 0.4)'; // Azul muy claro
+                }),
+                borderWidth: 1,
+                borderColor: 'rgba(255,255,255,0.3)'
             }]
         },
         options: {
@@ -316,9 +324,25 @@ function updateHabitSection(habits) {
 
 function renderDonut(id, data, chartRef) {
     const ctx = document.getElementById(id).getContext('2d');
-    const labels = Object.keys(data);
-    const values = Object.values(data);
+    const $canvas = $(`#${id}`);
+    const $parent = $canvas.parent();
+    
+    // Eliminar mensaje previo if exists
+    $parent.find('.no-data-overlay').remove();
+
+    const labels = Object.keys(data || {});
+    const values = Object.values(data || {});
+    const total = values.reduce((a, b) => a + b, 0);
+
     if (chartRef) chartRef.destroy();
+
+    if (total === 0) {
+        $canvas.hide();
+        $parent.append('<div class="no-data-overlay text-muted small py-5 text-center"><i class="fas fa-chart-pie d-block mb-2 opacity-25" style="font-size: 2rem;"></i>Sin datos suficientes para este periodo</div>');
+        return null;
+    }
+
+    $canvas.show();
     return new Chart(ctx, {
         type: 'doughnut',
         data: { labels: labels, datasets: [{ data: values, backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#f97316', '#ef4444', '#64748b'], borderWidth: 0 }] },
