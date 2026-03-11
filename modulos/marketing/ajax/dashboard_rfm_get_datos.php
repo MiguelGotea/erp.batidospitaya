@@ -61,9 +61,17 @@ try {
     $diff = strtotime($fecha_fin) - strtotime($fecha_inicio);
     $p_inicio = date('Y-m-d', strtotime($fecha_inicio) - $diff - 86400);
     $p_fin = date('Y-m-d', strtotime($fecha_inicio) - 86400);
-    $sqlPrev = "SELECT COUNT(DISTINCT membresia) as PrevNuevos FROM clientesclub WHERE fecha_registro BETWEEN :p_inicio AND :p_fin";
+
+    $whereClub = "WHERE fecha_registro BETWEEN :p_inicio AND :p_fin AND nombre_sucursal IN (SELECT nombre FROM sucursales WHERE VMTAP = 1)";
+    $paramsClub = [':p_inicio' => $p_inicio, ':p_fin' => $p_fin];
+    if ($sucursal && $sucursal !== 'todas') {
+        $whereClub .= " AND nombre_sucursal = :suc_club";
+        $paramsClub[':suc_club'] = $sucursal;
+    }
+
+    $sqlPrev = "SELECT COUNT(DISTINCT membresia) as PrevNuevos FROM clientesclub $whereClub";
     $stmtPrev = $conn->prepare($sqlPrev);
-    $stmtPrev->execute([':p_inicio' => $p_inicio, ':p_fin' => $p_fin]);
+    $stmtPrev->execute($paramsClub);
     $prev_nuevos = $stmtPrev->fetch(PDO::FETCH_ASSOC)['PrevNuevos'] ?? 0;
 
     // 1. Obtener Datos RFM (Agrupado por Cliente)
@@ -159,8 +167,15 @@ try {
     $perdidos = count(array_filter($raw_data, fn($x) => $x['Recency'] > $umbral_perdido));
     
     // Clientes nuevos (Registrados en el periodo)
-    $stmtNew = $conn->prepare("SELECT COUNT(*) as Nuevos FROM clientesclub WHERE fecha_registro BETWEEN :f_inicio AND :f_fin");
-    $stmtNew->execute([':f_inicio' => $fecha_inicio, ':f_fin' => $fecha_fin]);
+    $whereClubNow = "WHERE fecha_registro BETWEEN :f_inicio AND :f_fin AND nombre_sucursal IN (SELECT nombre FROM sucursales WHERE VMTAP = 1)";
+    $paramsClubNow = [':f_inicio' => $fecha_inicio, ':f_fin' => $fecha_fin];
+    if ($sucursal && $sucursal !== 'todas') {
+        $whereClubNow .= " AND nombre_sucursal = :suc_club_now";
+        $paramsClubNow[':suc_club_now'] = $sucursal;
+    }
+
+    $stmtNew = $conn->prepare("SELECT COUNT(*) as Nuevos FROM clientesclub $whereClubNow");
+    $stmtNew->execute($paramsClubNow);
     $nuevos_res = $stmtNew->fetch();
 
     // Ingresos y Tickets
