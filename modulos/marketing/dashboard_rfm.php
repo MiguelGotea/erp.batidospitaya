@@ -86,7 +86,6 @@ $puedeDescargar = tienePermiso('dashboard_rfm', 'descargar', $cargoOperario);
 
                 <!-- 📌 SECCIÓN 1 — KPIs Resumen -->
                 <div class="row g-3 mb-4" id="kpiGrid">
-                    <!-- Cards dinámicas generadas via JS -->
                     <div class="col-md-3 col-xl-1-5">
                         <div class="glass-card kpi-card-new p-3 text-center">
                             <div class="icon-circle bg-primary-light text-primary mb-2 mx-auto"><i class="fas fa-users"></i></div>

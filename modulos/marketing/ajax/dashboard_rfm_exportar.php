@@ -67,7 +67,7 @@ try {
     $output = fopen('php://output', 'w');
     fprintf($output, chr(0xEF) . chr(0xBB) . chr(0xBF)); // UTF-8 BOM
 
-    fputcsv($output, ['ID Cliente', 'Cliente', 'Sucursal', 'Recencia (d)', 'Frecuencia', 'Monetario ($)', 'Score R', 'Score F', 'Score M', 'Score Total', 'Segmento']);
+    fputcsv($output, ['ID Cliente', 'Cliente', 'Sucursal', 'Recencia (d)', 'Frecuencia', 'Monetario (C$)', 'Score R', 'Score F', 'Score M', 'Score Total', 'Segmento']);
 
     foreach ($raw_data as $row) {
         $r_score = $get_q($row['Recency'], $recencies, true);

@@ -181,7 +181,8 @@ try {
             'perdidos' => $perdidos,
             'ticket_club' => round($ticket_club, 2),
             'monto_total' => round($sum_m, 2),
-            'churn_rate' => round(($perdidos / $total_count) * 100, 2)
+            'churn_rate' => round(($perdidos / $total_count) * 100, 2),
+            'retention_rate' => calculateRetention($conn, $whereSimple, $params)
         ],
         'segments' => $segments,
         'evolution' => $evolution,
@@ -196,3 +197,49 @@ try {
 } catch (Exception $e) {
     echo json_encode(['success' => false, 'message' => $e->getMessage()]);
 }
+
+/**
+ * Calcula la tasa de retención comparando visitas en la primera vs segunda mitad del periodo
+ */
+function calculateRetention($conn, $where, $params) {
+    try {
+        $sql = "SELECT CodCliente, Fecha FROM VentasGlobalesAccessCSV $where GROUP BY CodCliente, CodPedido, Fecha ORDER BY Fecha ASC";
+        $stmt = $conn->prepare($sql);
+        $stmt->execute($params);
+        $visitas = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        if (empty($visitas)) return 0;
+
+        $user_visits = [];
+        $min_ts = null; $max_ts = null;
+        foreach ($visitas as $v) {
+            $ts = strtotime($v['Fecha']);
+            $user_visits[$v['CodCliente']][] = $ts;
+            if ($min_ts === null || $ts < $min_ts) $min_ts = $ts;
+            if ($max_ts === null || $ts > $max_ts) $max_ts = $ts;
+        }
+
+        if ($min_ts === $max_ts) return 0;
+
+        $ts_mitad = $min_ts + ($max_ts - $min_ts) / 2;
+        $users_h1 = 0;
+        $users_h1_returned = 0;
+
+        foreach ($user_visits as $cid => $dates) {
+            $has_h1 = false; $has_h2 = false;
+            foreach ($dates as $d) {
+                if ($d <= $ts_mitad) $has_h1 = true;
+                if ($d > $ts_mitad) $has_h2 = true;
+            }
+            if ($has_h1) {
+                $users_h1++;
+                if ($has_h2) $users_h1_returned++;
+            }
+        }
+
+        return ($users_h1 > 0) ? round(($users_h1_returned / $users_h1) * 100, 2) : 0;
+    } catch (Exception $e) {
+        return 0;
+    }
+}
+?>

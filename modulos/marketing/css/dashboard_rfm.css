@@ -30,6 +30,7 @@ body {
 .text-gradient-primary {
     background: linear-gradient(45deg, var(--color-principal), #3498db);
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 
@@ -63,7 +64,7 @@ body {
 
 /* Tables Premium */
 .premium-table {
-    border-separate: 0 10px;
+    border-collapse: separate;
     border-spacing: 0 8px;
     width: 100%;
 }

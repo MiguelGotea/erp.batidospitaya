@@ -284,7 +284,7 @@ function animateValue(id, value, isCurrency = false, suffix = '') {
     });
 }
 
-function fmt(val) { return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val); }
+function fmt(val) { return 'C$ ' + new Intl.NumberFormat('es-NI', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(val); }
 
 function debounce(func, wait) {
     let timeout;
