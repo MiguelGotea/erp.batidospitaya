@@ -278,7 +278,7 @@ try {
 
 function calculateRetentionDetail($conn, $where, $params) {
     try {
-        // Encontrar puntos medios de forma eficiente en SQL
+        // 1. Obtener los límites de tiempo del periodo filtrado
         $sqlDates = "SELECT MIN(Fecha) as min_f, MAX(Fecha) as max_f FROM VentasGlobalesAccessCSV $where";
         $stmtDates = $conn->prepare($sqlDates);
         $stmtDates->execute($params);
@@ -292,31 +292,53 @@ function calculateRetentionDetail($conn, $where, $params) {
         $max_ts = strtotime($limits['max_f']);
         $mid_date = date('Y-m-d H:i:s', $min_ts + ($max_ts - $min_ts) / 2);
 
-        // H1 Users
-        $sqlH1 = "SELECT COUNT(DISTINCT CodCliente) FROM VentasGlobalesAccessCSV $where AND Fecha <= :mid";
+        // 2. Contar clientes únicos en la primera mitad (H1)
+        // Usamos parámetros posicionales (?) para evitar conflictos de nombres en el subquery si fuera necesario,
+        // pero aquí simplemente crearemos un set de parámetros limpio.
+        $whereH1 = $where . " AND Fecha <= :mid_h1 AND CodCliente > 0";
+        $paramsH1 = array_merge($params, [':mid_h1' => $mid_date]);
+        
+        $sqlH1 = "SELECT COUNT(DISTINCT CodCliente) FROM VentasGlobalesAccessCSV $whereH1";
         $stmtH1 = $conn->prepare($sqlH1);
-        $paramsH1 = array_merge($params, [':mid' => $mid_date]);
         $stmtH1->execute($paramsH1);
-        $h1_count = $stmtH1->fetchColumn();
+        $h1_count = (int)$stmtH1->fetchColumn();
 
-        // H2 Users who were in H1
+        if ($h1_count === 0) return ['rate' => 0, 'h1' => 0, 'h2' => 0];
+
+        // 3. Contar clientes de H1 que regresaron en la segunda mitad (H2)
+        // Usamos un JOIN para encontrar la intersección de IDs de clientes entre periodos
+        $whereH2 = $where . " AND Fecha > :mid_h2 AND CodCliente > 0";
+        $paramsJoin = array_merge($params, [':mid_h2' => $mid_date]);
+        // Duplicamos los parámetros del 'where' original para el subquery interno
+        $paramsFinal = [];
+        foreach($paramsJoin as $k => $v) {
+            $paramsFinal[$k] = $v;
+            $paramsFinal[$k . '_sub'] = $v;
+        }
+        
+        // Reemplazamos los placeholders en el subquery para que sean únicos
+        $whereSub = str_replace([':f_inicio', ':f_fin', ':sucursal', ':suc_part', ':p_inicio', ':p_fin'], 
+                               [':f_inicio_sub', ':f_fin_sub', ':sucursal_sub', ':suc_part_sub', ':p_inicio_sub', ':p_fin_sub'], $whereH1);
+
         $sqlH2 = "
-            SELECT COUNT(DISTINCT CodCliente) 
-            FROM VentasGlobalesAccessCSV 
-            $where 
-            AND Fecha > :mid 
-            AND CodCliente IN (
-                SELECT DISTINCT CodCliente FROM VentasGlobalesAccessCSV $where AND Fecha <= :mid
-            )
+            SELECT COUNT(DISTINCT t2.CodCliente)
+            FROM VentasGlobalesAccessCSV t2
+            INNER JOIN (
+                SELECT DISTINCT CodCliente 
+                FROM VentasGlobalesAccessCSV 
+                $whereSub
+            ) t1 ON t2.CodCliente = t1.CodCliente
+            $whereH2
         ";
+
         $stmtH2 = $conn->prepare($sqlH2);
-        $stmtH2->execute($paramsH1);
-        $h2_retained = $stmtH2->fetchColumn();
+        $stmtH2->execute($paramsFinal);
+        $h2_retained = (int)$stmtH2->fetchColumn();
 
         return [
-            'rate' => ($h1_count > 0) ? round(($h2_retained / $h1_count) * 100, 2) : 0,
-            'h1' => (int)$h1_count,
-            'h2' => (int)$h2_retained
+            'rate' => round(($h2_retained / $h1_count) * 100, 2),
+            'h1' => $h1_count,
+            'h2' => $h2_retained
         ];
     } catch (Exception $e) {
         return ['rate' => 0, 'h1' => 0, 'h2' => 0];
