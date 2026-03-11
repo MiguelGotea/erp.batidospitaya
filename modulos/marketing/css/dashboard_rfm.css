@@ -67,6 +67,7 @@
 }
 
 .bg-teal { background: var(--color-principal); }
+.bg-orange { background: #fd7e14; color: white; }
 
 .scroll-y { overflow-y: auto; }
 

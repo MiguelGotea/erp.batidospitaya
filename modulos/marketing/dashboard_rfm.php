@@ -203,16 +203,19 @@ if (!tienePermiso('dashboard_rfm', 'vista', $cargoOperario)) {
                                     <span class="badge bg-success me-2">Campeones</span> Compraron recientemente, con mucha frecuencia y alto gasto.
                                 </div>
                                 <div class="segment-legend mb-2">
-                                    <span class="badge bg-primary me-2">Loyal</span> Clientes constantes con buen valor.
+                                    <span class="badge bg-primary me-2">Leal</span> Clientes constantes con buen valor.
                                 </div>
                                 <div class="segment-legend mb-2">
-                                    <span class="badge bg-warning text-dark me-2">At Risk</span> Hace tiempo que no compran, pero solían ser frecuentes.
+                                    <span class="badge bg-warning text-dark me-2">Nuevo</span> Clientes que han realizado su primera compra recientemente.
                                 </div>
                                 <div class="segment-legend mb-2">
-                                    <span class="badge bg-danger me-2">Lost</span> Clientes con baja frecuencia y que no han vuelto en mucho tiempo.
+                                    <span class="badge bg-orange me-2">En Riesgo</span> Hace tiempo que no compran, pero solían ser frecuentes.
                                 </div>
                                 <div class="segment-legend mb-2">
-                                    <span class="badge bg-info me-2">New</span> Clientes que han realizado su primera compra recientemente.
+                                    <span class="badge bg-secondary me-2">Hibernando</span> Clientes con baja frecuencia y poca actividad reciente.
+                                </div>
+                                <div class="segment-legend mb-2">
+                                    <span class="badge bg-danger me-2">Perdido</span> Clientes que no han vuelto en mucho tiempo.
                                 </div>
                             </div>
                         </div>

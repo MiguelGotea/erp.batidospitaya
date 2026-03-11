@@ -94,11 +94,10 @@ try {
     $segments_dist = [
         'Champions' => 0,
         'Loyal' => 0,
+        'New' => 0,
         'At Risk' => 0,
-        'About to Sleep' => 0,
-        'Lost' => 0,
         'Hibernating' => 0,
-        'Other' => 0
+        'Lost' => 0
     ];
 
     foreach ($rfm_data as &$row) {
@@ -120,7 +119,7 @@ try {
         elseif ($r <= 2 && $f <= 2)
             $seg = 'Lost';
         elseif ($r >= 4 && $f <= 2)
-            $seg = 'New / Recent';
+            $seg = 'New';
         else
             $seg = 'Hibernating';
 

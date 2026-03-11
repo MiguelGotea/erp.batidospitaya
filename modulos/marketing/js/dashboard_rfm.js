@@ -71,13 +71,12 @@ function actualizarSegmentosChart(segments) {
             datasets: [{
                 data: valores,
                 backgroundColor: [
-                    '#198754', // Champions
-                    '#0d6efd', // Loyal
-                    '#ffc107', // At Risk
-                    '#dc3545', // Lost
-                    '#0dcaf0', // New
-                    '#6c757d', // Hibernating
-                    '#adb5bd'  // Other
+                    '#198754', // Champions - Verde
+                    '#0d6efd', // Loyal - Azul
+                    '#ffc107', // New - Amarillo/Dorado
+                    '#fd7e14', // At Risk - Naranja
+                    '#6c757d', // Hibernating - Gris
+                    '#dc3545'  // Lost - Rojo
                 ],
                 borderWidth: 0
             }]
