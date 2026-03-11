@@ -37,7 +37,7 @@ if (!tienePermiso('dashboard_rfm', 'vista', $cargoOperario)) {
             <div class="container-fluid">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
-                <h1 class="main-header mb-0">Dashboard RFM <span class="badge bg-teal fs-6 align-middle">PREMIUM</span></h1>
+                <h1 class="premium-title mb-0">Dashboard RFM <span class="badge bg-teal fs-6 align-middle">PREMIUM</span></h1>
                 <p class="text-muted small">Análisis avanzado de segmentación y lealtad</p>
             </div>
             <div class="d-flex gap-2">

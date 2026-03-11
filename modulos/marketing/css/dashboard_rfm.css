@@ -27,7 +27,7 @@ body {
     padding: 2rem;
 }
 
-.main-header {
+.premium-title {
     background: linear-gradient(90deg, var(--color-principal), #3498db);
     -webkit-background-clip: text;
     background-clip: text;
