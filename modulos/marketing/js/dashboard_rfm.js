@@ -537,5 +537,6 @@ function exportData(type) {
 }
 
 function verDetalle(id) {
-    Swal.fire({ title: 'Perfil del Socio', text: 'Detalle del socio ID: ' + id, icon: 'info' });
+    if (!id) return;
+    window.location.href = `/modulos/atencioncliente/historial_productos.php?membresia=${id}`;
 }
