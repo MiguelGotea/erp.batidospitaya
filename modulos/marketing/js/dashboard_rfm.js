@@ -92,8 +92,11 @@ function updateKPIs(summary) {
 
     // Porcentajes de Salud (Relativos al Universo Total)
     if (summary.universo_total > 0) {
+        const pActivos = (summary.activos / summary.universo_total) * 100;
         const pRiesgo = (summary.en_riesgo / summary.universo_total) * 100;
         const pPerdidos = (summary.perdidos / summary.universo_total) * 100;
+        
+        $('#kpiTotalClubPerc').text(`${pActivos.toFixed(1)}% de la base`);
         $('#kpiEnRiesgoPerc').text(`${pRiesgo.toFixed(1)}% de la base`);
         $('#kpiPerdidosPerc').text(`${pPerdidos.toFixed(1)}% de la base`);
     }
@@ -131,7 +134,7 @@ function updateKPIs(summary) {
     $('#tipEnRiesgo').attr('title', `<div class="tooltip-data-row"><span>Criterio:</span> <span>${Math.floor(umbral/2)}-${umbral} días</span></div><div class="tooltip-formula">Socios enfriándose (Global). El % es sobre el total de socios de la sucursal.</div>`);
     $('#tipPerdidos').attr('title', `<div class="tooltip-data-row"><span>Criterio:</span> <span>> ${umbral} días</span></div><div class="tooltip-formula">Inactivos totales (Global). El % es sobre el total de socios de la sucursal.</div>`);
     $('#tipTicket').attr('title', `<div class="tooltip-data-row"><span>Ventas:</span> <span>${fmt(summary.raw.total_ingresos)}</span></div><div class="tooltip-data-row"><span>Pedidos:</span> <span>${summary.raw.total_pedidos}</span></div>`);
-    $('#tipRetention').attr('title', `<div class="tooltip-data-row"><span>H1 → H2:</span> <span>${summary.retention_metrics.h2} de ${summary.retention_metrics.h1}</span></div>`);
+    $('#tipRetention').attr('title', `<div class="tooltip-data-row"><span>Cohorte (Previo):</span> <span>${summary.retention_metrics.h1}</span></div><div class="tooltip-data-row"><span>Retornaron:</span> <span>${summary.retention_metrics.h2}</span></div><div class="tooltip-formula">Clientes del periodo anterior que volvieron en este periodo.</div>`);
     $('#tipParticipation').attr('title', `<div class="tooltip-data-row"><span>Venta Club:</span> <span>${fmt(summary.participacion.club)}</span></div><div class="tooltip-data-row"><span>Venta Gen:</span> <span>${fmt(summary.participacion.general)}</span></div>`);
     $('#tipChurnTotal').attr('title', `<div class="tooltip-data-row"><span>Perdidos:</span> <span>${summary.perdidos}</span></div><div class="tooltip-formula">Porcentaje de pérdida sobre base filtrada.</div>`);
 

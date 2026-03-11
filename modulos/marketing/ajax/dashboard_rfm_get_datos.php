@@ -331,61 +331,53 @@ try {
 function calculateRetentionDetail($conn, $where, $params) {
     try {
         // 1. Obtener los límites de tiempo del periodo filtrado
-        $sqlDates = "SELECT MIN(Fecha) as min_f, MAX(Fecha) as max_f FROM VentasGlobalesAccessCSV $where";
-        $stmtDates = $conn->prepare($sqlDates);
-        $stmtDates->execute($params);
-        $limits = $stmtDates->fetch(PDO::FETCH_ASSOC);
-
-        if (!$limits['min_f'] || $limits['min_f'] === $limits['max_f']) {
-            return ['rate' => 0, 'h1' => 0, 'h2' => 0];
-        }
-
-        $min_ts = strtotime($limits['min_f']);
-        $max_ts = strtotime($limits['max_f']);
-        $mid_date = date('Y-m-d H:i:s', $min_ts + ($max_ts - $min_ts) / 2);
-
-        // 2. Contar clientes únicos en la primera mitad (H1)
-        $whereH1 = $where . " AND Fecha <= :mid_h1 AND CodCliente > 0";
-        $paramsH1 = array_merge($params, [':mid_h1' => $mid_date]);
+        $i_f = $params[':f_inicio'];
+        $i_t = $params[':f_fin'];
         
-        $sqlH1 = "SELECT COUNT(DISTINCT CodCliente) FROM VentasGlobalesAccessCSV $whereH1";
+        $start = new DateTime($i_f);
+        $end = new DateTime($i_t);
+        // Diferencia en días para calcular el periodo anterior equivalente
+        $diff = $start->diff($end)->days + 1;
+        
+        $p_start = clone $start;
+        $p_start->modify("-{$diff} days");
+        $p_end = clone $start;
+        $p_end->modify("-1 day");
+        
+        $p_inicio = $p_start->format('Y-m-d');
+        $p_fin = $p_end->format('Y-m-d');
+
+        // 2. Definir filtros para el Periodo Anterior (Cohort H1)
+        $whereH1 = str_replace([':f_inicio', ':f_fin'], [':p_inicio', ':p_fin'], $where);
+        $paramsH1 = $params;
+        $paramsH1[':p_inicio'] = $p_inicio;
+        $paramsH1[':p_fin'] = $p_fin;
+        // Limpiamos los params originales para el subquery
+        unset($paramsH1[':f_inicio'], $paramsH1[':f_fin']);
+        
+        // Conteo H1
+        $sqlH1 = "SELECT COUNT(DISTINCT CodCliente) FROM VentasGlobalesAccessCSV $whereH1 AND CodCliente > 0";
         $stmtH1 = $conn->prepare($sqlH1);
         $stmtH1->execute($paramsH1);
         $h1_count = (int)$stmtH1->fetchColumn();
 
         if ($h1_count === 0) return ['rate' => 0, 'h1' => 0, 'h2' => 0];
 
-        // 3. Contar clientes de H1 que regresaron en la segunda mitad (H2)
-        $paramsFinal = [];
-        
-        // Base params + Midpoint para H2
-        foreach($params as $k => $v) $paramsFinal[$k] = $v;
-        $paramsFinal[':mid_h2'] = $mid_date;
-        $whereH2 = $where . " AND Fecha > :mid_h2 AND CodCliente > 0";
+        // 3. Contar cuántos de ese cohort (H1) compraron en el periodo actual (H2)
+        // Parámetros finales para el query principal
+        $paramsFinal = $params;
+        $paramsFinal[':p_inicio'] = $p_inicio;
+        $paramsFinal[':p_fin'] = $p_fin;
 
-        // Parámetros para el subquery (H1) con prefijo 's_'
-        $whereSub = $where . " AND Fecha <= :mid_s AND CodCliente > 0";
-        $paramsFinal[':mid_s'] = $mid_date;
-        
-        // Reemplazo de placeholders para evitar colisiones en PDO
-        $placeholders = [':f_inicio', ':f_fin', ':sucursal', ':suc_part', ':p_inicio', ':p_fin'];
-        foreach($placeholders as $p) {
-            if (isset($params[$p])) {
-                $p_sub = str_replace(':', ':s_', $p);
-                $whereSub = str_replace($p, $p_sub, $whereSub);
-                $paramsFinal[$p_sub] = $params[$p];
-            }
-        }
-
-        // Usamos IN en lugar de JOIN para evitar conflictos con los alias de tabla y el WHERE dinámico
         $sqlH2 = "
             SELECT COUNT(DISTINCT CodCliente)
             FROM VentasGlobalesAccessCSV
-            $whereH2
+            $where
+            AND CodCliente > 0
             AND CodCliente IN (
                 SELECT CodCliente 
                 FROM VentasGlobalesAccessCSV 
-                $whereSub
+                $whereH1 AND CodCliente > 0
             )
         ";
 
