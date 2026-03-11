@@ -74,6 +74,9 @@ function updateDashboard(data) {
     $('#habitSize').text(habits.fav_size);
     $('#habitModalidad').text(habits.fav_modalidad);
     $('#habitPromo').text(habits.perc_promo + '%');
+    $('#habitHour').text(habits.fav_hour);
+    $('#habitDay').text(habits.fav_day);
+    $('#habitRedenciones').text(habits.redenciones);
 
     // Ingresos y Tickets Promedio
     const club = parseFloat(ingresos.IngresosClub || 0);

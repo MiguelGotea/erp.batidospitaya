@@ -146,39 +146,58 @@ if (!tienePermiso('dashboard_rfm', 'vista', $cargoOperario)) {
                     </div>
                 </div>
             </div>
+        </div>
 
-            <!-- Hábitos de Compra -->
-            <div class="col-lg-5">
+        <!-- Análisis de Producto / Hábito -->
+        <div class="row g-4 mt-2">
+            <div class="col-12">
                 <div class="glass-card p-4">
-                    <h5 class="fw-bold mb-4">Hábitos del Periodo</h5>
-                    <div class="list-group list-group-flush bg-transparent">
-                        <div class="list-group-item bg-transparent px-0 py-3 d-flex justify-content-between align-items-center border-bottom border-white border-opacity-25">
-                            <div>
-                                <div class="small text-muted">Producto Estrella</div>
-                                <div class="fw-bold text-dark" id="habitProduct">-</div>
+                    <h5 class="fw-bold mb-4 text-orange"><i class="fas fa-shopping-bag me-2"></i>Análisis de Producto / Hábito</h5>
+                    <div class="row g-4">
+                        <div class="col-md-4 col-sm-6">
+                            <div class="habit-item p-3 rounded-4 bg-white bg-opacity-50">
+                                <div class="text-muted small mb-1">Producto Favorito</div>
+                                <h6 class="fw-bold mb-0" id="habitProduct">Cargando...</h6>
                             </div>
-                            <i class="fas fa-star text-warning"></i>
                         </div>
-                        <div class="list-group-item bg-transparent px-0 py-3 d-flex justify-content-between align-items-center border-bottom border-white border-opacity-25">
-                            <div>
-                                <div class="small text-muted">Medida Preferida</div>
-                                <div class="fw-bold text-dark" id="habitSize">-</div>
+                        <div class="col-md-2 col-sm-6">
+                            <div class="habit-item p-3 rounded-4 bg-white bg-opacity-50">
+                                <div class="text-muted small mb-1">Medida Preferida</div>
+                                <h6 class="fw-bold mb-0" id="habitSize">Cargando...</h6>
                             </div>
-                            <i class="fas fa-expand-arrows-alt text-primary"></i>
                         </div>
-                        <div class="list-group-item bg-transparent px-0 py-3 d-flex justify-content-between align-items-center border-bottom border-white border-opacity-25">
-                            <div>
-                                <div class="small text-muted">Modalidad Top</div>
-                                <div class="fw-bold text-dark" id="habitModalidad">-</div>
+                        <div class="col-md-3 col-sm-6">
+                            <div class="habit-item p-3 rounded-4 bg-white bg-opacity-50">
+                                <div class="text-muted small mb-1">Modalidad de Pedido</div>
+                                <h6 class="fw-bold mb-0" id="habitModalidad">Cargando...</h6>
                             </div>
-                            <i class="fas fa-store text-success"></i>
                         </div>
-                        <div class="list-group-item bg-transparent px-0 py-3 d-flex justify-content-between align-items-center">
-                            <div>
-                                <div class="small text-muted">% Uso de Promociones</div>
-                                <div class="fw-bold text-dark" id="habitPromo">-</div>
+                        <div class="col-md-3 col-sm-6">
+                            <div class="habit-item p-3 rounded-4 bg-white bg-opacity-50">
+                                <div class="text-muted small mb-1">Uso de Promociones</div>
+                                <h6 class="fw-bold mb-0" id="habitPromo">Cargando...</h6>
                             </div>
-                            <i class="fas fa-percentage text-danger"></i>
+                        </div>
+                        <div class="col-md-3 col-sm-6">
+                            <div class="habit-item p-3 rounded-4 bg-white bg-opacity-50">
+                                <div class="text-muted small mb-1"><i class="fas fa-clock me-1"></i>Hora Pico</div>
+                                <h6 class="fw-bold mb-0" id="habitHour">Cargando...</h6>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-sm-6">
+                            <div class="habit-item p-3 rounded-4 bg-white bg-opacity-50">
+                                <div class="text-muted small mb-1"><i class="fas fa-calendar-day me-1"></i>Día Preferido</div>
+                                <h6 class="fw-bold mb-0" id="habitDay">Cargando...</h6>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-sm-12">
+                            <div class="habit-item p-3 rounded-4 bg-white bg-opacity-50 d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="text-muted small mb-1">Total Redenciones</div>
+                                    <h6 class="fw-bold mb-0" id="habitRedenciones">0</h6>
+                                </div>
+                                <i class="fas fa-ticket-alt text-orange opacity-50 fa-2x"></i>
+                            </div>
                         </div>
                     </div>
                 </div>

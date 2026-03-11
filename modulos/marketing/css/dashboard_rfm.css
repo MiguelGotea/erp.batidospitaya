@@ -173,6 +173,19 @@ body {
 .bg-primary-light { background: rgba(81, 184, 172, 0.1); }
 .bg-danger-light { background: rgba(220, 53, 69, 0.1); }
 
+.habit-item {
+    transition: all 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.habit-item:hover {
+    background: rgba(255, 255, 255, 0.9) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+
+.text-orange { color: #fd7e14; }
+
 .icon-square {
     width: 40px;
     height: 40px;

@@ -234,6 +234,8 @@ try {
             (SELECT DBBatidos_Nombre FROM VentasGlobalesAccessCSV $whereH1 AND Tipo IN ('Batido', 'Bowl', 'Limonada', 'Pitaya Store', 'Waffles') GROUP BY DBBatidos_Nombre ORDER BY COUNT(*) DESC LIMIT 1) as FavProduct,
             (SELECT Medida FROM VentasGlobalesAccessCSV $whereH2 AND Tipo IN ('Batido', 'Limonada') AND Medida IS NOT NULL AND Medida <> '' GROUP BY Medida ORDER BY COUNT(*) DESC LIMIT 1) as FavSize,
             (SELECT Modalidad FROM VentasGlobalesAccessCSV $whereH3 GROUP BY Modalidad ORDER BY COUNT(*) DESC LIMIT 1) as FavModalidad,
+            (SELECT HOUR(Hora) FROM VentasGlobalesAccessCSV $whereH1 GROUP BY HOUR(Hora) ORDER BY COUNT(*) DESC LIMIT 1) as FavHour,
+            (SELECT DAYOFWEEK(Fecha) FROM VentasGlobalesAccessCSV $whereH1 GROUP BY DAYOFWEEK(Fecha) ORDER BY COUNT(*) DESC LIMIT 1) as FavDay,
             COUNT(DISTINCT CASE WHEN CodigoPromocion <> 5 THEN CodPedido END) as PromoOrders,
             COUNT(DISTINCT CodPedido) as TotalOrders,
             SUM(CASE WHEN Puntos < 0 THEN 1 ELSE 0 END) as RedemptionLines
@@ -287,6 +289,8 @@ try {
             'fav_product' => $habits['FavProduct'] ?? 'N/A',
             'fav_size' => $habits['FavSize'] ?? 'N/A',
             'fav_modalidad' => $habits['FavModalidad'] ?? 'N/A',
+            'fav_hour' => isset($habits['FavHour']) ? $habits['FavHour'] . ':00' : 'N/A',
+            'fav_day' => isset($habits['FavDay']) ? ['N/A', 'Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'][$habits['FavDay']] : 'N/A',
             'perc_promo' => ($habits['TotalOrders'] > 0) ? round(($habits['PromoOrders'] / $habits['TotalOrders']) * 100, 2) : 0,
             'redenciones' => $habits['RedemptionLines']
         ],
