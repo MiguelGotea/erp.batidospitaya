@@ -217,6 +217,30 @@ function updateBranchCharts(branchData) {
         },
         options: { responsive: true, scales: { y: { max: 15 } } }
     });
+
+    // Distribución por sucursal (Stacked Bar)
+    const ctxD = document.getElementById('chartBranchDistribution').getContext('2d');
+    if (chartBranchDistribution) chartBranchDistribution.destroy();
+    
+    const segmentLabels = ['Champions', 'Loyal', 'New', 'At Risk', 'Hibernating', 'Lost'];
+    const palette = getPalette();
+    
+    const datasets = segmentLabels.map(seg => ({
+        label: getSegmentName(seg),
+        data: labels.map(bn => branchData[bn].segments[seg] || 0),
+        backgroundColor: palette[seg]
+    }));
+
+    chartBranchDistribution = new Chart(ctxD, {
+        type: 'bar',
+        data: { labels: labels, datasets: datasets },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            scales: { x: { stacked: true }, y: { stacked: true } },
+            plugins: { legend: { position: 'bottom', labels: { boxWidth: 10 } } }
+        }
+    });
 }
 
 function updateHabitSection(habits) {
@@ -238,25 +262,42 @@ function updateHabitSection(habits) {
         `);
     });
 
-    // Heatmap (Simulado con Matrix o Bubble si no hay plugin, usaremos Bubble simplificado)
+    // Heatmap Mejorado
     const ctxH = document.getElementById('chartHeatmap').getContext('2d');
     if (chartHeatmap) chartHeatmap.destroy();
+    
+    const maxVal = Math.max(...habits.heatmap.map(h => h.Count));
     
     chartHeatmap = new Chart(ctxH, {
         type: 'bubble',
         data: {
             datasets: [{
                 label: 'Intensidad',
-                data: habits.heatmap.map(h => ({ x: h.Hour, y: h.Day, r: Math.log(h.Count + 1) * 3 })),
-                backgroundColor: 'rgba(81, 184, 172, 0.5)'
+                data: habits.heatmap.map(h => ({ 
+                    x: h.Hour, 
+                    y: h.Day, 
+                    r: Math.log(h.Count + 1) * 4 
+                })),
+                backgroundColor: habits.heatmap.map(h => {
+                    const intensity = h.Count / maxVal;
+                    // Escala de verde a rojo/naranja
+                    return `rgba(255, ${Math.floor(200 * (1-intensity))}, ${Math.floor(100 * (1-intensity))}, 0.7)`;
+                })
             }]
         },
         options: {
             scales: {
-                x: { title: { display: true, text: 'Hora del día' }, min: 6, max: 23 },
-                y: { title: { display: true, text: 'Día de Semana' }, min: 1, max: 7, ticks: { callback: v => ['','Dom','Lun','Mar','Mie','Jue','Vie','Sab'][v] } }
+                x: { title: { display: true, text: 'Hora del día' }, min: 6, max: 23, grid: { display: false } },
+                y: { title: { display: true, text: 'Día de Semana' }, min: 1, max: 7, ticks: { callback: v => ['','Dom','Lun','Mar','Mie','Jue','Vie','Sab'][v] }, grid: { display: false } }
             },
-            plugins: { legend: { display: false } }
+            plugins: { 
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: (ctx) => `Día ${['','Dom','Lun','Mar','Mie','Jue','Vie','Sab'][ctx.raw.y]} - ${ctx.raw.x}:00h: ${habits.heatmap[ctx.dataIndex].Count} pedidos`
+                    }
+                }
+            }
         }
     });
 }
