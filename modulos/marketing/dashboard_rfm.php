@@ -173,6 +173,15 @@ $puedeDescargar = tienePermiso('dashboard_rfm', 'descargar', $cargoOperario);
                             <tbody id="rfmTableBody"></tbody>
                         </table>
                     </div>
+                    <!-- Pagination -->
+                    <div class="d-flex justify-content-between align-items-center mt-3 px-2">
+                        <div class="small text-muted" id="paginationInfo">Mostrando 0 de 0 socios</div>
+                        <nav>
+                            <ul class="pagination pagination-sm mb-0" id="paginationControls">
+                                <!-- Botones de paginación via JS -->
+                            </ul>
+                        </nav>
+                    </div>
                 </div>
 
                 <!-- 🏪 SECCIÓN 4 — Análisis por Sucursal -->

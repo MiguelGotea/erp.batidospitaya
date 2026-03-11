@@ -4,7 +4,12 @@ let chartEvolution = null;
 let chartBranchScores = null;
 let chartBranchDistribution = null;
 let chartHeatmap = null;
+
+// State Management
 let fullClientData = [];
+let filteredData = [];
+let currentPage = 1;
+const itemsPerPage = 20;
 
 $(document).ready(function() {
     cargarSucursales();
@@ -12,7 +17,7 @@ $(document).ready(function() {
     
     // Event Listeners
     $('#filterForm').on('submit', (e) => { e.preventDefault(); cargarDatos(); });
-    $('#tableSearch').on('keyup', debounce(filterTable, 300));
+    $('#tableSearch').on('keyup', debounce(handleSearch, 300));
     $('#btnExportFull').on('click', () => exportData('full'));
 });
 
@@ -49,6 +54,8 @@ async function cargarDatos() {
 
         if (data.success) {
             fullClientData = data.individual || [];
+            filteredData = [...fullClientData];
+            currentPage = 1;
             updateDashboard(data);
         } else {
             Swal.fire('Atención', data.message, 'warning');
@@ -71,8 +78,8 @@ function updateDashboard(data) {
     updateSegmentsChart(data.segments);
     updateEvolutionChart(data.evolution);
     
-    // 3. Tabla Individual
-    renderRFMTable(fullClientData);
+    // 3. Tabla Individual (Paginada)
+    renderPaginatedTable();
     
     // 4. Sucursales
     updateBranchCharts(data.branch_analysis);
@@ -208,14 +215,33 @@ function updateHabitSection(habits) {
     });
 }
 
-// --- TABLA Y FILTROS ---
+// --- TABLA Y PAGINACIÓN ---
 
-function renderRFMTable(data) {
+function handleSearch() {
+    const term = $('#tableSearch').val().toLowerCase();
+    filteredData = fullClientData.filter(c => 
+        (c.ClienteNombre && c.ClienteNombre.toLowerCase().includes(term)) || 
+        c.CodCliente.toString().includes(term)
+    );
+    currentPage = 1; // Reset to page 1 on search
+    renderPaginatedTable();
+}
+
+function renderPaginatedTable() {
     const $body = $('#rfmTableBody');
     $body.empty();
     
-    data.forEach(c => {
-        const rColor = c.Recency > $('#umbral_perdido').val() ? 'text-danger' : '';
+    const start = (currentPage - 1) * itemsPerPage;
+    const end = start + itemsPerPage;
+    const paginatedItems = filteredData.slice(start, end);
+    const umbral = $('#umbral_perdido').val();
+
+    if (paginatedItems.length === 0) {
+        $body.append('<tr><td colspan="9" class="text-center py-5 text-muted">No se encontraron socios con este criterio.</td></tr>');
+    }
+
+    paginatedItems.forEach(c => {
+        const rColor = c.Recency > umbral ? 'text-danger' : '';
         $body.append(`
             <tr>
                 <td>
@@ -239,15 +265,60 @@ function renderRFMTable(data) {
             </tr>
         `);
     });
+
+    updatePaginationControls();
 }
 
-function filterTable() {
-    const term = $('#tableSearch').val().toLowerCase();
-    const filtered = fullClientData.filter(c => 
-        (c.ClienteNombre && c.ClienteNombre.toLowerCase().includes(term)) || 
-        c.CodCliente.toString().includes(term)
-    );
-    renderRFMTable(filtered);
+function updatePaginationControls() {
+    const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+    const $controls = $('#paginationControls');
+    const $info = $('#paginationInfo');
+    
+    $controls.empty();
+    
+    // Info
+    const startCount = filteredData.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0;
+    const endCount = Math.min(currentPage * itemsPerPage, filteredData.length);
+    $info.text(`Mostrando ${startCount} a ${endCount} de ${filteredData.length} socios`);
+
+    if (totalPages <= 1) return;
+
+    // Previous
+    $controls.append(`
+        <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+            <a class="page-link" href="javascript:void(0)" onclick="changePage(${currentPage - 1})"><i class="fas fa-chevron-left"></i></a>
+        </li>
+    `);
+
+    // Numbered Pages (Limited logic to not show 100 buttons)
+    let startPage = Math.max(1, currentPage - 2);
+    let endPage = Math.min(totalPages, startPage + 4);
+    if (endPage - startPage < 4) startPage = Math.max(1, endPage - 4);
+
+    for (let i = startPage; i <= endPage; i++) {
+        $controls.append(`
+            <li class="page-item ${i === currentPage ? 'active' : ''}">
+                <a class="page-link" href="javascript:void(0)" onclick="changePage(${i})">${i}</a>
+            </li>
+        `);
+    }
+
+    // Next
+    $controls.append(`
+        <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+            <a class="page-link" href="javascript:void(0)" onclick="changePage(${currentPage + 1})"><i class="fas fa-chevron-right"></i></a>
+        </li>
+    `);
+}
+
+function changePage(p) {
+    const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+    if (p < 1 || p > totalPages) return;
+    currentPage = p;
+    renderPaginatedTable();
+    
+    // Smooth scroll to table top
+    document.getElementById('rfmTableMaster').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 // --- UTILS ---
