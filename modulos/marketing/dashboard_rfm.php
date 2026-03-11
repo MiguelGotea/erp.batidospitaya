@@ -296,55 +296,101 @@ $puedeDescargar = tienePermiso('dashboard_rfm', 'descargar', $cargoOperario);
                     <h5 class="modal-title font-weight-bold"><i class="fas fa-graduation-cap me-2"></i>Guía RFM 360°</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body p-4 scroller" style="max-height: 70vh;">
-                    <div class="mb-4">
-                        <h6 class="fw-bold text-primary"><i class="fas fa-filter me-2"></i>Filtros Globales</h6>
-                        <p class="small text-muted">Afectan a todos los cálculos excepto donde se indique:</p>
-                        <ul class="small">
-                            <li><b>Periodo:</b> Define la ventana de tiempo para Frecuencia, Monto y Retención.</li>
-                            <li><b>Sucursal:</b> Filtra las transacciones por ubicación física.</li>
-                            <li><b>Tipo de Cliente:</b> Alterna entre socios del Club (CodCliente > 0) y Clientes Generales (CodCliente = 0).</li>
-                            <li><b>Umbral de Perdido:</b> Días de inactividad para considerar a un cliente como "Perdido".</li>
+                <div class="modal-body p-4 scroller" style="max-height: 70vh; overflow-y: auto;">
+                    <div class="doc-section">
+                        <div class="doc-title text-primary"><i class="fas fa-layer-group"></i> Lógica del Panel: Salud vs Rendimiento</div>
+                        <p class="small text-muted">Para un análisis preciso, el panel separa los datos en dos dimensiones clave:</p>
+                        <ul class="doc-list">
+                            <li><b>Datos de Salud (Globales):</b> Reflejan el estado real del negocio HOY. No dependen de las fechas seleccionadas. (Ej: Quiénes están Perdidos o en Riesgo).</li>
+                            <li><b>Datos de Rendimiento (Periodo):</b> Reflejan qué pasó en el rango de fechas elegido. (Ej: Cuántas ventas hubo o cuántos socios nuevos se registraron).</li>
                         </ul>
                     </div>
 
-                    <div class="mb-4">
-                        <h6 class="fw-bold text-primary"><i class="fas fa-tachometer-alt me-2"></i>Indicadores Clave (KPIs)</h6>
-                        <table class="table table-sm table-borderless small">
-                            <thead class="border-bottom">
-                                <tr><th>Indicador</th><th>Lógica / Cálculo</th><th>Filtros</th></tr>
-                            </thead>
-                            <tbody>
-                                <tr><td><b>Club Activos</b></td><td>Socios con compra en periodo y cuya Recencia < Umbral.</td><td>Sucursal, Fecha, Umbral</td></tr>
-                                <tr><td><b>Nuevos</b></td><td>Socios registrados en el rango de fechas seleccionado.</td><td>Fecha</td></tr>
-                                <tr><td><b>Participación</b></td><td>(Venta Club / Venta Total) * 100 dentro del periodo.</td><td>Sucursal, Fecha</td></tr>
-                                <tr><td><b>Retención</b></td><td>% de socios de la 1ra mitad del periodo que volvieron en la 2da mitad.</td><td>Sucursal, Fecha</td></tr>
-                                <tr><td><b>Churn Total</b></td><td>(Socios Perdidos / Total Base de Datos) * 100.</td><td>Sucursal, Umbral</td></tr>
-                                <tr><td><b>Ticket Promedio</b></td><td>Venta Total / Cantidad de transacciones.</td><td>Sucursal, Fecha, Tipo</td></tr>
-                            </tbody>
-                        </table>
+                    <div class="doc-section">
+                        <div class="doc-title text-primary"><i class="fas fa-tachometer-alt"></i> Indicadores Clave (KPIs)</div>
+                        <div class="doc-table">
+                            <table class="table table-sm table-borderless mb-0 small">
+                                <thead>
+                                    <tr><th>Métrica</th><th>Criterio de Cálculo</th><th>Tipo</th></tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><b>Club Activos</b></td>
+                                        <td>Socios con última compra &le; Umbral de Perdido.</td>
+                                        <td><span class="method-tag tag-global">Global</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><b>Nuevos Periodo</b></td>
+                                        <td>Socios registrados entre Fecha Inicio y Fin.</td>
+                                        <td><span class="method-tag tag-period">Periodo</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><b>En Riesgo</b></td>
+                                        <td>Socios con inactividad entre 50% y 100% del Umbral.</td>
+                                        <td><span class="method-tag tag-global">Global</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><b>Perdidos</b></td>
+                                        <td>Socios con inactividad mayor al Umbral configurado.</td>
+                                        <td><span class="method-tag tag-global">Global</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><b>Tasa de Retención</b></td>
+                                        <td>% de socios que compraron en H1 y volvieron en H2.</td>
+                                        <td><span class="method-tag tag-period">Periodo</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><b>Part. Ingresos</b></td>
+                                        <td>% de la venta que proviene de socios Club vs General.</td>
+                                        <td><span class="method-tag tag-period">Periodo</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
 
-                    <div class="mb-4">
-                        <h6 class="fw-bold text-primary"><i class="fas fa-chart-line me-2"></i>RFM & Segmentación</h6>
-                        <p class="small text-muted">El scoring se calcula comparando a cada cliente contra la población filtrada actualmente usando quintiles (1-5):</p>
-                        <ul class="small">
-                            <li><b>Recencia (R):</b> Días desde la última compra. (5 = Compró hoy/ayer).</li>
-                            <li><b>Frecuencia (F):</b> Cantidad de pedidos en el periodo. (5 = Muy habitual).</li>
-                            <li><b>Monetario (M):</b> Gasto total en el periodo. (5 = Gran valor).</li>
+                    <div class="doc-section">
+                        <div class="doc-title text-primary"><i class="fas fa-chart-pie"></i> Visualizaciones y Gráficos</div>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <h6 class="small fw-bold mb-1">Mapa de Calor</h6>
+                                <p class="x-small text-muted mb-0">Cruza Hora vs Día para identificar picos de demanda. Ayuda a planificar turnos y promociones por hora.</p>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="small fw-bold mb-1">Distribución 100% Sug.</h6>
+                                <p class="x-small text-muted mb-0">Normaliza las sucursales para ver qué tan "Sana" está la base de cada una (proporción de Leales vs Perdidos).</p>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="small fw-bold mb-1">Hábitos de Consumo</h6>
+                                <p class="x-small text-muted mb-0">Analiza Medidas (S/M/L) y Modalidades (Delivery/Local) preferidas por los socios.</p>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="small fw-bold mb-1">Evolución de Pedidos</h6>
+                                <p class="x-small text-muted mb-0">Muestra la tendencia de transacciones semana a semana dentro del periodo.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="doc-section">
+                        <div class="doc-title text-primary"><i class="fas fa-users-cog"></i> Modelo RFM (Recencia, Frecuencia, Monto)</div>
+                        <p class="small mb-2">Cada cliente recibe una puntuación del 1 al 5 comparándolo con el resto de la base:</p>
+                        <ul class="doc-list">
+                            <li><b>Recencia:</b> Tiempo desde el último pedido.</li>
+                            <li><b>Frecuencia:</b> Cantidad de pedidos históricos (Lifetime).</li>
+                            <li><b>Monetario:</b> Valor total invertido por el cliente (Lifetime).</li>
                         </ul>
-                        <p class="small"><b>Segmentos Clave:</b> 
-                            <br>• <i>Campeones:</i> Los mejores en R y F.
-                            <br>• <i>En Riesgo:</i> Clientes habituales que han dejado de venir (R baja).
-                        </p>
+                        <div class="alert alert-light border small py-2 mb-0">
+                            <b>Nota:</b> Los segmentos "Campeones", "Leales" y "Estrategas" se basan en el comportamiento histórico total para mayor estabilidad.
+                        </div>
                     </div>
 
-                    <div class="mb-0">
-                        <h6 class="fw-bold text-primary"><i class="fas fa-store me-2"></i>Sucursales y Hábitos</h6>
-                        <p class="small">
-                            • <b>Distribución 100%:</b> Gráfico normalizado para comparar la "calidad" de la base de clientes (qué tan sana está) entre sucursales, sin importar el volumen de venta.
-                            <br>• <b>Ticket Benchmarking:</b> Compara el rendimiento de cada tienda contra el promedio global del sistema.
-                        </p>
+                    <div class="doc-section mb-0">
+                        <div class="doc-title text-primary"><i class="fas fa-question-circle"></i> Ayuda Visual en Tabla</div>
+                        <ul class="doc-list">
+                            <li><span class="text-danger fw-bold">Rojo:</span> Cliente en estado PERDIDO (superó el umbral).</li>
+                            <li><span class="text-warning fw-bold">Naranja:</span> Cliente EN RIESGO (próximo a perderse).</li>
+                            <li><span class="text-success fw-bold">Verde:</span> Cliente ACTIVO (compra reciente).</li>
+                        </ul>
                     </div>
                 </div>
             </div>
