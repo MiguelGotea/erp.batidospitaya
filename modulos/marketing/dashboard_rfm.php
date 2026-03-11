@@ -313,6 +313,9 @@ $puedeDescargar = tienePermiso('dashboard_rfm', 'descargar', $cargoOperario);
                             <li><b>Datos de Salud (Globales):</b> Reflejan el estado real del negocio HOY. No dependen de las fechas seleccionadas. (Ej: Quiénes están Perdidos o en Riesgo).</li>
                             <li><b>Datos de Rendimiento (Periodo):</b> Reflejan qué pasó en el rango de fechas elegido. (Ej: Cuántas ventas hubo o cuántos socios nuevos se registraron).</li>
                         </ul>
+                        <div class="alert alert-info py-2 small mb-0 mt-2">
+                            <i class="fas fa-info-circle me-1"></i> <b>Nota sobre Porcentajes:</b> Los indicadores se calculan sobre el <b>Universo Total</b> de socios. Si la suma de Activos + Perdidos no llega al 100%, la diferencia representa a los socios registrados que <b>aún no han realizado su primera compra</b>.
+                        </div>
                     </div>
 
                     <div class="doc-section">

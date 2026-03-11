@@ -239,7 +239,7 @@ try {
         $branch_stats[$bn]['segments'][$r['Segment']] = ($branch_stats[$bn]['segments'][$r['Segment']] ?? 0) + 1;
         
         $branch_stats[$bn]['top_customers'][] = [
-            'name' => $r['Nombre'],
+            'name' => $r['ClienteNombre'],
             'ltv' => $r['Monetary']
         ];
 
