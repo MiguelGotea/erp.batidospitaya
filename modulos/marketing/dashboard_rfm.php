@@ -44,11 +44,6 @@ $puedeDescargar = tienePermiso('dashboard_rfm', 'descargar', $cargoOperario);
                         <div class="col">
                             <h4 class="fw-bold mb-0 text-gradient-primary">RFM Intelligence <span class="badge bg-primary-light text-primary fs-6 ms-2">v2.0</span></h4>
                         </div>
-                        <div class="col-auto">
-                            <button class="btn btn-sm btn-outline-secondary rounded-pill px-3" onclick="$('#pageHelpModal').modal('show')">
-                                <i class="fas fa-question-circle me-1"></i> Guía
-                            </button>
-                        </div>
                     </div>
                     <form id="filterForm" class="row g-3">
                         <div class="col-md-3">
@@ -300,13 +295,55 @@ $puedeDescargar = tienePermiso('dashboard_rfm', 'descargar', $cargoOperario);
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body p-4 scroller" style="max-height: 70vh;">
-                    <h6>¿Cómo interpretar los scores?</h6>
-                    <p class="small text-muted">Cada cliente recibe de 1 a 5 puntos en cada categoría basándose en su posición relativa al resto de los socios.</p>
-                    <ul>
-                        <li><b>R (Recencia):</b> 5 = Compró recientemente; 1 = Compró hace mucho.</li>
-                        <li><b>F (Frecuencia):</b> 5 = Cliente muy habitual; 1 = Compra esporádica.</li>
-                        <li><b>M (Monto):</b> 5 = Ticket alto acumulado; 1 = Gasto bajo.</li>
-                    </ul>
+                    <div class="mb-4">
+                        <h6 class="fw-bold text-primary"><i class="fas fa-filter me-2"></i>Filtros Globales</h6>
+                        <p class="small text-muted">Afectan a todos los cálculos excepto donde se indique:</p>
+                        <ul class="small">
+                            <li><b>Periodo:</b> Define la ventana de tiempo para Frecuencia, Monto y Retención.</li>
+                            <li><b>Sucursal:</b> Filtra las transacciones por ubicación física.</li>
+                            <li><b>Tipo de Cliente:</b> Alterna entre socios del Club (CodCliente > 0) y Clientes Generales (CodCliente = 0).</li>
+                            <li><b>Umbral de Perdido:</b> Días de inactividad para considerar a un cliente como "Perdido".</li>
+                        </ul>
+                    </div>
+
+                    <div class="mb-4">
+                        <h6 class="fw-bold text-primary"><i class="fas fa-tachometer-alt me-2"></i>Indicadores Clave (KPIs)</h6>
+                        <table class="table table-sm table-borderless small">
+                            <thead class="border-bottom">
+                                <tr><th>Indicador</th><th>Lógica / Cálculo</th><th>Filtros</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td><b>Club Activos</b></td><td>Socios con compra en periodo y cuya Recencia < Umbral.</td><td>Sucursal, Fecha, Umbral</td></tr>
+                                <tr><td><b>Nuevos</b></td><td>Socios registrados en el rango de fechas seleccionado.</td><td>Fecha</td></tr>
+                                <tr><td><b>Participación</b></td><td>(Venta Club / Venta Total) * 100 dentro del periodo.</td><td>Sucursal, Fecha</td></tr>
+                                <tr><td><b>Retención</b></td><td>% de socios de la 1ra mitad del periodo que volvieron en la 2da mitad.</td><td>Sucursal, Fecha</td></tr>
+                                <tr><td><b>Churn Total</b></td><td>(Socios Perdidos / Total Base de Datos) * 100.</td><td>Sucursal, Umbral</td></tr>
+                                <tr><td><b>Ticket Promedio</b></td><td>Venta Total / Cantidad de transacciones.</td><td>Sucursal, Fecha, Tipo</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="mb-4">
+                        <h6 class="fw-bold text-primary"><i class="fas fa-chart-line me-2"></i>RFM & Segmentación</h6>
+                        <p class="small text-muted">El scoring se calcula comparando a cada cliente contra la población filtrada actualmente usando quintiles (1-5):</p>
+                        <ul class="small">
+                            <li><b>Recencia (R):</b> Días desde la última compra. (5 = Compró hoy/ayer).</li>
+                            <li><b>Frecuencia (F):</b> Cantidad de pedidos en el periodo. (5 = Muy habitual).</li>
+                            <li><b>Monetario (M):</b> Gasto total en el periodo. (5 = Gran valor).</li>
+                        </ul>
+                        <p class="small"><b>Segmentos Clave:</b> 
+                            <br>• <i>Campeones:</i> Los mejores en R y F.
+                            <br>• <i>En Riesgo:</i> Clientes habituales que han dejado de venir (R baja).
+                        </p>
+                    </div>
+
+                    <div class="mb-0">
+                        <h6 class="fw-bold text-primary"><i class="fas fa-store me-2"></i>Sucursales y Hábitos</h6>
+                        <p class="small">
+                            • <b>Distribución 100%:</b> Gráfico normalizado para comparar la "calidad" de la base de clientes (qué tan sana está) entre sucursales, sin importar el volumen de venta.
+                            <br>• <b>Ticket Benchmarking:</b> Compara el rendimiento de cada tienda contra el promedio global del sistema.
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>
