@@ -224,18 +224,41 @@ try {
     $segment_revenue = [];
     foreach ($raw_data as &$r) {
         $bn = $r['Sucursal'] ?: 'Desconocida';
-        if (!isset($branch_stats[$bn])) $branch_stats[$bn] = ['monto' => 0, 'count' => 0, 'score' => 0, 'segments' => []];
+        if (!isset($branch_stats[$bn])) {
+            $branch_stats[$bn] = [
+                'monto' => 0, 
+                'count' => 0, 
+                'score' => 0, 
+                'segments' => [],
+                'top_customers' => [] // Para calcular el top 5 después
+            ];
+        }
         $branch_stats[$bn]['monto'] += $r['Monetary'];
         $branch_stats[$bn]['count']++;
         $branch_stats[$bn]['score'] += $r['ScoreTotal'];
         $branch_stats[$bn]['segments'][$r['Segment']] = ($branch_stats[$bn]['segments'][$r['Segment']] ?? 0) + 1;
         
+        $branch_stats[$bn]['top_customers'][] = [
+            'name' => $r['Nombre'],
+            'ltv' => $r['Monetary']
+        ];
+
         $segment_revenue[$r['Segment']] = ($segment_revenue[$r['Segment']] ?? 0) + $r['Monetary'];
 
         // Enriquecer registro individual
         $r['TicketPromedio'] = ($r['Frequency'] > 0) ? $r['Monetary'] / $r['Frequency'] : 0;
         $r['Antiguedad'] = $r['FechaRegistro'] ? (int)floor((time() - strtotime($r['FechaRegistro'])) / 86400) : 0;
     }
+
+    // Procesar Top 5 por sucursal
+    foreach ($branch_stats as $bn => &$stats) {
+        usort($stats['top_customers'], function($a, $b) {
+            return $b['ltv'] <=> $a['ltv'];
+        });
+        $stats['top_5_ltv'] = array_slice($stats['top_customers'], 0, 5);
+        unset($stats['top_customers']); // Limpiar para no enviar datos excesivos
+    }
+    unset($stats);
 
     // Obtener Último Producto para los top 1000 de forma eficiente
     if (!empty($raw_data)) {

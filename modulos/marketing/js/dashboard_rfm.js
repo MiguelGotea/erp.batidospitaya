@@ -247,14 +247,33 @@ function updateBranchCharts(branchData, globalTicket = 0) {
     });
 
     // 4. TOP 5 LTV Mini Tables
-    const $ltvRow = $('#branchTopLTV').empty();
+    const $ltvContainer = $('#branchTopLTV').empty();
     labels.forEach(bn => {
-        $ltvRow.append(`
-            <div class="mb-3 border-bottom pb-2">
-                <div class="fw-bold mb-1"><i class="fas fa-store me-2"></i>${bn}</div>
-                <div class="small text-muted">Próximamente: Integración con historial extendido</div>
-            </div>
-        `);
+        const top5 = branchData[bn].top_5_ltv || [];
+        let html = `
+            <div class="mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-2 border-bottom pb-1">
+                    <span class="fw-bold text-primary small"><i class="fas fa-store me-1"></i>${bn}</span>
+                </div>
+                <div class="list-group list-group-flush shadow-sm rounded">`;
+        
+        if (top5.length === 0) {
+            html += `<div class="list-group-item small text-muted text-center py-3">Sin datos</div>`;
+        } else {
+            top5.forEach((c, idx) => {
+                html += `
+                    <div class="list-group-item d-flex justify-content-between align-items-center py-2 px-3 border-0" style="background: rgba(255,255,255,0.05); margin-bottom: 2px;">
+                        <div class="d-flex align-items-center">
+                            <span class="badge bg-light text-dark rounded-circle me-2" style="width: 20px; height: 20px; font-size: 10px; display: flex; align-items: center; justify-content: center;">${idx + 1}</span>
+                            <span class="small text-truncate" style="max-width: 150px;" title="${c.name}">${c.name}</span>
+                        </div>
+                        <span class="badge bg-soft-success text-success fw-bold">C$ ${parseFloat(c.ltv).toLocaleString('es-NI', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</span>
+                    </div>`;
+            });
+        }
+        
+        html += `</div></div>`;
+        $ltvContainer.append(html);
     });
 }
 
