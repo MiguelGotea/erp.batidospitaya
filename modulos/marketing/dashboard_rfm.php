@@ -224,28 +224,67 @@ if (!tienePermiso('dashboard_rfm', 'vista', $cargoOperario)) {
 
     <!-- Modal de Ayuda -->
     <div class="modal fade" id="pageHelpModal" tabindex="-1" data-bs-backdrop="static">
-        <div class="modal-dialog modal-lg">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
-                <div class="modal-header">
+                <div class="modal-header bg-primary text-white">
                     <h5 class="modal-title"><i class="fas fa-info-circle me-2"></i>Guía del Dashboard RFM</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body">
-                    <h6>¿Qué es RFM?</h6>
-                    <p>Es una técnica de segmentación de clientes basada en su comportamiento de compra:</p>
-                    <ul>
-                        <li><strong>Recencia:</strong> Días desde la última compra.</li>
-                        <li><strong>Frecuencia:</strong> Número total de pedidos realizados.</li>
-                        <li><strong>Monto:</strong> Valor total gastado por el cliente.</li>
-                    </ul>
-                    <hr>
-                    <h6>Métricas Principales</h6>
-                    <p><strong>Clientes Activos:</strong> Aquellos con al menos una compra en los últimos 60 días.</p>
-                    <p><strong>Tasa de Churn:</strong> Porcentaje de clientes club que han dejado de comprar hace más de 60 días.</p>
+                <div class="modal-body p-4">
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100 border-0 bg-light">
+                                <div class="card-body">
+                                    <h6 class="text-primary border-bottom pb-2 fw-bold">
+                                        <i class="fas fa-chart-line me-2"></i> ¿Qué es RFM?
+                                    </h6>
+                                    <p class="small text-muted mb-0">
+                                        Es una técnica de segmentación basada en:
+                                        <br>• <b>Recencia:</b> Días desde la última compra.
+                                        <br>• <b>Frecuencia:</b> Cantidad de pedidos únicos.
+                                        <br>• <b>Monto:</b> Gasto total acumulado (LTV).
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100 border-0 bg-light">
+                                <div class="card-body">
+                                    <h6 class="text-success border-bottom pb-2 fw-bold">
+                                        <i class="fas fa-user-check me-2"></i> Clientes Activos
+                                    </h6>
+                                    <p class="small text-muted mb-0">
+                                        Se consideran activos aquellos clientes con al menos una compra en los últimos <b>60 días</b>.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info py-2 px-3 small">
+                        <strong><i class="fas fa-info-circle me-1"></i> Nota:</strong>
+                        Los cálculos excluyen pedidos anulados (`Anulado = 0`) y filtran productos por categoría según corresponda.
+                    </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <style>
+        /* Ajuste de posición y capas para Modal de Ayuda */
+        #pageHelpModal {
+            z-index: 1060 !important;
+        }
+        .modal-backdrop {
+            z-index: 1050 !important;
+        }
+        #pageHelpModal .modal-content {
+            border-radius: 15px;
+            overflow: hidden;
+            border: none;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+        }
+    </style>
     
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
