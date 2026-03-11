@@ -213,9 +213,9 @@ function fmt(val) {
 
 // Exportar
 $(document).on('click', '#btnExportar', function() {
-    const f_inicio = $('input[name="fecha_inicio"]').val();
-    const f_fin = $('input[name="fecha_fin"]').val();
-    const sucursal = $('#selectSucursal').val();
+    const f_inicio = $('#fecha_inicio').val();
+    const f_fin = $('#fecha_fin').val();
+    const sucursal = $('#filtro_sucursal').val();
     window.location.href = `ajax/dashboard_rfm_exportar.php?fecha_inicio=${f_inicio}&fecha_fin=${f_fin}&sucursal=${sucursal}`;
 });
 
