@@ -203,7 +203,11 @@ try {
             'ticket_club' => round($ticket_club, 2),
             'monto_total' => round($sum_m, 2),
             'churn_rate' => round(($perdidos / $total_count) * 100, 2),
-            'retention_rate' => calculateRetention($conn, $whereSimple, $params)
+            'retention_metrics' => calculateRetentionDetail($conn, $whereSimple, $params),
+            'raw' => [
+                'total_pedidos' => $sum_f,
+                'total_ingresos' => $sum_m
+            ]
         ],
         'segments' => $segments,
         'evolution' => $evolution,
@@ -220,16 +224,16 @@ try {
 }
 
 /**
- * Calcula la tasa de retención comparando visitas en la primera vs segunda mitad del periodo
+ * Calcula la tasa de retención detallada comparando visitas en la primera vs segunda mitad del periodo
  */
-function calculateRetention($conn, $where, $params) {
+function calculateRetentionDetail($conn, $where, $params) {
     try {
         $sql = "SELECT CodCliente, Fecha FROM VentasGlobalesAccessCSV $where GROUP BY CodCliente, CodPedido, Fecha ORDER BY Fecha ASC";
         $stmt = $conn->prepare($sql);
         $stmt->execute($params);
         $visitas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        if (empty($visitas)) return 0;
+        if (empty($visitas)) return ['rate' => 0, 'h1' => 0, 'h2' => 0];
 
         $user_visits = [];
         $min_ts = null; $max_ts = null;
@@ -240,7 +244,7 @@ function calculateRetention($conn, $where, $params) {
             if ($max_ts === null || $ts > $max_ts) $max_ts = $ts;
         }
 
-        if ($min_ts === $max_ts) return 0;
+        if ($min_ts === $max_ts) return ['rate' => 0, 'h1' => count($user_visits), 'h2' => 0];
 
         $ts_mitad = $min_ts + ($max_ts - $min_ts) / 2;
         $users_h1 = 0;
@@ -258,9 +262,13 @@ function calculateRetention($conn, $where, $params) {
             }
         }
 
-        return ($users_h1 > 0) ? round(($users_h1_returned / $users_h1) * 100, 2) : 0;
+        return [
+            'rate' => ($users_h1 > 0) ? round(($users_h1_returned / $users_h1) * 100, 2) : 0,
+            'h1' => $users_h1,
+            'h2' => $users_h1_returned
+        ];
     } catch (Exception $e) {
-        return 0;
+        return ['rate' => 0, 'h1' => 0, 'h2' => 0];
     }
 }
 ?>

@@ -95,25 +95,52 @@ function updateKPIs(summary) {
     animateValue('kpiEnRiesgo', summary.en_riesgo);
     animateValue('kpiPerdidos', summary.perdidos);
     animateValue('kpiTicket', summary.ticket_club, true);
-    animateValue('kpiRetention', summary.retention_rate, false, '%');
+    animateValue('kpiRetention', summary.retention_metrics.rate, false, '%');
 
-    // Actualizar Tooltips con fórmulas
+    // Actualizar Tooltips con fórmulas y datos crudos
     const umbral = $('#umbral_perdido').val();
     
-    $('#tipClubActivos').attr('title', `Socio con compras en los últimos ${umbral} días`);
-    $('#tipNuevos').attr('title', `Socios con fecha de registro en el periodo seleccionado`);
-    $('#tipEnRiesgo').attr('title', `Inactividad entre ${umbral/2} y ${umbral} días`);
-    $('#tipPerdidos').attr('title', `Inactividad mayor a ${umbral} días`);
-    $('#tipTicket').attr('title', `<b>Fórmula:</b> Ingresos / Pedidos Totales`);
-    $('#tipRetention').attr('title', `<b>Fórmula:</b> (Regresaron H2 / Compraron H1) * 100 <br><small>H1: Primera mitad periodo | H2: Segunda mitad</small>`);
+    $('#tipClubActivos').attr('title', `
+        <div class="tooltip-data-row"><span>Criterio:</span> <span>< ${umbral} días</span></div>
+        <div class="tooltip-data-row"><span>Total:</span> <span>${summary.total_club}</span></div>
+        <div class="tooltip-formula">Socios con al menos una compra en el periodo de inactividad aceptable.</div>
+    `);
+
+    $('#tipNuevos').attr('title', `
+        <div class="tooltip-data-row"><span>Registros:</span> <span>${summary.nuevos}</span></div>
+        <div class="tooltip-formula">Socios captados dentro del rango de fechas seleccionado.</div>
+    `);
+
+    $('#tipEnRiesgo').attr('title', `
+        <div class="tooltip-data-row"><span>Criterio:</span> <span>${umbral/2} - ${umbral} días</span></div>
+        <div class="tooltip-data-row"><span>Cantidad:</span> <span>${summary.en_riesgo}</span></div>
+        <div class="tooltip-formula">Socios que están entrando en la zona de desinterés.</div>
+    `);
+
+    $('#tipPerdidos').attr('title', `
+        <div class="tooltip-data-row"><span>Criterio:</span> <span>> ${umbral} días</span></div>
+        <div class="tooltip-data-row"><span>Cantidad:</span> <span>${summary.perdidos}</span></div>
+        <div class="tooltip-formula">Socios que no han comprado en el tiempo límite definido.</div>
+    `);
+
+    $('#tipTicket').attr('title', `
+        <div class="tooltip-data-row"><span>Ingresos:</span> <span>${fmt(summary.raw.total_ingresos)}</span></div>
+        <div class="tooltip-data-row"><span>Pedidos:</span> <span>${summary.raw.total_pedidos}</span></div>
+        <div class="tooltip-formula">Ventas Totales / Cantidad de Pedidos</div>
+    `);
+
+    $('#tipRetention').attr('title', `
+        <div class="tooltip-data-row"><span>Compraron H1:</span> <span>${summary.retention_metrics.h1}</span></div>
+        <div class="tooltip-data-row"><span>Regresaron H2:</span> <span>${summary.retention_metrics.h2}</span></div>
+        <div class="tooltip-formula">(Regresaron H2 / Compraron H1) * 100 <br><small>H1: 1ra mitad | H2: 2da mitad</small></div>
+    `);
 
     // Reinicializar tooltips de Bootstrap
     const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
     tooltipTriggerList.map(function (tooltipTriggerEl) {
-        // Primero destruir el anterior para evitar duplicados
         const oldTip = bootstrap.Tooltip.getInstance(tooltipTriggerEl);
         if (oldTip) oldTip.dispose();
-        return new bootstrap.Tooltip(tooltipTriggerEl);
+        return new bootstrap.Tooltip(tooltipTriggerEl, { sanitize: false });
     });
 }
 

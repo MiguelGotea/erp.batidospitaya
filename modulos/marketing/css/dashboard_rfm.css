@@ -140,3 +140,37 @@ body {
 .scroller::-webkit-scrollbar { width: 5px; }
 .scroller::-webkit-scrollbar-track { background: transparent; }
 .scroller::-webkit-scrollbar-thumb { background: #cbd5e0; border-radius: 10px; }
+
+/* Glassmorphism Tooltips */
+.tooltip-inner {
+    background: rgba(44, 62, 80, 0.9) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    color: #fff !important;
+    padding: 12px !important;
+    border-radius: 12px !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
+    max-width: 280px !important;
+    text-align: left !important;
+}
+
+.tooltip-formula {
+    font-family: monospace;
+    background: rgba(0,0,0,0.2);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.85em;
+    display: block;
+    margin-top: 5px;
+    color: #ffd766;
+}
+
+.tooltip-data-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9em;
+    margin-bottom: 3px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    padding-bottom: 2px;
+}
