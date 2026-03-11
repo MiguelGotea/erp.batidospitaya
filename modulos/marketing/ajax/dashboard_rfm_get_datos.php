@@ -24,7 +24,7 @@ try {
         ':f_inicio' => $fecha_inicio,
         ':f_fin' => $fecha_fin
     ];
-    
+
     if ($sucursal) {
         $where .= " AND Sucursal_Nombre = :sucursal";
         $params[':sucursal'] = $sucursal;
@@ -74,15 +74,20 @@ try {
     sort($monetaries);
 
     $count = count($rfm_data);
-    $get_quintile = function($val, $arr, $invert = false) use ($count) {
+    $get_quintile = function ($val, $arr, $invert = false) use ($count) {
         $pos = array_search($val, $arr);
         $percentile = $pos / $count;
-        if ($invert) $percentile = 1 - $percentile; // For Recency, lower is better
-        
-        if ($percentile <= 0.2) return 1;
-        if ($percentile <= 0.4) return 2;
-        if ($percentile <= 0.6) return 3;
-        if ($percentile <= 0.8) return 4;
+        if ($invert)
+            $percentile = 1 - $percentile; // For Recency, lower is better
+
+        if ($percentile <= 0.2)
+            return 1;
+        if ($percentile <= 0.4)
+            return 2;
+        if ($percentile <= 0.6)
+            return 3;
+        if ($percentile <= 0.8)
+            return 4;
         return 5;
     };
 
@@ -100,18 +105,24 @@ try {
         $row['R_Score'] = $get_quintile($row['Recency'], $recencies, true);
         $row['F_Score'] = $get_quintile($row['Frequency'], $frequencies);
         $row['M_Score'] = $get_quintile($row['Monetary'], $monetaries);
-        
+
         $r = $row['R_Score'];
         $f = $row['F_Score'];
         $m = $row['M_Score'];
 
         // Segment Logic
-        if ($r >= 4 && $f >= 4) $seg = 'Champions';
-        elseif ($r >= 3 && $f >= 3) $seg = 'Loyal';
-        elseif ($r <= 2 && $f >= 3) $seg = 'At Risk';
-        elseif ($r <= 2 && $f <= 2) $seg = 'Lost';
-        elseif ($r >= 4 && $f <= 2) $seg = 'New / Recent';
-        else $seg = 'Hibernating';
+        if ($r >= 4 && $f >= 4)
+            $seg = 'Champions';
+        elseif ($r >= 3 && $f >= 3)
+            $seg = 'Loyal';
+        elseif ($r <= 2 && $f >= 3)
+            $seg = 'At Risk';
+        elseif ($r <= 2 && $f <= 2)
+            $seg = 'Lost';
+        elseif ($r >= 4 && $f <= 2)
+            $seg = 'New / Recent';
+        else
+            $seg = 'Hibernating';
 
         $row['Segment'] = $seg;
         $segments_dist[$seg] = ($segments_dist[$seg] ?? 0) + 1;
@@ -126,17 +137,21 @@ try {
     // Para evitar el error de número de parámetros inválido al repetir el mismo placeholder, 
     // desactivamos temporalmente el chequeo estricto si el driver lo permite o usamos parámetros únicos.
     // Usaremos parámetros únicos para mayor compatibilidad.
-    
+
     $whereH1 = str_replace([':f_inicio', ':f_fin', ':sucursal'], [':f1', ':f2', ':s1'], $where);
     $whereH2 = str_replace([':f_inicio', ':f_fin', ':sucursal'], [':f3', ':f4', ':s2'], $where);
     $whereH3 = str_replace([':f_inicio', ':f_fin', ':sucursal'], [':f5', ':f6', ':s3'], $where);
     $whereH4 = str_replace([':f_inicio', ':f_fin', ':sucursal'], [':f7', ':f8', ':s4'], $where);
-    
+
     $paramsH = [
-        ':f1' => $fecha_inicio, ':f2' => $fecha_fin,
-        ':f3' => $fecha_inicio, ':f4' => $fecha_fin,
-        ':f5' => $fecha_inicio, ':f6' => $fecha_fin,
-        ':f7' => $fecha_inicio, ':f8' => $fecha_fin
+        ':f1' => $fecha_inicio,
+        ':f2' => $fecha_fin,
+        ':f3' => $fecha_inicio,
+        ':f4' => $fecha_fin,
+        ':f5' => $fecha_inicio,
+        ':f6' => $fecha_fin,
+        ':f7' => $fecha_inicio,
+        ':f8' => $fecha_fin
     ];
     if ($sucursal) {
         $paramsH[':s1'] = $sucursal;
@@ -156,7 +171,8 @@ try {
         FROM VentasGlobalesAccessCSV
         $whereH4
     ";
-    
+
+
     $stmtH = $conn->prepare($sqlHabits);
     $stmtH->execute($paramsH);
     $habits = $stmtH->fetch(PDO::FETCH_ASSOC);
@@ -169,9 +185,10 @@ try {
         FROM VentasGlobalesAccessCSV
         WHERE Anulado = 0 AND Fecha BETWEEN :fi AND :ff
         " . ($sucursal ? " AND Sucursal_Nombre = :suc" : "");
-    
+
     $paramsI = [':fi' => $fecha_inicio, ':ff' => $fecha_fin];
-    if ($sucursal) $paramsI[':suc'] = $sucursal;
+    if ($sucursal)
+        $paramsI[':suc'] = $sucursal;
 
     $stmtI = $conn->prepare($sqlIngresos);
     $stmtI->execute($paramsI);
