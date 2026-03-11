@@ -34,166 +34,7 @@ if (!tienePermiso('dashboard_rfm', 'vista', $cargoOperario)) {
         <div class="sub-container">
             <?php echo renderHeader($usuario, false, 'Dashboard RFM & Segmentación'); ?>
             
-            <div class="container-fluid p-4">
-                <!-- Filtros -->
-                <div class="row mb-4">
-                    <div class="col-12">
-                        <div class="card border-0 shadow-sm glass-card">
-                            <div class="card-body d-flex flex-wrap gap-3 align-items-center">
-                                <div class="filter-group">
-                                    <label class="small fw-bold text-muted mb-1">Periodo</label>
-                                    <div class="input-group input-group-sm">
-                                        <input type="date" id="fecha_inicio" class="form-control" value="<?php echo date('Y-m-d', strtotime('-90 days')); ?>">
-                                        <span class="input-group-text">a</span>
-                                        <input type="date" id="fecha_fin" class="form-control" value="<?php echo date('Y-m-d'); ?>">
-                                    </div>
-                                </div>
-                                <div class="filter-group">
-                                    <label class="small fw-bold text-muted mb-1">Sucursal</label>
-                                    <select id="filtro_sucursal" class="form-select form-select-sm">
-                                        <option value="">Todas las sucursales</option>
-                                        <!-- Se cargará dinámicamente -->
-                                    </select>
-                                </div>
-                                <div class="ms-auto pt-3">
-                                    <button class="btn btn-primary btn-sm px-4" onclick="cargarDatos()">
-                                        <i class="fas fa-sync-alt me-2"></i>Actualizar
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Resumen Global -->
-                <div class="row g-3 mb-4">
-                    <div class="col-md-3">
-                        <div class="kpi-card glass-card color-1">
-                            <div class="kpi-icon"><i class="fas fa-users"></i></div>
-                            <div class="kpi-info">
-                                <h4 id="kpi_total_club">0</h4>
-                                <p>Clientes Club Totales</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="kpi-card glass-card color-2">
-                            <div class="kpi-icon"><i class="fas fa-user-check"></i></div>
-                            <div class="kpi-info">
-                                <h4 id="kpi_activos">0</h4>
-                                <p>Clientes Activos (60d)</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="kpi-card glass-card color-3">
-                            <div class="kpi-icon"><i class="fas fa-percentage"></i></div>
-                            <div class="kpi-info">
-                                <h4 id="kpi_churn">0%</h4>
-                                <p>Tasa de Churn</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="kpi-card glass-card color-4">
-                            <div class="kpi-icon"><i class="fas fa-receipt"></i></div>
-                            <div class="kpi-info">
-                                <h4 id="kpi_ticket">C$ 0.00</h4>
-                                <p>Ticket Promedio</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Gráficos Principales -->
-                <div class="row g-4">
-                    <div class="col-lg-8">
-                        <div class="card border-0 shadow-sm glass-card h-100">
-                            <div class="card-header bg-transparent border-0 pt-4 px-4">
-                                <h5 class="fw-bold mb-0">Distribución de Segmentos RFM</h5>
-                                <p class="small text-muted mb-0">Comportamiento según Recencia, Frecuencia y Monto</p>
-                            </div>
-                            <div class="card-body p-4">
-                                <canvas id="chart_segmentos" style="max-height: 350px;"></canvas>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-4">
-                        <div class="card border-0 shadow-sm glass-card h-100">
-                            <div class="card-header bg-transparent border-0 pt-4 px-4">
-                                <h5 class="fw-bold mb-0">Hábitos de Compra</h5>
-                            </div>
-                            <div class="card-body p-4">
-                                <div class="habit-item mb-4">
-                                    <div class="d-flex justify-content-between mb-1">
-                                        <span class="text-muted small">Producto Favorito</span>
-                                        <span class="fw-bold" id="habit_fav_product">-</span>
-                                    </div>
-                                    <div class="progress" style="height: 6px;">
-                                        <div class="progress-bar bg-success" style="width: 100%;"></div>
-                                    </div>
-                                </div>
-                                <div class="habit-item mb-4">
-                                    <div class="d-flex justify-content-between mb-1">
-                                        <span class="text-muted small">Medida Preferida</span>
-                                        <span class="fw-bold" id="habit_fav_size">-</span>
-                                    </div>
-                                    <div class="progress" style="height: 6px;">
-                                        <div class="progress-bar bg-info" style="width: 100%;"></div>
-                                    </div>
-                                </div>
-                                <div class="habit-item mb-4">
-                                    <div class="d-flex justify-content-between mb-1">
-                                        <span class="text-muted small">Modalidad</span>
-                                        <span class="fw-bold" id="habit_fav_modalidad">-</span>
-                                    </div>
-                                    <div class="progress" style="height: 6px;">
-                                        <div class="progress-bar bg-warning" style="width: 100%;"></div>
-                                    </div>
-                                </div>
-                                <hr class="my-4 opacity-10">
-                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <div>
-                                        <p class="mb-0 small text-muted">Uso de Promociones</p>
-                                        <h5 class="mb-0 fw-bold" id="habit_perc_promo">0%</h5>
-                                    </div>
-                                    <div class="icon-circle bg-primary-light text-primary">
-                                        <i class="fas fa-tag"></i>
-                                    </div>
-                                </div>
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <p class="mb-0 small text-muted">Canjes de Puntos</p>
-                                        <h5 class="mb-0 fw-bold" id="habit_redenciones">0</h5>
-                                    </div>
-                                    <div class="icon-circle bg-danger-light text-danger">
-                                        <i class="fas fa-gift"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Comparativa Club vs General -->
-                <div class="row g-4 mt-2">
-                    <div class="col-md-6">
-                        <div class="card border-0 shadow-sm glass-card">
-                            <div class="card-body p-4">
-                                <div class="d-flex align-items-center mb-3">
-                                    <div class="icon-square bg-teal me-3">
-                                        <i class="fas fa-hand-holding-usd"></i>
-                                    </div>
-                                    <div>
-                                        <h5 class="fw-bold mb-0">Ingresos Totales (LTV)</h5>
-                                        <p class="small text-muted mb-0">Club vs Clientes Generales</p>
-                                    </div>
-                                </div>
-                                <canvas id="chart_ingresos" style="max-height: 250px;"></canvas>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="container-fluid">
+            <div class="container-fluid">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
                 <h1 class="main-header mb-0">Dashboard RFM <span class="badge bg-teal fs-6 align-middle">PREMIUM</span></h1>
@@ -215,14 +56,14 @@ if (!tienePermiso('dashboard_rfm', 'vista', $cargoOperario)) {
                 <div class="col-md-3">
                     <label class="form-label small fw-bold">Rango de Fecha</label>
                     <div class="input-group input-group-sm">
-                        <input type="date" class="form-control" name="fecha_inicio" value="<?php echo date('Y-m-d', strtotime('-90 days')); ?>">
+                        <input type="date" id="fecha_inicio" class="form-control" name="fecha_inicio" value="<?php echo date('Y-m-d', strtotime('-90 days')); ?>">
                         <span class="input-group-text">a</span>
-                        <input type="date" class="form-control" name="fecha_fin" value="<?php echo date('Y-m-d'); ?>">
+                        <input type="date" id="fecha_fin" class="form-control" name="fecha_fin" value="<?php echo date('Y-m-d'); ?>">
                     </div>
                 </div>
                 <div class="col-md-3">
                     <label class="form-label small fw-bold">Sucursal</label>
-                    <select class="form-select form-select-sm" name="sucursal" id="selectSucursal">
+                    <select class="form-select form-select-sm" name="sucursal" id="filtro_sucursal">
                         <option value="">Todas las Sucursales</option>
                     </select>
                 </div>
@@ -293,7 +134,7 @@ if (!tienePermiso('dashboard_rfm', 'vista', $cargoOperario)) {
                     </div>
                     <div class="row align-items-center">
                         <div class="col-md-6">
-                            <div class="chart-container">
+                            <div class="chart-container" style="height: 300px;">
                                 <canvas id="chartSegments"></canvas>
                             </div>
                         </div>
