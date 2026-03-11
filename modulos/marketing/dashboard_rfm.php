@@ -87,42 +87,42 @@ $puedeDescargar = tienePermiso('dashboard_rfm', 'descargar', $cargoOperario);
                 <!-- 📌 SECCIÓN 1 — KPIs Resumen -->
                 <div class="row g-3 mb-4" id="kpiGrid">
                     <div class="col-md-3 col-xl-1-5">
-                        <div class="glass-card kpi-card-new p-3 text-center">
+                        <div class="glass-card kpi-card-new p-3 text-center" data-bs-toggle="tooltip" data-bs-html="true" id="tipClubActivos">
                             <div class="icon-circle bg-primary-light text-primary mb-2 mx-auto"><i class="fas fa-users"></i></div>
                             <div class="text-secondary small">Club Activos</div>
                             <h3 class="fw-bold mb-0" id="kpiTotalClub">-</h3>
                         </div>
                     </div>
                     <div class="col-md-3 col-xl-1-5">
-                        <div class="glass-card kpi-card-new p-3 text-center">
+                        <div class="glass-card kpi-card-new p-3 text-center" data-bs-toggle="tooltip" data-bs-html="true" id="tipNuevos">
                             <div class="icon-circle bg-success-light text-success mb-2 mx-auto"><i class="fas fa-user-plus"></i></div>
                             <div class="text-secondary small">Nuevos Periodo</div>
                             <h3 class="fw-bold mb-0" id="kpiNuevos">-</h3>
                         </div>
                     </div>
                     <div class="col-md-3 col-xl-1-5">
-                        <div class="glass-card kpi-card-new p-3 text-center">
+                        <div class="glass-card kpi-card-new p-3 text-center" data-bs-toggle="tooltip" data-bs-html="true" id="tipEnRiesgo">
                             <div class="icon-circle bg-warning-light text-warning mb-2 mx-auto"><i class="fas fa-exclamation-triangle"></i></div>
                             <div class="text-secondary small">En Riesgo</div>
                             <h3 class="fw-bold mb-0" id="kpiEnRiesgo">-</h3>
                         </div>
                     </div>
                     <div class="col-md-3 col-xl-1-5">
-                        <div class="glass-card kpi-card-new p-3 text-center">
+                        <div class="glass-card kpi-card-new p-3 text-center" data-bs-toggle="tooltip" data-bs-html="true" id="tipPerdidos">
                             <div class="icon-circle bg-danger-light text-danger mb-2 mx-auto"><i class="fas fa-user-slash"></i></div>
                             <div class="text-secondary small">Perdidos</div>
                             <h3 class="fw-bold mb-0" id="kpiPerdidos">-</h3>
                         </div>
                     </div>
                     <div class="col-md-3 col-xl-1-5">
-                        <div class="glass-card kpi-card-new p-3 text-center">
+                        <div class="glass-card kpi-card-new p-3 text-center" data-bs-toggle="tooltip" data-bs-html="true" id="tipTicket">
                             <div class="icon-circle bg-info-light text-info mb-2 mx-auto"><i class="fas fa-receipt"></i></div>
                             <div class="text-secondary small">Ticket Club</div>
                             <h3 class="fw-bold mb-0" id="kpiTicket">-</h3>
                         </div>
                     </div>
                     <div class="col-md-3 col-xl-1-5">
-                        <div class="glass-card kpi-card-new p-3 text-center">
+                        <div class="glass-card kpi-card-new p-3 text-center" data-bs-toggle="tooltip" data-bs-html="true" id="tipRetention">
                             <div class="icon-circle bg-teal-light text-teal mb-2 mx-auto"><i class="fas fa-percentage"></i></div>
                             <div class="text-secondary small">Retención</div>
                             <h3 class="fw-bold mb-0" id="kpiRetention">-</h3>

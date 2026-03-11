@@ -96,6 +96,25 @@ function updateKPIs(summary) {
     animateValue('kpiPerdidos', summary.perdidos);
     animateValue('kpiTicket', summary.ticket_club, true);
     animateValue('kpiRetention', summary.retention_rate, false, '%');
+
+    // Actualizar Tooltips con fórmulas
+    const umbral = $('#umbral_perdido').val();
+    
+    $('#tipClubActivos').attr('title', `Socio con compras en los últimos ${umbral} días`);
+    $('#tipNuevos').attr('title', `Socios con fecha de registro en el periodo seleccionado`);
+    $('#tipEnRiesgo').attr('title', `Inactividad entre ${umbral/2} y ${umbral} días`);
+    $('#tipPerdidos').attr('title', `Inactividad mayor a ${umbral} días`);
+    $('#tipTicket').attr('title', `<b>Fórmula:</b> Ingresos / Pedidos Totales`);
+    $('#tipRetention').attr('title', `<b>Fórmula:</b> (Regresaron H2 / Compraron H1) * 100 <br><small>H1: Primera mitad periodo | H2: Segunda mitad</small>`);
+
+    // Reinicializar tooltips de Bootstrap
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        // Primero destruir el anterior para evitar duplicados
+        const oldTip = bootstrap.Tooltip.getInstance(tooltipTriggerEl);
+        if (oldTip) oldTip.dispose();
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
 }
 
 // --- VISUALIZACIONES (CHART.JS) ---
