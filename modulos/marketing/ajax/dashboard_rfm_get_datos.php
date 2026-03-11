@@ -229,7 +229,7 @@ try {
         if ($hr['EsPromo']) $h_promo['si'] += $hr['Count']; else $h_promo['no'] += $hr['Count'];
     }
 
-    $sqlHeatmap = "SELECT HOUR(Hora) as Hour, DAYOFWEEK(Fecha) as Day, COUNT(*) as Count FROM VentasGlobalesAccessCSV $whereSimple GROUP BY Hour, Day";
+    $sqlHeatmap = "SELECT HOUR(Hora) as Hour, CASE WHEN DAYOFWEEK(Fecha) = 1 THEN 7 ELSE DAYOFWEEK(Fecha) - 1 END as Day, COUNT(*) as Count FROM VentasGlobalesAccessCSV $whereSimple GROUP BY Hour, Day";
     $stmtHeat = $conn->prepare($sqlHeatmap);
     $stmtHeat->execute($params);
     $heatmap = $stmtHeat->fetchAll(PDO::FETCH_ASSOC);

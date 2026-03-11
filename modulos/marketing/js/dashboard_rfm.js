@@ -268,20 +268,28 @@ function updateHabitSection(habits) {
         type: 'bubble',
         data: {
             datasets: [{
-                data: habits.heatmap.map(h => ({ x: h.Hour, y: h.Day, r: Math.log(h.Count + 1) * 5 })),
+                data: habits.heatmap.map(h => ({ x: h.Hour, y: h.Day, r: Math.sqrt(h.Count) * 2 + 2 })),
                 backgroundColor: habits.heatmap.map(h => {
                     const i = h.Count / maxVal;
-                    return `rgba(255, ${Math.floor(200 * (1-i))}, ${Math.floor(100 * (1-i))}, 0.7)`;
+                    return i > 0.8 ? 'rgba(239, 68, 68, 0.8)' : (i > 0.4 ? 'rgba(249, 115, 22, 0.7)' : 'rgba(59, 130, 246, 0.6)');
                 })
             }]
         },
         options: {
-            maintainAspectRatio: false,
+            aspectRatio: 2.2,
+            maintainAspectRatio: true,
             scales: {
-                x: { min: 6, max: 23, grid: { display: false } },
-                y: { min: 1, max: 7, ticks: { callback: v => ['','Dom','Lun','Mar','Mie','Jue','Vie','Sab'][v] }, grid: { display: false } }
+                x: { min: 6, max: 23, title: { display: true, text: 'Hora del Día', font: { size: 10 } } },
+                y: { min: 1, max: 7, ticks: { padding: 10, callback: v => ['', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'][v] }, grid: { display: true, drawTicks: false } }
             },
-            plugins: { legend: { display: false } }
+            plugins: { 
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: (ctx) => `Ventas: ${ctx.raw.r > 0 ? habits.heatmap[ctx.dataIndex].Count : 0}`
+                    }
+                }
+            }
         }
     });
 
