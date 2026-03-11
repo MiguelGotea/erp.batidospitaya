@@ -27,7 +27,8 @@ $umbral_perdido = intval($_GET['umbral_perdido'] ?? 60);
 
 try {
     // Definición de base de filtros
-    $whereSimple = "WHERE Anulado = 0 AND Fecha BETWEEN :f_inicio AND :f_fin";
+    $whereVmtap = " AND Sucursal_Nombre IN (SELECT nombre FROM sucursales WHERE VMTAP = 1)";
+    $whereSimple = "WHERE Anulado = 0 AND Fecha BETWEEN :f_inicio AND :f_fin" . $whereVmtap;
     $params = [':f_inicio' => $fecha_inicio, ':f_fin' => $fecha_fin];
 
     if ($sucursal && $sucursal !== 'todas') {
@@ -42,7 +43,7 @@ try {
     }
 
     // 0.1 Participación Ingresos (Club vs General) - Independiente del filtro tipo_cliente
-    $wherePart = "WHERE Anulado = 0 AND Fecha BETWEEN :f_inicio AND :f_fin";
+    $wherePart = "WHERE Anulado = 0 AND Fecha BETWEEN :f_inicio AND :f_fin" . $whereVmtap;
     if ($sucursal && $sucursal !== 'todas') { $wherePart .= " AND Sucursal_Nombre = :suc_part"; }
     $sqlPart = "SELECT (CodCliente > 0) as EsClub, SUM(MontoFactura) as Total FROM (SELECT CodPedido, CodCliente, MAX(MontoFactura) as MontoFactura FROM VentasGlobalesAccessCSV $wherePart GROUP BY CodPedido) t GROUP BY EsClub";
     $stmtPart = $conn->prepare($sqlPart);

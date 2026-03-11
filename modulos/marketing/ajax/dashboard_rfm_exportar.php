@@ -20,7 +20,8 @@ $sucursal = $_GET['sucursal'] ?? 'todas';
 
 
 try {
-    $whereSimple = "WHERE Anulado = 0 AND Fecha BETWEEN :f_inicio AND :f_fin";
+    $whereVmtap = " AND Sucursal_Nombre IN (SELECT nombre FROM sucursales WHERE VMTAP = 1)";
+    $whereSimple = "WHERE Anulado = 0 AND Fecha BETWEEN :f_inicio AND :f_fin" . $whereVmtap;
     $params = [':f_inicio' => $fecha_inicio, ':f_fin' => $fecha_fin];
 
     if ($sucursal && $sucursal !== 'todas') {
