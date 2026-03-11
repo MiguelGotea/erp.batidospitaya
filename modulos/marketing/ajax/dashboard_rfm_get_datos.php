@@ -294,8 +294,6 @@ function calculateRetentionDetail($conn, $where, $params) {
         $mid_date = date('Y-m-d H:i:s', $min_ts + ($max_ts - $min_ts) / 2);
 
         // 2. Contar clientes únicos en la primera mitad (H1)
-        // Usamos parámetros posicionales (?) para evitar conflictos de nombres en el subquery si fuera necesario,
-        // pero aquí simplemente crearemos un set de parámetros limpio.
         $whereH1 = $where . " AND Fecha <= :mid_h1 AND CodCliente > 0";
         $paramsH1 = array_merge($params, [':mid_h1' => $mid_date]);
         
@@ -307,29 +305,37 @@ function calculateRetentionDetail($conn, $where, $params) {
         if ($h1_count === 0) return ['rate' => 0, 'h1' => 0, 'h2' => 0];
 
         // 3. Contar clientes de H1 que regresaron en la segunda mitad (H2)
-        // Usamos un JOIN para encontrar la intersección de IDs de clientes entre periodos
-        $whereH2 = $where . " AND Fecha > :mid_h2 AND CodCliente > 0";
-        $paramsJoin = array_merge($params, [':mid_h2' => $mid_date]);
-        // Duplicamos los parámetros del 'where' original para el subquery interno
         $paramsFinal = [];
-        foreach($paramsJoin as $k => $v) {
-            $paramsFinal[$k] = $v;
-            $paramsFinal[$k . '_sub'] = $v;
-        }
         
-        // Reemplazamos los placeholders en el subquery para que sean únicos
-        $whereSub = str_replace([':f_inicio', ':f_fin', ':sucursal', ':suc_part', ':p_inicio', ':p_fin'], 
-                               [':f_inicio_sub', ':f_fin_sub', ':sucursal_sub', ':suc_part_sub', ':p_inicio_sub', ':p_fin_sub'], $whereH1);
+        // Base params + Midpoint para H2
+        foreach($params as $k => $v) $paramsFinal[$k] = $v;
+        $paramsFinal[':mid_h2'] = $mid_date;
+        $whereH2 = $where . " AND Fecha > :mid_h2 AND CodCliente > 0";
 
+        // Parámetros para el subquery (H1) con prefijo 's_'
+        $whereSub = $where . " AND Fecha <= :mid_s AND CodCliente > 0";
+        $paramsFinal[':mid_s'] = $mid_date;
+        
+        // Reemplazo de placeholders para evitar colisiones en PDO
+        $placeholders = [':f_inicio', ':f_fin', ':sucursal', ':suc_part', ':p_inicio', ':p_fin'];
+        foreach($placeholders as $p) {
+            if (isset($params[$p])) {
+                $p_sub = str_replace(':', ':s_', $p);
+                $whereSub = str_replace($p, $p_sub, $whereSub);
+                $paramsFinal[$p_sub] = $params[$p];
+            }
+        }
+
+        // Usamos IN en lugar de JOIN para evitar conflictos con los alias de tabla y el WHERE dinámico
         $sqlH2 = "
-            SELECT COUNT(DISTINCT t2.CodCliente)
-            FROM VentasGlobalesAccessCSV t2
-            INNER JOIN (
-                SELECT DISTINCT CodCliente 
+            SELECT COUNT(DISTINCT CodCliente)
+            FROM VentasGlobalesAccessCSV
+            $whereH2
+            AND CodCliente IN (
+                SELECT CodCliente 
                 FROM VentasGlobalesAccessCSV 
                 $whereSub
-            ) t1 ON t2.CodCliente = t1.CodCliente
-            $whereH2
+            )
         ";
 
         $stmtH2 = $conn->prepare($sqlH2);
@@ -342,7 +348,7 @@ function calculateRetentionDetail($conn, $where, $params) {
             'h2' => $h2_retained
         ];
     } catch (Exception $e) {
-        return ['rate' => 0, 'h1' => 0, 'h2' => 0];
+        return ['rate' => 0, 'h1' => 0, 'h2' => 0, 'error' => $e->getMessage()];
     }
 }
 ?>
