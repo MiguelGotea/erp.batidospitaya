@@ -15,8 +15,10 @@ if (!tienePermiso('dashboard_rfm', 'vista', $cargoOperario)) {
 
 $puedeDescargar = tienePermiso('dashboard_rfm', 'descargar', $cargoOperario);
 ?>
+
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -29,39 +31,45 @@ $puedeDescargar = tienePermiso('dashboard_rfm', 'descargar', $cargoOperario);
     <link rel="stylesheet" href="/core/assets/css/modales_premium.css?v=<?php echo mt_rand(1, 10000); ?>">
     <link rel="stylesheet" href="css/dashboard_rfm.css?v=<?php echo mt_rand(1, 10000); ?>">
 </head>
+
 <body>
     <?php echo renderMenuLateral($cargoOperario); ?>
-    
+
     <div class="main-container">
         <div class="sub-container">
             <?php echo renderHeader($usuario, false, 'Dashboard RFM & Segmentación'); ?>
-            
+
             <div class="container-fluid py-4">
-                
+
                 <!-- 🔝 SECCIÓN 0 — Filtros Globales -->
                 <div class="glass-card p-4 mb-4 shadow-sm border-0">
                     <div class="row align-items-center mb-3">
                         <div class="col">
-                            <h4 class="fw-bold mb-0 text-gradient-primary">RFM Intelligence <span class="badge bg-primary-light text-primary fs-6 ms-2">v2.0</span></h4>
+                            <h4 class="fw-bold mb-0 text-gradient-primary">RFM Intelligence <span
+                                    class="badge bg-primary-light text-primary fs-6 ms-2">v2.0</span></h4>
                         </div>
                     </div>
                     <form id="filterForm" class="row g-3">
                         <div class="col-md-3">
                             <label class="form-label small fw-bold">Rango de Análisis</label>
                             <div class="input-group input-group-sm">
-                                <input type="date" id="fecha_inicio" class="form-control rounded-start-pill" name="fecha_inicio" value="<?php echo date('Y-m-d', strtotime('-90 days')); ?>">
-                                <input type="date" id="fecha_fin" class="form-control rounded-end-pill" name="fecha_fin" value="<?php echo date('Y-m-d'); ?>">
+                                <input type="date" id="fecha_inicio" class="form-control rounded-start-pill"
+                                    name="fecha_inicio" value="<?php echo date('Y-m-d', strtotime('-90 days')); ?>">
+                                <input type="date" id="fecha_fin" class="form-control rounded-end-pill" name="fecha_fin"
+                                    value="<?php echo date('Y-m-d'); ?>">
                             </div>
                         </div>
                         <div class="col-md-2">
                             <label class="form-label small fw-bold">Sucursal</label>
-                            <select class="form-select form-select-sm rounded-pill" name="sucursal" id="filtro_sucursal">
+                            <select class="form-select form-select-sm rounded-pill" name="sucursal"
+                                id="filtro_sucursal">
                                 <option value="todas">Todas las Sucursales</option>
                             </select>
                         </div>
                         <div class="col-md-2">
                             <label class="form-label small fw-bold">Tipo Cliente</label>
-                            <select class="form-select form-select-sm rounded-pill" name="tipo_cliente" id="tipo_cliente">
+                            <select class="form-select form-select-sm rounded-pill" name="tipo_cliente"
+                                id="tipo_cliente">
                                 <option value="club">Solo Club</option>
                                 <option value="general">Solo General</option>
                                 <option value="todos">Todos</option>
@@ -69,7 +77,8 @@ $puedeDescargar = tienePermiso('dashboard_rfm', 'descargar', $cargoOperario);
                         </div>
                         <div class="col-md-2">
                             <label class="form-label small fw-bold">Umbral Perdido (Días)</label>
-                            <input type="number" class="form-control form-control-sm rounded-pill text-center" name="umbral_perdido" id="umbral_perdido" value="60">
+                            <input type="number" class="form-control form-control-sm rounded-pill text-center"
+                                name="umbral_perdido" id="umbral_perdido" value="60">
                         </div>
                         <div class="col-md-3 d-flex align-items-end">
                             <button type="submit" class="btn btn-primary btn-sm w-100 rounded-pill shadow-sm">
@@ -82,69 +91,85 @@ $puedeDescargar = tienePermiso('dashboard_rfm', 'descargar', $cargoOperario);
                 <!-- 📌 SECCIÓN 1 — KPIs Resumen -->
                 <div class="row g-3 mb-4" id="kpiGrid">
                     <div class="col-md-3 col-xl-1-5">
-                        <div class="glass-card kpi-card-new p-3 text-center position-relative" data-bs-toggle="tooltip" data-bs-html="true" id="tipClubActivos">
+                        <div class="glass-card kpi-card-new p-3 text-center position-relative" data-bs-toggle="tooltip"
+                            data-bs-html="true" id="tipClubActivos">
                             <span class="scope-badge scope-global">Global</span>
-                            <div class="icon-circle bg-primary-light text-primary mb-2 mx-auto"><i class="fas fa-users"></i></div>
+                            <div class="icon-circle bg-primary-light text-primary mb-2 mx-auto"><i
+                                    class="fas fa-users"></i></div>
                             <div class="text-secondary small">Club Activos</div>
                             <h3 class="fw-bold mb-0" id="kpiTotalClub">-</h3>
                             <div class="small fw-bold text-primary" id="kpiTotalClubPerc"></div>
                         </div>
                     </div>
                     <div class="col-md-3 col-xl-1-5">
-                        <div class="glass-card kpi-card-new p-3 text-center position-relative" data-bs-toggle="tooltip" data-bs-html="true" id="tipNuevos">
+                        <div class="glass-card kpi-card-new p-3 text-center position-relative" data-bs-toggle="tooltip"
+                            data-bs-html="true" id="tipNuevos">
                             <span class="scope-badge scope-period">Periodo</span>
-                            <div class="icon-circle bg-success-light text-success mb-2 mx-auto"><i class="fas fa-user-plus"></i></div>
+                            <div class="icon-circle bg-success-light text-success mb-2 mx-auto"><i
+                                    class="fas fa-user-plus"></i></div>
                             <div class="text-secondary small">Nuevos Periodo</div>
                             <h3 class="fw-bold mb-0" id="kpiNuevos">-</h3>
                             <div class="small fw-bold" id="kpiNuevosTrend"></div>
                         </div>
                     </div>
                     <div class="col-md-3 col-xl-1-5">
-                        <div class="glass-card kpi-card-new p-3 text-center position-relative" data-bs-toggle="tooltip" data-bs-html="true" id="tipEnRiesgo">
+                        <div class="glass-card kpi-card-new p-3 text-center position-relative" data-bs-toggle="tooltip"
+                            data-bs-html="true" id="tipEnRiesgo">
                             <span class="scope-badge scope-global">Global</span>
-                            <div class="icon-circle bg-warning-light text-warning mb-2 mx-auto"><i class="fas fa-exclamation-triangle"></i></div>
+                            <div class="icon-circle bg-warning-light text-warning mb-2 mx-auto"><i
+                                    class="fas fa-exclamation-triangle"></i></div>
                             <div class="text-secondary small">En Riesgo</div>
                             <h3 class="fw-bold mb-0" id="kpiEnRiesgo">-</h3>
                             <div class="small fw-bold text-warning" id="kpiEnRiesgoPerc"></div>
                         </div>
                     </div>
                     <div class="col-md-3 col-xl-1-5">
-                        <div class="glass-card kpi-card-new p-3 text-center position-relative" data-bs-toggle="tooltip" data-bs-html="true" id="tipPerdidos">
+                        <div class="glass-card kpi-card-new p-3 text-center position-relative" data-bs-toggle="tooltip"
+                            data-bs-html="true" id="tipPerdidos">
                             <span class="scope-badge scope-global">Global</span>
-                            <div class="icon-circle bg-danger-light text-danger mb-2 mx-auto"><i class="fas fa-user-slash"></i></div>
+                            <div class="icon-circle bg-danger-light text-danger mb-2 mx-auto"><i
+                                    class="fas fa-user-slash"></i></div>
                             <div class="text-secondary small">Perdidos</div>
                             <h3 class="fw-bold mb-0" id="kpiPerdidos">-</h3>
                             <div class="small fw-bold text-danger" id="kpiPerdidosPerc"></div>
                         </div>
                     </div>
                     <div class="col-md-3 col-xl-1-5 text-nowrap">
-                        <div class="glass-card kpi-card-new p-3 text-center position-relative" data-bs-toggle="tooltip" data-bs-html="true" id="tipParticipation">
+                        <div class="glass-card kpi-card-new p-3 text-center position-relative" data-bs-toggle="tooltip"
+                            data-bs-html="true" id="tipParticipation">
                             <span class="scope-badge scope-period">Periodo</span>
-                            <div class="icon-circle bg-indigo-light text-indigo mb-2 mx-auto"><i class="fas fa-chart-pie"></i></div>
+                            <div class="icon-circle bg-indigo-light text-indigo mb-2 mx-auto"><i
+                                    class="fas fa-chart-pie"></i></div>
                             <div class="text-secondary small">Part. Ingresos Club</div>
                             <h3 class="fw-bold mb-0" id="kpiParticipation">-</h3>
                         </div>
                     </div>
                     <div class="col-md-3 col-xl-1-5">
-                        <div class="glass-card kpi-card-new p-3 text-center position-relative" data-bs-toggle="tooltip" data-bs-html="true" id="tipTicket">
+                        <div class="glass-card kpi-card-new p-3 text-center position-relative" data-bs-toggle="tooltip"
+                            data-bs-html="true" id="tipTicket">
                             <span class="scope-badge scope-period">Periodo</span>
-                            <div class="icon-circle bg-info-light text-info mb-2 mx-auto"><i class="fas fa-receipt"></i></div>
+                            <div class="icon-circle bg-info-light text-info mb-2 mx-auto"><i class="fas fa-receipt"></i>
+                            </div>
                             <div class="text-secondary small">Ticket Club</div>
                             <h3 class="fw-bold mb-0" id="kpiTicket">-</h3>
                         </div>
                     </div>
                     <div class="col-md-3 col-xl-1-5">
-                        <div class="glass-card kpi-card-new p-3 text-center position-relative" data-bs-toggle="tooltip" data-bs-html="true" id="tipRetention">
+                        <div class="glass-card kpi-card-new p-3 text-center position-relative" data-bs-toggle="tooltip"
+                            data-bs-html="true" id="tipRetention">
                             <span class="scope-badge scope-period">Periodo</span>
-                            <div class="icon-circle bg-teal-light text-teal mb-2 mx-auto"><i class="fas fa-percentage"></i></div>
+                            <div class="icon-circle bg-teal-light text-teal mb-2 mx-auto"><i
+                                    class="fas fa-percentage"></i></div>
                             <div class="text-secondary small">Retención</div>
                             <h3 class="fw-bold mb-0" id="kpiRetention">-</h3>
                         </div>
                     </div>
                     <div class="col-md-3 col-xl-1-5">
-                        <div class="glass-card kpi-card-new p-3 text-center position-relative" data-bs-toggle="tooltip" data-bs-html="true" id="tipChurnTotal">
+                        <div class="glass-card kpi-card-new p-3 text-center position-relative" data-bs-toggle="tooltip"
+                            data-bs-html="true" id="tipChurnTotal">
                             <span class="scope-badge scope-global">Global</span>
-                            <div class="icon-circle bg-red-light text-red mb-2 mx-auto"><i class="fas fa-door-open"></i></div>
+                            <div class="icon-circle bg-red-light text-red mb-2 mx-auto"><i class="fas fa-door-open"></i>
+                            </div>
                             <div class="text-secondary small">Tasa Churn</div>
                             <h3 class="fw-bold mb-0" id="kpiChurn">-</h3>
                         </div>
@@ -179,7 +204,8 @@ $puedeDescargar = tienePermiso('dashboard_rfm', 'descargar', $cargoOperario);
                         <h5 class="fw-bold mb-0">Listado Maestro de Clientes</h5>
                         <div class="input-group input-group-sm w-25">
                             <span class="input-group-text bg-white border-end-0"><i class="fas fa-search"></i></span>
-                            <input type="text" id="tableSearch" class="form-control border-start-0" placeholder="Buscar por nombre o membresía...">
+                            <input type="text" id="tableSearch" class="form-control border-start-0"
+                                placeholder="Buscar por nombre o membresía...">
                         </div>
                     </div>
                     <div class="table-responsive">
@@ -281,14 +307,14 @@ $puedeDescargar = tienePermiso('dashboard_rfm', 'descargar', $cargoOperario);
                     <p class="text-muted small">Descarga los datos procesados para análisis externo</p>
                     <div class="d-flex justify-content-center gap-3 mt-4">
                         <?php if ($puedeDescargar): ?>
-                        <button class="btn btn-success rounded-pill px-4" id="btnExportFull">
-                            <i class="fas fa-file-excel me-2"></i> Tabla Maestra (Excel)
-                        </button>
-                        <button class="btn btn-outline-success rounded-pill px-4" id="btnExportSummary">
-                            <i class="fas fa-file-pdf me-2"></i> Reporte Ejecutivo (PDF)
-                        </button>
+                            <button class="btn btn-success rounded-pill px-4" id="btnExportFull">
+                                <i class="fas fa-file-excel me-2"></i> Tabla Maestra (Excel)
+                            </button>
+                            <button class="btn btn-outline-success rounded-pill px-4" id="btnExportSummary">
+                                <i class="fas fa-file-pdf me-2"></i> Reporte Ejecutivo (PDF)
+                            </button>
                         <?php else: ?>
-                        <div class="alert alert-warning py-2 mb-0">No tiene permisos de descarga habilitados.</div>
+                            <div class="alert alert-warning py-2 mb-0">No tiene permisos de descarga habilitados.</div>
                         <?php endif; ?>
                     </div>
                 </div>
@@ -302,28 +328,41 @@ $puedeDescargar = tienePermiso('dashboard_rfm', 'descargar', $cargoOperario);
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content border-0 shadow-lg">
                 <div class="modal-header bg-gradient-primary text-white">
-                    <h5 class="modal-title font-weight-bold"><i class="fas fa-graduation-cap me-2"></i>Guía RFM 360°</h5>
+                    <h5 class="modal-title font-weight-bold"><i class="fas fa-graduation-cap me-2"></i>Guía RFM 360°
+                    </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body p-4 scroller" style="max-height: 70vh; overflow-y: auto;">
                     <div class="doc-section">
-                        <div class="doc-title text-primary"><i class="fas fa-layer-group"></i> Lógica del Panel: Salud vs Rendimiento</div>
-                        <p class="small text-muted">Para un análisis preciso, el panel separa los datos en dos dimensiones clave:</p>
+                        <div class="doc-title text-primary"><i class="fas fa-layer-group"></i> Lógica del Panel: Salud
+                            vs Rendimiento</div>
+                        <p class="small text-muted">Para un análisis preciso, el panel separa los datos en dos
+                            dimensiones clave:</p>
                         <ul class="doc-list">
-                            <li><b>Datos de Salud (Globales):</b> Reflejan el estado real del negocio HOY. No dependen de las fechas seleccionadas. (Ej: Quiénes están Perdidos o en Riesgo).</li>
-                            <li><b>Datos de Rendimiento (Periodo):</b> Reflejan qué pasó en el rango de fechas elegido. (Ej: Cuántas ventas hubo o cuántos socios nuevos se registraron).</li>
+                            <li><b>Datos de Salud (Globales):</b> Reflejan el estado real del negocio HOY. No dependen
+                                de las fechas seleccionadas. (Ej: Quiénes están Perdidos o en Riesgo).</li>
+                            <li><b>Datos de Rendimiento (Periodo):</b> Reflejan qué pasó en el rango de fechas elegido.
+                                (Ej: Cuántas ventas hubo o cuántos socios nuevos se registraron).</li>
                         </ul>
                         <div class="alert alert-info py-2 small mb-0 mt-2">
-                            <i class="fas fa-info-circle me-1"></i> <b>Nota sobre Porcentajes:</b> Los indicadores se calculan sobre el <b>Universo Total</b> de socios. Si la suma de Activos + Perdidos no llega al 100%, la diferencia representa a los socios registrados que <b>aún no han realizado su primera compra</b>.
+                            <i class="fas fa-info-circle me-1"></i> <b>Nota sobre Porcentajes:</b> Los indicadores se
+                            calculan sobre el <b>Universo Total</b> de socios. Si la suma de Activos + Perdidos no llega
+                            al 100%, la diferencia representa a los socios registrados que <b>aún no han realizado su
+                                primera compra</b>.
                         </div>
                     </div>
 
                     <div class="doc-section">
-                        <div class="doc-title text-primary"><i class="fas fa-tachometer-alt"></i> Indicadores Clave (KPIs)</div>
+                        <div class="doc-title text-primary"><i class="fas fa-tachometer-alt"></i> Indicadores Clave
+                            (KPIs)</div>
                         <div class="doc-table">
                             <table class="table table-sm table-borderless mb-0 small">
                                 <thead>
-                                    <tr><th>Métrica</th><th>Criterio de Cálculo</th><th>Tipo</th></tr>
+                                    <tr>
+                                        <th>Métrica</th>
+                                        <th>Criterio de Cálculo</th>
+                                        <th>Tipo</th>
+                                    </tr>
                                 </thead>
                                 <tbody>
                                     <tr>
@@ -362,45 +401,56 @@ $puedeDescargar = tienePermiso('dashboard_rfm', 'descargar', $cargoOperario);
                     </div>
 
                     <div class="doc-section">
-                        <div class="doc-title text-primary"><i class="fas fa-chart-pie"></i> Visualizaciones y Gráficos</div>
+                        <div class="doc-title text-primary"><i class="fas fa-chart-pie"></i> Visualizaciones y Gráficos
+                        </div>
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <h6 class="small fw-bold mb-1">Mapa de Calor</h6>
-                                <p class="x-small text-muted mb-0">Cruza Hora vs Día para identificar picos de demanda. Ayuda a planificar turnos y promociones por hora.</p>
+                                <p class="x-small text-muted mb-0">Cruza Hora vs Día para identificar picos de demanda.
+                                    Ayuda a planificar turnos y promociones por hora.</p>
                             </div>
                             <div class="col-md-6">
                                 <h6 class="small fw-bold mb-1">Distribución 100% Sug.</h6>
-                                <p class="x-small text-muted mb-0">Normaliza las sucursales para ver qué tan "Sana" está la base de cada una (proporción de Leales vs Perdidos).</p>
+                                <p class="x-small text-muted mb-0">Normaliza las sucursales para ver qué tan "Sana" está
+                                    la base de cada una (proporción de Leales vs Perdidos).</p>
                             </div>
                             <div class="col-md-6">
                                 <h6 class="small fw-bold mb-1">Hábitos de Consumo</h6>
-                                <p class="x-small text-muted mb-0">Analiza Medidas (S/M/L) y Modalidades (Delivery/Local) preferidas por los socios.</p>
+                                <p class="x-small text-muted mb-0">Analiza Medidas (S/M/L) y Modalidades
+                                    (Delivery/Local) preferidas por los socios.</p>
                             </div>
                             <div class="col-md-6">
                                 <h6 class="small fw-bold mb-1">Evolución de Pedidos</h6>
-                                <p class="x-small text-muted mb-0">Muestra la tendencia de transacciones semana a semana dentro del periodo.</p>
+                                <p class="x-small text-muted mb-0">Muestra la tendencia de transacciones semana a semana
+                                    dentro del periodo.</p>
                             </div>
                         </div>
                     </div>
 
                     <div class="doc-section">
-                        <div class="doc-title text-primary"><i class="fas fa-users-cog"></i> Modelo RFM (Recencia, Frecuencia, Monto)</div>
-                        <p class="small mb-2">Cada cliente recibe una puntuación del 1 al 5 comparándolo con el resto de la base:</p>
+                        <div class="doc-title text-primary"><i class="fas fa-users-cog"></i> Modelo RFM (Recencia,
+                            Frecuencia, Monto)</div>
+                        <p class="small mb-2">Cada cliente recibe una puntuación del 1 al 5 comparándolo con el resto de
+                            la base:</p>
                         <ul class="doc-list">
                             <li><b>Recencia:</b> Tiempo desde el último pedido.</li>
                             <li><b>Frecuencia:</b> Cantidad de pedidos históricos (Lifetime).</li>
                             <li><b>Monetario:</b> Valor total invertido por el cliente (Lifetime).</li>
                         </ul>
                         <div class="alert alert-light border small py-2 mb-0">
-                            <b>Nota:</b> Los segmentos "Campeones", "Leales" y "Estrategas" se basan en el comportamiento histórico total para mayor estabilidad.
+                            <b>Nota:</b> Los segmentos "Campeones", "Leales" y "Estrategas" se basan en el
+                            comportamiento histórico total para mayor estabilidad.
                         </div>
                     </div>
 
                     <div class="doc-section mb-0">
-                        <div class="doc-title text-primary"><i class="fas fa-question-circle"></i> Ayuda Visual en Tabla</div>
+                        <div class="doc-title text-primary"><i class="fas fa-question-circle"></i> Ayuda Visual en Tabla
+                        </div>
                         <ul class="doc-list">
-                            <li><span class="text-danger fw-bold">Rojo:</span> Cliente en estado PERDIDO (superó el umbral).</li>
-                            <li><span class="text-warning fw-bold">Naranja:</span> Cliente EN RIESGO (próximo a perderse).</li>
+                            <li><span class="text-danger fw-bold">Rojo:</span> Cliente en estado PERDIDO (superó el
+                                umbral).</li>
+                            <li><span class="text-warning fw-bold">Naranja:</span> Cliente EN RIESGO (próximo a
+                                perderse).</li>
                             <li><span class="text-success fw-bold">Verde:</span> Cliente ACTIVO (compra reciente).</li>
                         </ul>
                     </div>
@@ -415,4 +465,5 @@ $puedeDescargar = tienePermiso('dashboard_rfm', 'descargar', $cargoOperario);
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="js/dashboard_rfm.js?v=<?php echo mt_rand(1, 10000); ?>"></script>
 </body>
+
 </html>
