@@ -85,7 +85,7 @@ function updateDashboard(data) {
 }
 function updateKPIs(summary) {
     if (!summary) return;
-    animateValue('kpiTotalClub', summary.total_club);
+    animateValue('kpiTotalClub', summary.activos);
     animateValue('kpiNuevos', summary.nuevos);
     animateValue('kpiEnRiesgo', summary.en_riesgo);
     animateValue('kpiPerdidos', summary.perdidos);
@@ -111,7 +111,7 @@ function updateKPIs(summary) {
     // Tooltips
     const umbral = $('#umbral_perdido').val();
     
-    $('#tipClubActivos').attr('title', `<div class="tooltip-data-row"><span>Criterio:</span> <span><= ${umbral} días</span></div><div class="tooltip-data-row"><span>Total:</span> <span>${summary.total_club}</span></div><div class="tooltip-formula">Socios con al menos una compra en el periodo.</div>`);
+    $('#tipClubActivos').attr('title', `<div class="tooltip-data-row"><span>Criterio:</span> <span><= ${umbral} días</span></div><div class="tooltip-data-row"><span>Total Activos:</span> <span>${summary.activos}</span></div><div class="tooltip-formula">Socios con al menos una compra en los últimos ${umbral} días.</div>`);
     $('#tipNuevos').attr('title', `<div class="tooltip-data-row"><span>Registros:</span> <span>${summary.nuevos}</span></div><div class="tooltip-data-row"><span>Previo:</span> <span>${summary.prev_nuevos}</span></div><div class="tooltip-formula">Comparado contra el periodo anterior equivalente.</div>`);
     $('#tipEnRiesgo').attr('title', `<div class="tooltip-data-row"><span>Criterio:</span> <span>${Math.floor(umbral/2)}-${umbral} días</span></div><div class="tooltip-formula">Socios enfriándose.</div>`);
     $('#tipPerdidos').attr('title', `<div class="tooltip-data-row"><span>Criterio:</span> <span>> ${umbral} días</span></div><div class="tooltip-formula">Inactivos totales.</div>`);
