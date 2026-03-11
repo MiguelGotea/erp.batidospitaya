@@ -19,8 +19,11 @@ $sucursal = $_GET['sucursal'] ?? null;
 
 try {
     // 1. Obtener Base RFM para Clientes Club
-    $where = "WHERE Anulado = 0 AND CodCliente > 0";
-    $params = [];
+    $where = "WHERE Anulado = 0 AND CodCliente > 0 AND Fecha BETWEEN :f_inicio AND :f_fin";
+    $params = [
+        ':f_inicio' => $fecha_inicio,
+        ':f_fin' => $fecha_fin
+    ];
     
     if ($sucursal) {
         $where .= " AND Sucursal_Nombre = :sucursal";
@@ -120,20 +123,42 @@ try {
     $churn_rate = ($total_clientes_club > 0) ? (count(array_filter($rfm_data, fn($x) => $x['Recency'] > 60)) / $total_clientes_club) * 100 : 0;
 
     // 4. Hábitos (Query separada para mayor precisión por línea)
+    // Para evitar el error de número de parámetros inválido al repetir el mismo placeholder, 
+    // desactivamos temporalmente el chequeo estricto si el driver lo permite o usamos parámetros únicos.
+    // Usaremos parámetros únicos para mayor compatibilidad.
+    
+    $whereH1 = str_replace([':f_inicio', ':f_fin', ':sucursal'], [':f1', ':f2', ':s1'], $where);
+    $whereH2 = str_replace([':f_inicio', ':f_fin', ':sucursal'], [':f3', ':f4', ':s2'], $where);
+    $whereH3 = str_replace([':f_inicio', ':f_fin', ':sucursal'], [':f5', ':f6', ':s3'], $where);
+    $whereH4 = str_replace([':f_inicio', ':f_fin', ':sucursal'], [':f7', ':f8', ':s4'], $where);
+    
+    $paramsH = [
+        ':f1' => $fecha_inicio, ':f2' => $fecha_fin,
+        ':f3' => $fecha_inicio, ':f4' => $fecha_fin,
+        ':f5' => $fecha_inicio, ':f6' => $fecha_fin,
+        ':f7' => $fecha_inicio, ':f8' => $fecha_fin
+    ];
+    if ($sucursal) {
+        $paramsH[':s1'] = $sucursal;
+        $paramsH[':s2'] = $sucursal;
+        $paramsH[':s3'] = $sucursal;
+        $paramsH[':s4'] = $sucursal;
+    }
+
     $sqlHabits = "
         SELECT 
-            (SELECT DBBatidos_Nombre FROM VentasGlobalesAccessCSV $where AND Tipo IN ('Batido', 'Bowl', 'Limonada', 'Pitaya Store', 'Waffles') GROUP BY DBBatidos_Nombre ORDER BY COUNT(*) DESC LIMIT 1) as FavProduct,
-            (SELECT Medida FROM VentasGlobalesAccessCSV $where AND Tipo IN ('Batido', 'Limonada') AND Medida IN ('S','M','L') GROUP BY Medida ORDER BY COUNT(*) DESC LIMIT 1) as FavSize,
-            (SELECT Modalidad FROM VentasGlobalesAccessCSV $where GROUP BY Modalidad ORDER BY COUNT(*) DESC LIMIT 1) as FavModalidad,
+            (SELECT DBBatidos_Nombre FROM VentasGlobalesAccessCSV $whereH1 AND Tipo IN ('Batido', 'Bowl', 'Limonada', 'Pitaya Store', 'Waffles') GROUP BY DBBatidos_Nombre ORDER BY COUNT(*) DESC LIMIT 1) as FavProduct,
+            (SELECT Medida FROM VentasGlobalesAccessCSV $whereH2 AND Tipo IN ('Batido', 'Limonada') AND Medida IN ('S','M','L') GROUP BY Medida ORDER BY COUNT(*) DESC LIMIT 1) as FavSize,
+            (SELECT Modalidad FROM VentasGlobalesAccessCSV $whereH3 GROUP BY Modalidad ORDER BY COUNT(*) DESC LIMIT 1) as FavModalidad,
             COUNT(DISTINCT CASE WHEN CodigoPromocion <> 5 THEN CodPedido END) as PromoOrders,
             COUNT(DISTINCT CodPedido) as TotalOrders,
             SUM(CASE WHEN Puntos < 0 THEN 1 ELSE 0 END) as RedemptionLines
         FROM VentasGlobalesAccessCSV
-        $where
+        $whereH4
     ";
     
     $stmtH = $conn->prepare($sqlHabits);
-    $stmtH->execute($params);
+    $stmtH->execute($paramsH);
     $habits = $stmtH->fetch(PDO::FETCH_ASSOC);
 
     // 5. Ingresos Club vs General
@@ -142,11 +167,14 @@ try {
             SUM(CASE WHEN CodCliente > 0 THEN Precio ELSE 0 END) as IngresosClub,
             SUM(CASE WHEN CodCliente = 0 THEN Precio ELSE 0 END) as IngresosGeneral
         FROM VentasGlobalesAccessCSV
-        WHERE Anulado = 0
-        " . ($sucursal ? " AND Sucursal_Nombre = :sucursal" : "");
+        WHERE Anulado = 0 AND Fecha BETWEEN :fi AND :ff
+        " . ($sucursal ? " AND Sucursal_Nombre = :suc" : "");
     
+    $paramsI = [':fi' => $fecha_inicio, ':ff' => $fecha_fin];
+    if ($sucursal) $paramsI[':suc'] = $sucursal;
+
     $stmtI = $conn->prepare($sqlIngresos);
-    $stmtI->execute($params);
+    $stmtI->execute($paramsI);
     $ingresos = $stmtI->fetch(PDO::FETCH_ASSOC);
 
     // 6. Formatear Respuesta
