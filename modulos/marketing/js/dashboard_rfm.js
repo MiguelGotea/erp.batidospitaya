@@ -1,9 +1,14 @@
 // Dashboard RFM 2.0 - Intelligence & Loyalty Logic
 let chartSegments = null;
 let chartEvolution = null;
+let chartSegmentRevenue = null;
 let chartBranchScores = null;
 let chartBranchDistribution = null;
+let chartBranchTicket = null;
 let chartHeatmap = null;
+let chartHabitMeasure = null;
+let chartHabitModality = null;
+let chartHabitPromo = null;
 
 // State Management
 let fullClientData = [];
@@ -71,23 +76,13 @@ async function cargarDatos() {
 // --- ACTUALIZACIÓN DE UI ---
 
 function updateDashboard(data) {
-    // 1. KPIs
     updateKPIs(data.summary);
-    
-    // 2. Segmentos y Evolución
-    updateSegmentsChart(data.segments);
+    updateSegmentsChart(data.segments, data.segment_revenue);
     updateEvolutionChart(data.evolution);
-    
-    // 3. Tabla Individual (Paginada)
     renderPaginatedTable();
-    
-    // 4. Sucursales
-    updateBranchCharts(data.branch_analysis);
-    
-    // 5. Hábitos
+    updateBranchCharts(data.branch_analysis, data.summary.ticket_club);
     updateHabitSection(data.habits);
 }
-
 function updateKPIs(summary) {
     if (!summary) return;
     animateValue('kpiTotalClub', summary.total_club);
@@ -96,46 +91,35 @@ function updateKPIs(summary) {
     animateValue('kpiPerdidos', summary.perdidos);
     animateValue('kpiTicket', summary.ticket_club, true);
     animateValue('kpiRetention', summary.retention_metrics.rate, false, '%');
+    
+    // New KPIs
+    if (summary.participacion) {
+        const partPerc = (summary.participacion.club / Math.max(1, summary.participacion.total)) * 100;
+        animateValue('kpiParticipation', partPerc, false, '%');
+    }
+    animateValue('kpiChurn', summary.churn_rate, false, '%');
 
-    // Actualizar Tooltips con fórmulas y datos crudos
+    // Trends
+    if (summary.prev_nuevos !== undefined) {
+        const trend = summary.nuevos - summary.prev_nuevos;
+        const trendPerc = summary.prev_nuevos > 0 ? (trend / summary.prev_nuevos) * 100 : 100;
+        const color = trend >= 0 ? 'text-success' : 'text-danger';
+        const icon = trend >= 0 ? 'fa-caret-up' : 'fa-caret-down';
+        $('#kpiNuevosTrend').html(`<span class="${color}"><i class="fas ${icon}"></i> ${Math.abs(trendPerc).toFixed(1)}%</span>`).attr('title', `Ant: ${summary.prev_nuevos}`);
+    }
+
+    // Tooltips
     const umbral = $('#umbral_perdido').val();
     
-    $('#tipClubActivos').attr('title', `
-        <div class="tooltip-data-row"><span>Criterio:</span> <span>< ${umbral} días</span></div>
-        <div class="tooltip-data-row"><span>Total:</span> <span>${summary.total_club}</span></div>
-        <div class="tooltip-formula">Socios con al menos una compra en el periodo de inactividad aceptable.</div>
-    `);
+    $('#tipClubActivos').attr('title', `<div class="tooltip-data-row"><span>Criterio:</span> <span>< ${umbral} días</span></div><div class="tooltip-data-row"><span>Total:</span> <span>${summary.total_club}</span></div><div class="tooltip-formula">Socios con al menos una compra en el periodo.</div>`);
+    $('#tipNuevos').attr('title', `<div class="tooltip-data-row"><span>Registros:</span> <span>${summary.nuevos}</span></div><div class="tooltip-data-row"><span>Previo:</span> <span>${summary.prev_nuevos}</span></div><div class="tooltip-formula">Comparado contra el periodo anterior equivalente.</div>`);
+    $('#tipEnRiesgo').attr('title', `<div class="tooltip-data-row"><span>Criterio:</span> <span>${umbral/2}-${umbral} días</span></div><div class="tooltip-formula">Socios enfriándose.</div>`);
+    $('#tipPerdidos').attr('title', `<div class="tooltip-data-row"><span>Criterio:</span> <span>> ${umbral} días</span></div><div class="tooltip-formula">Inactivos totales.</div>`);
+    $('#tipTicket').attr('title', `<div class="tooltip-data-row"><span>Ventas:</span> <span>${fmt(summary.raw.total_ingresos)}</span></div><div class="tooltip-data-row"><span>Pedidos:</span> <span>${summary.raw.total_pedidos}</span></div>`);
+    $('#tipRetention').attr('title', `<div class="tooltip-data-row"><span>H1 → H2:</span> <span>${summary.retention_metrics.h2} de ${summary.retention_metrics.h1}</span></div>`);
+    $('#tipParticipation').attr('title', `<div class="tooltip-data-row"><span>Venta Club:</span> <span>${fmt(summary.participacion.club)}</span></div><div class="tooltip-data-row"><span>Venta Gen:</span> <span>${fmt(summary.participacion.general)}</span></div>`);
+    $('#tipChurnTotal').attr('title', `<div class="tooltip-data-row"><span>Perdidos:</span> <span>${summary.perdidos}</span></div><div class="tooltip-formula">Porcentaje de pérdida sobre base filtrada.</div>`);
 
-    $('#tipNuevos').attr('title', `
-        <div class="tooltip-data-row"><span>Registros:</span> <span>${summary.nuevos}</span></div>
-        <div class="tooltip-formula">Socios captados dentro del rango de fechas seleccionado.</div>
-    `);
-
-    $('#tipEnRiesgo').attr('title', `
-        <div class="tooltip-data-row"><span>Criterio:</span> <span>${umbral/2} - ${umbral} días</span></div>
-        <div class="tooltip-data-row"><span>Cantidad:</span> <span>${summary.en_riesgo}</span></div>
-        <div class="tooltip-formula">Socios que están entrando en la zona de desinterés.</div>
-    `);
-
-    $('#tipPerdidos').attr('title', `
-        <div class="tooltip-data-row"><span>Criterio:</span> <span>> ${umbral} días</span></div>
-        <div class="tooltip-data-row"><span>Cantidad:</span> <span>${summary.perdidos}</span></div>
-        <div class="tooltip-formula">Socios que no han comprado en el tiempo límite definido.</div>
-    `);
-
-    $('#tipTicket').attr('title', `
-        <div class="tooltip-data-row"><span>Ingresos:</span> <span>${fmt(summary.raw.total_ingresos)}</span></div>
-        <div class="tooltip-data-row"><span>Pedidos:</span> <span>${summary.raw.total_pedidos}</span></div>
-        <div class="tooltip-formula">Ventas Totales / Cantidad de Pedidos</div>
-    `);
-
-    $('#tipRetention').attr('title', `
-        <div class="tooltip-data-row"><span>Compraron H1:</span> <span>${summary.retention_metrics.h1}</span></div>
-        <div class="tooltip-data-row"><span>Regresaron H2:</span> <span>${summary.retention_metrics.h2}</span></div>
-        <div class="tooltip-formula">(Regresaron H2 / Compraron H1) * 100 <br><small>H1: 1ra mitad | H2: 2da mitad</small></div>
-    `);
-
-    // Reinicializar tooltips de Bootstrap
     const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
     tooltipTriggerList.map(function (tooltipTriggerEl) {
         const oldTip = bootstrap.Tooltip.getInstance(tooltipTriggerEl);
@@ -146,28 +130,31 @@ function updateKPIs(summary) {
 
 // --- VISUALIZACIONES (CHART.JS) ---
 
-function updateSegmentsChart(segments) {
+function updateSegmentsChart(segments, revenue) {
     const ctx = document.getElementById('chartSegments').getContext('2d');
     const labels = Object.keys(segments);
     const valores = Object.values(segments);
     const colors = getPalette();
-
     if (chartSegments) chartSegments.destroy();
     chartSegments = new Chart(ctx, {
         type: 'doughnut',
         data: {
             labels: labels.map(getSegmentName),
-            datasets: [{
-                data: valores,
-                backgroundColor: labels.map(l => colors[l]),
-                borderWidth: 0,
-                cutout: '70%'
-            }]
+            datasets: [{ data: valores, backgroundColor: labels.map(l => colors[l]), borderWidth: 0, cutout: '70%' }]
         },
-        options: {
-            plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, font: { size: 10 } } } },
-            maintainAspectRatio: false
-        }
+        options: { plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, font: { size: 10 } } } }, maintainAspectRatio: false }
+    });
+
+    // Ingresos por Segmento
+    const ctxR = document.getElementById('chartSegmentRevenue').getContext('2d');
+    if (chartSegmentRevenue) chartSegmentRevenue.destroy();
+    chartSegmentRevenue = new Chart(ctxR, {
+        type: 'bar',
+        data: {
+            labels: labels.map(getSegmentName),
+            datasets: [{ data: labels.map(l => revenue[l] || 0), backgroundColor: labels.map(l => colors[l]), borderRadius: 5 }]
+        },
+        options: { indexAxis: 'y', plugins: { legend: { display: false } }, maintainAspectRatio: false }
     });
 }
 
@@ -197,49 +184,62 @@ function updateEvolutionChart(evolution) {
     });
 }
 
-function updateBranchCharts(branchData) {
+function updateBranchCharts(branchData, globalTicket = 0) {
     const labels = Object.keys(branchData);
     const scores = labels.map(l => branchData[l].score / branchData[l].count);
+    const tickets = labels.map(l => branchData[l].monto / branchData[l].count);
     
-    // Scores por sucursal
+    // 1. Scores
     const ctxS = document.getElementById('chartBranchScores').getContext('2d');
     if (chartBranchScores) chartBranchScores.destroy();
     chartBranchScores = new Chart(ctxS, {
         type: 'bar',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'RFM Score Promedio',
-                data: scores,
-                backgroundColor: 'rgba(52, 152, 219, 0.6)',
-                borderRadius: 10
-            }]
-        },
-        options: { responsive: true, scales: { y: { max: 15 } } }
+        data: { labels: labels, datasets: [{ label: 'RFM Score', data: scores, backgroundColor: 'rgba(52, 152, 219, 0.6)', borderRadius: 10 }] },
+        options: { scales: { y: { max: 15 } } }
     });
 
-    // Distribución por sucursal (Stacked Bar)
+    // 2. Distribución Normalizada 100%
     const ctxD = document.getElementById('chartBranchDistribution').getContext('2d');
     if (chartBranchDistribution) chartBranchDistribution.destroy();
-    
     const segmentLabels = ['Champions', 'Loyal', 'New', 'At Risk', 'Hibernating', 'Lost'];
     const palette = getPalette();
-    
     const datasets = segmentLabels.map(seg => ({
         label: getSegmentName(seg),
-        data: labels.map(bn => branchData[bn].segments[seg] || 0),
+        data: labels.map(bn => {
+            const total = branchData[bn].count;
+            return ((branchData[bn].segments[seg] || 0) / total) * 100;
+        }),
         backgroundColor: palette[seg]
     }));
-
     chartBranchDistribution = new Chart(ctxD, {
         type: 'bar',
         data: { labels: labels, datasets: datasets },
-        options: {
-            indexAxis: 'y',
-            responsive: true,
-            scales: { x: { stacked: true }, y: { stacked: true } },
-            plugins: { legend: { position: 'bottom', labels: { boxWidth: 10 } } }
+        options: { indexAxis: 'y', scales: { x: { stacked: true, max: 100, ticks: { callback: v => v + '%' } }, y: { stacked: true } } }
+    });
+
+    // 3. Ticket Benchmarking
+    const ctxT = document.getElementById('chartBranchTicket').getContext('2d');
+    if (chartBranchTicket) chartBranchTicket.destroy();
+    chartBranchTicket = new Chart(ctxT, {
+        type: 'bar',
+        data: { 
+            labels: labels, 
+            datasets: [
+                { label: 'Ticket Sucursal', data: tickets, backgroundColor: '#51B8AC', borderRadius: 5 },
+                { label: 'Promedio Global', data: Array(labels.length).fill(globalTicket), type: 'line', borderColor: '#ef4444', borderDash: [5, 5], pointRadius: 0 }
+            ] 
         }
+    });
+
+    // 4. TOP 5 LTV Mini Tables
+    const $ltvRow = $('#branchTopLTV').empty();
+    labels.forEach(bn => {
+        $ltvRow.append(`
+            <div class="mb-3 border-bottom pb-2">
+                <div class="fw-bold mb-1"><i class="fas fa-store me-2"></i>${bn}</div>
+                <div class="small text-muted">Próximamente: Integración con historial extendido</div>
+            </div>
+        `);
     });
 }
 
@@ -252,53 +252,54 @@ function updateHabitSection(habits) {
         $container.append(`
             <div class="mb-3">
                 <div class="d-flex justify-content-between small mb-1">
-                    <span class="fw-bold">${i+1}. ${p.Product}</span>
-                    <span class="text-muted">${p.Count} pedidos</span>
+                    <span class="fw-bold text-nowrap">${i+1}. ${p.Product}</span>
+                    <span class="text-muted">${p.Count}</span>
                 </div>
-                <div class="progress" style="height: 6px;">
-                    <div class="progress-bar bg-primary" style="width: ${perc}%"></div>
-                </div>
+                <div class="progress" style="height: 6px;"><div class="progress-bar bg-primary" style="width: ${perc}%"></div></div>
             </div>
         `);
     });
 
-    // Heatmap Mejorado
+    // Heatmap (Bubble)
     const ctxH = document.getElementById('chartHeatmap').getContext('2d');
     if (chartHeatmap) chartHeatmap.destroy();
-    
     const maxVal = Math.max(...habits.heatmap.map(h => h.Count));
-    
     chartHeatmap = new Chart(ctxH, {
         type: 'bubble',
         data: {
             datasets: [{
-                label: 'Intensidad',
-                data: habits.heatmap.map(h => ({ 
-                    x: h.Hour, 
-                    y: h.Day, 
-                    r: Math.log(h.Count + 1) * 4 
-                })),
+                data: habits.heatmap.map(h => ({ x: h.Hour, y: h.Day, r: Math.log(h.Count + 1) * 5 })),
                 backgroundColor: habits.heatmap.map(h => {
-                    const intensity = h.Count / maxVal;
-                    // Escala de verde a rojo/naranja
-                    return `rgba(255, ${Math.floor(200 * (1-intensity))}, ${Math.floor(100 * (1-intensity))}, 0.7)`;
+                    const i = h.Count / maxVal;
+                    return `rgba(255, ${Math.floor(200 * (1-i))}, ${Math.floor(100 * (1-i))}, 0.7)`;
                 })
             }]
         },
         options: {
+            maintainAspectRatio: false,
             scales: {
-                x: { title: { display: true, text: 'Hora del día' }, min: 6, max: 23, grid: { display: false } },
-                y: { title: { display: true, text: 'Día de Semana' }, min: 1, max: 7, ticks: { callback: v => ['','Dom','Lun','Mar','Mie','Jue','Vie','Sab'][v] }, grid: { display: false } }
+                x: { min: 6, max: 23, grid: { display: false } },
+                y: { min: 1, max: 7, ticks: { callback: v => ['','Dom','Lun','Mar','Mie','Jue','Vie','Sab'][v] }, grid: { display: false } }
             },
-            plugins: { 
-                legend: { display: false },
-                tooltip: {
-                    callbacks: {
-                        label: (ctx) => `Día ${['','Dom','Lun','Mar','Mie','Jue','Vie','Sab'][ctx.raw.y]} - ${ctx.raw.x}:00h: ${habits.heatmap[ctx.dataIndex].Count} pedidos`
-                    }
-                }
-            }
+            plugins: { legend: { display: false } }
         }
+    });
+
+    // Donuts: Medida, Modalidad, Promo
+    renderDonut('chartHabitMeasure', habits.medida, chartHabitMeasure);
+    renderDonut('chartHabitModality', habits.modalidad, chartHabitModality);
+    renderDonut('chartHabitPromo', { 'Con Promo': habits.promo.si, 'Sin Promo': habits.promo.no }, chartHabitPromo);
+}
+
+function renderDonut(id, data, chartRef) {
+    const ctx = document.getElementById(id).getContext('2d');
+    const labels = Object.keys(data);
+    const values = Object.values(data);
+    if (chartRef) chartRef.destroy();
+    return new Chart(ctx, {
+        type: 'doughnut',
+        data: { labels: labels, datasets: [{ data: values, backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#f97316', '#ef4444', '#64748b'], borderWidth: 0 }] },
+        options: { cutout: '60%', plugins: { legend: { position: 'right', labels: { boxWidth: 10, font: { size: 9 } } } }, maintainAspectRatio: false }
     });
 }
 
@@ -333,19 +334,24 @@ function renderPaginatedTable() {
             <tr>
                 <td>
                     <div class="fw-bold text-dark">${c.ClienteNombre || 'Innominado'}</div>
-                    <div class="small text-muted">Membresía: ${c.CodCliente}</div>
+                    <div class="small text-muted">ID: ${c.CodCliente}</div>
                 </td>
                 <td><span class="badge border text-dark opacity-75">${c.Sucursal || 'N/A'}</span></td>
                 <td class="${rColor} fw-bold">${c.Recency}d</td>
                 <td class="text-center">${c.Frequency}</td>
-                <td class="fw-bold text-teal">${fmt(c.Monetary)}</td>
+                <td class="fw-bold">${fmt(c.Monetary)}</td>
+                <td class="text-teal">${fmt(c.TicketPromedio)}</td>
                 <td>
-                    <span class="badge-score score-${c.R_Score}">${c.R_Score}</span>
-                    <span class="badge-score score-${c.F_Score}">${c.F_Score}</span>
-                    <span class="badge-score score-${c.M_Score}">${c.M_Score}</span>
+                    <div class="d-flex gap-1 mb-1">
+                        <span class="badge-score score-${c.R_Score}">${c.R_Score}</span>
+                        <span class="badge-score score-${c.F_Score}">${c.F_Score}</span>
+                        <span class="badge-score score-${c.M_Score}">${c.M_Score}</span>
+                    </div>
+                    <div class="small fw-bold text-center border rounded">Total: ${c.ScoreTotal}</div>
                 </td>
-                <td class="fw-bold ps-3">${c.ScoreTotal}</td>
                 <td><span class="badge ${getSegmentBadge(c.Segment)} shadow-sm">${getSegmentName(c.Segment)}</span></td>
+                <td class="small">${c.Antiguedad}d</td>
+                <td class="small" title="${c.UltimoProducto || ''}">${(c.UltimoProducto || '--').substring(0,12)}...</td>
                 <td>
                     <button class="btn btn-sm btn-light border" onclick="verDetalle(${c.CodCliente})"><i class="fas fa-eye"></i></button>
                 </td>

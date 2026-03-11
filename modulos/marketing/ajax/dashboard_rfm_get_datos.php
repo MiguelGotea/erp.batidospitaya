@@ -39,6 +39,30 @@ try {
         $whereSimple .= " AND CodCliente = 0";
     }
 
+    // 0.1 Participación Ingresos (Club vs General) - Independiente del filtro tipo_cliente
+    $wherePart = "WHERE Anulado = 0 AND Fecha BETWEEN :f_inicio AND :f_fin";
+    if ($sucursal && $sucursal !== 'todas') { $wherePart .= " AND Sucursal_Nombre = :suc_part"; }
+    $sqlPart = "SELECT (CodCliente > 0) as EsClub, SUM(MontoFactura) as Total FROM (SELECT CodPedido, CodCliente, MAX(MontoFactura) as MontoFactura FROM VentasGlobalesAccessCSV $wherePart GROUP BY CodPedido) t GROUP BY EsClub";
+    $stmtPart = $conn->prepare($sqlPart);
+    $paramsPart = [':f_inicio' => $fecha_inicio, ':f_fin' => $fecha_fin];
+    if ($sucursal && $sucursal !== 'todas') { $paramsPart[':suc_part'] = $sucursal; }
+    $stmtPart->execute($paramsPart);
+    $part_raw = $stmtPart->fetchAll(PDO::FETCH_KEY_PAIR);
+    $participacion = [
+        'club' => $part_raw[1] ?? 0,
+        'general' => $part_raw[0] ?? 0,
+        'total' => ($part_raw[1] ?? 0) + ($part_raw[0] ?? 0)
+    ];
+
+    // 0.2 Comparativa Periodo Anterior (Nuevos Clientes)
+    $diff = strtotime($fecha_fin) - strtotime($fecha_inicio);
+    $p_inicio = date('Y-m-d', strtotime($fecha_inicio) - $diff - 86400);
+    $p_fin = date('Y-m-d', strtotime($fecha_inicio) - 86400);
+    $sqlPrev = "SELECT COUNT(DISTINCT membresia) as PrevNuevos FROM clientesclub WHERE fecha_registro BETWEEN :p_inicio AND :p_fin";
+    $stmtPrev = $conn->prepare($sqlPrev);
+    $stmtPrev->execute([':p_inicio' => $p_inicio, ':p_fin' => $p_fin]);
+    $prev_nuevos = $stmtPrev->fetch(PDO::FETCH_ASSOC)['PrevNuevos'] ?? 0;
+
     // 1. Obtener Datos RFM (Agrupado por Cliente)
     $sqlRFM = "
         WITH ResumenPedidos AS (
@@ -131,62 +155,72 @@ try {
     $sqlEvol = "
         SELECT S.numero_semana as Semana, COUNT(DISTINCT V.CodPedido) as Pedidos
         FROM VentasGlobalesAccessCSV V
-        INNER JOIN SemanasSistema S ON V.Fecha BETWEEN S.fecha_inicio AND S.fecha_fin
-        " . str_replace('WHERE', 'AND', $whereSimple) . "
-        WHERE V.Anulado = 0 AND V.Fecha BETWEEN :f_inicio AND :f_fin
-        GROUP BY S.id, S.numero_semana 
-        ORDER BY S.fecha_inicio ASC
-    ";
-    // Nota: Reajustamos el whereSimple para el join si es necesario, o usamos uno limpio
-    $sqlEvol = "
-        SELECT S.numero_semana as Semana, COUNT(DISTINCT V.CodPedido) as Pedidos
-        FROM VentasGlobalesAccessCSV V
         JOIN SemanasSistema S ON V.Fecha BETWEEN S.fecha_inicio AND S.fecha_fin
         WHERE V.Anulado = 0 AND V.Fecha BETWEEN :f_inicio AND :f_fin
     ";
-    if ($sucursal && $sucursal !== 'todas') {
-        $sqlEvol .= " AND V.Sucursal_Nombre = :sucursal";
-    }
-    if ($tipo_cliente === 'club') {
-        $sqlEvol .= " AND V.CodCliente > 0";
-    } elseif ($tipo_cliente === 'general') {
-        $sqlEvol .= " AND V.CodCliente = 0";
-    }
-
+    if ($sucursal && $sucursal !== 'todas') { $sqlEvol .= " AND V.Sucursal_Nombre = :sucursal"; }
+    if ($tipo_cliente === 'club') { $sqlEvol .= " AND V.CodCliente > 0"; } 
+    elseif ($tipo_cliente === 'general') { $sqlEvol .= " AND V.CodCliente = 0"; }
     $sqlEvol .= " GROUP BY S.numero_semana, S.fecha_inicio ORDER BY S.fecha_inicio ASC";
+    $stmtEvol = $conn->prepare($sqlEvol);
+    $stmtEvol->execute($params);
+    $evolution = $stmtEvol->fetchAll(PDO::FETCH_ASSOC);
 
-    $evol_data = $conn->prepare($sqlEvol);
-    $evol_data->execute($params);
-    $evolution = $evol_data->fetchAll(PDO::FETCH_ASSOC);
-
-    // 5. Análisis por Sucursal
+    // 5. Análisis por Sucursal y Detalle Individual Incremental
     $branch_stats = [];
-    foreach ($raw_data as $r) {
+    $segment_revenue = [];
+    foreach ($raw_data as &$r) {
         $bn = $r['Sucursal'] ?: 'Desconocida';
         if (!isset($branch_stats[$bn])) $branch_stats[$bn] = ['monto' => 0, 'count' => 0, 'score' => 0, 'segments' => []];
         $branch_stats[$bn]['monto'] += $r['Monetary'];
         $branch_stats[$bn]['count']++;
         $branch_stats[$bn]['score'] += $r['ScoreTotal'];
         $branch_stats[$bn]['segments'][$r['Segment']] = ($branch_stats[$bn]['segments'][$r['Segment']] ?? 0) + 1;
+        
+        $segment_revenue[$r['Segment']] = ($segment_revenue[$r['Segment']] ?? 0) + $r['Monetary'];
+
+        // Enriquecer registro individual
+        $r['TicketPromedio'] = ($r['Frequency'] > 0) ? $r['Monetary'] / $r['Frequency'] : 0;
+        $r['Antiguedad'] = $r['FechaRegistro'] ? (int)floor((time() - strtotime($r['FechaRegistro'])) / 86400) : 0;
     }
 
-    // 6. Hábitos (Heatmap y Top 10)
-    $sqlHeatmap = "
-        SELECT HOUR(Hora) as Hour, DAYOFWEEK(Fecha) as Day, COUNT(*) as Count
+    // Obtener Último Producto para los top 1000
+    if (!empty($raw_data)) {
+        $ids = array_column(array_slice($raw_data, 0, 1000), 'CodCliente');
+        $sqlLast = "SELECT CodCliente, DBBatidos_Nombre FROM VentasGlobalesAccessCSV WHERE CodCliente IN (" . implode(',', $ids) . ") AND Anulado = 0 ORDER BY Fecha DESC, Hora DESC";
+        $last_products = $conn->query($sqlLast)->fetchAll(PDO::FETCH_GROUP | PDO::FETCH_COLUMN);
+        foreach ($raw_data as &$r) {
+            if (isset($last_products[$r['CodCliente']])) {
+                $r['UltimoProducto'] = $last_products[$r['CodCliente']][0];
+            }
+        }
+    }
+
+    // 6. Hábitos Expandidos
+    $sqlHabits = "
+        SELECT 
+            Medida, Modalidad, (CodigoPromocion IS NOT NULL AND CodigoPromocion <> '') as EsPromo, COUNT(*) as Count
         FROM VentasGlobalesAccessCSV
         $whereSimple
-        GROUP BY Hour, Day
+        GROUP BY Medida, Modalidad, EsPromo
     ";
+    $stmtHab = $conn->prepare($sqlHabits);
+    $stmtHab->execute($params);
+    $habits_raw = $stmtHab->fetchAll(PDO::FETCH_ASSOC);
+
+    $h_medida = []; $h_modalidad = []; $h_promo = ['si' => 0, 'no' => 0];
+    foreach ($habits_raw as $hr) {
+        if ($hr['Medida']) $h_medida[$hr['Medida']] = ($h_medida[$hr['Medida']] ?? 0) + $hr['Count'];
+        if ($hr['Modalidad']) $h_modalidad[$hr['Modalidad']] = ($h_modalidad[$hr['Modalidad']] ?? 0) + $hr['Count'];
+        if ($hr['EsPromo']) $h_promo['si'] += $hr['Count']; else $h_promo['no'] += $hr['Count'];
+    }
+
+    $sqlHeatmap = "SELECT HOUR(Hora) as Hour, DAYOFWEEK(Fecha) as Day, COUNT(*) as Count FROM VentasGlobalesAccessCSV $whereSimple GROUP BY Hour, Day";
     $stmtHeat = $conn->prepare($sqlHeatmap);
     $stmtHeat->execute($params);
     $heatmap = $stmtHeat->fetchAll(PDO::FETCH_ASSOC);
 
-    $sqlTopProd = "
-        SELECT DBBatidos_Nombre as Product, COUNT(*) as Count
-        FROM VentasGlobalesAccessCSV
-        $whereSimple AND Tipo IN ('Batido', 'Bowl', 'Limonada', 'Pitaya Store', 'Waffles')
-        GROUP BY Product ORDER BY Count DESC LIMIT 10
-    ";
+    $sqlTopProd = "SELECT DBBatidos_Nombre as Product, COUNT(*) as Count FROM VentasGlobalesAccessCSV $whereSimple AND Tipo IN ('Batido', 'Bowl', 'Limonada', 'Pitaya Store', 'Waffles') GROUP BY Product ORDER BY Count DESC LIMIT 10";
     $stmtTP = $conn->prepare($sqlTopProd);
     $stmtTP->execute($params);
     $top_products = $stmtTP->fetchAll(PDO::FETCH_ASSOC);
@@ -198,24 +232,30 @@ try {
             'total_club' => $total_count,
             'activos' => $activos,
             'nuevos' => $nuevos_res['Nuevos'],
+            'prev_nuevos' => $prev_nuevos,
             'en_riesgo' => $en_riesgo,
             'perdidos' => $perdidos,
             'ticket_club' => round($ticket_club, 2),
             'monto_total' => round($sum_m, 2),
-            'churn_rate' => round(($perdidos / $total_count) * 100, 2),
+            'churn_rate' => round(($perdidos / max(1, $total_count)) * 100, 2),
             'retention_metrics' => calculateRetentionDetail($conn, $whereSimple, $params),
+            'participacion' => $participacion,
             'raw' => [
                 'total_pedidos' => $sum_f,
                 'total_ingresos' => $sum_m
             ]
         ],
         'segments' => $segments,
+        'segment_revenue' => $segment_revenue,
         'evolution' => $evolution,
-        'individual' => array_slice($raw_data, 0, 1000), // Limitamos para no saturar el JSON
+        'individual' => array_slice($raw_data, 0, 1000),
         'branch_analysis' => $branch_stats,
         'habits' => [
             'top_products' => $top_products,
-            'heatmap' => $heatmap
+            'heatmap' => $heatmap,
+            'medida' => $h_medida,
+            'modalidad' => $h_modalidad,
+            'promo' => $h_promo
         ]
     ]);
 

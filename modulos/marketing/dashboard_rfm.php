@@ -98,6 +98,7 @@ $puedeDescargar = tienePermiso('dashboard_rfm', 'descargar', $cargoOperario);
                             <div class="icon-circle bg-success-light text-success mb-2 mx-auto"><i class="fas fa-user-plus"></i></div>
                             <div class="text-secondary small">Nuevos Periodo</div>
                             <h3 class="fw-bold mb-0" id="kpiNuevos">-</h3>
+                            <div class="small fw-bold" id="kpiNuevosTrend"></div>
                         </div>
                     </div>
                     <div class="col-md-3 col-xl-1-5">
@@ -114,6 +115,13 @@ $puedeDescargar = tienePermiso('dashboard_rfm', 'descargar', $cargoOperario);
                             <h3 class="fw-bold mb-0" id="kpiPerdidos">-</h3>
                         </div>
                     </div>
+                    <div class="col-md-3 col-xl-1-5 text-nowrap">
+                        <div class="glass-card kpi-card-new p-3 text-center" data-bs-toggle="tooltip" data-bs-html="true" id="tipParticipation">
+                            <div class="icon-circle bg-indigo-light text-indigo mb-2 mx-auto"><i class="fas fa-chart-pie"></i></div>
+                            <div class="text-secondary small">Part. Ingresos Club</div>
+                            <h3 class="fw-bold mb-0" id="kpiParticipation">-</h3>
+                        </div>
+                    </div>
                     <div class="col-md-3 col-xl-1-5">
                         <div class="glass-card kpi-card-new p-3 text-center" data-bs-toggle="tooltip" data-bs-html="true" id="tipTicket">
                             <div class="icon-circle bg-info-light text-info mb-2 mx-auto"><i class="fas fa-receipt"></i></div>
@@ -128,6 +136,13 @@ $puedeDescargar = tienePermiso('dashboard_rfm', 'descargar', $cargoOperario);
                             <h3 class="fw-bold mb-0" id="kpiRetention">-</h3>
                         </div>
                     </div>
+                    <div class="col-md-3 col-xl-1-5">
+                        <div class="glass-card kpi-card-new p-3 text-center" data-bs-toggle="tooltip" data-bs-html="true" id="tipChurnTotal">
+                            <div class="icon-circle bg-red-light text-red mb-2 mx-auto"><i class="fas fa-door-open"></i></div>
+                            <div class="text-secondary small">Tasa Churn</div>
+                            <h3 class="fw-bold mb-0" id="kpiChurn">-</h3>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- 📊 SECCIÓN 2 — Distribución de Segmentos -->
@@ -138,10 +153,16 @@ $puedeDescargar = tienePermiso('dashboard_rfm', 'descargar', $cargoOperario);
                             <canvas id="chartSegments" style="max-height: 250px;"></canvas>
                         </div>
                     </div>
-                    <div class="col-lg-8">
+                    <div class="col-lg-4">
                         <div class="glass-card p-4 h-100">
                             <h6 class="fw-bold mb-4">Evolución de Pedidos por Periodo</h6>
                             <canvas id="chartEvolution" style="max-height: 250px;"></canvas>
+                        </div>
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="glass-card p-4 h-100">
+                            <h6 class="fw-bold mb-4">Ingresos por Segmento</h6>
+                            <canvas id="chartSegmentRevenue" style="max-height: 250px;"></canvas>
                         </div>
                     </div>
                 </div>
@@ -164,9 +185,11 @@ $puedeDescargar = tienePermiso('dashboard_rfm', 'descargar', $cargoOperario);
                                     <th>Recencia</th>
                                     <th>Frecuencia</th>
                                     <th>Monetario</th>
-                                    <th>Scores R-F-M</th>
-                                    <th>Total</th>
+                                    <th>Ticket</th>
+                                    <th>Score RFM</th>
                                     <th>Segmento</th>
+                                    <th>Antigüedad</th>
+                                    <th>Últ. Prod</th>
                                     <th>Acciones</th>
                                 </tr>
                             </thead>
@@ -188,32 +211,60 @@ $puedeDescargar = tienePermiso('dashboard_rfm', 'descargar', $cargoOperario);
                 <div class="row g-4 mb-4">
                     <div class="col-md-6">
                         <div class="glass-card p-4">
-                            <h6 class="fw-bold mb-4">Productividad por Sucursal (RFM Score)</h6>
+                            <h6 class="fw-bold mb-4">Productividad (RFM Score)</h6>
                             <canvas id="chartBranchScores"></canvas>
                         </div>
                     </div>
                     <div class="col-md-6">
-                        <div class="glass-card p-4">
-                            <h6 class="fw-bold mb-4">Distribución por Sucursal</h6>
+                        <div class="glass-card p-4 text-nowrap">
+                            <h6 class="fw-bold mb-4">Distribución de Segmentos (%)</h6>
                             <canvas id="chartBranchDistribution"></canvas>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="glass-card p-4">
+                            <h6 class="fw-bold mb-4">Ticket Promedio por Sucursal</h6>
+                            <canvas id="chartBranchTicket"></canvas>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="glass-card p-4">
+                            <h6 class="fw-bold mb-4">Top 5 LTV por Sucursal</h6>
+                            <div id="branchTopLTV" class="scroller" style="max-height: 300px;"></div>
                         </div>
                     </div>
                 </div>
 
                 <!-- 🧠 SECCIÓN 5 — Hábitos de Consumo -->
                 <div class="row g-4 mb-4">
-                    <div class="col-lg-7">
+                    <div class="col-lg-6">
                         <div class="glass-card p-4">
                             <h6 class="fw-bold mb-4">Mapa de Calor: Intensidad de Consumo (Hora vs Día)</h6>
-                            <div id="heatmapContainer" style="height: 350px;">
-                                <canvas id="chartHeatmap"></canvas>
-                            </div>
+                            <canvas id="chartHeatmap"></canvas>
                         </div>
                     </div>
-                    <div class="col-lg-5">
+                    <div class="col-lg-6">
                         <div class="glass-card p-4">
-                            <h6 class="fw-bold mb-4">Top 10 Productos Preferidos</h6>
+                            <h6 class="fw-bold mb-4">Productos Más Vendidos (Club)</h6>
                             <div id="topProductsList"></div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="glass-card p-4">
+                            <h6 class="fw-bold mb-4">Distribución por Medida</h6>
+                            <canvas id="chartHabitMeasure"></canvas>
+                        </div>
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="glass-card p-4">
+                            <h6 class="fw-bold mb-4">Distribución por Modalidad</h6>
+                            <canvas id="chartHabitModality"></canvas>
+                        </div>
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="glass-card p-4">
+                            <h6 class="fw-bold mb-4">Uso de Promociones</h6>
+                            <canvas id="chartHabitPromo"></canvas>
                         </div>
                     </div>
                 </div>

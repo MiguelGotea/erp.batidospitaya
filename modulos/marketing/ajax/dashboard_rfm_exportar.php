@@ -36,7 +36,8 @@ try {
         SELECT 
             r.CodCliente, MAX(r.Sucursal) as Sucursal, DATEDIFF(CURDATE(), MAX(r.Fecha)) as Recency,
             COUNT(r.CodPedido) as Frequency, SUM(r.TotalPedido) as Monetary,
-            MAX(CONCAT(COALESCE(c.nombre,''), ' ', COALESCE(c.apellido, ''))) as ClienteNombre
+            MAX(CONCAT(COALESCE(c.nombre,''), ' ', COALESCE(c.apellido, ''))) as ClienteNombre,
+            MAX(c.fecha_registro) as FechaRegistro
         FROM ResumenPedidos r
         LEFT JOIN clientesclub c ON r.CodCliente = c.membresia
         GROUP BY r.CodCliente
@@ -78,7 +79,7 @@ try {
     $output = fopen('php://output', 'w');
     fprintf($output, chr(0xEF) . chr(0xBB) . chr(0xBF)); // UTF-8 BOM
 
-    fputcsv($output, ['ID Cliente', 'Cliente', 'Sucursal', 'Recencia (d)', 'Frecuencia', 'Monetario (C$)', 'Score R', 'Score F', 'Score M', 'Score Total', 'Segmento']);
+    fputcsv($output, ['ID Cliente', 'Cliente', 'Sucursal', 'Recencia (d)', 'Frecuencia', 'Monetario (C$)', 'Ticket Promedio', 'Score R', 'Score F', 'Score M', 'Score Total', 'Segmento', 'Antigüedad (d)']);
 
     foreach ($raw_data as $row) {
         $r_score = $get_q($row['Recency'], $recencies, true);
@@ -99,6 +100,9 @@ try {
         else
             $seg = 'Hibernando';
 
+        $ticket = ($row['Frequency'] > 0) ? $row['Monetary'] / $row['Frequency'] : 0;
+        $antiguedad = $row['FechaRegistro'] ? (int)floor((time() - strtotime($row['FechaRegistro'])) / 86400) : 0;
+
         fputcsv($output, [
             $row['CodCliente'],
             $row['ClienteNombre'] ?: 'Anónimo',
@@ -106,11 +110,13 @@ try {
             $row['Recency'],
             $row['Frequency'],
             number_format($row['Monetary'], 2, '.', ''),
+            number_format($ticket, 2, '.', ''),
             $r_score,
             $f_score,
             $m_score,
             $total_score,
-            $seg
+            $seg,
+            $antiguedad
         ]);
     }
 

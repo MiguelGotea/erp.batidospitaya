@@ -130,6 +130,13 @@ body {
 .bg-danger-light { background: rgba(239, 68, 68, 0.1) !important; color: #dc2626 !important; }
 .bg-info-light { background: rgba(6, 182, 212, 0.1) !important; color: #0891b2 !important; }
 .bg-teal-light { background: rgba(20, 184, 166, 0.1) !important; color: #0d9488 !important; }
+.bg-indigo-light { background: rgba(99, 102, 241, 0.1) !important; color: #6366f1 !important; }
+.bg-red-light { background: rgba(255, 99, 132, 0.1) !important; color: #ff6384 !important; }
+
+.text-teal { color: #0d9488 !important; }
+.text-indigo { color: #6366f1 !important; }
+.text-red { color: #ff6384 !important; }
+.bg-orange { background: #f97316 !important; color: white !important; }
 
 .border-dashed {
     border-style: dashed !important;
