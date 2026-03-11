@@ -1,15 +1,27 @@
+// Dashboard RFM 2.0 - Intelligence & Loyalty Logic
 let chartSegments = null;
-let chartIngresos = null;
+let chartEvolution = null;
+let chartBranchScores = null;
+let chartBranchDistribution = null;
+let chartHeatmap = null;
+let fullClientData = [];
 
 $(document).ready(function() {
     cargarSucursales();
     cargarDatos();
+    
+    // Event Listeners
+    $('#filterForm').on('submit', (e) => { e.preventDefault(); cargarDatos(); });
+    $('#tableSearch').on('keyup', debounce(filterTable, 300));
+    $('#btnExportFull').on('click', () => exportData('full'));
 });
+
+// --- CARGA DE DATOS ---
 
 function cargarSucursales() {
     $.get('/modulos/marketing/ajax/get_sucursales.php', function(res) {
         if (res.success) {
-            let html = '<option value="">Todas las sucursales</option>';
+            let html = '<option value="todas">Todas las Sucursales</option>';
             res.data.forEach(s => {
                 html += `<option value="${s.nombre}">${s.nombre}</option>`;
             });
@@ -19,222 +31,280 @@ function cargarSucursales() {
 }
 
 async function cargarDatos() {
-    Swal.fire({
-        title: 'Cargando indicadores...',
-        allowOutsideClick: false,
-        didOpen: () => { Swal.showLoading(); }
-    });
-
-    const f_inicio = $('#fecha_inicio').val();
-    const f_fin = $('#fecha_fin').val();
-    const sucursal = $('#filtro_sucursal').val();
+    const btn = $('#filterForm button[type="submit"]');
+    btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-2"></i>Analizando...');
+    
+    const params = {
+        fecha_inicio: $('#fecha_inicio').val(),
+        fecha_fin: $('#fecha_fin').val(),
+        sucursal: $('#filtro_sucursal').val(),
+        tipo_cliente: $('#tipo_cliente').val(),
+        umbral_perdido: $('#umbral_perdido').val()
+    };
 
     try {
-        const response = await fetch(`ajax/dashboard_rfm_get_datos.php?fecha_inicio=${f_inicio}&fecha_fin=${f_fin}&sucursal=${sucursal}`);
+        const query = $.param(params);
+        const response = await fetch(`ajax/dashboard_rfm_get_datos.php?${query}`);
         const data = await response.json();
 
-        updateDashboard(data);
-        Swal.close();
+        if (data.success) {
+            fullClientData = data.individual || [];
+            updateDashboard(data);
+        } else {
+            Swal.fire('Atención', data.message, 'warning');
+        }
     } catch (error) {
         console.error(error);
-        Swal.fire('Error', 'Hubo un problema al cargar los datos', 'error');
+        Swal.fire('Error', 'No se pudo conectar con el servicio de datos.', 'error');
+    } finally {
+        btn.prop('disabled', false).html('<i class="fas fa-sync-alt me-2"></i>Actualizar Inteligencia');
     }
 }
+
+// --- ACTUALIZACIÓN DE UI ---
 
 function updateDashboard(data) {
-    if (!data.success) {
-        Swal.fire('Error', data.message, 'error');
-        return;
-    }
-
-    const summary = data.summary;
-    const habits = data.habits;
-    const ingresos = data.ingresos;
-    const membership = data.membership;
-
-    // Actualizar KPIs Principales
-    animateValue('kpiTotalClub', summary.total_club);
-    animateValue('kpiActivos', summary.activos);
-    animateValue('kpiTicket', summary.ticket_promedio, true);
-    animateValue('kpiAntiguedad', summary.antiguedad_promedio);
-    animateValue('kpiChurn', summary.churn_rate, false, '%');
-
-    // Comportamiento de Membresía (Panel Nuevo)
-    animateValue('memRetention', membership.retention_rate, false, '%');
-    animateValue('memFreq', membership.avg_freq_month);
-    animateValue('memAntiquity', summary.antiguedad_promedio);
-    animateValue('memGap', membership.avg_time_between);
-    $('#barRetention').css('width', membership.retention_rate + '%');
-
-    // Gráfico de Segmentos
-    updateSegmentsChart(data.segments);
-
-    // Hábitos
-    $('#habitProduct').text(habits.fav_product);
-    $('#habitSize').text(habits.fav_size);
-    $('#habitModalidad').text(habits.fav_modalidad);
-    $('#habitPromo').text(habits.perc_promo + '%');
-    $('#habitHour').text(habits.fav_hour);
-    $('#habitDay').text(habits.fav_day);
-    $('#habitRedenciones').text(habits.redenciones);
-
-    // Ingresos y Tickets Promedio
-    const club = parseFloat(ingresos.IngresosClub || 0);
-    const general = parseFloat(ingresos.IngresosGeneral || 0);
-    const total = club + general;
-    const perc = total > 0 ? (club / total) * 100 : 0;
-
-    $('#ingresoClub').text(fmt(club));
-    $('#ticketClub').text(fmt(membership.ticket_club));
-    $('#ingresoGeneral').text(fmt(general));
-    $('#ticketGeneral').text(fmt(membership.ticket_general));
+    // 1. KPIs
+    updateKPIs(data.summary);
     
-    $('#percClub').text(perc.toFixed(1) + '%');
-    $('#progressClub').css('width', perc + '%');
-
-    // Top 10 Clientes
-    renderTop10(data.top_10);
+    // 2. Segmentos y Evolución
+    updateSegmentsChart(data.segments);
+    updateEvolutionChart(data.evolution);
+    
+    // 3. Tabla Individual
+    renderRFMTable(fullClientData);
+    
+    // 4. Sucursales
+    updateBranchCharts(data.branch_analysis);
+    
+    // 5. Hábitos
+    updateHabitSection(data.habits);
 }
 
-function renderTop10(clientes) {
-    const $body = $('#tableTopClients');
-    $body.empty();
-
-    if (!clientes || clientes.length === 0) {
-        $body.append('<tr><td colspan="5" class="text-center py-4 opacity-50">No hay datos disponibles</td></tr>');
-        return;
-    }
-
-    clientes.forEach((c, i) => {
-        const badgeClass = getSegmentBadge(c.Segment);
-        $body.append(`
-            <tr>
-                <td class="fw-bold">#${i + 1}</td>
-                <td>
-                    <div class="fw-bold text-dark">${c.ClienteNombre || 'Anónimo'}</div>
-                    <div class="small text-muted">ID: ${c.CodCliente}</div>
-                </td>
-                <td class="text-center">${c.Frequency}</td>
-                <td class="fw-bold text-teal">${fmt(c.Monetary)}</td>
-                <td><span class="badge ${badgeClass}">${getSegmentName(c.Segment)}</span></td>
-            </tr>
-        `);
-    });
+function updateKPIs(summary) {
+    if (!summary) return;
+    animateValue('kpiTotalClub', summary.total_club);
+    animateValue('kpiNuevos', summary.nuevos);
+    animateValue('kpiEnRiesgo', summary.en_riesgo);
+    animateValue('kpiPerdidos', summary.perdidos);
+    animateValue('kpiTicket', summary.ticket_club, true);
+    animateValue('kpiRetention', summary.retention_rate, false, '%');
 }
+
+// --- VISUALIZACIONES (CHART.JS) ---
 
 function updateSegmentsChart(segments) {
     const ctx = document.getElementById('chartSegments').getContext('2d');
     const labels = Object.keys(segments);
     const valores = Object.values(segments);
-
-    const colors = {
-        'Champions': '#198754',
-        'Loyal': '#0d6efd',
-        'New': '#ffc107',
-        'At Risk': '#fd7e14',
-        'Hibernating': '#6c757d',
-        'Lost': '#dc3545'
-    };
-
-    const backgroundColors = labels.map(l => colors[l] || '#adb5bd');
+    const colors = getPalette();
 
     if (chartSegments) chartSegments.destroy();
-
     chartSegments = new Chart(ctx, {
         type: 'doughnut',
         data: {
             labels: labels.map(getSegmentName),
             datasets: [{
                 data: valores,
-                backgroundColor: backgroundColors,
+                backgroundColor: labels.map(l => colors[l]),
                 borderWidth: 0,
-                hoverOffset: 15
+                cutout: '70%'
             }]
         },
         options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            cutout: '75%',
-            plugins: {
-                legend: { display: false }
-            }
+            plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, font: { size: 10 } } } },
+            maintainAspectRatio: false
         }
     });
+}
 
-    // Renderizar leyenda personalizada
-    const $legend = $('#segmentLegend');
-    $legend.empty();
-    labels.forEach((l, i) => {
-        const totalValores = valores.reduce((a, b) => a + b, 0);
-        const perc = totalValores > 0 ? (valores[i] / totalValores * 100).toFixed(1) : 0;
-        $legend.append(`
-            <div class="segment-legend d-flex justify-content-between align-items-center">
-                <div>
-                    <span class="badge" style="background: ${backgroundColors[i]}">${getSegmentName(l)}</span>
+function updateEvolutionChart(evolution) {
+    const ctx = document.getElementById('chartEvolution').getContext('2d');
+    if (chartEvolution) chartEvolution.destroy();
+    
+    chartEvolution = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: evolution.map(e => 'Sem ' + e.Semana.split('-')[1]),
+            datasets: [{
+                label: 'Pedidos por Semana',
+                data: evolution.map(e => e.Pedidos),
+                borderColor: '#51B8AC',
+                backgroundColor: 'rgba(81, 184, 172, 0.1)',
+                fill: true,
+                tension: 0.4,
+                pointRadius: 4
+            }]
+        },
+        options: {
+            plugins: { legend: { display: false } },
+            maintainAspectRatio: false,
+            scales: { y: { beginAtZero: true, grid: { display: false } }, x: { grid: { display: false } } }
+        }
+    });
+}
+
+function updateBranchCharts(branchData) {
+    const labels = Object.keys(branchData);
+    const scores = labels.map(l => branchData[l].score / branchData[l].count);
+    
+    // Scores por sucursal
+    const ctxS = document.getElementById('chartBranchScores').getContext('2d');
+    if (chartBranchScores) chartBranchScores.destroy();
+    chartBranchScores = new Chart(ctxS, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'RFM Score Promedio',
+                data: scores,
+                backgroundColor: 'rgba(52, 152, 219, 0.6)',
+                borderRadius: 10
+            }]
+        },
+        options: { responsive: true, scales: { y: { max: 15 } } }
+    });
+}
+
+function updateHabitSection(habits) {
+    // Top Productos
+    const $container = $('#topProductsList');
+    $container.empty();
+    habits.top_products.forEach((p, i) => {
+        const perc = (p.Count / habits.top_products[0].Count) * 100;
+        $container.append(`
+            <div class="mb-3">
+                <div class="d-flex justify-content-between small mb-1">
+                    <span class="fw-bold">${i+1}. ${p.Product}</span>
+                    <span class="text-muted">${p.Count} pedidos</span>
                 </div>
-                <div class="fw-bold">${perc}%</div>
+                <div class="progress" style="height: 6px;">
+                    <div class="progress-bar bg-primary" style="width: ${perc}%"></div>
+                </div>
             </div>
+        `);
+    });
+
+    // Heatmap (Simulado con Matrix o Bubble si no hay plugin, usaremos Bubble simplificado)
+    const ctxH = document.getElementById('chartHeatmap').getContext('2d');
+    if (chartHeatmap) chartHeatmap.destroy();
+    
+    chartHeatmap = new Chart(ctxH, {
+        type: 'bubble',
+        data: {
+            datasets: [{
+                label: 'Intensidad',
+                data: habits.heatmap.map(h => ({ x: h.Hour, y: h.Day, r: Math.log(h.Count + 1) * 3 })),
+                backgroundColor: 'rgba(81, 184, 172, 0.5)'
+            }]
+        },
+        options: {
+            scales: {
+                x: { title: { display: true, text: 'Hora del día' }, min: 6, max: 23 },
+                y: { title: { display: true, text: 'Día de Semana' }, min: 1, max: 7, ticks: { callback: v => ['','Dom','Lun','Mar','Mie','Jue','Vie','Sab'][v] } }
+            },
+            plugins: { legend: { display: false } }
+        }
+    });
+}
+
+// --- TABLA Y FILTROS ---
+
+function renderRFMTable(data) {
+    const $body = $('#rfmTableBody');
+    $body.empty();
+    
+    data.forEach(c => {
+        const rColor = c.Recency > $('#umbral_perdido').val() ? 'text-danger' : '';
+        $body.append(`
+            <tr>
+                <td>
+                    <div class="fw-bold text-dark">${c.ClienteNombre || 'Innominado'}</div>
+                    <div class="small text-muted">Membresía: ${c.CodCliente}</div>
+                </td>
+                <td><span class="badge border text-dark opacity-75">${c.Sucursal || 'N/A'}</span></td>
+                <td class="${rColor} fw-bold">${c.Recency}d</td>
+                <td class="text-center">${c.Frequency}</td>
+                <td class="fw-bold text-teal">${fmt(c.Monetary)}</td>
+                <td>
+                    <span class="badge-score score-${c.R_Score}">${c.R_Score}</span>
+                    <span class="badge-score score-${c.F_Score}">${c.F_Score}</span>
+                    <span class="badge-score score-${c.M_Score}">${c.M_Score}</span>
+                </td>
+                <td class="fw-bold ps-3">${c.ScoreTotal}</td>
+                <td><span class="badge ${getSegmentBadge(c.Segment)} shadow-sm">${getSegmentName(c.Segment)}</span></td>
+                <td>
+                    <button class="btn btn-sm btn-light border" onclick="verDetalle(${c.CodCliente})"><i class="fas fa-eye"></i></button>
+                </td>
+            </tr>
         `);
     });
 }
 
-function getSegmentName(key) {
-    const names = {
-        'Champions': 'Campeones',
-        'Loyal': 'Leales',
-        'New': 'Nuevos',
-        'At Risk': 'En Riesgo',
-        'Hibernating': 'Hibernando',
-        'Lost': 'Perdidos'
+function filterTable() {
+    const term = $('#tableSearch').val().toLowerCase();
+    const filtered = fullClientData.filter(c => 
+        (c.ClienteNombre && c.ClienteNombre.toLowerCase().includes(term)) || 
+        c.CodCliente.toString().includes(term)
+    );
+    renderRFMTable(filtered);
+}
+
+// --- UTILS ---
+
+function getPalette() {
+    return {
+        'Champions': '#10b981',
+        'Loyal': '#3b82f6',
+        'New': '#f59e0b',
+        'At Risk': '#f97316',
+        'Hibernating': '#64748b',
+        'Lost': '#ef4444'
     };
+}
+
+function getSegmentName(key) {
+    const names = { 'Champions': 'Campeones', 'Loyal': 'Leales', 'New': 'Nuevos', 'At Risk': 'En Riesgo', 'Hibernating': 'Hibernando', 'Lost': 'Perdidos' };
     return names[key] || key;
 }
 
 function getSegmentBadge(key) {
-    const badges = {
-        'Champions': 'bg-success',
-        'Loyal': 'bg-primary',
-        'New': 'bg-warning text-dark',
-        'At Risk': 'bg-orange',
-        'Hibernating': 'bg-secondary',
-        'Lost': 'bg-danger'
-    };
+    const badges = { 'Champions': 'bg-success', 'Loyal': 'bg-primary', 'New': 'bg-warning text-dark', 'At Risk': 'bg-orange', 'Hibernating': 'bg-secondary', 'Lost': 'bg-danger' };
     return badges[key] || 'bg-light text-dark';
 }
 
 function animateValue(id, value, isCurrency = false, suffix = '') {
-    const obj = document.getElementById(id);
-    if(!obj) return;
-    const start = 0;
+    const obj = document.getElementById(id); if(!obj) return;
     const end = parseFloat(value);
-    const duration = 1000;
-    let startTimestamp = null;
-    const step = (timestamp) => {
-        if (!startTimestamp) startTimestamp = timestamp;
-        const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-        const current = progress * (end - start) + start;
-        obj.innerHTML = (isCurrency ? fmt(current) : Math.floor(current).toLocaleString('en-US')) + suffix;
-        if (progress < 1) {
-            window.requestAnimationFrame(step);
-        }
+    $({ val: 0 }).animate({ val: end }, {
+        duration: 1000,
+        easing: 'swing',
+        step: function() { obj.innerHTML = (isCurrency ? fmt(this.val) : Math.floor(this.val).toLocaleString()) + suffix; },
+        complete: function() { obj.innerHTML = (isCurrency ? fmt(end) : Math.floor(end).toLocaleString()) + suffix; }
+    });
+}
+
+function fmt(val) { return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val); }
+
+function debounce(func, wait) {
+    let timeout;
+    return function() {
+        const context = this, args = arguments;
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(context, args), wait);
     };
-    window.requestAnimationFrame(step);
 }
 
-function fmt(val) {
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);
+function exportData(type) {
+    const params = {
+        fecha_inicio: $('#fecha_inicio').val(),
+        fecha_fin: $('#fecha_fin').val(),
+        sucursal: $('#filtro_sucursal').val(),
+        type: type
+    };
+    window.location.href = `ajax/dashboard_rfm_exportar.php?${$.param(params)}`;
 }
 
-// Exportar
-$(document).on('click', '#btnExportar', function() {
-    const f_inicio = $('#fecha_inicio').val();
-    const f_fin = $('#fecha_fin').val();
-    const sucursal = $('#filtro_sucursal').val();
-    window.location.href = `ajax/dashboard_rfm_exportar.php?fecha_inicio=${f_inicio}&fecha_fin=${f_fin}&sucursal=${sucursal}`;
-});
-
-// Listener para el formulario de filtros
-$('#filterForm').on('submit', function(e) {
-    e.preventDefault();
-    cargarDatos();
-});
+function verDetalle(id) {
+    Swal.fire({ title: 'Perfil del Socio', text: 'Detalle del socio ID: ' + id, icon: 'info' });
+}

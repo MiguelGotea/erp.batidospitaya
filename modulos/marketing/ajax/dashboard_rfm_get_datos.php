@@ -16,299 +16,183 @@ if (!tienePermiso('dashboard_rfm', 'vista', $cargoOperario)) {
     exit;
 }
 
+// 0. Captura de Filtros
 $fecha_inicio = $_GET['fecha_inicio'] ?? date('Y-m-d', strtotime('-90 days'));
 $fecha_fin = $_GET['fecha_fin'] ?? date('Y-m-d');
 $sucursal = $_GET['sucursal'] ?? null;
+$tipo_cliente = $_GET['tipo_cliente'] ?? 'club'; // club, general, todos
+$umbral_perdido = intval($_GET['umbral_perdido'] ?? 60);
 
 try {
-    // 1. Obtener Base RFM para Clientes Club
-    $where = "WHERE Anulado = 0 AND CodCliente > 0 AND Fecha BETWEEN :f_inicio AND :f_fin";
-    $params = [
-        ':f_inicio' => $fecha_inicio,
-        ':f_fin' => $fecha_fin
-    ];
+    // Definición de base de filtros
+    $whereSimple = "WHERE Anulado = 0 AND Fecha BETWEEN :f_inicio AND :f_fin";
+    $params = [':f_inicio' => $fecha_inicio, ':f_fin' => $fecha_fin];
 
-    if ($sucursal) {
-        $where .= " AND Sucursal_Nombre = :sucursal";
+    if ($sucursal && $sucursal !== 'todas') {
+        $whereSimple .= " AND Sucursal_Nombre = :sucursal";
         $params[':sucursal'] = $sucursal;
     }
 
-    // CTE para obtener detalles por pedido (Monto unico por CodPedido)
-    $sqlBase = "
+    if ($tipo_cliente === 'club') {
+        $whereSimple .= " AND CodCliente > 0";
+    } elseif ($tipo_cliente === 'general') {
+        $whereSimple .= " AND CodCliente = 0";
+    }
+
+    // 1. Obtener Datos RFM (Agrupado por Cliente)
+    $sqlRFM = "
         WITH ResumenPedidos AS (
             SELECT 
-                CodCliente, 
-                CodPedido, 
-                MAX(Fecha) as Fecha, 
-                MAX(MontoFactura) as TotalPedido
+                CodCliente, CodPedido, MAX(Fecha) as Fecha, MAX(MontoFactura) as TotalPedido, MAX(Sucursal_Nombre) as Sucursal
             FROM VentasGlobalesAccessCSV
-            $where
+            $whereSimple
             GROUP BY CodPedido
-        ),
-        RFM_Raw AS (
-            SELECT 
-                r.CodCliente,
-                DATEDIFF(CURDATE(), MAX(r.Fecha)) as Recency,
-                COUNT(r.CodPedido) as Frequency,
-                SUM(r.TotalPedido) as Monetary,
-                MAX(CONCAT(COALESCE(c.nombre,''), ' ', COALESCE(c.apellido, ''))) as ClienteNombre,
-                MAX(c.fecha_registro) as FechaRegistro
-            FROM ResumenPedidos r
-            LEFT JOIN clientesclub c ON r.CodCliente = c.membresia
-            GROUP BY r.CodCliente
         )
-        SELECT * FROM RFM_Raw
+        SELECT 
+            r.CodCliente,
+            MAX(r.Sucursal) as Sucursal,
+            DATEDIFF(CURDATE(), MAX(r.Fecha)) as Recency,
+            COUNT(r.CodPedido) as Frequency,
+            SUM(r.TotalPedido) as Monetary,
+            MAX(CONCAT(COALESCE(c.nombre,''), ' ', COALESCE(c.apellido, ''))) as ClienteNombre,
+            MAX(c.fecha_registro) as FechaRegistro
+        FROM ResumenPedidos r
+        LEFT JOIN clientesclub c ON r.CodCliente = c.membresia
+        GROUP BY r.CodCliente
     ";
 
-    $stmt = $conn->prepare($sqlBase);
+    $stmt = $conn->prepare($sqlRFM);
     $stmt->execute($params);
-    $rfm_data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $raw_data = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    if (empty($rfm_data)) {
-        echo json_encode(['success' => true, 'data' => null, 'message' => 'No hay datos en el periodo']);
+    // Salir si no hay datos
+    if (empty($raw_data)) {
+        echo json_encode(['success' => true, 'summary' => null, 'message' => 'Sin datos']);
         exit;
     }
 
-    // 2. Calcular Quintiles (PHP for flexibility with large datasets if needed)
-    // Para simplificar, calcularemos los scores 1-5 basados en la distribución de la muestra
-    $recencies = array_column($rfm_data, 'Recency');
-    $frequencies = array_column($rfm_data, 'Frequency');
-    $monetaries = array_column($rfm_data, 'Monetary');
+    // 2. Procesamiento de Segmentos (Lógica PHP por flexibilidad)
+    $recencies = array_column($raw_data, 'Recency');
+    $frequencies = array_column($raw_data, 'Frequency');
+    $monetaries = array_column($raw_data, 'Monetary');
+    sort($recencies); sort($frequencies); sort($monetaries);
+    $total_count = count($raw_data);
 
-    sort($recencies);
-    sort($frequencies);
-    sort($monetaries);
-
-    $count = count($rfm_data);
-    $get_quintile = function ($val, $arr, $invert = false) use ($count) {
+    $get_q = function($val, $arr, $inv = false) use ($total_count) {
         $pos = array_search($val, $arr);
-        $percentile = $pos / $count;
-        if ($invert)
-            $percentile = 1 - $percentile; // For Recency, lower is better
-
-        if ($percentile <= 0.2)
-            return 1;
-        if ($percentile <= 0.4)
-            return 2;
-        if ($percentile <= 0.6)
-            return 3;
-        if ($percentile <= 0.8)
-            return 4;
+        $p = $pos / $total_count;
+        if ($inv) $p = 1 - $p;
+        if ($p <= 0.2) return 1;
+        if ($p <= 0.4) return 2;
+        if ($p <= 0.6) return 3;
+        if ($p <= 0.8) return 4;
         return 5;
     };
 
-    $segments_dist = [
-        'Champions' => 0,
-        'Loyal' => 0,
-        'New' => 0,
-        'At Risk' => 0,
-        'Hibernating' => 0,
-        'Lost' => 0
+    $segments = [
+        'Champions' => 0, 'Loyal' => 0, 'New' => 0, 
+        'At Risk' => 0, 'Hibernating' => 0, 'Lost' => 0
     ];
 
-    foreach ($rfm_data as &$row) {
-        $row['R_Score'] = $get_quintile($row['Recency'], $recencies, true);
-        $row['F_Score'] = $get_quintile($row['Frequency'], $frequencies);
-        $row['M_Score'] = $get_quintile($row['Monetary'], $monetaries);
+    foreach ($raw_data as &$row) {
+        $row['R_Score'] = $get_q($row['Recency'], $recencies, true);
+        $row['F_Score'] = $get_q($row['Frequency'], $frequencies);
+        $row['M_Score'] = $get_q($row['Monetary'], $monetaries);
+        $row['ScoreTotal'] = $row['R_Score'] + $row['F_Score'] + $row['M_Score'];
 
-        $r = $row['R_Score'];
-        $f = $row['F_Score'];
-        $m = $row['M_Score'];
-
-        // Segment Logic
-        if ($r >= 4 && $f >= 4)
-            $seg = 'Champions';
-        elseif ($r >= 3 && $f >= 3)
-            $seg = 'Loyal';
-        elseif ($r <= 2 && $f >= 3)
-            $seg = 'At Risk';
-        elseif ($r <= 2 && $f <= 2)
-            $seg = 'Lost';
-        elseif ($r >= 4 && $f <= 2)
-            $seg = 'New';
-        else
-            $seg = 'Hibernating';
+        $r = $row['R_Score']; $f = $row['F_Score'];
+        if ($r >= 4 && $f >= 4) $seg = 'Champions';
+        elseif ($r >= 3 && $f >= 3) $seg = 'Loyal';
+        elseif ($r <= 2 && $f >= 3) $seg = 'At Risk';
+        elseif ($r <= 2 && $f <= 2) $seg = 'Lost';
+        elseif ($r >= 4 && $f <= 2) $seg = 'New';
+        else $seg = 'Hibernating';
 
         $row['Segment'] = $seg;
-        $segments_dist[$seg] = ($segments_dist[$seg] ?? 0) + 1;
+        $segments[$seg]++;
     }
 
-    // 3. KPIs Globales
-    $total_clientes_club = count($rfm_data);
-    $activos_60d = count(array_filter($rfm_data, fn($x) => $x['Recency'] <= 60));
-    $churn_rate = ($total_clientes_club > 0) ? (count(array_filter($rfm_data, fn($x) => $x['Recency'] > 60)) / $total_clientes_club) * 100 : 0;
+    // 3. KPIs Resumen
+    $activos = count(array_filter($raw_data, fn($x) => $x['Recency'] <= $umbral_perdido));
+    $en_riesgo = count(array_filter($raw_data, fn($x) => $x['Recency'] > ($umbral_perdido/2) && $x['Recency'] <= $umbral_perdido));
+    $perdidos = count(array_filter($raw_data, fn($x) => $x['Recency'] > $umbral_perdido));
     
-    // Antigüedad Promedio (días)
-    $antiguedades = array_filter(array_map(fn($x) => $x['FechaRegistro'] ? (strtotime('now') - strtotime($x['FechaRegistro'])) / (60*60*24) : null, $rfm_data));
-    $antiguedad_promedio = count($antiguedades) > 0 ? array_sum($antiguedades) / count($antiguedades) : 0;
+    // Clientes nuevos (Registrados en el periodo)
+    $stmtNew = $conn->prepare("SELECT COUNT(*) as Nuevos FROM clientesclub WHERE fecha_registro BETWEEN :f_inicio AND :f_fin");
+    $stmtNew->execute([':f_inicio' => $fecha_inicio, ':f_fin' => $fecha_fin]);
+    $nuevos_res = $stmtNew->fetch();
 
-    // Top 10 Clientes por LTV
-    $top_10 = $rfm_data;
-    usort($top_10, fn($a, $b) => $b['Monetary'] <=> $a['Monetary']);
-    $top_10 = array_slice($top_10, 0, 10);
+    // Ingresos y Tickets
+    $sum_m = array_sum($monetaries);
+    $sum_f = array_sum($frequencies);
+    $ticket_club = $sum_f > 0 ? $sum_m / $sum_f : 0;
 
-    // 3.5. Comportamiento de Membresía (Nuevas Metricas)
-    // Obtener todas las visitas para calcular retención y tiempo entre visitas
-    $sqlVisitas = "
-        SELECT CodCliente, Fecha 
-        FROM VentasGlobalesAccessCSV 
-        $where 
-        GROUP BY CodCliente, CodPedido, Fecha
-        ORDER BY Fecha ASC
-    ";
-    $stmtV = $conn->prepare($sqlVisitas);
-    $stmtV->execute($params);
-    $all_visitas = $stmtV->fetchAll(PDO::FETCH_ASSOC);
-
-    $user_visits = [];
-    foreach ($all_visitas as $v) {
-        $user_visits[$v['CodCliente']][] = strtotime($v['Fecha']);
-    }
-
-    // A. Tasa de Retención (Regresaron en la 2da mitad del periodo)
-    $ts_inicio = strtotime($fecha_inicio);
-    $ts_fin = strtotime($fecha_fin);
-    $ts_mitad = $ts_inicio + ($ts_fin - $ts_inicio) / 2;
-
-    $users_h1 = 0;
-    $users_h1_returned = 0;
-
-    foreach ($user_visits as $cid => $dates) {
-        $has_h1 = false;
-        $has_h2 = false;
-        foreach ($dates as $d) {
-            if ($d <= $ts_mitad) $has_h1 = true;
-            if ($d > $ts_mitad) $has_h2 = true;
-        }
-        if ($has_h1) {
-            $users_h1++;
-            if ($has_h2) $users_h1_returned++;
-        }
-    }
-    $retention_rate = ($users_h1 > 0) ? ($users_h1_returned / $users_h1) * 100 : 0;
-
-    // B. Tiempo promedio entre visitas
-    $gaps = [];
-    foreach ($user_visits as $cid => $dates) {
-        if (count($dates) > 1) {
-            $user_gaps = [];
-            for ($i = 1; $i < count($dates); $i++) {
-                $user_gaps[] = ($dates[$i] - $dates[$i-1]) / (60*60*24);
-            }
-            $gaps[] = array_sum($user_gaps) / count($user_gaps);
-        }
-    }
-    $avg_time_between = count($gaps) > 0 ? array_sum($gaps) / count($gaps) : 0;
-
-    // C. Frecuencia Mensual
-    $diff_days = ($ts_fin - $ts_inicio) / (60*60*24);
-    $meses = max(1, $diff_days / 30);
-    $avg_freq_month = ($total_clientes_club > 0) ? (count($all_visitas) / $total_clientes_club) / $meses : 0;
-
-    // 4. Hábitos (Query separada para mayor precisión por línea)
-    // Para evitar el error de número de parámetros inválido al repetir el mismo placeholder, 
-    // desactivamos temporalmente el chequeo estricto si el driver lo permite o usamos parámetros únicos.
-    // Usaremos parámetros únicos para mayor compatibilidad.
-
-    $whereH1 = str_replace([':f_inicio', ':f_fin', ':sucursal'], [':f1', ':f2', ':s1'], $where);
-    $whereH2 = str_replace([':f_inicio', ':f_fin', ':sucursal'], [':f3', ':f4', ':s2'], $where);
-    $whereH3 = str_replace([':f_inicio', ':f_fin', ':sucursal'], [':f5', ':f6', ':s3'], $where);
-    $whereH4 = str_replace([':f_inicio', ':f_fin', ':sucursal'], [':f7', ':f8', ':s4'], $where);
-    $whereH5 = str_replace([':f_inicio', ':f_fin', ':sucursal'], [':f9', ':f10', ':s5'], $where);
-    $whereH6 = str_replace([':f_inicio', ':f_fin', ':sucursal'], [':f11', ':f12', ':s6'], $where);
-
-    $paramsH = [
-        ':f1' => $fecha_inicio, ':f2' => $fecha_fin,
-        ':f3' => $fecha_inicio, ':f4' => $fecha_fin,
-        ':f5' => $fecha_inicio, ':f6' => $fecha_fin,
-        ':f7' => $fecha_inicio, ':f8' => $fecha_fin,
-        ':f9' => $fecha_inicio, ':f10' => $fecha_fin,
-        ':f11' => $fecha_inicio, ':f12' => $fecha_fin
-    ];
-    if ($sucursal) {
-        $paramsH[':s1'] = $sucursal;
-        $paramsH[':s2'] = $sucursal;
-        $paramsH[':s3'] = $sucursal;
-        $paramsH[':s4'] = $sucursal;
-        $paramsH[':s5'] = $sucursal;
-        $paramsH[':s6'] = $sucursal;
-    }
-
-    $sqlHabits = "
-        SELECT 
-            (SELECT DBBatidos_Nombre FROM VentasGlobalesAccessCSV $whereH1 AND Tipo IN ('Batido', 'Bowl', 'Limonada', 'Pitaya Store', 'Waffles') GROUP BY DBBatidos_Nombre ORDER BY COUNT(*) DESC LIMIT 1) as FavProduct,
-            (SELECT Medida FROM VentasGlobalesAccessCSV $whereH2 AND Tipo IN ('Batido', 'Limonada') AND Medida IS NOT NULL AND Medida <> '' GROUP BY Medida ORDER BY COUNT(*) DESC LIMIT 1) as FavSize,
-            (SELECT Modalidad FROM VentasGlobalesAccessCSV $whereH3 GROUP BY Modalidad ORDER BY COUNT(*) DESC LIMIT 1) as FavModalidad,
-            (SELECT HOUR(Hora) FROM VentasGlobalesAccessCSV $whereH5 GROUP BY HOUR(Hora) ORDER BY COUNT(*) DESC LIMIT 1) as FavHour,
-            (SELECT DAYOFWEEK(Fecha) FROM VentasGlobalesAccessCSV $whereH6 GROUP BY DAYOFWEEK(Fecha) ORDER BY COUNT(*) DESC LIMIT 1) as FavDay,
-            COUNT(DISTINCT CASE WHEN CodigoPromocion <> 5 THEN CodPedido END) as PromoOrders,
-            COUNT(DISTINCT CodPedido) as TotalOrders,
-            SUM(CASE WHEN Puntos < 0 THEN 1 ELSE 0 END) as RedemptionLines
+    // 4. Evolución de Segmentos (Temporal) - Usamos el histórico real
+    $sqlEvol = "
+        SELECT DATE_FORMAT(Fecha, '%x-%v') as Semana, COUNT(DISTINCT CodPedido) as Pedidos
         FROM VentasGlobalesAccessCSV
-        $whereH4
+        $whereSimple
+        GROUP BY Semana ORDER BY Semana ASC
     ";
+    $evol_data = $conn->prepare($sqlEvol);
+    $evol_data->execute($params);
+    $evolution = $evol_data->fetchAll(PDO::FETCH_ASSOC);
 
-    $stmtH = $conn->prepare($sqlHabits);
-    $stmtH->execute($paramsH);
-    $habits = $stmtH->fetch(PDO::FETCH_ASSOC);
+    // 5. Análisis por Sucursal
+    $branch_stats = [];
+    foreach ($raw_data as $r) {
+        $bn = $r['Sucursal'] ?: 'Desconocida';
+        if (!isset($branch_stats[$bn])) $branch_stats[$bn] = ['monto' => 0, 'count' => 0, 'score' => 0, 'segments' => []];
+        $branch_stats[$bn]['monto'] += $r['Monetary'];
+        $branch_stats[$bn]['count']++;
+        $branch_stats[$bn]['score'] += $r['ScoreTotal'];
+        $branch_stats[$bn]['segments'][$r['Segment']] = ($branch_stats[$bn]['segments'][$r['Segment']] ?? 0) + 1;
+    }
 
-    // 5. Ingresos Club vs General
-    $sqlIngresos = "
-        SELECT 
-            SUM(CASE WHEN CodCliente > 0 THEN Precio ELSE 0 END) as IngresosClub,
-            SUM(CASE WHEN CodCliente = 0 THEN Precio ELSE 0 END) as IngresosGeneral
+    // 6. Hábitos (Heatmap y Top 10)
+    $sqlHeatmap = "
+        SELECT HOUR(Hora) as Hour, DAYOFWEEK(Fecha) as Day, COUNT(*) as Count
         FROM VentasGlobalesAccessCSV
-        WHERE Anulado = 0 AND Fecha BETWEEN :fi AND :ff
-        " . ($sucursal ? " AND Sucursal_Nombre = :suc" : "");
+        $whereSimple
+        GROUP BY Hour, Day
+    ";
+    $stmtHeat = $conn->prepare($sqlHeatmap);
+    $stmtHeat->execute($params);
+    $heatmap = $stmtHeat->fetchAll(PDO::FETCH_ASSOC);
 
-    $paramsI = [':fi' => $fecha_inicio, ':ff' => $fecha_fin];
-    if ($sucursal)
-        $paramsI[':suc'] = $sucursal;
+    $sqlTopProd = "
+        SELECT DBBatidos_Nombre as Product, COUNT(*) as Count
+        FROM VentasGlobalesAccessCSV
+        $whereSimple AND Tipo IN ('Batido', 'Bowl', 'Limonada', 'Pitaya Store', 'Waffles')
+        GROUP BY Product ORDER BY Count DESC LIMIT 10
+    ";
+    $stmtTP = $conn->prepare($sqlTopProd);
+    $stmtTP->execute($params);
+    $top_products = $stmtTP->fetchAll(PDO::FETCH_ASSOC);
 
-    $stmtI = $conn->prepare($sqlIngresos);
-    $stmtI->execute($paramsI);
-    $ingresos = $stmtI->fetch(PDO::FETCH_ASSOC);
-
-    // 5.5 Conteo de Pedidos Generales para Ticket Promedio
-    $sqlPedidosGen = "SELECT COUNT(DISTINCT CodPedido) as TotalPedidosGen FROM VentasGlobalesAccessCSV WHERE Anulado = 0 AND CodCliente = 0 AND Fecha BETWEEN :fi AND :ff " . ($sucursal ? " AND Sucursal_Nombre = :suc" : "");
-    $stmtPG = $conn->prepare($sqlPedidosGen);
-    $stmtPG->execute($paramsI);
-    $pedidosGen = $stmtPG->fetch(PDO::FETCH_ASSOC);
-    $total_pedidos_gen = $pedidosGen['TotalPedidosGen'] ?? 0;
-
-    // 6. Formatear Respuesta
+    // 7. Respuesta Final Estructurada
     echo json_encode([
         'success' => true,
         'summary' => [
-            'total_club' => $total_clientes_club,
-            'activos' => $activos_60d,
-            'churn_rate' => round($churn_rate, 2),
-            'ticket_promedio' => count($monetaries) > 0 ? array_sum($monetaries) / array_sum($frequencies) : 0,
-            'ltv_total' => array_sum($monetaries),
-            'antiguedad_promedio' => round($antiguedad_promedio)
+            'total_club' => $total_count,
+            'activos' => $activos,
+            'nuevos' => $nuevos_res['Nuevos'],
+            'en_riesgo' => $en_riesgo,
+            'perdidos' => $perdidos,
+            'ticket_club' => round($ticket_club, 2),
+            'monto_total' => round($sum_m, 2),
+            'churn_rate' => round(($perdidos / $total_count) * 100, 2)
         ],
-        'segments' => $segments_dist,
-        'top_10' => $top_10,
+        'segments' => $segments,
+        'evolution' => $evolution,
+        'individual' => array_slice($raw_data, 0, 1000), // Limitamos para no saturar el JSON
+        'branch_analysis' => $branch_stats,
         'habits' => [
-            'fav_product' => $habits['FavProduct'] ?? 'N/A',
-            'fav_size' => $habits['FavSize'] ?? 'N/A',
-            'fav_modalidad' => $habits['FavModalidad'] ?? 'N/A',
-            'fav_hour' => isset($habits['FavHour']) ? $habits['FavHour'] . ':00' : 'N/A',
-            'fav_day' => isset($habits['FavDay']) ? ['N/A', 'Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'][$habits['FavDay']] : 'N/A',
-            'perc_promo' => ($habits['TotalOrders'] > 0) ? round(($habits['PromoOrders'] / $habits['TotalOrders']) * 100, 2) : 0,
-            'redenciones' => $habits['RedemptionLines']
-        ],
-        'ingresos' => $ingresos,
-        'membership' => [
-            'retention_rate' => round($retention_rate, 2),
-            'avg_time_between' => round($avg_time_between, 1),
-            'avg_freq_month' => round($avg_freq_month, 2),
-            'ticket_club' => $total_clientes_club > 0 ? $ingresos['IngresosClub'] / array_sum($frequencies) : 0,
-            'ticket_general' => $total_pedidos_gen > 0 ? $ingresos['IngresosGeneral'] / $total_pedidos_gen : 0
+            'top_products' => $top_products,
+            'heatmap' => $heatmap
         ]
     ]);
 
 } catch (Exception $e) {
     echo json_encode(['success' => false, 'message' => $e->getMessage()]);
 }
-?>

@@ -12,14 +12,16 @@ if (!tienePermiso('dashboard_rfm', 'vista', $cargoOperario)) {
     header('Location: /login.php');
     exit();
 }
+
+$puedeDescargar = tienePermiso('dashboard_rfm', 'descargar', $cargoOperario);
 ?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard RFM - Batidos Pitaya</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <title>Dashboard RFM 360° - Batidos Pitaya</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="icon" href="../../assets/img/icon12.png" type="image/png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
@@ -34,330 +36,223 @@ if (!tienePermiso('dashboard_rfm', 'vista', $cargoOperario)) {
         <div class="sub-container">
             <?php echo renderHeader($usuario, false, 'Dashboard RFM & Segmentación'); ?>
             
-            <div class="container-fluid">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h1 class="premium-title mb-0">Dashboard RFM <span class="badge bg-teal fs-6 align-middle">PREMIUM</span></h1>
-                <p class="text-muted small">Análisis avanzado de segmentación y lealtad</p>
-            </div>
-            <div class="d-flex gap-2">
-                <button class="btn btn-outline-primary btn-sm rounded-pill px-3" onclick="$('#pageHelpModal').modal('show')">
-                    <i class="fas fa-question-circle me-1"></i> Ayuda
-                </button>
-                <button class="btn btn-success btn-sm rounded-pill px-3" id="btnExportar">
-                    <i class="fas fa-file-excel me-1"></i> Exportar Datos
-                </button>
-            </div>
-        </div>
+            <div class="container-fluid py-4">
+                
+                <!-- 🔝 SECCIÓN 0 — Filtros Globales -->
+                <div class="glass-card p-4 mb-4 shadow-sm border-0">
+                    <div class="row align-items-center mb-3">
+                        <div class="col">
+                            <h4 class="fw-bold mb-0 text-gradient-primary">RFM Intelligence <span class="badge bg-primary-light text-primary fs-6 ms-2">v2.0</span></h4>
+                        </div>
+                        <div class="col-auto">
+                            <button class="btn btn-sm btn-outline-secondary rounded-pill px-3" onclick="$('#pageHelpModal').modal('show')">
+                                <i class="fas fa-question-circle me-1"></i> Guía
+                            </button>
+                        </div>
+                    </div>
+                    <form id="filterForm" class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label small fw-bold">Rango de Análisis</label>
+                            <div class="input-group input-group-sm">
+                                <input type="date" id="fecha_inicio" class="form-control rounded-start-pill" name="fecha_inicio" value="<?php echo date('Y-m-d', strtotime('-90 days')); ?>">
+                                <input type="date" id="fecha_fin" class="form-control rounded-end-pill" name="fecha_fin" value="<?php echo date('Y-m-d'); ?>">
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label small fw-bold">Sucursal</label>
+                            <select class="form-select form-select-sm rounded-pill" name="sucursal" id="filtro_sucursal">
+                                <option value="todas">Todas las Sucursales</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label small fw-bold">Tipo Cliente</label>
+                            <select class="form-select form-select-sm rounded-pill" name="tipo_cliente" id="tipo_cliente">
+                                <option value="club">Solo Club</option>
+                                <option value="general">Solo General</option>
+                                <option value="todos">Todos</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label small fw-bold">Umbral Perdido (Días)</label>
+                            <input type="number" class="form-control form-control-sm rounded-pill text-center" name="umbral_perdido" id="umbral_perdido" value="60">
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary btn-sm w-100 rounded-pill shadow-sm">
+                                <i class="fas fa-sync-alt me-2"></i> Actualizar Inteligencia
+                            </button>
+                        </div>
+                    </form>
+                </div>
 
-        <!-- Filtros -->
-        <div class="glass-card p-3 mb-4">
-            <form id="filterForm" class="row g-3 align-items-end">
-                <div class="col-md-3">
-                    <label class="form-label small fw-bold">Rango de Fecha</label>
-                    <div class="input-group input-group-sm">
-                        <input type="date" id="fecha_inicio" class="form-control" name="fecha_inicio" value="<?php echo date('Y-m-d', strtotime('-90 days')); ?>">
-                        <span class="input-group-text">a</span>
-                        <input type="date" id="fecha_fin" class="form-control" name="fecha_fin" value="<?php echo date('Y-m-d'); ?>">
+                <!-- 📌 SECCIÓN 1 — KPIs Resumen -->
+                <div class="row g-3 mb-4" id="kpiGrid">
+                    <!-- Cards dinámicas generadas via JS -->
+                    <div class="col-md-3 col-xl-1-5">
+                        <div class="glass-card kpi-card-new p-3 text-center">
+                            <div class="icon-circle bg-primary-light text-primary mb-2 mx-auto"><i class="fas fa-users"></i></div>
+                            <div class="text-secondary small">Club Activos</div>
+                            <h3 class="fw-bold mb-0" id="kpiTotalClub">-</h3>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-xl-1-5">
+                        <div class="glass-card kpi-card-new p-3 text-center">
+                            <div class="icon-circle bg-success-light text-success mb-2 mx-auto"><i class="fas fa-user-plus"></i></div>
+                            <div class="text-secondary small">Nuevos Periodo</div>
+                            <h3 class="fw-bold mb-0" id="kpiNuevos">-</h3>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-xl-1-5">
+                        <div class="glass-card kpi-card-new p-3 text-center">
+                            <div class="icon-circle bg-warning-light text-warning mb-2 mx-auto"><i class="fas fa-exclamation-triangle"></i></div>
+                            <div class="text-secondary small">En Riesgo</div>
+                            <h3 class="fw-bold mb-0" id="kpiEnRiesgo">-</h3>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-xl-1-5">
+                        <div class="glass-card kpi-card-new p-3 text-center">
+                            <div class="icon-circle bg-danger-light text-danger mb-2 mx-auto"><i class="fas fa-user-slash"></i></div>
+                            <div class="text-secondary small">Perdidos</div>
+                            <h3 class="fw-bold mb-0" id="kpiPerdidos">-</h3>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-xl-1-5">
+                        <div class="glass-card kpi-card-new p-3 text-center">
+                            <div class="icon-circle bg-info-light text-info mb-2 mx-auto"><i class="fas fa-receipt"></i></div>
+                            <div class="text-secondary small">Ticket Club</div>
+                            <h3 class="fw-bold mb-0" id="kpiTicket">-</h3>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-xl-1-5">
+                        <div class="glass-card kpi-card-new p-3 text-center">
+                            <div class="icon-circle bg-teal-light text-teal mb-2 mx-auto"><i class="fas fa-percentage"></i></div>
+                            <div class="text-secondary small">Retención</div>
+                            <h3 class="fw-bold mb-0" id="kpiRetention">-</h3>
+                        </div>
                     </div>
                 </div>
-                <div class="col-md-3">
-                    <label class="form-label small fw-bold">Sucursal</label>
-                    <select class="form-select form-select-sm" name="sucursal" id="filtro_sucursal">
-                        <option value="">Todas las Sucursales</option>
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <button type="submit" class="btn btn-primary btn-sm w-100 rounded-pill">
-                        <i class="fas fa-sync-alt me-1"></i> Actualizar
-                    </button>
-                </div>
-            </form>
-        </div>
 
-        <!-- KPI Cards -->
-        <div class="row g-4 mb-4" id="kpiContainer">
-            <div class="col-md-3 col-lg">
-                <div class="glass-card kpi-card">
-                    <i class="fas fa-users"></i>
-                    <div class="card-title">Total Club</div>
-                    <h2 id="kpiTotalClub">-</h2>
-                    <div class="small text-muted mt-2">Miembros únicos</div>
+                <!-- 📊 SECCIÓN 2 — Distribución de Segmentos -->
+                <div class="row g-4 mb-4">
+                    <div class="col-lg-4">
+                        <div class="glass-card p-4 h-100">
+                            <h6 class="fw-bold mb-4">Distribución RFM</h6>
+                            <canvas id="chartSegments" style="max-height: 250px;"></canvas>
+                        </div>
+                    </div>
+                    <div class="col-lg-8">
+                        <div class="glass-card p-4 h-100">
+                            <h6 class="fw-bold mb-4">Evolución de Pedidos por Periodo</h6>
+                            <canvas id="chartEvolution" style="max-height: 250px;"></canvas>
+                        </div>
+                    </div>
                 </div>
-            </div>
-            <div class="col-md-3 col-lg">
-                <div class="glass-card kpi-card">
-                    <i class="fas fa-user-check"></i>
-                    <div class="card-title">Activos (60d)</div>
-                    <h2 id="kpiActivos">-</h2>
-                    <div class="small text-success mt-2">En el periodo</div>
-                </div>
-            </div>
-            <div class="col-md-3 col-lg">
-                <div class="glass-card kpi-card">
-                    <i class="fas fa-receipt"></i>
-                    <div class="card-title">Ticket Promedio</div>
-                    <h2 id="kpiTicket">-</h2>
-                    <div class="small text-primary mt-2">Monto factura</div>
-                </div>
-            </div>
-            <div class="col-md-3 col-lg">
-                <div class="glass-card kpi-card">
-                    <i class="fas fa-calendar-alt"></i>
-                    <div class="card-title">Antigüedad Prom.</div>
-                    <h2 id="kpiAntiguedad">-</h2>
-                    <div class="small text-info mt-2">Días suscritos</div>
-                </div>
-            </div>
-            <div class="col-md-3 col-lg">
-                <div class="glass-card kpi-card">
-                    <i class="fas fa-user-slash"></i>
-                    <div class="card-title">Tasa Churn</div>
-                    <h2 id="kpiChurn">-</h2>
-                    <div class="small text-danger mt-2">% Inactividad</div>
-                </div>
-            </div>
-        </div>
 
-        <div class="row g-4">
-            <!-- Gráfico Segmentos -->
-            <div class="col-lg-7">
-                <div class="glass-card p-4">
+                <!-- 👤 SECCIÓN 3 — Tabla Individual RFM -->
+                <div class="glass-card p-4 mb-4">
                     <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h5 class="fw-bold mb-0">Distribución de Segmentos</h5>
-                        <div class="dropdown">
-                            <button class="btn btn-link link-dark p-0" data-bs-toggle="dropdown"><i class="fas fa-ellipsis-v"></i></button>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="#">Ver Detalles</a></li>
-                            </ul>
+                        <h5 class="fw-bold mb-0">Listado Maestro de Clientes</h5>
+                        <div class="input-group input-group-sm w-25">
+                            <span class="input-group-text bg-white border-end-0"><i class="fas fa-search"></i></span>
+                            <input type="text" id="tableSearch" class="form-control border-start-0" placeholder="Buscar por nombre o membresía...">
                         </div>
                     </div>
-                    <div class="row align-items-center">
-                        <div class="col-md-6">
-                            <div class="chart-container" style="height: 300px;">
-                                <canvas id="chartSegments"></canvas>
-                            </div>
-                        </div>
-                        <div class="col-md-6 scroller" style="max-height: 300px; overflow-y: auto;">
-                            <div id="segmentLegend">
-                                <!-- Leyenda se llena con JS -->
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Análisis de Producto / Hábito -->
-        <div class="row g-4 mt-2">
-            <div class="col-12">
-                <div class="glass-card p-4">
-                    <h5 class="fw-bold mb-4 text-orange"><i class="fas fa-shopping-bag me-2"></i>Análisis de Producto / Hábito</h5>
-                    <div class="row g-4">
-                        <div class="col-md-4 col-sm-6">
-                            <div class="habit-item p-3 rounded-4 bg-white bg-opacity-50">
-                                <div class="text-muted small mb-1">Producto Favorito</div>
-                                <h6 class="fw-bold mb-0" id="habitProduct">Cargando...</h6>
-                            </div>
-                        </div>
-                        <div class="col-md-2 col-sm-6">
-                            <div class="habit-item p-3 rounded-4 bg-white bg-opacity-50">
-                                <div class="text-muted small mb-1">Medida Preferida</div>
-                                <h6 class="fw-bold mb-0" id="habitSize">Cargando...</h6>
-                            </div>
-                        </div>
-                        <div class="col-md-3 col-sm-6">
-                            <div class="habit-item p-3 rounded-4 bg-white bg-opacity-50">
-                                <div class="text-muted small mb-1">Modalidad de Pedido</div>
-                                <h6 class="fw-bold mb-0" id="habitModalidad">Cargando...</h6>
-                            </div>
-                        </div>
-                        <div class="col-md-3 col-sm-6">
-                            <div class="habit-item p-3 rounded-4 bg-white bg-opacity-50">
-                                <div class="text-muted small mb-1">Uso de Promociones</div>
-                                <h6 class="fw-bold mb-0" id="habitPromo">Cargando...</h6>
-                            </div>
-                        </div>
-                        <div class="col-md-3 col-sm-6">
-                            <div class="habit-item p-3 rounded-4 bg-white bg-opacity-50">
-                                <div class="text-muted small mb-1"><i class="fas fa-clock me-1"></i>Hora Pico</div>
-                                <h6 class="fw-bold mb-0" id="habitHour">Cargando...</h6>
-                            </div>
-                        </div>
-                        <div class="col-md-3 col-sm-6">
-                            <div class="habit-item p-3 rounded-4 bg-white bg-opacity-50">
-                                <div class="text-muted small mb-1"><i class="fas fa-calendar-day me-1"></i>Día Preferido</div>
-                                <h6 class="fw-bold mb-0" id="habitDay">Cargando...</h6>
-                            </div>
-                        </div>
-                        <div class="col-md-6 col-sm-12">
-                            <div class="habit-item p-3 rounded-4 bg-white bg-opacity-50 d-flex justify-content-between align-items-center">
-                                <div>
-                                    <div class="text-muted small mb-1">Total Redenciones</div>
-                                    <h6 class="fw-bold mb-0" id="habitRedenciones">0</h6>
-                                </div>
-                                <i class="fas fa-ticket-alt text-orange opacity-50 fa-2x"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Comportamiento de Membresía -->
-        <div class="row g-4 mt-2">
-            <div class="col-12">
-                <div class="glass-card p-4">
-                    <h5 class="fw-bold mb-4 text-teal"><i class="fas fa-chart-line me-2"></i>Comportamiento de Membresía</h5>
-                    <div class="row g-4">
-                        <div class="col-md-3 col-sm-6">
-                            <div class="membership-kpi">
-                                <span class="text-muted small">Tasa de Retención</span>
-                                <h3 id="memRetention">- %</h3>
-                                <div class="progress" style="height: 4px;">
-                                    <div class="progress-bar bg-success" id="barRetention" style="width: 0%"></div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-3 col-sm-6">
-                            <div class="membership-kpi">
-                                <span class="text-muted small">Frecuencia Mensual</span>
-                                <h3 id="memFreq">-</h3>
-                                <p class="small text-muted mb-0">Visitas por mes</p>
-                            </div>
-                        </div>
-                        <div class="col-md-3 col-sm-6">
-                            <div class="membership-kpi">
-                                <span class="text-muted small">Antigüedad Promedio</span>
-                                <h3 id="memAntiquity">-</h3>
-                                <p class="small text-muted mb-0">Días suscritos</p>
-                            </div>
-                        </div>
-                        <div class="col-md-3 col-sm-6">
-                            <div class="membership-kpi">
-                                <span class="text-muted small">Tiempo entre Visitas</span>
-                                <h3 id="memGap">-</h3>
-                                <p class="small text-muted mb-0">Días promedio</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Top Clientes y Otros Rankings -->
-        <div class="row g-4 mt-2">
-            <div class="col-lg-8">
-                <div class="glass-card p-4">
-                    <h5 class="fw-bold mb-4">🏆 Top 10 Clientes Club (LTV)</h5>
                     <div class="table-responsive">
-                        <table class="premium-table">
+                        <table class="table table-hover align-middle premium-table" id="rfmTableMaster">
                             <thead>
                                 <tr>
-                                    <th>Rank</th>
                                     <th>Cliente</th>
+                                    <th>Sucursal</th>
+                                    <th>Recencia</th>
                                     <th>Frecuencia</th>
                                     <th>Monetario</th>
+                                    <th>Scores R-F-M</th>
+                                    <th>Total</th>
                                     <th>Segmento</th>
+                                    <th>Acciones</th>
                                 </tr>
                             </thead>
-                            <tbody id="tableTopClients">
-                                <!-- Datos via JS -->
-                            </tbody>
+                            <tbody id="rfmTableBody"></tbody>
                         </table>
                     </div>
                 </div>
-            </div>
-            <div class="col-lg-4">
-                <div class="glass-card p-4">
-                    <h5 class="fw-bold mb-4">Resumen Económico</h5>
-                    <div class="p-4 rounded-4 bg-teal text-white mb-3">
-                        <div class="small opacity-75">Ingresos Club</div>
-                        <h3 class="fw-bold mb-0" id="ingresoClub">$ 0.00</h3>
-                        <div class="small mt-1 opacity-75">Ticket Prom: <b id="ticketClub">$0.00</b></div>
-                    </div>
-                    <div class="p-4 rounded-4 bg-secondary text-white border-white border-opacity-25">
-                        <div class="small opacity-75">Ingresos General</div>
-                        <h3 class="fw-bold mb-0" id="ingresoGeneral">$ 0.00</h3>
-                        <div class="small mt-1 opacity-75">Ticket Prom: <b id="ticketGeneral">$0.00</b></div>
-                    </div>
-                    <div class="mt-4 p-3 border border-white border-opacity-50 rounded-4">
-                        <div class="d-flex justify-content-between align-items-center mb-1">
-                            <span class="small">Participación Club</span>
-                            <span class="fw-bold" id="percClub">0%</span>
+
+                <!-- 🏪 SECCIÓN 4 — Análisis por Sucursal -->
+                <div class="row g-4 mb-4">
+                    <div class="col-md-6">
+                        <div class="glass-card p-4">
+                            <h6 class="fw-bold mb-4">Productividad por Sucursal (RFM Score)</h6>
+                            <canvas id="chartBranchScores"></canvas>
                         </div>
-                        <div class="progress" style="height: 6px;">
-                            <div class="progress-bar bg-teal" id="progressClub" style="width: 0%"></div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="glass-card p-4">
+                            <h6 class="fw-bold mb-4">Distribución por Sucursal</h6>
+                            <canvas id="chartBranchDistribution"></canvas>
                         </div>
                     </div>
                 </div>
+
+                <!-- 🧠 SECCIÓN 5 — Hábitos de Consumo -->
+                <div class="row g-4 mb-4">
+                    <div class="col-lg-7">
+                        <div class="glass-card p-4">
+                            <h6 class="fw-bold mb-4">Mapa de Calor: Intensidad de Consumo (Hora vs Día)</h6>
+                            <div id="heatmapContainer" style="height: 350px;">
+                                <canvas id="chartHeatmap"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-5">
+                        <div class="glass-card p-4">
+                            <h6 class="fw-bold mb-4">Top 10 Productos Preferidos</h6>
+                            <div id="topProductsList"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 📤 SECCIÓN 6 — Exportación -->
+                <div class="glass-card p-4 text-center border-dashed border-primary">
+                    <h5 class="fw-bold mb-1">Centro de Exportación</h5>
+                    <p class="text-muted small">Descarga los datos procesados para análisis externo</p>
+                    <div class="d-flex justify-content-center gap-3 mt-4">
+                        <?php if ($puedeDescargar): ?>
+                        <button class="btn btn-success rounded-pill px-4" id="btnExportFull">
+                            <i class="fas fa-file-excel me-2"></i> Tabla Maestra (Excel)
+                        </button>
+                        <button class="btn btn-outline-success rounded-pill px-4" id="btnExportSummary">
+                            <i class="fas fa-file-pdf me-2"></i> Reporte Ejecutivo (PDF)
+                        </button>
+                        <?php else: ?>
+                        <div class="alert alert-warning py-2 mb-0">No tiene permisos de descarga habilitados.</div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>
-    <!-- Modal de Ayuda -->
-    <div class="modal fade" id="pageHelpModal" tabindex="-1" data-bs-backdrop="static">
+
+    <!-- Modales, Scripts y Ayuda -->
+    <div class="modal fade" id="pageHelpModal" tabindex="-1">
         <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title"><i class="fas fa-info-circle me-2"></i>Guía del Dashboard RFM</h5>
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-gradient-primary text-white">
+                    <h5 class="modal-title font-weight-bold"><i class="fas fa-graduation-cap me-2"></i>Guía RFM 360°</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body p-4">
-                    <div class="row">
-                        <div class="col-md-6 mb-4">
-                            <div class="card h-100 border-0 bg-light">
-                                <div class="card-body">
-                                    <h6 class="text-primary border-bottom pb-2 fw-bold">
-                                        <i class="fas fa-chart-line me-2"></i> ¿Qué es RFM?
-                                    </h6>
-                                    <p class="small text-muted mb-0">
-                                        Es una técnica de segmentación basada en:
-                                        <br>• <b>Recencia:</b> Días desde la última compra.
-                                        <br>• <b>Frecuencia:</b> Cantidad de pedidos únicos.
-                                        <br>• <b>Monto:</b> Gasto total acumulado (LTV).
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6 mb-4">
-                            <div class="card h-100 border-0 bg-light">
-                                <div class="card-body">
-                                    <h6 class="text-success border-bottom pb-2 fw-bold">
-                                        <i class="fas fa-user-check me-2"></i> Clientes Activos
-                                    </h6>
-                                    <p class="small text-muted mb-0">
-                                        Se consideran activos aquellos clientes con al menos una compra en los últimos <b>60 días</b>.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="alert alert-info py-2 px-3 small">
-                        <strong><i class="fas fa-info-circle me-1"></i> Nota:</strong>
-                        Los cálculos excluyen pedidos anulados (`Anulado = 0`) y filtran productos por categoría según corresponda.
-                    </div>
+                <div class="modal-body p-4 scroller" style="max-height: 70vh;">
+                    <h6>¿Cómo interpretar los scores?</h6>
+                    <p class="small text-muted">Cada cliente recibe de 1 a 5 puntos en cada categoría basándose en su posición relativa al resto de los socios.</p>
+                    <ul>
+                        <li><b>R (Recencia):</b> 5 = Compró recientemente; 1 = Compró hace mucho.</li>
+                        <li><b>F (Frecuencia):</b> 5 = Cliente muy habitual; 1 = Compra esporádica.</li>
+                        <li><b>M (Monto):</b> 5 = Ticket alto acumulado; 1 = Gasto bajo.</li>
+                    </ul>
                 </div>
             </div>
         </div>
     </div>
 
-    <style>
-        /* Ajuste de posición y capas para Modal de Ayuda */
-        #pageHelpModal {
-            z-index: 1060 !important;
-        }
-        .modal-backdrop {
-            z-index: 1050 !important;
-        }
-        #pageHelpModal .modal-content {
-            border-radius: 15px;
-            overflow: hidden;
-            border: none;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
-        }
-    </style>
-    
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
