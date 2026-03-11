@@ -28,18 +28,28 @@ $umbral_perdido = intval($_GET['umbral_perdido'] ?? 60);
 try {
     // Definición de base de filtros
     $whereVmtap = " AND Sucursal_Nombre IN (SELECT nombre FROM sucursales WHERE VMTAP = 1)";
+    
+    // Filtro Global (Ignora Fecha para Salud/RFM)
+    $whereGlobal = "WHERE Anulado = 0" . $whereVmtap;
+    $paramsGlobal = [];
+
+    // Filtro Periodo (Para Rendimiento/Ventas)
     $whereSimple = "WHERE Anulado = 0 AND Fecha BETWEEN :f_inicio AND :f_fin" . $whereVmtap;
     $params = [':f_inicio' => $fecha_inicio, ':f_fin' => $fecha_fin];
 
     if ($sucursal && $sucursal !== 'todas') {
         $whereSimple .= " AND Sucursal_Nombre = :sucursal";
+        $whereGlobal .= " AND Sucursal_Nombre = :suc_global";
         $params[':sucursal'] = $sucursal;
+        $paramsGlobal[':suc_global'] = $sucursal;
     }
 
     if ($tipo_cliente === 'club') {
         $whereSimple .= " AND CodCliente > 0";
+        $whereGlobal .= " AND CodCliente > 0";
     } elseif ($tipo_cliente === 'general') {
         $whereSimple .= " AND CodCliente = 0";
+        $whereGlobal .= " AND CodCliente = 0";
     }
 
     // 0.1 Participación Ingresos (Club vs General) - Independiente del filtro tipo_cliente
@@ -57,7 +67,7 @@ try {
         'total' => ($part_raw[1] ?? 0) + ($part_raw[0] ?? 0)
     ];
 
-    // 0.2 Comparativa Periodo Anterior (Nuevos Clientes)
+    // 0.2 Comparativa Periodo Anterior (Nuevos Clientes - Rendimiento)
     $diff = strtotime($fecha_fin) - strtotime($fecha_inicio);
     $p_inicio = date('Y-m-d', strtotime($fecha_inicio) - $diff - 86400);
     $p_fin = date('Y-m-d', strtotime($fecha_inicio) - 86400);
@@ -80,7 +90,7 @@ try {
             SELECT 
                 CodCliente, CodPedido, MAX(Fecha) as Fecha, MAX(MontoFactura) as TotalPedido, MAX(Sucursal_Nombre) as Sucursal
             FROM VentasGlobalesAccessCSV
-            $whereSimple
+            $whereGlobal
             GROUP BY CodPedido
         )
         SELECT 
@@ -97,8 +107,19 @@ try {
     ";
 
     $stmt = $conn->prepare($sqlRFM);
-    $stmt->execute($params);
+    $stmt->execute($paramsGlobal);
     $raw_data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Conteo Universo Total de Socios (Para % de base)
+    $whereUniverso = "WHERE VMTAP = 1";
+    $paramsUniv = [];
+    if($sucursal && $sucursal !== 'todas') {
+        $whereUniverso .= " AND nombre = :s_univ";
+        $paramsUniv[':s_univ'] = $sucursal;
+    }
+    $total_universo = $conn->prepare("SELECT COUNT(*) FROM clientesclub WHERE nombre_sucursal IN (SELECT nombre FROM sucursales $whereUniverso)");
+    $total_universo->execute($paramsUniv);
+    $universo_count = $total_universo->fetchColumn() ?: 1;
 
     // Salir si no hay datos
     if (empty($raw_data)) {
@@ -283,6 +304,7 @@ try {
             'churn_rate' => round(($perdidos / max(1, $total_count)) * 100, 2),
             'retention_metrics' => calculateRetentionDetail($conn, $whereSimple, $params),
             'participacion' => $participacion,
+            'universo_total' => $universo_count,
             'raw' => [
                 'total_pedidos' => $sum_f,
                 'total_ingresos' => $sum_m

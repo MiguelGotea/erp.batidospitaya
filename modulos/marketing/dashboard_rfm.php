@@ -101,6 +101,7 @@ $puedeDescargar = tienePermiso('dashboard_rfm', 'descargar', $cargoOperario);
                             <div class="icon-circle bg-warning-light text-warning mb-2 mx-auto"><i class="fas fa-exclamation-triangle"></i></div>
                             <div class="text-secondary small">En Riesgo</div>
                             <h3 class="fw-bold mb-0" id="kpiEnRiesgo">-</h3>
+                            <div class="small fw-bold text-warning" id="kpiEnRiesgoPerc"></div>
                         </div>
                     </div>
                     <div class="col-md-3 col-xl-1-5">
@@ -108,6 +109,7 @@ $puedeDescargar = tienePermiso('dashboard_rfm', 'descargar', $cargoOperario);
                             <div class="icon-circle bg-danger-light text-danger mb-2 mx-auto"><i class="fas fa-user-slash"></i></div>
                             <div class="text-secondary small">Perdidos</div>
                             <h3 class="fw-bold mb-0" id="kpiPerdidos">-</h3>
+                            <div class="small fw-bold text-danger" id="kpiPerdidosPerc"></div>
                         </div>
                     </div>
                     <div class="col-md-3 col-xl-1-5 text-nowrap">
