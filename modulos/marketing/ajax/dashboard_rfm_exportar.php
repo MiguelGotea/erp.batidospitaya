@@ -33,7 +33,7 @@ try {
                 DATEDIFF(CURDATE(), MAX(r.Fecha)) as Recency,
                 COUNT(r.CodPedido) as Frequency,
                 SUM(r.TotalPedido) as Monetary,
-                MAX(CONCAT(COALESCE(c.nombres,''), ' ', COALESCE(c.apellidos, ''))) as ClienteNombre
+                MAX(CONCAT(COALESCE(c.nombre,''), ' ', COALESCE(c.apellido, ''))) as ClienteNombre
             FROM ResumenPedidos r
             LEFT JOIN clientesclub c ON r.CodCliente = c.membresia
             GROUP BY r.CodCliente
