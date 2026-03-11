@@ -106,11 +106,17 @@ function updateKPIs(summary) {
         const color = trend >= 0 ? 'text-success' : 'text-danger';
         const icon = trend >= 0 ? 'fa-caret-up' : 'fa-caret-down';
         $('#kpiNuevosTrend').html(`<span class="${color}"><i class="fas ${icon}"></i> ${Math.abs(trendPerc).toFixed(1)}%</span>`).attr('title', `Ant: ${summary.prev_nuevos}`);
-    }
-
-    // Tooltips
+    }    // Tooltips - Re-inicialización forzada para evitar caché de Bootstrap
     const umbral = $('#umbral_perdido').val();
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
     
+    tooltipTriggerList.forEach(el => {
+        const instance = bootstrap.Tooltip.getInstance(el);
+        if (instance) instance.dispose();
+        // Limpiamos atributos que Bootstrap usa para cachear
+        el.removeAttribute('data-bs-original-title');
+    });
+
     $('#tipClubActivos').attr('title', `<div class="tooltip-data-row"><span>Criterio:</span> <span><= ${umbral} días</span></div><div class="tooltip-data-row"><span>Total Activos:</span> <span>${summary.activos}</span></div><div class="tooltip-formula">Socios con al menos una compra en los últimos ${umbral} días.</div>`);
     $('#tipNuevos').attr('title', `<div class="tooltip-data-row"><span>Registros:</span> <span>${summary.nuevos}</span></div><div class="tooltip-data-row"><span>Previo:</span> <span>${summary.prev_nuevos}</span></div><div class="tooltip-formula">Comparado contra el periodo anterior equivalente.</div>`);
     $('#tipEnRiesgo').attr('title', `<div class="tooltip-data-row"><span>Criterio:</span> <span>${Math.floor(umbral/2)}-${umbral} días</span></div><div class="tooltip-formula">Socios enfriándose.</div>`);
@@ -120,11 +126,8 @@ function updateKPIs(summary) {
     $('#tipParticipation').attr('title', `<div class="tooltip-data-row"><span>Venta Club:</span> <span>${fmt(summary.participacion.club)}</span></div><div class="tooltip-data-row"><span>Venta Gen:</span> <span>${fmt(summary.participacion.general)}</span></div>`);
     $('#tipChurnTotal').attr('title', `<div class="tooltip-data-row"><span>Perdidos:</span> <span>${summary.perdidos}</span></div><div class="tooltip-formula">Porcentaje de pérdida sobre base filtrada.</div>`);
 
-    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    tooltipTriggerList.map(function (tooltipTriggerEl) {
-        const oldTip = bootstrap.Tooltip.getInstance(tooltipTriggerEl);
-        if (oldTip) oldTip.dispose();
-        return new bootstrap.Tooltip(tooltipTriggerEl, { sanitize: false });
+    tooltipTriggerList.forEach(el => {
+        new bootstrap.Tooltip(el, { sanitize: false });
     });
 }
 
