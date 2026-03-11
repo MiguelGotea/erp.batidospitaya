@@ -211,22 +211,24 @@ try {
     $whereH2 = str_replace([':f_inicio', ':f_fin', ':sucursal'], [':f3', ':f4', ':s2'], $where);
     $whereH3 = str_replace([':f_inicio', ':f_fin', ':sucursal'], [':f5', ':f6', ':s3'], $where);
     $whereH4 = str_replace([':f_inicio', ':f_fin', ':sucursal'], [':f7', ':f8', ':s4'], $where);
+    $whereH5 = str_replace([':f_inicio', ':f_fin', ':sucursal'], [':f9', ':f10', ':s5'], $where);
+    $whereH6 = str_replace([':f_inicio', ':f_fin', ':sucursal'], [':f11', ':f12', ':s6'], $where);
 
     $paramsH = [
-        ':f1' => $fecha_inicio,
-        ':f2' => $fecha_fin,
-        ':f3' => $fecha_inicio,
-        ':f4' => $fecha_fin,
-        ':f5' => $fecha_inicio,
-        ':f6' => $fecha_fin,
-        ':f7' => $fecha_inicio,
-        ':f8' => $fecha_fin
+        ':f1' => $fecha_inicio, ':f2' => $fecha_fin,
+        ':f3' => $fecha_inicio, ':f4' => $fecha_fin,
+        ':f5' => $fecha_inicio, ':f6' => $fecha_fin,
+        ':f7' => $fecha_inicio, ':f8' => $fecha_fin,
+        ':f9' => $fecha_inicio, ':f10' => $fecha_fin,
+        ':f11' => $fecha_inicio, ':f12' => $fecha_fin
     ];
     if ($sucursal) {
         $paramsH[':s1'] = $sucursal;
         $paramsH[':s2'] = $sucursal;
         $paramsH[':s3'] = $sucursal;
         $paramsH[':s4'] = $sucursal;
+        $paramsH[':s5'] = $sucursal;
+        $paramsH[':s6'] = $sucursal;
     }
 
     $sqlHabits = "
@@ -234,15 +236,14 @@ try {
             (SELECT DBBatidos_Nombre FROM VentasGlobalesAccessCSV $whereH1 AND Tipo IN ('Batido', 'Bowl', 'Limonada', 'Pitaya Store', 'Waffles') GROUP BY DBBatidos_Nombre ORDER BY COUNT(*) DESC LIMIT 1) as FavProduct,
             (SELECT Medida FROM VentasGlobalesAccessCSV $whereH2 AND Tipo IN ('Batido', 'Limonada') AND Medida IS NOT NULL AND Medida <> '' GROUP BY Medida ORDER BY COUNT(*) DESC LIMIT 1) as FavSize,
             (SELECT Modalidad FROM VentasGlobalesAccessCSV $whereH3 GROUP BY Modalidad ORDER BY COUNT(*) DESC LIMIT 1) as FavModalidad,
-            (SELECT HOUR(Hora) FROM VentasGlobalesAccessCSV $whereH1 GROUP BY HOUR(Hora) ORDER BY COUNT(*) DESC LIMIT 1) as FavHour,
-            (SELECT DAYOFWEEK(Fecha) FROM VentasGlobalesAccessCSV $whereH1 GROUP BY DAYOFWEEK(Fecha) ORDER BY COUNT(*) DESC LIMIT 1) as FavDay,
+            (SELECT HOUR(Hora) FROM VentasGlobalesAccessCSV $whereH5 GROUP BY HOUR(Hora) ORDER BY COUNT(*) DESC LIMIT 1) as FavHour,
+            (SELECT DAYOFWEEK(Fecha) FROM VentasGlobalesAccessCSV $whereH6 GROUP BY DAYOFWEEK(Fecha) ORDER BY COUNT(*) DESC LIMIT 1) as FavDay,
             COUNT(DISTINCT CASE WHEN CodigoPromocion <> 5 THEN CodPedido END) as PromoOrders,
             COUNT(DISTINCT CodPedido) as TotalOrders,
             SUM(CASE WHEN Puntos < 0 THEN 1 ELSE 0 END) as RedemptionLines
         FROM VentasGlobalesAccessCSV
         $whereH4
     ";
-
 
     $stmtH = $conn->prepare($sqlHabits);
     $stmtH->execute($paramsH);
