@@ -148,7 +148,7 @@ try {
     $sqlHabits = "
         SELECT 
             (SELECT DBBatidos_Nombre FROM VentasGlobalesAccessCSV $whereH1 AND Tipo IN ('Batido', 'Bowl', 'Limonada', 'Pitaya Store', 'Waffles') GROUP BY DBBatidos_Nombre ORDER BY COUNT(*) DESC LIMIT 1) as FavProduct,
-            (SELECT Medida FROM VentasGlobalesAccessCSV $whereH2 AND Tipo IN ('Batido', 'Limonada') AND Medida IN ('S','M','L') GROUP BY Medida ORDER BY COUNT(*) DESC LIMIT 1) as FavSize,
+            (SELECT Medida FROM VentasGlobalesAccessCSV $whereH2 AND Tipo IN ('Batido', 'Limonada') AND Medida IS NOT NULL AND Medida <> '' GROUP BY Medida ORDER BY COUNT(*) DESC LIMIT 1) as FavSize,
             (SELECT Modalidad FROM VentasGlobalesAccessCSV $whereH3 GROUP BY Modalidad ORDER BY COUNT(*) DESC LIMIT 1) as FavModalidad,
             COUNT(DISTINCT CASE WHEN CodigoPromocion <> 5 THEN CodPedido END) as PromoOrders,
             COUNT(DISTINCT CodPedido) as TotalOrders,
