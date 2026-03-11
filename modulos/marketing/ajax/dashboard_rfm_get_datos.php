@@ -4,9 +4,11 @@ require_once '../../../core/database/conexion.php';
 require_once '../../../core/permissions/permissions.php';
 
 // Sincronizar zona horaria de MySQL para este script
-$conn->query("SET time_zone = '-06:00'");
+if(isset($conn)) $conn->query("SET time_zone = '-06:00'");
 
 header('Content-Type: application/json');
+set_time_limit(120);
+ini_set('memory_limit', '512M');
 
 $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
@@ -184,15 +186,26 @@ try {
         $r['Antiguedad'] = $r['FechaRegistro'] ? (int)floor((time() - strtotime($r['FechaRegistro'])) / 86400) : 0;
     }
 
-    // Obtener Último Producto para los top 1000
+    // Obtener Último Producto para los top 1000 de forma eficiente
     if (!empty($raw_data)) {
-        $ids = array_column(array_slice($raw_data, 0, 1000), 'CodCliente');
-        $sqlLast = "SELECT CodCliente, DBBatidos_Nombre FROM VentasGlobalesAccessCSV WHERE CodCliente IN (" . implode(',', $ids) . ") AND Anulado = 0 ORDER BY Fecha DESC, Hora DESC";
-        $last_products = $conn->query($sqlLast)->fetchAll(PDO::FETCH_GROUP | PDO::FETCH_COLUMN);
+        $slice = array_slice($raw_data, 0, 1000);
+        $ids = array_column($slice, 'CodCliente');
+        $inClause = implode(',', array_map('intval', $ids));
+        
+        $sqlLast = "
+            SELECT v.CodCliente, v.DBBatidos_Nombre 
+            FROM VentasGlobalesAccessCSV v
+            INNER JOIN (
+                SELECT CodCliente, MAX(Fecha) as MaxF, MAX(Hora) as MaxH
+                FROM VentasGlobalesAccessCSV
+                WHERE CodCliente IN ($inClause) AND Anulado = 0
+                GROUP BY CodCliente
+            ) t ON v.CodCliente = t.CodCliente AND v.Fecha = t.MaxF AND v.Hora = t.MaxH
+        ";
+        
+        $last_res = $conn->query($sqlLast)->fetchAll(PDO::FETCH_KEY_PAIR);
         foreach ($raw_data as &$r) {
-            if (isset($last_products[$r['CodCliente']])) {
-                $r['UltimoProducto'] = $last_products[$r['CodCliente']][0];
-            }
+            $r['UltimoProducto'] = $last_res[$r['CodCliente']] ?? '--';
         }
     }
 
@@ -263,49 +276,47 @@ try {
     echo json_encode(['success' => false, 'message' => $e->getMessage()]);
 }
 
-/**
- * Calcula la tasa de retención detallada comparando visitas en la primera vs segunda mitad del periodo
- */
 function calculateRetentionDetail($conn, $where, $params) {
     try {
-        $sql = "SELECT CodCliente, Fecha FROM VentasGlobalesAccessCSV $where GROUP BY CodCliente, CodPedido, Fecha ORDER BY Fecha ASC";
-        $stmt = $conn->prepare($sql);
-        $stmt->execute($params);
-        $visitas = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        // Encontrar puntos medios de forma eficiente en SQL
+        $sqlDates = "SELECT MIN(Fecha) as min_f, MAX(Fecha) as max_f FROM VentasGlobalesAccessCSV $where";
+        $stmtDates = $conn->prepare($sqlDates);
+        $stmtDates->execute($params);
+        $limits = $stmtDates->fetch(PDO::FETCH_ASSOC);
 
-        if (empty($visitas)) return ['rate' => 0, 'h1' => 0, 'h2' => 0];
-
-        $user_visits = [];
-        $min_ts = null; $max_ts = null;
-        foreach ($visitas as $v) {
-            $ts = strtotime($v['Fecha']);
-            $user_visits[$v['CodCliente']][] = $ts;
-            if ($min_ts === null || $ts < $min_ts) $min_ts = $ts;
-            if ($max_ts === null || $ts > $max_ts) $max_ts = $ts;
+        if (!$limits['min_f'] || $limits['min_f'] === $limits['max_f']) {
+            return ['rate' => 0, 'h1' => 0, 'h2' => 0];
         }
 
-        if ($min_ts === $max_ts) return ['rate' => 0, 'h1' => count($user_visits), 'h2' => 0];
+        $min_ts = strtotime($limits['min_f']);
+        $max_ts = strtotime($limits['max_f']);
+        $mid_date = date('Y-m-d H:i:s', $min_ts + ($max_ts - $min_ts) / 2);
 
-        $ts_mitad = $min_ts + ($max_ts - $min_ts) / 2;
-        $users_h1 = 0;
-        $users_h1_returned = 0;
+        // H1 Users
+        $sqlH1 = "SELECT COUNT(DISTINCT CodCliente) FROM VentasGlobalesAccessCSV $where AND Fecha <= :mid";
+        $stmtH1 = $conn->prepare($sqlH1);
+        $paramsH1 = array_merge($params, [':mid' => $mid_date]);
+        $stmtH1->execute($paramsH1);
+        $h1_count = $stmtH1->fetchColumn();
 
-        foreach ($user_visits as $cid => $dates) {
-            $has_h1 = false; $has_h2 = false;
-            foreach ($dates as $d) {
-                if ($d <= $ts_mitad) $has_h1 = true;
-                if ($d > $ts_mitad) $has_h2 = true;
-            }
-            if ($has_h1) {
-                $users_h1++;
-                if ($has_h2) $users_h1_returned++;
-            }
-        }
+        // H2 Users who were in H1
+        $sqlH2 = "
+            SELECT COUNT(DISTINCT CodCliente) 
+            FROM VentasGlobalesAccessCSV 
+            $where 
+            AND Fecha > :mid 
+            AND CodCliente IN (
+                SELECT DISTINCT CodCliente FROM VentasGlobalesAccessCSV $where AND Fecha <= :mid
+            )
+        ";
+        $stmtH2 = $conn->prepare($sqlH2);
+        $stmtH2->execute($paramsH1);
+        $h2_retained = $stmtH2->fetchColumn();
 
         return [
-            'rate' => ($users_h1 > 0) ? round(($users_h1_returned / $users_h1) * 100, 2) : 0,
-            'h1' => $users_h1,
-            'h2' => $users_h1_returned
+            'rate' => ($h1_count > 0) ? round(($h2_retained / $h1_count) * 100, 2) : 0,
+            'h1' => (int)$h1_count,
+            'h2' => (int)$h2_retained
         ];
     } catch (Exception $e) {
         return ['rate' => 0, 'h1' => 0, 'h2' => 0];

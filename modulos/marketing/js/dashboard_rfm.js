@@ -286,9 +286,9 @@ function updateHabitSection(habits) {
     });
 
     // Donuts: Medida, Modalidad, Promo
-    renderDonut('chartHabitMeasure', habits.medida, chartHabitMeasure);
-    renderDonut('chartHabitModality', habits.modalidad, chartHabitModality);
-    renderDonut('chartHabitPromo', { 'Con Promo': habits.promo.si, 'Sin Promo': habits.promo.no }, chartHabitPromo);
+    chartHabitMeasure = renderDonut('chartHabitMeasure', habits.medida, chartHabitMeasure);
+    chartHabitModality = renderDonut('chartHabitModality', habits.modalidad, chartHabitModality);
+    chartHabitPromo = renderDonut('chartHabitPromo', { 'Con Promo': habits.promo.si, 'Sin Promo': habits.promo.no }, chartHabitPromo);
 }
 
 function renderDonut(id, data, chartRef) {
