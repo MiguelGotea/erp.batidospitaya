@@ -49,14 +49,24 @@ try {
     $recencies = array_column($raw_data, 'Recency');
     $frequencies = array_column($raw_data, 'Frequency');
     $monetaries = array_column($raw_data, 'Monetary');
-    sort($recencies); sort($frequencies); sort($monetaries);
+    sort($recencies);
+    sort($frequencies);
+    sort($monetaries);
     $total_count = count($raw_data);
 
-    $get_q = function($val, $arr, $inv = false) use ($total_count) {
-        $pos = array_search($val, $arr); $p = $pos / max(1, $total_count);
-        if ($inv) $p = 1 - $p;
-        if ($p <= 0.2) return 1; if ($p <= 0.4) return 2;
-        if ($p <= 0.6) return 3; if ($p <= 0.8) return 4;
+    $get_q = function ($val, $arr, $inv = false) use ($total_count) {
+        $pos = array_search($val, $arr);
+        $p = $pos / max(1, $total_count);
+        if ($inv)
+            $p = 1 - $p;
+        if ($p <= 0.2)
+            return 1;
+        if ($p <= 0.4)
+            return 2;
+        if ($p <= 0.6)
+            return 3;
+        if ($p <= 0.8)
+            return 4;
         return 5;
     };
 
@@ -75,12 +85,18 @@ try {
         $m_score = $get_q($row['Monetary'], $monetaries);
         $total_score = $r_score + $f_score + $m_score;
 
-        if ($r_score >= 4 && $f_score >= 4) $seg = 'Campeón';
-        elseif ($r_score >= 3 && $f_score >= 3) $seg = 'Leal';
-        elseif ($r_score <= 2 && $f_score >= 3) $seg = 'En Riesgo';
-        elseif ($r_score <= 2 && $f_score <= 2) $seg = 'Perdido';
-        elseif ($r_score >= 4 && $f_score <= 2) $seg = 'Nuevo';
-        else $seg = 'Hibernando';
+        if ($r_score >= 4 && $f_score >= 4)
+            $seg = 'Campeón';
+        elseif ($r_score >= 3 && $f_score >= 3)
+            $seg = 'Leal';
+        elseif ($r_score <= 2 && $f_score >= 3)
+            $seg = 'En Riesgo';
+        elseif ($r_score <= 2 && $f_score <= 2)
+            $seg = 'Perdido';
+        elseif ($r_score >= 4 && $f_score <= 2)
+            $seg = 'Nuevo';
+        else
+            $seg = 'Hibernando';
 
         fputcsv($output, [
             $row['CodCliente'],
