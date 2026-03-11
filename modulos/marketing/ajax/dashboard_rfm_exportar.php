@@ -14,6 +14,7 @@ $fecha_inicio = $_GET['fecha_inicio'] ?? date('Y-m-d', strtotime('-90 days'));
 $fecha_fin = $_GET['fecha_fin'] ?? date('Y-m-d');
 $sucursal = $_GET['sucursal'] ?? null;
 
+
 try {
     $where = "WHERE Anulado = 0 AND CodCliente > 0 AND Fecha BETWEEN :f_inicio AND :f_fin";
     $params = [':f_inicio' => $fecha_inicio, ':f_fin' => $fecha_fin];
@@ -47,11 +48,11 @@ try {
 
     $filename_date = date('Ymd_His');
     header('Content-Type: text/csv; charset=utf-8');
-    header('Content-Disposition: attachment; filename=RFM_Export_'.$filename_date.'.csv');
+    header('Content-Disposition: attachment; filename=RFM_Export_' . $filename_date . '.csv');
 
     $output = fopen('php://output', 'w');
-    fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF)); // UTF-8 BOM
-    
+    fprintf($output, chr(0xEF) . chr(0xBB) . chr(0xBF)); // UTF-8 BOM
+
     fputcsv($output, ['ID Cliente', 'Nombre', 'Recencia (Días)', 'Frecuencia (Visitas)', 'Monetario (LTV)']);
 
     foreach ($data as $row) {
