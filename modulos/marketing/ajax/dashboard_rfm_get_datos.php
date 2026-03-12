@@ -422,7 +422,7 @@ try {
     $sqlHabits = "
         SELECT 
             v.Modalidad, 
-            (v.CodigoPromocion IS NOT NULL AND v.CodigoPromocion <> '') as EsPromo, 
+            (v.CodigoPromocion IS NOT NULL AND v.CodigoPromocion <> '' AND v.CodigoPromocion <> '5') as EsPromo, 
             COUNT(*) as Count
         FROM VentasGlobalesAccessCSV v
         JOIN DBBatidos d ON v.CodProducto = d.CodBatido
