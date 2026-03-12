@@ -44,13 +44,11 @@ try {
         $paramsGlobal[':suc_global'] = $sucursal;
     }
 
-    if ($tipo_cliente === 'club') {
-        $whereSimple .= " AND CodCliente > 0";
-        $whereGlobal .= " AND CodCliente > 0";
-    } elseif ($tipo_cliente === 'general') {
-        $whereSimple .= " AND CodCliente = 0";
-        $whereGlobal .= " AND CodCliente = 0";
-    }
+    /* 
+       ELIMINADO: Filtro de CodCliente a nivel de fila.
+       Se aplicará después de agrupar por CodPedido para no perder montos de líneas sin ID (tips/envío) 
+       en pedidos que sÍ son de miembros.
+    */
 
     // 0.1 Participación Ingresos (Club vs General) - Independiente del filtro tipo_cliente
     $wherePart = "WHERE Anulado = 0 AND Fecha BETWEEN :f_inicio AND :f_fin" . $whereVmtap;
@@ -102,6 +100,11 @@ try {
     $prev_nuevos = $stmtPrev->fetch(PDO::FETCH_ASSOC)['PrevNuevos'] ?? 0;
 
     // 1. Obtener Datos RFM (Agrupado por Cliente)
+    // Filtramos por tipo_cliente DESPUÉS de agrupar por pedido para integridad de datos
+    $havingRFM = "";
+    if ($tipo_cliente === 'club') $havingRFM = "HAVING MAX(r.CodCliente) > 0";
+    elseif ($tipo_cliente === 'general') $havingRFM = "HAVING MAX(r.CodCliente) = 0";
+
     $sqlRFM = "
         WITH ResumenPedidos AS (
             SELECT 
@@ -118,13 +121,14 @@ try {
             r.CodCliente,
             COALESCE(NULLIF(MAX(c.nombre_sucursal), ''), MAX(r.Sucursal)) as Sucursal,
             DATEDIFF(CURDATE(), MAX(r.Fecha)) as Recency,
-            COUNT(r.CodCliente) as Frequency,
+            COUNT(r.CodPedido) as Frequency,
             SUM(r.TotalPedido) as Monetary,
             MAX(CONCAT(COALESCE(c.nombre,''), ' ', COALESCE(c.apellido, ''))) as ClienteNombre,
             MAX(c.fecha_registro) as FechaRegistro
         FROM ResumenPedidos r
         LEFT JOIN clientesclub c ON r.CodCliente = c.membresia
         GROUP BY r.CodCliente
+        $havingRFM
     ";
 
     $stmt = $conn->prepare($sqlRFM);
@@ -221,15 +225,20 @@ try {
     $nuevos_res = $stmtNew->fetch();
 
     // Ingresos y Tickets del PERIODO (para KPIs de Rendimiento)
+    // Usamos EXACTAMENTE la misma lógica que sqlPart para asegurar consistencia
     $stmtPeriod = $conn->prepare("
         SELECT 
             SUM(MontoPedido) as TotalIngresos,
             COUNT(*) as TotalPedidos
         FROM (
-            SELECT CodPedido, MAX(MontoFactura) as MontoPedido 
+            SELECT 
+                CodPedido, 
+                MAX(CodCliente) as ClienteID, 
+                MAX(MontoFactura) as MontoPedido 
             FROM VentasGlobalesAccessCSV 
-            $whereSimple AND CodCliente > 0
+            $whereSimple 
             GROUP BY CodPedido
+            HAVING ClienteID > 0
         ) t
     ");
     $stmtPeriod->execute($params);
@@ -237,7 +246,7 @@ try {
     
     $sum_m_period = $period_stats['TotalIngresos'] ?? 0;
     $sum_f_period = $period_stats['TotalPedidos'] ?? 0;
-    $ticket_club = $sum_f_period > 1 ? $sum_m_period / $sum_f_period : 0;
+    $ticket_club = $sum_f_period > 0 ? $sum_m_period / $sum_f_period : 0;
 
     // 4. Evolución de Segmentos (Temporal) - Usamos el histórico real y SemanasSistema
     $sqlEvol = "
@@ -342,20 +351,35 @@ try {
         else $h_promo['no'] += $hr['Count'];
     }
 
+    // Filtro adicional para Heatmap y TopProd si estamos en vista Club/General
+    $filterOrders = "";
+    if ($tipo_cliente === 'club') $filterOrders = "AND CodPedido IN (SELECT CodPedido FROM VentasGlobalesAccessCSV WHERE CodCliente > 0)";
+    elseif ($tipo_cliente === 'general') $filterOrders = "AND CodPedido NOT IN (SELECT CodPedido FROM VentasGlobalesAccessCSV WHERE CodCliente > 0)";
+
     $sqlHeatmap = "
         SELECT 
             HOUR(Hora) as Hour, 
             CASE WHEN DAYOFWEEK(Fecha) = 1 THEN 7 ELSE DAYOFWEEK(Fecha) - 1 END as Day, 
             COUNT(DISTINCT CodPedido) as Count 
         FROM VentasGlobalesAccessCSV 
-        $whereSimple 
+        $whereSimple $filterOrders
         GROUP BY Hour, Day
     ";
     $stmtHeat = $conn->prepare($sqlHeatmap);
     $stmtHeat->execute($params);
     $heatmap = $stmtHeat->fetchAll(PDO::FETCH_ASSOC);
 
-    $sqlTopProd = "SELECT DBBatidos_Nombre as Product, COUNT(*) as Count FROM VentasGlobalesAccessCSV $whereSimple AND Tipo IN ('Batido', 'Bowl', 'Limonada', 'Pitaya Store', 'Waffles') GROUP BY Product ORDER BY Count DESC LIMIT 10";
+    $sqlTopProd = "
+        SELECT 
+            DBBatidos_Nombre as Product, 
+            COUNT(*) as Count 
+        FROM VentasGlobalesAccessCSV 
+        $whereSimple $filterOrders
+        AND Tipo IN ('Batido', 'Bowl', 'Limonada', 'Pitaya Store', 'Waffles') 
+        GROUP BY Product 
+        ORDER BY Count DESC 
+        LIMIT 10
+    ";
     $stmtTP = $conn->prepare($sqlTopProd);
     $stmtTP->execute($params);
     $top_products = $stmtTP->fetchAll(PDO::FETCH_ASSOC);
