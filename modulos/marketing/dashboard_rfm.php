@@ -89,7 +89,7 @@ $puedeDescargar = tienePermiso('dashboard_rfm', 'descargar', $cargoOperario);
                                         data-bs-toggle="tooltip" data-bs-html="true" id="tipAvgLTV">
                                         <div class="icon-circle bg-teal-light text-teal mb-2 mx-auto sm"><i
                                                 class="fas fa-globe-americas"></i></div>
-                                        <div class="text-secondary x-small fw-bold">LTV Prom. Global</div>
+                                        <div class="text-secondary x-small fw-bold">LTV</div>
                                         <h4 class="fw-bold mb-0" id="kpiAvgLTV">-</h4>
                                     </div>
                                 </div>
@@ -240,8 +240,7 @@ $puedeDescargar = tienePermiso('dashboard_rfm', 'descargar', $cargoOperario);
                                             onclick="toggleFilter(this, event)"></i>
                                     </th>
                                     <th data-column="Monetary" data-type="number">
-                                        LTV <i class="bi bi-funnel filter-icon"
-                                            onclick="toggleFilter(this, event)"></i>
+                                        LTV <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this, event)"></i>
                                     </th>
                                     <th data-column="TicketPromedio" data-type="number">
                                         Ticket <i class="bi bi-funnel filter-icon"
@@ -320,7 +319,8 @@ $puedeDescargar = tienePermiso('dashboard_rfm', 'descargar', $cargoOperario);
                     <div class="col-lg-6">
                         <div class="glass-card p-4">
                             <h6 class="fw-bold mb-4">Productos Más Vendidos (Club)</h6>
-                            <div id="topProductsList" class="scroller px-2" style="height: 420px; overflow-y: auto;"></div>
+                            <div id="topProductsList" class="scroller px-2" style="height: 420px; overflow-y: auto;">
+                            </div>
                         </div>
                     </div>
                     <div class="col-lg-4">
@@ -568,7 +568,8 @@ $puedeDescargar = tienePermiso('dashboard_rfm', 'descargar', $cargoOperario);
                                     por el socio.</div>
                             </div>
                             <div class="col-md-6">
-                                <div class="x-small"><b>LTV (Life Time Value):</b> Valor total real del socio en **toda la marca**, incluyendo locales cerrados o delivery. Base para el Score RFM.</div>
+                                <div class="x-small"><b>LTV (Life Time Value):</b> Valor total real del socio en **toda
+                                    la marca**, incluyendo locales cerrados o delivery. Base para el Score RFM.</div>
                             </div>
                             <div class="col-md-6">
                                 <div class="x-small"><b>Ticket:</b> Gasto promedio por pedido (Monetario dividido entre
