@@ -83,89 +83,96 @@ $puedeDescargar = tienePermiso('dashboard_rfm', 'descargar', $cargoOperario);
                 </div>
 
                 <!-- 📌 SECCIÓN 1 — KPIs Resumen -->
-                <div class="row g-3 mb-4" id="kpiGrid">
-                    <div class="col-md-3 col-xl-1-5">
-                        <div class="glass-card kpi-card-new p-3 text-center position-relative" data-bs-toggle="tooltip"
-                            data-bs-html="true" id="tipClubActivos">
-                            <span class="scope-badge scope-global">Global</span>
-                            <div class="icon-circle bg-primary-light text-primary mb-2 mx-auto"><i
-                                    class="fas fa-users"></i></div>
-                            <div class="text-secondary small">Club Activos</div>
-                            <h3 class="fw-bold mb-0" id="kpiTotalClub">-</h3>
-                            <div class="small fw-bold text-primary" id="kpiTotalClubPerc"></div>
+                <div class="row g-3 mb-4">
+                    <!-- Salud de la Base (Global) -->
+                    <div class="col-xl-6">
+                        <div class="d-flex align-items-center mb-3">
+                            <h6 class="fw-bold mb-0 text-dark small text-uppercase letter-spacing-1">
+                                <i class="fas fa-heartbeat me-2 text-danger"></i>Salud de la Base (Global)
+                            </h6>
+                            <hr class="flex-grow-1 ms-3 opacity-25">
                         </div>
-                    </div>
-                    <div class="col-md-3 col-xl-1-5">
-                        <div class="glass-card kpi-card-new p-3 text-center position-relative" data-bs-toggle="tooltip"
-                            data-bs-html="true" id="tipNuevos">
-                            <span class="scope-badge scope-period">Periodo</span>
-                            <div class="icon-circle bg-success-light text-success mb-2 mx-auto"><i
-                                    class="fas fa-user-plus"></i></div>
-                            <div class="text-secondary small">Nuevos Periodo</div>
-                            <h3 class="fw-bold mb-0" id="kpiNuevos">-</h3>
-                            <div class="small fw-bold" id="kpiNuevosTrend"></div>
-                        </div>
-                    </div>
-                    <div class="col-md-3 col-xl-1-5">
-                        <div class="glass-card kpi-card-new p-3 text-center position-relative" data-bs-toggle="tooltip"
-                            data-bs-html="true" id="tipEnRiesgo">
-                            <span class="scope-badge scope-global">Global</span>
-                            <div class="icon-circle bg-warning-light text-warning mb-2 mx-auto"><i
-                                    class="fas fa-exclamation-triangle"></i></div>
-                            <div class="text-secondary small">En Riesgo</div>
-                            <h3 class="fw-bold mb-0" id="kpiEnRiesgo">-</h3>
-                            <div class="small fw-bold text-warning" id="kpiEnRiesgoPerc"></div>
-                        </div>
-                    </div>
-                    <div class="col-md-3 col-xl-1-5">
-                        <div class="glass-card kpi-card-new p-3 text-center position-relative" data-bs-toggle="tooltip"
-                            data-bs-html="true" id="tipPerdidos">
-                            <span class="scope-badge scope-global">Global</span>
-                            <div class="icon-circle bg-danger-light text-danger mb-2 mx-auto"><i
-                                    class="fas fa-user-slash"></i></div>
-                            <div class="text-secondary small">Perdidos</div>
-                            <h3 class="fw-bold mb-0" id="kpiPerdidos">-</h3>
-                            <div class="small fw-bold text-danger" id="kpiPerdidosPerc"></div>
-                        </div>
-                    </div>
-                    <div class="col-md-3 col-xl-1-5 text-nowrap">
-                        <div class="glass-card kpi-card-new p-3 text-center position-relative" data-bs-toggle="tooltip"
-                            data-bs-html="true" id="tipParticipation">
-                            <span class="scope-badge scope-period">Periodo</span>
-                            <div class="icon-circle bg-indigo-light text-indigo mb-2 mx-auto"><i
-                                    class="fas fa-chart-pie"></i></div>
-                            <div class="text-secondary small">Part. Ingresos Club</div>
-                            <h3 class="fw-bold mb-0" id="kpiParticipation">-</h3>
-                        </div>
-                    </div>
-                    <div class="col-md-3 col-xl-1-5">
-                        <div class="glass-card kpi-card-new p-3 text-center position-relative" data-bs-toggle="tooltip"
-                            data-bs-html="true" id="tipTicket">
-                            <span class="scope-badge scope-period">Periodo</span>
-                            <div class="icon-circle bg-info-light text-info mb-2 mx-auto"><i class="fas fa-receipt"></i>
+                        <div class="row g-2">
+                            <div class="col-md-3">
+                                <div class="glass-card kpi-card-new p-2 text-center position-relative h-100" data-bs-toggle="tooltip" data-bs-html="true" id="tipClubActivos">
+                                    <span class="scope-badge scope-global">Global</span>
+                                    <div class="icon-circle bg-primary-light text-primary mb-2 mx-auto sm"><i class="fas fa-users"></i></div>
+                                    <div class="text-secondary x-small fw-bold">Activos</div>
+                                    <h4 class="fw-bold mb-0" id="kpiTotalClub">-</h4>
+                                    <div class="x-small fw-bold text-primary" id="kpiTotalClubPerc"></div>
+                                </div>
                             </div>
-                            <div class="text-secondary small">Ticket Club</div>
-                            <h3 class="fw-bold mb-0" id="kpiTicket">-</h3>
-                        </div>
-                    </div>
-                    <div class="col-md-3 col-xl-1-5">
-                        <div class="glass-card kpi-card-new p-3 text-center position-relative" data-bs-toggle="tooltip"
-                            data-bs-html="true" id="tipRetention">
-                            <span class="scope-badge scope-period">Periodo</span>
-                            <div class="icon-circle bg-teal-light text-teal mb-2 mx-auto"><i
-                                    class="fas fa-percentage"></i></div>
-                            <div class="text-secondary small">Retención</div>
-                            <h3 class="fw-bold mb-0" id="kpiRetention">-</h3>
-                        </div>
-                    </div>
-                    <div class="col-md-3 col-xl-1-5">
-                        <div class="glass-card kpi-card-new p-3 text-center position-relative" data-bs-toggle="tooltip"
-                            data-bs-html="true" id="tipChurnTotal">
-                            <span class="scope-badge scope-global">Global</span>
-                            <div class="icon-circle bg-red-light text-red mb-2 mx-auto"><i class="fas fa-door-open"></i>
+                            <div class="col-md-3">
+                                <div class="glass-card kpi-card-new p-2 text-center position-relative h-100" data-bs-toggle="tooltip" data-bs-html="true" id="tipEnRiesgo">
+                                    <span class="scope-badge scope-global">Global</span>
+                                    <div class="icon-circle bg-warning-light text-warning mb-2 mx-auto sm"><i class="fas fa-exclamation-triangle"></i></div>
+                                    <div class="text-secondary x-small fw-bold">En Riesgo</div>
+                                    <h4 class="fw-bold mb-0" id="kpiEnRiesgo">-</h4>
+                                    <div class="x-small fw-bold text-warning" id="kpiEnRiesgoPerc"></div>
+                                </div>
                             </div>
-                            <div class="text-secondary small">Tasa Churn</div>
-                            <h3 class="fw-bold mb-0" id="kpiChurn">-</h3>
+                            <div class="col-md-3">
+                                <div class="glass-card kpi-card-new p-2 text-center position-relative h-100" data-bs-toggle="tooltip" data-bs-html="true" id="tipPerdidos">
+                                    <span class="scope-badge scope-global">Global</span>
+                                    <div class="icon-circle bg-danger-light text-danger mb-2 mx-auto sm"><i class="fas fa-user-slash"></i></div>
+                                    <div class="text-secondary x-small fw-bold">Perdidos</div>
+                                    <h4 class="fw-bold mb-0" id="kpiPerdidos">-</h4>
+                                    <div class="x-small fw-bold text-danger" id="kpiPerdidosPerc"></div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="glass-card kpi-card-new p-2 text-center position-relative h-100" data-bs-toggle="tooltip" data-bs-html="true" id="tipChurnTotal">
+                                    <span class="scope-badge scope-global">Global</span>
+                                    <div class="icon-circle bg-red-light text-red mb-2 mx-auto sm"><i class="fas fa-door-open"></i></div>
+                                    <div class="text-secondary x-small fw-bold">Tasa Churn</div>
+                                    <h4 class="fw-bold mb-0" id="kpiChurn">-</h4>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Rendimiento (Periodo) -->
+                    <div class="col-xl-6">
+                        <div class="d-flex align-items-center mb-3">
+                            <h6 class="fw-bold mb-0 text-dark small text-uppercase letter-spacing-1">
+                                <i class="fas fa-chart-line me-2 text-success"></i>Rendimiento (Periodo)
+                            </h6>
+                            <hr class="flex-grow-1 ms-3 opacity-25">
+                        </div>
+                        <div class="row g-2">
+                            <div class="col-md-3">
+                                <div class="glass-card kpi-card-new p-2 text-center position-relative h-100" data-bs-toggle="tooltip" data-bs-html="true" id="tipNuevos">
+                                    <span class="scope-badge scope-period">Periodo</span>
+                                    <div class="icon-circle bg-success-light text-success mb-2 mx-auto sm"><i class="fas fa-user-plus"></i></div>
+                                    <div class="text-secondary x-small fw-bold">Nuevos</div>
+                                    <h4 class="fw-bold mb-0" id="kpiNuevos">-</h4>
+                                    <div class="x-small fw-bold" id="kpiNuevosTrend"></div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="glass-card kpi-card-new p-2 text-center position-relative h-100" data-bs-toggle="tooltip" data-bs-html="true" id="tipParticipation">
+                                    <span class="scope-badge scope-period">Periodo</span>
+                                    <div class="icon-circle bg-indigo-light text-indigo mb-2 mx-auto sm"><i class="fas fa-chart-pie"></i></div>
+                                    <div class="text-secondary x-small fw-bold">Part. Ingresos</div>
+                                    <h4 class="fw-bold mb-0" id="kpiParticipation">-</h4>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="glass-card kpi-card-new p-2 text-center position-relative h-100" data-bs-toggle="tooltip" data-bs-html="true" id="tipTicket">
+                                    <span class="scope-badge scope-period">Periodo</span>
+                                    <div class="icon-circle bg-info-light text-info mb-2 mx-auto sm"><i class="fas fa-receipt"></i></div>
+                                    <div class="text-secondary x-small fw-bold">Ticket Club</div>
+                                    <h4 class="fw-bold mb-0" id="kpiTicket">-</h4>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="glass-card kpi-card-new p-2 text-center position-relative h-100" data-bs-toggle="tooltip" data-bs-html="true" id="tipRetention">
+                                    <span class="scope-badge scope-period">Periodo</span>
+                                    <div class="icon-circle bg-teal-light text-teal mb-2 mx-auto sm"><i class="fas fa-percentage"></i></div>
+                                    <div class="text-secondary x-small fw-bold">Retención</div>
+                                    <h4 class="fw-bold mb-0" id="kpiRetention">-</h4>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
