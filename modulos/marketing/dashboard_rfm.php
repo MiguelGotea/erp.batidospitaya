@@ -96,7 +96,8 @@ $puedeDescargar = tienePermiso('dashboard_rfm', 'descargar', $cargoOperario);
                                 <div class="col-md-3">
                                     <div class="glass-card kpi-card-new p-2 text-center position-relative h-100 bg-white bg-opacity-50 border-0"
                                         data-bs-toggle="tooltip" data-bs-html="true" id="tipClubActivos">
-                                        <div class="icon-circle bg-primary-light text-primary mb-2 mx-auto sm"><i class="fas fa-users"></i></div>
+                                        <div class="icon-circle bg-primary-light text-primary mb-2 mx-auto sm"><i
+                                                class="fas fa-users"></i></div>
                                         <div class="text-secondary x-small fw-bold">Activos</div>
                                         <h4 class="fw-bold mb-0" id="kpiTotalClub">-</h4>
                                         <div class="x-small fw-bold text-primary" id="kpiTotalClubPerc"></div>
@@ -105,7 +106,8 @@ $puedeDescargar = tienePermiso('dashboard_rfm', 'descargar', $cargoOperario);
                                 <div class="col-md-3">
                                     <div class="glass-card kpi-card-new p-2 text-center position-relative h-100 bg-white bg-opacity-50 border-0"
                                         data-bs-toggle="tooltip" data-bs-html="true" id="tipEnRiesgo">
-                                        <div class="icon-circle bg-warning-light text-warning mb-2 mx-auto sm"><i class="fas fa-exclamation-triangle"></i></div>
+                                        <div class="icon-circle bg-warning-light text-warning mb-2 mx-auto sm"><i
+                                                class="fas fa-exclamation-triangle"></i></div>
                                         <div class="text-secondary x-small fw-bold">En Riesgo</div>
                                         <h4 class="fw-bold mb-0" id="kpiEnRiesgo">-</h4>
                                         <div class="x-small fw-bold text-warning" id="kpiEnRiesgoPerc"></div>
@@ -114,7 +116,8 @@ $puedeDescargar = tienePermiso('dashboard_rfm', 'descargar', $cargoOperario);
                                 <div class="col-md-3">
                                     <div class="glass-card kpi-card-new p-2 text-center position-relative h-100 bg-white bg-opacity-50 border-0"
                                         data-bs-toggle="tooltip" data-bs-html="true" id="tipPerdidos">
-                                        <div class="icon-circle bg-danger-light text-danger mb-2 mx-auto sm"><i class="fas fa-user-slash"></i></div>
+                                        <div class="icon-circle bg-danger-light text-danger mb-2 mx-auto sm"><i
+                                                class="fas fa-user-slash"></i></div>
                                         <div class="text-secondary x-small fw-bold">Perdidos</div>
                                         <h4 class="fw-bold mb-0" id="kpiPerdidos">-</h4>
                                         <div class="x-small fw-bold text-danger" id="kpiPerdidosPerc"></div>
@@ -123,7 +126,8 @@ $puedeDescargar = tienePermiso('dashboard_rfm', 'descargar', $cargoOperario);
                                 <div class="col-md-3">
                                     <div class="glass-card kpi-card-new p-2 text-center position-relative h-100 bg-white bg-opacity-50 border-0"
                                         data-bs-toggle="tooltip" data-bs-html="true" id="tipChurnTotal">
-                                        <div class="icon-circle bg-red-light text-red mb-2 mx-auto sm"><i class="fas fa-door-open"></i></div>
+                                        <div class="icon-circle bg-red-light text-red mb-2 mx-auto sm"><i
+                                                class="fas fa-door-open"></i></div>
                                         <div class="text-secondary x-small fw-bold">Tasa Churn</div>
                                         <h4 class="fw-bold mb-0" id="kpiChurn">-</h4>
                                     </div>
@@ -144,7 +148,8 @@ $puedeDescargar = tienePermiso('dashboard_rfm', 'descargar', $cargoOperario);
                                 <div class="col-md-3">
                                     <div class="glass-card kpi-card-new p-2 text-center position-relative h-100 bg-white bg-opacity-50 border-0"
                                         data-bs-toggle="tooltip" data-bs-html="true" id="tipNuevos">
-                                        <div class="icon-circle bg-success-light text-success mb-2 mx-auto sm"><i class="fas fa-user-plus"></i></div>
+                                        <div class="icon-circle bg-success-light text-success mb-2 mx-auto sm"><i
+                                                class="fas fa-user-plus"></i></div>
                                         <div class="text-secondary x-small fw-bold">Nuevos</div>
                                         <h4 class="fw-bold mb-0" id="kpiNuevos">-</h4>
                                         <div class="x-small fw-bold" id="kpiNuevosTrend"></div>
@@ -153,7 +158,8 @@ $puedeDescargar = tienePermiso('dashboard_rfm', 'descargar', $cargoOperario);
                                 <div class="col-md-3">
                                     <div class="glass-card kpi-card-new p-2 text-center position-relative h-100 bg-white bg-opacity-50 border-0"
                                         data-bs-toggle="tooltip" data-bs-html="true" id="tipParticipation">
-                                        <div class="icon-circle bg-indigo-light text-indigo mb-2 mx-auto sm"><i class="fas fa-chart-pie"></i></div>
+                                        <div class="icon-circle bg-indigo-light text-indigo mb-2 mx-auto sm"><i
+                                                class="fas fa-chart-pie"></i></div>
                                         <div class="text-secondary x-small fw-bold">Part. Ingresos</div>
                                         <h4 class="fw-bold mb-0" id="kpiParticipation">-</h4>
                                     </div>
@@ -161,7 +167,8 @@ $puedeDescargar = tienePermiso('dashboard_rfm', 'descargar', $cargoOperario);
                                 <div class="col-md-3">
                                     <div class="glass-card kpi-card-new p-2 text-center position-relative h-100 bg-white bg-opacity-50 border-0"
                                         data-bs-toggle="tooltip" data-bs-html="true" id="tipTicket">
-                                        <div class="icon-circle bg-info-light text-info mb-2 mx-auto sm"><i class="fas fa-receipt"></i></div>
+                                        <div class="icon-circle bg-info-light text-info mb-2 mx-auto sm"><i
+                                                class="fas fa-receipt"></i></div>
                                         <div class="text-secondary x-small fw-bold">Ticket Club</div>
                                         <h4 class="fw-bold mb-0" id="kpiTicket">-</h4>
                                     </div>
@@ -169,7 +176,8 @@ $puedeDescargar = tienePermiso('dashboard_rfm', 'descargar', $cargoOperario);
                                 <div class="col-md-3">
                                     <div class="glass-card kpi-card-new p-2 text-center position-relative h-100 bg-white bg-opacity-50 border-0"
                                         data-bs-toggle="tooltip" data-bs-html="true" id="tipRetention">
-                                        <div class="icon-circle bg-teal-light text-teal mb-2 mx-auto sm"><i class="fas fa-percentage"></i></div>
+                                        <div class="icon-circle bg-teal-light text-teal mb-2 mx-auto sm"><i
+                                                class="fas fa-percentage"></i></div>
                                         <div class="text-secondary x-small fw-bold">Retención</div>
                                         <h4 class="fw-bold mb-0" id="kpiRetention">-</h4>
                                     </div>
@@ -328,6 +336,7 @@ $puedeDescargar = tienePermiso('dashboard_rfm', 'descargar', $cargoOperario);
                     </div>
                 </div>
 
+
                 <!-- 📤 SECCIÓN 6 — Exportación -->
                 <div class="glass-card p-4 text-center border-dashed border-primary">
                     <h5 class="fw-bold mb-1">Centro de Exportación</h5>
@@ -409,12 +418,14 @@ $puedeDescargar = tienePermiso('dashboard_rfm', 'descargar', $cargoOperario);
                                     </tr>
                                     <tr>
                                         <td><b>Perdidos</b></td>
-                                        <td>Mide el volumen de socios inactivos (>Umbral). El % mostrado es sobre el <b>Universo Total</b>.</td>
+                                        <td>Mide el volumen de socios inactivos (>Umbral). El % mostrado es sobre el
+                                            <b>Universo Total</b>.</td>
                                         <td><span class="method-tag tag-global">Global</span></td>
                                     </tr>
                                     <tr>
                                         <td><b>Tasa Churn</b></td>
-                                        <td>Mide la deserción de socios que ya eran clientes. El % mostrado es sobre el <b>Universo con Compra</b>.</td>
+                                        <td>Mide la deserción de socios que ya eran clientes. El % mostrado es sobre el
+                                            <b>Universo con Compra</b>.</td>
                                         <td><span class="method-tag tag-global">Global</span></td>
                                     </tr>
                                     <tr>
