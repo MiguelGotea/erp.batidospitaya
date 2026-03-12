@@ -23,6 +23,7 @@ $(document).ready(function() {
     // Event Listeners
     $('#filterForm').on('submit', (e) => { e.preventDefault(); cargarDatos(); });
     $('#tableSearch').on('keyup', debounce(handleSearch, 300));
+    $('.column-filter').on('keyup change', debounce(() => { currentPage = 1; applyAllFilters(); }, 300));
     $('#btnExportFull').on('click', () => exportData('full'));
 });
 
@@ -79,6 +80,7 @@ function updateDashboard(data) {
     updateKPIs(data.summary);
     updateSegmentsChart(data.segments, data.segment_revenue);
     updateEvolutionChart(data.evolution);
+    populateTableFilters();
     renderPaginatedTable();
     updateBranchCharts(data.branch_analysis, data.summary.ticket_club);
     updateHabitSection(data.habits);
@@ -372,12 +374,46 @@ function renderDonut(id, data, chartRef) {
 // --- TABLA Y PAGINACIÓN ---
 
 function handleSearch() {
-    const term = $('#tableSearch').val().toLowerCase();
-    filteredData = fullClientData.filter(c => 
-        (c.ClienteNombre && c.ClienteNombre.toLowerCase().includes(term)) || 
-        c.CodCliente.toString().includes(term)
-    );
-    currentPage = 1; // Reset to page 1 on search
+    currentPage = 1;
+    applyAllFilters();
+}
+
+function applyAllFilters() {
+    const searchTerm = $('#tableSearch').val().toLowerCase();
+    const colFilters = {};
+    
+    $('.column-filter').each(function() {
+        const val = $(this).val();
+        if (val) colFilters[$(this).data('column')] = val.toLowerCase();
+    });
+
+    filteredData = fullClientData.filter(c => {
+        // 1. Buscador Global
+        const globalMatch = !searchTerm || 
+            (c.ClienteNombre && c.ClienteNombre.toLowerCase().includes(searchTerm)) || 
+            c.CodCliente.toString().includes(searchTerm);
+        
+        if (!globalMatch) return false;
+
+        // 2. Filtros por Columna
+        for (const [col, filterVal] of Object.entries(colFilters)) {
+            const cellVal = c[col];
+            if (cellVal === undefined || cellVal === null) return false;
+
+            const strVal = cellVal.toString().toLowerCase();
+
+            // Lógica especial por tipo de columna (Numéricos: mayor o igual)
+            if (['Recency', 'Frequency', 'Monetary', 'TicketPromedio', 'Antiguedad', 'ScoreTotal'].includes(col)) {
+                if (parseFloat(cellVal) < parseFloat(filterVal)) return false;
+            } else if (col === 'Segment' || col === 'Sucursal') {
+                if (filterVal && strVal !== filterVal) return false;
+            } else {
+                if (!strVal.includes(filterVal)) return false;
+            }
+        }
+        return true;
+    });
+
     renderPaginatedTable();
 }
 
@@ -539,4 +575,17 @@ function exportData(type) {
 function verDetalle(id) {
     if (!id) return;
     window.location.href = `/modulos/atencioncliente/historial_productos.php?membresia=${id}`;
+}
+
+function populateTableFilters() {
+    const sucursales = [...new Set(fullClientData.map(c => c.Sucursal))].filter(Boolean).sort();
+    const segmentos = [...new Set(fullClientData.map(c => c.Segment))].filter(Boolean).sort();
+
+    let sucHtml = '<option value="">Todas</option>';
+    sucursales.forEach(s => sucHtml += `<option value="${s.toLowerCase()}">${s}</option>`);
+    $('select[data-column="Sucursal"]').html(sucHtml);
+
+    let segHtml = '<option value="">Todos</option>';
+    segmentos.forEach(s => segHtml += `<option value="${s.toLowerCase()}">${getSegmentName(s)}</option>`);
+    $('select[data-column="Segment"]').html(segHtml);
 }

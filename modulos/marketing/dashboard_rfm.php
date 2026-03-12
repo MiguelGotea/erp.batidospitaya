@@ -216,7 +216,29 @@ $puedeDescargar = tienePermiso('dashboard_rfm', 'descargar', $cargoOperario);
                                     <th>Segmento</th>
                                     <th>Antigüedad</th>
                                     <th>Últ. Prod</th>
-                                    <th>Acciones</th>
+                                    <th style="width: 50px;">Acciones</th>
+                                </tr>
+                                <!-- Fila de Filtros -->
+                                <tr class="filter-row bg-light">
+                                    <td><input type="text" class="form-control form-control-sm column-filter" data-column="ClienteNombre" placeholder="Filtrar..."></td>
+                                    <td>
+                                        <select class="form-select form-select-sm column-filter" data-column="Sucursal">
+                                            <option value="">Todas</option>
+                                        </select>
+                                    </td>
+                                    <td><input type="number" class="form-control form-control-sm column-filter" data-column="Recency" placeholder=">="></td>
+                                    <td><input type="number" class="form-control form-control-sm column-filter" data-column="Frequency" placeholder=">="></td>
+                                    <td><input type="number" class="form-control form-control-sm column-filter" data-column="Monetary" placeholder=">="></td>
+                                    <td><input type="number" class="form-control form-control-sm column-filter" data-column="TicketPromedio" placeholder=">="></td>
+                                    <td></td>
+                                    <td>
+                                        <select class="form-select form-select-sm column-filter" data-column="Segment">
+                                            <option value="">Todos</option>
+                                        </select>
+                                    </td>
+                                    <td><input type="number" class="form-control form-control-sm column-filter" data-column="Antiguedad" placeholder=">="></td>
+                                    <td><input type="text" class="form-control form-control-sm column-filter" data-column="UltimoProducto" placeholder="..."></td>
+                                    <td></td>
                                 </tr>
                             </thead>
                             <tbody id="rfmTableBody"></tbody>

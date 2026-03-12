@@ -70,13 +70,13 @@ body {
 }
 
 .premium-table thead th {
-    font-size: 0.75rem;
+    font-size: 0.72rem;
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 0.5px;
     font-weight: 700;
     color: #64748b;
     border: none;
-    padding: 15px;
+    padding: 10px 8px;
 }
 
 .premium-table tbody tr {
@@ -87,9 +87,9 @@ body {
 }
 
 .premium-table tbody td {
-    padding: 15px;
+    padding: 8px 10px;
     border: none;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
 }
 
 .premium-table tbody tr td:first-child { border-radius: 15px 0 0 15px; }
