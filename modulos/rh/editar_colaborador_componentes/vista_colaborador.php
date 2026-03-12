@@ -941,19 +941,7 @@ $imagenesParaCarrusel = [];
                                     </div>
 
                                     <div class="form-col">
-                                        <div class="form-group" id="edit_grupo_categoria">
-                                            <label for="edit_id_categoria_adendum">Categoría</label>
-                                            <select id="edit_id_categoria_adendum" name="id_categoria"
-                                                class="form-control">
-                                                <option value="">Seleccionar categoría...</option>
-                                                <?php foreach ($todasCategorias as $categoria): ?>
-                                                    <option value="<?= $categoria['idCategoria'] ?>">
-                                                        <?= htmlspecialchars($categoria['NombreCategoria']) ?>
-                                                        (Peso: <?= $categoria['Peso'] ?>)
-                                                    </option>
-                                                <?php endforeach; ?>
-                                            </select>
-                                        </div>
+
 
                                         <div class="form-group" id="edit_grupo_salario">
                                             <label for="edit_salario_adendum">Salario (C$)</label>
@@ -2607,74 +2595,58 @@ $imagenesParaCarrusel = [];
 
                         // Función para actualizar campos según el tipo de adendum
                         function actualizarCamposAdendum() {
-                            const tipoAdendum = document.getElementById('tipo_adendum').value;
-                            const codCargo = document.getElementById('cod_cargo_adendum').value;
+                            const tipoAdendum = document.getElementById('tipo_adendum') ? document.getElementById('tipo_adendum').value : document.getElementById('edit_tipo_adendum').value;
 
                             // Grupos de campos
-                            const grupoCargo = document.getElementById('grupo_cargo');
-                            const grupoSucursal = document.getElementById('grupo_sucursal');
-                            const grupoCategoria = document.getElementById('grupo_categoria');
-                            const grupoSalario = document.getElementById('grupo_salario');
+                            const grupoCargo = document.getElementById('grupo_cargo') || document.getElementById('edit_grupo_cargo');
+                            const grupoSucursal = document.getElementById('grupo_sucursal') || document.getElementById('edit_grupo_sucursal');
+                            const grupoSalario = document.getElementById('grupo_salario') || document.getElementById('edit_grupo_salario');
 
                             // Campos individuales
-                            const cargoInput = document.getElementById('cod_cargo_adendum');
-                            const sucursalInput = document.getElementById('sucursal_adendum');
-                            const categoriaInput = document.getElementById('id_categoria_adendum');
-                            const salarioInput = document.getElementById('salario_adendum');
+                            const cargoInput = document.getElementById('cod_cargo_adendum') || document.getElementById('edit_cod_cargo_adendum');
+                            const sucursalInput = document.getElementById('sucursal_adendum') || document.getElementById('edit_sucursal_adendum');
+                            const salarioInput = document.getElementById('salario_adendum') || document.getElementById('edit_salario_adendum');
 
                             // Resetear requeridos y visibilidad por defecto
-                            cargoInput.required = false;
-                            sucursalInput.required = false;
-                            categoriaInput.required = false;
-                            salarioInput.required = false;
+                            if (cargoInput) cargoInput.required = false;
+                            if (sucursalInput) sucursalInput.required = false;
+                            if (salarioInput) salarioInput.required = false;
 
-                            grupoCargo.style.display = 'none';
-                            grupoSucursal.style.display = 'none';
-                            grupoCategoria.style.display = 'none';
-                            grupoSalario.style.display = 'none';
+                            if (grupoCargo) grupoCargo.style.display = 'none';
+                            if (grupoSucursal) grupoSucursal.style.display = 'none';
+                            if (grupoSalario) grupoSalario.style.display = 'none';
 
                             switch (tipoAdendum) {
                                 case 'cargo':
-                                    grupoCargo.style.display = 'block';
-                                    grupoSucursal.style.display = 'block';
-                                    cargoInput.required = true;
-                                    sucursalInput.required = true;
-
-                                    if (codCargo === '2' || codCargo === '5') {
-                                        grupoCategoria.style.display = 'block';
-                                        categoriaInput.required = true;
-                                    }
+                                    if (grupoCargo) grupoCargo.style.display = 'block';
+                                    if (grupoSucursal) grupoSucursal.style.display = 'block';
+                                    if (cargoInput) cargoInput.required = true;
+                                    if (sucursalInput) sucursalInput.required = true;
                                     break;
 
                                 case 'salario':
-                                    grupoSalario.style.display = 'block';
-                                    salarioInput.required = true;
+                                    if (grupoSalario) grupoSalario.style.display = 'block';
+                                    if (salarioInput) salarioInput.required = true;
                                     break;
 
                                 case 'movimiento':
-                                    grupoSucursal.style.display = 'block';
-                                    sucursalInput.required = true;
+                                    if (grupoSucursal) grupoSucursal.style.display = 'block';
+                                    if (sucursalInput) sucursalInput.required = true;
                                     break;
 
                                 case 'ambos':
-                                    grupoCargo.style.display = 'block';
-                                    grupoSucursal.style.display = 'block';
-                                    grupoSalario.style.display = 'block';
-                                    cargoInput.required = true;
-                                    sucursalInput.required = true;
-                                    salarioInput.required = true;
-
-                                    if (codCargo === '2' || codCargo === '5') {
-                                        grupoCategoria.style.display = 'block';
-                                        categoriaInput.required = true;
-                                    }
+                                    if (grupoCargo) grupoCargo.style.display = 'block';
+                                    if (grupoSucursal) grupoSucursal.style.display = 'block';
+                                    if (grupoSalario) grupoSalario.style.display = 'block';
+                                    if (cargoInput) cargoInput.required = true;
+                                    if (sucursalInput) sucursalInput.required = true;
+                                    if (salarioInput) salarioInput.required = true;
                                     break;
 
                                 default:
-                                    grupoCargo.style.display = 'none';
-                                    grupoSucursal.style.display = 'none';
-                                    grupoCategoria.style.display = 'none';
-                                    grupoSalario.style.display = 'none';
+                                    if (grupoCargo) grupoCargo.style.display = 'none';
+                                    if (grupoSucursal) grupoSucursal.style.display = 'none';
+                                    if (grupoSalario) grupoSalario.style.display = 'none';
                             }
                         }
 
@@ -2693,18 +2665,8 @@ $imagenesParaCarrusel = [];
                                     document.getElementById('modalAdendum').style.display = 'block';
 
                                     // Llenar el formulario con los datos
-                                    document.getElementById('edit_id_adendum').value = adendum.CodAsignacionNivelesCargos;
-                                    document.getElementById('edit_tipo_adendum').value = adendum.TipoAdendum || '';
-                                    document.getElementById('edit_cod_cargo_adendum').value = adendum.CodNivelesCargos || '';
-                                    document.getElementById('edit_sucursal_adendum').value = adendum.Sucursal || '';
-                                    //document.getElementById('edit_id_categoria_adendum').value = adendum.idCategoria || '';
-                                    document.getElementById('edit_salario_adendum').value = adendum.Salario || '';
-                                    document.getElementById('edit_fecha_inicio_adendum').value = adendum.Fecha || '';
-                                    document.getElementById('edit_fecha_fin_adendum').value = adendum.Fin || '';
-                                    document.getElementById('edit_observaciones_adendum').value = adendum.Observaciones || '';
-
                                     // Actualizar campos según el tipo
-                                    actualizarCamposEdicionAdendum();
+                                    actualizarCamposAdendum();
                                 })
                                 .catch(error => {
                                     console.error('Error:', error);
