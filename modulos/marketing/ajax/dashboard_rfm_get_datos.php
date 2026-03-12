@@ -437,6 +437,7 @@ try {
     $stmtHab->execute($params);
     $habits_raw = $stmtHab->fetchAll(PDO::FETCH_ASSOC);
 
+
     $h_modalidad = [];
     $h_promo = ['si' => 0, 'no' => 0];
     foreach ($habits_raw as $hr) {
