@@ -250,8 +250,8 @@ try {
 
     // Filtro adicional para pedidos Club/General (basado en transacción completa)
     $filterOrders = "";
-    if ($tipo_cliente === 'club') $filterOrders = "AND V.CodPedido IN (SELECT CodPedido FROM VentasGlobalesAccessCSV WHERE CodCliente > 0)";
-    elseif ($tipo_cliente === 'general') $filterOrders = "AND V.CodPedido NOT IN (SELECT CodPedido FROM VentasGlobalesAccessCSV WHERE CodCliente > 0)";
+    if ($tipo_cliente === 'club') $filterOrders = "AND CodPedido IN (SELECT CodPedido FROM VentasGlobalesAccessCSV WHERE CodCliente > 0)";
+    elseif ($tipo_cliente === 'general') $filterOrders = "AND CodPedido NOT IN (SELECT CodPedido FROM VentasGlobalesAccessCSV WHERE CodCliente > 0)";
 
     // 4. Evolución de Segmentos (Temporal) - Usamos el histórico real y SemanasSistema
     $sqlEvol = "
