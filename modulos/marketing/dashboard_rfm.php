@@ -380,30 +380,30 @@ $puedeDescargar = tienePermiso('dashboard_rfm', 'descargar', $cargoOperario);
                             <li><b>Datos de Rendimiento (Periodo):</b> Reflejan qué pasó en el rango de fechas elegido.
                                 (Ej: Cuántas ventas hubo o cuántos socios nuevos se registraron).</li>
                         </ul>
-                        <div class="alert alert-info py-2 small mb-0 mt-2">
-                            <i class="fas fa-info-circle me-1"></i> <b>Nota sobre Porcentajes:</b> Los indicadores se
-                            calculan sobre el <b>Universo Total</b> de socios. Si la suma de Activos + Perdidos no llega
-                            al 100%, la diferencia representa a los socios registrados que <b>aún no han realizado su
-                                primera compra</b>.
-                        </div>
                     </div>
 
                     <div class="doc-section">
-                        <div class="doc-title text-primary"><i class="fas fa-database"></i> Definición de la Base (Universo)</div>
-                        <p class="small mb-2">Para garantizar la integridad de los datos, el dashboard utiliza dos conceptos de "Base":</p>
+                        <div class="doc-title text-primary"><i class="fas fa-database"></i> Definición de la Base
+                            (Universo)</div>
+                        <p class="small mb-2">Para garantizar la integridad de los datos, el dashboard utiliza dos
+                            conceptos de "Base":</p>
                         <ul class="doc-list small">
-                            <li><b>Universo con Compra:</b> Es el total de socios únicos que han tenido al menos una transacción no anulada. Esta es nuestra base real de clientes.</li>
-                            <li><b>Registro Total:</b> Todos los socios en la base de datos (incluye los que nunca han comprado). Se usa solo para auditoría.</li>
+                            <li><b>Universo con Compra:</b> Es el total de socios únicos que han tenido al menos una
+                                transacción no anulada. Esta es nuestra base real de clientes.</li>
+                            <li><b>Registro Total:</b> Todos los socios en la base de datos (incluye los que nunca han
+                                comprado). Se usa solo para auditoría.</li>
                         </ul>
                     </div>
 
                     <div class="doc-section">
-                        <div class="doc-title text-primary"><i class="fas fa-tachometer-alt"></i> Indicadores Clave (KPIs)</div>
+                        <div class="doc-title text-primary"><i class="fas fa-tachometer-alt"></i> Indicadores Clave
+                            (KPIs)</div>
                         <div class="doc-table">
                             <table class="table table-sm table-borderless mb-0 small">
                                 <thead>
                                     <tr class="border-bottom">
-                                        <th colspan="3" class="text-secondary py-2">Salud de la Base (Datos Globales)</th>
+                                        <th colspan="3" class="text-secondary py-2">Salud de la Base (Datos Globales)
+                                        </th>
                                     </tr>
                                     <tr>
                                         <th>Métrica</th>
@@ -465,38 +465,48 @@ $puedeDescargar = tienePermiso('dashboard_rfm', 'descargar', $cargoOperario);
                     </div>
 
                     <div class="doc-section">
-                        <div class="doc-title text-primary"><i class="fas fa-chart-pie"></i> Visualizaciones y Fidelidad</div>
+                        <div class="doc-title text-primary"><i class="fas fa-chart-pie"></i> Visualizaciones y Fidelidad
+                        </div>
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <h6 class="small fw-bold mb-1">Evolución de Pedidos</h6>
-                                <p class="x-small text-muted mb-0">Se adapta al filtro (Club/General). Muestra transacciones completas por semana.</p>
+                                <p class="x-small text-muted mb-0">Se adapta al filtro (Club/General). Muestra
+                                    transacciones completas por semana.</p>
                             </div>
                             <div class="col-md-6">
                                 <h6 class="small fw-bold mb-1">Mapa de Calor</h6>
-                                <p class="x-small text-muted mb-0">Intensidad de tráfico por horas. Basado en Pedidos únicos por franja horaria.</p>
+                                <p class="x-small text-muted mb-0">Intensidad de tráfico por horas. Basado en Pedidos
+                                    únicos por franja horaria.</p>
                             </div>
                         </div>
                     </div>
 
                     <div class="doc-section">
-                        <div class="doc-title text-primary"><i class="fas fa-users-cog"></i> Modelo RFM (Recencia, Frecuencia, Monto)</div>
-                        <p class="small mb-2">Cada cliente recibe una puntuación del 1 al 5 comparándolo con el resto de la base:</p>
+                        <div class="doc-title text-primary"><i class="fas fa-users-cog"></i> Modelo RFM (Recencia,
+                            Frecuencia, Monto)</div>
+                        <p class="small mb-2">Cada cliente recibe una puntuación del 1 al 5 comparándolo con el resto de
+                            la base:</p>
                         <ul class="doc-list small">
                             <li><b>Recencia:</b> Tiempo transcurrido desde el último pedido.</li>
                             <li><b>Frecuencia:</b> Cantidad de pedidos históricos (Transacciones completas).</li>
                             <li><b>Monetario:</b> Valor total invertido por el cliente (Sumatoria de Facturas).</li>
                         </ul>
                         <div class="alert alert-light border small py-2 mb-0">
-                            <b>Nota de Integridad:</b> Un pedido se considera "Club" si al menos una línea está asociada a una membresía. Se contabiliza el monto total de la factura.
+                            <b>Nota de Integridad:</b> Un pedido se considera "Club" si al menos una línea está asociada
+                            a una membresía. Se contabiliza el monto total de la factura.
                         </div>
                     </div>
 
                     <div class="doc-section mb-0">
-                        <div class="doc-title text-primary"><i class="fas fa-question-circle"></i> Estado de Clientes en Tabla</div>
+                        <div class="doc-title text-primary"><i class="fas fa-question-circle"></i> Estado de Clientes en
+                            Tabla</div>
                         <ul class="doc-list small">
-                            <li><span class="text-danger fw-bold">Rojo (Perdido):</span> Superó el umbral de días de inactividad.</li>
-                            <li><span class="text-warning fw-bold">Naranja (En Riesgo):</span> Ha pasado más de la mitad del umbral sin comprar.</li>
-                            <li><span class="text-success fw-bold">Verde (Activo):</span> Compra reciente dentro del margen esperado.</li>
+                            <li><span class="text-danger fw-bold">Rojo (Perdido):</span> Superó el umbral de días de
+                                inactividad.</li>
+                            <li><span class="text-warning fw-bold">Naranja (En Riesgo):</span> Ha pasado más de la mitad
+                                del umbral sin comprar.</li>
+                            <li><span class="text-success fw-bold">Verde (Activo):</span> Compra reciente dentro del
+                                margen esperado.</li>
                         </ul>
                     </div>
                 </div>
