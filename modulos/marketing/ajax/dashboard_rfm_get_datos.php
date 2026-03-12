@@ -75,6 +75,7 @@ try {
         GROUP BY EsClub
     ";
 
+
     $stmtPart = $conn->prepare($sqlPart);
     $paramsPart = [':f_inicio' => $fecha_inicio, ':f_fin' => $fecha_fin];
     if ($sucursal && $sucursal !== 'todas') {
@@ -319,13 +320,17 @@ try {
 
     foreach ($evolutionRaw as $row) {
         $week = 'Sem ' . $row['Semana'];
-        $seg = $clientSegments[$row['CodCliente']] ?? 'Hibernating'; 
+        $seg = $clientSegments[$row['CodCliente']] ?? 'Hibernating';
 
         if (!isset($evolutionDetail[$week])) {
             $evolutionDetail[$week] = [
                 'Semana' => $week,
-                'Champions' => 0, 'Loyal' => 0, 'New' => 0, 
-                'At Risk' => 0, 'Hibernating' => 0, 'Lost' => 0
+                'Champions' => 0,
+                'Loyal' => 0,
+                'New' => 0,
+                'At Risk' => 0,
+                'Hibernating' => 0,
+                'Lost' => 0
             ];
         }
         $evolutionDetail[$week][$seg]++;
@@ -364,16 +369,17 @@ try {
     $segment_revenue = [];
     foreach ($raw_data as &$r) {
         $bn = $r['Sucursal'] ?: 'Desconocida';
-        
+
         // Los KPI de Ingresos por Segmento y Listado Maestro deben incluir TODO
         $segment_revenue[$r['Segment']] = ($segment_revenue[$r['Segment']] ?? 0) + $r['Monetary'];
-        
+
         // Enriquecer registro individual para el Listado Maestro
         $r['TicketPromedio'] = ($r['Frequency'] > 0) ? $r['Monetary'] / $r['Frequency'] : 0;
         $r['Antiguedad'] = $r['FechaRegistro'] ? (int) floor((time() - strtotime($r['FechaRegistro'])) / 86400) : 0;
 
         // SOLO para las gráficas de Benchmarking por sucursal, restringimos visualmente a VMTAP=1
-        if (!in_array($bn, $activeBranches)) continue;
+        if (!in_array($bn, $activeBranches))
+            continue;
 
         if (!isset($branch_stats[$bn])) {
             $branch_stats[$bn] = [
