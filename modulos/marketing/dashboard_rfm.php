@@ -473,13 +473,11 @@ $puedeDescargar = tienePermiso('dashboard_rfm', 'descargar', $cargoOperario);
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <h6 class="small fw-bold mb-1">Evolución de Pedidos</h6>
-                                <p class="x-small text-muted mb-0">Se adapta al filtro (Club/General). Muestra
-                                    transacciones completas por semana.</p>
+                                <p class="x-small text-muted mb-0">Muestra la actividad de los Socios Club a lo largo del tiempo, agrupada por semanas.</p>
                             </div>
                             <div class="col-md-6">
                                 <h6 class="small fw-bold mb-1">Mapa de Calor</h6>
-                                <p class="x-small text-muted mb-0">Intensidad de tráfico por horas. Basado en Pedidos
-                                    únicos por franja horaria.</p>
+                                <p class="x-small text-muted mb-0">Intensidad de tráfico de Socios Club por horas. Basado en pedidos únicos por franja horaria.</p>
                             </div>
                         </div>
                     </div>
