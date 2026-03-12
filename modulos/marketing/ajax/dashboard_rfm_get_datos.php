@@ -4,7 +4,8 @@ require_once '../../../core/database/conexion.php';
 require_once '../../../core/permissions/permissions.php';
 
 // Sincronizar zona horaria de MySQL para este script
-if(isset($conn)) $conn->query("SET time_zone = '-06:00'");
+if (isset($conn))
+    $conn->query("SET time_zone = '-06:00'");
 
 header('Content-Type: application/json');
 set_time_limit(120);
@@ -28,7 +29,7 @@ $umbral_perdido = intval($_GET['umbral_perdido'] ?? 60);
 try {
     // Definición de base de filtros
     $whereVmtap = " AND local IN (SELECT codigo FROM sucursales WHERE VMTAP = 1)";
-    
+
     // Filtro Global (Ignora Fecha para Salud/RFM)
     $whereGlobal = "WHERE Anulado = 0" . $whereVmtap;
     $paramsGlobal = [];
@@ -54,8 +55,10 @@ try {
 
     // 0.1 Participación Ingresos (Club vs General) - Independiente del filtro tipo_cliente
     $wherePart = "WHERE Anulado = 0 AND Fecha BETWEEN :f_inicio AND :f_fin" . $whereVmtap;
-    if ($sucursal && $sucursal !== 'todas') { $wherePart .= " AND Sucursal_Nombre = :suc_part"; }
-    
+    if ($sucursal && $sucursal !== 'todas') {
+        $wherePart .= " AND Sucursal_Nombre = :suc_part";
+    }
+
     $sqlPart = "
         SELECT 
             (ClienteID > 0) as EsClub, 
@@ -72,13 +75,15 @@ try {
         ) t 
         GROUP BY EsClub
     ";
-    
+
     $stmtPart = $conn->prepare($sqlPart);
     $paramsPart = [':f_inicio' => $fecha_inicio, ':f_fin' => $fecha_fin];
-    if ($sucursal && $sucursal !== 'todas') { $paramsPart[':suc_part'] = $sucursal; }
+    if ($sucursal && $sucursal !== 'todas') {
+        $paramsPart[':suc_part'] = $sucursal;
+    }
     $stmtPart->execute($paramsPart);
     $part_raw = $stmtPart->fetchAll(PDO::FETCH_KEY_PAIR);
-    
+
     $participacion = [
         'club' => $part_raw[1] ?? 0,
         'general' => $part_raw[0] ?? 0,
@@ -106,7 +111,7 @@ try {
     // Para CLUB: Usamos Atribución de Origen (Home Branch de clientesclub) + Ciclo de vida TOTAL
     // Para GENERAL: Usamos Atribución de Transacción (Donde ocurrió la venta)
     $havingRFM = "HAVING r.CodCliente > 0";
-    $whereRFM = "WHERE v.Anulado = 0"; 
+    $whereRFM = "WHERE v.Anulado = 0";
     // Filtramos local globalmente
     $whereRFM .= " AND v.local IN (SELECT codigo FROM sucursales WHERE VMTAP = 1)";
 
@@ -151,11 +156,12 @@ try {
     // Socios registrados en la sucursal que han tenido al menos una compra en la historia (cualquier sucursal)
     $whereUniverso = "WHERE c.sucursal IN (SELECT codigo FROM sucursales WHERE VMTAP = 1)";
     $paramsUniv = [];
-    if($sucursal && $sucursal !== 'todas') {
+    if ($sucursal && $sucursal !== 'todas') {
         $whereUniverso .= " AND c.sucursal = (SELECT codigo FROM sucursales WHERE nombre = :s_univ)";
         $paramsUniv[':s_univ'] = $sucursal;
     }
-    
+
+
     $sqlUniv = "
         SELECT COUNT(DISTINCT c.membresia) 
         FROM clientesclub c
@@ -176,26 +182,39 @@ try {
     $recencies = array_column($raw_data, 'Recency');
     $frequencies = array_column($raw_data, 'Frequency');
     $monetaries = array_column($raw_data, 'Monetary');
-    sort($recencies); sort($frequencies); sort($monetaries);
+    sort($recencies);
+    sort($frequencies);
+    sort($monetaries);
     $total_count = count($raw_data);
 
-    $get_q = function($val, $arr, $inv = false) use ($total_count) {
+    $get_q = function ($val, $arr, $inv = false) use ($total_count) {
         $pos = array_search($val, $arr);
         $p = $pos / $total_count;
-        if ($inv) $p = 1 - $p;
-        if ($p <= 0.2) return 1;
-        if ($p <= 0.4) return 2;
-        if ($p <= 0.6) return 3;
-        if ($p <= 0.8) return 4;
+        if ($inv)
+            $p = 1 - $p;
+        if ($p <= 0.2)
+            return 1;
+        if ($p <= 0.4)
+            return 2;
+        if ($p <= 0.6)
+            return 3;
+        if ($p <= 0.8)
+            return 4;
         return 5;
     };
 
     $segments = [
-        'Champions' => 0, 'Loyal' => 0, 'New' => 0, 
-        'At Risk' => 0, 'Hibernating' => 0, 'Lost' => 0
+        'Champions' => 0,
+        'Loyal' => 0,
+        'New' => 0,
+        'At Risk' => 0,
+        'Hibernating' => 0,
+        'Lost' => 0
     ];
 
-    $activos = 0; $en_riesgo = 0; $perdidos = 0;
+    $activos = 0;
+    $en_riesgo = 0;
+    $perdidos = 0;
 
     foreach ($raw_data as &$row) {
         $row['R_Score'] = $get_q($row['Recency'], $recencies, true);
@@ -203,12 +222,13 @@ try {
         $row['M_Score'] = $get_q($row['Monetary'], $monetaries);
         $row['ScoreTotal'] = $row['R_Score'] + $row['F_Score'] + $row['M_Score'];
 
-        $r = $row['R_Score']; $f = $row['F_Score'];
+        $r = $row['R_Score'];
+        $f = $row['F_Score'];
         $recency = $row['Recency'];
 
         // Lógica de Segmentos y Contadores basada en Umbral
         if ($recency > $umbral_perdido) {
-            $seg = 'Lost'; 
+            $seg = 'Lost';
             $perdidos++;
         } elseif ($recency > ($umbral_perdido / 2)) {
             $seg = 'At Risk';
@@ -216,10 +236,14 @@ try {
             $activos++; // Sigue siendo activo hasta que pase el umbral total
         } else {
             // Segmentación RFM Tradicional para los que NO son perdidos/riesgo por umbral
-            if ($r >= 4 && $f >= 4) $seg = 'Champions';
-            elseif ($r >= 3 && $f >= 3) $seg = 'Loyal';
-            elseif ($r >= 4 && $f <= 2) $seg = 'New';
-            else $seg = 'Hibernating';
+            if ($r >= 4 && $f >= 4)
+                $seg = 'Champions';
+            elseif ($r >= 3 && $f >= 3)
+                $seg = 'Loyal';
+            elseif ($r >= 4 && $f <= 2)
+                $seg = 'New';
+            else
+                $seg = 'Hibernating';
             $activos++;
         }
 
@@ -229,9 +253,9 @@ try {
 
     // 3. KPIs Resumen
     $activos = count(array_filter($raw_data, fn($x) => $x['Recency'] <= $umbral_perdido));
-    $en_riesgo = count(array_filter($raw_data, fn($x) => $x['Recency'] > ($umbral_perdido/2) && $x['Recency'] <= $umbral_perdido));
+    $en_riesgo = count(array_filter($raw_data, fn($x) => $x['Recency'] > ($umbral_perdido / 2) && $x['Recency'] <= $umbral_perdido));
     $perdidos = count(array_filter($raw_data, fn($x) => $x['Recency'] > $umbral_perdido));
-    
+
     // Clientes nuevos (Registrados en el periodo)
     $whereClubNow = "WHERE fecha_registro BETWEEN :f_inicio AND :f_fin AND sucursal IN (SELECT codigo FROM sucursales WHERE VMTAP = 1)";
     $paramsClubNow = [':f_inicio' => $fecha_inicio, ':f_fin' => $fecha_fin];
@@ -263,7 +287,7 @@ try {
     ");
     $stmtPeriod->execute($params);
     $period_stats = $stmtPeriod->fetch(PDO::FETCH_ASSOC);
-    
+
     $sum_m_period = $period_stats['TotalIngresos'] ?? 0;
     $sum_f_period = $period_stats['TotalPedidos'] ?? 0;
     $ticket_club = $sum_f_period > 0 ? $sum_m_period / $sum_f_period : 0;
@@ -280,7 +304,9 @@ try {
         $whereVmtap
         $filterOrders
     ";
-    if ($sucursal && $sucursal !== 'todas') { $sqlEvol .= " AND V.Sucursal_Nombre = :sucursal"; }
+    if ($sucursal && $sucursal !== 'todas') {
+        $sqlEvol .= " AND V.Sucursal_Nombre = :sucursal";
+    }
     $sqlEvol .= " GROUP BY S.numero_semana, S.fecha_inicio ORDER BY S.fecha_inicio ASC";
     $stmtEvol = $conn->prepare($sqlEvol);
     $stmtEvol->execute($params);
@@ -316,9 +342,9 @@ try {
         $bn = $r['Sucursal'] ?: 'Desconocida';
         if (!isset($branch_stats[$bn])) {
             $branch_stats[$bn] = [
-                'monto' => 0, 
-                'count' => 0, 
-                'score' => 0, 
+                'monto' => 0,
+                'count' => 0,
+                'score' => 0,
                 'segments' => [],
                 'top_customers' => [],
                 'period_monto' => $period_bench[$bn]['TotalMonto'] ?? 0,
@@ -329,7 +355,7 @@ try {
         $branch_stats[$bn]['count']++;
         $branch_stats[$bn]['score'] += $r['ScoreTotal'];
         $branch_stats[$bn]['segments'][$r['Segment']] = ($branch_stats[$bn]['segments'][$r['Segment']] ?? 0) + 1;
-        
+
         $branch_stats[$bn]['top_customers'][] = [
             'name' => $r['ClienteNombre'],
             'ltv' => $r['Monetary']
@@ -339,12 +365,12 @@ try {
 
         // Enriquecer registro individual
         $r['TicketPromedio'] = ($r['Frequency'] > 0) ? $r['Monetary'] / $r['Frequency'] : 0;
-        $r['Antiguedad'] = $r['FechaRegistro'] ? (int)floor((time() - strtotime($r['FechaRegistro'])) / 86400) : 0;
+        $r['Antiguedad'] = $r['FechaRegistro'] ? (int) floor((time() - strtotime($r['FechaRegistro'])) / 86400) : 0;
     }
 
     // Procesar Top 5 por sucursal
     foreach ($branch_stats as $bn => &$stats) {
-        usort($stats['top_customers'], function($a, $b) {
+        usort($stats['top_customers'], function ($a, $b) {
             return $b['ltv'] <=> $a['ltv'];
         });
         $stats['top_5_ltv'] = array_slice($stats['top_customers'], 0, 5);
@@ -357,7 +383,7 @@ try {
         $slice = array_slice($raw_data, 0, 1000);
         $ids = array_column($slice, 'CodCliente');
         $inClause = implode(',', array_map('intval', $ids));
-        
+
         $sqlLast = "
             SELECT v.CodCliente, v.DBBatidos_Nombre 
             FROM VentasGlobalesAccessCSV v
@@ -368,7 +394,7 @@ try {
                 GROUP BY CodCliente
             ) t ON v.CodCliente = t.CodCliente AND v.Fecha = t.MaxF AND v.Hora = t.MaxH
         ";
-        
+
         $last_res = $conn->query($sqlLast)->fetchAll(PDO::FETCH_KEY_PAIR);
         foreach ($raw_data as &$r) {
             $r['UltimoProducto'] = $last_res[$r['CodCliente']] ?? '--';
@@ -409,13 +435,16 @@ try {
     $stmtHab->execute($params);
     $habits_raw = $stmtHab->fetchAll(PDO::FETCH_ASSOC);
 
-    $h_modalidad = []; $h_promo = ['si' => 0, 'no' => 0];
+    $h_modalidad = [];
+    $h_promo = ['si' => 0, 'no' => 0];
     foreach ($habits_raw as $hr) {
         $modValue = ($hr['Modalidad'] && trim($hr['Modalidad']) !== '') ? $hr['Modalidad'] : 'General';
         $h_modalidad[$modValue] = ($h_modalidad[$modValue] ?? 0) + $hr['Count'];
-        
-        if ($hr['EsPromo']) $h_promo['si'] += $hr['Count']; 
-        else $h_promo['no'] += $hr['Count'];
+
+        if ($hr['EsPromo'])
+            $h_promo['si'] += $hr['Count'];
+        else
+            $h_promo['no'] += $hr['Count'];
     }
 
 
@@ -490,46 +519,50 @@ try {
     echo json_encode(['success' => false, 'message' => $e->getMessage()]);
 }
 
-function calculateRetentionDetail($conn, $where, $params) {
+function calculateRetentionDetail($conn, $where, $params)
+{
     try {
         // 1. Obtener los límites de tiempo del periodo filtrado
         $i_f = $params[':f_inicio'];
         $i_t = $params[':f_fin'];
-        
+
         $start = new DateTime($i_f);
         $end = new DateTime($i_t);
         // Diferencia en días para calcular el periodo anterior equivalente
         $diff = $start->diff($end)->days + 1;
-        
+
         $p_start = clone $start;
         $p_start->modify("-{$diff} days");
         $p_end = clone $start;
         $p_end->modify("-1 day");
-        
+
         $p_inicio = $p_start->format('Y-m-d');
         $p_fin = $p_end->format('Y-m-d');
 
         // 2. Definir filtros para el Periodo Anterior (H1 y Subquery de H2)
         // Usamos prefijos diferentes para los parámetros para evitar colisiones si se usan en el mismo query
         $whereH1 = str_replace([':f_inicio', ':f_fin', ':sucursal'], [':p_inicio', ':p_fin', ':p_sucursal'], $where);
-        
+
         $paramsH1 = [];
-        if (isset($params[':sucursal'])) $paramsH1[':p_sucursal'] = $params[':sucursal'];
+        if (isset($params[':sucursal']))
+            $paramsH1[':p_sucursal'] = $params[':sucursal'];
         $paramsH1[':p_inicio'] = $p_inicio;
         $paramsH1[':p_fin'] = $p_fin;
-        
+
         // Conteo H1
         $sqlH1 = "SELECT COUNT(DISTINCT CodCliente) FROM VentasGlobalesAccessCSV $whereH1 AND CodCliente > 0";
         $stmtH1 = $conn->prepare($sqlH1);
         $stmtH1->execute($paramsH1);
-        $h1_count = (int)$stmtH1->fetchColumn();
+        $h1_count = (int) $stmtH1->fetchColumn();
 
-        if ($h1_count === 0) return ['rate' => 0, 'h1' => 0, 'h2' => 0];
+        if ($h1_count === 0)
+            return ['rate' => 0, 'h1' => 0, 'h2' => 0];
 
         // 3. Contar cuántos de ese cohort (H1) compraron en el periodo actual (H2)
         // Combinamos parámetros del periodo actual (:f_...) y del anterior (:p_...)
         $paramsCombined = $params;
-        if (isset($params[':sucursal'])) $paramsCombined[':p_sucursal'] = $params[':sucursal'];
+        if (isset($params[':sucursal']))
+            $paramsCombined[':p_sucursal'] = $params[':sucursal'];
         $paramsCombined[':p_inicio'] = $p_inicio;
         $paramsCombined[':p_fin'] = $p_fin;
 
@@ -547,7 +580,7 @@ function calculateRetentionDetail($conn, $where, $params) {
 
         $stmtH2 = $conn->prepare($sqlH2);
         $stmtH2->execute($paramsCombined);
-        $h2_retained = (int)$stmtH2->fetchColumn();
+        $h2_retained = (int) $stmtH2->fetchColumn();
 
         return [
             'rate' => round(($h2_retained / $h1_count) * 100, 2),
