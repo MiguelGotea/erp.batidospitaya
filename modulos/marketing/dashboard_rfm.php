@@ -43,12 +43,6 @@ $puedeDescargar = tienePermiso('dashboard_rfm', 'descargar', $cargoOperario);
 
                 <!-- 🔝 SECCIÓN 0 — Filtros Globales -->
                 <div class="glass-card p-4 mb-4 shadow-sm border-0">
-                    <div class="row align-items-center mb-3">
-                        <div class="col">
-                            <h4 class="fw-bold mb-0 text-gradient-primary">RFM Intelligence <span
-                                    class="badge bg-primary-light text-primary fs-6 ms-2">v2.0</span></h4>
-                        </div>
-                    </div>
                     <form id="filterForm" class="row g-3">
                         <div class="col-md-3">
                             <label class="form-label small fw-bold">Rango de Análisis</label>
