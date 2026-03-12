@@ -275,7 +275,7 @@ $puedeDescargar = tienePermiso('dashboard_rfm', 'descargar', $cargoOperario);
                     </div>
                     <div class="col-md-6">
                         <div class="glass-card p-4">
-                            <h6 class="fw-bold mb-4">Ticket Promedio por Sucursal</h6>
+                            <h6 class="fw-bold mb-4">Ticket Promedio por Sucursal (Socios Club)</h6>
                             <canvas id="chartBranchTicket"></canvas>
                         </div>
                     </div>
