@@ -199,10 +199,24 @@ try {
     $stmtNew->execute($paramsClubNow);
     $nuevos_res = $stmtNew->fetch();
 
-    // Ingresos y Tickets
-    $sum_m = array_sum($monetaries);
-    $sum_f = array_sum($frequencies);
-    $ticket_club = $sum_f > 0 ? $sum_m / $sum_f : 0;
+    // Ingresos y Tickets del PERIODO (para KPIs de Rendimiento)
+    $stmtPeriod = $conn->prepare("
+        SELECT 
+            SUM(MontoPedido) as TotalIngresos,
+            COUNT(*) as TotalPedidos
+        FROM (
+            SELECT CodPedido, MAX(MontoFactura) as MontoPedido 
+            FROM VentasGlobalesAccessCSV 
+            $whereSimple AND CodCliente > 0
+            GROUP BY CodPedido
+        ) t
+    ");
+    $stmtPeriod->execute($params);
+    $period_stats = $stmtPeriod->fetch(PDO::FETCH_ASSOC);
+    
+    $sum_m_period = $period_stats['TotalIngresos'] ?? 0;
+    $sum_f_period = $period_stats['TotalPedidos'] ?? 0;
+    $ticket_club = $sum_f_period > 1 ? $sum_m_period / $sum_f_period : 0;
 
     // 4. Evolución de Segmentos (Temporal) - Usamos el histórico real y SemanasSistema
     $sqlEvol = "
@@ -328,14 +342,14 @@ try {
             'en_riesgo' => $en_riesgo,
             'perdidos' => $perdidos,
             'ticket_club' => round($ticket_club, 2),
-            'monto_total' => round($sum_m, 2),
+            'monto_total' => round($sum_m_period, 2),
             'churn_rate' => round(($perdidos / max(1, $total_count)) * 100, 2),
             'retention_metrics' => calculateRetentionDetail($conn, $whereSimple, $params),
             'participacion' => $participacion,
             'universo_total' => $universo_count,
             'raw' => [
-                'total_pedidos' => $sum_f,
-                'total_ingresos' => $sum_m
+                'total_pedidos' => $sum_f_period,
+                'total_ingresos' => $sum_m_period
             ]
         ],
         'segments' => $segments,
