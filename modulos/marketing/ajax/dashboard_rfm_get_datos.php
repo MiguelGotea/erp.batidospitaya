@@ -127,7 +127,7 @@ try {
             MAX(c.fecha_registro) as FechaRegistro
         FROM ResumenPedidos r
         LEFT JOIN clientesclub c ON r.CodCliente = c.membresia
-        WHERE 1=1
+        WHERE c.nombre_sucursal IN (SELECT nombre FROM sucursales WHERE VMTAP = 1) OR (r.CodCliente = 0 AND r.Sucursal IN (SELECT nombre FROM sucursales WHERE VMTAP = 1))
     ";
 
     if ($sucursal && $sucursal !== 'todas') {
@@ -271,6 +271,7 @@ try {
         FROM VentasGlobalesAccessCSV V
         JOIN SemanasSistema S ON V.Fecha BETWEEN S.fecha_inicio AND S.fecha_fin
         WHERE V.Anulado = 0 AND V.Fecha BETWEEN :f_inicio AND :f_fin
+        $whereVmtap
         $filterOrders
     ";
     if ($sucursal && $sucursal !== 'todas') { $sqlEvol .= " AND V.Sucursal_Nombre = :sucursal"; }
@@ -279,7 +280,29 @@ try {
     $stmtEvol->execute($params);
     $evolution = $stmtEvol->fetchAll(PDO::FETCH_ASSOC);
 
-    // 5. Análisis por Sucursal y Detalle Individual Incremental
+    // 5. Análisis por Sucursal y Detalle Individual
+    // 5.1 Obtener Ticket Promedio del PERIODO por Sucursal para Benchmarking
+    $sqlBranchPeriod = "
+        SELECT 
+            Sucursal_Nombre as Sucursal,
+            SUM(MontoPedido) as TotalMonto,
+            COUNT(*) as TotalPedidos
+        FROM (
+            SELECT 
+                CodPedido, 
+                MAX(Sucursal_Nombre) as Sucursal_Nombre,
+                MAX(MontoFactura) as MontoPedido 
+            FROM VentasGlobalesAccessCSV 
+            $whereSimple 
+            GROUP BY CodPedido
+            HAVING MAX(CodCliente) > 0
+        ) t
+        GROUP BY Sucursal
+    ";
+    $stmtBP = $conn->prepare($sqlBranchPeriod);
+    $stmtBP->execute($params);
+    $period_bench = $stmtBP->fetchAll(PDO::FETCH_GROUP | PDO::FETCH_UNIQUE | PDO::FETCH_ASSOC);
+
     $branch_stats = [];
     $segment_revenue = [];
     foreach ($raw_data as &$r) {
@@ -290,7 +313,9 @@ try {
                 'count' => 0, 
                 'score' => 0, 
                 'segments' => [],
-                'top_customers' => [] // Para calcular el top 5 después
+                'top_customers' => [],
+                'period_monto' => $period_bench[$bn]['TotalMonto'] ?? 0,
+                'period_pedidos' => $period_bench[$bn]['TotalPedidos'] ?? 0
             ];
         }
         $branch_stats[$bn]['monto'] += $r['Monetary'];

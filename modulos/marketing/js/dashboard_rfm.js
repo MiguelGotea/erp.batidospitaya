@@ -237,7 +237,7 @@ function updateEvolutionChart(evolution) {
 function updateBranchCharts(branchData, globalTicket = 0) {
     const labels = Object.keys(branchData);
     const scores = labels.map(l => branchData[l].score / branchData[l].count);
-    const tickets = labels.map(l => branchData[l].monto / branchData[l].count);
+    const tickets = labels.map(l => branchData[l].period_pedidos > 0 ? branchData[l].period_monto / branchData[l].period_pedidos : 0);
 
     // 1. Scores
     const ctxS = document.getElementById('chartBranchScores').getContext('2d');
