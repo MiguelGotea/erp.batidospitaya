@@ -34,6 +34,12 @@ $(document).ready(function () {
             cerrarTodosFiltros();
         }
     });
+
+    // Reactividad para cambio de umbral (Colores en tabla y re-segmentación local rápida o recarga)
+    $('#umbral_perdido').on('change input', debounce(() => {
+        renderPaginatedTable();
+        actualizarKPIsLocales();
+    }, 500));
 });
 
 // --- CARGA DE DATOS ---
@@ -81,6 +87,25 @@ async function cargarDatos() {
     } finally {
         btn.prop('disabled', false).html('<i class="fas fa-sync-alt me-2"></i>Actualizar Inteligencia');
     }
+}
+
+function actualizarKPIsLocales() {
+    const umbral = parseInt($('#umbral_perdido').val()) || 60;
+    
+    // Actualizar tooltips dinámicamente
+    $('.kpi-card-new').each(function() {
+        const id = $(this).attr('id');
+        if (id === 'tipClubActivos') {
+            $(this).attr('data-bs-original-title', `Socios con última compra hace &le; ${umbral} días.`);
+        } else if (id === 'tipEnRiesgo') {
+            $(this).attr('data-bs-original-title', `Socios con inactividad entre ${Math.floor(umbral/2)} y ${umbral} días.`);
+        } else if (id === 'tipPerdidos') {
+            $(this).attr('data-bs-original-title', `Socios con inactividad > ${umbral} días.`);
+        }
+    });
+    
+    // Si queremos que los segmentos también cambien visualmente rápido sin ir al server:
+    // (O podemos simplemente avisar que para re-segmentar haga clic en Actualizar)
 }
 
 // --- ACTUALIZACIÓN DE UI ---
