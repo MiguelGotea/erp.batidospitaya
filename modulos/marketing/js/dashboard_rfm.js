@@ -16,10 +16,10 @@ let filteredData = [];
 let currentPage = 1;
 const itemsPerPage = 20;
 
-$(document).ready(function() {
+$(document).ready(function () {
     cargarSucursales();
     cargarDatos();
-    
+
     // Event Listeners
     $('#filterForm').on('submit', (e) => { e.preventDefault(); cargarDatos(); });
     $('#tableSearch').on('keyup', debounce(handleSearch, 300));
@@ -30,7 +30,7 @@ $(document).ready(function() {
 // --- CARGA DE DATOS ---
 
 function cargarSucursales() {
-    $.get('/modulos/marketing/ajax/get_sucursales.php', function(res) {
+    $.get('/modulos/marketing/ajax/get_sucursales.php', function (res) {
         if (res.success) {
             let html = '<option value="todas">Todas las Sucursales</option>';
             res.data.forEach(s => {
@@ -44,7 +44,7 @@ function cargarSucursales() {
 async function cargarDatos() {
     const btn = $('#filterForm button[type="submit"]');
     btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-2"></i>Analizando...');
-    
+
     const params = {
         fecha_inicio: $('#fecha_inicio').val(),
         fecha_fin: $('#fecha_fin').val(),
@@ -97,15 +97,15 @@ function updateKPIs(summary) {
         const pActivos = (summary.activos / summary.total_club) * 100;
         const pPerdidos = (summary.perdidos / summary.total_club) * 100;
         const pRiesgo = summary.activos > 0 ? (summary.en_riesgo / summary.activos) * 100 : 0;
-        
-        $('#kpiTotalClubPerc').text(`${pActivos.toFixed(1)}% de la base c/compra`);
-        $('#kpiEnRiesgoPerc').text(`${pRiesgo.toFixed(1)}% de los activos`);
-        $('#kpiPerdidosPerc').text(`${pPerdidos.toFixed(1)}% de la base c/compra`);
+
+        $('#kpiTotalClubPerc').text(`${pActivos.toFixed(1)}% de la base`);
+        $('#kpiEnRiesgoPerc').text(`${pRiesgo.toFixed(1)}% de activos`);
+        $('#kpiPerdidosPerc').text(`${pPerdidos.toFixed(1)}% de la base`);
     }
 
     animateValue('kpiTicket', summary.ticket_club, true);
     animateValue('kpiRetention', summary.retention_metrics.rate, false, '%');
-    
+
     // New KPIs
     if (summary.participacion) {
         const partPerc = (summary.participacion.club / Math.max(1, summary.participacion.total)) * 100;
@@ -123,7 +123,7 @@ function updateKPIs(summary) {
     }    // Tooltips - Re-inicialización forzada para evitar caché de Bootstrap
     const umbral = $('#umbral_perdido').val();
     const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    
+
     tooltipTriggerList.forEach(el => {
         const instance = bootstrap.Tooltip.getInstance(el);
         if (instance) instance.dispose();
@@ -133,7 +133,7 @@ function updateKPIs(summary) {
 
     $('#tipClubActivos').attr('title', `<div class="tooltip-data-row"><span>Criterio:</span> <span><= ${umbral} días</span></div><div class="tooltip-data-row"><span>Total c/Compra:</span> <span>${summary.total_club}</span></div><div class="tooltip-formula">Socios con al menos una compra en los últimos ${umbral} días.</div>`);
     $('#tipNuevos').attr('title', `<div class="tooltip-data-row"><span>Registros:</span> <span>${summary.nuevos}</span></div><div class="tooltip-data-row"><span>Previo:</span> <span>${summary.prev_nuevos}</span></div><div class="tooltip-formula">Comparado contra el periodo anterior equivalente.</div>`);
-    $('#tipEnRiesgo').attr('title', `<div class="tooltip-data-row"><span>Criterio:</span> <span>${Math.floor(umbral/2)}-${umbral} días</span></div><div class="tooltip-formula">Socios enfriándose. El % es sobre el total de socios ACTVOS.</div>`);
+    $('#tipEnRiesgo').attr('title', `<div class="tooltip-data-row"><span>Criterio:</span> <span>${Math.floor(umbral / 2)}-${umbral} días</span></div><div class="tooltip-formula">Socios enfriándose. El % es sobre el total de socios ACTVOS.</div>`);
     $('#tipPerdidos').attr('title', `<div class="tooltip-data-row"><span>Criterio:</span> <span>> ${umbral} días</span></div><div class="tooltip-data-row"><span>Total c/Compra:</span> <span>${summary.total_club}</span></div><div class="tooltip-formula">Inactivos totales. El % es sobre el total de socios con historial.</div>`);
     $('#tipTicket').attr('title', `<div class="tooltip-data-row"><span>Ventas:</span> <span>${fmt(summary.raw.total_ingresos)}</span></div><div class="tooltip-data-row"><span>Pedidos:</span> <span>${summary.raw.total_pedidos}</span></div>`);
     $('#tipRetention').attr('title', `<div class="tooltip-data-row"><span>Cohorte (Previo):</span> <span>${summary.retention_metrics.h1}</span></div><div class="tooltip-data-row"><span>Retornaron:</span> <span>${summary.retention_metrics.h2}</span></div><div class="tooltip-formula">Clientes del periodo anterior que volvieron en este periodo.</div>`);
@@ -178,7 +178,7 @@ function updateSegmentsChart(segments, revenue) {
 function updateEvolutionChart(evolution) {
     const ctx = document.getElementById('chartEvolution').getContext('2d');
     if (chartEvolution) chartEvolution.destroy();
-    
+
     chartEvolution = new Chart(ctx, {
         type: 'line',
         data: {
@@ -205,7 +205,7 @@ function updateBranchCharts(branchData, globalTicket = 0) {
     const labels = Object.keys(branchData);
     const scores = labels.map(l => branchData[l].score / branchData[l].count);
     const tickets = labels.map(l => branchData[l].monto / branchData[l].count);
-    
+
     // 1. Scores
     const ctxS = document.getElementById('chartBranchScores').getContext('2d');
     if (chartBranchScores) chartBranchScores.destroy();
@@ -239,12 +239,12 @@ function updateBranchCharts(branchData, globalTicket = 0) {
     if (chartBranchTicket) chartBranchTicket.destroy();
     chartBranchTicket = new Chart(ctxT, {
         type: 'bar',
-        data: { 
-            labels: labels, 
+        data: {
+            labels: labels,
             datasets: [
                 { label: 'Ticket Sucursal', data: tickets, backgroundColor: '#51B8AC', borderRadius: 5 },
                 { label: 'Promedio Global', data: Array(labels.length).fill(globalTicket), type: 'line', borderColor: '#ef4444', borderDash: [5, 5], pointRadius: 0 }
-            ] 
+            ]
         }
     });
 
@@ -258,7 +258,7 @@ function updateBranchCharts(branchData, globalTicket = 0) {
                     <span class="fw-bold text-primary small"><i class="fas fa-store me-1"></i>${bn}</span>
                 </div>
                 <div class="list-group list-group-flush shadow-sm rounded">`;
-        
+
         if (top5.length === 0) {
             html += `<div class="list-group-item small text-muted text-center py-3">Sin datos</div>`;
         } else {
@@ -273,7 +273,7 @@ function updateBranchCharts(branchData, globalTicket = 0) {
                     </div>`;
             });
         }
-        
+
         html += `</div></div>`;
         $ltvContainer.append(html);
     });
@@ -288,7 +288,7 @@ function updateHabitSection(habits) {
         $container.append(`
             <div class="mb-3">
                 <div class="d-flex justify-content-between small mb-1">
-                    <span class="fw-bold text-nowrap">${i+1}. ${p.Product}</span>
+                    <span class="fw-bold text-nowrap">${i + 1}. ${p.Product}</span>
                     <span class="text-muted">${p.Count}</span>
                 </div>
                 <div class="progress" style="height: 6px;"><div class="progress-bar bg-primary" style="width: ${perc}%"></div></div>
@@ -326,7 +326,7 @@ function updateHabitSection(habits) {
                 x: { min: 6, max: 23, title: { display: true, text: 'Hora del Día', font: { size: 10 } } },
                 y: { min: 1, max: 7, ticks: { padding: 10, callback: v => ['', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'][v] }, grid: { display: true, drawTicks: false } }
             },
-            plugins: { 
+            plugins: {
                 legend: { display: false },
                 tooltip: {
                     callbacks: {
@@ -347,7 +347,7 @@ function renderDonut(id, data, chartRef) {
     const ctx = document.getElementById(id).getContext('2d');
     const $canvas = $(`#${id}`);
     const $parent = $canvas.parent();
-    
+
     // Eliminar mensaje previo if exists
     $parent.find('.no-data-overlay').remove();
 
@@ -381,18 +381,18 @@ function handleSearch() {
 function applyAllFilters() {
     const searchTerm = $('#tableSearch').val().toLowerCase();
     const colFilters = {};
-    
-    $('.column-filter').each(function() {
+
+    $('.column-filter').each(function () {
         const val = $(this).val();
         if (val) colFilters[$(this).data('column')] = val.toLowerCase();
     });
 
     filteredData = fullClientData.filter(c => {
         // 1. Buscador Global
-        const globalMatch = !searchTerm || 
-            (c.ClienteNombre && c.ClienteNombre.toLowerCase().includes(searchTerm)) || 
+        const globalMatch = !searchTerm ||
+            (c.ClienteNombre && c.ClienteNombre.toLowerCase().includes(searchTerm)) ||
             c.CodCliente.toString().includes(searchTerm);
-        
+
         if (!globalMatch) return false;
 
         // 2. Filtros por Columna
@@ -420,7 +420,7 @@ function applyAllFilters() {
 function renderPaginatedTable() {
     const $body = $('#rfmTableBody');
     $body.empty();
-    
+
     const start = (currentPage - 1) * itemsPerPage;
     const end = start + itemsPerPage;
     const paginatedItems = filteredData.slice(start, end);
@@ -431,8 +431,8 @@ function renderPaginatedTable() {
     }
 
     paginatedItems.forEach(c => {
-        const rColor = c.Recency >= umbral ? 'text-danger' : 
-                      (c.Recency >= (umbral / 2) ? 'text-warning' : '');
+        const rColor = c.Recency >= umbral ? 'text-danger' :
+            (c.Recency >= (umbral / 2) ? 'text-warning' : '');
         $body.append(`
             <tr>
                 <td>
@@ -454,7 +454,7 @@ function renderPaginatedTable() {
                 </td>
                 <td><span class="badge ${getSegmentBadge(c.Segment)} shadow-sm">${getSegmentName(c.Segment)}</span></td>
                 <td class="small">${c.Antiguedad}d</td>
-                <td class="small" title="${c.UltimoProducto || ''}">${(c.UltimoProducto || '--').substring(0,12)}...</td>
+                <td class="small" title="${c.UltimoProducto || ''}">${(c.UltimoProducto || '--').substring(0, 12)}...</td>
                 <td>
                     <button class="btn btn-sm btn-light border" onclick="verDetalle(${c.CodCliente})"><i class="fas fa-eye"></i></button>
                 </td>
@@ -469,9 +469,9 @@ function updatePaginationControls() {
     const totalPages = Math.ceil(filteredData.length / itemsPerPage);
     const $controls = $('#paginationControls');
     const $info = $('#paginationInfo');
-    
+
     $controls.empty();
-    
+
     // Info
     const startCount = filteredData.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0;
     const endCount = Math.min(currentPage * itemsPerPage, filteredData.length);
@@ -512,7 +512,7 @@ function changePage(p) {
     if (p < 1 || p > totalPages) return;
     currentPage = p;
     renderPaginatedTable();
-    
+
     // Smooth scroll to table top
     document.getElementById('rfmTableMaster').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
@@ -541,13 +541,13 @@ function getSegmentBadge(key) {
 }
 
 function animateValue(id, value, isCurrency = false, suffix = '') {
-    const obj = document.getElementById(id); if(!obj) return;
+    const obj = document.getElementById(id); if (!obj) return;
     const end = parseFloat(value);
     $({ val: 0 }).animate({ val: end }, {
         duration: 1000,
         easing: 'swing',
-        step: function() { obj.innerHTML = (isCurrency ? fmt(this.val) : Math.floor(this.val).toLocaleString()) + suffix; },
-        complete: function() { obj.innerHTML = (isCurrency ? fmt(end) : Math.floor(end).toLocaleString()) + suffix; }
+        step: function () { obj.innerHTML = (isCurrency ? fmt(this.val) : Math.floor(this.val).toLocaleString()) + suffix; },
+        complete: function () { obj.innerHTML = (isCurrency ? fmt(end) : Math.floor(end).toLocaleString()) + suffix; }
     });
 }
 
@@ -555,7 +555,7 @@ function fmt(val) { return 'C$ ' + new Intl.NumberFormat('es-NI', { minimumFract
 
 function debounce(func, wait) {
     let timeout;
-    return function() {
+    return function () {
         const context = this, args = arguments;
         clearTimeout(timeout);
         timeout = setTimeout(() => func.apply(context, args), wait);
