@@ -112,8 +112,6 @@ try {
     // Para GENERAL: Usamos Atribución de Transacción (Donde ocurrió la venta)
     $havingRFM = "HAVING r.CodCliente > 0";
     $whereRFM = "WHERE v.Anulado = 0";
-    // Filtramos local globalmente
-    $whereRFM .= " AND v.local IN (SELECT codigo FROM sucursales WHERE VMTAP = 1)";
 
     $paramsRFM = [];
     $sqlRFM = "
@@ -123,7 +121,6 @@ try {
             DATEDIFF(CURDATE(), MAX(r.Fecha)) as Recency,
             COUNT(r.CodPedido) as Frequency,
             SUM(r.TotalPedido) as Monetary,
-            MAX(u.UniversalLTV) as LTV,
             MAX(CONCAT(COALESCE(c.nombre,''), ' ', COALESCE(c.apellido, ''))) as ClienteNombre,
             MAX(c.fecha_registro) as FechaRegistro
         FROM (
@@ -139,16 +136,6 @@ try {
             GROUP BY CodPedido
         ) r
         LEFT JOIN clientesclub c ON r.CodCliente = c.membresia
-        LEFT JOIN (
-            SELECT ClienteID as CodCliente, SUM(MontoPedido) as UniversalLTV
-            FROM (
-                SELECT CodPedido, MAX(CodCliente) as ClienteID, MAX(MontoFactura) as MontoPedido
-                FROM VentasGlobalesAccessCSV
-                WHERE Anulado = 0
-                GROUP BY CodPedido
-            ) t_univ
-            GROUP BY ClienteID
-        ) u ON r.CodCliente = u.CodCliente
         WHERE c.sucursal IN (SELECT codigo FROM sucursales WHERE VMTAP = 1)
     ";
 
@@ -193,12 +180,11 @@ try {
     $recencies = array_column($raw_data, 'Recency');
     $frequencies = array_column($raw_data, 'Frequency');
     $monetaries = array_column($raw_data, 'Monetary');
-    $ltvs = array_column($raw_data, 'LTV');
     sort($recencies);
     sort($frequencies);
     sort($monetaries);
     $total_count = count($raw_data);
-    $avg_ltv = $total_count > 0 ? array_sum($ltvs) / $total_count : 0;
+    $avg_ltv = $total_count > 0 ? array_sum($monetaries) / $total_count : 0;
 
     $get_q = function ($val, $arr, $inv = false) use ($total_count) {
         $pos = array_search($val, $arr);
