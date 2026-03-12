@@ -476,6 +476,14 @@ $puedeDescargar = tienePermiso('dashboard_rfm', 'descargar', $cargoOperario);
                                 <p class="x-small text-muted mb-0">Muestra la actividad de los Socios Club a lo largo del tiempo, agrupada por semanas.</p>
                             </div>
                             <div class="col-md-6">
+                                <h6 class="small fw-bold mb-1">Distribución por Medida</h6>
+                                <p class="x-small text-muted mb-0">Análisis exclusivo para las categorías de <b>Batido y Limonada</b>. Muestra la preferencia de tamaños.</p>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="small fw-bold mb-1">Uso de Promociones</h6>
+                                <p class="x-small text-muted mb-0">Consumo con cupón vs regular para: <b>Batido, Limonada, Bowl, Membresía, Store y Waffles</b>.</p>
+                            </div>
+                            <div class="col-md-6">
                                 <h6 class="small fw-bold mb-1">Mapa de Calor</h6>
                                 <p class="x-small text-muted mb-0">Intensidad de tráfico de Socios Club por horas. Basado en pedidos únicos por franja horaria.</p>
                             </div>

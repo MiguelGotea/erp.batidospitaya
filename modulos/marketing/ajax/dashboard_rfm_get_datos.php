@@ -376,25 +376,43 @@ try {
     }
 
     // 6. Hábitos Expandidos
+    // 6.1 Medida (Solo Batido y Limonada)
+    $sqlMedida = "
+        SELECT v.Medida, COUNT(*) as Count
+        FROM VentasGlobalesAccessCSV v
+        JOIN DBBatidos d ON v.CodProducto = d.CodBatido
+        JOIN GrupoProductosVenta g ON d.CodGrupo = g.CodGrupo
+        $whereSimple
+        AND v.local IN (SELECT codigo FROM sucursales WHERE VMTAP = 1)
+        AND g.Tipo IN ('Batido', 'Limonada')
+        GROUP BY v.Medida
+    ";
+    $stmtMed = $conn->prepare($sqlMedida);
+    $stmtMed->execute($params);
+    $h_medida = $stmtMed->fetchAll(PDO::FETCH_KEY_PAIR);
+
+    // 6.2 Promo (Varios Tipos) y Modalidad (General)
     $sqlHabits = "
         SELECT 
-            Medida, Modalidad, (CodigoPromocion IS NOT NULL AND CodigoPromocion <> '') as EsPromo, COUNT(*) as Count
-        FROM VentasGlobalesAccessCSV
+            v.Modalidad, 
+            (v.CodigoPromocion IS NOT NULL AND v.CodigoPromocion <> '') as EsPromo, 
+            COUNT(*) as Count
+        FROM VentasGlobalesAccessCSV v
+        JOIN DBBatidos d ON v.CodProducto = d.CodBatido
+        JOIN GrupoProductosVenta g ON d.CodGrupo = g.CodGrupo
         $whereSimple
-        AND local IN (SELECT codigo FROM sucursales WHERE VMTAP = 1)
-        GROUP BY Medida, Modalidad, EsPromo
+        AND v.local IN (SELECT codigo FROM sucursales WHERE VMTAP = 1)
+        AND g.Tipo IN ('Batido', 'Limonada', 'Bowl', 'Membresia', 'Pitaya Store', 'Waffles')
+        GROUP BY v.Modalidad, EsPromo
     ";
     $stmtHab = $conn->prepare($sqlHabits);
     $stmtHab->execute($params);
     $habits_raw = $stmtHab->fetchAll(PDO::FETCH_ASSOC);
 
-    $h_medida = []; $h_modalidad = []; $h_promo = ['si' => 0, 'no' => 0];
+    $h_modalidad = []; $h_promo = ['si' => 0, 'no' => 0];
     foreach ($habits_raw as $hr) {
-        $m = ($hr['Medida'] && trim($hr['Medida']) !== '') ? $hr['Medida'] : 'No especificada';
-        $mod = ($hr['Modalidad'] && trim($hr['Modalidad']) !== '') ? $hr['Modalidad'] : 'General';
-        
-        $h_medida[$m] = ($h_medida[$m] ?? 0) + $hr['Count'];
-        $h_modalidad[$mod] = ($h_modalidad[$mod] ?? 0) + $hr['Count'];
+        $modValue = ($hr['Modalidad'] && trim($hr['Modalidad']) !== '') ? $hr['Modalidad'] : 'General';
+        $h_modalidad[$modValue] = ($h_modalidad[$modValue] ?? 0) + $hr['Count'];
         
         if ($hr['EsPromo']) $h_promo['si'] += $hr['Count']; 
         else $h_promo['no'] += $hr['Count'];
