@@ -312,13 +312,15 @@ $puedeDescargar = tienePermiso('dashboard_rfm', 'descargar', $cargoOperario);
                         <div class="glass-card p-4">
                             <h6 class="fw-bold mb-4">Mapa de Calor: Intensidad de Consumo (Hora vs Día) (Club)
                             </h6>
-                            <canvas id="chartHeatmap"></canvas>
+                            <div style="height: 420px; position: relative;">
+                                <canvas id="chartHeatmap"></canvas>
+                            </div>
                         </div>
                     </div>
                     <div class="col-lg-6">
                         <div class="glass-card p-4">
                             <h6 class="fw-bold mb-4">Productos Más Vendidos (Club)</h6>
-                            <div id="topProductsList"></div>
+                            <div id="topProductsList" class="scroller px-2" style="height: 420px; overflow-y: auto;"></div>
                         </div>
                     </div>
                     <div class="col-lg-4">

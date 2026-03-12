@@ -363,8 +363,7 @@ function updateHabitSection(habits) {
             }]
         },
         options: {
-            aspectRatio: 2.2,
-            maintainAspectRatio: true,
+            maintainAspectRatio: false,
             scales: {
                 x: { min: 6, max: 23, title: { display: true, text: 'Hora del Día', font: { size: 10 } } },
                 y: { min: 1, max: 7, ticks: { padding: 10, callback: v => ['', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'][v] }, grid: { display: true, drawTicks: false } }
