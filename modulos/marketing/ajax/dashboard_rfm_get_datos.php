@@ -55,12 +55,29 @@ try {
     // 0.1 Participación Ingresos (Club vs General) - Independiente del filtro tipo_cliente
     $wherePart = "WHERE Anulado = 0 AND Fecha BETWEEN :f_inicio AND :f_fin" . $whereVmtap;
     if ($sucursal && $sucursal !== 'todas') { $wherePart .= " AND Sucursal_Nombre = :suc_part"; }
-    $sqlPart = "SELECT (CodCliente > 0) as EsClub, SUM(MontoFactura) as Total FROM (SELECT CodPedido, CodCliente, MAX(MontoFactura) as MontoFactura FROM VentasGlobalesAccessCSV $wherePart GROUP BY CodPedido) t GROUP BY EsClub";
+    
+    $sqlPart = "
+        SELECT 
+            (ClienteID > 0) as EsClub, 
+            SUM(MontoFactura) as Total 
+        FROM (
+            SELECT 
+                CodPedido, 
+                MAX(CodCliente) as ClienteID, 
+                MAX(MontoFactura) as MontoFactura 
+            FROM VentasGlobalesAccessCSV 
+            $wherePart 
+            GROUP BY CodPedido
+        ) t 
+        GROUP BY EsClub
+    ";
+    
     $stmtPart = $conn->prepare($sqlPart);
     $paramsPart = [':f_inicio' => $fecha_inicio, ':f_fin' => $fecha_fin];
     if ($sucursal && $sucursal !== 'todas') { $paramsPart[':suc_part'] = $sucursal; }
     $stmtPart->execute($paramsPart);
     $part_raw = $stmtPart->fetchAll(PDO::FETCH_KEY_PAIR);
+    
     $participacion = [
         'club' => $part_raw[1] ?? 0,
         'general' => $part_raw[0] ?? 0,
