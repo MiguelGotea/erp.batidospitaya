@@ -84,17 +84,26 @@ $puedeDescargar = tienePermiso('dashboard_rfm', 'descargar', $cargoOperario);
                                 </h6>
                             </div>
                             <div class="row g-2">
-                                <div class="col-md-3">
+                                <div class="col">
+                                    <div class="glass-card kpi-card-new p-2 text-center position-relative h-100 bg-white bg-opacity-50 border-0"
+                                        data-bs-toggle="tooltip" data-bs-html="true" id="tipAvgLTV">
+                                        <div class="icon-circle bg-teal-light text-teal mb-2 mx-auto sm"><i
+                                                class="fas fa-globe-americas"></i></div>
+                                        <div class="text-secondary x-small fw-bold">LTV Prom. Global</div>
+                                        <h4 class="fw-bold mb-0" id="kpiAvgLTV">-</h4>
+                                    </div>
+                                </div>
+                                <div class="col">
                                     <div class="glass-card kpi-card-new p-2 text-center position-relative h-100 bg-white bg-opacity-50 border-0"
                                         data-bs-toggle="tooltip" data-bs-html="true" id="tipClubActivos">
                                         <div class="icon-circle bg-primary-light text-primary mb-2 mx-auto sm"><i
                                                 class="fas fa-users"></i></div>
-                                        <div class="text-secondary x-small fw-bold">Activos</div>
+                                        <div class="text-secondary x-small fw-bold">Club Activos</div>
                                         <h4 class="fw-bold mb-0" id="kpiTotalClub">-</h4>
                                         <div class="x-small fw-bold text-primary" id="kpiTotalClubPerc"></div>
                                     </div>
                                 </div>
-                                <div class="col-md-3">
+                                <div class="col">
                                     <div class="glass-card kpi-card-new p-2 text-center position-relative h-100 bg-white bg-opacity-50 border-0"
                                         data-bs-toggle="tooltip" data-bs-html="true" id="tipEnRiesgo">
                                         <div class="icon-circle bg-warning-light text-warning mb-2 mx-auto sm"><i
@@ -104,7 +113,7 @@ $puedeDescargar = tienePermiso('dashboard_rfm', 'descargar', $cargoOperario);
                                         <div class="x-small fw-bold text-warning" id="kpiEnRiesgoPerc"></div>
                                     </div>
                                 </div>
-                                <div class="col-md-3">
+                                <div class="col">
                                     <div class="glass-card kpi-card-new p-2 text-center position-relative h-100 bg-white bg-opacity-50 border-0"
                                         data-bs-toggle="tooltip" data-bs-html="true" id="tipPerdidos">
                                         <div class="icon-circle bg-danger-light text-danger mb-2 mx-auto sm"><i
@@ -114,7 +123,7 @@ $puedeDescargar = tienePermiso('dashboard_rfm', 'descargar', $cargoOperario);
                                         <div class="x-small fw-bold text-danger" id="kpiPerdidosPerc"></div>
                                     </div>
                                 </div>
-                                <div class="col-md-3">
+                                <div class="col">
                                     <div class="glass-card kpi-card-new p-2 text-center position-relative h-100 bg-white bg-opacity-50 border-0"
                                         data-bs-toggle="tooltip" data-bs-html="true" id="tipChurnTotal">
                                         <div class="icon-circle bg-red-light text-red mb-2 mx-auto sm"><i

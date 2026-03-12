@@ -124,6 +124,7 @@ function updateKPIs(summary) {
     animateValue('kpiNuevos', summary.nuevos);
     animateValue('kpiEnRiesgo', summary.en_riesgo);
     animateValue('kpiPerdidos', summary.perdidos);
+    animateValue('kpiAvgLTV', summary.avg_ltv, true);
 
     // Porcentajes de Salud (Relativos al Universo con Compra / Activos)
     if (summary.total_club > 0) {
@@ -164,6 +165,7 @@ function updateKPIs(summary) {
         el.removeAttribute('data-bs-original-title');
     });
 
+    $('#tipAvgLTV').attr('title', `<div class="tooltip-data-row"><span>Promedio Global:</span> <span>${fmt(summary.avg_ltv)}</span></div><div class="tooltip-formula">Valor de vida promedio de los socios en toda la marca.</div>`);
     $('#tipClubActivos').attr('title', `<div class="tooltip-data-row"><span>Criterio:</span> <span><= ${umbral} días</span></div><div class="tooltip-data-row"><span>Total c/Compra:</span> <span>${summary.total_club}</span></div><div class="tooltip-formula">Socios con al menos una compra en los últimos ${umbral} días.</div>`);
     $('#tipNuevos').attr('title', `<div class="tooltip-data-row"><span>Registros:</span> <span>${summary.nuevos}</span></div><div class="tooltip-data-row"><span>Previo:</span> <span>${summary.prev_nuevos}</span></div><div class="tooltip-formula">Comparado contra el periodo anterior equivalente.</div>`);
     $('#tipEnRiesgo').attr('title', `<div class="tooltip-data-row"><span>Criterio:</span> <span>${Math.floor(umbral / 2)}-${umbral} días</span></div><div class="tooltip-formula">Socios enfriándose. El % es sobre el total de socios ACTVOS.</div>`);

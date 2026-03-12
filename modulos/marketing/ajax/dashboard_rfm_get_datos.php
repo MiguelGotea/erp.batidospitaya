@@ -193,10 +193,12 @@ try {
     $recencies = array_column($raw_data, 'Recency');
     $frequencies = array_column($raw_data, 'Frequency');
     $monetaries = array_column($raw_data, 'Monetary');
+    $ltvs = array_column($raw_data, 'LTV');
     sort($recencies);
     sort($frequencies);
     sort($monetaries);
     $total_count = count($raw_data);
+    $avg_ltv = $total_count > 0 ? array_sum($ltvs) / $total_count : 0;
 
     $get_q = function ($val, $arr, $inv = false) use ($total_count) {
         $pos = array_search($val, $arr);
@@ -504,6 +506,7 @@ try {
             'prev_nuevos' => $prev_nuevos,
             'en_riesgo' => $en_riesgo,
             'perdidos' => $perdidos,
+            'avg_ltv' => round($avg_ltv, 2),
             'ticket_club' => round($ticket_club, 2),
             'monto_total' => round($sum_m_period, 2),
             'churn_rate' => round(($perdidos / max(1, $total_count)) * 100, 2),
