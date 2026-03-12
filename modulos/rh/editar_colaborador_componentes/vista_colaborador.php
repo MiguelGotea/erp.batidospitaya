@@ -1147,46 +1147,9 @@ $imagenesParaCarrusel = [];
                             }
                         }
 
-                        // Función para actualizar y mostrar la categoría según el cargo seleccionado
-                        function actualizarCategoriaYMostrar() {
-                            const codCargo = document.getElementById('cod_cargo');
-                            const selectCategoria = document.getElementById('id_categoria');
-                            const infoCategoria = document.getElementById('infoCategoria');
-                            const textoCategoria = document.getElementById('textoCategoria');
 
-                            // Ocultar información por defecto
-                            infoCategoria.style.display = 'none';
-
-                            if (codCargo.value) {
-                                const optionSeleccionada = codCargo.options[codCargo.selectedIndex];
-                                const idCategoriaSugerida = optionSeleccionada.getAttribute('data-categoria');
-
-                                if (idCategoriaSugerida) {
-                                    // Buscar y seleccionar la categoría sugerida
-                                    for (let i = 0; i < selectCategoria.options.length; i++) {
-                                        if (selectCategoria.options[i].value == idCategoriaSugerida) {
-                                            selectCategoria.value = idCategoriaSugerida;
-                                            const nombreCategoria = selectCategoria.options[i].text.split(' (Peso:')[0]; // Remover el peso
-                                            textoCategoria.textContent = 'Categoría asignada automáticamente: ' + nombreCategoria;
-                                            infoCategoria.style.display = 'block';
-                                            break;
-                                        }
-                                    }
-                                } // else {
-                                // Para cargos sin categoría predefinida
-                                //textoCategoria.textContent = 'Seleccione una categoría manualmente para este cargo';
-                                //infoCategoria.style.display = 'block';
-                                //selectCategoria.value = ''; // Limpiar selección
-                                //}
-                            }
-                        }
-
-                        // También mostrar la categoría actual al cargar la página
                         document.addEventListener('DOMContentLoaded', function () {
                             const codCargo = document.getElementById('cod_cargo');
-                            if (codCargo && codCargo.value) {
-                                actualizarCategoriaYMostrar();
-                            }
 
                             // Mapeo de cargos a categorías para referencia
                             window.mapaCargosCategorias = {

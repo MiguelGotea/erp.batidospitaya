@@ -102,8 +102,7 @@
                     <div class="form-group">
                         <label for="cod_cargo">Cargo *</label>
                         <select id="cod_cargo" name="cod_cargo" class="form-control" required
-                            <?= $bloquearSelect($asignacionCargoActual['CodNivelesCargos'] ?? '') ?>
-                            onchange="actualizarCategoriaYMostrar()">
+                            <?= $bloquearSelect($asignacionCargoActual['CodNivelesCargos'] ?? '') ?>>
                             <option value="">Seleccionar cargo...</option>
                             <?php
                             $cargos = obtenerTodosCargos();
