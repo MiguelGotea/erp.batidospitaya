@@ -533,39 +533,52 @@ $puedeDescargar = tienePermiso('dashboard_rfm', 'descargar', $cargoOperario);
                         </div>
                     </div>
 
+
                     <div class="doc-section">
-                        <div class="doc-title text-primary"><i class="fas fa-list-ul"></i> Detalle de Columnas (Listado Maestro)</div>
-                        <p class="small mb-2">Definición de las métricas mostradas en la tabla principal de clientes:</p>
+                        <div class="doc-title text-primary"><i class="fas fa-list-ul"></i> Detalle de Columnas (Listado
+                            Maestro)</div>
+                        <p class="small mb-2">Definición de las métricas mostradas en la tabla principal de clientes:
+                        </p>
                         <div class="row g-2">
                             <div class="col-md-6">
-                                <div class="x-small"><b>Cliente:</b> Nombre, apellido y código único de membresía del socio.</div>
+                                <div class="x-small"><b>Cliente:</b> Nombre, apellido y código único de membresía del
+                                    socio.</div>
                             </div>
                             <div class="col-md-6">
-                                <div class="x-small"><b>Sucursal:</b> Local donde el socio se registró inicialmente (Sucursal de Origen).</div>
+                                <div class="x-small"><b>Sucursal:</b> Local donde el socio se registró inicialmente
+                                    (Sucursal de Origen).</div>
                             </div>
                             <div class="col-md-6">
-                                <div class="x-small"><b>Recencia:</b> Días transcurridos desde la fecha del último pedido registrado.</div>
+                                <div class="x-small"><b>Recencia:</b> Días transcurridos desde la fecha del último
+                                    pedido registrado.</div>
                             </div>
                             <div class="col-md-6">
-                                <div class="x-small"><b>Frecuencia:</b> Cantidad total de pedidos históricos realizados por el socio.</div>
+                                <div class="x-small"><b>Frecuencia:</b> Cantidad total de pedidos históricos realizados
+                                    por el socio.</div>
                             </div>
                             <div class="col-md-6">
-                                <div class="x-small"><b>Monetario:</b> Valor de vida del cliente (LTV) - Suma total de sus consumos históricos.</div>
+                                <div class="x-small"><b>Monetario:</b> Valor de vida del cliente (LTV) - Suma total de
+                                    sus consumos históricos.</div>
                             </div>
                             <div class="col-md-6">
-                                <div class="x-small"><b>Ticket:</b> Gasto promedio por pedido (Monetario dividido entre Frecuencia).</div>
+                                <div class="x-small"><b>Ticket:</b> Gasto promedio por pedido (Monetario dividido entre
+                                    Frecuencia).</div>
                             </div>
                             <div class="col-md-6">
-                                <div class="x-small"><b>Score RFM:</b> Sumatoria de los puntajes R+F+M (escala de 3 a 15).</div>
+                                <div class="x-small"><b>Score RFM:</b> Sumatoria de los puntajes R+F+M (escala de 3 a
+                                    15).</div>
                             </div>
                             <div class="col-md-6">
-                                <div class="x-small"><b>Segmento:</b> Categoría actual del socio según su comportamiento de compra.</div>
+                                <div class="x-small"><b>Segmento:</b> Categoría actual del socio según su comportamiento
+                                    de compra.</div>
                             </div>
                             <div class="col-md-6">
-                                <div class="x-small"><b>Antigüedad:</b> Días transcurridos desde la fecha de registro hasta hoy.</div>
+                                <div class="x-small"><b>Antigüedad:</b> Días transcurridos desde la fecha de registro
+                                    hasta hoy.</div>
                             </div>
                             <div class="col-md-6">
-                                <div class="x-small"><b>Últ. Prod:</b> Nombre del producto adquirido en su transacción más reciente.</div>
+                                <div class="x-small"><b>Últ. Prod:</b> Nombre del producto adquirido en su transacción
+                                    más reciente.</div>
                             </div>
                         </div>
                     </div>
