@@ -418,13 +418,14 @@ function calculateRetentionDetail($conn, $where, $params) {
         $p_inicio = $p_start->format('Y-m-d');
         $p_fin = $p_end->format('Y-m-d');
 
-        // 2. Definir filtros para el Periodo Anterior (Cohort H1)
-        $whereH1 = str_replace([':f_inicio', ':f_fin'], [':p_inicio', ':p_fin'], $where);
-        $paramsH1 = $params;
+        // 2. Definir filtros para el Periodo Anterior (H1 y Subquery de H2)
+        // Usamos prefijos diferentes para los parámetros para evitar colisiones si se usan en el mismo query
+        $whereH1 = str_replace([':f_inicio', ':f_fin', ':sucursal'], [':p_inicio', ':p_fin', ':p_sucursal'], $where);
+        
+        $paramsH1 = [];
+        if (isset($params[':sucursal'])) $paramsH1[':p_sucursal'] = $params[':sucursal'];
         $paramsH1[':p_inicio'] = $p_inicio;
         $paramsH1[':p_fin'] = $p_fin;
-        // Limpiamos los params originales para el subquery
-        unset($paramsH1[':f_inicio'], $paramsH1[':f_fin']);
         
         // Conteo H1
         $sqlH1 = "SELECT COUNT(DISTINCT CodCliente) FROM VentasGlobalesAccessCSV $whereH1 AND CodCliente > 0";
@@ -435,10 +436,11 @@ function calculateRetentionDetail($conn, $where, $params) {
         if ($h1_count === 0) return ['rate' => 0, 'h1' => 0, 'h2' => 0];
 
         // 3. Contar cuántos de ese cohort (H1) compraron en el periodo actual (H2)
-        // Parámetros finales para el query principal
-        $paramsFinal = $params;
-        $paramsFinal[':p_inicio'] = $p_inicio;
-        $paramsFinal[':p_fin'] = $p_fin;
+        // Combinamos parámetros del periodo actual (:f_...) y del anterior (:p_...)
+        $paramsCombined = $params;
+        if (isset($params[':sucursal'])) $paramsCombined[':p_sucursal'] = $params[':sucursal'];
+        $paramsCombined[':p_inicio'] = $p_inicio;
+        $paramsCombined[':p_fin'] = $p_fin;
 
         $sqlH2 = "
             SELECT COUNT(DISTINCT CodCliente)
@@ -453,7 +455,7 @@ function calculateRetentionDetail($conn, $where, $params) {
         ";
 
         $stmtH2 = $conn->prepare($sqlH2);
-        $stmtH2->execute($paramsFinal);
+        $stmtH2->execute($paramsCombined);
         $h2_retained = (int)$stmtH2->fetchColumn();
 
         return [
