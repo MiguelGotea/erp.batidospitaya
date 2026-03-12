@@ -284,7 +284,7 @@ $puedeDescargar = tienePermiso('dashboard_rfm', 'descargar', $cargoOperario);
                     </div>
                     <div class="col-md-6">
                         <div class="glass-card p-4">
-                            <h6 class="fw-bold mb-4">Ticket Promedio por Sucursal (Socios Club)</h6>
+                            <h6 class="fw-bold mb-4">Ticket Promedio por Sucursal (Club)</h6>
                             <canvas id="chartBranchTicket"></canvas>
                         </div>
                     </div>
@@ -301,7 +301,7 @@ $puedeDescargar = tienePermiso('dashboard_rfm', 'descargar', $cargoOperario);
                 <div class="row g-4 mb-4">
                     <div class="col-lg-6">
                         <div class="glass-card p-4">
-                            <h6 class="fw-bold mb-4">Mapa de Calor: Intensidad de Consumo (Hora vs Día) (Socios Club)
+                            <h6 class="fw-bold mb-4">Mapa de Calor: Intensidad de Consumo (Hora vs Día) (Club)
                             </h6>
                             <canvas id="chartHeatmap"></canvas>
                         </div>
@@ -314,7 +314,7 @@ $puedeDescargar = tienePermiso('dashboard_rfm', 'descargar', $cargoOperario);
                     </div>
                     <div class="col-lg-4">
                         <div class="glass-card p-4">
-                            <h6 class="fw-bold mb-4">Distribución por Medida (Socios Club)</h6>
+                            <h6 class="fw-bold mb-4">Distribución por Medida (Club)</h6>
                             <div style="height: 200px; position: relative;">
                                 <canvas id="chartHabitMeasure"></canvas>
                             </div>
@@ -322,7 +322,7 @@ $puedeDescargar = tienePermiso('dashboard_rfm', 'descargar', $cargoOperario);
                     </div>
                     <div class="col-lg-4">
                         <div class="glass-card p-4">
-                            <h6 class="fw-bold mb-4">Distribución por Modalidad (Socios Club)</h6>
+                            <h6 class="fw-bold mb-4">Distribución por Modalidad (Club)</h6>
                             <div style="height: 200px; position: relative;">
                                 <canvas id="chartHabitModality"></canvas>
                             </div>
@@ -330,7 +330,7 @@ $puedeDescargar = tienePermiso('dashboard_rfm', 'descargar', $cargoOperario);
                     </div>
                     <div class="col-lg-4">
                         <div class="glass-card p-4">
-                            <h6 class="fw-bold mb-4">Uso de Promociones (Socios Club)</h6>
+                            <h6 class="fw-bold mb-4">Uso de Promociones (Club)</h6>
                             <div style="height: 200px; position: relative;">
                                 <canvas id="chartHabitPromo"></canvas>
                             </div>
@@ -489,28 +489,28 @@ $puedeDescargar = tienePermiso('dashboard_rfm', 'descargar', $cargoOperario);
                         </div>
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <h6 class="small fw-bold mb-1">Mapa de Calor (Socios Club)</h6>
+                                <h6 class="small fw-bold mb-1">Mapa de Calor (Club)</h6>
                                 <p class="x-small text-muted mb-0">Intensidad de tráfico de Socios Club por horas y
                                     días.</p>
                             </div>
                             <div class="col-md-6">
-                                <h6 class="small fw-bold mb-1">Distribución por Medida (Socios Club)</h6>
+                                <h6 class="small fw-bold mb-1">Distribución por Medida (Club)</h6>
                                 <p class="x-small text-muted mb-0">Análisis exclusivo de Socios Club para las categorías
                                     de <b>Batido y Limonada</b>.</p>
                             </div>
                             <div class="col-md-6">
-                                <h6 class="small fw-bold mb-1">Distribución por Modalidad (Socios Club)</h6>
+                                <h6 class="small fw-bold mb-1">Distribución por Modalidad (Club)</h6>
                                 <p class="x-small text-muted mb-0">Preferencia de canal (Pick-up, Mesa, Domicilio) para
                                     consumos de Socios Club.</p>
                             </div>
                             <div class="col-md-6">
-                                <h6 class="small fw-bold mb-1">Uso de Promociones (Socios Club)</h6>
+                                <h6 class="small fw-bold mb-1">Uso de Promociones (Club)</h6>
                                 <p class="x-small text-muted mb-0">Consumo con cupón vs regular de Socios Club para:
                                     <b>Batido, Limonada, Bowl, Membresía, Store y Waffles</b>.
                                 </p>
                             </div>
                             <div class="col-md-6">
-                                <h6 class="small fw-bold mb-1">Ticket Promedio por Sucursal (Socios Club)</h6>
+                                <h6 class="small fw-bold mb-1">Ticket Promedio por Sucursal (Club)</h6>
                                 <p class="x-small text-muted mb-0">Comparativa de gasto medio por pedido realizado por
                                     Socios Club en cada local.</p>
                             </div>
