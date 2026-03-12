@@ -444,7 +444,9 @@ function applyAllFilters() {
 
 // --- SISTEMA DE FILTROS ESTÁNDAR ---
 
-function toggleFilter(icon) {
+function toggleFilter(icon, event) {
+    if (event) event.stopPropagation();
+    
     const th = $(icon).closest('th');
     const columna = th.data('column');
     const tipo = th.data('type');

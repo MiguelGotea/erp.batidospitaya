@@ -224,32 +224,32 @@ $puedeDescargar = tienePermiso('dashboard_rfm', 'descargar', $cargoOperario);
                             <thead>
                                 <tr class="text-dark bg-light opacity-75">
                                     <th data-column="ClienteNombre" data-type="text">
-                                        Cliente <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                        Cliente <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this, event)"></i>
                                     </th>
                                     <th data-column="Sucursal" data-type="list">
-                                        Sucursal <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                        Sucursal <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this, event)"></i>
                                     </th>
                                     <th data-column="Recency" data-type="number">
-                                        Recencia <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                        Recencia <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this, event)"></i>
                                     </th>
                                     <th data-column="Frequency" data-type="number">
-                                        Frecuencia <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                        Frecuencia <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this, event)"></i>
                                     </th>
                                     <th data-column="Monetary" data-type="number">
-                                        Monetario <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                        Monetario <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this, event)"></i>
                                     </th>
                                     <th data-column="TicketPromedio" data-type="number">
-                                        Ticket <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                        Ticket <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this, event)"></i>
                                     </th>
                                     <th>Score RFM</th>
                                     <th data-column="Segment" data-type="list">
-                                        Segmento <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                        Segmento <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this, event)"></i>
                                     </th>
                                     <th data-column="Antiguedad" data-type="number">
-                                        Antigüedad <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                        Antigüedad <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this, event)"></i>
                                     </th>
                                     <th data-column="UltimoProducto" data-type="text">
-                                        Últ. Prod <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                        Últ. Prod <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this, event)"></i>
                                     </th>
                                     <th style="width: 50px;">Acciones</th>
                                 </tr>

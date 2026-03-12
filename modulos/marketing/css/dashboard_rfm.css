@@ -294,11 +294,12 @@ body {
 
 .filter-icon {
     cursor: pointer;
-    margin-left: 6px;
-    opacity: 0.5;
+    margin-left: 8px;
+    opacity: 0.6;
     transition: all 0.2s ease;
-    font-size: 0.85rem;
+    font-size: 0.95rem;
     color: #0E544C;
+    padding: 2px;
 }
 
 .filter-icon:hover {
@@ -330,7 +331,7 @@ body {
 
 /* Panel de filtro con Glassmorphism */
 .filter-panel {
-    position: fixed;
+    position: absolute;
     background: rgba(255, 255, 255, 0.9);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
