@@ -248,16 +248,20 @@ try {
     $sum_f_period = $period_stats['TotalPedidos'] ?? 0;
     $ticket_club = $sum_f_period > 0 ? $sum_m_period / $sum_f_period : 0;
 
+    // Filtro adicional para pedidos Club/General (basado en transacción completa)
+    $filterOrders = "";
+    if ($tipo_cliente === 'club') $filterOrders = "AND V.CodPedido IN (SELECT CodPedido FROM VentasGlobalesAccessCSV WHERE CodCliente > 0)";
+    elseif ($tipo_cliente === 'general') $filterOrders = "AND V.CodPedido NOT IN (SELECT CodPedido FROM VentasGlobalesAccessCSV WHERE CodCliente > 0)";
+
     // 4. Evolución de Segmentos (Temporal) - Usamos el histórico real y SemanasSistema
     $sqlEvol = "
         SELECT S.numero_semana as Semana, COUNT(DISTINCT V.CodPedido) as Pedidos
         FROM VentasGlobalesAccessCSV V
         JOIN SemanasSistema S ON V.Fecha BETWEEN S.fecha_inicio AND S.fecha_fin
         WHERE V.Anulado = 0 AND V.Fecha BETWEEN :f_inicio AND :f_fin
+        $filterOrders
     ";
     if ($sucursal && $sucursal !== 'todas') { $sqlEvol .= " AND V.Sucursal_Nombre = :sucursal"; }
-    if ($tipo_cliente === 'club') { $sqlEvol .= " AND V.CodCliente > 0"; } 
-    elseif ($tipo_cliente === 'general') { $sqlEvol .= " AND V.CodCliente = 0"; }
     $sqlEvol .= " GROUP BY S.numero_semana, S.fecha_inicio ORDER BY S.fecha_inicio ASC";
     $stmtEvol = $conn->prepare($sqlEvol);
     $stmtEvol->execute($params);
@@ -351,10 +355,6 @@ try {
         else $h_promo['no'] += $hr['Count'];
     }
 
-    // Filtro adicional para Heatmap y TopProd si estamos en vista Club/General
-    $filterOrders = "";
-    if ($tipo_cliente === 'club') $filterOrders = "AND CodPedido IN (SELECT CodPedido FROM VentasGlobalesAccessCSV WHERE CodCliente > 0)";
-    elseif ($tipo_cliente === 'general') $filterOrders = "AND CodPedido NOT IN (SELECT CodPedido FROM VentasGlobalesAccessCSV WHERE CodCliente > 0)";
 
     $sqlHeatmap = "
         SELECT 
