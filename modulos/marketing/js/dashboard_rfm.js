@@ -693,6 +693,7 @@ function renderPaginatedTable() {
                 <td class="${rColor} fw-bold">${c.Recency}d</td>
                 <td class="text-center">${c.Frequency}</td>
                 <td class="fw-bold">${fmt(c.Monetary)}</td>
+                <td class="fw-bold text-primary">${fmt(c.LTV)}</td>
                 <td class="text-teal">${fmt(c.TicketPromedio)}</td>
                 <td>
                     <div class="d-flex gap-1 mb-1">

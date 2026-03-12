@@ -123,6 +123,7 @@ try {
             DATEDIFF(CURDATE(), MAX(r.Fecha)) as Recency,
             COUNT(r.CodPedido) as Frequency,
             SUM(r.TotalPedido) as Monetary,
+            MAX(u.UniversalLTV) as LTV,
             MAX(CONCAT(COALESCE(c.nombre,''), ' ', COALESCE(c.apellido, ''))) as ClienteNombre,
             MAX(c.fecha_registro) as FechaRegistro
         FROM (
@@ -138,6 +139,16 @@ try {
             GROUP BY CodPedido
         ) r
         LEFT JOIN clientesclub c ON r.CodCliente = c.membresia
+        LEFT JOIN (
+            SELECT ClienteID as CodCliente, SUM(MontoPedido) as UniversalLTV
+            FROM (
+                SELECT CodPedido, MAX(CodCliente) as ClienteID, MAX(MontoFactura) as MontoPedido
+                FROM VentasGlobalesAccessCSV
+                WHERE Anulado = 0
+                GROUP BY CodPedido
+            ) t_univ
+            GROUP BY ClienteID
+        ) u ON r.CodCliente = u.CodCliente
         WHERE c.sucursal IN (SELECT codigo FROM sucursales WHERE VMTAP = 1)
     ";
 

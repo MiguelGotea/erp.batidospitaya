@@ -234,6 +234,10 @@ $puedeDescargar = tienePermiso('dashboard_rfm', 'descargar', $cargoOperario);
                                         Monetario <i class="bi bi-funnel filter-icon"
                                             onclick="toggleFilter(this, event)"></i>
                                     </th>
+                                    <th data-column="LTV" data-type="number">
+                                        LTV <i class="bi bi-funnel filter-icon"
+                                            onclick="toggleFilter(this, event)"></i>
+                                    </th>
                                     <th data-column="TicketPromedio" data-type="number">
                                         Ticket <i class="bi bi-funnel filter-icon"
                                             onclick="toggleFilter(this, event)"></i>
@@ -557,8 +561,10 @@ $puedeDescargar = tienePermiso('dashboard_rfm', 'descargar', $cargoOperario);
                                     por el socio.</div>
                             </div>
                             <div class="col-md-6">
-                                <div class="x-small"><b>Monetario:</b> Valor de vida del cliente (LTV) - Suma total de
-                                    sus consumos históricos.</div>
+                                <div class="x-small"><b>Monetario:</b> Valor acumulado del socio en <b>locales activos (VMTAP=1)</b>. Base para el Score RFM.</div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="x-small"><b>LTV (Life Time Value):</b> Valor total real del socio en **toda la marca**, incluyendo locales cerrados o delivery.</div>
                             </div>
                             <div class="col-md-6">
                                 <div class="x-small"><b>Ticket:</b> Gasto promedio por pedido (Monetario dividido entre
