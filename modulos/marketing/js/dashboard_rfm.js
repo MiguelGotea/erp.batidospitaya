@@ -103,7 +103,6 @@ function updateKPIs(summary) {
         $('#kpiPerdidosPerc').text(`${pPerdidos.toFixed(1)}% de la base`);
     }
 
-
     animateValue('kpiTicket', summary.ticket_club, true);
     animateValue('kpiRetention', summary.retention_metrics.rate, false, '%');
 
