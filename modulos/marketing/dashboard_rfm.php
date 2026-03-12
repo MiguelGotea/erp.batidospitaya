@@ -61,15 +61,6 @@ $puedeDescargar = tienePermiso('dashboard_rfm', 'descargar', $cargoOperario);
                             </select>
                         </div>
                         <div class="col-md-2">
-                            <label class="form-label small fw-bold">Tipo Cliente</label>
-                            <select class="form-select form-select-sm rounded-pill" name="tipo_cliente"
-                                id="tipo_cliente">
-                                <option value="club">Solo Club</option>
-                                <option value="general">Solo General</option>
-                                <option value="todos">Todos</option>
-                            </select>
-                        </div>
-                        <div class="col-md-2">
                             <label class="form-label small fw-bold">Umbral Perdido (Días)</label>
                             <input type="number" class="form-control form-control-sm rounded-pill text-center"
                                 name="umbral_perdido" id="umbral_perdido" value="60">

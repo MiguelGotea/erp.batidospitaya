@@ -22,7 +22,7 @@ if (!tienePermiso('dashboard_rfm', 'vista', $cargoOperario)) {
 $fecha_inicio = $_GET['fecha_inicio'] ?? date('Y-m-d', strtotime('-90 days'));
 $fecha_fin = $_GET['fecha_fin'] ?? date('Y-m-d');
 $sucursal = $_GET['sucursal'] ?? null;
-$tipo_cliente = $_GET['tipo_cliente'] ?? 'club'; // club, general, todos
+$tipo_cliente = 'club'; // Hardcodeado a club por solicitud del usuario
 $umbral_perdido = intval($_GET['umbral_perdido'] ?? 60);
 
 try {
@@ -102,15 +102,8 @@ try {
     // 1. Obtener Datos RFM (Agrupado por Cliente)
     // Para CLUB: Usamos Atribución de Origen (Home Branch de clientesclub) + Ciclo de vida TOTAL
     // Para GENERAL: Usamos Atribución de Transacción (Donde ocurrió la venta)
-    $havingRFM = "";
-    if ($tipo_cliente === 'club') $havingRFM = "HAVING r.CodCliente > 0";
-    elseif ($tipo_cliente === 'general') $havingRFM = "HAVING r.CodCliente = 0";
-
-    $whereRFM = "WHERE v.Anulado = 0"; // Sin filtro de sucursal aquí para ver ciclo de vida completo
-    if($sucursal && $sucursal !== 'todas' && $tipo_cliente === 'general') {
-        $whereRFM .= " AND v.Sucursal_Nombre = :suc_gen";
-        $paramsRFM[':suc_gen'] = $sucursal;
-    }
+    $havingRFM = "HAVING r.CodCliente > 0";
+    $whereRFM = "WHERE v.Anulado = 0"; 
 
     $sqlRFM = "
         WITH ResumenPedidos AS (
@@ -138,14 +131,8 @@ try {
     ";
 
     if ($sucursal && $sucursal !== 'todas') {
-        if ($tipo_cliente === 'club') {
-            $sqlRFM .= " AND c.nombre_sucursal = :suc_club";
-            $paramsRFM[':suc_club'] = $sucursal;
-        } elseif ($tipo_cliente === 'todos') {
-            $sqlRFM .= " AND (c.nombre_sucursal = :suc_both OR (r.CodCliente = 0 AND r.Sucursal = :suc_both_gen))";
-            $paramsRFM[':suc_both'] = $sucursal;
-            $paramsRFM[':suc_both_gen'] = $sucursal;
-        }
+        $sqlRFM .= " AND c.nombre_sucursal = :suc_club";
+        $paramsRFM[':suc_club'] = $sucursal;
     }
 
     $sqlRFM .= " GROUP BY r.CodCliente $havingRFM";
@@ -275,10 +262,8 @@ try {
     $sum_f_period = $period_stats['TotalPedidos'] ?? 0;
     $ticket_club = $sum_f_period > 0 ? $sum_m_period / $sum_f_period : 0;
 
-    // Filtro adicional para pedidos Club/General (basado en transacción completa)
-    $filterOrders = "";
-    if ($tipo_cliente === 'club') $filterOrders = "AND CodPedido IN (SELECT CodPedido FROM VentasGlobalesAccessCSV WHERE CodCliente > 0)";
-    elseif ($tipo_cliente === 'general') $filterOrders = "AND CodPedido NOT IN (SELECT CodPedido FROM VentasGlobalesAccessCSV WHERE CodCliente > 0)";
+    // Filtro para pedidos Club (basado en transacción completa)
+    $filterOrders = "AND CodPedido IN (SELECT CodPedido FROM VentasGlobalesAccessCSV WHERE CodCliente > 0)";
 
     // 4. Evolución de Segmentos (Temporal) - Usamos el histórico real y SemanasSistema
     $sqlEvol = "

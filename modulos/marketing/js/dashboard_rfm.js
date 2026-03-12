@@ -64,7 +64,6 @@ async function cargarDatos() {
         fecha_inicio: $('#fecha_inicio').val(),
         fecha_fin: $('#fecha_fin').val(),
         sucursal: $('#filtro_sucursal').val(),
-        tipo_cliente: $('#tipo_cliente').val(),
         umbral_perdido: $('#umbral_perdido').val()
     };
 
