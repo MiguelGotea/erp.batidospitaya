@@ -2622,60 +2622,52 @@ $imagenesParaCarrusel = [];
                             const categoriaInput = document.getElementById('id_categoria_adendum');
                             const salarioInput = document.getElementById('salario_adendum');
 
-                            // Resetear requeridos
+                            // Resetear requeridos y visibilidad por defecto
                             cargoInput.required = false;
                             sucursalInput.required = false;
                             categoriaInput.required = false;
                             salarioInput.required = false;
 
-                            // MOSTRAR/OCULTAR CATEGORÍA SEGÚN CÓDIGO DE CARGO
-                            if (codCargo === '2' || codCargo === '5') {
-                                // Mostrar categoría solo para códigos 2 y 5
-                                grupoCategoria.style.display = 'block';
-                                categoriaInput.required = true;
-                            } else {
-                                grupoCategoria.style.display = 'none';
-                                categoriaInput.required = false;
-                            }
+                            grupoCargo.style.display = 'none';
+                            grupoSucursal.style.display = 'none';
+                            grupoCategoria.style.display = 'none';
+                            grupoSalario.style.display = 'none';
 
                             switch (tipoAdendum) {
                                 case 'cargo':
                                     grupoCargo.style.display = 'block';
                                     grupoSucursal.style.display = 'block';
-                                    // La categoría ya se maneja según el código de cargo
-                                    grupoSalario.style.display = 'none';
-
                                     cargoInput.required = true;
                                     sucursalInput.required = true;
+
+                                    if (codCargo === '2' || codCargo === '5') {
+                                        grupoCategoria.style.display = 'block';
+                                        categoriaInput.required = true;
+                                    }
                                     break;
 
                                 case 'salario':
-                                    grupoCargo.style.display = 'none';
-                                    grupoSucursal.style.display = 'none';
-                                    grupoCategoria.style.display = 'none'; // Ocultar categoría en ajuste salarial
                                     grupoSalario.style.display = 'block';
-
                                     salarioInput.required = true;
                                     break;
 
                                 case 'movimiento':
-                                    grupoCargo.style.display = 'none';
                                     grupoSucursal.style.display = 'block';
-                                    grupoCategoria.style.display = 'none';
-                                    grupoSalario.style.display = 'none';
-
                                     sucursalInput.required = true;
                                     break;
 
                                 case 'ambos':
                                     grupoCargo.style.display = 'block';
                                     grupoSucursal.style.display = 'block';
-                                    // La categoría ya se maneja según el código de cargo
                                     grupoSalario.style.display = 'block';
-
                                     cargoInput.required = true;
                                     sucursalInput.required = true;
                                     salarioInput.required = true;
+
+                                    if (codCargo === '2' || codCargo === '5') {
+                                        grupoCategoria.style.display = 'block';
+                                        categoriaInput.required = true;
+                                    }
                                     break;
 
                                 default:

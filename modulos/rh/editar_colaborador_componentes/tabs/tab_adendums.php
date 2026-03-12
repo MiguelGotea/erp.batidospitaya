@@ -1,4 +1,4 @@
-﻿<!-- Pestaña de Adendums -->
+<!-- Pestaña de Adendums -->
 <?php if (tienePermiso('editar_colaborador', 'edicion', $cargoId)): ?>
     <div id="adendums" class="tab-pane <?= $pestaña_activa == 'adendums' ? 'active' : '' ?>">
         <?php if (tienePermiso('editar_colaborador', 'edicion', $cargoId)): ?>
@@ -60,18 +60,16 @@
 
                             <div class="form-col">
                                 <div class="form-group" id="grupo_categoria" style="display:none;">
-                                    <div class="form-group" id="grupo_categoria" style="display:none;">
-                                        <label for="id_categoria_adendum">Categoría *</label>
-                                        <select id="id_categoria_adendum" name="id_categoria" class="form-control">
-                                            <option value="">Seleccionar categoría...</option>
-                                            <?php foreach ($todasCategorias as $categoria): ?>
-                                                <option value="<?= $categoria['idCategoria'] ?>">
-                                                    <?= htmlspecialchars($categoria['NombreCategoria']) ?>
-                                                    (Peso: <?= $categoria['Peso'] ?>)
-                                                </option>
-                                            <?php endforeach; ?>
-                                        </select>
-                                    </div>
+                                    <label for="id_categoria_adendum">Categoría *</label>
+                                    <select id="id_categoria_adendum" name="id_categoria" class="form-control">
+                                        <option value="">Seleccionar categoría...</option>
+                                        <?php foreach ($todasCategorias as $categoria): ?>
+                                            <option value="<?= $categoria['idCategoria'] ?>">
+                                                <?= htmlspecialchars($categoria['NombreCategoria']) ?>
+                                                (Peso: <?= $categoria['Peso'] ?>)
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
                                 </div>
 
                                 <div class="form-group" id="grupo_salario">
