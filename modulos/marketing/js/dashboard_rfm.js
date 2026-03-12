@@ -15,6 +15,9 @@ let fullClientData = [];
 let filteredData = [];
 let currentPage = 1;
 const itemsPerPage = 20;
+let filtrosActivos = {};
+let panelFiltroAbierto = null;
+let ordenActivo = { columna: null, direccion: null };
 
 $(document).ready(function () {
     cargarSucursales();
@@ -23,8 +26,14 @@ $(document).ready(function () {
     // Event Listeners
     $('#filterForm').on('submit', (e) => { e.preventDefault(); cargarDatos(); });
     $('#tableSearch').on('keyup', debounce(handleSearch, 300));
-    $('.column-filter').on('keyup change', debounce(() => { currentPage = 1; applyAllFilters(); }, 300));
     $('#btnExportFull').on('click', () => exportData('full'));
+
+    // Cerrar filtros al hacer clic fuera
+    $(document).on('click', function (e) {
+        if (!$(e.target).closest('.filter-panel, .filter-icon').length) {
+            cerrarTodosFiltros();
+        }
+    });
 });
 
 // --- CARGA DE DATOS ---
@@ -80,8 +89,8 @@ function updateDashboard(data) {
     updateKPIs(data.summary);
     updateSegmentsChart(data.segments, data.segment_revenue);
     updateEvolutionChart(data.evolution);
-    populateTableFilters();
-    renderPaginatedTable();
+    actualizarIndicadoresFiltros();
+    applyAllFilters();
     updateBranchCharts(data.branch_analysis, data.summary.ticket_club);
     updateHabitSection(data.habits);
 }
@@ -380,41 +389,256 @@ function handleSearch() {
 
 function applyAllFilters() {
     const searchTerm = $('#tableSearch').val().toLowerCase();
-    const colFilters = {};
-
-    $('.column-filter').each(function () {
-        const val = $(this).val();
-        if (val) colFilters[$(this).data('column')] = val.toLowerCase();
-    });
 
     filteredData = fullClientData.filter(c => {
         // 1. Buscador Global
         const globalMatch = !searchTerm ||
             (c.ClienteNombre && c.ClienteNombre.toLowerCase().includes(searchTerm)) ||
-            c.CodCliente.toString().includes(searchTerm);
+            (c.CodCliente && c.CodCliente.toString().includes(searchTerm));
 
         if (!globalMatch) return false;
 
-        // 2. Filtros por Columna
-        for (const [col, filterVal] of Object.entries(colFilters)) {
+        // 2. Filtros Estándar (filtrosActivos)
+        for (const [col, filterVal] of Object.entries(filtrosActivos)) {
             const cellVal = c[col];
             if (cellVal === undefined || cellVal === null) return false;
 
-            const strVal = cellVal.toString().toLowerCase();
+            const type = $(`th[data-column="${col}"]`).data('type');
 
-            // Lógica especial por tipo de columna (Numéricos: mayor o igual)
-            if (['Recency', 'Frequency', 'Monetary', 'TicketPromedio', 'Antiguedad', 'ScoreTotal'].includes(col)) {
-                if (parseFloat(cellVal) < parseFloat(filterVal)) return false;
-            } else if (col === 'Segment' || col === 'Sucursal') {
-                if (filterVal && strVal !== filterVal) return false;
+            if (type === 'number') {
+                const val = parseFloat(cellVal);
+                const min = filterVal.min !== undefined && filterVal.min !== '' ? parseFloat(filterVal.min) : -Infinity;
+                const max = filterVal.max !== undefined && filterVal.max !== '' ? parseFloat(filterVal.max) : Infinity;
+                if (val < min || val > max) return false;
+            } else if (type === 'list') {
+                if (filterVal.length > 0 && !filterVal.includes(cellVal.toString())) return false;
             } else {
-                if (!strVal.includes(filterVal)) return false;
+                // Text default
+                if (!cellVal.toString().toLowerCase().includes(filterVal.toLowerCase())) return false;
             }
         }
         return true;
     });
 
+    // 3. Ordenamiento
+    if (ordenActivo.columna) {
+        const col = ordenActivo.columna;
+        const dir = ordenActivo.direccion === 'asc' ? 1 : -1;
+        filteredData.sort((a, b) => {
+            let valA = a[col];
+            let valB = b[col];
+
+            // Manejo de nulos
+            if (valA === null || valA === undefined) return 1;
+            if (valB === null || valB === undefined) return -1;
+
+            if (typeof valA === 'string') {
+                return valA.localeCompare(valB) * dir;
+            }
+            return (valA - valB) * dir;
+        });
+    }
+
     renderPaginatedTable();
+}
+
+// --- SISTEMA DE FILTROS ESTÁNDAR ---
+
+function toggleFilter(icon) {
+    const th = $(icon).closest('th');
+    const columna = th.data('column');
+    const tipo = th.data('type');
+
+    if (panelFiltroAbierto === columna) {
+        cerrarTodosFiltros();
+        return;
+    }
+
+    cerrarTodosFiltros();
+    crearPanelFiltro(th, columna, tipo, icon);
+    panelFiltroAbierto = columna;
+    $(icon).addClass('active');
+}
+
+function cerrarTodosFiltros() {
+    $('.filter-panel').remove();
+    $('.filter-icon').removeClass('active');
+    panelFiltroAbierto = null;
+}
+
+function crearPanelFiltro(th, columna, tipo, icon) {
+    const panel = $('<div class="filter-panel shadow-lg"></div>');
+
+    // Sección de Ordenamiento
+    panel.append(`
+        <div class="filter-section">
+            <span class="filter-section-title">Ordenar por ${th.text().trim()}</span>
+            <div class="filter-sort-buttons">
+                <button class="filter-sort-btn ${ordenActivo.columna === columna && ordenActivo.direccion === 'asc' ? 'active' : ''}" 
+                        onclick="aplicarOrden('${columna}', 'asc')">
+                    <i class="bi bi-sort-numeric-down"></i> Menor/A-Z
+                </button>
+                <button class="filter-sort-btn ${ordenActivo.columna === columna && ordenActivo.direccion === 'desc' ? 'active' : ''}" 
+                        onclick="aplicarOrden('${columna}', 'desc')">
+                    <i class="bi bi-sort-numeric-up-alt"></i> Mayor/Z-A
+                </button>
+            </div>
+        </div>
+    `);
+
+    // Sección de Filtro según Tipo
+    if (tipo === 'text') {
+        const valorActual = filtrosActivos[columna] || '';
+        panel.append(`
+            <div class="filter-section">
+                <span class="filter-section-title">Contiene:</span>
+                <input type="text" class="filter-search" placeholder="Escribir texto..." 
+                       value="${valorActual}"
+                       oninput="filtrarBusqueda('${columna}', this.value)">
+            </div>
+        `);
+    } else if (tipo === 'number') {
+        const valorMin = filtrosActivos[columna]?.min || '';
+        const valorMax = filtrosActivos[columna]?.max || '';
+        panel.append(`
+            <div class="filter-section">
+                <span class="filter-section-title">Rango de Valores:</span>
+                <div class="numeric-inputs">
+                    <input type="number" class="filter-search" placeholder="Mín" 
+                           value="${valorMin}"
+                           oninput="filtrarNumerico('${columna}', 'min', this.value)">
+                    <input type="number" class="filter-search" placeholder="Máx" 
+                           value="${valorMax}"
+                           oninput="filtrarNumerico('${columna}', 'max', this.value)">
+                </div>
+            </div>
+        `);
+    } else if (tipo === 'list') {
+        cargarOpcionesFiltroLocal(panel, columna);
+    }
+
+    // Botones de Acción
+    panel.append(`
+        <div class="filter-actions">
+            <button class="filter-action-btn clear" onclick="limpiarFiltro('${columna}')">
+                <i class="bi bi-eraser-fill me-1"></i> Borrar Filtro
+            </button>
+        </div>
+    `);
+
+    $('body').append(panel);
+    posicionarPanelFiltro(panel, icon);
+}
+
+function filtrarBusqueda(col, val) {
+    if (!val) delete filtrosActivos[col];
+    else filtrosActivos[col] = val;
+    actualizarIndicadoresFiltros();
+    currentPage = 1;
+    applyAllFilters();
+}
+
+function filtrarNumerico(col, sub, val) {
+    if (!filtrosActivos[col]) filtrosActivos[col] = { min: '', max: '' };
+    filtrosActivos[col][sub] = val;
+
+    if (!filtrosActivos[col].min && !filtrosActivos[col].max) delete filtrosActivos[col];
+
+    actualizarIndicadoresFiltros();
+    currentPage = 1;
+    applyAllFilters();
+}
+
+function cargarOpcionesFiltroLocal(panel, columna) {
+    // Extraer valores únicos de fullClientData
+    let opciones = [...new Set(fullClientData.map(c => c[columna]))]
+        .filter(v => v !== null && v !== undefined && v !== '')
+        .sort((a, b) => a.toString().localeCompare(b.toString()));
+
+    let html = `
+        <div class="filter-section">
+            <span class="filter-section-title">Seleccionar de la lista:</span>
+            <input type="text" class="filter-search mb-2" placeholder="Buscar en lista..." onkeyup="buscarEnOpciones(this)">
+            <div class="filter-options">
+    `;
+
+    opciones.forEach(opt => {
+        const isChecked = (filtrosActivos[columna] || []).includes(opt.toString());
+        const display = (columna === 'Segment') ? getSegmentName(opt) : opt;
+        html += `
+            <label class="filter-option">
+                <input type="checkbox" value="${opt}" ${isChecked ? 'checked' : ''} 
+                       onchange="toggleOpcionFiltro('${columna}', this.value, this.checked)">
+                <span class="text-truncate">${display}</span>
+            </label>
+        `;
+    });
+
+    html += `</div></div>`;
+    panel.append(html);
+}
+
+function toggleOpcionFiltro(col, val, checked) {
+    if (!filtrosActivos[col]) filtrosActivos[col] = [];
+    if (checked) {
+        if (!filtrosActivos[col].includes(val)) filtrosActivos[col].push(val);
+    } else {
+        filtrosActivos[col] = filtrosActivos[col].filter(v => v !== val);
+    }
+    if (filtrosActivos[col].length === 0) delete filtrosActivos[col];
+
+    actualizarIndicadoresFiltros();
+    currentPage = 1;
+    applyAllFilters();
+}
+
+function buscarEnOpciones(input) {
+    const val = input.value.toLowerCase();
+    $(input).siblings('.filter-options').find('.filter-option').each(function () {
+        const text = $(this).text().toLowerCase();
+        $(this).toggle(text.includes(val));
+    });
+}
+
+function aplicarOrden(columna, direccion) {
+    ordenActivo = { columna, direccion };
+    $('.filter-sort-btn').removeClass('active');
+    $(`.filter-sort-btn[onclick*="'${columna}', '${direccion}'"]`).addClass('active');
+    currentPage = 1;
+    applyAllFilters();
+    // Cerramos el panel después de ordenar
+    cerrarTodosFiltros();
+}
+
+function limpiarFiltro(columna) {
+    delete filtrosActivos[columna];
+    actualizarIndicadoresFiltros();
+    currentPage = 1;
+    applyAllFilters();
+    cerrarTodosFiltros();
+}
+
+function actualizarIndicadoresFiltros() {
+    $('.filter-icon').removeClass('has-filter');
+    Object.keys(filtrosActivos).forEach(col => {
+        $(`th[data-column="${col}"] .filter-icon`).addClass('has-filter');
+    });
+}
+
+function posicionarPanelFiltro(panel, icon) {
+    const offset = $(icon).offset();
+    const iconH = $(icon).outerHeight();
+    const panelW = panel.outerWidth();
+    const winW = $(window).width();
+
+    let left = offset.left - panelW + 20;
+    if (left < 10) left = 10;
+    if (left + panelW > winW) left = winW - panelW - 10;
+
+    panel.css({
+        top: (offset.top + iconH + 8) + 'px',
+        left: left + 'px'
+    });
 }
 
 function renderPaginatedTable() {
@@ -577,15 +801,3 @@ function verDetalle(id) {
     window.location.href = `/modulos/atencioncliente/historial_productos.php?membresia=${id}`;
 }
 
-function populateTableFilters() {
-    const sucursales = [...new Set(fullClientData.map(c => c.Sucursal))].filter(Boolean).sort();
-    const segmentos = [...new Set(fullClientData.map(c => c.Segment))].filter(Boolean).sort();
-
-    let sucHtml = '<option value="">Todas</option>';
-    sucursales.forEach(s => sucHtml += `<option value="${s.toLowerCase()}">${s}</option>`);
-    $('select[data-column="Sucursal"]').html(sucHtml);
-
-    let segHtml = '<option value="">Todos</option>';
-    segmentos.forEach(s => segHtml += `<option value="${s.toLowerCase()}">${getSegmentName(s)}</option>`);
-    $('select[data-column="Segment"]').html(segHtml);
-}

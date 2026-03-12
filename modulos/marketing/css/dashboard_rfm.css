@@ -282,3 +282,212 @@ body {
 }
 .tag-global { background: #e0f2fe; color: #0369a1; } /* Blue for Lifetime/Global */
 .tag-period { background: #fef3c7; color: #92400e; } /* Amber for Period */
+
+/* ==========================================================================
+   ESTILOS DE FILTROS DE TABLA (ESTÁNDAR)
+   ========================================================================== */
+
+.premium-table thead th {
+    position: relative;
+    vertical-align: middle;
+}
+
+.filter-icon {
+    cursor: pointer;
+    margin-left: 6px;
+    opacity: 0.5;
+    transition: all 0.2s ease;
+    font-size: 0.85rem;
+    color: #0E544C;
+}
+
+.filter-icon:hover {
+    opacity: 1;
+    transform: scale(1.15);
+}
+
+.filter-icon.active {
+    opacity: 1;
+    color: #51B8AC;
+}
+
+.filter-icon.has-filter {
+    opacity: 1;
+    color: #ffc107;
+}
+
+.filter-icon.has-filter::after {
+    content: '';
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    width: 6px;
+    height: 6px;
+    background-color: #ffc107;
+    border-radius: 50%;
+    box-shadow: 0 0 5px rgba(255, 193, 7, 0.5);
+}
+
+/* Panel de filtro con Glassmorphism */
+.filter-panel {
+    position: fixed;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+    padding: 18px;
+    z-index: 2000;
+    min-width: 280px;
+    max-width: 320px;
+    animation: filterPanelFadeIn 0.2s ease-out;
+}
+
+@keyframes filterPanelFadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.filter-section {
+    margin-bottom: 15px;
+}
+
+.filter-section:last-child {
+    margin-bottom: 0;
+}
+
+.filter-section-title {
+    display: block;
+    font-weight: 700;
+    font-size: 0.75rem;
+    color: #0E544C;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 10px;
+    border-bottom: 1px solid rgba(14, 84, 76, 0.1);
+    padding-bottom: 5px;
+}
+
+.filter-search {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    transition: all 0.2s;
+    background: white;
+}
+
+.filter-search:focus {
+    outline: none;
+    border-color: #51B8AC;
+    box-shadow: 0 0 0 3px rgba(81, 184, 172, 0.1);
+}
+
+.filter-sort-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.filter-sort-btn {
+    padding: 8px;
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    color: #444;
+}
+
+.filter-sort-btn:hover {
+    background: #f8f9fa;
+    border-color: #51B8AC;
+}
+
+.filter-sort-btn.active {
+    background: #51B8AC;
+    color: white;
+    border-color: #51B8AC;
+}
+
+.filter-options {
+    max-height: 180px;
+    overflow-y: auto;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    background: white;
+}
+
+.filter-option {
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: background 0.2s;
+}
+
+.filter-option:hover {
+    background: #f0fdfa;
+}
+
+.filter-option input {
+    cursor: pointer;
+    width: 16px;
+    height: 16px;
+    accent-color: #51B8AC;
+}
+
+.numeric-inputs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.filter-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid rgba(0,0,0,0.05);
+}
+
+.filter-action-btn {
+    flex: 1;
+    padding: 8px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+}
+
+.filter-action-btn.clear {
+    background: #fff0f0;
+    color: #d32f2f;
+}
+
+.filter-action-btn.clear:hover {
+    background: #ffe5e5;
+}
+
+/* Scrollbar para paneles de filtro */
+.filter-options::-webkit-scrollbar {
+    width: 4px;
+}
+.filter-options::-webkit-scrollbar-track {
+    background: transparent;
+}
+.filter-options::-webkit-scrollbar-thumb {
+    background: #51B8AC;
+    border-radius: 10px;
+}

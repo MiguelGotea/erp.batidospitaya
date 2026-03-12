@@ -214,40 +214,36 @@ $puedeDescargar = tienePermiso('dashboard_rfm', 'descargar', $cargoOperario);
                     <div class="table-responsive">
                         <table class="table table-hover align-middle premium-table" id="rfmTableMaster">
                             <thead>
-                                <tr>
-                                    <th>Cliente</th>
-                                    <th>Sucursal</th>
-                                    <th>Recencia</th>
-                                    <th>Frecuencia</th>
-                                    <th>Monetario</th>
-                                    <th>Ticket</th>
+                                <tr class="text-dark bg-light opacity-75">
+                                    <th data-column="ClienteNombre" data-type="text">
+                                        Cliente <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                    </th>
+                                    <th data-column="Sucursal" data-type="list">
+                                        Sucursal <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                    </th>
+                                    <th data-column="Recency" data-type="number">
+                                        Recencia <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                    </th>
+                                    <th data-column="Frequency" data-type="number">
+                                        Frecuencia <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                    </th>
+                                    <th data-column="Monetary" data-type="number">
+                                        Monetario <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                    </th>
+                                    <th data-column="TicketPromedio" data-type="number">
+                                        Ticket <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                    </th>
                                     <th>Score RFM</th>
-                                    <th>Segmento</th>
-                                    <th>Antigüedad</th>
-                                    <th>Últ. Prod</th>
+                                    <th data-column="Segment" data-type="list">
+                                        Segmento <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                    </th>
+                                    <th data-column="Antiguedad" data-type="number">
+                                        Antigüedad <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                    </th>
+                                    <th data-column="UltimoProducto" data-type="text">
+                                        Últ. Prod <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                    </th>
                                     <th style="width: 50px;">Acciones</th>
-                                </tr>
-                                <!-- Fila de Filtros -->
-                                <tr class="filter-row bg-light">
-                                    <td><input type="text" class="form-control form-control-sm column-filter" data-column="ClienteNombre" placeholder="Filtrar..."></td>
-                                    <td>
-                                        <select class="form-select form-select-sm column-filter" data-column="Sucursal">
-                                            <option value="">Todas</option>
-                                        </select>
-                                    </td>
-                                    <td><input type="number" class="form-control form-control-sm column-filter" data-column="Recency" placeholder=">="></td>
-                                    <td><input type="number" class="form-control form-control-sm column-filter" data-column="Frequency" placeholder=">="></td>
-                                    <td><input type="number" class="form-control form-control-sm column-filter" data-column="Monetary" placeholder=">="></td>
-                                    <td><input type="number" class="form-control form-control-sm column-filter" data-column="TicketPromedio" placeholder=">="></td>
-                                    <td></td>
-                                    <td>
-                                        <select class="form-select form-select-sm column-filter" data-column="Segment">
-                                            <option value="">Todos</option>
-                                        </select>
-                                    </td>
-                                    <td><input type="number" class="form-control form-control-sm column-filter" data-column="Antiguedad" placeholder=">="></td>
-                                    <td><input type="text" class="form-control form-control-sm column-filter" data-column="UltimoProducto" placeholder="..."></td>
-                                    <td></td>
                                 </tr>
                             </thead>
                             <tbody id="rfmTableBody"></tbody>
