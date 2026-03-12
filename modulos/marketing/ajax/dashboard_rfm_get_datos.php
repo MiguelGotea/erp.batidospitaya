@@ -27,7 +27,7 @@ $umbral_perdido = intval($_GET['umbral_perdido'] ?? 60);
 
 try {
     // Definición de base de filtros
-    $whereVmtap = " AND Sucursal_Nombre IN (SELECT nombre FROM sucursales WHERE VMTAP = 1)";
+    $whereVmtap = " AND local IN (SELECT codigo FROM sucursales WHERE VMTAP = 1)";
     
     // Filtro Global (Ignora Fecha para Salud/RFM)
     $whereGlobal = "WHERE Anulado = 0" . $whereVmtap;
@@ -43,6 +43,8 @@ try {
         $params[':sucursal'] = $sucursal;
         $paramsGlobal[':suc_global'] = $sucursal;
     }
+    // Nota: El filtro por nombre se mantiene para el selector de UI por ahora, 
+    // pero la integridad de VMTAP usa los códigos.
 
     /* 
        ELIMINADO: Filtro de CodCliente a nivel de fila.
@@ -65,6 +67,7 @@ try {
                 MAX(MontoFactura) as MontoFactura 
             FROM VentasGlobalesAccessCSV 
             $wherePart 
+            AND local IN (SELECT codigo FROM sucursales WHERE VMTAP = 1)
             GROUP BY CodPedido
         ) t 
         GROUP BY EsClub
@@ -104,6 +107,8 @@ try {
     // Para GENERAL: Usamos Atribución de Transacción (Donde ocurrió la venta)
     $havingRFM = "HAVING r.CodCliente > 0";
     $whereRFM = "WHERE v.Anulado = 0"; 
+    // Filtramos local globalmente
+    $whereRFM .= " AND v.local IN (SELECT codigo FROM sucursales WHERE VMTAP = 1)";
 
     $sqlRFM = "
         WITH ResumenPedidos AS (
@@ -112,7 +117,8 @@ try {
                 CodPedido, 
                 MAX(Fecha) as Fecha, 
                 MAX(MontoFactura) as TotalPedido, 
-                MAX(Sucursal_Nombre) as Sucursal
+                MAX(Sucursal_Nombre) as Sucursal,
+                MAX(local) as LocalID
             FROM VentasGlobalesAccessCSV v
             $whereRFM
             GROUP BY CodPedido
@@ -127,7 +133,7 @@ try {
             MAX(c.fecha_registro) as FechaRegistro
         FROM ResumenPedidos r
         LEFT JOIN clientesclub c ON r.CodCliente = c.membresia
-        WHERE c.nombre_sucursal IN (SELECT nombre FROM sucursales WHERE VMTAP = 1) OR (r.CodCliente = 0 AND r.Sucursal IN (SELECT nombre FROM sucursales WHERE VMTAP = 1))
+        WHERE 1=1
     ";
 
     if ($sucursal && $sucursal !== 'todas') {
@@ -294,6 +300,7 @@ try {
                 MAX(MontoFactura) as MontoPedido 
             FROM VentasGlobalesAccessCSV 
             $whereSimple 
+            AND local IN (SELECT codigo FROM sucursales WHERE VMTAP = 1)
             GROUP BY CodPedido
             HAVING MAX(CodCliente) > 0
         ) t
@@ -374,6 +381,7 @@ try {
             Medida, Modalidad, (CodigoPromocion IS NOT NULL AND CodigoPromocion <> '') as EsPromo, COUNT(*) as Count
         FROM VentasGlobalesAccessCSV
         $whereSimple
+        AND local IN (SELECT codigo FROM sucursales WHERE VMTAP = 1)
         GROUP BY Medida, Modalidad, EsPromo
     ";
     $stmtHab = $conn->prepare($sqlHabits);
@@ -399,7 +407,9 @@ try {
             CASE WHEN DAYOFWEEK(Fecha) = 1 THEN 7 ELSE DAYOFWEEK(Fecha) - 1 END as Day, 
             COUNT(DISTINCT CodPedido) as Count 
         FROM VentasGlobalesAccessCSV 
-        $whereSimple $filterOrders
+        $whereSimple 
+        AND local IN (SELECT codigo FROM sucursales WHERE VMTAP = 1)
+        $filterOrders
         GROUP BY Hour, Day
     ";
     $stmtHeat = $conn->prepare($sqlHeatmap);
@@ -411,7 +421,9 @@ try {
             DBBatidos_Nombre as Product, 
             COUNT(*) as Count 
         FROM VentasGlobalesAccessCSV 
-        $whereSimple $filterOrders
+        $whereSimple 
+        AND local IN (SELECT codigo FROM sucursales WHERE VMTAP = 1)
+        $filterOrders
         AND Tipo IN ('Batido', 'Bowl', 'Limonada', 'Pitaya Store', 'Waffles') 
         GROUP BY Product 
         ORDER BY Count DESC 
