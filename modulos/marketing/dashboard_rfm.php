@@ -288,6 +288,7 @@ $puedeDescargar = tienePermiso('dashboard_rfm', 'descargar', $cargoOperario);
                             <canvas id="chartBranchTicket"></canvas>
                         </div>
                     </div>
+
                     <div class="col-md-6">
                         <div class="glass-card p-4">
                             <h6 class="fw-bold mb-4">Top 5 LTV por Sucursal</h6>
@@ -505,7 +506,8 @@ $puedeDescargar = tienePermiso('dashboard_rfm', 'descargar', $cargoOperario);
                             <div class="col-md-6">
                                 <h6 class="small fw-bold mb-1">Uso de Promociones (Socios Club)</h6>
                                 <p class="x-small text-muted mb-0">Consumo con cupón vs regular de Socios Club para:
-                                    <b>Batido, Limonada, Bowl, Membresía, Store y Waffles</b>.</p>
+                                    <b>Batido, Limonada, Bowl, Membresía, Store y Waffles</b>.
+                                </p>
                             </div>
                             <div class="col-md-6">
                                 <h6 class="small fw-bold mb-1">Ticket Promedio por Sucursal (Socios Club)</h6>
