@@ -197,7 +197,7 @@ $puedeDescargar = tienePermiso('dashboard_rfm', 'descargar', $cargoOperario);
                     </div>
                     <div class="col-lg-4">
                         <div class="glass-card p-4 h-100">
-                            <h6 class="fw-bold mb-4">Evolución de Pedidos por Periodo</h6>
+                            <h6 class="fw-bold mb-4">Evolución por Segmento</h6>
                             <canvas id="chartEvolution" style="max-height: 250px;"></canvas>
                         </div>
                     </div>

@@ -294,7 +294,10 @@ try {
 
     // 4. Evolución de Segmentos (Temporal) - Usamos el histórico real y SemanasSistema
     $sqlEvol = "
-        SELECT S.numero_semana as Semana, COUNT(DISTINCT V.CodPedido) as Pedidos
+        SELECT 
+            S.numero_semana as Semana, 
+            V.CodPedido, 
+            V.CodCliente
         FROM VentasGlobalesAccessCSV V
         JOIN SemanasSistema S ON V.Fecha BETWEEN S.fecha_inicio AND S.fecha_fin
         WHERE V.Anulado = 0 AND V.Fecha BETWEEN :f_inicio AND :f_fin
@@ -303,10 +306,35 @@ try {
     if ($sucursal && $sucursal !== 'todas') {
         $sqlEvol .= " AND V.Sucursal_Nombre = :sucursal";
     }
-    $sqlEvol .= " GROUP BY S.numero_semana, S.fecha_inicio ORDER BY S.fecha_inicio ASC";
+    $sqlEvol .= " ORDER BY S.fecha_inicio ASC";
     $stmtEvol = $conn->prepare($sqlEvol);
     $stmtEvol->execute($params);
-    $evolution = $stmtEvol->fetchAll(PDO::FETCH_ASSOC);
+    $evolutionRaw = $stmtEvol->fetchAll(PDO::FETCH_ASSOC);
+
+    // Mapear Clientes a Segmentos para la evolución
+    $clientSegments = array_column($raw_data, 'Segment', 'CodCliente');
+    $evolutionDetail = [];
+    $processedOrders = []; // Para asegurar DISTINCT CodPedido
+
+    foreach ($evolutionRaw as $row) {
+        if (isset($processedOrders[$row['CodPedido']])) continue;
+        $processedOrders[$row['CodPedido']] = true;
+
+        $week = 'Sem ' . $row['Semana'];
+        $seg = $clientSegments[$row['CodCliente']] ?? 'Hibernating'; 
+        // Nota: Los que no están en raw_data (porque no cumplen filtros) los tratamos como Hibernating 
+        // o similar, pero $filterOrders ya garantiza que son del Club.
+
+        if (!isset($evolutionDetail[$week])) {
+            $evolutionDetail[$week] = [
+                'Semana' => $week,
+                'Champions' => 0, 'Loyal' => 0, 'New' => 0, 
+                'At Risk' => 0, 'Hibernating' => 0, 'Lost' => 0
+            ];
+        }
+        $evolutionDetail[$week][$seg]++;
+    }
+    $evolution = array_values($evolutionDetail);
 
     // 5. Análisis por Sucursal y Detalle Individual
     // 5.1 Obtener Ticket Promedio del PERIODO por Sucursal para Benchmarking

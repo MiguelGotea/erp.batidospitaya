@@ -214,24 +214,32 @@ function updateEvolutionChart(evolution) {
     const ctx = document.getElementById('chartEvolution').getContext('2d');
     if (chartEvolution) chartEvolution.destroy();
 
+    const segmentLabels = ['Champions', 'Loyal', 'New', 'At Risk', 'Hibernating', 'Lost'];
+    const palette = getPalette();
+
+    const datasets = segmentLabels.map(seg => ({
+        label: getSegmentName(seg),
+        data: evolution.map(e => e[seg] || 0),
+        backgroundColor: palette[seg],
+        borderRadius: 2
+    }));
+
     chartEvolution = new Chart(ctx, {
-        type: 'line',
+        type: 'bar',
         data: {
-            labels: evolution.map(e => 'Sem ' + e.Semana),
-            datasets: [{
-                label: 'Pedidos por Semana',
-                data: evolution.map(e => e.Pedidos),
-                borderColor: '#51B8AC',
-                backgroundColor: 'rgba(81, 184, 172, 0.1)',
-                fill: true,
-                tension: 0.4,
-                pointRadius: 4
-            }]
+            labels: evolution.map(e => e.Semana),
+            datasets: datasets
         },
         options: {
-            plugins: { legend: { display: false } },
+            plugins: { 
+                legend: { display: false },
+                tooltip: { stacked: true }
+            },
             maintainAspectRatio: false,
-            scales: { y: { beginAtZero: true, grid: { display: false } }, x: { grid: { display: false } } }
+            scales: { 
+                y: { stacked: true, beginAtZero: true, grid: { display: false } }, 
+                x: { stacked: true, grid: { display: false } } 
+            }
         }
     });
 }
