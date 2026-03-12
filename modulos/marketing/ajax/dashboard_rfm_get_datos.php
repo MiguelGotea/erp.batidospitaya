@@ -138,7 +138,7 @@ try {
             MAX(c.fecha_registro) as FechaRegistro
         FROM ResumenPedidos r
         LEFT JOIN clientesclub c ON r.CodCliente = c.membresia
-        WHERE 1=1
+        WHERE c.sucursal IN (SELECT codigo FROM sucursales WHERE VMTAP = 1)
     ";
 
     if ($sucursal && $sucursal !== 'todas') {
