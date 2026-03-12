@@ -411,7 +411,12 @@ $puedeDescargar = tienePermiso('dashboard_rfm', 'descargar', $cargoOperario);
                                     </tr>
                                     <tr>
                                         <td><b>Perdidos</b></td>
-                                        <td>Socios con inactividad mayor al Umbral configurado.</td>
+                                        <td>Mide el volumen de socios inactivos (>Umbral). El % mostrado es sobre el <b>Universo Total</b>.</td>
+                                        <td><span class="method-tag tag-global">Global</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><b>Tasa Churn</b></td>
+                                        <td>Mide la deserción de socios que ya eran clientes. El % mostrado es sobre el <b>Universo con Compra</b>.</td>
                                         <td><span class="method-tag tag-global">Global</span></td>
                                     </tr>
                                     <tr>

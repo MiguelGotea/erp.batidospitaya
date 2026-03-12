@@ -138,7 +138,7 @@ function updateKPIs(summary) {
     $('#tipTicket').attr('title', `<div class="tooltip-data-row"><span>Ventas:</span> <span>${fmt(summary.raw.total_ingresos)}</span></div><div class="tooltip-data-row"><span>Pedidos:</span> <span>${summary.raw.total_pedidos}</span></div>`);
     $('#tipRetention').attr('title', `<div class="tooltip-data-row"><span>Cohorte (Previo):</span> <span>${summary.retention_metrics.h1}</span></div><div class="tooltip-data-row"><span>Retornaron:</span> <span>${summary.retention_metrics.h2}</span></div><div class="tooltip-formula">Clientes del periodo anterior que volvieron en este periodo.</div>`);
     $('#tipParticipation').attr('title', `<div class="tooltip-data-row"><span>Venta Club:</span> <span>${fmt(summary.participacion.club)}</span></div><div class="tooltip-data-row"><span>Venta Gen:</span> <span>${fmt(summary.participacion.general)}</span></div>`);
-    $('#tipChurnTotal').attr('title', `<div class="tooltip-data-row"><span>Perdidos:</span> <span>${summary.perdidos}</span></div><div class="tooltip-formula">Porcentaje de pérdida sobre base filtrada.</div>`);
+    $('#tipChurnTotal').attr('title', `<div class="tooltip-data-row"><span>Perdidos:</span> <span>${summary.perdidos}</span></div><div class="tooltip-data-row"><span>Univ. c/Compra:</span> <span>${summary.total_club}</span></div><div class="tooltip-formula">Tasa Churn = (Perdidos / Socios con al menos 1 compra) * 100.</div>`);
 
     tooltipTriggerList.forEach(el => {
         new bootstrap.Tooltip(el, { sanitize: false });
