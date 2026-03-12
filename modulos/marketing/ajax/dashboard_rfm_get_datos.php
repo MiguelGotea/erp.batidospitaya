@@ -289,19 +289,20 @@ try {
     $sum_f_period = $period_stats['TotalPedidos'] ?? 0;
     $ticket_club = $sum_f_period > 0 ? $sum_m_period / $sum_f_period : 0;
 
-    // Filtro para pedidos Club (basado en transacción completa)
-    $filterOrders = "AND CodPedido IN (SELECT CodPedido FROM VentasGlobalesAccessCSV WHERE CodCliente > 0)";
+    // Filtro para pedidos Club (basado en transacción completa) - OPTIMIZADO con fechas
+    $filterOrders = "AND CodPedido IN (SELECT DISTINCT CodPedido FROM VentasGlobalesAccessCSV WHERE CodCliente > 0 AND Fecha BETWEEN :f_inicio AND :f_fin)";
 
     // 4. Evolución de Segmentos (Temporal) - Usamos el histórico real y SemanasSistema
     $sqlEvol = "
         SELECT 
             S.numero_semana as Semana, 
             V.CodPedido, 
-            V.CodCliente
+            MAX(V.CodCliente) as CodCliente
         FROM VentasGlobalesAccessCSV V
         JOIN SemanasSistema S ON V.Fecha BETWEEN S.fecha_inicio AND S.fecha_fin
         WHERE V.Anulado = 0 AND V.Fecha BETWEEN :f_inicio AND :f_fin
         $filterOrders
+        GROUP BY S.numero_semana, V.CodPedido
     ";
     if ($sucursal && $sucursal !== 'todas') {
         $sqlEvol .= " AND V.Sucursal_Nombre = :sucursal";
@@ -314,16 +315,10 @@ try {
     // Mapear Clientes a Segmentos para la evolución
     $clientSegments = array_column($raw_data, 'Segment', 'CodCliente');
     $evolutionDetail = [];
-    $processedOrders = []; // Para asegurar DISTINCT CodPedido
 
     foreach ($evolutionRaw as $row) {
-        if (isset($processedOrders[$row['CodPedido']])) continue;
-        $processedOrders[$row['CodPedido']] = true;
-
         $week = 'Sem ' . $row['Semana'];
         $seg = $clientSegments[$row['CodCliente']] ?? 'Hibernating'; 
-        // Nota: Los que no están en raw_data (porque no cumplen filtros) los tratamos como Hibernating 
-        // o similar, pero $filterOrders ya garantiza que son del Club.
 
         if (!isset($evolutionDetail[$week])) {
             $evolutionDetail[$week] = [
