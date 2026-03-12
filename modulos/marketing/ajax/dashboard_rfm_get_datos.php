@@ -137,7 +137,7 @@ try {
     ";
 
     if ($sucursal && $sucursal !== 'todas') {
-        $sqlRFM .= " AND c.nombre_sucursal = :suc_club";
+        $sqlRFM .= " AND c.sucursal = (SELECT codigo FROM sucursales WHERE nombre = :suc_club)";
         $paramsRFM[':suc_club'] = $sucursal;
     }
 
@@ -149,10 +149,10 @@ try {
 
     // Conteo Universo con Compra (Denominator for Health %)
     // Socios registrados en la sucursal que han tenido al menos una compra en la historia (cualquier sucursal)
-    $whereUniverso = "WHERE c.nombre_sucursal IN (SELECT nombre FROM sucursales WHERE VMTAP = 1)";
+    $whereUniverso = "WHERE c.sucursal IN (SELECT codigo FROM sucursales WHERE VMTAP = 1)";
     $paramsUniv = [];
     if($sucursal && $sucursal !== 'todas') {
-        $whereUniverso .= " AND c.nombre_sucursal = :s_univ";
+        $whereUniverso .= " AND c.sucursal = (SELECT codigo FROM sucursales WHERE nombre = :s_univ)";
         $paramsUniv[':s_univ'] = $sucursal;
     }
     
@@ -233,10 +233,10 @@ try {
     $perdidos = count(array_filter($raw_data, fn($x) => $x['Recency'] > $umbral_perdido));
     
     // Clientes nuevos (Registrados en el periodo)
-    $whereClubNow = "WHERE fecha_registro BETWEEN :f_inicio AND :f_fin AND nombre_sucursal IN (SELECT nombre FROM sucursales WHERE VMTAP = 1)";
+    $whereClubNow = "WHERE fecha_registro BETWEEN :f_inicio AND :f_fin AND sucursal IN (SELECT codigo FROM sucursales WHERE VMTAP = 1)";
     $paramsClubNow = [':f_inicio' => $fecha_inicio, ':f_fin' => $fecha_fin];
     if ($sucursal && $sucursal !== 'todas') {
-        $whereClubNow .= " AND nombre_sucursal = :suc_club_now";
+        $whereClubNow .= " AND sucursal = (SELECT codigo FROM sucursales WHERE nombre = :suc_club_now)";
         $paramsClubNow[':suc_club_now'] = $sucursal;
     }
 
