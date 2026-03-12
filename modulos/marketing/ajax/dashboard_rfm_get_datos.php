@@ -290,7 +290,8 @@ try {
     $ticket_club = $sum_f_period > 0 ? $sum_m_period / $sum_f_period : 0;
 
     // Filtro para pedidos Club (basado en transacción completa) - OPTIMIZADO con fechas
-    $filterOrders = "AND CodPedido IN (SELECT DISTINCT CodPedido FROM VentasGlobalesAccessCSV WHERE CodCliente > 0 AND Fecha BETWEEN :f_inicio AND :f_fin)";
+    $filterOrders = "AND CodPedido IN (SELECT DISTINCT CodPedido FROM VentasGlobalesAccessCSV WHERE CodCliente > 0 AND Fecha BETWEEN :fo_i AND :fo_f)";
+    $paramsFO = [':fo_i' => $fecha_inicio, ':fo_f' => $fecha_fin];
 
     // 4. Evolución de Segmentos (Temporal) - Usamos el histórico real y SemanasSistema
     $sqlEvol = "
@@ -309,7 +310,7 @@ try {
     }
     $sqlEvol .= " ORDER BY S.fecha_inicio ASC";
     $stmtEvol = $conn->prepare($sqlEvol);
-    $stmtEvol->execute($params);
+    $stmtEvol->execute(array_merge($params, $paramsFO));
     $evolutionRaw = $stmtEvol->fetchAll(PDO::FETCH_ASSOC);
 
     // Mapear Clientes a Segmentos para la evolución
@@ -488,7 +489,7 @@ try {
         GROUP BY Hour, Day
     ";
     $stmtHeat = $conn->prepare($sqlHeatmap);
-    $stmtHeat->execute($params);
+    $stmtHeat->execute(array_merge($params, $paramsFO));
     $heatmap = $stmtHeat->fetchAll(PDO::FETCH_ASSOC);
 
     $sqlTopProd = "
@@ -504,7 +505,7 @@ try {
         LIMIT 10
     ";
     $stmtTP = $conn->prepare($sqlTopProd);
-    $stmtTP->execute($params);
+    $stmtTP->execute(array_merge($params, $paramsFO));
     $top_products = $stmtTP->fetchAll(PDO::FETCH_ASSOC);
 
     // 7. Respuesta Final Estructurada
