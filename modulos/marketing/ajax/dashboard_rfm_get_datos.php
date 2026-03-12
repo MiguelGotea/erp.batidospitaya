@@ -105,7 +105,11 @@ try {
     $sqlRFM = "
         WITH ResumenPedidos AS (
             SELECT 
-                CodCliente, CodPedido, MAX(Fecha) as Fecha, MAX(MontoFactura) as TotalPedido, MAX(Sucursal_Nombre) as Sucursal
+                MAX(CodCliente) as CodCliente, 
+                CodPedido, 
+                MAX(Fecha) as Fecha, 
+                MAX(MontoFactura) as TotalPedido, 
+                MAX(Sucursal_Nombre) as Sucursal
             FROM VentasGlobalesAccessCSV
             $whereGlobal
             GROUP BY CodPedido
@@ -338,7 +342,15 @@ try {
         else $h_promo['no'] += $hr['Count'];
     }
 
-    $sqlHeatmap = "SELECT HOUR(Hora) as Hour, CASE WHEN DAYOFWEEK(Fecha) = 1 THEN 7 ELSE DAYOFWEEK(Fecha) - 1 END as Day, COUNT(*) as Count FROM VentasGlobalesAccessCSV $whereSimple GROUP BY Hour, Day";
+    $sqlHeatmap = "
+        SELECT 
+            HOUR(Hora) as Hour, 
+            CASE WHEN DAYOFWEEK(Fecha) = 1 THEN 7 ELSE DAYOFWEEK(Fecha) - 1 END as Day, 
+            COUNT(DISTINCT CodPedido) as Count 
+        FROM VentasGlobalesAccessCSV 
+        $whereSimple 
+        GROUP BY Hour, Day
+    ";
     $stmtHeat = $conn->prepare($sqlHeatmap);
     $stmtHeat->execute($params);
     $heatmap = $stmtHeat->fetchAll(PDO::FETCH_ASSOC);
