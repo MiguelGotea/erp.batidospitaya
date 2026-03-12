@@ -411,6 +411,7 @@ try {
         $whereSimple
         AND v.local IN (SELECT codigo FROM sucursales WHERE VMTAP = 1)
         AND g.Tipo IN ('Batido', 'Limonada')
+        AND v.CodCliente > 0
         GROUP BY v.Medida
     ";
     $stmtMed = $conn->prepare($sqlMedida);
@@ -429,6 +430,7 @@ try {
         $whereSimple
         AND v.local IN (SELECT codigo FROM sucursales WHERE VMTAP = 1)
         AND g.Tipo IN ('Batido', 'Limonada', 'Bowl', 'Membresia', 'Pitaya Store', 'Waffles')
+        AND v.CodCliente > 0
         GROUP BY v.Modalidad, EsPromo
     ";
     $stmtHab = $conn->prepare($sqlHabits);
