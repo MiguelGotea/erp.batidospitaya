@@ -100,10 +100,17 @@ try {
     $prev_nuevos = $stmtPrev->fetch(PDO::FETCH_ASSOC)['PrevNuevos'] ?? 0;
 
     // 1. Obtener Datos RFM (Agrupado por Cliente)
-    // Filtramos por tipo_cliente DESPUÉS de agrupar por pedido para integridad de datos
+    // Para CLUB: Usamos Atribución de Origen (Home Branch de clientesclub) + Ciclo de vida TOTAL
+    // Para GENERAL: Usamos Atribución de Transacción (Donde ocurrió la venta)
     $havingRFM = "";
-    if ($tipo_cliente === 'club') $havingRFM = "HAVING MAX(r.CodCliente) > 0";
-    elseif ($tipo_cliente === 'general') $havingRFM = "HAVING MAX(r.CodCliente) = 0";
+    if ($tipo_cliente === 'club') $havingRFM = "HAVING r.CodCliente > 0";
+    elseif ($tipo_cliente === 'general') $havingRFM = "HAVING r.CodCliente = 0";
+
+    $whereRFM = "WHERE v.Anulado = 0"; // Sin filtro de sucursal aquí para ver ciclo de vida completo
+    if($sucursal && $sucursal !== 'todas' && $tipo_cliente === 'general') {
+        $whereRFM .= " AND v.Sucursal_Nombre = :suc_gen";
+        $paramsRFM[':suc_gen'] = $sucursal;
+    }
 
     $sqlRFM = "
         WITH ResumenPedidos AS (
@@ -113,8 +120,8 @@ try {
                 MAX(Fecha) as Fecha, 
                 MAX(MontoFactura) as TotalPedido, 
                 MAX(Sucursal_Nombre) as Sucursal
-            FROM VentasGlobalesAccessCSV
-            $whereGlobal
+            FROM VentasGlobalesAccessCSV v
+            $whereRFM
             GROUP BY CodPedido
         )
         SELECT 
@@ -127,24 +134,44 @@ try {
             MAX(c.fecha_registro) as FechaRegistro
         FROM ResumenPedidos r
         LEFT JOIN clientesclub c ON r.CodCliente = c.membresia
-        GROUP BY r.CodCliente
-        $havingRFM
+        WHERE 1=1
     ";
 
+    if ($sucursal && $sucursal !== 'todas') {
+        if ($tipo_cliente === 'club') {
+            $sqlRFM .= " AND c.nombre_sucursal = :suc_club";
+            $paramsRFM[':suc_club'] = $sucursal;
+        } elseif ($tipo_cliente === 'todos') {
+            $sqlRFM .= " AND (c.nombre_sucursal = :suc_both OR (r.CodCliente = 0 AND r.Sucursal = :suc_both_gen))";
+            $paramsRFM[':suc_both'] = $sucursal;
+            $paramsRFM[':suc_both_gen'] = $sucursal;
+        }
+    }
+
+    $sqlRFM .= " GROUP BY r.CodCliente $havingRFM";
+
     $stmt = $conn->prepare($sqlRFM);
-    $stmt->execute($paramsGlobal);
+    $stmt->execute($paramsRFM ?? []);
     $raw_data = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // Conteo Universo Total de Socios (Para % de base)
-    $whereUniverso = "WHERE VMTAP = 1";
+    // Conteo Universo con Compra (Denominator for Health %)
+    // Socios registrados en la sucursal que han tenido al menos una compra en la historia (cualquier sucursal)
+    $whereUniverso = "WHERE c.nombre_sucursal IN (SELECT nombre FROM sucursales WHERE VMTAP = 1)";
     $paramsUniv = [];
     if($sucursal && $sucursal !== 'todas') {
-        $whereUniverso .= " AND nombre = :s_univ";
+        $whereUniverso .= " AND c.nombre_sucursal = :s_univ";
         $paramsUniv[':s_univ'] = $sucursal;
     }
-    $total_universo = $conn->prepare("SELECT COUNT(*) FROM clientesclub WHERE nombre_sucursal IN (SELECT nombre FROM sucursales $whereUniverso)");
-    $total_universo->execute($paramsUniv);
-    $universo_count = $total_universo->fetchColumn() ?: 1;
+    
+    $sqlUniv = "
+        SELECT COUNT(DISTINCT c.membresia) 
+        FROM clientesclub c
+        INNER JOIN VentasGlobalesAccessCSV v ON c.membresia = v.CodCliente
+        $whereUniverso AND v.Anulado = 0
+    ";
+    $stmtUniv = $conn->prepare($sqlUniv);
+    $stmtUniv->execute($paramsUniv);
+    $universo_count = $stmtUniv->fetchColumn() ?: 1;
 
     // Salir si no hay datos
     if (empty($raw_data)) {

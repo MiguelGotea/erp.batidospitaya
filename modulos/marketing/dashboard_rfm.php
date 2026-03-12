@@ -462,6 +462,18 @@ $puedeDescargar = tienePermiso('dashboard_rfm', 'descargar', $cargoOperario);
                                 </tbody>
                             </table>
                         </div>
+
+                        <div class="alert alert-info py-2 px-3 mb-4 border-0 shadow-sm" style="background: rgba(81, 184, 172, 0.1);">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="fas fa-map-marker-alt text-teal me-2"></i>
+                                <h6 class="fw-bold mb-0 small text-teal">Modelos de Atribución por Sucursal</h6>
+                            </div>
+                            <p class="small mb-2 text-dark opacity-75">Cuando se elige una sucursal específica, el sistema aplica dos criterios distintos según el tipo de métrica:</p>
+                            <ul class="small mb-0 text-dark opacity-75 ps-3">
+                                <li><b>Atribución de Origen (Home Branch):</b> Aplica a KPIs de <b>Salud (RFM y Listado Maestro)</b>. Mide el comportamiento de los socios que fueron captados originalmente por esa sucursal, sin importar dónde compren.</li>
+                                <li><b>Atribución de Transacción (Operativo):</b> Aplica a KPIs de <b>Rendimiento y Gráficas</b>. Mide las ventas y tickets que ocurrieron físicamente en el local seleccionado.</li>
+                            </ul>
+                        </div>
                     </div>
 
                     <div class="doc-section">
