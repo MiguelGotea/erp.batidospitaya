@@ -444,12 +444,13 @@ try {
         JOIN DBBatidos d ON v.CodProducto = d.CodBatido
         JOIN GrupoProductosVenta g ON d.CodGrupo = g.CodGrupo
         $whereSimple
+        $filterOrders
         AND g.Tipo IN ('Batido', 'Limonada')
         AND v.CodCliente > 0
         GROUP BY v.Medida
     ";
     $stmtMed = $conn->prepare($sqlMedida);
-    $stmtMed->execute($params);
+    $stmtMed->execute(array_merge($params, $paramsFO));
     $h_medida = $stmtMed->fetchAll(PDO::FETCH_KEY_PAIR);
 
     // 6.2 Promo (Varios Tipos) y Modalidad (General)
@@ -462,12 +463,13 @@ try {
         JOIN DBBatidos d ON v.CodProducto = d.CodBatido
         JOIN GrupoProductosVenta g ON d.CodGrupo = g.CodGrupo
         $whereSimple
+        $filterOrders
         AND g.Tipo IN ('Batido', 'Limonada', 'Bowl', 'Membresia', 'Pitaya Store', 'Waffles')
         AND v.CodCliente > 0
         GROUP BY v.Modalidad, EsPromo
     ";
     $stmtHab = $conn->prepare($sqlHabits);
-    $stmtHab->execute($params);
+    $stmtHab->execute(array_merge($params, $paramsFO));
     $habits_raw = $stmtHab->fetchAll(PDO::FETCH_ASSOC);
 
 
@@ -500,12 +502,14 @@ try {
 
     $sqlTopProd = "
         SELECT 
-            DBBatidos_Nombre as Product, 
+            v.DBBatidos_Nombre as Product, 
             COUNT(*) as Count 
-        FROM VentasGlobalesAccessCSV 
+        FROM VentasGlobalesAccessCSV v
+        JOIN DBBatidos d ON v.CodProducto = d.CodBatido
+        JOIN GrupoProductosVenta g ON d.CodGrupo = g.CodGrupo
         $whereSimple 
         $filterOrders
-        AND Tipo IN ('Batido', 'Bowl', 'Limonada', 'Pitaya Store', 'Waffles') 
+        AND g.Tipo IN ('Batido', 'Bowl', 'Limonada', 'Pitaya Store', 'Waffles') 
         GROUP BY Product 
         ORDER BY Count DESC 
         LIMIT 10
