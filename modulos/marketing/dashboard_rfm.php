@@ -215,32 +215,41 @@ $puedeDescargar = tienePermiso('dashboard_rfm', 'descargar', $cargoOperario);
                             <thead>
                                 <tr class="text-dark bg-light opacity-75">
                                     <th data-column="ClienteNombre" data-type="text">
-                                        Cliente <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this, event)"></i>
+                                        Cliente <i class="bi bi-funnel filter-icon"
+                                            onclick="toggleFilter(this, event)"></i>
                                     </th>
                                     <th data-column="Sucursal" data-type="list">
-                                        Sucursal <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this, event)"></i>
+                                        Sucursal <i class="bi bi-funnel filter-icon"
+                                            onclick="toggleFilter(this, event)"></i>
                                     </th>
                                     <th data-column="Recency" data-type="number">
-                                        Recencia <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this, event)"></i>
+                                        Recencia <i class="bi bi-funnel filter-icon"
+                                            onclick="toggleFilter(this, event)"></i>
                                     </th>
                                     <th data-column="Frequency" data-type="number">
-                                        Frecuencia <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this, event)"></i>
+                                        Frecuencia <i class="bi bi-funnel filter-icon"
+                                            onclick="toggleFilter(this, event)"></i>
                                     </th>
                                     <th data-column="Monetary" data-type="number">
-                                        Monetario <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this, event)"></i>
+                                        Monetario <i class="bi bi-funnel filter-icon"
+                                            onclick="toggleFilter(this, event)"></i>
                                     </th>
                                     <th data-column="TicketPromedio" data-type="number">
-                                        Ticket <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this, event)"></i>
+                                        Ticket <i class="bi bi-funnel filter-icon"
+                                            onclick="toggleFilter(this, event)"></i>
                                     </th>
                                     <th>Score RFM</th>
                                     <th data-column="Segment" data-type="list">
-                                        Segmento <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this, event)"></i>
+                                        Segmento <i class="bi bi-funnel filter-icon"
+                                            onclick="toggleFilter(this, event)"></i>
                                     </th>
                                     <th data-column="Antiguedad" data-type="number">
-                                        Antigüedad <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this, event)"></i>
+                                        Antigüedad <i class="bi bi-funnel filter-icon"
+                                            onclick="toggleFilter(this, event)"></i>
                                     </th>
                                     <th data-column="UltimoProducto" data-type="text">
-                                        Últ. Prod <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this, event)"></i>
+                                        Últ. Prod <i class="bi bi-funnel filter-icon"
+                                            onclick="toggleFilter(this, event)"></i>
                                     </th>
                                     <th style="width: 50px;">Acciones</th>
                                 </tr>
@@ -291,7 +300,8 @@ $puedeDescargar = tienePermiso('dashboard_rfm', 'descargar', $cargoOperario);
                 <div class="row g-4 mb-4">
                     <div class="col-lg-6">
                         <div class="glass-card p-4">
-                            <h6 class="fw-bold mb-4">Mapa de Calor: Intensidad de Consumo (Hora vs Día) (Socios Club)</h6>
+                            <h6 class="fw-bold mb-4">Mapa de Calor: Intensidad de Consumo (Hora vs Día) (Socios Club)
+                            </h6>
                             <canvas id="chartHeatmap"></canvas>
                         </div>
                     </div>
@@ -454,15 +464,21 @@ $puedeDescargar = tienePermiso('dashboard_rfm', 'descargar', $cargoOperario);
                             </table>
                         </div>
 
-                        <div class="alert alert-info py-2 px-3 mb-4 border-0 shadow-sm" style="background: rgba(81, 184, 172, 0.1);">
+                        <div class="alert alert-info py-2 px-3 mb-4 border-0 shadow-sm"
+                            style="background: rgba(81, 184, 172, 0.1);">
                             <div class="d-flex align-items-center mb-2">
                                 <i class="fas fa-map-marker-alt text-teal me-2"></i>
                                 <h6 class="fw-bold mb-0 small text-teal">Modelos de Atribución por Sucursal</h6>
                             </div>
-                            <p class="small mb-2 text-dark opacity-75">Cuando se elige una sucursal específica, el sistema aplica dos criterios distintos según el tipo de métrica:</p>
+                            <p class="small mb-2 text-dark opacity-75">Cuando se elige una sucursal específica, el
+                                sistema aplica dos criterios distintos según el tipo de métrica:</p>
                             <ul class="small mb-0 text-dark opacity-75 ps-3">
-                                <li><b>Atribución de Origen (Home Branch):</b> Aplica a KPIs de <b>Salud (RFM y Listado Maestro)</b>. Mide el comportamiento de los socios que fueron captados originalmente por esa sucursal, sin importar dónde compren.</li>
-                                <li><b>Atribución de Transacción (Operativo):</b> Aplica a KPIs de <b>Rendimiento y Gráficas</b>. Mide las ventas y tickets que ocurrieron físicamente en el local seleccionado.</li>
+                                <li><b>Atribución de Origen (Home Branch):</b> Aplica a KPIs de <b>Salud (RFM y Listado
+                                        Maestro)</b>. Mide el comportamiento de los socios que fueron captados
+                                    originalmente por esa sucursal, sin importar dónde compren.</li>
+                                <li><b>Atribución de Transacción (Operativo):</b> Aplica a KPIs de <b>Rendimiento y
+                                        Gráficas</b>. Mide las ventas y tickets que ocurrieron físicamente en el local
+                                    seleccionado.</li>
                             </ul>
                         </div>
                     </div>
@@ -473,23 +489,28 @@ $puedeDescargar = tienePermiso('dashboard_rfm', 'descargar', $cargoOperario);
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <h6 class="small fw-bold mb-1">Mapa de Calor (Socios Club)</h6>
-                                <p class="x-small text-muted mb-0">Intensidad de tráfico de Socios Club por horas y días.</p>
+                                <p class="x-small text-muted mb-0">Intensidad de tráfico de Socios Club por horas y
+                                    días.</p>
                             </div>
                             <div class="col-md-6">
                                 <h6 class="small fw-bold mb-1">Distribución por Medida (Socios Club)</h6>
-                                <p class="x-small text-muted mb-0">Análisis exclusivo de Socios Club para las categorías de <b>Batido y Limonada</b>.</p>
+                                <p class="x-small text-muted mb-0">Análisis exclusivo de Socios Club para las categorías
+                                    de <b>Batido y Limonada</b>.</p>
                             </div>
                             <div class="col-md-6">
                                 <h6 class="small fw-bold mb-1">Distribución por Modalidad (Socios Club)</h6>
-                                <p class="x-small text-muted mb-0">Preferencia de canal (Pick-up, Mesa, Domicilio) para consumos de Socios Club.</p>
+                                <p class="x-small text-muted mb-0">Preferencia de canal (Pick-up, Mesa, Domicilio) para
+                                    consumos de Socios Club.</p>
                             </div>
                             <div class="col-md-6">
                                 <h6 class="small fw-bold mb-1">Uso de Promociones (Socios Club)</h6>
-                                <p class="x-small text-muted mb-0">Consumo con cupón vs regular de Socios Club para: <b>Batido, Limonada, Bowl, Membresía, Store y Waffles</b>.</p>
+                                <p class="x-small text-muted mb-0">Consumo con cupón vs regular de Socios Club para:
+                                    <b>Batido, Limonada, Bowl, Membresía, Store y Waffles</b>.</p>
                             </div>
                             <div class="col-md-6">
                                 <h6 class="small fw-bold mb-1">Ticket Promedio por Sucursal (Socios Club)</h6>
-                                <p class="x-small text-muted mb-0">Comparativa de gasto medio por pedido realizado por Socios Club en cada local.</p>
+                                <p class="x-small text-muted mb-0">Comparativa de gasto medio por pedido realizado por
+                                    Socios Club en cada local.</p>
                             </div>
                         </div>
                     </div>

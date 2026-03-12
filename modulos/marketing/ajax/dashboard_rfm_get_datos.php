@@ -115,8 +115,17 @@ try {
     // Filtramos local globalmente
     $whereRFM .= " AND v.local IN (SELECT codigo FROM sucursales WHERE VMTAP = 1)";
 
+    $paramsRFM = [];
     $sqlRFM = "
-        WITH ResumenPedidos AS (
+        SELECT 
+            r.CodCliente,
+            COALESCE(NULLIF(MAX(c.nombre_sucursal), ''), MAX(r.Sucursal)) as Sucursal,
+            DATEDIFF(CURDATE(), MAX(r.Fecha)) as Recency,
+            COUNT(r.CodPedido) as Frequency,
+            SUM(r.TotalPedido) as Monetary,
+            MAX(CONCAT(COALESCE(c.nombre,''), ' ', COALESCE(c.apellido, ''))) as ClienteNombre,
+            MAX(c.fecha_registro) as FechaRegistro
+        FROM (
             SELECT 
                 MAX(CodCliente) as CodCliente, 
                 CodPedido, 
@@ -127,16 +136,7 @@ try {
             FROM VentasGlobalesAccessCSV v
             $whereRFM
             GROUP BY CodPedido
-        )
-        SELECT 
-            r.CodCliente,
-            COALESCE(NULLIF(MAX(c.nombre_sucursal), ''), MAX(r.Sucursal)) as Sucursal,
-            DATEDIFF(CURDATE(), MAX(r.Fecha)) as Recency,
-            COUNT(r.CodPedido) as Frequency,
-            SUM(r.TotalPedido) as Monetary,
-            MAX(CONCAT(COALESCE(c.nombre,''), ' ', COALESCE(c.apellido, ''))) as ClienteNombre,
-            MAX(c.fecha_registro) as FechaRegistro
-        FROM ResumenPedidos r
+        ) r
         LEFT JOIN clientesclub c ON r.CodCliente = c.membresia
         WHERE c.sucursal IN (SELECT codigo FROM sucursales WHERE VMTAP = 1)
     ";
@@ -518,8 +518,8 @@ try {
         ]
     ]);
 
-} catch (Exception $e) {
-    echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+} catch (Throwable $e) {
+    echo json_encode(['success' => false, 'message' => $e->getMessage(), 'file' => $e->getFile(), 'line' => $e->getLine()]);
 }
 
 function calculateRetentionDetail($conn, $where, $params)
