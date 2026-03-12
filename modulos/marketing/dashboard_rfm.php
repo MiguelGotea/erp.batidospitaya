@@ -389,54 +389,75 @@ $puedeDescargar = tienePermiso('dashboard_rfm', 'descargar', $cargoOperario);
                     </div>
 
                     <div class="doc-section">
-                        <div class="doc-title text-primary"><i class="fas fa-tachometer-alt"></i> Indicadores Clave
-                            (KPIs)</div>
+                        <div class="doc-title text-primary"><i class="fas fa-database"></i> Definición de la Base (Universo)</div>
+                        <p class="small mb-2">Para garantizar la integridad de los datos, el dashboard utiliza dos conceptos de "Base":</p>
+                        <ul class="doc-list small">
+                            <li><b>Universo con Compra:</b> Es el total de socios únicos que han tenido al menos una transacción no anulada. Esta es nuestra base real de clientes.</li>
+                            <li><b>Registro Total:</b> Todos los socios en la base de datos (incluye los que nunca han comprado). Se usa solo para auditoría.</li>
+                        </ul>
+                    </div>
+
+                    <div class="doc-section">
+                        <div class="doc-title text-primary"><i class="fas fa-tachometer-alt"></i> Indicadores Clave (KPIs)</div>
                         <div class="doc-table">
                             <table class="table table-sm table-borderless mb-0 small">
                                 <thead>
+                                    <tr class="border-bottom">
+                                        <th colspan="3" class="text-secondary py-2">Salud de la Base (Datos Globales)</th>
+                                    </tr>
                                     <tr>
                                         <th>Métrica</th>
                                         <th>Criterio de Cálculo</th>
-                                        <th>Tipo</th>
+                                        <th>Referencia (%)</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <tr>
                                         <td><b>Club Activos</b></td>
                                         <td>Socios con última compra &le; Umbral de Perdido.</td>
-                                        <td><span class="method-tag tag-global">Global</span></td>
-                                    </tr>
-                                    <tr>
-                                        <td><b>Nuevos Periodo</b></td>
-                                        <td>Socios registrados entre Fecha Inicio y Fin.</td>
-                                        <td><span class="method-tag tag-period">Periodo</span></td>
+                                        <td>Sobre Universo con Compra</td>
                                     </tr>
                                     <tr>
                                         <td><b>En Riesgo</b></td>
-                                        <td>Socios con inactividad entre 50% y 100% del Umbral.</td>
-                                        <td><span class="method-tag tag-global">Global</span></td>
+                                        <td>Inactividad entre 50% y 100% del Umbral.</td>
+                                        <td>Sobre Socios Activos</td>
                                     </tr>
                                     <tr>
                                         <td><b>Perdidos</b></td>
-                                        <td>Mide el volumen de socios inactivos (>Umbral). El % mostrado es sobre el
-                                            <b>Universo Total</b>.</td>
-                                        <td><span class="method-tag tag-global">Global</span></td>
+                                        <td>Socios con inactividad > Umbral seleccionado.</td>
+                                        <td>Sobre Universo con Compra</td>
                                     </tr>
                                     <tr>
                                         <td><b>Tasa Churn</b></td>
-                                        <td>Mide la deserción de socios que ya eran clientes. El % mostrado es sobre el
-                                            <b>Universo con Compra</b>.</td>
-                                        <td><span class="method-tag tag-global">Global</span></td>
+                                        <td>Socios que habiendo comprado alguna vez, hoy son "Perdidos".</td>
+                                        <td>Sobre Universo con Compra</td>
+                                    </tr>
+                                </tbody>
+                                <thead>
+                                    <tr class="border-bottom">
+                                        <th colspan="3" class="text-secondary py-2">Rendimiento (Datos del Periodo)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><b>Nuevos Periodo</b></td>
+                                        <td>Socios registrados entre Fecha Inicio y Fin.</td>
+                                        <td>Nuevos Socios</td>
                                     </tr>
                                     <tr>
-                                        <td><b>Tasa de Retención</b></td>
-                                        <td>% de socios del periodo previo que volvieron en el actual.</td>
-                                        <td><span class="method-tag tag-period">Periodo</span></td>
+                                        <td><b>Ticket Club</b></td>
+                                        <td>Promedio invertido por socios en cada transacción.</td>
+                                        <td>Consignación Real</td>
+                                    </tr>
+                                    <tr>
+                                        <td><b>Tasa Retención</b></td>
+                                        <td>% de socios del periodo previo que repitieron compra.</td>
+                                        <td>Fidelización Histórica</td>
                                     </tr>
                                     <tr>
                                         <td><b>Part. Ingresos</b></td>
-                                        <td>% de la venta que proviene de socios Club vs General.</td>
-                                        <td><span class="method-tag tag-period">Periodo</span></td>
+                                        <td>% de la venta total proveniente de socios Club.</td>
+                                        <td>Transacción Completa</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -444,57 +465,38 @@ $puedeDescargar = tienePermiso('dashboard_rfm', 'descargar', $cargoOperario);
                     </div>
 
                     <div class="doc-section">
-                        <div class="doc-title text-primary"><i class="fas fa-chart-pie"></i> Visualizaciones y Gráficos
-                        </div>
+                        <div class="doc-title text-primary"><i class="fas fa-chart-pie"></i> Visualizaciones y Fidelidad</div>
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <h6 class="small fw-bold mb-1">Mapa de Calor</h6>
-                                <p class="x-small text-muted mb-0">Cruza Hora vs Día para identificar picos de demanda.
-                                    Ayuda a planificar turnos y promociones por hora.</p>
-                            </div>
-                            <div class="col-md-6">
-                                <h6 class="small fw-bold mb-1">Distribución 100% Sug.</h6>
-                                <p class="x-small text-muted mb-0">Normaliza las sucursales para ver qué tan "Sana" está
-                                    la base de cada una (proporción de Leales vs Perdidos).</p>
-                            </div>
-                            <div class="col-md-6">
-                                <h6 class="small fw-bold mb-1">Hábitos de Consumo</h6>
-                                <p class="x-small text-muted mb-0">Analiza Medidas (S/M/L) y Modalidades
-                                    (Delivery/Local) preferidas por los socios.</p>
-                            </div>
-                            <div class="col-md-6">
                                 <h6 class="small fw-bold mb-1">Evolución de Pedidos</h6>
-                                <p class="x-small text-muted mb-0">Muestra la tendencia de transacciones semana a semana
-                                    dentro del periodo.</p>
+                                <p class="x-small text-muted mb-0">Se adapta al filtro (Club/General). Muestra transacciones completas por semana.</p>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="small fw-bold mb-1">Mapa de Calor</h6>
+                                <p class="x-small text-muted mb-0">Intensidad de tráfico por horas. Basado en Pedidos únicos por franja horaria.</p>
                             </div>
                         </div>
                     </div>
 
                     <div class="doc-section">
-                        <div class="doc-title text-primary"><i class="fas fa-users-cog"></i> Modelo RFM (Recencia,
-                            Frecuencia, Monto)</div>
-                        <p class="small mb-2">Cada cliente recibe una puntuación del 1 al 5 comparándolo con el resto de
-                            la base:</p>
-                        <ul class="doc-list">
-                            <li><b>Recencia:</b> Tiempo desde el último pedido.</li>
-                            <li><b>Frecuencia:</b> Cantidad de pedidos históricos (Lifetime).</li>
-                            <li><b>Monetario:</b> Valor total invertido por el cliente (Lifetime).</li>
+                        <div class="doc-title text-primary"><i class="fas fa-users-cog"></i> Modelo RFM (Recencia, Frecuencia, Monto)</div>
+                        <p class="small mb-2">Cada cliente recibe una puntuación del 1 al 5 comparándolo con el resto de la base:</p>
+                        <ul class="doc-list small">
+                            <li><b>Recencia:</b> Tiempo transcurrido desde el último pedido.</li>
+                            <li><b>Frecuencia:</b> Cantidad de pedidos históricos (Transacciones completas).</li>
+                            <li><b>Monetario:</b> Valor total invertido por el cliente (Sumatoria de Facturas).</li>
                         </ul>
                         <div class="alert alert-light border small py-2 mb-0">
-                            <b>Nota:</b> Los segmentos "Campeones", "Leales" y "Estrategas" se basan en el
-                            comportamiento histórico total para mayor estabilidad.
+                            <b>Nota de Integridad:</b> Un pedido se considera "Club" si al menos una línea está asociada a una membresía. Se contabiliza el monto total de la factura.
                         </div>
                     </div>
 
                     <div class="doc-section mb-0">
-                        <div class="doc-title text-primary"><i class="fas fa-question-circle"></i> Ayuda Visual en Tabla
-                        </div>
-                        <ul class="doc-list">
-                            <li><span class="text-danger fw-bold">Rojo:</span> Cliente en estado PERDIDO (superó el
-                                umbral).</li>
-                            <li><span class="text-warning fw-bold">Naranja:</span> Cliente EN RIESGO (próximo a
-                                perderse).</li>
-                            <li><span class="text-success fw-bold">Verde:</span> Cliente ACTIVO (compra reciente).</li>
+                        <div class="doc-title text-primary"><i class="fas fa-question-circle"></i> Estado de Clientes en Tabla</div>
+                        <ul class="doc-list small">
+                            <li><span class="text-danger fw-bold">Rojo (Perdido):</span> Superó el umbral de días de inactividad.</li>
+                            <li><span class="text-warning fw-bold">Naranja (En Riesgo):</span> Ha pasado más de la mitad del umbral sin comprar.</li>
+                            <li><span class="text-success fw-bold">Verde (Activo):</span> Compra reciente dentro del margen esperado.</li>
                         </ul>
                     </div>
                 </div>
