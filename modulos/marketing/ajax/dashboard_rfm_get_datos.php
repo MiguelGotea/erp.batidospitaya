@@ -31,11 +31,11 @@ try {
     $whereVmtap = " AND local IN (SELECT codigo FROM sucursales WHERE VMTAP = 1)";
 
     // Filtro Global (Ignora Fecha para Salud/RFM)
-    $whereGlobal = "WHERE Anulado = 0" . $whereVmtap;
+    $whereGlobal = "WHERE Anulado = 0";
     $paramsGlobal = [];
 
     // Filtro Periodo (Para Rendimiento/Ventas)
-    $whereSimple = "WHERE Anulado = 0 AND Fecha BETWEEN :f_inicio AND :f_fin" . $whereVmtap;
+    $whereSimple = "WHERE Anulado = 0 AND Fecha BETWEEN :f_inicio AND :f_fin";
     $params = [':f_inicio' => $fecha_inicio, ':f_fin' => $fecha_fin];
 
     if ($sucursal && $sucursal !== 'todas') {
@@ -54,7 +54,7 @@ try {
     */
 
     // 0.1 Participación Ingresos (Club vs General) - Independiente del filtro tipo_cliente
-    $wherePart = "WHERE Anulado = 0 AND Fecha BETWEEN :f_inicio AND :f_fin" . $whereVmtap;
+    $wherePart = "WHERE Anulado = 0 AND Fecha BETWEEN :f_inicio AND :f_fin";
     if ($sucursal && $sucursal !== 'todas') {
         $wherePart .= " AND Sucursal_Nombre = :suc_part";
     }
@@ -70,7 +70,6 @@ try {
                 MAX(MontoFactura) as MontoFactura 
             FROM VentasGlobalesAccessCSV 
             $wherePart 
-            AND local IN (SELECT codigo FROM sucursales WHERE VMTAP = 1)
             GROUP BY CodPedido
         ) t 
         GROUP BY EsClub
@@ -95,7 +94,7 @@ try {
     $p_inicio = date('Y-m-d', strtotime($fecha_inicio) - $diff - 86400);
     $p_fin = date('Y-m-d', strtotime($fecha_inicio) - 86400);
 
-    $whereClub = "WHERE fecha_registro BETWEEN :p_inicio AND :p_fin AND nombre_sucursal IN (SELECT nombre FROM sucursales WHERE VMTAP = 1)";
+    $whereClub = "WHERE fecha_registro BETWEEN :p_inicio AND :p_fin";
     $paramsClub = [':p_inicio' => $p_inicio, ':p_fin' => $p_fin];
     if ($sucursal && $sucursal !== 'todas') {
         $whereClub .= " AND nombre_sucursal = :suc_club";
@@ -136,12 +135,12 @@ try {
             GROUP BY CodPedido
         ) r
         LEFT JOIN clientesclub c ON r.CodCliente = c.membresia
-        WHERE c.sucursal IN (SELECT codigo FROM sucursales WHERE VMTAP = 1)
     ";
 
     if ($sucursal && $sucursal !== 'todas') {
-        $sqlRFM .= " AND c.sucursal = (SELECT codigo FROM sucursales WHERE nombre = :suc_club)";
+        $sqlRFM .= " AND (c.sucursal = (SELECT codigo FROM sucursales WHERE nombre = :suc_club) OR r.Sucursal = :suc_name)";
         $paramsRFM[':suc_club'] = $sucursal;
+        $paramsRFM[':suc_name'] = $sucursal;
     }
 
     $sqlRFM .= " GROUP BY r.CodCliente $havingRFM";
@@ -151,14 +150,13 @@ try {
     $raw_data = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     // Conteo Universo con Compra (Denominator for Health %)
-    // Socios registrados en la sucursal que han tenido al menos una compra en la historia (cualquier sucursal)
-    $whereUniverso = "WHERE c.sucursal IN (SELECT codigo FROM sucursales WHERE VMTAP = 1)";
+    // Socios registrados que han tenido al menos una compra en la historia
+    $whereUniverso = "WHERE 1=1";
     $paramsUniv = [];
     if ($sucursal && $sucursal !== 'todas') {
         $whereUniverso .= " AND c.sucursal = (SELECT codigo FROM sucursales WHERE nombre = :s_univ)";
         $paramsUniv[':s_univ'] = $sucursal;
     }
-
 
     $sqlUniv = "
         SELECT COUNT(DISTINCT c.membresia) 
@@ -256,7 +254,7 @@ try {
     $perdidos = count(array_filter($raw_data, fn($x) => $x['Recency'] > $umbral_perdido));
 
     // Clientes nuevos (Registrados en el periodo)
-    $whereClubNow = "WHERE fecha_registro BETWEEN :f_inicio AND :f_fin AND sucursal IN (SELECT codigo FROM sucursales WHERE VMTAP = 1)";
+    $whereClubNow = "WHERE fecha_registro BETWEEN :f_inicio AND :f_fin";
     $paramsClubNow = [':f_inicio' => $fecha_inicio, ':f_fin' => $fecha_fin];
     if ($sucursal && $sucursal !== 'todas') {
         $whereClubNow .= " AND sucursal = (SELECT codigo FROM sucursales WHERE nombre = :suc_club_now)";
@@ -300,7 +298,6 @@ try {
         FROM VentasGlobalesAccessCSV V
         JOIN SemanasSistema S ON V.Fecha BETWEEN S.fecha_inicio AND S.fecha_fin
         WHERE V.Anulado = 0 AND V.Fecha BETWEEN :f_inicio AND :f_fin
-        $whereVmtap
         $filterOrders
     ";
     if ($sucursal && $sucursal !== 'todas') {
@@ -335,10 +332,25 @@ try {
     $stmtBP->execute($params);
     $period_bench = $stmtBP->fetchAll(PDO::FETCH_GROUP | PDO::FETCH_UNIQUE | PDO::FETCH_ASSOC);
 
+    // Obtener lista de sucursales activas para filtrar el enlistado visual en gráficas de benchmarking
+    $stmtActive = $conn->query("SELECT nombre FROM sucursales WHERE VMTAP = 1");
+    $activeBranches = $stmtActive->fetchAll(PDO::FETCH_COLUMN);
+
     $branch_stats = [];
     $segment_revenue = [];
     foreach ($raw_data as &$r) {
         $bn = $r['Sucursal'] ?: 'Desconocida';
+        
+        // Los KPI de Ingresos por Segmento y Listado Maestro deben incluir TODO
+        $segment_revenue[$r['Segment']] = ($segment_revenue[$r['Segment']] ?? 0) + $r['Monetary'];
+        
+        // Enriquecer registro individual para el Listado Maestro
+        $r['TicketPromedio'] = ($r['Frequency'] > 0) ? $r['Monetary'] / $r['Frequency'] : 0;
+        $r['Antiguedad'] = $r['FechaRegistro'] ? (int) floor((time() - strtotime($r['FechaRegistro'])) / 86400) : 0;
+
+        // SOLO para las gráficas de Benchmarking por sucursal, restringimos visualmente a VMTAP=1
+        if (!in_array($bn, $activeBranches)) continue;
+
         if (!isset($branch_stats[$bn])) {
             $branch_stats[$bn] = [
                 'monto' => 0,
@@ -359,12 +371,6 @@ try {
             'name' => $r['ClienteNombre'],
             'ltv' => $r['Monetary']
         ];
-
-        $segment_revenue[$r['Segment']] = ($segment_revenue[$r['Segment']] ?? 0) + $r['Monetary'];
-
-        // Enriquecer registro individual
-        $r['TicketPromedio'] = ($r['Frequency'] > 0) ? $r['Monetary'] / $r['Frequency'] : 0;
-        $r['Antiguedad'] = $r['FechaRegistro'] ? (int) floor((time() - strtotime($r['FechaRegistro'])) / 86400) : 0;
     }
 
     // Procesar Top 5 por sucursal
@@ -408,7 +414,6 @@ try {
         JOIN DBBatidos d ON v.CodProducto = d.CodBatido
         JOIN GrupoProductosVenta g ON d.CodGrupo = g.CodGrupo
         $whereSimple
-        AND v.local IN (SELECT codigo FROM sucursales WHERE VMTAP = 1)
         AND g.Tipo IN ('Batido', 'Limonada')
         AND v.CodCliente > 0
         GROUP BY v.Medida
@@ -427,7 +432,6 @@ try {
         JOIN DBBatidos d ON v.CodProducto = d.CodBatido
         JOIN GrupoProductosVenta g ON d.CodGrupo = g.CodGrupo
         $whereSimple
-        AND v.local IN (SELECT codigo FROM sucursales WHERE VMTAP = 1)
         AND g.Tipo IN ('Batido', 'Limonada', 'Bowl', 'Membresia', 'Pitaya Store', 'Waffles')
         AND v.CodCliente > 0
         GROUP BY v.Modalidad, EsPromo
@@ -457,7 +461,6 @@ try {
             COUNT(DISTINCT CodPedido) as Count 
         FROM VentasGlobalesAccessCSV 
         $whereSimple 
-        AND local IN (SELECT codigo FROM sucursales WHERE VMTAP = 1)
         $filterOrders
         GROUP BY Hour, Day
     ";
@@ -471,7 +474,6 @@ try {
             COUNT(*) as Count 
         FROM VentasGlobalesAccessCSV 
         $whereSimple 
-        AND local IN (SELECT codigo FROM sucursales WHERE VMTAP = 1)
         $filterOrders
         AND Tipo IN ('Batido', 'Bowl', 'Limonada', 'Pitaya Store', 'Waffles') 
         GROUP BY Product 
