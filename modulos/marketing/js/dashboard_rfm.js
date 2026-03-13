@@ -695,8 +695,7 @@ function renderPaginatedTable() {
         $body.append(`
             <tr>
                 <td>
-                    <div class="fw-bold text-dark">${c.ClienteNombre || 'Innominado'}</div>
-                    <div class="small text-muted">ID: ${c.CodCliente}</div>
+                    <div class="fw-bold text-dark small">${c.CodCliente}: ${c.ClienteNombre || 'Innominado'}</div>
                 </td>
                 <td><span class="badge border text-dark opacity-75">${c.Sucursal || 'N/A'}</span></td>
                 <td class="${rColor} fw-bold">${c.Recency}d</td>
@@ -704,12 +703,10 @@ function renderPaginatedTable() {
                 <td class="fw-bold">${fmt(c.Monetary)}</td>
                 <td class="text-teal">${fmt(c.TicketPromedio)}</td>
                 <td>
-                    <div class="d-flex gap-1 mb-1">
-                        <span class="badge-score score-${c.R_Score}">${c.R_Score}</span>
-                        <span class="badge-score score-${c.F_Score}">${c.F_Score}</span>
-                        <span class="badge-score score-${c.M_Score}">${c.M_Score}</span>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="x-small text-muted">(${c.R_Score}, ${c.F_Score}, ${c.M_Score})</span>
+                        <span class="x-small fw-bold border rounded px-1">Total: ${c.ScoreTotal}</span>
                     </div>
-                    <div class="small fw-bold text-center border rounded">Total: ${c.ScoreTotal}</div>
                 </td>
                 <td><span class="badge ${getSegmentBadge(c.Segment)} shadow-sm">${getSegmentName(c.Segment)}</span></td>
                 <td class="small">${c.Antiguedad}d</td>
