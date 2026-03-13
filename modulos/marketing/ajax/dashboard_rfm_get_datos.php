@@ -145,9 +145,8 @@ try {
     ";
 
     if ($sucursal && $sucursal !== 'todas') {
-        $sqlRFM .= " WHERE (c.sucursal = (SELECT codigo FROM sucursales WHERE nombre = :suc_club) OR r.Sucursal = :suc_name)";
+        $sqlRFM .= " WHERE c.sucursal = (SELECT codigo FROM sucursales WHERE nombre = :suc_club)";
         $paramsRFM[':suc_club'] = $sucursal;
-        $paramsRFM[':suc_name'] = $sucursal;
     }
 
     $sqlRFM .= " GROUP BY r.CodCliente $havingRFM";
