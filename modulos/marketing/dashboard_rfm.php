@@ -531,14 +531,27 @@ $puedeDescargar = tienePermiso('dashboard_rfm', 'descargar', $cargoOperario);
                     </div>
 
                     <div class="doc-section">
+                        <div class="doc-title text-primary"><i class="fas fa-history"></i> Datos Universales y VMTAP</div>
+                        <p class="small mb-2">Siguiendo la nueva lógica de Inteligencia de Marca:</p>
+                        <ul class="doc-list small">
+                            <li><b>Salud de la Base:</b> Se calcula sobre el <b>histórico completo de la marca</b>, ignorando si los locales están abiertos o cerrados (Universal).</li>
+                            <li><b>Rendimiento:</b> Las métricas de ventas y nuevos socios se atribuyen al local donde ocurrió la transacción o registro.</li>
+                            <li><b>Filtro VMTAP:</b> Solo se aplica para enlistar sucursales visualmente en gráficas de comparativa y productividad.</li>
+                        </ul>
+                        <div class="alert alert-light border small py-2 mb-0">
+                            <b>Nota:</b> La matemática del dashboard no restringe datos por VMTAP=1 para KPIs globales, asegurando una visión real del LTV.
+                        </div>
+                    </div>
+
+                    <div class="doc-section">
                         <div class="doc-title text-primary"><i class="fas fa-users-cog"></i> Modelo RFM (Recencia,
-                            Frecuencia, Monto)</div>
+                            Frecuencia, LTV)</div>
                         <p class="small mb-2">Cada cliente recibe una puntuación del 1 al 5 comparándolo con el resto de
                             la base:</p>
                         <ul class="doc-list small">
                             <li><b>Recencia:</b> Tiempo transcurrido desde el último pedido.</li>
                             <li><b>Frecuencia:</b> Cantidad de pedidos históricos (Transacciones completas).</li>
-                            <li><b>Monetario:</b> Valor total invertido por el cliente (Sumatoria de Facturas).</li>
+                            <li><b>LTV (Monetario):</b> Valor total invertido por el cliente en toda la marca.</li>
                         </ul>
                         <div class="alert alert-light border small py-2 mb-0">
                             <b>Nota de Integridad:</b> Un pedido se considera "Club" si al menos una línea está asociada
@@ -554,8 +567,8 @@ $puedeDescargar = tienePermiso('dashboard_rfm', 'descargar', $cargoOperario);
                         </p>
                         <div class="row g-2">
                             <div class="col-md-6">
-                                <div class="x-small"><b>Cliente:</b> Nombre, apellido y código único de membresía del
-                                    socio.</div>
+                                <div class="x-small"><b>Cliente:</b> Código único y Nombre del socio (Formato compacto
+                                    ID: Nombre).</div>
                             </div>
                             <div class="col-md-6">
                                 <div class="x-small"><b>Sucursal:</b> Local donde el socio se registró inicialmente
@@ -570,16 +583,16 @@ $puedeDescargar = tienePermiso('dashboard_rfm', 'descargar', $cargoOperario);
                                     por el socio.</div>
                             </div>
                             <div class="col-md-6">
-                                <div class="x-small"><b>LTV (Life Time Value):</b> Valor total real del socio en **toda
-                                    la marca**, incluyendo locales cerrados o delivery. Base para el Score RFM.</div>
+                                <div class="x-small"><b>LTV (Life Time Value):</b> Valor total real del socio en toda
+                                    la marca. Es la base para el score Monetario.</div>
                             </div>
                             <div class="col-md-6">
-                                <div class="x-small"><b>Ticket:</b> Gasto promedio por pedido (Monetario dividido entre
+                                <div class="x-small"><b>Ticket:</b> Gasto promedio por pedido (LTV dividido entre
                                     Frecuencia).</div>
                             </div>
                             <div class="col-md-6">
-                                <div class="x-small"><b>Score RFM:</b> Sumatoria de los puntajes R+F+M (escala de 3 a
-                                    15).</div>
+                                <div class="x-small"><b>Score RFM:</b> Puntajes detallados (R, F, M) y sumatoria total
+                                    en una sola línea.</div>
                             </div>
                             <div class="col-md-6">
                                 <div class="x-small"><b>Segmento:</b> Categoría actual del socio según su comportamiento
