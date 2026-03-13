@@ -70,7 +70,7 @@ try {
                 MAX(CodCliente) as ClienteID, 
                 MAX(MontoFactura) as MontoFactura 
             FROM VentasGlobalesAccessCSV 
-            $wherePart 
+            $wherePart AND CodCliente > 0
             GROUP BY CodPedido
         ) t 
         GROUP BY EsClub
@@ -133,7 +133,7 @@ try {
                 MAX(Sucursal_Nombre) as Sucursal,
                 MAX(local) as LocalID
             FROM VentasGlobalesAccessCSV v
-            $whereRFM
+            $whereRFM AND v.CodCliente > 0
             GROUP BY CodPedido
         ) r
         LEFT JOIN clientesclub c ON r.CodCliente = c.membresia
@@ -279,9 +279,8 @@ try {
                 MAX(CodCliente) as ClienteID, 
                 MAX(MontoFactura) as MontoPedido 
             FROM VentasGlobalesAccessCSV 
-            $whereSimple 
+            $whereSimple AND CodCliente > 0
             GROUP BY CodPedido
-            HAVING ClienteID > 0
         ) t
     ");
     $stmtPeriod->execute($params);
@@ -291,8 +290,7 @@ try {
     $sum_f_period = $period_stats['TotalPedidos'] ?? 0;
     $ticket_club = $sum_f_period > 0 ? $sum_m_period / $sum_f_period : 0;
 
-    // Filtro para pedidos Club (basado en transacción completa) - OPTIMIZADO con fechas
-    $filterOrders = "AND CodPedido IN (SELECT DISTINCT CodPedido FROM VentasGlobalesAccessCSV WHERE CodCliente > 0 AND Fecha BETWEEN :fo_i AND :fo_f)";
+    // Filtro para pedidos Club (basado en transacción completa) - OPTIMIZADO con JOIN
     $paramsFO = [':fo_i' => $fecha_inicio, ':fo_f' => $fecha_fin];
 
     // 4. Evolución de Segmentos (Temporal) - Usamos el histórico real y SemanasSistema
@@ -303,14 +301,17 @@ try {
             MAX(V.CodCliente) as CodCliente
         FROM VentasGlobalesAccessCSV V
         JOIN SemanasSistema S ON V.Fecha BETWEEN S.fecha_inicio AND S.fecha_fin
+        INNER JOIN (
+            SELECT DISTINCT CodPedido 
+            FROM VentasGlobalesAccessCSV 
+            WHERE CodCliente > 0 AND Fecha BETWEEN :fo_i AND :fo_f AND Anulado = 0
+        ) fo ON V.CodPedido = fo.CodPedido
         WHERE V.Anulado = 0 AND V.Fecha BETWEEN :f_inicio AND :f_fin
-        $filterOrders
-        GROUP BY S.numero_semana, V.CodPedido
     ";
     if ($sucursal && $sucursal !== 'todas') {
         $sqlEvol .= " AND V.Sucursal_Nombre = :sucursal";
     }
-    $sqlEvol .= " ORDER BY S.fecha_inicio ASC";
+    $sqlEvol .= " GROUP BY S.numero_semana, V.CodPedido ORDER BY S.fecha_inicio ASC";
     $stmtEvol = $conn->prepare($sqlEvol);
     $stmtEvol->execute(array_merge($params, $paramsFO));
     $evolutionRaw = $stmtEvol->fetchAll(PDO::FETCH_ASSOC);
@@ -441,14 +442,17 @@ try {
     $whereSimpleV = str_replace(['Anulado', 'Fecha', 'Sucursal_Nombre'], ['v.Anulado', 'v.Fecha', 'v.Sucursal_Nombre'], $whereSimple);
 
     // 6. Hábitos Expandidos
+    // OPTIMIZACIÓN: Creamos un JOIN común para filtrar pedidos club eficientemente
+    $joinClubOrders = " INNER JOIN (SELECT DISTINCT CodPedido FROM VentasGlobalesAccessCSV WHERE CodCliente > 0 AND Fecha BETWEEN :fo_i AND :fo_f AND Anulado = 0) fo ON v.CodPedido = fo.CodPedido ";
+
     // 6.1 Medida (Solo Batido y Limonada)
     $sqlMedida = "
         SELECT v.Medida, COUNT(*) as Count
         FROM VentasGlobalesAccessCSV v
         JOIN DBBatidos d ON v.CodProducto = d.CodBatido
         JOIN GrupoProductosVenta g ON d.CodGrupo = g.CodGrupo
+        $joinClubOrders
         $whereSimpleV
-        $filterOrders
         AND g.Tipo IN ('Batido', 'Limonada')
         AND v.CodCliente > 0
         GROUP BY v.Medida
@@ -466,8 +470,8 @@ try {
         FROM VentasGlobalesAccessCSV v
         JOIN DBBatidos d ON v.CodProducto = d.CodBatido
         JOIN GrupoProductosVenta g ON d.CodGrupo = g.CodGrupo
+        $joinClubOrders
         $whereSimpleV
-        $filterOrders
         AND g.Tipo IN ('Batido', 'Limonada', 'Bowl', 'Membresia', 'Pitaya Store', 'Waffles')
         AND v.CodCliente > 0
         GROUP BY v.Modalidad, EsPromo
@@ -492,12 +496,12 @@ try {
 
     $sqlHeatmap = "
         SELECT 
-            HOUR(Hora) as Hour, 
-            CASE WHEN DAYOFWEEK(Fecha) = 1 THEN 7 ELSE DAYOFWEEK(Fecha) - 1 END as Day, 
-            COUNT(DISTINCT CodPedido) as Count 
-        FROM VentasGlobalesAccessCSV 
-        $whereSimple 
-        $filterOrders
+            HOUR(v.Hora) as Hour, 
+            CASE WHEN DAYOFWEEK(v.Fecha) = 1 THEN 7 ELSE DAYOFWEEK(v.Fecha) - 1 END as Day, 
+            COUNT(DISTINCT v.CodPedido) as Count 
+        FROM VentasGlobalesAccessCSV v
+        $joinClubOrders
+        $whereSimpleV
         GROUP BY Hour, Day
     ";
     $stmtHeat = $conn->prepare($sqlHeatmap);
@@ -511,8 +515,8 @@ try {
         FROM VentasGlobalesAccessCSV v
         JOIN DBBatidos d ON v.CodProducto = d.CodBatido
         JOIN GrupoProductosVenta g ON d.CodGrupo = g.CodGrupo
-        $whereSimpleV 
-        $filterOrders
+        $joinClubOrders
+        $whereSimpleV
         AND g.Tipo IN ('Batido', 'Bowl', 'Limonada', 'Pitaya Store', 'Waffles') 
         GROUP BY Product 
         ORDER BY Count DESC 
