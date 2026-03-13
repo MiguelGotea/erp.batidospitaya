@@ -13,6 +13,7 @@ if (!tienePermiso('index_sistemas', 'vista', $cargoOperario)) {
     header('Location: ../index.php');
     exit();
 }
+
 ?>
 <!DOCTYPE html>
 <html lang="es">
