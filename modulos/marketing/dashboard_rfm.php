@@ -67,7 +67,7 @@ $puedeDescargar = tienePermiso('dashboard_rfm', 'descargar', $cargoOperario);
                         </div>
                         <div class="col-md-3 d-flex align-items-end">
                             <button type="submit" class="btn btn-primary btn-sm w-100 rounded-pill shadow-sm">
-                                <i class="fas fa-sync-alt me-2"></i> Actualizar Inteligencia
+                                <i class="fas fa-sync-alt me-2"></i> Actualizar
                             </button>
                         </div>
                     </form>
@@ -531,15 +531,20 @@ $puedeDescargar = tienePermiso('dashboard_rfm', 'descargar', $cargoOperario);
                     </div>
 
                     <div class="doc-section">
-                        <div class="doc-title text-primary"><i class="fas fa-history"></i> Datos Universales y VMTAP</div>
+                        <div class="doc-title text-primary"><i class="fas fa-history"></i> Datos Universales y VMTAP
+                        </div>
                         <p class="small mb-2">Siguiendo la nueva lógica de Inteligencia de Marca:</p>
                         <ul class="doc-list small">
-                            <li><b>Salud de la Base:</b> Se calcula sobre el <b>histórico completo de la marca</b>, ignorando si los locales están abiertos o cerrados (Universal).</li>
-                            <li><b>Rendimiento:</b> Las métricas de ventas y nuevos socios se atribuyen al local donde ocurrió la transacción o registro.</li>
-                            <li><b>Filtro VMTAP:</b> Solo se aplica para enlistar sucursales visualmente en gráficas de comparativa y productividad.</li>
+                            <li><b>Salud de la Base:</b> Se calcula sobre el <b>histórico completo de la marca</b>,
+                                ignorando si los locales están abiertos o cerrados (Universal).</li>
+                            <li><b>Rendimiento:</b> Las métricas de ventas y nuevos socios se atribuyen al local donde
+                                ocurrió la transacción o registro.</li>
+                            <li><b>Filtro VMTAP:</b> Solo se aplica para enlistar sucursales visualmente en gráficas de
+                                comparativa y productividad.</li>
                         </ul>
                         <div class="alert alert-light border small py-2 mb-0">
-                            <b>Nota:</b> La matemática del dashboard no restringe datos por VMTAP=1 para KPIs globales, asegurando una visión real del LTV.
+                            <b>Nota:</b> La matemática del dashboard no restringe datos por VMTAP=1 para KPIs globales,
+                            asegurando una visión real del LTV.
                         </div>
                     </div>
 
