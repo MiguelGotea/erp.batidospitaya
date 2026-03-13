@@ -8,6 +8,7 @@ if (isset($conn))
     $conn->query("SET time_zone = '-06:00'");
 
 header('Content-Type: application/json');
+ini_set('display_errors', 0); // Evitar que advertencias rompan el JSON
 set_time_limit(120);
 ini_set('memory_limit', '512M');
 
@@ -436,6 +437,9 @@ try {
         }
     }
 
+    // Versión de whereSimple con prefijos para tablas con alias 'v'
+    $whereSimpleV = str_replace(['Anulado', 'Fecha', 'Sucursal_Nombre'], ['v.Anulado', 'v.Fecha', 'v.Sucursal_Nombre'], $whereSimple);
+
     // 6. Hábitos Expandidos
     // 6.1 Medida (Solo Batido y Limonada)
     $sqlMedida = "
@@ -443,7 +447,7 @@ try {
         FROM VentasGlobalesAccessCSV v
         JOIN DBBatidos d ON v.CodProducto = d.CodBatido
         JOIN GrupoProductosVenta g ON d.CodGrupo = g.CodGrupo
-        $whereSimple
+        $whereSimpleV
         $filterOrders
         AND g.Tipo IN ('Batido', 'Limonada')
         AND v.CodCliente > 0
@@ -462,7 +466,7 @@ try {
         FROM VentasGlobalesAccessCSV v
         JOIN DBBatidos d ON v.CodProducto = d.CodBatido
         JOIN GrupoProductosVenta g ON d.CodGrupo = g.CodGrupo
-        $whereSimple
+        $whereSimpleV
         $filterOrders
         AND g.Tipo IN ('Batido', 'Limonada', 'Bowl', 'Membresia', 'Pitaya Store', 'Waffles')
         AND v.CodCliente > 0
@@ -507,7 +511,7 @@ try {
         FROM VentasGlobalesAccessCSV v
         JOIN DBBatidos d ON v.CodProducto = d.CodBatido
         JOIN GrupoProductosVenta g ON d.CodGrupo = g.CodGrupo
-        $whereSimple 
+        $whereSimpleV 
         $filterOrders
         AND g.Tipo IN ('Batido', 'Bowl', 'Limonada', 'Pitaya Store', 'Waffles') 
         GROUP BY Product 
