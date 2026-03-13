@@ -140,7 +140,7 @@ try {
     ";
 
     if ($sucursal && $sucursal !== 'todas') {
-        $sqlRFM .= " AND (c.sucursal = (SELECT codigo FROM sucursales WHERE nombre = :suc_club) OR r.Sucursal = :suc_name)";
+        $sqlRFM .= " WHERE (c.sucursal = (SELECT codigo FROM sucursales WHERE nombre = :suc_club) OR r.Sucursal = :suc_name)";
         $paramsRFM[':suc_club'] = $sucursal;
         $paramsRFM[':suc_name'] = $sucursal;
     }
@@ -156,7 +156,7 @@ try {
     $whereUniverso = "WHERE 1=1";
     $paramsUniv = [];
     if ($sucursal && $sucursal !== 'todas') {
-        $whereUniverso .= " AND c.sucursal = (SELECT codigo FROM sucursales WHERE nombre = :s_univ)";
+        $whereUniverso = " WHERE c.sucursal = (SELECT codigo FROM sucursales WHERE nombre = :s_univ)";
         $paramsUniv[':s_univ'] = $sucursal;
     }
 
