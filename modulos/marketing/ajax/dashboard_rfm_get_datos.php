@@ -460,7 +460,6 @@ try {
         $joinClubOrders
         $whereSimpleV
         AND g.Tipo IN ('Batido', 'Limonada')
-        AND v.CodCliente > 0
         GROUP BY v.Medida
     ";
     $stmtMed = $conn->prepare($sqlMedida);
@@ -479,7 +478,6 @@ try {
         $joinClubOrders
         $whereSimpleV
         AND g.Tipo IN ('Batido', 'Limonada', 'Bowl', 'Membresia', 'Pitaya Store', 'Waffles')
-        AND v.CodCliente > 0
         GROUP BY v.Modalidad, EsPromo
     ";
     $stmtHab = $conn->prepare($sqlHabits);
