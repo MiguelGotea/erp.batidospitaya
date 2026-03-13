@@ -70,7 +70,7 @@ try {
                 MAX(CodCliente) as ClienteID, 
                 MAX(MontoFactura) as MontoFactura 
             FROM VentasGlobalesAccessCSV 
-            $wherePart AND CodCliente > 0
+            $wherePart 
             GROUP BY CodPedido
         ) t 
         GROUP BY EsClub
@@ -126,15 +126,20 @@ try {
             MAX(c.fecha_registro) as FechaRegistro
         FROM (
             SELECT 
-                MAX(CodCliente) as CodCliente, 
-                CodPedido, 
-                MAX(Fecha) as Fecha, 
-                MAX(MontoFactura) as TotalPedido, 
-                MAX(Sucursal_Nombre) as Sucursal,
-                MAX(local) as LocalID
+                MAX(v.CodCliente) as CodCliente, 
+                v.CodPedido, 
+                MAX(v.Fecha) as Fecha, 
+                MAX(v.MontoFactura) as TotalPedido, 
+                MAX(v.Sucursal_Nombre) as Sucursal
             FROM VentasGlobalesAccessCSV v
-            $whereRFM AND v.CodCliente > 0
-            GROUP BY CodPedido
+            -- OPTIMIZACIÓN: Solo procesamos pedidos que sabemos son de SOCIOS
+            INNER JOIN (
+                SELECT DISTINCT CodPedido 
+                FROM VentasGlobalesAccessCSV 
+                WHERE CodCliente > 0 AND Anulado = 0
+            ) mo ON v.CodPedido = mo.CodPedido
+            WHERE v.Anulado = 0
+            GROUP BY v.CodPedido
         ) r
         LEFT JOIN clientesclub c ON r.CodCliente = c.membresia
     ";
@@ -279,8 +284,9 @@ try {
                 MAX(CodCliente) as ClienteID, 
                 MAX(MontoFactura) as MontoPedido 
             FROM VentasGlobalesAccessCSV 
-            $whereSimple AND CodCliente > 0
+            $whereSimple 
             GROUP BY CodPedido
+            HAVING ClienteID > 0
         ) t
     ");
     $stmtPeriod->execute($params);
