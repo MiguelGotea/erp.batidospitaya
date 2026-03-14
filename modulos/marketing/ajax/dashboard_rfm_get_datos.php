@@ -4,13 +4,19 @@ require_once '../../../core/database/conexion.php';
 require_once '../../../core/permissions/permissions.php';
 
 // Sincronizar zona horaria de MySQL para este script
-if (isset($conn))
-    $conn->query("SET time_zone = '-06:00'");
+		if (isset($conn))
+				$conn->query("SET time_zone = '-06:00'");
 
-header('Content-Type: application/json');
-ini_set('display_errors', 0); // Evitar que advertencias rompan el JSON
-set_time_limit(120);
-ini_set('memory_limit', '512M');
+		header('Content-Type: application/json');
+		ini_set('display_errors', 1); // Temporalmente para depurar el 500
+		error_reporting(E_ALL);
+		set_time_limit(240); // Aumentar tiempo para tablas grandes
+		ini_set('memory_limit', '1024M'); // Aumentar memoria
+
+		// Logger simple para atrapar lo que display_errors no muestre
+		$logFile = __DIR__ . '/debug_rfm_error.txt';
+		ini_set('log_errors', 1);
+		ini_set('error_log', $logFile);
 
 $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
@@ -139,10 +145,13 @@ try {
                 v.local
             FROM VentasGlobalesAccessCSV v
             -- OPTIMIZACIÓN: Solo procesamos pedidos que sabemos son de SOCIOS
+            -- Si hay sucursal, filtramos por los socios de esa sucursal para reducir el espacio de búsqueda
             INNER JOIN (
                 SELECT DISTINCT local, CodPedido 
-                FROM VentasGlobalesAccessCSV 
-                WHERE CodCliente > 0 AND Anulado = 0
+                FROM VentasGlobalesAccessCSV v2
+                " . ($sucursal && $sucursal !== 'todas' ? "INNER JOIN clientesclub c2 ON v2.CodCliente = c2.membresia" : "") . "
+                WHERE v2.CodCliente > 0 AND v2.Anulado = 0
+                " . ($sucursal && $sucursal !== 'todas' ? "AND c2.sucursal = :mo_suc_local" : "") . "
             ) mo ON v.local = mo.local AND v.CodPedido = mo.CodPedido
             WHERE v.Anulado = 0
             GROUP BY v.local, v.CodPedido
@@ -154,6 +163,7 @@ try {
     if ($sucursal && $sucursal !== 'todas') {
         $sqlRFM .= " WHERE c.sucursal = :suc_local";
         $paramsRFM[':suc_local'] = $codigo_local;
+        $paramsRFM[':mo_suc_local'] = $codigo_local;
     }
 
     $sqlRFM .= " GROUP BY r.CodCliente $havingRFM";
@@ -164,19 +174,21 @@ try {
 
     // Conteo Universo con Compra (Denominator for Health %)
     // Socios registrados que han tenido al menos una compra en la historia
-    $whereUniverso = "WHERE 1=1";
-    $paramsUniv = [];
+    // OPTIMIZACIÓN: Buscamos directamente en ventas si el cliente es miembro
     if ($sucursal && $sucursal !== 'todas') {
-        $whereUniverso = " WHERE c.sucursal = :suc_local";
-        $paramsUniv[':suc_local'] = $codigo_local;
+        // Si hay sucursal, unimos con clientesclub para filtrar por su registro
+        $sqlUniv = "
+            SELECT COUNT(DISTINCT v.CodCliente) 
+            FROM VentasGlobalesAccessCSV v
+            JOIN clientesclub c ON v.CodCliente = c.membresia
+            WHERE c.sucursal = :suc_local AND v.Anulado = 0
+        ";
+        $paramsUniv = [':suc_local' => $codigo_local];
+    } else {
+        $sqlUniv = "SELECT COUNT(DISTINCT CodCliente) FROM VentasGlobalesAccessCSV WHERE CodCliente > 0 AND Anulado = 0";
+        $paramsUniv = [];
     }
 
-    $sqlUniv = "
-        SELECT COUNT(DISTINCT c.membresia) 
-        FROM clientesclub c
-        INNER JOIN VentasGlobalesAccessCSV v ON c.membresia = v.CodCliente
-        $whereUniverso AND v.Anulado = 0
-    ";
     $stmtUniv = $conn->prepare($sqlUniv);
     $stmtUniv->execute($paramsUniv);
     $universo_count = $stmtUniv->fetchColumn() ?: 1;
