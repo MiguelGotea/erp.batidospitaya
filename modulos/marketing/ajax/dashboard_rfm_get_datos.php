@@ -8,15 +8,12 @@ require_once '../../../core/permissions/permissions.php';
 				$conn->query("SET time_zone = '-06:00'");
 
 		header('Content-Type: application/json');
-		ini_set('display_errors', 1); // Temporalmente para depurar el 500
+		ini_set('display_errors', 0); // Desactivar para que warnings no rompan el JSON
 		error_reporting(E_ALL);
-		set_time_limit(240); // Aumentar tiempo para tablas grandes
-		ini_set('memory_limit', '1024M'); // Aumentar memoria
+		set_time_limit(300); // 5 minutos para procesos pesados
+		ini_set('memory_limit', '1024M');
 
-		// Logger simple para atrapar lo que display_errors no muestre
-		$logFile = __DIR__ . '/debug_rfm_error.txt';
-		ini_set('log_errors', 1);
-		ini_set('error_log', $logFile);
+		ob_start(); // Capturar cualquier salida accidental (warnings/notices)
 
 $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
@@ -145,13 +142,14 @@ try {
                 v.local
             FROM VentasGlobalesAccessCSV v
             -- OPTIMIZACIÓN: Solo procesamos pedidos que sabemos son de SOCIOS
-            -- Si hay sucursal, filtramos por los socios de esa sucursal para reducir el espacio de búsqueda
+            -- Si hay sucursal, filtramos por los socios de esa sucursal primero
             INNER JOIN (
-                SELECT DISTINCT local, CodPedido 
+                SELECT DISTINCT v2.local, v2.CodPedido 
                 FROM VentasGlobalesAccessCSV v2
                 " . ($sucursal && $sucursal !== 'todas' ? "INNER JOIN clientesclub c2 ON v2.CodCliente = c2.membresia" : "") . "
                 WHERE v2.CodCliente > 0 AND v2.Anulado = 0
                 " . ($sucursal && $sucursal !== 'todas' ? "AND c2.sucursal = :mo_suc_local" : "") . "
+                AND v2.Fecha BETWEEN :f_inicio AND :f_fin
             ) mo ON v.local = mo.local AND v.CodPedido = mo.CodPedido
             WHERE v.Anulado = 0
             GROUP BY v.local, v.CodPedido
@@ -169,7 +167,8 @@ try {
     $sqlRFM .= " GROUP BY r.CodCliente $havingRFM";
 
     $stmt = $conn->prepare($sqlRFM);
-    $stmt->execute($paramsRFM ?? []);
+    $paramsJoin = array_merge($paramsRFM ?? [], [':f_inicio' => $fecha_inicio, ':f_fin' => $fecha_fin]);
+    $stmt->execute($paramsJoin);
     $raw_data = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     // Conteo Universo con Compra (Denominator for Health %)
@@ -549,9 +548,12 @@ try {
     $stmtTP->execute(array_merge($params, $paramsFO));
     $top_products = $stmtTP->fetchAll(PDO::FETCH_ASSOC);
 
-    // 7. Respuesta Final Estructurada
+    // Capturar cualquier salida sucia (warnings/notices) que haya ocurrido
+    $debug_output = ob_get_clean();
+
     echo json_encode([
         'success' => true,
+        'debug' => $debug_output, // Enviamos el debug DENTRO del JSON
         'summary' => [
             'total_club' => $total_count,
             'activos' => $activos,
@@ -586,6 +588,7 @@ try {
     ]);
 
 } catch (Throwable $e) {
+    ob_get_clean(); // Limpiar si falló
     echo json_encode(['success' => false, 'message' => $e->getMessage(), 'file' => $e->getFile(), 'line' => $e->getLine()]);
 }
 
