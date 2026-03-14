@@ -830,6 +830,6 @@ function exportData(type) {
 
 function verDetalle(id) {
     if (!id) return;
-    window.location.href = `/modulos/atencioncliente/historial_productos.php?membresia=${id}`;
+    window.open(`/modulos/atencioncliente/historial_productos.php?membresia=${id}`, '_blank');
 }
 
