@@ -451,7 +451,7 @@ try {
 
     // 6. Hábitos Expandidos
     // OPTIMIZACIÓN: Creamos un JOIN común para filtrar pedidos club eficientemente
-    $joinClubOrders = " INNER JOIN (SELECT DISTINCT CodPedido FROM VentasGlobalesAccessCSV WHERE CodCliente > 0 AND Fecha BETWEEN :fo_i AND :fo_f AND Anulado = 0) fo ON v.CodPedido = fo.CodPedido ";
+    $joinClubOrders = " INNER JOIN (SELECT DISTINCT local, CodPedido FROM VentasGlobalesAccessCSV WHERE CodCliente > 0 AND Fecha BETWEEN :fo_i AND :fo_f AND Anulado = 0) fo ON v.local = fo.local AND v.CodPedido = fo.CodPedido ";
 
     // 6.1 Medida (Solo Batido y Limonada)
     $sqlMedida = "
