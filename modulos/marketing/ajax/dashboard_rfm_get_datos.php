@@ -39,11 +39,16 @@ try {
     $whereSimple = "WHERE Anulado = 0 AND Fecha BETWEEN :f_inicio AND :f_fin";
     $params = [':f_inicio' => $fecha_inicio, ':f_fin' => $fecha_fin];
 
+    $codigo_local = null;
     if ($sucursal && $sucursal !== 'todas') {
-        $whereSimple .= " AND Sucursal_Nombre = :sucursal";
-        $whereGlobal .= " AND Sucursal_Nombre = :suc_global";
-        $params[':sucursal'] = $sucursal;
-        $paramsGlobal[':suc_global'] = $sucursal;
+        $stmtLoc = $conn->prepare("SELECT codigo FROM sucursales WHERE nombre = :suc");
+        $stmtLoc->execute([':suc' => $sucursal]);
+        $codigo_local = $stmtLoc->fetchColumn() ?: -1;
+
+        $whereSimple .= " AND local = :suc_local";
+        $whereGlobal .= " AND local = :suc_local";
+        $params[':suc_local'] = $codigo_local;
+        $paramsGlobal[':suc_local'] = $codigo_local;
     }
     // Nota: El filtro por nombre se mantiene para el selector de UI por ahora, 
     // pero la integridad de VMTAP usa los códigos.
@@ -57,7 +62,7 @@ try {
     // 0.1 Participación Ingresos (Club vs General) - Independiente del filtro tipo_cliente
     $wherePart = "WHERE Anulado = 0 AND Fecha BETWEEN :f_inicio AND :f_fin";
     if ($sucursal && $sucursal !== 'todas') {
-        $wherePart .= " AND local = (SELECT codigo FROM sucursales WHERE nombre = :suc_part)";
+        $wherePart .= " AND local = :suc_local";
     }
 
     $sqlPart = "
@@ -81,7 +86,7 @@ try {
     $stmtPart = $conn->prepare($sqlPart);
     $paramsPart = [':f_inicio' => $fecha_inicio, ':f_fin' => $fecha_fin];
     if ($sucursal && $sucursal !== 'todas') {
-        $paramsPart[':suc_part'] = $sucursal;
+        $paramsPart[':suc_local'] = $codigo_local;
     }
     $stmtPart->execute($paramsPart);
     $part_raw = $stmtPart->fetchAll(PDO::FETCH_KEY_PAIR);
@@ -100,8 +105,8 @@ try {
     $whereClub = "WHERE fecha_registro BETWEEN :p_inicio AND :p_fin";
     $paramsClub = [':p_inicio' => $p_inicio, ':p_fin' => $p_fin];
     if ($sucursal && $sucursal !== 'todas') {
-        $whereClub .= " AND nombre_sucursal = :suc_club";
-        $paramsClub[':suc_club'] = $sucursal;
+        $whereClub .= " AND sucursal = :suc_local";
+        $paramsClub[':suc_local'] = $codigo_local;
     }
 
     $sqlPrev = "SELECT COUNT(DISTINCT membresia) as PrevNuevos FROM clientesclub $whereClub";
@@ -147,8 +152,8 @@ try {
     ";
 
     if ($sucursal && $sucursal !== 'todas') {
-        $sqlRFM .= " WHERE c.sucursal = (SELECT codigo FROM sucursales WHERE nombre = :suc_club)";
-        $paramsRFM[':suc_club'] = $sucursal;
+        $sqlRFM .= " WHERE c.sucursal = :suc_local";
+        $paramsRFM[':suc_local'] = $codigo_local;
     }
 
     $sqlRFM .= " GROUP BY r.CodCliente $havingRFM";
@@ -162,8 +167,8 @@ try {
     $whereUniverso = "WHERE 1=1";
     $paramsUniv = [];
     if ($sucursal && $sucursal !== 'todas') {
-        $whereUniverso = " WHERE c.sucursal = (SELECT codigo FROM sucursales WHERE nombre = :s_univ)";
-        $paramsUniv[':s_univ'] = $sucursal;
+        $whereUniverso = " WHERE c.sucursal = :suc_local";
+        $paramsUniv[':suc_local'] = $codigo_local;
     }
 
     $sqlUniv = "
@@ -265,8 +270,8 @@ try {
     $whereClubNow = "WHERE fecha_registro BETWEEN :f_inicio AND :f_fin";
     $paramsClubNow = [':f_inicio' => $fecha_inicio, ':f_fin' => $fecha_fin];
     if ($sucursal && $sucursal !== 'todas') {
-        $whereClubNow .= " AND sucursal = (SELECT codigo FROM sucursales WHERE nombre = :suc_club_now)";
-        $paramsClubNow[':suc_club_now'] = $sucursal;
+        $whereClubNow .= " AND sucursal = :suc_local";
+        $paramsClubNow[':suc_local'] = $codigo_local;
     }
 
     $stmtNew = $conn->prepare("SELECT COUNT(*) as Nuevos FROM clientesclub $whereClubNow");
@@ -317,7 +322,7 @@ try {
         WHERE V.Anulado = 0 AND V.Fecha BETWEEN :f_inicio AND :f_fin
     ";
     if ($sucursal && $sucursal !== 'todas') {
-        $sqlEvol .= " AND V.local = (SELECT codigo FROM sucursales WHERE nombre = :sucursal)";
+        $sqlEvol .= " AND V.local = :suc_local";
     }
     $sqlEvol .= " GROUP BY S.numero_semana, V.local, V.CodPedido ORDER BY S.fecha_inicio ASC";
     $stmtEvol = $conn->prepare($sqlEvol);
@@ -594,11 +599,11 @@ function calculateRetentionDetail($conn, $where, $params)
 
         // 2. Definir filtros para el Periodo Anterior (H1 y Subquery de H2)
         // Usamos prefijos diferentes para los parámetros para evitar colisiones si se usan en el mismo query
-        $whereH1 = str_replace([':f_inicio', ':f_fin', ':sucursal'], [':p_inicio', ':p_fin', ':p_sucursal'], $where);
+        $whereH1 = str_replace([':f_inicio', ':f_fin', ':suc_local'], [':p_inicio', ':p_fin', ':p_suc_local'], $where);
 
         $paramsH1 = [];
-        if (isset($params[':sucursal']))
-            $paramsH1[':p_sucursal'] = $params[':sucursal'];
+        if (isset($params[':suc_local']))
+            $paramsH1[':p_suc_local'] = $params[':suc_local'];
         $paramsH1[':p_inicio'] = $p_inicio;
         $paramsH1[':p_fin'] = $p_fin;
 
@@ -614,8 +619,8 @@ function calculateRetentionDetail($conn, $where, $params)
         // 3. Contar cuántos de ese cohort (H1) compraron en el periodo actual (H2)
         // Combinamos parámetros del periodo actual (:f_...) y del anterior (:p_...)
         $paramsCombined = $params;
-        if (isset($params[':sucursal']))
-            $paramsCombined[':p_sucursal'] = $params[':sucursal'];
+        if (isset($params[':suc_local']))
+            $paramsCombined[':p_suc_local'] = $params[':suc_local'];
         $paramsCombined[':p_inicio'] = $p_inicio;
         $paramsCombined[':p_fin'] = $p_fin;
 
