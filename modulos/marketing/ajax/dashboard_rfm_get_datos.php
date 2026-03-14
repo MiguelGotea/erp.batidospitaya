@@ -57,7 +57,7 @@ try {
     // 0.1 Participación Ingresos (Club vs General) - Independiente del filtro tipo_cliente
     $wherePart = "WHERE Anulado = 0 AND Fecha BETWEEN :f_inicio AND :f_fin";
     if ($sucursal && $sucursal !== 'todas') {
-        $wherePart .= " AND Sucursal_Nombre = :suc_part";
+        $wherePart .= " AND local = (SELECT codigo FROM sucursales WHERE nombre = :suc_part)";
     }
 
     $sqlPart = "
@@ -119,7 +119,7 @@ try {
     $sqlRFM = "
         SELECT 
             r.CodCliente,
-            COALESCE(NULLIF(MAX(c.nombre_sucursal), ''), MAX(r.Sucursal)) as Sucursal,
+            COALESCE(MAX(c.nombre_sucursal), MAX(s.nombre), 'Desconocida') as Sucursal,
             DATEDIFF(CURDATE(), MAX(r.Fecha)) as Recency,
             COUNT(r.CodPedido) as Frequency,
             SUM(r.TotalPedido) as Monetary,
@@ -131,7 +131,7 @@ try {
                 v.CodPedido, 
                 MAX(v.Fecha) as Fecha, 
                 MAX(v.MontoFactura) as TotalPedido, 
-                MAX(v.Sucursal_Nombre) as Sucursal
+                v.local
             FROM VentasGlobalesAccessCSV v
             -- OPTIMIZACIÓN: Solo procesamos pedidos que sabemos son de SOCIOS
             INNER JOIN (
@@ -143,6 +143,7 @@ try {
             GROUP BY v.local, v.CodPedido
         ) r
         LEFT JOIN clientesclub c ON r.CodCliente = c.membresia
+        LEFT JOIN sucursales s ON r.local = s.codigo
     ";
 
     if ($sucursal && $sucursal !== 'todas') {
@@ -316,7 +317,7 @@ try {
         WHERE V.Anulado = 0 AND V.Fecha BETWEEN :f_inicio AND :f_fin
     ";
     if ($sucursal && $sucursal !== 'todas') {
-        $sqlEvol .= " AND V.Sucursal_Nombre = :sucursal";
+        $sqlEvol .= " AND V.local = (SELECT codigo FROM sucursales WHERE nombre = :sucursal)";
     }
     $sqlEvol .= " GROUP BY S.numero_semana, V.local, V.CodPedido ORDER BY S.fecha_inicio ASC";
     $stmtEvol = $conn->prepare($sqlEvol);
@@ -347,17 +348,15 @@ try {
     $evolution = array_values($evolutionDetail);
 
     // 5. Análisis por Sucursal y Detalle Individual
-    // 5.1 Obtener Ticket Promedio del PERIODO por Sucursal para Benchmarking
     $sqlBranchPeriod = "
         SELECT 
-            Sucursal_Nombre as Sucursal,
-            SUM(MontoPedido) as TotalMonto,
+            s.nombre as Sucursal,
+            SUM(t.MontoPedido) as TotalMonto,
             COUNT(*) as TotalPedidos
         FROM (
             SELECT 
                 local,
                 CodPedido, 
-                MAX(Sucursal_Nombre) as Sucursal_Nombre,
                 MAX(MontoFactura) as MontoPedido 
             FROM VentasGlobalesAccessCSV 
             $whereSimple 
@@ -365,7 +364,8 @@ try {
             GROUP BY local, CodPedido
             HAVING MAX(CodCliente) > 0
         ) t
-        GROUP BY Sucursal
+        JOIN sucursales s ON t.local = s.codigo
+        GROUP BY s.nombre
     ";
     $stmtBP = $conn->prepare($sqlBranchPeriod);
     $stmtBP->execute($params);
@@ -447,7 +447,7 @@ try {
     }
 
     // Versión de whereSimple con prefijos para tablas con alias 'v'
-    $whereSimpleV = str_replace(['Anulado', 'Fecha', 'Sucursal_Nombre'], ['v.Anulado', 'v.Fecha', 'v.Sucursal_Nombre'], $whereSimple);
+    $whereSimpleV = str_replace(['Anulado', 'Fecha', ' local '], ['v.Anulado', 'v.Fecha', ' v.local '], $whereSimple);
 
     // 6. Hábitos Expandidos
     // OPTIMIZACIÓN: Creamos un JOIN común para filtrar pedidos club eficientemente
