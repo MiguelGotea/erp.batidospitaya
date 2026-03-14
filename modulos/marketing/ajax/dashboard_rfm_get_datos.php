@@ -9,8 +9,8 @@ require_once '../../../core/permissions/permissions.php';
 
 		header('Content-Type: application/json');
 		ini_set('display_errors', 0); // Desactivar para que warnings no rompan el JSON
-		error_reporting(E_ALL & ~E_NOTICE & ~E_DEPRECATED); // Ignorar ruidos menores
-		set_time_limit(300);
+		error_reporting(E_ALL);
+		set_time_limit(300); // 5 minutos para procesos pesados
 		ini_set('memory_limit', '1024M');
 
 		ob_start(); // Capturar cualquier salida accidental (warnings/notices)
@@ -128,7 +128,7 @@ try {
         SELECT 
             r.CodCliente,
             COALESCE(MAX(c.nombre_sucursal), MAX(s.nombre), 'Desconocida') as Sucursal,
-            COALESCE(DATEDIFF(CURDATE(), MAX(r.Fecha)), 999) as Recency,
+            DATEDIFF(CURDATE(), MAX(r.Fecha)) as Recency,
             COUNT(r.CodPedido) as Frequency,
             SUM(r.TotalPedido) as Monetary,
             MAX(CONCAT(COALESCE(c.nombre,''), ' ', COALESCE(c.apellido, ''))) as ClienteNombre,
@@ -318,28 +318,26 @@ try {
     $paramsFO = [':fo_i' => $fecha_inicio, ':fo_f' => $fecha_fin];
 
     // 4. Evolución de Segmentos (Temporal) - Usamos el histórico real y SemanasSistema
-    // OPTIMIZACIÓN: Solo nos interesa si el cliente compró en la semana, no cada pedido.
     $sqlEvol = "
         SELECT 
             S.numero_semana as Semana, 
-            mo.CodCliente
-        FROM SemanasSistema S
+            V.CodPedido, 
+            MAX(V.CodCliente) as CodCliente
+        FROM VentasGlobalesAccessCSV V
+        JOIN SemanasSistema S ON V.Fecha BETWEEN S.fecha_inicio AND S.fecha_fin
         INNER JOIN (
-            SELECT DISTINCT local, CodPedido, CodCliente, Fecha
+            SELECT DISTINCT local, CodPedido 
             FROM VentasGlobalesAccessCSV 
             WHERE CodCliente > 0 AND Fecha BETWEEN :fo_i AND :fo_f AND Anulado = 0
-        ) mo ON mo.Fecha BETWEEN S.fecha_inicio AND S.fecha_fin
-        WHERE S.fecha_inicio BETWEEN :f_inicio AND :f_fin
+        ) fo ON V.local = fo.local AND V.CodPedido = fo.CodPedido
+        WHERE V.Anulado = 0 AND V.Fecha BETWEEN :f_inicio AND :f_fin
     ";
     if ($sucursal && $sucursal !== 'todas') {
-        // Para evolución por sucursal, nos interesa que la TRANSACCIÓN haya sido en esa sucursal
-        $sqlEvol .= " AND mo.local = :suc_local";
+        $sqlEvol .= " AND V.local = :suc_local";
     }
-    $sqlEvol .= " GROUP BY S.numero_semana, mo.CodCliente ORDER BY S.fecha_inicio ASC";
+    $sqlEvol .= " GROUP BY S.numero_semana, V.local, V.CodPedido ORDER BY S.fecha_inicio ASC";
     $stmtEvol = $conn->prepare($sqlEvol);
-    $paramsEvol = array_merge($params, $paramsFO);
-    if ($sucursal && $sucursal !== 'todas') $paramsEvol[':suc_local'] = $codigo_local;
-    $stmtEvol->execute($paramsEvol);
+    $stmtEvol->execute(array_merge($params, $paramsFO));
     $evolutionRaw = $stmtEvol->fetchAll(PDO::FETCH_ASSOC);
 
     // Mapear Clientes a Segmentos para la evolución
@@ -508,9 +506,8 @@ try {
     $h_modalidad = [];
     $h_promo = ['si' => 0, 'no' => 0];
     foreach ($habits_raw as $hr) {
-        $modVal = $hr['Modalidad'] ?? 'General';
-        $modValue = (trim($modVal) !== '') ? $modVal : 'General';
-        $h_modalidad[$modValue] = ($h_modalidad[$modValue] ?? 0) + ($hr['Count'] ?? 0);
+        $modValue = ($hr['Modalidad'] && trim($hr['Modalidad']) !== '') ? $hr['Modalidad'] : 'General';
+        $h_modalidad[$modValue] = ($h_modalidad[$modValue] ?? 0) + $hr['Count'];
 
         if ($hr['EsPromo'])
             $h_promo['si'] += $hr['Count'];
