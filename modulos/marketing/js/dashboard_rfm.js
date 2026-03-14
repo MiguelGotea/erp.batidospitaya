@@ -84,25 +84,25 @@ async function cargarDatos() {
         console.error(error);
         Swal.fire('Error', 'No se pudo conectar con el servicio de datos.', 'error');
     } finally {
-        btn.prop('disabled', false).html('<i class="fas fa-sync-alt me-2"></i>Actualizar Inteligencia');
+        btn.prop('disabled', false).html('<i class="fas fa-sync-alt me-2"></i>Actualizar');
     }
 }
 
 function actualizarKPIsLocales() {
     const umbral = parseInt($('#umbral_perdido').val()) || 60;
-    
+
     // Actualizar tooltips dinámicamente
-    $('.kpi-card-new').each(function() {
+    $('.kpi-card-new').each(function () {
         const id = $(this).attr('id');
         if (id === 'tipClubActivos') {
             $(this).attr('data-bs-original-title', `Socios con última compra hace &le; ${umbral} días.`);
         } else if (id === 'tipEnRiesgo') {
-            $(this).attr('data-bs-original-title', `Socios con inactividad entre ${Math.floor(umbral/2)} y ${umbral} días.`);
+            $(this).attr('data-bs-original-title', `Socios con inactividad entre ${Math.floor(umbral / 2)} y ${umbral} días.`);
         } else if (id === 'tipPerdidos') {
             $(this).attr('data-bs-original-title', `Socios con inactividad > ${umbral} días.`);
         }
     });
-    
+
     // Si queremos que los segmentos también cambien visualmente rápido sin ir al server:
     // (O podemos simplemente avisar que para re-segmentar haga clic en Actualizar)
 }
@@ -231,14 +231,14 @@ function updateEvolutionChart(evolution) {
             datasets: datasets
         },
         options: {
-            plugins: { 
+            plugins: {
                 legend: { display: false },
                 tooltip: { stacked: true }
             },
             maintainAspectRatio: false,
-            scales: { 
-                y: { stacked: true, beginAtZero: true, grid: { display: false } }, 
-                x: { stacked: true, grid: { display: false } } 
+            scales: {
+                y: { stacked: true, beginAtZero: true, grid: { display: false } },
+                x: { stacked: true, grid: { display: false } }
             }
         }
     });
@@ -479,7 +479,7 @@ function applyAllFilters() {
 
 function toggleFilter(icon, event) {
     if (event) event.stopPropagation();
-    
+
     const th = $(icon).closest('th');
     const columna = th.data('column');
     const tipo = th.data('type');
