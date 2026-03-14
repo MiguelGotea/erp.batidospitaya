@@ -66,12 +66,13 @@ try {
             SUM(MontoFactura) as Total 
         FROM (
             SELECT 
+                Sucursal_Nombre,
                 CodPedido, 
                 MAX(CodCliente) as ClienteID, 
                 MAX(MontoFactura) as MontoFactura 
             FROM VentasGlobalesAccessCSV 
             $wherePart 
-            GROUP BY CodPedido
+            GROUP BY Sucursal_Nombre, CodPedido
         ) t 
         GROUP BY EsClub
     ";
@@ -134,12 +135,12 @@ try {
             FROM VentasGlobalesAccessCSV v
             -- OPTIMIZACIÓN: Solo procesamos pedidos que sabemos son de SOCIOS
             INNER JOIN (
-                SELECT DISTINCT CodPedido 
+                SELECT DISTINCT Sucursal_Nombre, CodPedido 
                 FROM VentasGlobalesAccessCSV 
                 WHERE CodCliente > 0 AND Anulado = 0
-            ) mo ON v.CodPedido = mo.CodPedido
+            ) mo ON v.Sucursal_Nombre = mo.Sucursal_Nombre AND v.CodPedido = mo.CodPedido
             WHERE v.Anulado = 0
-            GROUP BY v.CodPedido
+            GROUP BY v.Sucursal_Nombre, v.CodPedido
         ) r
         LEFT JOIN clientesclub c ON r.CodCliente = c.membresia
     ";
@@ -279,12 +280,13 @@ try {
             COUNT(*) as TotalPedidos
         FROM (
             SELECT 
+                Sucursal_Nombre,
                 CodPedido, 
                 MAX(CodCliente) as ClienteID, 
                 MAX(MontoFactura) as MontoPedido 
             FROM VentasGlobalesAccessCSV 
             $whereSimple 
-            GROUP BY CodPedido
+            GROUP BY Sucursal_Nombre, CodPedido
             HAVING ClienteID > 0
         ) t
     ");
@@ -307,16 +309,16 @@ try {
         FROM VentasGlobalesAccessCSV V
         JOIN SemanasSistema S ON V.Fecha BETWEEN S.fecha_inicio AND S.fecha_fin
         INNER JOIN (
-            SELECT DISTINCT CodPedido 
+            SELECT DISTINCT Sucursal_Nombre, CodPedido 
             FROM VentasGlobalesAccessCSV 
             WHERE CodCliente > 0 AND Fecha BETWEEN :fo_i AND :fo_f AND Anulado = 0
-        ) fo ON V.CodPedido = fo.CodPedido
+        ) fo ON V.Sucursal_Nombre = fo.Sucursal_Nombre AND V.CodPedido = fo.CodPedido
         WHERE V.Anulado = 0 AND V.Fecha BETWEEN :f_inicio AND :f_fin
     ";
     if ($sucursal && $sucursal !== 'todas') {
         $sqlEvol .= " AND V.Sucursal_Nombre = :sucursal";
     }
-    $sqlEvol .= " GROUP BY S.numero_semana, V.CodPedido ORDER BY S.fecha_inicio ASC";
+    $sqlEvol .= " GROUP BY S.numero_semana, V.Sucursal_Nombre, V.CodPedido ORDER BY S.fecha_inicio ASC";
     $stmtEvol = $conn->prepare($sqlEvol);
     $stmtEvol->execute(array_merge($params, $paramsFO));
     $evolutionRaw = $stmtEvol->fetchAll(PDO::FETCH_ASSOC);
@@ -353,13 +355,14 @@ try {
             COUNT(*) as TotalPedidos
         FROM (
             SELECT 
+                local,
                 CodPedido, 
                 MAX(Sucursal_Nombre) as Sucursal_Nombre,
                 MAX(MontoFactura) as MontoPedido 
             FROM VentasGlobalesAccessCSV 
             $whereSimple 
             AND local IN (SELECT codigo FROM sucursales WHERE VMTAP = 1)
-            GROUP BY CodPedido
+            GROUP BY local, CodPedido
             HAVING MAX(CodCliente) > 0
         ) t
         GROUP BY Sucursal
@@ -501,7 +504,7 @@ try {
         SELECT 
             HOUR(v.Hora) as Hour, 
             CASE WHEN DAYOFWEEK(v.Fecha) = 1 THEN 7 ELSE DAYOFWEEK(v.Fecha) - 1 END as Day, 
-            COUNT(DISTINCT v.CodPedido) as Count 
+            COUNT(DISTINCT CONCAT(v.Sucursal_Nombre, '-', v.CodPedido)) as Count 
         FROM VentasGlobalesAccessCSV v
         $joinClubOrders
         $whereSimpleV
