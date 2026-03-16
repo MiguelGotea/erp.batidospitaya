@@ -149,7 +149,6 @@ try {
                 " . ($sucursal && $sucursal !== 'todas' ? "INNER JOIN clientesclub c2 ON v2.CodCliente = c2.membresia" : "") . "
                 WHERE v2.CodCliente > 0 AND v2.Anulado = 0
                 " . ($sucursal && $sucursal !== 'todas' ? "AND c2.sucursal = :mo_suc_local" : "") . "
-                AND v2.Fecha BETWEEN :f_inicio AND :f_fin
             ) mo ON v.local = mo.local AND v.CodPedido = mo.CodPedido
             WHERE v.Anulado = 0
             GROUP BY v.local, v.CodPedido
@@ -167,8 +166,7 @@ try {
     $sqlRFM .= " GROUP BY r.CodCliente $havingRFM";
 
     $stmt = $conn->prepare($sqlRFM);
-    $paramsJoin = array_merge($paramsRFM ?? [], [':f_inicio' => $fecha_inicio, ':f_fin' => $fecha_fin]);
-    $stmt->execute($paramsJoin);
+    $stmt->execute($paramsRFM ?? []);
     $raw_data = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     // Conteo Universo con Compra (Denominator for Health %)
