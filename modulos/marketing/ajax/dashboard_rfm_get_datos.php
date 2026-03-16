@@ -13,6 +13,12 @@ require_once '../../../core/permissions/permissions.php';
 		set_time_limit(300); // 5 minutos para procesos pesados
 		ini_set('memory_limit', '1024M');
 
+        // Intentar subir límites de sesión MariaDB/MySQL si el host lo permite
+        if (isset($conn)) {
+            $conn->exec("SET SESSION max_statement_time = 300"); // MariaDB
+            $conn->exec("SET SESSION max_execution_time = 300000"); // MySQL
+        }
+
 		ob_start(); // Capturar cualquier salida accidental (warnings/notices)
 
 $usuario = obtenerUsuarioActual();
@@ -142,13 +148,12 @@ try {
                 v.local
             FROM VentasGlobalesAccessCSV v
             -- OPTIMIZACIÓN: Solo procesamos pedidos que sabemos son de SOCIOS
-            -- Si hay sucursal, filtramos por los socios de esa sucursal primero
+            -- Si hay sucursal, usamos IN (SELECT) para que MySQL use el índice de CodCliente directamente
             INNER JOIN (
                 SELECT DISTINCT v2.local, v2.CodPedido 
                 FROM VentasGlobalesAccessCSV v2
-                " . ($sucursal && $sucursal !== 'todas' ? "INNER JOIN clientesclub c2 ON v2.CodCliente = c2.membresia" : "") . "
                 WHERE v2.CodCliente > 0 AND v2.Anulado = 0
-                " . ($sucursal && $sucursal !== 'todas' ? "AND c2.sucursal = :mo_suc_local" : "") . "
+                " . ($sucursal && $sucursal !== 'todas' ? "AND v2.CodCliente IN (SELECT membresia FROM clientesclub WHERE sucursal = :mo_suc_local)" : "") . "
             ) mo ON v.local = mo.local AND v.CodPedido = mo.CodPedido
             WHERE v.Anulado = 0
             GROUP BY v.local, v.CodPedido
@@ -173,12 +178,12 @@ try {
     // Socios registrados que han tenido al menos una compra en la historia
     // OPTIMIZACIÓN: Buscamos directamente en ventas si el cliente es miembro
     if ($sucursal && $sucursal !== 'todas') {
-        // Si hay sucursal, unimos con clientesclub para filtrar por su registro
+        // OPTIMIZACIÓN: Usar IN (SELECT) en lugar de JOIN para aprovechar índice CodCliente
         $sqlUniv = "
-            SELECT COUNT(DISTINCT v.CodCliente) 
-            FROM VentasGlobalesAccessCSV v
-            JOIN clientesclub c ON v.CodCliente = c.membresia
-            WHERE c.sucursal = :suc_local AND v.Anulado = 0
+            SELECT COUNT(DISTINCT CodCliente) 
+            FROM VentasGlobalesAccessCSV 
+            WHERE CodCliente IN (SELECT membresia FROM clientesclub WHERE sucursal = :suc_local)
+            AND Anulado = 0
         ";
         $paramsUniv = [':suc_local' => $codigo_local];
     } else {
