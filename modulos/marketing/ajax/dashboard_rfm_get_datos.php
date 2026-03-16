@@ -13,10 +13,12 @@ require_once '../../../core/permissions/permissions.php';
 		set_time_limit(300); // 5 minutos para procesos pesados
 		ini_set('memory_limit', '1024M');
 
-        // Intentar subir límites de sesión MariaDB/MySQL si el host lo permite
+        // Intentar subir límites si el host lo permite (evitar 500 si no existe la variable)
         if (isset($conn)) {
-            $conn->exec("SET SESSION max_statement_time = 300"); // MariaDB
-            $conn->exec("SET SESSION max_execution_time = 300000"); // MySQL
+            try {
+                @$conn->exec("SET SESSION max_statement_time = 300"); // MariaDB
+                @$conn->exec("SET SESSION max_execution_time = 300000"); // MySQL
+            } catch (Exception $e) { /* Ignorar si no tiene permisos */ }
         }
 
 		ob_start(); // Capturar cualquier salida accidental (warnings/notices)
@@ -147,15 +149,7 @@ try {
                 MAX(v.MontoFactura) as TotalPedido, 
                 v.local
             FROM VentasGlobalesAccessCSV v
-            -- OPTIMIZACIÓN: Solo procesamos pedidos que sabemos son de SOCIOS
-            -- Si hay sucursal, usamos IN (SELECT) para que MySQL use el índice de CodCliente directamente
-            INNER JOIN (
-                SELECT DISTINCT v2.local, v2.CodPedido 
-                FROM VentasGlobalesAccessCSV v2
-                WHERE v2.CodCliente > 0 AND v2.Anulado = 0
-                " . ($sucursal && $sucursal !== 'todas' ? "AND v2.CodCliente IN (SELECT membresia FROM clientesclub WHERE sucursal = :mo_suc_local)" : "") . "
-            ) mo ON v.local = mo.local AND v.CodPedido = mo.CodPedido
-            WHERE v.Anulado = 0
+            WHERE v.Anulado = 0 AND v.CodCliente > 0
             GROUP BY v.local, v.CodPedido
         ) r
         LEFT JOIN clientesclub c ON r.CodCliente = c.membresia
@@ -163,9 +157,9 @@ try {
     ";
 
     if ($sucursal && $sucursal !== 'todas') {
-        $sqlRFM .= " WHERE c.sucursal = :suc_local";
+        // OPTIMIZACIÓN: Filtrar por socios de la sucursal usando el índice de CodCliente
+        $sqlRFM .= " WHERE r.CodCliente IN (SELECT membresia FROM clientesclub WHERE sucursal = :suc_local)";
         $paramsRFM[':suc_local'] = $codigo_local;
-        $paramsRFM[':mo_suc_local'] = $codigo_local;
     }
 
     $sqlRFM .= " GROUP BY r.CodCliente $havingRFM";
