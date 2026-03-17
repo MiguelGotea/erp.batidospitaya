@@ -16,8 +16,19 @@ $informe_id = $_POST['informe_id'] ?? null;
 $km_final = $_POST['km_final'] ?? null;
 
 if (!$informe_id || !$km_final) {
-    echo json_encode(['success' => false, 'message' => 'Faltan datos para el cierre de jornada']);
+    echo json_encode(['success' => false, 'message' => 'Faltan datos para el cierre del informe']);
     exit;
+}
+
+// Validar que todas las visitas tengan hora_salida y materiales_stock
+$informeData = $ticketModel->getDetalleInformeCompleto($informe_id);
+if ($informeData) {
+    foreach ($informeData['visitas'] as $v) {
+        if (!$v['hora_salida'] || !$v['materiales_stock']) {
+            echo json_encode(['success' => false, 'message' => 'Todas las visitas deben tener registrada la hora de salida y los materiales usados antes de finalizar el informe.']);
+            exit;
+        }
+    }
 }
 
 $foto_nombre = null;

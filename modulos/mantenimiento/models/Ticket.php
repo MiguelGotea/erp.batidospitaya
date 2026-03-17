@@ -579,5 +579,23 @@ class Ticket
         
         return $this->db->fetchAll($sql, $params);
     }
+
+    /**
+     * Actualizar hora de salida de una visita
+     */
+    public function actualizarHoraSalida($visita_id, $hora_salida)
+    {
+        $sql = "UPDATE mtto_informe_visitas SET hora_salida = ? WHERE id = ?";
+        return $this->db->query($sql, [$hora_salida, $visita_id]);
+    }
+
+    /**
+     * Actualizar materiales usados de una visita
+     */
+    public function actualizarMateriales($visita_id, $materiales)
+    {
+        $sql = "UPDATE mtto_informe_visitas SET materiales_stock = ? WHERE id = ?";
+        return $this->db->query($sql, [$materiales, $visita_id]);
+    }
 }
 ?>

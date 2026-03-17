@@ -4,9 +4,6 @@ let activeStream = null;
 let currentCameraTarget = null;
 let fotosEvidenciaTmp = []; // Almacena fotos (file o base64) para la tarea actual
 
-/**
- * Abre el modal para iniciar la jornada
- */
 function modalApertura() {
     $('#formApertura')[0].reset();
     $('#preview_apertura').addClass('d-none');
@@ -16,9 +13,6 @@ function modalApertura() {
     modal.show();
 }
 
-/**
- * Guarda el inicio de jornada (KM inicial)
- */
 async function guardarApertura() {
     const form = document.getElementById('formApertura');
     if (!form.checkValidity()) {
@@ -35,7 +29,7 @@ async function guardarApertura() {
     }
 
     Swal.fire({
-        title: 'Iniciando jornada...',
+        title: 'Iniciando reporte...',
         allowOutsideClick: false,
         didOpen: () => { Swal.showLoading(); }
     });
@@ -48,7 +42,7 @@ async function guardarApertura() {
         const res = await response.json();
 
         if (res.success) {
-            Swal.fire('¡Éxito!', 'Jornada iniciada correctamente', 'success').then(() => {
+            Swal.fire('¡Éxito!', 'Informe iniciado correctamente', 'success').then(() => {
                 location.reload();
             });
         } else {
@@ -69,9 +63,6 @@ function modalNuevaVisita(informeId) {
     modal.show();
 }
 
-/**
- * Guarda la visita a sucursal
- */
 async function guardarVisita() {
     const form = document.getElementById('formVisita');
     if (!form.checkValidity()) {
@@ -81,7 +72,7 @@ async function guardarVisita() {
 
     const formData = new FormData(form);
 
-    Swal.fire({ title: 'Registrando parada...', didOpen: () => Swal.showLoading() });
+    Swal.fire({ title: 'Registrando visita...', didOpen: () => Swal.showLoading() });
 
     try {
         const response = await fetch('ajax/guardar_visita.php', {
@@ -90,7 +81,72 @@ async function guardarVisita() {
         });
         const res = await response.json();
         if (res.success) {
-            Swal.fire('Registrado', 'Parada guardada con éxito', 'success').then(() => location.reload());
+            Swal.fire('Registrado', 'Visita guardada con éxito', 'success').then(() => location.reload());
+        } else {
+            Swal.fire('Error', res.message, 'error');
+        }
+    } catch (e) {
+        Swal.fire('Error', e.message, 'error');
+    }
+}
+
+/**
+ * Lógica para registrar salida y materiales posteriormente
+ */
+function modalRegistrarSalida(visitaId) {
+    $('#salida_visita_id').val(visitaId);
+    $('#formSalida')[0].reset();
+    const modal = new bootstrap.Modal(document.getElementById('salidaModal'));
+    modal.show();
+}
+
+async function guardarSalida() {
+    const form = document.getElementById('formSalida');
+    const formData = new FormData(form);
+    
+    Swal.fire({ title: 'Guardando salida...', didOpen: () => Swal.showLoading() });
+    
+    try {
+        const response = await fetch('ajax/actualizar_hora_salida.php', {
+            method: 'POST',
+            body: formData
+        });
+        const res = await response.json();
+        if (res.success) {
+            Swal.fire('Éxito', 'Hora de salida registrada', 'success').then(() => location.reload());
+        } else {
+            Swal.fire('Error', res.message, 'error');
+        }
+    } catch (e) {
+        Swal.fire('Error', e.message, 'error');
+    }
+}
+
+function modalRegistrarMateriales(visitaId) {
+    $('#materiales_visita_id').val(visitaId);
+    $('#formMateriales')[0].reset();
+    const modal = new bootstrap.Modal(document.getElementById('materialesModal'));
+    modal.show();
+}
+
+async function guardarMateriales() {
+    const form = document.getElementById('formMateriales');
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+    const formData = new FormData(form);
+    
+    Swal.fire({ title: 'Guardando materiales...', didOpen: () => Swal.showLoading() });
+    
+    try {
+        const response = await fetch('ajax/actualizar_materiales.php', {
+            method: 'POST',
+            body: formData
+        });
+        const res = await response.json();
+        if (res.success) {
+            Swal.fire('Éxito', 'Materiales registrados correctamente', 'success').then(() => location.reload());
         } else {
             Swal.fire('Error', res.message, 'error');
         }
@@ -325,13 +381,27 @@ async function guardarCierre() {
         return;
     }
 
+    // Validación de campos obligatorios en visitas (Salida y Materiales)
+    const btnSalida = document.querySelector('button[onclick^="modalRegistrarSalida"]');
+    const btnMat = document.querySelector('button[onclick^="modalRegistrarMateriales"]');
+    
+    if (btnSalida || btnMat) {
+        Swal.fire({
+            title: 'Informe Incompleto',
+            text: 'Todas las visitas deben tener registrada la Hora de Salida y los Materiales de Stock antes de finalizar.',
+            icon: 'warning',
+            confirmButtonColor: '#0E544C'
+        });
+        return;
+    }
+
     const formData = new FormData(form);
     if (!formData.get('km_foto_final').name && !formData.get('km_foto_final_cam')) {
         Swal.fire('Error', 'Debe adjuntar foto del kilometraje final', 'error');
         return;
     }
 
-    Swal.fire({ title: 'Cerrando jornada...', didOpen: () => Swal.showLoading() });
+    Swal.fire({ title: 'Finalizando informe...', didOpen: () => Swal.showLoading() });
 
     try {
         const response = await fetch('ajax/finalizar_informe_diario.php', {
@@ -340,7 +410,7 @@ async function guardarCierre() {
         });
         const res = await response.json();
         if (res.success) {
-            Swal.fire('Jornada Cerrada', 'El informe ha sido finalizado correctamente', 'success').then(() => {
+            Swal.fire('Informe Finalizado', 'El informe ha sido cerrado correctamente', 'success').then(() => {
                 location.reload();
             });
         } else {

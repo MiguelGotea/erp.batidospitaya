@@ -83,13 +83,7 @@ if ($colaborador_filtro) {
             <div class="container-fluid p-3">
                 <div class="container">
                     
-                    <div class="d-flex justify-content-between align-items-center mb-4">
-                        <div></div>
-                        <div class="text-end">
-                            <span class="text-muted small">Colaborador:</span>
-                            <span class="fw-bold"><?= htmlspecialchars($usuario['Nombre'] . ' ' . $usuario['Apellido']) ?></span>
-                        </div>
-                    </div>
+                    <div class="mb-4"></div>
 
                     <!-- PANEL DE CONTROL DEL INFORME -->
                         <div class="report-status-card mb-4 p-4 rounded-4 shadow-sm border-0 
@@ -99,17 +93,17 @@ if ($colaborador_filtro) {
                                 <div>
                                     <h4 class="mb-1">
                                         <i class="fas fa-clipboard-list me-2"></i>
-                                        Jornada del <?= date('d/m/Y') ?>
+                                        Informe de <?= htmlspecialchars($usuario['Nombre'] . ' ' . $usuario['Apellido']) ?> - <?= date('d/m/Y') ?>
                                     </h4>
                                     <p class="mb-0 text-muted">
                                         <?php if (!$informeActual): ?>
                                             <span class="badge bg-secondary">Sin Iniciar</span>
-                                            Debe abrir su jornada registrando el kilometraje inicial.
+                                            Debe abrir su informe registrando el kilometraje inicial.
                                         <?php elseif ($informeActual['estado'] === 'creado'): ?>
                                             <span class="badge bg-primary">En Transcurso (Abierto)</span>
                                             Puede registrar visitas, compras y tareas.
                                         <?php else: ?>
-                                            <span class="badge bg-success">Jornada Finalizada</span>
+                                            <span class="badge bg-success">Informe Finalizado</span>
                                             El informe está cerrado y no admite ediciones.
                                         <?php endif; ?>
                                     </p>
@@ -118,11 +112,11 @@ if ($colaborador_filtro) {
                                 <div class="d-flex gap-2">
                                     <?php if (!$informeActual && $colaborador_filtro == $usuario['CodOperario']): ?>
                                         <button class="btn btn-primary px-4 rounded-pill" onclick="modalApertura()">
-                                            <i class="fas fa-play me-2"></i>Iniciar Jornada
+                                            <i class="fas fa-play me-2"></i>Iniciar Informe
                                         </button>
                                     <?php elseif ($informeActual && $informeActual['estado'] === 'creado' && $colaborador_filtro == $usuario['CodOperario']): ?>
                                         <button class="btn btn-outline-danger px-4 rounded-pill" onclick="modalCierre(<?= $informeActual['id'] ?>)">
-                                            <i class="fas fa-stop me-2"></i>Finalizar Jornada
+                                            <i class="fas fa-stop me-2"></i>Finalizar Informe
                                         </button>
                                     <?php endif; ?>
 
@@ -251,6 +245,32 @@ if ($colaborador_filtro) {
                                                                 <p class="mb-0 text-muted"><?= htmlspecialchars($v['materiales_stock']) ?></p>
                                                             </div>
                                                         <?php endif; ?>
+
+                                                        <div class="visita-footer mt-3 pt-3 border-top d-flex gap-2">
+                                                            <?php if (!$v['hora_salida'] && $informeActual['estado'] === 'creado' && $colaborador_filtro == $usuario['CodOperario']): ?>
+                                                                <button class="btn btn-sm btn-outline-info rounded-pill px-3" onclick="modalRegistrarSalida(<?= $v['id'] ?>)">
+                                                                    <i class="fas fa-sign-out-alt me-1"></i>Registrar Salida
+                                                                </button>
+                                                            <?php endif; ?>
+                                                            <?php if (!$v['materiales_stock'] && $informeActual['estado'] === 'creado' && $colaborador_filtro == $usuario['CodOperario']): ?>
+                                                                <button class="btn btn-sm btn-outline-secondary rounded-pill px-3" onclick="modalRegistrarMateriales(<?= $v['id'] ?>)">
+                                                                    <i class="fas fa-box-open me-1"></i>Materiales Stock
+                                                                </button>
+                                                            <?php endif; ?>
+                                                        </div>
+
+                                                        <div class="visita-footer mt-3 pt-3 border-top d-flex gap-2">
+                                                            <?php if (!$v['hora_salida'] && $informeActual['estado'] === 'creado' && $colaborador_filtro == $usuario['CodOperario']): ?>
+                                                                <button class="btn btn-sm btn-outline-info rounded-pill px-3" onclick="modalRegistrarSalida(<?= $v['id'] ?>)">
+                                                                    <i class="fas fa-sign-out-alt me-1"></i>Registrar Salida
+                                                                </button>
+                                                            <?php endif; ?>
+                                                            <?php if (!$v['materiales_stock'] && $informeActual['estado'] === 'creado' && $colaborador_filtro == $usuario['CodOperario']): ?>
+                                                                <button class="btn btn-sm btn-outline-secondary rounded-pill px-3" onclick="modalRegistrarMateriales(<?= $v['id'] ?>)">
+                                                                    <i class="fas fa-box-open me-1"></i>Materiales Stock
+                                                                </button>
+                                                            <?php endif; ?>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             <?php endforeach; ?>
@@ -297,7 +317,7 @@ if ($colaborador_filtro) {
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content shadow-premium border-0 overflow-hidden rounded-4">
                 <div class="modal-header bg-primary text-white p-3 px-4 border-0">
-                    <h5 class="modal-title fw-bold"><i class="fas fa-play me-2"></i>Apertura de Jornada</h5>
+                    <h5 class="modal-title fw-bold"><i class="fas fa-play me-2"></i>Apertura de Informe</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body p-4">
@@ -568,5 +588,59 @@ if ($colaborador_filtro) {
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="js/agenda_colaborador.js?v=<?php echo mt_rand(1, 10000); ?>"></script>
+    <!-- MODAL REGISTRAR SALIDA -->
+    <div class="modal fade" id="salidaModal" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content shadow-premium border-0 rounded-4">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title fw-bold text-info"><i class="fas fa-sign-out-alt me-2"></i>Registrar Hora de Salida</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4 pt-0">
+                    <form id="formSalida">
+                        <input type="hidden" name="visita_id" id="salida_visita_id">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Hora de Salida *</label>
+                            <input type="time" class="form-control form-control-lg rounded-3" name="hora_salida" required value="<?= date('H:i') ?>">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-0 p-3 px-4 pb-4">
+                    <button type="button" class="btn btn-link link-secondary text-decoration-none" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-info text-white rounded-pill px-4" onclick="guardarSalida()">
+                        Guardar Salida
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL REGISTRAR MATERIALES -->
+    <div class="modal fade" id="materialesModal" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content shadow-premium border-0 rounded-4">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title fw-bold text-secondary"><i class="fas fa-box-open me-2"></i>Materiales de Stock Usados</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4 pt-0">
+                    <form id="formMateriales">
+                        <input type="hidden" name="visita_id" id="materiales_visita_id">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Listado de Materiales *</label>
+                            <textarea class="form-control rounded-3" name="materiales_stock" rows="4" required placeholder="Escriba aquí los materiales utilizados de su propio stock..."></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-0 p-3 px-4 pb-4">
+                    <button type="button" class="btn btn-link link-secondary text-decoration-none" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-secondary rounded-pill px-4" onclick="guardarMateriales()">
+                        Guardar Materiales
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </body>
 </html>
