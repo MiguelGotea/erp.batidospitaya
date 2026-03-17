@@ -368,5 +368,172 @@ class Ticket
 
         return $this->db->fetchAll($sql, [$year]);
     }
+
+    // --- NUEVAS FUNCIONES PARA INFORMES DIARIOS v4 ---
+
+    /**
+     * Obtener el informe diario actual de un colaborador para una fecha específica
+     */
+    public function getInformeDiarioPorFecha($cod_operario, $fecha)
+    {
+        $sql = "SELECT * FROM mtto_informes_diarios 
+                WHERE cod_operario = ? AND fecha = ?";
+        return $this->db->fetchOne($sql, [$cod_operario, $fecha]);
+    }
+
+    /**
+     * Crear un nuevo informe diario
+     */
+    public function crearInformeDiario($data)
+    {
+        $sql = "INSERT INTO mtto_informes_diarios (cod_operario, fecha, km_inicial, km_foto_inicial, estado) 
+                VALUES (?, ?, ?, ?, 'creado')";
+        $this->db->query($sql, [
+            $data['cod_operario'],
+            $data['fecha'],
+            $data['km_inicial'],
+            $data['km_foto_inicial']
+        ]);
+        return $this->db->lastInsertId();
+    }
+
+    /**
+     * Finalizar un informe diario (bloquea ediciones)
+     */
+    public function finalizarInformeDiario($informe_id, $data)
+    {
+        $sql = "UPDATE mtto_informes_diarios SET 
+                km_final = ?, 
+                km_foto_final = ?, 
+                estado = 'finalizado',
+                updated_at = CURRENT_TIMESTAMP
+                WHERE id = ?";
+        return $this->db->query($sql, [
+            $data['km_final'],
+            $data['km_foto_final'],
+            $informe_id
+        ]);
+    }
+
+    /**
+     * Agregar una visita a sucursal al informe
+     */
+    public function agregarVisita($informe_id, $data)
+    {
+        $sql = "INSERT INTO mtto_informe_visitas (informe_id, cod_sucursal, hora_llegada, hora_salida, materiales_stock) 
+                VALUES (?, ?, ?, ?, ?)";
+        $this->db->query($sql, [
+            $informe_id,
+            $data['cod_sucursal'],
+            $data['hora_llegada'],
+            $data['hora_salida'] ?? null,
+            $data['materiales_stock'] ?? ''
+        ]);
+        return $this->db->lastInsertId();
+    }
+
+    /**
+     * Agregar una compra/factura a una visita
+     */
+    public function agregarCompra($visita_id, $data)
+    {
+        $sql = "INSERT INTO mtto_informe_compras (visita_id, foto_factura, monto, detalle) 
+                VALUES (?, ?, ?, ?)";
+        return $this->db->query($sql, [
+            $visita_id,
+            $data['foto_factura'],
+            $data['monto'],
+            $data['detalle']
+        ]);
+    }
+
+    /**
+     * Registrar una tarea realizada en una visita
+     */
+    public function registrarTareaInforme($visita_id, $data)
+    {
+        $sql = "INSERT INTO mtto_informe_tareas (visita_id, ticket_id, completado_100, trabajo_realizado) 
+                VALUES (?, ?, ?, ?)";
+        $this->db->query($sql, [
+            $visita_id,
+            $data['ticket_id'],
+            $data['completado_100'],
+            $data['trabajo_realizado']
+        ]);
+        $tarea_id = $this->db->lastInsertId();
+
+        // Actualizar el ticket original:
+        // Si completado_100 es 1, status = finalizado. Si es 0, status = agendado (vuelve al flujo).
+        $status = $data['completado_100'] ? 'finalizado' : 'agendado';
+        $updateSql = "UPDATE mtto_tickets SET status = ?, fecha_finalizacion = CURRENT_TIMESTAMP WHERE id = ?";
+        $this->db->query($updateSql, [$status, $data['ticket_id']]);
+
+        return $tarea_id;
+    }
+
+    /**
+     * Agregar fotos de evidencia a una tarea de informe
+     */
+    public function agregarFotosTareaInforme($tarea_id, $fotos)
+    {
+        $sql = "INSERT INTO mtto_informe_tareas_fotos (tarea_id, foto, orden) VALUES (?, ?, ?)";
+        foreach ($fotos as $idx => $foto) {
+            $this->db->query($sql, [$tarea_id, $foto, $idx]);
+        }
+    }
+
+    /**
+     * Obtener el detalle completo de un informe diario para impresión/visualización
+     */
+    public function getDetalleInformeCompleto($informe_id)
+    {
+        // Info básica
+        $sql = "SELECT i.*, o.Nombre, o.Apellido 
+                FROM mtto_informes_diarios i
+                LEFT JOIN Operarios o ON i.cod_operario = o.CodOperario
+                WHERE i.id = ?";
+        $informe = $this->db->fetchOne($sql, [$informe_id]);
+
+        if (!$informe) return null;
+
+        // Visitas
+        $sqlV = "SELECT v.*, s.nombre as nombre_sucursal, s.departamento as departamento_sucursal
+                 FROM mtto_informe_visitas v
+                 LEFT JOIN sucursales s ON v.cod_sucursal = s.codigo
+                 WHERE v.informe_id = ?
+                 ORDER BY v.created_at ASC";
+        $visitas = $this->db->fetchAll($sqlV, [$informe_id]);
+
+        foreach ($visitas as &$visita) {
+            // Compras por visita
+            $sqlC = "SELECT * FROM mtto_informe_compras WHERE visita_id = ?";
+            $visita['compras'] = $this->db->fetchAll($sqlC, [$visita['id']]);
+
+            // Tareas por visita
+            $sqlT = "SELECT it.*, t.codigo, t.titulo 
+                     FROM mtto_informe_tareas it
+                     INNER JOIN mtto_tickets t ON it.ticket_id = t.id
+                     WHERE it.visita_id = ?";
+            $tareas = $this->db->fetchAll($sqlT, [$visita['id']]);
+
+            foreach ($tareas as &$tarea) {
+                $sqlF = "SELECT * FROM mtto_informe_tareas_fotos WHERE tarea_id = ? ORDER BY orden ASC";
+                $tarea['fotos'] = $this->db->fetchAll($sqlF, [$tarea['id']]);
+            }
+            $visita['tareas'] = $tareas;
+        }
+
+        $informe['visitas'] = $visitas;
+        return $informe;
+    }
+
+    /**
+     * Actualizar datos de caja chica (Admin)
+     */
+    public function actualizarCajaChica($informe_id, $monto, $foto)
+    {
+        $sql = "UPDATE mtto_informes_diarios SET monto_caja_chica = ?, foto_caja_chica = ? WHERE id = ?";
+        return $this->db->query($sql, [$monto, $foto, $informe_id]);
+    }
 }
 ?>

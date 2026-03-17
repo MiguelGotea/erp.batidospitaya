@@ -1,5 +1,5 @@
 <?php
-
+// agenda_colaborador.php
 
 require_once 'models/Ticket.php';
 require_once '../../core/auth/auth.php';
@@ -16,26 +16,43 @@ if (!tienePermiso('agenda_mantenimiento', 'vista', $cargoOperario)) {
     exit();
 }
 
-$ticket = new Ticket();
+$ticketModel = new Ticket();
+$fechaHoy = date('Y-m-d');
 
 // Verificar si tiene permiso para ver todos los colaboradores
 $puedeVerTodosColaboradores = tienePermiso('agenda_mantenimiento', 'todos_colaboradores', $cargoOperario);
 
 if ($puedeVerTodosColaboradores) {
-    // Mostrar selector de colaboradores
-    $colaboradoresDisponibles = $ticket->getColaboradoresAsignados();
+    $colaboradoresDisponibles = $ticketModel->getColaboradoresAsignados();
     $colaborador_filtro = isset($_GET['colaborador']) ? intval($_GET['colaborador']) : null;
 } else {
-    // Filtrar automáticamente por el colaborador logueado
     $colaborador_filtro = $usuario['CodOperario'];
     $colaboradoresDisponibles = [];
 }
 
-// Obtener tickets del colaborador
-$tickets = [];
+// Obtener informe del día para el colaborador seleccionado
+$informeActual = null;
 if ($colaborador_filtro) {
-    $tickets = $ticket->getTicketsPorColaborador($colaborador_filtro, "2016-01-01");
+    $informeActual = $ticketModel->getInformeDiarioPorFecha($colaborador_filtro, $fechaHoy);
+    if ($informeActual) {
+        $informeActual = $ticketModel->getDetalleInformeCompleto($informeActual['id']);
+    }
 }
+
+// Obtener sucursales para el selector de visitas
+$sucursales = $ticketModel->getSucursales();
+
+// Obtener tickets pendientes (agendados) del colaborador
+$ticketsPendientes = [];
+if ($colaborador_filtro) {
+    $todosTickets = $ticketModel->getTicketsPorColaborador($colaborador_filtro, "2016-01-01");
+    foreach ($todosTickets as $t) {
+        if ($t['status'] === 'agendado') {
+            $ticketsPendientes[] = $t;
+        }
+    }
+}
+
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -43,14 +60,16 @@ if ($colaborador_filtro) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Agenda de Colaboradores</title>
+    <title>Agenda e Informe Diario</title>
 
     <link rel="icon" href="../../core/assets/img/icon12.png" type="image/png">
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <link rel="stylesheet" href="/assets/css/global_tools.css?v=<?php echo mt_rand(1, 10000); ?>">
     <link rel="stylesheet" href="css/agenda_colaborador.css?v=<?php echo mt_rand(1, 10000); ?>">
+    <link rel="stylesheet" href="../../core/assets/css/modales_premium.css">
 </head>
 
 <body>
@@ -58,16 +77,17 @@ if ($colaborador_filtro) {
 
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, 'Agenda Diaria'); ?>
+            <?php echo renderHeader($usuario, false, 'Informe Diario de Mantenimiento'); ?>
 
             <div class="container-fluid p-3">
                 <div class="container">
+                    
+                    <!-- Filtro Colaborador -->
                     <?php if ($puedeVerTodosColaboradores): ?>
-                        <!-- Selector de colaboradores (solo si tiene permiso) -->
-                        <div class="filter-section">
+                        <div class="filter-section mb-4">
                             <form method="GET" class="row g-3">
                                 <div class="col-md-8">
-                                    <select name="colaborador" class="form-select" required>
+                                    <select name="colaborador" class="form-select border-0 shadow-sm" required>
                                         <option value="">Seleccionar colaborador...</option>
                                         <?php foreach ($colaboradoresDisponibles as $col): ?>
                                             <option value="<?= $col['CodOperario'] ?>"
@@ -78,8 +98,8 @@ if ($colaborador_filtro) {
                                     </select>
                                 </div>
                                 <div class="col-md-4">
-                                    <button type="submit" class="btn btn-light w-100">
-                                        <i class="fas fa-search me-2"></i>Buscar
+                                    <button type="submit" class="btn btn-light w-100 shadow-sm">
+                                        <i class="fas fa-search me-2"></i>Ver Agenda
                                     </button>
                                 </div>
                             </form>
@@ -87,417 +107,492 @@ if ($colaborador_filtro) {
                     <?php endif; ?>
 
                     <?php if ($colaborador_filtro): ?>
+                        <!-- PANEL DE CONTROL DEL INFORME -->
+                        <div class="report-status-card mb-4 p-4 rounded-4 shadow-sm border-0 
+                            <?= !$informeActual ? 'bg-light' : ($informeActual['estado'] === 'creado' ? 'bg-primary bg-opacity-10' : 'bg-success bg-opacity-10') ?>">
+                            
+                            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                                <div>
+                                    <h4 class="mb-1">
+                                        <i class="fas fa-clipboard-list me-2"></i>
+                                        Jornada del <?= date('d/m/Y') ?>
+                                    </h4>
+                                    <p class="mb-0 text-muted">
+                                        <?php if (!$informeActual): ?>
+                                            <span class="badge bg-secondary">Sin Iniciar</span>
+                                            Debe abrir su jornada registrando el kilometraje inicial.
+                                        <?php elseif ($informeActual['estado'] === 'creado'): ?>
+                                            <span class="badge bg-primary">En Transcurso (Abierto)</span>
+                                            Puede registrar visitas, compras y tareas.
+                                        <?php else: ?>
+                                            <span class="badge bg-success">Jornada Finalizada</span>
+                                            El informe está cerrado y no admite ediciones.
+                                        <?php endif; ?>
+                                    </p>
+                                </div>
 
-                        <?php if (empty($tickets)): ?>
-                            <div class="text-center py-5">
-                                <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
-                                <p class="text-muted">No hay tickets asignados a este colaborador</p>
+                                <div class="d-flex gap-2">
+                                    <?php if (!$informeActual && $colaborador_filtro == $usuario['CodOperario']): ?>
+                                        <button class="btn btn-primary px-4 rounded-pill" onclick="modalApertura()">
+                                            <i class="fas fa-play me-2"></i>Iniciar Jornada
+                                        </button>
+                                    <?php elseif ($informeActual && $informeActual['estado'] === 'creado' && $colaborador_filtro == $usuario['CodOperario']): ?>
+                                        <button class="btn btn-outline-danger px-4 rounded-pill" onclick="modalCierre(<?= $informeActual['id'] ?>)">
+                                            <i class="fas fa-stop me-2"></i>Finalizar Jornada
+                                        </button>
+                                    <?php endif; ?>
+
+                                    <?php if ($informeActual): ?>
+                                        <a href="imprimir_informe.php?id=<?= $informeActual['id'] ?>" target="_blank" class="btn btn-dark px-4 rounded-pill">
+                                            <i class="fas fa-print me-2"></i>Imprimir Reporte
+                                        </a>
+                                    <?php endif; ?>
+                                </div>
                             </div>
-                        <?php else: ?>
-                            <div class="ticket-list">
-                                <?php foreach ($tickets as $t): ?>
-                                    <?php
-                                    $borderClass = $t['tipo_formulario'] === 'cambio_equipos' ?
-                                        'ticket-equipos' :
-                                        'ticket-urgencia-' . ($t['nivel_urgencia'] ?? '0');
-                                    $finalizado = $t['status'] === 'finalizado';
-                                    $fotos = $ticket->getFotos($t['id']);
-                                    ?>
-                                    <div class="ticket-card <?= $borderClass ?> <?= $finalizado ? 'ticket-finalizado' : '' ?>">
-                                        <div class="ticket-header">
-                                            <div class="ticket-date">
-                                                <i class="fas fa-calendar me-1"></i>
-                                                <?= date('d/m/Y', strtotime($t['fecha_inicio'])) ?>
-                                                <?php if ($t['fecha_final'] != $t['fecha_inicio']): ?>
-                                                    - <?= date('d/m', strtotime($t['fecha_final'])) ?>
-                                                <?php endif; ?>
-                                            </div>
 
-                                            <span class="ticket-sucursal">
-                                                <i class="fas fa-map-marker-alt me-1"></i>
-                                                <?= htmlspecialchars($t['nombre_sucursal']) ?>
-                                            </span>
-                                        </div>
-
-                                        <div class="ticket-title">
-                                            <i
-                                                class="fas fa-<?= $t['tipo_formulario'] === 'cambio_equipos' ? 'laptop' : 'tools' ?> me-1"></i>
-                                            <?= htmlspecialchars($t['titulo']) ?>
-                                        </div>
-
-                                        <div class="ticket-desc">
-                                            <?= htmlspecialchars($t['descripcion']) ?>
-                                        </div>
-
-                                        <div class="ticket-footer">
-                                            <div class="fotos-preview">
-                                                <?php if (!empty($fotos)): ?>
-
-                                                    <?php foreach (array_slice($fotos, 0, 3) as $foto): ?>
-                                                        <img src="uploads/tickets/<?= $foto['foto'] ?>" class="foto-thumb"
-                                                            onclick="mostrarFotosTicket(<?= $t['id'] ?>)">
-                                                    <?php endforeach; ?>
-                                                    <?php if (count($fotos) > 3): ?>
-                                                        <div class="foto-thumb d-flex align-items-center justify-content-center"
-                                                            style="background: #f8f9fa; border: 1px solid #dee2e6; font-size: 0.75em; font-weight: bold; color: #6c757d;"
-                                                            onclick="mostrarFotosTicket(<?= $t['id'] ?>)">
-                                                            +<?= count($fotos) - 3 ?>
-                                                        </div>
-                                                    <?php endif; ?>
-                                                <?php endif; ?>
-                                            </div>
-                                            <?php if (!$finalizado): ?>
-                                                <button class="btn-finalizar" onclick="abrirModalFinalizar(<?= $t['id'] ?>)">
-                                                    <i class="fas fa-check-circle me-1"></i>Finalizar
-                                                </button>
-                                            <?php endif; ?>
-                                        </div>
+                            <?php if ($informeActual): ?>
+                                <hr class="my-3 opacity-10">
+                                <div class="row g-4 text-center">
+                                    <div class="col-6 col-md-3 border-end">
+                                        <small class="text-muted d-block">KM Inicial</small>
+                                        <span class="fw-bold"><?= number_format($informeActual['km_inicial'], 2) ?></span>
                                     </div>
-                                <?php endforeach; ?>
+                                    <div class="col-6 col-md-3 border-end">
+                                        <small class="text-muted d-block">Caja Chica</small>
+                                        <span class="fw-bold fs-5 text-success">$<?= number_format($informeActual['monto_caja_chica'], 2) ?></span>
+                                    </div>
+                                    <div class="col-6 col-md-3 border-end">
+                                        <small class="text-muted d-block">Sucursales Visitas</small>
+                                        <span class="fw-bold"><?= count($informeActual['visitas']) ?></span>
+                                    </div>
+                                    <div class="col-6 col-md-3">
+                                        <small class="text-muted d-block">Tareas Hechas</small>
+                                        <?php 
+                                            $totalT = 0; 
+                                            foreach($informeActual['visitas'] as $v) $totalT += count($v['tareas']); 
+                                        ?>
+                                        <span class="fw-bold"><?= $totalT ?></span>
+                                    </div>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+
+                        <!-- LISTA DE VISITAS/PROGRESO -->
+                        <?php if ($informeActual): ?>
+                            <div class="row">
+                                <div class="col-lg-8">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <h5><i class="fas fa-map-marker-alt text-danger me-2"></i>Mis Visitas del Día</h5>
+                                        <?php if ($informeActual['estado'] === 'creado' && $colaborador_filtro == $usuario['CodOperario']): ?>
+                                            <button class="btn btn-sm btn-primary rounded-pill" onclick="modalNuevaVisita(<?= $informeActual['id'] ?>)">
+                                                <i class="fas fa-plus me-1"></i>Agregar Sucursal
+                                            </button>
+                                        <?php endif; ?>
+                                    </div>
+
+                                    <div class="visitas-timeline">
+                                        <?php if (empty($informeActual['visitas'])): ?>
+                                            <div class="alert alert-light border text-center py-4 rounded-4">
+                                                <i class="fas fa-truck-loading fa-2x text-muted mb-2"></i>
+                                                <p class="text-muted mb-0">Aún no has registrado visitas a sucursales hoy.</p>
+                                            </div>
+                                        <?php else: ?>
+                                            <?php foreach ($informeActual['visitas'] as $v): ?>
+                                                <div class="visita-item card border-0 shadow-sm mb-4 rounded-4 overflow-hidden">
+                                                    <div class="card-header bg-white border-bottom-0 pt-3 px-4 d-flex justify-content-between align-items-start">
+                                                        <div>
+                                                            <h6 class="mb-0 text-primary fw-bold"><?= htmlspecialchars($v['nombre_sucursal']) ?></h6>
+                                                            <small class="text-muted">
+                                                                <i class="far fa-clock me-1"></i> 
+                                                                Arribo: <?= date('h:i A', strtotime($v['hora_llegada'])) ?>
+                                                                <?php if ($v['hora_salida']): ?>
+                                                                    - Salida: <?= date('h:i A', strtotime($v['hora_salida'])) ?>
+                                                                <?php endif; ?>
+                                                            </small>
+                                                        </div>
+                                                        <div class="dropdown">
+                                                            <?php if ($informeActual['estado'] === 'creado' && $colaborador_filtro == $usuario['CodOperario']): ?>
+                                                                <button class="btn btn-outline-secondary btn-sm rounded-circle" data-bs-toggle="dropdown">
+                                                                    <i class="fas fa-ellipsis-v"></i>
+                                                                </button>
+                                                                <ul class="dropdown-menu shadow border-0 rounded-3">
+                                                                    <li><a class="dropdown-item" href="#" onclick="modalNuevaTarea(<?= $v['id'] ?>)"><i class="fas fa-tools me-2 text-primary"></i>Registrar Tarea</a></li>
+                                                                    <li><a class="dropdown-item" href="#" onclick="modalNuevaCompra(<?= $v['id'] ?>)"><i class="fas fa-file-invoice-dollar me-2 text-success"></i>Subir Factura</a></li>
+                                                                    <li><hr class="dropdown-item-divider"></li>
+                                                                    <li><a class="dropdown-item text-danger" href="#" onclick="eliminarVisita(<?= $v['id'] ?>)"><i class="fas fa-trash me-2"></i>Eliminar Visita</a></li>
+                                                                </ul>
+                                                            <?php endif; ?>
+                                                        </div>
+                                                    </div>
+                                                    <div class="card-body px-4 pb-3">
+                                                        <!-- Tareas -->
+                                                        <div class="visita-tareas mb-3">
+                                                            <?php foreach ($v['tareas'] as $tarea): ?>
+                                                                <div class="p-2 border-bottom d-flex align-items-center gap-3">
+                                                                    <span class="badge bg-<?= $tarea['completado_100'] ? 'success' : 'warning text-dark' ?> rounded-pill">
+                                                                        <?= $tarea['completado_100'] ? '100% Hecho' : 'Parcial' ?>
+                                                                    </span>
+                                                                    <div class="flex-grow-1">
+                                                                        <small class="text-dark fw-bold d-block"><?= htmlspecialchars($tarea['titulo']) ?></small>
+                                                                        <small class="text-muted text-truncate d-block" style="max-width: 300px;"><?= htmlspecialchars($tarea['trabajo_realizado']) ?></small>
+                                                                    </div>
+                                                                    <div class="d-flex gap-1">
+                                                                        <?php foreach ($tarea['fotos'] as $f): ?>
+                                                                            <img src="uploads/evidencias/<?= $f['foto'] ?>" class="rounded-1" style="width: 30px; height: 30px; object-fit: cover; cursor: zoom-in;" onclick="zoomFoto(this.src)">
+                                                                        <?php endforeach; ?>
+                                                                    </div>
+                                                                </div>
+                                                            <?php endforeach; ?>
+                                                        </div>
+
+                                                        <!-- Compras -->
+                                                        <?php if (!empty($v['compras'])): ?>
+                                                            <div class="visita-compras p-2 bg-light rounded-3 mb-2">
+                                                                <small class="text-muted fw-bold d-block mb-1">FACTURAS/COMPRAS:</small>
+                                                                <?php foreach ($v['compras'] as $c): ?>
+                                                                    <div class="d-flex justify-content-between align-items-center small py-1 border-bottom border-white">
+                                                                        <span><i class="fas fa-file-invoice me-1"></i> <?= htmlspecialchars($c['detalle']) ?></span>
+                                                                        <div class="d-flex align-items-center gap-2">
+                                                                            <span class="fw-bold">$<?= number_format($c['monto'], 2) ?></span>
+                                                                            <img src="uploads/compras/<?= $c['foto_factura'] ?>" class="rounded-1" style="width: 25px; height: 25px; object-fit: cover; cursor: zoom-in;" onclick="zoomFoto(this.src)">
+                                                                        </div>
+                                                                    </div>
+                                                                <?php endforeach; ?>
+                                                            </div>
+                                                        <?php endif; ?>
+
+                                                        <?php if ($v['materiales_stock']): ?>
+                                                            <div class="mt-2 small">
+                                                                <span class="text-muted fw-bold">Materiales Stock:</span>
+                                                                <p class="mb-0 text-muted"><?= htmlspecialchars($v['materiales_stock']) ?></p>
+                                                            </div>
+                                                        <?php endif; ?>
+                                                    </div>
+                                                </div>
+                                            <?php endforeach; ?>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-4">
+                                    <h5 class="mb-3"><i class="fas fa-tasks text-primary me-2"></i>Agenda Pendiente</h5>
+                                    <div class="pending-list">
+                                        <?php if (empty($ticketsPendientes)): ?>
+                                            <div class="text-center bg-white p-4 rounded-4 shadow-sm">
+                                                <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                                                <p class="text-muted small">No hay tickets pendientes asignados.</p>
+                                            </div>
+                                        <?php else: ?>
+                                            <?php foreach ($ticketsPendientes as $tp): ?>
+                                                <div class="card border-0 shadow-sm mb-3 rounded-4 overflow-hidden border-start border-4
+                                                    <?= $tp['tipo_formulario'] === 'cambio_equipos' ? 'border-danger' : 'border-info' ?>">
+                                                    <div class="card-body p-3">
+                                                        <div class="d-flex justify-content-between mb-1">
+                                                            <small class="text-muted fw-bold"><?= htmlspecialchars($tp['nombre_sucursal']) ?></small>
+                                                            <?php if ($tp['nivel_urgencia'] == 4): ?>
+                                                                <span class="badge bg-danger rounded-pill">CRÍTICO</span>
+                                                            <?php endif; ?>
+                                                        </div>
+                                                        <h6 class="mb-1 fw-bold small"><?= htmlspecialchars($tp['titulo']) ?></h6>
+                                                        <p class="small text-muted mb-0" style="font-size: 0.8em;"><?= htmlspecialchars($tp['descripcion']) ?></p>
+                                                    </div>
+                                                </div>
+                                            <?php endforeach; ?>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
                             </div>
                         <?php endif; ?>
+
                     <?php else: ?>
                         <div class="text-center py-5">
                             <i class="fas fa-user-friends fa-3x text-muted mb-3"></i>
-                            <p class="text-muted">Selecciona un colaborador para ver su agenda</p>
+                            <p class="text-muted">Selecciona un colaborador para ver su agenda e informe diario</p>
                         </div>
                     <?php endif; ?>
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Modal para ver fotos -->
-        <div class="modal fade" id="fotosModal" tabindex="-1">
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">
-                            <i class="fas fa-images me-2"></i>
-                            Fotografías del Ticket
-                        </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body" id="fotosModalBody"></div>
+    <!-- MODAL APERTURA -->
+    <div class="modal fade" id="aperturaModal" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content shadow-premium border-0 overflow-hidden rounded-4">
+                <div class="modal-header bg-primary text-white p-3 px-4 border-0">
+                    <h5 class="modal-title fw-bold"><i class="fas fa-play me-2"></i>Apertura de Jornada</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="formApertura">
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Kilometraje Inicial *</label>
+                            <input type="number" step="0.01" class="form-control form-control-lg rounded-3" name="km_inicial" required placeholder="0.00">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Foto del Odómetro *</label>
+                            <div class="d-flex gap-2 mb-2">
+                                <button type="button" class="btn btn-outline-primary btn-sm flex-grow-1" onclick="document.getElementById('km_foto_input').click()">
+                                    <i class="fas fa-upload me-1"></i>Subir
+                                </button>
+                                <button type="button" class="btn btn-outline-success btn-sm flex-grow-1" onclick="startCamera('cam_apertura')">
+                                    <i class="fas fa-camera me-1"></i>Cámara
+                                </button>
+                            </div>
+                            <input type="file" id="km_foto_input" name="km_foto_inicial" accept="image/*" class="d-none" onchange="previewFile(this, 'preview_apertura')">
+                            <input type="hidden" name="km_foto_inicial_cam" id="cam_apertura_data">
+                            
+                            <div id="preview_apertura" class="text-center mt-2 d-none">
+                                <img src="" class="img-thumbnail rounded-3" style="max-height: 200px;">
+                            </div>
+                            <div id="cam_apertura_container" class="mt-2 d-none border rounded-3 overflow-hidden position-relative bg-black">
+                                <video id="cam_apertura_video" autoplay playsinline class="w-100"></video>
+                                <button type="button" class="btn btn-success btn-sm position-absolute bottom-0 start-50 translate-middle-x mb-2" onclick="captureSnapshot('cam_apertura')">
+                                    <i class="fas fa-circle"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-0 p-3 px-4 pb-4">
+                    <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary rounded-pill px-4" onclick="guardarApertura()">
+                        Confirmar Inicio
+                    </button>
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Modal para finalizar ticket -->
-        <div class="modal fade" id="finalizarModal" tabindex="-1">
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">
-                            <i class="fas fa-check-circle me-2"></i>
-                            Finalizar Ticket
-                        </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <form id="formFinalizar" enctype="multipart/form-data">
-                            <input type="hidden" id="ticket_id_fin" name="ticket_id">
-
-                            <div class="mb-3">
-                                <label for="detalle_trabajo" class="form-label">
-                                    <strong>Detalle del Trabajo Realizado *</strong>
-                                </label>
-                                <textarea class="form-control" id="detalle_trabajo" name="detalle_trabajo" rows="3"
-                                    required placeholder="Describe el trabajo que se realizó..."></textarea>
+    <!-- MODAL NUEVA VISITA -->
+    <div class="modal fade" id="visitaModal" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content shadow-premium border-0 rounded-4">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title fw-bold"><i class="fas fa-map-marker-alt text-danger me-2"></i>Registrar Parada</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4 pt-0">
+                    <form id="formVisita">
+                        <input type="hidden" name="informe_id" id="visita_informe_id">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Sucursal Visitada *</label>
+                            <select name="cod_sucursal" class="form-select rounded-3" required>
+                                <option value="">Seleccionar tienda...</option>
+                                <?php foreach ($sucursales as $s): ?>
+                                    <option value="<?= $s['cod_sucursal'] ?>"><?= htmlspecialchars($s['nombre_sucursal']) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="mb-3 row">
+                            <div class="col-6">
+                                <label class="form-label small fw-bold">Hora Llegada *</label>
+                                <input type="time" name="hora_llegada" class="form-control rounded-3" value="<?= date('H:i') ?>" required>
                             </div>
-
-                            <div class="mb-3">
-                                <label for="materiales_usados" class="form-label">
-                                    <strong>Materiales Utilizados *</strong>
-                                </label>
-                                <textarea class="form-control" id="materiales_usados" name="materiales_usados" rows="3"
-                                    required placeholder="Lista los materiales que se utilizaron..."></textarea>
+                            <div class="col-6">
+                                <label class="form-label small fw-bold">Hora Salida (Opcional)</label>
+                                <input type="time" name="hora_salida" class="form-control rounded-3">
                             </div>
-
-                            <div class="mb-3">
-                                <label class="form-label">
-                                    <strong>Fotos del Trabajo Finalizado (Opcional)</strong>
-                                </label>
-                                <div class="photo-options mb-2">
-                                    <button type="button" class="btn btn-sm btn-outline-primary" id="btnFileFin">
-                                        <i class="fas fa-upload me-2"></i>Subir Archivos
-                                    </button>
-                                    <button type="button" class="btn btn-sm btn-outline-success" id="btnCameraFin">
-                                        <i class="fas fa-camera me-2"></i>Tomar Foto
-                                    </button>
-                                </div>
-
-                                <input type="file" id="fotos_fin" name="fotos_fin[]" accept="image/*" multiple
-                                    style="display: none;">
-                                <input type="hidden" id="fotos_camera_fin" name="fotos_camera_fin">
-
-                                <div class="camera-preview" id="cameraPreviewFin"
-                                    style="display: none; max-width: 300px; margin: 10px 0;">
-                                    <video id="videoFin" autoplay style="width: 100%; border-radius: 8px;"></video>
-                                    <canvas id="canvasFin" style="display: none;"></canvas>
-                                </div>
-
-                                <div id="photosPreviewFin" style="display: none; margin-top: 10px;">
-                                    <div id="photosListFin" class="row g-2"></div>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="button" class="btn btn-success" onclick="finalizarTicket()">
-                            <i class="fas fa-check-circle me-2"></i>Finalizar Ticket
-                        </button>
-                    </div>
+                        </div>
+                        <div class="mb-0">
+                            <label class="form-label small fw-bold">Materiales del Stock Usados</label>
+                            <textarea name="materiales_stock" class="form-control rounded-3" rows="2" placeholder="Ej: 3 tornillos, 1m cable..."></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-0 p-3 px-4 pb-4">
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger rounded-pill px-4" onclick="guardarVisita()">Guardar Parada</button>
                 </div>
             </div>
         </div>
+    </div>
 
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- MODAL TAREA/TICKET RESULTADO -->
+    <div class="modal fade" id="tareaModal" data-bs-backdrop="static">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content shadow-premium border-0 rounded-4">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold text-primary"><i class="fas fa-tools me-2"></i>Registrar Trabajo Realizado</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4 pt-3">
+                    <form id="formTarea">
+                        <input type="hidden" name="visita_id" id="tarea_visita_id">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Seleccionar Ticket de la Agenda *</label>
+                            <select name="ticket_id" class="form-select rounded-3" required>
+                                <option value="">Lista de pendientes...</option>
+                                <?php foreach ($ticketsPendientes as $tp): ?>
+                                    <option value="<?= $tp['id'] ?>"><?= htmlspecialchars($tp['nombre_sucursal'] . ' - ' . $tp['titulo']) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Grado de Finalización *</label>
+                            <div class="btn-group w-100" role="group">
+                                <input type="radio" class="btn-check" name="completado_100" id="done100" value="1" checked>
+                                <label class="btn btn-outline-success" for="done100">Completado 100%</label>
+                                <input type="radio" class="btn-check" name="completado_100" id="donePartial" value="0">
+                                <label class="btn btn-outline-warning" for="donePartial">Parcial / Pendiente</label>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Detalle del Trabajo Realizado *</label>
+                            <textarea name="trabajo_realizado" class="form-control rounded-3" rows="3" required placeholder="Explica detalladamente qué hiciste..."></textarea>
+                        </div>
+                        
+                        <div class="mb-0">
+                            <label class="form-label small fw-bold">Fotos de Evidencia (Múltiples permitsas, mín 1) *</label>
+                            <div class="d-flex gap-2 mb-2">
+                                <button type="button" class="btn btn-sm btn-outline-primary" onclick="document.getElementById('evidencia_input').click()">
+                                    <i class="fas fa-file-image me-1"></i>Galería
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-success" onclick="startCamera('cam_evidencia')">
+                                    <i class="fas fa-camera me-1"></i>Cámara
+                                </button>
+                            </div>
+                            <input type="file" id="evidencia_input" multiple accept="image/*" class="d-none" onchange="previewEvidencia(this)">
+                            <div id="evidencia_previews" class="row g-2 mt-2"></div>
+                            
+                            <div id="cam_evidencia_container" class="mt-2 d-none border rounded-3 overflow-hidden position-relative bg-black" style="max-width: 400px; margin: 0 auto;">
+                                <video id="cam_evidencia_video" autoplay playsinline class="w-100"></video>
+                                <button type="button" class="btn btn-success btn-sm position-absolute bottom-0 start-50 translate-middle-x mb-2" onclick="captureSnapshot('cam_evidencia')">
+                                    <i class="fas fa-circle"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-0 p-3 px-4 pb-4">
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary rounded-pill px-4" onclick="guardarTarea()">Guardar Registro</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-        <script>
-            let streamFin = null;
-            let fotosFin = [];
-            const MAX_FOTOS_FIN = 5;
+    <!-- MODAL CIERRE DE JORNADA -->
+    <div class="modal fade" id="cierreModal" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content shadow-premium border-0 rounded-4">
+                <div class="modal-header bg-danger text-white p-3 px-4 border-0">
+                    <h5 class="modal-title fw-bold"><i class="fas fa-stop me-2"></i>Finalizar Jornada</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <p class="text-muted small">Al finalizar, no podrá agregar más visitas o fotos al reporte de hoy.</p>
+                    <form id="formCierre">
+                        <input type="hidden" name="informe_id" id="cierre_informe_id">
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Kilometraje Final *</label>
+                            <input type="number" step="0.01" class="form-control form-control-lg rounded-3" name="km_final" required>
+                        </div>
+                        <div class="mb-0">
+                            <label class="form-label fw-bold">Foto del Odómetro (Final) *</label>
+                            <div class="d-flex gap-2 mb-2">
+                                <button type="button" class="btn btn-outline-primary btn-sm flex-grow-1" onclick="document.getElementById('km_fin_input').click()">
+                                    <i class="fas fa-upload me-1"></i>Subir
+                                </button>
+                                <button type="button" class="btn btn-outline-success btn-sm flex-grow-1" onclick="startCamera('cam_cierre')">
+                                    <i class="fas fa-camera me-1"></i>Cámara
+                                </button>
+                            </div>
+                            <input type="file" id="km_fin_input" name="km_foto_final" accept="image/*" class="d-none" onchange="previewFile(this, 'preview_cierre')">
+                            <input type="hidden" name="km_foto_final_cam" id="cam_cierre_data">
+                            
+                            <div id="preview_cierre" class="text-center mt-2 d-none">
+                                <img src="" class="img-thumbnail rounded-3" style="max-height: 180px;">
+                            </div>
+                            <div id="cam_cierre_container" class="mt-2 d-none border rounded-3 overflow-hidden position-relative bg-black">
+                                <video id="cam_cierre_video" autoplay playsinline class="w-100"></video>
+                                <button type="button" class="btn btn-success btn-sm position-absolute bottom-0 start-50 translate-middle-x mb-2" onclick="captureSnapshot('cam_cierre')">
+                                    <i class="fas fa-circle"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-0 p-3 px-4 pb-4">
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger rounded-pill px-4" onclick="guardarCierre()">Cerrar Jornada</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-            function mostrarFotosTicket(ticketId) {
-                $.ajax({
-                    url: 'ajax/get_ticket_photos.php',
-                    method: 'GET',
-                    data: { ticket_id: ticketId },
-                    dataType: 'json',
-                    success: function (response) {
-                        if (response.success && response.fotos.length > 0) {
-                            let html = '<div id="photosCarousel" class="carousel slide" data-bs-ride="false">';
-                            html += '<div class="carousel-inner">';
+    <!-- MODAL COMPRA / FACTURA -->
+    <div class="modal fade" id="compraModal" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content shadow-premium border-0 rounded-4">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title fw-bold text-success"><i class="fas fa-file-invoice-dollar me-2"></i>Registrar Compra/Gasto</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4 pt-0">
+                    <form id="formCompra">
+                        <input type="hidden" name="visita_id" id="compra_visita_id">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Monto de la Factura *</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light">$</span>
+                                <input type="number" step="0.01" name="monto" class="form-control form-control-lg" required placeholder="0.00">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Detalle de lo Comprado *</label>
+                            <input type="text" name="detalle" class="form-control" required placeholder="Ej: Tornillería p/ estante">
+                        </div>
+                        <div class="mb-0">
+                            <label class="form-label small fw-bold">Foto de la Factura *</label>
+                            <div class="d-flex gap-2 mb-2">
+                                <button type="button" class="btn btn-sm btn-outline-primary" onclick="document.getElementById('compra_foto_input').click()">
+                                    <i class="fas fa-upload me-1"></i>Galería
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-success" onclick="startCamera('cam_compra')">
+                                    <i class="fas fa-camera me-1"></i>Cámara
+                                </button>
+                            </div>
+                            <input type="file" id="compra_foto_input" name="foto_factura" accept="image/*" class="d-none" onchange="previewFile(this, 'preview_compra')">
+                            <input type="hidden" name="foto_factura_cam" id="cam_compra_data">
+                            
+                            <div id="preview_compra" class="text-center mt-2 d-none">
+                                <img src="" class="img-thumbnail rounded-3" style="max-height: 150px;">
+                            </div>
+                            <div id="cam_compra_container" class="mt-2 d-none border rounded-3 overflow-hidden position-relative bg-black">
+                                <video id="cam_compra_video" autoplay playsinline class="w-100"></video>
+                                <button type="button" class="btn btn-success btn-sm position-absolute bottom-0 start-50 translate-middle-x mb-2" onclick="captureSnapshot('cam_compra')">
+                                    <i class="fas fa-circle"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-0 p-3 px-4 pb-4">
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-success rounded-pill px-4" onclick="guardarCompra()">Guardar Factura</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-                            response.fotos.forEach((foto, index) => {
-                                html += `<div class="carousel-item ${index === 0 ? 'active' : ''}">
-                                <img src="uploads/tickets/${foto.foto}" class="d-block w-100" style="max-height: 500px; object-fit: contain;">
-                                <div class="text-center mt-2">
-                                    <small class="text-muted">Foto ${index + 1} de ${response.fotos.length}</small>
-                                </div>
-                            </div>`;
-                            });
+    <!-- MODAL ZOOM IMAGEN -->
+    <div class="modal fade" id="zoomModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content bg-transparent border-0 shadow-none">
+                <div class="modal-body text-center p-0">
+                    <img id="zoomImg" src="" class="img-fluid rounded-4 shadow-lg">
+                    <button type="button" class="btn btn-dark btn-sm rounded-circle position-absolute top-0 end-0 m-3" data-bs-dismiss="modal">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-                            html += '</div>';
-
-                            if (response.fotos.length > 1) {
-                                html += `<button class="carousel-control-prev" type="button" data-bs-target="#photosCarousel" data-bs-slide="prev">
-                                        <span class="carousel-control-prev-icon"></span>
-                                    </button>
-                                    <button class="carousel-control-next" type="button" data-bs-target="#photosCarousel" data-bs-slide="next">
-                                        <span class="carousel-control-next-icon"></span>
-                                    </button>`;
-                            }
-
-                            html += '</div>';
-
-                            $('#fotosModalBody').html(html);
-                            new bootstrap.Modal(document.getElementById('fotosModal')).show();
-                        }
-                    }
-                });
-            }
-
-            function abrirModalFinalizar(ticketId) {
-                document.getElementById('ticket_id_fin').value = ticketId;
-                document.getElementById('formFinalizar').reset();
-                fotosFin = [];
-                updatePhotosPreviewFin();
-                new bootstrap.Modal(document.getElementById('finalizarModal')).show();
-            }
-
-            // Manejo de fotos finalización
-            document.getElementById('btnFileFin')?.addEventListener('click', function () {
-                document.getElementById('fotos_fin').click();
-            });
-
-            document.getElementById('fotos_fin')?.addEventListener('change', function (e) {
-                const files = Array.from(e.target.files);
-
-                if (fotosFin.length + files.length > MAX_FOTOS_FIN) {
-                    alert(`Solo puedes agregar hasta ${MAX_FOTOS_FIN} fotos`);
-                    return;
-                }
-
-                files.forEach(file => {
-                    const reader = new FileReader();
-                    reader.onload = function (e) {
-                        fotosFin.push({
-                            tipo: 'file',
-                            data: e.target.result,
-                            file: file
-                        });
-                        updatePhotosPreviewFin();
-                    };
-                    reader.readAsDataURL(file);
-                });
-            });
-
-            document.getElementById('btnCameraFin')?.addEventListener('click', function () {
-                if (fotosFin.length >= MAX_FOTOS_FIN) {
-                    alert(`Ya has alcanzado el límite de ${MAX_FOTOS_FIN} fotos`);
-                    return;
-                }
-
-                if (streamFin) {
-                    stopCameraFin();
-                } else {
-                    startCameraFin();
-                }
-            });
-
-            function startCameraFin() {
-                navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
-                    .then(function (mediaStream) {
-                        streamFin = mediaStream;
-                        const video = document.getElementById('videoFin');
-                        video.srcObject = streamFin;
-                        document.getElementById('cameraPreviewFin').style.display = 'block';
-
-                        if (!document.getElementById('captureBtnFin')) {
-                            const captureBtn = document.createElement('button');
-                            captureBtn.type = 'button';
-                            captureBtn.id = 'captureBtnFin';
-                            captureBtn.className = 'btn btn-success btn-sm mt-2 w-100';
-                            captureBtn.innerHTML = '<i class="fas fa-camera me-2"></i>Capturar Foto';
-                            captureBtn.addEventListener('click', capturePhotoFin);
-                            document.getElementById('cameraPreviewFin').appendChild(captureBtn);
-                        }
-                    })
-                    .catch(function (err) {
-                        alert('Error al acceder a la cámara: ' + err.message);
-                    });
-            }
-
-            function capturePhotoFin() {
-                if (fotosFin.length >= MAX_FOTOS_FIN) {
-                    alert(`Ya has alcanzado el límite de ${MAX_FOTOS_FIN} fotos`);
-                    stopCameraFin();
-                    return;
-                }
-
-                const video = document.getElementById('videoFin');
-                const canvas = document.getElementById('canvasFin');
-                const context = canvas.getContext('2d');
-
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
-                context.drawImage(video, 0, 0);
-
-                const dataURL = canvas.toDataURL('image/jpeg');
-
-                fotosFin.push({
-                    tipo: 'camera',
-                    data: dataURL
-                });
-
-                updatePhotosPreviewFin();
-                stopCameraFin();
-            }
-
-            function stopCameraFin() {
-                if (streamFin) {
-                    streamFin.getTracks().forEach(track => track.stop());
-                    streamFin = null;
-                }
-                document.getElementById('cameraPreviewFin').style.display = 'none';
-                const captureBtn = document.getElementById('captureBtnFin');
-                if (captureBtn) captureBtn.remove();
-            }
-
-            function updatePhotosPreviewFin() {
-                const previewContainer = document.getElementById('photosPreviewFin');
-                const photosList = document.getElementById('photosListFin');
-
-                if (fotosFin.length === 0) {
-                    previewContainer.style.display = 'none';
-                    return;
-                }
-
-                previewContainer.style.display = 'block';
-                photosList.innerHTML = '';
-
-                fotosFin.forEach((foto, index) => {
-                    const col = document.createElement('div');
-                    col.className = 'col-6 col-md-4';
-                    col.innerHTML = `
-                    <div class="position-relative">
-                        <img src="${foto.data}" class="img-thumbnail w-100" style="height: 120px; object-fit: cover;">
-                        <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 m-1" 
-                                onclick="removeFotoFin(${index})">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                `;
-                    photosList.appendChild(col);
-                });
-
-                updateHiddenInputsFin();
-            }
-
-            function removeFotoFin(index) {
-                fotosFin.splice(index, 1);
-                updatePhotosPreviewFin();
-            }
-
-            function updateHiddenInputsFin() {
-                const dt = new DataTransfer();
-                const fotosCamera = [];
-
-                fotosFin.forEach(foto => {
-                    if (foto.tipo === 'file') {
-                        dt.items.add(foto.file);
-                    } else if (foto.tipo === 'camera') {
-                        fotosCamera.push(foto.data);
-                    }
-                });
-
-                document.getElementById('fotos_fin').files = dt.files;
-                document.getElementById('fotos_camera_fin').value = JSON.stringify(fotosCamera);
-            }
-
-            function finalizarTicket() {
-                const form = document.getElementById('formFinalizar');
-                const formData = new FormData(form);
-
-                if (!form.checkValidity()) {
-                    form.reportValidity();
-                    return;
-                }
-
-                const btnSubmit = event.target;
-                btnSubmit.disabled = true;
-                btnSubmit.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Finalizando...';
-
-                $.ajax({
-                    url: 'ajax/get_finalizar_ticket.php',
-                    method: 'POST',
-                    data: formData,
-                    processData: false,
-                    contentType: false,
-                    dataType: 'json',
-                    success: function (response) {
-                        if (response.success) {
-                            $('#finalizarModal').modal('hide');
-                            alert('✅ Ticket finalizado correctamente');
-                            location.reload();
-                        } else {
-                            alert('❌ Error: ' + response.message);
-                            btnSubmit.disabled = false;
-                            btnSubmit.innerHTML = '<i class="fas fa-check-circle me-2"></i>Finalizar Ticket';
-                        }
-                    },
-                    error: function (xhr) {
-                        console.error('Error:', xhr.responseText);
-                        alert('❌ Error al finalizar el ticket');
-                        btnSubmit.disabled = false;
-                        btnSubmit.innerHTML = '<i class="fas fa-check-circle me-2"></i>Finalizar Ticket';
-                    }
-                });
-            }
-        </script>
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="js/agenda_colaborador.js?v=<?php echo mt_rand(1, 10000); ?>"></script>
 </body>
-
 </html>
