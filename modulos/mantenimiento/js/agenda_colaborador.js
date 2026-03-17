@@ -463,3 +463,102 @@ async function guardarCompra() {
         Swal.fire('Error', e.message, 'error');
     }
 }
+
+/**
+ * ELIMINACIÓN DE REGISTROS
+ */
+async function eliminarTarea(id) {
+    const result = await Swal.fire({
+        title: '¿Eliminar tarea?',
+        text: 'Se borrará el registro y todas las fotos adjuntas.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        confirmButtonText: 'Sí, borrar',
+        cancelButtonText: 'Cancelar'
+    });
+
+    if (result.isConfirmed) {
+        Swal.fire({ title: 'Eliminando...', didOpen: () => Swal.showLoading() });
+        try {
+            const formData = new FormData();
+            formData.append('id', id);
+            const response = await fetch('ajax/eliminar_tarea_informe.php', {
+                method: 'POST',
+                body: formData
+            });
+            const res = await response.json();
+            if (res.success) {
+                Swal.fire('Borrado', 'La tarea ha sido eliminada', 'success').then(() => location.reload());
+            } else {
+                Swal.fire('Error', res.message, 'error');
+            }
+        } catch (e) {
+            Swal.fire('Error', e.message, 'error');
+        }
+    }
+}
+
+async function eliminarCompra(id) {
+    const result = await Swal.fire({
+        title: '¿Eliminar factura?',
+        text: 'Se borrará el registro y la foto de la factura.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        confirmButtonText: 'Sí, borrar',
+        cancelButtonText: 'Cancelar'
+    });
+
+    if (result.isConfirmed) {
+        Swal.fire({ title: 'Eliminando...', didOpen: () => Swal.showLoading() });
+        try {
+            const formData = new FormData();
+            formData.append('id', id);
+            const response = await fetch('ajax/eliminar_compra_informe.php', {
+                method: 'POST',
+                body: formData
+            });
+            const res = await response.json();
+            if (res.success) {
+                Swal.fire('Borrado', 'La factura ha sido eliminada', 'success').then(() => location.reload());
+            } else {
+                Swal.fire('Error', res.message, 'error');
+            }
+        } catch (e) {
+            Swal.fire('Error', e.message, 'error');
+        }
+    }
+}
+
+async function eliminarVisita(id) {
+    const result = await Swal.fire({
+        title: '¿Eliminar visita?',
+        text: '¡ATENCIÓN! Esto borrará permanentemente la visita, todas sus tareas, compras y fotos asociadas.',
+        icon: 'error',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        confirmButtonText: 'Sí, borrar todo',
+        cancelButtonText: 'Cancelar'
+    });
+
+    if (result.isConfirmed) {
+        Swal.fire({ title: 'Eliminando visita y registros...', didOpen: () => Swal.showLoading() });
+        try {
+            const formData = new FormData();
+            formData.append('id', id);
+            const response = await fetch('ajax/eliminar_visita_informe.php', {
+                method: 'POST',
+                body: formData
+            });
+            const res = await response.json();
+            if (res.success) {
+                Swal.fire('Borrado', 'La visita y todo su contenido han sido eliminados', 'success').then(() => location.reload());
+            } else {
+                Swal.fire('Error', res.message, 'error');
+            }
+        } catch (e) {
+            Swal.fire('Error', e.message, 'error');
+        }
+    }
+}

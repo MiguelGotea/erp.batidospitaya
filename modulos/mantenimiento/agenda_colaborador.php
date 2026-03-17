@@ -214,10 +214,15 @@ if ($colaborador_filtro) {
                                                                         <small class="text-dark fw-bold d-block"><?= htmlspecialchars($tarea['titulo']) ?></small>
                                                                         <small class="text-muted text-truncate d-block" style="max-width: 300px;"><?= htmlspecialchars($tarea['trabajo_realizado']) ?></small>
                                                                     </div>
-                                                                    <div class="d-flex gap-1">
+                                                                    <div class="d-flex gap-1 align-items-center">
                                                                         <?php foreach ($tarea['fotos'] as $f): ?>
                                                                             <img src="uploads/evidencias/<?= $f['foto'] ?>" class="rounded-1" style="width: 30px; height: 30px; object-fit: cover; cursor: zoom-in;" onclick="zoomFoto(this.src)">
                                                                         <?php endforeach; ?>
+                                                                        <?php if ($informeActual['estado'] === 'creado' && $colaborador_filtro == $usuario['CodOperario']): ?>
+                                                                            <button class="btn btn-link btn-sm text-danger p-1 ms-1" onclick="eliminarTarea(<?= $tarea['id'] ?>)" title="Eliminar Tarea">
+                                                                                <i class="fas fa-trash-alt"></i>
+                                                                            </button>
+                                                                        <?php endif; ?>
                                                                     </div>
                                                                 </div>
                                                             <?php endforeach; ?>
@@ -233,6 +238,11 @@ if ($colaborador_filtro) {
                                                                         <div class="d-flex align-items-center gap-2">
                                                                             <span class="fw-bold">C$<?= number_format($c['monto'], 2) ?></span>
                                                                             <img src="uploads/compras/<?= $c['foto_factura'] ?>" class="rounded-1" style="width: 25px; height: 25px; object-fit: cover; cursor: zoom-in;" onclick="zoomFoto(this.src)">
+                                                                            <?php if ($informeActual['estado'] === 'creado' && $colaborador_filtro == $usuario['CodOperario']): ?>
+                                                                                <button class="btn btn-link btn-sm text-danger p-0 ms-1" onclick="eliminarCompra(<?= $c['id'] ?>)" title="Eliminar Factura">
+                                                                                    <i class="fas fa-trash-alt"></i>
+                                                                                </button>
+                                                                            <?php endif; ?>
                                                                         </div>
                                                                     </div>
                                                                 <?php endforeach; ?>

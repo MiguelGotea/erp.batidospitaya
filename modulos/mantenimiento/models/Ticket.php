@@ -597,5 +597,68 @@ class Ticket
         $sql = "UPDATE mtto_informe_visitas SET materiales_stock = ? WHERE id = ?";
         return $this->db->query($sql, [$materiales, $visita_id]);
     }
+
+    /**
+     * Eliminar una tarea de un informe y sus fotos asociadas (físicas y BD)
+     */
+    public function eliminarTareaInforme($tarea_id)
+    {
+        // 1. Obtener fotos para borrar archivos físicos
+        $sqlFotos = "SELECT foto FROM mtto_informe_tareas_fotos WHERE tarea_id = ?";
+        $fotos = $this->db->fetchAll($sqlFotos, [$tarea_id]);
+        
+        foreach ($fotos as $f) {
+            $path = __DIR__ . '/../uploads/evidencias/' . $f['foto'];
+            if (file_exists($path)) {
+                unlink($path);
+            }
+        }
+
+        // 2. Borrar de la BD (cascada manual)
+        $this->db->query("DELETE FROM mtto_informe_tareas_fotos WHERE tarea_id = ?", [$tarea_id]);
+        return $this->db->query("DELETE FROM mtto_informe_tareas WHERE id = ?", [$tarea_id]);
+    }
+
+    /**
+     * Eliminar una compra de un informe y su foto de factura
+     */
+    public function eliminarCompraInforme($compra_id)
+    {
+        // 1. Obtener foto
+        $sql = "SELECT foto_factura FROM mtto_informe_compras WHERE id = ?";
+        $compra = $this->db->fetchOne($sql, [$compra_id]);
+        
+        if ($compra && $compra['foto_factura']) {
+            $path = __DIR__ . '/../uploads/compras/' . $compra['foto_factura'];
+            if (file_exists($path)) {
+                unlink($path);
+            }
+        }
+
+        return $this->db->query("DELETE FROM mtto_informe_compras WHERE id = ?", [$compra_id]);
+    }
+
+    /**
+     * Eliminar una visita y todo su contenido relacionado (cascada completa)
+     */
+    public function eliminarVisitaInforme($visita_id)
+    {
+        // 1. Eliminar Tareas (con sus fotos)
+        $sqlT = "SELECT id FROM mtto_informe_tareas WHERE visita_id = ?";
+        $tareas = $this->db->fetchAll($sqlT, [$visita_id]);
+        foreach ($tareas as $t) {
+            $this->eliminarTareaInforme($t['id']);
+        }
+
+        // 2. Eliminar Compras (con sus facturas)
+        $sqlC = "SELECT id FROM mtto_informe_compras WHERE visita_id = ?";
+        $compras = $this->db->fetchAll($sqlC, [$visita_id]);
+        foreach ($compras as $c) {
+            $this->eliminarCompraInforme($c['id']);
+        }
+
+        // 3. Eliminar la visita
+        return $this->db->query("DELETE FROM mtto_informe_visitas WHERE id = ?", [$visita_id]);
+    }
 }
 ?>
