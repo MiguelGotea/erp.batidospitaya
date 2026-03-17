@@ -92,7 +92,6 @@ function renderizarTabla(datos) {
             <tr class="align-middle">
                 <td class="ps-4">
                     <span class="fw-bold">${formatearFecha(i.fecha)}</span>
-                    <br><small class="text-muted">${formatearHora(i.created_at)}</small>
                 </td>
                 <td>
                     <div class="d-flex align-items-center">

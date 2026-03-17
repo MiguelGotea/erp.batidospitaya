@@ -145,13 +145,13 @@ $esAdminCaja = tienePermiso('mantenimiento', 'validar_caja_chica', $cargoOperari
                                         </th>
                                         <th data-column="Nombre" data-type="list">
                                             Colaborador
-                                            <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                            <i class="fas fa-filter filter-icon" onclick="toggleFilter(this)"></i>
                                         </th>
                                         <th>KM Recorrido</th>
                                         <th>Caja Chica</th>
                                         <th data-column="estado" data-type="list">
                                             Estado
-                                            <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                            <i class="fas fa-filter filter-icon" onclick="toggleFilter(this)"></i>
                                         </th>
                                         <th class="text-center">Acciones</th>
                                     </tr>
@@ -300,7 +300,7 @@ $esAdminCaja = tienePermiso('mantenimiento', 'validar_caja_chica', $cargoOperari
                                     </h6>
                                     <p class="small text-muted mb-0">
                                         Haz clic en el ícono de embudo (<i class="bi bi-funnel"></i>) en los encabezados
-                                        de Fecha, Colaborador o Estado para filtrar y ordenar los datos dinámicamente.
+                                        de Fecha, Colaborador o Estado para filtrar y ordenar los datos dinámicamente. <i class="fas fa-filter"></i>
                                     </p>
                                 </div>
                             </div>
