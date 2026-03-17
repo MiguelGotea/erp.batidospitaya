@@ -191,18 +191,21 @@ if ($colaborador_filtro) {
                                         <?php else: ?>
                                             <?php foreach ($informeActual['visitas'] as $v): ?>
                                                 <div class="visita-item card border-0 shadow-sm mb-4 rounded-4 overflow-hidden">
-                                                    <div class="card-header bg-white border-bottom-0 pt-3 px-4 d-flex justify-content-between align-items-start">
-                                                        <div>
+                                                    <div class="card-header bg-white border-bottom-0 pt-3 px-4 d-flex justify-content-between align-items-start gap-3">
+                                                        <div class="flex-grow-1">
                                                             <h6 class="mb-0 text-primary fw-bold"><?= htmlspecialchars($v['nombre_sucursal']) ?></h6>
-                                                            <small class="text-muted">
-                                                                <i class="far fa-clock me-1"></i> 
-                                                                Arribo: <?= date('h:i A', strtotime($v['hora_llegada'])) ?>
-                                                                <?php if ($v['hora_salida']): ?>
-                                                                    - Salida: <?= date('h:i A', strtotime($v['hora_salida'])) ?>
-                                                                <?php endif; ?>
-                                                            </small>
+                                                            <div class="text-muted small mt-2">
+                                                                <div class="d-flex flex-wrap gap-x-3">
+                                                                    <span><i class="far fa-clock me-1 text-primary"></i> <b>Arribo:</b> <?= date('h:i A', strtotime($v['hora_llegada'])) ?></span>
+                                                                    <span class="ms-md-2"><i class="fas fa-history me-1 text-primary"></i> <b>Término:</b> <?= $v['hora_salida'] ? date('h:i A', strtotime($v['hora_salida'])) : '-' ?></span>
+                                                                </div>
+                                                                <div class="mt-1 d-flex align-items-start gap-1">
+                                                                    <i class="fas fa-boxes me-1 text-primary mt-1"></i> 
+                                                                    <div><b>Materiales:</b> <?= $v['materiales_stock'] ? htmlspecialchars($v['materiales_stock']) : '-' ?></div>
+                                                                </div>
+                                                            </div>
                                                         </div>
-                                                        <div class="d-flex gap-2">
+                                                        <div class="d-flex gap-2 flex-wrap justify-content-end">
                                                             <?php if ($informeActual['estado'] === 'creado' && $colaborador_filtro == $usuario['CodOperario']): ?>
                                                                 <button class="btn btn-sm btn-outline-primary rounded-pill px-3" onclick="modalNuevaTarea(<?= $v['id'] ?>, '<?= $v['cod_sucursal'] ?>')">
                                                                     <i class="fas fa-tools me-1"></i>Tarea
@@ -210,6 +213,16 @@ if ($colaborador_filtro) {
                                                                 <button class="btn btn-sm btn-outline-success rounded-pill px-3" onclick="modalNuevaCompra(<?= $v['id'] ?>)">
                                                                     <i class="fas fa-file-invoice-dollar me-1"></i>Factura
                                                                 </button>
+                                                                <?php if (!$v['hora_salida']): ?>
+                                                                    <button class="btn btn-sm btn-outline-info rounded-pill px-3" onclick="modalRegistrarSalida(<?= $v['id'] ?>)">
+                                                                        <i class="fas fa-sign-out-alt me-1"></i>Salida
+                                                                    </button>
+                                                                <?php endif; ?>
+                                                                <?php if (!$v['materiales_stock']): ?>
+                                                                    <button class="btn btn-sm btn-outline-secondary rounded-pill px-3" onclick="modalRegistrarMateriales(<?= $v['id'] ?>)">
+                                                                        <i class="fas fa-box-open me-1"></i>Materiales
+                                                                    </button>
+                                                                <?php endif; ?>
                                                                 <button class="btn btn-link btn-sm text-danger p-0 ms-1" onclick="eliminarVisita(<?= $v['id'] ?>)" title="Eliminar Visita">
                                                                     <i class="fas fa-trash"></i>
                                                                 </button>
@@ -263,25 +276,6 @@ if ($colaborador_filtro) {
                                                             </div>
                                                         <?php endif; ?>
 
-                                                        <?php if ($v['materiales_stock']): ?>
-                                                            <div class="mt-2 small">
-                                                                <span class="text-muted fw-bold">Materiales Stock:</span>
-                                                                <p class="mb-0 text-muted"><?= htmlspecialchars($v['materiales_stock']) ?></p>
-                                                            </div>
-                                                        <?php endif; ?>
-
-                                                        <div class="visita-footer mt-3 pt-3 border-top d-flex gap-2">
-                                                            <?php if (!$v['hora_salida'] && $informeActual['estado'] === 'creado' && $colaborador_filtro == $usuario['CodOperario']): ?>
-                                                                <button class="btn btn-sm btn-outline-info rounded-pill px-3" onclick="modalRegistrarSalida(<?= $v['id'] ?>)">
-                                                                    <i class="fas fa-sign-out-alt me-1"></i>Registrar Salida
-                                                                </button>
-                                                            <?php endif; ?>
-                                                            <?php if (!$v['materiales_stock'] && $informeActual['estado'] === 'creado' && $colaborador_filtro == $usuario['CodOperario']): ?>
-                                                                <button class="btn btn-sm btn-outline-secondary rounded-pill px-3" onclick="modalRegistrarMateriales(<?= $v['id'] ?>)">
-                                                                    <i class="fas fa-box-open me-1"></i>Materiales Stock
-                                                                </button>
-                                                            <?php endif; ?>
-                                                        </div>
                                                     </div>
                                                 </div>
                                             <?php endforeach; ?>
