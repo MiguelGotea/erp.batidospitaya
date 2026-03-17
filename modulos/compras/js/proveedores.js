@@ -30,7 +30,7 @@ let scrollTopInicial = 0;
 // Cargar datos
 function cargarDatos() {
     $.ajax({
-        url: '../ajax/proveedores_get_datos.php',
+        url: 'ajax/proveedores_get_datos.php',
         method: 'POST',
         data: {
             pagina: paginaActual,
@@ -324,7 +324,7 @@ function seleccionarFecha(tipo, fecha, columna) {
 // Cargar opciones de filtro
 function cargarOpcionesFiltro(panel, columna) {
     $.ajax({
-        url: '../ajax/proveedores_get_opciones_filtro.php',
+        url: 'ajax/proveedores_get_opciones_filtro.php',
         method: 'POST',
         data: { columna: columna },
         dataType: 'json',
