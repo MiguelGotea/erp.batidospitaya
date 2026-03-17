@@ -80,8 +80,8 @@ if ($colaborador_filtro) {
         <div class="sub-container">
             <?php echo renderHeader($usuario, false, 'Informe Diario de Mantenimiento'); ?>
 
-            <div class="container-fluid p-3">
-                <div class="container">
+            <div class="container-fluid px-md-5 py-3">
+                <div class="container-fluid p-0">
                     
                     <div class="mb-4"></div>
 
@@ -136,8 +136,22 @@ if ($colaborador_filtro) {
                                         <span class="fw-bold"><?= number_format($informeActual['km_inicial'], 2) ?></span>
                                     </div>
                                     <div class="col-6 col-md-3 border-end">
-                                        <small class="text-muted d-block">Caja Chica</small>
-                                        <span class="fw-bold fs-5 text-success">C$<?= number_format($informeActual['monto_caja_chica'], 2) ?></span>
+                                        <small class="text-muted d-block">Asignado</small>
+                                        <span class="fw-bold fs-5 text-dark">C$<?= number_format($informeActual['monto_caja_chica'], 2) ?></span>
+                                    </div>
+                                    <div class="col-6 col-md-3 border-end">
+                                        <?php 
+                                            $totalGastado = 0;
+                                            foreach($informeActual['visitas'] as $v) {
+                                                foreach($v['compras'] as $c) $totalGastado += $c['monto'];
+                                            }
+                                        ?>
+                                        <small class="text-muted d-block">Gastado</small>
+                                        <span class="fw-bold fs-5 text-danger">C$<?= number_format($totalGastado, 2) ?></span>
+                                    </div>
+                                    <div class="col-6 col-md-3 border-end">
+                                        <small class="text-muted d-block">Saldo Actual</small>
+                                        <span class="fw-bold fs-5 text-success">C$<?= number_format($informeActual['monto_caja_chica'] - $totalGastado, 2) ?></span>
                                     </div>
                                     <div class="col-6 col-md-3 border-end">
                                         <small class="text-muted d-block">Sucursales Visitas</small>
