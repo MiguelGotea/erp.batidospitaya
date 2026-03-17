@@ -148,6 +148,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit();
         }
     }
+
+    // --- ACCIÓN: TOGGLE STATUS ---
+    elseif ($accion === 'toggle_status') {
+        header('Content-Type: application/json');
+        $id = $_POST['id'];
+        $activa = $_POST['activa'];
+        try {
+            $stmt = $conn->prepare("UPDATE ia_proveedores_api SET activa = ? WHERE id = ?");
+            $stmt->execute([$activa, $id]);
+            echo json_encode(['success' => true, 'message' => 'Estado actualizado']);
+            exit();
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+            exit();
+        }
+    }
 }
 
 header('Location: ../ia_config_api.php');

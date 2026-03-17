@@ -48,6 +48,81 @@ $links = [
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="/core/assets/css/global_tools.css?v=<?php echo mt_rand(1, 10000); ?>">
     <link rel="stylesheet" href="css/ia_config_api.css?v=<?php echo mt_rand(1, 10000); ?>">
+    <style>
+        /* Estilos para filtros de encabezado (según Skill) */
+        .filter-icon {
+            cursor: pointer;
+            font-size: 0.8rem;
+            margin-left: 5px;
+            color: rgba(255,255,255,0.6);
+            transition: all 0.2s;
+        }
+        .filter-icon:hover, .filter-icon.active {
+            color: white;
+        }
+        .filter-icon.has-filter {
+            color: #FFC107 !important;
+        }
+        .filter-panel {
+            position: absolute;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            padding: 15px;
+            width: 250px;
+            z-index: 1060;
+            border: 1px solid #eee;
+            display: none;
+        }
+        .filter-panel.show {
+            display: block;
+            animation: fadeIn 0.2s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .filter-section-title {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #888;
+            text-transform: uppercase;
+            display: block;
+            margin-bottom: 8px;
+        }
+        .filter-search {
+            width: 100%;
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            font-size: 0.9rem;
+        }
+        .filter-actions {
+            margin-top: 15px;
+            padding-top: 10px;
+            border-top: 1px solid #eee;
+            display: flex;
+            justify-content: flex-end;
+        }
+        .filter-btn-clear {
+            background: none;
+            border: none;
+            color: #dc3545;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        /* Toggle Switch para Tabla */
+        .table-switch .form-check-input {
+            width: 2.5em;
+            height: 1.25em;
+            cursor: pointer;
+        }
+        .table-switch .form-check-input:checked {
+            background-color: var(--color-principal);
+            border-color: var(--color-principal);
+        }
+    </style>
 </head>
 
 <body>
@@ -63,12 +138,12 @@ $links = [
                         <?php echo htmlspecialchars($mensaje); ?>
                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
-                <?php endif; ?>
+                <?php
+endif; ?>
 
                 <!-- Cabecera de la sección -->
                 <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h3 class="fw-bold m-0" style="color: var(--color-header-tabla);">Gestión de APIs</h3>
-                    <button class="btn btn-primary shadow-sm" onclick="nuevoProveedor()">
+                                       <button class="btn btn-primary shadow-sm" onclick="nuevoProveedor()">
                         <i class="fas fa-plus me-2"></i> Nuevo Proveedor
                     </button>
                 </div>
@@ -79,12 +154,24 @@ $links = [
                         <table>
                             <thead>
                                 <tr>
-                                    <th>Proveedor</th>
-                                    <th>Correo</th>
+                                    <th data-column="proveedor" data-type="text">
+                                        Proveedor
+                                        <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                    </th>
+                                    <th data-column="cuenta_correo" data-type="text">
+                                        Correo
+                                        <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                    </th>
                                     <th>API Key</th>
-                                    <th>Activa</th>
-                                    <th>Estado Límite</th>
-                                    <th>Último Uso</th>
+                                    <th data-column="activa" data-type="list">
+                                        Activa
+                                        <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                    </th>
+                                    <th data-column="estado" data-type="list">
+                                        Estado Límite
+                                        <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                    </th>
+                                   <th>Último Uso</th>
                                     <th style="width: 180px; text-align: center;">Acciones</th>
                                 </tr>
                             </thead>
@@ -99,23 +186,25 @@ $links = [
                                         </td>
                                         <td class="api-key-hidden">
                                             <?php
-                                            $part = substr($p['api_key'], 0, 8);
-                                            echo htmlspecialchars($part) . "..." . htmlspecialchars(substr($p['api_key'], -4));
-                                            ?>
+    $part = substr($p['api_key'], 0, 8);
+    echo htmlspecialchars($part) . "..." . htmlspecialchars(substr($p['api_key'], -4));
+?>
                                         </td>
                                         <td>
-                                            <?php if ($p['activa']): ?>
-                                                <span class="badge badge-success">SI</span>
-                                            <?php else: ?>
-                                                <span class="badge bg-secondary text-white">NO</span>
-                                            <?php endif; ?>
+                                            <div class="form-check form-switch table-switch">
+                                                <input class="form-check-input" type="checkbox" 
+                                                       onchange="toggleStatus(<?php echo $p['id']; ?>, this)"
+                                                       <?php echo $p['activa'] ? 'checked' : ''; ?>>
+                                            </div>
                                         </td>
                                         <td>
                                             <?php if ($p['limite_alcanzado_hoy']): ?>
                                                 <span class="badge badge-warning">AGOTADA</span>
-                                            <?php else: ?>
+                                            <?php
+    else: ?>
                                                 <span class="badge badge-success">DISPONIBLE</span>
-                                            <?php endif; ?>
+                                            <?php
+    endif; ?>
                                         </td>
                                         <td style="font-size: 0.85rem; color: #666;">
                                             <?php echo $p['ultimo_uso'] ? date('d/m/Y H:i', strtotime($p['ultimo_uso'])) : 'Nunca usado'; ?>
@@ -128,7 +217,8 @@ $links = [
                                                     title="Reiniciar Límite Diario">
                                                     <i class="fas fa-sync-alt"></i>
                                                 </button>
-                                                <?php endif; ?>
+                                                <?php
+    endif; ?>
                                                 <button class="btn-action ping"
                                                     onclick="probarConexion(<?php echo $p['id']; ?>)"
                                                     title="Probar Conexión">
@@ -149,14 +239,16 @@ $links = [
                                             </div>
                                         </td>
                                     </tr>
-                                <?php endforeach; ?>
+                                <?php
+endforeach; ?>
                                 <?php if (empty($proveedores)): ?>
                                     <tr>
                                         <td colspan="6" style="text-align: center; padding: 40px; color: #666;">
                                             No hay llaves registradas.
                                         </td>
                                     </tr>
-                                <?php endif; ?>
+                                <?php
+endif; ?>
                             </tbody>
                         </table>
                     </div>
@@ -298,7 +390,8 @@ $links = [
                                                 <i class="fas fa-external-link-square-alt me-1"></i>
                                                 <?php echo ucfirst($name); ?>
                                             </a>
-                                        <?php endforeach; ?>
+                                        <?php
+endforeach; ?>
                                     </div>
                                     <div class="alert alert-info py-2 px-3 small mt-3 mb-0 border-0 shadow-sm">
                                         <strong><i class="fas fa-info-circle me-1"></i> Recomendación:</strong>
