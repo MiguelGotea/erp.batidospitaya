@@ -83,11 +83,8 @@ if ($colaborador_filtro) {
             <div class="container-fluid p-3">
                 <div class="container">
                     
-                    <!-- Navegación y Título -->
                     <div class="d-flex justify-content-between align-items-center mb-4">
-                        <a href="historial_informes.php" class="btn btn-outline-secondary rounded-pill btn-sm px-3">
-                            <i class="fas fa-arrow-left me-1"></i>Volver al Historial
-                        </a>
+                        <div></div>
                         <div class="text-end">
                             <span class="text-muted small">Colaborador:</span>
                             <span class="fw-bold"><?= htmlspecialchars($usuario['Nombre'] . ' ' . $usuario['Apellido']) ?></span>
@@ -146,7 +143,7 @@ if ($colaborador_filtro) {
                                     </div>
                                     <div class="col-6 col-md-3 border-end">
                                         <small class="text-muted d-block">Caja Chica</small>
-                                        <span class="fw-bold fs-5 text-success">$<?= number_format($informeActual['monto_caja_chica'], 2) ?></span>
+                                        <span class="fw-bold fs-5 text-success">C$<?= number_format($informeActual['monto_caja_chica'], 2) ?></span>
                                     </div>
                                     <div class="col-6 col-md-3 border-end">
                                         <small class="text-muted d-block">Sucursales Visitas</small>
@@ -240,7 +237,7 @@ if ($colaborador_filtro) {
                                                                     <div class="d-flex justify-content-between align-items-center small py-1 border-bottom border-white">
                                                                         <span><i class="fas fa-file-invoice me-1"></i> <?= htmlspecialchars($c['detalle']) ?></span>
                                                                         <div class="d-flex align-items-center gap-2">
-                                                                            <span class="fw-bold">$<?= number_format($c['monto'], 2) ?></span>
+                                                                            <span class="fw-bold">C$<?= number_format($c['monto'], 2) ?></span>
                                                                             <img src="uploads/compras/<?= $c['foto_factura'] ?>" class="rounded-1" style="width: 25px; height: 25px; object-fit: cover; cursor: zoom-in;" onclick="zoomFoto(this.src)">
                                                                         </div>
                                                                     </div>
@@ -512,7 +509,7 @@ if ($colaborador_filtro) {
                         <div class="mb-3">
                             <label class="form-label small fw-bold">Monto de la Factura *</label>
                             <div class="input-group">
-                                <span class="input-group-text bg-light">$</span>
+                                <span class="input-group-text bg-light">C$</span>
                                 <input type="number" step="0.01" name="monto" class="form-control form-control-lg" required placeholder="0.00">
                             </div>
                         </div>

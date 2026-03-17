@@ -113,7 +113,7 @@ $viaticos = calcularViaticos($informe['visitas']);
         </div>
         <div class="info-item">
             <label>Caja Chica</label>
-            <span style="color: #2e7d32;">$<?= number_format($informe['monto_caja_chica'], 2) ?></span>
+            <span style="color: #2e7d32;">C$<?= number_format($informe['monto_caja_chica'], 2) ?></span>
         </div>
         <div class="info-item">
             <label>Viáticos Aplicados</label>
@@ -170,7 +170,7 @@ $viaticos = calcularViaticos($informe['visitas']);
                         <?php foreach($v['compras'] as $c): ?>
                             <tr>
                                 <td style="width: 70%"><?= htmlspecialchars($c['detalle']) ?></td>
-                                <td style="width: 20%; text-align: right; font-weight: bold;">$<?= number_format($c['monto'], 2) ?></td>
+                                <td style="width: 20%; text-align: right; font-weight: bold;">C$<?= number_format($c['monto'], 2) ?></td>
                                 <td style="width: 10%; text-align: right;">
                                     <div class="foto-box" style="width: 40px; height: 40px; display: inline-block;">
                                         <img src="uploads/compras/<?= $c['foto_factura'] ?>">

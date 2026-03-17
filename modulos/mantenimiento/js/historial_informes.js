@@ -109,7 +109,7 @@ function renderizarTabla(datos) {
                 </td>
                 <td>
                     <div class="d-flex align-items-center gap-2">
-                        <span class="fw-bold text-success">$${parseFloat(i.monto_caja_chica).toFixed(2)}</span>
+                        <span class="fw-bold text-success">C$${parseFloat(i.monto_caja_chica).toFixed(2)}</span>
                         ${i.foto_caja_chica ? `<i class="fas fa-file-invoice text-muted cursor-zoom" onclick="zoomFoto('uploads/caja/${i.foto_caja_chica}')"></i>` : ''}
                         ${esAdminCaja && i.estado === 'creado' ? `
                             <button class="btn btn-link btn-sm p-0" onclick="modalValidarCaja(${i.id}, ${i.monto_caja_chica})">
