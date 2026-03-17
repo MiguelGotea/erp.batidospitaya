@@ -16,6 +16,7 @@ if (!tienePermiso('agenda_mantenimiento', 'vista', $cargoOperario)) {
     exit();
 }
 
+
 $ticketModel = new Ticket();
 $puedeVerTodos = tienePermiso('agenda_mantenimiento', 'todos_colaboradores', $cargoOperario);
 $esAdminCaja = tienePermiso('mantenimiento', 'validar_caja_chica', $cargoOperario);
@@ -35,6 +36,7 @@ $colaboradores = $puedeVerTodos ? $ticketModel->getColaboradoresDisponibles() : 
 ?>
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -46,14 +48,49 @@ $colaboradores = $puedeVerTodos ? $ticketModel->getColaboradoresDisponibles() : 
     <link rel="stylesheet" href="/assets/css/global_tools.css">
     <link rel="stylesheet" href="../../core/assets/css/modales_premium.css">
     <style>
-        .card-informe { transition: all 0.2s; border-radius: 12px; }
-        .card-informe:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
-        .status-badge { font-weight: 600; font-size: 0.75rem; padding: 4px 12px; border-radius: 20px; }
-        .table-premium thead th { background: #f8f9fa; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.5px; color: #666; border-top: none; }
-        .btn-action { width: 32px; height: 32px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; transition: 0.2s; }
-        .btn-action:hover { transform: scale(1.1); }
+        .card-informe {
+            transition: all 0.2s;
+            border-radius: 12px;
+        }
+
+        .card-informe:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .status-badge {
+            font-weight: 600;
+            font-size: 0.75rem;
+            padding: 4px 12px;
+            border-radius: 20px;
+        }
+
+        .table-premium thead th {
+            background: #f8f9fa;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.5px;
+            color: #666;
+            border-top: none;
+        }
+
+        .btn-action {
+            width: 32px;
+            height: 32px;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            transition: 0.2s;
+        }
+
+        .btn-action:hover {
+            transform: scale(1.1);
+        }
     </style>
 </head>
+
 <body>
     <?php echo renderMenuLateral($cargoOperario); ?>
 
@@ -110,18 +147,21 @@ $colaboradores = $puedeVerTodos ? $ticketModel->getColaboradoresDisponibles() : 
                                 <tbody>
                                     <?php if (empty($informes)): ?>
                                         <tr>
-                                            <td colspan="6" class="text-center py-5 text-muted">No se encontraron reportes registrados</td>
+                                            <td colspan="6" class="text-center py-5 text-muted">No se encontraron reportes
+                                                registrados</td>
                                         </tr>
                                     <?php else: ?>
                                         <?php foreach ($informes as $i): ?>
                                             <tr class="align-middle">
                                                 <td class="ps-4">
                                                     <span class="fw-bold"><?= date('d/m/Y', strtotime($i['fecha'])) ?></span>
-                                                    <br><small class="text-muted"><?= date('h:i A', strtotime($i['created_at'])) ?></small>
+                                                    <br><small
+                                                        class="text-muted"><?= date('h:i A', strtotime($i['created_at'])) ?></small>
                                                 </td>
                                                 <td>
                                                     <div class="d-flex align-items-center">
-                                                        <div class="avatar-sm bg-primary bg-opacity-10 text-primary rounded-circle me-2 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                                                        <div class="avatar-sm bg-primary bg-opacity-10 text-primary rounded-circle me-2 d-flex align-items-center justify-content-center"
+                                                            style="width: 32px; height: 32px;">
                                                             <?= substr($i['Nombre'], 0, 1) ?>
                                                         </div>
                                                         <span><?= htmlspecialchars($i['Nombre'] . ' ' . $i['Apellido']) ?></span>
@@ -138,30 +178,38 @@ $colaboradores = $puedeVerTodos ? $ticketModel->getColaboradoresDisponibles() : 
                                                 </td>
                                                 <td>
                                                     <div class="d-flex align-items-center gap-2">
-                                                        <span class="fw-bold text-success">$<?= number_format($i['monto_caja_chica'], 2) ?></span>
+                                                        <span
+                                                            class="fw-bold text-success">$<?= number_format($i['monto_caja_chica'], 2) ?></span>
                                                         <?php if ($i['foto_caja_chica']): ?>
-                                                            <i class="fas fa-file-invoice text-muted cursor-zoom" onclick="zoomFoto('uploads/caja/<?= $i['foto_caja_chica'] ?>')"></i>
+                                                            <i class="fas fa-file-invoice text-muted cursor-zoom"
+                                                                onclick="zoomFoto('uploads/caja/<?= $i['foto_caja_chica'] ?>')"></i>
                                                         <?php endif; ?>
                                                         <?php if ($esAdminCaja && $i['estado'] === 'creado'): ?>
-                                                            <button class="btn btn-link btn-sm p-0" onclick="modalValidarCaja(<?= $i['id'] ?>, <?= $i['monto_caja_chica'] ?>)">
+                                                            <button class="btn btn-link btn-sm p-0"
+                                                                onclick="modalValidarCaja(<?= $i['id'] ?>, <?= $i['monto_caja_chica'] ?>)">
                                                                 <i class="fas fa-edit"></i>
                                                             </button>
                                                         <?php endif; ?>
                                                     </div>
                                                 </td>
                                                 <td>
-                                                    <span class="status-badge bg-<?= $i['estado'] === 'finalizado' ? 'success' : 'primary' ?> bg-opacity-10 text-<?= $i['estado'] === 'finalizado' ? 'success' : 'primary' ?>">
+                                                    <span
+                                                        class="status-badge bg-<?= $i['estado'] === 'finalizado' ? 'success' : 'primary' ?> bg-opacity-10 text-<?= $i['estado'] === 'finalizado' ? 'success' : 'primary' ?>">
                                                         <?= strtoupper($i['estado'] === 'creado' ? 'Abierto' : 'Finalizado') ?>
                                                     </span>
                                                 </td>
                                                 <td class="text-center pe-4">
                                                     <div class="d-flex justify-content-center gap-2">
                                                         <?php if ($i['estado'] === 'creado' && $i['cod_operario'] == $usuario['CodOperario']): ?>
-                                                            <a href="agenda_colaborador.php" class="btn-action bg-primary bg-opacity-10 text-primary" title="Continuar Reporte">
+                                                            <a href="agenda_colaborador.php"
+                                                                class="btn-action bg-primary bg-opacity-10 text-primary"
+                                                                title="Continuar Reporte">
                                                                 <i class="fas fa-external-link-alt"></i>
                                                             </a>
                                                         <?php endif; ?>
-                                                        <a href="imprimir_informe.php?id=<?= $i['id'] ?>" target="_blank" class="btn-action bg-dark bg-opacity-10 text-dark" title="Ver/Imprimir">
+                                                        <a href="imprimir_informe.php?id=<?= $i['id'] ?>" target="_blank"
+                                                            class="btn-action bg-dark bg-opacity-10 text-dark"
+                                                            title="Ver/Imprimir">
                                                             <i class="fas fa-print"></i>
                                                         </a>
                                                     </div>
@@ -183,7 +231,8 @@ $colaboradores = $puedeVerTodos ? $ticketModel->getColaboradoresDisponibles() : 
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content shadow-premium border-0 rounded-4">
                 <div class="modal-header border-0 pb-0">
-                    <h5 class="modal-title fw-bold"><i class="fas fa-cash-register me-2 text-success"></i>Validar Caja Chica</h5>
+                    <h5 class="modal-title fw-bold"><i class="fas fa-cash-register me-2 text-success"></i>Validar Caja
+                        Chica</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body p-4">
@@ -193,18 +242,22 @@ $colaboradores = $puedeVerTodos ? $ticketModel->getColaboradoresDisponibles() : 
                             <label class="form-label small fw-bold">Monto Entregado (Caja Chica) *</label>
                             <div class="input-group">
                                 <span class="input-group-text">$</span>
-                                <input type="number" step="0.01" name="monto" id="caja_monto" class="form-control form-control-lg" required>
+                                <input type="number" step="0.01" name="monto" id="caja_monto"
+                                    class="form-control form-control-lg" required>
                             </div>
                         </div>
                         <div class="mb-0">
                             <label class="form-label small fw-bold">Foto del Voucher / Comprobante *</label>
-                            <input type="file" name="foto_caja" id="caja_foto_input" class="form-control" accept="image/*" required>
+                            <input type="file" name="foto_caja" id="caja_foto_input" class="form-control"
+                                accept="image/*" required>
                         </div>
                     </form>
                 </div>
                 <div class="modal-footer border-0 p-3 px-4 pb-4">
-                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-success rounded-pill px-4" onclick="guardarValidacionCaja()">Confirmar Entrega</button>
+                    <button type="button" class="btn btn-light rounded-pill px-4"
+                        data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-success rounded-pill px-4"
+                        onclick="guardarValidacionCaja()">Confirmar Entrega</button>
                 </div>
             </div>
         </div>
@@ -216,7 +269,8 @@ $colaboradores = $puedeVerTodos ? $ticketModel->getColaboradoresDisponibles() : 
             <div class="modal-content bg-transparent border-0 shadow-none">
                 <div class="modal-body text-center p-0">
                     <img id="zoomImg" src="" class="img-fluid rounded-4 shadow-lg">
-                    <button type="button" class="btn btn-dark btn-sm rounded-circle position-absolute top-0 end-0 m-3" data-bs-dismiss="modal">
+                    <button type="button" class="btn btn-dark btn-sm rounded-circle position-absolute top-0 end-0 m-3"
+                        data-bs-dismiss="modal">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
@@ -266,4 +320,5 @@ $colaboradores = $puedeVerTodos ? $ticketModel->getColaboradoresDisponibles() : 
         }
     </script>
 </body>
+
 </html>
