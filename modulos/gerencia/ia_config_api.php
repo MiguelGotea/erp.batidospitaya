@@ -82,10 +82,10 @@ $links = [
                                     <th>Proveedor</th>
                                     <th>Correo</th>
                                     <th>API Key</th>
-                                    <th>Password</th>
-                                    <th>Estado</th>
+                                    <th>Activa</th>
+                                    <th>Estado Límite</th>
                                     <th>Último Uso</th>
-                                    <th style="width: 150px; text-align: center;">Acciones</th>
+                                    <th style="width: 180px; text-align: center;">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -103,16 +103,18 @@ $links = [
                                             echo htmlspecialchars($part) . "..." . htmlspecialchars(substr($p['api_key'], -4));
                                             ?>
                                         </td>
-                                        <td class="api-key-hidden">
-                                            <?php echo $p['password'] ? '••••••••' : '-'; ?>
+                                        <td>
+                                            <?php if ($p['activa']): ?>
+                                                <span class="badge badge-success">SI</span>
+                                            <?php else: ?>
+                                                <span class="badge bg-secondary text-white">NO</span>
+                                            <?php endif; ?>
                                         </td>
                                         <td>
                                             <?php if ($p['limite_alcanzado_hoy']): ?>
-                                                <span class="badge badge-warning">LÍMITE DIARIO</span>
-                                            <?php elseif ($p['activa']): ?>
-                                                <span class="badge badge-success">ACTIVA</span>
+                                                <span class="badge badge-warning">AGOTADA</span>
                                             <?php else: ?>
-                                                <span class="badge" style="background: #eee; color: #666;">INACTIVA</span>
+                                                <span class="badge badge-success">DISPONIBLE</span>
                                             <?php endif; ?>
                                         </td>
                                         <td style="font-size: 0.85rem; color: #666;">
@@ -120,6 +122,13 @@ $links = [
                                         </td>
                                         <td>
                                             <div class="action-btns" style="justify-content: center;">
+                                                <?php if ($p['limite_alcanzado_hoy']): ?>
+                                                <button class="btn-action ping text-warning"
+                                                    onclick="reiniciarLimite(<?php echo $p['id']; ?>)"
+                                                    title="Reiniciar Límite Diario">
+                                                    <i class="fas fa-sync-alt"></i>
+                                                </button>
+                                                <?php endif; ?>
                                                 <button class="btn-action ping"
                                                     onclick="probarConexion(<?php echo $p['id']; ?>)"
                                                     title="Probar Conexión">

@@ -133,6 +133,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit();
         }
     }
+
+    // --- ACCIÓN: REINICIAR LÍMITE ---
+    elseif ($accion === 'reiniciar_limite') {
+        header('Content-Type: application/json');
+        $id = $_POST['id'];
+        try {
+            $stmt = $conn->prepare("UPDATE ia_proveedores_api SET limite_alcanzado_hoy = 0 WHERE id = ?");
+            $stmt->execute([$id]);
+            echo json_encode(['success' => true, 'message' => 'Límite reiniciado correctamente']);
+            exit();
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+            exit();
+        }
+    }
 }
 
 header('Location: ../ia_config_api.php');

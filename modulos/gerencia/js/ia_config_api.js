@@ -116,3 +116,40 @@ function mostrarModalResultado(success, message) {
     const modal = new bootstrap.Modal(document.getElementById('pingResultModal'));
     modal.show();
 }
+
+/**
+ * Reinicia el límite diario de un proveedor
+ */
+function reiniciarLimite(id) {
+    if (!confirm('¿Estás seguro de que deseas reiniciar el límite diario de este proveedor?')) return;
+
+    const btn = event.currentTarget;
+    const originalIcon = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    btn.disabled = true;
+
+    $.ajax({
+        url: 'ajax/ia_config_api_handler.php',
+        method: 'POST',
+        data: {
+            accion: 'reiniciar_limite',
+            id: id
+        },
+        dataType: 'json',
+        success: function (response) {
+            if (response.success) {
+                location.reload();
+            } else {
+                alert('Error: ' + response.message);
+                btn.innerHTML = originalIcon;
+                btn.disabled = false;
+            }
+        },
+        error: function () {
+            alert('Error de comunicación con el servidor');
+            btn.innerHTML = originalIcon;
+            btn.disabled = false;
+        }
+    });
+}
+
