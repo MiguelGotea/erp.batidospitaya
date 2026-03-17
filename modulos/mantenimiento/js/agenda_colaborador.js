@@ -217,7 +217,7 @@ async function guardarTarea() {
     // Para múltiples fotos via $_FILES[] usualmente se usa el name="fotos_evidencia[]"
     // Pero como estamos usando FormData manual:
     const finalFormData = new FormData(form);
-    dt.files.forEach(f => finalFormData.append('fotos_evidencia[]', f));
+    Array.from(dt.files).forEach(f => finalFormData.append('fotos_evidencia[]', f));
     finalFormData.append('fotos_camera_json', JSON.stringify(fotosCam));
 
     Swal.fire({ title: 'Guardando informe de tarea...', didOpen: () => Swal.showLoading() });
