@@ -20,24 +20,6 @@ if (!$informe) {
 }
 
 // Lógica de Viáticos (Simplificada para el reporte)
-function calcularViaticos($visitas) {
-    if (empty($visitas)) return ['desayuno' => 0, 'almuerzo' => 0, 'cena' => 0];
-    
-    $primera = $visitas[0]['hora_llegada'];
-    $ultima = end($visitas)['hora_salida'] ?? end($visitas)['hora_llegada'];
-    
-    $fueraManagua = false;
-    foreach($visitas as $v) if ($v['departamento_sucursal'] !== 'Managua') $fueraManagua = true;
-
-    return [
-        'desayuno' => (strtotime($primera) < strtotime('06:00:00')) ? 1 : 0,
-        'almuerzo' => ($fueraManagua) ? 1 : 0,
-        'cena' => (strtotime($ultima) > strtotime('19:00:00')) ? 1 : 0
-    ];
-}
-
-$viaticos = calcularViaticos($informe['visitas']);
-
 // Calculos para el resumen
 $totalGastado = 0;
 $totalTareas = 0;
@@ -58,7 +40,7 @@ $saldoActual = $informe['monto_caja_chica'] - $totalGastado;
         .header { display: flex; justify-content: space-between; border-bottom: 2px solid #0E544C; padding-bottom: 10px; margin-bottom: 20px; }
         .logo { height: 50px; }
         .title { font-size: 16pt; font-weight: bold; color: #0E544C; margin: 0; }
-        .info-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; background: #f9f9f9; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+        .info-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; background: #f9f9f9; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
         .info-item label { display: block; font-size: 8pt; color: #666; text-transform: uppercase; font-weight: bold; }
         .info-item span { font-size: 11pt; font-weight: 600; }
         
@@ -73,8 +55,6 @@ $saldoActual = $informe['monto_caja_chica'] - $totalGastado;
         .foto-box { width: 80px; height: 80px; border: 1px solid #ddd; border-radius: 4px; overflow: hidden; }
         .foto-box img { width: 100%; height: 100%; object-fit: cover; }
         
-        .viatico-badge { padding: 2px 8px; border-radius: 4px; font-size: 8pt; font-weight: bold; margin-right: 5px; border: 1px solid #ddd; }
-        .viatico-active { background: #e8f5e9; color: #2e7d32; border-color: #2e7d32; }
 
         .footer { margin-top: 40px; display: flex; justify-content: space-around; text-align: center; }
         .firma-line { border-top: 1px solid #000; width: 200px; margin-top: 40px; }
@@ -154,14 +134,6 @@ $saldoActual = $informe['monto_caja_chica'] - $totalGastado;
                 <div style="display: flex; justify-content: space-between;"><span>Sucursales:</span> <span style="font-weight: bold;"><?= count($informe['visitas']) ?></span></div>
                 <div style="display: flex; justify-content: space-between;"><span>Tareas:</span> <span style="font-weight: bold;"><?= $totalTareas ?></span></div>
                 <div style="display: flex; justify-content: space-between;"><span>Distancia:</span> <span style="font-weight: bold;"><?= $informe['km_final'] ? number_format($informe['km_final'] - $informe['km_inicial'], 2) : '--' ?> km</span></div>
-            </div>
-        </div>
-        <div class="info-item">
-            <label>Viáticos Aplicados</label>
-            <div style="margin-top: 3px;">
-                <span class="viatico-badge <?= $viaticos['desayuno'] ? 'viatico-active' : '' ?>">Desayuno</span>
-                <span class="viatico-badge <?= $viaticos['almuerzo'] ? 'viatico-active' : '' ?>">Almuerzo</span>
-                <span class="viatico-badge <?= $viaticos['cena'] ? 'viatico-active' : '' ?>">Cena</span>
             </div>
         </div>
     </div>
