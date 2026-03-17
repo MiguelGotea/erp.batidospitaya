@@ -130,58 +130,93 @@ if ($colaborador_filtro) {
 
                             <?php if ($informeActual): ?>
                                 <hr class="my-3 opacity-10">
-                                <div class="row g-4 text-center">
-                                    <div class="col-6 col-md-2 border-end">
-                                        <small class="text-muted d-block">KM Inicial</small>
-                                        <div class="d-flex align-items-center justify-content-center gap-2">
-                                            <span class="fw-bold"><?= number_format($informeActual['km_inicial'], 2) ?></span>
-                                            <?php if ($informeActual['km_foto_inicial']): ?>
-                                                <img src="uploads/informes/<?= $informeActual['km_foto_inicial'] ?>" 
-                                                     class="rounded shadow-sm" style="width: 30px; height: 30px; object-fit: cover; cursor: zoom-in;"
-                                                     onclick="zoomFoto(this.src)" title="Ver foto inicial">
-                                            <?php endif; ?>
+                                <div class="row g-4 text-center align-items-center">
+                                    <!-- COLUMNA KILOMETRAJE -->
+                                    <div class="col-md-3 border-end">
+                                        <div class="row g-0">
+                                            <div class="col-6 border-end">
+                                                <small class="visita-info-label mb-1">KM Inicial</small>
+                                                <div class="d-flex flex-column align-items-center gap-1">
+                                                    <span class="fw-bold fs-5"><?= number_format($informeActual['km_inicial'], 2) ?></span>
+                                                    <?php if ($informeActual['km_foto_inicial']): ?>
+                                                        <img src="uploads/informes/<?= $informeActual['km_foto_inicial'] ?>" 
+                                                             class="rounded shadow-sm" style="width: 45px; height: 45px; object-fit: cover; cursor: zoom-in;"
+                                                             onclick="zoomFoto(this.src)">
+                                                    <?php endif; ?>
+                                                </div>
+                                            </div>
+                                            <div class="col-6">
+                                                <small class="visita-info-label mb-1">KM Final</small>
+                                                <div class="d-flex flex-column align-items-center gap-1">
+                                                    <?php if ($informeActual['km_final']): ?>
+                                                        <span class="fw-bold fs-5"><?= number_format($informeActual['km_final'], 2) ?></span>
+                                                        <?php if ($informeActual['km_foto_final']): ?>
+                                                            <img src="uploads/informes/<?= $informeActual['km_foto_final'] ?>" 
+                                                                 class="rounded shadow-sm" style="width: 45px; height: 45px; object-fit: cover; cursor: zoom-in;"
+                                                                 onclick="zoomFoto(this.src)">
+                                                        <?php endif; ?>
+                                                    <?php else: ?>
+                                                        <button class="btn btn-sm btn-outline-danger mt-1 rounded-pill" onclick="modalCierre(<?= $informeActual['id'] ?>)">
+                                                            <i class="fas fa-plus me-1"></i>Registrar
+                                                        </button>
+                                                    <?php endif; ?>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div class="col-6 col-md-2 border-end">
-                                        <small class="text-muted d-block">KM Final</small>
-                                        <div class="d-flex align-items-center justify-content-center gap-2">
-                                            <span class="fw-bold"><?= $informeActual['km_final'] ? number_format($informeActual['km_final'], 2) : '---' ?></span>
-                                            <?php if ($informeActual['km_foto_final']): ?>
-                                                <img src="uploads/informes/<?= $informeActual['km_foto_final'] ?>" 
-                                                     class="rounded shadow-sm" style="width: 30px; height: 30px; object-fit: cover; cursor: zoom-in;"
-                                                     onclick="zoomFoto(this.src)" title="Ver foto final">
-                                            <?php endif; ?>
-                                        </div>
-                                    </div>
-                                    <div class="col-6 col-md-2 border-end">
-                                        <small class="text-muted d-block">Asignado</small>
-                                        <span class="fw-bold fs-5 text-dark">C$<?= number_format($informeActual['monto_caja_chica'], 2) ?></span>
-                                    </div>
-                                    <div class="col-6 col-md-2 border-end">
+
+                                    <!-- COLUMNA CAJA CHICA -->
+                                    <div class="col-md-3 border-end">
                                         <?php 
                                             $totalGastado = 0;
                                             foreach($informeActual['visitas'] as $v) {
                                                 foreach($v['compras'] as $c) $totalGastado += $c['monto'];
                                             }
+                                            $saldoActual = $informeActual['monto_caja_chica'] - $totalGastado;
                                         ?>
-                                        <small class="text-muted d-block">Gastado</small>
-                                        <span class="fw-bold fs-5 text-danger">C$<?= number_format($totalGastado, 2) ?></span>
+                                        <div class="d-flex flex-column gap-1 text-start">
+                                            <div class="d-flex justify-content-between px-3">
+                                                <small class="visita-info-label small opacity-75">Caja Chica (Ingreso):</small>
+                                                <span class="fw-bold text-dark">C$<?= number_format($informeActual['monto_caja_chica'], 2) ?></span>
+                                            </div>
+                                            <div class="d-flex justify-content-between px-3">
+                                                <small class="visita-info-label small opacity-75">Total Gastado:</small>
+                                                <span class="fw-bold text-danger">C$<?= number_format($totalGastado, 2) ?></span>
+                                            </div>
+                                            <div class="bg-white rounded-pill py-1 px-3 mt-1 d-flex justify-content-between shadow-sm border mx-2">
+                                                <small class="visita-info-label">Saldo Actual:</small>
+                                                <span class="fw-bold fs-5 text-success">C$<?= number_format($saldoActual, 2) ?></span>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div class="col-6 col-md-2 border-end">
-                                        <small class="text-muted d-block">Saldo Actual</small>
-                                        <span class="fw-bold fs-5 text-success">C$<?= number_format($informeActual['monto_caja_chica'] - $totalGastado, 2) ?></span>
+
+                                    <!-- COLUMNA ESTADISTICAS -->
+                                    <div class="col-md-3 border-end">
+                                        <div class="row g-0">
+                                            <div class="col-6 border-end">
+                                                <small class="visita-info-label mb-1">Sucursales</small>
+                                                <div class="fs-3 fw-bold text-primary"><?= count($informeActual['visitas']) ?></div>
+                                            </div>
+                                            <div class="col-6">
+                                                <small class="visita-info-label mb-1">Tareas</small>
+                                                <?php 
+                                                    $totalT = 0;
+                                                    foreach($informeActual['visitas'] as $v) $totalT += count($v['tareas']);
+                                                ?>
+                                                <div class="fs-3 fw-bold text-primary"><?= $totalT ?></div>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div class="col-6 col-md-2 border-end">
-                                        <small class="text-muted d-block">Sucursales Visitas</small>
-                                        <span class="fw-bold"><?= count($informeActual['visitas']) ?></span>
-                                    </div>
-                                    <div class="col-6 col-md-2">
-                                        <small class="text-muted d-block">Tareas Hechas</small>
-                                        <?php 
-                                            $totalT = 0; 
-                                            foreach($informeActual['visitas'] as $v) $totalT += count($v['tareas']); 
-                                        ?>
-                                        <span class="fw-bold"><?= $totalT ?></span>
+
+                                    <!-- COLUMNA ESTADO FINAL -->
+                                    <div class="col-md-3">
+                                        <div class="visita-info-label mb-1">Estado del Informe</div>
+                                        <?php if ($informeActual['estado'] === 'creado'): ?>
+                                            <div class="text-warning fw-bold fs-5"><i class="fas fa-spinner fa-spin me-2"></i>ABIERTO</div>
+                                        <?php else: ?>
+                                            <div class="text-success fw-bold fs-5"><i class="fas fa-check-circle me-2"></i>FINALIZADO</div>
+                                            <small class="text-muted d-block">Distancia: <?= number_format($informeActual['km_final'] - $informeActual['km_inicial'], 2) ?> km</small>
+                                        <?php endif; ?>
                                     </div>
                                 </div>
                             <?php endif; ?>
@@ -237,7 +272,7 @@ if ($colaborador_filtro) {
                                                                     <div class="visita-info-label mb-1">Arribo</div>
                                                                     <div class="d-flex align-items-center gap-1">
                                                                         <i class="far fa-clock text-primary"></i> 
-                                                                        <input type="time" class="form-control form-control-sm border-0 bg-white py-0 px-1" style="width: 100px;" 
+                                                                        <input type="time" class="form-control form-control-sm border-0 bg-white py-0 px-1" style="width: 115px;" 
                                                                                value="<?= date('H:i', strtotime($v['hora_llegada'])) ?>" 
                                                                                onchange="actualizarVisitaInline(<?= $v['id'] ?>, 'hora_llegada', this.value)"
                                                                                <?= !$canEdit ? 'disabled' : '' ?>>
@@ -247,7 +282,7 @@ if ($colaborador_filtro) {
                                                                     <div class="visita-info-label mb-1">Término</div>
                                                                     <div class="d-flex align-items-center gap-1">
                                                                         <i class="fas fa-history text-primary"></i> 
-                                                                        <input type="time" class="form-control form-control-sm border-0 bg-white py-0 px-1" style="width: 100px;" 
+                                                                        <input type="time" class="form-control form-control-sm border-0 bg-white py-0 px-1" style="width: 115px;" 
                                                                                value="<?= $v['hora_salida'] ? date('H:i', strtotime($v['hora_salida'])) : '' ?>" 
                                                                                onchange="actualizarVisitaInline(<?= $v['id'] ?>, 'hora_salida', this.value)"
                                                                                <?= !$canEdit ? 'disabled' : '' ?>>
