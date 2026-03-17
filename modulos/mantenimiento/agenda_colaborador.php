@@ -111,17 +111,18 @@ if ($colaborador_filtro) {
                                 </p>
                             </div>
 
+
                             <div class="d-flex gap-2">
-                                    <?php if (!$informeActual && ($colaborador_filtro == $usuario['CodOperario'] || $puedeVerTodosColaboradores)): ?>
-                                        <button class="btn btn-primary px-4 rounded-pill" onclick="modalApertura()">
-                                            <i class="fas fa-play me-2"></i>Iniciar Informe
-                                        </button>
-                                    <?php elseif ($informeActual && $informeActual['estado'] === 'creado' && ($colaborador_filtro == $usuario['CodOperario'] || $puedeVerTodosColaboradores)): ?>
-                                        <button class="btn btn-outline-danger px-4 rounded-pill"
-                                            onclick="modalCierre(<?= $informeActual['id'] ?>)">
-                                            <i class="fas fa-stop me-2"></i>Finalizar Informe
-                                        </button>
-                                    <?php endif; ?>
+                                <?php if (!$informeActual && ($colaborador_filtro == $usuario['CodOperario'] || $puedeVerTodosColaboradores)): ?>
+                                    <button class="btn btn-primary px-4 rounded-pill" onclick="modalApertura()">
+                                        <i class="fas fa-play me-2"></i>Iniciar Informe
+                                    </button>
+                                <?php elseif ($informeActual && $informeActual['estado'] === 'creado' && ($colaborador_filtro == $usuario['CodOperario'] || $puedeVerTodosColaboradores)): ?>
+                                    <button class="btn btn-outline-danger px-4 rounded-pill"
+                                        onclick="modalCierre(<?= $informeActual['id'] ?>)">
+                                        <i class="fas fa-stop me-2"></i>Finalizar Informe
+                                    </button>
+                                <?php endif; ?>
 
                                 <?php if ($informeActual): ?>
                                     <button
@@ -189,9 +190,12 @@ if ($colaborador_filtro) {
                                         <div class="d-flex justify-content-between px-3">
                                             <small class="visita-info-label small opacity-75">Caja Chica (Ingreso):</small>
                                             <div class="d-flex align-items-center gap-2">
-                                                <span class="fw-bold text-dark">C$<?= number_format($informeActual['monto_caja_chica'], 2) ?></span>
+                                                <span
+                                                    class="fw-bold text-dark">C$<?= number_format($informeActual['monto_caja_chica'], 2) ?></span>
                                                 <?php if ($informeActual['monto_caja_chica'] == 0 && !tienePermiso('agenda_mantenimiento', 'caja_chica', $cargoOperario) && $informeActual['estado'] === 'creado'): ?>
-                                                    <button class="btn btn-sm btn-outline-success p-0 px-2 rounded-pill" style="font-size: 0.75rem;" onclick="modalValidarCaja(<?= $informeActual['id'] ?>, 0)">
+                                                    <button class="btn btn-sm btn-outline-success p-0 px-2 rounded-pill"
+                                                        style="font-size: 0.75rem;"
+                                                        onclick="modalValidarCaja(<?= $informeActual['id'] ?>, 0)">
                                                         <i class="fas fa-plus me-1"></i>Registrar
                                                     </button>
                                                 <?php endif; ?>
@@ -277,7 +281,8 @@ if ($colaborador_filtro) {
                                                     class="card-header bg-white border-bottom-0 pt-3 px-4 d-flex justify-content-between align-items-start gap-3">
                                                     <div class="flex-grow-1">
                                                         <h6 class="mb-0 text-primary fw-bold">
-                                                            <?= htmlspecialchars($v['nombre_sucursal']) ?></h6>
+                                                            <?= htmlspecialchars($v['nombre_sucursal']) ?>
+                                                        </h6>
                                                     </div>
                                                     <div class="d-flex gap-2 flex-wrap justify-content-end">
                                                         <?php if ($informeActual['estado'] === 'creado' && $colaborador_filtro == $usuario['CodOperario']): ?>
@@ -434,7 +439,8 @@ if ($colaborador_filtro) {
                                                     </div>
                                                     <h6 class="mb-1 fw-bold small"><?= htmlspecialchars($tp['titulo']) ?></h6>
                                                     <p class="small text-muted mb-0" style="font-size: 0.8em;">
-                                                        <?= htmlspecialchars($tp['descripcion']) ?></p>
+                                                        <?= htmlspecialchars($tp['descripcion']) ?>
+                                                    </p>
                                                 </div>
                                             </div>
                                         <?php endforeach; ?>
@@ -774,7 +780,8 @@ if ($colaborador_filtro) {
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content shadow-premium border-0 rounded-4">
                 <div class="modal-header border-0 pb-0">
-                    <h5 class="modal-title fw-bold"><i class="fas fa-cash-register me-2 text-success"></i>Registrar Caja Chica</h5>
+                    <h5 class="modal-title fw-bold"><i class="fas fa-cash-register me-2 text-success"></i>Registrar Caja
+                        Chica</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body p-4">
@@ -784,18 +791,22 @@ if ($colaborador_filtro) {
                             <label class="form-label small fw-bold">Monto Recibido *</label>
                             <div class="input-group">
                                 <span class="input-group-text">C$</span>
-                                <input type="number" step="0.01" name="monto" id="caja_monto" class="form-control form-control-lg" required>
+                                <input type="number" step="0.01" name="monto" id="caja_monto"
+                                    class="form-control form-control-lg" required>
                             </div>
                         </div>
                         <div class="mb-0">
                             <label class="form-label small fw-bold">Foto del Voucher / Comprobante *</label>
-                            <input type="file" name="foto_caja" id="caja_foto_input" class="form-control" accept="image/*" required>
+                            <input type="file" name="foto_caja" id="caja_foto_input" class="form-control"
+                                accept="image/*" required>
                         </div>
                     </form>
                 </div>
                 <div class="modal-footer border-0 p-3 px-4 pb-4">
-                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-success rounded-pill px-4" onclick="guardarValidacionCaja()">Confirmar Entrega</button>
+                    <button type="button" class="btn btn-light rounded-pill px-4"
+                        data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-success rounded-pill px-4"
+                        onclick="guardarValidacionCaja()">Confirmar Entrega</button>
                 </div>
             </div>
         </div>
