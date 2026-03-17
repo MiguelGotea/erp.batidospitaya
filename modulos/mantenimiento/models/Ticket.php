@@ -542,6 +542,19 @@ class Ticket
     }
 
     /**
+     * Obtener tickets pendientes por sucursal
+     */
+    public function getTicketsPorSucursal($cod_sucursal)
+    {
+        $sql = "SELECT t.*, s.nombre as nombre_sucursal 
+                FROM mtto_tickets t
+                LEFT JOIN sucursales s ON t.cod_sucursal = s.codigo
+                WHERE t.cod_sucursal = ? AND t.status IN ('solicitado', 'agendado')
+                ORDER BY t.created_at DESC";
+        return $this->db->fetchAll($sql, [$cod_sucursal]);
+    }
+
+    /**
      * Obtener historial de informes para el dashboard
      */
     public function getHistorialInformes($filters = [])

@@ -43,16 +43,7 @@ if ($colaborador_filtro) {
 // Obtener sucursales para el selector de visitas
 $sucursales = $ticketModel->getSucursales();
 
-// Obtener tickets pendientes (agendados) del colaborador
-$ticketsPendientes = [];
-if ($colaborador_filtro) {
-    $todosTickets = $ticketModel->getTicketsPorColaborador($colaborador_filtro, "2016-01-01");
-    foreach ($todosTickets as $t) {
-        if ($t['status'] === 'agendado') {
-            $ticketsPendientes[] = $t;
-        }
-    }
-}
+// Los tickets se cargan dinámicamente vía AJAX según la sucursal visitada
 
 ?>
 <!DOCTYPE html>
@@ -203,7 +194,7 @@ if ($colaborador_filtro) {
                                                                     <i class="fas fa-ellipsis-v"></i>
                                                                 </button>
                                                                 <ul class="dropdown-menu shadow border-0 rounded-3">
-                                                                    <li><a class="dropdown-item" href="#" onclick="modalNuevaTarea(<?= $v['id'] ?>)"><i class="fas fa-tools me-2 text-primary"></i>Registrar Tarea</a></li>
+                                                                    <li><a class="dropdown-item" href="#" onclick="modalNuevaTarea(<?= $v['id'] ?>, '<?= $v['cod_sucursal'] ?>')"><i class="fas fa-tools me-2 text-primary"></i>Registrar Tarea</a></li>
                                                                     <li><a class="dropdown-item" href="#" onclick="modalNuevaCompra(<?= $v['id'] ?>)"><i class="fas fa-file-invoice-dollar me-2 text-success"></i>Subir Factura</a></li>
                                                                     <li><hr class="dropdown-item-divider"></li>
                                                                     <li><a class="dropdown-item text-danger" href="#" onclick="eliminarVisita(<?= $v['id'] ?>)"><i class="fas fa-trash me-2"></i>Eliminar Visita</a></li>
@@ -402,10 +393,7 @@ if ($colaborador_filtro) {
                         <div class="mb-3">
                             <label class="form-label small fw-bold">Seleccionar Ticket de la Agenda *</label>
                             <select name="ticket_id" class="form-select rounded-3" required>
-                                <option value="">Lista de pendientes...</option>
-                                <?php foreach ($ticketsPendientes as $tp): ?>
-                                    <option value="<?= $tp['id'] ?>"><?= htmlspecialchars($tp['nombre_sucursal'] . ' - ' . $tp['titulo']) ?></option>
-                                <?php endforeach; ?>
+                                <option value="">Seleccione una parada para cargar tickets...</option>
                             </select>
                         </div>
                         <div class="mb-3">

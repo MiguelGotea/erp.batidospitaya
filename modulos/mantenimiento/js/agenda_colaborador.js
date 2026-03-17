@@ -102,14 +102,44 @@ async function guardarVisita() {
 /**
  * Abre modal para registrar tarea dentro de una visita
  */
-function modalNuevaTarea(visitaId) {
+function modalNuevaTarea(visitaId, codSucursal) {
     $('#tarea_visita_id').val(visitaId);
     $('#formTarea')[0].reset();
+    
+    // Limpiar select y mostrar cargando
+    const select = $('#formTarea select[name="ticket_id"]');
+    select.empty().append('<option value="">Cargando tickets de esta sucursal...</option>');
+
     $('#evidencia_previews').empty();
     fotosEvidenciaTmp = [];
     stopCamera();
+
     const modal = new bootstrap.Modal(document.getElementById('tareaModal'));
     modal.show();
+
+    // Cargar tickets por sucursal vía AJAX
+    $.ajax({
+        url: 'ajax/get_tickets_sucursal.php',
+        method: 'GET',
+        data: { cod_sucursal: codSucursal },
+        success: function(res) {
+            select.empty().append('<option value="">Seleccionar Ticket...</option>');
+            if (res.success) {
+                if (res.tickets.length > 0) {
+                    res.tickets.forEach(t => {
+                        select.append(`<option value="${t.id}">${t.codigo} - ${t.titulo}</option>`);
+                    });
+                } else {
+                    select.append('<option value="" disabled>No hay tickets pendientes en esta sucursal</option>');
+                }
+            } else {
+                Swal.fire('Error', res.message, 'error');
+            }
+        },
+        error: function() {
+            select.empty().append('<option value="">Error al cargar tickets</option>');
+        }
+    });
 }
 
 /**
