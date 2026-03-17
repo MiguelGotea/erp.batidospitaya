@@ -43,7 +43,16 @@ if ($colaborador_filtro) {
 // Obtener sucursales para el selector de visitas
 $sucursales = $ticketModel->getSucursales();
 
-// Los tickets se cargan dinámicamente vía AJAX según la sucursal visitada
+// Obtener tickets pendientes (solicitados/agendados) del colaborador para el panel lateral
+$ticketsPendientes = [];
+if ($colaborador_filtro) {
+    $todosTickets = $ticketModel->getTicketsPorColaborador($colaborador_filtro, "2016-01-01");
+    foreach ($todosTickets as $t) {
+        if ($t['status'] === 'agendado' || $t['status'] === 'solicitado') {
+            $ticketsPendientes[] = $t;
+        }
+    }
+}
 
 ?>
 <!DOCTYPE html>
