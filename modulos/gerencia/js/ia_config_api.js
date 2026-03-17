@@ -13,6 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+
 /**
  * Abre el modal para registrar un nuevo proveedor
  */
