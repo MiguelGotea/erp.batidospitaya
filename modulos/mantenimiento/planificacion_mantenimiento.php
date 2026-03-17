@@ -58,14 +58,15 @@ define('BASE_LNG', -86.2504);
 
 // Función Haversine para tiempos de viaje
 if (!function_exists('obtenerHorasViaje')) {
-    function obtenerHorasViaje($lat1, $lon1, $lat2, $lon2) {
+    function obtenerHorasViaje($lat1, $lon1, $lat2, $lon2)
+    {
         if (empty($lat1) || empty($lon1) || empty($lat2) || empty($lon2)) {
             return 2.5; // Fallback promedio si no hay lat/lng
         }
         $earth_radius = 6371; // km
         $dLat = deg2rad($lat2 - $lat1);
         $dLon = deg2rad($lon2 - $lon1);
-        $a = sin($dLat/2) * sin($dLat/2) + cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * sin($dLon/2) * sin($dLon/2);
+        $a = sin($dLat / 2) * sin($dLat / 2) + cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * sin($dLon / 2) * sin($dLon / 2);
         $c = 2 * asin(sqrt($a));
         $distancia_km = $earth_radius * $c;
         return $distancia_km / VELOCIDAD_PROMEDIO_KMH;
@@ -80,22 +81,22 @@ $pool_tickets_raw = [];
 foreach ($tickets as $t) {
     // T_real con holgura
     $t['T_real'] = max(0.2, floatval($t['tiempo_exec']) * BUFFER_TIEMPO);
-    
+
     // Urgencia Efectiva (escala 1 pt cada 3 semanas)
     $semanas = intval($t['semanas_antiguedad'] ?? 0);
     $urg_base = intval($t['urgencia'] ?? 1);
     $t['U_ef'] = min(4, $urg_base + floor($semanas / 3));
-    
+
     // Fallback Coords
     $lat = floatval($t['Latitude'] ?? 0);
     $lng = floatval($t['Longitude'] ?? 0);
     $is_regional = ($t['departamento_sucursal'] !== 'Managua');
-    
+
     if ($lat == 0 || $lng == 0) {
         $t['Latitude'] = BASE_LAT + ($is_regional ? 0.8 : 0.05); // Offset mock geográfico
         $t['Longitude'] = BASE_LNG + ($is_regional ? 0.8 : 0.05);
     }
-    
+
     $pool_tickets_raw[$t['id']] = $t;
 }
 
@@ -115,7 +116,7 @@ for ($d = 1; $d <= $dias_plan; $d++) {
 
     // Procesar oleadas 4 a 1
     for ($oleada = 4; $oleada >= 1; $oleada--) {
-        
+
         while ($h_libres > 0.5) {
             // Agrupar tickets de esta oleada por sucursal
             $grupos = [];
@@ -139,11 +140,12 @@ for ($d = 1; $d <= $dias_plan; $d++) {
                 }
             }
 
-            if (empty($grupos)) break; // Pasa a la siguiente oleada
+            if (empty($grupos))
+                break; // Pasa a la siguiente oleada
 
             $max_C = max(array_column($grupos, 'C'));
             $max_eta = 0;
-            
+
             foreach ($grupos as &$g) {
                 if (empty($sucursales_visitadas_hoy)) {
                     $g['costo_viaje'] = obtenerHorasViaje(BASE_LAT, BASE_LNG, $g['lat'], $g['lng']) * 2;
@@ -153,10 +155,11 @@ for ($d = 1; $d <= $dias_plan; $d++) {
                     $t_u_b = obtenerHorasViaje($ultima_lat, $ultima_lng, BASE_LAT, BASE_LNG);
                     $g['costo_viaje'] = max(0, $t_u_n + $t_n_b - $t_u_b); // Evita flotantes minúsculos negativos
                 }
-                
+
                 $viaje_total = obtenerHorasViaje(BASE_LAT, BASE_LNG, $g['lat'], $g['lng']) * 2;
                 $g['eta'] = $g['C'] / max(0.2, $viaje_total);
-                if ($g['eta'] > $max_eta) $max_eta = $g['eta'];
+                if ($g['eta'] > $max_eta)
+                    $max_eta = $g['eta'];
             }
             unset($g);
 
@@ -165,20 +168,22 @@ for ($d = 1; $d <= $dias_plan; $d++) {
 
             foreach ($grupos as $g) {
                 $min_task = min(array_column($g['tickets'], 'T_real'));
-                if ($h_libres < ($g['costo_viaje'] + $min_task)) continue;
+                if ($h_libres < ($g['costo_viaje'] + $min_task))
+                    continue;
 
                 $norm_C = $max_C > 0 ? $g['C'] / $max_C : 0;
                 $norm_eta = $max_eta > 0 ? $g['eta'] / $max_eta : 0;
-                
+
                 $score = ($alpha * $norm_C) + ($beta * $norm_eta);
-                
+
                 if ($score > $mejor_score) {
                     $mejor_score = $score;
                     $mejor_grupo = $g;
                 }
             }
 
-            if (!$mejor_grupo) break; // Ningún grupo cabe, intenta oleada menor o pasa al sgte dia
+            if (!$mejor_grupo)
+                break; // Ningún grupo cabe, intenta oleada menor o pasa al sgte dia
 
             $h_libres -= $mejor_grupo['costo_viaje'];
             $horas_exec_hoy = 0;
@@ -212,7 +217,7 @@ for ($d = 1; $d <= $dias_plan; $d++) {
                 $agenda_semanal[$dia_nombre]['tiempo_ejecucion'] += $horas_exec_hoy;
                 $agenda_semanal[$dia_nombre]['tiempo_transporte'] += $mejor_grupo['costo_viaje'];
                 $agenda_semanal[$dia_nombre]['tiempo_total'] += ($horas_exec_hoy + $mejor_grupo['costo_viaje']);
-                
+
                 $sucursales_visitadas_hoy[] = $mejor_grupo['cod'];
                 $ultima_lat = $mejor_grupo['lat'];
                 $ultima_lng = $mejor_grupo['lng'];
@@ -360,8 +365,7 @@ $solicitudes_criticas = array_filter($tickets, function ($t) {
                                         <div class="col-6">
                                             <label class="small text-muted mb-0">Cant. de Días</label>
                                             <input type="number" min="1" step="1" name="dias_plan"
-                                                class="form-control form-control-sm"
-                                                value="<?php echo $dias_plan; ?>">
+                                                class="form-control form-control-sm" value="<?php echo $dias_plan; ?>">
                                         </div>
                                     </div>
                                     <div class="d-flex justify-content-end align-items-center mt-3 mb-1">
@@ -534,9 +538,8 @@ $solicitudes_criticas = array_filter($tickets, function ($t) {
                                                         <?php foreach ($data['visitas'] as $v): ?>
                                                             <div class="visit-item mb-2 bg-white rounded-2 p-2 px-3 border-start border-4 shadow-sm"
                                                                 style="border-color: <?php echo getColorUrgencia($v['tickets'][0]['urgencia']); ?>; cursor: pointer;"
-                                                                title="Clic para ver detalle térmico"
-                                                                data-bs-toggle="modal" data-bs-target="#visitDetailsModal"
-                                                                data-visit-json='<?php echo htmlspecialchars(json_encode([
+                                                                title="Clic para ver detalle térmico" data-bs-toggle="modal"
+                                                                data-bs-target="#visitDetailsModal" data-visit-json='<?php echo htmlspecialchars(json_encode([
                                                                     "nombre" => $v["nombre"],
                                                                     "departamento" => $v["departamento"],
                                                                     "horas_exec" => $v["horas_exec"],
@@ -582,22 +585,25 @@ $solicitudes_criticas = array_filter($tickets, function ($t) {
     </div>
 
     <!-- Modal de Detalles de Visita -->
-    <div class="modal fade" id="visitDetailsModal" tabindex="-1" aria-labelledby="visitDetailsModalLabel" aria-hidden="true">
+    <div class="modal fade" id="visitDetailsModal" tabindex="-1" aria-labelledby="visitDetailsModalLabel"
+        aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content border-0 shadow-lg">
                 <div class="modal-header text-white border-0 py-3" style="background-color: #0E544C;">
                     <h5 class="modal-title fw-bold" id="visitDetailsModalLabel">
                         <i class="bi bi-geo-alt-fill me-2"></i>Detalles de Visita
                     </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-4 bg-light">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h6 class="fw-bold mb-0 text-dark" id="modalVisitBranch">Nombre de la Sucursal</h6>
                         <span class="badge bg-secondary" id="modalVisitStats">0h Ejecución | 0h Viaje</span>
                     </div>
-                    
-                    <div class="list-group list-group-flush border rounded-3 overflow-hidden shadow-sm" id="modalTicketsList">
+
+                    <div class="list-group list-group-flush border rounded-3 overflow-hidden shadow-sm"
+                        id="modalTicketsList">
                         <!-- Tickets se inyectarán aquí vía JS -->
                     </div>
                 </div>
@@ -618,12 +624,16 @@ $solicitudes_criticas = array_filter($tickets, function ($t) {
                 </div>
                 <div class="modal-body p-4">
                     <section class="mb-4">
-                        <h6 class="fw-bold text-info"><i class="bi bi-cpu-fill me-2"></i>Algoritmo: Oleadas de Urgencia v2</h6>
+                        <h6 class="fw-bold text-info"><i class="bi bi-cpu-fill me-2"></i>Algoritmo: Oleadas de Urgencia
+                            v2</h6>
                         <p class="text-muted small mb-2">
-                            El sistema evalúa todos los tickets de <strong>Mantenimiento General</strong> y los agrupa en <strong>Oleadas (O4 a O1)</strong> basado en su Urgencia Efectiva. 
+                            El sistema evalúa todos los tickets de <strong>Mantenimiento General</strong> y los agrupa
+                            en <strong>Oleadas (O4 a O1)</strong> basado en su Urgencia Efectiva.
                         </p>
                         <p class="text-muted small">
-                            Aplica la <strong>Fórmula de Haversine</strong> para medir distancias exactas y optimizar los viajes, resolviendo un problema logístico avanzado con relleno oportunista para aprovechar cada minuto del día.
+                            Aplica la <strong>Fórmula de Haversine</strong> para medir distancias exactas y optimizar
+                            los viajes, resolviendo un problema logístico avanzado con relleno oportunista para
+                            aprovechar cada minuto del día.
                         </p>
                     </section>
 
@@ -631,32 +641,41 @@ $solicitudes_criticas = array_filter($tickets, function ($t) {
                         <div class="col-md-6">
                             <div class="p-3 bg-light rounded-3 h-100">
                                 <h7 class="fw-bold d-block mb-2 text-dark">1. Escalado de Urgencia</h7>
-                                <p class="small text-muted mb-0">Cada 3 semanas que un ticket pasa sin ser atendido, su urgencia sube 1 nivel automáticamente. ¡Un ticket Normal puede volverse Crítico por antigüedad!</p>
+                                <p class="small text-muted mb-0">Cada 3 semanas que un ticket pasa sin ser atendido, su
+                                    urgencia sube 1 nivel automáticamente. ¡Un ticket Normal puede volverse Crítico por
+                                    antigüedad!</p>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="p-3 bg-light rounded-3 h-100">
                                 <h7 class="fw-bold d-block mb-2 text-dark">2. Score de Eficiencia</h7>
-                                <p class="small text-muted mb-0">El sistema balancea el impacto (volumen de horas de trabajo en la sucursal) contra la distancia geográfica. Privilegia viajes donde se resuelvan muchas tareas de golpe.</p>
+                                <p class="small text-muted mb-0">El sistema balancea el impacto (volumen de horas de
+                                    trabajo en la sucursal) contra la distancia geográfica. Privilegia viajes donde se
+                                    resuelvan muchas tareas de golpe.</p>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="p-3 bg-light rounded-3 h-100">
                                 <h7 class="fw-bold d-block mb-2 text-dark">3. Agrupamiento Triangular</h7>
-                                <p class="small text-muted mb-0">Si el equipo ya está en la Sucursal A, el algoritmo evalúa si vale la pena saltar a la B midiendo el "Costo Incremental" del triángulo (A -> B -> Base) vs (A -> Base).</p>
+                                <p class="small text-muted mb-0">Si el equipo ya está en la Sucursal A, el algoritmo
+                                    evalúa si vale la pena saltar a la B midiendo el "Costo Incremental" del triángulo
+                                    (A -> B -> Base) vs (A -> Base).</p>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="p-3 bg-light rounded-3 h-100">
                                 <h7 class="fw-bold d-block mb-2 text-dark">4. Relleno Oportunista</h7>
-                                <p class="small text-muted mb-0">Si el sistema te envía a un departamento por una Urgencia 4 y sobran horas en el día, rellenará ese tiempo resolviendo tickets menores de <strong>esa misma sucursal</strong>.</p>
+                                <p class="small text-muted mb-0">Si el sistema te envía a un departamento por una
+                                    Urgencia 4 y sobran horas en el día, rellenará ese tiempo resolviendo tickets
+                                    menores de <strong>esa misma sucursal</strong>.</p>
                             </div>
                         </div>
                     </div>
 
                     <div class="alert alert-warning mt-4 mb-0 border-0 shadow-sm">
                         <i class="bi bi-lightbulb-fill me-2 text-warning"></i>
-                        <strong>Importante:</strong> Los tiempos estimados se multiplican por un factor de holgura (1.15x) para representar el tiempo real operativo y evitar retrasos.
+                        <strong>Importante:</strong> Los tiempos estimados se multiplican por un factor de holgura
+                        (1.15x) para representar el tiempo real operativo y evitar retrasos.
                     </div>
                 </div>
                 <div class="modal-footer border-0 pt-0">
@@ -842,26 +861,27 @@ $solicitudes_criticas = array_filter($tickets, function ($t) {
             const modalTicketsList = document.getElementById('modalTicketsList');
 
             visitItems.forEach(item => {
-                item.addEventListener('click', function() {
+                item.addEventListener('click', function () {
                     let rawData = this.getAttribute('data-visit-json');
                     if (!rawData) return;
-                    
+
                     const data = JSON.parse(rawData);
-                    
+
                     // Actualizar cabeceras
                     modalBranch.textContent = data.nombre + ' (' + data.departamento + ')';
                     modalStats.textContent = `${data.horas_exec}h Ejecución | ${data.viaje}h Viaje`;
-                    
+
+
                     // Limpiar y poblar lista de tickets
                     modalTicketsList.innerHTML = '';
-                    
+
                     if (data.tickets && data.tickets.length > 0) {
                         data.tickets.forEach(tk => {
                             // Función Helper JS para colores de urgencia (replicando PHP)
                             let badgeHex = '';
                             let badgeLabel = '';
                             let textClass = 'text-white';
-                            switch(parseInt(tk.urgencia)) {
+                            switch (parseInt(tk.urgencia)) {
                                 case 4: badgeHex = '#dc3545'; badgeLabel = 'Crítico'; break; // Rojo
                                 case 3: badgeHex = '#fd7e14'; badgeLabel = 'Alta'; break; // Naranja
                                 case 2: badgeHex = '#ffc107'; badgeLabel = 'Media'; textClass = 'text-dark'; break; // Amarillo
@@ -870,10 +890,10 @@ $solicitudes_criticas = array_filter($tickets, function ($t) {
                             }
 
                             const imgPath = tk.primera_foto ? `/uploads/${tk.primera_foto}` : null;
-                            const imageHtml = imgPath 
+                            const imageHtml = imgPath
                                 ? `<div class="me-3 flex-shrink-0">
                                      <img src="${imgPath}" class="rounded border" style="width: 60px; height: 60px; object-fit: cover;" alt="Miniatura" onerror="this.style.display='none'">
-                                   </div>` 
+                                   </div>`
                                 : '';
 
                             const tktHtml = `
