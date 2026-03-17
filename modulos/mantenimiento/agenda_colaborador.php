@@ -40,6 +40,17 @@ if ($colaborador_filtro) {
     }
 }
 
+// Obtener información del colaborador para el título
+$nombreAMostrar = $usuario['Nombre'] . ' ' . $usuario['Apellido'];
+if ($informeActual) {
+    $nombreAMostrar = $informeActual['Nombre'] . ' ' . $informeActual['Apellido'];
+} elseif ($colaborador_filtro != $usuario['CodOperario']) {
+    $infoColab = $ticketModel->getColaboradorInfo($colaborador_filtro);
+    if ($infoColab) {
+        $nombreAMostrar = $infoColab['Nombre'] . ' ' . $infoColab['Apellido'];
+    }
+}
+
 // Obtener sucursales para el selector de visitas
 $sucursales = $ticketModel->getSucursales();
 
@@ -94,8 +105,8 @@ if ($colaborador_filtro) {
                             <div>
                                 <h4 class="mb-1">
                                     <i class="fas fa-clipboard-list me-2"></i>
-                                    Informe de <?= htmlspecialchars($usuario['Nombre'] . ' ' . $usuario['Apellido']) ?>
-                                    - <?= date('d/m/Y') ?>
+                                    Informe de <?= htmlspecialchars($nombreAMostrar) ?>
+                                    - <?= date('d/m/Y', strtotime($fechaHoy)) ?>
                                 </h4>
                                 <p class="mb-0 text-muted">
                                     <?php if (!$informeActual): ?>

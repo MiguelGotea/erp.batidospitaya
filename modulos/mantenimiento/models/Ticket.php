@@ -273,6 +273,14 @@ class Ticket
         return $this->db->fetchAll($sql);
     }
 
+    public function getColaboradorInfo($cod_operario)
+    {
+        $sql = "SELECT CodOperario, Nombre, Apellido 
+                FROM Operarios 
+                WHERE CodOperario = ?";
+        return $this->db->fetchOne($sql, [$cod_operario]);
+    }
+
     public function getTicketsPorColaborador($cod_operario, $fecha_inicio = null)
     {
         $sql = "SELECT t.*, s.nombre as nombre_sucursal, tc.fecha_asignacion,
