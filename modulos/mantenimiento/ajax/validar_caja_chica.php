@@ -10,6 +10,7 @@ header('Content-Type: application/json');
 try {
     require_once '../models/Ticket.php';
     require_once '../../../core/auth/auth.php';
+    require_once '../../../core/permissions/permissions.php';
 
     $usuario = obtenerUsuarioActual();
     if (!$usuario) {
