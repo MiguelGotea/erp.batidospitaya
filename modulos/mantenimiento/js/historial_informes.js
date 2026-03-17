@@ -6,7 +6,6 @@ let filtrosActivos = {};
 let ordenActivo = { columna: 'fecha', direccion: 'desc' };
 let panelFiltroAbierto = null;
 let totalRegistros = 0;
-let actualUserId = null; // Se seteará desde el PHP
 
 $(document).ready(function () {
     cargarDatos();
