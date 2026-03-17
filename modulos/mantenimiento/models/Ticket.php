@@ -167,7 +167,8 @@ class Ticket
     public function getTicketsForPlanning()
     {
         $sql = "SELECT t.*, s.nombre as nombre_sucursal, s.departamento as departamento_sucursal,
-                s.Latitude, s.Longitude, t.imagen_1,
+                s.Latitude, s.Longitude,
+                (SELECT foto FROM mtto_tickets_fotos WHERE ticket_id = t.id ORDER BY orden ASC LIMIT 1) as primera_foto,
                 FLOOR(DATEDIFF(NOW(), t.created_at) / 7) as semanas_antiguedad,
                 COALESCE(t.nivel_urgencia, 0) as urgencia,
                 COALESCE(t.tiempo_estimado, 0) as tiempo_exec

@@ -866,7 +866,7 @@ $solicitudes_criticas = array_filter($tickets, function ($t) {
                                 default: badgeColor = 'bg-secondary'; badgeLabel = 'N/A';
                             }
 
-                            const imgPath = tk.imagen_1 ? `/uploads/${tk.imagen_1}` : null;
+                            const imgPath = tk.primera_foto ? `/uploads/${tk.primera_foto}` : null;
                             const imageHtml = imgPath 
                                 ? `<div class="me-3 flex-shrink-0">
                                      <img src="${imgPath}" class="rounded border" style="width: 60px; height: 60px; object-fit: cover;" alt="Miniatura" onerror="this.style.display='none'">
