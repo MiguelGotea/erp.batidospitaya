@@ -1,22 +1,22 @@
 let modalContacto;
 let modalCuenta;
 
-$(document).ready(function() {
+$(document).ready(function () {
     modalContacto = new bootstrap.Modal(document.getElementById('modalContacto'));
     modalCuenta = new bootstrap.Modal(document.getElementById('modalCuenta'));
-    
+
     // Si es edición, cargar datos adicionales
     if (ES_EDICION) {
         // Cargar contactos, cuentas e historial cuando se cambia de pestaña
-        $('#contactos-tab').on('shown.bs.tab', function() {
+        $('#contactos-tab').on('shown.bs.tab', function () {
             cargarContactos();
         });
-        
-        $('#cuentas-tab').on('shown.bs.tab', function() {
+
+        $('#cuentas-tab').on('shown.bs.tab', function () {
             cargarCuentas();
         });
-        
-        $('#historial-tab').on('shown.bs.tab', function() {
+
+        $('#historial-tab').on('shown.bs.tab', function () {
             cargarHistorial();
         });
     }
@@ -25,30 +25,31 @@ $(document).ready(function() {
 // Guardar datos básicos - MEJORADO CON MEJOR MANEJO DE ERRORES
 function guardarDatosBasicos() {
     const formData = $('#formDatosBasicos').serialize();
-    
+
     // Recopilar tipos de pago seleccionados
     const tiposPagoSeleccionados = [];
-    $('.tipo-pago-checkbox:checked').each(function() {
+    $('.tipo-pago-checkbox:checked').each(function () {
         tiposPagoSeleccionados.push($(this).val());
     });
-    
+
     const datosCompletos = formData + '&tipos_pago=' + JSON.stringify(tiposPagoSeleccionados);
-    
+
     // Mostrar indicador de carga
     const btnGuardar = event.target;
     const textoOriginal = btnGuardar.innerHTML;
     btnGuardar.disabled = true;
     btnGuardar.innerHTML = '<i class="bi bi-hourglass-split"></i> Guardando...';
-    
+
+
     $.ajax({
         url: 'ajax/proveedores_guardar_basicos.php',
         method: 'POST',
         data: datosCompletos,
         dataType: 'json',
-        success: function(response) {
+        success: function (response) {
             btnGuardar.disabled = false;
             btnGuardar.innerHTML = textoOriginal;
-            
+
             if (response.success) {
                 alert('✅ ' + response.message);
                 if (!ES_EDICION && response.id_proveedor) {
@@ -58,7 +59,7 @@ function guardarDatosBasicos() {
             } else {
                 // MOSTRAR ERROR COMPLETO
                 let mensajeError = '❌ Error al guardar:\n\n' + response.message;
-                
+
                 // Si hay detalles adicionales, mostrarlos
                 if (response.error_code) {
                     mensajeError += '\n\nCódigo: ' + response.error_code;
@@ -67,22 +68,22 @@ function guardarDatosBasicos() {
                     console.error('Stack trace:', response.trace);
                     mensajeError += '\n\n(Ver consola del navegador para más detalles)';
                 }
-                
+
                 alert(mensajeError);
             }
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             btnGuardar.disabled = false;
             btnGuardar.innerHTML = textoOriginal;
-            
+
             // MOSTRAR ERROR DETALLADO DEL SERVIDOR
             let mensajeError = '❌ Error de conexión con el servidor:\n\n';
-            
+
             try {
                 // Intentar parsear respuesta JSON
                 const response = JSON.parse(xhr.responseText);
                 mensajeError += response.message || 'Error desconocido';
-                
+
                 if (response.error_code) {
                     mensajeError += '\n\nCódigo: ' + response.error_code;
                 }
@@ -93,7 +94,7 @@ function guardarDatosBasicos() {
             } catch (e) {
                 // Si no es JSON, mostrar respuesta cruda
                 mensajeError += 'Respuesta del servidor:\n' + xhr.responseText;
-                
+
                 if (xhr.status === 404) {
                     mensajeError = '❌ Error 404: Archivo no encontrado\n\n';
                     mensajeError += 'Verifica que el archivo exista en:\n';
@@ -103,17 +104,17 @@ function guardarDatosBasicos() {
                     mensajeError += 'Revisa los logs del servidor PHP';
                 }
             }
-            
+
             console.error('Error AJAX:', {
                 status: xhr.status,
                 statusText: xhr.statusText,
                 responseText: xhr.responseText,
                 error: error
             });
-            
+
             mensajeError += '\n\nEstado HTTP: ' + xhr.status;
             mensajeError += '\nVer consola del navegador (F12) para más detalles';
-            
+
             alert(mensajeError);
         }
     });
@@ -127,14 +128,14 @@ function cargarContactos() {
         method: 'POST',
         data: { id_proveedor: ID_PROVEEDOR },
         dataType: 'json',
-        success: function(response) {
+        success: function (response) {
             if (response.success) {
                 renderizarContactos(response.contactos);
             } else {
                 $('#listaContactos').html('<p class="text-muted">Error al cargar contactos</p>');
             }
         },
-        error: function(xhr) {
+        error: function (xhr) {
             console.error('Error al cargar contactos:', xhr.responseText);
             $('#listaContactos').html('<p class="text-danger">Error: ' + xhr.statusText + '</p>');
         }
@@ -144,12 +145,12 @@ function cargarContactos() {
 function renderizarContactos(contactos) {
     const lista = $('#listaContactos');
     lista.empty();
-    
+
     if (contactos.length === 0) {
         lista.html('<p class="text-muted">No hay contactos registrados</p>');
         return;
     }
-    
+
     contactos.forEach(contacto => {
         const principal = contacto.principal == 1 ? '<span class="badge bg-primary ms-2">Principal</span>' : '';
         const card = $(`
@@ -186,7 +187,7 @@ function editarContacto(id) {
         method: 'POST',
         data: { id: id },
         dataType: 'json',
-        success: function(response) {
+        success: function (response) {
             if (response.success) {
                 $('#modalContactoTitulo').text('Editar Contacto');
                 $('#contactoId').val(response.data.id);
@@ -199,7 +200,7 @@ function editarContacto(id) {
                 alert('❌ Error: ' + response.message);
             }
         },
-        error: function(xhr) {
+        error: function (xhr) {
             console.error('Error:', xhr.responseText);
             alert('❌ Error al cargar el contacto: ' + xhr.statusText);
         }
@@ -208,13 +209,13 @@ function editarContacto(id) {
 
 function guardarContacto() {
     const formData = $('#formContacto').serialize();
-    
+
     $.ajax({
         url: 'ajax/proveedores_guardar_contacto.php',
         method: 'POST',
         data: formData,
         dataType: 'json',
-        success: function(response) {
+        success: function (response) {
             if (response.success) {
                 modalContacto.hide();
                 cargarContactos();
@@ -223,7 +224,7 @@ function guardarContacto() {
                 alert('❌ Error: ' + response.message);
             }
         },
-        error: function(xhr) {
+        error: function (xhr) {
             console.error('Error:', xhr.responseText);
             alert('❌ Error al guardar: ' + xhr.statusText + '\n\nVer consola para más detalles');
         }
@@ -238,14 +239,14 @@ function cargarCuentas() {
         method: 'POST',
         data: { id_proveedor: ID_PROVEEDOR },
         dataType: 'json',
-        success: function(response) {
+        success: function (response) {
             if (response.success) {
                 renderizarCuentas(response.cuentas);
             } else {
                 $('#listaCuentas').html('<p class="text-muted">Error al cargar cuentas</p>');
             }
         },
-        error: function(xhr) {
+        error: function (xhr) {
             console.error('Error al cargar cuentas:', xhr.responseText);
             $('#listaCuentas').html('<p class="text-danger">Error: ' + xhr.statusText + '</p>');
         }
@@ -255,12 +256,12 @@ function cargarCuentas() {
 function renderizarCuentas(cuentas) {
     const lista = $('#listaCuentas');
     lista.empty();
-    
+
     if (cuentas.length === 0) {
         lista.html('<p class="text-muted">No hay cuentas bancarias registradas</p>');
         return;
     }
-    
+
     cuentas.forEach(cuenta => {
         const principal = cuenta.principal == 1 ? '<span class="badge bg-primary ms-2">Principal</span>' : '';
         const card = $(`
@@ -298,7 +299,7 @@ function editarCuenta(id) {
         method: 'POST',
         data: { id: id },
         dataType: 'json',
-        success: function(response) {
+        success: function (response) {
             if (response.success) {
                 $('#modalCuentaTitulo').text('Editar Cuenta Bancaria');
                 $('#cuentaId').val(response.data.id);
@@ -312,7 +313,7 @@ function editarCuenta(id) {
                 alert('❌ Error: ' + response.message);
             }
         },
-        error: function(xhr) {
+        error: function (xhr) {
             console.error('Error:', xhr.responseText);
             alert('❌ Error al cargar la cuenta: ' + xhr.statusText);
         }
@@ -321,13 +322,13 @@ function editarCuenta(id) {
 
 function guardarCuenta() {
     const formData = $('#formCuenta').serialize();
-    
+
     $.ajax({
         url: 'ajax/proveedores_guardar_cuenta.php',
         method: 'POST',
         data: formData,
         dataType: 'json',
-        success: function(response) {
+        success: function (response) {
             if (response.success) {
                 modalCuenta.hide();
                 cargarCuentas();
@@ -336,7 +337,7 @@ function guardarCuenta() {
                 alert('❌ Error: ' + response.message);
             }
         },
-        error: function(xhr) {
+        error: function (xhr) {
             console.error('Error:', xhr.responseText);
             alert('❌ Error al guardar: ' + xhr.statusText + '\n\nVer consola para más detalles');
         }
@@ -351,14 +352,14 @@ function cargarHistorial() {
         method: 'POST',
         data: { id_proveedor: ID_PROVEEDOR },
         dataType: 'json',
-        success: function(response) {
+        success: function (response) {
             if (response.success) {
                 renderizarHistorial(response.historial);
             } else {
                 $('#listaHistorial').html('<p class="text-muted">Error al cargar historial</p>');
             }
         },
-        error: function(xhr) {
+        error: function (xhr) {
             console.error('Error al cargar historial:', xhr.responseText);
             $('#listaHistorial').html('<p class="text-danger">Error: ' + xhr.statusText + '</p>');
         }
@@ -368,12 +369,12 @@ function cargarHistorial() {
 function renderizarHistorial(historial) {
     const lista = $('#listaHistorial');
     lista.empty();
-    
+
     if (historial.length === 0) {
         lista.html('<p class="text-muted">No hay cambios registrados</p>');
         return;
     }
-    
+
     historial.forEach(item => {
         const iconos = {
             'datos_basicos': 'bi-building',
@@ -382,9 +383,9 @@ function renderizarHistorial(historial) {
             'tipo_pago': 'bi-cash-stack',
             'vigencia': 'bi-toggle-on'
         };
-        
+
         const icono = iconos[item.tipo_cambio] || 'bi-pencil';
-        
+
         const card = $(`
             <div class="historial-item">
                 <div class="historial-icon">
