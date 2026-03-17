@@ -120,7 +120,9 @@ for ($d = 1; $d <= $dias_plan; $d++) {
             // Agrupar tickets de esta oleada por sucursal
             $grupos = [];
             foreach ($pool_tickets_raw as $id => $t) {
-                if ($t['U_ef'] == $oleada) {
+                $u_floor = floor($t['U_ef']);
+                $match = ($oleada == 4) ? ($u_floor >= 4) : ($u_floor == $oleada);
+                if ($match) {
                     $cod = $t['cod_sucursal'];
                     if (!isset($grupos[$cod])) {
                         $grupos[$cod] = [
