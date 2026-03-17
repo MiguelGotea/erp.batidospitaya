@@ -1,0 +1,332 @@
+/* Pestañas */
+.nav-tabs {
+    border-bottom: 2px solid #dee2e6;
+}
+
+.nav-tabs .nav-link {
+    color: #6c757d;
+    border: none;
+    border-bottom: 2px solid transparent;
+    padding: 12px 20px;
+    font-weight: 500;
+    transition: all 0.3s;
+}
+
+.nav-tabs .nav-link:hover {
+    border-color: transparent;
+    color: #0E544C;
+}
+
+.nav-tabs .nav-link.active {
+    color: #0E544C;
+    border-color: transparent transparent #0E544C transparent;
+    background-color: transparent;
+}
+
+.nav-tabs .nav-link i {
+    margin-right: 6px;
+}
+
+.tab-content {
+    padding: 0;
+}
+
+/* Cards */
+.card {
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.card-body {
+    padding: 24px;
+}
+
+/* Formularios */
+.form-label {
+    font-weight: 500;
+    color: #495057;
+    margin-bottom: 6px;
+}
+
+.form-control, .form-select {
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    padding: 8px 12px;
+    transition: all 0.2s;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: #51B8AC;
+    box-shadow: 0 0 0 0.2rem rgba(81, 184, 172, 0.25);
+}
+
+/* Grid de tipos de pago */
+.tipos-pago-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 12px;
+    padding: 12px;
+    background-color: #f8f9fa;
+    border-radius: 6px;
+    max-height: 250px;
+    overflow-y: auto;
+}
+
+.tipos-pago-grid .form-check {
+    margin-bottom: 0;
+}
+
+.tipos-pago-grid .form-check-label {
+    cursor: pointer;
+    user-select: none;
+}
+
+.tipos-pago-grid::-webkit-scrollbar {
+    width: 8px;
+}
+
+.tipos-pago-grid::-webkit-scrollbar-track {
+    background: #e9ecef;
+    border-radius: 4px;
+}
+
+.tipos-pago-grid::-webkit-scrollbar-thumb {
+    background: #51B8AC;
+    border-radius: 4px;
+}
+
+.tipos-pago-grid::-webkit-scrollbar-thumb:hover {
+    background: #0E544C;
+}
+
+/* Tarjetas de contactos */
+.contacto-card {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    transition: all 0.2s;
+}
+
+.contacto-card:hover {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.contacto-info h6 {
+    margin-bottom: 8px;
+    color: #0E544C;
+    font-weight: 600;
+}
+
+.contacto-info p {
+    margin-bottom: 4px;
+    font-size: 14px;
+    color: #495057;
+}
+
+.contacto-info small {
+    font-size: 12px;
+}
+
+.contacto-acciones {
+    display: flex;
+    gap: 8px;
+}
+
+/* Tarjetas de cuentas */
+.cuenta-card {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    transition: all 0.2s;
+}
+
+.cuenta-card:hover {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.cuenta-info h6 {
+    margin-bottom: 8px;
+    color: #0E544C;
+    font-weight: 600;
+}
+
+.cuenta-info p {
+    margin-bottom: 4px;
+    font-size: 14px;
+    color: #495057;
+}
+
+.cuenta-info small {
+    font-size: 12px;
+}
+
+.cuenta-acciones {
+    display: flex;
+    gap: 8px;
+}
+
+/* Items de historial */
+.historial-item {
+    display: flex;
+    gap: 16px;
+    padding: 16px;
+    border-bottom: 1px solid #dee2e6;
+    transition: background-color 0.2s;
+}
+
+.historial-item:last-child {
+    border-bottom: none;
+}
+
+.historial-item:hover {
+    background-color: #f8f9fa;
+}
+
+.historial-icon {
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    background-color: #e7f3f2;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #0E544C;
+}
+
+.historial-icon i {
+    font-size: 18px;
+}
+
+.historial-info {
+    flex: 1;
+}
+
+.historial-info h6 {
+    margin-bottom: 4px;
+    font-size: 14px;
+    color: #495057;
+    font-weight: 500;
+}
+
+.historial-info small {
+    font-size: 12px;
+}
+
+/* Badges */
+.badge {
+    padding: 4px 10px;
+    font-size: 12px;
+    font-weight: 500;
+    border-radius: 4px;
+}
+
+/* Botones */
+.btn {
+    padding: 8px 16px;
+    font-weight: 500;
+    border-radius: 6px;
+    transition: all 0.2s;
+}
+
+.btn i {
+    margin-right: 6px;
+}
+
+.btn-primary {
+    background-color: #0E544C;
+    border-color: #0E544C;
+}
+
+.btn-primary:hover {
+    background-color: #0a3f39;
+    border-color: #0a3f39;
+}
+
+.btn-success {
+    background-color: #28a745;
+    border-color: #28a745;
+}
+
+.btn-success:hover {
+    background-color: #218838;
+    border-color: #218838;
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+    border-color: #6c757d;
+}
+
+.btn-secondary:hover {
+    background-color: #5a6268;
+    border-color: #545b62;
+}
+
+/* Modales */
+.modal-header {
+    background-color: #0E544C;
+    color: white;
+    border-bottom: none;
+    border-radius: 8px 8px 0 0;
+}
+
+.modal-header .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+.modal-title {
+    font-weight: 600;
+}
+
+.modal-body {
+    padding: 24px;
+}
+
+.modal-footer {
+    border-top: 1px solid #dee2e6;
+    padding: 16px 24px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .tipos-pago-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .contacto-card,
+    .cuenta-card {
+        flex-direction: column;
+        gap: 12px;
+    }
+    
+    .contacto-acciones,
+    .cuenta-acciones {
+        width: 100%;
+    }
+    
+    .contacto-acciones button,
+    .cuenta-acciones button {
+        flex: 1;
+    }
+    
+    .nav-tabs .nav-link {
+        padding: 10px 12px;
+        font-size: 14px;
+    }
+    
+    .card-body {
+        padding: 16px;
+    }
+}
