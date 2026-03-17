@@ -16,22 +16,8 @@ if (!tienePermiso('agenda_mantenimiento', 'vista', $cargoOperario)) {
     exit();
 }
 
-
-$ticketModel = new Ticket();
 $puedeVerTodos = tienePermiso('agenda_mantenimiento', 'todos_colaboradores', $cargoOperario);
 $esAdminCaja = tienePermiso('mantenimiento', 'validar_caja_chica', $cargoOperario);
-
-$filtros = [];
-if (!$puedeVerTodos) {
-    $filtros['cod_operario'] = $usuario['CodOperario'];
-} else {
-    if (isset($_GET['colaborador']) && !empty($_GET['colaborador'])) {
-        $filtros['cod_operario'] = intval($_GET['colaborador']);
-    }
-}
-
-$informes = $ticketModel->getHistorialInformes($filtros);
-$colaboradores = $puedeVerTodos ? $ticketModel->getColaboradoresDisponibles() : [];
 
 ?>
 <!DOCTYPE html>
@@ -48,14 +34,14 @@ $colaboradores = $puedeVerTodos ? $ticketModel->getColaboradoresDisponibles() : 
     <link rel="stylesheet" href="/assets/css/global_tools.css">
     <link rel="stylesheet" href="../../core/assets/css/modales_premium.css">
     <style>
+        :root {
+            --color-header-tabla: #0E544C;
+            --color-principal: #51B8AC;
+        }
+
         .card-informe {
             transition: all 0.2s;
             border-radius: 12px;
-        }
-
-        .card-informe:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
         }
 
         .status-badge {
@@ -66,12 +52,32 @@ $colaboradores = $puedeVerTodos ? $ticketModel->getColaboradoresDisponibles() : 
         }
 
         .table-premium thead th {
-            background: #f8f9fa;
+            background: var(--color-header-tabla) !important;
+            color: white !important;
             text-transform: uppercase;
             font-size: 0.75rem;
             letter-spacing: 0.5px;
-            color: #666;
             border-top: none;
+            position: relative;
+            padding: 12px 15px;
+        }
+
+        .filter-icon {
+            cursor: pointer;
+            margin-left: 5px;
+            opacity: 0.7;
+            transition: 0.2s;
+        }
+
+        .filter-icon:hover,
+        .filter-icon.active {
+            opacity: 1;
+            color: var(--color-principal);
+        }
+
+        .filter-icon.has-filter {
+            color: #ffc107;
+            opacity: 1;
         }
 
         .btn-action {
@@ -87,6 +93,27 @@ $colaboradores = $puedeVerTodos ? $ticketModel->getColaboradoresDisponibles() : 
 
         .btn-action:hover {
             transform: scale(1.1);
+        }
+
+        .pagination-btn {
+            border: 1px solid #dee2e6;
+            background: white;
+            padding: 5px 12px;
+            margin: 0 2px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .pagination-btn.active {
+            background: var(--color-header-tabla);
+            color: white;
+            border-color: var(--color-header-tabla);
+        }
+
+        .pagination-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
     </style>
 </head>
@@ -104,121 +131,52 @@ $colaboradores = $puedeVerTodos ? $ticketModel->getColaboradoresDisponibles() : 
                         <h4 class="fw-bold mb-1">Historial de Jornadas</h4>
                         <p class="text-muted small mb-0">Listado de reportes de mantenimiento y control de gastos</p>
                     </div>
-                    <a href="agenda_colaborador.php" class="btn btn-primary rounded-pill px-4 shadow-sm">
+                    <a href="agenda_colaborador.php" class="btn btn-primary rounded-pill px-4 shadow-sm" style="background-color: var(--color-principal); border: none;">
                         <i class="fas fa-plus me-2"></i>Nuevo Reporte de Hoy
                     </a>
                 </div>
 
                 <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
-                    <div class="card-header bg-white p-3 border-0">
-                        <form method="GET" class="row g-2 align-items-center">
-                            <?php if ($puedeVerTodos): ?>
-                                <div class="col-md-4">
-                                    <select name="colaborador" class="form-select border-light bg-light">
-                                        <option value="">Todos los colaboradores...</option>
-                                        <?php foreach ($colaboradores as $c): ?>
-                                            <option value="<?= $c['CodOperario'] ?>" <?= (isset($_GET['colaborador']) && $_GET['colaborador'] == $c['CodOperario']) ? 'selected' : '' ?>>
-                                                <?= htmlspecialchars($c['Nombre'] . ' ' . $c['Apellido']) ?>
-                                            </option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                </div>
-                            <?php endif; ?>
-                            <div class="col-md-2">
-                                <button type="submit" class="btn btn-dark w-100 rounded-3">
-                                    <i class="fas fa-filter me-2"></i>Filtrar
-                                </button>
-                            </div>
-                        </form>
-                    </div>
                     <div class="card-body p-0">
                         <div class="table-responsive">
                             <table class="table table-hover table-premium mb-0">
                                 <thead>
                                     <tr>
-                                        <th class="ps-4">Fecha</th>
-                                        <th>Colaborador</th>
+                                        <th class="ps-4" data-column="fecha" data-type="daterange">
+                                            Fecha
+                                            <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                        </th>
+                                        <th data-column="Nombre" data-type="list">
+                                            Colaborador
+                                            <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                        </th>
                                         <th>KM Recorrido</th>
                                         <th>Caja Chica</th>
-                                        <th>Estado</th>
+                                        <th data-column="estado" data-type="list">
+                                            Estado
+                                            <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                        </th>
                                         <th class="text-center">Acciones</th>
                                     </tr>
                                 </thead>
-                                <tbody>
-                                    <?php if (empty($informes)): ?>
-                                        <tr>
-                                            <td colspan="6" class="text-center py-5 text-muted">No se encontraron reportes
-                                                registrados</td>
-                                        </tr>
-                                    <?php else: ?>
-                                        <?php foreach ($informes as $i): ?>
-                                            <tr class="align-middle">
-                                                <td class="ps-4">
-                                                    <span class="fw-bold"><?= date('d/m/Y', strtotime($i['fecha'])) ?></span>
-                                                    <br><small
-                                                        class="text-muted"><?= date('h:i A', strtotime($i['created_at'])) ?></small>
-                                                </td>
-                                                <td>
-                                                    <div class="d-flex align-items-center">
-                                                        <div class="avatar-sm bg-primary bg-opacity-10 text-primary rounded-circle me-2 d-flex align-items-center justify-content-center"
-                                                            style="width: 32px; height: 32px;">
-                                                            <?= substr($i['Nombre'], 0, 1) ?>
-                                                        </div>
-                                                        <span><?= htmlspecialchars($i['Nombre'] . ' ' . $i['Apellido']) ?></span>
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    <?php if ($i['km_final']): ?>
-                                                        <span class="badge bg-light text-dark border">
-                                                            <?= number_format($i['km_final'] - $i['km_inicial'], 2) ?> KM
-                                                        </span>
-                                                    <?php else: ?>
-                                                        <span class="text-muted small">En proceso...</span>
-                                                    <?php endif; ?>
-                                                </td>
-                                                <td>
-                                                    <div class="d-flex align-items-center gap-2">
-                                                        <span
-                                                            class="fw-bold text-success">$<?= number_format($i['monto_caja_chica'], 2) ?></span>
-                                                        <?php if ($i['foto_caja_chica']): ?>
-                                                            <i class="fas fa-file-invoice text-muted cursor-zoom"
-                                                                onclick="zoomFoto('uploads/caja/<?= $i['foto_caja_chica'] ?>')"></i>
-                                                        <?php endif; ?>
-                                                        <?php if ($esAdminCaja && $i['estado'] === 'creado'): ?>
-                                                            <button class="btn btn-link btn-sm p-0"
-                                                                onclick="modalValidarCaja(<?= $i['id'] ?>, <?= $i['monto_caja_chica'] ?>)">
-                                                                <i class="fas fa-edit"></i>
-                                                            </button>
-                                                        <?php endif; ?>
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    <span
-                                                        class="status-badge bg-<?= $i['estado'] === 'finalizado' ? 'success' : 'primary' ?> bg-opacity-10 text-<?= $i['estado'] === 'finalizado' ? 'success' : 'primary' ?>">
-                                                        <?= strtoupper($i['estado'] === 'creado' ? 'Abierto' : 'Finalizado') ?>
-                                                    </span>
-                                                </td>
-                                                <td class="text-center pe-4">
-                                                    <div class="d-flex justify-content-center gap-2">
-                                                        <?php if ($i['estado'] === 'creado' && $i['cod_operario'] == $usuario['CodOperario']): ?>
-                                                            <a href="agenda_colaborador.php?fecha=<?= $i['fecha'] ?>"
-                                                                class="btn-action bg-primary bg-opacity-10 text-primary"
-                                                                title="Continuar Reporte">
-                                                                <i class="fas fa-external-link-alt"></i>
-                                                            </a>
-                                                        <?php endif; ?>
-                                                        <a href="imprimir_informe.php?id=<?= $i['id'] ?>" target="_blank"
-                                                            class="btn-action bg-dark bg-opacity-10 text-dark"
-                                                            title="Ver/Imprimir">
-                                                            <i class="fas fa-print"></i>
-                                                        </a>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        <?php endforeach; ?>
-                                    <?php endif; ?>
+                                <tbody id="tablaInformesBody">
+                                    <!-- Cargado vía AJAX -->
                                 </tbody>
                             </table>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-white border-0 p-3">
+                        <div class="d-flex justify-content-between align-items-center mt-1">
+                            <div class="d-flex align-items-center gap-2">
+                                <label class="mb-0 small">Mostrar:</label>
+                                <select class="form-select form-select-sm" id="registrosPorPagina" style="width: auto;" onchange="cambiarRegistrosPorPagina()">
+                                    <option value="10">10</option>
+                                    <option value="25" selected>25</option>
+                                    <option value="50">50</option>
+                                    <option value="100">100</option>
+                                </select>
+                            </div>
+                            <div id="paginacion" class="d-flex align-items-center"></div>
                         </div>
                     </div>
                 </div>
@@ -231,8 +189,7 @@ $colaboradores = $puedeVerTodos ? $ticketModel->getColaboradoresDisponibles() : 
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content shadow-premium border-0 rounded-4">
                 <div class="modal-header border-0 pb-0">
-                    <h5 class="modal-title fw-bold"><i class="fas fa-cash-register me-2 text-success"></i>Validar Caja
-                        Chica</h5>
+                    <h5 class="modal-title fw-bold"><i class="fas fa-cash-register me-2 text-success"></i>Validar Caja Chica</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body p-4">
@@ -242,22 +199,18 @@ $colaboradores = $puedeVerTodos ? $ticketModel->getColaboradoresDisponibles() : 
                             <label class="form-label small fw-bold">Monto Entregado (Caja Chica) *</label>
                             <div class="input-group">
                                 <span class="input-group-text">$</span>
-                                <input type="number" step="0.01" name="monto" id="caja_monto"
-                                    class="form-control form-control-lg" required>
+                                <input type="number" step="0.01" name="monto" id="caja_monto" class="form-control form-control-lg" required>
                             </div>
                         </div>
                         <div class="mb-0">
                             <label class="form-label small fw-bold">Foto del Voucher / Comprobante *</label>
-                            <input type="file" name="foto_caja" id="caja_foto_input" class="form-control"
-                                accept="image/*" required>
+                            <input type="file" name="foto_caja" id="caja_foto_input" class="form-control" accept="image/*" required>
                         </div>
                     </form>
                 </div>
                 <div class="modal-footer border-0 p-3 px-4 pb-4">
-                    <button type="button" class="btn btn-light rounded-pill px-4"
-                        data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-success rounded-pill px-4"
-                        onclick="guardarValidacionCaja()">Confirmar Entrega</button>
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-success rounded-pill px-4" onclick="guardarValidacionCaja()">Confirmar Entrega</button>
                 </div>
             </div>
         </div>
@@ -269,10 +222,78 @@ $colaboradores = $puedeVerTodos ? $ticketModel->getColaboradoresDisponibles() : 
             <div class="modal-content bg-transparent border-0 shadow-none">
                 <div class="modal-body text-center p-0">
                     <img id="zoomImg" src="" class="img-fluid rounded-4 shadow-lg">
-                    <button type="button" class="btn btn-dark btn-sm rounded-circle position-absolute top-0 end-0 m-3"
-                        data-bs-dismiss="modal">
+                    <button type="button" class="btn btn-dark btn-sm rounded-circle position-absolute top-0 end-0 m-3" data-bs-dismiss="modal">
                         <i class="fas fa-times"></i>
                     </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Ayuda Universal -->
+    <div class="modal fade" id="pageHelpModal" tabindex="-1" aria-labelledby="pageHelpModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-primary text-white" style="background-color: var(--color-header-tabla) !important;">
+                    <h5 class="modal-title" id="pageHelpModalLabel">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Guía de Historial de Informes Diarios
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100 border-0 bg-light">
+                                <div class="card-body">
+                                    <h6 class="text-primary border-bottom pb-2 fw-bold">
+                                        <i class="fas fa-list-alt me-2"></i> Visibilidad de Informes
+                                    </h6>
+                                    <p class="small text-muted mb-0">
+                                        - Los <strong>Colaboradores</strong> solo pueden ver sus propios informes.<br>
+                                        - Los <strong>Administradores</strong> pueden ver el historial de todo el equipo utilizando los filtros en los encabezados.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100 border-0 bg-light">
+                                <div class="card-body">
+                                    <h6 class="text-success border-bottom pb-2 fw-bold">
+                                        <i class="fas fa-cash-register me-2"></i> Caja Chica
+                                    </h6>
+                                    <p class="small text-muted mb-0">
+                                        Los administradores pueden validar el monto entregado y adjuntar el voucher una vez que el colaborador abre su jornada.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100 border-0 bg-light">
+                                <div class="card-body">
+                                    <h6 class="text-warning border-bottom pb-2 fw-bold">
+                                        <i class="fas fa-edit me-2"></i> Estados del Informe
+                                    </h6>
+                                    <p class="small text-muted mb-0">
+                                        - <strong>Abierto:</strong> El informe aún puede ser editado por el colaborador.<br>
+                                        - <strong>Finalizado:</strong> El informe ya no es editable y está listo para auditoría.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100 border-0 bg-light">
+                                <div class="card-body">
+                                    <h6 class="text-info border-bottom pb-2 fw-bold">
+                                        <i class="fas fa-filter me-2"></i> Filtros de Encabezado
+                                    </h6>
+                                    <p class="small text-muted mb-0">
+                                        Haz clic en el ícono de embudo (<i class="bi bi-funnel"></i>) en los encabezados de Fecha, Colaborador o Estado para filtrar y ordenar los datos dinámicamente.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -282,43 +303,10 @@ $colaboradores = $puedeVerTodos ? $ticketModel->getColaboradoresDisponibles() : 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        function zoomFoto(src) {
-            $('#zoomImg').attr('src', src);
-            new bootstrap.Modal(document.getElementById('zoomModal')).show();
-        }
-
-        function modalValidarCaja(id, monto) {
-            $('#caja_informe_id').val(id);
-            $('#caja_monto').val(monto);
-            new bootstrap.Modal(document.getElementById('validarCajaModal')).show();
-        }
-
-        async function guardarValidacionCaja() {
-            const form = document.getElementById('formCaja');
-            if (!form.checkValidity()) {
-                form.reportValidity();
-                return;
-            }
-
-            const formData = new FormData(form);
-            Swal.fire({ title: 'Procesando...', didOpen: () => Swal.showLoading() });
-
-            try {
-                const response = await fetch('ajax/validar_caja_chica.php', {
-                    method: 'POST',
-                    body: formData
-                });
-                const res = await response.json();
-                if (res.success) {
-                    Swal.fire('Éxito', 'Entrega de caja chica validada', 'success').then(() => location.reload());
-                } else {
-                    Swal.fire('Error', res.message, 'error');
-                }
-            } catch (e) {
-                Swal.fire('Error', e.message, 'error');
-            }
-        }
+        const actualUserId = <?= $usuario['CodOperario'] ?>;
+        const esAdminCaja = <?= $esAdminCaja ? 'true' : 'false' ?>;
     </script>
+    <script src="js/historial_informes.js?v=<?= mt_rand(1, 10000) ?>"></script>
 </body>
 
 </html>
