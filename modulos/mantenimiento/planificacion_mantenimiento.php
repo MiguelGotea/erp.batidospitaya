@@ -879,7 +879,7 @@ $solicitudes_criticas = array_filter($tickets, function ($t) {
                                         ${imageHtml}
                                         <div class="flex-grow-1 min-width-0">
                                             <div class="d-flex w-100 justify-content-between align-items-center mb-1">
-                                                <h6 class="mb-0 fw-bold text-dark text-truncate pe-2">${tk.titulo_formulario || 'Ticket de Mantenimiento'}</h6>
+                                                <h6 class="mb-0 fw-bold text-dark text-truncate pe-2">${tk.titulo || 'Ticket de Mantenimiento'}</h6>
                                                 <span class="badge ${badgeColor} flex-shrink-0">${badgeLabel}</span>
                                             </div>
                                             <div class="d-flex justify-content-start align-items-center mb-1">
