@@ -127,7 +127,9 @@ function modalNuevaTarea(visitaId, codSucursal) {
             if (res.success) {
                 if (res.tickets.length > 0) {
                     res.tickets.forEach(t => {
-                        select.append(`<option value="${t.id}">${t.codigo} - ${t.titulo}</option>`);
+                        const descCorta = t.descripcion ? (t.descripcion.length > 50 ? t.descripcion.substring(0, 50) + '...' : t.descripcion) : '';
+                        const displayText = t.titulo + (descCorta ? ' - ' + descCorta : '');
+                        select.append(`<option value="${t.id}">${displayText}</option>`);
                     });
                 } else {
                     select.append('<option value="" disabled>No hay tickets pendientes en esta sucursal</option>');
