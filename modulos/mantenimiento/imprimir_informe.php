@@ -37,6 +37,15 @@ function calcularViaticos($visitas) {
 }
 
 $viaticos = calcularViaticos($informe['visitas']);
+
+// Calculos para el resumen
+$totalGastado = 0;
+$totalTareas = 0;
+foreach($informe['visitas'] as $v) {
+    foreach($v['compras'] as $c) $totalGastado += $c['monto'];
+    $totalTareas += count($v['tareas']);
+}
+$saldoActual = $informe['monto_caja_chica'] - $totalGastado;
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -49,7 +58,7 @@ $viaticos = calcularViaticos($informe['visitas']);
         .header { display: flex; justify-content: space-between; border-bottom: 2px solid #0E544C; padding-bottom: 10px; margin-bottom: 20px; }
         .logo { height: 50px; }
         .title { font-size: 16pt; font-weight: bold; color: #0E544C; margin: 0; }
-        .info-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; background: #f9f9f9; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+        .info-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; background: #f9f9f9; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
         .info-item label { display: block; font-size: 8pt; color: #666; text-transform: uppercase; font-weight: bold; }
         .info-item span { font-size: 11pt; font-weight: 600; }
         
@@ -131,7 +140,21 @@ $viaticos = calcularViaticos($informe['visitas']);
         </div>
         <div class="info-item">
             <label>Caja Chica</label>
-            <span style="color: #2e7d32;">C$<?= number_format($informe['monto_caja_chica'], 2) ?></span>
+            <div style="font-size: 9pt; margin-top: 3px;">
+                <div style="display: flex; justify-content: space-between;"><span>Asignado:</span> <span style="font-weight: bold;">C$<?= number_format($informe['monto_caja_chica'], 2) ?></span></div>
+                <div style="display: flex; justify-content: space-between;"><span>Gastado:</span> <span style="font-weight: bold; color: #dc3545;">C$<?= number_format($totalGastado, 2) ?></span></div>
+                <div style="display: flex; justify-content: space-between; border-top: 1px solid #ddd; padding-top: 2px; margin-top: 2px;">
+                    <span>Saldo:</span> <span style="font-weight: bold; color: #2e7d32;">C$<?= number_format($saldoActual, 2) ?></span>
+                </div>
+            </div>
+        </div>
+        <div class="info-item">
+            <label>Resumen de Actividad</label>
+            <div style="font-size: 9pt; margin-top: 3px;">
+                <div style="display: flex; justify-content: space-between;"><span>Sucursales:</span> <span style="font-weight: bold;"><?= count($informe['visitas']) ?></span></div>
+                <div style="display: flex; justify-content: space-between;"><span>Tareas:</span> <span style="font-weight: bold;"><?= $totalTareas ?></span></div>
+                <div style="display: flex; justify-content: space-between;"><span>Distancia:</span> <span style="font-weight: bold;"><?= $informe['km_final'] ? number_format($informe['km_final'] - $informe['km_inicial'], 2) : '--' ?> km</span></div>
+            </div>
         </div>
         <div class="info-item">
             <label>Viáticos Aplicados</label>
