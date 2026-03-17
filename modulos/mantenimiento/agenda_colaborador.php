@@ -268,19 +268,6 @@ if ($colaborador_filtro) {
                                                                 </button>
                                                             <?php endif; ?>
                                                         </div>
-
-                                                        <div class="visita-footer mt-3 pt-3 border-top d-flex gap-2">
-                                                            <?php if (!$v['hora_salida'] && $informeActual['estado'] === 'creado' && $colaborador_filtro == $usuario['CodOperario']): ?>
-                                                                <button class="btn btn-sm btn-outline-info rounded-pill px-3" onclick="modalRegistrarSalida(<?= $v['id'] ?>)">
-                                                                    <i class="fas fa-sign-out-alt me-1"></i>Registrar Salida
-                                                                </button>
-                                                            <?php endif; ?>
-                                                            <?php if (!$v['materiales_stock'] && $informeActual['estado'] === 'creado' && $colaborador_filtro == $usuario['CodOperario']): ?>
-                                                                <button class="btn btn-sm btn-outline-secondary rounded-pill px-3" onclick="modalRegistrarMateriales(<?= $v['id'] ?>)">
-                                                                    <i class="fas fa-box-open me-1"></i>Materiales Stock
-                                                                </button>
-                                                            <?php endif; ?>
-                                                        </div>
                                                     </div>
                                                 </div>
                                             <?php endforeach; ?>
