@@ -390,7 +390,7 @@ if ($colaborador_filtro) {
 
     <!-- MODAL TAREA/TICKET RESULTADO -->
     <div class="modal fade" id="tareaModal" data-bs-backdrop="static">
-        <div class="modal-dialog modal-lg">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content shadow-premium border-0 rounded-4">
                 <div class="modal-header border-0 pb-0">
                     <h5 class="modal-title fw-bold text-primary"><i class="fas fa-tools me-2"></i>Registrar Trabajo Realizado</h5>

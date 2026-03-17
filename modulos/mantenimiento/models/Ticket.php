@@ -12,6 +12,11 @@ class Ticket
         $this->db = $db;
     }
 
+    public function getDb()
+    {
+        return $this->db;
+    }
+
     public function create($data)
     {
         // Generar código único para el ticket
