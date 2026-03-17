@@ -17,7 +17,8 @@ if (!tienePermiso('agenda_mantenimiento', 'vista', $cargoOperario)) {
 }
 
 $ticketModel = new Ticket();
-$fechaHoy = date('Y-m-d');
+$fechaHoy = isset($_GET['fecha']) ? $_GET['fecha'] : date('Y-m-d');
+$esHoy = ($fechaHoy === date('Y-m-d'));
 
 // Verificar si tiene permiso para ver todos los colaboradores
 $puedeVerTodosColaboradores = tienePermiso('agenda_mantenimiento', 'todos_colaboradores', $cargoOperario);

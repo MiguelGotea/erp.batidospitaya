@@ -201,7 +201,7 @@ $colaboradores = $puedeVerTodos ? $ticketModel->getColaboradoresDisponibles() : 
                                                 <td class="text-center pe-4">
                                                     <div class="d-flex justify-content-center gap-2">
                                                         <?php if ($i['estado'] === 'creado' && $i['cod_operario'] == $usuario['CodOperario']): ?>
-                                                            <a href="agenda_colaborador.php"
+                                                            <a href="agenda_colaborador.php?fecha=<?= $i['fecha'] ?>"
                                                                 class="btn-action bg-primary bg-opacity-10 text-primary"
                                                                 title="Continuar Reporte">
                                                                 <i class="fas fa-external-link-alt"></i>
