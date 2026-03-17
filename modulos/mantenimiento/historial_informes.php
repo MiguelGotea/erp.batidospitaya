@@ -17,7 +17,7 @@ if (!tienePermiso('agenda_mantenimiento', 'vista', $cargoOperario)) {
 }
 
 $puedeVerTodos = tienePermiso('agenda_mantenimiento', 'todos_colaboradores', $cargoOperario);
-$esAdminCaja = tienePermiso('mantenimiento', 'validar_caja_chica', $cargoOperario);
+$esAdminCaja = tienePermiso('agenda_mantenimiento', 'caja_chica', $cargoOperario);
 
 ?>
 <!DOCTYPE html>
@@ -299,8 +299,10 @@ $esAdminCaja = tienePermiso('mantenimiento', 'validar_caja_chica', $cargoOperari
                                         <i class="fas fa-filter me-2"></i> Filtros de Encabezado
                                     </h6>
                                     <p class="small text-muted mb-0">
-                                        Haz clic en el ícono de embudo (<i class="fas fa-filter"></i>) en los encabezados
-                                        de Fecha, Colaborador o Estado para filtrar y ordenar los datos dinámicamente. <i class="fas fa-filter"></i>
+                                        Haz clic en el ícono de embudo (<i class="fas fa-filter"></i>) en los
+                                        encabezados
+                                        de Fecha, Colaborador o Estado para filtrar y ordenar los datos dinámicamente.
+                                        <i class="fas fa-filter"></i>
                                     </p>
                                 </div>
                             </div>
