@@ -3,7 +3,8 @@
  * ia_config_api_get_datos.php
  * Carga de datos de proveedores de IA con soporte para filtros, orden y paginación.
  */
-require_once '../../../core/auth/auth.php'; // Incluye conexion.php y funciones.php
+require_once '../../../core/auth/auth.php'; 
+require_once '../../../core/permissions/permissions.php';
 header('Content-Type: application/json');
 
 $usuario = obtenerUsuarioActual();
