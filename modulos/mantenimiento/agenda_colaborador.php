@@ -208,6 +208,7 @@ if ($colaborador_filtro) {
                                             </div>
                                         <?php else: ?>
                                             <?php foreach ($informeActual['visitas'] as $v): ?>
+                                                <?php $canEdit = ($informeActual['estado'] === 'creado' && $colaborador_filtro == $usuario['CodOperario']); ?>
                                                 <div class="visita-item card border-0 shadow-sm mb-4 rounded-4 overflow-hidden">
                                                     <div class="card-header bg-white border-bottom-0 pt-3 px-4 d-flex justify-content-between align-items-start gap-3">
                                                         <div class="flex-grow-1">
