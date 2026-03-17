@@ -466,12 +466,12 @@ if ($colaborador_filtro) {
         </div>
     </div>
 
-    <!-- MODAL CIERRE DE JORNADA -->
+    <!-- MODAL CIERRE DE INFORME -->
     <div class="modal fade" id="cierreModal" data-bs-backdrop="static">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content shadow-premium border-0 rounded-4">
                 <div class="modal-header bg-danger text-white p-3 px-4 border-0">
-                    <h5 class="modal-title fw-bold"><i class="fas fa-stop me-2"></i>Finalizar Jornada</h5>
+                    <h5 class="modal-title fw-bold"><i class="fas fa-stop me-2"></i>Finalizar Informe</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body p-4">
@@ -509,7 +509,7 @@ if ($colaborador_filtro) {
                 </div>
                 <div class="modal-footer border-0 p-3 px-4 pb-4">
                     <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-danger rounded-pill px-4" onclick="guardarCierre()">Cerrar Jornada</button>
+                    <button type="button" class="btn btn-danger rounded-pill px-4" onclick="guardarCierre()">Finalizar Informe</button>
                 </div>
             </div>
         </div>
