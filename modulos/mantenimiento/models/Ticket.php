@@ -535,5 +535,31 @@ class Ticket
         $sql = "UPDATE mtto_informes_diarios SET monto_caja_chica = ?, foto_caja_chica = ? WHERE id = ?";
         return $this->db->query($sql, [$monto, $foto, $informe_id]);
     }
+
+    /**
+     * Obtener historial de informes para el dashboard
+     */
+    public function getHistorialInformes($filters = [])
+    {
+        $sql = "SELECT i.*, o.Nombre, o.Apellido 
+                FROM mtto_informes_diarios i
+                LEFT JOIN Operarios o ON i.cod_operario = o.CodOperario
+                WHERE 1=1";
+        $params = [];
+
+        if (!empty($filters['cod_operario'])) {
+            $sql .= " AND i.cod_operario = :cod_operario";
+            $params[':cod_operario'] = $filters['cod_operario'];
+        }
+
+        if (!empty($filters['fecha_desde'])) {
+            $sql .= " AND i.fecha >= :fecha_desde";
+            $params[':fecha_desde'] = $filters['fecha_desde'];
+        }
+
+        $sql .= " ORDER BY i.fecha DESC, i.created_at DESC LIMIT 100";
+        
+        return $this->db->fetchAll($sql, $params);
+    }
 }
 ?>

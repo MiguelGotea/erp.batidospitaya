@@ -24,7 +24,7 @@ $puedeVerTodosColaboradores = tienePermiso('agenda_mantenimiento', 'todos_colabo
 
 if ($puedeVerTodosColaboradores) {
     $colaboradoresDisponibles = $ticketModel->getColaboradoresAsignados();
-    $colaborador_filtro = isset($_GET['colaborador']) ? intval($_GET['colaborador']) : null;
+    $colaborador_filtro = isset($_GET['colaborador']) ? intval($_GET['colaborador']) : $usuario['CodOperario'];
 } else {
     $colaborador_filtro = $usuario['CodOperario'];
     $colaboradoresDisponibles = [];
@@ -82,32 +82,18 @@ if ($colaborador_filtro) {
             <div class="container-fluid p-3">
                 <div class="container">
                     
-                    <!-- Filtro Colaborador -->
-                    <?php if ($puedeVerTodosColaboradores): ?>
-                        <div class="filter-section mb-4">
-                            <form method="GET" class="row g-3">
-                                <div class="col-md-8">
-                                    <select name="colaborador" class="form-select border-0 shadow-sm" required>
-                                        <option value="">Seleccionar colaborador...</option>
-                                        <?php foreach ($colaboradoresDisponibles as $col): ?>
-                                            <option value="<?= $col['CodOperario'] ?>"
-                                                <?= $colaborador_filtro == $col['CodOperario'] ? 'selected' : '' ?>>
-                                                <?= htmlspecialchars($col['Nombre'] . ' ' . ($col['Apellido'] ?? '')) ?>
-                                            </option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                </div>
-                                <div class="col-md-4">
-                                    <button type="submit" class="btn btn-light w-100 shadow-sm">
-                                        <i class="fas fa-search me-2"></i>Ver Agenda
-                                    </button>
-                                </div>
-                            </form>
+                    <!-- Navegación y Título -->
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <a href="historial_informes.php" class="btn btn-outline-secondary rounded-pill btn-sm px-3">
+                            <i class="fas fa-arrow-left me-1"></i>Volver al Historial
+                        </a>
+                        <div class="text-end">
+                            <span class="text-muted small">Colaborador:</span>
+                            <span class="fw-bold"><?= htmlspecialchars($usuario['Nombre'] . ' ' . $usuario['Apellido']) ?></span>
                         </div>
-                    <?php endif; ?>
+                    </div>
 
-                    <?php if ($colaborador_filtro): ?>
-                        <!-- PANEL DE CONTROL DEL INFORME -->
+                    <!-- PANEL DE CONTROL DEL INFORME -->
                         <div class="report-status-card mb-4 p-4 rounded-4 shadow-sm border-0 
                             <?= !$informeActual ? 'bg-light' : ($informeActual['estado'] === 'creado' ? 'bg-primary bg-opacity-10' : 'bg-success bg-opacity-10') ?>">
                             
@@ -303,13 +289,6 @@ if ($colaborador_filtro) {
                                 </div>
                             </div>
                         <?php endif; ?>
-
-                    <?php else: ?>
-                        <div class="text-center py-5">
-                            <i class="fas fa-user-friends fa-3x text-muted mb-3"></i>
-                            <p class="text-muted">Selecciona un colaborador para ver su agenda e informe diario</p>
-                        </div>
-                    <?php endif; ?>
                 </div>
             </div>
         </div>
