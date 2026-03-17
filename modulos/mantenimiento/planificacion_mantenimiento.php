@@ -74,7 +74,6 @@ if (!function_exists('obtenerHorasViaje')) {
 
 // ALGORITMO DE AGENDAMIENTO DINÁMICO: OLEADAS DE URGENCIA v2
 $agenda_semanal = [];
-$dias_nombres = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
 
 // 1. Preparación del Pool
 $pool_tickets_raw = [];
@@ -100,8 +99,8 @@ foreach ($tickets as $t) {
     $pool_tickets_raw[$t['id']] = $t;
 }
 
-for ($d = 0; $d < $dias_plan; $d++) {
-    $dia_nombre = $dias_nombres[$d];
+for ($d = 1; $d <= $dias_plan; $d++) {
+    $dia_nombre = "Día " . $d;
     $agenda_semanal[$dia_nombre] = [
         'visitas' => [],
         'tiempo_total' => 0,
@@ -533,8 +532,17 @@ $solicitudes_criticas = array_filter($tickets, function ($t) {
                                                 <?php else: ?>
                                                     <div class="day-activities">
                                                         <?php foreach ($data['visitas'] as $v): ?>
-                                                            <div
-                                                                class="visit-item mb-2 p-2 rounded bg-light border-start border-3 <?php echo ($v['viaje'] > 0) ? 'border-danger' : 'border-info'; ?>">
+                                                            <div class="visit-item mb-2 bg-white rounded-2 p-2 px-3 border-start border-4 shadow-sm"
+                                                                style="border-color: <?php echo getColorUrgencia($v['tickets'][0]['urgencia']); ?>; cursor: pointer;"
+                                                                title="Clic para ver detalle térmico"
+                                                                data-bs-toggle="modal" data-bs-target="#visitDetailsModal"
+                                                                data-visit-json='<?php echo htmlspecialchars(json_encode([
+                                                                    "nombre" => $v["nombre"],
+                                                                    "departamento" => $v["departamento"],
+                                                                    "horas_exec" => $v["horas_exec"],
+                                                                    "viaje" => $v["viaje"],
+                                                                    "tickets" => $v["tickets"]
+                                                                ]), ENT_QUOTES, "UTF-8"); ?>'>
                                                                 <div
                                                                     class="d-flex justify-content-between align-items-center flex-wrap gap-1">
                                                                     <div class="fw-bold small">
@@ -567,6 +575,30 @@ $solicitudes_criticas = array_filter($tickets, function ($t) {
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Detalles de Visita -->
+    <div class="modal fade" id="visitDetailsModal" tabindex="-1" aria-labelledby="visitDetailsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header text-white border-0 py-3" style="background-color: #0E544C;">
+                    <h5 class="modal-title fw-bold" id="visitDetailsModalLabel">
+                        <i class="bi bi-geo-alt-fill me-2"></i>Detalles de Visita
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4 bg-light">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="fw-bold mb-0 text-dark" id="modalVisitBranch">Nombre de la Sucursal</h6>
+                        <span class="badge bg-secondary" id="modalVisitStats">0h Ejecución | 0h Viaje</span>
+                    </div>
+                    
+                    <div class="list-group list-group-flush border rounded-3 overflow-hidden shadow-sm" id="modalTicketsList">
+                        <!-- Tickets se inyectarán aquí vía JS -->
                     </div>
                 </div>
             </div>
@@ -800,6 +832,62 @@ $solicitudes_criticas = array_filter($tickets, function ($t) {
                     }
                 }
             }
+        });
+
+        // Lógica del Modal de Detalles de Visita
+        document.addEventListener('DOMContentLoaded', () => {
+            const visitItems = document.querySelectorAll('.visit-item');
+            const modalBranch = document.getElementById('modalVisitBranch');
+            const modalStats = document.getElementById('modalVisitStats');
+            const modalTicketsList = document.getElementById('modalTicketsList');
+
+            visitItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    let rawData = this.getAttribute('data-visit-json');
+                    if (!rawData) return;
+                    
+                    const data = JSON.parse(rawData);
+                    
+                    // Actualizar cabeceras
+                    modalBranch.textContent = data.nombre + ' (' + data.departamento + ')';
+                    modalStats.textContent = `${data.horas_exec}h Ejecución | ${data.viaje}h Viaje`;
+                    
+                    // Limpiar y poblar lista de tickets
+                    modalTicketsList.innerHTML = '';
+                    
+                    if (data.tickets && data.tickets.length > 0) {
+                        data.tickets.forEach(tk => {
+                            // Función Helper JS para colores de urgencia (replicando PHP)
+                            let badgeColor = '';
+                            let badgeLabel = '';
+                            switch(parseInt(tk.urgencia)) {
+                                case 4: badgeColor = 'bg-danger'; badgeLabel = 'Crítico'; break;
+                                case 3: badgeColor = 'bg-warning text-dark'; badgeLabel = 'Alta'; break;
+                                case 2: badgeColor = 'bg-info text-white'; badgeLabel = 'Media'; break;
+                                case 1: badgeColor = 'bg-success'; badgeLabel = 'Baja'; break;
+                                default: badgeColor = 'bg-secondary'; badgeLabel = 'N/A';
+                            }
+
+                            const tktHtml = `
+                                <div class="list-group-item list-group-item-action p-3">
+                                    <div class="d-flex w-100 justify-content-between align-items-center mb-1">
+                                        <h6 class="mb-0 fw-bold text-dark text-truncate" style="max-width: 70%;">${tk.titulo_formulario || 'Ticket de Mantenimiento'}</h6>
+                                        <span class="badge ${badgeColor}">${badgeLabel}</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <small class="text-muted"><i class="bi bi-clock-history me-1"></i>${tk.tiempo_exec}h estimadas</small>
+                                        <small class="text-muted">TK-${tk.id}</small>
+                                    </div>
+                                    ${tk.descripcion ? `<p class="mb-0 mt-2 small text-muted text-wrap">${tk.descripcion}</p>` : ''}
+                                </div>
+                            `;
+                            modalTicketsList.insertAdjacentHTML('beforeend', tktHtml);
+                        });
+                    } else {
+                        modalTicketsList.innerHTML = '<div class="p-4 text-center text-muted">No hay tickets asignados a esta visita.</div>';
+                    }
+                });
+            });
         });
     </script>
 </body>
