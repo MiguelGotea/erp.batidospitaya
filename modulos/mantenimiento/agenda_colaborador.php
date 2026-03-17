@@ -112,16 +112,16 @@ if ($colaborador_filtro) {
                             </div>
 
                             <div class="d-flex gap-2">
-                                <?php if (!$informeActual && $colaborador_filtro == $usuario['CodOperario']): ?>
-                                    <button class="btn btn-primary px-4 rounded-pill" onclick="modalApertura()">
-                                        <i class="fas fa-play me-2"></i>Iniciar Informe
-                                    </button>
-                                <?php elseif ($informeActual && $informeActual['estado'] === 'creado' && $colaborador_filtro == $usuario['CodOperario']): ?>
-                                    <button class="btn btn-outline-danger px-4 rounded-pill"
-                                        onclick="modalCierre(<?= $informeActual['id'] ?>)">
-                                        <i class="fas fa-stop me-2"></i>Finalizar Informe
-                                    </button>
-                                <?php endif; ?>
+                                    <?php if (!$informeActual && ($colaborador_filtro == $usuario['CodOperario'] || $puedeVerTodosColaboradores)): ?>
+                                        <button class="btn btn-primary px-4 rounded-pill" onclick="modalApertura()">
+                                            <i class="fas fa-play me-2"></i>Iniciar Informe
+                                        </button>
+                                    <?php elseif ($informeActual && $informeActual['estado'] === 'creado' && ($colaborador_filtro == $usuario['CodOperario'] || $puedeVerTodosColaboradores)): ?>
+                                        <button class="btn btn-outline-danger px-4 rounded-pill"
+                                            onclick="modalCierre(<?= $informeActual['id'] ?>)">
+                                            <i class="fas fa-stop me-2"></i>Finalizar Informe
+                                        </button>
+                                    <?php endif; ?>
 
                                 <?php if ($informeActual): ?>
                                     <button
