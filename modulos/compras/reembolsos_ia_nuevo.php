@@ -98,7 +98,7 @@ $proveedores = $stmtProv->fetchAll(PDO::FETCH_ASSOC);
                                     </label>
                                     <div class="input-group">
                                         <span class="input-group-text bg-primary text-white border-0"><i class="fas fa-robot"></i></span>
-                                        <input type="file" id="foto_factura" class="form-control border-0 shadow-sm" accept="image/*" onchange="procesarFoto(this)">
+                                        <input type="file" id="foto_factura" class="form-control border-0 shadow-sm" accept="image/*,application/pdf" onchange="procesarFoto(this)">
                                     </div>
                                     <div id="statusIA" class="small mt-1 text-muted"></div>
                                 </div>

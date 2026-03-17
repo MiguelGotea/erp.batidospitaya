@@ -35,7 +35,7 @@ try {
     $mimeType = mime_content_type($targetPath);
 
     // Prompt del sistema
-    $systemPrompt = "Eres un asistente experto en contabilidad. Tu tarea es extraer información de fotos de facturas o tickets de gastos. 
+    $systemPrompt = "Eres un asistente experto en contabilidad. Tu tarea es extraer información de facturas o tickets (imagenes o PDF). 
     Debes identificar los artículos o conceptos pagados y devolver un JSON con la lista de items.
     
     Cada item debe tener:
@@ -43,11 +43,13 @@ try {
     - detalle: descripción corta del producto o servicio
     - total_cordobas: el monto total de esa línea en Córdobas (numérico)
     
+    CRÍTICO: Incluye líneas específicas para IMPUESTOS (IVA, IR, etc.) si aparecen en la factura, para que la suma total sea correcta.
+    
     Si la factura está en otra moneda, intenta convertir a Córdobas si hay un tipo de cambio visible, de lo contrario devuelve el monto tal cual pero indícalo en el detalle.
     
-    IMPORTANTE: Devuelve ÚNICAMENTE el objeto JSON, sin explicaciones, sin bloques de código markdown, sin texto adicional.";
+    IMPORTANTE: Devuelve ÚNICAMENTE el objeto JSON, sin explicaciones, sin bloques de código markdown.";
 
-    $userPrompt = "Extrae los datos de esta factura para un resumen de reembolso.";
+    $userPrompt = "Extrae los datos de este documento para un resumen de reembolso.";
 
     // Partes extra para Vision (Gemini format)
     $extraParts = [
@@ -59,8 +61,10 @@ try {
         ]
     ];
 
-    // Cascada de proveedores que soportan visión
-    $proveedores = ['google', 'openai', 'groq'];
+    // Cascada de proveedores
+    $esPDF = ($mimeType === 'application/pdf');
+    $proveedores = $esPDF ? ['google'] : ['google', 'openai', 'groq'];
+    
     $items = [];
     $proveedorUsado = '';
     $errores = [];
@@ -88,7 +92,8 @@ try {
     }
 
     if (empty($items)) {
-        throw new Exception("No se pudo procesar la imagen con ninguna IA. Errores: " . implode(" | ", $errores));
+        $msgError = $esPDF ? "El procesamiento de PDF solo está disponible con Google Gemini. " : "";
+        throw new Exception($msgError . "No se pudo procesar el documento. Detalles: " . implode(" | ", $errores));
     }
 
     echo json_encode([

@@ -35,8 +35,6 @@ $stmtDet = $conn->prepare("SELECT * FROM reembolsos_detalles WHERE id_solicitud 
 $stmtDet->execute([$id]);
 $detalles = $stmtDet->fetchAll(PDO::FETCH_ASSOC);
 
-// Rellenar con filas vacías hasta 10 para mantener el formato Excel si es necesario
-$filas_vacias = max(0, 10 - count($detalles));
 ?>
 
 <!DOCTYPE html>
@@ -173,16 +171,7 @@ $filas_vacias = max(0, 10 - count($detalles));
                     <td class="bg-blue"><?= htmlspecialchars($solicitud['ceco']) ?></td>
                 </tr>
                 <?php endforeach; ?>
-                
-                <?php for($i=0; $i<$filas_vacias; $i++): ?>
-                <tr>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
-                <?php endfor; ?>
+
                 
                 <tr class="total-row">
                     <td colspan="2" class="text-center">TOTAL C$:</td>
