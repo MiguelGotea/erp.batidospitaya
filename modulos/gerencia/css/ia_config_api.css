@@ -73,14 +73,19 @@ table {
 }
 
 th {
-    text-align: left;
-    padding: 16px 20px;
-    color: white;
-    background-color: var(--color-header-tabla);
-    font-size: 0.85rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    font-weight: 600;
+    text-align: left !important;
+    padding: 16px 20px !important;
+    color: white !important;
+    background-color: var(--color-header-tabla) !important;
+    font-size: 0.85rem !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+    font-weight: 600 !important;
+    border: none !important;
+}
+
+thead, thead tr {
+    background-color: var(--color-header-tabla) !important;
 }
 
 td {

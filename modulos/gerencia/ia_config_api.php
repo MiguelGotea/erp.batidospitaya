@@ -40,81 +40,6 @@ $links = [
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="/core/assets/css/global_tools.css?v=<?php echo mt_rand(1, 10000); ?>">
     <link rel="stylesheet" href="css/ia_config_api.css?v=<?php echo mt_rand(1, 10000); ?>">
-    <style>
-        /* Estilos para filtros de encabezado (según Skill) */
-        .filter-icon {
-            cursor: pointer;
-            font-size: 0.8rem;
-            margin-left: 5px;
-            color: rgba(255,255,255,0.6);
-            transition: all 0.2s;
-        }
-        .filter-icon:hover, .filter-icon.active {
-            color: white;
-        }
-        .filter-icon.has-filter {
-            color: #FFC107 !important;
-        }
-        .filter-panel {
-            position: absolute;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-            padding: 15px;
-            width: 250px;
-            z-index: 1060;
-            border: 1px solid #eee;
-            display: none;
-        }
-        .filter-panel.show {
-            display: block;
-            animation: fadeIn 0.2s ease-out;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .filter-section-title {
-            font-size: 0.75rem;
-            font-weight: 700;
-            color: #888;
-            text-transform: uppercase;
-            display: block;
-            margin-bottom: 8px;
-        }
-        .filter-search {
-            width: 100%;
-            padding: 8px 12px;
-            border-radius: 8px;
-            border: 1px solid #ddd;
-            font-size: 0.9rem;
-        }
-        .filter-actions {
-            margin-top: 15px;
-            padding-top: 10px;
-            border-top: 1px solid #eee;
-            display: flex;
-            justify-content: flex-end;
-        }
-        .filter-btn-clear {
-            background: none;
-            border: none;
-            color: #dc3545;
-            font-size: 0.8rem;
-            font-weight: 600;
-            cursor: pointer;
-        }
-        /* Toggle Switch para Tabla */
-        .table-switch .form-check-input {
-            width: 2.5em;
-            height: 1.25em;
-            cursor: pointer;
-        }
-        .table-switch .form-check-input:checked {
-            background-color: var(--color-principal);
-            border-color: var(--color-principal);
-        }
-    </style>
 </head>
 
 <body>
@@ -128,9 +53,6 @@ $links = [
             <div class="row">
                 <div class="col-12">
                     <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h4 class="mb-0 fw-bold" style="color: var(--color-header-tabla);">
-                            <i class="fas fa-robot me-2"></i> Configuración de APIs de IA
-                        </h4>
                         <div>
                             <button class="btn btn-success btn-sm shadow-sm px-3" onclick="nuevoProveedor()">
                                 <i class="fas fa-plus me-2"></i> Nuevo Proveedor
