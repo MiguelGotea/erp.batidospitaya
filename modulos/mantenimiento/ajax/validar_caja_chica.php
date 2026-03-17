@@ -12,6 +12,13 @@ if (!$usuario) {
 }
 
 $ticketModel = new Ticket();
+$cargoOperario = $usuario['CodNivelesCargos'];
+
+// Verificar permiso
+if (!tienePermiso('agenda_mantenimiento', 'caja_chica', $cargoOperario)) {
+    echo json_encode(['success' => false, 'message' => 'No tiene permisos para realizar esta acción']);
+    exit;
+}
 $informe_id = $_POST['informe_id'] ?? null;
 $monto = $_POST['monto'] ?? 0;
 

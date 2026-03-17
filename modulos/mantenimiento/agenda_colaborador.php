@@ -192,7 +192,7 @@ if ($colaborador_filtro) {
                                             <div class="d-flex align-items-center gap-2">
                                                 <span
                                                     class="fw-bold text-dark">C$<?= number_format($informeActual['monto_caja_chica'], 2) ?></span>
-                                                <?php if ($informeActual['monto_caja_chica'] == 0 && !tienePermiso('agenda_mantenimiento', 'caja_chica', $cargoOperario) && $informeActual['estado'] === 'creado'): ?>
+                                                <?php if ($informeActual['monto_caja_chica'] == 0 && tienePermiso('agenda_mantenimiento', 'caja_chica', $cargoOperario) && $informeActual['estado'] === 'creado'): ?>
                                                     <button class="btn btn-sm btn-outline-success p-0 px-2 rounded-pill"
                                                         style="font-size: 0.75rem;"
                                                         onclick="modalValidarCaja(<?= $informeActual['id'] ?>, 0)">
