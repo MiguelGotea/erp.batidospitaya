@@ -41,9 +41,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt->execute([$proveedor, $cuentaCorreo, $apiKey, $password, $activa]);
                 $mensaje = "Nuevo proveedor registrado correctamente";
             }
+            
+            if (isset($_POST['is_ajax'])) {
+                echo json_encode(['success' => true, 'message' => $mensaje]);
+                exit();
+            }
+
             header("Location: ../ia_config_api.php?status=success&msg=" . urlencode($mensaje));
             exit();
         } catch (Exception $e) {
+            if (isset($_POST['is_ajax'])) {
+                echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+                exit();
+            }
             header("Location: ../ia_config_api.php?status=error&msg=" . urlencode($e->getMessage()));
             exit();
         }
@@ -55,9 +65,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
             $stmt = $conn->prepare("DELETE FROM ia_proveedores_api WHERE id = ?");
             $stmt->execute([$id]);
+
+            if (isset($_POST['is_ajax'])) {
+                echo json_encode(['success' => true, 'message' => 'Proveedor eliminado']);
+                exit();
+            }
+
             header("Location: ../ia_config_api.php?status=success&msg=" . urlencode("Proveedor eliminado"));
             exit();
         } catch (Exception $e) {
+            if (isset($_POST['is_ajax'])) {
+                echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+                exit();
+            }
             header("Location: ../ia_config_api.php?status=error&msg=" . urlencode($e->getMessage()));
             exit();
         }

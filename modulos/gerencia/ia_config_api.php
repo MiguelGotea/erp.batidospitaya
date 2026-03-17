@@ -15,14 +15,6 @@ if (!tienePermiso('configuracion_ia_provedores', 'vista', $cargoOperario)) {
     exit();
 }
 
-// Consultar Proveedores
-$stmt = $conn->query("SELECT * FROM ia_proveedores_api ORDER BY proveedor ASC, activa DESC");
-$proveedores = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-// Manejo de mensajes vía GET
-$mensaje = $_GET['msg'] ?? '';
-$tipoMensaje = ($_GET['status'] ?? '') === 'success' ? 'success' : 'danger';
-
 // Enlaces de ayuda
 $links = [
     'google' => 'https://aistudio.google.com/app/apikey',
@@ -133,25 +125,24 @@ $links = [
             <?php echo renderHeader($usuario, false, 'Configuración de APIs IA'); ?>
 
             <div class="content-padding">
-                <?php if ($mensaje): ?>
-                    <div class="alert alert-<?php echo $tipoMensaje; ?> alert-dismissible fade show">
-                        <?php echo htmlspecialchars($mensaje); ?>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            <div class="row">
+                <div class="col-12">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4 class="mb-0 fw-bold" style="color: var(--color-header-tabla);">
+                            <i class="fas fa-robot me-2"></i> Configuración de APIs de IA
+                        </h4>
+                        <div>
+                            <button class="btn btn-success btn-sm shadow-sm px-3" onclick="nuevoProveedor()">
+                                <i class="fas fa-plus me-2"></i> Nuevo Proveedor
+                            </button>
+                        </div>
                     </div>
-                <?php
-endif; ?>
-
-                <!-- Cabecera de la sección -->
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                                       <button class="btn btn-primary shadow-sm" onclick="nuevoProveedor()">
-                        <i class="fas fa-plus me-2"></i> Nuevo Proveedor
-                    </button>
                 </div>
 
                 <!-- Listado de LLaves -->
                 <div class="card overflow-hidden">
                     <div class="table-container">
-                        <table>
+                        <table class="table table-hover" id="tablaApis">
                             <thead>
                                 <tr>
                                     <th data-column="proveedor" data-type="text">
@@ -171,88 +162,41 @@ endif; ?>
                                         Estado Límite
                                         <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                     </th>
-                                   <th>Último Uso</th>
+                                    <th data-column="ultimo_uso" data-type="daterange">
+                                        Último Uso
+                                        <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                    </th>
                                     <th style="width: 180px; text-align: center;">Acciones</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                <?php foreach ($proveedores as $p): ?>
-                                    <tr id="row-<?php echo $p['id']; ?>">
-                                        <td class="provider-icon">
-                                            <?php echo htmlspecialchars($p['proveedor']); ?>
-                                        </td>
-                                        <td style="font-size: 0.9rem; color: var(--text-dim);">
-                                            <?php echo htmlspecialchars($p['cuenta_correo'] ?? '-'); ?>
-                                        </td>
-                                        <td class="api-key-hidden">
-                                            <?php
-    $part = substr($p['api_key'], 0, 8);
-    echo htmlspecialchars($part) . "..." . htmlspecialchars(substr($p['api_key'], -4));
-?>
-                                        </td>
-                                        <td>
-                                            <div class="form-check form-switch table-switch">
-                                                <input class="form-check-input" type="checkbox" 
-                                                       onchange="toggleStatus(<?php echo $p['id']; ?>, this)"
-                                                       <?php echo $p['activa'] ? 'checked' : ''; ?>>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <?php if ($p['limite_alcanzado_hoy']): ?>
-                                                <span class="badge badge-warning">AGOTADA</span>
-                                            <?php
-    else: ?>
-                                                <span class="badge badge-success">DISPONIBLE</span>
-                                            <?php
-    endif; ?>
-                                        </td>
-                                        <td style="font-size: 0.85rem; color: #666;">
-                                            <?php echo $p['ultimo_uso'] ? date('d/m/Y H:i', strtotime($p['ultimo_uso'])) : 'Nunca usado'; ?>
-                                        </td>
-                                        <td>
-                                            <div class="action-btns" style="justify-content: center;">
-                                                <?php if ($p['limite_alcanzado_hoy']): ?>
-                                                <button class="btn-action ping text-warning"
-                                                    onclick="reiniciarLimite(<?php echo $p['id']; ?>)"
-                                                    title="Reiniciar Límite Diario">
-                                                    <i class="fas fa-sync-alt"></i>
-                                                </button>
-                                                <?php
-    endif; ?>
-                                                <button class="btn-action ping"
-                                                    onclick="probarConexion(<?php echo $p['id']; ?>)"
-                                                    title="Probar Conexión">
-                                                    <i class="fas fa-bolt"></i>
-                                                </button>
-                                                <button class="btn-action edit"
-                                                    onclick='editar(<?php echo json_encode($p); ?>)' title="Editar">
-                                                    <i class="fas fa-edit"></i>
-                                                </button>
-                                                <form method="POST" action="ajax/ia_config_api_handler.php"
-                                                    onsubmit="return confirmarEliminacion()" style="display:inline;">
-                                                    <input type="hidden" name="accion" value="eliminar">
-                                                    <input type="hidden" name="id" value="<?php echo $p['id']; ?>">
-                                                    <button type="submit" class="btn-action delete" title="Eliminar">
-                                                        <i class="fas fa-trash"></i>
-                                                    </button>
-                                                </form>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                <?php
-endforeach; ?>
-                                <?php if (empty($proveedores)): ?>
-                                    <tr>
-                                        <td colspan="6" style="text-align: center; padding: 40px; color: #666;">
-                                            No hay llaves registradas.
-                                        </td>
-                                    </tr>
-                                <?php
-endif; ?>
+                            <tbody id="tablaApisBody">
+                                <!-- Carga vía AJAX -->
+                                <tr>
+                                    <td colspan="7" class="text-center py-5">
+                                        <i class="fas fa-spinner fa-spin fa-2x text-primary mb-2"></i>
+                                        <p class="text-muted">Cargando proveedores...</p>
+                                    </td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
                 </div>
+
+                <!-- Paginación Estándar -->
+                <div class="d-flex justify-content-between align-items-center mt-3 mb-5">
+                    <div class="d-flex align-items-center gap-2">
+                        <label class="mb-0 text-muted small">Mostrar:</label>
+                        <select class="form-select form-select-sm" id="registrosPorPagina" 
+                                style="width: auto;" onchange="cambiarRegistrosPorPagina()">
+                            <option value="10">10</option>
+                            <option value="25" selected>25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                        <span class="mb-0 text-muted small">registros</span>
+                    </div>
+                    <div id="paginacion"></div>
+                </div>   </div>
             </div>
         </div> <!-- Cierre content-padding -->
     </div> <!-- Cierre sub-container -->
@@ -325,9 +269,8 @@ endif; ?>
                         </div>
                     </form>
                 </div>
-                <div class="modal-footer bg-light border-0">
                     <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Cerrar</button>
-                    <button type="submit" form="apiForm" class="btn btn-primary px-4">Guardar Configuración</button>
+                    <button type="button" class="btn btn-primary px-4" onclick="guardarProveedor()">Guardar Configuración</button>
                 </div>
             </div>
         </div>
@@ -431,7 +374,62 @@ endforeach; ?>
 
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
     <script src="js/ia_config_api.js?v=<?php echo mt_rand(1, 10000); ?>"></script>
+
+    <!-- Modal de Ayuda (OBLIGATORIO) -->
+    <div class="modal fade" id="pageHelpModal" tabindex="-1" 
+         aria-labelledby="pageHelpModalLabel" aria-hidden="true" 
+         data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-primary text-white border-0">
+                    <h5 class="modal-title" id="pageHelpModalLabel">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Guía de Configuración de APIs de IA
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" 
+                            data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100 border-0 bg-light p-3">
+                                <h6 class="text-primary border-bottom pb-2 fw-bold">
+                                    <i class="fas fa-filter me-2"></i> Filtros Inteligentes
+                                </h6>
+                                <p class="small text-muted mb-0">
+                                    Use los iconos de embudo <i class="bi bi-funnel text-primary"></i> en los encabezados para filtrar por proveedor, correo o estado. Los filtros se aplican al instante.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100 border-0 bg-light p-3">
+                                <h6 class="text-success border-bottom pb-2 fw-bold">
+                                    <i class="fas fa-toggle-on me-2"></i> Activación Rápida
+                                </h6>
+                                <p class="small text-muted mb-0">
+                                    Active o desactive llaves directamente con el interruptor de la tabla. Las llaves inactivas no serán usadas por el sistema de transcripción.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="alert alert-info py-2 px-3 small">
+                                <strong><i class="fas fa-sync-alt me-1"></i> Reinicio de Límites:</strong>
+                                <br>
+                                Si un proveedor agota su cuota diaria, puede usar el botón de reinicio <i class="fas fa-sync-alt text-warning"></i> en la columna de acciones una vez que haya verificado los límites en el panel del proveedor.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        #pageHelpModal { z-index: 1060 !important; }
+        .modal-backdrop { z-index: 1050 !important; }
+    </style>
 </body>
 
 </html>
