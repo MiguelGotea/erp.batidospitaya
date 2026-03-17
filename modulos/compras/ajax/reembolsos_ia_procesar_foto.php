@@ -47,7 +47,7 @@ try {
     
     Si la factura está en otra moneda, intenta convertir a Córdobas si hay un tipo de cambio visible, de lo contrario devuelve el monto tal cual pero indícalo en el detalle.
     
-    IMPORTANTE: Devuelve ÚNICAMENTE el objeto JSON, sin explicaciones, sin bloques de código markdown.";
+    IMPORTANTE: Devuelve ÚNICAMENTE un ARREGLO JSON (array de objetos), sin explicaciones ni bloques de código markdown.";
 
     $userPrompt = "Extrae los datos de este documento para un resumen de reembolso.";
 
