@@ -1,6 +1,6 @@
 :root {
     --color-principal: #51B8AC;
-    --color-header-tabla: #51B8AC;
+    --color-header-tabla: #0E544C;
     --btn-nuevo: #218838;
     --btn-nuevo-hover: #1d6f42;
     --bg: #f4f7f6;
@@ -74,14 +74,21 @@ table {
 
 th {
     text-align: left !important;
-    padding: 16px 20px !important;
+    padding: 14px 12px !important;
     color: white !important;
     background-color: var(--color-header-tabla) !important;
-    font-size: 0.85rem !important;
-    text-transform: uppercase !important;
-    letter-spacing: 0.05em !important;
+    font-size: 14px !important;
+    text-transform: none !important;
+    letter-spacing: normal !important;
     font-weight: 600 !important;
     border: none !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.2) !important;
+    position: relative !important;
+    white-space: nowrap !important;
+}
+
+th:last-child {
+    border-right: none !important;
 }
 
 thead, thead tr {
