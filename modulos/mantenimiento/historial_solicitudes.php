@@ -114,39 +114,39 @@ function getTextoUrgencia($nivel)
                             <tr>
                                 <th data-column="created_at" data-type="daterange">
                                     Solicitado
-                                    <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                    <i class="fas fa-filter filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
                                 <th data-column="titulo" data-type="text">
                                     Título
-                                    <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                    <i class="fas fa-filter filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
                                 <th data-column="descripcion" data-type="text">
                                     Descripción
-                                    <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                    <i class="fas fa-filter filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
                                 <th data-column="nombre_sucursal" data-type="list">
                                     Sucursal
-                                    <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                    <i class="fas fa-filter filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
                                 <th data-column="tipo_formulario" data-type="list">
                                     Tipo
-                                    <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                    <i class="fas fa-filter filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
                                 <th data-column="nivel_urgencia" data-type="urgency">
                                     Urgencia
-                                    <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                    <i class="fas fa-filter filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
                                 <th data-column="tiempo_estimado" data-type="text" style="width: 100px;">
                                     Tiempo (H)
-                                    <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                    <i class="fas fa-filter filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
                                 <th data-column="status" data-type="list">
                                     Estado
-                                    <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                    <i class="fas fa-filter filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
                                 <th data-column="fecha_inicio" data-type="daterange">
                                     Agendado
-                                    <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                    <i class="fas fa-filter filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
                                 <th style="width: 80px;">Foto</th>
                             </tr>
