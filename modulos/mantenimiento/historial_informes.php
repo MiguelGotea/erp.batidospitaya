@@ -319,6 +319,7 @@ $esAdminCaja = tienePermiso('agenda_mantenimiento', 'caja_chica', $cargoOperario
     <script>
         const actualUserId = <?= $usuario['CodOperario'] ?>;
         const esAdminCaja = <?= $esAdminCaja ? 'true' : 'false' ?>;
+        const puedeVerTodos = <?= $puedeVerTodos ? 'true' : 'false' ?>;
     </script>
     <script src="js/historial_informes.js?v=<?= mt_rand(1, 10000) ?>"></script>
 </body>

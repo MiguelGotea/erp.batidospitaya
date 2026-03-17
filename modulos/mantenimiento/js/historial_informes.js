@@ -79,9 +79,9 @@ function renderizarTabla(datos) {
                 </a>
         `;
 
-        if (i.estado === 'creado' && i.cod_operario == actualUserId) {
+        if (i.estado === 'creado' && (i.cod_operario == actualUserId || puedeVerTodos)) {
             accionesHtml += `
-                <a href="agenda_colaborador.php?fecha=${i.fecha}" class="btn-action bg-primary bg-opacity-10 text-primary" title="Continuar Reporte">
+                <a href="agenda_colaborador.php?fecha=${i.fecha}&colaborador=${i.cod_operario}" class="btn-action bg-primary bg-opacity-10 text-primary" title="Continuar Reporte">
                     <i class="fas fa-external-link-alt"></i>
                 </a>
             `;
