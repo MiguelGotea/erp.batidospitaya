@@ -905,8 +905,9 @@ $solicitudes_criticas = array_filter($tickets, function ($t) {
                                                 <h6 class="mb-0 fw-bold text-dark text-truncate pe-2">${tk.titulo || 'Ticket de Mantenimiento'}</h6>
                                                 <span class="badge ${textClass} flex-shrink-0" style="background-color: ${badgeHex};">${badgeLabel}</span>
                                             </div>
-                                            <div class="d-flex justify-content-start align-items-center mb-1">
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
                                                 <small class="text-muted"><i class="bi bi-clock-history me-1"></i>${tk.tiempo_exec}h estimadas</small>
+                                                <small class="fw-bold text-primary" style="font-size: 0.7rem;">Peso: ${parseFloat(tk.U_ef).toFixed(2)}</small>
                                             </div>
                                             ${tk.descripcion ? `<p class="mb-0 small text-muted text-wrap" style="line-height: 1.3;">${tk.descripcion}</p>` : ''}
                                         </div>
