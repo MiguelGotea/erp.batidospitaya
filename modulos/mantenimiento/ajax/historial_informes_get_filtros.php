@@ -28,7 +28,7 @@ try {
                     FROM Operarios o
                     JOIN mtto_informes_diarios i ON o.CodOperario = i.cod_operario
                     ORDER BY label ASC";
-            $response['options'] = $ticketModel->db->fetchAll($sql);
+            $response['options'] = $ticketModel->getDb()->fetchAll($sql);
         } else {
             // Solo el usuario actual
             $response['options'] = [[

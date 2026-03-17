@@ -95,7 +95,7 @@ try {
             $order_sql
             LIMIT :limit OFFSET :offset";
     
-    $stmt = $ticketModel->getDb()->prepare($sql);
+    $stmt = $ticketModel->getDb()->getConnection()->prepare($sql);
     foreach ($params as $key => $val) {
         $stmt->bindValue($key, $val);
     }
@@ -107,7 +107,7 @@ try {
     // Conteo total
     $sql_count = "SELECT COUNT(*) as total FROM mtto_informes_diarios i 
                   LEFT JOIN Operarios o ON i.cod_operario = o.CodOperario $where_sql";
-    $stmt_count = $ticketModel->getDb()->prepare($sql_count);
+    $stmt_count = $ticketModel->getDb()->getConnection()->prepare($sql_count);
     foreach ($params as $key => $val) {
         $stmt_count->bindValue($key, $val);
     }
