@@ -7,10 +7,14 @@ require_once '../../../core/auth/auth.php'; // Incluye conexion.php y funciones.
 header('Content-Type: application/json');
 
 $usuario = obtenerUsuarioActual();
-$cargoOperario = $usuario['CodNivelesCargos'];
+if (!$usuario) {
+    echo json_encode(['success' => false, 'message' => 'Sesión expirada']);
+    exit();
+}
+$cargoOperario = $usuario['CodNivelesCargos'] ?? null;
 
 // Verificar permiso (mismo que la página principal)
-if (!verificarPermiso('ia_config_api')) {
+if (!tienePermiso('configuracion_ia_provedores', 'vista', $cargoOperario)) {
     echo json_encode(['success' => false, 'message' => 'Sin permisos']);
     exit();
 }
