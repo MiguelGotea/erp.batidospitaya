@@ -1,5 +1,5 @@
 -- SQL Setup for AI-Powered Reimbursement Tool
--- Module: Compras
+-- Module: Compras (Legacy names updated to be generic)
 
 CREATE TABLE IF NOT EXISTS `reembolsos_solicitudes` (
   `id` int(11) NOT NULL AUTO_INCREMENT,

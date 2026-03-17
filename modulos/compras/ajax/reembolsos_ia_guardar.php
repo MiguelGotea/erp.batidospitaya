@@ -1,7 +1,7 @@
 <?php
 /**
  * Guardar solicitud de reembolso
- * Ubicación: /modulos/compras/ajax/reembolsos_guardar.php
+ * Ubicación: /modulos/compras/ajax/reembolsos_ia_guardar.php
  */
 
 ini_set('display_errors', 1);

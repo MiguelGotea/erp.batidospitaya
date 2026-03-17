@@ -1,7 +1,7 @@
 <?php
 /**
- * Historial y Nueva Solicitud de Reembolsos
- * Ubicación: /modulos/compras/reembolsos_historial.php
+ * Historial y Nueva Solicitud de Reembolsos con IA
+ * Ubicación: /modulos/compras/reembolsos_ia_historial.php
  */
 
 require_once '../../core/auth/auth.php';
@@ -14,8 +14,8 @@ require_once '../../core/helpers/funciones.php';
 $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
 
-// Verificar acceso
-if (!tienePermiso('reembolsos', 'vista', $cargoOperario)) {
+// Verificar acceso (Permiso estandarizado)
+if (!tienePermiso('reembolsos_ia_plantilla', 'vista', $cargoOperario)) {
     header('Location: /login.php');
     exit();
 }
@@ -42,7 +42,7 @@ $historial = $stmtHist->fetchAll(PDO::FETCH_ASSOC);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestión de Reembolsos | Pitaya ERP</title>
+    <title>Resúmenes de Reembolso IA | Pitaya ERP</title>
     
     <!-- Librerías estándar -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
@@ -53,7 +53,7 @@ $historial = $stmtHist->fetchAll(PDO::FETCH_ASSOC);
     <!-- Estilos Globales y Específicos -->
     <link rel="stylesheet" href="/assets/css/global_tools.css?v=<?php echo mt_rand(1, 10000); ?>">
     <link rel="stylesheet" href="/core/assets/css/modales_premium.css">
-    <link rel="stylesheet" href="css/reembolsos_historial.css?v=<?php echo mt_rand(1, 10000); ?>">
+    <link rel="stylesheet" href="css/reembolsos_ia_historial.css?v=<?php echo mt_rand(1, 10000); ?>">
 </head>
 <body>
 
@@ -61,18 +61,18 @@ $historial = $stmtHist->fetchAll(PDO::FETCH_ASSOC);
 
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, 'Gestión de Reembolsos'); ?>
+            <?php echo renderHeader($usuario, false, 'Plantilla: Reembolsos con IA'); ?>
             
             <div class="container-fluid p-3">
                 <div class="row mb-4 align-items-center">
                     <div class="col">
-                        <h4 class="fw-bold mb-0">Historial de Solicitudes</h4>
-                        <p class="text-muted small">Registro de gastos y reembolsos procesados con IA</p>
+                        <h4 class="fw-bold mb-0">Solicitudes de Reembolso</h4>
+                        <p class="text-muted small">Herramienta inteligente para transcripción de facturas</p>
                     </div>
                     <div class="col-auto">
-                        <?php if (tienePermiso('reembolsos', 'nuevo_registro', $cargoOperario)): ?>
+                        <?php if (tienePermiso('reembolsos_ia_plantilla', 'nuevo_registro', $cargoOperario)): ?>
                         <button class="btn btn-pitaya" data-bs-toggle="modal" data-bs-target="#modalNuevoReembolso">
-                            <i class="fas fa-plus me-2"></i> Nueva Solicitud
+                            <i class="fas fa-plus me-2"></i> Nuevo Resumen
                         </button>
                         <?php endif; ?>
                     </div>
@@ -137,7 +137,7 @@ $historial = $stmtHist->fetchAll(PDO::FETCH_ASSOC);
                 <div class="modal-header">
                     <h5 class="modal-title fw-bold">
                         <i class="fas fa-file-invoice-dollar text-primary me-2"></i>
-                        Nuevo Resumen de Reembolso
+                        Nuevo Resumen de Reembolso (IA)
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
@@ -217,14 +217,14 @@ $historial = $stmtHist->fetchAll(PDO::FETCH_ASSOC);
         </div>
     </div>
 
-    <!-- Modal de Ayuda Universal (OBLIGATORIO) -->
+    <!-- Modal de Ayuda Universal -->
     <div class="modal fade" id="pageHelpModal" tabindex="-1" aria-labelledby="pageHelpModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
         <div class="modal-dialog modal-lg">
             <div class="modal-content border-0 shadow">
                 <div class="modal-header bg-primary text-white">
                     <h5 class="modal-title" id="pageHelpModalLabel">
                         <i class="fas fa-info-circle me-2"></i>
-                        Guía de Uso: Gestión de Reembolsos
+                        Guía: Reembolsos con IA
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
@@ -237,8 +237,7 @@ $historial = $stmtHist->fetchAll(PDO::FETCH_ASSOC);
                                         <i class="fas fa-robot me-2"></i> Transcripción con IA
                                     </h6>
                                     <p class="small text-muted mb-0">
-                                        Al subir una foto de factura, el sistema utiliza modelos de visión (Gemini/OpenAI) 
-                                        para extraer automáticamente la cantidad, el detalle y el monto total en Córdobas.
+                                        Sube una foto clara de la factura para que la IA extraiga los conceptos y montos automáticamente.
                                     </p>
                                 </div>
                             </div>
@@ -247,20 +246,12 @@ $historial = $stmtHist->fetchAll(PDO::FETCH_ASSOC);
                             <div class="card h-100 border-0 bg-light">
                                 <div class="card-body">
                                     <h6 class="text-primary border-bottom pb-2 fw-bold">
-                                        <i class="fas fa-university me-2"></i> Datos de Proveedor
+                                        <i class="fas fa-university me-2"></i> Cuentas Bancarias
                                     </h6>
                                     <p class="small text-muted mb-0">
-                                        Al seleccionar un proveedor, el sistema recupera automáticamente su cuenta principal y banco 
-                                        registrados en el sistema para facilitar la transferencia posterior.
+                                        El sistema auto-completa los datos bancarios del proveedor seleccionado para facilitar el pago.
                                     </p>
                                 </div>
-                            </div>
-                        </div>
-                        <div class="col-md-12">
-                            <div class="alert alert-info py-2 px-3 small rounded-3">
-                                <strong><i class="fas fa-exclamation-circle me-1"></i> Nota:</strong>
-                                <br>
-                                Si la factura está en dólares, la IA intentará convertirla a Córdobas basándose en los datos visibles o indicará la moneda original en el detalle.
                             </div>
                         </div>
                     </div>
@@ -279,7 +270,7 @@ $historial = $stmtHist->fetchAll(PDO::FETCH_ASSOC);
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="js/reembolsos_historial.js?v=<?php echo mt_rand(1, 10000); ?>"></script>
+    <script src="js/reembolsos_ia_historial.js?v=<?php echo mt_rand(1, 10000); ?>"></script>
 
 </body>
 </html>

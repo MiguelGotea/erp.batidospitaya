@@ -1,13 +1,13 @@
 /**
- * Lógica para Gestión de Reembolsos
- * Ubicación: /modulos/compras/js/reembolsos_historial.js
+ * Lógica para Gestión de Reembolsos con IA
+ * Ubicación: /modulos/compras/js/reembolsos_ia_historial.js
  */
 
 let itemsActuales = [];
 let id_cuenta_proveedor = null;
 
 $(document).ready(function() {
-    // Inicializaciones si son necesarias
+    // Inicializaciones
 });
 
 function cargarDatosProveedor(id) {
@@ -18,7 +18,7 @@ function cargarDatosProveedor(id) {
         return;
     }
 
-    $.get('ajax/reembolsos_get_proveedor_data.php', { id_proveedor: id }, function(res) {
+    $.get('ajax/reembolsos_ia_get_proveedor_data.php', { id_proveedor: id }, function(res) {
         if (res.success && res.data) {
             $('#cuenta_bancaria').val(res.data.numero_cuenta);
             $('#banco_proveedor').val(res.data.banco);
@@ -40,7 +40,7 @@ function procesarFoto(input) {
     $('#loader').css('display', 'flex');
 
     $.ajax({
-        url: 'ajax/reembolsos_procesar_foto.php',
+        url: 'ajax/reembolsos_ia_procesar_foto.php',
         type: 'POST',
         data: formData,
         processData: false,
@@ -51,7 +51,7 @@ function procesarFoto(input) {
                 Swal.fire({
                     icon: 'success',
                     title: 'Transcripción Exitosa',
-                    text: 'IA procesó la factura usando ' + res.proveedor,
+                    text: 'IA procesó la factura correctamente usando ' + res.proveedor,
                     timer: 2000,
                     showConfirmButton: false
                 });
@@ -140,7 +140,7 @@ async function guardarSolicitud() {
 
     try {
         const res = await $.ajax({
-            url: 'ajax/reembolsos_guardar.php',
+            url: 'ajax/reembolsos_ia_guardar.php',
             type: 'POST',
             data: JSON.stringify(data),
             contentType: 'application/json'

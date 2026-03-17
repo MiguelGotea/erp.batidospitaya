@@ -1,7 +1,7 @@
 <?php
 /**
  * Obtener datos de cuenta y banco de un proveedor
- * Ubicación: /modulos/compras/ajax/reembolsos_get_proveedor_data.php
+ * Ubicación: /modulos/compras/ajax/reembolsos_ia_get_proveedor_data.php
  */
 
 ini_set('display_errors', 1);

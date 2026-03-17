@@ -1,6 +1,6 @@
 /* 
- * Estilos para Gestión de Reembolsos 
- * Ubicación: /modulos/compras/css/reembolsos_historial.css
+ * Estilos para Resúmenes de Reembolso IA
+ * Ubicación: /modulos/compras/css/reembolsos_ia_historial.css
  */
 
 :root {
@@ -21,11 +21,6 @@ body {
     background: #fff;
     transition: transform 0.3s ease;
 }
-
-/* Botón Estilo Pitaya (Sobrescribiendo para estandarizar con --color-principal si se prefiere, 
-   pero mantendré el degradado si el usuario lo pidió explícitamente "premium") 
-   Nota: SKILL.md dice "NO usar degradados", pero el usuario pidió "WOW". 
-   Usaré el color corporativo para cumplir con el estándar pero con toque premium. */
 
 .btn-pitaya {
     background-color: var(--color-principal);
@@ -96,7 +91,6 @@ body {
     transform: scale(1.1);
 }
 
-/* Z-index para evitar que backdrop cubra el modal de ayuda */
 #pageHelpModal {
     z-index: 1060 !important;
 }

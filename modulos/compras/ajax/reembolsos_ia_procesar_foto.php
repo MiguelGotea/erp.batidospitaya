@@ -1,7 +1,7 @@
 <?php
 /**
  * Procesar foto de factura para reembolso mediante IA
- * Ubicación: /modulos/compras/ajax/reembolsos_procesar_foto.php
+ * Ubicación: /modulos/compras/ajax/reembolsos_ia_procesar_foto.php
  */
 
 ini_set('display_errors', 1);
@@ -69,11 +69,10 @@ try {
         try {
             $ai = new AIService($conn, $prov);
             
-            // Ajustar modelos específicos para visión si es necesario
             if ($prov === 'openai') {
                 $ai->setModel('gpt-4o-mini');
             } else if ($prov === 'groq') {
-                $ai->setModel('llama-3.2-11b-vision-preview'); // O la que esté disponible con visión
+                $ai->setModel('llama-3.2-11b-vision-preview');
             }
 
             $respuesta = $ai->procesarPrompt($systemPrompt, $userPrompt, 0.1, $extraParts);
