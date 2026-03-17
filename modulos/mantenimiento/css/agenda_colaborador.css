@@ -103,7 +103,6 @@
     background-color: #fff;
 }
 
-/* Glassmorphism sutil solo para modales si es necesario, pero manteniendo la limpieza */
 .shadow-premium {
     box-shadow: 0 15px 35px rgba(0,0,0,0.1) !important;
 }
@@ -124,4 +123,28 @@
     .report-status-card {
         padding: 1.5rem !important;
     }
+}
+
+/* NUEVOS ESTILOS PARA ORGANIZACION DE VISITA */
+.visita-logistica-box {
+    background-color: #f8f9fa;
+    border-radius: 12px;
+    padding: 15px;
+    border: 1px dashed #dee2e6;
+}
+
+.section-divider {
+    border: 0;
+    border-top: 1px solid #eee;
+    margin: 1.5rem 0;
+    opacity: 0.8;
+}
+
+.visita-info-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: #888;
+    font-weight: 800;
+    display: block;
 }

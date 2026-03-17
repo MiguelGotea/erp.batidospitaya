@@ -194,36 +194,6 @@ if ($colaborador_filtro) {
                                                     <div class="card-header bg-white border-bottom-0 pt-3 px-4 d-flex justify-content-between align-items-start gap-3">
                                                         <div class="flex-grow-1">
                                                             <h6 class="mb-0 text-primary fw-bold"><?= htmlspecialchars($v['nombre_sucursal']) ?></h6>
-                                                            <div class="text-muted small mt-2">
-                                                                <?php $canEdit = ($informeActual['estado'] === 'creado' && $colaborador_filtro == $usuario['CodOperario']); ?>
-                                                                <div class="d-flex flex-wrap gap-3 align-items-center">
-                                                                    <div class="d-flex align-items-center gap-1">
-                                                                        <i class="far fa-clock text-primary"></i> 
-                                                                        <b>Arribo:</b> 
-                                                                        <input type="time" class="form-control form-control-sm border-0 bg-light py-0 px-1" style="width: 100px;" 
-                                                                               value="<?= date('H:i', strtotime($v['hora_llegada'])) ?>" 
-                                                                               onchange="actualizarVisitaInline(<?= $v['id'] ?>, 'hora_llegada', this.value)"
-                                                                               <?= !$canEdit ? 'disabled' : '' ?>>
-                                                                    </div>
-                                                                    <div class="d-flex align-items-center gap-1">
-                                                                        <i class="fas fa-history text-primary"></i> 
-                                                                        <b>Término:</b> 
-                                                                        <input type="time" class="form-control form-control-sm border-0 bg-light py-0 px-1" style="width: 100px;" 
-                                                                               value="<?= $v['hora_salida'] ? date('H:i', strtotime($v['hora_salida'])) : '' ?>" 
-                                                                               onchange="actualizarVisitaInline(<?= $v['id'] ?>, 'hora_salida', this.value)"
-                                                                               <?= !$canEdit ? 'disabled' : '' ?>>
-                                                                    </div>
-                                                                </div>
-                                                                <div class="mt-2 d-flex align-items-start gap-1">
-                                                                    <i class="fas fa-boxes text-primary mt-1"></i> 
-                                                                    <div class="flex-grow-1">
-                                                                        <b>Materiales:</b> 
-                                                                        <textarea class="form-control form-control-sm border-0 bg-light mt-1" rows="1" placeholder="Materiales utilizados..."
-                                                                                  onchange="actualizarVisitaInline(<?= $v['id'] ?>, 'materiales_stock', this.value)"
-                                                                                  <?= !$canEdit ? 'disabled' : '' ?>><?= htmlspecialchars($v['materiales_stock']) ?></textarea>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
                                                         </div>
                                                         <div class="d-flex gap-2 flex-wrap justify-content-end">
                                                             <?php if ($informeActual['estado'] === 'creado' && $colaborador_filtro == $usuario['CodOperario']): ?>
@@ -239,9 +209,49 @@ if ($colaborador_filtro) {
                                                             <?php endif; ?>
                                                         </div>
                                                     </div>
-                                                    <div class="card-body px-4 pb-3">
+                                                    
+                                                    <div class="card-body px-4 pb-4">
+                                                        <!-- BLOQUE LOGÍSTICA (Arribo, Salida, Materiales) -->
+                                                        <div class="visita-logistica-box mb-3">
+                                                            <div class="row g-3">
+                                                                <div class="col-md-auto">
+                                                                    <div class="visita-info-label mb-1">Arribo</div>
+                                                                    <div class="d-flex align-items-center gap-1">
+                                                                        <i class="far fa-clock text-primary"></i> 
+                                                                        <input type="time" class="form-control form-control-sm border-0 bg-white py-0 px-1" style="width: 100px;" 
+                                                                               value="<?= date('H:i', strtotime($v['hora_llegada'])) ?>" 
+                                                                               onchange="actualizarVisitaInline(<?= $v['id'] ?>, 'hora_llegada', this.value)"
+                                                                               <?= !$canEdit ? 'disabled' : '' ?>>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-md-auto border-start ps-md-4">
+                                                                    <div class="visita-info-label mb-1">Término</div>
+                                                                    <div class="d-flex align-items-center gap-1">
+                                                                        <i class="fas fa-history text-primary"></i> 
+                                                                        <input type="time" class="form-control form-control-sm border-0 bg-white py-0 px-1" style="width: 100px;" 
+                                                                               value="<?= $v['hora_salida'] ? date('H:i', strtotime($v['hora_salida'])) : '' ?>" 
+                                                                               onchange="actualizarVisitaInline(<?= $v['id'] ?>, 'hora_salida', this.value)"
+                                                                               <?= !$canEdit ? 'disabled' : '' ?>>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-md border-start ps-md-4">
+                                                                    <div class="visita-info-label mb-1">Materiales de Stock</div>
+                                                                    <div class="d-flex align-items-start gap-1">
+                                                                        <i class="fas fa-boxes text-primary mt-1"></i> 
+                                                                        <textarea class="form-control form-control-sm border-0 bg-white" rows="1" placeholder="Ninguno..."
+                                                                                  onchange="actualizarVisitaInline(<?= $v['id'] ?>, 'materiales_stock', this.value)"
+                                                                                  <?= !$canEdit ? 'disabled' : '' ?>><?= htmlspecialchars($v['materiales_stock']) ?></textarea>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        <hr class="section-divider">
                                                         <!-- Tareas -->
-                                                        <div class="visita-tareas mb-3">
+                                                        <div class="mb-2">
+                                                            <small class="visita-info-label">TRABAJOS REALIZADOS:</small>
+                                                        </div>
+                                                        <div class="visita-tareas mb-4">
                                                             <?php foreach ($v['tareas'] as $tarea): ?>
                                                                 <div class="p-2 border-bottom d-flex align-items-center gap-3">
                                                                     <span class="badge bg-<?= $tarea['completado_100'] ? 'success' : 'warning text-dark' ?> rounded-pill">
@@ -267,8 +277,10 @@ if ($colaborador_filtro) {
 
                                                         <!-- Compras -->
                                                         <?php if (!empty($v['compras'])): ?>
-                                                            <div class="visita-compras p-2 bg-light rounded-3 mb-2">
-                                                                <small class="text-muted fw-bold d-block mb-1">FACTURAS/COMPRAS:</small>
+                                                            <div class="mb-2">
+                                                                <small class="visita-info-label">FACTURAS Y GASTOS:</small>
+                                                            </div>
+                                                            <div class="visita-compras p-3 bg-light rounded-3 mb-2">
                                                                 <?php foreach ($v['compras'] as $c): ?>
                                                                     <div class="d-flex justify-content-between align-items-center small py-1 border-bottom border-white">
                                                                         <span><i class="fas fa-file-invoice me-1"></i> <?= htmlspecialchars($c['detalle']) ?></span>
