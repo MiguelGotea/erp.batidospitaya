@@ -17,6 +17,7 @@ $(document).ready(function () {
         }
     });
 
+
     $(window).on('scroll resize', function () {
         if (panelFiltroAbierto) cerrarTodosFiltros();
     });
@@ -70,7 +71,7 @@ function renderizarTabla(datos) {
         const kmRecorrido = i.km_final ? (i.km_final - i.km_inicial).toFixed(2) : 'En proceso...';
         const badgeColor = i.estado === 'finalizado' ? 'success' : 'primary';
         const labelEstado = i.estado === 'finalizado' ? 'Finalizado' : 'Abierto';
-        
+
         let accionesHtml = `
             <div class="d-flex justify-content-center gap-2">
                 <a href="imprimir_informe.php?id=${i.id}" target="_blank" class="btn-action bg-dark bg-opacity-10 text-dark" title="Ver/Imprimir">
@@ -201,7 +202,7 @@ function cargarOpcionesFiltro(panel, columna) {
         url: 'ajax/historial_informes_get_filtros.php',
         method: 'GET',
         data: { column: columna },
-        success: function(response) {
+        success: function (response) {
             if (response.success) {
                 let html = '<div class="filter-section">';
                 html += '<span class="filter-section-title">Opciones:</span>';
