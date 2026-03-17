@@ -173,9 +173,17 @@ async function guardarSolicitud() {
                 icon: 'success',
                 title: '¡Guardado!',
                 text: res.message,
-                confirmButtonText: 'Ver Historial'
-            }).then(() => {
-                location.href = 'reembolsos_ia_historial.php';
+                showCancelButton: true,
+                confirmButtonText: '<i class="fas fa-print"></i> Imprimir',
+                cancelButtonText: 'Ver Historial',
+                confirmButtonColor: '#51B8AC'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.open('reembolsos_ia_imprimir.php?id=' + res.id, '_blank');
+                    location.href = 'reembolsos_ia_historial.php';
+                } else {
+                    location.href = 'reembolsos_ia_historial.php';
+                }
             });
         } else {
             Swal.fire('Error', res.message, 'error');
