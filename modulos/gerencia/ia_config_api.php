@@ -383,7 +383,7 @@ endforeach; ?>
          data-bs-backdrop="static" data-bs-keyboard="false">
         <div class="modal-dialog modal-lg">
             <div class="modal-content border-0 shadow">
-                <div class="modal-header bg-primary text-white border-0">
+                <div class="modal-header bg-primary text-white border-0">   
                     <button type="button" class="btn-close btn-close-white" 
                             data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
