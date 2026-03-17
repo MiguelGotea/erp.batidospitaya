@@ -1,6 +1,6 @@
 :root {
     --color-principal: #51B8AC;
-    --color-header-tabla: #0E544C;
+    --color-header-tabla: #51B8AC;
     --btn-nuevo: #218838;
     --btn-nuevo-hover: #1d6f42;
     --bg: #f4f7f6;
@@ -324,12 +324,13 @@ tr:hover {
     display: block;
     font-weight: 700;
     font-size: 11px;
-    color: var(--color-header-tabla);
+    color: white;
+    background: var(--color-principal);
+    padding: 8px 12px;
+    margin: -18px -18px 15px -18px;
+    border-radius: 10px 10px 0 0;
     text-transform: uppercase;
     letter-spacing: 1px;
-    margin-bottom: 10px;
-    border-bottom: 1px solid #f0f0f0;
-    padding-bottom: 5px;
 }
 
 .filter-search {
