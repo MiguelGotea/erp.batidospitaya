@@ -194,17 +194,17 @@ if ($colaborador_filtro) {
                                                                 <?php endif; ?>
                                                             </small>
                                                         </div>
-                                                        <div class="dropdown">
+                                                        <div class="d-flex gap-2">
                                                             <?php if ($informeActual['estado'] === 'creado' && $colaborador_filtro == $usuario['CodOperario']): ?>
-                                                                <button class="btn btn-outline-secondary btn-sm rounded-circle" data-bs-toggle="dropdown">
-                                                                    <i class="fas fa-ellipsis-v"></i>
+                                                                <button class="btn btn-sm btn-outline-primary rounded-pill px-3" onclick="modalNuevaTarea(<?= $v['id'] ?>, '<?= $v['cod_sucursal'] ?>')">
+                                                                    <i class="fas fa-tools me-1"></i>Tarea
                                                                 </button>
-                                                                <ul class="dropdown-menu shadow border-0 rounded-3">
-                                                                    <li><a class="dropdown-item" href="#" onclick="modalNuevaTarea(<?= $v['id'] ?>, '<?= $v['cod_sucursal'] ?>')"><i class="fas fa-tools me-2 text-primary"></i>Registrar Tarea</a></li>
-                                                                    <li><a class="dropdown-item" href="#" onclick="modalNuevaCompra(<?= $v['id'] ?>)"><i class="fas fa-file-invoice-dollar me-2 text-success"></i>Subir Factura</a></li>
-                                                                    <li><hr class="dropdown-item-divider"></li>
-                                                                    <li><a class="dropdown-item text-danger" href="#" onclick="eliminarVisita(<?= $v['id'] ?>)"><i class="fas fa-trash me-2"></i>Eliminar Visita</a></li>
-                                                                </ul>
+                                                                <button class="btn btn-sm btn-outline-success rounded-pill px-3" onclick="modalNuevaCompra(<?= $v['id'] ?>)">
+                                                                    <i class="fas fa-file-invoice-dollar me-1"></i>Factura
+                                                                </button>
+                                                                <button class="btn btn-link btn-sm text-danger p-0 ms-1" onclick="eliminarVisita(<?= $v['id'] ?>)" title="Eliminar Visita">
+                                                                    <i class="fas fa-trash"></i>
+                                                                </button>
                                                             <?php endif; ?>
                                                         </div>
                                                     </div>
