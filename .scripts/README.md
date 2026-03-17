@@ -24,6 +24,7 @@ cd "c:\Users\migue\Desktop\Sistema\Pitaya Web\VisualCode\erp.batidospitaya.com"
 - `gitpush-atencioncliente.ps1`
 - `gitpush-auxiliaradministrativo.ps1`
 - `gitpush-cds.ps1`
+- `gitpush-compras.ps1`
 - `gitpush-desarrollo.ps1`
 - `gitpush-diseno.ps1`
 - `gitpush-experienciadigital.ps1`
