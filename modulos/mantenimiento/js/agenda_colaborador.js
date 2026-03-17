@@ -27,7 +27,7 @@ async function guardarApertura() {
     }
 
     const formData = new FormData(form);
-    
+
     // Validar que haya foto
     if (!formData.get('km_foto_inicial').name && !formData.get('km_foto_inicial_cam')) {
         Swal.fire('Error', 'Debe adjuntar o tomar una foto del kilometraje inicial', 'error');
@@ -46,7 +46,7 @@ async function guardarApertura() {
             body: formData
         });
         const res = await response.json();
-        
+
         if (res.success) {
             Swal.fire('¡Éxito!', 'Jornada iniciada correctamente', 'success').then(() => {
                 location.reload();
@@ -105,7 +105,7 @@ async function guardarVisita() {
 function modalNuevaTarea(visitaId, codSucursal) {
     $('#tarea_visita_id').val(visitaId);
     $('#formTarea')[0].reset();
-    
+
     // Limpiar select y mostrar cargando
     const select = $('#formTarea select[name="ticket_id"]');
     select.empty().append('<option value="">Cargando tickets de esta sucursal...</option>');
@@ -122,7 +122,7 @@ function modalNuevaTarea(visitaId, codSucursal) {
         url: 'ajax/get_tickets_sucursal.php',
         method: 'GET',
         data: { cod_sucursal: codSucursal },
-        success: function(res) {
+        success: function (res) {
             select.empty().append('<option value="">Seleccionar Ticket...</option>');
             if (res.success) {
                 if (res.tickets.length > 0) {
@@ -138,7 +138,7 @@ function modalNuevaTarea(visitaId, codSucursal) {
                 Swal.fire('Error', res.message, 'error');
             }
         },
-        error: function() {
+        error: function () {
             select.empty().append('<option value="">Error al cargar tickets</option>');
         }
     });
@@ -151,7 +151,7 @@ function previewEvidencia(input) {
     if (input.files) {
         Array.from(input.files).forEach(file => {
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = function (e) {
                 fotosEvidenciaTmp.push({ tipo: 'file', data: e.target.result, file: file });
                 renderEvidenciaPreviews();
             };
@@ -198,11 +198,11 @@ async function guardarTarea() {
     }
 
     const formData = new FormData(form);
-    
+
     // Consolidar fotos de cámara y archivos
     const fotosCam = [];
     const dt = new DataTransfer();
-    
+
     fotosEvidenciaTmp.forEach(f => {
         if (f.tipo === 'file') {
             dt.items.add(f.file);
@@ -221,6 +221,7 @@ async function guardarTarea() {
     finalFormData.append('fotos_camera_json', JSON.stringify(fotosCam));
 
     Swal.fire({ title: 'Guardando informe de tarea...', didOpen: () => Swal.showLoading() });
+
 
     try {
         const response = await fetch('ajax/guardar_tarea_informe.php', {
@@ -245,10 +246,10 @@ async function startCamera(target) {
     currentCameraTarget = target;
     const container = $(`#${target}_container`);
     const video = document.getElementById(`${target}_video`);
-    
+
     try {
-        activeStream = await navigator.mediaDevices.getUserMedia({ 
-            video: { facingMode: 'environment' } 
+        activeStream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: 'environment' }
         });
         video.srcObject = activeStream;
         container.removeClass('d-none');
@@ -273,7 +274,7 @@ function captureSnapshot(target) {
         const preview = target.replace('cam_', 'preview_');
         $(`#${preview}`).removeClass('d-none').find('img').attr('src', dataURL);
     }
-    
+
     stopCamera();
 }
 
