@@ -808,8 +808,33 @@ if ($colaborador_filtro) {
                         </div>
                         <div class="mb-0">
                             <label class="form-label small fw-bold">Foto del Voucher / Comprobante *</label>
-                            <input type="file" name="foto_caja" id="caja_foto_input" class="form-control"
-                                accept="image/*" required>
+                            <div class="d-flex gap-2 mb-2">
+                                <button type="button" class="btn btn-sm btn-outline-primary flex-grow-1"
+                                    onclick="document.getElementById('caja_foto_input').click()">
+                                    <i class="fas fa-upload me-1"></i>Galería
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-success flex-grow-1"
+                                    onclick="startCamera('cam_caja')">
+                                    <i class="fas fa-camera me-1"></i>Cámara
+                                </button>
+                            </div>
+                            <input type="file" name="foto_caja" id="caja_foto_input" class="d-none"
+                                accept="image/*" onchange="previewFile(this, 'preview_caja')">
+                            <input type="hidden" name="foto_caja_cam" id="cam_caja_data">
+
+                            <div id="preview_caja" class="text-center mt-2 d-none">
+                                <img src="" class="img-thumbnail rounded-3" style="max-height: 180px;">
+                            </div>
+
+                            <div id="cam_caja_container"
+                                class="mt-2 d-none border rounded-3 overflow-hidden position-relative bg-black">
+                                <video id="cam_caja_video" autoplay playsinline class="w-100"></video>
+                                <button type="button"
+                                    class="btn btn-success btn-sm position-absolute bottom-0 start-50 translate-middle-x mb-2"
+                                    onclick="captureSnapshot('cam_caja')">
+                                    <i class="fas fa-circle"></i>
+                                </button>
+                            </div>
                         </div>
                     </form>
                 </div>

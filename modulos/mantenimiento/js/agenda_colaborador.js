@@ -567,6 +567,9 @@ async function eliminarVisita(id) {
 function modalValidarCaja(id, monto) {
     $('#caja_informe_id').val(id);
     $('#caja_monto').val(monto);
+    $('#preview_caja').addClass('d-none');
+    $('#cam_caja_container').addClass('d-none');
+    stopCamera();
     new bootstrap.Modal(document.getElementById('validarCajaModal')).show();
 }
 
@@ -578,6 +581,13 @@ async function guardarValidacionCaja() {
     }
 
     const formData = new FormData(form);
+
+    // Validar foto (archivo o cámara)
+    if (!formData.get('foto_caja').name && !formData.get('foto_caja_cam')) {
+        Swal.fire('Error', 'Debe adjuntar o tomar una foto del voucher', 'error');
+        return;
+    }
+
     Swal.fire({ title: 'Procesando...', didOpen: () => Swal.showLoading() });
 
     try {
