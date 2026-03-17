@@ -8,6 +8,7 @@ require_once '../../includes/funciones.php';
 require_once '../../core/layout/menu_lateral.php';
 require_once '../../core/layout/header_universal.php';
 
+
 //******************************Estándar para header******************************
 verificarAutenticacion();
 
