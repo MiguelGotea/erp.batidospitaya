@@ -52,13 +52,6 @@ $proveedores = $stmtProv->fetchAll(PDO::FETCH_ASSOC);
             <?php echo renderHeader($usuario, false, 'Nueva Solicitud: Reembolsos con IA'); ?>
             
             <div class="container-fluid p-4">
-                <div class="row mb-3">
-                    <div class="col">
-                        <a href="reembolsos_ia_historial.php" class="btn btn-outline-secondary rounded-pill btn-sm">
-                            <i class="fas fa-arrow-left me-1"></i> Volver al Historial
-                        </a>
-                    </div>
-                </div>
 
                 <div class="card premium-card border-0">
                     <div class="card-header bg-white border-0 py-3">
@@ -161,7 +154,7 @@ $proveedores = $stmtProv->fetchAll(PDO::FETCH_ASSOC);
 
     <!-- Modal de Ayuda Universal -->
     <div class="modal fade" id="pageHelpModal" tabindex="-1" aria-labelledby="pageHelpModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
-        <div class="modal-dialog modal-lg">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content border-0 shadow">
                 <div class="modal-header bg-primary text-white">
                     <h5 class="modal-title" id="pageHelpModalLabel">
