@@ -560,3 +560,39 @@ async function eliminarVisita(id) {
         }
     }
 }
+
+/**
+ * CAJA CHICA REGISTRO (OPERARIO)
+ */
+function modalValidarCaja(id, monto) {
+    $('#caja_informe_id').val(id);
+    $('#caja_monto').val(monto);
+    new bootstrap.Modal(document.getElementById('validarCajaModal')).show();
+}
+
+async function guardarValidacionCaja() {
+    const form = document.getElementById('formCaja');
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+
+    const formData = new FormData(form);
+    Swal.fire({ title: 'Procesando...', didOpen: () => Swal.showLoading() });
+
+    try {
+        const response = await fetch('ajax/validar_caja_chica.php', {
+            method: 'POST',
+            body: formData
+        });
+        const res = await response.json();
+        if (res.success) {
+            Swal.fire('Éxito', 'Registro de caja chica guardado', 'success').then(() => location.reload());
+            bootstrap.Modal.getInstance(document.getElementById('validarCajaModal')).hide();
+        } else {
+            Swal.fire('Error', res.message, 'error');
+        }
+    } catch (e) {
+        Swal.fire('Error', e.message, 'error');
+    }
+}

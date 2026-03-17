@@ -188,8 +188,14 @@ if ($colaborador_filtro) {
                                     <div class="d-flex flex-column gap-1 text-start">
                                         <div class="d-flex justify-content-between px-3">
                                             <small class="visita-info-label small opacity-75">Caja Chica (Ingreso):</small>
-                                            <span
-                                                class="fw-bold text-dark">C$<?= number_format($informeActual['monto_caja_chica'], 2) ?></span>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <span class="fw-bold text-dark">C$<?= number_format($informeActual['monto_caja_chica'], 2) ?></span>
+                                                <?php if ($informeActual['monto_caja_chica'] == 0 && !tienePermiso('agenda_mantenimiento', 'caja_chica', $cargoOperario) && $informeActual['estado'] === 'creado'): ?>
+                                                    <button class="btn btn-sm btn-outline-success p-0 px-2 rounded-pill" style="font-size: 0.75rem;" onclick="modalValidarCaja(<?= $informeActual['id'] ?>, 0)">
+                                                        <i class="fas fa-plus me-1"></i>Registrar
+                                                    </button>
+                                                <?php endif; ?>
+                                            </div>
                                         </div>
                                         <div class="d-flex justify-content-between px-3">
                                             <small class="visita-info-label small opacity-75">Total Gastado:</small>
@@ -758,6 +764,38 @@ if ($colaborador_filtro) {
                         data-bs-dismiss="modal">
                         <i class="fas fa-times"></i>
                     </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL REGISTRAR CAJA CHICA (OPERARIO) -->
+    <div class="modal fade" id="validarCajaModal" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content shadow-premium border-0 rounded-4">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold"><i class="fas fa-cash-register me-2 text-success"></i>Registrar Caja Chica</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="formCaja">
+                        <input type="hidden" name="informe_id" id="caja_informe_id">
+                        <div class="mb-4">
+                            <label class="form-label small fw-bold">Monto Recibido *</label>
+                            <div class="input-group">
+                                <span class="input-group-text">C$</span>
+                                <input type="number" step="0.01" name="monto" id="caja_monto" class="form-control form-control-lg" required>
+                            </div>
+                        </div>
+                        <div class="mb-0">
+                            <label class="form-label small fw-bold">Foto del Voucher / Comprobante *</label>
+                            <input type="file" name="foto_caja" id="caja_foto_input" class="form-control" accept="image/*" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-0 p-3 px-4 pb-4">
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-success rounded-pill px-4" onclick="guardarValidacionCaja()">Confirmar Entrega</button>
                 </div>
             </div>
         </div>
