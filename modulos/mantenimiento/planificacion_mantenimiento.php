@@ -356,12 +356,10 @@ $solicitudes_criticas = array_filter($tickets, function ($t) {
                                                 value="<?php echo $horas_jornada; ?>">
                                         </div>
                                         <div class="col-6">
-                                            <label class="small text-muted mb-0">Días/Semana</label>
-                                            <select name="dias_plan" class="form-select form-select-sm">
-                                                <?php for ($i = 1; $i <= 7; $i++): ?>
-                                                    <option value="<?php echo $i; ?>" <?php echo ($dias_plan == $i) ? 'selected' : ''; ?>><?php echo $i; ?></option>
-                                                <?php endfor; ?>
-                                            </select>
+                                            <label class="small text-muted mb-0">Cant. de Días</label>
+                                            <input type="number" min="1" step="1" name="dias_plan"
+                                                class="form-control form-control-sm"
+                                                value="<?php echo $dias_plan; ?>">
                                         </div>
                                     </div>
                                     <div class="d-flex justify-content-end align-items-center mt-3 mb-1">
@@ -868,17 +866,28 @@ $solicitudes_criticas = array_filter($tickets, function ($t) {
                                 default: badgeColor = 'bg-secondary'; badgeLabel = 'N/A';
                             }
 
+                            const imgPath = tk.imagen_1 ? `/uploads/${tk.imagen_1}` : null;
+                            const imageHtml = imgPath 
+                                ? `<div class="me-3 flex-shrink-0">
+                                     <img src="${imgPath}" class="rounded border" style="width: 60px; height: 60px; object-fit: cover;" alt="Miniatura" onerror="this.style.display='none'">
+                                   </div>` 
+                                : '';
+
                             const tktHtml = `
                                 <div class="list-group-item list-group-item-action p-3">
-                                    <div class="d-flex w-100 justify-content-between align-items-center mb-1">
-                                        <h6 class="mb-0 fw-bold text-dark text-truncate" style="max-width: 70%;">${tk.titulo_formulario || 'Ticket de Mantenimiento'}</h6>
-                                        <span class="badge ${badgeColor}">${badgeLabel}</span>
+                                    <div class="d-flex w-100 align-items-start">
+                                        ${imageHtml}
+                                        <div class="flex-grow-1 min-width-0">
+                                            <div class="d-flex w-100 justify-content-between align-items-center mb-1">
+                                                <h6 class="mb-0 fw-bold text-dark text-truncate pe-2">${tk.titulo_formulario || 'Ticket de Mantenimiento'}</h6>
+                                                <span class="badge ${badgeColor} flex-shrink-0">${badgeLabel}</span>
+                                            </div>
+                                            <div class="d-flex justify-content-start align-items-center mb-1">
+                                                <small class="text-muted"><i class="bi bi-clock-history me-1"></i>${tk.tiempo_exec}h estimadas</small>
+                                            </div>
+                                            ${tk.descripcion ? `<p class="mb-0 small text-muted text-wrap" style="line-height: 1.3;">${tk.descripcion}</p>` : ''}
+                                        </div>
                                     </div>
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <small class="text-muted"><i class="bi bi-clock-history me-1"></i>${tk.tiempo_exec}h estimadas</small>
-                                        <small class="text-muted">TK-${tk.id}</small>
-                                    </div>
-                                    ${tk.descripcion ? `<p class="mb-0 mt-2 small text-muted text-wrap">${tk.descripcion}</p>` : ''}
                                 </div>
                             `;
                             modalTicketsList.insertAdjacentHTML('beforeend', tktHtml);
