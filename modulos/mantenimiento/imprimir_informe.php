@@ -202,7 +202,7 @@ $viaticos = calcularViaticos($informe['visitas']);
 
             <?php if($v['materiales_stock']): ?>
                 <div style="margin-top: 10px; font-size: 9pt;">
-                    <strong>Materiales Stock:</strong> <?= htmlspecialchars($v['materiales_stock']) ?>
+                    <strong>Materiales Usados:</strong> <?= htmlspecialchars($v['materiales_stock']) ?>
                 </div>
             <?php endif; ?>
         </div>

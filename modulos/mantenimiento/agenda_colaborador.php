@@ -289,7 +289,7 @@ if ($colaborador_filtro) {
                                                                     </div>
                                                                 </div>
                                                                 <div class="col-md border-start ps-md-4">
-                                                                    <div class="visita-info-label mb-1">Materiales de Stock</div>
+                                                                    <div class="visita-info-label mb-1">Materiales Usados</div>
                                                                     <div class="d-flex align-items-start gap-1">
                                                                         <i class="fas fa-boxes text-primary mt-1"></i> 
                                                                         <textarea class="form-control form-control-sm border-0 bg-white" rows="1" placeholder="Ninguno..."

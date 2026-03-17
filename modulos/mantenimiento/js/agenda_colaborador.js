@@ -386,7 +386,7 @@ async function guardarCierre() {
     if (btnSalida || btnMat) {
         Swal.fire({
             title: 'Informe Incompleto',
-            text: 'Todas las visitas deben tener registrada la Hora de Salida y los Materiales de Stock antes de finalizar.',
+            text: 'Todas las visitas deben tener registrada la Hora de Salida y los Materiales Usados antes de finalizar.',
             icon: 'warning',
             confirmButtonColor: '#0E544C'
         });
