@@ -47,59 +47,57 @@ $filas_vacias = max(0, 10 - count($detalles));
     <style>
         @page {
             size: letter;
-            margin: 1cm;
+            margin: 10mm;
         }
         body {
             font-family: Arial, sans-serif;
-            font-size: 11px;
+            font-size: 10px;
             color: #333;
             margin: 0;
             padding: 0;
+            background-color: #fff;
         }
         .container {
-            width: 100%;
+            width: 190mm; /* Ancho estándar para carta con márgenes */
+            margin: 0 auto;
             border: 1px solid #000;
         }
         table {
             width: 100%;
             border-collapse: collapse;
+            table-layout: fixed; /* Asegura que no se desborde */
         }
         th, td {
             border: 1px solid #000;
-            padding: 4px 8px;
+            padding: 3px 6px;
             text-align: left;
+            word-wrap: break-word; /* Evita que el texto largo rompa la tabla */
         }
         .header-title {
             text-align: center;
             font-weight: bold;
-            font-size: 14px;
+            font-size: 12px;
             background-color: #fff;
-            padding: 8px;
+            padding: 6px;
         }
         .v-label {
             background-color: #f8f9fa;
             font-weight: bold;
-            width: 15%;
+            width: 60px;
         }
         .v-value {
-            width: 35%;
             color: #0000FF;
             font-weight: bold;
-        }
-        .section-header {
-            text-align: right;
-            font-size: 10px;
-            color: #666;
-            border-bottom: none;
         }
         .table-main th {
             text-align: center;
             text-transform: uppercase;
-            font-size: 10px;
-            padding: 6px;
+            font-size: 9px;
+            padding: 5px;
+            background-color: #f2f2f2;
         }
         .table-main td {
-            height: 20px;
+            height: 18px;
         }
         .text-center { text-align: center; }
         .text-right { text-align: right; }
@@ -199,7 +197,7 @@ $filas_vacias = max(0, 10 - count($detalles));
                 <td style="width: 10%;">Reembolso:</td>
                 <td style="width: 25%;" class="bg-blue">TRANSFERENCIA</td>
                 <td style="width: 10%;">Cuenta:</td>
-                <td style="width: 25%;" class="bg-blue"><?= htmlspecialchars($solicitud['titular'] ?? 'N/A') ?></td>
+                <td style="width: 25%;" class="bg-blue"><?= htmlspecialchars($solicitud['titular'] ?? 'N/A') ?> - <?= htmlspecialchars($solicitud['numero_cuenta'] ?? '') ?></td>
                 <td style="width: 10%;">Banco:</td>
                 <td style="width: 20%;" class="bg-blue"><?= htmlspecialchars($solicitud['banco'] ?? 'N/A') ?></td>
             </tr>
