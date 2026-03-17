@@ -6,6 +6,8 @@ let filtrosActivos = {};
 let ordenActivo = { columna: 'fecha', direccion: 'desc' };
 let panelFiltroAbierto = null;
 let totalRegistros = 0;
+let activeStream = null;
+let currentCameraTarget = null;
 
 $(document).ready(function () {
     cargarDatos();
@@ -321,6 +323,9 @@ function formatearHora(f) {
 function modalValidarCaja(id, monto) {
     $('#caja_informe_id').val(id);
     $('#caja_monto').val(monto);
+    $('#preview_caja').addClass('d-none');
+    $('#cam_caja_container').addClass('d-none');
+    stopCamera();
     new bootstrap.Modal(document.getElementById('validarCajaModal')).show();
 }
 
@@ -332,6 +337,13 @@ async function guardarValidacionCaja() {
     }
 
     const formData = new FormData(form);
+
+    // Validar foto (archivo o cámara)
+    if (!formData.get('foto_caja').name && !formData.get('foto_caja_cam')) {
+        Swal.fire('Error', 'Debe adjuntar o tomar una foto del voucher', 'error');
+        return;
+    }
+
     Swal.fire({ title: 'Procesando...', didOpen: () => Swal.showLoading() });
 
     try {
@@ -348,6 +360,60 @@ async function guardarValidacionCaja() {
         }
     } catch (e) {
         Swal.fire('Error', e.message, 'error');
+    }
+}
+
+/**
+ * GESTIÓN DE CÁMARA UNIVERSAL
+ */
+async function startCamera(target) {
+    currentCameraTarget = target;
+    const container = $(`#${target}_container`);
+    const video = document.getElementById(`${target}_video`);
+
+    try {
+        activeStream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: 'environment' }
+        });
+        video.srcObject = activeStream;
+        container.removeClass('d-none');
+    } catch (e) {
+        Swal.fire('Cámara', 'No se pudo acceder a la cámara: ' + e.message, 'warning');
+    }
+}
+
+function captureSnapshot(target) {
+    const video = document.getElementById(`${target}_video`);
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext('2d').drawImage(video, 0, 0);
+    const dataURL = canvas.toDataURL('image/jpeg', 0.8);
+
+    $(`#${target}_data`).val(dataURL);
+    const preview = target.replace('cam_', 'preview_');
+    $(`#${preview}`).removeClass('d-none').find('img').attr('src', dataURL);
+
+    stopCamera();
+}
+
+function stopCamera() {
+    if (activeStream) {
+        activeStream.getTracks().forEach(track => track.stop());
+        activeStream = null;
+    }
+    if (currentCameraTarget) {
+        $(`#${currentCameraTarget}_container`).addClass('d-none');
+    }
+}
+
+function previewFile(input, previewId) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = e => {
+            $(`#${previewId}`).removeClass('d-none').find('img').attr('src', e.target.result);
+        };
+        reader.readAsDataURL(input.files[0]);
     }
 }
 

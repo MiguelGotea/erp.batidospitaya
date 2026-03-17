@@ -27,6 +27,7 @@ if (!$informe_id) {
     exit;
 }
 
+$foto_nombre = null;
 if (isset($_FILES['foto_caja']) && $_FILES['foto_caja']['error'] === UPLOAD_ERR_OK) {
     $ext = pathinfo($_FILES['foto_caja']['name'], PATHINFO_EXTENSION);
     $foto_nombre = 'caja_' . $informe_id . '_' . time() . '.' . $ext;
@@ -41,6 +42,11 @@ if (isset($_FILES['foto_caja']) && $_FILES['foto_caja']['error'] === UPLOAD_ERR_
     $foto_nombre = 'caja_cam_' . $informe_id . '_' . time() . '.jpg';
     if (!is_dir('../uploads/caja')) mkdir('../uploads/caja', 0777, true);
     file_put_contents('../uploads/caja/' . $foto_nombre, $data);
+}
+
+if (!$foto_nombre) {
+    echo json_encode(['success' => false, 'message' => 'Debe adjuntar una foto del voucher']);
+    exit;
 }
 
 try {
