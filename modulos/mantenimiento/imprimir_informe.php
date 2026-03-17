@@ -98,7 +98,7 @@ $saldoActual = $informe['monto_caja_chica'] - $totalGastado;
             <p class="title">INFORME DIARIO DE MANTENIMIENTO</p>
             <p style="margin: 5px 0 0 0; color: #666;">Sistema ERP Pitaya - Control Operativo</p>
         </div>
-        <img src="../../core/assets/img/logo_pitaya.png" class="logo" onerror="this.src='/assets/img/logo.png'">
+        <img src="../../core/assets/img/Logo.svg" class="logo" onerror="this.src='/core/assets/img/Logo.svg'">
     </div>
 
     <div class="info-grid">
