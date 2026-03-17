@@ -45,7 +45,7 @@ try {
     
     Si la factura está en otra moneda, intenta convertir a Córdobas si hay un tipo de cambio visible, de lo contrario devuelve el monto tal cual pero indícalo en el detalle.
     
-    Devuelve ÚNICAMENTE el JSON.";
+    IMPORTANTE: Devuelve ÚNICAMENTE el objeto JSON, sin explicaciones, sin bloques de código markdown, sin texto adicional.";
 
     $userPrompt = "Extrae los datos de esta factura para un resumen de reembolso.";
 
@@ -72,7 +72,7 @@ try {
             if ($prov === 'openai') {
                 $ai->setModel('gpt-4o-mini');
             } else if ($prov === 'groq') {
-                $ai->setModel('llama-3.2-11b-vision-preview');
+                $ai->setModel('llama-3.2-90b-vision-preview');
             }
 
             $respuesta = $ai->procesarPrompt($systemPrompt, $userPrompt, 0.1, $extraParts);
