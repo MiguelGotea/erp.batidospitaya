@@ -131,15 +131,15 @@ if ($colaborador_filtro) {
                             <?php if ($informeActual): ?>
                                 <hr class="my-3 opacity-10">
                                 <div class="row g-4 text-center">
-                                    <div class="col-6 col-md-3 border-end">
+                                    <div class="col-6 col-md-2 border-end">
                                         <small class="text-muted d-block">KM Inicial</small>
                                         <span class="fw-bold"><?= number_format($informeActual['km_inicial'], 2) ?></span>
                                     </div>
-                                    <div class="col-6 col-md-3 border-end">
+                                    <div class="col-6 col-md-2 border-end">
                                         <small class="text-muted d-block">Asignado</small>
                                         <span class="fw-bold fs-5 text-dark">C$<?= number_format($informeActual['monto_caja_chica'], 2) ?></span>
                                     </div>
-                                    <div class="col-6 col-md-3 border-end">
+                                    <div class="col-6 col-md-2 border-end">
                                         <?php 
                                             $totalGastado = 0;
                                             foreach($informeActual['visitas'] as $v) {
@@ -149,15 +149,15 @@ if ($colaborador_filtro) {
                                         <small class="text-muted d-block">Gastado</small>
                                         <span class="fw-bold fs-5 text-danger">C$<?= number_format($totalGastado, 2) ?></span>
                                     </div>
-                                    <div class="col-6 col-md-3 border-end">
+                                    <div class="col-6 col-md-2 border-end">
                                         <small class="text-muted d-block">Saldo Actual</small>
                                         <span class="fw-bold fs-5 text-success">C$<?= number_format($informeActual['monto_caja_chica'] - $totalGastado, 2) ?></span>
                                     </div>
-                                    <div class="col-6 col-md-3 border-end">
+                                    <div class="col-6 col-md-2 border-end">
                                         <small class="text-muted d-block">Sucursales Visitas</small>
                                         <span class="fw-bold"><?= count($informeActual['visitas']) ?></span>
                                     </div>
-                                    <div class="col-6 col-md-3">
+                                    <div class="col-6 col-md-2">
                                         <small class="text-muted d-block">Tareas Hechas</small>
                                         <?php 
                                             $totalT = 0; 
