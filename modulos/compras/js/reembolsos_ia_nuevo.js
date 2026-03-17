@@ -1,31 +1,31 @@
 /**
- * Lógica para Gestión de Reembolsos con IA
- * Ubicación: /modulos/compras/js/reembolsos_ia_historial.js
+ * Lógica para Creación de Reembolsos con IA (Standalone Page)
+ * Ubicación: /modulos/compras/js/reembolsos_ia_nuevo.js
  */
 
 let itemsActuales = [];
 let id_cuenta_proveedor = null;
 
 $(document).ready(function() {
-    // Inicializaciones
+    // Inicializaciones automáticas si existen
 });
 
 function cargarDatosProveedor(id) {
     if (!id) {
-        $('#cuenta_bancaria').val('');
-        $('#banco_proveedor').val('');
+        $('#cuenta_bancaria').val('').addClass('opacity-50');
+        $('#banco_proveedor').val('').addClass('opacity-50');
         id_cuenta_proveedor = null;
         return;
     }
 
     $.get('ajax/reembolsos_ia_get_proveedor_data.php', { id_proveedor: id }, function(res) {
         if (res.success && res.data) {
-            $('#cuenta_bancaria').val(res.data.numero_cuenta);
-            $('#banco_proveedor').val(res.data.banco);
+            $('#cuenta_bancaria').val(res.data.numero_cuenta).removeClass('opacity-50');
+            $('#banco_proveedor').val(res.data.banco).removeClass('opacity-50');
             id_cuenta_proveedor = res.data.id;
         } else {
-            $('#cuenta_bancaria').val('');
-            $('#banco_proveedor').val('');
+            $('#cuenta_bancaria').val('No registra cuenta').addClass('opacity-50');
+            $('#banco_proveedor').val('No registra banco').addClass('opacity-50');
             id_cuenta_proveedor = null;
         }
     });
@@ -37,7 +37,8 @@ function procesarFoto(input) {
     let formData = new FormData();
     formData.append('foto', input.files[0]);
 
-    $('#loader').css('display', 'flex');
+    $('#loader').css('display', 'flex').hide().fadeIn(300);
+    $('#statusIA').text('Cargando imagen...');
 
     $.ajax({
         url: 'ajax/reembolsos_ia_procesar_foto.php',
@@ -46,28 +47,31 @@ function procesarFoto(input) {
         processData: false,
         contentType: false,
         success: function(res) {
-            $('#loader').hide();
+            $('#loader').fadeOut(300);
             if (res.success) {
                 Swal.fire({
                     icon: 'success',
-                    title: 'Transcripción Exitosa',
-                    text: 'IA procesó la factura correctamente usando ' + res.proveedor,
-                    timer: 2000,
+                    title: '¡Procesado!',
+                    text: 'Extracción completada con ' + res.proveedor,
+                    timer: 1500,
                     showConfirmButton: false
                 });
+                $('#statusIA').html('<span class="text-success"><i class="fas fa-check-circle"></i> Última factura leída con éxito.</span>');
                 agregarAFilas(res.items, res.foto_path);
             } else {
-                Swal.fire('Error', res.message, 'error');
+                Swal.fire('Error de IA', res.message, 'error');
+                $('#statusIA').html('<span class="text-danger"><i class="fas fa-times-circle"></i> Error al transcribir.</span>');
             }
         },
         error: function() {
             $('#loader').hide();
-            Swal.fire('Error', 'Error de conexión con el servidor', 'error');
+            Swal.fire('Error', 'No se pudo conectar con el servicio de IA.', 'error');
         }
     });
 }
 
 function agregarAFilas(items, fotoPath) {
+    $('.empty-row').hide();
     items.forEach(item => {
         item.foto_path = fotoPath;
         itemsActuales.push(item);
@@ -87,15 +91,31 @@ function eliminarFila(index) {
 
 function renderTable() {
     $('#bodyDetalles').empty();
+    if (itemsActuales.length === 0) {
+        let emptyRow = `
+            <tr class="empty-row">
+                <td colspan="5" class="text-center py-5 text-muted">
+                    <i class="fas fa-cloud-upload-alt fa-3x mb-3 d-block opacity-25"></i>
+                    Sube una foto para comenzar la extracción automática.
+                </td>
+            </tr>
+        `;
+        $('#bodyDetalles').append(emptyRow);
+        calcularTotal();
+        return;
+    }
+
     itemsActuales.forEach((item, i) => {
         let row = `
-            <tr data-index="${i}">
+            <tr data-index="${i}" class="align-middle">
                 <td><input type="number" class="excel-input" value="${item.cantidad}" onchange="actualizarDato(${i}, 'cantidad', this.value)"></td>
                 <td><input type="text" class="excel-input" value="${item.detalle}" onchange="actualizarDato(${i}, 'detalle', this.value)"></td>
-                <td><input type="number" class="excel-input" value="${item.total_cordobas}" onchange="actualizarDato(${i}, 'total_cordobas', this.value)"></td>
-                <td class="text-center"><img src="../../${item.foto_path}" class="preview-img" onclick="window.open('../../${item.foto_path}')"></td>
+                <td><input type="number" class="excel-input fw-bold text-primary" value="${item.total_cordobas}" onchange="actualizarDato(${i}, 'total_cordobas', this.value)"></td>
                 <td class="text-center">
-                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="eliminarFila(${i})">
+                    <img src="../../${item.foto_path}" class="preview-img" onclick="window.open('../../${item.foto_path}')" title="Ver original">
+                </td>
+                <td class="text-center">
+                    <button type="button" class="btn btn-sm btn-outline-danger border-0" onclick="eliminarFila(${i})">
                         <i class="fas fa-trash"></i>
                     </button>
                 </td>
@@ -116,7 +136,7 @@ function calcularTotal() {
 
 async function guardarSolicitud() {
     let data = {
-        id_proveedor: $('#id_proveedor').val(),
+        id_provider: $('#id_proveedor').val(),
         id_cuenta_proveedor: id_cuenta_proveedor,
         concepto: $('#concepto').val(),
         ceco: $('#ceco').val(),
@@ -126,16 +146,16 @@ async function guardarSolicitud() {
     };
 
     if (!data.concepto) {
-        Swal.fire('Validación', 'Debe ingresar un concepto para el reembolso.', 'warning');
+        Swal.fire('Validación', 'Por favor ingresa un concepto para el reembolso.', 'warning');
         return;
     }
 
     if (itemsActuales.length === 0) {
-        Swal.fire('Validación', 'Debe agregar al menos un gasto subiendo una factura.', 'warning');
+        Swal.fire('Validación', 'No hay gastos registrados. Sube al menos una factura.', 'warning');
         return;
     }
 
-    $('#loader h5').text('Guardando...');
+    $('#loader h5').text('Registrando en base de datos...');
     $('#loader').css('display', 'flex');
 
     try {
@@ -149,18 +169,19 @@ async function guardarSolicitud() {
         $('#loader').hide();
 
         if (res.success) {
-            Swal.fire('¡Éxito!', res.message, 'success').then(() => {
-                location.reload();
+            Swal.fire({
+                icon: 'success',
+                title: '¡Guardado!',
+                text: res.message,
+                confirmButtonText: 'Ver Historial'
+            }).then(() => {
+                location.href = 'reembolsos_ia_historial.php';
             });
         } else {
             Swal.fire('Error', res.message, 'error');
         }
     } catch (error) {
         $('#loader').hide();
-        Swal.fire('Error', 'No se pudo guardar la solicitud.', 'error');
+        Swal.fire('Error', 'Ocurrió un error inesperado al intentar guardar.', 'error');
     }
-}
-
-function verDetalle(id) {
-    Swal.fire('Información', 'La vista de detalle histórica se habilitará en la siguiente fase.', 'info');
 }
