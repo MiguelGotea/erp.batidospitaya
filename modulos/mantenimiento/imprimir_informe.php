@@ -109,7 +109,25 @@ $viaticos = calcularViaticos($informe['visitas']);
         </div>
         <div class="info-item">
             <label>Kilometraje (Ini/Fin)</label>
-            <span><?= number_format($informe['km_inicial'], 2) ?> - <?= $informe['km_final'] ? number_format($informe['km_final'], 2) : '---' ?></span>
+            <div style="display: flex; align-items: center; gap: 10px; margin-top: 3px;">
+                <div style="text-align: center;">
+                    <span style="display: block; font-size: 10pt;"><?= number_format($informe['km_inicial'], 2) ?></span>
+                    <?php if ($informe['km_foto_inicial']): ?>
+                        <div class="foto-box" style="width: 60px; height: 60px; margin: 2px auto;">
+                            <img src="uploads/informes/<?= $informe['km_foto_inicial'] ?>">
+                        </div>
+                    <?php endif; ?>
+                </div>
+                <div style="color: #ddd;">|</div>
+                <div style="text-align: center;">
+                    <span style="display: block; font-size: 10pt;"><?= $informe['km_final'] ? number_format($informe['km_final'], 2) : '---' ?></span>
+                    <?php if ($informe['km_foto_final']): ?>
+                        <div class="foto-box" style="width: 60px; height: 60px; margin: 2px auto;">
+                            <img src="uploads/informes/<?= $informe['km_foto_final'] ?>">
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
         </div>
         <div class="info-item">
             <label>Caja Chica</label>

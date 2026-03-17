@@ -133,7 +133,25 @@ if ($colaborador_filtro) {
                                 <div class="row g-4 text-center">
                                     <div class="col-6 col-md-2 border-end">
                                         <small class="text-muted d-block">KM Inicial</small>
-                                        <span class="fw-bold"><?= number_format($informeActual['km_inicial'], 2) ?></span>
+                                        <div class="d-flex align-items-center justify-content-center gap-2">
+                                            <span class="fw-bold"><?= number_format($informeActual['km_inicial'], 2) ?></span>
+                                            <?php if ($informeActual['km_foto_inicial']): ?>
+                                                <img src="uploads/informes/<?= $informeActual['km_foto_inicial'] ?>" 
+                                                     class="rounded shadow-sm" style="width: 30px; height: 30px; object-fit: cover; cursor: zoom-in;"
+                                                     onclick="zoomFoto(this.src)" title="Ver foto inicial">
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-2 border-end">
+                                        <small class="text-muted d-block">KM Final</small>
+                                        <div class="d-flex align-items-center justify-content-center gap-2">
+                                            <span class="fw-bold"><?= $informeActual['km_final'] ? number_format($informeActual['km_final'], 2) : '---' ?></span>
+                                            <?php if ($informeActual['km_foto_final']): ?>
+                                                <img src="uploads/informes/<?= $informeActual['km_foto_final'] ?>" 
+                                                     class="rounded shadow-sm" style="width: 30px; height: 30px; object-fit: cover; cursor: zoom-in;"
+                                                     onclick="zoomFoto(this.src)" title="Ver foto final">
+                                            <?php endif; ?>
+                                        </div>
                                     </div>
                                     <div class="col-6 col-md-2 border-end">
                                         <small class="text-muted d-block">Asignado</small>
