@@ -9,7 +9,7 @@ require_once '../../core/layout/menu_lateral.php';
 
 $usuario = obtenerUsuarioActual();
 
-if (!verificarAccesoCargo([5, 43, 11, 27, 26, 42, 49, 16]) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
+if (!verificarAccesoCargo([5, 43, 11, 27, 26, 42, 49, 16. 53, 49]) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
     header('Location: ../index.php');
     exit();
 }
