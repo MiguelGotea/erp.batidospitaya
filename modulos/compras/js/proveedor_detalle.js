@@ -41,7 +41,7 @@ function guardarDatosBasicos() {
     btnGuardar.innerHTML = '<i class="bi bi-hourglass-split"></i> Guardando...';
     
     $.ajax({
-        url: '../ajax/proveedores_guardar_basicos.php',
+        url: 'ajax/proveedores_guardar_basicos.php',
         method: 'POST',
         data: datosCompletos,
         dataType: 'json',
@@ -53,7 +53,7 @@ function guardarDatosBasicos() {
                 alert('✅ ' + response.message);
                 if (!ES_EDICION && response.id_proveedor) {
                     // Redirigir a la página de edición con el ID del nuevo proveedor
-                    window.location.href = '../proveedor_detalle.php?id=' + response.id_proveedor;
+                    window.location.href = 'proveedor_detalle.php?id=' + response.id_proveedor;
                 }
             } else {
                 // MOSTRAR ERROR COMPLETO
@@ -97,7 +97,7 @@ function guardarDatosBasicos() {
                 if (xhr.status === 404) {
                     mensajeError = '❌ Error 404: Archivo no encontrado\n\n';
                     mensajeError += 'Verifica que el archivo exista en:\n';
-                    mensajeError += '../ajax/proveedores_guardar_basicos.php';
+                    mensajeError += 'ajax/proveedores_guardar_basicos.php';
                 } else if (xhr.status === 500) {
                     mensajeError = '❌ Error 500: Error interno del servidor\n\n';
                     mensajeError += 'Revisa los logs del servidor PHP';
@@ -123,7 +123,7 @@ function guardarDatosBasicos() {
 
 function cargarContactos() {
     $.ajax({
-        url: '../ajax/proveedores_get_contactos.php',
+        url: 'ajax/proveedores_get_contactos.php',
         method: 'POST',
         data: { id_proveedor: ID_PROVEEDOR },
         dataType: 'json',
@@ -182,7 +182,7 @@ function abrirModalContacto() {
 
 function editarContacto(id) {
     $.ajax({
-        url: '../ajax/proveedores_get_contacto.php',
+        url: 'ajax/proveedores_get_contacto.php',
         method: 'POST',
         data: { id: id },
         dataType: 'json',
@@ -210,7 +210,7 @@ function guardarContacto() {
     const formData = $('#formContacto').serialize();
     
     $.ajax({
-        url: '../ajax/proveedores_guardar_contacto.php',
+        url: 'ajax/proveedores_guardar_contacto.php',
         method: 'POST',
         data: formData,
         dataType: 'json',
@@ -234,7 +234,7 @@ function guardarContacto() {
 
 function cargarCuentas() {
     $.ajax({
-        url: '../ajax/proveedores_get_cuentas.php',
+        url: 'ajax/proveedores_get_cuentas.php',
         method: 'POST',
         data: { id_proveedor: ID_PROVEEDOR },
         dataType: 'json',
@@ -294,7 +294,7 @@ function abrirModalCuenta() {
 
 function editarCuenta(id) {
     $.ajax({
-        url: '../ajax/proveedores_get_cuenta.php',
+        url: 'ajax/proveedores_get_cuenta.php',
         method: 'POST',
         data: { id: id },
         dataType: 'json',
@@ -323,7 +323,7 @@ function guardarCuenta() {
     const formData = $('#formCuenta').serialize();
     
     $.ajax({
-        url: '../ajax/proveedores_guardar_cuenta.php',
+        url: 'ajax/proveedores_guardar_cuenta.php',
         method: 'POST',
         data: formData,
         dataType: 'json',
@@ -347,7 +347,7 @@ function guardarCuenta() {
 
 function cargarHistorial() {
     $.ajax({
-        url: '../ajax/proveedores_get_historial.php',
+        url: 'ajax/proveedores_get_historial.php',
         method: 'POST',
         data: { id_proveedor: ID_PROVEEDOR },
         dataType: 'json',
