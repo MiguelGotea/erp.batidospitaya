@@ -45,18 +45,60 @@ foreach (array_reverse($equipment_stats) as $es) {
 
 
 // Configuración del Algoritmo (Valores por defecto o personalizados)
-$peso_u1 = isset($_POST['peso_u1']) ? floatval($_POST['peso_u1']) : 1;
-$peso_u2 = isset($_POST['peso_u2']) ? floatval($_POST['peso_u2']) : 5;
-$peso_u3 = isset($_POST['peso_u3']) ? floatval($_POST['peso_u3']) : 25;
-$peso_u4 = isset($_POST['peso_u4']) ? floatval($_POST['peso_u4']) : 150;
 $horas_jornada = isset($_POST['horas_jornada']) ? floatval($_POST['horas_jornada']) : 10;
 $dias_plan = isset($_POST['dias_plan']) ? intval($_POST['dias_plan']) : 6;
-$v_viaje_reg = isset($_POST['v_viaje_reg']) ? floatval($_POST['v_viaje_reg']) : 6;
+$alpha = 0.7; // Peso a Carga Relativa
+$beta = 0.3;  // Peso a Eficiencia Geográfica
 
-// ALGORITMO DE AGENDAMIENTO DINÁMICO
+// Constantes logísticas
+define('VELOCIDAD_PROMEDIO_KMH', 50.0);
+define('BUFFER_TIEMPO', 1.15);
+define('BASE_LAT', 12.1328); // Managua
+define('BASE_LNG', -86.2504);
+
+// Función Haversine para tiempos de viaje
+if (!function_exists('obtenerHorasViaje')) {
+    function obtenerHorasViaje($lat1, $lon1, $lat2, $lon2) {
+        if (empty($lat1) || empty($lon1) || empty($lat2) || empty($lon2)) {
+            return 2.5; // Fallback promedio si no hay lat/lng
+        }
+        $earth_radius = 6371; // km
+        $dLat = deg2rad($lat2 - $lat1);
+        $dLon = deg2rad($lon2 - $lon1);
+        $a = sin($dLat/2) * sin($dLat/2) + cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * sin($dLon/2) * sin($dLon/2);
+        $c = 2 * asin(sqrt($a));
+        $distancia_km = $earth_radius * $c;
+        return $distancia_km / VELOCIDAD_PROMEDIO_KMH;
+    }
+}
+
+// ALGORITMO DE AGENDAMIENTO DINÁMICO: OLEADAS DE URGENCIA v2
 $agenda_semanal = [];
-$pool_tickets = $tickets;
 $dias_nombres = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+
+// 1. Preparación del Pool
+$pool_tickets_raw = [];
+foreach ($tickets as $t) {
+    // T_real con holgura
+    $t['T_real'] = max(0.2, floatval($t['tiempo_exec']) * BUFFER_TIEMPO);
+    
+    // Urgencia Efectiva (escala 1 pt cada 3 semanas)
+    $semanas = intval($t['semanas_antiguedad'] ?? 0);
+    $urg_base = intval($t['urgencia'] ?? 1);
+    $t['U_ef'] = min(4, $urg_base + floor($semanas / 3));
+    
+    // Fallback Coords
+    $lat = floatval($t['Latitude'] ?? 0);
+    $lng = floatval($t['Longitude'] ?? 0);
+    $is_regional = ($t['departamento_sucursal'] !== 'Managua');
+    
+    if ($lat == 0 || $lng == 0) {
+        $t['Latitude'] = BASE_LAT + ($is_regional ? 0.8 : 0.05); // Offset mock geográfico
+        $t['Longitude'] = BASE_LNG + ($is_regional ? 0.8 : 0.05);
+    }
+    
+    $pool_tickets_raw[$t['id']] = $t;
+}
 
 for ($d = 0; $d < $dias_plan; $d++) {
     $dia_nombre = $dias_nombres[$d];
@@ -67,88 +109,119 @@ for ($d = 0; $d < $dias_plan; $d++) {
         'tiempo_ejecucion' => 0
     ];
 
-    $tiempo_restante = $horas_jornada;
+    $h_libres = $horas_jornada;
     $sucursales_visitadas_hoy = [];
+    $ultima_lat = BASE_LAT;
+    $ultima_lng = BASE_LNG;
 
-    // Intentar llenar el día mientras haya tiempo y tickets
-    while ($tiempo_restante > 0.5 && !empty($pool_tickets)) {
-        $scores_sucursales = [];
-        $tickets_por_sucursal = [];
-
-        foreach ($pool_tickets as $t) {
-            $cod = $t['cod_sucursal'];
-            if (!isset($tickets_por_sucursal[$cod]))
-                $tickets_por_sucursal[$cod] = [];
-            $tickets_por_sucursal[$cod][] = $t;
-        }
-
-        foreach ($tickets_por_sucursal as $cod => $s_tickets) {
-            $is_regional = ($s_tickets[0]['departamento_sucursal'] !== 'Managua');
-            $costo_viaje = (in_array($cod, $sucursales_visitadas_hoy)) ? 0 : ($is_regional ? $v_viaje_reg : 0);
-
-            if ($tiempo_restante < ($costo_viaje + 0.5))
-                continue;
-
-            $score_sucursal = 0;
-            $tiempo_util = $tiempo_restante - $costo_viaje;
-            $tickets_seleccionados = [];
-            $acum_h = 0;
-
-            foreach ($s_tickets as $st) {
-                if ($acum_h + $st['tiempo_exec'] <= $tiempo_util) {
-                    // El score favorece la urgencia según pesos configurados
-                    $curr_weight = 1;
-                    if ($st['urgencia'] == 2)
-                        $curr_weight = $peso_u2;
-                    if ($st['urgencia'] == 3)
-                        $curr_weight = $peso_u3;
-                    if ($st['urgencia'] == 4)
-                        $curr_weight = $peso_u4;
-                    if ($st['urgencia'] == 1)
-                        $curr_weight = $peso_u1;
-
-                    $score_sucursal += $curr_weight * 10;
-                    $acum_h += $st['tiempo_exec'];
-                    $tickets_seleccionados[] = $st;
-                } else {
-                    break;
+    // Procesar oleadas 4 a 1
+    for ($oleada = 4; $oleada >= 1; $oleada--) {
+        
+        while ($h_libres > 0.5) {
+            // Agrupar tickets de esta oleada por sucursal
+            $grupos = [];
+            foreach ($pool_tickets_raw as $id => $t) {
+                if ($t['U_ef'] == $oleada) {
+                    $cod = $t['cod_sucursal'];
+                    if (!isset($grupos[$cod])) {
+                        $grupos[$cod] = [
+                            'cod' => $cod,
+                            'nombre' => $t['nombre_sucursal'],
+                            'lat' => $t['Latitude'],
+                            'lng' => $t['Longitude'],
+                            'tickets' => [],
+                            'C' => 0
+                        ];
+                    }
+                    $grupos[$cod]['tickets'][] = $t;
+                    $grupos[$cod]['C'] += $t['T_real'];
                 }
             }
 
-            if ($score_sucursal > 0) {
-                $scores_sucursales[] = [
-                    'cod' => $cod,
-                    'nombre' => $s_tickets[0]['nombre_sucursal'],
-                    'departamento' => $s_tickets[0]['departamento_sucursal'],
-                    'score' => $score_sucursal,
-                    'viaje' => $costo_viaje,
-                    'tickets' => $tickets_seleccionados,
-                    'horas_exec' => $acum_h
+            if (empty($grupos)) break; // Pasa a la siguiente oleada
+
+            $max_C = max(array_column($grupos, 'C'));
+            $max_eta = 0;
+            
+            foreach ($grupos as &$g) {
+                if (empty($sucursales_visitadas_hoy)) {
+                    $g['costo_viaje'] = obtenerHorasViaje(BASE_LAT, BASE_LNG, $g['lat'], $g['lng']) * 2;
+                } else {
+                    $t_u_n = obtenerHorasViaje($ultima_lat, $ultima_lng, $g['lat'], $g['lng']);
+                    $t_n_b = obtenerHorasViaje($g['lat'], $g['lng'], BASE_LAT, BASE_LNG);
+                    $t_u_b = obtenerHorasViaje($ultima_lat, $ultima_lng, BASE_LAT, BASE_LNG);
+                    $g['costo_viaje'] = max(0, $t_u_n + $t_n_b - $t_u_b); // Evita flotantes minúsculos negativos
+                }
+                
+                $viaje_total = obtenerHorasViaje(BASE_LAT, BASE_LNG, $g['lat'], $g['lng']) * 2;
+                $g['eta'] = $g['C'] / max(0.2, $viaje_total);
+                if ($g['eta'] > $max_eta) $max_eta = $g['eta'];
+            }
+            unset($g);
+
+            $mejor_grupo = null;
+            $mejor_score = -1;
+
+            foreach ($grupos as $g) {
+                $min_task = min(array_column($g['tickets'], 'T_real'));
+                if ($h_libres < ($g['costo_viaje'] + $min_task)) continue;
+
+                $norm_C = $max_C > 0 ? $g['C'] / $max_C : 0;
+                $norm_eta = $max_eta > 0 ? $g['eta'] / $max_eta : 0;
+                
+                $score = ($alpha * $norm_C) + ($beta * $norm_eta);
+                
+                if ($score > $mejor_score) {
+                    $mejor_score = $score;
+                    $mejor_grupo = $g;
+                }
+            }
+
+            if (!$mejor_grupo) break; // Ningún grupo cabe, intenta oleada menor o pasa al sgte dia
+
+            $h_libres -= $mejor_grupo['costo_viaje'];
+            $horas_exec_hoy = 0;
+            $tickets_ejecutados = [];
+
+            // RELLENO OPORTUNISTA (Mochila Voraz en Sucursal Elegida)
+            $tkts_sucursal = array_filter($pool_tickets_raw, fn($t) => $t['cod_sucursal'] === $mejor_grupo['cod']);
+            usort($tkts_sucursal, fn($a, $b) => $b['U_ef'] <=> $a['U_ef']);
+
+            foreach ($tkts_sucursal as $t) {
+                if ($h_libres >= $t['T_real']) {
+                    $h_libres -= $t['T_real'];
+                    $horas_exec_hoy += $t['T_real'];
+                    // Ajuste UI: Reflejar T_real en el panel formateando a visual
+                    $t['tiempo_exec'] = round($t['T_real'], 2);
+                    $tickets_ejecutados[] = $t;
+                    unset($pool_tickets_raw[$t['id']]);
+                }
+            }
+
+            if (!empty($tickets_ejecutados)) {
+                $agenda_semanal[$dia_nombre]['visitas'][] = [
+                    'cod' => $mejor_grupo['cod'],
+                    'nombre' => $mejor_grupo['nombre'],
+                    'departamento' => $tickets_ejecutados[0]['departamento_sucursal'],
+                    'viaje' => round($mejor_grupo['costo_viaje'], 2),
+                    'horas_exec' => round($horas_exec_hoy, 2),
+                    'tickets' => $tickets_ejecutados
                 ];
+
+                $agenda_semanal[$dia_nombre]['tiempo_ejecucion'] += $horas_exec_hoy;
+                $agenda_semanal[$dia_nombre]['tiempo_transporte'] += $mejor_grupo['costo_viaje'];
+                $agenda_semanal[$dia_nombre]['tiempo_total'] += ($horas_exec_hoy + $mejor_grupo['costo_viaje']);
+                
+                $sucursales_visitadas_hoy[] = $mejor_grupo['cod'];
+                $ultima_lat = $mejor_grupo['lat'];
+                $ultima_lng = $mejor_grupo['lng'];
             }
         }
-
-        if (empty($scores_sucursales))
-            break;
-
-        // Elegir la sucursal con el mejor impacto para este momento del día
-        usort($scores_sucursales, fn($a, $b) => $b['score'] <=> $a['score']);
-        $mejor_opcion = $scores_sucursales[0];
-
-        // Registrar visita en la agenda
-        $agenda_semanal[$dia_nombre]['visitas'][] = $mejor_opcion;
-        $agenda_semanal[$dia_nombre]['tiempo_ejecucion'] += $mejor_opcion['horas_exec'];
-        $agenda_semanal[$dia_nombre]['tiempo_transporte'] += $mejor_opcion['viaje'];
-        $agenda_semanal[$dia_nombre]['tiempo_total'] += ($mejor_opcion['horas_exec'] + $mejor_opcion['viaje']);
-
-        // Quitar tickets del pool
-        $ids_remover = array_column($mejor_opcion['tickets'], 'id');
-        $pool_tickets = array_filter($pool_tickets, fn($pt) => !in_array($pt['id'], $ids_remover));
-
-        $sucursales_visitadas_hoy[] = $mejor_opcion['cod'];
-        $tiempo_restante -= ($mejor_opcion['horas_exec'] + $mejor_opcion['viaje']);
     }
 }
+
+// Convertimos el mapa remanente a arreglo normal para UI
+$pool_tickets = array_values($pool_tickets_raw);
 
 // Función para obtener color de urgencia (consistente con el módulo)
 function getColorUrgencia($nivel)
@@ -291,40 +364,8 @@ $solicitudes_criticas = array_filter($tickets, function ($t) {
                                                 <?php endfor; ?>
                                             </select>
                                         </div>
-                                        <div class="col-6">
-                                            <label class="small text-muted mb-0">Peso U4 (Críticos)</label>
-                                            <input type="number" name="peso_u4" class="form-control form-control-sm"
-                                                value="<?php echo $peso_u4; ?>">
-                                        </div>
-                                        <div class="col-6">
-                                            <label class="small text-muted mb-0">Viaje Regional (h)</label>
-                                            <input type="number" step="0.5" name="v_viaje_reg"
-                                                class="form-control form-control-sm"
-                                                value="<?php echo $v_viaje_reg; ?>">
-                                        </div>
                                     </div>
-                                    <div class="collapse mt-2" id="moreSettings">
-                                        <div class="row g-2">
-                                            <div class="col-4">
-                                                <label class="small text-muted mb-0">Peso U3</label>
-                                                <input type="number" name="peso_u3" class="form-control form-control-sm"
-                                                    value="<?php echo $peso_u3; ?>">
-                                            </div>
-                                            <div class="col-4">
-                                                <label class="small text-muted mb-0">Peso U2</label>
-                                                <input type="number" name="peso_u2" class="form-control form-control-sm"
-                                                    value="<?php echo $peso_u2; ?>">
-                                            </div>
-                                            <div class="col-4">
-                                                <label class="small text-muted mb-0">Peso U1</label>
-                                                <input type="number" name="peso_u1" class="form-control form-control-sm"
-                                                    value="<?php echo $peso_u1; ?>">
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="d-flex justify-content-between align-items-center mt-2">
-                                        <a href="javascript:void(0)" class="small text-decoration-none"
-                                            data-bs-toggle="collapse" data-bs-target="#moreSettings">Ver Pesos</a>
+                                    <div class="d-flex justify-content-end align-items-center mt-3 mb-1">
                                         <button type="submit" class="btn btn-primary btn-sm px-3">
                                             <i class="bi bi-arrow-clockwise me-1"></i> Recalcular
                                         </button>
@@ -545,60 +586,45 @@ $solicitudes_criticas = array_filter($tickets, function ($t) {
                 </div>
                 <div class="modal-body p-4">
                     <section class="mb-4">
-                        <h6 class="fw-bold text-info"><i class="bi bi-cpu-fill me-2"></i>¿Cómo funciona el cerebro del
-                            sistema?</h6>
+                        <h6 class="fw-bold text-info"><i class="bi bi-cpu-fill me-2"></i>Algoritmo: Oleadas de Urgencia v2</h6>
                         <p class="text-muted small mb-2">
-                            El sistema analiza los tickets con estado <span class="badge bg-secondary">solicitado</span>
-                            y <span class="badge bg-secondary">agendado</span>, calculando el tiempo de transporte según
-                            el departamento y priorizando por urgencia crítica.
+                            El sistema evalúa todos los tickets de <strong>Mantenimiento General</strong> y los agrupa en <strong>Oleadas (O4 a O1)</strong> basado en su Urgencia Efectiva. 
                         </p>
                         <p class="text-muted small">
-                            El algoritmo utiliza una técnica de <strong>Optimización Heurística</strong>. No solo busca
-                            atender lo más urgente, sino hacerlo de la manera más eficiente logísticamente.
+                            Aplica la <strong>Fórmula de Haversine</strong> para medir distancias exactas y optimizar los viajes, resolviendo un problema logístico avanzado con relleno oportunista para aprovechar cada minuto del día.
                         </p>
                     </section>
 
                     <div class="row g-4">
                         <div class="col-md-6">
                             <div class="p-3 bg-light rounded-3 h-100">
-                                <h7 class="fw-bold d-block mb-2 text-dark">1. Score de Prioridad</h7>
-                                <p class="small text-muted mb-0"> Cada sucursal recibe un puntaje basado en sus tickets.
-                                    Los tickets <strong>Críticos (U4)</strong> tienen un "peso" exponencialmente mayor.
-                                    Si aumentas el peso de U4, el sistema moverá cielo y tierra para agendarlos primero.
-                                </p>
+                                <h7 class="fw-bold d-block mb-2 text-dark">1. Escalado de Urgencia</h7>
+                                <p class="small text-muted mb-0">Cada 3 semanas que un ticket pasa sin ser atendido, su urgencia sube 1 nivel automáticamente. ¡Un ticket Normal puede volverse Crítico por antigüedad!</p>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="p-3 bg-light rounded-3 h-100">
-                                <h7 class="fw-bold d-block mb-2 text-dark">2. Agrupamiento Logístico</h7>
-                                <p class="small text-muted mb-0">El sistema prefiere visitar una sucursal y resolver
-                                    <strong>todos sus tickets pendientes</strong> de una vez para "ahorrar" el tiempo de
-                                    transporte, en lugar de saltar entre múltiples ubicaciones.
-                                </p>
+                                <h7 class="fw-bold d-block mb-2 text-dark">2. Score de Eficiencia</h7>
+                                <p class="small text-muted mb-0">El sistema balancea el impacto (volumen de horas de trabajo en la sucursal) contra la distancia geográfica. Privilegia viajes donde se resuelvan muchas tareas de golpe.</p>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="p-3 bg-light rounded-3 h-100">
-                                <h7 class="fw-bold d-block mb-2 text-dark">3. Gestión de Tiempos</h7>
-                                <p class="small text-muted mb-0">Cada día tiene un límite (ej. 10h). El sistema
-                                    descuenta el viaje regional (6h ida/vuelta) de la jornada. Si un ticket requiere más
-                                    tiempo del sobrante, se descarta para ese día.</p>
+                                <h7 class="fw-bold d-block mb-2 text-dark">3. Agrupamiento Triangular</h7>
+                                <p class="small text-muted mb-0">Si el equipo ya está en la Sucursal A, el algoritmo evalúa si vale la pena saltar a la B midiendo el "Costo Incremental" del triángulo (A -> B -> Base) vs (A -> Base).</p>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="p-3 bg-light rounded-3 h-100">
-                                <h7 class="fw-bold d-block mb-2 text-dark">4. Pool de Descartes</h7>
-                                <p class="small text-muted mb-0">Los tickets que ves como "Descartados" son aquellos
-                                    que, por su urgencia o tiempo, no pudieron ser encajados en la ventana de 60h
-                                    semanales bajo las reglas actuales.</p>
+                                <h7 class="fw-bold d-block mb-2 text-dark">4. Relleno Oportunista</h7>
+                                <p class="small text-muted mb-0">Si el sistema te envía a un departamento por una Urgencia 4 y sobran horas en el día, rellenará ese tiempo resolviendo tickets menores de <strong>esa misma sucursal</strong>.</p>
                             </div>
                         </div>
                     </div>
 
                     <div class="alert alert-warning mt-4 mb-0 border-0 shadow-sm">
                         <i class="bi bi-lightbulb-fill me-2 text-warning"></i>
-                        <strong>Tip:</strong> Puedes "forzar" la agenda reduciendo el tiempo de viaje regional o
-                        aumentando las horas laborables en el panel de configuración.
+                        <strong>Importante:</strong> Los tiempos estimados se multiplican por un factor de holgura (1.15x) para representar el tiempo real operativo y evitar retrasos.
                     </div>
                 </div>
                 <div class="modal-footer border-0 pt-0">

@@ -167,14 +167,14 @@ class Ticket
     public function getTicketsForPlanning()
     {
         $sql = "SELECT t.*, s.nombre as nombre_sucursal, s.departamento as departamento_sucursal,
+                s.Latitude, s.Longitude,
+                FLOOR(DATEDIFF(NOW(), t.created_at) / 7) as semanas_antiguedad,
                 COALESCE(t.nivel_urgencia, 0) as urgencia,
-                COALESCE(t.tiempo_estimado, 0) as tiempo_exec,
-                CASE WHEN s.departamento = 'Managua' THEN 0 ELSE 6 END as tiempo_transporte
+                COALESCE(t.tiempo_estimado, 0) as tiempo_exec
                 FROM mtto_tickets t 
                 LEFT JOIN sucursales s ON t.cod_sucursal = s.codigo 
                 WHERE t.status IN ('solicitado', 'agendado')
-                AND t.tipo_formulario = 'mantenimiento_general'
-                ORDER BY urgencia DESC, (COALESCE(t.tiempo_estimado, 0) + CASE WHEN s.departamento = 'Managua' THEN 0 ELSE 6 END) ASC, t.created_at ASC";
+                AND t.tipo_formulario = 'mantenimiento_general'";
 
         return $this->db->fetchAll($sql);
     }
