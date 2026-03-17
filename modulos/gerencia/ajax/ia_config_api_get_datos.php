@@ -11,6 +11,7 @@ if (!$usuario) {
     echo json_encode(['success' => false, 'message' => 'Sesión expirada']);
     exit();
 }
+
 $cargoOperario = $usuario['CodNivelesCargos'] ?? null;
 
 // Verificar permiso (mismo que la página principal)
@@ -100,7 +101,7 @@ try {
             WHERE $whereSql 
             ORDER BY $columnaOrden $dirOrden 
             LIMIT $offset, $registrosPorPagina";
-    
+
     $stmt = $conn->prepare($sql);
     $stmt->execute($params);
     $datos = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -113,6 +114,7 @@ try {
         'total_paginas' => ceil($totalRegistros / $registrosPorPagina)
     ]);
 
-} catch (Exception $e) {
+}
+catch (Exception $e) {
     echo json_encode(['success' => false, 'message' => $e->getMessage()]);
 }
