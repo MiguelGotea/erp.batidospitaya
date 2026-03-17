@@ -121,9 +121,9 @@ if ($colaborador_filtro) {
                                     <?php endif; ?>
 
                                     <?php if ($informeActual): ?>
-                                        <a href="imprimir_informe.php?id=<?= $informeActual['id'] ?>" target="_blank" class="btn btn-dark px-4 rounded-pill">
+                                        <button onclick="validarImpresion(<?= $informeActual['id'] ?>, '<?= $informeActual['estado'] ?>')" class="btn btn-dark px-4 rounded-pill">
                                             <i class="fas fa-print me-2"></i>Imprimir Reporte
-                                        </a>
+                                        </button>
                                     <?php endif; ?>
                                 </div>
                             </div>

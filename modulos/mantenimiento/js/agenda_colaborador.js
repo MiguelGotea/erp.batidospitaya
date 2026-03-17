@@ -156,6 +156,28 @@ async function guardarMateriales() {
 }
 
 /**
+ * VALIDACIÓN DE IMPRESIÓN
+ */
+function validarImpresion(id, estado) {
+    if (estado !== 'finalizado') {
+        const btnSalida = document.querySelector('button[onclick^="modalRegistrarSalida"]');
+        const btnMat = document.querySelector('button[onclick^="modalRegistrarMateriales"]');
+
+        if (btnSalida || btnMat) {
+            Swal.fire({
+                title: 'No se puede imprimir',
+                text: 'Debe completar la Hora de Salida y los Materiales de todas las visitas antes de imprimir el reporte.',
+                icon: 'warning',
+                confirmButtonColor: '#0E544C'
+            });
+            return;
+        }
+    }
+    
+    window.open(`imprimir_informe.php?id=${id}`, '_blank');
+}
+
+/**
  * Abre modal para registrar tarea dentro de una visita
  */
 function modalNuevaTarea(visitaId, codSucursal) {
