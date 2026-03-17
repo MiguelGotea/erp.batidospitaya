@@ -856,14 +856,15 @@ $solicitudes_criticas = array_filter($tickets, function ($t) {
                     if (data.tickets && data.tickets.length > 0) {
                         data.tickets.forEach(tk => {
                             // Función Helper JS para colores de urgencia (replicando PHP)
-                            let badgeColor = '';
+                            let badgeHex = '';
                             let badgeLabel = '';
+                            let textClass = 'text-white';
                             switch(parseInt(tk.urgencia)) {
-                                case 4: badgeColor = 'bg-danger'; badgeLabel = 'Crítico'; break;
-                                case 3: badgeColor = 'bg-warning text-dark'; badgeLabel = 'Alta'; break;
-                                case 2: badgeColor = 'bg-info text-white'; badgeLabel = 'Media'; break;
-                                case 1: badgeColor = 'bg-success'; badgeLabel = 'Baja'; break;
-                                default: badgeColor = 'bg-secondary'; badgeLabel = 'N/A';
+                                case 4: badgeHex = '#dc3545'; badgeLabel = 'Crítico'; break; // Rojo
+                                case 3: badgeHex = '#fd7e14'; badgeLabel = 'Alta'; break; // Naranja
+                                case 2: badgeHex = '#ffc107'; badgeLabel = 'Media'; textClass = 'text-dark'; break; // Amarillo
+                                case 1: badgeHex = '#28a745'; badgeLabel = 'Baja'; break; // Verde
+                                default: badgeHex = '#adb5bd'; badgeLabel = 'N/A';
                             }
 
                             const imgPath = tk.primera_foto ? `/uploads/${tk.primera_foto}` : null;
@@ -880,7 +881,7 @@ $solicitudes_criticas = array_filter($tickets, function ($t) {
                                         <div class="flex-grow-1 min-width-0">
                                             <div class="d-flex w-100 justify-content-between align-items-center mb-1">
                                                 <h6 class="mb-0 fw-bold text-dark text-truncate pe-2">${tk.titulo || 'Ticket de Mantenimiento'}</h6>
-                                                <span class="badge ${badgeColor} flex-shrink-0">${badgeLabel}</span>
+                                                <span class="badge ${textClass} flex-shrink-0" style="background-color: ${badgeHex};">${badgeLabel}</span>
                                             </div>
                                             <div class="d-flex justify-content-start align-items-center mb-1">
                                                 <small class="text-muted"><i class="bi bi-clock-history me-1"></i>${tk.tiempo_exec}h estimadas</small>
