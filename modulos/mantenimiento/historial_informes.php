@@ -127,11 +127,8 @@ $esAdminCaja = tienePermiso('mantenimiento', 'validar_caja_chica', $cargoOperari
 
             <div class="container-fluid p-4">
                 <div class="d-flex justify-content-between align-items-center mb-4">
-                    <div>
-                        <h4 class="fw-bold mb-1">Historial de Jornadas</h4>
-                        <p class="text-muted small mb-0">Listado de reportes de mantenimiento y control de gastos</p>
-                    </div>
-                    <a href="agenda_colaborador.php" class="btn btn-primary rounded-pill px-4 shadow-sm" style="background-color: var(--color-principal); border: none;">
+                    <a href="agenda_colaborador.php" class="btn btn-primary rounded-pill px-4 shadow-sm"
+                        style="background-color: var(--color-principal); border: none;">
                         <i class="fas fa-plus me-2"></i>Nuevo Reporte de Hoy
                     </a>
                 </div>
@@ -169,7 +166,8 @@ $esAdminCaja = tienePermiso('mantenimiento', 'validar_caja_chica', $cargoOperari
                         <div class="d-flex justify-content-between align-items-center mt-1">
                             <div class="d-flex align-items-center gap-2">
                                 <label class="mb-0 small">Mostrar:</label>
-                                <select class="form-select form-select-sm" id="registrosPorPagina" style="width: auto;" onchange="cambiarRegistrosPorPagina()">
+                                <select class="form-select form-select-sm" id="registrosPorPagina" style="width: auto;"
+                                    onchange="cambiarRegistrosPorPagina()">
                                     <option value="10">10</option>
                                     <option value="25" selected>25</option>
                                     <option value="50">50</option>
@@ -189,7 +187,8 @@ $esAdminCaja = tienePermiso('mantenimiento', 'validar_caja_chica', $cargoOperari
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content shadow-premium border-0 rounded-4">
                 <div class="modal-header border-0 pb-0">
-                    <h5 class="modal-title fw-bold"><i class="fas fa-cash-register me-2 text-success"></i>Validar Caja Chica</h5>
+                    <h5 class="modal-title fw-bold"><i class="fas fa-cash-register me-2 text-success"></i>Validar Caja
+                        Chica</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body p-4">
@@ -199,18 +198,22 @@ $esAdminCaja = tienePermiso('mantenimiento', 'validar_caja_chica', $cargoOperari
                             <label class="form-label small fw-bold">Monto Entregado (Caja Chica) *</label>
                             <div class="input-group">
                                 <span class="input-group-text">$</span>
-                                <input type="number" step="0.01" name="monto" id="caja_monto" class="form-control form-control-lg" required>
+                                <input type="number" step="0.01" name="monto" id="caja_monto"
+                                    class="form-control form-control-lg" required>
                             </div>
                         </div>
                         <div class="mb-0">
                             <label class="form-label small fw-bold">Foto del Voucher / Comprobante *</label>
-                            <input type="file" name="foto_caja" id="caja_foto_input" class="form-control" accept="image/*" required>
+                            <input type="file" name="foto_caja" id="caja_foto_input" class="form-control"
+                                accept="image/*" required>
                         </div>
                     </form>
                 </div>
                 <div class="modal-footer border-0 p-3 px-4 pb-4">
-                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-success rounded-pill px-4" onclick="guardarValidacionCaja()">Confirmar Entrega</button>
+                    <button type="button" class="btn btn-light rounded-pill px-4"
+                        data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-success rounded-pill px-4"
+                        onclick="guardarValidacionCaja()">Confirmar Entrega</button>
                 </div>
             </div>
         </div>
@@ -222,7 +225,8 @@ $esAdminCaja = tienePermiso('mantenimiento', 'validar_caja_chica', $cargoOperari
             <div class="modal-content bg-transparent border-0 shadow-none">
                 <div class="modal-body text-center p-0">
                     <img id="zoomImg" src="" class="img-fluid rounded-4 shadow-lg">
-                    <button type="button" class="btn btn-dark btn-sm rounded-circle position-absolute top-0 end-0 m-3" data-bs-dismiss="modal">
+                    <button type="button" class="btn btn-dark btn-sm rounded-circle position-absolute top-0 end-0 m-3"
+                        data-bs-dismiss="modal">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
@@ -231,15 +235,18 @@ $esAdminCaja = tienePermiso('mantenimiento', 'validar_caja_chica', $cargoOperari
     </div>
 
     <!-- Modal de Ayuda Universal -->
-    <div class="modal fade" id="pageHelpModal" tabindex="-1" aria-labelledby="pageHelpModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal fade" id="pageHelpModal" tabindex="-1" aria-labelledby="pageHelpModalLabel" aria-hidden="true"
+        data-bs-backdrop="static" data-bs-keyboard="false">
         <div class="modal-dialog modal-lg">
             <div class="modal-content border-0 shadow">
-                <div class="modal-header bg-primary text-white" style="background-color: var(--color-header-tabla) !important;">
+                <div class="modal-header bg-primary text-white"
+                    style="background-color: var(--color-header-tabla) !important;">
                     <h5 class="modal-title" id="pageHelpModalLabel">
                         <i class="fas fa-info-circle me-2"></i>
                         Guía de Historial de Informes Diarios
                     </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <div class="row">
@@ -251,7 +258,8 @@ $esAdminCaja = tienePermiso('mantenimiento', 'validar_caja_chica', $cargoOperari
                                     </h6>
                                     <p class="small text-muted mb-0">
                                         - Los <strong>Colaboradores</strong> solo pueden ver sus propios informes.<br>
-                                        - Los <strong>Administradores</strong> pueden ver el historial de todo el equipo utilizando los filtros en los encabezados.
+                                        - Los <strong>Administradores</strong> pueden ver el historial de todo el equipo
+                                        utilizando los filtros en los encabezados.
                                     </p>
                                 </div>
                             </div>
@@ -263,7 +271,8 @@ $esAdminCaja = tienePermiso('mantenimiento', 'validar_caja_chica', $cargoOperari
                                         <i class="fas fa-cash-register me-2"></i> Caja Chica
                                     </h6>
                                     <p class="small text-muted mb-0">
-                                        Los administradores pueden validar el monto entregado y adjuntar el voucher una vez que el colaborador abre su jornada.
+                                        Los administradores pueden validar el monto entregado y adjuntar el voucher una
+                                        vez que el colaborador abre su jornada.
                                     </p>
                                 </div>
                             </div>
@@ -275,8 +284,10 @@ $esAdminCaja = tienePermiso('mantenimiento', 'validar_caja_chica', $cargoOperari
                                         <i class="fas fa-edit me-2"></i> Estados del Informe
                                     </h6>
                                     <p class="small text-muted mb-0">
-                                        - <strong>Abierto:</strong> El informe aún puede ser editado por el colaborador.<br>
-                                        - <strong>Finalizado:</strong> El informe ya no es editable y está listo para auditoría.
+                                        - <strong>Abierto:</strong> El informe aún puede ser editado por el
+                                        colaborador.<br>
+                                        - <strong>Finalizado:</strong> El informe ya no es editable y está listo para
+                                        auditoría.
                                     </p>
                                 </div>
                             </div>
@@ -288,7 +299,8 @@ $esAdminCaja = tienePermiso('mantenimiento', 'validar_caja_chica', $cargoOperari
                                         <i class="fas fa-filter me-2"></i> Filtros de Encabezado
                                     </h6>
                                     <p class="small text-muted mb-0">
-                                        Haz clic en el ícono de embudo (<i class="bi bi-funnel"></i>) en los encabezados de Fecha, Colaborador o Estado para filtrar y ordenar los datos dinámicamente.
+                                        Haz clic en el ícono de embudo (<i class="bi bi-funnel"></i>) en los encabezados
+                                        de Fecha, Colaborador o Estado para filtrar y ordenar los datos dinámicamente.
                                     </p>
                                 </div>
                             </div>
