@@ -63,8 +63,8 @@ function cargarDatos() {
                 tbody.html(`<tr><td colspan="7" class="text-center text-danger py-4">Error: ${response.message}</td></tr>`);
             }
         },
-        error: function () {
-            tbody.html(`<tr><td colspan="7" class="text-center text-danger py-4">Error de comunicación con el servidor.</td></tr>`);
+        error: function (xhr, status, error) {
+            tbody.html(`<tr><td colspan="7" class="text-center text-danger py-4">Error de comunicación: ${status} - ${error}<br><small>${xhr.responseText.substring(0, 200)}</small></td></tr>`);
         }
     });
 }
