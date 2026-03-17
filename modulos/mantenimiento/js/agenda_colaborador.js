@@ -91,67 +91,34 @@ async function guardarVisita() {
 }
 
 /**
- * Lógica para registrar salida y materiales posteriormente
+ * ACTUALIZACIÓN INLINE DE VISITA
  */
-function modalRegistrarSalida(visitaId) {
-    $('#salida_visita_id').val(visitaId);
-    $('#formSalida')[0].reset();
-    const modal = new bootstrap.Modal(document.getElementById('salidaModal'));
-    modal.show();
-}
+async function actualizarVisitaInline(id, campo, valor) {
+    let url = '';
+    let data = new FormData();
+    data.append('visita_id', id);
 
-async function guardarSalida() {
-    const form = document.getElementById('formSalida');
-    const formData = new FormData(form);
-    
-    Swal.fire({ title: 'Guardando salida...', didOpen: () => Swal.showLoading() });
-    
+    if (campo === 'hora_llegada') {
+        url = 'ajax/actualizar_hora_llegada.php';
+        data.append('hora_llegada', valor);
+    } else if (campo === 'hora_salida') {
+        url = 'ajax/actualizar_hora_salida.php';
+        data.append('hora_salida', valor);
+    } else if (campo === 'materiales_stock') {
+        url = 'ajax/actualizar_materiales.php';
+        data.append('materiales_stock', valor);
+    }
+
+    if (!url) return;
+
     try {
-        const response = await fetch('ajax/actualizar_hora_salida.php', {
-            method: 'POST',
-            body: formData
-        });
+        const response = await fetch(url, { method: 'POST', body: data });
         const res = await response.json();
-        if (res.success) {
-            Swal.fire('Éxito', 'Hora de salida registrada', 'success').then(() => location.reload());
-        } else {
-            Swal.fire('Error', res.message, 'error');
+        if (!res.success) {
+            console.error('Error al actualizar:', res.message);
         }
     } catch (e) {
-        Swal.fire('Error', e.message, 'error');
-    }
-}
-
-function modalRegistrarMateriales(visitaId) {
-    $('#materiales_visita_id').val(visitaId);
-    $('#formMateriales')[0].reset();
-    const modal = new bootstrap.Modal(document.getElementById('materialesModal'));
-    modal.show();
-}
-
-async function guardarMateriales() {
-    const form = document.getElementById('formMateriales');
-    if (!form.checkValidity()) {
-        form.reportValidity();
-        return;
-    }
-    const formData = new FormData(form);
-    
-    Swal.fire({ title: 'Guardando materiales...', didOpen: () => Swal.showLoading() });
-    
-    try {
-        const response = await fetch('ajax/actualizar_materiales.php', {
-            method: 'POST',
-            body: formData
-        });
-        const res = await response.json();
-        if (res.success) {
-            Swal.fire('Éxito', 'Materiales registrados correctamente', 'success').then(() => location.reload());
-        } else {
-            Swal.fire('Error', res.message, 'error');
-        }
-    } catch (e) {
-        Swal.fire('Error', e.message, 'error');
+        console.error('Error de conexión:', e);
     }
 }
 
@@ -160,10 +127,19 @@ async function guardarMateriales() {
  */
 function validarImpresion(id, estado) {
     if (estado !== 'finalizado') {
-        const btnSalida = document.querySelector('button[onclick^="modalRegistrarSalida"]');
-        const btnMat = document.querySelector('button[onclick^="modalRegistrarMateriales"]');
+        const inputs = document.querySelectorAll('input[onchange^="actualizarVisitaInline"]');
+        const textareas = document.querySelectorAll('textarea[onchange^="actualizarVisitaInline"]');
+        
+        // Verificar si hay campos vacíos obligatorios (Término y Materiales)
+        let incompleto = false;
+        inputs.forEach(input => {
+            if (input.onchange.toString().includes('hora_salida') && !input.value) incompleto = true;
+        });
+        textareas.forEach(textarea => {
+            if (!textarea.value) incompleto = true;
+        });
 
-        if (btnSalida || btnMat) {
+        if (incompleto) {
             Swal.fire({
                 title: 'No se puede imprimir',
                 text: 'Debe completar la Hora de Salida y los Materiales de todas las visitas antes de imprimir el reporte.',

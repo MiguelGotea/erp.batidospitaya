@@ -195,13 +195,33 @@ if ($colaborador_filtro) {
                                                         <div class="flex-grow-1">
                                                             <h6 class="mb-0 text-primary fw-bold"><?= htmlspecialchars($v['nombre_sucursal']) ?></h6>
                                                             <div class="text-muted small mt-2">
-                                                                <div class="d-flex flex-wrap gap-x-3">
-                                                                    <span><i class="far fa-clock me-1 text-primary"></i> <b>Arribo:</b> <?= date('h:i A', strtotime($v['hora_llegada'])) ?></span>
-                                                                    <span class="ms-md-2"><i class="fas fa-history me-1 text-primary"></i> <b>Término:</b> <?= $v['hora_salida'] ? date('h:i A', strtotime($v['hora_salida'])) : '-' ?></span>
+                                                                <?php $canEdit = ($informeActual['estado'] === 'creado' && $colaborador_filtro == $usuario['CodOperario']); ?>
+                                                                <div class="d-flex flex-wrap gap-3 align-items-center">
+                                                                    <div class="d-flex align-items-center gap-1">
+                                                                        <i class="far fa-clock text-primary"></i> 
+                                                                        <b>Arribo:</b> 
+                                                                        <input type="time" class="form-control form-control-sm border-0 bg-light py-0 px-1" style="width: 100px;" 
+                                                                               value="<?= date('H:i', strtotime($v['hora_llegada'])) ?>" 
+                                                                               onchange="actualizarVisitaInline(<?= $v['id'] ?>, 'hora_llegada', this.value)"
+                                                                               <?= !$canEdit ? 'disabled' : '' ?>>
+                                                                    </div>
+                                                                    <div class="d-flex align-items-center gap-1">
+                                                                        <i class="fas fa-history text-primary"></i> 
+                                                                        <b>Término:</b> 
+                                                                        <input type="time" class="form-control form-control-sm border-0 bg-light py-0 px-1" style="width: 100px;" 
+                                                                               value="<?= $v['hora_salida'] ? date('H:i', strtotime($v['hora_salida'])) : '' ?>" 
+                                                                               onchange="actualizarVisitaInline(<?= $v['id'] ?>, 'hora_salida', this.value)"
+                                                                               <?= !$canEdit ? 'disabled' : '' ?>>
+                                                                    </div>
                                                                 </div>
-                                                                <div class="mt-1 d-flex align-items-start gap-1">
-                                                                    <i class="fas fa-boxes me-1 text-primary mt-1"></i> 
-                                                                    <div><b>Materiales:</b> <?= $v['materiales_stock'] ? htmlspecialchars($v['materiales_stock']) : '-' ?></div>
+                                                                <div class="mt-2 d-flex align-items-start gap-1">
+                                                                    <i class="fas fa-boxes text-primary mt-1"></i> 
+                                                                    <div class="flex-grow-1">
+                                                                        <b>Materiales:</b> 
+                                                                        <textarea class="form-control form-control-sm border-0 bg-light mt-1" rows="1" placeholder="Materiales utilizados..."
+                                                                                  onchange="actualizarVisitaInline(<?= $v['id'] ?>, 'materiales_stock', this.value)"
+                                                                                  <?= !$canEdit ? 'disabled' : '' ?>><?= htmlspecialchars($v['materiales_stock']) ?></textarea>
+                                                                    </div>
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -213,16 +233,6 @@ if ($colaborador_filtro) {
                                                                 <button class="btn btn-sm btn-outline-success rounded-pill px-3" onclick="modalNuevaCompra(<?= $v['id'] ?>)">
                                                                     <i class="fas fa-file-invoice-dollar me-1"></i>Factura
                                                                 </button>
-                                                                <?php if (!$v['hora_salida']): ?>
-                                                                    <button class="btn btn-sm btn-outline-info rounded-pill px-3" onclick="modalRegistrarSalida(<?= $v['id'] ?>)">
-                                                                        <i class="fas fa-sign-out-alt me-1"></i>Salida
-                                                                    </button>
-                                                                <?php endif; ?>
-                                                                <?php if (!$v['materiales_stock']): ?>
-                                                                    <button class="btn btn-sm btn-outline-secondary rounded-pill px-3" onclick="modalRegistrarMateriales(<?= $v['id'] ?>)">
-                                                                        <i class="fas fa-box-open me-1"></i>Materiales
-                                                                    </button>
-                                                                <?php endif; ?>
                                                                 <button class="btn btn-link btn-sm text-danger p-0 ms-1" onclick="eliminarVisita(<?= $v['id'] ?>)" title="Eliminar Visita">
                                                                     <i class="fas fa-trash"></i>
                                                                 </button>
@@ -593,59 +603,6 @@ if ($colaborador_filtro) {
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="js/agenda_colaborador.js?v=<?php echo mt_rand(1, 10000); ?>"></script>
-    <!-- MODAL REGISTRAR SALIDA -->
-    <div class="modal fade" id="salidaModal" data-bs-backdrop="static">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content shadow-premium border-0 rounded-4">
-                <div class="modal-header border-0">
-                    <h5 class="modal-title fw-bold text-info"><i class="fas fa-sign-out-alt me-2"></i>Registrar Hora de Salida</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body p-4 pt-0">
-                    <form id="formSalida">
-                        <input type="hidden" name="visita_id" id="salida_visita_id">
-                        <div class="mb-3">
-                            <label class="form-label small fw-bold">Hora de Salida *</label>
-                            <input type="time" class="form-control form-control-lg rounded-3" name="hora_salida" required value="<?= date('H:i') ?>">
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer border-0 p-3 px-4 pb-4">
-                    <button type="button" class="btn btn-link link-secondary text-decoration-none" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-info text-white rounded-pill px-4" onclick="guardarSalida()">
-                        Guardar Salida
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL REGISTRAR MATERIALES -->
-    <div class="modal fade" id="materialesModal" data-bs-backdrop="static">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content shadow-premium border-0 rounded-4">
-                <div class="modal-header border-0">
-                    <h5 class="modal-title fw-bold text-secondary"><i class="fas fa-box-open me-2"></i>Materiales de Stock Usados</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body p-4 pt-0">
-                    <form id="formMateriales">
-                        <input type="hidden" name="visita_id" id="materiales_visita_id">
-                        <div class="mb-3">
-                            <label class="form-label small fw-bold">Listado de Materiales *</label>
-                            <textarea class="form-control rounded-3" name="materiales_stock" rows="4" required placeholder="Escriba aquí los materiales utilizados de su propio stock..."></textarea>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer border-0 p-3 px-4 pb-4">
-                    <button type="button" class="btn btn-link link-secondary text-decoration-none" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-secondary rounded-pill px-4" onclick="guardarMateriales()">
-                        Guardar Materiales
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
 
 </body>
 </html>

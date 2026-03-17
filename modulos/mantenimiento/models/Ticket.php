@@ -581,6 +581,15 @@ class Ticket
     }
 
     /**
+     * Actualizar hora de llegada de una visita (inline)
+     */
+    public function actualizarHoraLlegada($visita_id, $hora_llegada)
+    {
+        $sql = "UPDATE mtto_informe_visitas SET hora_llegada = ? WHERE id = ?";
+        return $this->db->query($sql, [$hora_llegada, $visita_id]);
+    }
+
+    /**
      * Actualizar hora de salida de una visita
      */
     public function actualizarHoraSalida($visita_id, $hora_salida)
