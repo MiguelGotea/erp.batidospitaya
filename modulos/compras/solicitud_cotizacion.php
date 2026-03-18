@@ -285,113 +285,159 @@ function redimensionarImagen($origen, $destino, $anchoMax, $altoMax)
             <?php echo renderHeader($usuario, false, 'Solicitud de Cotización'); ?>
             
             <div class="container-fluid p-3">
-        
-        <?php if (isset($_SESSION['success'])): ?>
-            <div class="alert alert-success">
-                <?php echo htmlspecialchars($_SESSION['success']);
-    unset($_SESSION['success']); ?>
-            </div>
-        <?php
-endif; ?>
+                
+                <?php if (isset($_SESSION['success'])): ?>
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <i class="fas fa-check-circle me-2"></i>
+                        <?php echo htmlspecialchars($_SESSION['success']); unset($_SESSION['success']); ?>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                <?php endif; ?>
 
-        <?php if (isset($_SESSION['error'])): ?>
-            <div class="alert alert-danger">
-                <?php echo htmlspecialchars($_SESSION['error']);
-    unset($_SESSION['error']); ?>
-            </div>
-        <?php
-endif; ?>
-        
-        <form id="solicitudForm" method="post" enctype="multipart/form-data">
-            <div class="form-section">
-                <h3>Información de la Solicitud</h3>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="solicitante">Solicitante:</label>
-                        <input type="text" id="solicitante" value="<?php echo htmlspecialchars($nombreSolicitante); ?>" 
-                               class="readonly-field" readonly>
+                <?php if (isset($_SESSION['error'])): ?>
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <?php echo htmlspecialchars($_SESSION['error']); unset($_SESSION['error']); ?>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
+                <?php endif; ?>
+
+                <form id="solicitudForm" method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
                     
-                    <div class="form-group">
-                        <label for="fecha_solicitud">Fecha:</label>
-                        <input type="text" id="fecha_solicitud" value="<?php echo date('d/m/Y'); ?>" 
-                               class="readonly-field" readonly>
-                    </div>
-                </div>
-                
-                <div class="form-group">
-                    <label for="observaciones">Observaciones Generales:</label>
-                    <textarea id="observaciones" name="observaciones" 
-                              placeholder="Observaciones adicionales sobre la solicitud..."></textarea>
-                </div>
-            </div>
-            
-            <div class="form-section">
-                <h3>Productos a Cotizar</h3>
-                
-                <table class="productos-table" id="productosTable">
-                    <thead>
-                        <tr>
-                            <th style="width: 35%;">Productos</th>
-                            <th style="width: 25%;">Foto de Referencia</th>
-                            <th style="width: 15%;">Cantidad</th>
-                            <th style="width: 15%;">Precio Unitario (C$)</th>
-                            <th style="width: 10%;"></th>
-                        </tr>
-                    </thead>
-                    <tbody id="productosBody">
-                        <!-- Fila inicial -->
-                        <tr class="producto-row">
-                            <td>
-                                <input type="text" name="producto_descripcion[]" 
-                                       placeholder="Descripción del producto" 
-                                       class="producto-desc" required style="width: 100%;">
-                            </td>
-                            <td>
-                                <input type="file" name="foto_referencia[]" 
-                                       class="foto-input" accept="image/*" 
-                                       onchange="previewFoto(this)">
-                                <div class="foto-preview">
-                                    <img src="" alt="Vista previa">
+                    <!-- Card: Información General -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="card-title">
+                                <i class="fas fa-file-invoice"></i> Información de la Solicitud
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <div class="form-floating mb-3">
+                                        <input type="text" class="form-control bg-light" id="solicitante" 
+                                               value="<?php echo htmlspecialchars($nombreSolicitante); ?>" readonly>
+                                        <label for="solicitante"><i class="fas fa-user me-2"></i>Solicitante</label>
+                                    </div>
                                 </div>
-                            </td>
-                            <td>
-                                <input type="number" name="cantidad[]" 
-                                       value="1" min="1" class="cantidad" 
-                                       style="width: 80px;" required>
-                            </td>
-                            <td>
-                                <input type="number" name="precio_unitario[]" 
-                                       value="0.00" min="0" step="0.01" 
-                                       class="precio" style="width: 100px;">
-                            </td>
-                            <td style="text-align: center;">
-                                <button type="button" class="btn-remove" onclick="removeRow(this)" disabled>
-                                    <i class="fas fa-times"></i>
+                                <div class="col-md-4">
+                                    <div class="form-floating mb-3">
+                                        <input type="text" class="form-control bg-light" id="fecha_solicitud" 
+                                               value="<?php echo date('d/m/Y'); ?>" readonly>
+                                        <label for="fecha_solicitud"><i class="fas fa-calendar-alt me-2"></i>Fecha</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-floating mb-3">
+                                        <input type="text" class="form-control bg-light" id="codigo_previo" 
+                                               value="SC-<?php echo date('Ym'); ?>-XXX" readonly>
+                                        <label for="codigo_previo"><i class="fas fa-hashtag me-2"></i>Código (Auto)</label>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="form-floating">
+                                        <textarea class="form-control" id="observaciones" name="observaciones" 
+                                                  placeholder="Observaciones generales..." style="height: 100px"></textarea>
+                                        <label for="observaciones"><i class="fas fa-comment-alt me-2"></i>Observaciones Generales</label>
+                                    </div>
+                                    <div class="form-text mt-2 text-muted">
+                                        Informa sobre detalles globales de la cotización que no correspondan a un producto específico.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card: Productos -->
+                    <div class="card mb-4">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-boxes"></i> Productos a Cotizar
+                            </h5>
+                            <button type="button" class="btn btn-pitaya-secondary btn-sm" onclick="addRow()">
+                                <i class="fas fa-plus me-1"></i> Agregar Producto
+                            </button>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table productos-table" id="productosTable">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 40%;">Descripción del Producto</th>
+                                            <th style="width: 25%;">Foto de Referencia</th>
+                                            <th style="width: 15%;">Cantidad</th>
+                                            <th style="width: 15%;">Precio Est. (C$)</th>
+                                            <th style="width: 5%;"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="productosBody">
+                                        <!-- Fila modelo (index 0) -->
+                                        <tr class="producto-row">
+                                            <td data-label="Descripción">
+                                                <input type="text" name="producto_descripcion[]" 
+                                                       class="form-control form-control-sm producto-desc" 
+                                                       placeholder="Ej: Impresora Epson L3210" required>
+                                            </td>
+                                            <td data-label="Foto">
+                                                <div class="foto-input-wrapper">
+                                                    <input type="file" name="foto_referencia[]" 
+                                                           class="form-control form-control-sm foto-input" 
+                                                           accept="image/*" onchange="previewFoto(this)">
+                                                    <div class="foto-preview">
+                                                        <img src="" alt="Vista previa">
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td data-label="Cantidad">
+                                                <input type="number" name="cantidad[]" 
+                                                       value="1" min="1" class="form-control form-control-sm cantidad text-center" required>
+                                            </td>
+                                            <td data-label="Precio Unitario">
+                                                <div class="input-group input-group-sm">
+                                                    <span class="input-group-text">$</span>
+                                                    <input type="number" name="precio_unitario[]" 
+                                                           value="0.00" min="0" step="0.01" class="form-control precio text-end">
+                                                </div>
+                                            </td>
+                                            <td class="text-center">
+                                                <button type="button" class="btn-remove" onclick="removeRow(this)" disabled>
+                                                    <i class="fas fa-trash-alt"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-white border-0 text-end p-3">
+                            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="addRow()">
+                                <i class="fas fa-plus me-1"></i> Añadir otra fila
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Botones de Acción -->
+                    <div class="card border-0 bg-transparent shadow-none">
+                        <div class="card-body p-0">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <button type="button" class="btn btn-light shadow-sm" onclick="window.history.back()">
+                                    <i class="fas fa-arrow-left me-2"></i> Regresar al Historial
                                 </button>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-                
-                <button type="button" class="btn-add-row" onclick="addRow()">
-                    <i class="fas fa-plus"></i> Agregar Producto
-                </button>
-            </div>
-            
-            <div class="actions">
-                <button type="button" class="btn btn-secondary" onclick="window.history.back()">
-                    <i class="fas fa-times"></i> Cancelar
-                </button>
-                <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-save"></i> Guardar Solicitud
-                </button>
-            </div>
-        </form>
+                                <button type="submit" class="btn btn-pitaya-primary shadow">
+                                    <i class="fas fa-paper-plane me-2"></i> Enviar Solicitud de Cotización
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                </form>
             </div><!-- /.container-fluid -->
         </div><!-- /.sub-container -->
     </div><!-- /.main-container -->
+
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
         let rowCounter = 1;
@@ -402,32 +448,35 @@ endif; ?>
             newRow.className = 'producto-row';
             
             newRow.innerHTML = `
-                <td>
+                <td data-label="Descripción">
                     <input type="text" name="producto_descripcion[]" 
-                           placeholder="Descripción del producto" 
-                           class="producto-desc" required style="width: 100%;">
+                           class="form-control form-control-sm producto-desc" 
+                           placeholder="Ej: Impresora Epson L3210" required>
                 </td>
-                <td>
-                    <input type="file" name="foto_referencia[]" 
-                           class="foto-input" accept="image/*" 
-                           onchange="previewFoto(this)">
-                    <div class="foto-preview">
-                        <img src="" alt="Vista previa">
+                <td data-label="Foto">
+                    <div class="foto-input-wrapper">
+                        <input type="file" name="foto_referencia[]" 
+                               class="form-control form-control-sm foto-input" 
+                               accept="image/*" onchange="previewFoto(this)">
+                        <div class="foto-preview">
+                            <img src="" alt="Vista previa">
+                        </div>
                     </div>
                 </td>
-                <td>
+                <td data-label="Cantidad">
                     <input type="number" name="cantidad[]" 
-                           value="1" min="1" class="cantidad" 
-                           style="width: 80px;" required>
+                           value="1" min="1" class="form-control form-control-sm cantidad text-center" required>
                 </td>
-                <td>
-                    <input type="number" name="precio_unitario[]" 
-                           value="0.00" min="0" step="0.01" 
-                           class="precio" style="width: 100px;">
+                <td data-label="Precio Unitario">
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text">$</span>
+                        <input type="number" name="precio_unitario[]" 
+                               value="0.00" min="0" step="0.01" class="form-control precio text-end">
+                    </div>
                 </td>
-                <td style="text-align: center;">
+                <td class="text-center">
                     <button type="button" class="btn-remove" onclick="removeRow(this)">
-                        <i class="fas fa-times"></i>
+                        <i class="fas fa-trash-alt"></i>
                     </button>
                 </td>
             `;
@@ -450,15 +499,7 @@ endif; ?>
             const removeButtons = document.querySelectorAll('.btn-remove');
             
             removeButtons.forEach((btn, index) => {
-                if (rows.length > 1) {
-                    btn.disabled = false;
-                    btn.style.opacity = '1';
-                    btn.style.cursor = 'pointer';
-                } else {
-                    btn.disabled = true;
-                    btn.style.opacity = '0.5';
-                    btn.style.cursor = 'not-allowed';
-                }
+                btn.disabled = rows.length <= 1;
             });
         }
         
@@ -480,61 +521,64 @@ endif; ?>
                 previewImg.src = '';
             }
         }
-        
-        // Validar formulario antes de enviar
-        document.getElementById('solicitudForm').addEventListener('submit', function(e) {
-            // Validar que haya al menos un producto con descripción
-            const productosDesc = document.querySelectorAll('.producto-desc');
-            let tieneProductos = false;
-            
-            productosDesc.forEach(input => {
-                if (input.value.trim() !== '') {
-                    tieneProductos = true;
-                }
-            });
-            
-            if (!tieneProductos) {
-                e.preventDefault();
-                alert('Debe agregar al menos un producto con descripción');
-                return false;
-            }
-            
-            // Validar que las cantidades sean mayores a 0
-            const cantidades = document.querySelectorAll('.cantidad');
-            let cantidadesValidas = true;
-            
-            cantidades.forEach(input => {
-                if (parseInt(input.value) <= 0) {
-                    cantidadesValidas = false;
-                    input.style.borderColor = 'red';
-                } else {
-                    input.style.borderColor = '';
-                }
-            });
-            
-            if (!cantidadesValidas) {
-                e.preventDefault();
-                alert('Todas las cantidades deben ser mayores a 0');
-                return false;
-            }
-            
-            // Mostrar confirmación
-            if (!confirm('¿Está seguro de crear esta solicitud de cotización?')) {
-                e.preventDefault();
-                return false;
-            }
-            
-            return true;
-        });
-        
-        // Inicializar
+
+        // Inicialización y Validación
         document.addEventListener('DOMContentLoaded', function() {
             updateRemoveButtons();
+
+            const form = document.getElementById('solicitudForm');
+            form.addEventListener('submit', function(event) {
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Formulario Incompleto',
+                        text: 'Por favor, complete todos los campos requeridos correctamente.',
+                        confirmButtonColor: '#0E544C'
+                    });
+                } else {
+                    // Validación personalizada de productos
+                    const productosDesc = document.querySelectorAll('.producto-desc');
+                    let tieneProductos = false;
+                    productosDesc.forEach(input => {
+                        if (input.value.trim() !== '') {
+                            tieneProductos = true;
+                        }
+                    });
+
+                    if (!tieneProductos) {
+                        event.preventDefault();
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Sin productos',
+                            text: 'Debe agregar al menos un producto con descripción.',
+                            confirmButtonColor: '#0E544C'
+                        });
+                        return;
+                    }
+
+                    // Confirmación final
+                    event.preventDefault();
+                    Swal.fire({
+                        title: '¿Confirmar Envío?',
+                        text: "¿Desea crear esta solicitud de cotización ahora?",
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonColor: '#0E544C',
+                        cancelButtonColor: '#d33',
+                        confirmButtonText: 'Sí, enviar',
+                        cancelButtonText: 'Revisar'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            form.submit();
+                        }
+                    });
+                }
+                form.classList.add('was-validated');
+            }, false);
         });
     </script>
-
-    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <!-- Modal de Ayuda -->
     <div class="modal fade" id="pageHelpModal" tabindex="-1" 
