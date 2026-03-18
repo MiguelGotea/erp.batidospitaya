@@ -27,6 +27,7 @@ try {
     $total_cordobas = isset($input['total_cordobas']) ? (float)$input['total_cordobas'] : 0;
     $items = isset($input['items']) ? $input['items'] : [];
     $usuario_registro = $_SESSION['usuario_id'] ?? 1;
+    $id_solicitud = !empty($input['id']) ? (int)$input['id'] : null;
 
     if (empty($concepto)) {
         throw new Exception('El concepto es obligatorio.');
@@ -34,23 +35,43 @@ try {
 
     $conn->beginTransaction();
 
-    // Insertar cabecera
-    $stmt = $conn->prepare("
-        INSERT INTO reembolsos_solicitudes 
-        (id_proveedor, id_cuenta_proveedor, concepto, ceco, total_cordobas, usuario_registro, fecha_solicitud)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-    ");
-    $stmt->execute([
-        $id_proveedor,
-        $id_cuenta_proveedor,
-        $concepto,
-        $ceco,
-        $total_cordobas,
-        $usuario_registro,
-        $fecha_solicitud
-    ]);
+    if ($id_solicitud) {
+        // Actualizar cabecera
+        $stmt = $conn->prepare("
+            UPDATE reembolsos_solicitudes 
+            SET id_proveedor = ?, id_cuenta_proveedor = ?, concepto = ?, ceco = ?, total_cordobas = ?, fecha_solicitud = ?
+            WHERE id = ?
+        ");
+        $stmt->execute([
+            $id_proveedor,
+            $id_cuenta_proveedor,
+            $concepto,
+            $ceco,
+            $total_cordobas,
+            $fecha_solicitud,
+            $id_solicitud
+        ]);
 
-    $id_solicitud = $conn->lastInsertId();
+        // Eliminar detalles anteriores para re-insertar (más simple que hacer un diff)
+        $conn->prepare("DELETE FROM reembolsos_detalles WHERE id_solicitud = ?")->execute([$id_solicitud]);
+    } else {
+        // Insertar cabecera
+        $stmt = $conn->prepare("
+            INSERT INTO reembolsos_solicitudes 
+            (id_proveedor, id_cuenta_proveedor, concepto, ceco, total_cordobas, usuario_registro, fecha_solicitud)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        ");
+        $stmt->execute([
+            $id_proveedor,
+            $id_cuenta_proveedor,
+            $concepto,
+            $ceco,
+            $total_cordobas,
+            $usuario_registro,
+            $fecha_solicitud
+        ]);
+        $id_solicitud = $conn->lastInsertId();
+    }
 
     // Insertar detalles
     if (!empty($items)) {

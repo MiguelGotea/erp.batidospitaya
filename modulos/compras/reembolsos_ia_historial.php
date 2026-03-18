@@ -180,7 +180,7 @@ $historial = $stmtHist->fetchAll(PDO::FETCH_ASSOC);
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         function verDetalle(id) {
-            Swal.fire('Información', 'La vista de detalle histórica se habilitará en la siguiente fase.', 'info');
+            location.href = 'reembolsos_ia_nuevo.php?id=' + id;
         }
     </script>
 

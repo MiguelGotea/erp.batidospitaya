@@ -10,7 +10,39 @@ let modalCamara = null;
 
 $(document).ready(function() {
     modalCamara = new bootstrap.Modal(document.getElementById('modalCamara'));
+
+    if (editingId) {
+        cargarDatosEdicion(editingId);
+    }
 });
+
+function cargarDatosEdicion(id) {
+    $.get('ajax/reembolsos_ia_get_detalle.php', { id: id }, function(res) {
+        if (res.success) {
+            const s = res.solicitud;
+            $('#id_proveedor').val(s.id_proveedor);
+            $('#cuenta_bancaria').val(s.numero_cuenta).removeClass('opacity-50');
+            $('#banco_proveedor').val(s.banco).removeClass('opacity-50');
+            $('#fecha_solicitud').val(s.fecha_solicitud);
+            $('#concepto').val(s.concepto);
+            $('#ceco').val(s.ceco);
+            id_cuenta_proveedor = s.id_cuenta_proveedor;
+
+            // Cargar items
+            itemsActuales = res.detalles.map(d => ({
+                cantidad: d.cantidad,
+                detalle: d.detalle,
+                total_cordobas: d.monto_cordobas,
+                foto_path: d.foto_factura
+            }));
+            
+            $('.empty-row').hide();
+            renderTable();
+        } else {
+            Swal.fire('Error', res.message, 'error');
+        }
+    });
+}
 
 function abrirCamara() {
     const video = document.getElementById('video');
@@ -204,7 +236,8 @@ function calcularTotal() {
 
 async function guardarSolicitud() {
     let data = {
-        id_provider: $('#id_proveedor').val(),
+        id: editingId,
+        id_proveedor: $('#id_proveedor').val(),
         id_cuenta_proveedor: id_cuenta_proveedor,
         concepto: $('#concepto').val(),
         ceco: $('#ceco').val(),

@@ -23,6 +23,10 @@ if (!tienePermiso('reembolsos_ia_plantilla', 'nuevo_registro', $cargoOperario)) 
 // Obtener proveedores para el select
 $stmtProv = $conn->query("SELECT id, nombre FROM proveedores WHERE vigente = 1 ORDER BY nombre ASC");
 $proveedores = $stmtProv->fetchAll(PDO::FETCH_ASSOC);
+
+// Detectar modo edición
+$editingId = isset($_GET['id']) ? (int)$_GET['id'] : null;
+$tituloPagina = $editingId ? 'Editar Solicitud IA' : 'Nueva Solicitud: Reembolsos con IA';
 ?>
 
 <!DOCTYPE html>
@@ -49,7 +53,11 @@ $proveedores = $stmtProv->fetchAll(PDO::FETCH_ASSOC);
 
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, 'Nueva Solicitud: Reembolsos con IA'); ?>
+            <?php echo renderHeader($usuario, false, $tituloPagina); ?>
+            
+            <script>
+                const editingId = <?= json_encode($editingId) ?>;
+            </script>
             
             <div class="container-fluid p-4">
 
