@@ -1,17 +1,9 @@
 <?php
-//ini_set('display_errors', 1);
-//ini_set('display_startup_errors', 1);
-//error_reporting(E_ALL);
-
-// public_html/modulos/compras/solicitud_cotizacion.php
-//require_once '../../includes/config.php';
-require_once '../../includes/funciones.php';
-require_once '../../includes/auth.php';
-require_once 'includes/funciones_compras.php';
+require_once '../../core/auth/auth.php';
 require_once '../../core/permissions/permissions.php';
-require_once '../../includes/menu_lateral.php';
-require_once '../../includes/header_universal.php';
-require_once '../../includes/config.php';
+require_once '../../core/layout/menu_lateral.php';
+require_once '../../core/layout/header_universal.php';
+require_once 'includes/funciones_compras.php';
 
 verificarAutenticacion();
 
@@ -272,352 +264,28 @@ function redimensionarImagen($origen, $destino, $anchoMax, $altoMax) {
     <title>Solicitud de Cotización</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <link rel="icon" href="../../assets/img/icon12.png" type="image/png">
-    <style>
-        * {
-            font-family: 'Calibri', sans-serif;
-            box-sizing: border-box;
-        }
-        
-        body {
-            background-color: #F6F6F6;
-            margin: 0;
-            padding: 0;
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-            border-bottom: 2px solid #51B8AC;
-            padding-bottom: 15px;
-        }
-        
-        .logo {
-            height: 60px;
-        }
-        
-        .titulo {
-            color: #0E544C;
-            margin: 0;
-            font-size: 24px;
-        }
-        
-        .user-info {
-            text-align: right;
-        }
-        
-        .alert {
-            padding: 12px;
-            border-radius: 4px;
-            margin-bottom: 20px;
-            display: none;
-        }
-        
-        .alert-success {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-            display: block;
-        }
-        
-        .alert-error {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-            display: block;
-        }
-        
-        .form-section {
-            margin-bottom: 30px;
-            padding: 20px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            background-color: #f9f9f9;
-        }
-        
-        .form-section h3 {
-            color: #0E544C;
-            margin-top: 0;
-            border-bottom: 1px solid #ddd;
-            padding-bottom: 10px;
-        }
-        
-        .form-group {
-            margin-bottom: 15px;
-        }
-        
-        .form-row {
-            display: flex;
-            gap: 20px;
-            margin-bottom: 15px;
-        }
-        
-        .form-row .form-group {
-            flex: 1;
-        }
-        
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-            color: #333;
-        }
-        
-        input[type="text"],
-        input[type="number"],
-        textarea,
-        select {
-            width: 100%;
-            padding: 8px 12px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 14px;
-        }
-        
-        input[type="file"] {
-            padding: 5px;
-        }
-        
-        textarea {
-            min-height: 80px;
-            resize: vertical;
-        }
-        
-        .readonly-field {
-            background-color: #f0f0f0;
-            cursor: not-allowed;
-        }
-        
-        /* Estilos para la tabla de productos */
-        .productos-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-        }
-        
-        .productos-table th {
-            background-color: #0E544C;
-            color: white;
-            padding: 10px;
-            text-align: left;
-            font-weight: normal;
-        }
-        
-        .productos-table td {
-            padding: 10px;
-            border-bottom: 1px solid #ddd;
-            vertical-align: middle;
-        }
-        
-        .productos-table tr:hover {
-            background-color: #f5f5f5;
-        }
-        
-        .btn {
-            padding: 8px 16px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-            transition: background-color 0.3s;
-        }
-        
-        .btn-primary {
-            background-color: #0E544C;
-            color: white;
-        }
-        
-        .btn-primary:hover {
-            background-color: #51B8AC;
-        }
-        
-        .btn-success {
-            background-color: #28a745;
-            color: white;
-        }
-        
-        .btn-success:hover {
-            background-color: #218838;
-        }
-        
-        .btn-danger {
-            background-color: #dc3545;
-            color: white;
-        }
-        
-        .btn-danger:hover {
-            background-color: #c82333;
-        }
-        
-        .btn-secondary {
-            background-color: #6c757d;
-            color: white;
-        }
-        
-        .btn-secondary:hover {
-            background-color: #5a6268;
-        }
-        
-        .btn-sm {
-            padding: 4px 8px;
-            font-size: 12px;
-        }
-        
-        .btn-add-row {
-            background-color: #0E544C;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-top: 10px;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-        }
-        
-        .btn-add-row:hover {
-            background-color: #51B8AC;
-        }
-        
-        .btn-remove {
-            color: #dc3545;
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 16px;
-            padding: 0;
-            width: 30px;
-            height: 30px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
-        }
-        
-        .btn-remove:hover {
-            background-color: #f8d7da;
-        }
-        
-        .foto-preview {
-            max-width: 100px;
-            max-height: 100px;
-            margin-top: 5px;
-            display: none;
-        }
-        
-        .foto-preview img {
-            max-width: 100%;
-            max-height: 100px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-        
-        .actions {
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 1px solid #ddd;
-        }
-        
-        .signature-section {
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 1px solid #ddd;
-        }
-        
-        .signature-row {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 20px;
-        }
-        
-        .signature-box {
-            flex: 1;
-            text-align: center;
-            padding: 20px;
-            border: 1px dashed #ddd;
-            border-radius: 4px;
-            margin: 0 10px;
-        }
-        
-        .signature-box h4 {
-            margin-top: 0;
-            color: #666;
-        }
-        
-        .signature-placeholder {
-            height: 80px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #999;
-            font-style: italic;
-            border: 1px solid #eee;
-            border-radius: 4px;
-            margin-top: 10px;
-        }
-        
-        @media (max-width: 768px) {
-            .form-row {
-                flex-direction: column;
-                gap: 10px;
-            }
-            
-            .signature-row {
-                flex-direction: column;
-                gap: 20px;
-            }
-            
-            .signature-box {
-                margin: 0;
-            }
-            
-            .productos-table {
-                display: block;
-                overflow-x: auto;
-            }
-        }
-    </style>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/assets/css/global_tools.css?v=<?php echo mt_rand(1, 10000); ?>">
+    <link rel="stylesheet" href="css/solicitud_cotizacion.css?v=<?php echo mt_rand(1, 10000); ?>">
 </head>
 <body>
     <?php echo renderMenuLateral($cargoOperario); ?>
     
-    <div class="container">
-        <div class="header">
-            <div>
-                <h1 class="titulo">SOLICITUD DE COTIZACIÓN</h1>
-                <div style="display: flex; gap: 30px; margin-top: 10px;">
-                    <div class="form-group" style="margin-bottom: 0;">
-                        <label style="font-size: 12px; color: #666;">Formato:</label>
-                        <input type="text" value="SC-001" class="readonly-field" style="width: 100px;" readonly>
-                    </div>
-                    <div class="form-group" style="margin-bottom: 0;">
-                        <label style="font-size: 12px; color: #666;">Versión:</label>
-                        <input type="text" value="1.0" class="readonly-field" style="width: 80px;" readonly>
-                    </div>
-                </div>
-            </div>
-            <div class="user-info">
-                <div style="font-weight: bold;"><?php echo htmlspecialchars($nombreSolicitante); ?></div>
-                <div style="color: #666; font-size: 14px;">Solicitante</div>
-            </div>
-        </div>
+    <div class="main-container">
+        <div class="sub-container">
+            <?php echo renderHeader($usuario, false, 'Solicitud de Cotización'); ?>
+            
+            <div class="container-fluid p-3">
         
+        <?php if (isset($_SESSION['success'])): ?>
+            <div class="alert alert-success">
+                <?php echo htmlspecialchars($_SESSION['success']); unset($_SESSION['success']); ?>
+            </div>
+        <?php endif; ?>
+
         <?php if (isset($_SESSION['error'])): ?>
-            <div class="alert alert-error">
+            <div class="alert alert-danger">
                 <?php echo htmlspecialchars($_SESSION['error']); unset($_SESSION['error']); ?>
             </div>
         <?php endif; ?>
@@ -709,7 +377,9 @@ function redimensionarImagen($origen, $destino, $anchoMax, $altoMax) {
                 </button>
             </div>
         </form>
-    </div>
+            </div><!-- /.container-fluid -->
+        </div><!-- /.sub-container -->
+    </div><!-- /.main-container -->
 
     <script>
         let rowCounter = 1;
@@ -850,5 +520,78 @@ function redimensionarImagen($origen, $destino, $anchoMax, $altoMax) {
             updateRemoveButtons();
         });
     </script>
+
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Modal de Ayuda -->
+    <div class="modal fade" id="pageHelpModal" tabindex="-1" 
+         aria-labelledby="pageHelpModalLabel" aria-hidden="true" 
+         data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="pageHelpModalLabel">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Guía de Solicitud de Cotización
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" 
+                            data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100 border-0 bg-light">
+                                <div class="card-body">
+                                    <h6 class="text-primary border-bottom pb-2 fw-bold">
+                                        <i class="fas fa-plus-circle me-2"></i> Crear Solicitud
+                                    </h6>
+                                    <p class="small text-muted mb-0">
+                                        Complete la información general y agregue los productos que desea cotizar. Puede incluir observaciones generales para todo el documento.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100 border-0 bg-light">
+                                <div class="card-body">
+                                    <h6 class="text-success border-bottom pb-2 fw-bold">
+                                        <i class="fas fa-boxes me-2"></i> Productos y Fotos
+                                    </h6>
+                                    <p class="small text-muted mb-0">
+                                        Para cada producto, indique la cantidad y opcionalmente el precio unitario estimado. Es <strong>altamente recomendable</strong> subir una foto de referencia para cada ítem.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100 border-0 bg-light">
+                                <div class="card-body">
+                                    <h6 class="text-warning border-bottom pb-2 fw-bold">
+                                        <i class="fas fa-exclamation-triangle me-2"></i> Límites de Archivo
+                                    </h6>
+                                    <p class="small text-muted mb-0">
+                                        Las fotos de referencia deben estar en formato JPG, PNG o GIF y no superar los <strong>5MB</strong> por archivo.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100 border-0 bg-light">
+                                <div class="card-body">
+                                    <h6 class="text-info border-bottom pb-2 fw-bold">
+                                        <i class="fas fa-history me-2"></i> Seguimiento
+                                    </h6>
+                                    <p class="small text-muted mb-0">
+                                        Una vez guardada, la solicitud pasará a estado <strong>Pendiente</strong> y deberá ser aprobada por Gerencia antes de ser procesada por el departamento de Compras.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
