@@ -96,73 +96,67 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Insertar los productos
             $orden = 1;
             foreach ($productos as $producto) {
-                $fotoNombre = null;
-
-                // Manejar la foto si se subió
-                $fileInputName = 'foto_referencia[' . $producto['index'] . ']';
-                if (isset($_FILES['foto_referencia']['name'][$producto['index']]) &&
-                !empty($_FILES['foto_referencia']['name'][$producto['index']])) {
-
-                    $fileTmpName = $_FILES['foto_referencia']['tmp_name'][$producto['index']];
-                    $fileName = $_FILES['foto_referencia']['name'][$producto['index']];
-                    $fileSize = $_FILES['foto_referencia']['size'][$producto['index']];
-                    $fileError = $_FILES['foto_referencia']['error'][$producto['index']];
-
-                    // Validar que no haya errores
-                    if ($fileError === UPLOAD_ERR_OK) {
-                        // Validar tipo de archivo
-                        $allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
-                        $fileType = mime_content_type($fileTmpName);
-
-                        if (in_array($fileType, $allowedTypes)) {
-                            // Validar tamaño (max 5MB)
-                            if ($fileSize <= 5 * 1024 * 1024) {
-                                // Generar nombre único para la foto
-                                $fileExtension = pathinfo($fileName, PATHINFO_EXTENSION);
-                                $fotoNombre = 'foto_' . $solicitudId . '_' . $orden . '_' . time() . '.' . $fileExtension;
-                                $uploadPath = $uploadDir . $fotoNombre;
-
-                                // Mover la foto
-                                if (move_uploaded_file($fileTmpName, $uploadPath)) {
-                                    // Redimensionar si es necesario
-                                    list($width, $height) = getimagesize($uploadPath);
-                                    if ($width > 1024 || $height > 1024) {
-                                        redimensionarImagen($uploadPath, $uploadPath, 1024, 1024);
-                                    }
-                                }
-                                else {
-                                    $fotoNombre = null;
-                                    error_log("Error al mover archivo: " . $uploadPath);
-                                }
-                            }
-                            else {
-                                throw new Exception("La foto es demasiado grande (máximo 5MB)");
-                            }
-                        }
-                        else {
-                            throw new Exception("Tipo de archivo no permitido. Solo se aceptan imágenes JPG, PNG o GIF");
-                        }
-                    }
-                    else {
-                        error_log("Error en subida de archivo: " . $fileError);
-                    }
-                }
-
+                // Insertar el producto primero para obtener su ID
                 $stmtProducto = $conn->prepare("
                     INSERT INTO solicitudes_cotizacion_productos 
-                    (solicitud_id, producto_descripcion, cantidad, precio_unitario, foto_referencia, orden) 
-                    VALUES (?, ?, ?, ?, ?, ?)
+                    (solicitud_id, producto_descripcion, cantidad, precio_unitario, orden) 
+                    VALUES (?, ?, ?, ?, ?)
                 ");
-
+                
                 $stmtProducto->execute([
                     $solicitudId,
                     $producto['descripcion'],
                     $producto['cantidad'],
                     $producto['precio_unitario'],
-                    $fotoNombre,
                     $orden
                 ]);
-
+                
+                $productoId = $conn->lastInsertId();
+                
+                // Manejar las fotos (Múltiples)
+                if (isset($_FILES['foto_referencia']['name'][$producto['index']]) &&
+                    is_array($_FILES['foto_referencia']['name'][$producto['index']])) {
+                    
+                    $uploadDir = $_SERVER['DOCUMENT_ROOT'] . '/modulos/compras/uploads/cotizaciones/';
+                    if (!file_exists($uploadDir)) {
+                        mkdir($uploadDir, 0777, true);
+                    }
+                    
+                    $totalFotos = count($_FILES['foto_referencia']['name'][$producto['index']]);
+                    
+                    for ($i = 0; $i < $totalFotos; $i++) {
+                        if ($_FILES['foto_referencia']['error'][$producto['index']][$i] === UPLOAD_ERR_OK) {
+                            $fileTmpName = $_FILES['foto_referencia']['tmp_name'][$producto['index']][$i];
+                            $fileName = $_FILES['foto_referencia']['name'][$producto['index']][$i];
+                            $fileSize = $_FILES['foto_referencia']['size'][$producto['index']][$i];
+                            
+                            $allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+                            $fileType = mime_content_type($fileTmpName);
+                            
+                            if (in_array($fileType, $allowedTypes) && $fileSize <= 5 * 1024 * 1024) {
+                                $fileExtension = pathinfo($fileName, PATHINFO_EXTENSION);
+                                $fotoNombre = 'foto_' . $solicitudId . '_' . $productoId . '_' . $i . '_' . time() . '.' . $fileExtension;
+                                $uploadPath = $uploadDir . $fotoNombre;
+                                
+                                if (move_uploaded_file($fileTmpName, $uploadPath)) {
+                                    // Redimensionar
+                                    list($width, $height) = getimagesize($uploadPath);
+                                    if ($width > 1024 || $height > 1024) {
+                                        redimensionarImagen($uploadPath, $uploadPath, 1024, 1024);
+                                    }
+                                    
+                                    // Insertar en la tabla de fotos (Opción B)
+                                    $stmtFoto = $conn->prepare("
+                                        INSERT INTO solicitudes_cotizacion_fotos (producto_id, foto_nombre) 
+                                        VALUES (?, ?)
+                                    ");
+                                    $stmtFoto->execute([$productoId, $fotoNombre]);
+                                }
+                            }
+                        }
+                    }
+                }
+                
                 $orden++;
             }
 
@@ -378,13 +372,28 @@ function redimensionarImagen($origen, $destino, $anchoMax, $altoMax)
                                                        class="form-control form-control-sm producto-desc" 
                                                        placeholder="Ej: Impresora Epson L3210" required>
                                             </td>
-                                            <td data-label="Foto">
-                                                <div class="foto-input-wrapper">
-                                                    <input type="file" name="foto_referencia[]" 
-                                                           class="form-control form-control-sm foto-input" 
-                                                           accept="image/*" onchange="previewFoto(this)">
-                                                    <div class="foto-preview">
-                                                        <img src="" alt="Vista previa">
+                                            <td data-label="Fotos">
+                                                <div class="foto-manager">
+                                                    <div class="foto-actions">
+                                                        <button type="button" class="btn-foto-action" onclick="triggerFileInput(this, 'file')">
+                                                            <i class="fas fa-file-image"></i> Archivos
+                                                        </button>
+                                                        <button type="button" class="btn-foto-action" onclick="triggerFileInput(this, 'camera')">
+                                                            <i class="fas fa-camera"></i> Cámara
+                                                        </button>
+                                                    </div>
+                                                    
+                                                    <!-- Inputs ocultos para archivos -->
+                                                    <input type="file" name="foto_referencia[0][]" 
+                                                           class="foto-input d-none" 
+                                                           accept="image/*" multiple onchange="handleFotosSelect(this)">
+                                                    
+                                                    <input type="file" name="foto_referencia[0][]" 
+                                                           class="camera-input d-none" 
+                                                           accept="image/*" capture="environment" onchange="handleFotosSelect(this)">
+                                                    
+                                                    <div class="galeria-wrapper">
+                                                        <!-- Miniaturas se generan aquí via JS -->
                                                     </div>
                                                 </div>
                                             </td>
@@ -446,6 +455,7 @@ function redimensionarImagen($origen, $destino, $anchoMax, $altoMax)
             const tbody = document.getElementById('productosBody');
             const newRow = document.createElement('tr');
             newRow.className = 'producto-row';
+            const rowIndex = document.querySelectorAll('.producto-row').length;
             
             newRow.innerHTML = `
                 <td data-label="Descripción">
@@ -453,14 +463,26 @@ function redimensionarImagen($origen, $destino, $anchoMax, $altoMax)
                            class="form-control form-control-sm producto-desc" 
                            placeholder="Ej: Impresora Epson L3210" required>
                 </td>
-                <td data-label="Foto">
-                    <div class="foto-input-wrapper">
-                        <input type="file" name="foto_referencia[]" 
-                               class="form-control form-control-sm foto-input" 
-                               accept="image/*" onchange="previewFoto(this)">
-                        <div class="foto-preview">
-                            <img src="" alt="Vista previa">
+                <td data-label="Fotos">
+                    <div class="foto-manager">
+                        <div class="foto-actions">
+                            <button type="button" class="btn-foto-action" onclick="triggerFileInput(this, 'file')">
+                                <i class="fas fa-file-image"></i> Archivos
+                            </button>
+                            <button type="button" class="btn-foto-action" onclick="triggerFileInput(this, 'camera')">
+                                <i class="fas fa-camera"></i> Cámara
+                            </button>
                         </div>
+                        
+                        <input type="file" name="foto_referencia[${rowIndex}][]" 
+                               class="foto-input d-none" 
+                               accept="image/*" multiple onchange="handleFotosSelect(this)">
+                        
+                        <input type="file" name="foto_referencia[${rowIndex}][]" 
+                               class="camera-input d-none" 
+                               accept="image/*" capture="environment" onchange="handleFotosSelect(this)">
+                        
+                        <div class="galeria-wrapper"></div>
                     </div>
                 </td>
                 <td data-label="Cantidad">
@@ -503,22 +525,40 @@ function redimensionarImagen($origen, $destino, $anchoMax, $altoMax)
             });
         }
         
-        function previewFoto(input) {
-            const previewContainer = input.nextElementSibling;
-            const previewImg = previewContainer.querySelector('img');
+        function triggerFileInput(btn, type) {
+            const container = btn.closest('.foto-manager');
+            const input = type === 'file' ? 
+                container.querySelector('.foto-input') : 
+                container.querySelector('.camera-input');
+            input.click();
+        }
+
+        function handleFotosSelect(input) {
+            const manager = input.closest('.foto-manager');
+            const galeria = manager.querySelector('.galeria-wrapper');
             
-            if (input.files && input.files[0]) {
-                const reader = new FileReader();
-                
-                reader.onload = function(e) {
-                    previewImg.src = e.target.result;
-                    previewContainer.style.display = 'block';
-                };
-                
-                reader.readAsDataURL(input.files[0]);
-            } else {
-                previewContainer.style.display = 'none';
-                previewImg.src = '';
+            // Limpiar galería previa de este input (o mantener si se desea acumular)
+            // Por simplicidad, esta versión muestra lo seleccionado en el último cambio
+            galeria.innerHTML = ''; 
+            
+            if (input.files && input.files.length > 0) {
+                Array.from(input.files).forEach((file, index) => {
+                    if (!file.type.startsWith('image/')) return;
+                    
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const div = document.createElement('div');
+                        div.className = 'foto-item';
+                        div.innerHTML = `
+                            <img src="${e.target.result}" alt="Preview">
+                            <span class="btn-remove-foto" onclick="this.parentElement.remove()" title="Quitar">
+                                <i class="fas fa-times"></i>
+                            </span>
+                        `;
+                        galeria.appendChild(div);
+                    };
+                    reader.readAsDataURL(file);
+                });
             }
         }
 

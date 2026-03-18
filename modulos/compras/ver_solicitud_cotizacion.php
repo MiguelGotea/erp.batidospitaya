@@ -62,6 +62,22 @@ try {
     $stmtHistorial->execute([$solicitudId]);
     $historial = $stmtHistorial->fetchAll(PDO::FETCH_ASSOC);
 
+    // Obtener todas las fotos de todos los productos de esta solicitud
+    $stmtFotos = $conn->prepare("
+        SELECT f.* 
+        FROM solicitudes_cotizacion_fotos f
+        JOIN solicitudes_cotizacion_productos p ON f.producto_id = p.id
+        WHERE p.solicitud_id = ?
+    ");
+    $stmtFotos->execute([$solicitudId]);
+    $todasLasFotos = $stmtFotos->fetchAll(PDO::FETCH_ASSOC);
+    
+    // Agrupar fotos por producto_id
+    $fotosPorProducto = [];
+    foreach ($todasLasFotos as $foto) {
+        $fotosPorProducto[$foto['producto_id']][] = $foto['foto_nombre'];
+    }
+
 
 }
 catch (Exception $e) {
@@ -366,33 +382,34 @@ else: ?>
                                     <div style="font-weight: bold;">
                                         <?php echo htmlspecialchars($producto['producto_descripcion']); ?>
                                     </div>
-                                </td>
-                                <td class="foto-container">
-                                    <?php if (!empty($producto['foto_referencia'])):
-            $rutaFotoWeb = '/modulos/compras/uploads/cotizaciones/' . $producto['foto_referencia'];
-            $rutaFotoServidor = $_SERVER['DOCUMENT_ROOT'] . $rutaFotoWeb;
+                                                         <td class="foto-container">
+                                    <?php 
+                                    $fotos = $fotosPorProducto[$producto['id']] ?? [];
+                                    if (empty($fotos) && !empty($producto['foto_referencia'])) {
+                                        // Compatibilidad con el sistema anterior (foto única)
+                                        $fotos = [$producto['foto_referencia']];
+                                    }
 
-            if (file_exists($rutaFotoServidor)):
-?>
-                                        <img src="<?php echo htmlspecialchars($rutaFotoWeb); ?>" 
-                                             alt="Referencia" 
-                                             class="foto-referencia"
-                                             onclick="ampliarFoto('<?php echo htmlspecialchars($rutaFotoWeb); ?>')"
-                                             style="cursor: pointer;"
-                                             onerror="this.parentElement.innerHTML='<div class=\'no-foto\'><i class=\'fas fa-exclamation-triangle\'></i> Error al cargar imagen</div>';">
-                                    <?php
-            else: ?>
-                                        <div class="no-foto">
-                                            <i class="fas fa-image"></i> Imagen no disponible
+                                    if (!empty($fotos)): ?>
+                                        <div class="galeria-fotos">
+                                            <?php foreach ($fotos as $foto): 
+                                                $rutaFotoWeb = '/modulos/compras/uploads/cotizaciones/' . $foto;
+                                                $rutaFotoServidor = $_SERVER['DOCUMENT_ROOT'] . $rutaFotoWeb;
+                                                
+                                                if (file_exists($rutaFotoServidor)):
+                                            ?>
+                                                <div class="foto-thumb" onclick="ampliarFoto('<?php echo htmlspecialchars($rutaFotoWeb); ?>')">
+                                                    <img src="<?php echo htmlspecialchars($rutaFotoWeb); ?>" 
+                                                         alt="Ref" 
+                                                         onerror="this.parentElement.style.display='none';">
+                                                </div>
+                                            <?php endif; endforeach; ?>
                                         </div>
-                                    <?php
-            endif;
-        else: ?>
+                                    <?php else: ?>
                                         <div class="no-foto">
-                                            <i class="fas fa-ban"></i> Sin imagen
+                                            <i class="fas fa-image"></i> Sin imágenes
                                         </div>
-                                    <?php
-        endif; ?>
+                                    <?php endif; ?>
                                 </td>
                                 <td><?php echo htmlspecialchars($producto['cantidad']); ?></td>
                                 <td>
