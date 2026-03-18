@@ -20,14 +20,14 @@ $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admi
 
 // Obtener el nombre completo del usuario
 $nombreSolicitante = $esAdmin ? 
-    $usuario['nombre'] : 
+    $usuario['nombre'] :
     trim($usuario['Nombre'] . ' ' . $usuario['Apellido']);
 $solicitanteId = $_SESSION['usuario_id'];
 
 // Procesar el formulario cuando se envía
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $observaciones = trim($_POST['observaciones'] ?? '');
-    
+
     // Obtener productos del formulario
     $productos = [];
     if (isset($_POST['producto_descripcion']) && is_array($_POST['producto_descripcion'])) {
@@ -42,18 +42,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
     }
-    
+
     // Validar que haya al menos un producto
     if (empty($productos)) {
         $_SESSION['error'] = 'Debe agregar al menos un producto';
-    } else {
+    }
+    else {
         try {
             $conn->beginTransaction();
-            
+
             // Generar código único para la solicitud (SC-YYYY-MM-NNN)
             $fechaActual = date('Y-m-d');
             $yearMonth = date('Ym');
-            
+
             // Obtener el último número de secuencia para este mes
             $stmt = $conn->prepare("
                 SELECT MAX(SUBSTRING_INDEX(codigo, '-', -1)) as ultimo_num 
@@ -63,18 +64,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $likePattern = "SC-" . $yearMonth . "-%";
             $stmt->execute([$likePattern]);
             $result = $stmt->fetch();
-            
+
             $ultimoNum = $result['ultimo_num'] ?? 0;
             $nuevoNum = intval($ultimoNum) + 1;
             $codigoSolicitud = "SC-" . $yearMonth . "-" . str_pad($nuevoNum, 3, '0', STR_PAD_LEFT);
-            
+
             // Insertar la solicitud principal
             $stmt = $conn->prepare("
                 INSERT INTO solicitudes_cotizacion 
                 (codigo, version, solicitante_id, solicitante_nombre, fecha_solicitud, observaciones) 
                 VALUES (?, ?, ?, ?, ?, ?)
             ");
-            
+
             $stmt->execute([
                 $codigoSolicitud,
                 1,
@@ -83,36 +84,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $fechaActual,
                 $observaciones
             ]);
-            
+
             $solicitudId = $conn->lastInsertId();
-            
+
             // Crear directorio para fotos si no existe
             $uploadDir = $_SERVER['DOCUMENT_ROOT'] . '/modulos/compras/uploads/cotizaciones/';
             if (!file_exists($uploadDir)) {
                 mkdir($uploadDir, 0777, true);
             }
-            
+
             // Insertar los productos
             $orden = 1;
             foreach ($productos as $producto) {
                 $fotoNombre = null;
-                
+
                 // Manejar la foto si se subió
                 $fileInputName = 'foto_referencia[' . $producto['index'] . ']';
                 if (isset($_FILES['foto_referencia']['name'][$producto['index']]) &&
-                    !empty($_FILES['foto_referencia']['name'][$producto['index']])) {
-                    
+                !empty($_FILES['foto_referencia']['name'][$producto['index']])) {
+
                     $fileTmpName = $_FILES['foto_referencia']['tmp_name'][$producto['index']];
                     $fileName = $_FILES['foto_referencia']['name'][$producto['index']];
                     $fileSize = $_FILES['foto_referencia']['size'][$producto['index']];
                     $fileError = $_FILES['foto_referencia']['error'][$producto['index']];
-                    
+
                     // Validar que no haya errores
                     if ($fileError === UPLOAD_ERR_OK) {
                         // Validar tipo de archivo
                         $allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
                         $fileType = mime_content_type($fileTmpName);
-                        
+
                         if (in_array($fileType, $allowedTypes)) {
                             // Validar tamaño (max 5MB)
                             if ($fileSize <= 5 * 1024 * 1024) {
@@ -120,7 +121,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 $fileExtension = pathinfo($fileName, PATHINFO_EXTENSION);
                                 $fotoNombre = 'foto_' . $solicitudId . '_' . $orden . '_' . time() . '.' . $fileExtension;
                                 $uploadPath = $uploadDir . $fotoNombre;
-                                
+
                                 // Mover la foto
                                 if (move_uploaded_file($fileTmpName, $uploadPath)) {
                                     // Redimensionar si es necesario
@@ -128,27 +129,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     if ($width > 1024 || $height > 1024) {
                                         redimensionarImagen($uploadPath, $uploadPath, 1024, 1024);
                                     }
-                                } else {
+                                }
+                                else {
                                     $fotoNombre = null;
                                     error_log("Error al mover archivo: " . $uploadPath);
                                 }
-                            } else {
+                            }
+                            else {
                                 throw new Exception("La foto es demasiado grande (máximo 5MB)");
                             }
-                        } else {
+                        }
+                        else {
                             throw new Exception("Tipo de archivo no permitido. Solo se aceptan imágenes JPG, PNG o GIF");
                         }
-                    } else {
+                    }
+                    else {
                         error_log("Error en subida de archivo: " . $fileError);
                     }
                 }
-                
+
                 $stmtProducto = $conn->prepare("
                     INSERT INTO solicitudes_cotizacion_productos 
                     (solicitud_id, producto_descripcion, cantidad, precio_unitario, foto_referencia, orden) 
                     VALUES (?, ?, ?, ?, ?, ?)
                 ");
-                
+
                 $stmtProducto->execute([
                     $solicitudId,
                     $producto['descripcion'],
@@ -157,22 +162,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $fotoNombre,
                     $orden
                 ]);
-                
+
                 $orden++;
             }
-            
+
             // Registrar en el historial
             $stmtHistorial = $conn->prepare("
                 INSERT INTO solicitudes_cotizacion_historial 
                 (solicitud_id, usuario_id, usuario_nombre, accion, detalles) 
                 VALUES (?, ?, ?, ?, ?)
             ");
-            
+
             $detallesHistorial = json_encode([
                 'productos' => count($productos),
                 'observaciones' => $observaciones
             ]);
-            
+
             $stmtHistorial->execute([
                 $solicitudId,
                 $solicitanteId,
@@ -180,14 +185,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'creada',
                 $detallesHistorial
             ]);
-            
+
             $conn->commit();
-            
+
             $_SESSION['success'] = 'Solicitud de cotización creada exitosamente: ' . $codigoSolicitud;
             header('Location: ver_solicitud_cotizacion.php?id=' . $solicitudId);
             exit();
-            
-        } catch (Exception $e) {
+
+        }
+        catch (Exception $e) {
             $conn->rollBack();
             $_SESSION['error'] = 'Error al crear la solicitud: ' . $e->getMessage();
         }
@@ -195,19 +201,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // Función para redimensionar imágenes
-function redimensionarImagen($origen, $destino, $anchoMax, $altoMax) {
+function redimensionarImagen($origen, $destino, $anchoMax, $altoMax)
+{
     list($ancho, $alto, $tipo) = getimagesize($origen);
-    
+
     // Calcular nuevas dimensiones manteniendo proporción
     $ratio = $ancho / $alto;
     if ($ancho > $alto) {
         $nuevoAncho = $anchoMax;
         $nuevoAlto = $anchoMax / $ratio;
-    } else {
+    }
+    else {
         $nuevoAlto = $altoMax;
         $nuevoAncho = $altoMax * $ratio;
     }
-    
+
     // Crear imagen según el tipo
     switch ($tipo) {
         case IMAGETYPE_JPEG:
@@ -222,20 +230,20 @@ function redimensionarImagen($origen, $destino, $anchoMax, $altoMax) {
         default:
             return false;
     }
-    
+
     // Crear nueva imagen
     $nuevaImagen = imagecreatetruecolor($nuevoAncho, $nuevoAlto);
-    
+
     // Preservar transparencia para PNG y GIF
     if ($tipo == IMAGETYPE_PNG || $tipo == IMAGETYPE_GIF) {
         imagecolortransparent($nuevaImagen, imagecolorallocatealpha($nuevaImagen, 0, 0, 0, 127));
         imagealphablending($nuevaImagen, false);
         imagesavealpha($nuevaImagen, true);
     }
-    
+
     // Redimensionar
     imagecopyresampled($nuevaImagen, $imagen, 0, 0, 0, 0, $nuevoAncho, $nuevoAlto, $ancho, $alto);
-    
+
     // Guardar según el tipo
     switch ($tipo) {
         case IMAGETYPE_JPEG:
@@ -248,11 +256,11 @@ function redimensionarImagen($origen, $destino, $anchoMax, $altoMax) {
             imagegif($nuevaImagen, $destino);
             break;
     }
-    
+
     // Liberar memoria
     imagedestroy($imagen);
     imagedestroy($nuevaImagen);
-    
+
     return true;
 }
 ?>
@@ -280,15 +288,19 @@ function redimensionarImagen($origen, $destino, $anchoMax, $altoMax) {
         
         <?php if (isset($_SESSION['success'])): ?>
             <div class="alert alert-success">
-                <?php echo htmlspecialchars($_SESSION['success']); unset($_SESSION['success']); ?>
+                <?php echo htmlspecialchars($_SESSION['success']);
+    unset($_SESSION['success']); ?>
             </div>
-        <?php endif; ?>
+        <?php
+endif; ?>
 
         <?php if (isset($_SESSION['error'])): ?>
             <div class="alert alert-danger">
-                <?php echo htmlspecialchars($_SESSION['error']); unset($_SESSION['error']); ?>
+                <?php echo htmlspecialchars($_SESSION['error']);
+    unset($_SESSION['error']); ?>
             </div>
-        <?php endif; ?>
+        <?php
+endif; ?>
         
         <form id="solicitudForm" method="post" enctype="multipart/form-data">
             <div class="form-section">
