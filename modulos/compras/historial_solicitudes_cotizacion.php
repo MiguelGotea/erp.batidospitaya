@@ -2,12 +2,11 @@
 //ini_set('display_errors', 1);
 //error_reporting(E_ALL);
 
-require_once '../../includes/funciones.php';
-require_once '../../includes/auth.php';
+require_once '../../core/auth/auth.php';
 require_once '../../core/permissions/permissions.php';
 require_once 'includes/funciones_compras.php';
-require_once '../../includes/menu_lateral.php';
-require_once '../../includes/header_universal.php';
+require_once '../../core/layout/menu_lateral.php';
+require_once '../../core/layout/header_universal.php';
 
 verificarAutenticacion();
 
@@ -44,17 +43,21 @@ if (!tienePermiso('historial_solicitudes_cotizacion', 'vista', $cargoOperario)) 
             
             <?php if (isset($_SESSION['success'])): ?>
                 <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    <?php echo htmlspecialchars($_SESSION['success']); unset($_SESSION['success']); ?>
+                    <?php echo htmlspecialchars($_SESSION['success']);
+    unset($_SESSION['success']); ?>
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
-            <?php endif; ?>
+            <?php
+endif; ?>
             
             <?php if (isset($_SESSION['error'])): ?>
                 <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    <?php echo htmlspecialchars($_SESSION['error']); unset($_SESSION['error']); ?>
+                    <?php echo htmlspecialchars($_SESSION['error']);
+    unset($_SESSION['error']); ?>
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
-            <?php endif; ?>
+            <?php
+endif; ?>
             
             <div class="container-fluid p-3">
                 <!-- Botón para nueva solicitud -->
@@ -64,7 +67,8 @@ if (!tienePermiso('historial_solicitudes_cotizacion', 'vista', $cargoOperario)) 
                         <i class="bi bi-plus-circle"></i> Nueva Solicitud
                     </a>
                 </div>
-                <?php endif; ?>
+                <?php
+endif; ?>
 
                 <div class="table-responsive">
                     <table class="table table-hover solicitudes-table" id="tablaSolicitudes">
