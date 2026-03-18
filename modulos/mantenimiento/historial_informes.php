@@ -115,34 +115,6 @@ $esAdminCaja = tienePermiso('agenda_mantenimiento', 'caja_chica', $cargoOperario
             opacity: 0.5;
             cursor: not-allowed;
         }
-
-        /* Botón Flotante (FAB) */
-        .btn-floating-pitaya {
-            position: fixed;
-            bottom: 35px;
-            right: 35px;
-            width: 65px;
-            height: 65px;
-            border-radius: 50%;
-            background-color: var(--color-principal);
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 28px;
-            box-shadow: 0 8px 25px rgba(81, 184, 172, 0.5);
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            z-index: 1000;
-            text-decoration: none;
-            border: 3px solid white;
-        }
-
-        .btn-floating-pitaya:hover {
-            transform: scale(1.15) rotate(90deg);
-            background-color: var(--color-header-tabla);
-            color: white;
-            box-shadow: 0 12px 30px rgba(14, 84, 76, 0.4);
-        }
     </style>
 </head>
 
