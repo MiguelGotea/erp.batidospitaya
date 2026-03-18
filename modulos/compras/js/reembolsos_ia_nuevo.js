@@ -5,10 +5,57 @@
 
 let itemsActuales = [];
 let id_cuenta_proveedor = null;
+let stream = null;
+let modalCamara = null;
 
 $(document).ready(function() {
-    // Inicializaciones automáticas si existen
+    modalCamara = new bootstrap.Modal(document.getElementById('modalCamara'));
 });
+
+function abrirCamara() {
+    const video = document.getElementById('video');
+    
+    navigator.mediaDevices.getUserMedia({ 
+        video: { facingMode: 'environment' }, // Preferir cámara trasera
+        audio: false 
+    })
+    .then(s => {
+        stream = s;
+        video.srcObject = stream;
+        modalCamara.show();
+    })
+    .catch(err => {
+        console.error("Error al acceder a la cámara:", err);
+        Swal.fire('Cámara', 'No se pudo acceder a la cámara. Verifica los permisos.', 'error');
+    });
+}
+
+function cerrarCamara() {
+    if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+    }
+    modalCamara.hide();
+}
+
+function capturarFoto() {
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const context = canvas.getContext('2d');
+
+    // Ajustar dimensiones del canvas al video
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+
+    // Dibujar frame
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    // Convertir a blob y procesar
+    canvas.toBlob(blob => {
+        const file = new File([blob], "captura_camara.jpg", { type: "image/jpeg" });
+        cerrarCamara();
+        procesarFoto(file);
+    }, 'image/jpeg', 0.85);
+}
 
 function agregarFilaManual() {
     $('.empty-row').hide();
@@ -42,11 +89,19 @@ function cargarDatosProveedor(id) {
     });
 }
 
-function procesarFoto(input) {
-    if (!input.files || !input.files[0]) return;
+function procesarFoto(archivo) {
+    let fileToUpload = null;
+    
+    // Si viene de un input file
+    if (archivo instanceof HTMLInputElement) {
+        if (!archivo.files || !archivo.files[0]) return;
+        fileToUpload = archivo.files[0];
+    } else {
+        fileToUpload = archivo; // Es un File/Blob directo (desde cámara)
+    }
 
     let formData = new FormData();
-    formData.append('foto', input.files[0]);
+    formData.append('foto', fileToUpload);
 
     $('#loader').css('display', 'flex').hide().fadeIn(300);
     $('#statusIA').text('Cargando imagen...');

@@ -99,6 +99,9 @@ $proveedores = $stmtProv->fetchAll(PDO::FETCH_ASSOC);
                                     <div class="input-group">
                                         <span class="input-group-text bg-primary text-white border-0"><i class="fas fa-robot"></i></span>
                                         <input type="file" id="foto_factura" class="form-control border-0 shadow-sm" accept="image/*,application/pdf" onchange="procesarFoto(this)">
+                                        <button type="button" class="btn btn-primary" onclick="abrirCamara()" title="Tomar Foto">
+                                            <i class="fas fa-camera"></i>
+                                        </button>
                                     </div>
                                     <div id="statusIA" class="small mt-1 text-muted"></div>
                                 </div>
@@ -190,6 +193,29 @@ $proveedores = $stmtProv->fetchAll(PDO::FETCH_ASSOC);
             <div class="progress-bar progress-bar-striped progress-bar-animated bg-primary" style="width: 100%"></div>
         </div>
         <p class="text-muted mt-3">Estamos leyendo tu factura, por favor espera.</p>
+    </div>
+
+    <!-- Modal para Cámara -->
+    <div class="modal fade" id="modalCamara" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 25px !important; overflow: hidden;">
+                <div class="modal-header bg-dark text-white border-0">
+                    <h5 class="modal-title"><i class="fas fa-camera me-2"></i> Capturar Factura</h5>
+                    <button type="button" class="btn-close btn-close-white" onclick="cerrarCamara()"></button>
+                </div>
+                <div class="modal-body p-0 position-relative bg-black" style="min-height: 300px;">
+                    <video id="video" autoplay playsinline class="w-100 h-100" style="object-fit: cover;"></video>
+                    <canvas id="canvas" style="display:none;"></canvas>
+                </div>
+                <div class="modal-footer border-0 bg-dark d-flex justify-content-between p-3">
+                    <button type="button" class="btn btn-outline-light rounded-pill px-4" onclick="cerrarCamara()">Cancelar</button>
+                    <button type="button" class="btn btn-primary rounded-circle" style="width: 60px; height: 60px;" onclick="capturarFoto()">
+                        <i class="fas fa-camera fa-lg"></i>
+                    </button>
+                    <div style="width: 80px;"></div> <!-- Espaciador -->
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Scripts -->
