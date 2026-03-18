@@ -33,6 +33,35 @@ if (!tienePermiso('historial_solicitudes_cotizacion', 'vista', $cargoOperario)) 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="css/historial_solicitudes.css?v=<?php echo time(); ?>">
+    <style>
+        /* Botón Flotante (FAB) */
+        .btn-floating-pitaya {
+            position: fixed;
+            bottom: 35px;
+            right: 35px;
+            width: 65px;
+            height: 65px;
+            border-radius: 50%;
+            background-color: #51B8AC;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            box-shadow: 0 8px 25px rgba(81, 184, 172, 0.5);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 1000;
+            text-decoration: none;
+            border: 3px solid white;
+        }
+
+        .btn-floating-pitaya:hover {
+            transform: scale(1.15) rotate(90deg);
+            background-color: #0E544C;
+            color: white;
+            box-shadow: 0 12px 30px rgba(14, 84, 76, 0.4);
+        }
+    </style>
 </head>
 <body>
     <?php echo renderMenuLateral($cargoOperario); ?>
@@ -60,15 +89,13 @@ endif; ?>
 endif; ?>
             
             <div class="container-fluid p-3">
-                <!-- Botón para nueva solicitud -->
+
+                <!-- Botón Flotante Nueva Solicitud -->
                 <?php if (tienePermiso('historial_solicitudes_cotizacion', 'boton_nuevo', $cargoOperario)): ?>
-                <div class="mb-3">
-                    <a href="solicitud_cotizacion.php" class="btn btn-success">
-                        <i class="bi bi-plus-circle"></i> Nueva Solicitud
-                    </a>
-                </div>
-                <?php
-endif; ?>
+                <a href="solicitud_cotizacion.php" class="btn-floating-pitaya" title="Nueva Solicitud de Cotización">
+                    <i class="fas fa-plus"></i>
+                </a>
+                <?php endif; ?>
 
                 <div class="table-responsive">
                     <table class="table table-hover solicitudes-table" id="tablaSolicitudes">
