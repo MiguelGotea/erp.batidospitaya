@@ -405,7 +405,7 @@ function redimensionarImagen($origen, $destino, $anchoMax, $altoMax)
                                             </td>
                                             <td data-label="Precio Unitario">
                                                 <div class="input-group input-group-sm">
-                                                    <span class="input-group-text">$</span>
+                                                    <span class="input-group-text">C$</span>
                                                     <input type="number" name="precio_unitario[]" 
                                                            value="0.00" min="0" step="0.01" class="form-control precio text-end">
                                                 </div>
@@ -492,7 +492,7 @@ function redimensionarImagen($origen, $destino, $anchoMax, $altoMax)
                 </td>
                 <td data-label="Precio Unitario">
                     <div class="input-group input-group-sm">
-                        <span class="input-group-text">$</span>
+                        <span class="input-group-text">C$</span>
                         <input type="number" name="precio_unitario[]" 
                                value="0.00" min="0" step="0.01" class="form-control precio text-end">
                     </div>

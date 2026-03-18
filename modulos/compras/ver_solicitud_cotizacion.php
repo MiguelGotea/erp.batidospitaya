@@ -390,7 +390,7 @@ else: ?>
                             <th style="width: 40%;">Producto</th>
                             <th style="width: 15%;">Referencia</th>
                             <th style="width: 10%;">Cantidad</th>
-                            <th style="width: 15%;">Precio Unitario (USD)</th>
+                            <th style="width: 15%;">Precio Unitario (C$)</th>
                             <th style="width: 20%;">Notas de Compras</th>
                         </tr>
                     </thead>
@@ -437,10 +437,10 @@ else: ?>
                                 </td>
                                 <td><?php echo htmlspecialchars($producto['cantidad']); ?></td>
                                 <td>
-                                    $<?php echo number_format($producto['precio_unitario'], 2); ?>
+                                    C$<?php echo number_format($producto['precio_unitario'], 2); ?>
                                     <?php if ($producto['precio_unitario'] > 0): ?>
                                         <br><small style="color: #666;">
-                                            Subtotal: $<?php echo number_format($subtotal, 2); ?>
+                                            Subtotal: C$<?php echo number_format($subtotal, 2); ?>
                                         </small>
                                     <?php
         endif; ?>
@@ -488,7 +488,7 @@ else: ?>
                             <tr style="background-color: #f8f9fa;">
                                 <td colspan="3" style="text-align: right; font-weight: bold;">Total Estimado:</td>
                                 <td style="font-weight: bold; color: #0E544C;">
-                                    $<?php echo number_format($totalEstimado, 2); ?>
+                                    C$<?php echo number_format($totalEstimado, 2); ?>
                                 </td>
                                 <td></td>
                             </tr>
