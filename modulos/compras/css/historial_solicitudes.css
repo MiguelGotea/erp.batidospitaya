@@ -529,6 +529,74 @@ body {
     background: #0E544C;
 }
 
+/* Toggle de Aprobación/Rechazo */
+.status-toggle-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.status-toggle {
+    display: inline-flex;
+    background: #e9ecef;
+    padding: 2px;
+    border-radius: 20px;
+    position: relative;
+    width: 90px;
+    height: 32px;
+    cursor: pointer;
+    border: 1px solid #dee2e6;
+    overflow: hidden;
+    user-select: none;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.status-toggle .toggle-knob {
+    position: absolute;
+    top: 2px;
+    left: 31px; /* Centro aproximado: (90-28)/2 */
+    width: 26px;
+    height: 26px;
+    background: #adb5bd;
+    border-radius: 50%;
+    transition: all 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+    z-index: 5;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.status-toggle .toggle-side {
+    flex: 1;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    color: #ced4da;
+    transition: all 0.2s;
+}
+
+.status-toggle:hover .side-rechazar { color: rgba(220, 53, 69, 0.4); }
+.status-toggle:hover .side-aprobar { color: rgba(40, 167, 69, 0.4); }
+
+/* Estados activos simulados por hover o posición */
+.status-toggle .side-rechazar:hover { color: #dc3545 !important; }
+.status-toggle .side-aprobar:hover { color: #28a745 !important; }
+
+/* Posicionamiento del knob al hacer hover en extremos */
+.status-toggle:has(.side-rechazar:hover) .toggle-knob {
+    left: 3px;
+    background-color: #dc3545;
+}
+
+.status-toggle:has(.side-aprobar:hover) .toggle-knob {
+    left: 59px;
+    background-color: #28a745;
+}
+
+.status-toggle i {
+    pointer-events: none;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .filter-panel {
