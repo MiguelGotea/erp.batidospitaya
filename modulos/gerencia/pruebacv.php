@@ -70,12 +70,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $extraParts[] = ['inline_data' => ['mime_type' => $parsedCV['mime_type'], 'data' => $parsedCV['data']]];
                 }
 
-                $aiService = new AIService($conn, 'google');
-                $systemPrompt = "Eres un reclutador experto. Analiza el CV y compáralo con el perfil.";
+                $systemPrompt = "Eres un reclutador experto con años de experiencia en selección de personal. Analiza el CV del candidato y compáralo con el perfil del puesto requerido. Devuelve ÚNICAMENTE un objeto JSON válido, sin markdown ni explicaciones adicionales.";
                 $prompt = construirPromptAnalisis($perfil_puesto) . $promptExtra;
                 
-                $texto_respuesta = $aiService->procesarPrompt($systemPrompt, $prompt, 0.2, $extraParts);
-                if (empty($texto_respuesta)) throw new Exception("Sin respuesta de IA.");
+                // Cascada de proveedores
+                $proveedores = ['google', 'groq', 'deepseek'];
+                $texto_respuesta = null;
+                $erroresProveedores = [];
+
+                foreach ($proveedores as $prov) {
+                    try {
+                        $aiService = new AIService($conn, $prov);
+                        $texto_respuesta = $aiService->procesarPrompt($systemPrompt, $prompt, 0.2, $extraParts);
+                        if (!empty($texto_respuesta)) break;
+                    } catch (Exception $eAI) {
+                        $erroresProveedores[] = strtoupper($prov) . ": " . $eAI->getMessage();
+                    }
+                }
+
+                if (empty($texto_respuesta)) throw new Exception("Sin respuesta de IA. Detalles: " . implode(" | ", $erroresProveedores));
 
                 $resultado = ['success' => true, 'parsed' => parsearRespuesta($texto_respuesta)];
             } catch (Exception $e) { $error = $e->getMessage(); }
@@ -98,19 +111,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 function construirPromptAnalisis($perfil) {
-    return "Analiza el CV contra este perfil:\n\"\"\"$perfil\"\"\"\nGenera:\n1. PUNTAJE: (0-100)\n2. FORTALEZAS: (lista puntos)\n3. BRECHAS: (lista puntos)\n4. RECOMENDACIÓN: (Contratar/Entrevistar/Descartar)\n5. EXPLICACIÓN: (breve)";
+    return "Analiza el CV del candidato contra el siguiente perfil de puesto:\n\"\"\"$perfil\"\"\"\n\nDevuelve ÚNICAMENTE un objeto JSON con esta estructura exacta (sin markdown, sin texto extra):\n{\n  \"puntaje\": (número entero del 0 al 100 que indica la compatibilidad del candidato con el perfil),\n  \"fortalezas\": [\"punto 1\", \"punto 2\", ...],\n  \"brechas\": [\"brecha 1\", \"brecha 2\", ...],\n  \"recomendacion\": \"Contratar\" | \"Entrevistar\" | \"Descartar\",\n  \"explicacion\": \"Análisis breve de 2-3 oraciones sobre la idoneidad del candidato\"\n}";
 }
 
 function parsearRespuesta($texto) {
     $res = ['puntaje' => 0, 'fortalezas' => [], 'brechas' => [], 'recomendacion' => 'N/A', 'explicacion' => 'N/A'];
-    if (preg_match('/PUNTAJE:\s*(\d+)/i', $texto, $m)) $res['puntaje'] = $m[1];
-    if (preg_match('/RECOMENDACIÓN:\s*([^\n]+)/i', $texto, $m)) $res['recomendacion'] = trim($m[1]);
-    if (preg_match('/EXPLICACIÓN:\s*([^\n]+(?:\n[^\n]+)*)/i', $texto, $m)) $res['explicacion'] = trim($m[1]);
     
-    foreach(['FORTALEZAS' => 'fortalezas', 'BRECHAS' => 'brechas'] as $key => $field) {
-        if (preg_match('/' . $key . ':(.*?)(?=BRECHAS:|RECOMENDACIÓN:|EXPLICACIÓN:|$)/is', $texto, $m)) {
-            foreach(explode("\n", trim($m[1])) as $l) {
-                if (trim($l)) $res[$field][] = trim(ltrim(trim($l), '•-* '));
+    // Intentar parsear como JSON primero (respuesta de Gemini con response_mime_type: json)
+    $limpio = trim($texto);
+    // Eliminar bloques de código markdown si los hubiera
+    $limpio = preg_replace('/^```(?:json)?\s*/i', '', $limpio);
+    $limpio = preg_replace('/\s*```$/i', '', $limpio);
+    
+    $json = json_decode($limpio, true);
+    
+    if ($json !== null && json_last_error() === JSON_ERROR_NONE) {
+        // Respuesta JSON correcta
+        $res['puntaje']      = isset($json['puntaje'])      ? (int)$json['puntaje']            : 0;
+        $res['recomendacion']= isset($json['recomendacion'])? trim($json['recomendacion'])      : 'N/A';
+        $res['explicacion']  = isset($json['explicacion'])  ? trim($json['explicacion'])        : 'N/A';
+        $res['fortalezas']   = isset($json['fortalezas'])   && is_array($json['fortalezas'])   ? $json['fortalezas'] : [];
+        $res['brechas']      = isset($json['brechas'])      && is_array($json['brechas'])      ? $json['brechas']    : [];
+    } else {
+        // Fallback: intentar regex sobre texto plano (para proveedores que no fuerzan JSON)
+        if (preg_match('/puntaje[":]?\s*(\d+)/i', $texto, $m)) $res['puntaje'] = (int)$m[1];
+        if (preg_match('/recomendaci[oó]n[":]?\s*["\']?([^"\',\n}]+)/iu', $texto, $m)) $res['recomendacion'] = trim($m[1]);
+        if (preg_match('/explicaci[oó]n[":]?\s*["\']?([^"\'\n}]{10,})/iu', $texto, $m)) $res['explicacion'] = trim($m[1]);
+        
+        foreach(['fortalezas' => 'fortalezas', 'brechas' => 'brechas'] as $key => $field) {
+            if (preg_match('/"?' . $key . '"?\s*:\s*\[([^\]]+)\]/is', $texto, $m)) {
+                foreach(preg_split('/["\'],\s*["\']/', trim($m[1], '[]"\' ')) as $l) {
+                    if (trim($l)) $res[$field][] = trim(trim($l, '"\' '));
+                }
+            } elseif (preg_match('/' . strtoupper($key) . ':(.+?)(?=' . strtoupper($key==='fortalezas'?'BRECHAS':'RECOMENDACI') . '|$)/is', $texto, $m)) {
+                foreach(explode("\n", trim($m[1])) as $l) {
+                    if (trim($l)) $res[$field][] = trim(ltrim(trim($l), '•-* '));
+                }
             }
         }
     }
