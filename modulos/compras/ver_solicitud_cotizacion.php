@@ -284,6 +284,30 @@ $estadoTexto = ucfirst(str_replace('_', ' ', $solicitud['estado']));
                         <?php echo date('d/m/Y H:i', strtotime($solicitud['updated_at'])); ?>
                     </div>
                 </div>
+
+                <?php if (!empty($solicitud['gerente_aprobador_nombre'])): ?>
+                <div class="info-item">
+                    <div class="info-label">Aprobación Gerencial:</div>
+                    <div class="info-value">
+                        <div style="font-weight: bold; color: #0E544C;">
+                            <i class="fas fa-check-circle me-1"></i>
+                            <?php echo htmlspecialchars($solicitud['gerente_aprobador_nombre']); ?>
+                        </div>
+                        <div style="font-size: 0.85em; color: #666;">
+                            <?php echo date('d/m/Y', strtotime($solicitud['fecha_aprobacion'])); ?>
+                        </div>
+                    </div>
+                </div>
+                <?php else: ?>
+                <div class="info-item">
+                    <div class="info-label">Aprobación Gerencial:</div>
+                    <div class="info-value">
+                        <span class="text-muted italic" style="font-size: 0.9em;">
+                            <i class="fas fa-clock me-1"></i> Pendiente
+                        </span>
+                    </div>
+                </div>
+                <?php endif; ?>
             </div>
             
             <?php if (!empty($solicitud['observaciones'])): ?>
@@ -516,31 +540,6 @@ endif; ?>
         </div>
         <?php
 endif; ?>
-        
-        <!-- Firmas -->
-        <div class="firmas-section">
-            <h2 class="section-title"><i class="fas fa-signature"></i> Aprobación Gerencial</h2>
-            <div class="firmas-grid">
-                <div class="firma-box <?php echo !empty($solicitud['gerente_aprobador_nombre']) ? 'aprobada' : 'pendiente'; ?>">
-                    <div class="firma-nombre">Gerencia</div>
-                    
-                    <?php if (!empty($solicitud['gerente_aprobador_nombre'])): ?>
-                        <div style="margin-top: 10px;">
-                            <div style="font-weight: bold;"><?php echo htmlspecialchars($solicitud['gerente_aprobador_nombre']); ?></div>
-                            <div class="firma-fecha">
-                                Aprobado: <?php echo date('d/m/Y', strtotime($solicitud['fecha_aprobacion'])); ?>
-                            </div>
-                        </div>
-                    <?php
-else: ?>
-                        <div class="firma-placeholder">
-                            Pendiente de aprobación
-                        </div>
-                    <?php
-endif; ?>
-                </div>
-            </div>
-        </div>
         
         <!-- Historial -->
         <?php if (!empty($historial)): ?>
