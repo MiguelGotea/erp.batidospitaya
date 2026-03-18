@@ -32,6 +32,7 @@ $esAdminCaja = tienePermiso('agenda_mantenimiento', 'caja_chica', $cargoOperario
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <link rel="stylesheet" href="/assets/css/global_tools.css">
+    <link rel="stylesheet" href="/core/assets/css/fab_button.css">
     <link rel="stylesheet" href="../../core/assets/css/modales_premium.css">
     <style>
         :root {

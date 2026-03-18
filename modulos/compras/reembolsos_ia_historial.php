@@ -52,6 +52,7 @@ $historial = $stmtHist->fetchAll(PDO::FETCH_ASSOC);
     
     <!-- Estilos Globales y Específicos -->
     <link rel="stylesheet" href="/assets/css/global_tools.css?v=<?php echo mt_rand(1, 10000); ?>">
+    <link rel="stylesheet" href="/core/assets/css/fab_button.css">
     <link rel="stylesheet" href="/core/assets/css/modales_premium.css">
     <link rel="stylesheet" href="css/reembolsos_ia_historial.css?v=<?php echo mt_rand(1, 10000); ?>">
 </head>
