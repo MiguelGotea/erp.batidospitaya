@@ -1,14 +1,9 @@
 <?php
-//ini_set('display_errors', 1);
-//ini_set('display_startup_errors', 1);
-//error_reporting(E_ALL);
-//require_once '../../includes/config.php';
-require_once '../../includes/funciones.php';
-require_once '../../includes/auth.php';
-require_once 'includes/funciones_compras.php';
+require_once '../../core/auth/auth.php';
 require_once '../../core/permissions/permissions.php';
-require_once '../../includes/menu_lateral.php';
-require_once '../../includes/config.php';
+require_once '../../core/layout/menu_lateral.php';
+require_once '../../core/layout/header_universal.php';
+require_once 'includes/funciones_compras.php';
 
 verificarAutenticacion();
 
@@ -205,711 +200,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
     <title>Ver Solicitud de Cotización</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <link rel="icon" href="../../assets/img/icon12.png" type="image/png">
-    <style>
-        * {
-            font-family: 'Calibri', sans-serif;
-            box-sizing: border-box;
-        }
-        
-        body {
-            background-color: #F6F6F6;
-            margin: 0;
-            padding: 0;
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid #51B8AC;
-        }
-        
-        .titulo {
-            color: #0E544C;
-            margin: 0;
-            font-size: 24px;
-        }
-        
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-        
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background-color: #51B8AC;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
-        }
-        
-        .alert {
-            padding: 12px;
-            border-radius: 4px;
-            margin-bottom: 20px;
-        }
-        
-        .alert-success {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-        
-        .alert-error {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-        
-        .solicitud-header {
-            background-color: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-        
-        .header-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-bottom: 15px;
-        }
-        
-        .info-item {
-            margin-bottom: 10px;
-        }
-        
-        .info-label {
-            font-weight: bold;
-            color: #666;
-            font-size: 14px;
-            margin-bottom: 3px;
-        }
-        
-        .info-value {
-            font-size: 16px;
-            color: #333;
-        }
-        
-        .estado-badge {
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: bold;
-            display: inline-block;
-        }
-        
-        .estado-pendiente {
-            background-color: #fff3cd;
-            color: #856404;
-            border: 1px solid #ffeaa7;
-        }
-        
-        .estado-en_proceso {
-            background-color: #d1ecf1;
-            color: #0c5460;
-            border: 1px solid #bee5eb;
-        }
-        
-        .estado-aprobada {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-        
-        .estado-rechazada {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-        
-        .estado-completada {
-            background-color: #0E544C;
-            color: white;
-            border: 1px solid #0E544C;
-        }
-        
-        .actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 20px;
-            flex-wrap: wrap;
-        }
-        
-        .btn {
-            padding: 8px 16px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-            transition: background-color 0.3s;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-        }
-        
-        .btn-primary {
-            background-color: #0E544C;
-            color: white;
-        }
-        
-        .btn-primary:hover {
-            background-color: #51B8AC;
-        }
-        
-        .btn-success {
-            background-color: #28a745;
-            color: white;
-        }
-        
-        .btn-success:hover {
-            background-color: #218838;
-        }
-        
-        .btn-warning {
-            background-color: #ffc107;
-            color: #212529;
-        }
-        
-        .btn-warning:hover {
-            background-color: #e0a800;
-        }
-        
-        .btn-danger {
-            background-color: #dc3545;
-            color: white;
-        }
-        
-        .btn-danger:hover {
-            background-color: #c82333;
-        }
-        
-        .btn-secondary {
-            background-color: #6c757d;
-            color: white;
-        }
-        
-        .btn-secondary:hover {
-            background-color: #5a6268;
-        }
-        
-        /* Productos */
-        .productos-section {
-            margin-bottom: 30px;
-        }
-        
-        .section-title {
-            color: #0E544C;
-            border-bottom: 2px solid #51B8AC;
-            padding-bottom: 10px;
-            margin-bottom: 20px;
-        }
-        
-        .productos-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        
-        .productos-table th {
-            background-color: #0E544C;
-            color: white;
-            padding: 12px;
-            text-align: left;
-            font-weight: normal;
-        }
-        
-        .productos-table td {
-            padding: 12px;
-            border-bottom: 1px solid #ddd;
-            vertical-align: top;
-        }
-        
-        .productos-table tr:hover {
-            background-color: #f9f9f9;
-        }
-        
-        .foto-container {
-            max-width: 150px;
-        }
-        
-        .foto-referencia {
-            max-width: 100%;
-            max-height: 100px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-        
-        .no-foto {
-            color: #999;
-            font-style: italic;
-            font-size: 14px;
-        }
-        
-        /* Firmas */
-        .firmas-section {
-            margin-bottom: 30px;
-        }
-        
-        .firmas-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
-        }
-        
-        .firma-box {
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            padding: 20px;
-            text-align: center;
-            background-color: #f8f9fa;
-        }
-        
-        .firma-box.aprobada {
-            border-color: #28a745;
-            background-color: #d4edda;
-        }
-        
-        .firma-box.pendiente {
-            border-color: #ffc107;
-            background-color: #fff3cd;
-        }
-        
-        .firma-nombre {
-            font-weight: bold;
-            color: #0E544C;
-            margin-bottom: 10px;
-        }
-        
-        .firma-fecha {
-            color: #666;
-            font-size: 14px;
-            margin-top: 10px;
-        }
-        
-        .firma-placeholder {
-            height: 60px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #999;
-            font-style: italic;
-            border: 1px dashed #ccc;
-            border-radius: 4px;
-            margin-top: 10px;
-        }
-        
-        /* Historial */
-        .historial-section {
-            margin-bottom: 30px;
-        }
-        
-        .historial-list {
-            max-height: 300px;
-            overflow-y: auto;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-        
-        .historial-item {
-            padding: 15px;
-            border-bottom: 1px solid #eee;
-        }
-        
-        .historial-item:last-child {
-            border-bottom: none;
-        }
-        
-        .historial-item-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 5px;
-        }
-        
-        .historial-usuario {
-            font-weight: bold;
-            color: #0E544C;
-        }
-        
-        .historial-fecha {
-            color: #666;
-            font-size: 12px;
-        }
-        
-        .historial-accion {
-            margin-bottom: 5px;
-        }
-        
-        .historial-detalles {
-            color: #666;
-            font-size: 14px;
-            font-style: italic;
-        }
-        
-        /* Modal de acción */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.5);
-        }
-        
-        .modal-content {
-            background-color: white;
-            margin: 10% auto;
-            padding: 20px;
-            border-radius: 8px;
-            width: 90%;
-            max-width: 500px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
-        
-        .modal-title {
-            margin-top: 0;
-            color: #0E544C;
-            border-bottom: 1px solid #ddd;
-            padding-bottom: 10px;
-        }
-        
-        .modal-actions {
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-            margin-top: 20px;
-        }
-        
-        textarea {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 14px;
-            resize: vertical;
-            min-height: 100px;
-        }
-        
-        @media (max-width: 768px) {
-            .header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 15px;
-            }
-            
-            .user-info {
-                align-self: flex-end;
-            }
-            
-            .header-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .productos-table {
-                display: block;
-                overflow-x: auto;
-            }
-            
-            .firmas-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .actions {
-                flex-direction: column;
-            }
-            
-            .btn {
-                width: 100%;
-                justify-content: center;
-            }
-        }
-        
-        /* Modal para foto ampliada - MEJORADO */
-        #fotoModal {
-            display: none;
-            position: fixed;
-            z-index: 9999;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.9);
-            overflow: auto;
-            animation: fadeIn 0.3s;
-        }
-        
-        #fotoModal .modal-content {
-            position: relative;
-            margin: auto;
-            padding: 0;
-            width: auto;
-            max-width: 95%;
-            max-height: 95vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            box-shadow: none;
-            background: transparent;
-        }
-        
-        #fotoModal .modal-content > div {
-            width: 100%;
-            max-width: 1400px;
-            padding: 20px;
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 12px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-        }
-        
-        #fotoAmpliada {
-            width: 100%;
-            height: auto;
-            max-height: 85vh;
-            object-fit: contain;
-            border-radius: 8px;
-            display: block;
-            transition: transform 0.3s ease;
-        }
-        
-        /* Botón de cerrar mejorado */
-        #fotoModal .btn-close-modal {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background-color: rgba(220, 53, 69, 0.9);
-            color: white;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: bold;
-            transition: all 0.3s;
-            z-index: 10000;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-        }
-        
-        #fotoModal .btn-close-modal:hover {
-            background-color: rgba(200, 35, 51, 1);
-            transform: scale(1.05);
-        }
-        
-        /* Animación de entrada */
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
-            to {
-                opacity: 1;
-            }
-        }
-        
-        /* Responsive para móviles */
-        @media (max-width: 768px) {
-            #fotoModal .modal-content > div {
-                max-width: 100%;
-                padding: 15px;
-                border-radius: 0;
-            }
-            
-            #fotoAmpliada {
-                max-height: 80vh;
-            }
-            
-            #fotoModal .btn-close-modal {
-                top: 10px;
-                right: 10px;
-                padding: 10px 16px;
-                font-size: 14px;
-            }
-        }
-        
-        /* Para pantallas muy pequeñas */
-        @media (max-width: 480px) {
-            #fotoModal .modal-content > div {
-                padding: 10px;
-            }
-            
-            #fotoAmpliada {
-                max-height: 75vh;
-            }
-            
-            #fotoModal .btn-close-modal {
-                padding: 8px 12px;
-                font-size: 13px;
-            }
-        }
-        
-        /* Estilos para notas de compras por producto */
-        .notas-compras-container {
-            min-height: 40px;
-        }
-        
-        .nota-existente {
-            background-color: #fff8e1;
-            border-left: 3px solid #ffc107;
-            padding: 10px;
-            border-radius: 4px;
-        }
-        
-        .btn-agregar-nota,
-        .btn-editar-nota {
-            background-color: #ffc107;
-            color: #212529;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 12px;
-            transition: background-color 0.3s;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-        }
-        
-        .btn-agregar-nota:hover,
-        .btn-editar-nota:hover {
-            background-color: #e0a800;
-        }
-        
-        .btn-editar-nota {
-            margin-top: 8px;
-            background-color: #17a2b8;
-            color: white;
-        }
-        
-        .btn-editar-nota:hover {
-            background-color: #138496;
-        }
-        
-        /* Estilos para observaciones generales de compras */
-        .observaciones-compras-section {
-            margin-bottom: 30px;
-        }
-        
-        .observaciones-compras-container {
-            background-color: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 8px;
-            padding: 20px;
-        }
-        
-        .observacion-existente {
-            background-color: white;
-            border-left: 4px solid #0E544C;
-            padding: 15px;
-            border-radius: 4px;
-        }
-        
-        .observacion-contenido {
-            font-size: 14px;
-            color: #333;
-            line-height: 1.6;
-            margin-bottom: 12px;
-        }
-        
-        .observacion-info {
-            display: flex;
-            gap: 20px;
-            font-size: 12px;
-            color: #666;
-            margin-bottom: 12px;
-        }
-        
-        .observacion-info span {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-        
-        /* Formulario de edición inline */
-        .form-nota-inline {
-            background-color: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 4px;
-            padding: 12px;
-        }
-        
-        .form-nota-inline textarea {
-            width: 100%;
-            min-height: 80px;
-            padding: 8px;
-            border: 1px solid #ced4da;
-            border-radius: 4px;
-            font-size: 13px;
-            resize: vertical;
-            margin-bottom: 10px;
-        }
-        
-        .form-nota-inline .btn-group {
-            display: flex;
-            gap: 8px;
-        }
-        
-        .form-nota-inline .btn {
-            flex: 1;
-            padding: 6px 12px;
-            font-size: 13px;
-        }
-    </style>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/assets/css/global_tools.css?v=<?php echo mt_rand(1,10000); ?>">
+    <link rel="stylesheet" href="css/ver_solicitud_cotizacion.css?v=<?php echo mt_rand(1,10000); ?>">
 </head>
 <body>
     <?php echo renderMenuLateral($cargoOperario); ?>
-    
-    <div class="container">
-        <div class="header">
-            <div>
-                <h1 class="titulo">SOLICITUD DE COTIZACIÓN</h1>
-                <div style="display: flex; gap: 20px; margin-top: 10px;">
-                    <div class="info-item">
-                        <div class="info-label">Código:</div>
-                        <div class="info-value"><?php echo htmlspecialchars($solicitud['codigo']); ?></div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">Versión:</div>
-                        <div class="info-value"><?php echo htmlspecialchars($solicitud['version']); ?></div>
-                    </div>
-                </div>
-            </div>
-            <div class="user-info">
-                <div style="text-align: right;">
-                    <div style="font-weight: bold;">
-                        <?php echo htmlspecialchars($esAdmin ? $usuario['nombre'] : $usuario['Nombre'].' '.$usuario['Apellido']); ?>
-                    </div>
-                    <div style="color: #666; font-size: 14px;">
-                        <?php echo obtenerCargoPrincipalUsuario($_SESSION['usuario_id']); ?>
-                    </div>
-                </div>
-                <div class="user-avatar">
-                    <?php echo strtoupper(substr($esAdmin ? $usuario['nombre'] : $usuario['Nombre'], 0, 1)); ?>
-                </div>
-            </div>
-        </div>
+
+    <div class="main-container">
+        <div class="sub-container">
+            <?php echo renderHeader($usuario, false, 'Ver Solicitud de Cotización'); ?>
+
+            <div class="container-fluid p-3">
         
         <?php if (isset($_SESSION['success'])): ?>
             <div class="alert alert-success">
@@ -1217,7 +520,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
                 </div>
             </div>
         <?php endif; ?>
-    </div>
+            </div><!-- /.container-fluid -->
+        </div><!-- /.sub-container -->
+    </div><!-- /.main-container -->
     
     <!-- Modal para acciones -->
     <div id="actionModal" class="modal">
@@ -1565,5 +870,79 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
             });
         }
     </script>
+
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Modal de Ayuda -->
+    <div class="modal fade" id="pageHelpModal" tabindex="-1"
+         aria-labelledby="pageHelpModalLabel" aria-hidden="true"
+         data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="pageHelpModalLabel">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Guía — Ver Solicitud de Cotización
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white"
+                            data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100 border-0 bg-light">
+                                <div class="card-body">
+                                    <h6 class="text-primary border-bottom pb-2 fw-bold">
+                                        <i class="fas fa-eye me-2"></i> ¿Qué muestra esta página?
+                                    </h6>
+                                    <p class="small text-muted mb-0">
+                                        Detalle completo de una solicitud de cotización: datos generales, productos solicitados con foto de referencia, aprobaciones gerenciales e historial de cambios.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100 border-0 bg-light">
+                                <div class="card-body">
+                                    <h6 class="text-success border-bottom pb-2 fw-bold">
+                                        <i class="fas fa-check-circle me-2"></i> Acciones disponibles
+                                    </h6>
+                                    <p class="small text-muted mb-0">
+                                        Gerencia puede <strong>Aprobar</strong> o <strong>Rechazar</strong> solicitudes pendientes. Compras puede agregar notas por producto y observaciones generales.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100 border-0 bg-light">
+                                <div class="card-body">
+                                    <h6 class="text-warning border-bottom pb-2 fw-bold">
+                                        <i class="fas fa-exclamation-triangle me-2"></i> Estados posibles
+                                    </h6>
+                                    <p class="small text-muted mb-0">
+                                        <strong>Pendiente</strong> → <strong>Aprobada / Rechazada</strong> → <strong>En Proceso</strong> → <strong>Completada</strong>. Una solicitud cancelada no puede reactivarse.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100 border-0 bg-light">
+                                <div class="card-body">
+                                    <h6 class="text-info border-bottom pb-2 fw-bold">
+                                        <i class="fas fa-image me-2"></i> Fotos de referencia
+                                    </h6>
+                                    <p class="small text-muted mb-0">
+                                        Haga clic sobre la imagen en miniatura para ampliarla. Dentro del visor puede hacer clic sobre la imagen para hacer zoom.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </body>
 </html>
