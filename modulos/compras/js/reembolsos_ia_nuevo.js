@@ -10,6 +10,17 @@ $(document).ready(function() {
     // Inicializaciones automáticas si existen
 });
 
+function agregarFilaManual() {
+    $('.empty-row').hide();
+    itemsActuales.push({
+        cantidad: 1,
+        detalle: '',
+        total_cordobas: 0,
+        foto_path: null // Indica que es manual
+    });
+    renderTable();
+}
+
 function cargarDatosProveedor(id) {
     if (!id) {
         $('#cuenta_bancaria').val('').addClass('opacity-50');
@@ -112,7 +123,9 @@ function renderTable() {
                 <td><input type="text" class="excel-input" value="${item.detalle}" onchange="actualizarDato(${i}, 'detalle', this.value)"></td>
                 <td><input type="number" class="excel-input fw-bold text-primary" value="${item.total_cordobas}" onchange="actualizarDato(${i}, 'total_cordobas', this.value)"></td>
                 <td class="text-center">
-                    <img src="../../${item.foto_path}" class="preview-img" onclick="window.open('../../${item.foto_path}')" title="Ver original">
+                    ${item.foto_path 
+                        ? `<img src="../../${item.foto_path}" class="preview-img" onclick="window.open('../../${item.foto_path}')" title="Ver original">` 
+                        : '<span class="badge bg-light text-secondary border"><i class="fas fa-keyboard me-1"></i> Manual</span>'}
                 </td>
                 <td class="text-center">
                     <button type="button" class="btn btn-sm btn-outline-danger border-0" onclick="eliminarFila(${i})">

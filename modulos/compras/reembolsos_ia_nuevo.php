@@ -135,6 +135,12 @@ $proveedores = $stmtProv->fetchAll(PDO::FETCH_ASSOC);
                                 </table>
                             </div>
 
+                            <div class="mb-4">
+                                <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-4" onclick="agregarFilaManual()">
+                                    <i class="fas fa-plus me-2"></i> Agregar Detalle Manualmente
+                                </button>
+                            </div>
+
                             <div class="row mt-4">
                                 <div class="col-12 text-end">
                                     <button type="button" class="btn btn-secondary px-5 rounded-pill me-2" onclick="location.href='reembolsos_ia_historial.php'">
