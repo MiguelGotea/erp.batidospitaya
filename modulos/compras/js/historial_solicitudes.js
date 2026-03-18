@@ -118,7 +118,7 @@ function generarBotonesAcciones(row) {
     
     // Botón Ver (siempre visible)
     botones += `
-        <a href="../ver_solicitud_cotizacion.php?id=${row.id}" class="btn-accion btn-ver" title="Ver Detalles">
+        <a href="ver_solicitud_cotizacion.php?id=${row.id}" class="btn-accion btn-ver" title="Ver Detalles">
             <i class="bi bi-eye"></i>
         </a>
     `;
