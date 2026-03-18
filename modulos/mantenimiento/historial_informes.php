@@ -115,6 +115,34 @@ $esAdminCaja = tienePermiso('agenda_mantenimiento', 'caja_chica', $cargoOperario
             opacity: 0.5;
             cursor: not-allowed;
         }
+
+        /* Botón Flotante (FAB) */
+        .btn-floating-pitaya {
+            position: fixed;
+            bottom: 35px;
+            right: 35px;
+            width: 65px;
+            height: 65px;
+            border-radius: 50%;
+            background-color: var(--color-principal);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            box-shadow: 0 8px 25px rgba(81, 184, 172, 0.5);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 1000;
+            text-decoration: none;
+            border: 3px solid white;
+        }
+
+        .btn-floating-pitaya:hover {
+            transform: scale(1.15) rotate(90deg);
+            background-color: var(--color-header-tabla);
+            color: white;
+            box-shadow: 0 12px 30px rgba(14, 84, 76, 0.4);
+        }
     </style>
 </head>
 
@@ -126,12 +154,14 @@ $esAdminCaja = tienePermiso('agenda_mantenimiento', 'caja_chica', $cargoOperario
             <?php echo renderHeader($usuario, false, 'Control de Informes Diarios'); ?>
 
             <div class="container-fluid p-4">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <a href="agenda_colaborador.php" class="btn btn-primary rounded-pill px-4 shadow-sm"
-                        style="background-color: var(--color-principal); border: none;">
-                        <i class="fas fa-plus me-2"></i>Nuevo Reporte de Hoy
-                    </a>
+                <div class="mb-4">
+                    <!-- El botón circular flotante se ubica en la esquina inferior derecha -->
                 </div>
+
+                <!-- Botón Flotante Nueva Solicitud -->
+                <a href="agenda_colaborador.php" class="btn-floating-pitaya" title="Nuevo Reporte de Hoy">
+                    <i class="fas fa-plus"></i>
+                </a>
 
                 <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
                     <div class="card-body p-0">
