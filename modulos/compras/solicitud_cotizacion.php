@@ -384,11 +384,13 @@ function redimensionarImagen($origen, $destino, $anchoMax, $altoMax)
                                                     </div>
                                                     
                                                     <!-- Inputs ocultos para archivos -->
+                                                    <!-- Input centralizado (con name) para enviar todos los archivos de la fila -->
                                                     <input type="file" name="foto_referencia[0][]" 
                                                            class="foto-input d-none" 
                                                            accept="image/*" multiple onchange="handleFotosSelect(this)">
                                                     
-                                                    <input type="file" name="foto_referencia[0][]" 
+                                                    <!-- Input auxiliar para cámara (sin name para evitar duplicados en el envío) -->
+                                                    <input type="file" 
                                                            class="camera-input d-none" 
                                                            accept="image/*" capture="environment" onchange="handleFotosSelect(this)">
                                                     
@@ -471,11 +473,13 @@ function redimensionarImagen($origen, $destino, $anchoMax, $altoMax)
                             </button>
                         </div>
                         
+                        <!-- Input centralizado -->
                         <input type="file" name="foto_referencia[${rowIndex}][]" 
                                class="foto-input d-none" 
                                accept="image/*" multiple onchange="handleFotosSelect(this)">
                         
-                        <input type="file" name="foto_referencia[${rowIndex}][]" 
+                        <!-- Input auxiliar para cámara -->
+                        <input type="file" 
                                class="camera-input d-none" 
                                accept="image/*" capture="environment" onchange="handleFotosSelect(this)">
                         
@@ -577,9 +581,8 @@ function redimensionarImagen($origen, $destino, $anchoMax, $altoMax)
                     }
                 });
                 
-                // Sincronizar AMBOS inputs de la fila con el acumulador central
+                // Sincronizar el input oficial (con name) con el acumulador central
                 manager.querySelector('.foto-input').files = dt.files;
-                manager.querySelector('.camera-input').files = dt.files;
             }
         }
 
@@ -602,10 +605,9 @@ function redimensionarImagen($origen, $destino, $anchoMax, $altoMax)
                 }
             });
 
-            // Actualizar el acumulador global y los inputs
+            // Actualizar el acumulador global y el input oficial
             rowDataTransfers[rowIndex] = newDt;
             fileInput.files = newDt.files;
-            cameraInput.files = newDt.files;
             
             item.remove();
         }
