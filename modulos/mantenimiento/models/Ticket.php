@@ -415,17 +415,78 @@ class Ticket
      */
     public function finalizarInformeDiario($informe_id, $data)
     {
+        // 1. Marcar el informe como finalizado
         $sql = "UPDATE mtto_informes_diarios SET 
                 km_final = ?, 
                 km_foto_final = ?, 
                 estado = 'finalizado',
                 updated_at = CURRENT_TIMESTAMP
                 WHERE id = ?";
-        return $this->db->query($sql, [
+        $this->db->query($sql, [
             $data['km_final'],
             $data['km_foto_final'],
             $informe_id
         ]);
+
+        // 2. Obtener datos del informe (fecha y operario) para propagar a los tickets
+        $informe = $this->db->fetchOne(
+            "SELECT fecha, cod_operario FROM mtto_informes_diarios WHERE id = ?",
+            [$informe_id]
+        );
+        if (!$informe) return;
+
+        $fechaInforme   = $informe['fecha'];       // formato Y-m-d
+        $codOperario    = $informe['cod_operario'];
+        $ahora          = date('Y-m-d H:i:s');     // Nicaragua (America/Managua) por conexion.php
+
+        // 3. Obtener todas las tareas del informe (a través de sus visitas)
+        $tareas = $this->db->fetchAll(
+            "SELECT it.ticket_id, it.completado_100
+             FROM mtto_informe_tareas it
+             INNER JOIN mtto_informe_visitas iv ON it.visita_id = iv.id
+             WHERE iv.informe_id = ?",
+            [$informe_id]
+        );
+
+        foreach ($tareas as $tarea) {
+            $ticketId     = $tarea['ticket_id'];
+            $completado   = (int) $tarea['completado_100'];
+
+            // Leer fecha_inicio actual para no sobreescribir si ya existe
+            $ticketActual = $this->db->fetchOne(
+                "SELECT fecha_inicio FROM mtto_tickets WHERE id = ?",
+                [$ticketId]
+            );
+            if (!$ticketActual) continue;
+
+            $fechaInicioActual = $ticketActual['fecha_inicio'];
+            // Si ya tiene fecha_inicio registrada no se modifica; si es NULL se asigna la del informe
+            $nuevaFechaInicio  = $fechaInicioActual ?: $fechaInforme;
+
+            if ($completado === 1) {
+                // Tarea 100% completada → finalizar ticket
+                $this->db->query(
+                    "UPDATE mtto_tickets SET
+                        fecha_inicio       = ?,
+                        fecha_final        = ?,
+                        status             = 'finalizado',
+                        updated_at         = ?,
+                        fecha_finalizacion = ?,
+                        finalizado_por     = ?
+                     WHERE id = ?",
+                    [$nuevaFechaInicio, $fechaInforme, $ahora, $fechaInforme, $codOperario, $ticketId]
+                );
+            } else {
+                // Avance parcial / pendiente → solo actualizar fecha_inicio (si era NULL) y updated_at
+                $this->db->query(
+                    "UPDATE mtto_tickets SET
+                        fecha_inicio = ?,
+                        updated_at   = ?
+                     WHERE id = ?",
+                    [$nuevaFechaInicio, $ahora, $ticketId]
+                );
+            }
+        }
     }
 
     /**
@@ -473,15 +534,9 @@ class Ticket
             $data['completado_100'],
             $data['trabajo_realizado']
         ]);
-        $tarea_id = $this->db->lastInsertId();
-
-        // Actualizar el ticket original:
-        // Si completado_100 es 1, status = finalizado. Si es 0, status = agendado (vuelve al flujo).
-        $status = $data['completado_100'] ? 'finalizado' : 'agendado';
-        $updateSql = "UPDATE mtto_tickets SET status = ?, fecha_finalizacion = CURRENT_TIMESTAMP WHERE id = ?";
-        $this->db->query($updateSql, [$status, $data['ticket_id']]);
-
-        return $tarea_id;
+        return $this->db->lastInsertId();
+        // NOTA: mtto_tickets NO se actualiza aquí.
+        // La actualización ocurre únicamente al finalizar el informe (finalizarInformeDiario).
     }
 
     /**

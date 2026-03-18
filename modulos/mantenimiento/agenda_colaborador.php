@@ -848,6 +848,135 @@ if ($colaborador_filtro) {
         </div>
     </div>
 
+    <!-- ===== MODAL DE AYUDA ===== -->
+    <div class="modal fade" id="pageHelpModal" tabindex="-1"
+         aria-labelledby="pageHelpModalLabel" aria-hidden="true"
+         data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="pageHelpModalLabel">
+                        <i class="fas fa-info-circle me-2"></i>Guía de Informe Diario de Mantenimiento
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+
+                    <!-- FLUJO GENERAL -->
+                    <div class="row g-3 mb-3">
+                        <div class="col-12">
+                            <div class="card border-0 bg-light">
+                                <div class="card-body">
+                                    <h6 class="text-primary border-bottom pb-2 fw-bold">
+                                        <i class="fas fa-route me-2"></i>Flujo del Informe Diario
+                                    </h6>
+                                    <ol class="small text-muted mb-0 ps-3">
+                                        <li class="mb-1"><strong>Iniciar Informe</strong> – Registrar el kilometraje inicial y foto del odómetro.</li>
+                                        <li class="mb-1"><strong>Agregar Visitas</strong> – Por cada sucursal visitada, registrar hora de llegada, salida y materiales usados.</li>
+                                        <li class="mb-1"><strong>Registrar Tareas</strong> – Dentro de cada visita, vincular tickets de la agenda e indicar el grado de avance (100% o Parcial).</li>
+                                        <li class="mb-1"><strong>Registrar Facturas</strong> – Agregar compras/gastos con foto de factura y monto.</li>
+                                        <li><strong>Finalizar Informe</strong> – Registrar el kilometraje final y foto. <span class="text-danger fw-bold">Solo en este paso</span> se actualizan los tickets en el sistema.</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- REGLA DE ACTUALIZACIÓN DE TICKETS -->
+                    <div class="row g-3 mb-3">
+                        <div class="col-12">
+                            <div class="card border-0 border-start border-4 border-warning bg-warning bg-opacity-10">
+                                <div class="card-body">
+                                    <h6 class="text-warning border-bottom pb-2 fw-bold">
+                                        <i class="fas fa-exclamation-triangle me-2"></i>Regla Importante: Actualización de Tickets
+                                    </h6>
+                                    <p class="small text-muted mb-2">
+                                        Agregar una tarea a una visita <strong>NO modifica el estado del ticket</strong> de inmediato.
+                                        La actualización de <code>mtto_tickets</code> ocurre <strong>únicamente al presionar "Finalizar Informe"</strong>.
+                                    </p>
+                                    <div class="table-responsive">
+                                        <table class="table table-sm table-bordered small mb-0">
+                                            <thead class="table-primary">
+                                                <tr>
+                                                    <th>Grado de Avance</th>
+                                                    <th>fecha_inicio</th>
+                                                    <th>fecha_final</th>
+                                                    <th>status</th>
+                                                    <th>fecha_finalizacion</th>
+                                                    <th>finalizado_por</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr class="table-success">
+                                                    <td><span class="badge bg-success">100% Hecho</span></td>
+                                                    <td>Si NULL → fecha del informe; si ya tenía → no modificar</td>
+                                                    <td>Fecha del informe</td>
+                                                    <td><code>finalizado</code></td>
+                                                    <td>Fecha del informe</td>
+                                                    <td>Operario del informe</td>
+                                                </tr>
+                                                <tr class="table-warning">
+                                                    <td><span class="badge bg-warning text-dark">Parcial / Pendiente</span></td>
+                                                    <td>Si NULL → fecha del informe; si ya tenía → no modificar</td>
+                                                    <td class="text-muted">Sin cambio</td>
+                                                    <td class="text-muted">Sin cambio</td>
+                                                    <td class="text-muted">Sin cambio</td>
+                                                    <td class="text-muted">Sin cambio</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- OTRAS REGLAS -->
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="card border-0 bg-light h-100">
+                                <div class="card-body">
+                                    <h6 class="text-danger border-bottom pb-2 fw-bold">
+                                        <i class="fas fa-lock me-2"></i>Requisitos para Finalizar
+                                    </h6>
+                                    <ul class="small text-muted mb-0 ps-3">
+                                        <li>Todas las visitas deben tener <strong>hora de salida</strong> registrada.</li>
+                                        <li>Todas las visitas deben tener <strong>materiales usados</strong> registrados (poner "Ninguno" si aplica).</li>
+                                        <li>Foto del odómetro final es obligatoria.</li>
+                                        <li>Una vez finalizado, el informe <strong>no admite ediciones</strong>.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card border-0 bg-light h-100">
+                                <div class="card-body">
+                                    <h6 class="text-info border-bottom pb-2 fw-bold">
+                                        <i class="fas fa-user-shield me-2"></i>Permisos
+                                    </h6>
+                                    <ul class="small text-muted mb-0 ps-3">
+                                        <li><strong>Vista propia:</strong> Cada colaborador ve únicamente su agenda.</li>
+                                        <li><strong>Todos los colaboradores:</strong> Supervisores con permiso <code>todos_colaboradores</code> pueden ver cualquier informe.</li>
+                                        <li><strong>Caja Chica:</strong> Solo operarios con permiso <code>caja_chica</code> pueden validar el monto recibido.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        #pageHelpModal { z-index: 1060 !important; }
+        .modal-backdrop { z-index: 1050 !important; }
+    </style>
+
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
