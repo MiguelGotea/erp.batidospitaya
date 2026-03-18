@@ -183,7 +183,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $conn->commit();
 
             $_SESSION['success'] = 'Solicitud de cotización creada exitosamente: ' . $codigoSolicitud;
-            header('Location: ver_solicitud_cotizacion.php?id=' . $solicitudId);
+            header('Location: historial_solicitudes_cotizacion.php');
             exit();
 
         }

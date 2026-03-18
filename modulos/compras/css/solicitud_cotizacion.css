@@ -44,9 +44,9 @@
 .galeria-wrapper {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
-    margin-top: 10px;
-    min-height: 40px;
+    gap: 5px;
+    margin-top: 5px;
+    min-height: 20px;
 }
 
 .foto-item {
@@ -96,7 +96,7 @@
 .foto-actions {
     display: flex;
     gap: 5px;
-    margin-bottom: 5px;
+    margin-bottom: 2px;
 }
 
 .btn-foto-action {

@@ -398,7 +398,7 @@ else: ?>
                                                 
                                                 if (file_exists($rutaFotoServidor)):
                                             ?>
-                                                <div class="foto-thumb" onclick="ampliarFoto('<?php echo htmlspecialchars($rutaFotoWeb); ?>')">
+                                                <div class="foto-thumb" onclick="ampliarFoto(<?php echo htmlspecialchars(json_encode($fotos)); ?>, <?php echo array_search($foto, $fotos); ?>)">
                                                     <img src="<?php echo htmlspecialchars($rutaFotoWeb); ?>" 
                                                          alt="Ref" 
                                                          onerror="this.parentElement.style.display='none';">
@@ -615,7 +615,17 @@ endif; ?>
     </button>
     <div class="modal-content">
         <div>
+            <button type="button" class="carousel-control prev" id="btnPrevFoto" onclick="prevFoto()">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            
             <img id="fotoAmpliada" src="" alt="Foto ampliada">
+            
+            <button type="button" class="carousel-control next" id="btnNextFoto" onclick="nextFoto()">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+            
+            <div class="foto-counter" id="fotoCounter">1 de 1</div>
         </div>
     </div>
 </div>
@@ -666,35 +676,64 @@ endif; ?>
             document.getElementById('actionModal').style.display = 'none';
         }
         
-        function ampliarFoto(ruta) {
-    const modal = document.getElementById('fotoModal');
-    const img = document.getElementById('fotoAmpliada');
-    
-    img.src = ruta;
-    modal.style.display = 'block';
-    document.body.style.overflow = 'hidden';
-    
-    // Agregar funcionalidad de zoom con scroll
-    img.style.cursor = 'zoom-in';
-    img.onclick = function() {
-        if (this.style.transform === 'scale(2)') {
-            this.style.transform = 'scale(1)';
-            this.style.cursor = 'zoom-in';
-        } else {
-            this.style.transform = 'scale(2)';
-            this.style.cursor = 'zoom-out';
+        let currentImages = [];
+        let currentIndex = 0;
+
+        function ampliarFoto(images, index) {
+            currentImages = Array.isArray(images) ? images : [images];
+            currentIndex = index;
+            
+            const modal = document.getElementById('fotoModal');
+            actualizarVisor();
+            
+            modal.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+            
+            // Cerrar con ESC y navegar con flechas
+            const keyboardHandler = function(e) {
+                if (e.key === 'Escape') {
+                    cerrarFotoModal();
+                    document.removeEventListener('keydown', keyboardHandler);
+                } else if (e.key === 'ArrowRight') {
+                    nextFoto();
+                } else if (e.key === 'ArrowLeft') {
+                    prevFoto();
+                }
+            };
+            document.addEventListener('keydown', keyboardHandler);
         }
-    };
-    
-    // Cerrar con ESC
-    const escHandler = function(e) {
-        if (e.key === 'Escape') {
-            cerrarFotoModal();
-            document.removeEventListener('keydown', escHandler);
+
+        function actualizarVisor() {
+            const img = document.getElementById('fotoAmpliada');
+            const counter = document.getElementById('fotoCounter');
+            const btnPrev = document.getElementById('btnPrevFoto');
+            const btnNext = document.getElementById('btnNextFoto');
+            
+            const ruta = '/modulos/compras/uploads/cotizaciones/' + currentImages[currentIndex];
+            img.src = ruta;
+            counter.textContent = `${currentIndex + 1} de ${currentImages.length}`;
+            
+            // Mostrar/Ocultar controles según cantidad
+            if (currentImages.length > 1) {
+                btnPrev.style.display = 'flex';
+                btnNext.style.display = 'flex';
+            } else {
+                btnPrev.style.display = 'none';
+                btnNext.style.display = 'none';
+            }
         }
-    };
-    document.addEventListener('keydown', escHandler);
-}
+
+        function nextFoto() {
+            if (currentImages.length <= 1) return;
+            currentIndex = (currentIndex + 1) % currentImages.length;
+            actualizarVisor();
+        }
+
+        function prevFoto() {
+            if (currentImages.length <= 1) return;
+            currentIndex = (currentIndex - 1 + currentImages.length) % currentImages.length;
+            actualizarVisor();
+        }
         
         function cerrarFotoModal() {
             const modal = document.getElementById('fotoModal');
