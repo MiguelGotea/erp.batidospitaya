@@ -418,11 +418,6 @@ function redimensionarImagen($origen, $destino, $anchoMax, $altoMax)
                                 </table>
                             </div>
                         </div>
-                        <div class="card-footer bg-white border-0 text-end p-3">
-                            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="addRow()">
-                                <i class="fas fa-plus me-1"></i> Añadir otra fila
-                            </button>
-                        </div>
                     </div>
 
                     <!-- Botones de Acción -->
