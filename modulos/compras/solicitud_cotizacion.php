@@ -423,10 +423,7 @@ function redimensionarImagen($origen, $destino, $anchoMax, $altoMax)
                     <!-- Botones de Acción -->
                     <div class="card border-0 bg-transparent shadow-none">
                         <div class="card-body p-0">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <button type="button" class="btn btn-light shadow-sm" onclick="window.history.back()">
-                                    <i class="fas fa-arrow-left me-2"></i> Regresar al Historial
-                                </button>
+                            <div class="text-end">
                                 <button type="submit" class="btn btn-pitaya-primary shadow">
                                     <i class="fas fa-paper-plane me-2"></i> Enviar Solicitud de Cotización
                                 </button>
@@ -445,6 +442,11 @@ function redimensionarImagen($origen, $destino, $anchoMax, $altoMax)
 
     <script>
         let rowCounter = 1;
+        // Objeto para almacenar los DataTransfer de cada fila (gestiona la acumulación de archivos)
+        const rowDataTransfers = {};
+        
+        // Inicializar el DataTransfer para la fila 0
+        rowDataTransfers[0] = new DataTransfer();
         
         function addRow() {
             const tbody = document.getElementById('productosBody');
@@ -499,6 +501,10 @@ function redimensionarImagen($origen, $destino, $anchoMax, $altoMax)
             `;
             
             tbody.appendChild(newRow);
+            
+            // Inicializar acumulador de archivos para la nueva fila
+            rowDataTransfers[rowIndex] = new DataTransfer();
+            
             rowCounter++;
             updateRemoveButtons();
         }
@@ -506,6 +512,11 @@ function redimensionarImagen($origen, $destino, $anchoMax, $altoMax)
         function removeRow(button) {
             const row = button.closest('.producto-row');
             if (row && document.querySelectorAll('.producto-row').length > 1) {
+                // Obtener el índice real de la fila desde los nombres de los inputs
+                const input = row.querySelector('.foto-input');
+                const match = input.name.match(/\[(\d+)\]/);
+                if (match) delete rowDataTransfers[match[1]];
+                
                 row.remove();
                 updateRemoveButtons();
             }
@@ -531,30 +542,72 @@ function redimensionarImagen($origen, $destino, $anchoMax, $altoMax)
         function handleFotosSelect(input) {
             const manager = input.closest('.foto-manager');
             const galeria = manager.querySelector('.galeria-wrapper');
+            const rowIndexMatch = input.name.match(/\[(\d+)\]/);
+            if (!rowIndexMatch) return;
             
-            // Limpiar galería previa de este input (o mantener si se desea acumular)
-            // Por simplicidad, esta versión muestra lo seleccionado en el último cambio
-            galeria.innerHTML = ''; 
+            const rowIndex = rowIndexMatch[1];
+            if (!rowDataTransfers[rowIndex]) rowDataTransfers[rowIndex] = new DataTransfer();
+            
+            const dt = rowDataTransfers[rowIndex];
             
             if (input.files && input.files.length > 0) {
-                Array.from(input.files).forEach((file, index) => {
+                Array.from(input.files).forEach((file) => {
                     if (!file.type.startsWith('image/')) return;
                     
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        const div = document.createElement('div');
-                        div.className = 'foto-item';
-                        div.innerHTML = `
-                            <img src="${e.target.result}" alt="Preview">
-                            <span class="btn-remove-foto" onclick="this.parentElement.remove()" title="Quitar">
-                                <i class="fas fa-times"></i>
-                            </span>
-                        `;
-                        galeria.appendChild(div);
-                    };
-                    reader.readAsDataURL(file);
+                    // Solo agregar si no existe ya un archivo con el mismo nombre y tamaño (evitar duplicados simples)
+                    const seaDuplicado = Array.from(dt.files).some(f => f.name === file.name && f.size === file.size);
+                    if (!seaDuplicado) {
+                        dt.items.add(file);
+                        
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            const div = document.createElement('div');
+                            div.className = 'foto-item';
+                            div.dataset.fileName = file.name;
+                            div.dataset.fileSize = file.size;
+                            div.innerHTML = `
+                                <img src="${e.target.result}" alt="Preview">
+                                <span class="btn-remove-foto" onclick="removeFotoThumb(this, ${rowIndex})" title="Quitar">
+                                    <i class="fas fa-times"></i>
+                                </span>
+                            `;
+                            galeria.appendChild(div);
+                        };
+                        reader.readAsDataURL(file);
+                    }
                 });
+                
+                // Sincronizar AMBOS inputs de la fila con el acumulador central
+                manager.querySelector('.foto-input').files = dt.files;
+                manager.querySelector('.camera-input').files = dt.files;
             }
+        }
+
+        function removeFotoThumb(btn, rowIndex) {
+            const item = btn.closest('.foto-item');
+            const fileName = item.dataset.fileName;
+            const fileSize = parseInt(item.dataset.fileSize);
+            const manager = item.closest('.foto-manager');
+            const fileInput = manager.querySelector('.foto-input');
+            const cameraInput = manager.querySelector('.camera-input');
+            
+            const dt = rowDataTransfers[rowIndex];
+            if (!dt) return;
+
+            // Crear un nuevo DataTransfer para filtrar el archivo eliminado
+            const newDt = new DataTransfer();
+            Array.from(dt.files).forEach(file => {
+                if (file.name !== fileName || file.size !== fileSize) {
+                    newDt.items.add(file);
+                }
+            });
+
+            // Actualizar el acumulador global y los inputs
+            rowDataTransfers[rowIndex] = newDt;
+            fileInput.files = newDt.files;
+            cameraInput.files = newDt.files;
+            
+            item.remove();
         }
 
         // Inicialización y Validación
