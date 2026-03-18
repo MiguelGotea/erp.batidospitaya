@@ -50,6 +50,26 @@ body {
     text-align: left;
 }
 
+.table thead {
+    background-color: var(--color-header-tabla) !important;
+    color: white !important;
+}
+
+.table thead th {
+    background-color: var(--color-header-tabla) !important;
+    color: white !important;
+    font-weight: 600;
+    padding: 14px 12px;
+    border: none;
+    border-right: 1px solid rgba(255, 255, 255, 0.2);
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+.table thead th:last-child {
+    border-right: none;
+}
+
 .excel-table th {
     background-color: var(--color-header-tabla);
     color: white;
