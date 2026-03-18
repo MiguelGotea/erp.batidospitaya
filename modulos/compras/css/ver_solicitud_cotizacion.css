@@ -11,6 +11,7 @@
     margin-bottom: 20px;
 }
 
+
 .header-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -43,12 +44,41 @@
     display: inline-block;
 }
 
-.estado-pendiente  { background-color: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
-.estado-en_proceso { background-color: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
-.estado-aprobada   { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-.estado-rechazada  { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-.estado-completada { background-color: #0E544C; color: white;   border: 1px solid #0E544C; }
-.estado-cancelada  { background-color: #6c757d; color: white;   border: 1px solid #6c757d; }
+.estado-pendiente {
+    background-color: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeaa7;
+}
+
+.estado-en_proceso {
+    background-color: #d1ecf1;
+    color: #0c5460;
+    border: 1px solid #bee5eb;
+}
+
+.estado-aprobada {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.estado-rechazada {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.estado-completada {
+    background-color: #0E544C;
+    color: white;
+    border: 1px solid #0E544C;
+}
+
+.estado-cancelada {
+    background-color: #6c757d;
+    color: white;
+    border: 1px solid #6c757d;
+}
 
 /* --- Botones de acción del formulario --- */
 .acciones-solicitud {
@@ -91,7 +121,9 @@
 }
 
 /* --- Foto de referencia --- */
-.foto-container   { max-width: 150px; }
+.foto-container {
+    max-width: 150px;
+}
 
 .foto-referencia {
     max-width: 100%;
@@ -122,11 +154,27 @@
     background-color: #f8f9fa;
 }
 
-.firma-box.aprobada { border-color: #28a745; background-color: #d4edda; }
-.firma-box.pendiente { border-color: #ffc107; background-color: #fff3cd; }
+.firma-box.aprobada {
+    border-color: #28a745;
+    background-color: #d4edda;
+}
 
-.firma-nombre { font-weight: bold; color: #0E544C; margin-bottom: 10px; }
-.firma-fecha  { color: #666; font-size: 14px; margin-top: 10px; }
+.firma-box.pendiente {
+    border-color: #ffc107;
+    background-color: #fff3cd;
+}
+
+.firma-nombre {
+    font-weight: bold;
+    color: #0E544C;
+    margin-bottom: 10px;
+}
+
+.firma-fecha {
+    color: #666;
+    font-size: 14px;
+    margin-top: 10px;
+}
 
 .firma-placeholder {
     height: 60px;
@@ -153,7 +201,9 @@
     border-bottom: 1px solid #eee;
 }
 
-.historial-item:last-child { border-bottom: none; }
+.historial-item:last-child {
+    border-bottom: none;
+}
 
 .historial-item-header {
     display: flex;
@@ -162,18 +212,32 @@
     margin-bottom: 5px;
 }
 
-.historial-usuario { font-weight: bold; color: #0E544C; }
-.historial-fecha   { color: #666; font-size: 12px; }
-.historial-detalles { color: #666; font-size: 14px; font-style: italic; }
+.historial-usuario {
+    font-weight: bold;
+    color: #0E544C;
+}
+
+.historial-fecha {
+    color: #666;
+    font-size: 12px;
+}
+
+.historial-detalles {
+    color: #666;
+    font-size: 14px;
+    font-style: italic;
+}
 
 /* --- Modal de acción (custom) --- */
 #actionModal {
     display: none;
     position: fixed;
     z-index: 1050;
-    left: 0; top: 0;
-    width: 100%; height: 100%;
-    background-color: rgba(0,0,0,0.5);
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
 }
 
 #actionModal .modal-content {
@@ -183,7 +247,7 @@
     border-radius: 8px;
     width: 90%;
     max-width: 500px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .modal-title-action {
@@ -205,9 +269,11 @@
     display: none;
     position: fixed;
     z-index: 9999;
-    left: 0; top: 0;
-    width: 100%; height: 100%;
-    background-color: rgba(0,0,0,0.9);
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.9);
     overflow: auto;
     animation: fadeIn 0.3s;
 }
@@ -228,13 +294,13 @@
     background: transparent;
 }
 
-#fotoModal .modal-content > div {
+#fotoModal .modal-content>div {
     width: 100%;
     max-width: 1400px;
     padding: 20px;
-    background: rgba(255,255,255,0.95);
+    background: rgba(255, 255, 255, 0.95);
     border-radius: 12px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
 
 #fotoAmpliada {
@@ -249,8 +315,9 @@
 
 #fotoModal .btn-close-modal {
     position: absolute;
-    top: 20px; right: 20px;
-    background-color: rgba(220,53,69,0.9);
+    top: 20px;
+    right: 20px;
+    background-color: rgba(220, 53, 69, 0.9);
     color: white;
     border: none;
     padding: 12px 20px;
@@ -263,21 +330,28 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 #fotoModal .btn-close-modal:hover {
-    background-color: rgba(200,35,51,1);
+    background-color: rgba(200, 35, 51, 1);
     transform: scale(1.05);
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; }
-    to   { opacity: 1; }
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
 
 /* --- Notas de compras por producto --- */
-.notas-compras-container { min-height: 40px; }
+.notas-compras-container {
+    min-height: 40px;
+}
 
 .nota-existente {
     background-color: #fff8e1;
@@ -302,7 +376,9 @@
 }
 
 .btn-agregar-nota:hover,
-.btn-editar-nota:hover { background-color: #e0a800; }
+.btn-editar-nota:hover {
+    background-color: #e0a800;
+}
 
 .btn-editar-nota {
     margin-top: 8px;
@@ -310,7 +386,9 @@
     color: white;
 }
 
-.btn-editar-nota:hover { background-color: #138496; }
+.btn-editar-nota:hover {
+    background-color: #138496;
+}
 
 /* --- Observaciones generales de compras --- */
 .observaciones-compras-container {
@@ -374,36 +452,61 @@
 
 /* --- Responsive --- */
 @media (max-width: 768px) {
-    .header-grid    { grid-template-columns: 1fr; }
-    .firmas-grid    { grid-template-columns: 1fr; }
-    .acciones-solicitud { flex-direction: column; }
+    .header-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .firmas-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .acciones-solicitud {
+        flex-direction: column;
+    }
 
     .productos-table {
         display: block;
         overflow-x: auto;
     }
 
-    #fotoModal .modal-content > div {
+    #fotoModal .modal-content>div {
         max-width: 100%;
         padding: 15px;
         border-radius: 0;
     }
 
-    #fotoAmpliada { max-height: 80vh; }
+    #fotoAmpliada {
+        max-height: 80vh;
+    }
 
     #fotoModal .btn-close-modal {
-        top: 10px; right: 10px;
+        top: 10px;
+        right: 10px;
         padding: 10px 16px;
         font-size: 14px;
     }
 }
 
 @media (max-width: 480px) {
-    #fotoModal .modal-content > div { padding: 10px; }
-    #fotoAmpliada { max-height: 75vh; }
-    #fotoModal .btn-close-modal { padding: 8px 12px; font-size: 13px; }
+    #fotoModal .modal-content>div {
+        padding: 10px;
+    }
+
+    #fotoAmpliada {
+        max-height: 75vh;
+    }
+
+    #fotoModal .btn-close-modal {
+        padding: 8px 12px;
+        font-size: 13px;
+    }
 }
 
 /* --- Z-index para modal de ayuda --- */
-#pageHelpModal     { z-index: 1060 !important; }
-.modal-backdrop    { z-index: 1050 !important; }
+#pageHelpModal {
+    z-index: 1060 !important;
+}
+
+.modal-backdrop {
+    z-index: 1050 !important;
+}
