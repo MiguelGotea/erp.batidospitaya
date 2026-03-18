@@ -35,13 +35,13 @@ try {
     ");
     $stmt->execute([$solicitudId]);
     $solicitud = $stmt->fetch(PDO::FETCH_ASSOC);
-    
+
     if (!$solicitud) {
         $_SESSION['error'] = 'La solicitud no existe';
         header('Location: historial_solicitudes_cotizacion.php');
         exit();
     }
-    
+
     // Obtener productos de la solicitud
     $stmtProductos = $conn->prepare("
         SELECT * 
@@ -51,7 +51,7 @@ try {
     ");
     $stmtProductos->execute([$solicitudId]);
     $productos = $stmtProductos->fetchAll(PDO::FETCH_ASSOC);
-    
+
     // Obtener historial
     $stmtHistorial = $conn->prepare("
         SELECT * 
@@ -61,8 +61,10 @@ try {
     ");
     $stmtHistorial->execute([$solicitudId]);
     $historial = $stmtHistorial->fetchAll(PDO::FETCH_ASSOC);
-    
-} catch (Exception $e) {
+
+
+}
+catch (Exception $e) {
     $_SESSION['error'] = 'Error al cargar la solicitud: ' . $e->getMessage();
     header('Location: historial_solicitudes_cotizacion.php');
     exit();
@@ -74,12 +76,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
     $observaciones = trim($_POST['observaciones_accion'] ?? '');
     $usuarioId = $_SESSION['usuario_id'];
     $usuarioNombre = $esAdmin ? 
-        $usuario['nombre'] : 
+        $usuario['nombre'] :
         trim($usuario['Nombre'] . ' ' . $usuario['Apellido']);
-    
+
     try {
         $conn->beginTransaction();
-        
+
         // Verificar permisos según acción
         switch ($accion) {
             case 'aprobar':
@@ -88,17 +90,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
                 }
                 $nuevoEstado = 'aprobada';
                 $accionHistorial = 'aprobada';
-                
+
                 // Determinar qué gerencia aprueba (16 o 49)
                 $cargosUsuario = obtenerCargosUsuario($usuarioId);
                 if (in_array(16, $cargosUsuario)) {
                     $campoGerencia = 'aprobado_1';
-                } elseif (in_array(49, $cargosUsuario)) {
+                }
+                elseif (in_array(49, $cargosUsuario)) {
                     $campoGerencia = 'aprobado_2';
-                } else {
+                }
+                else {
                     $campoGerencia = 'aprobado_1'; // Por defecto
                 }
-                
+
                 // Actualizar aprobación en la solicitud
                 $stmtUpdateAprobacion = $conn->prepare("
                     UPDATE solicitudes_cotizacion 
@@ -109,7 +113,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
                 ");
                 $stmtUpdateAprobacion->execute([$usuarioId, $usuarioNombre, $solicitudId]);
                 break;
-                
+
             case 'rechazar':
                 if (!puedeAprobarSolicitudes()) {
                     throw new Exception('No tiene permisos para rechazar solicitudes');
@@ -117,7 +121,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
                 $nuevoEstado = 'rechazada';
                 $accionHistorial = 'rechazada';
                 break;
-                
+
             case 'en_proceso':
                 if (!puedeAprobarSolicitudes()) {
                     throw new Exception('No tiene permisos para marcar como en proceso');
@@ -125,7 +129,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
                 $nuevoEstado = 'en_proceso';
                 $accionHistorial = 'en_proceso';
                 break;
-                
+
             case 'completar':
                 // Verificar si es compras (9) o gerencia (16, 49)
                 $puedeCompletar = puedeCompletarSolicitudes() || puedeAprobarSolicitudes();
@@ -135,7 +139,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
                 $nuevoEstado = 'completada';
                 $accionHistorial = 'completada';
                 break;
-                
+
             case 'cancelar':
                 // Solo el solicitante puede cancelar
                 if ($solicitud['solicitante_id'] != $usuarioId && !$esAdmin) {
@@ -144,11 +148,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
                 $nuevoEstado = 'cancelada';
                 $accionHistorial = 'cancelada';
                 break;
-                
+
             default:
                 throw new Exception('Acción no válida');
         }
-        
+
         // Actualizar estado
         $stmtUpdate = $conn->prepare("
             UPDATE solicitudes_cotizacion 
@@ -156,20 +160,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
             WHERE id = ?
         ");
         $stmtUpdate->execute([$nuevoEstado, $solicitudId]);
-        
+
         // Registrar en el historial
         $stmtHistorial = $conn->prepare("
             INSERT INTO solicitudes_cotizacion_historial 
             (solicitud_id, usuario_id, usuario_nombre, accion, detalles) 
             VALUES (?, ?, ?, ?, ?)
         ");
-        
+
         $detallesHistorial = json_encode([
             'observaciones' => $observaciones,
             'estado_anterior' => $solicitud['estado'],
             'estado_nuevo' => $nuevoEstado
         ]);
-        
+
         $stmtHistorial->execute([
             $solicitudId,
             $usuarioId,
@@ -177,14 +181,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
             $accionHistorial,
             $detallesHistorial
         ]);
-        
+
         $conn->commit();
-        
+
         $_SESSION['success'] = 'Solicitud actualizada exitosamente';
         header('Location: ver_solicitud_cotizacion.php?id=' . $solicitudId);
         exit();
-        
-    } catch (Exception $e) {
+
+    }
+    catch (Exception $e) {
         $conn->rollBack();
         $_SESSION['error'] = 'Error al procesar la acción: ' . $e->getMessage();
         header('Location: ver_solicitud_cotizacion.php?id=' . $solicitudId);
@@ -202,8 +207,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
     <link rel="icon" href="../../assets/img/icon12.png" type="image/png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="/assets/css/global_tools.css?v=<?php echo mt_rand(1,10000); ?>">
-    <link rel="stylesheet" href="css/ver_solicitud_cotizacion.css?v=<?php echo mt_rand(1,10000); ?>">
+    <link rel="stylesheet" href="/assets/css/global_tools.css?v=<?php echo mt_rand(1, 10000); ?>">
+    <link rel="stylesheet" href="css/ver_solicitud_cotizacion.css?v=<?php echo mt_rand(1, 10000); ?>">
 </head>
 <body>
     <?php echo renderMenuLateral($cargoOperario); ?>
@@ -216,25 +221,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
         
         <?php if (isset($_SESSION['success'])): ?>
             <div class="alert alert-success">
-                <?php echo htmlspecialchars($_SESSION['success']); unset($_SESSION['success']); ?>
+                <?php echo htmlspecialchars($_SESSION['success']);
+    unset($_SESSION['success']); ?>
             </div>
-        <?php endif; ?>
+        <?php
+endif; ?>
         
         <?php if (isset($_SESSION['error'])): ?>
             <div class="alert alert-error">
-                <?php echo htmlspecialchars($_SESSION['error']); unset($_SESSION['error']); ?>
+                <?php echo htmlspecialchars($_SESSION['error']);
+    unset($_SESSION['error']); ?>
             </div>
-        <?php endif; ?>
+        <?php
+endif; ?>
         
         <div class="solicitud-header">
             <div class="header-grid">
                 <div class="info-item">
                     <div class="info-label">Estado:</div>
                     <div class="info-value">
-                        <?php 
-                        $estadoClase = 'estado-' . $solicitud['estado'];
-                        $estadoTexto = ucfirst(str_replace('_', ' ', $solicitud['estado']));
-                        ?>
+                        <?php
+$estadoClase = 'estado-' . $solicitud['estado'];
+$estadoTexto = ucfirst(str_replace('_', ' ', $solicitud['estado']));
+?>
                         <span class="estado-badge <?php echo $estadoClase; ?>">
                             <?php echo htmlspecialchars($estadoTexto); ?>
                         </span>
@@ -268,16 +277,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
                         <?php echo nl2br(htmlspecialchars($solicitud['observaciones'])); ?>
                     </div>
                 </div>
-            <?php endif; ?>
+            <?php
+endif; ?>
             
             <div class="actions">
-                <?php if ($solicitud['estado'] === 'pendiente' && 
-                         ($solicitud['solicitante_id'] == $_SESSION['usuario_id'] || $esAdmin)): ?>
+                <?php if ($solicitud['estado'] === 'pendiente' &&
+($solicitud['solicitante_id'] == $_SESSION['usuario_id'] || $esAdmin)): ?>
                     <a style="display:none;" href="solicitud_cotizacion.php?editar=<?php echo $solicitudId; ?>" 
                        class="btn btn-warning">
                         <i class="fas fa-edit"></i> Editar Solicitud
                     </a>
-                <?php endif; ?>
+                <?php
+endif; ?>
                 
                 <button style="display:none;" type="button" class="btn btn-secondary" onclick="imprimirSolicitud()">
                     <i class="fas fa-print"></i> Imprimir
@@ -289,26 +300,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
                         <button type="button" class="btn btn-success" onclick="mostrarModal('aprobar')">
                             <i class="fas fa-check"></i> Aprobar
                         </button>
-                    <?php endif; ?>
+                    <?php
+    endif; ?>
                     
                     <?php if ($solicitud['estado'] === 'pendiente' || $solicitud['estado'] === 'en_proceso'): ?>
                         <button type="button" class="btn btn-danger" onclick="mostrarModal('rechazar')">
                             <i class="fas fa-times"></i> Rechazar
                         </button>
-                    <?php endif; ?>
+                    <?php
+    endif; ?>
                     
                     <?php if ($solicitud['estado'] === 'aprobada'): ?>
                         <button style="display:none;" type="button" class="btn btn-warning" onclick="mostrarModal('en_proceso')">
                             <i class="fas fa-cogs"></i> En Proceso
                         </button>
-                    <?php endif; ?>
+                    <?php
+    endif; ?>
                     
                     <?php if ($solicitud['estado'] === 'en_proceso'): ?>
                         <button type="button" class="btn btn-primary" onclick="mostrarModal('completar')">
                             <i class="fas fa-flag-checkered"></i> Completar
                         </button>
-                    <?php endif; ?>
-                <?php endif; ?>
+                    <?php
+    endif; ?>
+                <?php
+endif; ?>
             </div>
         </div>
         
@@ -326,7 +342,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
                     <i class="fas fa-box-open" style="font-size: 48px; margin-bottom: 10px;"></i>
                     <p>No hay productos en esta solicitud</p>
                 </div>
-            <?php else: ?>
+            <?php
+else: ?>
                 <table class="productos-table">
                     <thead>
                         <tr>
@@ -338,12 +355,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
                         </tr>
                     </thead>
                     <tbody>
-                        <?php 
-                        $totalEstimado = 0;
-                        foreach ($productos as $producto): 
-                            $subtotal = $producto['cantidad'] * $producto['precio_unitario'];
-                            $totalEstimado += $subtotal;
-                        ?>
+                        <?php
+    $totalEstimado = 0;
+    foreach ($productos as $producto):
+        $subtotal = $producto['cantidad'] * $producto['precio_unitario'];
+        $totalEstimado += $subtotal;
+?>
                             <tr>
                                 <td>
                                     <div style="font-weight: bold;">
@@ -351,27 +368,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
                                     </div>
                                 </td>
                                 <td class="foto-container">
-                                    <?php if (!empty($producto['foto_referencia'])): 
-                                        $rutaFotoWeb = '/modulos/compras/uploads/cotizaciones/' . $producto['foto_referencia'];
-                                        $rutaFotoServidor = $_SERVER['DOCUMENT_ROOT'] . $rutaFotoWeb;
-                                        
-                                        if (file_exists($rutaFotoServidor)):
-                                    ?>
+                                    <?php if (!empty($producto['foto_referencia'])):
+            $rutaFotoWeb = '/modulos/compras/uploads/cotizaciones/' . $producto['foto_referencia'];
+            $rutaFotoServidor = $_SERVER['DOCUMENT_ROOT'] . $rutaFotoWeb;
+
+            if (file_exists($rutaFotoServidor)):
+?>
                                         <img src="<?php echo htmlspecialchars($rutaFotoWeb); ?>" 
                                              alt="Referencia" 
                                              class="foto-referencia"
                                              onclick="ampliarFoto('<?php echo htmlspecialchars($rutaFotoWeb); ?>')"
                                              style="cursor: pointer;"
                                              onerror="this.parentElement.innerHTML='<div class=\'no-foto\'><i class=\'fas fa-exclamation-triangle\'></i> Error al cargar imagen</div>';">
-                                    <?php else: ?>
+                                    <?php
+            else: ?>
                                         <div class="no-foto">
                                             <i class="fas fa-image"></i> Imagen no disponible
                                         </div>
-                                    <?php endif; else: ?>
+                                    <?php
+            endif;
+        else: ?>
                                         <div class="no-foto">
                                             <i class="fas fa-ban"></i> Sin imagen
                                         </div>
-                                    <?php endif; ?>
+                                    <?php
+        endif; ?>
                                 </td>
                                 <td><?php echo htmlspecialchars($producto['cantidad']); ?></td>
                                 <td>
@@ -380,7 +401,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
                                         <br><small style="color: #666;">
                                             Subtotal: $<?php echo number_format($subtotal, 2); ?>
                                         </small>
-                                    <?php endif; ?>
+                                    <?php
+        endif; ?>
                                 </td>
                                 <td>
                                     <div class="notas-compras-container" id="notasContainer<?php echo $producto['id']; ?>">
@@ -397,22 +419,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
                                                             onclick="editarNotaProducto(<?php echo $producto['id']; ?>)">
                                                         <i class="fas fa-edit"></i> Editar
                                                     </button>
-                                                <?php endif; ?>
+                                                <?php
+            endif; ?>
                                             </div>
-                                        <?php else: ?>
+                                        <?php
+        else: ?>
                                             <?php if (puedeCompletarSolicitudes()): ?>
                                                 <button type="button" class="btn-agregar-nota" 
                                                         onclick="agregarNotaProducto(<?php echo $producto['id']; ?>)">
                                                     <i class="fas fa-plus"></i> Agregar Nota
                                                 </button>
-                                            <?php else: ?>
+                                            <?php
+            else: ?>
                                                 <span style="color: #999; font-style: italic; font-size: 13px;">Sin notas</span>
-                                            <?php endif; ?>
-                                        <?php endif; ?>
+                                            <?php
+            endif; ?>
+                                        <?php
+        endif; ?>
                                     </div>
                                 </td>
                             </tr>
-                        <?php endforeach; ?>
+                        <?php
+    endforeach; ?>
                     </tbody>
                     <tfoot>
                         <?php if ($totalEstimado > 0): ?>
@@ -423,10 +451,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
                                 </td>
                                 <td></td>
                             </tr>
-                        <?php endif; ?>
+                        <?php
+    endif; ?>
                     </tfoot>
                 </table>
-            <?php endif; ?>
+            <?php
+endif; ?>
         </div>
         
         <!-- NUEVA SECCIÓN: Observaciones Generales de Compras -->
@@ -450,20 +480,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
                             <button type="button" class="btn btn-warning btn-sm" onclick="editarObservacionesCompras()">
                                 <i class="fas fa-edit"></i> Editar Observaciones
                             </button>
-                        <?php endif; ?>
+                        <?php
+        endif; ?>
                     </div>
-                <?php else: ?>
+                <?php
+    else: ?>
                     <?php if (puedeCompletarSolicitudes()): ?>
                         <div style="text-align: center; padding: 20px;">
                             <button type="button" class="btn btn-primary" onclick="agregarObservacionesCompras()">
                                 <i class="fas fa-plus"></i> Agregar Observaciones Generales
                             </button>
                         </div>
-                    <?php endif; ?>
-                <?php endif; ?>
+                    <?php
+        endif; ?>
+                <?php
+    endif; ?>
             </div>
         </div>
-        <?php endif; ?>
+        <?php
+endif; ?>
         
         <!-- Firmas -->
         <div class="firmas-section">
@@ -479,11 +514,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
                                 Aprobado: <?php echo date('d/m/Y', strtotime($solicitud['fecha_aprobacion'])); ?>
                             </div>
                         </div>
-                    <?php else: ?>
+                    <?php
+else: ?>
                         <div class="firma-placeholder">
                             Pendiente de aprobación
                         </div>
-                    <?php endif; ?>
+                    <?php
+endif; ?>
                 </div>
             </div>
         </div>
@@ -493,9 +530,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
             <div class="historial-section" style="display:none;">
                 <h2 class="section-title"><i class="fas fa-history"></i> Creado</h2>
                 <div class="historial-list">
-                    <?php foreach ($historial as $registro): 
-                        $detalles = json_decode($registro['detalles'], true);
-                    ?>
+                    <?php foreach ($historial as $registro):
+        $detalles = json_decode($registro['detalles'], true);
+?>
                         <div class="historial-item">
                             <div class="historial-item-header">
                                 <div class="historial-usuario">
@@ -514,15 +551,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
                                     <strong>Observaciones:</strong> 
                                     <?php echo htmlspecialchars($detalles['observaciones']); ?>
                                 </div>
-                            <?php endif; ?>
+                            <?php
+        endif; ?>
                         </div>
-                    <?php endforeach; ?>
+                    <?php
+    endforeach; ?>
                 </div>
             </div>
-        <?php endif; ?>
+        <?php
+endif; ?>
             </div><!-- /.container-fluid -->
         </div><!-- /.sub-container -->
     </div><!-- /.main-container -->
+    
     
     <!-- Modal para acciones -->
     <div id="actionModal" class="modal">
