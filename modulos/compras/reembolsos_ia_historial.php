@@ -69,8 +69,8 @@ $historial = $stmtHist->fetchAll(PDO::FETCH_ASSOC);
                     </div>
                     <div class="col-auto">
                         <?php if (tienePermiso('reembolsos_ia_plantilla', 'nuevo_registro', $cargoOperario)): ?>
-                        <a href="reembolsos_ia_nuevo.php" class="btn btn-pitaya">
-                            <i class="fas fa-plus me-2"></i> Nuevo Resumen
+                        <a href="reembolsos_ia_nuevo.php" class="btn-floating-pitaya" title="Nuevo Resumen">
+                            <i class="fas fa-plus"></i>
                         </a>
                         <?php endif; ?>
                     </div>
