@@ -66,8 +66,6 @@ $historial = $stmtHist->fetchAll(PDO::FETCH_ASSOC);
             <div class="container-fluid p-3">
                 <div class="row mb-4 align-items-center">
                     <div class="col">
-                        <h4 class="fw-bold mb-0">Solicitudes de Reembolso</h4>
-                        <p class="text-muted small">Herramienta inteligente para transcripción de facturas</p>
                     </div>
                     <div class="col-auto">
                         <?php if (tienePermiso('reembolsos_ia_plantilla', 'nuevo_registro', $cargoOperario)): ?>
