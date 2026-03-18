@@ -336,13 +336,12 @@ tr:hover {
     display: block;
     font-weight: 700;
     font-size: 11px;
-    color: white;
-    background: var(--color-principal);
-    padding: 8px 12px;
-    margin: -18px -18px 15px -18px;
-    border-radius: 10px 10px 0 0;
+    color: var(--color-header-tabla);
     text-transform: uppercase;
     letter-spacing: 1px;
+    margin-bottom: 10px;
+    border-bottom: 1px solid #f0f0f0;
+    padding-bottom: 5px;
 }
 
 .filter-search {
@@ -442,6 +441,15 @@ tr:hover {
 
 .filter-action-btn.clear:hover {
     background: #fee2e2;
+}
+
+.filter-action-btn.apply {
+    background: var(--color-header-tabla);
+    color: white;
+}
+
+.filter-action-btn.apply:hover {
+    background: #0a3d38;
 }
 
 /* Paginación - Estilo Premium */
