@@ -170,31 +170,61 @@ function procesarFoto(archivo) {
     });
 }
 
-function cargarDatosVisita(id) {
-    $('#loader h5').text('Cargando datos de la visita...');
+async function cargarDatosVisita(id) {
+    $('#loader h5').text('Cargando información de la visita...');
     $('#loader').css('display', 'flex');
 
-    $.get('../mantenimiento/ajax/get_datos_reembolso_visita.php', { visita_id: id }, function(res) {
-        $('#loader').hide();
+    try {
+        const res = await $.get('../mantenimiento/ajax/get_datos_reembolso_visita.php', { visita_id: id });
+        
         if (res.success) {
             const v = res.visita;
             $('#concepto').val(`MANTENIMIENTO: Reembolso por visita a ${v.nombre_sucursal} (${v.fecha})`);
             
-            // Pre-cargar items desde las compras de la visita
             if (res.compras && res.compras.length > 0) {
                 $('.empty-row').hide();
-                itemsActuales = res.compras.map(c => ({
-                    cantidad: 1,
-                    detalle: c.detalle,
-                    total_cordobas: c.monto,
-                    foto_path: `modulos/mantenimiento/uploads/compras/${c.foto_factura}`
-                }));
-                renderTable();
+                
+                // Procesar cada factura de forma secuencial con IA
+                for (let i = 0; i < res.compras.length; i++) {
+                    const c = res.compras[i];
+                    $('#statusIA').html(`<i class="fas fa-robot"></i> Procesando factura ${i+1} de ${res.compras.length}...`);
+                    $('#loader h5').text(`Extrayendo datos de factura ${i+1}/${res.compras.length}...`);
+                    
+                    const ruta = `modulos/mantenimiento/uploads/compras/${c.foto_factura}`;
+                    
+                    try {
+                        const iaRes = await $.ajax({
+                            url: 'ajax/reembolsos_ia_procesar_existente.php',
+                            type: 'POST',
+                            data: JSON.stringify({ ruta: ruta }),
+                            contentType: 'application/json'
+                        });
+
+                        if (iaRes.success) {
+                            agregarAFilas(iaRes.items, iaRes.foto_path);
+                            $('#statusIA').html(`<span class="text-success small"><i class="fas fa-check"></i> Factura ${i+1} procesada.</span>`);
+                        } else {
+                            console.error(`Error en factura ${i+1}:`, iaRes.message);
+                            // Si falla la IA, agregar manualmente para no perder el item
+                            agregarAFilas([{
+                                cantidad: 1,
+                                detalle: `(MANUAL) ${c.detalle}`,
+                                total_cordobas: c.monto
+                            }], `modulos/mantenimiento/uploads/compras/${c.foto_factura}`);
+                        }
+                    } catch (err) {
+                        console.error("Error al conectar con IA para factura:", err);
+                    }
+                }
             }
         } else {
             Swal.fire('Error', res.message, 'error');
         }
-    });
+    } catch (e) {
+        Swal.fire('Error', 'No se pudieron cargar los datos de la visita.', 'error');
+    } finally {
+        $('#loader').fadeOut(300);
+    }
 }
 
 function agregarAFilas(items, fotoPath) {
