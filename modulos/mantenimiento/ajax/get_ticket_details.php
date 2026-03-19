@@ -18,7 +18,6 @@ $tipos_casos = $ticket_model->getTiposCasos();
 $fotos = $ticket_model->getFotos($_GET['id']);
 
 // Verificar permisos del usuario
-session_start();
 $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
 $puedeEditar = $esAdmin || verificarAccesoCargo([14, 16, 35]);
 $esLider = verificarAccesoCargo([5]);
