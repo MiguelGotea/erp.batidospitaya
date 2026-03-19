@@ -127,6 +127,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <link rel="icon" href="../../core/assets/img/icon12.png" type="image/png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/form_modern.css">
     <style>
         * {
             box-sizing: border-box;
@@ -136,172 +137,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             font-size: clamp(11px, 2vw, 16px) !important;
         }
 
-        body {
-            background-color: #F6F6F6;
-            margin: 0;
-            padding: 0;
-        }
-
-        .container {
-            max-width: 100%;
-            margin: 0 auto;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            padding: 10px;
-        }
-
-        .title {
-            color: #0E544C;
-            font-size: 1.5rem !important;
-            margin-bottom: 20px;
-        }
-
-        .form-container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
-        .btn-primary {
-            background-color: #51B8AC;
-            border-color: #51B8AC;
-        }
-
-        .btn-primary:hover {
-            background-color: #0E544C;
-            border-color: #0E544C;
-        }
-
-        .btn-success {
-            background-color: #28a745;
-            border-color: #28a745;
-        }
-
-        .btn-outline-primary {
-            color: #51B8AC;
-            border-color: #51B8AC;
-        }
-
-        .btn-outline-primary:hover {
-            background-color: #51B8AC;
-            border-color: #51B8AC;
-            color: white;
-        }
-
-        .btn-outline-success {
-            color: #28a745;
-            border-color: #28a745;
-        }
-
-        .btn-outline-success:hover {
-            background-color: #28a745;
-            border-color: #28a745;
-            color: white;
-        }
-
-        .camera-preview {
-            width: 100%;
-            max-width: 300px;
-            height: 200px;
-            background: #f8f9fa;
-            border: 2px dashed #dee2e6;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 10px 0;
-            border-radius: 8px;
-        }
-
-        #video,
-        #canvas {
-            max-width: 100%;
-            height: auto;
-            border-radius: 6px;
-        }
-
-        .photo-options {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            margin: 10px 0;
-        }
-
-        .alert {
-            padding: 10px;
-            margin-bottom: 15px;
-            border-radius: 4px;
-        }
-
-        .alert-danger {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-
-        .alert-success {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-
-        .form-label {
-            font-weight: bold;
-            color: #0E544C;
-            margin-bottom: 5px;
-        }
-
-        .form-control,
-        .form-select {
-            border-radius: 6px;
-            border: 1px solid #ddd;
-            padding: 8px 12px;
-        }
-
-        .form-control:focus,
-        .form-select:focus {
-            border-color: #51B8AC;
-            box-shadow: 0 0 0 0.2rem rgba(81, 184, 172, 0.25);
-        }
-
-        @media (max-width: 768px) {
-            .header-container {
-                flex-direction: row;
-                align-items: center;
-                gap: 10px;
-            }
-
-            .buttons-container {
-                position: static;
-                transform: none;
-                order: 3;
-                width: 100%;
-                justify-content: center;
-                margin-top: 10px;
-            }
-
-            .logo-container {
-                order: 1;
-                margin-right: 0;
-            }
-
-            .user-info {
-                order: 2;
-                margin-left: auto;
-            }
-
-            .btn-agregar {
-                padding: 6px 10px;
-                font-size: 13px;
-            }
-
-            .form-container {
-                padding: 10px;
-            }
-
-            .photo-options {
-        <link rel="stylesheet" href="css/form_modern.css">
-    <style>
         .photo-preview-item {
             position: relative;
             display: inline-block;
@@ -694,8 +529,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         });
 
         function goToDashboard() {
-            const url = `dashboard_sucursales.php?cod_operario=<?= $cod_operario ?>&cod_sucursal=<?= $cod_sucursal ?>`;
-            window.location.href = url;
+            window.location.href = 'historial_solicitudes.php';
         }
 
         function openEquipmentForm() {
