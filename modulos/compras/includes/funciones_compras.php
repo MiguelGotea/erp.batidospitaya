@@ -157,9 +157,10 @@ function obtenerAccionesPermitidas($solicitud, $usuarioId)
         }
     }
 
-    // Compras puede marcar como completado
+    // Compras puede marcar como completado o cancelar (finalizar)
     if (puedeCompletarSolicitudes() && $solicitud['estado'] === 'aprobada') {
         $acciones[] = 'completar';
+        $acciones[] = 'cancelar';
     }
 
     // El solicitante puede cancelar si está pendiente

@@ -81,9 +81,11 @@ try {
             break;
             
         case 'cancelar':
-            // Solo el solicitante puede cancelar
-            if ($solicitud['solicitante_id'] != $usuarioId) {
-                throw new Exception('Solo el solicitante puede cancelar esta solicitud');
+            // Solo el solicitante (si está pendiente) o quien tenga permiso de completar (si está aprobada)
+            $puedeCancelar = ($solicitud['estado'] === 'pendiente' && $solicitud['solicitante_id'] == $usuarioId) || puedeCompletarSolicitudes();
+            
+            if (!$puedeCancelar) {
+                throw new Exception('No tiene permisos para cancelar esta solicitud');
             }
             $nuevoEstado = 'cancelada';
             $accionHistorial = 'cancelada';

@@ -163,9 +163,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
                 break;
 
             case 'cancelar':
-                // Solo el solicitante puede cancelar
-                if ($solicitud['solicitante_id'] != $usuarioId) {
-                    throw new Exception('Solo el solicitante puede cancelar esta solicitud');
+                // Solo el solicitante (si está pendiente) o quien tenga permiso de completar (si está aprobada)
+                $puedeCancelar = ($solicitud['estado'] === 'pendiente' && $solicitud['solicitante_id'] == $usuarioId) || puedeCompletarSolicitudes();
+                
+                if (!$puedeCancelar) {
+                    throw new Exception('No tiene permisos para cancelar esta solicitud');
                 }
                 $nuevoEstado = 'cancelada';
                 $accionHistorial = 'cancelada';
@@ -359,9 +361,12 @@ endif; ?>
                     
                     <?php if ($solicitud['estado'] === 'aprobada'): ?>
                         <?php if (puedeCompletarSolicitudes()): ?>
-                        <button type="button" class="btn btn-primary" onclick="mostrarModal('completar')">
-                            <i class="fas fa-flag-checkered"></i> Completar
-                        </button>
+                            <button type="button" class="btn btn-primary" onclick="mostrarModal('completar')">
+                                <i class="fas fa-flag-checkered"></i> Completar
+                            </button>
+                            <button type="button" class="btn btn-danger" onclick="mostrarModal('cancelar')">
+                                <i class="fas fa-ban"></i> Cancelar
+                            </button>
                         <?php endif; ?>
                     <?php endif; ?>
                 <?php
