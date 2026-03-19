@@ -347,7 +347,7 @@ endif; ?>
                     <i class="fas fa-print"></i> Imprimir
                 </button>
                 
-                <?php if (esGerente()): ?>
+                <?php if (esGerente() || puedeCompletarSolicitudes()): ?>
                     <!-- Solo gerentes y admin pueden aprobar -->
                     <?php if ($solicitud['estado'] === 'pendiente'): ?>
                         <button type="button" class="btn btn-success" onclick="mostrarModal('aprobar')">
@@ -371,7 +371,7 @@ endif; ?>
     endif; ?>
                     
                     <?php if (in_array($solicitud['estado'], ['aprobada', 'en_proceso'])): ?>
-                        <?php if (puedeCompletarSolicitudes() || puedeAprobarSolicitudes()): ?>
+                        <?php if (puedeCompletarSolicitudes()): ?>
                         <button type="button" class="btn btn-primary" onclick="mostrarModal('completar')">
                             <i class="fas fa-flag-checkered"></i> Completar
                         </button>
