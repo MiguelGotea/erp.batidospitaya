@@ -19,7 +19,7 @@ try {
             ['valor' => 'pendiente', 'texto' => 'Pendiente'],
             ['valor' => 'aprobada', 'texto' => 'Aprobada'],
             ['valor' => 'rechazada', 'texto' => 'Rechazada'],
-            ['valor' => 'completada', 'texto' => 'Completada'],
+            ['valor' => 'completada', 'texto' => 'Finalizada'],
             ['valor' => 'cancelada', 'texto' => 'Cancelada']
         ];
     }

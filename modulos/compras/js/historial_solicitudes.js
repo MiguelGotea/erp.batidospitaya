@@ -88,7 +88,8 @@ function renderizarTabla(datos) {
         
         // Estado
         const estadoClass = 'estado-' + row.estado;
-        const estadoTexto = ucfirst(row.estado.replace('_', ' '));
+        let estadoTexto = ucfirst(row.estado.replace('_', ' '));
+        if (row.estado === 'completada') estadoTexto = 'Finalizada';
         tr.append(`<td><span class="estado-badge ${estadoClass}">${estadoTexto}</span></td>`);
         
         // Gerencia
@@ -149,9 +150,9 @@ function mostrarModalAccion(solicitudId, accion) {
             btnText = 'Rechazar';
             break;
         case 'completar':
-            titulo = 'Completar Solicitud';
+            titulo = 'Finalizar Solicitud';
             btnClass = 'btn-primary';
-            btnText = 'Completar';
+            btnText = 'Finalizar';
             break;
     }
     

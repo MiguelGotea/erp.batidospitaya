@@ -263,6 +263,7 @@ endif; ?>
             <?php
             $estadoClase = 'estado-' . $solicitud['estado'];
             $estadoTexto = ucfirst(str_replace('_', ' ', $solicitud['estado']));
+            if ($solicitud['estado'] === 'completada') $estadoTexto = 'Finalizada';
             ?>
             
             <div class="header-top">
@@ -297,7 +298,7 @@ endif; ?>
                         <?php if (puedeCompletarSolicitudes()): ?>
                             <?php if ($solicitud['estado'] === 'aprobada'): ?>
                                 <button type="button" class="btn btn-primary" onclick="mostrarModal('completar')">
-                                    <i class="fas fa-flag-checkered"></i> Completar
+                                    <i class="fas fa-flag-checkered"></i> Finalizar
                                 </button>
                             <?php endif; ?>
                             <?php if ($solicitud['estado'] === 'aprobada' || ($solicitud['estado'] === 'pendiente' && $solicitud['solicitante_id'] == $usuarioId)): ?>
@@ -642,8 +643,8 @@ endif; ?>
                     claseBoton = 'btn-danger';
                     break;
                 case 'completar':
-                    titulo = 'Completar Solicitud';
-                    textoBoton = 'Completar';
+                    titulo = 'Finalizar Solicitud';
+                    textoBoton = 'Finalizar';
                     claseBoton = 'btn-primary';
                     break;
             }
