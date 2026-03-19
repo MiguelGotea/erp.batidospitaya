@@ -21,6 +21,7 @@ if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
 }
 
 $solicitudId = intval($_GET['id']);
+$usuarioId = $_SESSION['usuario_id'];
 
 // Obtener información del usuario actual
 
