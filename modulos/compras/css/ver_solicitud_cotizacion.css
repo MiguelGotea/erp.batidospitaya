@@ -16,7 +16,7 @@
 .header-top {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
+    align-items: center;
     margin-bottom: 25px;
     padding-bottom: 15px;
     border-bottom: 1px solid #f0f2f5;
@@ -33,9 +33,10 @@
 
 .header-status-actions {
     display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 12px;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
 }
 
 .header-grid {
