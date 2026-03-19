@@ -56,7 +56,11 @@ if (!$puerto) {
 
 try {
     $destino = $numeroLimpio . '@c.us';
-    $payload = json_encode(['to' => $destino, 'message' => $mensaje]);
+    $payload = json_encode([
+        'to' => $destino, 
+        'message' => $mensaje,
+        'agente' => $usuario['Nombre'] . ' ' . $usuario['Apellido']
+    ]);
 
     $ctx = stream_context_create([
         'http' => [
@@ -67,7 +71,7 @@ try {
         ]
     ]);
 
-    $url = "http://{$vps_ip}:{$puerto}/send";
+    $url = "http://{$vps_ip}:{$puerto}/ping";
     $resp = @file_get_contents($url, false, $ctx);
 
     if ($resp) {
