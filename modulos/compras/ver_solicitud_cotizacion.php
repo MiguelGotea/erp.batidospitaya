@@ -71,7 +71,7 @@ try {
     ");
     $stmtFotos->execute([$solicitudId]);
     $todasLasFotos = $stmtFotos->fetchAll(PDO::FETCH_ASSOC);
-    
+
     // Agrupar fotos por producto_id
     $fotosPorProducto = [];
     foreach ($todasLasFotos as $foto) {
@@ -127,7 +127,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
                 $accionHistorial = 'rechazada';
                 break;
 
-
             case 'completar':
                 // Verificar si es compras (9) o gerencia (16, 49)
                 $puedeCompletar = puedeCompletarSolicitudes() || puedeAprobarSolicitudes();
@@ -157,7 +156,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
             case 'cancelar':
                 // Solo el solicitante (si está pendiente) o quien tenga permiso de completar (si está aprobada)
                 $puedeCancelar = ($solicitud['estado'] === 'pendiente' && $solicitud['solicitante_id'] == $usuarioId) || puedeCompletarSolicitudes();
-                
+
                 if (!$puedeCancelar) {
                     throw new Exception('No tiene permisos para cancelar esta solicitud');
                 }
@@ -253,10 +252,11 @@ endif; ?>
         
         <div class="solicitud-header">
             <?php
-            $estadoClase = 'estado-' . $solicitud['estado'];
-            $estadoTexto = ucfirst(str_replace('_', ' ', $solicitud['estado']));
-            if ($solicitud['estado'] === 'completada') $estadoTexto = 'Finalizada';
-            ?>
+$estadoClase = 'estado-' . $solicitud['estado'];
+$estadoTexto = ucfirst(str_replace('_', ' ', $solicitud['estado']));
+if ($solicitud['estado'] === 'completada')
+    $estadoTexto = 'Finalizada';
+?>
             
             <div class="header-top">
                 <div class="header-title-container">
@@ -284,8 +284,10 @@ endif; ?>
                                 <button type="button" class="btn btn-danger" onclick="mostrarModal('rechazar')">
                                     <i class="fas fa-times"></i> Rechazar
                                 </button>
-                            <?php endif; ?>
-                        <?php endif; ?>
+                            <?php
+    endif; ?>
+                        <?php
+endif; ?>
                         
                         <?php if (puedeCompletarSolicitudes()): ?>
                             <?php if ($solicitud['estado'] === 'aprobada'): ?>
@@ -295,15 +297,18 @@ endif; ?>
                                 <button type="button" class="btn btn-danger" onclick="mostrarModal('cancelar')">
                                     <i class="fas fa-ban"></i> Cancelar
                                 </button>
-                            <?php endif; ?>
-                        <?php endif; ?>
+                            <?php
+    endif; ?>
+                        <?php
+endif; ?>
 
                         <?php // El creador puede cancelar si todavía está pendiente ?>
                         <?php if ($solicitud['estado'] === 'pendiente' && $solicitud['solicitante_id'] == $usuarioId && !puedeCompletarSolicitudes() && !esGerente()): ?>
                             <button type="button" class="btn btn-danger" onclick="mostrarModal('cancelar')">
                                 <i class="fas fa-ban"></i> Cancelar
                             </button>
-                        <?php endif; ?>
+                        <?php
+endif; ?>
                     </div>
                 </div>
             </div>
@@ -336,11 +341,13 @@ endif; ?>
                             <div style="font-size: 0.85em; color: #666; margin-left: 20px;">
                                 <?php echo date('d/m/Y', strtotime($solicitud['fecha_aprobacion'])); ?>
                             </div>
-                        <?php else: ?>
+                        <?php
+else: ?>
                             <span class="text-muted italic" style="font-size: 0.9em;">
                                 <i class="fas fa-clock me-1"></i> Pendiente de Revisión
                             </span>
-                        <?php endif; ?>
+                        <?php
+endif; ?>
                     </div>
                 </div>
             </div>
@@ -352,7 +359,8 @@ endif; ?>
                         <?php echo nl2br(htmlspecialchars($solicitud['observaciones'])); ?>
                     </div>
                 </div>
-            <?php endif; ?>
+            <?php
+endif; ?>
         </div>
         
         <!-- Productos -->
@@ -395,33 +403,37 @@ else: ?>
                                     </div>
                                 </td>
                                 <td class="foto-container">
-                                    <?php 
-                                    $fotos = $fotosPorProducto[$producto['id']] ?? [];
-                                    if (empty($fotos) && !empty($producto['foto_referencia'])) {
-                                        // Compatibilidad con el sistema anterior (foto única)
-                                        $fotos = [$producto['foto_referencia']];
-                                    }
+                                    <?php
+        $fotos = $fotosPorProducto[$producto['id']] ?? [];
+        if (empty($fotos) && !empty($producto['foto_referencia'])) {
+            // Compatibilidad con el sistema anterior (foto única)
+            $fotos = [$producto['foto_referencia']];
+        }
 
-                                    if (!empty($fotos)): ?>
+        if (!empty($fotos)): ?>
                                         <div class="galeria-fotos">
-                                            <?php foreach ($fotos as $foto): 
-                                                $rutaFotoWeb = '/modulos/compras/uploads/cotizaciones/' . $foto;
-                                                $rutaFotoServidor = $_SERVER['DOCUMENT_ROOT'] . $rutaFotoWeb;
-                                                
-                                                if (file_exists($rutaFotoServidor)):
-                                            ?>
+                                            <?php foreach ($fotos as $foto):
+                $rutaFotoWeb = '/modulos/compras/uploads/cotizaciones/' . $foto;
+                $rutaFotoServidor = $_SERVER['DOCUMENT_ROOT'] . $rutaFotoWeb;
+
+                if (file_exists($rutaFotoServidor)):
+?>
                                                 <div class="foto-thumb" onclick="ampliarFoto(<?php echo htmlspecialchars(json_encode($fotos)); ?>, <?php echo array_search($foto, $fotos); ?>)">
                                                     <img src="<?php echo htmlspecialchars($rutaFotoWeb); ?>" 
                                                          alt="Ref" 
                                                          onerror="this.parentElement.style.display='none';">
                                                 </div>
-                                            <?php endif; endforeach; ?>
+                                            <?php
+                endif;
+            endforeach; ?>
                                         </div>
-                                    <?php else: ?>
+                                    <?php
+        else: ?>
                                         <div class="no-foto">
                                             <i class="fas fa-image"></i> Sin imágenes
                                         </div>
-                                    <?php endif; ?>
+                                    <?php
+        endif; ?>
                                 </td>
                                 <td><?php echo htmlspecialchars($producto['cantidad']); ?></td>
                                 <td>
