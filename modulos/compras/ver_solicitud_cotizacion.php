@@ -135,13 +135,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
                 $accionHistorial = 'rechazada';
                 break;
 
-            case 'en_proceso':
-                if (!puedeAprobarSolicitudes()) {
-                    throw new Exception('No tiene permisos para marcar como en proceso');
-                }
-                $nuevoEstado = 'en_proceso';
-                $accionHistorial = 'en_proceso';
-                break;
 
             case 'completar':
                 // Verificar si es compras (9) o gerencia (16, 49)
@@ -356,21 +349,15 @@ endif; ?>
                     <?php
     endif; ?>
                     
-                    <?php if ($solicitud['estado'] === 'pendiente' || $solicitud['estado'] === 'en_proceso'): ?>
+                    <?php if ($solicitud['estado'] === 'pendiente'): ?>
                         <button type="button" class="btn btn-danger" onclick="mostrarModal('rechazar')">
                             <i class="fas fa-times"></i> Rechazar
                         </button>
                     <?php
     endif; ?>
                     
-                    <?php if ($solicitud['estado'] === 'aprobada'): ?>
-                        <button style="display:none;" type="button" class="btn btn-warning" onclick="mostrarModal('en_proceso')">
-                            <i class="fas fa-cogs"></i> En Proceso
-                        </button>
-                    <?php
-    endif; ?>
                     
-                    <?php if (in_array($solicitud['estado'], ['aprobada', 'en_proceso'])): ?>
+                    <?php if ($solicitud['estado'] === 'aprobada'): ?>
                         <?php if (puedeCompletarSolicitudes()): ?>
                         <button type="button" class="btn btn-primary" onclick="mostrarModal('completar')">
                             <i class="fas fa-flag-checkered"></i> Completar
@@ -664,11 +651,6 @@ endif; ?>
                     titulo = 'Rechazar Solicitud';
                     textoBoton = 'Rechazar';
                     claseBoton = 'btn-danger';
-                    break;
-                case 'en_proceso':
-                    titulo = 'Marcar como En Proceso';
-                    textoBoton = 'En Proceso';
-                    claseBoton = 'btn-warning';
                     break;
                 case 'completar':
                     titulo = 'Completar Solicitud';

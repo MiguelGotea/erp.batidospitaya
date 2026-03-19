@@ -69,14 +69,6 @@ try {
             $accionHistorial = 'rechazada';
             break;
             
-        case 'en_proceso':
-            $puedeProcesar = puedeCompletarSolicitudes() || puedeAprobarSolicitudes();
-            if (!$puedeProcesar) {
-                throw new Exception('No tiene permisos para marcar como en proceso');
-            }
-            $nuevoEstado = 'en_proceso';
-            $accionHistorial = 'en_proceso';
-            break;
             
         case 'completar':
             // Verificar si es compras (9) o gerencia

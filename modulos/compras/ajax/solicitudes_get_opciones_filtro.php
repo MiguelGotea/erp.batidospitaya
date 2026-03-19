@@ -17,7 +17,6 @@ try {
     if ($columna === 'estado') {
         $opciones = [
             ['valor' => 'pendiente', 'texto' => 'Pendiente'],
-            ['valor' => 'en_proceso', 'texto' => 'En Proceso'],
             ['valor' => 'aprobada', 'texto' => 'Aprobada'],
             ['valor' => 'rechazada', 'texto' => 'Rechazada'],
             ['valor' => 'completada', 'texto' => 'Completada'],

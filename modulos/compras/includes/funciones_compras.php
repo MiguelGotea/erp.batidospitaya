@@ -18,7 +18,6 @@ function obtenerFiltroSolicitudesPorCargo($usuarioId, $cargoOperario)
             'filtros' => [
                 ['campo' => 'sc.solicitante_id', 'valor' => $usuarioId, 'operador' => '='],
                 ['campo' => 'sc.estado', 'valor' => 'aprobada', 'operador' => '='],
-                ['campo' => 'sc.estado', 'valor' => 'en_proceso', 'operador' => '='],
                 ['campo' => 'sc.estado', 'valor' => 'completada', 'operador' => '=']
             ]
         ];
@@ -154,17 +153,13 @@ function obtenerAccionesPermitidas($solicitud, $usuarioId)
             $acciones[] = 'rechazar';
         }
         if ($solicitud['estado'] === 'aprobada') {
-            $acciones[] = 'en_proceso';
-        }
-        if ($solicitud['estado'] === 'en_proceso') {
             $acciones[] = 'completar';
         }
     }
 
-    // Compras puede marcar como completado y/o en proceso
-    if (puedeCompletarSolicitudes() && in_array($solicitud['estado'], ['aprobada', 'en_proceso'])) {
+    // Compras puede marcar como completado
+    if (puedeCompletarSolicitudes() && $solicitud['estado'] === 'aprobada') {
         $acciones[] = 'completar';
-        $acciones[] = 'en_proceso';
     }
 
     // El solicitante puede cancelar si está pendiente
