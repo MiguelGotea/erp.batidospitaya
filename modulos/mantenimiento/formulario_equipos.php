@@ -171,11 +171,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <!-- Contenido principal -->
     <div class="main-container">
         <div class="sub-container">
-            <!-- Renderizar header universal -->
-            <?php echo renderHeader($usuario, false, 'Solicitud de Equipos'); ?>
-
             <div class="container-fluid p-3">
                 <div class="form-modern-container">
+                    <!-- Renderizar header universal -->
+                    <?php echo renderHeader($usuario, false, 'Solicitud de Equipos'); ?>
                     <?php if (isset($error)): ?>
                         <div class="alert alert-danger shadow-sm mb-4">
                             <i class="fas fa-exclamation-triangle me-2"></i>

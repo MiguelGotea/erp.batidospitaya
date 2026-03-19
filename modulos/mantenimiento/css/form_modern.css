@@ -14,7 +14,6 @@
     border: none;
     box-shadow: 0 4px 20px rgba(14, 84, 76, 0.08);
     transition: transform 0.2s ease;
-    height: 100%;
 }
 
 .card-body-modern {
@@ -69,7 +68,7 @@
 
 /* Sidebar Info Box */
 .info-box-status {
-    background: linear-gradient(135deg, #0E544C, #51B8AC);
+    background: #0E544C;
     color: white;
     border-radius: 12px;
     padding: 1.5rem;
