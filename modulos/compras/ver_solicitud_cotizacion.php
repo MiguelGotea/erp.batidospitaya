@@ -653,6 +653,11 @@ endif; ?>
                     textoBoton = 'Finalizar';
                     claseBoton = 'btn-primary';
                     break;
+                case 'cancelar':
+                    titulo = 'Cancelar Solicitud';
+                    textoBoton = 'Confirmar Cancelación';
+                    claseBoton = 'btn-danger';
+                    break;
             }
             
             accionInput.value = accion;
@@ -997,7 +1002,7 @@ endif; ?>
                                         <i class="fas fa-check-circle me-2"></i> Acciones disponibles
                                     </h6>
                                     <p class="small text-muted mb-0">
-                                        Gerencia puede <strong>Aprobar</strong> o <strong>Rechazar</strong> solicitudes pendientes. Compras puede agregar notas por producto y observaciones generales.
+                                        Gerencia puede <strong>Aprobar</strong> o <strong>Rechazar</strong> solicitudes pendientes. Una vez aprobadas, Compras o Gerencia pueden <strong>Finalizar</strong> o <strong>Cancelar</strong> la solicitud. El solicitante puede <strong>Cancelar</strong> su propia solicitud mientras esté pendiente.
                                     </p>
                                 </div>
                             </div>
@@ -1009,7 +1014,7 @@ endif; ?>
                                         <i class="fas fa-exclamation-triangle me-2"></i> Estados posibles
                                     </h6>
                                     <p class="small text-muted mb-0">
-                                        <strong>Pendiente</strong> → <strong>Aprobada / Rechazada</strong> → <strong>En Proceso</strong> → <strong>Completada</strong>. Una solicitud cancelada no puede reactivarse.
+                                        <strong>Pendiente</strong> → <strong>Aprobada / Rechazada</strong> → <strong>Finalizada / Cancelada</strong>. Las solicitudes finalizadas representan compras concluidas. Una solicitud cancelada no puede reactivarse.
                                     </p>
                                 </div>
                             </div>

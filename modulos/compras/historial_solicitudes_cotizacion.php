@@ -166,5 +166,61 @@ endif; ?>
         const usuarioId = <?php echo $_SESSION['usuario_id']; ?>;
     </script>
     <script src="js/historial_solicitudes.js?v=<?php echo time(); ?>"></script>
+
+    <!-- Modal de Ayuda -->
+    <div class="modal fade" id="pageHelpModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Guía — Historial de Solicitudes
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100 border-0 bg-light">
+                                <div class="card-body">
+                                    <h6 class="text-primary fw-bold border-bottom pb-2">
+                                        <i class="fas fa-filter me-2"></i> ¿Qué solicitudes puedo ver?
+                                    </h6>
+                                    <p class="small text-muted mb-0">
+                                        - <strong>Gerencia:</strong> Tiene acceso a todas las solicitudes del sistema.<br>
+                                        - <strong>Compras y Otros Cargos:</strong> Pueden ver sus propias solicitudes y todas aquellas que ya han sido <strong>Aprobadas</strong> o <strong>Finalizadas</strong>.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100 border-0 bg-light">
+                                <div class="card-body">
+                                    <h6 class="text-success fw-bold border-bottom pb-2">
+                                        <i class="fas fa-check-double me-2"></i> ¿Dónde están las acciones?
+                                    </h6>
+                                    <p class="small text-muted mb-0">
+                                        Para garantizar una revisión profesional, las acciones de <strong>Aprobar</strong> o <strong>Rechazar</strong> se realizan exclusivamente dentro del <strong>Detalle de la Solicitud</strong>. Esto asegura que se revisen todos los productos y fotos antes de tomar una decisión.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="card border-0 bg-light">
+                                <div class="card-body">
+                                    <h6 class="text-warning fw-bold border-bottom pb-2">
+                                        <i class="fas fa-stream me-2"></i> Flujo de Estados
+                                    </h6>
+                                    <p class="small text-muted mb-0">
+                                        Las solicitudes inician como <strong>Pendientes</strong> para revisión de Gerencia. Si se aprueban, pasan a <strong>Aprobada</strong> para que Compras gestione el pedido. Finalmente, se marcan como <strong>Finalizada</strong> cuando la compra concluye o <strong>Cancelada</strong> si se desiste de ella.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
