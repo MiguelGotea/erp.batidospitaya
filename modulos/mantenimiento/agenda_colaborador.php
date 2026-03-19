@@ -24,7 +24,7 @@ $esHoy = ($fechaHoy === date('Y-m-d'));
 $puedeVerTodosColaboradores = tienePermiso('agenda_mantenimiento', 'todos_colaboradores', $cargoOperario);
 $puedeGenerarReembolso = tienePermiso('agenda_mantenimiento', 'generar_reembolso', $cargoOperario);
 
-if ($puedeVerTodosColaboradores) {
+if ($puedeVerTodosColaboradores || $puedeGenerarReembolso) {
     $colaboradoresDisponibles = $ticketModel->getColaboradoresAsignados();
     $colaborador_filtro = isset($_GET['colaborador']) ? intval($_GET['colaborador']) : $usuario['CodOperario'];
 } else {

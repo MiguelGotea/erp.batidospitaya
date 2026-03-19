@@ -87,6 +87,12 @@ function renderizarTabla(datos) {
                     <i class="fas fa-external-link-alt"></i>
                 </a>
             `;
+        } else if (i.estado === 'finalizado' && puedeGenerarReembolso) {
+            accionesHtml += `
+                <a href="agenda_colaborador.php?fecha=${i.fecha}&colaborador=${i.cod_operario}" class="btn-action bg-success bg-opacity-10 text-success" title="Visualizar para Reembolso">
+                    <i class="fas fa-search-dollar"></i>
+                </a>
+            `;
         }
         accionesHtml += `</div>`;
 

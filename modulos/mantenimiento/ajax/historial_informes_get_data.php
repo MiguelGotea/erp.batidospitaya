@@ -14,6 +14,7 @@ if (!$usuario) {
 
 $cargoOperario = $usuario['CodNivelesCargos'];
 $puedeVerTodos = tienePermiso('agenda_mantenimiento', 'todos_colaboradores', $cargoOperario);
+$puedeGenerarReembolso = tienePermiso('agenda_mantenimiento', 'generar_reembolso', $cargoOperario);
 
 $pagina = isset($_POST['pagina']) ? intval($_POST['pagina']) : 1;
 $registros_por_pagina = isset($_POST['registros_por_pagina']) ? intval($_POST['registros_por_pagina']) : 25;
@@ -29,7 +30,7 @@ try {
     $params = [];
 
     // Filtro de visibilidad obligatorio si no es admin
-    if (!$puedeVerTodos) {
+    if (!$puedeVerTodos && !$puedeGenerarReembolso) {
         $where_conditions[] = "i.cod_operario = :user_id";
         $params[':user_id'] = $usuario['CodOperario'];
     }
@@ -118,7 +119,8 @@ try {
         'success' => true,
         'datos' => $datos,
         'total_registros' => $total,
-        'puedeVerTodos' => $puedeVerTodos
+        'puedeVerTodos' => $puedeVerTodos,
+        'puedeGenerarReembolso' => $puedeGenerarReembolso
     ]);
 
 } catch (Exception $e) {

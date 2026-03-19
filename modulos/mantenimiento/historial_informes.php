@@ -18,6 +18,7 @@ if (!tienePermiso('agenda_mantenimiento', 'vista', $cargoOperario)) {
 
 $puedeVerTodos = tienePermiso('agenda_mantenimiento', 'todos_colaboradores', $cargoOperario);
 $esAdminCaja = tienePermiso('agenda_mantenimiento', 'caja_chica', $cargoOperario);
+$puedeGenerarReembolso = tienePermiso('agenda_mantenimiento', 'generar_reembolso', $cargoOperario);
 
 ?>
 <!DOCTYPE html>
@@ -348,6 +349,7 @@ $esAdminCaja = tienePermiso('agenda_mantenimiento', 'caja_chica', $cargoOperario
         const actualUserId = <?= $usuario['CodOperario'] ?>;
         const esAdminCaja = <?= $esAdminCaja ? 'true' : 'false' ?>;
         const puedeVerTodos = <?= $puedeVerTodos ? 'true' : 'false' ?>;
+        const puedeGenerarReembolso = <?= $puedeGenerarReembolso ? 'true' : 'false' ?>;
     </script>
     <script src="js/historial_informes.js?v=<?= mt_rand(1, 10000) ?>"></script>
 </body>
