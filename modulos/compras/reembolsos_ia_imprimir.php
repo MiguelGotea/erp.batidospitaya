@@ -16,7 +16,7 @@ if (!$id) {
 
 // Obtener datos de la solicitud
 $stmt = $conn->prepare("
-    SELECT s.*, p.nombre as proveedor_nombre, cp.banco, cp.numero_cuenta, cp.titular, o.Nombre as usuario_nombre
+    SELECT s.*, p.nombre as proveedor_nombre, cp.banco, cp.numero_cuenta, cp.titular, cp.moneda, o.Nombre as usuario_nombre
     FROM reembolsos_solicitudes s
     LEFT JOIN proveedores p ON s.id_proveedor = p.id
     LEFT JOIN cuenta_proveedor cp ON s.id_cuenta_proveedor = cp.id
@@ -188,7 +188,7 @@ $detalles = $stmtDet->fetchAll(PDO::FETCH_ASSOC);
                 <td style="width: 10%;">Cuenta:</td>
                 <td style="width: 25%;" class="bg-blue"><?= htmlspecialchars($solicitud['titular'] ?? 'N/A') ?> - <?= htmlspecialchars($solicitud['numero_cuenta'] ?? '') ?></td>
                 <td style="width: 10%;">Banco:</td>
-                <td style="width: 20%;" class="bg-blue"><?= htmlspecialchars($solicitud['banco'] ?? 'N/A') ?></td>
+                <td style="width: 20%;" class="bg-blue"><?= htmlspecialchars($solicitud['banco'] ?? 'N/A') ?> (<?= htmlspecialchars($solicitud['moneda'] ?? '') ?>)</td>
             </tr>
         </table>
     </div>
