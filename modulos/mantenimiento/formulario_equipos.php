@@ -364,18 +364,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <?php echo renderMenuLateral($cargoOperario); ?>
 
     <!-- Contenido principal -->
-    <div class="main-container"> <!-- ya existe en el css de menu lateral -->
-        <div class="contenedor-principal"> <!-- ya existe en el css de menu lateral -->
-            <!-- todo el contenido existente -->
-            <div class="container">
-                <!-- Renderizar header universal -->
-                <?php echo renderHeader($usuario, false, 'Solicitud de Equipos'); ?>
+    <div class="main-container">
+        <div class="sub-container">
+            <!-- Renderizar header universal -->
+            <?php echo renderHeader($usuario, false, 'Solicitud de Equipos'); ?>
 
-                <h1 class="title" style="display:none;">
-                    <i class="fas fa-laptop me-2"></i>
-                    Solicitud de Cambio de Equipos
-                </h1>
-
+            <div class="container-fluid p-3">
                 <div class="form-container">
                     <div class="card shadow">
                         <div class="card-body">
@@ -394,8 +388,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             </div>
 
                             <form method="POST" enctype="multipart/form-data" id="equipmentForm">
-                                <div class="row">
-
+                                    <!-- Selector de Sucursal (solo para quienes ven todas) -->
+                                    <?php if (tienePermiso('historial_solicitudes_mantenimiento', 'vista_todas_sucursales', $cargoOperario)): ?>
+                                        <div class="mb-3">
+                                            <label for="sucursal" class="form-label">Sucursal *</label>
+                                            <select id="selectSucursal" class="form-select form-select-sm" 
+                                                    onchange="window.location.href='?cod_sucursal=' + this.value">
+                                                <?php foreach ($sucursalesPermitidas as $suc): ?>
+                                                    <option value="<?= $suc['codigo'] ?>" <?= $suc['codigo'] == $cod_sucursal ? 'selected' : '' ?>>
+                                                        <?= htmlspecialchars($suc['nombre']) ?>
+                                                    </option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                        </div>
+                                    <?php endif; ?>
 
                                     <div class="mb-3">
                                         <label for="equipo" class="form-label">Tipo de Equipo *</label>
@@ -410,7 +416,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         </select>
                                         <div id="equipoDescripcion" class="form-text"></div>
                                     </div>
-                                </div>
 
                                 <div class="mb-3">
                                     <label for="titulo" class="form-label">Título de la Solicitud *</label>

@@ -361,18 +361,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <?php echo renderMenuLateral($cargoOperario); ?>
 
     <!-- Contenido principal -->
-    <div class="main-container"> <!-- ya existe en el css de menu lateral -->
-        <div class="contenedor-principal"> <!-- ya existe en el css de menu lateral -->
-            <!-- todo el contenido existente -->
-            <div class="container">
-                <!-- Renderizar header universal -->
-                <?php echo renderHeader($usuario, false, 'Solicitud de Mantenimiento'); ?>
+    <div class="main-container">
+        <div class="sub-container">
+            <!-- Renderizar header universal -->
+            <?php echo renderHeader($usuario, false, 'Solicitud de Mantenimiento'); ?>
 
-                <h1 style="display:none;" class="title">
-                    <i class="fas fa-tools me-2"></i>
-                    Solicitud de Mantenimiento General
-                </h1>
-
+            <div class="container-fluid p-3">
                 <div class="form-container">
                     <div class="card shadow">
                         <div class="card-body">
@@ -401,6 +395,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         <?php endif; ?>
                                     </div>
 
+                                    <!-- Selector de Sucursal (solo para quienes ven todas) -->
+                                    <?php if (tienePermiso('historial_solicitudes_mantenimiento', 'vista_todas_sucursales', $cargoOperario)): ?>
+                                        <div class="mb-3">
+                                            <label for="sucursal" class="form-label">Sucursal *</label>
+                                            <select id="selectSucursal" class="form-select form-select-sm" 
+                                                    onchange="window.location.href='?cod_sucursal=' + this.value">
+                                                <?php foreach ($sucursalesPermitidas as $suc): ?>
+                                                    <option value="<?= $suc['codigo'] ?>" <?= $suc['codigo'] == $cod_sucursal ? 'selected' : '' ?>>
+                                                        <?= htmlspecialchars($suc['nombre']) ?>
+                                                    </option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                        </div>
+                                    <?php endif; ?>
 
                                     <div class="mb-3">
                                         <label for="area" class="form-label">Área Física *</label>
@@ -459,15 +467,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         <i class="fas fa-info-circle me-1"></i>
                                         Puedes subir hasta 5 fotos. Formatos aceptados: JPG, PNG
                                     </small>
-                                </div>
-
-                                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                                    <button type="button" class="btn btn-secondary me-md-2" onclick="goToDashboard()">
-                                        <i class="fas fa-times me-2"></i>Cancelar
-                                    </button>
-                                    <button type="submit" class="btn btn-primary">
-                                        <i class="fas fa-paper-plane me-2"></i>Enviar Solicitud
-                                    </button>
+                                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                                        <button type="button" class="btn btn-secondary me-md-2" onclick="goToDashboard()">
+                                            <i class="fas fa-times me-2"></i>Cancelar
+                                        </button>
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fas fa-paper-plane me-2"></i>Enviar Solicitud
+                                        </button>
+                                    </div>
                                 </div>
                             </form>
                         </div>
