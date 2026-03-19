@@ -1,21 +1,21 @@
 -- SQL para consolidar la creación de solicitudes en el historial
 -- Elimina la herramienta redundante id 15 (solicitud_cotizacion)
 
--- 1. Asegurar que la acción "boton_nueva" existe en historial_solicitudes_cotizacion
+-- 1. Asegurar que la acción "boton_nuevo" existe en historial_solicitudes_cotizacion
 INSERT INTO acciones_tools_erp (tool_erp_id, nombre_accion)
-SELECT t.id, 'boton_nueva'
+SELECT t.id, 'boton_nuevo'
 FROM tools_erp t
 WHERE t.nombre = 'historial_solicitudes_cotizacion'
 AND NOT EXISTS (
     SELECT 1 FROM acciones_tools_erp a 
-    WHERE a.tool_erp_id = t.id AND a.nombre_accion = 'boton_nueva'
+    WHERE a.tool_erp_id = t.id AND a.nombre_accion = 'boton_nuevo'
 );
 
--- 2. Migrar los permisos de la herramienta 15 (vista) a la acción boton_nueva
+-- 2. Migrar los permisos de la herramienta 15 (vista) a la acción boton_nuevo
 -- Se utiliza INSERT IGNORE para evitar duplicados si ya existen permisos
 INSERT IGNORE INTO permisos_tools_erp (accion_tool_erp_id, CodNivelesCargos, permiso)
 SELECT 
-    (SELECT a.id FROM acciones_tools_erp a INNER JOIN tools_erp t ON a.tool_erp_id = t.id WHERE t.nombre = 'historial_solicitudes_cotizacion' AND a.nombre_accion = 'boton_nueva' LIMIT 1),
+    (SELECT a.id FROM acciones_tools_erp a INNER JOIN tools_erp t ON a.tool_erp_id = t.id WHERE t.nombre = 'historial_solicitudes_cotizacion' AND a.nombre_accion = 'boton_nuevo' LIMIT 1),
     p.CodNivelesCargos,
     p.permiso
 FROM permisos_tools_erp p
