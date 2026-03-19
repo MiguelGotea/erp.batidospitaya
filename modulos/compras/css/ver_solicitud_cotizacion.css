@@ -313,41 +313,156 @@
     font-style: italic;
 }
 
-/* --- Modal de acción (custom) --- */
+/* --- Modal de acción (PREMIUM) --- */
 #actionModal {
     display: none;
     position: fixed;
-    z-index: 1050;
+    z-index: 2000;
     left: 0;
     top: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    animation: modalFadeIn 0.3s ease-out;
+}
+
+@keyframes modalFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes modalSlideUp {
+    from { transform: translateY(30px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
 }
 
 #actionModal .modal-content {
-    background-color: white;
-    margin: 10% auto;
-    padding: 20px;
-    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.95);
+    margin: 10vh auto;
+    padding: 30px;
+    border-radius: 20px;
     width: 90%;
-    max-width: 500px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    max-width: 480px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    animation: modalSlideUp 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+    position: relative;
 }
+
+.modal-header-premium {
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+.modal-icon-container {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    margin: 0 auto 15px;
+    transition: all 0.3s ease;
+}
+
+/* Colores dinámicos para el ícono */
+.modal-icon-aprobar { background: #e6f7ef; color: #28a745; border: 2px solid #28a745; }
+.modal-icon-rechazar { background: #fdeaea; color: #dc3545; border: 2px solid #dc3545; }
+.modal-icon-cancelar { background: #fff4e5; color: #fd7e14; border: 2px solid #fd7e14; }
+.modal-icon-completar { background: #e7f3ff; color: #007bff; border: 2px solid #007bff; }
 
 .modal-title-action {
-    margin-top: 0;
-    color: #0E544C;
-    border-bottom: 1px solid #ddd;
-    padding-bottom: 10px;
+    margin: 0;
+    font-size: 24px;
+    font-weight: 700;
+    color: #1a1a1a;
 }
 
-.modal-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-    margin-top: 20px;
+.modal-subtitle {
+    color: #666;
+    font-size: 15px;
+    margin-top: 5px;
 }
+
+.premium-form-group {
+    margin-bottom: 20px;
+}
+
+.premium-form-group label {
+    display: block;
+    font-weight: 600;
+    color: #444;
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+.premium-form-group textarea {
+    width: 100%;
+    min-height: 100px;
+    padding: 12px 15px;
+    border: 2px solid #eee;
+    border-radius: 12px;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    resize: vertical;
+    outline: none;
+}
+
+.premium-form-group textarea:focus {
+    border-color: #0E544C;
+    background: #f9fdfd;
+    box-shadow: 0 0 0 4px rgba(14, 84, 76, 0.1);
+}
+
+.modal-actions-premium {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-top: 30px;
+}
+
+.btn-premium {
+    padding: 12px 20px;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 15px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn-premium-secondary {
+    background: #f0f2f5;
+    color: #4a5568;
+}
+
+.btn-premium-secondary:hover {
+    background: #e2e8f0;
+    transform: translateY(-1px);
+}
+
+.btn-premium-confirm {
+    color: white;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.btn-premium-confirm:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+}
+
+/* Clases de confirmación según acción */
+.btn-confirm-aprobar { background: #28a745; }
+.btn-confirm-rechazar { background: #dc3545; }
+.btn-confirm-cancelar { background: #fd7e14; }
+.btn-confirm-completar { background: #007bff; }
 
 /* --- Modal de foto ampliada --- */
 #fotoModal {

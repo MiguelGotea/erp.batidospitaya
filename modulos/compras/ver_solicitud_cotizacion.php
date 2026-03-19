@@ -582,26 +582,33 @@ endif; ?>
     </div><!-- /.main-container -->
     
     
-    <!-- Modal para acciones -->
+    <!-- Modal para acciones PREMIUM -->
     <div id="actionModal" class="modal">
         <div class="modal-content">
             <form method="post" id="actionForm">
                 <input type="hidden" name="accion" id="accionInput">
                 
-                <h3 class="modal-title" id="modalTitle">Confirmar Acción</h3>
+                <div class="modal-header-premium">
+                    <div id="modalIcon" class="modal-icon-container">
+                        <i id="faIcon" class="fas"></i>
+                    </div>
+                    <h3 class="modal-title-action" id="modalTitle">Confirmar Acción</h3>
+                    <div class="modal-subtitle" id="modalSubtitle">¿Está seguro de continuar con esta operación?</div>
+                </div>
                 
-                <div class="form-group" style="margin-bottom: 15px;">
+                <div class="premium-form-group">
                     <label for="observaciones_accion">Observaciones (opcional):</label>
                     <textarea id="observaciones_accion" name="observaciones_accion" 
                               placeholder="Explique la razón de esta acción..."></textarea>
                 </div>
                 
-                <div class="modal-actions">
-                    <button type="button" class="btn btn-secondary" onclick="cerrarModal()">
-                        Cancelar
+                <div class="modal-actions-premium">
+                    <button type="button" class="btn-premium btn-premium-secondary" onclick="cerrarModal()">
+                        <i class="fas fa-times"></i> Cancelar
                     </button>
-                    <button type="submit" class="btn" id="modalActionBtn">
-                        Confirmar
+                    <button type="submit" class="btn-premium btn-premium-confirm" id="modalActionBtn">
+                        <i id="btnIcon" class="fas"></i> 
+                        <span id="btnText">Confirmar</span>
                     </button>
                 </div>
             </form>
@@ -633,43 +640,70 @@ endif; ?>
     <script>
         function mostrarModal(accion) {
             const modal = document.getElementById('actionModal');
-            const accionInput = document.getElementById('accionInput');
-            const modalTitle = document.getElementById('modalTitle');
-            const modalActionBtn = document.getElementById('modalActionBtn');
+            const input = document.getElementById('accionInput');
+            const title = document.getElementById('modalTitle');
+            const subtitle = document.getElementById('modalSubtitle');
+            const btn = document.getElementById('modalActionBtn');
+            const btnText = document.getElementById('btnText');
+            const btnIcon = document.getElementById('btnIcon');
+            const modalIcon = document.getElementById('modalIcon');
+            const faIcon = document.getElementById('faIcon');
+            
+            input.value = accion;
+            
+            // Limpiar clases previas
+            modalIcon.className = 'modal-icon-container';
+            btn.className = 'btn-premium btn-premium-confirm';
             
             let titulo = '';
+            let sub = '';
             let textoBoton = '';
-            let claseBoton = '';
+            let iconClass = '';
+            let colorClass = '';
             
             switch(accion) {
                 case 'aprobar':
                     titulo = 'Aprobar Solicitud';
-                    textoBoton = 'Aprobar';
-                    claseBoton = 'btn-success';
+                    sub = 'Se notificará al solicitante que su pedido ha sido aprobado.';
+                    textoBoton = 'Aprobar Ahora';
+                    iconClass = 'fa-check-circle';
+                    colorClass = 'aprobar';
                     break;
                 case 'rechazar':
                     titulo = 'Rechazar Solicitud';
-                    textoBoton = 'Rechazar';
-                    claseBoton = 'btn-danger';
-                    break;
-                case 'completar':
-                    titulo = 'Finalizar Solicitud';
-                    textoBoton = 'Finalizar';
-                    claseBoton = 'btn-primary';
+                    sub = 'Por favor indique el motivo del rechazo en las observaciones.';
+                    textoBoton = 'Rechazar Solicitud';
+                    iconClass = 'fa-times-circle';
+                    colorClass = 'rechazar';
                     break;
                 case 'cancelar':
                     titulo = 'Cancelar Solicitud';
-                    textoBoton = 'Confirmar Cancelación';
-                    claseBoton = 'btn-danger';
+                    sub = 'Esta acción anulará la solicitud de manera permanente.';
+                    textoBoton = 'Anular Solicitud';
+                    iconClass = 'fa-ban';
+                    colorClass = 'cancelar';
+                    break;
+                case 'completar':
+                    titulo = 'Finalizar Solicitud';
+                    sub = 'Confirmar que el proceso de compra ha concluido exitosamente.';
+                    textoBoton = 'Finalizar';
+                    iconClass = 'fa-check-double';
+                    colorClass = 'completar';
                     break;
             }
             
-            accionInput.value = accion;
-            modalTitle.textContent = titulo;
-            modalActionBtn.textContent = textoBoton;
-            modalActionBtn.className = 'btn ' + claseBoton;
+            title.textContent = titulo;
+            subtitle.textContent = sub;
+            btnText.textContent = textoBoton;
+            
+            // Aplicar estilos dinámicos
+            modalIcon.classList.add('modal-icon-' + colorClass);
+            faIcon.className = 'fas ' + iconClass;
+            btnIcon.className = 'fas ' + iconClass;
+            btn.classList.add('btn-confirm-' + colorClass);
             
             modal.style.display = 'block';
+            document.getElementById('observaciones_accion').focus();
         }
         
         function cerrarModal() {
