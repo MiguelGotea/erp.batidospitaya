@@ -4,11 +4,13 @@ require_once __DIR__ . '/../../core/auth/auth.php';
 require_once __DIR__ . '/../../core/layout/menu_lateral.php';
 require_once __DIR__ . '/../../core/layout/header_universal.php';
 
-$usuario = obtenerUsuarioActual();
-$cargoOperario = $usuario['CodNivelesCargos'];
+require_once __DIR__ . '/../../core/permissions/permissions.php';
 
-// Verificar acceso a formularios de mantenimiento (Código 14 y 19)
-if (!verificarAccesoFormulariosMantenimiento($_SESSION['usuario_id'])) {
+$usuario = obtenerUsuarioActual();
+$cargoOperario = $usuario['CodNivelesCargos'] ?? null;
+
+// Verificar acceso a formularios de mantenimiento (Uso de nuevo_registro)
+if (!$cargoOperario || !tienePermiso('historial_solicitudes_mantenimiento', 'nuevo_registro', $cargoOperario)) {
     header('Location: ../index.php');
     exit();
 }
@@ -399,19 +401,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         <?php endif; ?>
                                     </div>
 
-                                    <!-- Selector de Sucursal (solo mostrar si tiene más de una sucursal) -->
-                                    <?php if (count($sucursalesPermitidas) > 1): ?>
-                                        <div class="mb-3">
-                                            <label for="sucursal" class="form-label">Sucursal *</label>
-                                            <select id="selectSucursal" class="form-select form-select-sm">
-                                                <?php foreach ($sucursalesPermitidas as $suc): ?>
-                                                    <option value="<?= $suc['codigo'] ?>" <?= $suc['codigo'] == $cod_sucursal ? 'selected' : '' ?>>
-                                                        <?= htmlspecialchars($suc['nombre']) ?>
-                                                    </option>
-                                                <?php endforeach; ?>
-                                            </select>
-                                        </div>
-                                    <?php endif; ?>
 
                                     <div class="mb-3">
                                         <label for="area" class="form-label">Área Física *</label>

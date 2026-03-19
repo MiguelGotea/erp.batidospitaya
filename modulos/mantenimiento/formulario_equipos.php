@@ -5,15 +5,16 @@ require_once __DIR__ . '/../../core/layout/header_universal.php';
 // Incluir el menú lateral
 require_once __DIR__ . '/../../core/layout/menu_lateral.php';
 
+require_once __DIR__ . '/../../core/permissions/permissions.php';
+
 //******************************Estándar para header******************************
 verificarAutenticacion();
 
 $usuario = obtenerUsuarioActual();
-// Obtener cargo del operario para el menú
-$cargoOperario = $usuario['CodNivelesCargos'];
+$cargoOperario = $usuario['CodNivelesCargos'] ?? null;
 
-// Verificar acceso a formularios de mantenimiento (Código 14 y 19)
-if (!verificarAccesoFormulariosMantenimiento($_SESSION['usuario_id'])) {
+// Verificar acceso a formularios de mantenimiento (Uso de nuevo_registro)
+if (!$cargoOperario || !tienePermiso('historial_solicitudes_mantenimiento', 'nuevo_registro', $cargoOperario)) {
     header('Location: ../index.php');
     exit();
 }
@@ -394,35 +395,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                             <form method="POST" enctype="multipart/form-data" id="equipmentForm">
                                 <div class="row">
-                                    <div class="mb-3" style="display:none;">
-                                        <label for="sucursal" class="form-label">Sucursal *</label>
-                                        <select class="form-select" id="sucursal" name="sucursal" required
-                                            <?= count($sucursales) == 1 ? 'disabled' : '' ?>>
-                                            <?php foreach ($sucursales as $sucursalItem): ?>
-                                                <option value="<?= $sucursalItem['codigo'] ?>"
-                                                    <?= ($sucursalItem['codigo'] == $cod_sucursal) ? 'selected' : '' ?>>
-                                                    <?= htmlspecialchars($sucursalItem['nombre']) ?>
-                                                </option>
-                                            <?php endforeach; ?>
-                                        </select>
-                                        <?php if (count($sucursales) == 1): ?>
-                                            <input type="hidden" name="sucursal" value="<?= $sucursales[0]['codigo'] ?>">
-                                        <?php endif; ?>
-                                    </div>
 
-                                    <!-- Selector de Sucursal (solo mostrar si tiene más de una sucursal) -->
-                                    <?php if (count($sucursalesPermitidas) > 1): ?>
-                                        <div class="mb-3">
-                                            <label for="sucursal" class="form-label">Sucursal *</label>
-                                            <select id="selectSucursal" class="form-select form-select-sm">
-                                                <?php foreach ($sucursalesPermitidas as $suc): ?>
-                                                    <option value="<?= $suc['codigo'] ?>" <?= $suc['codigo'] == $cod_sucursal ? 'selected' : '' ?>>
-                                                        <?= htmlspecialchars($suc['nombre']) ?>
-                                                    </option>
-                                                <?php endforeach; ?>
-                                            </select>
-                                        </div>
-                                    <?php endif; ?>
 
                                     <div class="mb-3">
                                         <label for="equipo" class="form-label">Tipo de Equipo *</label>
