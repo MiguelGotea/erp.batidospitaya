@@ -39,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion']) && $_POST['
     
     if ($resultado['exito']) {
         $_SESSION['exito'] = $resultado['mensaje'];
-        header("Location: formato_salida.php?id_contrato=$idContrato");
+        header("Location: editar_colaborador.php?id=$codOperario&pestaña=contrato");
         exit();
     } else {
         $error = $resultado['mensaje'];
@@ -206,7 +206,7 @@ $tituloPagina = "Formato de Salida - " . $contrato['operario_nombre'] . " " . $c
 
                     <div class="btn-container">
                         <button type="button" class="btn-premium btn-secondary" onclick="window.location.href='editar_colaborador.php?id=<?= $codOperario ?>&pestaña=contrato'">
-                            <i class="fas fa-arrow-left"></i> Volver
+                            Cancelar
                         </button>
                         <button type="submit" class="btn-premium btn-primary">
                             <i class="fas fa-save"></i> <?= $formato ? 'Actualizar Formato' : 'Guardar Formato' ?>
