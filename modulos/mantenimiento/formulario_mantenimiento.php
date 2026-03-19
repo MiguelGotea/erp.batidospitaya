@@ -300,58 +300,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             .photo-options {
-                flex-direction: column;
-            }
-
-            .photo-options .btn {
-                width: 100%;
-            }
+        <link rel="stylesheet" href="css/form_modern.css">
+    <style>
+        .photo-preview-item {
+            position: relative;
+            display: inline-block;
+            margin: 5px;
         }
 
-        @media (max-width: 480px) {
-            .btn-agregar {
-                flex-grow: 1;
-                justify-content: center;
-                white-space: normal;
-                text-align: center;
-                padding: 8px 5px;
-            }
-
-            .user-info {
-                flex-direction: column;
-                align-items: flex-end;
-            }
+        .photo-preview-item .remove-btn {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background: #dc3545;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 12px;
+            border: 2px solid white;
         }
 
-        a.btn {
-            text-decoration: none;
+        .camera-preview {
+            width: 100%;
+            max-width: 400px;
+            margin: 10px 0;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 3px solid #51B8AC;
         }
 
-        .img-thumbnail {
-            border-radius: 8px;
-            border: 1px solid #dee2e6;
-        }
-
-        .sucursal-selector {
-            margin-right: 15px;
-        }
-
-        .sucursal-selector .form-select {
-            border-color: #51B8AC;
-            color: #0E544C;
-            font-weight: bold;
-        }
-
-        @media (max-width: 768px) {
-            .sucursal-selector {
-                order: 1;
-                width: 100%;
-                margin-bottom: 10px;
-            }
-
-            .sucursal-selector .form-select {
-                max-width: 100% !important;
-            }
+        #video {
+            width: 100%;
+            background: #000;
         }
     </style>
 </head>
@@ -367,118 +352,138 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <?php echo renderHeader($usuario, false, 'Solicitud de Mantenimiento'); ?>
 
             <div class="container-fluid p-3">
-                <div class="form-container">
-                    <div class="card shadow">
-                        <div class="card-body">
-                            <?php if (isset($error)): ?>
-                                <div class="alert alert-danger">
-                                    <i class="fas fa-exclamation-triangle me-2"></i>
-                                    <?= $error ?>
-                                </div>
-                            <?php endif; ?>
-
-                            <form method="POST" enctype="multipart/form-data" id="maintenanceForm">
-                                <div class="row">
-                                    <div class="mb-3" style="display:none;">
-                                        <label for="sucursal" class="form-label">Sucursal *</label>
-                                        <select class="form-select" id="sucursal" name="sucursal" required
-                                            <?= count($sucursales) == 1 ? 'disabled' : '' ?>>
-                                            <?php foreach ($sucursales as $sucursalItem): ?>
-                                                <option value="<?= $sucursalItem['codigo'] ?>"
-                                                    <?= ($sucursalItem['codigo'] == $cod_sucursal) ? 'selected' : '' ?>>
-                                                    <?= htmlspecialchars($sucursalItem['nombre']) ?>
-                                                </option>
-                                            <?php endforeach; ?>
-                                        </select>
-                                        <?php if (count($sucursales) == 1): ?>
-                                            <input type="hidden" name="sucursal" value="<?= $sucursales[0]['codigo'] ?>">
-                                        <?php endif; ?>
-                                    </div>
-
-                                    <!-- Selector de Sucursal (solo para quienes ven todas) -->
-                                    <?php if (tienePermiso('historial_solicitudes_mantenimiento', 'vista_todas_sucursales', $cargoOperario)): ?>
-                                        <div class="mb-3">
-                                            <label for="sucursal" class="form-label">Sucursal *</label>
-                                            <select id="selectSucursal" class="form-select form-select-sm" 
-                                                    onchange="window.location.href='?cod_sucursal=' + this.value">
-                                                <?php foreach ($sucursalesPermitidas as $suc): ?>
-                                                    <option value="<?= $suc['codigo'] ?>" <?= $suc['codigo'] == $cod_sucursal ? 'selected' : '' ?>>
-                                                        <?= htmlspecialchars($suc['nombre']) ?>
-                                                    </option>
-                                                <?php endforeach; ?>
-                                            </select>
-                                        </div>
-                                    <?php endif; ?>
-
-                                    <div class="mb-3">
-                                        <label for="area" class="form-label">Área Física *</label>
-                                        <input type="text" class="form-control" id="area" name="area"
-                                            placeholder="Ej: Area de preparacion, Almacén, Mueble de caja..." required>
-                                    </div>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label for="titulo" class="form-label">Título del Problema *</label>
-                                    <input type="text" class="form-control" id="titulo" name="titulo"
-                                        placeholder="Resumen breve del problema" required>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label for="descripcion" class="form-label">Descripción Detallada *</label>
-                                    <textarea class="form-control" id="descripcion" name="descripcion" rows="4"
-                                        placeholder="Describe detalladamente el problema o solicitud de mantenimiento..."
-                                        required></textarea>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label">Fotografías (Opcional - Máximo 5)</label>
-                                    <div class="photo-options">
-                                        <button type="button" class="btn btn-outline-primary" id="btnFile">
-                                            <i class="fas fa-upload me-2"></i>Subir Archivos
-                                        </button>
-                                        <button type="button" class="btn btn-outline-success" id="btnCamera">
-                                            <i class="fas fa-camera me-2"></i>Tomar Foto
-                                        </button>
-                                    </div>
-
-                                    <input type="file" id="fotos" name="fotos[]" accept="image/*" multiple
-                                        style="display: none;">
-                                    <input type="hidden" id="fotos_camera" name="fotos_camera">
-
-                                    <div class="camera-preview" id="cameraPreview" style="display: none;">
-                                        <video id="video" autoplay></video>
-                                        <canvas id="canvas" style="display: none;"></canvas>
-                                    </div>
-
-                                    <div id="photosPreview" style="display: none; margin-top: 15px;">
-                                        <label class="form-label"><strong>Fotos seleccionadas:</strong></label>
-                                        <div id="photosList" class="row g-2"></div>
-                                    </div>
-
-                                    <div id="photoPreview" style="display: none;">
-                                        <img id="previewImg" src="" alt="Preview" class="img-thumbnail"
-                                            style="max-width: 300px;">
-                                        <button type="button" class="btn btn-sm btn-danger ms-2" id="removePhoto">
-                                            <i class="fas fa-times"></i>
-                                        </button>
-                                    </div>
-
-                                    <small class="text-muted d-block mt-2">
-                                        <i class="fas fa-info-circle me-1"></i>
-                                        Puedes subir hasta 5 fotos. Formatos aceptados: JPG, PNG
-                                    </small>
-                                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
-                                        <button type="button" class="btn btn-secondary me-md-2" onclick="goToDashboard()">
-                                            <i class="fas fa-times me-2"></i>Cancelar
-                                        </button>
-                                        <button type="submit" class="btn btn-primary">
-                                            <i class="fas fa-paper-plane me-2"></i>Enviar Solicitud
-                                        </button>
-                                    </div>
-                                </div>
-                            </form>
+                <div class="form-modern-container">
+                    <?php if (isset($error)): ?>
+                        <div class="alert alert-danger shadow-sm mb-4">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <?= $error ?>
                         </div>
-                    </div>
+                    <?php endif; ?>
+
+                    <form method="POST" enctype="multipart/form-data" id="maintenanceForm">
+                        <div class="row">
+                            <!-- Columna Principal (70%) -->
+                            <div class="col-lg-8 mb-4">
+                                <div class="form-section-card">
+                                    <div class="card-body-modern">
+                                        <div class="section-header">
+                                            <i class="fas fa-edit"></i>
+                                            <h5>Detalles de la Solicitud</h5>
+                                        </div>
+
+                                        <div class="row">
+                                            <!-- Sucursal (Oculto o Selector) -->
+                                            <div class="mb-3" style="display:none;">
+                                                <label for="sucursal" class="form-label">Sucursal *</label>
+                                                <select class="form-select" id="sucursal" name="sucursal" required
+                                                    <?= count($sucursales) == 1 ? 'disabled' : '' ?>>
+                                                    <?php foreach ($sucursales as $sucursalItem): ?>
+                                                        <option value="<?= $sucursalItem['codigo'] ?>"
+                                                            <?= ($sucursalItem['codigo'] == $cod_sucursal) ? 'selected' : '' ?>>
+                                                            <?= htmlspecialchars($sucursalItem['nombre']) ?>
+                                                        </option>
+                                                    <?php endforeach; ?>
+                                                </select>
+                                                <?php if (count($sucursales) == 1): ?>
+                                                    <input type="hidden" name="sucursal" value="<?= $sucursales[0]['codigo'] ?>">
+                                                <?php endif; ?>
+                                            </div>
+
+                                            <?php if (tienePermiso('historial_solicitudes_mantenimiento', 'vista_todas_sucursales', $cargoOperario)): ?>
+                                                <div class="col-md-6 mb-3">
+                                                    <label for="selectSucursal" class="form-label">Sucursal del Problema *</label>
+                                                    <select id="selectSucursal" class="form-select" 
+                                                            onchange="window.location.href='?cod_sucursal=' + this.value">
+                                                        <?php foreach ($sucursalesPermitidas as $suc): ?>
+                                                            <option value="<?= $suc['codigo'] ?>" <?= $suc['codigo'] == $cod_sucursal ? 'selected' : '' ?>>
+                                                                <?= htmlspecialchars($suc['nombre']) ?>
+                                                            </option>
+                                                        <?php endforeach; ?>
+                                                    </select>
+                                                </div>
+                                            <?php endif; ?>
+
+                                            <div class="<?= tienePermiso('historial_solicitudes_mantenimiento', 'vista_todas_sucursales', $cargoOperario) ? 'col-md-6' : 'col-12' ?> mb-3">
+                                                <label for="area" class="form-label">Área Física *</label>
+                                                <input type="text" class="form-control" id="area" name="area"
+                                                    placeholder="Ej: Area de preparación, Almacén, Caja..." required>
+                                            </div>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label for="titulo" class="form-label">Título del Problema *</label>
+                                            <input type="text" class="form-control" id="titulo" name="titulo"
+                                                placeholder="Resumen breve del problema" required>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label for="descripcion" class="form-label">Descripción Detallada *</label>
+                                            <textarea class="form-control" id="descripcion" name="descripcion" rows="5"
+                                                placeholder="Describe detalladamente el problema o solicitud de mantenimiento..."
+                                                required></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Columna Lateral (30%) -->
+                            <div class="col-lg-4">
+                                <!-- Info Box -->
+                                <div class="info-box-status">
+                                    <h6><i class="fas fa-info-circle"></i> Instrucciones</h6>
+                                    <p>Describe el problema lo más claro posible. Las fotos ayudan al equipo técnico a diagnosticar más rápido.</p>
+                                </div>
+
+                                <!-- Multimedia Card -->
+                                <div class="form-section-card">
+                                    <div class="card-body-modern">
+                                        <div class="section-header">
+                                            <i class="fas fa-camera"></i>
+                                            <h5>Multimedia</h5>
+                                        </div>
+
+                                        <div class="photo-upload-zone">
+                                            <i class="fas fa-images fa-2x mb-3 text-muted"></i>
+                                            <p class="small text-muted mb-3">Sube hasta 5 fotos del problema</p>
+                                            
+                                            <div class="d-grid gap-2">
+                                                <button type="button" class="btn btn-outline-primary btn-sm" id="btnFile">
+                                                    <i class="fas fa-upload me-2"></i>Subir Archivos
+                                                </button>
+                                                <button type="button" class="btn btn-outline-success btn-sm" id="btnCamera">
+                                                    <i class="fas fa-camera me-2"></i>Tomar Foto
+                                                </button>
+                                            </div>
+
+                                            <input type="file" id="fotos" name="fotos[]" accept="image/*" multiple
+                                                style="display: none;">
+                                            <input type="hidden" id="fotos_camera" name="fotos_camera">
+
+                                            <div class="camera-preview mx-auto" id="cameraPreview" style="display: none;">
+                                                <video id="video" autoplay></video>
+                                                <canvas id="canvas" style="display: none;"></canvas>
+                                            </div>
+
+                                            <div id="photosPreview" style="display: none; margin-top: 15px;">
+                                                <div id="photosList" class="row g-2 justify-content-center"></div>
+                                            </div>
+                                        </div>
+
+                                        <div class="mt-4 pt-3 border-top">
+                                            <div class="d-grid gap-2">
+                                                <button type="submit" class="btn btn-primary-pitaya">
+                                                    <i class="fas fa-paper-plane me-2"></i>Enviar Solicitud
+                                                </button>
+                                                <button type="button" class="btn btn-secondary-pitaya btn-sm" onclick="goToDashboard()">
+                                                    <i class="fas fa-times me-2"></i>Cancelar
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>

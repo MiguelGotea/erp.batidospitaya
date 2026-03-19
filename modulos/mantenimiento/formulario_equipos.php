@@ -352,9 +352,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 margin-bottom: 10px;
             }
 
-            .sucursal-selector .form-select {
-                max-width: 100% !important;
-            }
+    <link rel="stylesheet" href="css/form_modern.css">
+    <style>
+        .photo-preview-item {
+            position: relative;
+            display: inline-block;
+            margin: 5px;
+        }
+
+        .photo-preview-item .remove-btn {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background: #dc3545;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 12px;
+            border: 2px solid white;
+        }
+
+        .camera-preview {
+            width: 100%;
+            max-width: 400px;
+            margin: 10px 0;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 3px solid #51B8AC;
+        }
+
+        #video {
+            width: 100%;
+            background: #000;
         }
     </style>
 </head>
@@ -370,111 +404,143 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <?php echo renderHeader($usuario, false, 'Solicitud de Equipos'); ?>
 
             <div class="container-fluid p-3">
-                <div class="form-container">
-                    <div class="card shadow">
-                        <div class="card-body">
-                            <?php if (isset($error)): ?>
-                                <div class="alert alert-danger">
-                                    <i class="fas fa-exclamation-triangle me-2"></i>
-                                    <?= $error ?>
-                                </div>
-                            <?php endif; ?>
+                <div class="form-modern-container">
+                    <?php if (isset($error)): ?>
+                        <div class="alert alert-danger shadow-sm mb-4">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <?= $error ?>
+                        </div>
+                    <?php endif; ?>
 
-                            <div class="equipment-info">
-                                <h6><i class="fas fa-info-circle me-2"></i>Información Importante</h6>
-                                <p class="mb-0">Esta solicitud es para cambio, reparación o mantenimiento unicamente de
-                                    los equipos que se encuentren codificados.
-                                    Selecciona el equipo específico y describe detalladamente el problema.</p>
+                    <form method="POST" enctype="multipart/form-data" id="equipmentForm">
+                        <div class="row">
+                            <!-- Columna Principal (70%) -->
+                            <div class="col-lg-8 mb-4">
+                                <div class="form-section-card">
+                                    <div class="card-body-modern">
+                                        <div class="section-header">
+                                            <i class="fas fa-desktop"></i>
+                                            <h5>Detalles del Equipo</h5>
+                                        </div>
+
+                                        <div class="row">
+                                            <!-- Selector de Sucursal (solo para quienes ven todas) -->
+                                            <?php if (tienePermiso('historial_solicitudes_mantenimiento', 'vista_todas_sucursales', $cargoOperario)): ?>
+                                                <div class="col-md-6 mb-3">
+                                                    <label for="selectSucursal" class="form-label">Sucursal del Equipo *</label>
+                                                    <select id="selectSucursal" class="form-select" 
+                                                            onchange="window.location.href='?cod_sucursal=' + this.value">
+                                                        <?php foreach ($sucursalesPermitidas as $suc): ?>
+                                                            <option value="<?= $suc['codigo'] ?>" <?= $suc['codigo'] == $cod_sucursal ? 'selected' : '' ?>>
+                                                                <?= htmlspecialchars($suc['nombre']) ?>
+                                                            </option>
+                                                        <?php endforeach; ?>
+                                                    </select>
+                                                </div>
+                                            <?php endif; ?>
+
+                                            <div class="<?= tienePermiso('historial_solicitudes_mantenimiento', 'vista_todas_sucursales', $cargoOperario) ? 'col-md-6' : 'col-12' ?> mb-3">
+                                                <label for="equipo" class="form-label">Tipo de Equipo *</label>
+                                                <select class="form-select" id="equipo" name="equipo" required>
+                                                    <option value="">Seleccionar equipo</option>
+                                                    <?php foreach ($equipos as $equipo): ?>
+                                                        <option value="<?= htmlspecialchars($equipo['marca']) ?>"
+                                                            data-descripcion="<?= htmlspecialchars($equipo['caracteristicas']) ?>">
+                                                            <?= htmlspecialchars($equipo['marca']) ?>
+                                                        </option>
+                                                    <?php endforeach; ?>
+                                                </select>
+                                                <div id="equipoDescripcion" class="form-text mt-2 text-primary fw-bold"></div>
+                                            </div>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label for="titulo" class="form-label">Título de la Solicitud *</label>
+                                            <input type="text" class="form-control" id="titulo" name="titulo"
+                                                placeholder="Ej: Reparación de impresora, Cambio de computadora..." required>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label for="descripcion" class="form-label">Descripción del Problema *</label>
+                                            <textarea class="form-control" id="descripcion" name="descripcion" rows="5"
+                                                placeholder="Describe el problema específico del equipo, síntomas, errores..."
+                                                required></textarea>
+                                            <div class="form-text mt-2 text-muted">
+                                                <i class="fas fa-lightbulb me-1"></i>
+                                                Indica cuándo comenzó y si el equipo funciona parcialmente.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
-                            <form method="POST" enctype="multipart/form-data" id="equipmentForm">
-                                    <!-- Selector de Sucursal (solo para quienes ven todas) -->
-                                    <?php if (tienePermiso('historial_solicitudes_mantenimiento', 'vista_todas_sucursales', $cargoOperario)): ?>
-                                        <div class="mb-3">
-                                            <label for="sucursal" class="form-label">Sucursal *</label>
-                                            <select id="selectSucursal" class="form-select form-select-sm" 
-                                                    onchange="window.location.href='?cod_sucursal=' + this.value">
-                                                <?php foreach ($sucursalesPermitidas as $suc): ?>
-                                                    <option value="<?= $suc['codigo'] ?>" <?= $suc['codigo'] == $cod_sucursal ? 'selected' : '' ?>>
-                                                        <?= htmlspecialchars($suc['nombre']) ?>
-                                                    </option>
-                                                <?php endforeach; ?>
-                                            </select>
+                            <!-- Columna Lateral (30%) -->
+                            <div class="col-lg-4">
+                                <!-- Info Box -->
+                                <div class="info-box-status">
+                                    <h6><i class="fas fa-info-circle"></i> Información Importante</h6>
+                                    <p>Esta solicitud es exclusiva para equipos codificados. Selecciona el equipo exacto para agilizar el soporte.</p>
+                                </div>
+
+                                <!-- Multimedia Card -->
+                                <div class="form-section-card">
+                                    <div class="card-body-modern">
+                                        <div class="section-header">
+                                            <i class="fas fa-camera"></i>
+                                            <h5>Multimedia</h5>
                                         </div>
-                                    <?php endif; ?>
 
-                                    <div class="mb-3">
-                                        <label for="equipo" class="form-label">Tipo de Equipo *</label>
-                                        <select class="form-select" id="equipo" name="equipo" required>
-                                            <option value="">Seleccionar equipo</option>
-                                            <?php foreach ($equipos as $equipo): ?>
-                                                <option value="<?= htmlspecialchars($equipo['marca']) ?>"
-                                                    data-descripcion="<?= htmlspecialchars($equipo['caracteristicas']) ?>">
-                                                    <?= htmlspecialchars($equipo['marca']) ?>
-                                                </option>
-                                            <?php endforeach; ?>
-                                        </select>
-                                        <div id="equipoDescripcion" class="form-text"></div>
-                                    </div>
+                                        <div class="photo-upload-zone">
+                                            <i class="fas fa-images fa-2x mb-3 text-muted"></i>
+                                            <p class="small text-muted mb-3">Sube o toma una foto del daño</p>
+                                            
+                                            <div class="d-grid gap-2">
+                                                <button type="button" class="btn btn-outline-primary btn-sm" id="btnFile">
+                                                    <i class="fas fa-upload me-2"></i>Subir Archivo
+                                                </button>
+                                                <button type="button" class="btn btn-outline-success btn-sm" id="btnCamera">
+                                                    <i class="fas fa-camera me-2"></i>Tomar Foto
+                                                </button>
+                                            </div>
 
-                                <div class="mb-3">
-                                    <label for="titulo" class="form-label">Título de la Solicitud *</label>
-                                    <input type="text" class="form-control" id="titulo" name="titulo"
-                                        placeholder="Ej: Reparación de impresora, Cambio de computadora..." required>
-                                </div>
+                                            <input type="file" id="foto" name="foto" accept="image/*" style="display: none;">
+                                            <input type="hidden" id="foto_camera" name="foto_camera">
 
-                                <div class="mb-3">
-                                    <label for="descripcion" class="form-label">Descripción del Problema *</label>
-                                    <textarea class="form-control" id="descripcion" name="descripcion" rows="4"
-                                        placeholder="Describe el problema específico del equipo, síntomas, mensajes de error, etc..."
-                                        required></textarea>
-                                    <div class="form-text">
-                                        <i class="fas fa-lightbulb me-1"></i>
-                                        Incluye detalles como: ¿Cuándo comenzó el problema? ¿Qué mensajes de error
-                                        aparecen?
-                                        ¿El equipo funciona parcialmente o no funciona en absoluto?
-                                    </div>
-                                </div>
+                                            <div class="camera-preview mx-auto" id="cameraPreview" style="display: none;">
+                                                <video id="video" autoplay></video>
+                                                <canvas id="canvas" style="display: none;"></canvas>
+                                            </div>
 
-                                <div class="mb-3">
-                                    <label class="form-label">Fotografía del Equipo/Problema (Opcional)</label>
-                                    <div class="photo-options">
-                                        <button type="button" class="btn btn-outline-primary" id="btnFile">
-                                            <i class="fas fa-upload me-2"></i>Subir Archivo
-                                        </button>
-                                        <button type="button" class="btn btn-outline-success" id="btnCamera">
-                                            <i class="fas fa-camera me-2"></i>Tomar Foto
-                                        </button>
-                                    </div>
+                                            <div id="photoPreview" style="display: none; margin-top: 15px;">
+                                                <div class="photo-preview-item">
+                                                    <img id="previewImg" src="" alt="Preview" class="img-thumbnail"
+                                                        style="max-width: 100%;">
+                                                    <div class="remove-btn" id="removePhoto">
+                                                        <i class="fas fa-times"></i>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
 
-                                    <input type="file" id="foto" name="foto" accept="image/*" style="display: none;">
-                                    <input type="hidden" id="foto_camera" name="foto_camera">
-
-                                    <div class="camera-preview" id="cameraPreview" style="display: none;">
-                                        <video id="video" autoplay></video>
-                                        <canvas id="canvas" style="display: none;"></canvas>
-                                    </div>
-
-                                    <div id="photoPreview" style="display: none;">
-                                        <img id="previewImg" src="" alt="Preview" class="img-thumbnail"
-                                            style="max-width: 300px;">
-                                        <button type="button" class="btn btn-sm btn-danger ms-2" id="removePhoto">
-                                            <i class="fas fa-times"></i>
-                                        </button>
+                                        <div class="mt-4 pt-3 border-top">
+                                            <div class="d-grid gap-2">
+                                                <button type="submit" class="btn btn-primary-pitaya">
+                                                    <i class="fas fa-paper-plane me-2"></i>Enviar Solicitud
+                                                </button>
+                                                <button type="button" class="btn btn-secondary-pitaya btn-sm" onclick="goToDashboard()">
+                                                    <i class="fas fa-times me-2"></i>Cancelar
+                                                </button>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-
-                                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                                    <button type="button" class="btn btn-secondary me-md-2" onclick="goToDashboard()">
-                                        <i class="fas fa-times me-2"></i>Cancelar
-                                    </button>
-                                    <button type="submit" class="btn btn-primary">
-                                        <i class="fas fa-paper-plane me-2"></i>Enviar Solicitud
-                                    </button>
-                                </div>
-                            </form>
+                            </div>
                         </div>
-                    </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
                 </div>
             </div>
         </div>
