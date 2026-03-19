@@ -11,7 +11,7 @@ echo "<h2>🔍 Test de Guardado - Proveedores</h2>";
 
 // Test 1: Verificar conexión
 echo "<h3>1. Verificando conexión...</h3>";
-require_once '../../../includes/conexion.php';
+require_once '../../../core/database/conexion.php';
 if (isset($conn)) {
     echo "✅ Conexión OK<br>";
 }
@@ -22,9 +22,10 @@ else {
 
 // Test 2: Verificar autenticación
 echo "<h3>2. Verificando autenticación...</h3>";
-if (file_exists('../../../includes/auth.php')) {
-    require_once '../../../includes/auth.php';
-    require_once '../../../includes/funciones.php';
+if (file_exists('../../../core/auth/auth.php')) {
+    require_once '../../../core/database/conexion.php';
+require_once '../../../core/helpers/funciones.php';
+require_once '../../../core/auth/auth.php';
     echo "✅ Archivo auth.php encontrado<br>";
 
     // Verificar si la función existe

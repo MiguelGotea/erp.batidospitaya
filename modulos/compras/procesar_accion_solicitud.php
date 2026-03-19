@@ -2,10 +2,10 @@
 //ini_set('display_errors', 1);
 //error_reporting(E_ALL);
 //require_once '../../includes/config.php';
-require_once '../../includes/funciones.php';
-require_once '../../includes/auth.php';
+require_once '../../core/helpers/funciones.php';
+require_once '../../core/auth/auth.php';
 require_once 'includes/funciones_compras.php';
-require_once '../../includes/config.php';
+require_once '../../core/helpers/config.php';
 
 verificarAutenticacion();
 
