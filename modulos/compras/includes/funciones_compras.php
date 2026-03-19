@@ -141,14 +141,16 @@ function puedeCompletarSolicitudes()
         return false;
     }
 
-
     // Si es admin, puede completar
     if (isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin') {
         return true;
     }
 
-    // Verificar si tiene cargo 9 (Compras)
-    return verificarAccesoCargo([9]);
+    // Usar el sistema de permisos dinámico
+    $usuario = obtenerUsuarioActual();
+    $cargoOperario = $usuario['CodNivelesCargos'] ?? null;
+
+    return tienePermiso('historial_solicitudes_cotizacion', 'completar', $cargoOperario);
 }
 
 /**
