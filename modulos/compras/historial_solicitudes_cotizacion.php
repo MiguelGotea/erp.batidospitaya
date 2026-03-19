@@ -188,7 +188,7 @@ endif; ?>
                                     </h6>
                                     <p class="small text-muted mb-0">
                                         - <strong>Gerencia:</strong> Tiene acceso a todas las solicitudes del sistema.<br>
-                                        - <strong>Compras y Otros Cargos:</strong> Pueden ver sus propias solicitudes y todas aquellas que ya han sido <strong>Aprobadas</strong> o <strong>Finalizadas</strong>.
+                                        - <strong>Gestión de Pedidos y Otros Cargos:</strong> Pueden ver sus propias solicitudes y todas aquellas que ya han sido <strong>Aprobadas</strong> o <strong>Finalizadas</strong>.
                                     </p>
                                 </div>
                             </div>
@@ -212,7 +212,7 @@ endif; ?>
                                         <i class="fas fa-stream me-2"></i> Flujo de Estados
                                     </h6>
                                     <p class="small text-muted mb-0">
-                                        Las solicitudes inician como <strong>Pendientes</strong> para revisión de Gerencia. Si se aprueban, pasan a <strong>Aprobada</strong> para que Compras gestione el pedido. Finalmente, se marcan como <strong>Finalizada</strong> cuando la compra concluye o <strong>Cancelada</strong> si se desiste de ella.
+                                        Las solicitudes inician como <strong>Pendientes</strong> para revisión de Gerencia. Si se aprueban, pasan a <strong>Aprobada</strong> para que el personal encargado gestione el pedido. Finalmente, se marcan como <strong>Finalizada</strong> cuando la compra concluye o <strong>Cancelada</strong> si se desiste de ella.
                                     </p>
                                 </div>
                             </div>

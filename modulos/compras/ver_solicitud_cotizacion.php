@@ -1025,7 +1025,7 @@ endif; ?>
                                         <i class="fas fa-check-circle me-2"></i> Acciones disponibles
                                     </h6>
                                     <p class="small text-muted mb-0">
-                                        Gerencia puede <strong>Aprobar</strong> o <strong>Rechazar</strong> solicitudes pendientes. Una vez aprobadas, Compras o Gerencia pueden <strong>Finalizar</strong> o <strong>Cancelar</strong> la solicitud. El solicitante puede <strong>Cancelar</strong> su propia solicitud mientras esté pendiente.
+                                        Gerencia puede <strong>Aprobar</strong> o <strong>Rechazar</strong> solicitudes pendientes. Una vez aprobadas, el <strong>Personal Autorizado</strong> puede <strong>Finalizar</strong> o <strong>Cancelar</strong> la solicitud. El solicitante puede <strong>Cancelar</strong> su propia solicitud mientras esté pendiente.
                                     </p>
                                 </div>
                             </div>
