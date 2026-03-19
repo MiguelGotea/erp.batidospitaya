@@ -20,11 +20,11 @@ try {
     $offset = ($pagina - 1) * $registros_por_pagina;
     
     // Obtener información del usuario
-    $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
-    $cargosUsuario = obtenerCargosUsuario($_SESSION['usuario_id']);
+    $usuario = obtenerUsuarioActual();
+    $cargoOperario = $usuario['CodNivelesCargos'] ?? null;
     
     // Obtener filtro por cargo
-    $filtroCargo = obtenerFiltroSolicitudesPorCargo($_SESSION['usuario_id'], $esAdmin, $cargosUsuario);
+    $filtroCargo = obtenerFiltroSolicitudesPorCargo($_SESSION['usuario_id'], $cargoOperario);
     
     // Construir WHERE
     $where = [];
@@ -185,7 +185,7 @@ try {
     
     // Agregar acciones permitidas para cada solicitud
     foreach ($datos as &$solicitud) {
-        $acciones = obtenerAccionesPermitidas($solicitud, $_SESSION['usuario_id'], $esAdmin);
+        $acciones = obtenerAccionesPermitidas($solicitud, $_SESSION['usuario_id']);
         $solicitud['acciones_permitidas'] = implode(',', $acciones);
     }
     

@@ -23,7 +23,6 @@ if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
 $solicitudId = intval($_GET['id']);
 
 // Obtener información del usuario actual
-$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
 
 // Obtener la solicitud
 try {
@@ -91,9 +90,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
     $accion = $_POST['accion'];
     $observaciones = trim($_POST['observaciones_accion'] ?? '');
     $usuarioId = $_SESSION['usuario_id'];
-    $usuarioNombre = $esAdmin ? 
-        $usuario['nombre'] :
-        trim($usuario['Nombre'] . ' ' . $usuario['Apellido']);
+    $usuarioNombre = trim($usuario['Nombre'] . ' ' . $usuario['Apellido']);
 
     try {
         $conn->beginTransaction();
@@ -174,7 +171,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
 
             case 'cancelar':
                 // Solo el solicitante puede cancelar
-                if ($solicitud['solicitante_id'] != $usuarioId && !$esAdmin) {
+                if ($solicitud['solicitante_id'] != $usuarioId) {
                     throw new Exception('Solo el solicitante puede cancelar esta solicitud');
                 }
                 $nuevoEstado = 'cancelada';
@@ -338,7 +335,7 @@ endif; ?>
             
             <div class="actions">
                 <?php if ($solicitud['estado'] === 'pendiente' &&
-($solicitud['solicitante_id'] == $_SESSION['usuario_id'] || $esAdmin)): ?>
+($solicitud['solicitante_id'] == $_SESSION['usuario_id'])): ?>
                     <a style="display:none;" href="solicitud_cotizacion.php?editar=<?php echo $solicitudId; ?>" 
                        class="btn btn-warning">
                         <i class="fas fa-edit"></i> Editar Solicitud
@@ -350,7 +347,7 @@ endif; ?>
                     <i class="fas fa-print"></i> Imprimir
                 </button>
                 
-                <?php if ($esAdmin || esGerente()): ?>
+                <?php if (esGerente()): ?>
                     <!-- Solo gerentes y admin pueden aprobar -->
                     <?php if ($solicitud['estado'] === 'pendiente'): ?>
                         <button type="button" class="btn btn-success" onclick="mostrarModal('aprobar')">

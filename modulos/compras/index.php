@@ -5,7 +5,7 @@ require_once '../../core/layout/menu_lateral.php';
 
 $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
-$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
+$cargoOperario = $usuario['CodNivelesCargos'];
 
 // Verificar acceso al módulo (cargos con permiso para ver marcaciones)
 if (!verificarAccesoCargo([9, 16])) {
@@ -44,7 +44,7 @@ if (!verificarAccesoCargo([9, 16])) {
     <?php echo renderMenuLateral($cargoOperario); ?>
     <div class="main-container">
         <div class="contenedor-principal">
-            <?php echo renderHeader($usuario, $esAdmin); ?>
+            <?php echo renderHeader($usuario); ?>
             
             <h2 class="section-title">
                 <i class="fas fa-chart-line"></i> Indicadores de Control

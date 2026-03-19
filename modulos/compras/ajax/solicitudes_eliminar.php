@@ -25,9 +25,8 @@ try {
     }
     
     // Verificar permisos
-    $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
     
-    if ($solicitud['solicitante_id'] != $_SESSION['usuario_id'] && !$esAdmin) {
+    if ($solicitud['solicitante_id'] != $_SESSION['usuario_id']) {
         throw new Exception('No tiene permisos para eliminar esta solicitud');
     }
     

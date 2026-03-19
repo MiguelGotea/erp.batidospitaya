@@ -14,7 +14,6 @@ $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
 
 // Obtener información del usuario actual
-$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
 $cargosUsuario = obtenerCargosUsuario($_SESSION['usuario_id']);
 
 if (!tienePermiso('historial_solicitudes_cotizacion', 'vista', $cargoOperario)) {
@@ -40,7 +39,7 @@ if (!tienePermiso('historial_solicitudes_cotizacion', 'vista', $cargoOperario)) 
     
     <div class="main-container">
         <div class="contenedor-principal">
-            <?php echo renderHeader($usuario, $esAdmin, 'Solicitudes de Cotización'); ?>
+            <?php echo renderHeader($usuario, false, 'Solicitudes de Cotización'); ?>
             
             <?php if (isset($_SESSION['success'])): ?>
                 <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -163,7 +162,7 @@ endif; ?>
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        const esAdmin = <?php echo $esAdmin ? 'true' : 'false'; ?>;
+        const esAdmin = false;
         const usuarioId = <?php echo $_SESSION['usuario_id']; ?>;
     </script>
     <script src="js/historial_solicitudes.js?v=<?php echo time(); ?>"></script>

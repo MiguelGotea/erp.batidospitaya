@@ -16,12 +16,9 @@ if (!tienePermiso('historial_solicitudes_cotizacion', 'boton_nuevo', $cargoOpera
 }
 
 // Obtener información del usuario actual
-$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
 
 // Obtener el nombre completo del usuario
-$nombreSolicitante = $esAdmin ? 
-    $usuario['nombre'] :
-    trim($usuario['Nombre'] . ' ' . $usuario['Apellido']);
+$nombreSolicitante = trim($usuario['Nombre'] . ' ' . $usuario['Apellido']);
 $solicitanteId = $_SESSION['usuario_id'];
 
 // Procesar el formulario cuando se envía

@@ -2,25 +2,17 @@
 /**
  * Verifica qué solicitudes de cotización puede ver el usuario según su cargo
  */
-function obtenerFiltroSolicitudesPorCargo($usuarioId, $esAdmin, $cargosUsuario)
+function obtenerFiltroSolicitudesPorCargo($usuarioId, $cargoOperario)
 {
     global $conn;
-
-    if ($esAdmin) {
-        return []; // Admin ve todas las solicitudes
-    }
 
     // Si es gerente (ReportaA es NULL/vacío), puede ver todas
     if (esGerente($usuarioId)) {
         return []; // Ver todas
     }
 
-    // Si tiene cargo 9 (Compras), puede ver:
-    // 1. Las que ha subido él mismo
-    // 2. Las que están aprobadas por gerencia
-    // 3. Las que están en proceso
-    // 4. Las que están completadas
-    if (in_array(9, $cargosUsuario)) {
+    // Si tiene el permiso dinámico de ver todas las aprobadas/en proceso/completadas
+    if (tienePermiso('historial_solicitudes_cotizacion', 'ver_todo_aprobadas', $cargoOperario)) {
         return [
             'condicion' => 'OR',
             'filtros' => [
@@ -141,11 +133,6 @@ function puedeCompletarSolicitudes()
         return false;
     }
 
-    // Si es admin, puede completar
-    if (isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin') {
-        return true;
-    }
-
     // Usar el sistema de permisos dinámico
     $usuario = obtenerUsuarioActual();
     $cargoOperario = $usuario['CodNivelesCargos'] ?? null;
@@ -156,15 +143,9 @@ function puedeCompletarSolicitudes()
 /**
  * Obtiene las acciones permitidas (actualizada para usar función esGerente)
  */
-function obtenerAccionesPermitidas($solicitud, $usuarioId, $esAdmin)
+function obtenerAccionesPermitidas($solicitud, $usuarioId)
 {
     $acciones = [];
-
-    // Si es admin, puede hacer todo
-    if ($esAdmin) {
-        $acciones = ['aprobar', 'rechazar', 'completar', 'en_proceso', 'cancelar'];
-        return $acciones;
-    }
 
     // Gerencia puede aprobar y rechazar
     if (esGerente($usuarioId)) {
@@ -187,6 +168,9 @@ function obtenerAccionesPermitidas($solicitud, $usuarioId, $esAdmin)
     }
 
     // El solicitante puede cancelar si está pendiente
+    $usuario = obtenerUsuarioActual();
+    $cargoUsuario = $usuario['CodNivelesCargos'] ?? null;
+
     if ($solicitud['solicitante_id'] == $usuarioId && $solicitud['estado'] === 'pendiente') {
         $acciones[] = 'cancelar';
     }

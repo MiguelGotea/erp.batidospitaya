@@ -45,8 +45,7 @@ try {
     
     // Registrar en el historial
     $usuario = obtenerUsuarioActual();
-    $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
-    $usuarioNombre = $esAdmin ? $usuario['nombre'] : trim($usuario['Nombre'] . ' ' . $usuario['Apellido']);
+    $usuarioNombre = trim($usuario['Nombre'] . ' ' . $usuario['Apellido']);
     
     $stmtHistorial = $conn->prepare("
         INSERT INTO solicitudes_cotizacion_historial 

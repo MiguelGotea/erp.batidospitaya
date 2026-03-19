@@ -35,9 +35,9 @@ try {
             throw new Exception('Solicitud no encontrada');
         }
         
-        $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
+        // No admin check needed here if we only allow solicitante or specific permissions, but user said admin is gone.
         
-        if ($solicitud['solicitante_id'] != $_SESSION['usuario_id'] && !$esAdmin) {
+        if ($solicitud['solicitante_id'] != $_SESSION['usuario_id']) {
             throw new Exception('No tiene permisos para editar esta solicitud');
         }
         

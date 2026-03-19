@@ -26,11 +26,8 @@ if ($solicitudId <= 0 || empty($accion)) {
 
 // Obtener información del usuario
 $usuario = obtenerUsuarioActual();
-$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
 $usuarioId = $_SESSION['usuario_id'];
-$usuarioNombre = $esAdmin ? 
-    $usuario['nombre'] : 
-    trim($usuario['Nombre'] . ' ' . $usuario['Apellido']);
+$usuarioNombre = trim($usuario['Nombre'] . ' ' . $usuario['Apellido']);
 
 try {
     // Obtener la solicitud
@@ -93,7 +90,7 @@ try {
             
         case 'cancelar':
             // Solo el solicitante puede cancelar
-            if ($solicitud['solicitante_id'] != $usuarioId && !$esAdmin) {
+            if ($solicitud['solicitante_id'] != $usuarioId) {
                 throw new Exception('Solo el solicitante puede cancelar esta solicitud');
             }
             $nuevoEstado = 'cancelada';
