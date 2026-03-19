@@ -1,10 +1,11 @@
 <?php
 // solicitudes_get_datos.php
-require_once '../../../includes/conexion.php';
-require_once '../../../includes/funciones.php';
-require_once '../../../includes/auth.php';
+require_once '../../../core/database/conexion.php';
+require_once '../../../core/helpers/funciones.php';
+require_once '../../../core/auth/auth.php';
+require_once '../../../core/permissions/permissions.php';
 require_once '../includes/funciones_compras.php';
-require_once '../../../includes/config.php';
+require_once '../../../core/helpers/config.php';
 
 verificarAutenticacion();
 
