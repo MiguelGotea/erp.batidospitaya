@@ -666,9 +666,15 @@ body {
     right: 35px;
     z-index: 1000;
     display: flex;
-    flex-direction: column-reverse;
+    flex-direction: column; /* Cambiado a column normal */
     align-items: flex-end;
     gap: 15px;
+    pointer-events: none; /* El contenedor no bloquea clics fuera de los botones */
+}
+
+/* IMPORTANTE: Los hijos deben recibir clics */
+.fab-container > * {
+    pointer-events: auto;
 }
 
 /* IMPORTANTE: Sobrescritura del estándar para permitir el flujo flex */
@@ -681,7 +687,7 @@ body {
 
 .fab-options {
     display: flex;
-    flex-direction: column-reverse;
+    flex-direction: column; /* Cambiado a column normal */
     align-items: flex-end;
     gap: 12px;
     opacity: 0;
