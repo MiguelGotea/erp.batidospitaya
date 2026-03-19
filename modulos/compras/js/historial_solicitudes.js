@@ -117,48 +117,12 @@ function generarBotonesAcciones(row) {
     let botones = '';
     
     // Botón Ver (siempre visible)
+    // Es el único botón que quedará para forzar la revisión detallada
     botones += `
         <a href="ver_solicitud_cotizacion.php?id=${row.id}" class="btn-accion btn-ver" title="Ver Detalles">
             <i class="bi bi-eye"></i>
         </a>
     `;
-    
-    // Acciones según permisos y estado
-    const acciones = row.acciones_permitidas ? row.acciones_permitidas.split(',') : [];
-    
-    // Si permite aprobar Y rechazar, usamos el toggle tri-estado
-    if (acciones.includes('aprobar') && acciones.includes('rechazar')) {
-        botones += `
-            <div class="status-toggle-wrapper d-inline-flex align-items-center">
-                <div class="status-toggle" title="Desliza/Click: Izquierda para Rechazar, Derecha para Aprobar">
-                    <div class="toggle-knob"></div>
-                    <div class="toggle-side side-rechazar" onclick="event.stopPropagation(); mostrarModalAccion(${row.id}, 'rechazar')">
-                        <i class="bi bi-x-lg"></i>
-                    </div>
-                    <div class="toggle-side side-aprobar" onclick="event.stopPropagation(); mostrarModalAccion(${row.id}, 'aprobar')">
-                        <i class="bi bi-check-lg"></i>
-                    </div>
-                </div>
-            </div>
-        `;
-    } else {
-        if (acciones.includes('aprobar')) {
-            botones += `
-                <button class="btn-accion btn-aprobar" onclick="mostrarModalAccion(${row.id}, 'aprobar')" title="Aprobar">
-                    <i class="bi bi-check-circle"></i>
-                </button>
-            `;
-        }
-        
-        if (acciones.includes('rechazar')) {
-            botones += `
-                <button class="btn-accion btn-rechazar" onclick="mostrarModalAccion(${row.id}, 'rechazar')" title="Rechazar">
-                    <i class="bi bi-x-circle"></i>
-                </button>
-            `;
-        }
-    }
-    
     
     return botones;
 }

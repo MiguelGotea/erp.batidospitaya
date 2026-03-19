@@ -283,7 +283,7 @@ endif; ?>
                     </span>
                     
                     <div class="action-buttons-top">
-                        <?php if (esGerente() || puedeCompletarSolicitudes()): ?>
+                        <?php if (esGerente()): ?>
                             <?php if ($solicitud['estado'] === 'pendiente'): ?>
                                 <button type="button" class="btn btn-success" onclick="mostrarModal('aprobar')">
                                     <i class="fas fa-check"></i> Aprobar
@@ -292,11 +292,15 @@ endif; ?>
                                     <i class="fas fa-times"></i> Rechazar
                                 </button>
                             <?php endif; ?>
-                            
-                            <?php if ($solicitud['estado'] === 'aprobada' && puedeCompletarSolicitudes()): ?>
+                        <?php endif; ?>
+                        
+                        <?php if (puedeCompletarSolicitudes()): ?>
+                            <?php if ($solicitud['estado'] === 'aprobada'): ?>
                                 <button type="button" class="btn btn-primary" onclick="mostrarModal('completar')">
                                     <i class="fas fa-flag-checkered"></i> Completar
                                 </button>
+                            <?php endif; ?>
+                            <?php if ($solicitud['estado'] === 'aprobada' || ($solicitud['estado'] === 'pendiente' && $solicitud['solicitante_id'] == $usuarioId)): ?>
                                 <button type="button" class="btn btn-danger" onclick="mostrarModal('cancelar')">
                                     <i class="fas fa-ban"></i> Cancelar
                                 </button>
