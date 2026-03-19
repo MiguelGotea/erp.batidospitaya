@@ -57,6 +57,7 @@ $tituloPagina = $editingId ? 'Editar Solicitud IA' : 'Nueva Solicitud: Reembolso
             
             <script>
                 const editingId = <?= json_encode($editingId) ?>;
+                const visitaId = <?= json_encode(isset($_GET['visita_id']) ? (int)$_GET['visita_id'] : null) ?>;
             </script>
             
             <div class="container-fluid p-4">

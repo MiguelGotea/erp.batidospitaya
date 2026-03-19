@@ -565,7 +565,8 @@ class Ticket
         if (!$informe) return null;
 
         // Visitas
-        $sqlV = "SELECT v.*, s.nombre as nombre_sucursal, s.departamento as departamento_sucursal
+        $sqlV = "SELECT v.*, s.nombre as nombre_sucursal, s.departamento as departamento_sucursal, 
+                        (SELECT COUNT(*) FROM mtto_informe_compras WHERE visita_id = v.id) as total_compras
                  FROM mtto_informe_visitas v
                  LEFT JOIN sucursales s ON v.cod_sucursal = s.codigo
                  WHERE v.informe_id = ?
@@ -731,6 +732,15 @@ class Ticket
 
         // 3. Eliminar la visita
         return $this->db->query("DELETE FROM mtto_informe_visitas WHERE id = ?", [$visita_id]);
+    }
+
+    /**
+     * Vincular un reembolso a una visita de informe
+     */
+    public function vincularReembolsoAVisita($visita_id, $reembolso_id)
+    {
+        $sql = "UPDATE mtto_informe_visitas SET reembolso_id = ? WHERE id = ?";
+        return $this->db->query($sql, [$reembolso_id, $visita_id]);
     }
 }
 ?>

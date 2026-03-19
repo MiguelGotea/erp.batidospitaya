@@ -606,3 +606,27 @@ async function guardarValidacionCaja() {
         Swal.fire('Error', e.message, 'error');
     }
 }
+function zoomFoto(src) {
+    document.getElementById('zoomImg').src = src;
+    new bootstrap.Modal(document.getElementById('zoomModal')).show();
+}
+
+/**
+ * Redirige a la herramienta de reembolsos con el ID de la visita
+ */
+function generarReembolsoDesdeVisita(visitaId) {
+    Swal.fire({
+        title: '¿Generar reembolso?',
+        text: "Se abrirá la herramienta de reembolsos con las facturas de esta visita pre-cargadas.",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Sí, generar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            window.location.href = `../compras/reembolsos_ia_nuevo.php?visita_id=${visitaId}`;
+        }
+    });
+}

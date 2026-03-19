@@ -13,6 +13,8 @@ $(document).ready(function() {
 
     if (editingId) {
         cargarDatosEdicion(editingId);
+    } else if (visitaId) {
+        cargarDatosVisita(visitaId);
     }
 });
 
@@ -168,6 +170,33 @@ function procesarFoto(archivo) {
     });
 }
 
+function cargarDatosVisita(id) {
+    $('#loader h5').text('Cargando datos de la visita...');
+    $('#loader').css('display', 'flex');
+
+    $.get('../mantenimiento/ajax/get_datos_reembolso_visita.php', { visita_id: id }, function(res) {
+        $('#loader').hide();
+        if (res.success) {
+            const v = res.visita;
+            $('#concepto').val(`MANTENIMIENTO: Reembolso por visita a ${v.nombre_sucursal} (${v.fecha})`);
+            
+            // Pre-cargar items desde las compras de la visita
+            if (res.compras && res.compras.length > 0) {
+                $('.empty-row').hide();
+                itemsActuales = res.compras.map(c => ({
+                    cantidad: 1,
+                    detalle: c.detalle,
+                    total_cordobas: c.monto,
+                    foto_path: `modulos/mantenimiento/uploads/compras/${c.foto_factura}`
+                }));
+                renderTable();
+            }
+        } else {
+            Swal.fire('Error', res.message, 'error');
+        }
+    });
+}
+
 function agregarAFilas(items, fotoPath) {
     $('.empty-row').hide();
     items.forEach(item => {
@@ -270,6 +299,16 @@ async function guardarSolicitud() {
         $('#loader').hide();
 
         if (res.success) {
+            // Vincular a visita si aplica
+            if (visitaId) {
+                await $.ajax({
+                    url: '../mantenimiento/ajax/vincular_reembolso_visita.php',
+                    type: 'POST',
+                    data: JSON.stringify({ visita_id: visitaId, reembolso_id: res.id }),
+                    contentType: 'application/json'
+                });
+            }
+
             Swal.fire({
                 icon: 'success',
                 title: '¡Guardado!',

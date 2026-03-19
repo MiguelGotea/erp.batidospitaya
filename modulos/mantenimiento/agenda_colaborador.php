@@ -22,6 +22,7 @@ $esHoy = ($fechaHoy === date('Y-m-d'));
 
 // Verificar si tiene permiso para ver todos los colaboradores
 $puedeVerTodosColaboradores = tienePermiso('agenda_mantenimiento', 'todos_colaboradores', $cargoOperario);
+$puedeGenerarReembolso = tienePermiso('agenda_mantenimiento', 'generar_reembolso', $cargoOperario);
 
 if ($puedeVerTodosColaboradores) {
     $colaboradoresDisponibles = $ticketModel->getColaboradoresAsignados();
@@ -309,6 +310,19 @@ if ($colaborador_filtro) {
                                                                 onclick="eliminarVisita(<?= $v['id'] ?>)" title="Eliminar Visita">
                                                                 <i class="fas fa-trash"></i>
                                                             </button>
+                                                        <?php endif; ?>
+
+                                                        <?php if ($informeActual['estado'] === 'finalizado' && $puedeGenerarReembolso && !empty($v['compras'])): ?>
+                                                            <?php if (!$v['reembolso_id']): ?>
+                                                                <button class="btn btn-sm btn-primary rounded-pill px-3"
+                                                                    onclick="generarReembolsoDesdeVisita(<?= $v['id'] ?>)">
+                                                                    <i class="fas fa-hand-holding-usd me-1"></i>Generar Reembolso
+                                                                </button>
+                                                            <?php else: ?>
+                                                                <span class="badge bg-success rounded-pill px-3 py-2" style="font-size: 0.75rem;">
+                                                                    <i class="fas fa-check-circle me-1"></i>Reembolso Procesado
+                                                                </span>
+                                                            <?php endif; ?>
                                                         <?php endif; ?>
                                                     </div>
                                                 </div>
