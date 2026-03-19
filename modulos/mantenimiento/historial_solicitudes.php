@@ -91,6 +91,7 @@ function getTextoUrgencia($nivel)
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="/assets/css/global_tools.css?v=<?php echo mt_rand(1, 10000); ?>">
+    <link rel="stylesheet" href="/core/assets/css/fab_button.css">
     <link rel="stylesheet" href="css/historial_solicitudes.css?v=<?php echo mt_rand(1, 10000); ?>">
 </head>
 
@@ -201,6 +202,25 @@ function getTextoUrgencia($nivel)
             </div>
         </div>
     </div>
+
+    <!-- Botón Flotante con opciones (Solo si tiene permiso de nuevo_registro) -->
+    <?php if (tienePermiso('historial_solicitudes_mantenimiento', 'nuevo_registro', $cargoOperario)): ?>
+        <div class="fab-container">
+            <div class="fab-options">
+                <a href="formulario_equipos.php" class="fab-option">
+                    <span class="fab-label">Mtto de Equipo</span>
+                    <div class="fab-icon-holder"><i class="fas fa-laptop"></i></div>
+                </a>
+                <a href="formulario_mantenimiento.php" class="fab-option">
+                    <span class="fab-label">Mtto de Area</span>
+                    <div class="fab-icon-holder"><i class="fas fa-tools"></i></div>
+                </a>
+            </div>
+            <div class="btn-floating-pitaya" title="Nueva Solicitud">
+                <i class="fas fa-plus"></i>
+            </div>
+        </div>
+    <?php endif; ?>
 
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
