@@ -260,118 +260,97 @@ endif; ?>
 endif; ?>
         
         <div class="solicitud-header">
-            <div class="header-grid">
-                <div class="info-item">
-                    <div class="info-label">Estado:</div>
-                    <div class="info-value">
-                        <?php
-$estadoClase = 'estado-' . $solicitud['estado'];
-$estadoTexto = ucfirst(str_replace('_', ' ', $solicitud['estado']));
-?>
-                        <span class="estado-badge <?php echo $estadoClase; ?>">
-                            <?php echo htmlspecialchars($estadoTexto); ?>
-                        </span>
+            <?php
+            $estadoClase = 'estado-' . $solicitud['estado'];
+            $estadoTexto = ucfirst(str_replace('_', ' ', $solicitud['estado']));
+            ?>
+            
+            <div class="header-top">
+                <div class="header-title-container">
+                    <h2>
+                        <i class="fas fa-file-invoice"></i> 
+                        Solicitud #<?php echo $solicitudId; ?>
+                    </h2>
+                    <div style="color: #666; font-size: 14px; margin-top: 5px;">
+                        <i class="fas fa-calendar-alt me-1"></i> 
+                        Creada el <?php echo date('d/m/Y', strtotime($solicitud['fecha_solicitud'])); ?>
                     </div>
                 </div>
-                
+
+                <div class="header-status-actions">
+                    <span class="estado-badge <?php echo $estadoClase; ?>">
+                        <?php echo htmlspecialchars($estadoTexto); ?>
+                    </span>
+                    
+                    <div class="action-buttons-top">
+                        <?php if (esGerente() || puedeCompletarSolicitudes()): ?>
+                            <?php if ($solicitud['estado'] === 'pendiente'): ?>
+                                <button type="button" class="btn btn-success" onclick="mostrarModal('aprobar')">
+                                    <i class="fas fa-check"></i> Aprobar
+                                </button>
+                                <button type="button" class="btn btn-danger" onclick="mostrarModal('rechazar')">
+                                    <i class="fas fa-times"></i> Rechazar
+                                </button>
+                            <?php endif; ?>
+                            
+                            <?php if ($solicitud['estado'] === 'aprobada' && puedeCompletarSolicitudes()): ?>
+                                <button type="button" class="btn btn-primary" onclick="mostrarModal('completar')">
+                                    <i class="fas fa-flag-checkered"></i> Completar
+                                </button>
+                                <button type="button" class="btn btn-danger" onclick="mostrarModal('cancelar')">
+                                    <i class="fas fa-ban"></i> Cancelar
+                                </button>
+                            <?php endif; ?>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+
+            <div class="header-grid">
                 <div class="info-item">
                     <div class="info-label">Solicitante:</div>
-                    <div class="info-value"><?php echo htmlspecialchars($solicitud['solicitante_nombre']); ?></div>
-                </div>
-                
-                <div class="info-item">
-                    <div class="info-label">Fecha de Solicitud:</div>
                     <div class="info-value">
-                        <?php echo date('d/m/Y', strtotime($solicitud['fecha_solicitud'])); ?>
+                        <i class="fas fa-user-circle me-1" style="color: #0E544C;"></i>
+                        <?php echo htmlspecialchars($solicitud['solicitante_nombre']); ?>
                     </div>
                 </div>
                 
                 <div class="info-item">
                     <div class="info-label">Última Actualización:</div>
                     <div class="info-value">
+                        <i class="fas fa-sync-alt me-1" style="color: #666;"></i>
                         <?php echo date('d/m/Y H:i', strtotime($solicitud['updated_at'])); ?>
                     </div>
                 </div>
 
-                <?php if (!empty($solicitud['gerente_aprobador_nombre'])): ?>
                 <div class="info-item">
                     <div class="info-label">Aprobación Gerencial:</div>
                     <div class="info-value">
-                        <div style="font-weight: bold; color: #0E544C;">
-                            <i class="fas fa-check-circle me-1"></i>
-                            <?php echo htmlspecialchars($solicitud['gerente_aprobador_nombre']); ?>
-                        </div>
-                        <div style="font-size: 0.85em; color: #666;">
-                            <?php echo date('d/m/Y', strtotime($solicitud['fecha_aprobacion'])); ?>
-                        </div>
+                        <?php if (!empty($solicitud['gerente_aprobador_nombre'])): ?>
+                            <div style="font-weight: bold; color: #155724;">
+                                <i class="fas fa-check-circle me-1"></i>
+                                <?php echo htmlspecialchars($solicitud['gerente_aprobador_nombre']); ?>
+                            </div>
+                            <div style="font-size: 0.85em; color: #666; margin-left: 20px;">
+                                <?php echo date('d/m/Y', strtotime($solicitud['fecha_aprobacion'])); ?>
+                            </div>
+                        <?php else: ?>
+                            <span class="text-muted italic" style="font-size: 0.9em;">
+                                <i class="fas fa-clock me-1"></i> Pendiente de Revisión
+                            </span>
+                        <?php endif; ?>
                     </div>
                 </div>
-                <?php else: ?>
-                <div class="info-item">
-                    <div class="info-label">Aprobación Gerencial:</div>
-                    <div class="info-value">
-                        <span class="text-muted italic" style="font-size: 0.9em;">
-                            <i class="fas fa-clock me-1"></i> Pendiente
-                        </span>
-                    </div>
-                </div>
-                <?php endif; ?>
             </div>
             
             <?php if (!empty($solicitud['observaciones'])): ?>
-                <div class="info-item">
-                    <div class="info-label">Observaciones Generales:</div>
-                    <div class="info-value" style="background-color: #f8f9fa; padding: 10px; border-radius: 4px;">
+                <div class="info-item mt-3">
+                    <div class="info-label">Observaciones del Solicitante:</div>
+                    <div class="info-value" style="background-color: #fcfcfc; padding: 12px; border: 1px dashed #ddd; border-radius: 6px; font-style: italic;">
                         <?php echo nl2br(htmlspecialchars($solicitud['observaciones'])); ?>
                     </div>
                 </div>
-            <?php
-endif; ?>
-            
-            <div class="actions">
-                <?php if ($solicitud['estado'] === 'pendiente' &&
-($solicitud['solicitante_id'] == $_SESSION['usuario_id'])): ?>
-                    <a style="display:none;" href="solicitud_cotizacion.php?editar=<?php echo $solicitudId; ?>" 
-                       class="btn btn-warning">
-                        <i class="fas fa-edit"></i> Editar Solicitud
-                    </a>
-                <?php
-endif; ?>
-                
-                <button style="display:none;" type="button" class="btn btn-secondary" onclick="imprimirSolicitud()">
-                    <i class="fas fa-print"></i> Imprimir
-                </button>
-                
-                <?php if (esGerente() || puedeCompletarSolicitudes()): ?>
-                    <!-- Solo gerentes y admin pueden aprobar -->
-                    <?php if ($solicitud['estado'] === 'pendiente'): ?>
-                        <button type="button" class="btn btn-success" onclick="mostrarModal('aprobar')">
-                            <i class="fas fa-check"></i> Aprobar
-                        </button>
-                    <?php
-    endif; ?>
-                    
-                    <?php if ($solicitud['estado'] === 'pendiente'): ?>
-                        <button type="button" class="btn btn-danger" onclick="mostrarModal('rechazar')">
-                            <i class="fas fa-times"></i> Rechazar
-                        </button>
-                    <?php
-    endif; ?>
-                    
-                    
-                    <?php if ($solicitud['estado'] === 'aprobada'): ?>
-                        <?php if (puedeCompletarSolicitudes()): ?>
-                            <button type="button" class="btn btn-primary" onclick="mostrarModal('completar')">
-                                <i class="fas fa-flag-checkered"></i> Completar
-                            </button>
-                            <button type="button" class="btn btn-danger" onclick="mostrarModal('cancelar')">
-                                <i class="fas fa-ban"></i> Cancelar
-                            </button>
-                        <?php endif; ?>
-                    <?php endif; ?>
-                <?php
-endif; ?>
-            </div>
+            <?php endif; ?>
         </div>
         
         <!-- Productos -->
@@ -412,7 +391,8 @@ else: ?>
                                     <div style="font-weight: bold;">
                                         <?php echo htmlspecialchars($producto['producto_descripcion']); ?>
                                     </div>
-                                                         <td class="foto-container">
+                                </td>
+                                <td class="foto-container">
                                     <?php 
                                     $fotos = $fotosPorProducto[$producto['id']] ?? [];
                                     if (empty($fotos) && !empty($producto['foto_referencia'])) {
