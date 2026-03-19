@@ -444,3 +444,53 @@ async function iniciarConversacion() {
         Swal.fire('Error', data.error || 'No se pudo iniciar la conversación', 'error');
     }
 }
+async function probarEnvio() {
+    const instancia = $('#filtroInstancia').val() || 'wsp-crmbot';
+    
+    const { value: formValues } = await Swal.fire({
+        title: '⚡ Probar Envío Directo',
+        html: `
+            <div class="text-start">
+                <label class="form-label mb-1 fw-bold">Número de teléfono</label>
+                <input id="swal-input-num" class="form-control mb-3" placeholder="50688881234">
+                <label class="form-label mb-1 fw-bold">Mensaje de prueba</label>
+                <textarea id="swal-input-msg" class="form-control" rows="2">Prueba de conexión Pitaya WhatsApp ⚡ desde ${instancia}</textarea>
+            </div>
+        `,
+        focusConfirm: false,
+        showCancelButton: true,
+        confirmButtonText: 'Enviar prueba',
+        cancelButtonText: 'Cancelar',
+        preConfirm: () => {
+            return {
+                numero: document.getElementById('swal-input-num').value,
+                mensaje: document.getElementById('swal-input-msg').value
+            }
+        }
+    });
+
+    if (!formValues || !formValues.numero) return;
+
+    Swal.fire({ title: 'Enviando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+    try {
+        const resp = await fetch('ajax/whatsapp_ping_directo.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                instancia: instancia,
+                numero: formValues.numero,
+                mensaje: formValues.mensaje
+            })
+        });
+        const data = await resp.json();
+        
+        if (data.success) {
+            Swal.fire('¡Éxito!', 'El mensaje de prueba fue enviado correctamente.', 'success');
+        } else {
+            Swal.fire('Error', data.error || 'No se pudo enviar el ping.', 'error');
+        }
+    } catch (e) {
+        Swal.fire('Error', 'No se pudo conectar con el servidor AJAX.', 'error');
+    }
+}

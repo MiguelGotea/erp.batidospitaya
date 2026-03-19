@@ -58,6 +58,9 @@ require_once '../../core/layout/header_universal.php';
                                 <i class="bi bi-arrow-repeat me-1"></i> Cambiar Número
                             </button>
                         <?php endif; ?>
+                        <button class="btn btn-outline-info btn-sm" onclick="probarEnvio()" title="Realizar prueba de envío">
+                            <i class="bi bi-lightning-charge me-1"></i> Probar Envío
+                        </button>
                         <button class="btn btn-outline-secondary btn-sm" onclick="cargarPlanillas()">
                             <i class="bi bi-arrow-clockwise me-1"></i> Actualizar
                         </button>

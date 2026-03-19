@@ -59,6 +59,9 @@ require_once '../../core/layout/header_universal.php';
                             </button>
                         <?php endif; ?>
                         <?php if ($puedeCrear): ?>
+                            <button class="btn btn-outline-info" onclick="probarEnvio()" title="Realizar prueba de envío">
+                                <i class="bi bi-lightning-charge me-1"></i> Probar Envío
+                            </button>
                             <button class="btn btn-success" onclick="abrirModalNueva()">
                                 <i class="bi bi-plus-circle me-1"></i> Nueva Campaña
                             </button>

@@ -69,6 +69,9 @@ $puedeReset = tienePermiso('crm_bot', 'resetear_sesion', $cargoOperario);
                             <button class="btn btn-sm btn-success" onclick="abrirModalNuevaConv()">
                                 <i class="bi bi-plus-circle me-1"></i> Nueva Conversación
                             </button>
+                            <button class="btn btn-sm btn-info text-white" onclick="probarEnvio()">
+                                <i class="bi bi-lightning-charge me-1"></i> Probar Envío
+                            </button>
                         <?php endif; ?>
                         <?php if ($puedeGestionarBot): ?>
                             <a href="crm_bot_intents.php" class="btn btn-sm btn-outline-secondary">
