@@ -8,7 +8,7 @@ let id_cuenta_proveedor = null;
 let stream = null;
 let modalCamara = null;
 
-$(document).ready(function() {
+$(document).ready(function () {
     modalCamara = new bootstrap.Modal(document.getElementById('modalCamara'));
 
     if (editingId) {
@@ -19,7 +19,7 @@ $(document).ready(function() {
 });
 
 function cargarDatosEdicion(id) {
-    $.get('ajax/reembolsos_ia_get_detalle.php', { id: id }, function(res) {
+    $.get('ajax/reembolsos_ia_get_detalle.php', { id: id }, function (res) {
         if (res.success) {
             const s = res.solicitud;
             $('#id_proveedor').val(s.id_proveedor);
@@ -37,7 +37,7 @@ function cargarDatosEdicion(id) {
                 total_cordobas: d.monto_cordobas,
                 foto_path: d.foto_factura
             }));
-            
+
             $('.empty-row').hide();
             renderTable();
         } else {
@@ -48,20 +48,20 @@ function cargarDatosEdicion(id) {
 
 function abrirCamara() {
     const video = document.getElementById('video');
-    
-    navigator.mediaDevices.getUserMedia({ 
+
+    navigator.mediaDevices.getUserMedia({
         video: { facingMode: 'environment' }, // Preferir cámara trasera
-        audio: false 
+        audio: false
     })
-    .then(s => {
-        stream = s;
-        video.srcObject = stream;
-        modalCamara.show();
-    })
-    .catch(err => {
-        console.error("Error al acceder a la cámara:", err);
-        Swal.fire('Cámara', 'No se pudo acceder a la cámara. Verifica los permisos.', 'error');
-    });
+        .then(s => {
+            stream = s;
+            video.srcObject = stream;
+            modalCamara.show();
+        })
+        .catch(err => {
+            console.error("Error al acceder a la cámara:", err);
+            Swal.fire('Cámara', 'No se pudo acceder a la cámara. Verifica los permisos.', 'error');
+        });
 }
 
 function cerrarCamara() {
@@ -110,7 +110,7 @@ function cargarDatosProveedor(id) {
         return;
     }
 
-    $.get('ajax/reembolsos_ia_get_proveedor_data.php', { id_proveedor: id }, function(res) {
+    $.get('ajax/reembolsos_ia_get_proveedor_data.php', { id_proveedor: id }, function (res) {
         if (res.success && res.data) {
             $('#cuenta_bancaria').val(res.data.numero_cuenta).removeClass('opacity-50');
             $('#banco_proveedor').val(res.data.banco).removeClass('opacity-50');
@@ -123,9 +123,10 @@ function cargarDatosProveedor(id) {
     });
 }
 
+
 function procesarFoto(archivo) {
     let fileToUpload = null;
-    
+
     // Si viene de un input file
     if (archivo instanceof HTMLInputElement) {
         if (!archivo.files || !archivo.files[0]) return;
@@ -146,7 +147,7 @@ function procesarFoto(archivo) {
         data: formData,
         processData: false,
         contentType: false,
-        success: function(res) {
+        success: function (res) {
             $('#loader').fadeOut(300);
             if (res.success) {
                 Swal.fire({
@@ -163,7 +164,7 @@ function procesarFoto(archivo) {
                 $('#statusIA').html('<span class="text-danger"><i class="fas fa-times-circle"></i> Error al transcribir.</span>');
             }
         },
-        error: function() {
+        error: function () {
             $('#loader').hide();
             Swal.fire('Error', 'No se pudo conectar con el servicio de IA.', 'error');
         }
@@ -176,22 +177,22 @@ async function cargarDatosVisita(id) {
 
     try {
         const res = await $.get('../mantenimiento/ajax/get_datos_reembolso_visita.php', { visita_id: id });
-        
+
         if (res.success) {
             const v = res.visita;
             // $('#concepto').val(`MANTENIMIENTO: Reembolso por visita a ${v.nombre_sucursal} (${v.fecha})`); // El usuario prefiere llenarlo manualmente
-            
+
             if (res.compras && res.compras.length > 0) {
                 $('.empty-row').hide();
-                
+
                 // Procesar cada factura de forma secuencial con IA
                 for (let i = 0; i < res.compras.length; i++) {
                     const c = res.compras[i];
-                    $('#statusIA').html(`<i class="fas fa-robot"></i> Procesando factura ${i+1} de ${res.compras.length}...`);
-                    $('#loader h5').text(`Extrayendo datos de factura ${i+1}/${res.compras.length}...`);
-                    
+                    $('#statusIA').html(`<i class="fas fa-robot"></i> Procesando factura ${i + 1} de ${res.compras.length}...`);
+                    $('#loader h5').text(`Extrayendo datos de factura ${i + 1}/${res.compras.length}...`);
+
                     const ruta = `modulos/mantenimiento/uploads/compras/${c.foto_factura}`;
-                    
+
                     try {
                         const iaRes = await $.ajax({
                             url: 'ajax/reembolsos_ia_procesar_existente.php',
@@ -202,9 +203,9 @@ async function cargarDatosVisita(id) {
 
                         if (iaRes.success) {
                             agregarAFilas(iaRes.items, iaRes.foto_path);
-                            $('#statusIA').html(`<span class="text-success small"><i class="fas fa-check"></i> Factura ${i+1} procesada.</span>`);
+                            $('#statusIA').html(`<span class="text-success small"><i class="fas fa-check"></i> Factura ${i + 1} procesada.</span>`);
                         } else {
-                            console.error(`Error en factura ${i+1}:`, iaRes.message);
+                            console.error(`Error en factura ${i + 1}:`, iaRes.message);
                             // Si falla la IA, agregar manualmente para no perder el item
                             agregarAFilas([{
                                 cantidad: 1,
@@ -269,9 +270,9 @@ function renderTable() {
                 <td><input type="text" class="excel-input" value="${item.detalle}" onchange="actualizarDato(${i}, 'detalle', this.value)"></td>
                 <td><input type="number" class="excel-input fw-bold text-primary" value="${item.total_cordobas}" onchange="actualizarDato(${i}, 'total_cordobas', this.value)"></td>
                 <td class="text-center">
-                    ${item.foto_path 
-                        ? `<img src="../../${item.foto_path}" class="preview-img" onclick="window.open('../../${item.foto_path}')" title="Ver original">` 
-                        : '<span class="badge bg-light text-secondary border"><i class="fas fa-keyboard me-1"></i> Manual</span>'}
+                    ${item.foto_path
+                ? `<img src="../../${item.foto_path}" class="preview-img" onclick="window.open('../../${item.foto_path}')" title="Ver original">`
+                : '<span class="badge bg-light text-secondary border"><i class="fas fa-keyboard me-1"></i> Manual</span>'}
                 </td>
                 <td class="text-center">
                     <button type="button" class="btn btn-sm btn-outline-danger border-0" onclick="eliminarFila(${i})">
