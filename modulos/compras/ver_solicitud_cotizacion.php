@@ -394,7 +394,7 @@ else: ?>
 ?>
                             <tr>
                                 <td>
-                                    <div style="font-weight: bold;">
+                                    <div class="producto-nombre">
                                         <?php echo htmlspecialchars($producto['producto_descripcion']); ?>
                                     </div>
                                 </td>

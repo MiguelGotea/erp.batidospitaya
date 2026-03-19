@@ -135,26 +135,40 @@
     border-bottom: 2px solid #51B8AC;
     padding-bottom: 10px;
     margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #51B8AC;
+    display: flex;
+    align-items: center;
 }
 
 /* --- Tabla de productos --- */
 .productos-table {
     width: 100%;
     border-collapse: collapse;
+    margin-top: 15px;
+    font-size: 14px;
 }
 
 .productos-table th {
-    background-color: #0E544C;
-    color: white;
-    padding: 12px;
+    background-color: #f8f9fa;
+    padding: 10px 12px;
+    border-bottom: 2px solid #dee2e6;
     text-align: left;
-    font-weight: normal;
+    font-weight: 600;
+    font-size: 13px;
+    color: #0E544C;
 }
 
 .productos-table td {
-    padding: 12px;
-    border-bottom: 1px solid #ddd;
-    vertical-align: top;
+    padding: 10px 12px;
+    border-bottom: 1px solid #f0f0f0;
+    vertical-align: middle;
+}
+
+.producto-nombre {
+    font-weight: 600;
+    color: #333;
+    font-size: 14px;
 }
 
 .productos-table tr:hover {
