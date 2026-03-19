@@ -1,0 +1,228 @@
+/* Formato de Salida - Estilos Premium */
+:root {
+    --primary-color: #0E544C;
+    --secondary-color: #51B8AC;
+    --accent-color: #FFC107;
+    --bg-color: #f8fbfb;
+    --card-bg: #ffffff;
+    --text-color: #333;
+    --border-radius: 12px;
+    --shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.exit-form-container {
+    max-width: 1000px;
+    margin: 20px auto;
+    padding: 30px;
+    background: var(--card-bg);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    color: var(--text-color);
+}
+
+.form-header {
+    text-align: center;
+    margin-bottom: 30px;
+    border-bottom: 2px solid var(--primary-color);
+    padding-bottom: 15px;
+}
+
+.form-header h2 {
+    color: var(--primary-color);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin: 0;
+}
+
+.form-section {
+    margin-bottom: 40px;
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    border-left: 5px solid var(--secondary-color);
+}
+
+.form-section h3 {
+    color: var(--primary-color);
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-size: 1.2rem;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 5px;
+    color: #555;
+    font-size: 0.9rem;
+}
+
+.form-control {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 1rem;
+    transition: border-color 0.3s;
+}
+
+.form-control:focus {
+    border-color: var(--secondary-color);
+    outline: none;
+    box-shadow: 0 0 5px rgba(81, 184, 172, 0.2);
+}
+
+.rating-group {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #f9f9f9;
+}
+
+.rating-options {
+    display: flex;
+    gap: 10px;
+    background: #f0f4f4;
+    padding: 6px;
+    border-radius: 30px;
+    border: 1px solid #e0eaea;
+}
+
+.rating-option {
+    position: relative;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.rating-option input {
+    position: absolute;
+    opacity: 0;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+    z-index: 2;
+    margin: 0;
+}
+
+.rating-number {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: white;
+    color: #0E544C;
+    border-radius: 50%;
+    font-weight: 800;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    border: 1px solid #d1dada;
+    font-size: 0.9rem;
+    z-index: 1;
+}
+
+.rating-option:hover .rating-number {
+    transform: translateY(-2px);
+    border-color: #51B8AC;
+}
+
+.rating-option input:checked + .rating-number {
+    color: white;
+    transform: scale(1.15);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    border: none;
+}
+
+/* Semáforo de colores para los niveles */
+.rating-option:nth-child(1) input:checked + .rating-number { background: #ff4757; } /* Muy Insatisfecho */
+.rating-option:nth-child(2) input:checked + .rating-number { background: #ffa502; } /* Insatisfecho */
+.rating-option:nth-child(3) input:checked + .rating-number { background: #ced6e0; color: #2f3542; } /* Neutral */
+.rating-option:nth-child(4) input:checked + .rating-number { background: #7bed9f; color: #2ed573; } /* Satisfecho -> Light green with dark text */
+.rating-option:nth-child(4) input:checked + .rating-number { background: #7bed9f; color: #0E544C; }
+.rating-option:nth-child(5) input:checked + .rating-number { background: #2ed573; } /* Muy Satisfecho */
+
+.signatures-section {
+    display: none; /* Ocultas por solicitud */
+}
+
+.signature-box {
+    text-align: center;
+}
+
+.signature-line {
+    border-bottom: 1px solid #333;
+    height: 60px;
+    margin-bottom: 10px;
+}
+
+.signature-name {
+    font-weight: 600;
+}
+
+.signature-title {
+    font-size: 0.8rem;
+    color: #666;
+}
+
+.btn-container {
+    display: flex;
+    justify-content: flex-end;
+    gap: 15px;
+    margin-top: 30px;
+}
+
+.btn-premium {
+    padding: 12px 25px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    border: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-primary {
+    background: var(--primary-color);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #093d37;
+    transform: translateY(-2px);
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #5a6268;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .info-grid, .signatures-section {
+        grid-template-columns: 1fr;
+    }
+}

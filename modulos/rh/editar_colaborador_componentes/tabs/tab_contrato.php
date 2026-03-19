@@ -331,6 +331,13 @@
                                                 <i class="fas fa-edit"></i>
                                             </button>
                                         <?php endif; ?>
+
+                                        <?php if (!empty($contrato['fecha_salida']) && $contrato['fecha_salida'] != '0000-00-00'): ?>
+                                            <a href="formato_salida.php?id_contrato=<?= $contrato['CodContrato'] ?>"
+                                                class="btn-accion" title="Formato de Salida" style="color: #51B8AC;">
+                                                <i class="fas fa-file-export"></i>
+                                            </a>
+                                        <?php endif; ?>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>

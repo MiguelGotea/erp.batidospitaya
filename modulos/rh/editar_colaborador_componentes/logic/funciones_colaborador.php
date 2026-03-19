@@ -2,6 +2,12 @@
 // Este archivo es incluido desde editar_colaborador.php
 require_once 'compliance_logic.php';
 
+// Inicializar variables globales si no están definidas (para evitar warnings al incluir el archivo)
+if (!isset($codOperario)) $codOperario = null;
+if (!isset($cargoId)) $cargoId = 0;
+if (!isset($pestaña)) $pestaña = '';
+if (!isset($usuario)) $usuario = null;
+
 /**
  * Calcula el porcentaje de documentos obligatorios completados para un contrato específico
  */
@@ -1118,9 +1124,11 @@ function obtenerNombreTipoContrato($codTipoContrato)
     return $result['nombre'] ?? 'No definido';
 }
 
-$categoriasColaborador = obtenerCategoriasColaborador($codOperario);
-$categoriaActual = obtenerCategoriaActual($codOperario);
-$todasCategorias = obtenerTodasCategorias();
+if (isset($codOperario)) {
+    $categoriasColaborador = obtenerCategoriasColaborador($codOperario);
+    $categoriaActual = obtenerCategoriaActual($codOperario);
+    $todasCategorias = obtenerTodasCategorias();
+}
 
 /**
  * Obtiene el historial de categorías de un colaborador
@@ -3357,3 +3365,99 @@ function obtenerTodasCategoriasCompletas()
     return $stmt->fetchAll();
 }
 
+
+/**
+ * Obtiene un contrato específico por su ID con información del cargo y sucursal
+ */
+function obtenerContratoPorId($codContrato)
+{
+    global $conn;
+
+    $stmt = $conn->prepare("
+        SELECT c.*, tc.nombre as tipo_contrato, nc.Nombre as cargo, s.nombre as sucursal,
+               o.Nombre as operario_nombre, o.Apellido as operario_apellido
+        FROM Contratos c
+        LEFT JOIN TipoContrato tc ON c.cod_tipo_contrato = tc.CodTipoContrato
+        LEFT JOIN AsignacionNivelesCargos anc ON c.CodAsignacionNivelesCargos = anc.CodAsignacionNivelesCargos
+        LEFT JOIN NivelesCargos nc ON anc.CodNivelesCargos = nc.CodNivelesCargos
+        LEFT JOIN sucursales s ON c.cod_sucursal_contrato = s.codigo
+        LEFT JOIN Operarios o ON c.cod_operario = o.CodOperario
+        WHERE c.CodContrato = ?
+    ");
+    $stmt->execute([$codContrato]);
+    return $stmt->fetch();
+}
+
+/**
+ * Obtiene el formato de salida asociado a un contrato
+ */
+function obtenerFormatoSalidaPorContrato($codContrato)
+{
+    global $conn;
+
+    $stmt = $conn->prepare("SELECT * FROM formato_salida WHERE cod_contrato = ?");
+    $stmt->execute([$codContrato]);
+    return $stmt->fetch();
+}
+
+/**
+ * Guarda o actualiza un formato de salida
+ */
+function guardarFormatoSalida($datos)
+{
+    global $conn;
+
+    try {
+        $codContrato = $datos['cod_contrato'];
+        $existente = obtenerFormatoSalidaPorContrato($codContrato);
+
+        $campos = [
+            'cod_contrato', 'fecha', 'induccion_p1', 'induccion_p2', 
+            'laboral_p1', 'laboral_p2', 'laboral_p3', 'laboral_p4', 'laboral_p5', 'laboral_p6',
+            'sat_salario', 'sat_ambiente', 'sat_relacion_companeros', 'sat_relacion_jefe', 
+            'sat_relacion_superiores', 'sat_horario', 'sat_trabajo_equipo', 'sat_recomendaria',
+            'opinion_clima', 'firma_entrevistado', 'firma_entrevistador', 
+            'usuario_ultima_modificacion', 'fecha_ultima_modificacion'
+        ];
+
+        if (!$existente) {
+            $campos[] = 'usuario_registro';
+            $campos[] = 'usuario_creador';
+            
+            $placeholders = str_repeat('?,', count($campos) - 1) . '?';
+            $sql = "INSERT INTO formato_salida (" . implode(', ', $campos) . ") VALUES ($placeholders)";
+            
+            $valores = [];
+            foreach ($campos as $campo) {
+                if ($campo == 'fecha_ultima_modificacion') {
+                    $valores[] = date('Y-m-d H:i:s');
+                } else {
+                    $valores[] = isset($datos[$campo]) ? $datos[$campo] : null;
+                }
+            }
+        } else {
+            $setClause = [];
+            foreach ($campos as $campo) {
+                $setClause[] = "$campo = ?";
+            }
+            $sql = "UPDATE formato_salida SET " . implode(', ', $setClause) . " WHERE id = ?";
+            
+            $valores = [];
+            foreach ($campos as $campo) {
+                if ($campo == 'fecha_ultima_modificacion') {
+                    $valores[] = date('Y-m-d H:i:s');
+                } else {
+                    $valores[] = isset($datos[$campo]) ? $datos[$campo] : null;
+                }
+            }
+            $valores[] = $existente['id'];
+        }
+
+        $stmt = $conn->prepare($sql);
+        $stmt->execute($valores);
+
+        return ['exito' => true, 'mensaje' => 'Formato de salida guardado correctamente'];
+    } catch (Exception $e) {
+        return ['exito' => false, 'mensaje' => 'Error al guardar el formato: ' . $e->getMessage()];
+    }
+}
