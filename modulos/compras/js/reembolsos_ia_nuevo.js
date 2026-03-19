@@ -179,7 +179,7 @@ async function cargarDatosVisita(id) {
         
         if (res.success) {
             const v = res.visita;
-            $('#concepto').val(`MANTENIMIENTO: Reembolso por visita a ${v.nombre_sucursal} (${v.fecha})`);
+            // $('#concepto').val(`MANTENIMIENTO: Reembolso por visita a ${v.nombre_sucursal} (${v.fecha})`); // El usuario prefiere llenarlo manualmente
             
             if (res.compras && res.compras.length > 0) {
                 $('.empty-row').hide();
