@@ -105,24 +105,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
                 $nuevoEstado = 'aprobada';
                 $accionHistorial = 'aprobada';
 
-                // Determinar qué gerencia aprueba (16 o 49)
-                $cargosUsuario = obtenerCargosUsuario($usuarioId);
-                if (in_array(16, $cargosUsuario)) {
-                    $campoGerencia = 'aprobado_1';
-                }
-                elseif (in_array(49, $cargosUsuario)) {
-                    $campoGerencia = 'aprobado_2';
-                }
-                else {
-                    $campoGerencia = 'aprobado_1'; // Por defecto
-                }
+                $nuevoEstado = 'aprobada';
+                $accionHistorial = 'aprobada';
 
                 // Actualizar aprobación en la solicitud
                 $stmtUpdateAprobacion = $conn->prepare("
                     UPDATE solicitudes_cotizacion 
-                    SET {$campoGerencia}_id = ?, 
-                        {$campoGerencia}_nombre = ?, 
-                        fecha_{$campoGerencia} = CURDATE()
+                    SET gerente_aprobador_id = ?, 
+                        gerente_aprobador_nombre = ?, 
+                        fecha_aprobacion = CURDATE()
                     WHERE id = ?
                 ");
                 $stmtUpdateAprobacion->execute([$usuarioId, $usuarioNombre, $solicitudId]);
