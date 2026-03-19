@@ -456,7 +456,7 @@ else: ?>
                                                 <div style="font-size: 11px; color: #999;">
                                                     <?php echo date('d/m/Y H:i', strtotime($producto['fecha_notas_compras'])); ?>
                                                 </div>
-                                                <?php if (puedeCompletarSolicitudes()): ?>
+                                                <?php if (puedeCompletarSolicitudes() && $solicitud['estado'] !== 'pendiente'): ?>
                                                     <button type="button" class="btn-editar-nota" 
                                                             onclick="editarNotaProducto(<?php echo $producto['id']; ?>)">
                                                         <i class="fas fa-edit"></i> Editar
@@ -466,7 +466,7 @@ else: ?>
                                             </div>
                                         <?php
         else: ?>
-                                            <?php if (puedeCompletarSolicitudes()): ?>
+                                            <?php if (puedeCompletarSolicitudes() && $solicitud['estado'] !== 'pendiente'): ?>
                                                 <button type="button" class="btn-agregar-nota" 
                                                         onclick="agregarNotaProducto(<?php echo $producto['id']; ?>)">
                                                     <i class="fas fa-plus"></i> Agregar Nota
@@ -502,7 +502,7 @@ endif; ?>
         </div>
         
         <!-- NUEVA SECCIÓN: Observaciones Generales de Compras -->
-        <?php if (puedeCompletarSolicitudes() || !empty($solicitud['observaciones_compras'])): ?>
+        <?php if ((puedeCompletarSolicitudes() && $solicitud['estado'] !== 'pendiente') || !empty($solicitud['observaciones_compras'])): ?>
         <div class="observaciones-compras-section">
             <h2 class="section-title">
                 <i class="fas fa-clipboard-list"></i> Observaciones de Compras
@@ -518,7 +518,7 @@ endif; ?>
                             <span><i class="fas fa-user"></i> <?php echo htmlspecialchars($solicitud['compras_usuario_nombre']); ?></span>
                             <span><i class="fas fa-clock"></i> <?php echo date('d/m/Y H:i', strtotime($solicitud['fecha_observaciones_compras'])); ?></span>
                         </div>
-                        <?php if (puedeCompletarSolicitudes()): ?>
+                        <?php if (puedeCompletarSolicitudes() && $solicitud['estado'] !== 'pendiente'): ?>
                             <button type="button" class="btn btn-warning btn-sm" onclick="editarObservacionesCompras()">
                                 <i class="fas fa-edit"></i> Editar Observaciones
                             </button>
@@ -527,7 +527,7 @@ endif; ?>
                     </div>
                 <?php
     else: ?>
-                    <?php if (puedeCompletarSolicitudes()): ?>
+                    <?php if (puedeCompletarSolicitudes() && $solicitud['estado'] !== 'pendiente'): ?>
                         <div style="text-align: center; padding: 20px;">
                             <button type="button" class="btn btn-primary" onclick="agregarObservacionesCompras()">
                                 <i class="fas fa-plus"></i> Agregar Observaciones Generales
