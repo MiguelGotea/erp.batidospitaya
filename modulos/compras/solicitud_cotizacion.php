@@ -10,7 +10,7 @@ verificarAutenticacion();
 $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
 
-if (!tienePermiso('solicitud_cotizacion', 'vista', $cargoOperario)) {
+if (!tienePermiso('historial_solicitudes_cotizacion', 'boton_nueva', $cargoOperario)) {
     header('Location: /index.php');
     exit();
 }

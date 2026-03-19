@@ -63,7 +63,7 @@ endif; ?>
             <div class="container-fluid p-3">
 
                 <!-- Botón Flotante Nueva Solicitud -->
-                <?php if (tienePermiso('historial_solicitudes_cotizacion', 'boton_nuevo', $cargoOperario)): ?>
+                <?php if (tienePermiso('historial_solicitudes_cotizacion', 'boton_nueva', $cargoOperario)): ?>
                 <a href="solicitud_cotizacion.php" class="btn-floating-pitaya" title="Nueva Solicitud de Cotización">
                     <i class="fas fa-plus"></i>
                 </a>
