@@ -756,7 +756,8 @@ body {
     box-shadow: 0 6px 20px rgba(81, 184, 172, 0.4);
 }
 
-/* Girar el icono del botón principal al hacer hover */
-.fab-container:hover .btn-floating-pitaya i {
+/* Girar el icono del botón principal al hacer hover o estar activo */
+.fab-container:hover .btn-floating-pitaya i,
+.fab-container.active .btn-floating-pitaya i {
     transform: rotate(135deg);
 }
