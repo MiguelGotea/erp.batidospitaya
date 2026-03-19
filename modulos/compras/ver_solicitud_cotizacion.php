@@ -304,7 +304,7 @@ endif; ?>
 endif; ?>
 
                         <?php // El creador puede cancelar si todavía está pendiente ?>
-                        <?php if ($solicitud['estado'] === 'pendiente' && $solicitud['solicitante_id'] == $usuarioId && !puedeCompletarSolicitudes() && !esGerente()): ?>
+                        <?php if ($solicitud['estado'] === 'pendiente' && $solicitud['solicitante_id'] == $usuarioId): ?>
                             <button type="button" class="btn btn-danger" onclick="mostrarModal('cancelar')">
                                 <i class="fas fa-ban"></i> Cancelar
                             </button>
