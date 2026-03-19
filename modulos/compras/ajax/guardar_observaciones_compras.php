@@ -3,6 +3,7 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/core/database/conexion.php';
 require_once $_SERVER['DOCUMENT_ROOT'] . '/core/auth/auth.php';
 require_once '../../../core/helpers/funciones.php';
 require_once '../includes/funciones_compras.php';
+require_once '../../../core/helpers/config.php';
 
 verificarAutenticacion();
 
