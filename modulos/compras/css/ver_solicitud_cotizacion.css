@@ -3,7 +3,7 @@
    ========================================================= */
 
 /* --- Layout de información de solicitud --- */
-.solicitud-header {
+.solicitud-header, .solicitud-body {
     background-color: white;
     border: 1px solid #e0e6ed;
     border-radius: 12px;
@@ -131,14 +131,14 @@
 
 /* --- Secciones generales --- */
 .section-title {
+    font-size: 18px; /* Reduced from default */
     color: #0E544C;
-    border-bottom: 2px solid #51B8AC;
-    padding-bottom: 10px;
     margin-bottom: 20px;
     padding-bottom: 10px;
     border-bottom: 2px solid #51B8AC;
     display: flex;
     align-items: center;
+    gap: 10px;
 }
 
 /* --- Tabla de productos --- */
@@ -147,6 +147,7 @@
     border-collapse: collapse;
     margin-top: 15px;
     font-size: 14px;
+    background-color: white; /* Ensure no translucency */
 }
 
 .productos-table th {

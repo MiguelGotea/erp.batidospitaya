@@ -364,183 +364,168 @@ endif; ?>
 endif; ?>
         </div>
         
-        <!-- Productos -->
-        <div class="productos-section">
-            <h2 class="section-title">
-                <i class="fas fa-boxes"></i> Productos Solicitados
-                <span style="font-size: 14px; color: #666; margin-left: 10px;">
-                    (<?php echo count($productos); ?> productos)
-                </span>
-            </h2>
-            
-            <?php if (empty($productos)): ?>
-                <div style="text-align: center; padding: 40px; color: #666;">
-                    <i class="fas fa-box-open" style="font-size: 48px; margin-bottom: 10px;"></i>
-                    <p>No hay productos en esta solicitud</p>
-                </div>
-            <?php
-else: ?>
-                <table class="productos-table">
-                    <thead>
-                        <tr>
-                            <th style="width: 40%;">Producto</th>
-                            <th style="width: 15%;">Referencia</th>
-                            <th style="width: 10%;">Cantidad</th>
-                            <th style="width: 15%;">Precio Unitario (C$)</th>
-                            <th style="width: 20%;">Notas de Compras</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php
-    $totalEstimado = 0;
-    foreach ($productos as $producto):
-        $subtotal = $producto['cantidad'] * $producto['precio_unitario'];
-        $totalEstimado += $subtotal;
-?>
-                            <tr>
-                                <td>
-                                    <div class="producto-nombre">
-                                        <?php echo htmlspecialchars($producto['producto_descripcion']); ?>
-                                    </div>
-                                </td>
-                                <td class="foto-container">
-                                    <?php
-        $fotos = $fotosPorProducto[$producto['id']] ?? [];
-        if (empty($fotos) && !empty($producto['foto_referencia'])) {
-            // Compatibilidad con el sistema anterior (foto única)
-            $fotos = [$producto['foto_referencia']];
-        }
-
-        if (!empty($fotos)): ?>
-                                        <div class="galeria-fotos">
-                                            <?php foreach ($fotos as $foto):
-                $rutaFotoWeb = '/modulos/compras/uploads/cotizaciones/' . $foto;
-                $rutaFotoServidor = $_SERVER['DOCUMENT_ROOT'] . $rutaFotoWeb;
-
-                if (file_exists($rutaFotoServidor)):
-?>
-                                                <div class="foto-thumb" onclick="ampliarFoto(<?php echo htmlspecialchars(json_encode($fotos)); ?>, <?php echo array_search($foto, $fotos); ?>)">
-                                                    <img src="<?php echo htmlspecialchars($rutaFotoWeb); ?>" 
-                                                         alt="Ref" 
-                                                         onerror="this.parentElement.style.display='none';">
-                                                </div>
-                                            <?php
-                endif;
-            endforeach; ?>
-                                        </div>
-                                    <?php
-        else: ?>
-                                        <div class="no-foto">
-                                            <i class="fas fa-image"></i> Sin imágenes
-                                        </div>
-                                    <?php
-        endif; ?>
-                                </td>
-                                <td><?php echo htmlspecialchars($producto['cantidad']); ?></td>
-                                <td>
-                                    C$<?php echo number_format($producto['precio_unitario'], 2); ?>
-                                    <?php if ($producto['precio_unitario'] > 0): ?>
-                                        <br><small style="color: #666;">
-                                            Subtotal: C$<?php echo number_format($subtotal, 2); ?>
-                                        </small>
-                                    <?php
-        endif; ?>
-                                </td>
-                                <td>
-                                    <div class="notas-compras-container" id="notasContainer<?php echo $producto['id']; ?>">
-                                        <?php if (!empty($producto['notas_compras'])): ?>
-                                            <div class="nota-existente">
-                                                <div style="font-size: 13px; color: #333; margin-bottom: 5px;">
-                                                    <?php echo nl2br(htmlspecialchars($producto['notas_compras'])); ?>
-                                                </div>
-                                                <div style="font-size: 11px; color: #999;">
-                                                    <?php echo date('d/m/Y H:i', strtotime($producto['fecha_notas_compras'])); ?>
-                                                </div>
-                                                <?php if (puedeCompletarSolicitudes() && $solicitud['estado'] !== 'pendiente'): ?>
-                                                    <button type="button" class="btn-editar-nota" 
-                                                            onclick="editarNotaProducto(<?php echo $producto['id']; ?>)">
-                                                        <i class="fas fa-edit"></i> Editar
-                                                    </button>
-                                                <?php
-            endif; ?>
-                                            </div>
-                                        <?php
-        else: ?>
-                                            <?php if (puedeCompletarSolicitudes() && $solicitud['estado'] !== 'pendiente'): ?>
-                                                <button type="button" class="btn-agregar-nota" 
-                                                        onclick="agregarNotaProducto(<?php echo $producto['id']; ?>)">
-                                                    <i class="fas fa-plus"></i> Agregar Nota
-                                                </button>
-                                            <?php
-            else: ?>
-                                                <span style="color: #999; font-style: italic; font-size: 13px;">Sin notas</span>
-                                            <?php
-            endif; ?>
-                                        <?php
-        endif; ?>
-                                    </div>
-                                </td>
-                            </tr>
-                        <?php
-    endforeach; ?>
-                    </tbody>
-                    <tfoot>
-                        <?php if ($totalEstimado > 0): ?>
-                            <tr style="background-color: #f8f9fa;">
-                                <td colspan="3" style="text-align: right; font-weight: bold;">Total Estimado:</td>
-                                <td style="font-weight: bold; color: #0E544C;">
-                                    C$<?php echo number_format($totalEstimado, 2); ?>
-                                </td>
-                                <td></td>
-                            </tr>
-                        <?php
-    endif; ?>
-                    </tfoot>
-                </table>
-            <?php
-endif; ?>
-        </div>
-        
-        <!-- NUEVA SECCIÓN: Observaciones Generales de Compras -->
-        <?php if ((puedeCompletarSolicitudes() && $solicitud['estado'] !== 'pendiente') || !empty($solicitud['observaciones_compras'])): ?>
-        <div class="observaciones-compras-section">
-            <h2 class="section-title">
-                <i class="fas fa-clipboard-list"></i> Observaciones de Compras
-            </h2>
-            
-            <div class="observaciones-compras-container">
-                <?php if (!empty($solicitud['observaciones_compras'])): ?>
-                    <div class="observacion-existente">
-                        <div class="observacion-contenido">
-                            <?php echo nl2br(htmlspecialchars($solicitud['observaciones_compras'])); ?>
-                        </div>
-                        <div class="observacion-info">
-                            <span><i class="fas fa-user"></i> <?php echo htmlspecialchars($solicitud['compras_usuario_nombre']); ?></span>
-                            <span><i class="fas fa-clock"></i> <?php echo date('d/m/Y H:i', strtotime($solicitud['fecha_observaciones_compras'])); ?></span>
-                        </div>
-                        <?php if (puedeCompletarSolicitudes() && $solicitud['estado'] !== 'pendiente'): ?>
-                            <button type="button" class="btn btn-warning btn-sm" onclick="editarObservacionesCompras()">
-                                <i class="fas fa-edit"></i> Editar Observaciones
-                            </button>
-                        <?php
-        endif; ?>
+        <!-- Contenido de la Solicitud (PRODUCTOS Y OBSERVACIONES) -->
+        <div class="solicitud-body">
+            <!-- Productos -->
+            <div class="productos-section">
+                <h2 class="section-title">
+                    <i class="fas fa-boxes"></i> Productos Solicitados
+                    <span style="font-size: 14px; color: #666; margin-left: 10px;">
+                        (<?php echo count($productos); ?> productos)
+                    </span>
+                </h2>
+                
+                <?php if (empty($productos)): ?>
+                    <div style="text-align: center; padding: 40px; color: #666;">
+                        <i class="fas fa-box-open" style="font-size: 48px; margin-bottom: 10px;"></i>
+                        <p>No hay productos en esta solicitud</p>
                     </div>
-                <?php
-    else: ?>
-                    <?php if (puedeCompletarSolicitudes() && $solicitud['estado'] !== 'pendiente'): ?>
-                        <div style="text-align: center; padding: 20px;">
-                            <button type="button" class="btn btn-primary" onclick="agregarObservacionesCompras()">
-                                <i class="fas fa-plus"></i> Agregar Observaciones Generales
-                            </button>
-                        </div>
-                    <?php
-        endif; ?>
-                <?php
-    endif; ?>
+                <?php else: ?>
+                    <table class="productos-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 40%;">Producto</th>
+                                <th style="width: 15%;">Referencia</th>
+                                <th style="width: 10%;">Cantidad</th>
+                                <th style="width: 15%;">Precio Unitario (C$)</th>
+                                <th style="width: 20%;">Notas de Compras</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php
+        $totalEstimado = 0;
+        foreach ($productos as $producto):
+            $subtotal = $producto['cantidad'] * $producto['precio_unitario'];
+            $totalEstimado += $subtotal;
+    ?>
+                                <tr>
+                                    <td>
+                                        <div class="producto-nombre">
+                                            <?php echo htmlspecialchars($producto['producto_descripcion']); ?>
+                                        </div>
+                                    </td>
+                                    <td class="foto-container">
+                                        <?php
+            $fotos = $fotosPorProducto[$producto['id']] ?? [];
+            if (empty($fotos) && !empty($producto['foto_referencia'])) {
+                $fotos = [$producto['foto_referencia']];
+            }
+
+            if (!empty($fotos)): ?>
+                                            <div class="galeria-fotos">
+                                                <?php foreach ($fotos as $foto):
+                    $rutaFotoWeb = '/modulos/compras/uploads/cotizaciones/' . $foto;
+                    $rutaFotoServidor = $_SERVER['DOCUMENT_ROOT'] . $rutaFotoWeb;
+
+                    if (file_exists($rutaFotoServidor)):
+    ?>
+                                                    <div class="foto-thumb" onclick="ampliarFoto(<?php echo htmlspecialchars(json_encode($fotos)); ?>, <?php echo array_search($foto, $fotos); ?>)">
+                                                        <img src="<?php echo htmlspecialchars($rutaFotoWeb); ?>" 
+                                                             alt="Ref" 
+                                                             onerror="this.parentElement.style.display='none';">
+                                                    </div>
+                                                <?php
+                    endif;
+                endforeach; ?>
+                                            </div>
+                                        <?php else: ?>
+                                            <div class="no-foto">
+                                                <i class="fas fa-image"></i> Sin imágenes
+                                            </div>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td><?php echo htmlspecialchars($producto['cantidad']); ?></td>
+                                    <td>
+                                        C$<?php echo number_format($producto['precio_unitario'], 2); ?>
+                                        <?php if ($producto['precio_unitario'] > 0): ?>
+                                            <br><small style="color: #666;">
+                                                Subtotal: C$<?php echo number_format($subtotal, 2); ?>
+                                            </small>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td>
+                                        <div class="notas-compras-container" id="notasContainer<?php echo $producto['id']; ?>">
+                                            <?php if (!empty($producto['notas_compras'])): ?>
+                                                <div class="nota-existente">
+                                                    <div style="font-size: 13px; color: #333; margin-bottom: 5px;">
+                                                        <?php echo nl2br(htmlspecialchars($producto['notas_compras'])); ?>
+                                                    </div>
+                                                    <div style="font-size: 11px; color: #999;">
+                                                        <?php echo date('d/m/Y H:i', strtotime($producto['fecha_notas_compras'])); ?>
+                                                    </div>
+                                                    <?php if (puedeCompletarSolicitudes() && $solicitud['estado'] !== 'pendiente'): ?>
+                                                        <button type="button" class="btn-editar-nota" 
+                                                                onclick="editarNotaProducto(<?php echo $producto['id']; ?>)">
+                                                            <i class="fas fa-edit"></i> Editar
+                                                        </button>
+                                                    <?php endif; ?>
+                                                </div>
+                                            <?php else: ?>
+                                                <?php if (puedeCompletarSolicitudes() && $solicitud['estado'] !== 'pendiente'): ?>
+                                                    <button type="button" class="btn-agregar-nota" 
+                                                            onclick="agregarNotaProducto(<?php echo $producto['id']; ?>)">
+                                                        <i class="fas fa-plus"></i> Agregar Nota
+                                                    </button>
+                                                <?php else: ?>
+                                                    <span style="color: #999; font-style: italic; font-size: 13px;">Sin notas</span>
+                                                <?php endif; ?>
+                                            <?php endif; ?>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                        <tfoot>
+                            <?php if ($totalEstimado > 0): ?>
+                                <tr style="background-color: #f8f9fa;">
+                                    <td colspan="3" style="text-align: right; font-weight: bold;">Total Estimado:</td>
+                                    <td style="font-weight: bold; color: #0E544C;">
+                                        C$<?php echo number_format($totalEstimado, 2); ?>
+                                    </td>
+                                    <td></td>
+                                </tr>
+                            <?php endif; ?>
+                        </tfoot>
+                    </table>
+                <?php endif; ?>
             </div>
+            
+            <!-- Observaciones Generales de Compras (Dentro del mismo cuerpo) -->
+            <?php if ((puedeCompletarSolicitudes() && $solicitud['estado'] !== 'pendiente') || !empty($solicitud['observaciones_compras'])): ?>
+            <div class="observaciones-compras-section" style="margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px;">
+                <h2 class="section-title">
+                    <i class="fas fa-clipboard-list"></i> Observaciones de Compras
+                </h2>
+                
+                <div class="observaciones-compras-container">
+                    <?php if (!empty($solicitud['observaciones_compras'])): ?>
+                        <div class="observacion-existente">
+                            <div class="observacion-contenido">
+                                <?php echo nl2br(htmlspecialchars($solicitud['observaciones_compras'])); ?>
+                            </div>
+                            <div class="observacion-info">
+                                <span><i class="fas fa-user"></i> <?php echo htmlspecialchars($solicitud['compras_usuario_nombre']); ?></span>
+                                <span><i class="fas fa-clock"></i> <?php echo date('d/m/Y H:i', strtotime($solicitud['fecha_observaciones_compras'])); ?></span>
+                            </div>
+                            <?php if (puedeCompletarSolicitudes() && $solicitud['estado'] !== 'pendiente'): ?>
+                                <button type="button" class="btn btn-warning btn-sm" onclick="editarObservacionesCompras()">
+                                    <i class="fas fa-edit"></i> Editar Observaciones
+                                </button>
+                            <?php endif; ?>
+                        </div>
+                    <?php else: ?>
+                        <?php if (puedeCompletarSolicitudes() && $solicitud['estado'] !== 'pendiente'): ?>
+                            <div style="text-align: center; padding: 20px;">
+                                <button type="button" class="btn btn-primary" onclick="agregarObservacionesCompras()">
+                                    <i class="fas fa-plus"></i> Agregar Observaciones Generales
+                                </button>
+                            </div>
+                        <?php endif; ?>
+                    <?php endif; ?>
+                </div>
+            </div>
+            <?php endif; ?>
         </div>
-        <?php
-endif; ?>
         
         <!-- Historial -->
         <?php if (!empty($historial)): ?>
