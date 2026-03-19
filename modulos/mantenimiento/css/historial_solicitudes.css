@@ -696,7 +696,8 @@ body {
     transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-.fab-container:hover .fab-options {
+.fab-container:hover .fab-options,
+.fab-container.active .fab-options {
     opacity: 1;
     visibility: visible;
     transform: translateY(0);
@@ -726,7 +727,8 @@ body {
     border: 1px solid rgba(255,255,255,0.2);
 }
 
-.fab-option:hover .fab-label {
+.fab-option:hover .fab-label,
+.fab-container.active .fab-label {
     opacity: 1;
     transform: translateX(0);
 }
@@ -746,7 +748,8 @@ body {
     transition: all 0.3s ease;
 }
 
-.fab-option:hover .fab-icon-holder {
+.fab-option:hover .fab-icon-holder,
+.fab-container.active .fab-icon-holder {
     background-color: #51B8AC;
     color: white;
     transform: scale(1.1);
