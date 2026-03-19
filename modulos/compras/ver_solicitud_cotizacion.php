@@ -301,12 +301,17 @@ endif; ?>
                                 <button type="button" class="btn btn-primary" onclick="mostrarModal('completar')">
                                     <i class="fas fa-flag-checkered"></i> Finalizar
                                 </button>
-                            <?php endif; ?>
-                            <?php if ($solicitud['estado'] === 'aprobada' || ($solicitud['estado'] === 'pendiente' && $solicitud['solicitante_id'] == $usuarioId)): ?>
                                 <button type="button" class="btn btn-danger" onclick="mostrarModal('cancelar')">
                                     <i class="fas fa-ban"></i> Cancelar
                                 </button>
                             <?php endif; ?>
+                        <?php endif; ?>
+
+                        <?php // El creador puede cancelar si todavía está pendiente ?>
+                        <?php if ($solicitud['estado'] === 'pendiente' && $solicitud['solicitante_id'] == $usuarioId && !puedeCompletarSolicitudes() && !esGerente()): ?>
+                            <button type="button" class="btn btn-danger" onclick="mostrarModal('cancelar')">
+                                <i class="fas fa-ban"></i> Cancelar
+                            </button>
                         <?php endif; ?>
                     </div>
                 </div>
