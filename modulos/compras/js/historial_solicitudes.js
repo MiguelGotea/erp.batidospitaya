@@ -159,13 +159,6 @@ function generarBotonesAcciones(row) {
         }
     }
     
-    if (acciones.includes('completar')) {
-        botones += `
-            <button class="btn-accion btn-completar" onclick="mostrarModalAccion(${row.id}, 'completar')" title="Completar">
-                <i class="fas fa-check-double"></i>
-            </button>
-        `;
-    }
     
     return botones;
 }

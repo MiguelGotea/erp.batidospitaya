@@ -154,6 +154,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
                 }
                 $nuevoEstado = 'completada';
                 $accionHistorial = 'completada';
+
+                // Actualizar observaciones generales de compras al completar
+                $stmtUpdateCompras = $conn->prepare("
+                    UPDATE solicitudes_cotizacion 
+                    SET observaciones_compras = ?,
+                        compras_usuario_id = ?,
+                        compras_usuario_nombre = ?,
+                        fecha_observaciones_compras = NOW()
+                    WHERE id = ?
+                ");
+                $stmtUpdateCompras->execute([
+                    $observaciones,
+                    $usuarioId,
+                    $usuarioNombre,
+                    $solicitudId
+                ]);
                 break;
 
             case 'cancelar':
@@ -357,12 +373,13 @@ endif; ?>
                     <?php
     endif; ?>
                     
-                    <?php if ($solicitud['estado'] === 'en_proceso'): ?>
+                    <?php if (in_array($solicitud['estado'], ['aprobada', 'en_proceso'])): ?>
+                        <?php if (puedeCompletarSolicitudes() || puedeAprobarSolicitudes()): ?>
                         <button type="button" class="btn btn-primary" onclick="mostrarModal('completar')">
                             <i class="fas fa-flag-checkered"></i> Completar
                         </button>
-                    <?php
-    endif; ?>
+                        <?php endif; ?>
+                    <?php endif; ?>
                 <?php
 endif; ?>
             </div>
