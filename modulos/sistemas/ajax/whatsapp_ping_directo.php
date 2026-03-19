@@ -82,7 +82,14 @@ try {
             echo json_encode(['success' => false, 'error' => $respData['error'] ?? 'Error desconocido en el VPS']);
         }
     } else {
-        echo json_encode(['success' => false, 'error' => 'El VPS no respondió. Verifica que el bot esté conectado y en línea.']);
+        $phpError = error_get_last();
+        $errMsg = 'El VPS no respondió. ';
+        if ($phpError && str_contains($phpError['message'], 'file_get_contents')) {
+            $errMsg .= 'Detalle: ' . $phpError['message'];
+        } else {
+            $errMsg .= 'Verifica que el bot esté conectado y en línea en el puerto ' . $puerto;
+        }
+        echo json_encode(['success' => false, 'error' => $errMsg]);
     }
 } catch (Exception $e) {
     echo json_encode(['success' => false, 'error' => 'Error de conexión: ' . $e->getMessage()]);
