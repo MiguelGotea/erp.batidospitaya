@@ -582,7 +582,8 @@ async function probarEnvio() {
         html: `
             <div class="text-start">
                 <label class="form-label mb-1 fw-bold">Número de teléfono</label>
-                <input id="swal-input-num" class="form-control mb-3" placeholder="50688881234">
+                <input id="swal-input-num" class="form-control mb-1" placeholder="50588112233">
+                <div class="text-muted small mb-3">Ej: 50588112233 (incluir código de país)</div>
                 <label class="form-label mb-1 fw-bold">Mensaje de prueba</label>
                 <textarea id="swal-input-msg" class="form-control" rows="2">Prueba de conexión Pitaya WhatsApp ⚡ desde Campañas</textarea>
             </div>

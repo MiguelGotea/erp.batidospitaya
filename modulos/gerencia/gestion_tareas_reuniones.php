@@ -379,13 +379,10 @@ $permisoPingBot   = tienePermiso('pitayabot', 'prueba_envio', $cargoOperario);
                 <div class="modal-body">
                     <div class="mb-3">
                         <label class="form-label fw-bold">Número de WhatsApp destino</label>
-                        <div class="input-group">
-                            <span class="input-group-text">+505</span>
-                            <input type="text" id="pitayabotPingNumero" class="form-control"
-                                placeholder="88112233" maxlength="15"
-                                oninput="this.value=this.value.replace(/\D/g,'')">
-                        </div>
-                        <small class="text-muted">Solo dígitos del número local (sin código de país)</small>
+                        <input type="text" id="pitayabotPingNumero" class="form-control mb-1"
+                            placeholder="50588112233" maxlength="15"
+                            oninput="this.value=this.value.replace(/\D/g,'')">
+                        <small class="text-muted">Ej: 50588112233 (incluir código de país completo)</small>
                     </div>
                     <div id="pitayabotPingResultado" class="d-none"></div>
                 </div>
