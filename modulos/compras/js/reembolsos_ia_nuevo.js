@@ -166,16 +166,45 @@ function seleccionarProveedor(valor) {
     }
 }
 
-function seleccionarCECO(valor) {
-    const option = $(`#listaCECOs option[value="${valor}"]`);
-    if (option.length > 0) {
-        const codigo = option.data('codigo');
-        $('#ceco').val(codigo);
+function filtrarCECO(valor) {
+    const suggestionsContainer = $('#ceco-suggestions');
+    if (valor.length < 1) {
+        suggestionsContainer.empty().hide();
+        return;
+    }
+
+    const filtered = dataCecos.filter(c => 
+        (c.CodigoTexto + ' ' + c.Nombre).toLowerCase().includes(valor.toLowerCase())
+    );
+
+    if (filtered.length > 0) {
+        suggestionsContainer.empty();
+        filtered.forEach(c => {
+            const text = `${c.CodigoTexto} - ${c.Nombre}`;
+            const div = $('<div class="autocomplete-suggestion"></div>')
+                .text(text)
+                .on('click', function() {
+                    seleccionarCECOInternal(c.Codigo, text);
+                });
+            suggestionsContainer.append(div);
+        });
+        suggestionsContainer.show();
     } else {
-        // Si no coincide exactamente, podrías limpiar el ID o dejarlo vacío
-        // $('#ceco').val('');
+        suggestionsContainer.empty().hide();
     }
 }
+
+function seleccionarCECOInternal(id, texto) {
+    $('#ceco').val(id);
+    $('#ceco_nombre').val(texto);
+    $('#ceco-suggestions').hide();
+}
+
+$(document).on('click', function (e) {
+    if (!$(e.target).closest('.position-relative').length) {
+        $('.autocomplete-suggestions').hide();
+    }
+});
 
 function cambiarMoneda(m) {
     const symbol = m === 'Dolares' ? 'US$' : 'C$';

@@ -50,6 +50,31 @@ $tituloPagina = $editingId ? 'Editar Solicitud IA' : 'Nueva Solicitud: Reembolso
     <link rel="stylesheet" href="/assets/css/global_tools.css?v=<?php echo mt_rand(1, 10000); ?>">
     <link rel="stylesheet" href="/core/assets/css/modales_premium.css">
     <link rel="stylesheet" href="css/reembolsos_ia_historial.css?v=<?php echo mt_rand(1, 10000); ?>">
+    <style>
+        .autocomplete-suggestions {
+            position: absolute;
+            z-index: 1000;
+            background: white;
+            border: 1px solid #ddd;
+            width: 100%;
+            max-height: 200px;
+            overflow-y: auto;
+            display: none;
+            border-bottom-left-radius: 10px;
+            border-bottom-right-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .autocomplete-suggestion {
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+        .autocomplete-suggestion:hover {
+            background-color: #f1f1f1;
+            color: #51B8AC;
+        }
+        .position-relative { position: relative; }
+    </style>
 </head>
 <body>
 
@@ -62,6 +87,7 @@ $tituloPagina = $editingId ? 'Editar Solicitud IA' : 'Nueva Solicitud: Reembolso
             <script>
                 const editingId = <?= json_encode($editingId) ?>;
                 const visitaId = <?= json_encode(isset($_GET['visita_id']) ? (int)$_GET['visita_id'] : null) ?>;
+                const dataCecos = <?= json_encode($cecos) ?>;
             </script>
             
             <div class="container-fluid p-4">
@@ -109,15 +135,11 @@ $tituloPagina = $editingId ? 'Editar Solicitud IA' : 'Nueva Solicitud: Reembolso
                                     <label class="form-label small fw-bold text-secondary">Concepto General del Reembolso</label>
                                     <input type="text" id="concepto" class="form-control border-0 shadow-sm" placeholder="Ej: Viáticos de viaje a Occidente - Marzo 2026">
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-4 position-relative">
                                     <label class="form-label small fw-bold text-secondary">Centro de Costo (CECO)</label>
-                                    <input type="text" id="ceco_nombre" class="form-control border-0 shadow-sm" placeholder="Escribe para buscar CECO..." list="listaCECOs" oninput="seleccionarCECO(this.value)">
+                                    <input type="text" id="ceco_nombre" class="form-control border-0 shadow-sm" placeholder="Escribe para buscar CECO..." oninput="filtrarCECO(this.value)" autocomplete="off">
                                     <input type="hidden" id="ceco" value="">
-                                    <datalist id="listaCECOs">
-                                        <?php foreach ($cecos as $c): ?>
-                                        <option value="<?= htmlspecialchars($c['CodigoTexto'] . ' - ' . $c['Nombre']) ?>" data-codigo="<?= $c['Codigo'] ?>">
-                                        <?php endforeach; ?>
-                                    </datalist>
+                                    <div id="ceco-suggestions" class="autocomplete-suggestions"></div>
                                 </div>
                                 <div class="col-md-8">
                                     <label class="form-label small fw-bold text-primary">

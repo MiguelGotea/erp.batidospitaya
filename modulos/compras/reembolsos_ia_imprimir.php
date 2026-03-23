@@ -17,7 +17,7 @@ if (!$id) {
 // Obtener datos de la solicitud
 $stmt = $conn->prepare("
     SELECT s.*, p.nombre as proveedor_nombre, cp.banco, cp.numero_cuenta, cp.titular, cp.moneda as cuenta_moneda, o.Nombre as usuario_nombre,
-           cc.CodigoTexto as ceco_nombre, cc.Nombre as ceco_descripcion
+           CONCAT(cc.CodigoTexto, ' - ', cc.Nombre) as ceco_nombre
     FROM reembolsos_solicitudes s
     LEFT JOIN proveedores p ON s.id_proveedor = p.id
     LEFT JOIN cuenta_proveedor cp ON s.id_cuenta_proveedor = cp.id
