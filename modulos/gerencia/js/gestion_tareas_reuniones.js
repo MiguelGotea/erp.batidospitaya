@@ -697,3 +697,137 @@ function escapeHtml(text) {
     };
     return text.replace(/[&<>"']/g, m => map[m]);
 }
+
+// ═══════════════════════════════════════════════════════
+//  PITAYABOT — Panel de estado de conexión WhatsApp
+// ═══════════════════════════════════════════════════════
+
+let pitayabotQRActual  = null;
+let pitayabotPollTimer = null;
+let modalPitayabotQRInst, modalPitayabotPingInst;
+
+$(document).ready(function () {
+    if (typeof PITAYABOT_PERMISOS !== 'undefined' && PITAYABOT_PERMISOS.verEstado) {
+        modalPitayabotQRInst   = new bootstrap.Modal(document.getElementById('modalPitayabotQR'));
+        modalPitayabotPingInst = new bootstrap.Modal(document.getElementById('modalPitayabotPing'));
+        pitayabotPollStatus();
+        pitayabotPollTimer = setInterval(pitayabotPollStatus, 30000);
+    }
+});
+
+function pitayabotPollStatus() {
+    $.ajax({
+        url: 'ajax/gestion_tareas_reuniones_pitayabot_status.php',
+        method: 'GET',
+        dataType: 'json',
+        success: function (r) {
+            const dot   = document.getElementById('pitayabotDot');
+            const texto = document.getElementById('pitayabotStatusTexto');
+            const btnQR = document.getElementById('btnPitayabotQR');
+            if (!dot || !texto) return;
+
+            dot.className = 'wsp-dot ' + (r.estado || 'desconectado');
+
+            const etiquetas = {
+                'conectado'     : '✅ Conectado' + (r.numero_telefono ? ' — +' + r.numero_telefono : ''),
+                'qr_pendiente'  : '📷 QR listo para escanear',
+                'inicializando' : '⏳ Iniciando...',
+                'desconectado'  : '🔴 Desconectado',
+                'error'         : '❌ Error de conexión'
+            };
+            texto.textContent = etiquetas[r.estado] || r.estado;
+
+            if (r.estado === 'qr_pendiente' && r.qr) {
+                pitayabotQRActual = r.qr;
+                btnQR.classList.remove('d-none');
+            } else {
+                pitayabotQRActual = null;
+                btnQR.classList.add('d-none');
+            }
+        },
+        error: function () {
+            const texto = document.getElementById('pitayabotStatusTexto');
+            if (texto) texto.textContent = '⚠️ Sin respuesta';
+        }
+    });
+}
+
+function pitayabotMostrarQR() {
+    if (!pitayabotQRActual) {
+        return Swal.fire('Sin QR', 'Aún no hay QR disponible. Espera unos segundos.', 'info');
+    }
+    document.getElementById('pitayabotQRImg').src = pitayabotQRActual;
+    modalPitayabotQRInst.show();
+}
+
+function pitayabotReset() {
+    Swal.fire({
+        title  : '¿Cambiar número de PitayaBot?',
+        html   : 'Se cerrará la sesión actual de WhatsApp.<br>Deberás escanear un QR nuevo para re-vincular.',
+        icon   : 'warning',
+        showCancelButton  : true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor : '#6c757d',
+        confirmButtonText : 'Sí, cambiar número',
+        cancelButtonText  : 'Cancelar'
+    }).then(result => {
+        if (!result.isConfirmed) return;
+        $.ajax({
+            url     : 'ajax/gestion_tareas_reuniones_pitayabot_reset.php',
+            method  : 'POST',
+            dataType: 'json',
+            success: function (r) {
+                if (r.success) {
+                    Swal.fire('Reset solicitado', r.mensaje, 'success');
+                    setTimeout(pitayabotPollStatus, 5000);
+                } else {
+                    Swal.fire('Error', r.error || 'No se pudo solicitar el reset', 'error');
+                }
+            },
+            error: () => Swal.fire('Error', 'No se pudo contactar al servidor', 'error')
+        });
+    });
+}
+
+function pitayabotAbrirPing() {
+    document.getElementById('pitayabotPingNumero').value = '';
+    document.getElementById('pitayabotPingResultado').classList.add('d-none');
+    modalPitayabotPingInst.show();
+}
+
+function pitayabotEnviarPing() {
+    const numero = document.getElementById('pitayabotPingNumero').value.trim();
+    if (!numero || numero.length < 7) {
+        return Swal.fire('Error', 'Ingresa un número válido', 'warning');
+    }
+
+    const btn = document.querySelector('#modalPitayabotPing .btn-success');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Enviando...';
+
+    $.ajax({
+        url        : 'ajax/gestion_tareas_reuniones_pitayabot_ping.php',
+        method     : 'POST',
+        contentType: 'application/json',
+        data       : JSON.stringify({ numero: '505' + numero }),
+        dataType   : 'json',
+        success: function (r) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-send me-1"></i>Enviar Prueba';
+            const div = document.getElementById('pitayabotPingResultado');
+            div.classList.remove('d-none');
+            if (r.success) {
+                div.className = 'alert alert-success small mt-2';
+                div.textContent = '✅ Mensaje enviado a +505' + numero;
+            } else {
+                div.className = 'alert alert-danger small mt-2';
+                div.textContent = '❌ ' + (r.error || 'Error desconocido');
+            }
+        },
+        error: function () {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-send me-1"></i>Enviar Prueba';
+            Swal.fire('Error', 'No se pudo conectar al servidor', 'error');
+        }
+    });
+}
