@@ -361,8 +361,16 @@ $puedeVerReporteSemanal = tienePermiso('agenda_mantenimiento', 'reporte_semanal'
 
     <!-- Modal Reporte Semanal -->
     <style>
-        #modalReporteSemanal .modal-xl {
-            max-width: 95% !important;
+        #modalReporteSemanal .modal-dialog {
+            max-width: 98% !important;
+            width: fit-content !important;
+            margin: 1.75rem auto;
+        }
+        @media (max-width: 768px) {
+            #modalReporteSemanal .modal-dialog {
+                width: auto !important;
+                margin: 0.5rem;
+            }
         }
         #modalReporteSemanal .table td, #modalReporteSemanal .table th {
             white-space: nowrap;
