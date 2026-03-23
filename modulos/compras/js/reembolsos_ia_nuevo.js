@@ -33,7 +33,6 @@ async function cargarDatosKm(semana, anio, costo) {
         });
 
         if (res.success) {
-            $('#concepto').val(`REEMBOLSO KM SEMANA #${semana} - ${anio}`);
             
             res.items.forEach(item => {
                 itemsActuales.push({
