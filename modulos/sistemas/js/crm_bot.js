@@ -474,7 +474,7 @@ async function probarEnvio() {
     Swal.fire({ title: 'Enviando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
     try {
-        const resp = await fetch('ajax/whatsapp_ping_directo.php', {
+        const resp = await fetch('../../core/wsp/whatsapp_ping_directo.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({

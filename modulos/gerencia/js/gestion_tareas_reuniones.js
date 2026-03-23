@@ -806,10 +806,14 @@ function pitayabotEnviarPing() {
     btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Enviando...';
 
     $.ajax({
-        url        : 'ajax/gestion_tareas_reuniones_pitayabot_ping.php',
+        url        : '../../core/wsp/whatsapp_ping_directo.php',
         method     : 'POST',
         contentType: 'application/json',
-        data       : JSON.stringify({ numero: '505' + numero }),
+        data       : JSON.stringify({
+            instancia: 'wsp-pitayabot',
+            numero: numero,
+            mensaje: 'Prueba de conexión PitayaBot ⚡'
+        }),
         dataType   : 'json',
         success: function (r) {
             btn.disabled = false;
