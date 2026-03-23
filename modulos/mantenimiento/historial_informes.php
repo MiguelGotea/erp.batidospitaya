@@ -360,6 +360,14 @@ $puedeVerReporteSemanal = tienePermiso('agenda_mantenimiento', 'reporte_semanal'
     </div>
 
     <!-- Modal Reporte Semanal -->
+    <style>
+        #modalReporteSemanal .modal-xl {
+            max-width: 95% !important;
+        }
+        #modalReporteSemanal .table td, #modalReporteSemanal .table th {
+            white-space: nowrap;
+        }
+    </style>
     <div class="modal fade no-print" id="modalReporteSemanal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-xl modal-dialog-centered">
             <div class="modal-content border-0 shadow-lg rounded-4">
