@@ -142,12 +142,16 @@ $detalles = $stmtDet->fetchAll(PDO::FETCH_ASSOC);
             <tr>
                 <td class="v-label">Fecha:</td>
                 <td class="v-value"><?= date('d-M-y', strtotime($solicitud['fecha_solicitud'])) ?></td>
-                <td class="v-label">Solicita:</td>
-                <td class="v-value"><?= htmlspecialchars($solicitud['usuario_nombre']) ?></td>
-                <td class="v-label">Autoriza:</td>
-                <td class="v-value"></td>
+                <td class="v-label">CECO:</td>
+                <td class="v-value"><?= htmlspecialchars($solicitud['ceco_nombre'] ?? $solicitud['ceco']) ?></td>
                 <td class="v-label">Moneda:</td>
                 <td class="v-value"><?= $solicitud['moneda'] ?></td>
+            </tr>
+            <tr>
+                <td class="v-label">Solicita:</td>
+                <td class="v-value" colspan="3"><?= htmlspecialchars($solicitud['usuario_nombre']) ?></td>
+                <td class="v-label">Autoriza:</td>
+                <td class="v-value"></td>
             </tr>
         </table>
 
