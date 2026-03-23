@@ -25,7 +25,7 @@ $stmtProv = $conn->query("SELECT id, nombre FROM proveedores WHERE vigente = 1 O
 $proveedores = $stmtProv->fetchAll(PDO::FETCH_ASSOC);
 
 // Obtener Centros de Costos para el select
-$stmtCeco = $conn->query("SELECT Codigo, CodigoTexto, Nombre FROM CentroCostos WHERE Activo = 1 ORDER BY CodigoTexto ASC");
+$stmtCeco = $conn->query("SELECT Codigo, Nombre FROM CentroCostos WHERE Activo = 1 ORDER BY Codigo ASC");
 $cecos = $stmtCeco->fetchAll(PDO::FETCH_ASSOC);
 
 // Detectar modo edición
