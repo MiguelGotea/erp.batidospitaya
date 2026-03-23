@@ -22,7 +22,7 @@ try {
     $id_proveedor = !empty($input['id_proveedor']) ? $input['id_proveedor'] : null;
     $id_cuenta_proveedor = !empty($input['id_cuenta_proveedor']) ? $input['id_cuenta_proveedor'] : null;
     $concepto = !empty($input['concepto']) ? trim($input['concepto']) : '';
-    $ceco = !empty($input['ceco']) ? trim($input['ceco']) : '';
+    $ceco = !empty($input['ceco']) ? (int)$input['ceco'] : null;
     $fecha_solicitud = !empty($input['fecha_solicitud']) ? $input['fecha_solicitud'] : date('Y-m-d');
     $moneda = !empty($input['moneda']) ? $input['moneda'] : 'Cordobas';
     $total_cordobas = isset($input['total_cordobas']) ? (float)$input['total_cordobas'] : 0;

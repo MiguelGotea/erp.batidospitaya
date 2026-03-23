@@ -26,11 +26,13 @@ $proveedores = $stmtProv->fetchAll(PDO::FETCH_ASSOC);
 
 // Obtener historial
 $stmtHist = $conn->prepare("
-    SELECT s.*, p.nombre as proveedor_nombre, cp.banco, cp.numero_cuenta, o.Nombre as usuario_nombre
+    SELECT s.*, p.nombre as proveedor_nombre, cp.banco, cp.numero_cuenta, o.Nombre as usuario_nombre,
+           cc.CodigoTexto as ceco_nombre
     FROM reembolsos_solicitudes s
     LEFT JOIN proveedores p ON s.id_proveedor = p.id
     LEFT JOIN cuenta_proveedor cp ON s.id_cuenta_proveedor = cp.id
     LEFT JOIN Operarios o ON s.usuario_registro = o.CodOperario
+    LEFT JOIN CentroCostos cc ON s.ceco = cc.Codigo
     ORDER BY s.created_at DESC
 ");
 $stmtHist->execute();
@@ -105,7 +107,7 @@ $historial = $stmtHist->fetchAll(PDO::FETCH_ASSOC);
                                         <td><?= formatoFechaCorta($reg['fecha_solicitud']) ?></td>
                                         <td><?= $reg['proveedor_nombre'] ?? '<span class="text-muted">N/A</span>' ?></td>
                                         <td><?= $reg['concepto'] ?></td>
-                                        <td><span class="badge bg-light text-dark"><?= $reg['ceco'] ?></span></td>
+                                        <td><span class="badge bg-light text-dark"><?= $reg['ceco_nombre'] ?? $reg['ceco'] ?></span></td>
                                         <td class="fw-bold text-primary"><?= $reg['moneda'] == 'Dolares' ? 'US$' : 'C$' ?> <?= number_format($reg['total_cordobas'], 2) ?></td>
                                         <td>
                                             <span class="badge bg-<?= $reg['estado'] == 'pendiente' ? 'warning text-dark' : 'success' ?>">

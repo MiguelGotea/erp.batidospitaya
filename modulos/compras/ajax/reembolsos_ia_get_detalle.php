@@ -17,10 +17,12 @@ try {
 
     // Obtener cabecera
     $stmt = $conn->prepare("
-        SELECT s.*, p.nombre as proveedor_nombre, cp.banco, cp.numero_cuenta
+        SELECT s.*, p.nombre as proveedor_nombre, cp.banco, cp.numero_cuenta, 
+               CONCAT(cc.CodigoTexto, ' - ', cc.Nombre) as ceco_nombre
         FROM reembolsos_solicitudes s
         LEFT JOIN proveedores p ON s.id_proveedor = p.id
         LEFT JOIN cuenta_proveedor cp ON s.id_cuenta_proveedor = cp.id
+        LEFT JOIN CentroCostos cc ON s.ceco = cc.Codigo
         WHERE s.id = ?
     ");
     $stmt->execute([$id]);

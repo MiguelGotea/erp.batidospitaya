@@ -76,6 +76,7 @@ function cargarDatosEdicion(id) {
             $('#fecha_solicitud').val(s.fecha_solicitud);
             $('#concepto').val(s.concepto);
             $('#ceco').val(s.ceco);
+            $('#ceco_nombre').val(s.ceco_nombre || s.ceco); // Mostrar nombre si está disponible, sino el código
             id_cuenta_proveedor = s.id_cuenta_proveedor;
             cambiarMoneda(s.moneda || 'Cordobas'); // Actualizar labels
 
@@ -162,6 +163,17 @@ function seleccionarProveedor(valor) {
         // Pero el usuario pidió un "input donde se ingresa texto", a veces quieren dejarlo como texto si no existe
         // En este ERP parece que se requiere el ID.
         // $('#id_proveedor').val('');
+    }
+}
+
+function seleccionarCECO(valor) {
+    const option = $(`#listaCECOs option[value="${valor}"]`);
+    if (option.length > 0) {
+        const codigo = option.data('codigo');
+        $('#ceco').val(codigo);
+    } else {
+        // Si no coincide exactamente, podrías limpiar el ID o dejarlo vacío
+        // $('#ceco').val('');
     }
 }
 

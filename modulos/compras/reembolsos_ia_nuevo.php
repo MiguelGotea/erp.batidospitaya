@@ -24,6 +24,10 @@ if (!tienePermiso('reembolsos_ia_plantilla', 'nuevo_registro', $cargoOperario)) 
 $stmtProv = $conn->query("SELECT id, nombre FROM proveedores WHERE vigente = 1 ORDER BY nombre ASC");
 $proveedores = $stmtProv->fetchAll(PDO::FETCH_ASSOC);
 
+// Obtener Centros de Costos para el select
+$stmtCeco = $conn->query("SELECT Codigo, CodigoTexto, Nombre FROM CentroCostos WHERE Activo = 1 ORDER BY CodigoTexto ASC");
+$cecos = $stmtCeco->fetchAll(PDO::FETCH_ASSOC);
+
 // Detectar modo edición
 $editingId = isset($_GET['id']) ? (int)$_GET['id'] : null;
 $tituloPagina = $editingId ? 'Editar Solicitud IA' : 'Nueva Solicitud: Reembolsos con IA';
@@ -107,7 +111,13 @@ $tituloPagina = $editingId ? 'Editar Solicitud IA' : 'Nueva Solicitud: Reembolso
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label small fw-bold text-secondary">Centro de Costo (CECO)</label>
-                                    <input type="text" id="ceco" class="form-control border-0 shadow-sm" placeholder="ID o Nombre del CECO">
+                                    <input type="text" id="ceco_nombre" class="form-control border-0 shadow-sm" placeholder="Escribe para buscar CECO..." list="listaCECOs" oninput="seleccionarCECO(this.value)">
+                                    <input type="hidden" id="ceco" value="">
+                                    <datalist id="listaCECOs">
+                                        <?php foreach ($cecos as $c): ?>
+                                        <option value="<?= htmlspecialchars($c['CodigoTexto'] . ' - ' . $c['Nombre']) ?>" data-codigo="<?= $c['Codigo'] ?>">
+                                        <?php endforeach; ?>
+                                    </datalist>
                                 </div>
                                 <div class="col-md-8">
                                     <label class="form-label small fw-bold text-primary">
