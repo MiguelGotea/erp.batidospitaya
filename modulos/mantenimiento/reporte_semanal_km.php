@@ -180,18 +180,16 @@ if (!tienePermiso('agenda_mantenimiento', 'reporte_semanal', $cargoOperario)) {
         const depreciacionFija = 150.00;
 
         $(document).ready(function() {
-            cargarSemanas();
+            cargarSemanaActual();
         });
 
-        async function cargarSemanas() {
+        async function cargarSemanaActual() {
             try {
-                const response = await $.post('ajax/reporte_semanal_handler.php', { action: 'get_semanas' });
-                if (response.success) {
-                    let html = '<option value="">Seleccione una semana...</option>';
-                    response.semanas.forEach(s => {
-                        html += `<option value="${s.id}" data-inicio="${s.fecha_inicio}" data-fin="${s.fecha_fin}">S${s.numero_semana} (${s.fecha_inicio} al ${s.fecha_fin})</option>`;
-                    });
-                    $('#semanaSelector').html(html);
+                const response = await $.post('ajax/reporte_semanal_handler.php', { action: 'get_current_week' });
+                if (response.success && response.numero_semana) {
+                    $('#infoSemanaActual').text(`Hoy: S-${response.numero_semana}`);
+                    $('#inputSemana').val(response.numero_semana);
+                    // Opcional: cargar reporte automáticamente al entrar
                 }
             } catch (error) {
                 console.error(error);
@@ -199,11 +197,11 @@ if (!tienePermiso('agenda_mantenimiento', 'reporte_semanal', $cargoOperario)) {
         }
 
         async function cargarReporte() {
-            const semanaId = $('#semanaSelector').val();
+            const numSemana = $('#inputSemana').val();
             const costoKm = parseFloat($('#inputCostoKm').val()) || 0;
 
-            if (!semanaId) {
-                Swal.fire('Atención', 'Selección de semana requerida', 'warning');
+            if (!numSemana) {
+                Swal.fire('Atención', 'Número de semana requerido', 'warning');
                 return;
             }
 
@@ -214,22 +212,27 @@ if (!tienePermiso('agenda_mantenimiento', 'reporte_semanal', $cargoOperario)) {
 
             try {
                 // 1. Guardar costo KM en los registros de esa semana
-                await $.post('ajax/reporte_semanal_handler.php', { 
+                const saveRes = await $.post('ajax/reporte_semanal_handler.php', { 
                     action: 'guardar_costo_km',
-                    semana_id: semanaId,
+                    numero_semana: numSemana,
                     costo_km: costoKm
                 });
+
+                if (!saveRes.success) {
+                    Swal.fire('Error', saveRes.message, 'error');
+                    return;
+                }
 
                 // 2. Obtener datos para la tabla
                 const res = await $.post('ajax/reporte_semanal_handler.php', { 
                     action: 'get_datos_semanales',
-                    semana_id: semanaId
+                    numero_semana: numSemana
                 });
 
                 if (res.success) {
                     $('#vistaVacia').addClass('d-none');
                     $('#resultadoReporte').removeClass('d-none');
-                    $('#rangoFechasTexto').text(`Rango: ${res.rango.desde} al ${res.rango.hasta}`);
+                    $('#rangoFechasTexto').text(`Semana #${numSemana} | Rango: ${res.rango.desde} al ${res.rango.hasta}`);
                     
                     let html = '';
                     let sumKm = 0;
@@ -240,7 +243,7 @@ if (!tienePermiso('agenda_mantenimiento', 'reporte_semanal', $cargoOperario)) {
                     res.datos.forEach(row => {
                         const km = parseFloat(row.km_total) || 0;
                         const combustible = km * costoKm;
-                        const dep = depreciacionFija; // El usuario pidió 150 fijo semanal
+                        const dep = depreciacionFija; 
                         const total = combustible + dep;
 
                         sumKm += km;
@@ -248,19 +251,13 @@ if (!tienePermiso('agenda_mantenimiento', 'reporte_semanal', $cargoOperario)) {
                         sumDep += dep;
                         sumTotal += total;
 
-                        // Si ya había un costo guardado y el input está en 0, sugerir usar el guardado o informar
-                        if (row.costo_km_guardado > 0 && costoKm == 0) {
-                            // Opcional: llenar el input si viene en 0
-                            $('#inputCostoKm').val(row.costo_km_guardado);
-                        }
-
                         html += `
                             <tr>
                                 <td class="ps-4 fw-bold text-dark">${row.Nombre} ${row.Apellido}</td>
                                 <td class="text-center">${km.toLocaleString()} km</td>
-                                <td class="text-center">$${combustible.toFixed(2)}</td>
-                                <td class="text-center">$${dep.toFixed(2)}</td>
-                                <td class="text-end pe-4 fw-bold text-dark">$${total.toFixed(2)}</td>
+                                <td class="text-center">C$ ${combustible.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                                <td class="text-center">C$ ${dep.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                                <td class="text-end pe-4 fw-bold text-dark">C$ ${total.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
                             </tr>
                         `;
                     });
@@ -271,9 +268,9 @@ if (!tienePermiso('agenda_mantenimiento', 'reporte_semanal', $cargoOperario)) {
 
                     $('#tablaCuerpo').html(html);
                     $('#totalKm').text(sumKm.toLocaleString() + ' km');
-                    $('#totalCombustible').text('$' + sumComb.toFixed(2));
-                    $('#totalDepreciacion').text('$' + sumDep.toFixed(2));
-                    $('#totalFinal').text('$' + sumTotal.toFixed(2));
+                    $('#totalCombustible').text('C$ ' + sumComb.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+                    $('#totalDepreciacion').text('C$ ' + sumDep.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+                    $('#totalFinal').text('C$ ' + sumTotal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}));
 
                     Swal.close();
                 } else {
