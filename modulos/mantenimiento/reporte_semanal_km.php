@@ -91,20 +91,21 @@ if (!tienePermiso('agenda_mantenimiento', 'reporte_semanal', $cargoOperario)) {
                 <div class="card card-reporte mb-4 no-print">
                     <div class="card-body">
                         <div class="row g-3 align-items-end">
-                            <div class="col-md-4">
-                                <label class="form-label small fw-bold">Seleccionar Semana (Lunes - Domingo)</label>
-                                <select id="semanaSelector" class="form-select form-select-lg rounded-3">
-                                    <option value="">Cargando semanas...</option>
-                                </select>
+                            <div class="col-md-3">
+                                <label class="form-label small fw-bold">Número de Semana</label>
+                                <div class="input-group input-group-lg">
+                                    <input type="number" id="inputSemana" class="form-control rounded-start-3" placeholder="Ej: 12">
+                                    <span class="input-group-text bg-light small text-muted" id="infoSemanaActual">Hoy: S-</span>
+                                </div>
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label small fw-bold">Costo por KM Actual</label>
                                 <div class="input-group input-group-lg">
-                                    <span class="input-group-text">$</span>
-                                    <input type="number" id="inputCostoKm" step="0.01" value="0.00" class="form-control rounded-end-3">
+                                    <span class="input-group-text">C$</span>
+                                    <input type="number" id="inputCostoKm" step="0.01" value="5" class="form-control rounded-end-3">
                                 </div>
                             </div>
-                            <div class="col-md-5 d-flex gap-2">
+                            <div class="col-md-6 d-flex gap-2">
                                 <button onclick="cargarReporte()" class="btn btn-primary btn-lg rounded-pill px-4 flex-grow-1" style="background-color: var(--color-header-tabla); border:none;">
                                     <i class="fas fa-sync-alt me-2"></i>Generar y Guardar
                                 </button>
@@ -146,16 +147,16 @@ if (!tienePermiso('agenda_mantenimiento', 'reporte_semanal', $cargoOperario)) {
                                     <tr class="total-row">
                                         <td class="ps-4 text-end">TOTALES:</td>
                                         <td id="totalKm" class="text-center">0</td>
-                                        <td id="totalCombustible" class="text-center">$0.00</td>
-                                        <td id="totalDepreciacion" class="text-center">$0.00</td>
-                                        <td id="totalFinal" class="text-end pe-4">$0.00</td>
+                                        <td id="totalCombustible" class="text-center">C$ 0.00</td>
+                                        <td id="totalDepreciacion" class="text-center">C$ 0.00</td>
+                                        <td id="totalFinal" class="text-end pe-4">C$ 0.00</td>
                                     </tr>
                                 </tfoot>
                             </table>
                         </div>
                     </div>
                     <div class="card-footer bg-white border-0 p-4 text-muted small">
-                        * La depreciación fija de $150 se aplica por operario que haya tenido actividad en la semana.<br>
+                        * La depreciación fija de C$ 150 se aplica por operario que haya tenido actividad en la semana.<br>
                         * El costo de combustible se calcula multiplicando los KM totales por el costo de KM asignado.
                     </div>
                 </div>
