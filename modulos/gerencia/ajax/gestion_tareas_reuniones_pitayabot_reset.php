@@ -13,7 +13,7 @@ header('Content-Type: application/json; charset=utf-8');
 $usuario       = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
 
-if (!tienePermiso('gestion_tareas_reuniones', 'pitayabot_resetear_sesion', $cargoOperario)) {
+if (!tienePermiso('pitayabot', 'resetear_sesion', $cargoOperario)) {
     http_response_code(403);
     echo json_encode(['success' => false, 'error' => 'Sin permiso para resetear la sesión de PitayaBot']);
     exit();

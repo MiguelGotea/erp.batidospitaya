@@ -13,7 +13,7 @@ header('Content-Type: application/json; charset=utf-8');
 $usuario       = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
 
-if (!tienePermiso('gestion_tareas_reuniones', 'vista', $cargoOperario)) {
+if (!tienePermiso('pitayabot', 'ver_estado', $cargoOperario)) {
     http_response_code(403);
     echo json_encode(['error' => 'Sin permiso']);
     exit;

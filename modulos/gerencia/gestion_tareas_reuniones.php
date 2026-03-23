@@ -22,10 +22,10 @@ $permisoSolicitarTarea = tienePermiso('gestion_tareas_reuniones', 'solicitar_tar
 $permisoSolicitarReunion = tienePermiso('gestion_tareas_reuniones', 'solicitar_reunion', $cargoOperario);
 $permisoCancelar = tienePermiso('gestion_tareas_reuniones', 'cancelar_tarea_reunion', $cargoOperario);
 
-// Permisos PitayaBot
-$permisoVerBot    = tienePermiso('gestion_tareas_reuniones', 'pitayabot_ver_estado', $cargoOperario);
-$permisoResetBot  = tienePermiso('gestion_tareas_reuniones', 'pitayabot_resetear_sesion', $cargoOperario);
-$permisoPingBot   = tienePermiso('gestion_tareas_reuniones', 'pitayabot_prueba_envio', $cargoOperario);
+// Permisos PitayaBot (tool independiente: 'pitayabot')
+$permisoVerBot    = tienePermiso('pitayabot', 'ver_estado', $cargoOperario);
+$permisoResetBot  = tienePermiso('pitayabot', 'resetear_sesion', $cargoOperario);
+$permisoPingBot   = tienePermiso('pitayabot', 'prueba_envio', $cargoOperario);
 ?>
 <!DOCTYPE html>
 <html lang="es">

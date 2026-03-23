@@ -13,7 +13,7 @@ header('Content-Type: application/json; charset=utf-8');
 $usuario       = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
 
-if (!tienePermiso('gestion_tareas_reuniones', 'pitayabot_prueba_envio', $cargoOperario)) {
+if (!tienePermiso('pitayabot', 'prueba_envio', $cargoOperario)) {
     http_response_code(403);
     echo json_encode(['success' => false, 'error' => 'Sin permiso para prueba de envío']);
     exit();
