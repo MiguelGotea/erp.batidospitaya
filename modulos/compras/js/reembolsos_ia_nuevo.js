@@ -11,12 +11,59 @@ let modalCamara = null;
 $(document).ready(function () {
     modalCamara = new bootstrap.Modal(document.getElementById('modalCamara'));
 
-    if (editingId) {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('from_km') === '1') {
+        cargarDatosKm(urlParams.get('semana'), urlParams.get('anio'), urlParams.get('costo'));
+    } else if (editingId) {
         cargarDatosEdicion(editingId);
     } else if (visitaId) {
         cargarDatosVisita(visitaId);
     }
 });
+
+async function cargarDatosKm(semana, anio, costo) {
+    $('#loader h5').text('Cargando consumos de KM de la semana...');
+    $('#loader').css('display', 'flex').hide().fadeIn(300);
+
+    try {
+        const res = await $.get('../mantenimiento/ajax/get_km_reembolso_data.php', {
+            semana: semana,
+            anio: anio,
+            costo_km: costo
+        });
+
+        if (res.success) {
+            $('#concepto').val(`REEMBOLSO KM SEMANA #${semana} - ${anio}`);
+            
+            res.items.forEach(item => {
+                itemsActuales.push({
+                    cantidad: item.cantidad,
+                    detalle: item.detalle,
+                    total_cordobas: item.total_cordobas,
+                    foto_path: null // Registros de KM no tienen foto individual aquí
+                });
+            });
+
+            $('.empty-row').hide();
+            renderTable();
+            
+            Swal.fire({
+                icon: 'info',
+                title: 'KM Importados',
+                text: `Se han cargado ${res.items.length} registros de la semana #${semana}.`,
+                timer: 2000,
+                showConfirmButton: false
+            });
+        } else {
+            Swal.fire('Error', res.message, 'error');
+        }
+    } catch (e) {
+        console.error(e);
+        Swal.fire('Error', 'No se pudieron cargar los datos de KM.', 'error');
+    } finally {
+        $('#loader').fadeOut(300);
+    }
+}
 
 function cargarDatosEdicion(id) {
     $.get('ajax/reembolsos_ia_get_detalle.php', { id: id }, function (res) {
@@ -330,6 +377,25 @@ async function guardarSolicitud() {
         $('#loader').hide();
 
         if (res.success) {
+            // Vincular a KM si aplica
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('from_km') === '1') {
+                try {
+                    await $.ajax({
+                        url: '../mantenimiento/ajax/marcar_informes_reembolsados.php',
+                        type: 'POST',
+                        data: JSON.stringify({
+                            semana: urlParams.get('semana'),
+                            anio: urlParams.get('anio'),
+                            reembolso_id: res.id
+                        }),
+                        contentType: 'application/json'
+                    });
+                } catch (err) {
+                    console.error("Error al marcar informes como reembolsados:", err);
+                }
+            }
+
             // Vincular a visita si aplica
             if (visitaId) {
                 await $.ajax({
