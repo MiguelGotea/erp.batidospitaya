@@ -64,7 +64,8 @@ try {
             // 3. Obtener resumen por operario (para totales consolidados)
             $sqlResumen = "SELECT o.CodOperario, o.Nombre, o.Apellido,
                                   SUM(i.km_final - i.km_inicial) as km_total,
-                                  MAX(i.costo_km) as costo_km_guardado
+                                  MAX(i.costo_km) as costo_km_guardado,
+                                  MAX(i.reembolso_id) as reembolso_id
                            FROM Operarios o
                            INNER JOIN mtto_informes_diarios i ON o.CodOperario = i.cod_operario
                            WHERE i.fecha BETWEEN :desde AND :hasta

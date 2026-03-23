@@ -1,9 +1,10 @@
 -- C:\Users\migue\Desktop\Sistema\Pitaya Web\VisualCode\erp.batidospitaya.com\modulos\mantenimiento\sql\alter_informes_table.sql
 
--- 1. Añadir columna de costo por KM a los informes diarios
+-- 1. Añadir columnas de costo por KM y ID de reembolso a los informes diarios
 -- Se coloca después de km_final para mantener orden lógico
 ALTER TABLE mtto_informes_diarios 
-ADD COLUMN costo_km DECIMAL(10,2) DEFAULT 0.00 AFTER km_final;
+ADD COLUMN costo_km DECIMAL(10,2) DEFAULT 0.00 AFTER km_final,
+ADD COLUMN reembolso_id INT NULL AFTER costo_km;
 
 -- 2. Registrar la nueva acción 'reporte_semanal' para la herramienta de mantenimiento
 -- Esto permite configurar qué cargos pueden ver este reporte consolidado

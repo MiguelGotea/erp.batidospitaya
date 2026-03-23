@@ -129,11 +129,23 @@ $puedeVerReporteSemanal = tienePermiso('agenda_mantenimiento', 'reporte_semanal'
             <?php echo renderHeader($usuario, false, 'Control de Informes Diarios'); ?>
 
             <div class="container-fluid p-4">
-                <div class="mb-4 d-flex justify-content-end gap-2">
+                <div class="mb-4 d-flex justify-content-end align-items-center gap-3 no-print">
                     <?php if ($puedeVerReporteSemanal): ?>
-                        <a href="reporte_semanal_km.php" class="btn btn-outline-primary rounded-pill px-4 shadow-sm border-2 fw-bold">
-                            <i class="fas fa-file-invoice-dollar me-2"></i>Reporte Semanal de Pagos
-                        </a>
+                        <div class="d-flex align-items-center bg-white p-2 rounded-pill shadow-sm border px-3 gap-2">
+                            <div class="d-flex align-items-center gap-1">
+                                <label class="small fw-bold text-muted mb-0">Semana:</label>
+                                <input type="number" id="inputSemanaReporte" class="form-control form-control-sm border-0 bg-light rounded-pill text-center fw-bold" style="width: 70px;" placeholder="#">
+                                <span id="spanSemanaActual" class="badge bg-secondary rounded-pill opacity-75" style="font-size: 0.7rem;"></span>
+                            </div>
+                            <div class="vr mx-1"></div>
+                            <div class="d-flex align-items-center gap-1">
+                                <label class="small fw-bold text-muted mb-0">C$:</label>
+                                <input type="number" id="inputCostoKmReporte" class="form-control form-control-sm border-0 bg-light rounded-pill text-center fw-bold" style="width: 60px;" value="5">
+                            </div>
+                            <button onclick="abrirModalReporte()" class="btn btn-pitaya btn-sm rounded-pill px-3 ms-2">
+                                <i class="fas fa-file-invoice-dollar me-1"></i>Ver Reporte
+                            </button>
+                        </div>
                     <?php endif; ?>
                 </div>
 
