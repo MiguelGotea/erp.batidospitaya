@@ -378,7 +378,7 @@ $puedeVerReporteSemanal = tienePermiso('agenda_mantenimiento', 'reporte_semanal'
                     </div>
 
                     <div class="table-responsive bg-white rounded-4 shadow-sm">
-                        <table class="table table-hover align-middle mb-0" style="min-width: 800px;">
+                        <table class="table table-hover align-middle mb-0">
                             <thead class="bg-white">
                                 <tr>
                                     <th class="ps-4 py-3" style="width: 300px;">Detalle</th>
@@ -427,7 +427,7 @@ $puedeVerReporteSemanal = tienePermiso('agenda_mantenimiento', 'reporte_semanal'
                 const response = await $.post('ajax/reporte_semanal_handler.php', { action: 'get_current_week' });
                 if (response.success) {
                     $('#inputSemanaReporte').val(response.numero_semana);
-                    $('#spanSemanaActual').text('S' + response.numero_semana);
+                    $('#spanSemanaActual').text('Semana Actual: ' + response.numero_semana);
                 }
             } catch (err) { console.error(err); }
         }
