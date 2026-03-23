@@ -16,11 +16,13 @@ if (!$id) {
 
 // Obtener datos de la solicitud
 $stmt = $conn->prepare("
-    SELECT s.*, p.nombre as proveedor_nombre, cp.banco, cp.numero_cuenta, cp.titular, cp.moneda, o.Nombre as usuario_nombre
+    SELECT s.*, p.nombre as proveedor_nombre, cp.banco, cp.numero_cuenta, cp.titular, cp.moneda as cuenta_moneda, o.Nombre as usuario_nombre,
+           cc.CodigoTexto as ceco_nombre, cc.Nombre as ceco_descripcion
     FROM reembolsos_solicitudes s
     LEFT JOIN proveedores p ON s.id_proveedor = p.id
     LEFT JOIN cuenta_proveedor cp ON s.id_cuenta_proveedor = cp.id
     LEFT JOIN Operarios o ON s.usuario_registro = o.CodOperario
+    LEFT JOIN CentroCostos cc ON s.ceco = cc.Codigo
     WHERE s.id = ?
 ");
 $stmt->execute([$id]);
@@ -144,9 +146,12 @@ $detalles = $stmtDet->fetchAll(PDO::FETCH_ASSOC);
                 <td class="v-value"><?= htmlspecialchars($solicitud['usuario_nombre']) ?></td>
                 <td class="v-label">Autoriza:</td>
                 <td class="v-value"></td>
+                <td class="v-label">Moneda:</td>
+                <td class="v-value"><?= $solicitud['moneda'] ?></td>
             </tr>
         </table>
 
+        <?php $simbolo = $solicitud['moneda'] == 'Dolares' ? 'US$' : 'C$'; ?>
         <table class="table-main">
             <thead>
                 <tr>
@@ -156,7 +161,7 @@ $detalles = $stmtDet->fetchAll(PDO::FETCH_ASSOC);
                 <tr>
                     <th style="width: 8%;">CANT</th>
                     <th style="width: 42%;">DETALLE DEL GASTO</th>
-                    <th style="width: 15%;">TOTAL C$</th>
+                    <th style="width: 15%;">TOTAL <?= $simbolo ?></th>
                     <th style="width: 15%;">CONCEPTO (Sistema)</th>
                     <th style="width: 20%;">CECO</th>
                 </tr>
@@ -168,13 +173,13 @@ $detalles = $stmtDet->fetchAll(PDO::FETCH_ASSOC);
                     <td class="bg-blue"><?= htmlspecialchars($det['detalle']) ?></td>
                     <td class="text-right bg-blue"><?= number_format($det['monto_cordobas'], 2) ?></td>
                     <td class="bg-blue"><?= htmlspecialchars($solicitud['concepto']) ?></td>
-                    <td class="bg-blue"><?= htmlspecialchars($solicitud['ceco']) ?></td>
+                    <td class="bg-blue"><?= htmlspecialchars($solicitud['ceco_nombre'] ?? $solicitud['ceco']) ?></td>
                 </tr>
                 <?php endforeach; ?>
 
                 
                 <tr class="total-row">
-                    <td colspan="2" class="text-center">TOTAL C$:</td>
+                    <td colspan="2" class="text-center">TOTAL <?= $simbolo ?>:</td>
                     <td class="text-right"><?= number_format($solicitud['total_cordobas'], 2) ?></td>
                     <td colspan="2" style="border: none;"></td>
                 </tr>
@@ -188,7 +193,7 @@ $detalles = $stmtDet->fetchAll(PDO::FETCH_ASSOC);
                 <td style="width: 10%;">Cuenta:</td>
                 <td style="width: 25%;" class="bg-blue"><?= htmlspecialchars($solicitud['titular'] ?? 'N/A') ?> - <?= htmlspecialchars($solicitud['numero_cuenta'] ?? '') ?></td>
                 <td style="width: 10%;">Banco:</td>
-                <td style="width: 20%;" class="bg-blue"><?= htmlspecialchars($solicitud['banco'] ?? 'N/A') ?> (<?= htmlspecialchars($solicitud['moneda'] ?? '') ?>)</td>
+                <td style="width: 20%;" class="bg-blue"><?= htmlspecialchars($solicitud['banco'] ?? 'N/A') ?> (<?= htmlspecialchars($solicitud['cuenta_moneda'] ?? '') ?>)</td>
             </tr>
         </table>
     </div>
