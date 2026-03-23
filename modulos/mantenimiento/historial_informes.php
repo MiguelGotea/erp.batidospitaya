@@ -19,6 +19,7 @@ if (!tienePermiso('agenda_mantenimiento', 'vista', $cargoOperario)) {
 $puedeVerTodos = tienePermiso('agenda_mantenimiento', 'todos_colaboradores', $cargoOperario);
 $esAdminCaja = tienePermiso('agenda_mantenimiento', 'caja_chica', $cargoOperario);
 $puedeGenerarReembolso = tienePermiso('agenda_mantenimiento', 'generar_reembolso', $cargoOperario);
+$puedeVerReporteSemanal = tienePermiso('agenda_mantenimiento', 'reporte_semanal', $cargoOperario);
 
 ?>
 <!DOCTYPE html>
@@ -128,8 +129,12 @@ $puedeGenerarReembolso = tienePermiso('agenda_mantenimiento', 'generar_reembolso
             <?php echo renderHeader($usuario, false, 'Control de Informes Diarios'); ?>
 
             <div class="container-fluid p-4">
-                <div class="mb-4">
-                    <!-- El botón circular flotante se ubica en la esquina inferior derecha -->
+                <div class="mb-4 d-flex justify-content-end gap-2">
+                    <?php if ($puedeVerReporteSemanal): ?>
+                        <a href="reporte_semanal_km.php" class="btn btn-outline-primary rounded-pill px-4 shadow-sm border-2 fw-bold">
+                            <i class="fas fa-file-invoice-dollar me-2"></i>Reporte Semanal de Pagos
+                        </a>
+                    <?php endif; ?>
                 </div>
 
                 <!-- Botón Flotante Nueva Solicitud -->
