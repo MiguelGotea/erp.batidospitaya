@@ -8,6 +8,10 @@ require_once '../../../core/auth/auth.php';
 require_once '../../../core/permissions/permissions.php';
 require_once '../../../core/database/conexion.php';
 
+// Token del VPS de PitayaBot — debe coincidir con WSP_TOKEN en wsp-pitayabot/.env
+// y con BOT_TOKEN_SECRETO en api/bot/auth/auth_bot.php
+define('PITAYABOT_VPS_TOKEN', 'c5b155ba8f6877a2eefca0183ab18e37fe9a6accde340cf5c88af724822cbf50');
+
 header('Content-Type: application/json; charset=utf-8');
 
 $usuario       = obtenerUsuarioActual();
@@ -42,9 +46,8 @@ try {
     $ipVps = $fila['ip_vps'];
     $puerto = 3007;
 
-    // Obtener WSP_TOKEN desde auth de la instancia
-    // Reutilizamos el token almacenado en la tabla si existe, o usamos la constante
-    $token = defined('WSP_TOKEN_SECRETO') ? WSP_TOKEN_SECRETO : '';
+    // Token que el VPS valida en su endpoint /ping (X-WSP-Token)
+    $token = PITAYABOT_VPS_TOKEN;
 
     $agente  = ($usuario['Nombre'] ?? '') . ' ' . ($usuario['Apellido'] ?? '');
     $payload = json_encode([
