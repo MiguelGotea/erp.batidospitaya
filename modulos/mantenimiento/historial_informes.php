@@ -360,28 +360,8 @@ $puedeVerReporteSemanal = tienePermiso('agenda_mantenimiento', 'reporte_semanal'
     </div>
 
     <!-- Modal Reporte Semanal -->
-    <style>
-        /* Forzar ancho maximo absoluto para este modal especifico */
-        body #modalReporteSemanal .modal-dialog.modal-xl {
-            max-width: 98vw !important;
-            width: 98vw !important;
-            margin: 10px auto !important;
-            display: flex !important;
-            align-items: center !important;
-        }
-        @media (max-width: 768px) {
-            body #modalReporteSemanal .modal-dialog.modal-xl {
-                width: auto !important;
-                max-width: calc(100% - 20px) !important;
-                margin: 10px !important;
-            }
-        }
-        #modalReporteSemanal .table td, #modalReporteSemanal .table th {
-            white-space: nowrap;
-        }
-    </style>
-    <div class="modal fade no-print" id="modalReporteSemanal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal fade no-print" id="modalKmReporteSemanal_Unico" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered" style="max-width: 98vw !important; width: 98vw !important; margin: 10px auto !important;">
             <div class="modal-content border-0 shadow-lg rounded-4">
                 <div class="modal-header bg-white border-0 py-3">
                     <h5 class="modal-title fw-bold text-primary">
@@ -522,10 +502,10 @@ $puedeVerReporteSemanal = tienePermiso('agenda_mantenimiento', 'reporte_semanal'
                             const costoDia = kmDia * costoKm;
                             html += `
                                 <tr class="small text-muted border-0">
-                                    <td class="ps-5 py-1">${log.fecha}</td>
-                                    <td class="text-center py-1">${parseFloat(log.km_inicial).toLocaleString()} → ${parseFloat(log.km_final).toLocaleString()}</td>
-                                    <td class="text-center py-1 fw-bold">${kmDia} km</td>
-                                    <td class="text-end pe-4 py-1">C$ ${costoDia.toFixed(2)}</td>
+                                    <td class="ps-5 py-1" style="white-space: nowrap;">${log.fecha}</td>
+                                    <td class="text-center py-1" style="white-space: nowrap;">${parseFloat(log.km_inicial).toLocaleString()} → ${parseFloat(log.km_final).toLocaleString()}</td>
+                                    <td class="text-center py-1 fw-bold" style="white-space: nowrap;">${kmDia} km</td>
+                                    <td class="text-end pe-4 py-1" style="white-space: nowrap;">C$ ${costoDia.toFixed(2)}</td>
                                 </tr>
                             `;
                         });
@@ -549,7 +529,7 @@ $puedeVerReporteSemanal = tienePermiso('agenda_mantenimiento', 'reporte_semanal'
                     `);
 
                     Swal.close();
-                    const modal = new bootstrap.Modal(document.getElementById('modalReporteSemanal'));
+                    const modal = new bootstrap.Modal(document.getElementById('modalKmReporteSemanal_Unico'));
                     modal.show();
                 } else {
                     Swal.fire('Error', res.message, 'error');
