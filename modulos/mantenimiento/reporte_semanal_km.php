@@ -233,44 +233,91 @@ if (!tienePermiso('agenda_mantenimiento', 'reporte_semanal', $cargoOperario)) {
                     $('#vistaVacia').addClass('d-none');
                     $('#resultadoReporte').removeClass('d-none');
                     $('#rangoFechasTexto').text(`Semana #${numSemana} | Rango: ${res.rango.desde} al ${res.rango.hasta}`);
-                    
+
                     let html = '';
-                    let sumKm = 0;
-                    let sumComb = 0;
-                    let sumDep = 0;
-                    let sumTotal = 0;
+                    let sumTotalKm = 0;
+                    let sumTotalComb = 0;
+                    let sumTotalDep = 0;
+                    let sumTotalFinal = 0;
 
-                    res.datos.forEach(row => {
-                        const km = parseFloat(row.km_total) || 0;
-                        const combustible = km * costoKm;
-                        const dep = depreciacionFija; 
-                        const total = combustible + dep;
-
-                        sumKm += km;
-                        sumComb += combustible;
-                        sumDep += dep;
-                        sumTotal += total;
-
-                        html += `
-                            <tr>
-                                <td class="ps-4 fw-bold text-dark">${row.Nombre} ${row.Apellido}</td>
-                                <td class="text-center">${km.toLocaleString()} km</td>
-                                <td class="text-center">C$ ${combustible.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
-                                <td class="text-center">C$ ${dep.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
-                                <td class="text-end pe-4 fw-bold text-dark">C$ ${total.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
-                            </tr>
-                        `;
+                    // Agrupar detalle por operario
+                    const agrupado = {};
+                    res.detalle.forEach(d => {
+                        const key = d.cod_operario;
+                        if (!agrupado[key]) agrupado[key] = { name: `${d.Nombre} ${d.Apellido}`, logs: [] };
+                        agrupado[key].logs.push(d);
                     });
 
-                    if (res.datos.length === 0) {
-                        html = '<tr><td colspan="5" class="text-center py-4">No se encontraron informes para esta semana</td></tr>';
+                    // Iterar por cada operario que tiene datos
+                    for (const opId in agrupado) {
+                        const op = agrupado[opId];
+                        const resumenOp = res.resumen.find(r => r.CodOperario == opId);
+                        
+                        const kmTotalOp = parseFloat(resumenOp.km_total) || 0;
+                        const combustibleOp = kmTotalOp * costoKm;
+                        const depOp = depreciacionFija;
+                        const totalOp = combustibleOp + depOp;
+
+                        sumTotalKm += kmTotalOp;
+                        sumTotalComb += combustibleOp;
+                        sumTotalDep += depOp;
+                        sumTotalFinal += totalOp;
+
+                        // Fila de encabezado de Colaborador
+                        html += `
+                            <tr class="table-light">
+                                <td colspan="5" class="ps-4 fw-bold text-dark" style="background-color: #f0f7f6;">
+                                    <i class="fas fa-user-circle me-2 text-primary"></i>${op.name}
+                                </td>
+                            </tr>
+                            <tr class="small text-muted bg-white">
+                                <th class="ps-5 border-0">Fecha</th>
+                                <th class="text-center border-0">KM Inicial</th>
+                                <th class="text-center border-0">KM Final</th>
+                                <th class="text-center border-0">KM del Día</th>
+                                <th class="text-end pe-4 border-0">Subtotal Combustible</th>
+                            </tr>
+                        `;
+
+                        // Filas de detalle diario
+                        op.logs.forEach(log => {
+                            const kmDia = (parseFloat(log.km_final) || 0) - (parseFloat(log.km_inicial) || 0);
+                            const costoDia = kmDia * costoKm;
+                            html += `
+                                <tr class="bg-white">
+                                    <td class="ps-5">${log.fecha}</td>
+                                    <td class="text-center">${parseFloat(log.km_inicial).toLocaleString()}</td>
+                                    <td class="text-center">${parseFloat(log.km_final).toLocaleString()}</td>
+                                    <td class="text-center fw-bold">${kmDia.toLocaleString()} km</td>
+                                    <td class="text-end pe-4 text-muted">C$ ${costoDia.toFixed(2)}</td>
+                                </tr>
+                            `;
+                        });
+
+                        // Fila de resumen del colaborador
+                        html += `
+                            <tr class="total-row bg-white border-bottom shadow-sm">
+                                <td class="ps-4 text-end text-primary fw-bold" colspan="3">Resumen ${op.name}:</td>
+                                <td class="text-center fw-bold text-primary">${kmTotalOp.toLocaleString()} km</td>
+                                <td class="text-end pe-4 fw-bold text-dark">
+                                    <div class="small text-muted">Combustible: C$ ${combustibleOp.toFixed(2)}</div>
+                                    <div class="small text-muted border-bottom mb-1">Deprec. Fija: C$ ${depOp.toFixed(2)}</div>
+                                    <div class="fs-6">Total: C$ ${totalOp.toFixed(2)}</div>
+                                </td>
+                            </tr>
+                            <tr><td colspan="5" style="height: 20px;" class="bg-light border-0"></td></tr>
+                        `;
+                    }
+
+                    if (res.resumen.length === 0) {
+                        html = '<tr><td colspan="5" class="text-center py-5 text-muted">No se encontraron informes para esta semana</td></tr>';
                     }
 
                     $('#tablaCuerpo').html(html);
-                    $('#totalKm').text(sumKm.toLocaleString() + ' km');
-                    $('#totalCombustible').text('C$ ' + sumComb.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}));
-                    $('#totalDepreciacion').text('C$ ' + sumDep.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}));
-                    $('#totalFinal').text('C$ ' + sumTotal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+                    $('#totalKm').text(sumTotalKm.toLocaleString() + ' km');
+                    $('#totalCombustible').text('C$ ' + sumTotalComb.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+                    $('#totalDepreciacion').text('C$ ' + sumTotalDep.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+                    $('#totalFinal').text('C$ ' + sumTotalFinal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}));
 
                     Swal.close();
                 } else {

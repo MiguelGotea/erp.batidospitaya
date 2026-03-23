@@ -33,6 +33,22 @@ try {
             echo json_encode(['success' => true, 'numero_semana' => $res ? $res['numero_semana'] : null]);
             break;
 
+        case 'get_datos_semanales':
+            $numero_semana = $_POST['numero_semana'] ?? null;
+            $anio = $_POST['anio'] ?? date('Y');
+            
+            if (!$numero_semana) throw new Exception("Número de semana no proporcionado");
+
+            // 1. Obtener rango de la semana y ID por su número
+            $sqlSemana = "SELECT id, fecha_inicio, fecha_fin FROM SemanasSistema WHERE numero_semana = :num AND anio = :anio";
+            $stmtS = $db->prepare($sqlSemana);
+            $stmtS->execute([':num' => $numero_semana, ':anio' => $anio]);
+            $semana = $stmtS->fetch(PDO::FETCH_ASSOC);
+            if (!$semana) throw new Exception("Semana #$numero_semana no encontrada para el año $anio");
+
+            $fecha_inicio = $semana['fecha_inicio'];
+            $fecha_fin = $semana['fecha_fin'];
+
             // 2. Obtener detalle diario por operario
             $sqlDetalle = "SELECT i.*, o.Nombre, o.Apellido
                            FROM mtto_informes_diarios i
@@ -42,21 +58,22 @@ try {
                            ORDER BY o.Nombre, o.Apellido, i.fecha ASC";
             
             $stmtD = $db->prepare($sqlDetalle);
-            $stmtD.execute([':desde' => $fecha_inicio, ':hasta' => $fecha_fin]);
+            $stmtD->execute([':desde' => $fecha_inicio, ':hasta' => $fecha_fin]);
             $detalle = $stmtD->fetchAll(PDO::FETCH_ASSOC);
 
             // 3. Obtener resumen por operario (para totales consolidados)
-            $sqlResumen = "SELECT o.CodOperario,
+            $sqlResumen = "SELECT o.CodOperario, o.Nombre, o.Apellido,
                                   SUM(i.km_final - i.km_inicial) as km_total,
                                   MAX(i.costo_km) as costo_km_guardado
                            FROM Operarios o
                            INNER JOIN mtto_informes_diarios i ON o.CodOperario = i.cod_operario
                            WHERE i.fecha BETWEEN :desde AND :hasta
                            AND i.km_final IS NOT NULL AND i.km_inicial IS NOT NULL
-                           GROUP BY o.CodOperario";
+                           GROUP BY o.CodOperario
+                           ORDER BY o.Nombre, o.Apellido";
             
             $stmtR = $db->prepare($sqlResumen);
-            $stmtR.execute([':desde' => $fecha_inicio, ':hasta' => $fecha_fin]);
+            $stmtR->execute([':desde' => $fecha_inicio, ':hasta' => $fecha_fin]);
             $resumen = $stmtR->fetchAll(PDO::FETCH_ASSOC);
 
             echo json_encode([
