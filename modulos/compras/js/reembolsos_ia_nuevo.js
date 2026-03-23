@@ -174,13 +174,13 @@ function filtrarCECO(valor) {
     }
 
     const filtered = dataCecos.filter(c => 
-        (c.CodigoTexto + ' ' + c.Nombre).toLowerCase().includes(valor.toLowerCase())
+        (c.Codigo + ' ' + c.Nombre).toLowerCase().includes(valor.toLowerCase())
     );
 
     if (filtered.length > 0) {
         suggestionsContainer.empty();
         filtered.forEach(c => {
-            const text = `${c.CodigoTexto} - ${c.Nombre}`;
+            const text = `${c.Codigo} - ${c.Nombre}`;
             const div = $('<div class="autocomplete-suggestion"></div>')
                 .text(text)
                 .on('click', function() {
