@@ -88,6 +88,7 @@ $tituloPagina = $editingId ? 'Editar Solicitud IA' : 'Nueva Solicitud: Reembolso
                 const editingId = <?= json_encode($editingId) ?>;
                 const visitaId = <?= json_encode(isset($_GET['visita_id']) ? (int)$_GET['visita_id'] : null) ?>;
                 const dataCecos = <?= json_encode($cecos) ?>;
+                const dataProveedores = <?= json_encode($proveedores) ?>;
             </script>
             
             <div class="container-fluid p-4">
@@ -102,15 +103,11 @@ $tituloPagina = $editingId ? 'Editar Solicitud IA' : 'Nueva Solicitud: Reembolso
                     <div class="card-body p-4 pt-0">
                         <form id="formReembolso">
                             <div class="row g-3 mb-4 p-3 bg-light rounded-4 shadow-sm">
-                                <div class="col-md-3">
+                                <div class="col-md-3 position-relative">
                                     <label class="form-label small fw-bold text-secondary">Proveedor</label>
-                                    <input type="text" id="proveedor_nombre" class="form-control border-0 shadow-sm" placeholder="Escribe para buscar..." list="listaProveedores" oninput="seleccionarProveedor(this.value)">
+                                    <input type="text" id="proveedor_nombre" class="form-control border-0 shadow-sm" placeholder="Escribe para buscar..." oninput="filtrarProveedor(this.value)" autocomplete="off">
                                     <input type="hidden" id="id_proveedor" value="">
-                                    <datalist id="listaProveedores">
-                                        <?php foreach ($proveedores as $p): ?>
-                                        <option value="<?= htmlspecialchars($p['nombre']) ?>" data-id="<?= $p['id'] ?>">
-                                        <?php endforeach; ?>
-                                    </datalist>
+                                    <div id="proveedor-suggestions" class="autocomplete-suggestions"></div>
                                 </div>
                                 <div class="col-md-2">
                                     <label class="form-label small fw-bold text-secondary">Moneda</label>

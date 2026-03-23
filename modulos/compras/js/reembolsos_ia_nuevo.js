@@ -152,18 +152,44 @@ function agregarFilaManual() {
     renderTable();
 }
 
-function seleccionarProveedor(valor) {
-    const option = $(`#listaProveedores option[value="${valor}"]`);
-    if (option.length > 0) {
-        const id = option.data('id');
-        $('#id_proveedor').val(id);
-        cargarDatosProveedor(id);
-    } else {
-        // Si no coincide exactamente, podrías limpiar el ID si quieres obligar a seleccionar de la lista
-        // Pero el usuario pidió un "input donde se ingresa texto", a veces quieren dejarlo como texto si no existe
-        // En este ERP parece que se requiere el ID.
-        // $('#id_proveedor').val('');
+function filtrarProveedor(valor) {
+    const suggestionsContainer = $('#proveedor-suggestions');
+    if (valor.length < 1) {
+        suggestionsContainer.empty().hide();
+        return;
     }
+
+    const filtered = dataProveedores.filter(p => 
+        p.nombre.toLowerCase().includes(valor.toLowerCase())
+    );
+
+    if (filtered.length > 0) {
+        suggestionsContainer.empty();
+        filtered.forEach(p => {
+            const div = $('<div class="autocomplete-suggestion"></div>')
+                .text(p.nombre)
+                .on('click', function() {
+                    seleccionarProveedorInternal(p.id, p.nombre);
+                });
+            suggestionsContainer.append(div);
+        });
+        suggestionsContainer.show();
+    } else {
+        suggestionsContainer.empty().hide();
+    }
+}
+
+function seleccionarProveedorInternal(id, nombre) {
+    $('#id_proveedor').val(id);
+    $('#proveedor_nombre').val(nombre);
+    $('#proveedor-suggestions').hide();
+    
+    // Disparar la lógica de cargar datos del proveedor
+    cargarDatosProveedor(id);
+}
+
+function seleccionarProveedor(valor) {
+    // Mantener por si acaso, aunque ya no se usa el datalist
 }
 
 function filtrarCECO(valor) {
