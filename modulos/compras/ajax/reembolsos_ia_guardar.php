@@ -24,6 +24,7 @@ try {
     $concepto = !empty($input['concepto']) ? trim($input['concepto']) : '';
     $ceco = !empty($input['ceco']) ? trim($input['ceco']) : '';
     $fecha_solicitud = !empty($input['fecha_solicitud']) ? $input['fecha_solicitud'] : date('Y-m-d');
+    $moneda = !empty($input['moneda']) ? $input['moneda'] : 'Cordobas';
     $total_cordobas = isset($input['total_cordobas']) ? (float)$input['total_cordobas'] : 0;
     $items = isset($input['items']) ? $input['items'] : [];
     $usuario_registro = $_SESSION['usuario_id'] ?? 1;
@@ -39,7 +40,7 @@ try {
         // Actualizar cabecera
         $stmt = $conn->prepare("
             UPDATE reembolsos_solicitudes 
-            SET id_proveedor = ?, id_cuenta_proveedor = ?, concepto = ?, ceco = ?, total_cordobas = ?, fecha_solicitud = ?
+            SET id_proveedor = ?, id_cuenta_proveedor = ?, concepto = ?, ceco = ?, total_cordobas = ?, fecha_solicitud = ?, moneda = ?
             WHERE id = ?
         ");
         $stmt->execute([
@@ -49,6 +50,7 @@ try {
             $ceco,
             $total_cordobas,
             $fecha_solicitud,
+            $moneda,
             $id_solicitud
         ]);
 
@@ -58,8 +60,8 @@ try {
         // Insertar cabecera
         $stmt = $conn->prepare("
             INSERT INTO reembolsos_solicitudes 
-            (id_proveedor, id_cuenta_proveedor, concepto, ceco, total_cordobas, usuario_registro, fecha_solicitud)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            (id_proveedor, id_cuenta_proveedor, concepto, ceco, total_cordobas, usuario_registro, fecha_solicitud, moneda)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         ");
         $stmt->execute([
             $id_proveedor,
@@ -68,7 +70,8 @@ try {
             $ceco,
             $total_cordobas,
             $usuario_registro,
-            $fecha_solicitud
+            $fecha_solicitud,
+            $moneda
         ]);
         $id_solicitud = $conn->lastInsertId();
     }

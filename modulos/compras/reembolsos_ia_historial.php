@@ -88,7 +88,7 @@ $historial = $stmtHist->fetchAll(PDO::FETCH_ASSOC);
                                         <th>Proveedor</th>
                                         <th>Concepto</th>
                                         <th>CECO</th>
-                                        <th>Monto (C$)</th>
+                                        <th>Monto</th>
                                         <th>Estado</th>
                                         <th>Registrado por</th>
                                         <th class="text-center">Acciones</th>
@@ -106,7 +106,7 @@ $historial = $stmtHist->fetchAll(PDO::FETCH_ASSOC);
                                         <td><?= $reg['proveedor_nombre'] ?? '<span class="text-muted">N/A</span>' ?></td>
                                         <td><?= $reg['concepto'] ?></td>
                                         <td><span class="badge bg-light text-dark"><?= $reg['ceco'] ?></span></td>
-                                        <td class="fw-bold text-primary">C$ <?= number_format($reg['total_cordobas'], 2) ?></td>
+                                        <td class="fw-bold text-primary"><?= $reg['moneda'] == 'Dolares' ? 'US$' : 'C$' ?> <?= number_format($reg['total_cordobas'], 2) ?></td>
                                         <td>
                                             <span class="badge bg-<?= $reg['estado'] == 'pendiente' ? 'warning text-dark' : 'success' ?>">
                                                 <?= strtoupper($reg['estado']) ?>

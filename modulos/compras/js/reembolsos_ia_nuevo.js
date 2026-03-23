@@ -69,12 +69,15 @@ function cargarDatosEdicion(id) {
         if (res.success) {
             const s = res.solicitud;
             $('#id_proveedor').val(s.id_proveedor);
+            $('#proveedor_nombre').val(s.proveedor_nombre || '');
+            $('#moneda').val(s.moneda || 'Cordobas');
             $('#cuenta_bancaria').val(s.numero_cuenta).removeClass('opacity-50');
             $('#banco_proveedor').val(s.banco).removeClass('opacity-50');
             $('#fecha_solicitud').val(s.fecha_solicitud);
             $('#concepto').val(s.concepto);
             $('#ceco').val(s.ceco);
             id_cuenta_proveedor = s.id_cuenta_proveedor;
+            cambiarMoneda(s.moneda || 'Cordobas'); // Actualizar labels
 
             // Cargar items
             itemsActuales = res.detalles.map(d => ({
@@ -146,6 +149,26 @@ function agregarFilaManual() {
         foto_path: null // Indica que es manual
     });
     renderTable();
+}
+
+function seleccionarProveedor(valor) {
+    const option = $(`#listaProveedores option[value="${valor}"]`);
+    if (option.length > 0) {
+        const id = option.data('id');
+        $('#id_proveedor').val(id);
+        cargarDatosProveedor(id);
+    } else {
+        // Si no coincide exactamente, podrías limpiar el ID si quieres obligar a seleccionar de la lista
+        // Pero el usuario pidió un "input donde se ingresa texto", a veces quieren dejarlo como texto si no existe
+        // En este ERP parece que se requiere el ID.
+        // $('#id_proveedor').val('');
+    }
+}
+
+function cambiarMoneda(m) {
+    const symbol = m === 'Dolares' ? 'US$' : 'C$';
+    $('#thTotalSugerido').text(`Total Sugerido (${symbol})`);
+    calcularTotal();
 }
 
 function cargarDatosProveedor(id) {
@@ -334,19 +357,24 @@ function renderTable() {
 
 function calcularTotal() {
     let total = 0;
+    const moneda = $('#moneda').val();
+    const symbol = moneda === 'Dolares' ? 'US$' : 'C$';
+
     itemsActuales.forEach(item => {
         total += parseFloat(item.total_cordobas) || 0;
     });
-    $('#labelTotal').text('C$ ' + total.toLocaleString('en-US', { minimumFractionDigits: 2 }));
+    $('#labelTotal').text(symbol + ' ' + total.toLocaleString('en-US', { minimumFractionDigits: 2 }));
 }
 
 async function guardarSolicitud() {
+    const moneda = $('#moneda').val();
     let data = {
         id: editingId,
         id_proveedor: $('#id_proveedor').val(),
         id_cuenta_proveedor: id_cuenta_proveedor,
         concepto: $('#concepto').val(),
         ceco: $('#ceco').val(),
+        moneda: moneda,
         fecha_solicitud: $('#fecha_solicitud').val(),
         total_cordobas: itemsActuales.reduce((acc, curr) => acc + (parseFloat(curr.total_cordobas) || 0), 0),
         items: itemsActuales

@@ -72,16 +72,24 @@ $tituloPagina = $editingId ? 'Editar Solicitud IA' : 'Nueva Solicitud: Reembolso
                     <div class="card-body p-4 pt-0">
                         <form id="formReembolso">
                             <div class="row g-3 mb-4 p-3 bg-light rounded-4 shadow-sm">
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <label class="form-label small fw-bold text-secondary">Proveedor</label>
-                                    <select id="id_proveedor" class="form-select border-0 shadow-sm" onchange="cargarDatosProveedor(this.value)">
-                                        <option value="">Seleccione proveedor...</option>
+                                    <input type="text" id="proveedor_nombre" class="form-control border-0 shadow-sm" placeholder="Escribe para buscar..." list="listaProveedores" oninput="seleccionarProveedor(this.value)">
+                                    <input type="hidden" id="id_proveedor" value="">
+                                    <datalist id="listaProveedores">
                                         <?php foreach ($proveedores as $p): ?>
-                                        <option value="<?= $p['id'] ?>"><?= $p['nombre'] ?></option>
+                                        <option value="<?= htmlspecialchars($p['nombre']) ?>" data-id="<?= $p['id'] ?>">
                                         <?php endforeach; ?>
+                                    </datalist>
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label small fw-bold text-secondary">Moneda</label>
+                                    <select id="moneda" class="form-select border-0 shadow-sm" onchange="cambiarMoneda(this.value)">
+                                        <option value="Cordobas" selected>Córdobas (C$)</option>
+                                        <option value="Dolares">Dólares (US$)</option>
                                     </select>
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <label class="form-label small fw-bold text-secondary">Cuenta Bancaria (Auto)</label>
                                     <input type="text" id="cuenta_bancaria" class="form-control border-0 shadow-sm bg-white" readonly placeholder="Esperando proveedor...">
                                 </div>
@@ -122,7 +130,7 @@ $tituloPagina = $editingId ? 'Editar Solicitud IA' : 'Nueva Solicitud: Reembolso
                                         <tr>
                                             <th style="width: 100px;">Cant.</th>
                                             <th>Detalle del Gasto</th>
-                                            <th style="width: 200px;">Total Sugerido (C$)</th>
+                                            <th style="width: 200px;" id="thTotalSugerido">Total Sugerido (C$)</th>
                                             <th style="width: 120px;" class="text-center">Evidencia</th>
                                             <th style="width: 60px;"></th>
                                         </tr>
