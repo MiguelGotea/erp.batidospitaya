@@ -387,7 +387,7 @@ class Ticket
         $year = date('Y');
         $sql = "SELECT s.numero_semana, s.fecha_inicio, s.fecha_fin, 
                 AVG(DATEDIFF(COALESCE(t.fecha_final, CURDATE()), DATE(t.created_at))) as promedio_dias,
-                GROUP_CONCAT(CONCAT(t.titulo, ' #', t.cod_sucursal) SEPARATOR '||') as tickets_info
+                GROUP_CONCAT(CONCAT(t.titulo, ' ', t.cod_sucursal) SEPARATOR '||') as tickets_info
                 FROM SemanasSistema s
                 LEFT JOIN mtto_tickets t ON COALESCE(t.fecha_final, CURDATE()) BETWEEN s.fecha_inicio AND s.fecha_fin
                     AND t.tipo_formulario = 'mantenimiento_general'
