@@ -51,6 +51,7 @@ $data_respuesta = [];
 foreach (array_reverse($response_stats) as $rs) {
     $labels_respuesta[] = $rs['numero_semana'];
     $data_respuesta[] = round($rs['promedio_dias'] ?? 0, 1);
+    $details_respuesta[] = $rs['tickets_info'] ? explode('||', $rs['tickets_info']) : [];
 }
 
 
@@ -802,6 +803,7 @@ $solicitudes_criticas = array_filter($tickets, function ($t) {
         // Gráfico de tiempo de respuesta
         const ctxResp = document.getElementById('responseTimeChart').getContext('2d');
         const responseData = <?php echo json_encode($data_respuesta); ?>;
+        const responseDetails = <?php echo json_encode($details_respuesta); ?>;
 
         const responseTimeChart = new Chart(ctxResp, {
             type: 'line',
@@ -841,7 +843,17 @@ $solicitudes_criticas = array_filter($tickets, function ($t) {
                     },
                     tooltip: {
                         mode: 'index',
-                        intersect: false
+                        intersect: false,
+                        callbacks: {
+                            afterLabel: function(context) {
+                                const index = context.dataIndex;
+                                const tickets = responseDetails[index];
+                                if (tickets && tickets.length > 0) {
+                                    return ['', 'Tickets Included:', ...tickets.map(t => '• ' + t)];
+                                }
+                                return '';
+                            }
+                        }
                     }
                 }
             }
