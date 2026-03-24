@@ -382,6 +382,24 @@ class Ticket
         return $this->db->fetchAll($sql, [$year]);
     }
 
+    public function getResponseTimeStats()
+    {
+        $year = date('Y');
+        $sql = "SELECT s.numero_semana, s.fecha_inicio, s.fecha_fin, 
+                AVG(DATEDIFF(COALESCE(t.fecha_final, CURDATE()), DATE(t.created_at))) as promedio_dias
+                FROM SemanasSistema s
+                LEFT JOIN mtto_tickets t ON t.created_at BETWEEN CONCAT(s.fecha_inicio, ' 00:00:00') AND CONCAT(s.fecha_fin, ' 23:59:59')
+                    AND t.tipo_formulario = 'mantenimiento_general'
+                    AND t.nivel_urgencia = 4
+                WHERE s.anio = ?
+                AND s.fecha_inicio <= CURDATE() 
+                GROUP BY s.id
+                ORDER BY s.numero_semana DESC
+                LIMIT 8";
+
+        return $this->db->fetchAll($sql, [$year]);
+    }
+
     // --- NUEVAS FUNCIONES PARA INFORMES DIARIOS v4 ---
 
     /**

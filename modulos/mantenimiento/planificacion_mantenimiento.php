@@ -22,6 +22,7 @@ $ticketModel = new Ticket();
 $tickets = $ticketModel->getTicketsForPlanning();
 $weekly_stats = $ticketModel->getWeeklyReportStats();
 $equipment_stats = $ticketModel->getEquipmentChangeStats();
+$response_stats = $ticketModel->getResponseTimeStats();
 
 // Preparar datos para el gráfico de barras (12 semanas)
 $labels_semanas = [];
@@ -41,6 +42,15 @@ $data_equipos = [];
 foreach (array_reverse($equipment_stats) as $es) {
     $labels_equipos[] = $es['numero_semana'];
     $data_equipos[] = $es['total_cambios'];
+}
+
+// Preparar datos para el gráfico de tiempo de respuesta (8 semanas)
+$labels_respuesta = [];
+$data_respuesta = [];
+
+foreach (array_reverse($response_stats) as $rs) {
+    $labels_respuesta[] = $rs['numero_semana'];
+    $data_respuesta[] = round($rs['promedio_dias'], 1);
 }
 
 
@@ -381,7 +391,7 @@ $solicitudes_criticas = array_filter($tickets, function ($t) {
 
                 <!-- Gráficos de Reportes Semanales -->
                 <div class="row mb-4">
-                    <div class="col-lg-6">
+                    <div class="col-lg-4">
                         <div class="card shadow-sm border-0 h-100">
                             <div class="card-header bg-white py-3">
                                 <h6 class="mb-0 fw-bold" style="color: #0E544C;"><i
@@ -392,7 +402,18 @@ $solicitudes_criticas = array_filter($tickets, function ($t) {
                             </div>
                         </div>
                     </div>
-                    <div class="col-lg-6">
+                    <div class="col-lg-4">
+                        <div class="card shadow-sm border-0 h-100">
+                            <div class="card-header bg-white py-3">
+                                <h6 class="mb-0 fw-bold" style="color: #fd7e14;"><i
+                                        class="bi bi-clock-history me-2"></i>Tiempo de Respuesta (Días)</h6>
+                            </div>
+                            <div class="card-body" style="height: 350px;">
+                                <canvas id="responseTimeChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4">
                         <div class="card shadow-sm border-0 h-100">
                             <div class="card-header bg-white py-3">
                                 <h6 class="mb-0 fw-bold text-warning"><i class="bi bi-tools me-2"></i>Cambios de Equipo
@@ -769,6 +790,54 @@ $solicitudes_criticas = array_filter($tickets, function ($t) {
                                 return !item.text.includes('Tendencia');
                             }
                         }
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false
+                    }
+                }
+            }
+        });
+
+        // Gráfico de tiempo de respuesta
+        const ctxResp = document.getElementById('responseTimeChart').getContext('2d');
+        const responseData = <?php echo json_encode($data_respuesta); ?>;
+
+        const responseTimeChart = new Chart(ctxResp, {
+            type: 'line',
+            data: {
+                labels: <?php echo json_encode($labels_respuesta); ?>,
+                datasets: [{
+                    label: 'Días Promedio',
+                    data: responseData,
+                    borderColor: '#fd7e14',
+                    backgroundColor: 'rgba(253, 126, 20, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 4,
+                    pointBackgroundColor: '#fd7e14'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        grid: { display: false }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: '#f0f0f0' },
+                        title: {
+                            display: true,
+                            text: 'Días'
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
                     },
                     tooltip: {
                         mode: 'index',
