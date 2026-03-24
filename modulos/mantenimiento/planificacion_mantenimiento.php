@@ -50,7 +50,7 @@ $data_respuesta = [];
 
 foreach (array_reverse($response_stats) as $rs) {
     $labels_respuesta[] = $rs['numero_semana'];
-    $data_respuesta[] = round($rs['promedio_dias'], 1);
+    $data_respuesta[] = round($rs['promedio_dias'] ?? 0, 1);
 }
 
 
