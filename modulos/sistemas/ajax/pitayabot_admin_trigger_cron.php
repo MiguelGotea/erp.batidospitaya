@@ -81,7 +81,15 @@ try {
         exit;
     }
 
-    $data = json_decode($response, true);
+    $data = null;
+
+    if ($response) {
+        // Extraer JSON ignorando cualquier output previo (notices PHP, warnings, etc.)
+        $jsonStart = strpos($response, '{');
+        if ($jsonStart !== false) {
+            $data = json_decode(substr($response, $jsonStart), true);
+        }
+    }
 
     if (!is_array($data)) {
         echo json_encode([
