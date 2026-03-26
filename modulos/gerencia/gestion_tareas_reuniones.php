@@ -20,7 +20,6 @@ $permisoCrearTarea      = tienePermiso('gestion_tareas_reuniones', 'crear_tarea'
 $permisoSolicitarTarea  = tienePermiso('gestion_tareas_reuniones', 'solicitar_tarea',    $cargoOperario);
 $permisoSolicitarReunion= tienePermiso('gestion_tareas_reuniones', 'solicitar_reunion',  $cargoOperario);
 $permisoCancelar        = tienePermiso('gestion_tareas_reuniones', 'cancelar_tarea_reunion', $cargoOperario);
-$permisoVerBot          = tienePermiso('pitayabot', 'ver_estado', $cargoOperario); // solo para mostrar el link de admin
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -50,17 +49,6 @@ $permisoVerBot          = tienePermiso('pitayabot', 'ver_estado', $cargoOperario
             <?php echo renderHeader($usuario, false, 'Gestión de Tareas y Reuniones'); ?>
 
             <div class="container-fluid p-3">
-                <!-- ── Enlace a administración del bot ──────────────────── -->
-                <?php if ($permisoVerBot): ?>
-                <div class="d-flex justify-content-end mb-2">
-                    <a href="/modulos/gerencia/pitayabot_admin.php"
-                       class="btn btn-sm btn-outline-success d-flex align-items-center gap-1">
-                        <i class="bi bi-whatsapp"></i>
-                        Administrar PitayaBot
-                        <i class="bi bi-arrow-right-short"></i>
-                    </a>
-                </div>
-                <?php endif; ?>
 
                 <!-- Botones de acción y agrupación en la misma fila -->
                 <div class="mb-3 d-flex justify-content-between align-items-center flex-wrap gap-3">
@@ -314,68 +302,12 @@ $permisoVerBot          = tienePermiso('pitayabot', 'ver_estado', $cargoOperario
         </div>
     </div>
 
-    <!-- Modal QR PitayaBot -->
-    <div class="modal fade" id="modalPitayabotQR" tabindex="-1">
-        <div class="modal-dialog modal-sm modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header py-2" style="background:#128C7E;color:#fff">
-                    <h6 class="modal-title mb-0">
-                        <i class="bi bi-qr-code me-1"></i>Escanear QR — PitayaBot
-                    </h6>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body text-center p-2">
-                    <img id="pitayabotQRImg" src="" alt="QR PitayaBot" class="img-fluid"
-                        style="max-width:260px;">
-                    <p class="text-muted small mt-2">
-                        Abre WhatsApp → <strong>Dispositivos vinculados</strong> → Vincular un dispositivo
-                    </p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Prueba de Envío PitayaBot -->
-    <div class="modal fade" id="modalPitayabotPing" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header" style="background:#128C7E;color:#fff">
-                    <h6 class="modal-title mb-0">
-                        <i class="bi bi-lightning-charge me-1"></i>Prueba de Envío — PitayaBot
-                    </h6>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Número de WhatsApp destino</label>
-                        <input type="text" id="pitayabotPingNumero" class="form-control mb-1"
-                            placeholder="50588112233" maxlength="15"
-                            oninput="this.value=this.value.replace(/\D/g,'')">
-                        <small class="text-muted">Ej: 50588112233 (incluir código de país completo)</small>
-                    </div>
-                    <div id="pitayabotPingResultado" class="d-none"></div>
-                </div>
-                <div class="modal-footer">
-                    <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button class="btn btn-success" onclick="pitayabotEnviarPing()">
-                        <i class="bi bi-send me-1"></i>Enviar Prueba
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // Variables globales
         const cargoActual     = <?php echo $cargoOperario; ?>;
         const permisoCancelar = <?php echo $permisoCancelar ? 'true' : 'false'; ?>;
-        const PITAYABOT_PERMISOS = {
-            verEstado : <?= $permisoVerBot   ? 'true' : 'false' ?>,
-            reset     : <?= $permisoResetBot ? 'true' : 'false' ?>,
-            ping      : <?= $permisoPingBot  ? 'true' : 'false' ?>
-        };
     </script>
     <script src="js/gestion_tareas_reuniones.js?v=<?php echo mt_rand(1, 10000); ?>"></script>
 </body>
