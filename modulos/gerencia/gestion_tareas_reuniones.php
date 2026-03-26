@@ -55,41 +55,15 @@ $permisoPingBot   = tienePermiso('pitayabot', 'prueba_envio', $cargoOperario);
             <?php echo renderHeader($usuario, false, 'Gestión de Tareas y Reuniones'); ?>
 
             <div class="container-fluid p-3">
-                <!-- ── Panel PitayaBot (visible solo con permiso) ────────────── -->
+                <!-- ── Enlace a administración del bot ──────────────────── -->
                 <?php if ($permisoVerBot): ?>
-                <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2
-                            border rounded px-3 py-2 bg-light">
-
-                    <!-- Badge de estado -->
-                    <div class="d-flex align-items-center gap-3">
-                        <span class="fw-semibold text-muted small">
-                            <i class="bi bi-whatsapp text-success me-1"></i>PitayaBot
-                        </span>
-                        <span>
-                            <span class="wsp-dot desconectado" id="pitayabotDot"></span>
-                            <small id="pitayabotStatusTexto">⏳ Verificando...</small>
-                        </span>
-                        <!-- Botón QR (visible solo cuando hay QR pendiente) -->
-                        <span id="btnPitayabotQR" class="d-none">
-                            <button class="btn btn-sm btn-warning" onclick="pitayabotMostrarQR()">
-                                <i class="bi bi-qr-code me-1"></i> Escanear QR
-                            </button>
-                        </span>
-                    </div>
-
-                    <!-- Botones de acción -->
-                    <div class="d-flex gap-2">
-                        <?php if ($permisoPingBot): ?>
-                        <button class="btn btn-sm btn-info text-white" onclick="pitayabotAbrirPing()">
-                            <i class="bi bi-lightning-charge me-1"></i> Prueba de Envío
-                        </button>
-                        <?php endif; ?>
-                        <?php if ($permisoResetBot): ?>
-                        <button class="btn btn-sm btn-outline-danger" onclick="pitayabotReset()">
-                            <i class="bi bi-arrow-repeat me-1"></i> Cambiar Número
-                        </button>
-                        <?php endif; ?>
-                    </div>
+                <div class="d-flex justify-content-end mb-2">
+                    <a href="/modulos/gerencia/pitayabot_admin.php"
+                       class="btn btn-sm btn-outline-success d-flex align-items-center gap-1">
+                        <i class="bi bi-whatsapp"></i>
+                        Administrar PitayaBot
+                        <i class="bi bi-arrow-right-short"></i>
+                    </a>
                 </div>
                 <?php endif; ?>
 
