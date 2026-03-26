@@ -500,11 +500,13 @@ function dispararCron(clave, nombre, btn) {
         btn.innerHTML = orig;
 
         const icon = d.success ? '✅' : '⚠️';
+        const raw  = d.raw ? `<br><pre style="font-size:.7rem;text-align:left;max-height:200px;overflow:auto;background:#f8f9fa;padding:8px;border-radius:4px;margin-top:8px">${d.raw}</pre>` : '';
         const msg  = d.success
             ? `El cron <strong>${nombre}</strong> se ejecutó correctamente.<br>Mensajes que enviaría: <strong>${d.mensajes}</strong>`
-            : `El cron se ejecutó pero devolvió: ${d.message || 'sin datos'}`;
+            : `<strong>${d.message || 'sin datos'}</strong>${raw}`;
 
-        Swal.fire({ title: `${icon} Resultado`, html: msg, icon: d.success ? 'success' : 'warning' });
+        Swal.fire({ title: `${icon} Resultado`, html: msg, icon: d.success ? 'success' : 'warning', width: d.raw ? 700 : 500 });
+
     }).catch(() => {
         btn.disabled = false;
         btn.innerHTML = orig;
