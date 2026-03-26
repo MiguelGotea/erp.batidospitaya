@@ -1,10 +1,8 @@
 <?php
 /**
  * pitayabot_admin_trigger_cron.php
- * Dispara manualmente un endpoint del scheduler para pruebas.
+ * Dispara manualmente un endpoint del scheduler para pruebas via cURL.
  * POST: { "clave": "briefing_diario" }
- *
- * Incluye el scheduler directamente por filesystem (evita loopback cURL en Hostinger).
  */
 
 require_once '../../../core/auth/auth.php';
@@ -24,68 +22,52 @@ if (!tienePermiso('pitayabot', 'resetear_sesion', $cargoOperario)) {
 $body  = json_decode(file_get_contents('php://input'), true);
 $clave = trim($body['clave'] ?? '');
 
-// Mapa clave → ruta relativa al repo api.batidospitaya.com
-// El DOCUMENT_ROOT apunta a la raíz de erp.batidospitaya.com/public_html
-// En Hostinger ambos dominios comparten el mismo home de usuario
-$schedulerFiles = [
-    'briefing_diario'      => 'briefing_diario.php',
-    'recordatorio_reunion' => 'recordatorio_reunion.php',
-    'resumen_fin_dia'      => 'resumen_fin_dia.php',
-    'revision_semanal'     => 'revision_semanal.php',
-    'cumpleanios'          => 'cumpleanios.php',
+$endpointsPermitidos = [
+    'briefing_diario'      => 'https://api.batidospitaya.com/api/bot/scheduler/briefing_diario.php',
+    'recordatorio_reunion' => 'https://api.batidospitaya.com/api/bot/scheduler/recordatorio_reunion.php',
+    'resumen_fin_dia'      => 'https://api.batidospitaya.com/api/bot/scheduler/resumen_fin_dia.php',
+    'revision_semanal'     => 'https://api.batidospitaya.com/api/bot/scheduler/revision_semanal.php',
+    'cumpleanios'          => 'https://api.batidospitaya.com/api/bot/scheduler/cumpleanios.php',
 ];
 
-if (!$clave || !isset($schedulerFiles[$clave])) {
+if (!$clave || !isset($endpointsPermitidos[$clave])) {
     http_response_code(400);
     echo json_encode(['success' => false, 'message' => 'Clave de cron inválida']);
     exit;
 }
 
-// Calcular ruta del scheduler en el filesystem de Hostinger
-// Estructura típica Hostinger: /home/user/domains/erp.batidospitaya.com/public_html
-// api.batidospitaya.com está en:  /home/user/domains/api.batidospitaya.com/public_html
-$docRoot       = rtrim($_SERVER['DOCUMENT_ROOT'], '/');
-$baseDir       = dirname(dirname($docRoot)); // sube 2 niveles: public_html → domain → home/user/domains
-$schedulerPath = $baseDir . '/api.batidospitaya.com/public_html/api/bot/scheduler/' . $schedulerFiles[$clave];
+// Token — mismo que BOT_TOKEN_SECRETO en api/bot/auth/auth_bot.php
+$wspToken = 'c5b155ba8f6877a2eefca0183ab18e37fe9a6accde340cf5c88af724822cbf50';
 
-// Fallback: intentar estructura alternativa de Hostinger
-if (!file_exists($schedulerPath)) {
-    $altBase       = dirname($docRoot);  // sube 1 nivel: public_html → domain-root
-    $schedulerPath = $altBase . '/api/bot/scheduler/' . $schedulerFiles[$clave];
-}
+$url = $endpointsPermitidos[$clave];
 
-if (!file_exists($schedulerPath)) {
-    echo json_encode([
-        'success' => false,
-        'message' => 'No se pudo localizar el scheduler en el servidor. Ruta calculada: ' . $schedulerPath,
-    ]);
+$ch = curl_init($url);
+curl_setopt_array($ch, [
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_HTTPGET        => true,
+    CURLOPT_HTTPHEADER     => ['X-WSP-Token: ' . $wspToken],
+    CURLOPT_TIMEOUT        => 45,
+    CURLOPT_SSL_VERIFYPEER => false,  // Hostinger loopback no valida SSL propio
+    CURLOPT_FOLLOWLOCATION => true,
+]);
+$response = curl_exec($ch);
+$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+$curlErr  = curl_error($ch);
+curl_close($ch);
+
+if ($curlErr) {
+    echo json_encode(['success' => false, 'message' => "Error de red: $curlErr"]);
     exit;
 }
 
-// Simular entorno de la petición para que auth_bot.php pase
-// (definir el token como superglobal de servidor)
-define('BOT_TOKEN_SECRETO', 'c5b155ba8f6877a2eefca0183ab18e37fe9a6accde340cf5c88af724822cbf50');
-$_SERVER['HTTP_X_WSP_TOKEN'] = BOT_TOKEN_SECRETO;
-$_SERVER['REQUEST_METHOD']   = 'GET';
+$data = json_decode($response, true);
 
-// Capturar la salida del scheduler
-ob_start();
-try {
-    include $schedulerPath;
-} catch (Throwable $e) {
-    ob_end_clean();
-    echo json_encode(['success' => false, 'message' => 'Error al ejecutar scheduler: ' . $e->getMessage()]);
-    exit;
-}
-$output = ob_get_clean();
-
-$data = json_decode($output, true);
-
+// Si el JSON falla, devolver el texto crudo para diagnóstico
 if (!is_array($data)) {
     echo json_encode([
         'success' => false,
-        'message' => 'El scheduler no devolvió JSON válido',
-        'raw'     => substr($output, 0, 500),
+        'message' => "HTTP $httpCode — El scheduler devolvió una respuesta no-JSON",
+        'raw'     => substr($response, 0, 400),
     ]);
     exit;
 }
@@ -95,4 +77,5 @@ echo json_encode([
     'mensajes' => count($data['data'] ?? []),
     'message'  => $data['message'] ?? ($data['success'] ? 'Ejecutado correctamente' : 'El cron devolvió error'),
     'motivo'   => $data['motivo'] ?? null,
+    'http_code'=> $httpCode,
 ]);
