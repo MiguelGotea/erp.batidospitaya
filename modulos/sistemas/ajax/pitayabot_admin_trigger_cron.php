@@ -38,6 +38,7 @@ try {
 
     $body  = json_decode(file_get_contents('php://input'), true);
     $clave = trim($body['clave'] ?? '');
+    $ejecutar = !empty($body['ejecutar']) ? 1 : 0;
 
     $endpointsPermitidos = [
         'briefing_diario'      => 'https://api.batidospitaya.com/api/bot/scheduler/briefing_diario.php',
@@ -54,14 +55,14 @@ try {
 
     // Token del bot
     $wspToken = 'c5b155ba8f6877a2eefca0183ab18e37fe9a6accde340cf5c88af724822cbf50';
-    $url      = $endpointsPermitidos[$clave];
+    $url      = $endpointsPermitidos[$clave] . "?ejecutar=" . $ejecutar;
 
     $ch = curl_init($url);
     curl_setopt_array($ch, [
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_HTTPGET        => true,
         CURLOPT_HTTPHEADER     => ['X-WSP-Token: ' . $wspToken],
-        CURLOPT_TIMEOUT        => 50,
+        CURLOPT_TIMEOUT        => 60, // Aumentado para envíos reales
         CURLOPT_CONNECTTIMEOUT => 10,
         CURLOPT_SSL_VERIFYPEER => false,
         CURLOPT_SSL_VERIFYHOST => false,
@@ -95,7 +96,7 @@ try {
         echo json_encode([
             'success' => false,
             'message' => "HTTP $httpCode — respuesta no-JSON del scheduler",
-            'raw'     => substr($response, 0, 500),
+            'raw'     => substr($response, 0, 800),
         ]);
         exit;
     }
@@ -103,7 +104,8 @@ try {
     echo json_encode([
         'success'   => $data['success'] ?? false,
         'mensajes'  => count($data['data'] ?? []),
-        'message'   => $data['message'] ?? ($data['success'] ? 'Ejecutado correctamente' : 'El cron devolvió error'),
+        'ejecutado' => $data['ejecutado'] ?? false,
+        'message'   => $data['message'] ?? ($data['success'] ? 'Operación exitosa' : 'El cron devolvió error'),
         'motivo'    => $data['motivo']   ?? null,
         'http_code' => $httpCode,
     ]);

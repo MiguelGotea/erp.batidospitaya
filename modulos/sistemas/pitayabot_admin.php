@@ -487,25 +487,50 @@ function toggleCron(id, activo) {
     });
 }
 
-function dispararCron(clave, nombre, btn) {
+function dispararCron(clave, nombre, btn, ejecutar = false) {
     const orig = btn.innerHTML;
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
 
     fetch('ajax/pitayabot_admin_trigger_cron.php', {
         method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ clave })
+        body: JSON.stringify({ clave, ejecutar })
     }).then(r => r.json()).then(d => {
         btn.disabled = false;
         btn.innerHTML = orig;
 
-        const icon = d.success ? '✅' : '⚠️';
-        const raw  = d.raw ? `<br><pre style="font-size:.7rem;text-align:left;max-height:200px;overflow:auto;background:#f8f9fa;padding:8px;border-radius:4px;margin-top:8px">${d.raw}</pre>` : '';
-        const msg  = d.success
-            ? `El cron <strong>${nombre}</strong> se ejecutó correctamente.<br>Mensajes que enviaría: <strong>${d.mensajes}</strong>`
-            : `<strong>${d.message || 'sin datos'}</strong>${raw}`;
+        if (!d.success) {
+            const raw = d.raw ? `<br><pre style="font-size:.7rem;text-align:left;max-height:200px;overflow:auto;background:#f8f9fa;padding:8px;border-radius:4px;margin-top:8px">${d.raw}</pre>` : '';
+            return Swal.fire({ title: '⚠️ Error', html: `<strong>${d.message || 'Error desconocido'}</strong>${raw}`, icon: 'warning', width: d.raw ? 700 : 500 });
+        }
 
-        Swal.fire({ title: `${icon} Resultado`, html: msg, icon: d.success ? 'success' : 'warning', width: d.raw ? 700 : 500 });
+        if (ejecutar) {
+            // Resultado de ejecución real
+            Swal.fire({
+                title: '✅ Envío Completado',
+                text: `Se procesaron y enviaron ${d.mensajes} mensajes correctamente.`,
+                icon: 'success'
+            });
+            cargarCrons(); // Refrescar para ver nueva fecha de ejecución
+        } else {
+            // Resultado de Test
+            const msg = `El cron <strong>${nombre}</strong> se validó correctamente.<br>Destinatarios detectados: <strong>${d.mensajes}</strong>`;
+            
+            Swal.fire({
+                title: '🔍 Resultado del Test',
+                html: msg,
+                icon: 'info',
+                showCancelButton: d.mensajes > 0,
+                confirmButtonText: d.mensajes > 0 ? '🚀 Confirmar Envío Real' : 'Cerrar',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#28a745',
+                width: 500
+            }).then(result => {
+                if (result.isConfirmed && d.mensajes > 0) {
+                    dispararCron(clave, nombre, btn, true);
+                }
+            });
+        }
 
     }).catch(() => {
         btn.disabled = false;
