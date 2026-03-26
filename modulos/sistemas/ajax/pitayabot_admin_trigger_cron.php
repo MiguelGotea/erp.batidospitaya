@@ -36,10 +36,20 @@ if (!$clave || !isset($endpointsPermitidos[$clave])) {
     exit;
 }
 
-// Token del bot — mismo valor que BOT_TOKEN_SECRETO en api/bot/auth/auth_bot.php
-// Si se cambia el token en auth_bot.php, actualizarlo también aquí.
-define('BOT_TOKEN', 'c5b155ba8f6877a2eefca0183ab18e37fe9a6accde340cf5c88af724822cbf50');
-$wspToken = BOT_TOKEN;
+// Leer el token desde auth_bot.php de la API.
+// Ambos sitios están en el mismo servidor Hostinger, por lo que el include funciona
+// usando la ruta del servidor (DOCUMENT_ROOT sube un nivel de public_html).
+$authBotPath = dirname($_SERVER['DOCUMENT_ROOT']) . '/api.batidospitaya.com/api/bot/auth/auth_bot.php';
+if (file_exists($authBotPath)) {
+    // Suprimir el header JSON que auth_bot.php emite al incluirse
+    ob_start();
+    require_once $authBotPath;
+    ob_end_clean();
+    $wspToken = BOT_TOKEN_SECRETO;
+} else {
+    // Fallback: token hardcodeado como respaldo (mantener sincronizado con auth_bot.php)
+    $wspToken = 'c5b155ba8f6877a2eefca0183ab18e37fe9a6accde340cf5c88af724822cbf50';
+}
 
 $url = $endpointsPermitidos[$clave];
 
