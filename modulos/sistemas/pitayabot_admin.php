@@ -295,7 +295,7 @@ $permisoPing  = tienePermiso('pitayabot', 'prueba_envio', $cargoOperario);
 <script>
 // ─── Status del bot ───────────────────────────────────────────
 function cargarStatus() {
-    fetch('ajax/gestion_tareas_reuniones_pitayabot_status.php')
+    fetch('../gerencia/ajax/gestion_tareas_reuniones_pitayabot_status.php')
         .then(r => r.json())
         .then(data => {
             const dot      = document.getElementById('botDot');
@@ -343,7 +343,7 @@ function enviarPing() {
     const mensaje = document.getElementById('pingMensaje').value.trim();
     if (!numero || !mensaje) return Swal.fire('Faltan datos','Completa número y mensaje','warning');
 
-    fetch('ajax/gestion_tareas_reuniones_pitayabot_reset.php', {
+    fetch('../gerencia/ajax/gestion_tareas_reuniones_pitayabot_reset.php', {
         method:'POST', headers:{'Content-Type':'application/json'},
         body: JSON.stringify({ accion:'ping', numero, mensaje })
     }).then(r => r.json()).then(d => {
@@ -358,7 +358,7 @@ function resetBot() {
         icon:'warning', showCancelButton:true, confirmButtonText:'Sí, cambiar', cancelButtonText:'Cancelar'
     }).then(r => {
         if (!r.isConfirmed) return;
-        fetch('ajax/gestion_tareas_reuniones_pitayabot_reset.php', {
+        fetch('../gerencia/ajax/gestion_tareas_reuniones_pitayabot_reset.php', {
             method:'POST', headers:{'Content-Type':'application/json'},
             body: JSON.stringify({ accion:'reset' })
         }).then(r => r.json()).then(d => {

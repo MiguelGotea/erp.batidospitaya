@@ -16,16 +16,11 @@ if (!tienePermiso('gestion_tareas_reuniones', 'vista', $cargoOperario)) {
     exit();
 }
 
-// Obtener permisos del usuario
-$permisoCrearTarea = tienePermiso('gestion_tareas_reuniones', 'crear_tarea', $cargoOperario);
-$permisoSolicitarTarea = tienePermiso('gestion_tareas_reuniones', 'solicitar_tarea', $cargoOperario);
-$permisoSolicitarReunion = tienePermiso('gestion_tareas_reuniones', 'solicitar_reunion', $cargoOperario);
-$permisoCancelar = tienePermiso('gestion_tareas_reuniones', 'cancelar_tarea_reunion', $cargoOperario);
-
-// Permisos PitayaBot (tool independiente: 'pitayabot')
-$permisoVerBot    = tienePermiso('pitayabot', 'ver_estado', $cargoOperario);
-$permisoResetBot  = tienePermiso('pitayabot', 'resetear_sesion', $cargoOperario);
-$permisoPingBot   = tienePermiso('pitayabot', 'prueba_envio', $cargoOperario);
+$permisoCrearTarea      = tienePermiso('gestion_tareas_reuniones', 'crear_tarea',        $cargoOperario);
+$permisoSolicitarTarea  = tienePermiso('gestion_tareas_reuniones', 'solicitar_tarea',    $cargoOperario);
+$permisoSolicitarReunion= tienePermiso('gestion_tareas_reuniones', 'solicitar_reunion',  $cargoOperario);
+$permisoCancelar        = tienePermiso('gestion_tareas_reuniones', 'cancelar_tarea_reunion', $cargoOperario);
+$permisoVerBot          = tienePermiso('pitayabot', 'ver_estado', $cargoOperario); // solo para mostrar el link de admin
 ?>
 <!DOCTYPE html>
 <html lang="es">
