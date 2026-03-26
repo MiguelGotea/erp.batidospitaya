@@ -36,19 +36,10 @@ if (!$clave || !isset($endpointsPermitidos[$clave])) {
     exit;
 }
 
-// Cargar WSP_TOKEN desde la BD del ERP
-try {
-    require_once '../../../core/database/conexion.php';
-    $stmt = $conn->prepare("
-        SELECT valor FROM configuracion_sistema
-        WHERE clave = 'wsp_token_pitayabot' LIMIT 1
-    ");
-    $stmt->execute();
-    $row = $stmt->fetch(PDO::FETCH_ASSOC);
-    $wspToken = $row['valor'] ?? '';
-} catch (Exception $e) {
-    $wspToken = '';
-}
+// Token del bot — mismo valor que BOT_TOKEN_SECRETO en api/bot/auth/auth_bot.php
+// Si se cambia el token en auth_bot.php, actualizarlo también aquí.
+define('BOT_TOKEN', 'c5b155ba8f6877a2eefca0183ab18e37fe9a6accde340cf5c88af724822cbf50');
+$wspToken = BOT_TOKEN;
 
 $url = $endpointsPermitidos[$clave];
 
