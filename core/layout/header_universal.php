@@ -63,8 +63,6 @@ function renderHeader($usuario, $esAdmin = false, $titulo = '')
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            flex: 0 1 auto;
-            min-width: 0;
         }
 
         /* ==================== TÍTULO DE BIENVENIDA (ALINEADO A LA IZQUIERDA) ==================== */
@@ -74,8 +72,6 @@ function renderHeader($usuario, $esAdmin = false, $titulo = '')
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            flex: 0 1 auto;
-            min-width: 0;
         }
 
         /* ==================== BOTÓN RETROCEDER CIRCULAR ==================== */
@@ -122,26 +118,27 @@ function renderHeader($usuario, $esAdmin = false, $titulo = '')
             display: flex;
             align-items: center;
             justify-content: center;
-            width: 24px;
-            height: 24px;
+            width: 26px;
+            height: 26px;
             border-radius: 50%;
             transition: all 0.3s ease;
             text-decoration: none;
-            color: #51B8AC;
-            background-color: white;
-            border: 1.5px solid #51B8AC;
+            color: white;
+            background-color: #51B8AC;
+            border: none;
             font-weight: 600;
-            font-size: 0.85rem !important;
+            font-size: 0.9rem !important;
+            box-shadow: 0 2px 4px rgba(81, 184, 172, 0.2);
             flex-shrink: 0;
+            white-space: nowrap;
             padding: 0;
         }
 
         .help-button-circle:hover {
-            background-color: white;
-            color: #51B8AC;
-            border: 1px solid #51B8AC;
+            background-color: #3d9a8f;
+            color: white;
             transform: translateY(-2px);
-            box-shadow: 0 3px 8px rgba(81, 184, 172, 0.2);
+            box-shadow: 0 4px 8px rgba(81, 184, 172, 0.4);
         }
 
         .help-button-circle:active {
@@ -149,7 +146,7 @@ function renderHeader($usuario, $esAdmin = false, $titulo = '')
         }
 
         .help-button-circle i {
-            font-size: 0.85rem !important;
+            font-size: 1.0rem !important;
         }
 
         /* ==================== NOTIFICACIONES ==================== */
@@ -292,109 +289,66 @@ function renderHeader($usuario, $esAdmin = false, $titulo = '')
             white-space: nowrap;
         }
 
-        /* ==================== BOTÓN HAMBURGUESA INTEGRADO (solo móvil) ==================== */
-        .header-mobile-menu-btn {
-            display: none;
-            align-items: center;
-            justify-content: center;
-            width: 38px;
-            height: 38px;
-            min-width: 38px;
-            background: #51B8AC;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            box-shadow: 0 2px 8px rgba(81, 184, 172, 0.3);
-            transition: all 0.3s ease;
-            flex-shrink: 0;
-            padding: 0;
-        }
-
-        .header-mobile-menu-btn:hover {
-            background: #0E544C;
-            transform: scale(1.05);
-        }
-
-        .header-mobile-menu-btn:active {
-            transform: scale(0.95);
-        }
-
-        .header-mobile-menu-btn i {
-            font-size: 1.1rem !important;
-        }
-
         /* ==================== RESPONSIVE ==================== */
         @media (max-width: 768px) {
             .main-header {
                 justify-content: flex-start;
-                padding: 8px 12px;
-                flex-wrap: nowrap;
-                gap: 8px;
-                overflow: hidden;
-            }
-
-            .header-mobile-menu-btn {
-                display: flex;
+                padding: 12px 15px;
+                flex-wrap: wrap;
+                gap: 15px;
             }
 
             .header-title-container {
-                gap: 6px;
-                flex: 1;
-                min-width: 0;
-                margin-right: 0;
-                margin-bottom: 0;
+                gap: 10px;
+                order: 1;
+                flex: 0 0 100%;
+                margin-bottom: 10px;
             }
 
             .header-title {
-                font-size: 0.82rem !important;
-                flex: 0 1 auto;
-                line-height: 1.2;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
+                font-size: 0.95rem !important;
+                flex: 1;
+                line-height: 1.3;
+                white-space: normal;
+                word-wrap: break-word;
             }
 
             .welcome-title {
-                font-size: 0.82rem !important;
-                flex: 0 1 auto;
-                line-height: 1.2;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
+                font-size: 0.95rem !important;
+                flex: 1;
+                line-height: 1.3;
+                white-space: normal;
+                word-wrap: break-word;
             }
 
             .back-button-circle {
-                width: 32px;
-                height: 32px;
-                min-width: 32px;
-                flex-shrink: 0;
+                width: 36px;
+                height: 36px;
+                order: 0;
             }
 
             .back-button-circle i {
-                font-size: 0.9rem !important;
+                font-size: 1rem !important;
             }
 
             .help-button-circle {
-                width: 22px;
-                height: 22px;
-                min-width: 22px;
-                flex-shrink: 0;
+                width: 36px;
+                height: 36px;
             }
 
             .help-button-circle i {
-                font-size: 0.75rem !important;
+                font-size: 1rem !important;
             }
 
             .notification-bell {
-                padding: 4px 6px;
-                gap: 4px;
+                padding: 6px 8px;
+                gap: 5px;
+                order: 2;
                 margin-left: 0;
-                flex-shrink: 0;
             }
 
             .bell-icon {
-                font-size: 1.1rem !important;
+                font-size: 1.2rem !important;
             }
 
             .notification-text {
@@ -403,22 +357,20 @@ function renderHeader($usuario, $esAdmin = false, $titulo = '')
 
             .notification-badge {
                 top: 0;
-                right: 2px;
-                font-size: 0.6rem !important;
-                min-width: 15px;
-                padding: 1px 3px;
+                right: 4px;
             }
 
             .user-info {
-                gap: 0;
-                flex-shrink: 0;
+                gap: 10px;
+                order: 3;
+                margin-left: auto;
             }
 
             .user-avatar {
-                width: 34px;
-                height: 34px;
-                min-width: 34px;
-                font-size: 0.95rem !important;
+                width: 40px;
+                height: 40px;
+                min-width: 40px;
+                font-size: 1.1rem !important;
             }
 
             .user-details {
@@ -427,42 +379,43 @@ function renderHeader($usuario, $esAdmin = false, $titulo = '')
         }
 
         @media (max-width: 480px) {
-            .main-header {
-                padding: 6px 10px;
-                gap: 6px;
-            }
-
             .header-title {
-                font-size: 0.78rem !important;
-                flex: 0 1 auto;
+                font-size: 0.85rem !important;
             }
 
             .welcome-title {
-                font-size: 0.78rem !important;
-                flex: 0 1 auto;
+                font-size: 0.85rem !important;
             }
 
             .back-button-circle {
-                width: 28px;
-                height: 28px;
-                min-width: 28px;
+                width: 34px;
+                height: 34px;
             }
 
             .help-button-circle {
-                width: 20px;
-                height: 20px;
-                min-width: 20px;
+                width: 34px;
+                height: 34px;
             }
 
-            .bell-icon {
+            .help-button-circle i {
                 font-size: 1rem !important;
             }
 
+            .bell-icon {
+                font-size: 1.1rem !important;
+            }
+
+            .notification-badge {
+                font-size: 0.65rem !important;
+                padding: 1px 4px;
+                min-width: 16px;
+            }
+
             .user-avatar {
-                width: 30px;
-                height: 30px;
-                min-width: 30px;
-                font-size: 0.85rem !important;
+                width: 38px;
+                height: 38px;
+                min-width: 38px;
+                font-size: 1rem !important;
             }
         }
 
@@ -482,34 +435,14 @@ function renderHeader($usuario, $esAdmin = false, $titulo = '')
         .main-header {
             animation: fadeIn 0.3s ease-out;
         }
-
-        /* ==================== GLOBAL HELPER MODAL FIX ==================== */
-        #pageHelpModal .modal-dialog {
-            display: flex;
-            align-items: center;
-            min-height: calc(100% - 1rem);
-            margin: 0.5rem auto;
-            max-width: 900px; /* Ancho cómodo universal */
-        }
-
-        @media (min-width: 576px) {
-            #pageHelpModal .modal-dialog {
-                min-height: calc(100% - 3.5rem);
-                margin: 1.75rem auto;
-            }
-        }
     </style>
 
     <!-- Header HTML -->
     <header class="main-header">
-        <!-- Botón hamburguesa integrado (visible solo en móvil) -->
-        <button class="header-mobile-menu-btn" onclick="toggleSidebarFromHeader()" title="Abrir menú">
-            <i class="fas fa-bars"></i>
-        </button>
         <div class="header-title-container">
             <!-- Botón circular para retroceder -->
             <?php if (!empty($paginaAnterior) && parse_url($paginaAnterior, PHP_URL_HOST) === $_SERVER['HTTP_HOST'] && basename($_SERVER['PHP_SELF']) !== 'index.php'): ?>
-                <button class="back-button-circle" onclick="goBackDistinct()" title="Volver a la página anterior">
+                <button class="back-button-circle" onclick="window.history.back()" title="Volver a la página anterior">
                     <i class="fas fa-arrow-left"></i>
                 </button>
             <?php endif; ?>
@@ -518,7 +451,7 @@ function renderHeader($usuario, $esAdmin = false, $titulo = '')
                 <h1 class="header-title"><?php echo htmlspecialchars($titulo); ?></h1>
                 <!-- Botón de ayuda -->
                 <button class="help-button-circle" onclick="openPageHelp()" title="Ver guía de ayuda">
-                    <i class="fas fa-info"></i>
+                    <i class="fas fa-info-circle"></i>
                 </button>
             <?php else: ?>
 
@@ -583,88 +516,8 @@ function renderHeader($usuario, $esAdmin = false, $titulo = '')
         </div>
     </header>
 
-    <!-- JavaScript del header -->
+    <!-- JavaScript para notificaciones -->
     <script>
-        // Función para abrir el sidebar desde el header (móvil)
-        // Delega a toggleSidebarMobile() definida en menu_lateral.php
-        function toggleSidebarFromHeader() {
-            if (typeof toggleSidebarMobile === 'function') {
-                toggleSidebarMobile();
-            } else {
-                // Fallback por si el menú lateral no está cargado
-                const sidebar = document.getElementById('sidebar');
-                const overlay = document.getElementById('sidebarOverlay');
-                if (sidebar) sidebar.classList.toggle('show');
-                if (overlay) overlay.classList.toggle('show');
-            }
-        }
-
-        document.addEventListener("DOMContentLoaded", function() {
-            let isBackForward = false;
-            
-            // Comprobar si la navegación fue mediante botones de retroceso/avance
-            if (window.performance && window.performance.getEntriesByType) {
-                const navEntries = window.performance.getEntriesByType("navigation");
-                if (navEntries.length > 0 && navEntries[0].type === "back_forward") {
-                    isBackForward = true;
-                }
-            } else if (window.performance && window.performance.navigation) {
-                if (window.performance.navigation.type === window.performance.navigation.TYPE_BACK_FORWARD) {
-                    isBackForward = true;
-                }
-            }
-            
-            let appHistory = JSON.parse(sessionStorage.getItem('custom_app_history') || '[]');
-            const currentUrl = window.location.href;
-            const currentPath = window.location.pathname;
-            
-            if (isBackForward) {
-                // Sincronizar historial cortando todo lo que está después de esta URL
-                let foundIndex = -1;
-                for (let i = appHistory.length - 1; i >= 0; i--) {
-                    if (appHistory[i].url === currentUrl) {
-                        foundIndex = i;
-                        break;
-                    }
-                }
-                if (foundIndex !== -1) {
-                    appHistory = appHistory.slice(0, foundIndex + 1);
-                } else {
-                    appHistory.push({ url: currentUrl, path: currentPath });
-                }
-            } else {
-                // Nueva visita o refresh. Evitar duplicar en caso de simple refresh
-                if (appHistory.length === 0 || appHistory[appHistory.length - 1].url !== currentUrl) {
-                    appHistory.push({ url: currentUrl, path: currentPath });
-                }
-            }
-            
-            sessionStorage.setItem('custom_app_history', JSON.stringify(appHistory));
-        });
-
-        // Retroceder a la última página distinta (ignorando variables GET del mismo PHP)
-        function goBackDistinct() {
-            const appHistory = JSON.parse(sessionStorage.getItem('custom_app_history') || '[]');
-            const currentPath = window.location.pathname;
-            let steps = 0;
-            let found = false;
-            
-            // appHistory.length - 1 es la página actual
-            for (let i = appHistory.length - 2; i >= 0; i--) {
-                if (appHistory[i].path !== currentPath) {
-                    steps = (appHistory.length - 1) - i;
-                    found = true;
-                    break;
-                }
-            }
-            
-            if (found && steps > 0) {
-                window.history.go(-steps);
-            } else {
-                window.history.back(); // Fallback si no hay historial distinto guardado
-            }
-        }
-
         // Obtener la URL base del sitio
         function getBaseUrl() {
             return window.location.protocol + '//' + window.location.host;
