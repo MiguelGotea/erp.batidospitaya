@@ -16,9 +16,9 @@ if (!tienePermiso('gestion_tareas_reuniones', 'vista', $cargoOperario)) {
     exit();
 }
 
-$permisoCrearTarea      = tienePermiso('gestion_tareas_reuniones', 'crear_tarea',        $cargoOperario);
-$permisoSolicitarTarea  = tienePermiso('gestion_tareas_reuniones', 'solicitar_tarea',    $cargoOperario);
-$permisoSolicitarReunion= tienePermiso('gestion_tareas_reuniones', 'solicitar_reunion',  $cargoOperario);
+$permisoCrearTarea      = tienePermiso('gestion_tareas_reuniones', 'crear_tarea',           $cargoOperario);
+$permisoSolicitarTarea  = tienePermiso('gestion_tareas_reuniones', 'solicitar_tarea',        $cargoOperario);
+$permisoSolicitarReunion= tienePermiso('gestion_tareas_reuniones', 'solicitar_reunion',      $cargoOperario);
 $permisoCancelar        = tienePermiso('gestion_tareas_reuniones', 'cancelar_tarea_reunion', $cargoOperario);
 ?>
 <!DOCTYPE html>
@@ -28,7 +28,6 @@ $permisoCancelar        = tienePermiso('gestion_tareas_reuniones', 'cancelar_tar
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestión de Tareas y Reuniones</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <link rel="icon" href="../../assets/img/icon12.png" type="image/png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
@@ -37,7 +36,6 @@ $permisoCancelar        = tienePermiso('gestion_tareas_reuniones', 'cancelar_tar
 
     <!-- FullCalendar v6 -->
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
-
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
@@ -50,46 +48,48 @@ $permisoCancelar        = tienePermiso('gestion_tareas_reuniones', 'cancelar_tar
 
             <div class="container-fluid p-3">
 
-                <!-- Botones de acción y agrupación en la misma fila -->
-                <div class="mb-3 d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <!-- ── Toolbar Premium ── -->
+                <div class="toolbar-premium">
+                    <!-- Botones de acción -->
                     <div class="d-flex gap-2 flex-wrap">
                         <?php if ($permisoCrearTarea): ?>
-                            <button class="btn btn-success" onclick="abrirModalNuevaTarea()">
-                                <i class="bi bi-plus-circle"></i> Nueva Tarea
+                            <button class="btn-premium btn-prem-success" onclick="abrirModalNuevaTarea()">
+                                <i class="bi bi-plus-circle-fill"></i> Nueva Tarea
                             </button>
                         <?php endif; ?>
 
                         <?php if ($permisoSolicitarTarea): ?>
-                            <button class="btn btn-primary" onclick="abrirModalSolicitarTarea()">
-                                <i class="bi bi-clipboard-check"></i> Solicitar Tarea
+                            <button class="btn-premium btn-prem-primary" onclick="abrirModalSolicitarTarea()">
+                                <i class="bi bi-clipboard-check-fill"></i> Solicitar Tarea
                             </button>
                         <?php endif; ?>
 
                         <?php if ($permisoSolicitarReunion): ?>
-                            <button class="btn btn-info text-white" onclick="abrirModalNuevaReunion()">
-                                <i class="bi bi-calendar-event"></i> Solicitar Reunión
+                            <button class="btn-premium btn-prem-info" onclick="abrirModalNuevaReunion()">
+                                <i class="bi bi-calendar-event-fill"></i> Solicitar Reunión
                             </button>
                         <?php endif; ?>
                     </div>
 
-                    <div class="btn-group" role="group">
-                        <button type="button" class="btn btn-outline-secondary active" data-agrupacion="mes"
+                    <!-- Toggle de vistas -->
+                    <div class="view-toggle">
+                        <button type="button" class="vt-btn active" data-agrupacion="mes"
                             onclick="cambiarAgrupacion('mes')">
-                            <i class="bi bi-calendar3"></i> Por Mes
+                            <i class="bi bi-calendar3"></i> Mes
                         </button>
-                        <button type="button" class="btn btn-outline-secondary" data-agrupacion="semana"
+                        <button type="button" class="vt-btn" data-agrupacion="semana"
                             onclick="cambiarAgrupacion('semana')">
-                            <i class="bi bi-calendar-week"></i> Por Semana
+                            <i class="bi bi-calendar-week"></i> Semana
                         </button>
-                        <button type="button" class="btn btn-outline-secondary" data-agrupacion="cargo"
+                        <button type="button" class="vt-btn" data-agrupacion="cargo"
                             onclick="cambiarAgrupacion('cargo')">
-                            <i class="bi bi-person-badge"></i> Por Cargo
+                            <i class="bi bi-person-badge"></i> Cargo
                         </button>
-                        <button type="button" class="btn btn-outline-secondary" data-agrupacion="estado"
+                        <button type="button" class="vt-btn" data-agrupacion="estado"
                             onclick="cambiarAgrupacion('estado')">
-                            <i class="bi bi-flag"></i> Por Estado
+                            <i class="bi bi-flag"></i> Estado
                         </button>
-                        <button type="button" class="btn btn-outline-secondary" data-agrupacion="calendario"
+                        <button type="button" class="vt-btn" data-agrupacion="calendario"
                             onclick="cambiarAgrupacion('calendario')">
                             <i class="bi bi-calendar-range"></i> Calendario
                         </button>
@@ -98,184 +98,178 @@ $permisoCancelar        = tienePermiso('gestion_tareas_reuniones', 'cancelar_tar
 
                 <!-- Contenedor de tareas y reuniones agrupadas -->
                 <div id="contenedorTareasReuniones">
-                    <div class="text-center py-5">
-                        <div class="spinner-border text-primary" role="status">
-                            <span class="visually-hidden">Cargando...</span>
-                        </div>
+                    <div class="spinner-prem">
+                        <div class="spinner-border" role="status"></div>
+                        <span>Cargando tareas y reuniones...</span>
                     </div>
                 </div>
 
                 <!-- Contenedor para el Calendario -->
-                <div id="contenedorCalendario"
-                    style="display:none; background: white; padding: 20px; border-radius: 8px; border: 1px solid #dee2e6;">
+                <div id="contenedorCalendario" style="display:none;">
                     <div id="calendarioTareas"></div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Modal Nueva Tarea -->
+    <!-- ══ Modal Nueva Tarea ══════════════════════════════════ -->
     <div class="modal fade" id="modalNuevaTarea" tabindex="-1">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Nueva Tarea</h5>
+                <div class="modal-header modal-header-premium">
+                    <h5 class="modal-title">
+                        <i class="bi bi-plus-circle-fill"></i> Nueva Tarea
+                    </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <form id="formNuevaTarea">
                         <div class="mb-3">
                             <label for="tituloTarea" class="form-label">Título *</label>
-                            <input type="text" class="form-control" id="tituloTarea" name="titulo" required
-                                maxlength="255">
+                            <input type="text" class="form-control" id="tituloTarea" name="titulo" required maxlength="255" placeholder="Ej: Revisar informe de ventas">
                         </div>
-
                         <div class="mb-3">
                             <label for="descripcionTarea" class="form-label">Descripción</label>
-                            <textarea class="form-control" id="descripcionTarea" name="descripcion" rows="4"></textarea>
+                            <textarea class="form-control" id="descripcionTarea" name="descripcion" rows="4" placeholder="Detalla el objetivo de la tarea..."></textarea>
                         </div>
-
-                        <div class="mb-3">
-                            <label for="cargoAsignadoTarea" class="form-label">Asignar a *</label>
-                            <select class="form-select" id="cargoAsignadoTarea" name="cod_cargo_asignado" required>
-                                <option value="">Seleccione un cargo...</option>
-                            </select>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="cargoAsignadoTarea" class="form-label">Asignar a *</label>
+                                <select class="form-select" id="cargoAsignadoTarea" name="cod_cargo_asignado" required>
+                                    <option value="">Seleccione un cargo...</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="fechaMetaTarea" class="form-label">Fecha Límite *</label>
+                                <input type="date" class="form-control" id="fechaMetaTarea" name="fecha_meta" required>
+                            </div>
                         </div>
-
-                        <div class="mb-3">
-                            <label for="fechaMetaTarea" class="form-label">Fecha Límite *</label>
-                            <input type="date" class="form-control" id="fechaMetaTarea" name="fecha_meta" required>
-                        </div>
-
-                        <div class="mb-3">
+                        <div class="mb-3 mt-3">
                             <label for="archivosTarea" class="form-label">Archivos Adjuntos</label>
-                            <input type="file" class="form-control" id="archivosTarea" name="archivos[]" multiple
-                                accept=".pdf,.jpg,.jpeg,.png">
+                            <input type="file" class="form-control" id="archivosTarea" name="archivos[]" multiple accept=".pdf,.jpg,.jpeg,.png">
                             <small class="text-muted">Máximo 10MB por archivo. Formatos: PDF, JPG, PNG</small>
                         </div>
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-success" onclick="guardarTarea('crear')">Crear Tarea</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x me-1"></i>Cancelar
+                    </button>
+                    <button type="button" class="btn btn-success" onclick="guardarTarea('crear')">
+                        <i class="bi bi-check-lg me-1"></i>Crear Tarea
+                    </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Modal Solicitar Tarea -->
+    <!-- ══ Modal Solicitar Tarea ══════════════════════════════ -->
     <div class="modal fade" id="modalSolicitarTarea" tabindex="-1">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Solicitar Tarea</h5>
+                <div class="modal-header modal-header-premium">
+                    <h5 class="modal-title">
+                        <i class="bi bi-clipboard-check-fill"></i> Solicitar Tarea
+                    </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <form id="formSolicitarTarea">
                         <div class="mb-3">
                             <label for="tituloTareaSolicitud" class="form-label">Título *</label>
-                            <input type="text" class="form-control" id="tituloTareaSolicitud" name="titulo" required
-                                maxlength="255">
+                            <input type="text" class="form-control" id="tituloTareaSolicitud" name="titulo" required maxlength="255" placeholder="Ej: Entrega de reporte semanal">
                         </div>
-
                         <div class="mb-3">
                             <label for="descripcionTareaSolicitud" class="form-label">Descripción</label>
-                            <textarea class="form-control" id="descripcionTareaSolicitud" name="descripcion"
-                                rows="4"></textarea>
+                            <textarea class="form-control" id="descripcionTareaSolicitud" name="descripcion" rows="4" placeholder="Detalla lo que se requiere..."></textarea>
                         </div>
-
-                        <div class="mb-3">
-                            <label for="cargoAsignadoTareaSolicitud" class="form-label">Solicitar a *</label>
-                            <select class="form-select" id="cargoAsignadoTareaSolicitud" name="cod_cargo_asignado"
-                                required>
-                                <option value="">Seleccione un cargo...</option>
-                            </select>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="cargoAsignadoTareaSolicitud" class="form-label">Solicitar a *</label>
+                                <select class="form-select" id="cargoAsignadoTareaSolicitud" name="cod_cargo_asignado" required>
+                                    <option value="">Seleccione un cargo...</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="fechaMetaTareaSolicitud" class="form-label">Fecha Límite *</label>
+                                <input type="date" class="form-control" id="fechaMetaTareaSolicitud" name="fecha_meta" required>
+                            </div>
                         </div>
-
-                        <div class="mb-3">
-                            <label for="fechaMetaTareaSolicitud" class="form-label">Fecha Límite *</label>
-                            <input type="date" class="form-control" id="fechaMetaTareaSolicitud" name="fecha_meta"
-                                required>
-                        </div>
-
-                        <div class="mb-3">
+                        <div class="mb-3 mt-3">
                             <label for="archivosTareaSolicitud" class="form-label">Archivos Adjuntos</label>
-                            <input type="file" class="form-control" id="archivosTareaSolicitud" name="archivos[]"
-                                multiple accept=".pdf,.jpg,.jpeg,.png">
+                            <input type="file" class="form-control" id="archivosTareaSolicitud" name="archivos[]" multiple accept=".pdf,.jpg,.jpeg,.png">
                             <small class="text-muted">Máximo 10MB por archivo. Formatos: PDF, JPG, PNG</small>
                         </div>
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-primary" onclick="guardarTarea('solicitar')">Solicitar
-                        Tarea</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x me-1"></i>Cancelar
+                    </button>
+                    <button type="button" class="btn btn-primary" onclick="guardarTarea('solicitar')">
+                        <i class="bi bi-send me-1"></i>Solicitar Tarea
+                    </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Modal Nueva Reunión -->
+    <!-- ══ Modal Nueva Reunión ════════════════════════════════ -->
     <div class="modal fade" id="modalNuevaReunion" tabindex="-1">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Solicitar Reunión</h5>
+                <div class="modal-header modal-header-premium">
+                    <h5 class="modal-title">
+                        <i class="bi bi-calendar-event-fill"></i> Solicitar Reunión
+                    </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <form id="formNuevaReunion">
                         <div class="mb-3">
                             <label for="tituloReunion" class="form-label">Título *</label>
-                            <input type="text" class="form-control" id="tituloReunion" name="titulo" required
-                                maxlength="255">
+                            <input type="text" class="form-control" id="tituloReunion" name="titulo" required maxlength="255" placeholder="Ej: Revisión de métricas Q1">
                         </div>
-
                         <div class="mb-3">
                             <label for="descripcionReunion" class="form-label">Descripción</label>
-                            <textarea class="form-control" id="descripcionReunion" name="descripcion"
-                                rows="4"></textarea>
+                            <textarea class="form-control" id="descripcionReunion" name="descripcion" rows="3" placeholder="Agenda de la reunión..."></textarea>
                         </div>
-
                         <div class="mb-3">
-                            <label for="fechaReunion" class="form-label">Fecha y Hora de Reunión *</label>
-                            <input type="datetime-local" class="form-control" id="fechaReunion" name="fecha_reunion"
-                                required>
+                            <label for="fechaReunion" class="form-label">Fecha y Hora *</label>
+                            <input type="datetime-local" class="form-control" id="fechaReunion" name="fecha_reunion" required>
                         </div>
-
                         <div class="mb-3">
                             <label class="form-label">Invitados *</label>
-                            <div id="listaInvitados" class="border rounded p-3"
-                                style="max-height: 200px; overflow-y: auto;">
-                                <!-- Se carga dinámicamente -->
-                            </div>
-                            <small class="text-muted">Seleccione los cargos que participarán en la reunión</small>
+                            <div id="listaInvitados"></div>
+                            <small class="text-muted">Selecciona los cargos que participarán en la reunión</small>
                         </div>
-
                         <div class="mb-3">
                             <label for="archivosReunion" class="form-label">Archivos Adjuntos</label>
-                            <input type="file" class="form-control" id="archivosReunion" name="archivos[]" multiple
-                                accept=".pdf,.jpg,.jpeg,.png">
+                            <input type="file" class="form-control" id="archivosReunion" name="archivos[]" multiple accept=".pdf,.jpg,.jpeg,.png">
                             <small class="text-muted">Máximo 10MB por archivo. Formatos: PDF, JPG, PNG</small>
                         </div>
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-info text-white" onclick="guardarReunion()">Solicitar
-                        Reunión</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x me-1"></i>Cancelar
+                    </button>
+                    <button type="button" class="btn btn-info text-white" onclick="guardarReunion()">
+                        <i class="bi bi-calendar-check me-1"></i>Solicitar Reunión
+                    </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Modal Finalizar Manuelamente (Tarea sin subtareas) -->
+    <!-- ══ Modal Finalizar Tarea ══════════════════════════════ -->
     <div class="modal fade" id="modalFinalizarTarea" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Finalizar Tarea</h5>
+                <div class="modal-header modal-header-premium">
+                    <h5 class="modal-title">
+                        <i class="bi bi-check-circle-fill"></i> Finalizar Tarea
+                    </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
@@ -284,19 +278,61 @@ $permisoCancelar        = tienePermiso('gestion_tareas_reuniones', 'cancelar_tar
                         <div class="mb-3">
                             <label class="form-label">Detalles de Finalización *</label>
                             <textarea class="form-control" id="detallesFinalizacionTarea" rows="4" required
-                                placeholder="Describe el resultado final..."></textarea>
+                                placeholder="Describe el resultado final, lo que se logró o entregó..."></textarea>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Evidencias / Archivos</label>
-                            <input type="file" class="form-control" id="archivosFinalizacionTarea" multiple
-                                accept=".pdf,.jpg,.jpeg,.png">
+                            <input type="file" class="form-control" id="archivosFinalizacionTarea" multiple accept=".pdf,.jpg,.jpeg,.png">
+                            <small class="text-muted">Adjunta capturas de pantalla, documentos u otro tipo de evidencia</small>
                         </div>
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-success" onclick="confirmarFinalizarManual()">Finalizar
-                        Tarea</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x me-1"></i>Cancelar
+                    </button>
+                    <button type="button" class="btn btn-success" onclick="confirmarFinalizarManual()">
+                        <i class="bi bi-check-lg me-1"></i>Finalizar Tarea
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ Modal Posponer / Reagendar ════════════════════════ -->
+    <div class="modal fade" id="modalPosponerFecha" tabindex="-1">
+        <div class="modal-dialog" style="max-width:420px;">
+            <div class="modal-content">
+                <div class="modal-header modal-header-premium">
+                    <h5 class="modal-title">
+                        <i class="bi bi-calendar-plus-fill"></i> Reagendar Tarea
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="posponerItemId" value="">
+                    <p class="text-muted mb-3" style="font-size:13.5px;">Selecciona la nueva fecha límite. Solo puedes reagendar a <strong>hoy o días futuros</strong>.</p>
+
+                    <!-- Botones rápidos -->
+                    <div class="fecha-quick-btns">
+                        <button type="button" class="fecha-quick-btn" id="btnPosponerManana">Mañana</button>
+                        <button type="button" class="fecha-quick-btn" id="btnPosponer2dias">+2 días</button>
+                        <button type="button" class="fecha-quick-btn" id="btnPosponerSemana">+1 semana</button>
+                        <button type="button" class="fecha-quick-btn" id="btnPosponer15dias">+15 días</button>
+                    </div>
+
+                    <div class="mb-0">
+                        <label for="posponerFechaInput" class="form-label">O elige una fecha específica</label>
+                        <input type="date" class="form-control" id="posponerFechaInput">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x me-1"></i>Cancelar
+                    </button>
+                    <button type="button" class="btn btn-warning text-white" onclick="confirmarPosponerFecha()">
+                        <i class="bi bi-calendar-check me-1"></i>Confirmar Nueva Fecha
+                    </button>
                 </div>
             </div>
         </div>
@@ -305,7 +341,6 @@ $permisoCancelar        = tienePermiso('gestion_tareas_reuniones', 'cancelar_tar
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Variables globales
         const cargoActual     = <?php echo $cargoOperario; ?>;
         const permisoCancelar = <?php echo $permisoCancelar ? 'true' : 'false'; ?>;
     </script>

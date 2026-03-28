@@ -27,6 +27,7 @@ try {
 
     // 1. OBTENER TAREAS (se muestran en su fecha límite)
     $sqlTareas = "SELECT 
+                    i.id,
                     i.titulo, 
                     i.descripcion,
                     i.fecha_meta, 
