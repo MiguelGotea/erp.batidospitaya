@@ -252,6 +252,7 @@ function crearItemHtml(item, hoy) {
                 </div>
             </div>
 
+            
             <div class="item-meta-row">
                 <div class="item-meta-col">
                     <span class="badge-estado ${item.estado}">${formatearEstado(item.estado)}</span>
