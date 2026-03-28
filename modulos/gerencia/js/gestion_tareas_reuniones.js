@@ -1,6 +1,6 @@
 // =====================================================
-// Gestión de Tareas y Reuniones — Minimal Premium v3
-// Popover inline para reagendar — sin modal extra
+// Gestión de Tareas y Reuniones — v4 Day-View
+// Reagendar SOLO por drag & drop — sin popover ni modal
 // =====================================================
 
 'use strict';
@@ -11,27 +11,16 @@ let cargosLiderazgo = [];
 let calendar;
 let itemDragId = null;
 let itemDragFechaOrigen = null;
-let popoverActivo = null; // referencia al popover abierto
-
 
 // ── Inicializar ──────────────────────────────────────
 $(document).ready(function () {
-    modalNuevaTarea = new bootstrap.Modal(document.getElementById('modalNuevaTarea'));
+    modalNuevaTarea     = new bootstrap.Modal(document.getElementById('modalNuevaTarea'));
     modalSolicitarTarea = new bootstrap.Modal(document.getElementById('modalSolicitarTarea'));
-    modalNuevaReunion = new bootstrap.Modal(document.getElementById('modalNuevaReunion'));
+    modalNuevaReunion   = new bootstrap.Modal(document.getElementById('modalNuevaReunion'));
     modalFinalizarTarea = new bootstrap.Modal(document.getElementById('modalFinalizarTarea'));
 
     cargarCargosLiderazgo();
     cargarDatos();
-
-    // Cerrar popover al hacer click fuera
-    document.addEventListener('click', function (e) {
-        if (popoverActivo && !popoverActivo.contains(e.target) &&
-            !e.target.classList.contains('btn-posponer') &&
-            !e.target.closest('.btn-posponer')) {
-            cerrarPopover();
-        }
-    });
 });
 
 // ── Cargos ───────────────────────────────────────────
@@ -79,7 +68,7 @@ function poblarListaInvitados() {
     });
 }
 
-// ── Modales de formulario ────────────────────────────
+// ── Modales ──────────────────────────────────────────
 function abrirModalNuevaTarea() {
     $('#formNuevaTarea')[0].reset();
     $('#fechaMetaTarea').val(obtenerFechaManana());
@@ -141,30 +130,59 @@ function cargarDatos() {
 // ── Renderizar ───────────────────────────────────────
 function renderizarDatos(grupos) {
     const cont = $('#contenedorTareasReuniones').empty();
-    grupos.forEach(g => cont.append(crearGrupoHtml(g)));
+
+    // En vista mes: detectar cambio de mes para insertar separador
+    let mesAnterior = null;
+
+    grupos.forEach(grupo => {
+        if (agrupacionActual === 'mes') {
+            // Separador de mes cuando cambia el mes
+            const mesFecha = (grupo.fecha_referencia || '').substring(0, 7); // YYYY-MM
+            if (mesFecha && mesFecha !== mesAnterior) {
+                mesAnterior = mesFecha;
+                const separador = crearSeparadorMes(grupo.fecha_referencia);
+                cont.append(separador);
+            }
+        }
+        cont.append(crearGrupoHtml(grupo));
+    });
+}
+
+function crearSeparadorMes(fecha) {
+    if (!fecha) return $('');
+    const d = new Date(fecha + 'T00:00:00');
+    const meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
+                   'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+    const nombre = meses[d.getMonth()] + ' ' + d.getFullYear();
+    return $(`<div class="mes-separador"><span>${nombre}</span></div>`);
 }
 
 function crearGrupoHtml(grupo) {
-    const hoy = obtenerFechaHoy();
-    let claseHeader = '';
-    if (agrupacionActual === 'mes') {
-        const n = (grupo.nombre || '').toLowerCase();
-        if (n.includes('vencid') || n.includes('pasad') || n.includes('anterior')) claseHeader = 'vencido';
-        else if (n.includes('hoy') || n.includes('today')) claseHeader = 'hoy';
-    }
+    // clase_header viene del backend o se deriva del nombre (semana, cargo, estado)
+    const claseHeader = grupo.clase_header || derivarClaseHeader(grupo.nombre);
+    const esDia       = agrupacionActual === 'mes'; // grupos diarios
+    const esVacio     = grupo.items.length === 0;
 
-    const grupoDiv = $('<div class="grupo-container"></div>');
+    const grupoDiv = $(`<div class="grupo-container${esDia ? ' grupo-dia' : ''}"></div>`);
+
     grupoDiv.append($(`
         <div class="grupo-header ${claseHeader}">
             <span>${grupo.nombre}</span>
-            <span class="grupo-badge">${grupo.items.length} ${grupo.items.length === 1 ? 'item' : 'items'}</span>
+            <span class="grupo-badge">${grupo.items.length === 0
+                ? '—'
+                : grupo.items.length + ' ' + (grupo.items.length === 1 ? 'item' : 'items')
+            }</span>
         </div>
     `));
 
-    const body = $('<div class="grupo-body"></div>');
-    if (grupo.items.length === 0) {
-        body.append('<p class="text-muted text-center mb-0" style="padding:14px;font-size:13px;">No hay tareas o reuniones en este grupo</p>');
+    const body = $(`<div class="grupo-body${esVacio && esDia ? ' dia-empty' : ''}"></div>`);
+
+    if (esVacio && esDia) {
+        body.append('<span class="drag-hint"><i class="bi bi-arrow-down-circle"></i> Arrastra aquí para reagendar</span>');
+    } else if (grupo.items.length === 0) {
+        body.append('<p class="text-muted text-center mb-0" style="padding:14px;font-size:13px;">Sin items</p>');
     } else {
+        const hoy = obtenerFechaHoy();
         grupo.items.forEach(item => body.append(crearItemHtml(item, hoy)));
     }
 
@@ -174,19 +192,26 @@ function crearGrupoHtml(grupo) {
     return grupoDiv;
 }
 
+function derivarClaseHeader(nombre) {
+    const n = (nombre || '').toLowerCase();
+    if (n.includes('vencid') || n.includes('pasad') || n.includes('anterior')) return 'vencido';
+    if (n.startsWith('hoy'))  return 'hoy';
+    return '';
+}
+
 // ── Item Card ────────────────────────────────────────
 function crearItemHtml(item, hoy) {
     const tipoIcono = item.tipo === 'reunion' ? 'bi-calendar-event' : 'bi-file-earmark-text';
     const tipoClase = item.tipo === 'reunion' ? 'reunion' : 'tarea';
-    const progreso = Math.round(item.progreso || 0);
+    const progreso  = Math.round(item.progreso || 0);
 
     const fechaRef = item.tipo === 'reunion'
         ? (item.fecha_reunion || '').substring(0, 10)
         : (item.fecha_meta || '');
     let claseCard = '', claseFecha = '';
     if (fechaRef && item.estado !== 'finalizado' && item.estado !== 'cancelado') {
-        if (fechaRef < hoy) { claseCard = 'vencida'; claseFecha = 'fecha-vencida'; }
-        else if (fechaRef === hoy) { claseCard = 'hoy'; claseFecha = 'fecha-hoy'; }
+        if      (fechaRef < hoy)   { claseCard = 'vencida'; claseFecha = 'fecha-vencida'; }
+        else if (fechaRef === hoy) { claseCard = 'hoy';     claseFecha = 'fecha-hoy'; }
         else if (diasDiff(hoy, fechaRef) <= 3) claseFecha = 'fecha-proxima';
     }
 
@@ -197,7 +222,7 @@ function crearItemHtml(item, hoy) {
              data-fecha="${fechaRef}"
              data-estado="${item.estado}">
 
-            <div class="drag-handle" title="Arrastra para reagendar">
+            <div class="drag-handle" title="Arrastra para reagendar a otro día">
                 <i class="bi bi-grip-vertical"></i>
             </div>
 
@@ -209,8 +234,8 @@ function crearItemHtml(item, hoy) {
                 <div class="item-title-block">
                     <div class="item-titulo-text">${escapeHtml(item.titulo)}</div>
                     ${item.descripcion
-            ? `<div class="item-descripcion-preview">${escapeHtml(stripHtml(item.descripcion))}</div>`
-            : ''}
+                        ? `<div class="item-descripcion-preview">${escapeHtml(stripHtml(item.descripcion))}</div>`
+                        : ''}
                 </div>
             </div>
 
@@ -221,8 +246,8 @@ function crearItemHtml(item, hoy) {
                 <div class="item-meta-col ${claseFecha}">
                     <i class="bi bi-calendar3 me-1"></i>
                     <span>${item.tipo === 'reunion'
-            ? formatearFechaHora(item.fecha_reunion)
-            : formatearFecha(item.fecha_meta)}</span>
+                        ? formatearFechaHora(item.fecha_reunion)
+                        : formatearFecha(item.fecha_meta)}</span>
                 </div>
                 <div class="item-meta-col">
                     ${crearAvatarHtml(item)}
@@ -251,7 +276,7 @@ function crearItemHtml(item, hoy) {
     return card;
 }
 
-// ── Acciones ─────────────────────────────────────────
+// ── Acciones (sin botón de posponer) ─────────────────
 function crearAccionesHtml(item) {
     let html = `
         <button class="btn-icon-only btn-ver" onclick="verDetalle(${item.id})" data-tip="Ver detalle">
@@ -272,19 +297,6 @@ function crearAccionesHtml(item) {
         </button>
     `;
 
-    const puedePosponer = item.tipo === 'tarea'
-        && item.estado !== 'finalizado'
-        && item.estado !== 'cancelado';
-
-    html += `
-        <button class="btn-icon-only btn-posponer"
-                onclick="abrirPopoverReagendar(this, ${item.id}, '${item.fecha_meta}')"
-                data-tip="Reagendar"
-                ${puedePosponer ? '' : 'style="visibility:hidden;pointer-events:none;"'}>
-            <i class="bi bi-calendar-plus"></i>
-        </button>
-    `;
-
     const mostrarCancelar = (permisoCancelar || item.cod_operario_creador == cargoActual)
         && item.estado !== 'cancelado'
         && item.estado !== 'finalizado';
@@ -300,111 +312,64 @@ function crearAccionesHtml(item) {
     return html;
 }
 
-// ════════════════════════════════════════════════════
-// POPOVER INLINE DE REAGENDA
-// ════════════════════════════════════════════════════
-function abrirPopoverReagendar(btnEl, itemId, fechaActual) {
-    // Si ya hay uno abierto para el mismo item, cerrarlo (toggle)
-    if (popoverActivo) {
-        const mismoItem = popoverActivo.dataset.itemId == itemId;
-        cerrarPopover();
-        if (mismoItem) return;
-    }
-
-    const hoy = obtenerFechaHoy();
-    // Si la fecha actual ya pasó, sugerir mañana
-    const sugerida = (!fechaActual || fechaActual < hoy) ? obtenerFechaManana() : fechaActual;
-
-    // Pre-calcular chips
-    const chips = [
-        { label: 'Hoy', fecha: hoy },
-        { label: 'Mañana', fecha: offsetFecha(hoy, 1) },
-        { label: '+2 días', fecha: offsetFecha(hoy, 2) },
-        { label: '+1 semana', fecha: offsetFecha(hoy, 7) },
-    ];
-
-    const chipsHtml = chips.map(c => `
-        <button type="button" class="date-chip" data-fecha="${c.fecha}"
-                onclick="seleccionarChip(this, '${c.fecha}', ${itemId})">
-            <span class="chip-label">${c.label}</span>
-            <span class="chip-date">${formatearFecha(c.fecha)}</span>
-        </button>
-    `).join('');
-
-    const popover = document.createElement('div');
-    popover.className = 'reschedule-popover';
-    popover.dataset.itemId = itemId;
-    popover.innerHTML = `
-        <h6><i class="bi bi-calendar-plus" style="color:#51B8AC;"></i> Reagendar tarea</h6>
-        <div class="date-chips">${chipsHtml}</div>
-        <div class="reschedule-divider">o elige una fecha</div>
-        <input type="date" id="rschDateInput_${itemId}" min="${hoy}" value="${sugerida}">
-        <div class="reschedule-actions">
-            <button type="button" class="btn-rsch-cancel" onclick="cerrarPopover()">Cancelar</button>
-            <button type="button" class="btn-rsch-confirm"
-                    onclick="confirmarReagendaManual(${itemId})">
-                <i class="bi bi-check2"></i> Confirmar
-            </button>
-        </div>
-    `;
-
-    // --- Posición FIJA (fixed) desde el viewport del botón ---
-    document.body.appendChild(popover);
-    popoverActivo = popover;
-
-    const POPOVER_W = 262;
-    const POPOVER_H = 240; // estimado
-    const rect = btnEl.getBoundingClientRect();
-    const gap  = 6;
-
-    // Horizontal: alinear derecha del botón, sin salir del viewport
-    let left = rect.right - POPOVER_W;
-    if (left < 8) left = 8;
-    if (left + POPOVER_W > window.innerWidth - 8) left = window.innerWidth - POPOVER_W - 8;
-
-    // Vertical: abajo del botón; si no cabe → abrir hacia arriba
-    let top = rect.bottom + gap;
-    if (top + POPOVER_H > window.innerHeight - 8) {
-        top = rect.top - gap - POPOVER_H;
-        popover.classList.add('open-upward');
-    }
-
-    popover.style.position = 'fixed';
-    popover.style.top  = Math.max(8, top)  + 'px';
-    popover.style.left = left + 'px';
-    popover.style.zIndex = '9999';
-
-    // Marcar chip si coincide con la fecha sugerida
-    const chipMatch = popover.querySelector(`.date-chip[data-fecha="${sugerida}"]`);
-    if (chipMatch) chipMatch.classList.add('selected');
+// ── Drag & Drop ──────────────────────────────────────
+function habilitarDrag(cardEl, item) {
+    cardEl.setAttribute('draggable', 'true');
+    cardEl.addEventListener('dragstart', function (e) {
+        itemDragId = item.id;
+        itemDragFechaOrigen = item.fecha_meta;
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', String(item.id));
+        cardEl.classList.add('dragging');
+    });
+    cardEl.addEventListener('dragend', function () {
+        cardEl.classList.remove('dragging');
+        document.querySelectorAll('.grupo-body.drop-active')
+            .forEach(z => z.classList.remove('drop-active'));
+    });
 }
 
-function seleccionarChip(chipEl, fecha, itemId) {
-    // Marcar seleccionado
-    chipEl.closest('.date-chips').querySelectorAll('.date-chip').forEach(c => c.classList.remove('selected'));
-    chipEl.classList.add('selected');
-    // Sincronizar el input de fecha
-    const input = document.getElementById(`rschDateInput_${itemId}`);
-    if (input) input.value = fecha;
-}
+function habilitarDropZone(bodyEl) {
+    bodyEl.addEventListener('dragover', function (e) {
+        if (!itemDragId) return;
+        const fechaDest = bodyEl.dataset.fechaGrupo;
+        const hoy = obtenerFechaHoy();
+        // Solo permitir drop en hoy o futuro
+        if (!fechaDest || fechaDest < hoy) return;
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        document.querySelectorAll('.grupo-body.drop-active')
+            .forEach(z => z.classList.remove('drop-active'));
+        bodyEl.classList.add('drop-active');
+    });
 
-function confirmarReagendaManual(itemId) {
-    const input = document.getElementById(`rschDateInput_${itemId}`);
-    const fecha = input ? input.value : '';
-    const hoy = obtenerFechaHoy();
+    bodyEl.addEventListener('dragleave', function (e) {
+        if (!bodyEl.contains(e.relatedTarget)) bodyEl.classList.remove('drop-active');
+    });
 
-    if (!fecha) { Swal.fire('Atención', 'Selecciona una nueva fecha', 'warning'); return; }
-    if (fecha < hoy) { Swal.fire('No permitido', 'Solo puedes reagendar a hoy o días futuros.', 'warning'); return; }
+    bodyEl.addEventListener('drop', function (e) {
+        e.preventDefault();
+        bodyEl.classList.remove('drop-active');
+        if (!itemDragId) return;
 
-    cerrarPopover();
-    posponerTareaAjax(itemId, fecha);
-}
+        const fechaDestino = bodyEl.dataset.fechaGrupo;
+        const hoy = obtenerFechaHoy();
 
-function cerrarPopover() {
-    if (popoverActivo) {
-        popoverActivo.remove();
-        popoverActivo = null;
-    }
+        if (!fechaDestino || fechaDestino < hoy) {
+            Swal.fire('No permitido', 'Solo puedes reagendar tareas a hoy o días futuros.', 'warning');
+            itemDragId = null;
+            return;
+        }
+
+        // No hacer nada si es la misma fecha
+        if (fechaDestino === itemDragFechaOrigen) {
+            itemDragId = null;
+            return;
+        }
+
+        posponerTareaAjax(itemDragId, fechaDestino);
+        itemDragId = null;
+    });
 }
 
 // ── Posponer AJAX ────────────────────────────────────
@@ -432,62 +397,6 @@ function posponerTareaAjax(id, nuevaFecha) {
     });
 }
 
-// ── Drag & Drop ──────────────────────────────────────
-function habilitarDrag(cardEl, item) {
-    cardEl.setAttribute('draggable', 'true');
-    cardEl.addEventListener('dragstart', function (e) {
-        itemDragId = item.id;
-        itemDragFechaOrigen = item.fecha_meta;
-        e.dataTransfer.effectAllowed = 'move';
-        e.dataTransfer.setData('text/plain', String(item.id));
-        cardEl.classList.add('dragging');
-        cerrarPopover();
-    });
-    cardEl.addEventListener('dragend', function () {
-        cardEl.classList.remove('dragging');
-        document.querySelectorAll('.grupo-body.drop-active')
-            .forEach(z => z.classList.remove('drop-active'));
-    });
-}
-
-function habilitarDropZone(bodyEl) {
-    bodyEl.addEventListener('dragover', function (e) {
-        if (!itemDragId) return;
-        e.preventDefault();
-        e.dataTransfer.dropEffect = 'move';
-        document.querySelectorAll('.grupo-body.drop-active')
-            .forEach(z => z.classList.remove('drop-active'));
-        bodyEl.classList.add('drop-active');
-    });
-    bodyEl.addEventListener('dragleave', function (e) {
-        if (!bodyEl.contains(e.relatedTarget)) bodyEl.classList.remove('drop-active');
-    });
-    bodyEl.addEventListener('drop', function (e) {
-        e.preventDefault();
-        bodyEl.classList.remove('drop-active');
-        if (!itemDragId) return;
-
-        const fechaDestino = bodyEl.dataset.fechaGrupo || '';
-        const hoy = obtenerFechaHoy();
-
-        if (!fechaDestino) {
-            // Sin fecha de referencia: abrir popover del elemento
-            const cardEl = document.querySelector(`.item-card-row[data-id="${itemDragId}"]`);
-            const btnPos = cardEl ? cardEl.querySelector('.btn-posponer') : null;
-            if (btnPos) abrirPopoverReagendar(btnPos, itemDragId, itemDragFechaOrigen);
-            itemDragId = null;
-            return;
-        }
-        if (fechaDestino < hoy) {
-            Swal.fire('No permitido', 'No puedes mover tareas a fechas pasadas.', 'warning');
-            itemDragId = null;
-            return;
-        }
-        posponerTareaAjax(itemDragId, fechaDestino);
-        itemDragId = null;
-    });
-}
-
 // ── Finalizar ────────────────────────────────────────
 function finalizarTareaManualPanel(id, totalSubtareas) {
     if (parseInt(totalSubtareas) > 0) {
@@ -505,7 +414,7 @@ function finalizarTareaManualPanel(id, totalSubtareas) {
 }
 
 function confirmarFinalizarManual() {
-    const idItem = $('#finalizarIdItem').val();
+    const idItem   = $('#finalizarIdItem').val();
     const detalles = $('#detallesFinalizacionTarea').val().trim();
     if (!detalles) { Swal.fire('Error', 'Ingresa los detalles de finalización', 'error'); return; }
 
@@ -642,6 +551,11 @@ function guardarReunion() {
     });
 }
 
+// ── Ver detalle ──────────────────────────────────────
+function verDetalle(id) {
+    window.location.href = `gestion_tareas_reuniones_detalle.php?id=${id}`;
+}
+
 // ── Calendario ───────────────────────────────────────
 function inicializarCalendario() {
     const calendarEl = document.getElementById('calendarioTareas');
@@ -665,7 +579,7 @@ function inicializarCalendario() {
             }
             posponerTareaAjax(info.event.extendedProps.itemId, nuevaFecha);
         },
-        events: function (info, ok, fail) {
+        events: function (info, ok) {
             $.ajax({
                 url: 'ajax/gestion_tareas_reuniones_get_calendario.php',
                 method: 'GET',
@@ -696,11 +610,6 @@ function inicializarCalendario() {
         eventTimeFormat: { hour: '2-digit', minute: '2-digit', meridiem: false }
     });
     calendar.render();
-}
-
-// ── Ver detalle ──────────────────────────────────────
-function verDetalle(id) {
-    window.location.href = `gestion_tareas_reuniones_detalle.php?id=${id}`;
 }
 
 // ── Empty state ──────────────────────────────────────

@@ -127,59 +127,90 @@ function obtenerItemsUsuario($conn, $codCargo)
 }
 
 /**
- * Agrupar por mes
+ * Agrupar por día dentro del mes:
+ * - Días pasados: mostrar solo si tienen tareas/reuniones pendientes
+ * - Hoy y futuros (60 días): mostrar siempre, aunque estén vacíos
  */
 function agruparPorMes($items)
 {
-    $grupos = [];
-    $hoy = new DateTime();
-    $mesActual = $hoy->format('Y-m');
+    $hoy    = new DateTime('today');
+    $hoyStr = $hoy->format('Y-m-d');
 
-    // Grupo de tareas vencidas
-    $vencidas = [];
+    $meses      = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+    $diasSemana = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
 
+    // Indexar items por fecha (YYYY-MM-DD)
+    $itemsByDate = [];
     foreach ($items as $item) {
-        $fecha = $item['tipo'] == 'reunion' ? $item['fecha_reunion'] : $item['fecha_meta'];
-
-        if (!$fecha)
-            continue;
-
-        $fechaObj = new DateTime($fecha);
-        $mes = $fechaObj->format('Y-m');
-
-        // Si es tarea y está vencida
-        if ($item['tipo'] == 'tarea' && $mes < $mesActual && $item['estado'] != 'finalizado' && $item['estado'] != 'cancelado') {
-            $vencidas[] = $item;
-            continue;
-        }
-
-        $nombreMes = obtenerNombreMes($fechaObj);
-
-        if (!isset($grupos[$mes])) {
-            $grupos[$mes] = [
-                'nombre' => $nombreMes,
-                'orden' => $mes,
-                'items' => []
-            ];
-        }
-
-        $grupos[$mes]['items'][] = $item;
+        $fecha = $item['tipo'] === 'reunion'
+            ? substr($item['fecha_reunion'] ?? '', 0, 10)
+            : ($item['fecha_meta'] ?? '');
+        if (!$fecha) continue;
+        $itemsByDate[$fecha][] = $item;
     }
 
-    // Ordenar grupos por mes
-    uasort($grupos, function ($a, $b) {
-        return strcmp($a['orden'], $b['orden']);
-    });
+    $grupos = [];
 
-    // Agregar grupo de vencidas al inicio si hay
-    if (!empty($vencidas)) {
-        array_unshift($grupos, [
-            'nombre' => 'Tareas Vencidas',
-            'orden' => '0000-00',
-            'items' => $vencidas
-        ]);
+    // ── PASADOS: hasta 90 días atrás con tareas pendientes ──
+    $desde       = (clone $hoy)->modify('-90 days');
+    $ayer        = (clone $hoy)->modify('-1 day');
+    $diaIterado  = clone $desde;
+
+    while ($diaIterado <= $ayer) {
+        $fechaStr = $diaIterado->format('Y-m-d');
+
+        if (isset($itemsByDate[$fechaStr])) {
+            // Mostrar solo si hay algo NO finalizado/cancelado
+            $tienePendientes = false;
+            foreach ($itemsByDate[$fechaStr] as $it) {
+                if (!in_array($it['estado'], ['finalizado', 'cancelado'])) {
+                    $tienePendientes = true;
+                    break;
+                }
+            }
+
+            if ($tienePendientes) {
+                $grupos[$fechaStr] = [
+                    'nombre'           => $diasSemana[(int)$diaIterado->format('w')] . ' ' .
+                                         $diaIterado->format('d') . ' ' .
+                                         $meses[(int)$diaIterado->format('n') - 1] . ' ' .
+                                         $diaIterado->format('Y'),
+                    'fecha_referencia' => $fechaStr,
+                    'clase_header'     => 'vencido',
+                    'items'            => $itemsByDate[$fechaStr],
+                ];
+            }
+        }
+
+        $diaIterado->modify('+1 day');
     }
 
+    // ── HOY y FUTUROS: siempre mostrar (hasta 60 días) ──
+    $hasta      = (clone $hoy)->modify('+60 days');
+    $diaIterado = clone $hoy;
+
+    while ($diaIterado <= $hasta) {
+        $fechaStr = $diaIterado->format('Y-m-d');
+        $esHoy    = ($fechaStr === $hoyStr);
+
+        $nombreDia = $diasSemana[(int)$diaIterado->format('w')] . ' ' .
+                     $diaIterado->format('d') . ' ' .
+                     $meses[(int)$diaIterado->format('n') - 1];
+
+        $nombre = $esHoy ? ('HOY — ' . $nombreDia) : $nombreDia;
+
+        $grupos[$fechaStr] = [
+            'nombre'           => $nombre,
+            'fecha_referencia' => $fechaStr,
+            'clase_header'     => $esHoy ? 'hoy' : '',
+            'items'            => $itemsByDate[$fechaStr] ?? [],
+        ];
+
+        $diaIterado->modify('+1 day');
+    }
+
+    // Ordenar cronológicamente
+    ksort($grupos);
     return array_values($grupos);
 }
 

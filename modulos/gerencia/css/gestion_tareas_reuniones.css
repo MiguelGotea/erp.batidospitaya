@@ -1,6 +1,7 @@
 /* =====================================================
-   Gestión de Tareas y Reuniones — Minimal Clean v3
+   Gestión de Tareas y Reuniones — Minimal Clean v4
    Paleta: #0E544C · #51B8AC · blancos · grises suaves
+   Vista diaria — reagendar solo por drag & drop
    ===================================================== */
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
@@ -98,14 +99,43 @@ body {
 }
 .view-toggle .vt-btn:hover:not(.active) { color: #0E544C; }
 
-/* ── Grupo ────────────────────────────────────────── */
+/* ── Separador de mes ────────────────────────────── */
+.mes-separador {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 20px 0 8px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #0E544C;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+}
+.mes-separador::before,
+.mes-separador::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #c6dedd;
+}
+
+/* ── Grupo / Caja de día ──────────────────────────── */
 .grupo-container {
-    margin-bottom: 18px;
+    margin-bottom: 6px;
     border-radius: 10px;
     overflow: visible;
     border: 1px solid #dde8e6;
     background: #fff;
-    box-shadow: 0 1px 3px rgba(0,0,0,.05);
+    box-shadow: 0 1px 3px rgba(0,0,0,.04);
+}
+
+/* Día vacío: más compacto */
+.grupo-container.grupo-dia .grupo-header {
+    padding: 8px 14px;
+    font-size: 12px;
+}
+.grupo-container.grupo-dia {
+    margin-bottom: 4px;
 }
 
 .grupo-header {
@@ -134,35 +164,61 @@ body {
 
 .grupo-body {
     background: #fff;
-    padding: 8px 10px;
+    padding: 6px 8px;
+    border-radius: 0 0 10px 10px;
+    min-height: 12px;
+}
+
+/* Día vacío — zona de drop visible */
+.grupo-body.dia-empty {
+    min-height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fafcfb;
     border-radius: 0 0 10px 10px;
 }
-.grupo-body.drop-active {
-    background: #f0faf9;
-    outline: 2px dashed #51B8AC;
-    outline-offset: -3px;
+.drag-hint {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: #c0d4d2;
+    font-weight: 500;
+    pointer-events: none;
+    user-select: none;
 }
+.drag-hint i { font-size: 13px; }
+
+/* Drop activo */
+.grupo-body.drop-active {
+    background: #e8f5f3 !important;
+    outline: 2px dashed #51B8AC;
+    outline-offset: -2px;
+}
+/* Zona NO permitida (día pasado) — sin hover */
 
 /* ── Item Card ────────────────────────────────────── */
 .item-card-row {
     background: #fff;
     border: 1px solid #e8efed;
     border-radius: 9px;
-    padding: 10px 12px;
-    margin-bottom: 6px;
+    padding: 8px 10px;
+    margin-bottom: 4px;
     display: flex;
     align-items: flex-start;
-    gap: 10px;
+    gap: 8px;
     cursor: grab;
     position: relative;
     transition: box-shadow .15s, border-color .15s;
 }
+.item-card-row:last-child { margin-bottom: 0; }
 .item-card-row:hover {
     box-shadow: 0 3px 12px rgba(14,84,76,.1);
     border-color: #51B8AC;
 }
 .item-card-row.dragging {
-    opacity: .5;
+    opacity: .45;
     cursor: grabbing;
     box-shadow: 0 8px 24px rgba(14,84,76,.18);
 }
@@ -183,19 +239,19 @@ body {
 .drag-handle {
     display: flex;
     align-items: center;
-    color: #c8d8d5;
+    color: #d0e0de;
     font-size: 15px;
     cursor: grab;
     flex-shrink: 0;
-    padding-top: 3px;
+    padding-top: 2px;
     transition: color .15s;
 }
 .drag-handle:hover { color: #51B8AC; }
 
 /* ── Icon ────────────────────────────────────────── */
 .item-icon-small {
-    font-size: 16px;
-    width: 32px; height: 32px; min-width: 32px;
+    font-size: 15px;
+    width: 30px; height: 30px; min-width: 30px;
     display: flex; align-items: center; justify-content: center;
     border-radius: 7px;
     flex-shrink: 0;
@@ -207,13 +263,13 @@ body {
 /* ── Texto ───────────────────────────────────────── */
 .item-main-info {
     flex: 1 1 0; min-width: 0;
-    display: flex; align-items: flex-start; gap: 8px;
+    display: flex; align-items: flex-start;
 }
 .item-title-block { flex: 1; min-width: 0; }
 
 .item-titulo-text {
     font-weight: 600;
-    font-size: 13.5px;
+    font-size: 13px;
     color: #1a2e2b;
     white-space: normal;
     word-break: break-word;
@@ -221,7 +277,7 @@ body {
     margin-bottom: 2px;
 }
 .item-descripcion-preview {
-    font-size: 12px;
+    font-size: 11.5px;
     color: #7a9391;
     white-space: normal;
     word-break: break-word;
@@ -237,10 +293,10 @@ body {
 .item-meta-row {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     flex-wrap: wrap;
     flex-shrink: 0;
-    min-width: 200px;
+    min-width: 180px;
 }
 .item-meta-col {
     display: flex;
@@ -253,17 +309,17 @@ body {
 
 /* ── Badges ──────────────────────────────────────── */
 .badge-estado {
-    padding: 3px 9px;
-    font-size: 10.5px;
+    padding: 2px 8px;
+    font-size: 10px;
     font-weight: 700;
     border-radius: 20px;
     text-transform: uppercase;
     letter-spacing: .03em;
 }
-.badge-estado.solicitado  { background: #e3f2fd; color: #1565c0; }
-.badge-estado.en_progreso { background: #fff8e1; color: #e65100; }
-.badge-estado.finalizado  { background: #e8f5e9; color: #2e7d32; }
-.badge-estado.cancelado   { background: #f5f5f5; color: #78909c; }
+.badge-estado.solicitado   { background: #e3f2fd; color: #1565c0; }
+.badge-estado.en_progreso  { background: #fff8e1; color: #e65100; }
+.badge-estado.finalizado   { background: #e8f5e9; color: #2e7d32; }
+.badge-estado.cancelado    { background: #f5f5f5; color: #78909c; }
 
 /* ── Fechas coloreadas ───────────────────────────── */
 .fecha-vencida { color: #c62828 !important; font-weight: 700; }
@@ -271,10 +327,10 @@ body {
 .fecha-proxima { color: #e65100 !important; font-weight: 600; }
 
 /* ── Progress ────────────────────────────────────── */
-.item-progreso-row { min-width: 90px; flex-shrink: 0; }
-.progreso-compacto { display: flex; align-items: center; gap: 6px; }
+.item-progreso-row { min-width: 80px; flex-shrink: 0; }
+.progreso-compacto { display: flex; align-items: center; gap: 5px; }
 .progreso-barra-small {
-    flex: 1; height: 5px;
+    flex: 1; height: 4px;
     background: #e4eeec;
     border-radius: 4px;
     overflow: hidden;
@@ -286,58 +342,55 @@ body {
     transition: width .4s;
 }
 .progreso-fill-small.completo { background: #27ae60; }
-.progreso-porcentaje { font-size: 11px; color: #64748b; font-weight: 600; min-width: 30px; }
+.progreso-porcentaje { font-size: 10.5px; color: #64748b; font-weight: 600; min-width: 28px; }
 
 /* ── Avatar ──────────────────────────────────────── */
 .avatar-responsable-small {
-    width: 28px; height: 28px;
+    width: 26px; height: 26px;
     border-radius: 50%;
     object-fit: cover;
     border: 2px solid #51B8AC;
     flex-shrink: 0;
 }
 .avatar-placeholder-small {
-    width: 28px; height: 28px;
+    width: 26px; height: 26px;
     border-radius: 50%;
     background: #51B8AC;
     color: #fff;
     display: flex; align-items: center; justify-content: center;
-    font-weight: 700; font-size: 10px;
+    font-weight: 700; font-size: 9px;
     flex-shrink: 0;
 }
 
 /* ── Botones de acción (card) ────────────────────── */
 .item-acciones-row {
     display: flex;
-    gap: 5px;
+    gap: 4px;
     flex-shrink: 0;
     align-items: center;
 }
 .btn-icon-only {
-    width: 32px; height: 32px; min-width: 32px;
+    width: 30px; height: 30px; min-width: 30px;
     border-radius: 7px;
     border: none;
     display: flex; align-items: center; justify-content: center;
     cursor: pointer;
-    font-size: 14px;
+    font-size: 13px;
     transition: background .15s, color .15s;
     position: relative;
 }
 .btn-icon-only:focus { outline: none; }
 
-.btn-ver      { background: #e8f4fd; color: #2980b9; }
+.btn-ver       { background: #e8f4fd; color: #2980b9; }
 .btn-ver:hover { background: #2980b9; color: #fff; }
 
-.btn-finalizar { background: #e8f5e9; color: #27ae60; }
-.btn-finalizar:hover { background: #27ae60; color: #fff; }
+.btn-finalizar      { background: #e8f5e9; color: #27ae60; }
+.btn-finalizar:hover{ background: #27ae60; color: #fff; }
 
-.btn-posponer { background: #fff3e0; color: #e65100; }
-.btn-posponer:hover { background: #ff6d00; color: #fff; }
+.btn-cancelar      { background: #fce8e6; color: #c62828; }
+.btn-cancelar:hover{ background: #c62828; color: #fff; }
 
-.btn-cancelar { background: #fce8e6; color: #c62828; }
-.btn-cancelar:hover { background: #c62828; color: #fff; }
-
-/* Tooltip on hover */
+/* Tooltip */
 .btn-icon-only::after {
     content: attr(data-tip);
     position: absolute;
@@ -346,7 +399,7 @@ body {
     transform: translateX(-50%);
     background: #1a2e2b;
     color: #fff;
-    font-size: 11px;
+    font-size: 10.5px;
     font-weight: 500;
     white-space: nowrap;
     padding: 3px 8px;
@@ -357,159 +410,6 @@ body {
     z-index: 300;
 }
 .btn-icon-only:hover::after { opacity: 1; }
-
-/* ══ POPOVER DE REAGENDA ═══════════════════════════ */
-.reschedule-popover {
-    /* Se inserta en body con position:fixed via JS */
-    background: #fff;
-    border: 1.5px solid #c6dedd;
-    border-radius: 12px;
-    box-shadow: 0 8px 28px rgba(14,84,76,.15);
-    padding: 14px;
-    width: 262px;
-    animation: popoverIn .15s ease;
-    /* Flecha superior por defecto (popover abre hacia abajo) */
-}
-@keyframes popoverIn {
-    from { opacity:0; transform: translateY(-6px) scale(.97); }
-    to   { opacity:1; transform: translateY(0)   scale(1); }
-}
-
-/* Flecha apuntando hacia arriba (popover debajo del botón) */
-.reschedule-popover::before {
-    content: '';
-    position: absolute;
-    top: -7px; right: 18px;
-    width: 12px; height: 12px;
-    background: #fff;
-    border-left: 1.5px solid #c6dedd;
-    border-top: 1.5px solid #c6dedd;
-    transform: rotate(45deg);
-}
-/* Flecha apuntando hacia abajo (popover sobre el botón) */
-.reschedule-popover.open-upward::before {
-    top: auto;
-    bottom: -7px;
-    border-left: none;
-    border-top: none;
-    border-right: 1.5px solid #c6dedd;
-    border-bottom: 1.5px solid #c6dedd;
-}
-
-.reschedule-popover h6 {
-    font-size: 12px;
-    font-weight: 700;
-    color: #0E544C;
-    text-transform: uppercase;
-    letter-spacing: .05em;
-    margin: 0 0 10px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-/* Grid de chips de fecha rápida */
-.date-chips {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 6px;
-    margin-bottom: 10px;
-}
-.date-chip {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 8px 6px;
-    border-radius: 8px;
-    border: 1.5px solid #dde8e6;
-    background: #f7fbfb;
-    cursor: pointer;
-    transition: border-color .15s, background .15s;
-    text-align: center;
-}
-.date-chip:hover {
-    border-color: #51B8AC;
-    background: #e8f5f3;
-}
-.date-chip.selected {
-    border-color: #0E544C;
-    background: #0E544C;
-    color: #fff;
-}
-.date-chip .chip-label {
-    font-size: 11.5px;
-    font-weight: 700;
-    color: #0E544C;
-    line-height: 1;
-    margin-bottom: 2px;
-}
-.date-chip.selected .chip-label { color: #fff; }
-.date-chip .chip-date {
-    font-size: 10px;
-    color: #78909c;
-    font-weight: 400;
-}
-.date-chip.selected .chip-date { color: rgba(255,255,255,.75); }
-
-/* Separador "o fecha específica" */
-.reschedule-divider {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin: 10px 0 8px;
-    font-size: 10.5px;
-    color: #9eb5b2;
-    font-weight: 500;
-}
-.reschedule-divider::before,
-.reschedule-divider::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: #e0eae8;
-}
-
-.reschedule-popover input[type="date"] {
-    width: 100%;
-    padding: 7px 10px;
-    border-radius: 7px;
-    border: 1.5px solid #dde8e6;
-    font-size: 13px;
-    font-family: 'Inter', sans-serif;
-    color: #1a2e2b;
-    margin-bottom: 10px;
-    transition: border-color .15s;
-}
-.reschedule-popover input[type="date"]:focus {
-    outline: none;
-    border-color: #51B8AC;
-}
-
-.reschedule-actions {
-    display: flex;
-    gap: 6px;
-}
-.reschedule-actions button {
-    flex: 1;
-    padding: 7px;
-    border-radius: 7px;
-    border: none;
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background .15s;
-}
-.btn-rsch-cancel {
-    background: #f1f4f3;
-    color: #546e7a;
-}
-.btn-rsch-cancel:hover { background: #e4eae8; }
-
-.btn-rsch-confirm {
-    background: #0E544C;
-    color: #fff;
-}
-.btn-rsch-confirm:hover { background: #0a3d37; }
 
 /* ── Modales ─────────────────────────────────────── */
 .modal-content {
@@ -629,5 +529,4 @@ body {
     .item-card-row { flex-wrap: wrap; }
     .item-meta-row { min-width: 0; }
     .item-acciones-row { width: 100%; justify-content: flex-end; }
-    .reschedule-popover { right: auto; left: 0; width: 240px; }
 }
