@@ -232,11 +232,22 @@ body {
 }
 .drag-hint i { font-size: 13px; }
 
-/* Drop activo */
+/* Drop activo — válido */
 .grupo-body.drop-active {
     background: #e8f5f3 !important;
     outline: 2px dashed #51B8AC;
     outline-offset: -2px;
+}
+/* Drop rechazado — día pasado */
+.grupo-body.drop-reject {
+    background: #fdf0f0 !important;
+    outline: 2px dashed #e53935;
+    outline-offset: -2px;
+}
+/* Evitar selección de texto durante arrastre */
+body.is-dragging {
+    user-select: none;
+    -webkit-user-select: none;
 }
 /* Zona NO permitida (día pasado) — sin hover */
 

@@ -379,64 +379,142 @@ function renderizarTablaFinalizados(items) {
     $('#contenedorTareasReuniones').append(seccion);
 }
 
+// ════════════════════════════════════════════════════
+// DRAG & DROP CON POINTER EVENTS
+// (permite scroll mientras se arrastra)
+// ════════════════════════════════════════════════════
+
+let dragState    = null;  // { id, fechaOrigen, ghost, cardEl, activeZone }
+let scrollTimer  = null;  // auto-scroll interval
+
+const SCROLL_EDGE  = 90;  // px desde el borde para activar auto-scroll
+const SCROLL_SPEED = 10;  // px por frame de auto-scroll
+
 function habilitarDrag(cardEl, item) {
-    cardEl.setAttribute('draggable', 'true');
-    cardEl.addEventListener('dragstart', function (e) {
-        itemDragId = item.id;
-        itemDragFechaOrigen = item.fecha_meta;
-        e.dataTransfer.effectAllowed = 'move';
-        e.dataTransfer.setData('text/plain', String(item.id));
+    // Usar el drag-handle como disparador, pero capturar en cardEl
+    const handle = cardEl.querySelector('.drag-handle') || cardEl;
+
+    handle.addEventListener('pointerdown', function (e) {
+        if (e.button !== 0) return;                    // solo clic izquierdo
+        if (e.target.closest('.btn-icon-only')) return; // no iniciar en botones
+
+        e.preventDefault();  // evita selección de texto
+
+        // ── Crear fantasma visual ──
+        const rect  = cardEl.getBoundingClientRect();
+        const ghost = cardEl.cloneNode(true);
+        Object.assign(ghost.style, {
+            position:      'fixed',
+            left:          rect.left + 'px',
+            top:           rect.top  + 'px',
+            width:         rect.width + 'px',
+            opacity:       '0.78',
+            pointerEvents: 'none',
+            zIndex:        '9998',
+            transform:     'rotate(1.5deg) scale(1.03)',
+            boxShadow:     '0 14px 36px rgba(14,84,76,.22)',
+            transition:    'none',
+            borderRadius:  '9px',
+        });
+        document.body.appendChild(ghost);
         cardEl.classList.add('dragging');
-    });
-    cardEl.addEventListener('dragend', function () {
-        cardEl.classList.remove('dragging');
-        document.querySelectorAll('.grupo-body.drop-active')
-            .forEach(z => z.classList.remove('drop-active'));
+
+        dragState = {
+            id:          item.id,
+            fechaOrigen: item.fecha_meta || '',
+            ghost:       ghost,
+            cardEl:      cardEl,
+            offsetX:     e.clientX - rect.left,
+            offsetY:     e.clientY - rect.top,
+            activeZone:  null,
+        };
+
+        // Capturar todos los eventos en el handle
+        handle.setPointerCapture(e.pointerId);
+        handle.addEventListener('pointermove',   onDragMove);
+        handle.addEventListener('pointerup',     onDragEnd);
+        handle.addEventListener('pointercancel', onDragEnd);
     });
 }
 
+function onDragMove(e) {
+    if (!dragState) return;
+    const { ghost, offsetX, offsetY } = dragState;
+
+    // Mover fantasma
+    ghost.style.left = (e.clientX - offsetX) + 'px';
+    ghost.style.top  = (e.clientY - offsetY) + 'px';
+
+    // ── Auto-scroll cerca de bordes ──
+    clearInterval(scrollTimer);
+    const vh = window.innerHeight;
+    if (e.clientY < SCROLL_EDGE) {
+        const vel = Math.ceil(SCROLL_SPEED * (1 - e.clientY / SCROLL_EDGE));
+        scrollTimer = setInterval(() => window.scrollBy(0, -vel), 16);
+    } else if (e.clientY > vh - SCROLL_EDGE) {
+        const vel = Math.ceil(SCROLL_SPEED * ((e.clientY - (vh - SCROLL_EDGE)) / SCROLL_EDGE));
+        scrollTimer = setInterval(() => window.scrollBy(0, vel), 16);
+    }
+
+    // ── Detectar zona de destino (ocultar ghost un instante) ──
+    ghost.style.display = 'none';
+    const elBajo = document.elementFromPoint(e.clientX, e.clientY);
+    ghost.style.display = '';
+
+    const zona = elBajo ? elBajo.closest('.grupo-body') : null;
+
+    // Limpiar zona anterior
+    document.querySelectorAll('.grupo-body.drop-active, .grupo-body.drop-reject')
+        .forEach(z => z.classList.remove('drop-active', 'drop-reject'));
+
+    if (zona) {
+        const fechaDest = zona.dataset.fechaGrupo;
+        const hoy = obtenerFechaHoy();
+        if (fechaDest && fechaDest >= hoy) {
+            zona.classList.add('drop-active');
+            dragState.activeZone = zona;
+        } else {
+            zona.classList.add('drop-reject');  // feedback visual negativo
+            dragState.activeZone = null;
+        }
+    } else {
+        dragState.activeZone = null;
+    }
+}
+
+function onDragEnd(e) {
+    if (!dragState) return;
+
+    clearInterval(scrollTimer);
+
+    const { id, fechaOrigen, ghost, cardEl, activeZone } = dragState;
+    const handle = e.currentTarget;
+
+    // Limpieza
+    ghost.remove();
+    cardEl.classList.remove('dragging');
+    document.querySelectorAll('.grupo-body.drop-active, .grupo-body.drop-reject')
+        .forEach(z => z.classList.remove('drop-active', 'drop-reject'));
+    handle.removeEventListener('pointermove',   onDragMove);
+    handle.removeEventListener('pointerup',     onDragEnd);
+    handle.removeEventListener('pointercancel', onDragEnd);
+    dragState = null;
+
+    // Ejecutar drop si hay zona válida
+    if (activeZone) {
+        const fechaDest = activeZone.dataset.fechaGrupo;
+        const hoy = obtenerFechaHoy();
+        if (fechaDest && fechaDest >= hoy && fechaDest !== fechaOrigen) {
+            posponerTareaAjax(id, fechaDest);
+        }
+    }
+}
+
+// habilitarDropZone solo establece el data-attribute (detección en onDragMove)
 function habilitarDropZone(bodyEl) {
-    bodyEl.addEventListener('dragover', function (e) {
-        if (!itemDragId) return;
-        const fechaDest = bodyEl.dataset.fechaGrupo;
-        const hoy = obtenerFechaHoy();
-        // Solo permitir drop en hoy o futuro
-        if (!fechaDest || fechaDest < hoy) return;
-        e.preventDefault();
-        e.dataTransfer.dropEffect = 'move';
-        document.querySelectorAll('.grupo-body.drop-active')
-            .forEach(z => z.classList.remove('drop-active'));
-        bodyEl.classList.add('drop-active');
-    });
-
-    bodyEl.addEventListener('dragleave', function (e) {
-        if (!bodyEl.contains(e.relatedTarget)) bodyEl.classList.remove('drop-active');
-    });
-
-    bodyEl.addEventListener('drop', function (e) {
-        e.preventDefault();
-        bodyEl.classList.remove('drop-active');
-        if (!itemDragId) return;
-
-        const fechaDestino = bodyEl.dataset.fechaGrupo;
-        const hoy = obtenerFechaHoy();
-
-        if (!fechaDestino || fechaDestino < hoy) {
-            Swal.fire('No permitido', 'Solo puedes reagendar tareas a hoy o días futuros.', 'warning');
-            itemDragId = null;
-            return;
-        }
-
-        // No hacer nada si es la misma fecha
-        if (fechaDestino === itemDragFechaOrigen) {
-            itemDragId = null;
-            return;
-        }
-
-        posponerTareaAjax(itemDragId, fechaDestino);
-        itemDragId = null;
-    });
+    // El dataset.fechaGrupo ya se establece en crearGrupoHtml, nada más necesario
 }
+
 
 // ── Posponer AJAX ────────────────────────────────────
 function posponerTareaAjax(id, nuevaFecha) {
