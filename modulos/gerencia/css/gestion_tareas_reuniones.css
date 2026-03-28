@@ -572,3 +572,81 @@ body {
     .item-meta-row { min-width: 0; }
     .item-acciones-row { width: 100%; justify-content: flex-end; }
 }
+
+/* ══ TABLA HISTORIAL ═══════════════════════════════ */
+.seccion-finalizados { margin-top: 28px; }
+
+.historial-separador {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    font-size: 11.5px;
+    font-weight: 700;
+    color: #546e7a;
+    text-transform: uppercase;
+    letter-spacing: .07em;
+}
+.historial-separador::before,
+.historial-separador::after { content:''; flex:1; height:1px; background:#dde8e6; }
+.historial-separador i { color: #27ae60; font-size: 13px; }
+
+.historial-tabla-wrap {
+    background: #fff;
+    border-radius: 10px;
+    border: 1px solid #dde8e6;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,.04);
+}
+.historial-tabla {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12.5px;
+}
+.historial-tabla thead tr {
+    background: #f7fbfb;
+    border-bottom: 1.5px solid #e0eae8;
+}
+.historial-tabla thead th {
+    padding: 9px 12px;
+    font-weight: 700;
+    color: #546e7a;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    white-space: nowrap;
+}
+.historial-fila {
+    border-bottom: 1px solid #f0f4f3;
+    cursor: pointer;
+    transition: background .12s;
+}
+.historial-fila:last-child { border-bottom: none; }
+.historial-fila:hover { background: #f7fbfb; }
+.historial-fila td { padding: 8px 12px; vertical-align: middle; }
+
+.historial-titulo {
+    font-weight: 600;
+    color: #1a2e2b;
+    max-width: 320px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.historial-resp  { color: #546e7a; white-space: nowrap; }
+.historial-fecha { color: #7a9391; white-space: nowrap; font-size: 12px; }
+
+/* Chip de tipo */
+.tipo-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px; height: 26px;
+    border-radius: 7px;
+    font-size: 13px;
+}
+.tipo-chip.tarea   { background: #e8f4fd; color: #2980b9; }
+.tipo-chip.reunion { background: #e8f5f3; color: #0E544C; }
+
+/* Badge extra para reuniones concluidas por fecha */
+.badge-estado.concluida { background: #f3e8fd; color: #7b2d8b; }

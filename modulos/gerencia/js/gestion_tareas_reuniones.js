@@ -121,7 +121,17 @@ function cargarDatos() {
         data: { agrupacion: agrupacionActual },
         dataType: 'json',
         success: function (r) {
-            (r.success && r.grupos.length > 0) ? renderizarDatos(r.grupos) : mostrarEstadoVacio();
+            const tieneGrupos      = r.success && r.grupos && r.grupos.length > 0;
+            const tieneFinalizados = agrupacionActual === 'mes' && r.finalizados && r.finalizados.length > 0;
+
+            if (tieneGrupos) {
+                renderizarDatos(r.grupos);
+            } else {
+                mostrarEstadoVacio();
+            }
+            if (tieneFinalizados) {
+                renderizarTablaFinalizados(r.finalizados);
+            }
         },
         error: function () { Swal.fire('Error', 'No se pudieron cargar los datos', 'error'); }
     });
@@ -250,12 +260,6 @@ function crearItemHtml(item, hoy) {
                 <div class="item-meta-col">
                     <span class="badge-estado ${item.estado}">${formatearEstado(item.estado)}</span>
                 </div>
-                <div class="item-meta-col ${claseFecha}">
-                    <i class="bi bi-calendar3 me-1"></i>
-                    <span>${item.tipo === 'reunion'
-                        ? formatearFechaHora(item.fecha_reunion)
-                        : formatearFecha(item.fecha_meta)}</span>
-                </div>
                 <div class="item-meta-col">
                     ${crearAvatarHtml(item)}
                 </div>
@@ -319,7 +323,62 @@ function crearAccionesHtml(item) {
     return html;
 }
 
-// ── Drag & Drop ──────────────────────────────────────
+// ── Tabla de historial ──────────────────────────────
+function renderizarTablaFinalizados(items) {
+    if (!items || items.length === 0) return;
+
+    const hoy = obtenerFechaHoy();
+    const seccion = $(`
+        <div class="seccion-finalizados">
+            <div class="historial-separador">
+                <span><i class="bi bi-check-circle-fill"></i> Historial — Finalizadas y concluidas</span>
+            </div>
+            <div class="historial-tabla-wrap">
+                <table class="historial-tabla">
+                    <thead>
+                        <tr>
+                            <th style="width:32px;"></th>
+                            <th>Título</th>
+                            <th>Responsable</th>
+                            <th>Fecha</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    `);
+
+    const tbody = seccion.find('tbody');
+    items.forEach(item => {
+        const fecha   = item.tipo === 'reunion'
+            ? formatearFechaHora(item.fecha_reunion)
+            : formatearFecha(item.fecha_meta);
+        const icono   = item.tipo === 'reunion' ? 'bi-calendar-event' : 'bi-file-earmark-text';
+        const tipoClase = item.tipo;
+
+        // Para reuniones pasadas: estado visual = 'Concluida'
+        const esConcluida = item.tipo === 'reunion'
+            && (item.fecha_reunion || '').substring(0, 10) < hoy
+            && item.estado !== 'finalizado';
+        const estadoLabel = esConcluida ? 'Concluida' : formatearEstado(item.estado);
+        const estadoClase = esConcluida ? 'concluida' : item.estado;
+
+        tbody.append(`
+            <tr class="historial-fila" onclick="verDetalle(${item.id})">
+                <td><span class="tipo-chip ${tipoClase}"><i class="bi ${icono}"></i></span></td>
+                <td class="historial-titulo">${escapeHtml(item.titulo)}</td>
+                <td class="historial-resp">${escapeHtml(item.nombre_responsable || '—')}</td>
+                <td class="historial-fecha">${fecha}</td>
+                <td><span class="badge-estado ${estadoClase}">${estadoLabel}</span></td>
+            </tr>
+        `);
+    });
+
+    $('#contenedorTareasReuniones').append(seccion);
+}
+
 function habilitarDrag(cardEl, item) {
     cardEl.setAttribute('draggable', 'true');
     cardEl.addEventListener('dragstart', function (e) {

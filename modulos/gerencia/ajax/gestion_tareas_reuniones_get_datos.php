@@ -20,11 +20,30 @@ try {
     $items = obtenerItemsUsuario($conn, $codCargo);
 
     // Agrupar según el tipo solicitado
-    $grupos = [];
+    $grupos     = [];
+    $finalizados = [];
+    $hoyStr = date('Y-m-d');
 
     switch ($agrupacion) {
         case 'mes':
             $grupos = agruparPorMes($items);
+            // Historial: tareas finalizadas/canceladas + reuniones cuya fecha ya pasó
+            foreach ($items as $it) {
+                if ($it['tipo'] === 'tarea' && in_array($it['estado'], ['finalizado', 'cancelado'])) {
+                    $finalizados[] = $it;
+                } elseif ($it['tipo'] === 'reunion') {
+                    $fechaR = substr($it['fecha_reunion'] ?? '', 0, 10);
+                    if ($fechaR < $hoyStr || $it['estado'] === 'finalizado') {
+                        $finalizados[] = $it;
+                    }
+                }
+            }
+            // Ordenar historial: más reciente primero
+            usort($finalizados, function($a, $b) {
+                $fa = $a['tipo'] === 'reunion' ? ($a['fecha_reunion'] ?? '') : ($a['fecha_meta'] ?? '');
+                $fb = $b['tipo'] === 'reunion' ? ($b['fecha_reunion'] ?? '') : ($b['fecha_meta'] ?? '');
+                return strcmp($fb, $fa);
+            });
             break;
         case 'semana':
             $grupos = agruparPorSemana($items, $conn);
@@ -38,8 +57,9 @@ try {
     }
 
     echo json_encode([
-        'success' => true,
-        'grupos' => $grupos
+        'success'     => true,
+        'grupos'      => $grupos,
+        'finalizados' => $finalizados
     ]);
 
 } catch (Exception $e) {
@@ -158,25 +178,24 @@ function agruparPorMes($items)
 
     $grupos = [];
 
-    // ── PASADOS: TODOS los items anteriores a hoy con pendientes (sin límite) ──
+    // ── PASADOS: solo tareas con estado pendiente (reuniones pasadas = concluidas, van al historial) ──
     foreach ($itemsByDate as $fechaStr => $itemsDelDia) {
-        if ($fechaStr >= $hoyStr) continue; // futuros se procesan abajo
+        if ($fechaStr >= $hoyStr) continue;
 
-        $tienePendientes = false;
-        foreach ($itemsDelDia as $it) {
-            if (!in_array($it['estado'], ['finalizado', 'cancelado'])) {
-                $tienePendientes = true;
-                break;
-            }
-        }
-        if (!$tienePendientes) continue;
+        // Filtrar solo TAREAS activas (en_progreso / solicitado)
+        $tareasPendientes = array_values(array_filter($itemsDelDia, function($it) {
+            return $it['tipo'] === 'tarea'
+                && !in_array($it['estado'], ['finalizado', 'cancelado']);
+        }));
+
+        if (empty($tareasPendientes)) continue;
 
         $diaObj = new DateTime($fechaStr);
         $grupos[$fechaStr] = [
             'nombre'           => $nombreDia($diaObj) . ' ' . $diaObj->format('Y'),
             'fecha_referencia' => $fechaStr,
             'clase_header'     => 'vencido',
-            'items'            => $itemsDelDia,
+            'items'            => $tareasPendientes,
         ];
     }
 
