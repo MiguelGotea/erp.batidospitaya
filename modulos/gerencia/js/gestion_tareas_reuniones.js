@@ -239,10 +239,6 @@ function crearItemHtml(item, hoy) {
              data-fecha="${fechaRef}"
              data-estado="${item.estado}">
 
-            <div class="drag-handle" title="Arrastra para reagendar a otro día">
-                <i class="bi bi-grip-vertical"></i>
-            </div>
-
             <div class="item-icon-small ${tipoClase}">
                 <i class="bi ${tipoIcono}"></i>
             </div>
@@ -392,14 +388,13 @@ const SCROLL_EDGE = 90;  // px desde el borde para activar auto-scroll
 const SCROLL_SPEED = 10;  // px por frame de auto-scroll
 
 function habilitarDrag(cardEl, item) {
-    // Usar el drag-handle como disparador, pero capturar en cardEl
-    const handle = cardEl.querySelector('.drag-handle') || cardEl;
+    // Toda la tarjeta es el área de arrastre (excepto botones de acción)
+    cardEl.addEventListener('pointerdown', function (e) {
+        if (e.button !== 0) return;
+        if (e.target.closest('.btn-icon-only')) return; // no iniciar en botones de acción
+        if (e.target.closest('.item-acciones-row')) return;
 
-    handle.addEventListener('pointerdown', function (e) {
-        if (e.button !== 0) return;                    // solo clic izquierdo
-        if (e.target.closest('.btn-icon-only')) return; // no iniciar en botones
-
-        e.preventDefault();  // evita selección de texto
+        e.preventDefault();
 
         // ── Crear fantasma visual ──
         const rect = cardEl.getBoundingClientRect();
@@ -430,11 +425,11 @@ function habilitarDrag(cardEl, item) {
             activeZone: null,
         };
 
-        // Capturar todos los eventos en el handle
-        handle.setPointerCapture(e.pointerId);
-        handle.addEventListener('pointermove', onDragMove);
-        handle.addEventListener('pointerup', onDragEnd);
-        handle.addEventListener('pointercancel', onDragEnd);
+        // Capturar todos los eventos en el card
+        cardEl.setPointerCapture(e.pointerId);
+        cardEl.addEventListener('pointermove', onDragMove);
+        cardEl.addEventListener('pointerup', onDragEnd);
+        cardEl.addEventListener('pointercancel', onDragEnd);
     });
 }
 
@@ -489,7 +484,7 @@ function onDragEnd(e) {
     clearInterval(scrollTimer);
 
     const { id, fechaOrigen, ghost, cardEl, activeZone } = dragState;
-    const handle = e.currentTarget;
+    const handle = cardEl; // ahora el listener está en cardEl
 
     // Limpieza
     ghost.remove();

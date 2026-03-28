@@ -288,19 +288,6 @@ body.is-dragging {
 .item-card-row.vencida::before { background: #e53935; }
 .item-card-row.hoy::before     { background: #1976d2; }
 
-/* ── Drag Handle ─────────────────────────────────── */
-.drag-handle {
-    display: flex;
-    align-items: center;
-    color: #d0e0de;
-    font-size: 15px;
-    cursor: grab;
-    flex-shrink: 0;
-    padding-top: 2px;
-    transition: color .15s;
-}
-.drag-handle:hover { color: #51B8AC; }
-
 /* ── Icon ────────────────────────────────────────── */
 .item-icon-small {
     font-size: 15px;
