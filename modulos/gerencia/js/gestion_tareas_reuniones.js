@@ -160,10 +160,17 @@ function crearSeparadorMes(fecha) {
 function crearGrupoHtml(grupo) {
     // clase_header viene del backend o se deriva del nombre (semana, cargo, estado)
     const claseHeader = grupo.clase_header || derivarClaseHeader(grupo.nombre);
-    const esDia       = agrupacionActual === 'mes'; // grupos diarios
+    const esDia       = agrupacionActual === 'mes';
     const esVacio     = grupo.items.length === 0;
 
-    const grupoDiv = $(`<div class="grupo-container${esDia ? ' grupo-dia' : ''}"></div>`);
+    // La clase del contenedor lleva el acento de color para CSS sin :has()
+    const claseContenedor = [
+        'grupo-container',
+        esDia ? 'grupo-dia' : '',
+        esDia && claseHeader ? `header-${claseHeader}` : ''
+    ].filter(Boolean).join(' ');
+
+    const grupoDiv = $(`<div class="${claseContenedor}"></div>`);
 
     grupoDiv.append($(`
         <div class="grupo-header ${claseHeader}">

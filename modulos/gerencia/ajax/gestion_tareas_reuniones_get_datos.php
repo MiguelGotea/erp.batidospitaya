@@ -127,9 +127,9 @@ function obtenerItemsUsuario($conn, $codCargo)
 }
 
 /**
- * Agrupar por día dentro del mes:
- * - Días pasados: mostrar solo si tienen tareas/reuniones pendientes
- * - Hoy y futuros (60 días): mostrar siempre, aunque estén vacíos
+ * Agrupar por día:
+ * - Pasados (cualquier fecha): mostrar SOLO si tienen pendientes (sin límite de antigüedad)
+ * - Hoy + días restantes del mes actual + 1 día del mes siguiente: siempre mostrar
  */
 function agruparPorMes($items)
 {
@@ -138,6 +138,13 @@ function agruparPorMes($items)
 
     $meses      = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
     $diasSemana = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+
+    // Helper para nombre de día
+    $nombreDia = function(DateTime $d) use ($meses, $diasSemana): string {
+        return $diasSemana[(int)$d->format('w')] . ' ' .
+               $d->format('d') . ' ' .
+               $meses[(int)$d->format('n') - 1];
+    };
 
     // Indexar items por fecha (YYYY-MM-DD)
     $itemsByDate = [];
@@ -151,56 +158,38 @@ function agruparPorMes($items)
 
     $grupos = [];
 
-    // ── PASADOS: hasta 90 días atrás con tareas pendientes ──
-    $desde       = (clone $hoy)->modify('-90 days');
-    $ayer        = (clone $hoy)->modify('-1 day');
-    $diaIterado  = clone $desde;
+    // ── PASADOS: TODOS los items anteriores a hoy con pendientes (sin límite) ──
+    foreach ($itemsByDate as $fechaStr => $itemsDelDia) {
+        if ($fechaStr >= $hoyStr) continue; // futuros se procesan abajo
 
-    while ($diaIterado <= $ayer) {
-        $fechaStr = $diaIterado->format('Y-m-d');
-
-        if (isset($itemsByDate[$fechaStr])) {
-            // Mostrar solo si hay algo NO finalizado/cancelado
-            $tienePendientes = false;
-            foreach ($itemsByDate[$fechaStr] as $it) {
-                if (!in_array($it['estado'], ['finalizado', 'cancelado'])) {
-                    $tienePendientes = true;
-                    break;
-                }
-            }
-
-            if ($tienePendientes) {
-                $grupos[$fechaStr] = [
-                    'nombre'           => $diasSemana[(int)$diaIterado->format('w')] . ' ' .
-                                         $diaIterado->format('d') . ' ' .
-                                         $meses[(int)$diaIterado->format('n') - 1] . ' ' .
-                                         $diaIterado->format('Y'),
-                    'fecha_referencia' => $fechaStr,
-                    'clase_header'     => 'vencido',
-                    'items'            => $itemsByDate[$fechaStr],
-                ];
+        $tienePendientes = false;
+        foreach ($itemsDelDia as $it) {
+            if (!in_array($it['estado'], ['finalizado', 'cancelado'])) {
+                $tienePendientes = true;
+                break;
             }
         }
+        if (!$tienePendientes) continue;
 
-        $diaIterado->modify('+1 day');
+        $diaObj = new DateTime($fechaStr);
+        $grupos[$fechaStr] = [
+            'nombre'           => $nombreDia($diaObj) . ' ' . $diaObj->format('Y'),
+            'fecha_referencia' => $fechaStr,
+            'clase_header'     => 'vencido',
+            'items'            => $itemsDelDia,
+        ];
     }
 
-    // ── HOY y FUTUROS: siempre mostrar (hasta 60 días) ──
-    $hasta      = (clone $hoy)->modify('+60 days');
+    // ── HOY + resto del mes actual + 1º día del mes siguiente ──
+    $hasta      = new DateTime('first day of next month');
     $diaIterado = clone $hoy;
 
     while ($diaIterado <= $hasta) {
         $fechaStr = $diaIterado->format('Y-m-d');
         $esHoy    = ($fechaStr === $hoyStr);
 
-        $nombreDia = $diasSemana[(int)$diaIterado->format('w')] . ' ' .
-                     $diaIterado->format('d') . ' ' .
-                     $meses[(int)$diaIterado->format('n') - 1];
-
-        $nombre = $esHoy ? ('HOY — ' . $nombreDia) : $nombreDia;
-
         $grupos[$fechaStr] = [
-            'nombre'           => $nombre,
+            'nombre'           => $esHoy ? ('HOY — ' . $nombreDia($diaIterado)) : $nombreDia($diaIterado),
             'fecha_referencia' => $fechaStr,
             'clase_header'     => $esHoy ? 'hoy' : '',
             'items'            => $itemsByDate[$fechaStr] ?? [],
@@ -209,7 +198,6 @@ function agruparPorMes($items)
         $diaIterado->modify('+1 day');
     }
 
-    // Ordenar cronológicamente
     ksort($grupos);
     return array_values($grupos);
 }
