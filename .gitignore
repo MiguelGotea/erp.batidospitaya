@@ -4,6 +4,7 @@
 !/modulos/
 !/.scripts/
 !/README.md
+!/.github/
 # .scripts/ (Versionado en GitHub pero excluido del host)
 /docs/
 /.agent/
