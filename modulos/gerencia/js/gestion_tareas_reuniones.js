@@ -9,15 +9,16 @@ let agrupacionActual = 'mes';
 let modalNuevaTarea, modalSolicitarTarea, modalNuevaReunion, modalFinalizarTarea;
 let cargosLiderazgo = [];
 let calendar;
-let itemDragId  = null;
+let itemDragId = null;
 let itemDragFechaOrigen = null;
 let popoverActivo = null; // referencia al popover abierto
 
+
 // ── Inicializar ──────────────────────────────────────
 $(document).ready(function () {
-    modalNuevaTarea     = new bootstrap.Modal(document.getElementById('modalNuevaTarea'));
+    modalNuevaTarea = new bootstrap.Modal(document.getElementById('modalNuevaTarea'));
     modalSolicitarTarea = new bootstrap.Modal(document.getElementById('modalSolicitarTarea'));
-    modalNuevaReunion   = new bootstrap.Modal(document.getElementById('modalNuevaReunion'));
+    modalNuevaReunion = new bootstrap.Modal(document.getElementById('modalNuevaReunion'));
     modalFinalizarTarea = new bootstrap.Modal(document.getElementById('modalFinalizarTarea'));
 
     cargarCargosLiderazgo();
@@ -36,8 +37,8 @@ $(document).ready(function () {
 // ── Cargos ───────────────────────────────────────────
 function cargarCargosLiderazgo() {
     $.ajax({
-        url:      'ajax/gestion_tareas_reuniones_get_cargos_liderazgo.php',
-        method:   'GET',
+        url: 'ajax/gestion_tareas_reuniones_get_cargos_liderazgo.php',
+        method: 'GET',
         dataType: 'json',
         success: function (r) {
             if (r.success) {
@@ -149,7 +150,7 @@ function crearGrupoHtml(grupo) {
     if (agrupacionActual === 'mes') {
         const n = (grupo.nombre || '').toLowerCase();
         if (n.includes('vencid') || n.includes('pasad') || n.includes('anterior')) claseHeader = 'vencido';
-        else if (n.includes('hoy') || n.includes('today'))                         claseHeader = 'hoy';
+        else if (n.includes('hoy') || n.includes('today')) claseHeader = 'hoy';
     }
 
     const grupoDiv = $('<div class="grupo-container"></div>');
@@ -177,15 +178,15 @@ function crearGrupoHtml(grupo) {
 function crearItemHtml(item, hoy) {
     const tipoIcono = item.tipo === 'reunion' ? 'bi-calendar-event' : 'bi-file-earmark-text';
     const tipoClase = item.tipo === 'reunion' ? 'reunion' : 'tarea';
-    const progreso  = Math.round(item.progreso || 0);
+    const progreso = Math.round(item.progreso || 0);
 
     const fechaRef = item.tipo === 'reunion'
         ? (item.fecha_reunion || '').substring(0, 10)
-        : (item.fecha_meta   || '');
+        : (item.fecha_meta || '');
     let claseCard = '', claseFecha = '';
     if (fechaRef && item.estado !== 'finalizado' && item.estado !== 'cancelado') {
-        if      (fechaRef < hoy)  { claseCard = 'vencida'; claseFecha = 'fecha-vencida'; }
-        else if (fechaRef === hoy) { claseCard = 'hoy';    claseFecha = 'fecha-hoy'; }
+        if (fechaRef < hoy) { claseCard = 'vencida'; claseFecha = 'fecha-vencida'; }
+        else if (fechaRef === hoy) { claseCard = 'hoy'; claseFecha = 'fecha-hoy'; }
         else if (diasDiff(hoy, fechaRef) <= 3) claseFecha = 'fecha-proxima';
     }
 
@@ -208,8 +209,8 @@ function crearItemHtml(item, hoy) {
                 <div class="item-title-block">
                     <div class="item-titulo-text">${escapeHtml(item.titulo)}</div>
                     ${item.descripcion
-                        ? `<div class="item-descripcion-preview">${escapeHtml(stripHtml(item.descripcion))}</div>`
-                        : ''}
+            ? `<div class="item-descripcion-preview">${escapeHtml(stripHtml(item.descripcion))}</div>`
+            : ''}
                 </div>
             </div>
 
@@ -220,8 +221,8 @@ function crearItemHtml(item, hoy) {
                 <div class="item-meta-col ${claseFecha}">
                     <i class="bi bi-calendar3 me-1"></i>
                     <span>${item.tipo === 'reunion'
-                        ? formatearFechaHora(item.fecha_reunion)
-                        : formatearFecha(item.fecha_meta)}</span>
+            ? formatearFechaHora(item.fecha_reunion)
+            : formatearFecha(item.fecha_meta)}</span>
                 </div>
                 <div class="item-meta-col">
                     ${crearAvatarHtml(item)}
@@ -310,16 +311,16 @@ function abrirPopoverReagendar(btnEl, itemId, fechaActual) {
         if (mismoItem) return;
     }
 
-    const hoy    = obtenerFechaHoy();
+    const hoy = obtenerFechaHoy();
     // Si la fecha actual ya pasó, sugerir mañana
     const sugerida = (!fechaActual || fechaActual < hoy) ? obtenerFechaManana() : fechaActual;
 
     // Pre-calcular chips
     const chips = [
-        { label: 'Hoy',      fecha: hoy },
-        { label: 'Mañana',   fecha: offsetFecha(hoy, 1) },
-        { label: '+2 días',  fecha: offsetFecha(hoy, 2) },
-        { label: '+1 semana',fecha: offsetFecha(hoy, 7) },
+        { label: 'Hoy', fecha: hoy },
+        { label: 'Mañana', fecha: offsetFecha(hoy, 1) },
+        { label: '+2 días', fecha: offsetFecha(hoy, 2) },
+        { label: '+1 semana', fecha: offsetFecha(hoy, 7) },
     ];
 
     const chipsHtml = chips.map(c => `
@@ -370,7 +371,7 @@ function seleccionarChip(chipEl, fecha, itemId) {
 function confirmarReagendaManual(itemId) {
     const input = document.getElementById(`rschDateInput_${itemId}`);
     const fecha = input ? input.value : '';
-    const hoy   = obtenerFechaHoy();
+    const hoy = obtenerFechaHoy();
 
     if (!fecha) { Swal.fire('Atención', 'Selecciona una nueva fecha', 'warning'); return; }
     if (fecha < hoy) { Swal.fire('No permitido', 'Solo puedes reagendar a hoy o días futuros.', 'warning'); return; }
@@ -389,9 +390,9 @@ function cerrarPopover() {
 // ── Posponer AJAX ────────────────────────────────────
 function posponerTareaAjax(id, nuevaFecha) {
     $.ajax({
-        url:    'ajax/gestion_tareas_reuniones_posponer.php',
+        url: 'ajax/gestion_tareas_reuniones_posponer.php',
         method: 'POST',
-        data:   { id: id, nueva_fecha: nuevaFecha },
+        data: { id: id, nueva_fecha: nuevaFecha },
         dataType: 'json',
         success: function (r) {
             if (r.success) {
@@ -415,7 +416,7 @@ function posponerTareaAjax(id, nuevaFecha) {
 function habilitarDrag(cardEl, item) {
     cardEl.setAttribute('draggable', 'true');
     cardEl.addEventListener('dragstart', function (e) {
-        itemDragId          = item.id;
+        itemDragId = item.id;
         itemDragFechaOrigen = item.fecha_meta;
         e.dataTransfer.effectAllowed = 'move';
         e.dataTransfer.setData('text/plain', String(item.id));
@@ -484,7 +485,7 @@ function finalizarTareaManualPanel(id, totalSubtareas) {
 }
 
 function confirmarFinalizarManual() {
-    const idItem   = $('#finalizarIdItem').val();
+    const idItem = $('#finalizarIdItem').val();
     const detalles = $('#detallesFinalizacionTarea').val().trim();
     if (!detalles) { Swal.fire('Error', 'Ingresa los detalles de finalización', 'error'); return; }
 
@@ -503,7 +504,7 @@ function confirmarFinalizarManual() {
         dataType: 'json',
         success: function (r) {
             if (r.success) {
-                Swal.fire({ icon:'success', title:'¡Completado!', text:'Tarea finalizada correctamente', timer:2000, showConfirmButton:false });
+                Swal.fire({ icon: 'success', title: '¡Completado!', text: 'Tarea finalizada correctamente', timer: 2000, showConfirmButton: false });
                 modalFinalizarTarea.hide();
                 cargarDatos();
             } else {
@@ -534,7 +535,7 @@ function cancelarItem(id, tipo) {
             dataType: 'json',
             success: function (r) {
                 if (r.success) {
-                    Swal.fire({ icon:'success', title:'Cancelado', text:r.message, timer:1800, showConfirmButton:false });
+                    Swal.fire({ icon: 'success', title: 'Cancelado', text: r.message, timer: 1800, showConfirmButton: false });
                     cargarDatos();
                 } else {
                     Swal.fire('Error', r.message, 'error');
@@ -548,7 +549,7 @@ function cancelarItem(id, tipo) {
 // ── Guardar tarea ────────────────────────────────────
 function guardarTarea(tipo) {
     const formId = tipo === 'crear' ? '#formNuevaTarea' : '#formSolicitarTarea';
-    const form   = $(formId)[0];
+    const form = $(formId)[0];
     if (!form.checkValidity()) { form.reportValidity(); return; }
 
     const formData = new FormData(form);
@@ -571,7 +572,7 @@ function guardarTarea(tipo) {
         dataType: 'json',
         success: function (r) {
             if (r.success) {
-                Swal.fire({ icon:'success', title:'Éxito', text:r.message, timer:2000, showConfirmButton:false });
+                Swal.fire({ icon: 'success', title: 'Éxito', text: r.message, timer: 2000, showConfirmButton: false });
                 tipo === 'crear' ? modalNuevaTarea.hide() : modalSolicitarTarea.hide();
                 cargarDatos();
             } else {
@@ -610,7 +611,7 @@ function guardarReunion() {
         dataType: 'json',
         success: function (r) {
             if (r.success) {
-                Swal.fire({ icon:'success', title:'Éxito', text:r.message, timer:2000, showConfirmButton:false });
+                Swal.fire({ icon: 'success', title: 'Éxito', text: r.message, timer: 2000, showConfirmButton: false });
                 modalNuevaReunion.hide();
                 cargarDatos();
             } else {
@@ -635,7 +636,7 @@ function inicializarCalendario() {
         editable: true,
         droppable: true,
         eventDrop: function (info) {
-            const hoy        = obtenerFechaHoy();
+            const hoy = obtenerFechaHoy();
             const nuevaFecha = info.event.startStr.substring(0, 10);
             if (nuevaFecha < hoy) {
                 Swal.fire('No permitido', 'No puedes mover tareas a fechas pasadas', 'warning');
@@ -713,17 +714,17 @@ function diasDiff(desde, hasta) {
 function formatearFecha(f) {
     if (!f) return '-';
     const d = new Date(f + 'T00:00:00');
-    const m = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-    return `${d.getDate().toString().padStart(2,'0')}-${m[d.getMonth()]}-${d.getFullYear().toString().substr(2)}`;
+    const m = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+    return `${d.getDate().toString().padStart(2, '0')}-${m[d.getMonth()]}-${d.getFullYear().toString().substr(2)}`;
 }
 function formatearFechaHora(fh) {
     if (!fh) return '-';
     const d = new Date(fh);
-    const m = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-    return `${d.getDate().toString().padStart(2,'0')}-${m[d.getMonth()]}-${d.getFullYear().toString().substr(2)} ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+    const m = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+    return `${d.getDate().toString().padStart(2, '0')}-${m[d.getMonth()]}-${d.getFullYear().toString().substr(2)} ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
 }
 function formatearEstado(e) {
-    return { solicitado:'Solicitado', en_progreso:'En Progreso', finalizado:'Finalizado', cancelado:'Cancelado' }[e] || e;
+    return { solicitado: 'Solicitado', en_progreso: 'En Progreso', finalizado: 'Finalizado', cancelado: 'Cancelado' }[e] || e;
 }
 function crearAvatarHtml(item) {
     if (item.avatar_url)
@@ -743,6 +744,6 @@ function stripHtml(h) {
 function escapeHtml(t) {
     if (!t) return '';
     return String(t).replace(/[&<>"']/g, m =>
-        ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[m])
+        ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m])
     );
 }
