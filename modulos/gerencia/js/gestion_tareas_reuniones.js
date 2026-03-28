@@ -14,9 +14,9 @@ let itemDragFechaOrigen = null;
 
 // ── Inicializar ──────────────────────────────────────
 $(document).ready(function () {
-    modalNuevaTarea     = new bootstrap.Modal(document.getElementById('modalNuevaTarea'));
+    modalNuevaTarea = new bootstrap.Modal(document.getElementById('modalNuevaTarea'));
     modalSolicitarTarea = new bootstrap.Modal(document.getElementById('modalSolicitarTarea'));
-    modalNuevaReunion   = new bootstrap.Modal(document.getElementById('modalNuevaReunion'));
+    modalNuevaReunion = new bootstrap.Modal(document.getElementById('modalNuevaReunion'));
     modalFinalizarTarea = new bootstrap.Modal(document.getElementById('modalFinalizarTarea'));
 
     cargarCargosLiderazgo();
@@ -121,7 +121,7 @@ function cargarDatos() {
         data: { agrupacion: agrupacionActual },
         dataType: 'json',
         success: function (r) {
-            const tieneGrupos      = r.success && r.grupos && r.grupos.length > 0;
+            const tieneGrupos = r.success && r.grupos && r.grupos.length > 0;
             const tieneFinalizados = agrupacionActual === 'mes' && r.finalizados && r.finalizados.length > 0;
 
             if (tieneGrupos) {
@@ -161,8 +161,8 @@ function renderizarDatos(grupos) {
 function crearSeparadorMes(fecha) {
     if (!fecha) return $('');
     const d = new Date(fecha + 'T00:00:00');
-    const meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
-                   'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+    const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+        'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
     const nombre = meses[d.getMonth()] + ' ' + d.getFullYear();
     return $(`<div class="mes-separador"><span>${nombre}</span></div>`);
 }
@@ -170,8 +170,8 @@ function crearSeparadorMes(fecha) {
 function crearGrupoHtml(grupo) {
     // clase_header viene del backend o se deriva del nombre (semana, cargo, estado)
     const claseHeader = grupo.clase_header || derivarClaseHeader(grupo.nombre);
-    const esDia       = agrupacionActual === 'mes';
-    const esVacio     = grupo.items.length === 0;
+    const esDia = agrupacionActual === 'mes';
+    const esVacio = grupo.items.length === 0;
 
     // La clase del contenedor lleva el acento de color para CSS sin :has()
     const claseContenedor = [
@@ -186,9 +186,9 @@ function crearGrupoHtml(grupo) {
         <div class="grupo-header ${claseHeader}">
             <span>${grupo.nombre}</span>
             <span class="grupo-badge">${grupo.items.length === 0
-                ? '—'
-                : grupo.items.length + ' ' + (grupo.items.length === 1 ? 'item' : 'items')
-            }</span>
+            ? '—'
+            : grupo.items.length + ' ' + (grupo.items.length === 1 ? 'item' : 'items')
+        }</span>
         </div>
     `));
 
@@ -212,7 +212,7 @@ function crearGrupoHtml(grupo) {
 function derivarClaseHeader(nombre) {
     const n = (nombre || '').toLowerCase();
     if (n.includes('vencid') || n.includes('pasad') || n.includes('anterior')) return 'vencido';
-    if (n.startsWith('hoy'))  return 'hoy';
+    if (n.startsWith('hoy')) return 'hoy';
     return '';
 }
 
@@ -220,15 +220,15 @@ function derivarClaseHeader(nombre) {
 function crearItemHtml(item, hoy) {
     const tipoIcono = item.tipo === 'reunion' ? 'bi-calendar-event' : 'bi-file-earmark-text';
     const tipoClase = item.tipo === 'reunion' ? 'reunion' : 'tarea';
-    const progreso  = Math.round(item.progreso || 0);
+    const progreso = Math.round(item.progreso || 0);
 
     const fechaRef = item.tipo === 'reunion'
         ? (item.fecha_reunion || '').substring(0, 10)
         : (item.fecha_meta || '');
     let claseCard = '', claseFecha = '';
     if (fechaRef && item.estado !== 'finalizado' && item.estado !== 'cancelado') {
-        if      (fechaRef < hoy)   { claseCard = 'vencida'; claseFecha = 'fecha-vencida'; }
-        else if (fechaRef === hoy) { claseCard = 'hoy';     claseFecha = 'fecha-hoy'; }
+        if (fechaRef < hoy) { claseCard = 'vencida'; claseFecha = 'fecha-vencida'; }
+        else if (fechaRef === hoy) { claseCard = 'hoy'; claseFecha = 'fecha-hoy'; }
         else if (diasDiff(hoy, fechaRef) <= 3) claseFecha = 'fecha-proxima';
     }
 
@@ -251,8 +251,8 @@ function crearItemHtml(item, hoy) {
                 <div class="item-title-block">
                     <div class="item-titulo-text">${escapeHtml(item.titulo)}</div>
                     ${item.descripcion
-                        ? `<div class="item-descripcion-preview">${escapeHtml(stripHtml(item.descripcion))}</div>`
-                        : ''}
+            ? `<div class="item-descripcion-preview">${escapeHtml(stripHtml(item.descripcion))}</div>`
+            : ''}
                 </div>
             </div>
 
@@ -352,10 +352,10 @@ function renderizarTablaFinalizados(items) {
 
     const tbody = seccion.find('tbody');
     items.forEach(item => {
-        const fecha   = item.tipo === 'reunion'
+        const fecha = item.tipo === 'reunion'
             ? formatearFechaHora(item.fecha_reunion)
             : formatearFecha(item.fecha_meta);
-        const icono   = item.tipo === 'reunion' ? 'bi-calendar-event' : 'bi-file-earmark-text';
+        const icono = item.tipo === 'reunion' ? 'bi-calendar-event' : 'bi-file-earmark-text';
         const tipoClase = item.tipo;
 
         // Para reuniones pasadas: estado visual = 'Concluida'
@@ -379,15 +379,16 @@ function renderizarTablaFinalizados(items) {
     $('#contenedorTareasReuniones').append(seccion);
 }
 
+
 // ════════════════════════════════════════════════════
 // DRAG & DROP CON POINTER EVENTS
 // (permite scroll mientras se arrastra)
 // ════════════════════════════════════════════════════
 
-let dragState    = null;  // { id, fechaOrigen, ghost, cardEl, activeZone }
-let scrollTimer  = null;  // auto-scroll interval
+let dragState = null;  // { id, fechaOrigen, ghost, cardEl, activeZone }
+let scrollTimer = null;  // auto-scroll interval
 
-const SCROLL_EDGE  = 90;  // px desde el borde para activar auto-scroll
+const SCROLL_EDGE = 90;  // px desde el borde para activar auto-scroll
 const SCROLL_SPEED = 10;  // px por frame de auto-scroll
 
 function habilitarDrag(cardEl, item) {
@@ -401,38 +402,38 @@ function habilitarDrag(cardEl, item) {
         e.preventDefault();  // evita selección de texto
 
         // ── Crear fantasma visual ──
-        const rect  = cardEl.getBoundingClientRect();
+        const rect = cardEl.getBoundingClientRect();
         const ghost = cardEl.cloneNode(true);
         Object.assign(ghost.style, {
-            position:      'fixed',
-            left:          rect.left + 'px',
-            top:           rect.top  + 'px',
-            width:         rect.width + 'px',
-            opacity:       '0.78',
+            position: 'fixed',
+            left: rect.left + 'px',
+            top: rect.top + 'px',
+            width: rect.width + 'px',
+            opacity: '0.78',
             pointerEvents: 'none',
-            zIndex:        '9998',
-            transform:     'rotate(1.5deg) scale(1.03)',
-            boxShadow:     '0 14px 36px rgba(14,84,76,.22)',
-            transition:    'none',
-            borderRadius:  '9px',
+            zIndex: '9998',
+            transform: 'rotate(1.5deg) scale(1.03)',
+            boxShadow: '0 14px 36px rgba(14,84,76,.22)',
+            transition: 'none',
+            borderRadius: '9px',
         });
         document.body.appendChild(ghost);
         cardEl.classList.add('dragging');
 
         dragState = {
-            id:          item.id,
+            id: item.id,
             fechaOrigen: item.fecha_meta || '',
-            ghost:       ghost,
-            cardEl:      cardEl,
-            offsetX:     e.clientX - rect.left,
-            offsetY:     e.clientY - rect.top,
-            activeZone:  null,
+            ghost: ghost,
+            cardEl: cardEl,
+            offsetX: e.clientX - rect.left,
+            offsetY: e.clientY - rect.top,
+            activeZone: null,
         };
 
         // Capturar todos los eventos en el handle
         handle.setPointerCapture(e.pointerId);
-        handle.addEventListener('pointermove',   onDragMove);
-        handle.addEventListener('pointerup',     onDragEnd);
+        handle.addEventListener('pointermove', onDragMove);
+        handle.addEventListener('pointerup', onDragEnd);
         handle.addEventListener('pointercancel', onDragEnd);
     });
 }
@@ -443,7 +444,7 @@ function onDragMove(e) {
 
     // Mover fantasma
     ghost.style.left = (e.clientX - offsetX) + 'px';
-    ghost.style.top  = (e.clientY - offsetY) + 'px';
+    ghost.style.top = (e.clientY - offsetY) + 'px';
 
     // ── Auto-scroll cerca de bordes ──
     clearInterval(scrollTimer);
@@ -495,8 +496,8 @@ function onDragEnd(e) {
     cardEl.classList.remove('dragging');
     document.querySelectorAll('.grupo-body.drop-active, .grupo-body.drop-reject')
         .forEach(z => z.classList.remove('drop-active', 'drop-reject'));
-    handle.removeEventListener('pointermove',   onDragMove);
-    handle.removeEventListener('pointerup',     onDragEnd);
+    handle.removeEventListener('pointermove', onDragMove);
+    handle.removeEventListener('pointerup', onDragEnd);
     handle.removeEventListener('pointercancel', onDragEnd);
     dragState = null;
 
@@ -558,7 +559,7 @@ function finalizarTareaManualPanel(id, totalSubtareas) {
 }
 
 function confirmarFinalizarManual() {
-    const idItem   = $('#finalizarIdItem').val();
+    const idItem = $('#finalizarIdItem').val();
     const detalles = $('#detallesFinalizacionTarea').val().trim();
     if (!detalles) { Swal.fire('Error', 'Ingresa los detalles de finalización', 'error'); return; }
 
