@@ -348,11 +348,31 @@ function abrirPopoverReagendar(btnEl, itemId, fechaActual) {
         </div>
     `;
 
-    // Posicionar relativo al contenedor de acciones (padre del botón)
-    const accRow = btnEl.closest('.item-acciones-row');
-    accRow.style.position = 'relative';
-    accRow.appendChild(popover);
+    // --- Posición FIJA (fixed) desde el viewport del botón ---
+    document.body.appendChild(popover);
     popoverActivo = popover;
+
+    const POPOVER_W = 262;
+    const POPOVER_H = 240; // estimado
+    const rect = btnEl.getBoundingClientRect();
+    const gap  = 6;
+
+    // Horizontal: alinear derecha del botón, sin salir del viewport
+    let left = rect.right - POPOVER_W;
+    if (left < 8) left = 8;
+    if (left + POPOVER_W > window.innerWidth - 8) left = window.innerWidth - POPOVER_W - 8;
+
+    // Vertical: abajo del botón; si no cabe → abrir hacia arriba
+    let top = rect.bottom + gap;
+    if (top + POPOVER_H > window.innerHeight - 8) {
+        top = rect.top - gap - POPOVER_H;
+        popover.classList.add('open-upward');
+    }
+
+    popover.style.position = 'fixed';
+    popover.style.top  = Math.max(8, top)  + 'px';
+    popover.style.left = left + 'px';
+    popover.style.zIndex = '9999';
 
     // Marcar chip si coincide con la fecha sugerida
     const chipMatch = popover.querySelector(`.date-chip[data-fecha="${sugerida}"]`);

@@ -191,13 +191,13 @@ function agruparPorSemana($items, $conn)
     $grupos = [];
     $hoy = new DateTime();
 
-    // Obtener semana actual del sistema
-    $sqlSemanaActual = "SELECT numero_semana FROM SemanasSistema 
-                        WHERE fecha_inicio <= CURDATE() AND fecha_fin >= CURDATE()";
-    $stmt = $conn->query($sqlSemanaActual);
-    $semanaActual = $stmt->fetchColumn();
+    // Obtener la semana actual del sistema — la tabla solo tiene id, fecha_inicio, fecha_fin
+    $sqlSemanaActual = "SELECT id FROM SemanasSistema 
+                        WHERE fecha_inicio <= CURDATE() AND fecha_fin >= CURDATE() LIMIT 1";
+    $stmtActual = $conn->query($sqlSemanaActual);
+    $idSemanaActual = $stmtActual ? (int)$stmtActual->fetchColumn() : 0;
 
-    // Grupo de tareas vencidas
+    // Grupo de tareas vencidas (antes de la semana actual)
     $vencidas = [];
 
     foreach ($items as $item) {
@@ -206,10 +206,10 @@ function agruparPorSemana($items, $conn)
         if (!$fecha)
             continue;
 
-        // Obtener semana del sistema para esta fecha
-        $sqlSemana = "SELECT numero_semana, fecha_inicio, fecha_fin 
+        // Obtener la fila de SemanasSistema que contiene esta fecha
+        $sqlSemana = "SELECT id, fecha_inicio, fecha_fin 
                       FROM SemanasSistema 
-                      WHERE fecha_inicio <= DATE(:fecha) AND fecha_fin >= DATE(:fecha)";
+                      WHERE fecha_inicio <= DATE(:fecha) AND fecha_fin >= DATE(:fecha) LIMIT 1";
         $stmt = $conn->prepare($sqlSemana);
         $stmt->execute([':fecha' => $fecha]);
         $semanaData = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -217,33 +217,39 @@ function agruparPorSemana($items, $conn)
         if (!$semanaData)
             continue;
 
-        $numeroSemana = $semanaData['numero_semana'];
+        $idSemana = (int)$semanaData['id'];
 
-        // Si es tarea y está vencida
-        if ($item['tipo'] == 'tarea' && $numeroSemana < $semanaActual && $item['estado'] != 'finalizado' && $item['estado'] != 'cancelado') {
+        // Si es tarea activa y su semana ya pasó → vencidas
+        if ($item['tipo'] == 'tarea'
+            && $idSemanaActual > 0
+            && $idSemana < $idSemanaActual
+            && $item['estado'] != 'finalizado'
+            && $item['estado'] != 'cancelado') {
             $vencidas[] = $item;
             continue;
         }
 
         $mesesCortos = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
         $fechaInicio = new DateTime($semanaData['fecha_inicio']);
-        $fechaFin = new DateTime($semanaData['fecha_fin']);
-        $nombreSemana = "Semana " . $numeroSemana . " (" .
-            $fechaInicio->format('d') . "-" . $mesesCortos[$fechaInicio->format('n') - 1] . " a " .
-            $fechaFin->format('d') . "-" . $mesesCortos[$fechaFin->format('n') - 1] . ")";
+        $fechaFin    = new DateTime($semanaData['fecha_fin']);
+        $nombreSemana = "Semana #" . $idSemana . " (" .
+            $fechaInicio->format('d') . "-" . $mesesCortos[$fechaInicio->format('n') - 1] . " al " .
+            $fechaFin->format('d')   . "-" . $mesesCortos[$fechaFin->format('n')   - 1] . ")";
 
-        if (!isset($grupos[$numeroSemana])) {
-            $grupos[$numeroSemana] = [
-                'nombre' => $nombreSemana,
-                'orden' => $numeroSemana,
-                'items' => []
+        // Agregar fecha_referencia para drag & drop
+        if (!isset($grupos[$idSemana])) {
+            $grupos[$idSemana] = [
+                'nombre'           => $nombreSemana,
+                'orden'            => $idSemana,
+                'fecha_referencia' => $semanaData['fecha_fin'], // última fecha de la semana
+                'items'            => []
             ];
         }
 
-        $grupos[$numeroSemana]['items'][] = $item;
+        $grupos[$idSemana]['items'][] = $item;
     }
 
-    // Ordenar grupos por semana
+    // Ordenar grupos por id de semana (cronológico)
     uasort($grupos, function ($a, $b) {
         return $a['orden'] - $b['orden'];
     });
@@ -251,9 +257,10 @@ function agruparPorSemana($items, $conn)
     // Agregar grupo de vencidas al inicio si hay
     if (!empty($vencidas)) {
         array_unshift($grupos, [
-            'nombre' => 'Tareas Vencidas',
-            'orden' => 0,
-            'items' => $vencidas
+            'nombre'           => 'Tareas Vencidas',
+            'orden'            => 0,
+            'fecha_referencia' => '',
+            'items'            => $vencidas
         ]);
     }
 

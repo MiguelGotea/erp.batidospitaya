@@ -360,23 +360,22 @@ body {
 
 /* ══ POPOVER DE REAGENDA ═══════════════════════════ */
 .reschedule-popover {
-    position: absolute;
-    right: 0;
-    top: calc(100% + 6px);
-    z-index: 500;
+    /* Se inserta en body con position:fixed via JS */
     background: #fff;
     border: 1.5px solid #c6dedd;
     border-radius: 12px;
     box-shadow: 0 8px 28px rgba(14,84,76,.15);
     padding: 14px;
-    width: 260px;
+    width: 262px;
     animation: popoverIn .15s ease;
+    /* Flecha superior por defecto (popover abre hacia abajo) */
 }
 @keyframes popoverIn {
     from { opacity:0; transform: translateY(-6px) scale(.97); }
     to   { opacity:1; transform: translateY(0)   scale(1); }
 }
 
+/* Flecha apuntando hacia arriba (popover debajo del botón) */
 .reschedule-popover::before {
     content: '';
     position: absolute;
@@ -386,6 +385,15 @@ body {
     border-left: 1.5px solid #c6dedd;
     border-top: 1.5px solid #c6dedd;
     transform: rotate(45deg);
+}
+/* Flecha apuntando hacia abajo (popover sobre el botón) */
+.reschedule-popover.open-upward::before {
+    top: auto;
+    bottom: -7px;
+    border-left: none;
+    border-top: none;
+    border-right: 1.5px solid #c6dedd;
+    border-bottom: 1.5px solid #c6dedd;
 }
 
 .reschedule-popover h6 {
