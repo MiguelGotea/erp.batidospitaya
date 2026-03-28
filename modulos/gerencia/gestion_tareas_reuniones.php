@@ -299,44 +299,6 @@ $permisoCancelar        = tienePermiso('gestion_tareas_reuniones', 'cancelar_tar
         </div>
     </div>
 
-    <!-- ══ Modal Posponer / Reagendar ════════════════════════ -->
-    <div class="modal fade" id="modalPosponerFecha" tabindex="-1">
-        <div class="modal-dialog" style="max-width:420px;">
-            <div class="modal-content">
-                <div class="modal-header modal-header-premium">
-                    <h5 class="modal-title">
-                        <i class="bi bi-calendar-plus-fill"></i> Reagendar Tarea
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <input type="hidden" id="posponerItemId" value="">
-                    <p class="text-muted mb-3" style="font-size:13.5px;">Selecciona la nueva fecha límite. Solo puedes reagendar a <strong>hoy o días futuros</strong>.</p>
-
-                    <!-- Botones rápidos -->
-                    <div class="fecha-quick-btns">
-                        <button type="button" class="fecha-quick-btn" id="btnPosponerManana">Mañana</button>
-                        <button type="button" class="fecha-quick-btn" id="btnPosponer2dias">+2 días</button>
-                        <button type="button" class="fecha-quick-btn" id="btnPosponerSemana">+1 semana</button>
-                        <button type="button" class="fecha-quick-btn" id="btnPosponer15dias">+15 días</button>
-                    </div>
-
-                    <div class="mb-0">
-                        <label for="posponerFechaInput" class="form-label">O elige una fecha específica</label>
-                        <input type="date" class="form-control" id="posponerFechaInput">
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                        <i class="bi bi-x me-1"></i>Cancelar
-                    </button>
-                    <button type="button" class="btn btn-warning text-white" onclick="confirmarPosponerFecha()">
-                        <i class="bi bi-calendar-check me-1"></i>Confirmar Nueva Fecha
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
