@@ -61,10 +61,15 @@ jobs:
 
       - name: 📤 Deploy core/ → HOST
         run: |
+          # Solo deployamos core/ al host
+          DEST_USER="${{ secrets.HOSTINGER_USER }}"
+          DEST_HOST="${{ secrets.HOSTINGER_HOST }}"
+          DEST_PATH="${{ secrets.HOSTINGER_PATH }}"
+          
           rsync -avz --delete \
             -e "ssh -o StrictHostKeyChecking=no -p 65002" \
             ./core/ \
-            ${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_HOST }}:${{ secrets.HOSTINGER_PATH }}/core/
+            $DEST_USER@$DEST_HOST:$DEST_PATH/core/
 
       - name: ✅ Finalizado
         run: |
