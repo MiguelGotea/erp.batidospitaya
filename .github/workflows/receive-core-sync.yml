@@ -58,7 +58,9 @@ jobs:
 
       - name: Shield - Validate Credentials
         run: |
-          if [ -z "${{ secrets.HOSTINGER_PATH }}" ]; then echo "ERROR: HOSTINGER_PATH is missing."; exit 1; fi
+          UPATH="${{ secrets.HOSTINGER_PATH }}${{ secrets.HOSTINGER_PATH_API }}${{ secrets.HOSTINGER_PATH_ERP }}${{ secrets.HOSTINGER_PATH_TALENTO }}"
+          
+          if [ -z "$UPATH" ]; then echo "ERROR: HOSTINGER_PATH (o variante) is missing."; exit 1; fi
           if [ -z "${{ secrets.HOSTINGER_USER }}" ]; then echo "ERROR: HOSTINGER_USER is missing."; exit 1; fi
           if [ -z "${{ secrets.HOSTINGER_HOST }}" ]; then echo "ERROR: HOSTINGER_HOST is missing."; exit 1; fi
           echo "Credentials detected successfully."
@@ -85,7 +87,7 @@ jobs:
         run: |
           DEST_USER="${{ secrets.HOSTINGER_USER }}"
           DEST_HOST="${{ secrets.HOSTINGER_HOST }}"
-          DEST_PATH="${{ secrets.HOSTINGER_PATH }}"
+          DEST_PATH="${{ secrets.HOSTINGER_PATH }}${{ secrets.HOSTINGER_PATH_API }}${{ secrets.HOSTINGER_PATH_ERP }}${{ secrets.HOSTINGER_PATH_TALENTO }}"
           
           rsync -avz --delete \
             -e "ssh -o StrictHostKeyChecking=no -p 65002" \
