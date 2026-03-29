@@ -12,4 +12,4 @@ Este archivo indica la versión de sincronización activa del sistema PitayaCore
 
 > Modificar este archivo desde cualquier repo activa el flujo de sincronización completo.
 
-prueba manual 2
+prueba manual 4
