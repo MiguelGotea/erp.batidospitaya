@@ -176,6 +176,27 @@ function agruparPorMes($items)
         $itemsByDate[$fecha][] = $item;
     }
 
+    // Ordenar items de cada día por prioridad
+    $prioridadWeight = function ($p) {
+        switch ($p) {
+            case 'alta': return 1;
+            case 'media': return 2;
+            case 'baja': return 3;
+            default: return 4;
+        }
+    };
+
+    foreach ($itemsByDate as &$itemsDia) {
+        usort($itemsDia, function ($a, $b) use ($prioridadWeight) {
+            $wa = $prioridadWeight($a['prioridad'] ?? 'media');
+            $wb = $prioridadWeight($b['prioridad'] ?? 'media');
+            if ($wa !== $wb) return $wa - $wb;
+            // Si tienen misma prioridad, mantener orden cronológico (por ID o hora si aplica)
+            return $a['id'] - $b['id'];
+        });
+    }
+    unset($itemsDia);
+
     $grupos = [];
 
     // ── PASADOS: solo tareas con estado pendiente (reuniones pasadas = concluidas, van al historial) ──
@@ -358,6 +379,25 @@ function agruparPorCargo($items, $conn)
     uasort($grupos, function ($a, $b) {
         return strcmp($a['orden'], $b['orden']);
     });
+
+    // Ordenar items dentro de cada grupo por prioridad
+    $prioridadWeight = function ($p) {
+        switch ($p) {
+            case 'alta': return 1;
+            case 'media': return 2;
+            case 'baja': return 3;
+            default: return 4;
+        }
+    };
+
+    foreach ($grupos as &$g) {
+        usort($g['items'], function ($a, $b) use ($prioridadWeight) {
+            $wa = $prioridadWeight($a['prioridad'] ?? 'media');
+            $wb = $prioridadWeight($b['prioridad'] ?? 'media');
+            return $wa - $wb;
+        });
+    }
+    unset($g);
 
     return array_values($grupos);
 }

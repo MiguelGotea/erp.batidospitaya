@@ -133,15 +133,23 @@ $permisoCancelar        = tienePermiso('gestion_tareas_reuniones', 'cancelar_tar
                             <textarea class="form-control" id="descripcionTarea" name="descripcion" rows="4" placeholder="Detalla el objetivo de la tarea..."></textarea>
                         </div>
                         <div class="row g-3">
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <label for="cargoAsignadoTarea" class="form-label">Asignar a *</label>
                                 <select class="form-select" id="cargoAsignadoTarea" name="cod_cargo_asignado" required>
                                     <option value="">Seleccione un cargo...</option>
                                 </select>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <label for="fechaMetaTarea" class="form-label">Fecha Límite *</label>
                                 <input type="date" class="form-control" id="fechaMetaTarea" name="fecha_meta" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="prioridadTarea" class="form-label">Prioridad *</label>
+                                <select class="form-select" id="prioridadTarea" name="prioridad" required>
+                                    <option value="baja">Baja</option>
+                                    <option value="media" selected>Media</option>
+                                    <option value="alta">Alta</option>
+                                </select>
                             </div>
                         </div>
                         <div class="mb-3 mt-3">
@@ -184,15 +192,23 @@ $permisoCancelar        = tienePermiso('gestion_tareas_reuniones', 'cancelar_tar
                             <textarea class="form-control" id="descripcionTareaSolicitud" name="descripcion" rows="4" placeholder="Detalla lo que se requiere..."></textarea>
                         </div>
                         <div class="row g-3">
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <label for="cargoAsignadoTareaSolicitud" class="form-label">Solicitar a *</label>
                                 <select class="form-select" id="cargoAsignadoTareaSolicitud" name="cod_cargo_asignado" required>
                                     <option value="">Seleccione un cargo...</option>
                                 </select>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <label for="fechaMetaTareaSolicitud" class="form-label">Fecha Límite *</label>
                                 <input type="date" class="form-control" id="fechaMetaTareaSolicitud" name="fecha_meta" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="prioridadTareaSolicitud" class="form-label">Prioridad *</label>
+                                <select class="form-select" id="prioridadTareaSolicitud" name="prioridad" required>
+                                    <option value="baja">Baja</option>
+                                    <option value="media" selected>Media</option>
+                                    <option value="alta">Alta</option>
+                                </select>
                             </div>
                         </div>
                         <div class="mb-3 mt-3">

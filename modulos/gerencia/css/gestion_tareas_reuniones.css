@@ -646,5 +646,27 @@ body.is-dragging {
 .tipo-chip.tarea   { background: #e8f4fd; color: #2980b9; }
 .tipo-chip.reunion { background: #e8f5f3; color: #0E544C; }
 
+/* ── Priority Badges (Minimalist Solid) ── */
+.priority-badge {
+    padding: 2px 9px;
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background .15s, transform .1s;
+    user-select: none;
+    display: inline-block;
+    color: #fff;
+    min-width: 50px;
+    text-align: center;
+}
+.priority-badge:hover { transform: translateY(-1px); }
+.priority-badge:active { transform: translateY(0); }
+
+.priority-badge.alta  { background-color: #e53935; } /* Vibrant Red */
+.priority-badge.media { background-color: #ffb300; } /* Amber */
+.priority-badge.baja  { background-color: #1e88e5; } /* Soft Blue */
+
 /* Badge extra para reuniones concluidas por fecha */
 .badge-estado.concluida { background: #f3e8fd; color: #7b2d8b; }

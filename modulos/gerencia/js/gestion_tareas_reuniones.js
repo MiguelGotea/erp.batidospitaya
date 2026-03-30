@@ -254,6 +254,15 @@ function crearItemHtml(item, hoy) {
 
             
             <div class="item-meta-row">
+                ${item.tipo === 'tarea' ? `
+                <div class="item-meta-col">
+                    <span class="priority-badge ${item.prioridad || 'media'}" 
+                          onclick="event.stopPropagation(); cambiarPrioridad(${item.id}, '${item.prioridad || 'media'}')"
+                          title="Cambiar prioridad">
+                        ${item.prioridad || 'media'}
+                    </span>
+                </div>
+                ` : ''}
                 <div class="item-meta-col">
                     <span class="badge-estado ${item.estado}">${formatearEstado(item.estado)}</span>
                 </div>
@@ -535,6 +544,27 @@ function posponerTareaAjax(id, nuevaFecha) {
             }
         },
         error: function () { Swal.fire('Error', 'No se pudo reagendar la tarea', 'error'); }
+    });
+}
+
+// ── Prioridad ───────────────────────────────────────
+function cambiarPrioridad(id, actual) {
+    const next = { 'baja': 'media', 'media': 'alta', 'alta': 'baja' };
+    const nueva = next[actual] || 'media';
+
+    $.ajax({
+        url: 'ajax/gestion_tareas_reuniones_actualizar_prioridad.php',
+        method: 'POST',
+        data: { id: id, prioridad: nueva },
+        dataType: 'json',
+        success: function (r) {
+            if (r.success) {
+                cargarDatos(); // Recargar para reordenar
+            } else {
+                Swal.fire('Error', r.message, 'error');
+            }
+        },
+        error: function () { Swal.fire('Error', 'No se pudo cambiar la prioridad', 'error'); }
     });
 }
 
