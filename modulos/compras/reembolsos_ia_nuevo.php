@@ -184,10 +184,18 @@ $tituloPagina = $editingId ? 'Editar Solicitud IA' : 'Nueva Solicitud: Reembolso
                                 </table>
                             </div>
 
-                            <div class="mb-4">
-                                <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-4" onclick="agregarFilaManual()">
-                                    <i class="fas fa-plus me-2"></i> Agregar Detalle Manualmente
-                                </button>
+                            <div class="row align-items-center mb-4">
+                                <div class="col-md-6">
+                                    <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-4" onclick="agregarFilaManual()">
+                                        <i class="fas fa-plus me-2"></i> Agregar Detalle Manualmente
+                                    </button>
+                                </div>
+                                <div class="col-md-6 text-end">
+                                    <div class="form-check form-switch d-inline-block">
+                                        <input class="form-check-input" type="checkbox" id="chkImprimirFotos" checked>
+                                        <label class="form-check-label fw-bold text-secondary" for="chkImprimirFotos">Imprimir fotos de facturas</label>
+                                    </div>
+                                </div>
                             </div>
 
                             <div class="row mt-4">

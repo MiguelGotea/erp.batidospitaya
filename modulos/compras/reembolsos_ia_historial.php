@@ -116,7 +116,7 @@ $historial = $stmtHist->fetchAll(PDO::FETCH_ASSOC);
                                         </td>
                                         <td><?= $reg['usuario_nombre'] ?></td>
                                         <td class="text-center">
-                                            <a href="reembolsos_ia_imprimir.php?id=<?= $reg['id'] ?>" target="_blank" class="btn btn-sm btn-outline-success" title="Imprimir Reembolso">
+                                            <a href="reembolsos_ia_imprimir.php?id=<?= $reg['id'] ?>&fotos=1" target="_blank" class="btn btn-sm btn-outline-success" title="Imprimir Reembolso">
                                                 <i class="fas fa-print"></i>
                                             </a>
                                             <button class="btn btn-sm btn-outline-primary" onclick="verDetalle(<?= $reg['id'] ?>)" title="Ver Detalle">

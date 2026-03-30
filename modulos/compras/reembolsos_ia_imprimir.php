@@ -115,10 +115,21 @@ $detalles = $stmtDet->fetchAll(PDO::FETCH_ASSOC);
         @media print {
             .no-print { display: none; }
         }
-        .btn-print {
+        .print-options {
             position: fixed;
             top: 20px;
             right: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            border: 1px solid #51B8AC;
+        }
+        .btn-print {
             padding: 10px 20px;
             background: #51B8AC;
             color: white;
@@ -126,75 +137,187 @@ $detalles = $stmtDet->fetchAll(PDO::FETCH_ASSOC);
             border-radius: 5px;
             cursor: pointer;
             font-weight: bold;
+            width: 100%;
+        }
+        .form-switch {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        /* Layout de Imágenes */
+        .page-break {
+            page-break-after: always;
+        }
+        .photo-container {
+            width: 190mm;
+            height: 125mm; /* Media hoja carta aprox */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            margin-top: 5mm;
+            border: 1px dashed #ccc;
+        }
+        .photo-container img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+        .photo-title {
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            background: rgba(255,255,255,0.7);
+            padding: 2px 5px;
+            font-size: 9px;
+            border: 1px solid #ddd;
+        }
+        .photo-half {
+            position: relative;
+            height: 129mm;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border-bottom: 1px solid #eee;
+        }
+        .photo-half:last-child {
+            border-bottom: none;
         }
     </style>
 </head>
+<?php 
+    $imprimirFotos = isset($_GET['fotos']) ? (int)$_GET['fotos'] : 1; 
+    // Obtener fotos únicas y válidas
+    $fotos = [];
+    foreach ($detalles as $det) {
+        if (!empty($det['foto_factura'])) {
+            $path = '../../' . $det['foto_factura'];
+            if (!in_array($path, $fotos)) {
+                $fotos[] = $path;
+            }
+        }
+    }
+    
+    // Decidir si la primera foto cabe en la primera hoja
+    // Estimación: Header (~30mm) + Tabla (~10mm por fila) + Footer (~20mm)
+    // Hoja carta: 279mm. Útil con márgenes: ~259mm. Media hoja: ~130mm.
+    $numFilas = count($detalles);
+    $cabeEnPrimeraHoja = ($numFilas <= 12); // Umbral de filas para que quepa una foto abajo
+?>
+
 <body onload="/*window.print()*/">
 
-    <button class="btn-print no-print" onclick="window.print()">Imprimir Documento</button>
-
-    <div class="container">
-        <table>
-            <tr>
-                <td colspan="5" class="header-title">SOLICITUD DE REEMBOLSO</td>
-                <td class="text-center" style="width: 100px; color: #999;">v2-Nov24</td>
-            </tr>
-            <tr>
-                <td class="v-label">Fecha:</td>
-                <td class="v-value"><?= date('d-M-y', strtotime($solicitud['fecha_solicitud'])) ?></td>
-                <td class="v-label">Solicita:</td>
-                <td class="v-value"><?= htmlspecialchars($solicitud['usuario_nombre']) ?></td>
-                <td class="v-label">Autoriza:</td>
-                <td class="v-value"></td>
-            </tr>
-        </table>
-
-        <?php $simbolo = $solicitud['moneda'] == 'Dolares' ? 'US$' : 'C$'; ?>
-        <table class="table-main">
-            <thead>
-                <tr>
-                    <th colspan="3"></th>
-                    <th colspan="2" style="background-color: #fff; border-bottom: none;">PARA REGISTRO CONTABLE</th>
-                </tr>
-                <tr>
-                    <th style="width: 8%;">CANT</th>
-                    <th style="width: 42%;">DETALLE DEL GASTO</th>
-                    <th style="width: 15%;">TOTAL <?= $simbolo ?></th>
-                    <th style="width: 15%;">CONCEPTO (Sistema)</th>
-                    <th style="width: 20%;">CECO</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php foreach ($detalles as $det): ?>
-                <tr>
-                    <td class="text-center bg-blue"><?= (float)$det['cantidad'] ?></td>
-                    <td class="bg-blue"><?= htmlspecialchars($det['detalle']) ?></td>
-                    <td class="text-right bg-blue"><?= number_format($det['monto_cordobas'], 2) ?></td>
-                    <td class="bg-blue"><?= htmlspecialchars($solicitud['concepto']) ?></td>
-                    <td class="bg-blue"><?= htmlspecialchars($solicitud['ceco_nombre'] ?? $solicitud['ceco']) ?></td>
-                </tr>
-                <?php endforeach; ?>
-
-                
-                <tr class="total-row">
-                    <td colspan="2" class="text-center">TOTAL <?= $simbolo ?>:</td>
-                    <td class="text-right"><?= number_format($solicitud['total_cordobas'], 2) ?></td>
-                    <td colspan="2" style="border: none;"></td>
-                </tr>
-            </tbody>
-        </table>
-
-        <table class="footer-table">
-            <tr>
-                <td style="width: 10%;">Reembolso:</td>
-                <td style="width: 25%;" class="bg-blue">TRANSFERENCIA</td>
-                <td style="width: 10%;">Cuenta:</td>
-                <td style="width: 25%;" class="bg-blue"><?= htmlspecialchars($solicitud['titular'] ?? 'N/A') ?> - <?= htmlspecialchars($solicitud['numero_cuenta'] ?? '') ?></td>
-                <td style="width: 10%;">Banco:</td>
-                <td style="width: 20%;" class="bg-blue"><?= htmlspecialchars($solicitud['banco'] ?? 'N/A') ?> (<?= htmlspecialchars($solicitud['cuenta_moneda'] ?? '') ?>)</td>
-            </tr>
-        </table>
+    <div class="print-options no-print">
+        <label class="form-switch">
+            <input type="checkbox" id="togglePhotos" <?= $imprimirFotos ? 'checked' : '' ?> onchange="cambiarPreferenciaFotos(this.checked)">
+            Imprimir Fotos
+        </label>
+        <button class="btn-print" onclick="window.print()">
+            <i class="fas fa-print me-2"></i> Imprimir
+        </button>
     </div>
+
+    <div id="contentToPrint">
+        <div class="container <?= ($imprimirFotos && !$cabeEnPrimeraHoja && !empty($fotos)) ? 'page-break' : '' ?>">
+            <table>
+                <tr>
+                    <td colspan="5" class="header-title">SOLICITUD DE REEMBOLSO</td>
+                    <td class="text-center" style="width: 100px; color: #999;">v2-Nov24</td>
+                </tr>
+                <tr>
+                    <td class="v-label">Fecha:</td>
+                    <td class="v-value"><?= date('d-M-y', strtotime($solicitud['fecha_solicitud'])) ?></td>
+                    <td class="v-label">Solicita:</td>
+                    <td class="v-value"><?= htmlspecialchars($solicitud['usuario_nombre']) ?></td>
+                    <td class="v-label">Autoriza:</td>
+                    <td class="v-value"></td>
+                </tr>
+            </table>
+
+            <?php $simbolo = $solicitud['moneda'] == 'Dolares' ? 'US$' : 'C$'; ?>
+            <table class="table-main">
+                <thead>
+                    <tr>
+                        <th colspan="3"></th>
+                        <th colspan="2" style="background-color: #fff; border-bottom: none;">PARA REGISTRO CONTABLE</th>
+                    </tr>
+                    <tr>
+                        <th style="width: 8%;">CANT</th>
+                        <th style="width: 42%;">DETALLE DEL GASTO</th>
+                        <th style="width: 15%;">TOTAL <?= $simbolo ?></th>
+                        <th style="width: 15%;">CONCEPTO (Sistema)</th>
+                        <th style="width: 20%;">CECO</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($detalles as $det): ?>
+                    <tr>
+                        <td class="text-center bg-blue"><?= (float)$det['cantidad'] ?></td>
+                        <td class="bg-blue"><?= htmlspecialchars($det['detalle']) ?></td>
+                        <td class="text-right bg-blue"><?= number_format($det['monto_cordobas'], 2) ?></td>
+                        <td class="bg-blue"><?= htmlspecialchars($solicitud['concepto']) ?></td>
+                        <td class="bg-blue"><?= htmlspecialchars($solicitud['ceco_nombre'] ?? $solicitud['ceco']) ?></td>
+                    </tr>
+                    <?php endforeach; ?>
+
+                    <tr class="total-row">
+                        <td colspan="2" class="text-center">TOTAL <?= $simbolo ?>:</td>
+                        <td class="text-right"><?= number_format($solicitud['total_cordobas'], 2) ?></td>
+                        <td colspan="2" style="border: none;"></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <table class="footer-table">
+                <tr>
+                    <td style="width: 10%;">Reembolso:</td>
+                    <td style="width: 25%;" class="bg-blue">TRANSFERENCIA</td>
+                    <td style="width: 10%;">Cuenta:</td>
+                    <td style="width: 25%;" class="bg-blue"><?= htmlspecialchars($solicitud['titular'] ?? 'N/A') ?> - <?= htmlspecialchars($solicitud['numero_cuenta'] ?? '') ?></td>
+                    <td style="width: 10%;">Banco:</td>
+                    <td style="width: 20%;" class="bg-blue"><?= htmlspecialchars($solicitud['banco'] ?? 'N/A') ?> (<?= htmlspecialchars($solicitud['cuenta_moneda'] ?? '') ?>)</td>
+                </tr>
+            </table>
+
+            <?php if ($imprimirFotos && $cabeEnPrimeraHoja && !empty($fotos)): ?>
+                <?php $fotoActual = array_shift($fotos); ?>
+                <div class="photo-half" style="margin-top: 10mm; border-top: 1px dashed #ccc;">
+                    <span class="photo-title">Factura Adjunta 1</span>
+                    <img src="<?= $fotoActual ?>" alt="Factura 1">
+                </div>
+            <?php endif; ?>
+        </div>
+
+        <?php if ($imprimirFotos && !empty($fotos)): ?>
+            <?php 
+                $chunks = array_chunk($fotos, 2); 
+                foreach ($chunks as $index => $chunk):
+            ?>
+                <div class="page-break" style="width: 190mm; margin: 0 auto; border: 1px solid #000; height: 260mm;">
+                    <?php foreach ($chunk as $subIndex => $fotoPath): ?>
+                        <div class="photo-half">
+                            <span class="photo-title">Factura Adjunta <?= ($cabeEnPrimeraHoja ? $index * 2 + $subIndex + 2 : $index * 2 + $subIndex + 1) ?></span>
+                            <img src="<?= $fotoPath ?>" alt="Factura">
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            <?php endforeach; ?>
+        <?php endif; ?>
+    </div>
+
+    <script>
+        function cambiarPreferenciaFotos(checked) {
+            const url = new URL(window.location.href);
+            url.searchParams.set('fotos', checked ? '1' : '0');
+            window.location.href = url.toString();
+        }
+    </script>
 
 </body>
 </html>
