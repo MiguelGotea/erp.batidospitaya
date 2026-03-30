@@ -113,7 +113,9 @@ $detalles = $stmtDet->fetchAll(PDO::FETCH_ASSOC);
         .no-border-bottom { border-bottom: none; }
         
         @media print {
-            .no-print { display: none; }
+            .no-print { display: none !important; }
+            .page-break { page-break-after: always; }
+            body { margin: 0; padding: 0; }
         }
         .print-options {
             position: fixed;
@@ -152,20 +154,32 @@ $detalles = $stmtDet->fetchAll(PDO::FETCH_ASSOC);
         .page-break {
             page-break-after: always;
         }
-        .photo-container {
-            width: 190mm;
-            height: 125mm; /* Media hoja carta aprox */
+        .photo-half {
+            position: relative;
+            height: 125mm;
+            width: 100%;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
+            border-bottom: 1px dashed #eee;
             overflow: hidden;
-            margin-top: 5mm;
-            border: 1px dashed #ccc;
+            page-break-inside: avoid;
         }
-        .photo-container img {
-            max-width: 100%;
-            max-height: 100%;
+        .photo-half:last-child {
+            border-bottom: none;
+        }
+        .photo-half img {
+            max-width: 95%;
+            max-height: 95%;
             object-fit: contain;
+        }
+        .photo-half img.rotate-90 {
+            transform: rotate(90deg);
+            /* Al rotar, la altura original se convierte en el ancho visual.
+               Debemos asegurar que no exceda los límites. */
+            max-width: 110mm; /* El alto del contenedor aprox */
+            max-height: 180mm; /* El ancho del contenedor aprox */
         }
         .photo-title {
             position: absolute;
@@ -175,19 +189,6 @@ $detalles = $stmtDet->fetchAll(PDO::FETCH_ASSOC);
             padding: 2px 5px;
             font-size: 9px;
             border: 1px solid #ddd;
-        }
-        .photo-half {
-            position: relative;
-            height: 129mm;
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            border-bottom: 1px solid #eee;
-        }
-        .photo-half:last-child {
-            border-bottom: none;
         }
     </style>
 </head>
@@ -208,7 +209,20 @@ $detalles = $stmtDet->fetchAll(PDO::FETCH_ASSOC);
     // Estimación: Header (~30mm) + Tabla (~10mm por fila) + Footer (~20mm)
     // Hoja carta: 279mm. Útil con márgenes: ~259mm. Media hoja: ~130mm.
     $numFilas = count($detalles);
-    $cabeEnPrimeraHoja = ($numFilas <= 12); // Umbral de filas para que quepa una foto abajo
+    $cabeEnPrimeraHoja = ($numFilas <= 8); // Umbral más estricto para asegurar que quepa sin forzar segunda hoja
+
+    function getPhotoClass($path) {
+        if (!file_exists($path)) return '';
+        $size = @getimagesize($path);
+        if (!$size) return '';
+        $w = $size[0];
+        $h = $size[1];
+        // Si es vertical (Portrait), rotarla para que use mejor el ancho de la hoja
+        if ($h > $w) {
+            return 'rotate-90';
+        }
+        return '';
+    }
 ?>
 
 <body onload="/*window.print()*/">
@@ -286,10 +300,13 @@ $detalles = $stmtDet->fetchAll(PDO::FETCH_ASSOC);
             </table>
 
             <?php if ($imprimirFotos && $cabeEnPrimeraHoja && !empty($fotos)): ?>
-                <?php $fotoActual = array_shift($fotos); ?>
-                <div class="photo-half" style="margin-top: 10mm; border-top: 1px dashed #ccc;">
+                <?php 
+                    $fotoActual = array_shift($fotos); 
+                    $rotationClass = getPhotoClass($fotoActual);
+                ?>
+                <div class="photo-half" style="margin-top: 5mm; border-top: 1px dashed #ccc;">
                     <span class="photo-title">Factura Adjunta 1</span>
-                    <img src="<?= $fotoActual ?>" alt="Factura 1">
+                    <img src="<?= $fotoActual ?>" class="<?= $rotationClass ?>" alt="Factura 1">
                 </div>
             <?php endif; ?>
         </div>
@@ -299,11 +316,12 @@ $detalles = $stmtDet->fetchAll(PDO::FETCH_ASSOC);
                 $chunks = array_chunk($fotos, 2); 
                 foreach ($chunks as $index => $chunk):
             ?>
-                <div class="page-break" style="width: 190mm; margin: 0 auto; border: 1px solid #000; height: 260mm;">
+                <div class="page-break" style="width: 190mm; margin: 10mm auto 0; border: 1px solid #000; height: 255mm;">
                     <?php foreach ($chunk as $subIndex => $fotoPath): ?>
+                        <?php $rotationClass = getPhotoClass($fotoPath); ?>
                         <div class="photo-half">
                             <span class="photo-title">Factura Adjunta <?= ($cabeEnPrimeraHoja ? $index * 2 + $subIndex + 2 : $index * 2 + $subIndex + 1) ?></span>
-                            <img src="<?= $fotoPath ?>" alt="Factura">
+                            <img src="<?= $fotoPath ?>" class="<?= $rotationClass ?>" alt="Factura">
                         </div>
                     <?php endforeach; ?>
                 </div>
