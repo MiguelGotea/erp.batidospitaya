@@ -1,3 +1,4 @@
 pryeba sync 4
 Prueba Bidireccional desde API 18:31:07
-prueba 5
+prueba 7
+prueba 10 - Scanner v6 activado
