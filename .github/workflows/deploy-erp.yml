@@ -45,28 +45,34 @@ jobs:
           if [ -d "./modulos/$MODULE" ]; then
             echo "🔄 Sincronizando modulos/$MODULE/"
             
-            # Crear la carpeta si no existe (incluyendo uploads)
             ssh -o StrictHostKeyChecking=no -p 65002 ${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_HOST }} \
               "mkdir -p ${{ secrets.HOSTINGER_PATH }}/modulos/$MODULE && \
                mkdir -p ${{ secrets.HOSTINGER_PATH }}/modulos/$MODULE/uploads"
             
-            # Sincronizar la carpeta excluyendo uploads
-            rsync -avz \
-              --delete \
+            rsync -avz --delete \
               --exclude='uploads/' \
               --exclude='.gitignore' \
               --exclude='.agent/' \
-              --exclude='core/' \
               --exclude='.scripts/' \
-              --exclude='docs/' \
               -e "ssh -o StrictHostKeyChecking=no -p 65002" \
               ./modulos/$MODULE/ \
               ${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_HOST }}:${{ secrets.HOSTINGER_PATH }}/modulos/$MODULE/
-          else
-            echo "⚠️ Saltando modulos/$MODULE/ (no existe localmente)"
           fi
         done
         
+    - name: 📤 Sincronizar Core y Docs raíz (v13)
+      run: |
+        echo "🔄 Sincronizando core/ y docs/ raíz..."
+        rsync -avz --delete \
+          -e "ssh -o StrictHostKeyChecking=no -p 65002" \
+          ./core/ \
+          ${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_HOST }}:${{ secrets.HOSTINGER_PATH }}/core/
+        
+        rsync -avz --delete \
+          -e "ssh -o StrictHostKeyChecking=no -p 65002" \
+          ./docs/ \
+          ${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_HOST }}:${{ secrets.HOSTINGER_PATH }}/docs/
+          
     - name: 📤 Sincronizar README raíz
       run: |
         echo "🔄 Sincronizando README.md..."
@@ -77,7 +83,6 @@ jobs:
           
     - name: 🔧 Configurar permisos
       run: |
-        # Definir lista de módulos de nuevo para el paso de permisos
         MODULES=(
           "atencioncliente"
           "auxiliaradministrativo"
@@ -107,14 +112,11 @@ jobs:
                find ${{ secrets.HOSTINGER_PATH }}/modulos/$MODULE/ -type f -exec chmod 644 {} \; && \
                chmod -R 755 ${{ secrets.HOSTINGER_PATH }}/modulos/$MODULE/uploads/ && \
                chmod -R 777 ${{ secrets.HOSTINGER_PATH }}/modulos/$MODULE/uploads/ || true"
-          else
-            echo "⚠️ Saltando permisos para modulos/$MODULE/ (no existe localmente)"
           fi
         done
         
     - name: ✅ Verificar deploy
       run: |
-        echo "✅ Deploy completado para los 17 módulos"
-        echo "📁 Carpetas 'uploads' excluidas del sync"
+        echo "✅ Deploy completado para los 17 módulos + Core raíz"
         echo "🌐 Sitio: https://erp.batidospitaya.com"
         echo "🖥️ Servidor: ${{ secrets.HOSTINGER_HOST }}:65002"
