@@ -260,14 +260,17 @@ function crearItemHtml(item, hoy) {
             <div class="item-meta-row">
                 ${item.tipo === 'tarea' ? `
                 <div class="item-meta-col">
-                    <div class="priority-picker-wrap" id="picker-wrap-${item.id}" onclick="event.stopPropagation(); expandirPrioridad(${item.id})">
+                    <div class="priority-picker-wrap" id="picker-wrap-${item.id}" data-current="${item.prioridad || 'media'}" onclick="event.stopPropagation(); expandirPrioridad(${item.id})">
                         <span class="priority-badge ${item.prioridad || 'media'}" id="badge-prio-${item.id}">
                             ${item.prioridad || 'media'}
                         </span>
-                        <div class="priority-options">
-                            <div class="p-opt baja" onclick="event.stopPropagation(); setPrioridad(${item.id}, 'baja')">Baja</div>
-                            <div class="p-opt media" onclick="event.stopPropagation(); setPrioridad(${item.id}, 'media')">Media</div>
-                            <div class="p-opt alta" onclick="event.stopPropagation(); setPrioridad(${item.id}, 'alta')">Alta</div>
+                        <div class="priority-wheel-container">
+                            <div class="wheel-track">
+                                <div class="p-opt baja" data-value="baja" onclick="event.stopPropagation(); confirmarPrioridad(${item.id}, 'baja')">Baja</div>
+                                <div class="p-opt media" data-value="media" onclick="event.stopPropagation(); confirmarPrioridad(${item.id}, 'media')">Media</div>
+                                <div class="p-opt alta" data-value="alta" onclick="event.stopPropagation(); confirmarPrioridad(${item.id}, 'alta')">Alta</div>
+                            </div>
+                            <div class="wheel-lens"></div>
                         </div>
                     </div>
                 </div>
@@ -555,11 +558,18 @@ function posponerTareaAjax(id, nuevaFecha) {
     });
 }
 
-// ── Prioridad (Picker Premium Expanded) ──────────────
+// ── Prioridad (Wheel Picker Vertical Premium) ────────
 function expandirPrioridad(id) {
+    const wrap = $(`#picker-wrap-${id}`);
+    const isExpanding = !wrap.hasClass('expanded');
+
     // Cerrar cualquier otro abierto
-    $('.priority-picker-wrap').not(`#picker-wrap-${id}`).removeClass('expanded');
-    $(`#picker-wrap-${id}`).toggleClass('expanded');
+    $('.priority-picker-wrap').not(wrap).removeClass('expanded');
+    
+    if (isExpanding) {
+        wrap.addClass('expanded');
+        initWheelPicker(id);
+    }
 
     // Cerrar al hacer clic fuera
     $(document).off('click.closePicker').on('click.closePicker', function (e) {
@@ -570,7 +580,68 @@ function expandirPrioridad(id) {
     });
 }
 
-function setPrioridad(id, nueva) {
+function initWheelPicker(id) {
+    const wrap = $(`#picker-wrap-${id}`);
+    const container = wrap.find('.priority-wheel-container');
+    const options = ['baja', 'media', 'alta'];
+    let currentVal = wrap.attr('data-current') || 'media';
+    let currentIdx = options.indexOf(currentVal);
+
+    // Función para actualizar la "rueda" visualmente
+    function updateWheelVisuals(idx) {
+        const items = wrap.find('.p-opt');
+        items.removeClass('focus next prev hidden');
+        
+        items.each(function() {
+            const val = $(this).attr('data-value');
+            const i = options.indexOf(val);
+            
+            if (i === idx) {
+                $(this).addClass('focus');
+            } else if (i === (idx + 1) % 3) {
+                $(this).addClass('next');
+            } else if (i === (idx - 1 + 3) % 3) {
+                $(this).addClass('prev');
+            } else {
+                $(this).addClass('hidden');
+            }
+        });
+    }
+
+    updateWheelVisuals(currentIdx);
+
+    // Scroll wheel interaction
+    container.off('wheel').on('wheel', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        if (e.originalEvent.deltaY > 0) {
+            currentIdx = (currentIdx + 1) % 3;
+        } else {
+            currentIdx = (currentIdx - 1 + 3) % 3;
+        }
+        
+        updateWheelVisuals(currentIdx);
+    });
+
+    // Mouse focus interaction (movimiento del mouse)
+    container.off('mousemove').on('mousemove', function(e) {
+        const rect = this.getBoundingClientRect();
+        const relY = e.clientY - rect.top;
+        const height = rect.height;
+        
+        let targetIdx;
+        if (relY < height * 0.33) targetIdx = (currentIdx - 1 + 3) % 3;
+        else if (relY > height * 0.66) targetIdx = (currentIdx + 1) % 3;
+        else targetIdx = currentIdx;
+
+        // No actualizamos currentIdx aquí para que el scroll sea más "mecánico", 
+        // pero podemos si queremos que el mouse mueva la rueda.
+        // updateWheelVisuals(targetIdx); 
+    });
+}
+
+function confirmarPrioridad(id, nueva) {
     $.ajax({
         url: 'ajax/gestion_tareas_reuniones_actualizar_prioridad.php',
         method: 'POST',
@@ -578,7 +649,6 @@ function setPrioridad(id, nueva) {
         dataType: 'json',
         success: function (r) {
             if (r.success) {
-                // Cerramos y recargamos para que el orden se aplique
                 $('.priority-picker-wrap').removeClass('expanded');
                 cargarDatos();
             } else {
