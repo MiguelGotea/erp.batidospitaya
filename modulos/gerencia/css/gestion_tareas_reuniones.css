@@ -760,13 +760,13 @@ body.is-dragging {
 }
 
 .p-opt.prev {
-    transform: translateY(-5px) scale(0.85) rotateX(-35deg);
-    opacity: 0.5;
+    transform: translateY(-5px) scale(0.85);
+    opacity: 1;
 }
 
 .p-opt.next {
-    transform: translateY(5px) scale(0.85) rotateX(35deg);
-    opacity: 0.5;
+    transform: translateY(5px) scale(0.85);
+    opacity: 1;
 }
 
 .p-opt.hidden {
