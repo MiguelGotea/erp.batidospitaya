@@ -711,13 +711,12 @@ body.is-dragging {
     top: 50%;
     left: -5px;
     width: calc(100% + 10px);
-    height: 58px;
+    height: 52px;
     transform: translateY(-50%);
-    background: rgba(255, 255, 255, 0.95);
-    border-top: 2px solid rgba(0,0,0,0.05);
-    border-bottom: 2px solid rgba(0,0,0,0.05);
-    border-radius: 12px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    /* Eliminamos fondo, sombras y bordes redondeados para evitar la "caja" */
+    background: transparent;
+    border-top: 1px solid rgba(0,0,0,0.1);
+    border-bottom: 1px solid rgba(0,0,0,0.1);
     pointer-events: none;
     z-index: 5;
 }
@@ -752,13 +751,12 @@ body.is-dragging {
 }
 .priority-badge:hover { transform: scale(1.05); }
 
-/* Wheel Magnification Effect */
+/* Wheel Magnification Effect - Only Scale, No Shadows */
 .p-opt.focus {
-    transform: scale(1.35) translateZ(30px);
+    transform: scale(1.4);
     z-index: 10;
     opacity: 1;
     filter: brightness(1.05);
-    font-size: 12px;
 }
 
 .p-opt.prev {
