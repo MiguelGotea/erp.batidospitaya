@@ -1746,7 +1746,7 @@ function obtenerDetalleAusenciasColaboradoresModal()
                     </div>
                 </div>
 
-                <!-- Operarios Incompletos -->
+                <!-- Porcentaje de avance de documentos -->
                 <div class="indicator-container" style="cursor: pointer;">
                     <div class="indicator-header">
                         <div class="indicator-icon">
@@ -1755,20 +1755,17 @@ function obtenerDetalleAusenciasColaboradoresModal()
                     </div>
 
                     <div class="indicator-count">
-                        <?//= $operariosIncompletos ?> <?//= $totalActivos ?>
-                        <?= $operariosPendientesDoc = ($operariosIncompletos / $totalActivos) * 100;
-                        $operariosPendientesDoc
-                            ?> %
+                        <?= number_format(100 - ($operariosIncompletos / ($totalActivos > 0 ? $totalActivos : 1) * 100), 1) ?> %
                     </div>
                     <div class="indicator-info">
                         <div class="indicator-titulo">
-                            Con documentos pendiente
+                            Porcentaje de avance de documentos
                         </div>
 
                         <div class="indicator-meta">
                             <span>
                                 <span class="indicator-status">
-                                    Incompletos
+                                    Completados
                                 </span>
                             </span>
                             <span class="indicator-action">
