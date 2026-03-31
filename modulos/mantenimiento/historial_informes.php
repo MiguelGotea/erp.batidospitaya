@@ -546,7 +546,7 @@ $puedeVerReporteSemanal = tienePermiso('agenda_mantenimiento', 'reporte_semanal'
             const anio = new Date().getFullYear();
 
             const url = `../compras/reembolsos_ia_nuevo.php?id=15&from_km=1&semana=${numSemana}&anio=${anio}&costo=${costoKm}`;
-            window.location.href = url;
+            window.open(url, '_blank');
         }
     </script>
     <script src="js/historial_informes.js?v=<?= mt_rand(1, 10000) ?>"></script>

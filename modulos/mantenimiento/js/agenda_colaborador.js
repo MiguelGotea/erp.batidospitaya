@@ -626,7 +626,7 @@ function generarReembolsoDesdeVisita(visitaId) {
         cancelButtonText: 'Cancelar'
     }).then((result) => {
         if (result.isConfirmed) {
-            window.location.href = `../compras/reembolsos_ia_nuevo.php?visita_id=${visitaId}`;
+            window.open(`../compras/reembolsos_ia_nuevo.php?visita_id=${visitaId}`, '_blank');
         }
     });
 }
