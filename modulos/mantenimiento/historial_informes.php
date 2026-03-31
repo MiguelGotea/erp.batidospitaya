@@ -134,13 +134,18 @@ $puedeVerReporteSemanal = tienePermiso('agenda_mantenimiento', 'reporte_semanal'
                         <div class="d-flex align-items-center bg-white p-2 rounded-pill shadow-sm border px-3 gap-2">
                             <div class="d-flex align-items-center gap-1">
                                 <label class="small fw-bold text-muted mb-0">Semana:</label>
-                                <input type="number" id="inputSemanaReporte" class="form-control form-control-sm border-0 bg-light rounded-pill text-center fw-bold" style="width: 70px;" placeholder="#">
-                                <span id="spanSemanaActual" class="badge bg-secondary rounded-pill opacity-75" style="font-size: 0.7rem;"></span>
+                                <input type="number" id="inputSemanaReporte"
+                                    class="form-control form-control-sm border-0 bg-light rounded-pill text-center fw-bold"
+                                    style="width: 70px;" placeholder="#">
+                                <span id="spanSemanaActual" class="badge bg-secondary rounded-pill opacity-75"
+                                    style="font-size: 0.7rem;"></span>
                             </div>
                             <div class="vr mx-1"></div>
                             <div class="d-flex align-items-center gap-1">
                                 <label class="small fw-bold text-muted mb-0">C$:</label>
-                                <input type="number" id="inputCostoKmReporte" class="form-control form-control-sm border-0 bg-light rounded-pill text-center fw-bold" style="width: 60px;" value="5">
+                                <input type="number" id="inputCostoKmReporte"
+                                    class="form-control form-control-sm border-0 bg-light rounded-pill text-center fw-bold"
+                                    style="width: 60px;" value="5">
                             </div>
                             <button onclick="abrirModalReporte()" class="btn btn-pitaya btn-sm rounded-pill px-3 ms-2">
                                 <i class="fas fa-file-invoice-dollar me-1"></i>Ver Reporte
@@ -235,8 +240,8 @@ $puedeVerReporteSemanal = tienePermiso('agenda_mantenimiento', 'reporte_semanal'
                                     <i class="fas fa-camera me-1"></i>Cámara
                                 </button>
                             </div>
-                            <input type="file" name="foto_caja" id="caja_foto_input" class="d-none"
-                                accept="image/*" onchange="previewFile(this, 'preview_caja')">
+                            <input type="file" name="foto_caja" id="caja_foto_input" class="d-none" accept="image/*"
+                                onchange="previewFile(this, 'preview_caja')">
                             <input type="hidden" name="foto_caja_cam" id="cam_caja_data">
 
                             <div id="preview_caja" class="text-center mt-2 d-none">
@@ -361,7 +366,8 @@ $puedeVerReporteSemanal = tienePermiso('agenda_mantenimiento', 'reporte_semanal'
 
     <!-- Modal Reporte Semanal -->
     <div class="modal fade no-print" id="modalKmReporteSemanal_Unico" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-xl modal-dialog-centered" style="max-width: 98vw !important; width: 98vw !important; margin: 10px auto !important;">
+        <div class="modal-dialog modal-xl modal-dialog-centered"
+            style="max-width: 98vw !important; width: 98vw !important; margin: 10px auto !important;">
             <div class="modal-content border-0 shadow-lg rounded-4">
                 <div class="modal-header bg-white border-0 py-3">
                     <h5 class="modal-title fw-bold text-primary">
@@ -370,11 +376,13 @@ $puedeVerReporteSemanal = tienePermiso('agenda_mantenimiento', 'reporte_semanal'
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-4 bg-light">
-                    <div id="rangoFechasTexto" class="text-muted small mb-3 fw-bold ps-2 border-start border-primary border-4">---</div>
-                    
+                    <div id="rangoFechasTexto"
+                        class="text-muted small mb-3 fw-bold ps-2 border-start border-primary border-4">---</div>
+
                     <div id="alertaReembolso" class="alert alert-warning d-none" role="alert">
                         <i class="fas fa-exclamation-triangle me-2"></i>
-                        Esta semana ya cuenta con una solicitud de reembolso vinculada. No se recomienda generar duplicados.
+                        Esta semana ya cuenta con una solicitud de reembolso vinculada. No se recomienda generar
+                        duplicados.
                     </div>
 
                     <div class="table-responsive bg-white rounded-4 shadow-sm">
@@ -397,7 +405,8 @@ $puedeVerReporteSemanal = tienePermiso('agenda_mantenimiento', 'reporte_semanal'
                     </div>
                 </div>
                 <div class="modal-footer border-0 bg-white">
-                    <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="button" class="btn btn-outline-secondary rounded-pill px-4"
+                        data-bs-dismiss="modal">Cerrar</button>
                     <button id="btnIrAReembolso" class="btn btn-pitaya px-4 rounded-pill" onclick="enviarAReembolso()">
                         <i class="fas fa-external-link-alt me-2"></i>Verificar y Generar Orden de Reembolso
                     </button>
@@ -414,11 +423,11 @@ $puedeVerReporteSemanal = tienePermiso('agenda_mantenimiento', 'reporte_semanal'
         const esAdminCaja = <?= $esAdminCaja ? 'true' : 'false' ?>;
         const puedeVerTodos = <?= $puedeVerTodos ? 'true' : 'false' ?>;
         const puedeGenerarReembolso = <?= $puedeGenerarReembolso ? 'true' : 'false' ?>;
-        
+
         const depreciacionFija = 150.00;
         let infoSemanaActual = null;
 
-        $(document).ready(function() {
+        $(document).ready(function () {
             cargarSemanaActual();
         });
 
@@ -455,7 +464,7 @@ $puedeVerReporteSemanal = tienePermiso('agenda_mantenimiento', 'reporte_semanal'
                 if (res.success) {
                     infoSemanaActual = res;
                     $('#rangoFechasTexto').text(`Semana #${numSemana} | Rango: ${res.rango.desde} al ${res.rango.hasta}`);
-                    
+
                     // Verificar si ya existe reembolso
                     const yaReembolsado = res.resumen.some(r => r.reembolso_id !== null && r.reembolso_id > 0);
                     if (yaReembolsado) {
