@@ -624,20 +624,31 @@ function initWheelPicker(id) {
         updateWheelVisuals(currentIdx);
     });
 
-    // Mouse focus interaction (movimiento del mouse)
+    // Mouse focus interaction (movimiento del mouse para elegir)
+    let lastTargetIdx = -1;
     container.off('mousemove').on('mousemove', function(e) {
         const rect = this.getBoundingClientRect();
         const relY = e.clientY - rect.top;
         const height = rect.height;
         
         let targetIdx;
-        if (relY < height * 0.33) targetIdx = (currentIdx - 1 + 3) % 3;
-        else if (relY > height * 0.66) targetIdx = (currentIdx + 1) % 3;
-        else targetIdx = currentIdx;
+        // Dividimos en 3 franjas para identificar arriba, medio o abajo
+        if (relY < height * 0.38) targetIdx = (options.indexOf(currentVal) - 1 + 3) % 3;
+        else if (relY > height * 0.62) targetIdx = (options.indexOf(currentVal) + 1) % 3;
+        else targetIdx = options.indexOf(currentVal);
 
-        // No actualizamos currentIdx aquí para que el scroll sea más "mecánico", 
-        // pero podemos si queremos que el mouse mueva la rueda.
-        // updateWheelVisuals(targetIdx); 
+        if (targetIdx !== lastTargetIdx) {
+            lastTargetIdx = targetIdx;
+            // No cambiamos currentVal permanentemente aquí para no perder el snapping del scroll,
+            // pero refrescamos visualmente según la posición del mouse.
+            updateWheelVisuals(targetIdx);
+        }
+    });
+
+    // Resetear al salir el mouse para que vuelva a la selección actual
+    container.off('mouseleave').on('mouseleave', function() {
+        lastTargetIdx = -1;
+        updateWheelVisuals(options.indexOf(currentVal));
     });
 }
 

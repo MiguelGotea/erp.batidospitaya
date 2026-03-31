@@ -668,21 +668,23 @@ body.is-dragging {
 }
 
 /* ── Priority Wheel Picker Premium ── */
+.priority-picker-wrap.expanded {
+    z-index: 10000 !important;
+}
+
 .priority-wheel-container {
     position: absolute;
     top: 50%;
     left: 0;
     transform: translateY(-50%) scale(0);
     width: 110px;
-    height: 160px;
-    background: #fff;
-    border-radius: 18px;
-    box-shadow: 0 15px 45px rgba(0,0,0,0.2);
+    height: 180px;
+    /* Quitamos el fondo sólido para que no se vea como una "caja" encerrada */
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    overflow: hidden;
+    overflow: visible; /* Permitir que la magnificación respire */
     z-index: 1000;
     opacity: 0;
     pointer-events: none;
@@ -707,13 +709,15 @@ body.is-dragging {
 .wheel-lens {
     position: absolute;
     top: 50%;
-    left: 0;
-    width: 100%;
-    height: 54px;
+    left: -5px;
+    width: calc(100% + 10px);
+    height: 58px;
     transform: translateY(-50%);
-    background: rgba(0,0,0,0.03);
-    border-top: 1px solid rgba(0,0,0,0.08);
-    border-bottom: 1px solid rgba(0,0,0,0.08);
+    background: rgba(255, 255, 255, 0.95);
+    border-top: 2px solid rgba(0,0,0,0.05);
+    border-bottom: 2px solid rgba(0,0,0,0.05);
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
     pointer-events: none;
     z-index: 5;
 }
