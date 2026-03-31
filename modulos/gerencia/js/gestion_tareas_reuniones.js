@@ -239,6 +239,10 @@ function crearItemHtml(item, hoy) {
              data-fecha="${fechaRef}"
              data-estado="${item.estado}">
 
+            <div class="drag-handle" title="Arrastrar para reordenar">
+                <i class="bi bi-grip-vertical"></i>
+            </div>
+
             <div class="item-icon-small ${tipoClase}">
                 <i class="bi ${tipoIcono}"></i>
             </div>
@@ -406,12 +410,7 @@ function habilitarDrag(cardEl, item) {
     // Toda la tarjeta es el área de arrastre (excepto botones de acción)
     cardEl.addEventListener('pointerdown', function (e) {
         if (e.button !== 0) return;
-        if (e.target.closest('.btn-icon-only')) return; // no iniciar en botones de acción
-        if (e.target.closest('.item-acciones-row')) return;
-        if (e.priorityPickerActive) return; // if any picker is active? No, better check class
-        if (e.target.closest('.priority-picker-wrap')) return;
-        if (e.target.closest('.badge-estado')) return;
-        if (e.target.closest('.item-main-info')) return;
+        if (!e.target.closest('.drag-handle')) return; // Solo arrastrar desde el tirador premium
 
         e.preventDefault();
 

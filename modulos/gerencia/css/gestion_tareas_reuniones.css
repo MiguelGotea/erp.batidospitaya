@@ -646,6 +646,21 @@ body.is-dragging {
 .tipo-chip.tarea   { background: #e8f4fd; color: #2980b9; }
 .tipo-chip.reunion { background: #e8f5f3; color: #0E544C; }
 
+/* ── Drag Handle Premium ── */
+.drag-handle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    color: #ccc;
+    cursor: grab;
+    transition: color 0.2s;
+    font-size: 18px;
+    margin-right: -5px;
+}
+.drag-handle:hover { color: #888; }
+.drag-handle:active { cursor: grabbing; }
+
 /* ── Priority Picker Premium ── */
 .priority-picker-wrap {
     position: relative;
