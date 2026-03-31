@@ -16,28 +16,7 @@ try {
     // Construir WHERE
     $where = ["o.CodOperario IS NOT NULL"];
 
-    // FILTRO GLOBAL SEGURO: Excluir colaboradores cuyo Cargo actual sea 'Tienda' o tenga ID 27
-    $subqueryCargoFiltroGlobal = "
-        COALESCE(
-            (SELECT nc_ext.Nombre 
-             FROM AsignacionNivelesCargos anc_ext
-             JOIN NivelesCargos nc_ext ON anc_ext.CodNivelesCargos = nc_ext.CodNivelesCargos
-             WHERE anc_ext.CodOperario = o.CodOperario 
-             AND anc_ext.CodNivelesCargos != 2
-             AND (anc_ext.Fin IS NULL OR anc_ext.Fin >= CURDATE())
-             ORDER BY anc_ext.CodNivelesCargos DESC
-             LIMIT 1),
-            (SELECT nc_ext.Nombre 
-             FROM AsignacionNivelesCargos anc_ext
-             JOIN NivelesCargos nc_ext ON anc_ext.CodNivelesCargos = nc_ext.CodNivelesCargos
-             WHERE anc_ext.CodOperario = o.CodOperario 
-             AND (anc_ext.Fin IS NULL OR anc_ext.Fin >= CURDATE())
-             ORDER BY anc_ext.CodNivelesCargos DESC
-             LIMIT 1),
-            'Sin cargo definido'
-        )
-    ";
-
+    // FILTRO GLOBAL SEGURO: Excluir colaboradores cuyo Cargo actual sea ID 27
     $subqueryCargoIdFiltroGlobal = "
         COALESCE(
             (SELECT anc_ext.CodNivelesCargos 
@@ -45,19 +24,19 @@ try {
              WHERE anc_ext.CodOperario = o.CodOperario 
              AND anc_ext.CodNivelesCargos != 2
              AND (anc_ext.Fin IS NULL OR anc_ext.Fin >= CURDATE())
-             ORDER BY anc_ext.CodNivelesCargos DESC
+             ORDER BY anc_ext.CodAsignacionNivelesCargos DESC
              LIMIT 1),
             (SELECT anc_ext.CodNivelesCargos 
              FROM AsignacionNivelesCargos anc_ext
              WHERE anc_ext.CodOperario = o.CodOperario 
              AND (anc_ext.Fin IS NULL OR anc_ext.Fin >= CURDATE())
-             ORDER BY anc_ext.CodNivelesCargos DESC
+             ORDER BY anc_ext.CodAsignacionNivelesCargos DESC
              LIMIT 1),
             0
         )
     ";
 
-    $where[] = "($subqueryCargoFiltroGlobal != 'Tienda' AND $subqueryCargoIdFiltroGlobal != 27)";
+    $where[] = "$subqueryCargoIdFiltroGlobal != 27";
 
     $params = [];
 
