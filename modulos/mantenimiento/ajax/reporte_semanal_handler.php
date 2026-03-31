@@ -50,7 +50,11 @@ try {
             $fecha_fin = $semana['fecha_fin'];
 
             // 2. Obtener detalle diario por operario
-            $sqlDetalle = "SELECT i.*, o.Nombre, o.Apellido
+            $sqlDetalle = "SELECT i.*, o.Nombre, o.Apellido,
+                                  (SELECT GROUP_CONCAT(DISTINCT s.nombre SEPARATOR ', ') 
+                                   FROM mtto_informe_visitas v 
+                                   JOIN sucursales s ON v.cod_sucursal = s.codigo 
+                                   WHERE v.informe_id = i.id) as sucursales_list
                            FROM mtto_informes_diarios i
                            INNER JOIN Operarios o ON i.cod_operario = o.CodOperario
                            WHERE i.fecha BETWEEN :desde AND :hasta

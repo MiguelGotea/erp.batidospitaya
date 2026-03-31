@@ -390,7 +390,8 @@ $puedeVerReporteSemanal = tienePermiso('agenda_mantenimiento', 'reporte_semanal'
                         <table class="table table-hover align-middle mb-0">
                             <thead class="bg-white">
                                 <tr>
-                                    <th class="ps-4 py-3" style="width: 300px;">Detalle</th>
+                                    <th class="ps-4 py-3" style="width: 250px;">Detalle</th>
+                                    <th class="py-3" style="min-width: 200px;">Sucursales</th>
                                     <th class="text-center py-3">Registros</th>
                                     <th class="text-center py-3">KM Totales</th>
                                     <th class="text-end pe-4 py-3">Total Estimado</th>
@@ -501,7 +502,7 @@ $puedeVerReporteSemanal = tienePermiso('agenda_mantenimiento', 'reporte_semanal'
 
                         html += `
                             <tr class="table-light">
-                                <td colspan="4" class="ps-4 fw-bold text-dark" style="background-color: #f8fcfb;">
+                                <td colspan="5" class="ps-4 fw-bold text-dark" style="background-color: #f8fcfb;">
                                     <i class="fas fa-user-circle me-2 text-primary"></i>${op.name}
                                 </td>
                             </tr>
@@ -510,10 +511,21 @@ $puedeVerReporteSemanal = tienePermiso('agenda_mantenimiento', 'reporte_semanal'
                         op.logs.forEach(log => {
                             const kmDia = (parseFloat(log.km_final) || 0) - (parseFloat(log.km_inicial) || 0);
                             const costoDia = kmDia * costoKm;
+                            const fotoHtml = log.km_foto_final ? 
+                                `<i class="fas fa-camera ms-2 text-muted cursor-zoom" title="Ver foto odómetro" onclick="zoomFoto('uploads/informes/${log.km_foto_final}')"></i>` : '';
+                            
                             html += `
                                 <tr class="small text-muted border-0">
                                     <td class="ps-5 py-1" style="white-space: nowrap;">${log.fecha}</td>
-                                    <td class="text-center py-1" style="white-space: nowrap;">${parseFloat(log.km_inicial).toLocaleString()} → ${parseFloat(log.km_final).toLocaleString()}</td>
+                                    <td class="py-1">
+                                        <div class="text-truncate" style="max-width: 250px;" title="${log.sucursales_list || ''}">
+                                            ${log.sucursales_list || '<span class="opacity-50">---</span>'}
+                                        </div>
+                                    </td>
+                                    <td class="text-center py-1" style="white-space: nowrap;">
+                                        ${parseFloat(log.km_inicial).toLocaleString()} → ${parseFloat(log.km_final).toLocaleString()}
+                                        ${fotoHtml}
+                                    </td>
                                     <td class="text-center py-1 fw-bold" style="white-space: nowrap;">${kmDia} km</td>
                                     <td class="text-end pe-4 py-1" style="white-space: nowrap;">C$ ${costoDia.toFixed(2)}</td>
                                 </tr>
@@ -522,7 +534,7 @@ $puedeVerReporteSemanal = tienePermiso('agenda_mantenimiento', 'reporte_semanal'
 
                         html += `
                             <tr class="fw-bold border-bottom shadow-sm">
-                                <td colspan="2" class="text-end text-primary ps-5 py-2">Total Colaborador (incluye C$ 150 fijo):</td>
+                                <td colspan="3" class="text-end text-primary ps-5 py-2">Total Colaborador (incluye C$ 150 fijo):</td>
                                 <td class="text-center text-primary py-2">${kmTotalOp.toLocaleString()} km</td>
                                 <td class="text-end pe-4 text-dark py-2">C$ ${totalOp.toFixed(2)}</td>
                             </tr>
@@ -532,7 +544,7 @@ $puedeVerReporteSemanal = tienePermiso('agenda_mantenimiento', 'reporte_semanal'
                     $('#tablaCuerpoModal').html(html);
                     $('#tablaPieModal').html(`
                         <tr>
-                            <td colspan="2" class="text-end fw-bold py-3 ps-4 fs-5">TOTAL SEMANAL ESTIMADO:</td>
+                            <td colspan="3" class="text-end fw-bold py-3 ps-4 fs-5">TOTAL SEMANAL ESTIMADO:</td>
                             <td class="text-center fw-bold text-primary py-3 fs-5">${sumTotalKm.toLocaleString()} km</td>
                             <td class="text-end pe-4 fw-bold text-pitaya py-3 fs-5">C$ ${sumTotalFinal.toFixed(2)}</td>
                         </tr>
