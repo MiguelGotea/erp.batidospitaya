@@ -559,6 +559,45 @@ function posponerTareaAjax(id, nuevaFecha) {
     });
 }
 
+// ── Mover vencidas a hoy ───────────────────────────
+function moverVencidasHoy() {
+    Swal.fire({
+        title: '¿Mover tareas vencidas a hoy?',
+        text: 'Todas las tareas pendientes que debieron finalizar antes de hoy se actualizarán a la fecha actual.',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#ff9800',
+        cancelButtonColor: '#78909c',
+        confirmButtonText: 'Sí, mover todo',
+        cancelButtonText: 'No'
+    }).then(result => {
+        if (!result.isConfirmed) return;
+
+        $.ajax({
+            url: 'ajax/gestion_tareas_reuniones_mover_vencidas.php',
+            method: 'POST',
+            dataType: 'json',
+            success: function (r) {
+                if (r.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Tareas Movidas',
+                        text: r.message,
+                        timer: 2500,
+                        showConfirmButton: false
+                    });
+                    cargarDatos();
+                } else {
+                    Swal.fire('Error', r.message || 'No se pudieron mover las tareas', 'error');
+                }
+            },
+            error: function () {
+                Swal.fire('Error', 'Error de conexión al mover tareas', 'error');
+            }
+        });
+    });
+}
+
 // ── Prioridad (Wheel Picker Vertical Premium) ────────
 function expandirPrioridad(id) {
     const wrap = $(`#picker-wrap-${id}`);

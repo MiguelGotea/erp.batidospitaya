@@ -69,6 +69,10 @@ $permisoCancelar        = tienePermiso('gestion_tareas_reuniones', 'cancelar_tar
                                 <i class="bi bi-calendar-event-fill"></i> Solicitar Reunión
                             </button>
                         <?php endif; ?>
+
+                        <button class="btn-premium btn-prem-warning" onclick="moverVencidasHoy()">
+                            <i class="bi bi-calendar-check-fill"></i> Mover vencidas a hoy
+                        </button>
                     </div>
 
                     <!-- Toggle de vistas -->
