@@ -1,4 +1,4 @@
-﻿let paginaActual = 1;
+let paginaActual = 1;
 let registrosPorPagina = 25;
 let filtrosActivos = {};
 let ordenActivo = { columna: null, direccion: 'asc' };
@@ -80,7 +80,7 @@ function renderizarTabla(datos) {
     tbody.empty();
 
     if (datos.length === 0) {
-        tbody.append('<tr><td colspan="12" class="text-center py-4">No se encontraron registros</td></tr>');
+        tbody.append('<tr><td colspan="13" class="text-center py-4">No se encontraron registros</td></tr>');
         return;
     }
 
@@ -183,6 +183,26 @@ function renderizarTabla(datos) {
                     <span style="font-weight: bold; color: ${colorLlenado}; font-size: 11px;">
                         ${porcLlenado}%
                     </span>
+                </div>
+            </td>
+        `);
+
+        // Documentos completos (Expediente Digital)
+        const exp = row.expediente_digital || { porcentaje: 0, completados: 0, total: 0 };
+        const porcExp = exp.porcentaje || 0;
+        let colorExp = '#dc3545';
+        if (porcExp == 100) colorExp = '#28a745';
+        else if (porcExp >= 50) colorExp = '#ffc107';
+
+        tr.append(`
+            <td style="text-align: center;">
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 2px;">
+                    <span style="font-weight: bold; color: ${colorExp}; font-size: 13px;">
+                        ${exp.completados} / ${exp.total}
+                    </span>
+                    <div style="width: 60px; height: 6px; background: #e9ecef; border-radius: 3px; overflow: hidden;">
+                        <div style="width: ${porcExp}%; height: 100%; background: ${colorExp}; transition: width 0.3s;"></div>
+                    </div>
                 </div>
             </td>
         `);
