@@ -110,6 +110,11 @@ function renderizarTabla(datos) {
                     </div>
                 </td>
                 <td>
+                    <div class="text-muted small text-truncate" style="max-width: 150px;" title="${i.sucursales_list || ''}">
+                        ${i.sucursales_list || '<span class="opacity-50">Ninguna</span>'}
+                    </div>
+                </td>
+                <td>
                     <span class="badge bg-light text-dark border">
                         ${kmRecorrido} ${i.km_final ? 'KM' : ''}
                     </span>
@@ -124,6 +129,13 @@ function renderizarTabla(datos) {
                             </button>
                         ` : ''}
                     </div>
+                </td>
+                <td class="text-center">
+                    ${i.total_compras > 0 ? (
+                        i.compras_sin_reembolso == 0 
+                        ? '<i class="fas fa-check-circle text-success fs-5" title="Todos los reembolsos procesados"></i>'
+                        : `<i class="fas fa-exclamation-triangle text-warning fs-5" title="${i.compras_sin_reembolso} visita(s) pendiente(s) de reembolso"></i>`
+                    ) : '<span class="text-muted opacity-50">-</span>'}
                 </td>
                 <td>
                     <span class="status-badge bg-${badgeColor} bg-opacity-10 text-${badgeColor}">

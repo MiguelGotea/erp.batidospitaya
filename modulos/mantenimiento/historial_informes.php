@@ -173,8 +173,10 @@ $puedeVerReporteSemanal = tienePermiso('agenda_mantenimiento', 'reporte_semanal'
                                             Colaborador
                                             <i class="fas fa-filter filter-icon" onclick="toggleFilter(this)"></i>
                                         </th>
+                                        <th>Sucursales</th>
                                         <th>KM Recorrido</th>
                                         <th>Caja Chica</th>
+                                        <th class="text-center">Reembolso</th>
                                         <th data-column="estado" data-type="list">
                                             Estado
                                             <i class="fas fa-filter filter-icon" onclick="toggleFilter(this)"></i>

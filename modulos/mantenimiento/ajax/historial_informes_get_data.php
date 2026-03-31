@@ -89,7 +89,20 @@ try {
     }
 
     // Consulta principal
-    $sql = "SELECT i.*, o.Nombre, o.Apellido 
+    $sql = "SELECT i.*, o.Nombre, o.Apellido,
+            (SELECT GROUP_CONCAT(DISTINCT s.nombre SEPARATOR ', ') 
+             FROM mtto_informe_visitas v 
+             JOIN sucursales s ON v.cod_sucursal = s.codigo 
+             WHERE v.informe_id = i.id) as sucursales_list,
+            (SELECT COUNT(*) 
+             FROM mtto_informe_compras c 
+             JOIN mtto_informe_visitas v ON c.visita_id = v.id 
+             WHERE v.informe_id = i.id) as total_compras,
+            (SELECT COUNT(*) 
+             FROM mtto_informe_visitas v 
+             WHERE v.informe_id = i.id 
+             AND v.reembolso_id IS NULL 
+             AND (SELECT COUNT(*) FROM mtto_informe_compras WHERE visita_id = v.id) > 0) as compras_sin_reembolso
             FROM mtto_informes_diarios i
             LEFT JOIN Operarios o ON i.cod_operario = o.CodOperario
             $where_sql
