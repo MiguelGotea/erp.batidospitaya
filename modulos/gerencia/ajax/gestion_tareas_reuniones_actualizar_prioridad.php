@@ -27,9 +27,7 @@ try {
         ':id' => $id
     ]);
 
-    if ($stmt->rowCount() === 0) {
-        throw new Exception('No se encontró la tarea o no es de tipo tarea/no hubo cambios');
-    }
+    // El éxito del execute es suficiente, rowCount() sería 0 si la prioridad es la misma que la actual
 
     echo json_encode([
         'success' => true,

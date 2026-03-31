@@ -590,6 +590,7 @@ function initWheelPicker(id) {
 
     // Función para actualizar la "rueda" visualmente
     function updateWheelVisuals(idx) {
+        currentIdx = idx; // Actualizar el índice global del picker
         const items = wrap.find('.p-opt');
         items.removeClass('focus next prev hidden');
 
@@ -626,7 +627,6 @@ function initWheelPicker(id) {
     });
 
     // Mouse focus interaction (movimiento del mouse para elegir)
-    let lastTargetIdx = -1;
     container.off('mousemove').on('mousemove', function (e) {
         const rect = this.getBoundingClientRect();
         const relY = e.clientY - rect.top;
@@ -638,18 +638,18 @@ function initWheelPicker(id) {
         else if (relY > height * 0.62) targetIdx = (options.indexOf(currentVal) + 1) % 3;
         else targetIdx = options.indexOf(currentVal);
 
-        if (targetIdx !== lastTargetIdx) {
-            lastTargetIdx = targetIdx;
-            // No cambiamos currentVal permanentemente aquí para no perder el snapping del scroll,
-            // pero refrescamos visualmente según la posición del mouse.
-            updateWheelVisuals(targetIdx);
-        }
+        updateWheelVisuals(targetIdx);
     });
 
-    // Resetear al salir el mouse para que vuelva a la selección actual
+    // Resetear al salir el mouse para que vuelva a la selección inicial o actual
     container.off('mouseleave').on('mouseleave', function () {
-        lastTargetIdx = -1;
         updateWheelVisuals(options.indexOf(currentVal));
+    });
+
+    // CLICK EN CUALQUIER PARTE DE LA RUEDA CONFIRMA LA SELECCIÓN ACTUAL
+    container.off('click').on('click', function (e) {
+        e.stopPropagation();
+        confirmarPrioridad(id, options[currentIdx]);
     });
 }
 
