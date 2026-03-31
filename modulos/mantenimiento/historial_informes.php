@@ -368,8 +368,7 @@ $puedeVerReporteSemanal = tienePermiso('agenda_mantenimiento', 'reporte_semanal'
 
     <!-- Modal Reporte Semanal -->
     <div class="modal fade no-print" id="modalKmReporteSemanal_Unico" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-xl modal-dialog-centered"
-            style="max-width: 98vw !important; width: 98vw !important; margin: 10px auto !important;">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
             <div class="modal-content border-0 shadow-lg rounded-4">
                 <div class="modal-header bg-white border-0 py-3">
                     <h5 class="modal-title fw-bold text-primary">
