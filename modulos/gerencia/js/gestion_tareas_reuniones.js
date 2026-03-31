@@ -598,6 +598,7 @@ function initWheelPicker(id) {
             const val = $(this).attr('data-value');
             const i = options.indexOf(val);
 
+
             if (i === idx) {
                 $(this).addClass('focus');
             } else if (i === (idx + 1) % 3) {
