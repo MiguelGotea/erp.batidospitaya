@@ -512,13 +512,13 @@ $puedeVerReporteSemanal = tienePermiso('agenda_mantenimiento', 'reporte_semanal'
                             const kmDia = (parseFloat(log.km_final) || 0) - (parseFloat(log.km_inicial) || 0);
                             const costoDia = kmDia * costoKm;
                             const fotoHtml = log.km_foto_final ? 
-                                `<i class="fas fa-camera ms-2 text-muted cursor-zoom" title="Ver foto odómetro" onclick="zoomFoto('uploads/informes/${log.km_foto_final}')"></i>` : '';
+                                `<i class="fas fa-camera ms-2 text-muted cursor-pointer" title="Ver foto odómetro" onclick="window.open('uploads/informes/${log.km_foto_final}', '_blank')"></i>` : '';
                             
                             html += `
                                 <tr class="small text-muted border-0">
                                     <td class="ps-5 py-1" style="white-space: nowrap;">${log.fecha}</td>
                                     <td class="py-1">
-                                        <div class="text-truncate" style="max-width: 250px;" title="${log.sucursales_list || ''}">
+                                        <div class="small" title="${log.sucursales_list || ''}">
                                             ${log.sucursales_list || '<span class="opacity-50">---</span>'}
                                         </div>
                                     </td>
