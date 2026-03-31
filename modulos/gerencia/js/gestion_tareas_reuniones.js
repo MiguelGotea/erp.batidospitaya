@@ -584,13 +584,13 @@ function expandirPrioridad(id) {
 function initWheelPicker(id) {
     const wrap = $(`#picker-wrap-${id}`);
     const container = wrap.find('.priority-wheel-container');
-    const options = ['baja', 'media', 'alta'];
+    const options = ['alta', 'media', 'baja']; // Orden de importancia
     let currentVal = wrap.attr('data-current') || 'media';
     let currentIdx = options.indexOf(currentVal);
 
     // Función para actualizar la "rueda" visualmente
     function updateWheelVisuals(idx) {
-        currentIdx = idx; // Actualizar el índice global del picker
+        currentIdx = idx; // Actualizar el índice dinámico
         const items = wrap.find('.p-opt');
         items.removeClass('focus next prev hidden');
 
@@ -634,23 +634,26 @@ function initWheelPicker(id) {
         const height = rect.height;
 
         let targetIdx;
-        // Dividimos en 3 franjas para identificar arriba, medio o abajo
-        if (relY < height * 0.38) targetIdx = (options.indexOf(currentVal) - 1 + 3) % 3;
-        else if (relY > height * 0.62) targetIdx = (options.indexOf(currentVal) + 1) % 3;
-        else targetIdx = options.indexOf(currentVal);
+        // La interacción debe ser relativa a la posición actual para evitar saltos bruscos
+        if (relY < height * 0.38) targetIdx = (currentIdx - 1 + 3) % 3;
+        else if (relY > height * 0.62) targetIdx = (currentIdx + 1) % 3;
+        else targetIdx = currentIdx;
 
         updateWheelVisuals(targetIdx);
     });
 
-    // Resetear al salir el mouse para que vuelva a la selección inicial o actual
+    // Resetear al salir el mouse para que vuelva a la selección confirmada (el valor de data-current)
     container.off('mouseleave').on('mouseleave', function () {
-        updateWheelVisuals(options.indexOf(currentVal));
+        const confirmedVal = wrap.attr('data-current') || 'media';
+        updateWheelVisuals(options.indexOf(confirmedVal));
     });
 
-    // CLICK EN CUALQUIER PARTE DE LA RUEDA CONFIRMA LA SELECCIÓN ACTUAL
+    // CLICK EN CUALQUIER PARTE DE LA RUEDA CONFIRMA LA SELECCIÓN ACTUAL VISUAL
     container.off('click').on('click', function (e) {
         e.stopPropagation();
-        confirmarPrioridad(id, options[currentIdx]);
+        // Confirmamos el valor que tenemos actualmente en el foco visual
+        const valueToSet = options[currentIdx];
+        confirmarPrioridad(id, valueToSet);
     });
 }
 
