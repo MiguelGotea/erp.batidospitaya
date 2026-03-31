@@ -243,6 +243,7 @@ function crearItemHtml(item, hoy) {
                 <i class="bi bi-grip-vertical"></i>
             </div>
 
+            
             <div class="item-icon-small ${tipoClase}">
                 <i class="bi ${tipoIcono}"></i>
             </div>
@@ -565,7 +566,7 @@ function expandirPrioridad(id) {
 
     // Cerrar cualquier otro abierto
     $('.priority-picker-wrap').not(wrap).removeClass('expanded');
-    
+
     if (isExpanding) {
         wrap.addClass('expanded');
         initWheelPicker(id);
@@ -591,11 +592,11 @@ function initWheelPicker(id) {
     function updateWheelVisuals(idx) {
         const items = wrap.find('.p-opt');
         items.removeClass('focus next prev hidden');
-        
-        items.each(function() {
+
+        items.each(function () {
             const val = $(this).attr('data-value');
             const i = options.indexOf(val);
-            
+
             if (i === idx) {
                 $(this).addClass('focus');
             } else if (i === (idx + 1) % 3) {
@@ -611,26 +612,26 @@ function initWheelPicker(id) {
     updateWheelVisuals(currentIdx);
 
     // Scroll wheel interaction
-    container.off('wheel').on('wheel', function(e) {
+    container.off('wheel').on('wheel', function (e) {
         e.preventDefault();
         e.stopPropagation();
-        
+
         if (e.originalEvent.deltaY > 0) {
             currentIdx = (currentIdx + 1) % 3;
         } else {
             currentIdx = (currentIdx - 1 + 3) % 3;
         }
-        
+
         updateWheelVisuals(currentIdx);
     });
 
     // Mouse focus interaction (movimiento del mouse para elegir)
     let lastTargetIdx = -1;
-    container.off('mousemove').on('mousemove', function(e) {
+    container.off('mousemove').on('mousemove', function (e) {
         const rect = this.getBoundingClientRect();
         const relY = e.clientY - rect.top;
         const height = rect.height;
-        
+
         let targetIdx;
         // Dividimos en 3 franjas para identificar arriba, medio o abajo
         if (relY < height * 0.38) targetIdx = (options.indexOf(currentVal) - 1 + 3) % 3;
@@ -646,7 +647,7 @@ function initWheelPicker(id) {
     });
 
     // Resetear al salir el mouse para que vuelva a la selección actual
-    container.off('mouseleave').on('mouseleave', function() {
+    container.off('mouseleave').on('mouseleave', function () {
         lastTargetIdx = -1;
         updateWheelVisuals(options.indexOf(currentVal));
     });
