@@ -403,6 +403,9 @@ function habilitarDrag(cardEl, item) {
         if (e.button !== 0) return;
         if (e.target.closest('.btn-icon-only')) return; // no iniciar en botones de acción
         if (e.target.closest('.item-acciones-row')) return;
+        if (e.target.closest('.priority-badge')) return;
+        if (e.target.closest('.badge-estado')) return;
+        if (e.target.closest('.item-main-info')) return;
 
         e.preventDefault();
 
