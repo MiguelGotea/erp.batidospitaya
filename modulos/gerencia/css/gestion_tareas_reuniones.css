@@ -646,27 +646,88 @@ body.is-dragging {
 .tipo-chip.tarea   { background: #e8f4fd; color: #2980b9; }
 .tipo-chip.reunion { background: #e8f5f3; color: #0E544C; }
 
-/* ── Priority Badges (Minimalist Solid) ── */
+/* ── Priority Picker Premium ── */
+.priority-picker-wrap {
+    position: relative;
+    z-index: 10;
+}
+
+.priority-options {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    transform: translateY(-50%) scale(0.6);
+    transform-origin: left center;
+    display: flex;
+    gap: 8px;
+    background: #fff;
+    padding: 10px;
+    border-radius: 14px;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.18);
+    opacity: 0;
+    pointer-events: none;
+    transition: transform 0.4s cubic-bezier(0.19, 1, 0.22, 1), opacity 0.2s;
+    z-index: 1000;
+}
+
+.priority-picker-wrap.expanded .priority-options {
+    transform: translateY(-50%) scale(1);
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.priority-options .p-opt {
+    opacity: 0;
+    transform: translateX(-10px);
+    transition: opacity 0.3s, transform 0.3s;
+}
+
+.priority-picker-wrap.expanded .priority-options .p-opt {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.priority-picker-wrap.expanded .priority-options .p-opt:nth-child(1) { transition-delay: 0.05s; }
+.priority-picker-wrap.expanded .priority-options .p-opt:nth-child(2) { transition-delay: 0.1s; }
+.priority-picker-wrap.expanded .priority-options .p-opt:nth-child(3) { transition-delay: 0.15s; }
+
 .priority-badge {
-    padding: 2px 9px;
-    border-radius: 6px;
+    padding: 3px 10px;
+    border-radius: 7px;
     font-size: 10px;
     font-weight: 700;
     text-transform: uppercase;
-    cursor: pointer;
-    transition: background .15s, transform .1s;
-    user-select: none;
-    display: inline-block;
     color: #fff;
-    min-width: 50px;
+    transition: transform 0.2s;
+    cursor: pointer;
+    display: inline-block;
+    min-width: 55px;
     text-align: center;
 }
-.priority-badge:hover { transform: translateY(-1px); }
-.priority-badge:active { transform: translateY(0); }
+.priority-badge:hover { transform: scale(1.05); }
 
-.priority-badge.alta  { background-color: #e53935; } /* Vibrant Red */
-.priority-badge.media { background-color: #ffb300; } /* Amber */
-.priority-badge.baja  { background-color: #1e88e5; } /* Soft Blue */
+.p-opt {
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+    color: #fff;
+    cursor: pointer;
+    transition: transform 0.2s, filter 0.2s, box-shadow 0.2s;
+    text-align: center;
+    min-width: 80px;
+}
+
+.p-opt:hover {
+    transform: scale(1.15) translateY(-2px);
+    filter: brightness(1.05);
+    box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+}
+
+.p-opt.alta, .priority-badge.alta  { background-color: #e53935; }
+.p-opt.media, .priority-badge.media { background-color: #ffb300; }
+.p-opt.baja, .priority-badge.baja  { background-color: #1e88e5; }
 
 /* Badge extra para reuniones concluidas por fecha */
 .badge-estado.concluida { background: #f3e8fd; color: #7b2d8b; }

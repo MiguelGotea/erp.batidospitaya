@@ -256,11 +256,16 @@ function crearItemHtml(item, hoy) {
             <div class="item-meta-row">
                 ${item.tipo === 'tarea' ? `
                 <div class="item-meta-col">
-                    <span class="priority-badge ${item.prioridad || 'media'}" 
-                          onclick="event.stopPropagation(); cambiarPrioridad(${item.id}, '${item.prioridad || 'media'}')"
-                          title="Cambiar prioridad">
-                        ${item.prioridad || 'media'}
-                    </span>
+                    <div class="priority-picker-wrap" id="picker-wrap-${item.id}" onclick="event.stopPropagation(); expandirPrioridad(${item.id})">
+                        <span class="priority-badge ${item.prioridad || 'media'}" id="badge-prio-${item.id}">
+                            ${item.prioridad || 'media'}
+                        </span>
+                        <div class="priority-options">
+                            <div class="p-opt baja" onclick="event.stopPropagation(); setPrioridad(${item.id}, 'baja')">Baja</div>
+                            <div class="p-opt media" onclick="event.stopPropagation(); setPrioridad(${item.id}, 'media')">Media</div>
+                            <div class="p-opt alta" onclick="event.stopPropagation(); setPrioridad(${item.id}, 'alta')">Alta</div>
+                        </div>
+                    </div>
                 </div>
                 ` : ''}
                 <div class="item-meta-col">
@@ -403,7 +408,8 @@ function habilitarDrag(cardEl, item) {
         if (e.button !== 0) return;
         if (e.target.closest('.btn-icon-only')) return; // no iniciar en botones de acción
         if (e.target.closest('.item-acciones-row')) return;
-        if (e.target.closest('.priority-badge')) return;
+        if (e.priorityPickerActive) return; // if any picker is active? No, better check class
+        if (e.target.closest('.priority-picker-wrap')) return;
         if (e.target.closest('.badge-estado')) return;
         if (e.target.closest('.item-main-info')) return;
 
@@ -550,11 +556,22 @@ function posponerTareaAjax(id, nuevaFecha) {
     });
 }
 
-// ── Prioridad ───────────────────────────────────────
-function cambiarPrioridad(id, actual) {
-    const next = { 'baja': 'media', 'media': 'alta', 'alta': 'baja' };
-    const nueva = next[actual] || 'media';
+// ── Prioridad (Picker Premium Expanded) ──────────────
+function expandirPrioridad(id) {
+    // Cerrar cualquier otro abierto
+    $('.priority-picker-wrap').not(`#picker-wrap-${id}`).removeClass('expanded');
+    $(`#picker-wrap-${id}`).toggleClass('expanded');
 
+    // Cerrar al hacer clic fuera
+    $(document).off('click.closePicker').on('click.closePicker', function (e) {
+        if (!$(e.target).closest('.priority-picker-wrap').length) {
+            $('.priority-picker-wrap').removeClass('expanded');
+            $(document).off('click.closePicker');
+        }
+    });
+}
+
+function setPrioridad(id, nueva) {
     $.ajax({
         url: 'ajax/gestion_tareas_reuniones_actualizar_prioridad.php',
         method: 'POST',
@@ -562,7 +579,9 @@ function cambiarPrioridad(id, actual) {
         dataType: 'json',
         success: function (r) {
             if (r.success) {
-                cargarDatos(); // Recargar para reordenar
+                // Cerramos y recargamos para que el orden se aplique
+                $('.priority-picker-wrap').removeClass('expanded');
+                cargarDatos();
             } else {
                 Swal.fire('Error', r.message, 'error');
             }
