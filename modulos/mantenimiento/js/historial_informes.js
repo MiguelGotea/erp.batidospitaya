@@ -131,11 +131,10 @@ function renderizarTabla(datos) {
                     </div>
                 </td>
                 <td class="text-center">
-                    ${i.total_compras > 0 ? (
-                        i.compras_sin_reembolso == 0 
-                        ? '<i class="fas fa-check-circle text-success fs-5" title="Todos los reembolsos procesados"></i>'
+                    ${i.compras_sin_reembolso == 0 
+                        ? '<i class="fas fa-check-circle text-success fs-5" title="Todo al día"></i>'
                         : `<i class="fas fa-exclamation-triangle text-warning fs-5" title="${i.compras_sin_reembolso} visita(s) pendiente(s) de reembolso"></i>`
-                    ) : '<span class="text-muted opacity-50">-</span>'}
+                    }
                 </td>
                 <td>
                     <span class="status-badge bg-${badgeColor} bg-opacity-10 text-${badgeColor}">
