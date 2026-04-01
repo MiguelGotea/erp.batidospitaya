@@ -149,7 +149,7 @@ function obtenerItemsUsuario($conn, $codCargo)
 /**
  * Agrupar por día:
  * - Pasados (cualquier fecha): mostrar SOLO si tienen pendientes (sin límite de antigüedad)
- * - Hoy + días restantes del mes actual + 1 día del mes siguiente: siempre mostrar
+ * - Hoy + días restantes del mes actual + al menos 6 días después de hoy: siempre mostrar
  */
 function agruparPorMes($items)
 {
@@ -220,8 +220,12 @@ function agruparPorMes($items)
         ];
     }
 
-    // ── HOY + resto del mes actual + 1º día del mes siguiente ──
-    $hasta      = new DateTime('first day of next month');
+    // ── HOY + resto del mes actual + al menos 6 días más (buffer futuro) ──
+    $hasta = new DateTime('first day of next month');
+    $seisDiasMas = (clone $hoy)->modify('+6 days');
+    if ($seisDiasMas > $hasta) {
+        $hasta = $seisDiasMas;
+    }
     $diaIterado = clone $hoy;
 
     while ($diaIterado <= $hasta) {
