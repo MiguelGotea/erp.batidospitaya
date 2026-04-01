@@ -113,7 +113,7 @@ $cargoOperario = $usuario['CodNivelesCargos'];
 
             <div class="iframe-container">
                 <iframe
-                    src="https://lookerstudio.google.com/embed/reporting/01645813-489d-42ea-8b91-b71b001af772/page/vEdYF"
+                    src="https://lookerstudio.google.com/embed/reporting/45296564-0dc3-401d-b0d5-83700742b8db/page/vEdYF"
                     frameborder="0" style="border:0" allowfullscreen
                     sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox">
                 </iframe>
