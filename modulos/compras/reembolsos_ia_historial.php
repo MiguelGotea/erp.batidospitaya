@@ -71,7 +71,7 @@ $proveedores = $stmtProv->fetchAll(PDO::FETCH_ASSOC);
                 <div class="card premium-card">
                     <div class="card-body p-0">
                         <div class="table-responsive">
-                            <table class="table table-hover mb-0" id="tablaReembolsos">
+                            <table class="table table-hover cupones-table" id="tablaReembolsos">
                                 <thead>
                                     <tr>
                                         <th data-column="fecha_solicitud" data-type="daterange">
@@ -102,15 +102,13 @@ $proveedores = $stmtProv->fetchAll(PDO::FETCH_ASSOC);
                                             Registrado por
                                             <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                         </th>
-                                        <th class="text-center" style="width: 120px;">Acciones</th>
+                                        <th style="width: 150px;">Acciones</th>
                                     </tr>
                                 </thead>
                                 <tbody id="tablaReembolsosBody">
                                     <tr>
-                                        <td colspan="8" class="text-center py-4">
-                                            <div class="spinner-border text-primary" role="status">
-                                                <span class="visually-hidden">Cargando...</span>
-                                            </div>
+                                        <td colspan="8" class="text-center py-4 text-muted">
+                                            Cargando registros...
                                         </td>
                                     </tr>
                                 </tbody>
@@ -125,7 +123,6 @@ $proveedores = $stmtProv->fetchAll(PDO::FETCH_ASSOC);
                         <label class="mb-0 registros-info">Mostrar:</label>
                         <select class="form-select form-select-sm" id="registrosPorPagina" 
                                 style="width: auto;" onchange="cambiarRegistrosPorPagina()">
-                            <option value="10">10</option>
                             <option value="25" selected>25</option>
                             <option value="50">50</option>
                             <option value="100">100</option>

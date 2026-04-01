@@ -24,6 +24,7 @@ $(document).ready(function () {
 
     // NO cerrar filtros al hacer scroll en la página
     $(window).on('scroll', function (e) {
+        // Solo cerrar si el scroll es significativo (más de 50px desde que se abrió)
         if (panelFiltroAbierto && Math.abs($(window).scrollTop() - scrollTopInicial) > 50) {
             cerrarTodosFiltros();
         }
@@ -55,11 +56,11 @@ function cargarDatos() {
                 renderizarPaginacion(response.total_registros);
                 actualizarIndicadoresFiltros();
             } else {
-                console.error('Error: ' + response.message);
+                alert('Error: ' + response.message);
             }
         },
         error: function () {
-            console.error('Error al cargar los datos');
+            alert('Error al cargar los datos');
         }
     });
 }
@@ -93,10 +94,10 @@ function renderizarTabla(datos) {
         // Botones de acciones
         tr.append(`
             <td class="text-center">
-                <a href="reembolsos_ia_imprimir.php?id=${row.id}&fotos=1" target="_blank" class="btn btn-sm btn-outline-success" title="Imprimir Reembolso">
+                <a href="reembolsos_ia_imprimir.php?id=${row.id}&fotos=1" target="_blank" class="btn-accion btn-editar" style="background-color: #28a745;" title="Imprimir Reembolso">
                     <i class="fas fa-print"></i>
                 </a>
-                <button class="btn btn-sm btn-outline-primary" onclick="verDetalle(${row.id})" title="Ver Detalle">
+                <button class="btn-accion btn-editar" onclick="verDetalle(${row.id})" title="Ver Detalle">
                     <i class="fas fa-eye"></i>
                 </button>
             </td>
@@ -122,33 +123,40 @@ function toggleFilter(icon) {
     }
 
     cerrarTodosFiltros();
-    scrollTopInicial = $(window).scrollTop();
+    scrollTopInicial = $(window).scrollTop(); // Guardar posición de scroll
     crearPanelFiltro(th, columna, tipo, icon);
     panelFiltroAbierto = columna;
     $(icon).addClass('active');
+    actualizarIndicadoresFiltros();
 }
 
 // Crear panel de filtro
 function crearPanelFiltro(th, columna, tipo, icon) {
     const panel = $('<div class="filter-panel show"></div>');
-    if (tipo === 'daterange') panel.addClass('has-daterange');
 
+    // Agregar clase especial si es filtro de fecha
+    if (tipo === 'daterange') {
+        panel.addClass('has-daterange');
+    }
+
+    // Ordenamiento
     panel.append(`
         <div class="filter-section">
             <span class="filter-section-title">Ordenar:</span>
             <div class="filter-sort-buttons">
                 <button class="filter-sort-btn ${ordenActivo.columna === columna && ordenActivo.direccion === 'asc' ? 'active' : ''}" 
                         onclick="aplicarOrden('${columna}', 'asc')">
-                    <i class="bi bi-sort-alpha-down"></i> Asc
+                    <i class="bi bi-sort-alpha-down"></i> A→Z
                 </button>
                 <button class="filter-sort-btn ${ordenActivo.columna === columna && ordenActivo.direccion === 'desc' ? 'active' : ''}" 
                         onclick="aplicarOrden('${columna}', 'desc')">
-                    <i class="bi bi-sort-alpha-up"></i> Desc
+                    <i class="bi bi-sort-alpha-up"></i> Z→A
                 </button>
             </div>
         </div>
     `);
 
+    // Botones de acción después del ordenamiento
     panel.append(`
         <div class="filter-actions">
             <button class="filter-action-btn clear" onclick="limpiarFiltro('${columna}')">
@@ -157,29 +165,23 @@ function crearPanelFiltro(th, columna, tipo, icon) {
         </div>
     `);
 
+    // Agregar al body primero
     $('body').append(panel);
 
+    // Filtros según tipo (después de agregar al DOM)
     if (tipo === 'text') {
         const valorActual = filtrosActivos[columna] || '';
         panel.append(`
             <div class="filter-section" style="margin-top: 12px;">
-                <input type="text" class="filter-search" placeholder="Buscar..." 
+                <span class="filter-section-title">Buscar:</span>
+                <input type="text" class="filter-search" placeholder="Escribir..." 
                        value="${valorActual}"
                        oninput="filtrarBusqueda('${columna}', this.value)">
             </div>
         `);
         posicionarPanelFiltro(panel, icon);
     } else if (tipo === 'number') {
-        const valorMin = filtrosActivos[columna]?.min || '';
-        const valorMax = filtrosActivos[columna]?.max || '';
-        panel.append(`
-            <div class="filter-section" style="margin-top: 12px;">
-                <div class="numeric-inputs">
-                    <input type="number" class="filter-search" placeholder="Mín" value="${valorMin}" onchange="filtrarNumerico('${columna}', 'min', this.value)">
-                    <input type="number" class="filter-search" placeholder="Máx" value="${valorMax}" onchange="filtrarNumerico('${columna}', 'max', this.value)">
-                </div>
-            </div>
-        `);
+        crearFiltroNumerico(panel, columna);
         posicionarPanelFiltro(panel, icon);
     } else if (tipo === 'list') {
         cargarOpcionesFiltro(panel, columna, icon);
@@ -189,6 +191,180 @@ function crearPanelFiltro(th, columna, tipo, icon) {
     }
 }
 
+// Crear filtro numérico
+function crearFiltroNumerico(panel, columna) {
+    const valorMin = filtrosActivos[columna]?.min || '';
+    const valorMax = filtrosActivos[columna]?.max || '';
+
+    panel.append(`
+        <div class="filter-section" style="margin-top: 12px;">
+            <span class="filter-section-title">Rango:</span>
+            <div class="numeric-inputs">
+                <input type="number" class="filter-search" placeholder="Mínimo" 
+                       value="${valorMin}"
+                       onchange="filtrarNumerico('${columna}', 'min', this.value)">
+                <input type="number" class="filter-search" placeholder="Máximo" 
+                       value="${valorMax}"
+                       onchange="filtrarNumerico('${columna}', 'max', this.value)">
+            </div>
+        </div>
+    `);
+}
+
+// Filtrar numérico
+function filtrarNumerico(columna, tipo, valor) {
+    if (!filtrosActivos[columna]) {
+        filtrosActivos[columna] = {};
+    }
+
+    if (valor === '') {
+        delete filtrosActivos[columna][tipo];
+        if (Object.keys(filtrosActivos[columna]).length === 0) {
+            delete filtrosActivos[columna];
+        }
+    } else {
+        filtrosActivos[columna][tipo] = valor;
+    }
+
+    paginaActual = 1;
+    cargarDatos();
+}
+
+// Crear calendario para rango de fechas
+function crearCalendarioDoble(panel, columna) {
+    const hoy = new Date();
+    const mesActual = hoy.getMonth();
+    const añoActual = hoy.getFullYear();
+
+    panel.append(`
+        <div class="filter-section" style="margin-top: 8px;">
+            <span class="filter-section-title">Seleccionar Rango:</span>
+            <div class="daterange-calendar-container">
+                <div class="daterange-month-selector">
+                    <select id="mesCalendario" onchange="actualizarCalendarioUnico('${columna}')"></select>
+                    <select id="añoCalendario" onchange="actualizarCalendarioUnico('${columna}')"></select>
+                </div>
+                <div class="daterange-calendar" id="calendarioUnico"></div>
+            </div>
+            <div class="daterange-info mt-2" style="font-size: 0.8rem; color: #666;">
+                <i class="bi bi-info-circle"></i> Haz clic en dos fechas para definir el rango.
+            </div>
+        </div>
+    `);
+
+    setTimeout(() => {
+        const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+            'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+
+        const selectMes = $('#mesCalendario');
+        const selectAño = $('#añoCalendario');
+
+        meses.forEach((mes, idx) => {
+            selectMes.append(`<option value="${idx}" ${idx === mesActual ? 'selected' : ''}>${mes}</option>`);
+        });
+
+        for (let año = añoActual - 10; año <= añoActual + 1; año++) {
+            selectAño.append(`<option value="${año}" ${año === añoActual ? 'selected' : ''}>${año}</option>`);
+        }
+
+        actualizarCalendarioUnico(columna);
+    }, 50);
+}
+
+// Actualizar calendario único
+function actualizarCalendarioUnico(columna) {
+    const mes = parseInt($('#mesCalendario').val());
+    const año = parseInt($('#añoCalendario').val());
+    const calendarioId = '#calendarioUnico';
+
+    const primerDia = new Date(año, mes, 1).getDay();
+    const diasEnMes = new Date(año, mes + 1, 0).getDate();
+
+    const diasSemana = ['D', 'L', 'M', 'M', 'J', 'V', 'S'];
+    let html = '<div class="daterange-calendar-header">';
+    diasSemana.forEach(dia => {
+        html += `<div class="daterange-calendar-day-name">${dia}</div>`;
+    });
+    html += '</div><div class="daterange-calendar-days">';
+
+    // Días vacíos al inicio
+    for (let i = 0; i < primerDia; i++) {
+        html += '<div class="daterange-calendar-day empty"></div>';
+    }
+
+    // Días del mes
+    for (let dia = 1; dia <= diasEnMes; dia++) {
+        const fechaStr = `${año}-${String(mes + 1).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
+        const clases = obtenerClasesCalendario(fechaStr, columna);
+        html += `<div class="daterange-calendar-day ${clases}" onclick="event.stopPropagation(); seleccionarFechaUnico('${fechaStr}', '${columna}')">${dia}</div>`;
+    }
+
+    html += '</div>';
+    $(calendarioId).html(html);
+}
+
+// Obtener clases para el día del calendario
+function obtenerClasesCalendario(fecha, columna) {
+    const fDesde = filtrosActivos[columna]?.desde;
+    const fHasta = filtrosActivos[columna]?.hasta;
+    let clases = [];
+
+    if (fDesde && fecha === fDesde) clases.push('selected');
+    if (fHasta && fecha === fHasta) clases.push('selected');
+
+    if (fDesde && fHasta) {
+        if (fecha > fDesde && fecha < fHasta) {
+            clases.push('in-range');
+        }
+    }
+    return clases.join(' ');
+}
+
+// Seleccionar fecha con lógica inteligente de actualización de rango
+function seleccionarFechaUnico(fecha, columna) {
+    if (window.event) window.event.stopPropagation();
+
+    if (!filtrosActivos[columna]) {
+        filtrosActivos[columna] = { desde: null, hasta: null };
+    }
+
+    let fDesde = filtrosActivos[columna].desde;
+    let fHasta = filtrosActivos[columna].hasta;
+
+    if (!fDesde) {
+        // Primer clic absoluto
+        filtrosActivos[columna].desde = fecha;
+    } else if (!fHasta) {
+        // Segundo clic: definir el rango inicial
+        if (fecha < fDesde) {
+            filtrosActivos[columna].desde = fecha;
+            filtrosActivos[columna].hasta = fDesde;
+        } else {
+            filtrosActivos[columna].hasta = fecha;
+        }
+    } else {
+        // Tercer clic en adelante: actualizar el límite más cercano o el final si está dentro
+        if (fecha < fDesde) {
+            filtrosActivos[columna].desde = fecha;
+        } else if (fecha > fHasta) {
+            filtrosActivos[columna].hasta = fecha;
+        } else {
+            // Si está dentro (o es igual a uno de los límites), actualizamos el "hasta"
+            filtrosActivos[columna].hasta = fecha;
+        }
+    }
+
+    // Actualizar el calendario visualmente
+    actualizarCalendarioUnico(columna);
+
+    // Aplicar filtro si ya tenemos un rango completo
+    if (filtrosActivos[columna].desde && filtrosActivos[columna].hasta) {
+        paginaActual = 1;
+        cargarDatos();
+    }
+}
+
+// Cargar opciones de filtro
 function cargarOpcionesFiltro(panel, columna, icon) {
     $.ajax({
         url: 'ajax/reembolsos_ia_get_opciones_filtro.php',
@@ -198,8 +374,10 @@ function cargarOpcionesFiltro(panel, columna, icon) {
         success: function (response) {
             if (response.success) {
                 let html = '<div class="filter-section" style="margin-top: 12px;">';
-                html += '<input type="text" class="filter-search" placeholder="Filtrar..." onkeyup="buscarEnOpciones(this)">';
+                html += '<span class="filter-section-title">Filtrar por:</span>';
+                html += '<input type="text" class="filter-search" placeholder="Buscar..." onkeyup="buscarEnOpciones(this)">';
                 html += '<div class="filter-options">';
+
                 response.opciones.forEach(opcion => {
                     const checked = filtrosActivos[columna] && filtrosActivos[columna].includes(opcion.valor) ? 'checked' : '';
                     html += `
@@ -210,109 +388,79 @@ function cargarOpcionesFiltro(panel, columna, icon) {
                         </div>
                     `;
                 });
+
                 html += '</div></div>';
                 panel.append(html);
+
+                // Posicionar después de agregar el contenido
                 posicionarPanelFiltro(panel, icon);
             }
         }
     });
 }
 
-function crearCalendarioDoble(panel, columna) {
-    const hoy = new Date();
-    const mesActual = hoy.getMonth();
-    const añoActual = hoy.getFullYear();
-
-    panel.append(`
-        <div class="filter-section" style="margin-top: 8px;">
-            <div class="daterange-calendar-container">
-                <div class="daterange-month-selector">
-                    <select id="mesCalendario" onchange="actualizarCalendarioUnico('${columna}')"></select>
-                    <select id="añoCalendario" onchange="actualizarCalendarioUnico('${columna}')"></select>
-                </div>
-                <div class="daterange-calendar" id="calendarioUnico"></div>
-            </div>
-        </div>
-    `);
-
-    setTimeout(() => {
-        const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-        meses.forEach((mes, idx) => $('#mesCalendario').append(`<option value="${idx}" ${idx === mesActual ? 'selected' : ''}>${mes}</option>`));
-        for (let año = añoActual - 10; año <= añoActual + 1; año++) $('#añoCalendario').append(`<option value="${año}" ${año === añoActual ? 'selected' : ''}>${año}</option>`);
-        actualizarCalendarioUnico(columna);
-    }, 50);
-}
-
-function actualizarCalendarioUnico(columna) {
-    const mes = parseInt($('#mesCalendario').val());
-    const año = parseInt($('#añoCalendario').val());
-    const primerDia = new Date(año, mes, 1).getDay();
-    const diasEnMes = new Date(año, mes + 1, 0).getDate();
-    const diasSemana = ['D', 'L', 'M', 'M', 'J', 'V', 'S'];
-    
-    let html = '<div class="daterange-calendar-header">' + diasSemana.map(d => `<div class="daterange-calendar-day-name">${d}</div>`).join('') + '</div><div class="daterange-calendar-days">';
-    for (let i = 0; i < primerDia; i++) html += '<div class="daterange-calendar-day empty"></div>';
-    for (let dia = 1; dia <= diasEnMes; dia++) {
-        const fechaStr = `${año}-${String(mes + 1).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
-        const clases = obtenerClasesCalendario(fechaStr, columna);
-        html += `<div class="daterange-calendar-day ${clases}" onclick="seleccionarFechaUnico('${fechaStr}', '${columna}')">${dia}</div>`;
-    }
-    $('#calendarioUnico').html(html + '</div>');
-}
-
-function obtenerClasesCalendario(fecha, columna) {
-    const fDesde = filtrosActivos[columna]?.desde;
-    const fHasta = filtrosActivos[columna]?.hasta;
-    let clases = [];
-    if (fDesde && fecha === fDesde) clases.push('selected');
-    if (fHasta && fecha === fHasta) clases.push('selected');
-    if (fDesde && fHasta && fecha > fDesde && fecha < fHasta) clases.push('in-range');
-    return clases.join(' ');
-}
-
-function seleccionarFechaUnico(fecha, columna) {
-    if (!filtrosActivos[columna]) filtrosActivos[columna] = { desde: null, hasta: null };
-    let { desde, hasta } = filtrosActivos[columna];
-
-    if (!desde) filtrosActivos[columna].desde = fecha;
-    else if (!hasta) {
-        if (fecha < desde) {
-            filtrosActivos[columna].desde = fecha;
-            filtrosActivos[columna].hasta = desde;
-        } else {
-            filtrosActivos[columna].hasta = fecha;
-        }
-    } else {
-        if (fecha < desde) filtrosActivos[columna].desde = fecha;
-        else filtrosActivos[columna].hasta = fecha;
-    }
-    actualizarCalendarioUnico(columna);
-    if (filtrosActivos[columna].desde && filtrosActivos[columna].hasta) {
-        paginaActual = 1;
-        cargarDatos();
-    }
-}
-
+// Posicionar panel
 function posicionarPanelFiltro(panel, icon) {
     const iconOffset = $(icon).offset();
+    const iconWidth = $(icon).outerWidth();
+    const iconHeight = $(icon).outerHeight();
     const panelWidth = panel.outerWidth();
+    const panelHeight = panel.outerHeight();
     const windowWidth = $(window).width();
-    let left = iconOffset.left - panelWidth + $(icon).outerWidth();
-    if (left + panelWidth > windowWidth) left = windowWidth - panelWidth - 10;
-    if (left < 10) left = 10;
-    panel.css({ top: (iconOffset.top + $(icon).outerHeight() + 5) + 'px', left: left + 'px' });
+    const windowHeight = $(window).height();
+    const scrollTop = $(window).scrollTop();
+
+    // Intentar posicionar debajo del icono
+    let top = iconOffset.top + iconHeight + 5;
+    let left = iconOffset.left - panelWidth + iconWidth;
+
+    // Ajustar horizontalmente si se sale de la pantalla
+    if (left + panelWidth > windowWidth) {
+        left = windowWidth - panelWidth - 10;
+    }
+    if (left < 10) {
+        left = 10;
+    }
+
+    // Verificar si cabe debajo del icono
+    const espacioAbajo = windowHeight + scrollTop - top;
+    const espacioArriba = iconOffset.top - scrollTop;
+
+    // Si no cabe abajo pero sí arriba, posicionar arriba
+    if (espacioAbajo < panelHeight && espacioArriba > panelHeight) {
+        top = iconOffset.top - panelHeight - 5;
+    }
+
+    // Si no cabe en ningún lado, ajustar al espacio disponible
+    if (top + panelHeight > windowHeight + scrollTop) {
+        top = Math.max(scrollTop + 10, windowHeight + scrollTop - panelHeight - 10);
+    }
+
+    if (top < scrollTop + 10) {
+        top = scrollTop + 10;
+    }
+
+    panel.css({
+        top: top + 'px',
+        left: left + 'px',
+        position: 'fixed' // Cambiado a fixed para alinear con cupones.css
+    });
 }
 
+// Actualizar indicadores
 function actualizarIndicadoresFiltros() {
     $('.filter-icon').removeClass('has-filter');
     Object.keys(filtrosActivos).forEach(columna => {
-        const val = filtrosActivos[columna];
-        if (val && (Object.keys(val).length > 0 || (Array.isArray(val) && val.length > 0))) {
+        const valor = filtrosActivos[columna];
+        if ((Array.isArray(valor) && valor.length > 0) ||
+            (!Array.isArray(valor) && typeof valor === 'object' && Object.keys(valor).length > 0) ||
+            (!Array.isArray(valor) && typeof valor !== 'object' && valor !== '')) {
             $(`th[data-column="${columna}"] .filter-icon`).addClass('has-filter');
         }
     });
 }
 
+// Limpiar filtro
 function limpiarFiltro(columna) {
     delete filtrosActivos[columna];
     cerrarTodosFiltros();
@@ -320,12 +468,14 @@ function limpiarFiltro(columna) {
     cargarDatos();
 }
 
+// Cerrar filtros
 function cerrarTodosFiltros() {
     $('.filter-panel').remove();
     $('.filter-icon').removeClass('active');
     panelFiltroAbierto = null;
 }
 
+// Aplicar orden
 function aplicarOrden(columna, direccion) {
     ordenActivo = { columna, direccion };
     cerrarTodosFiltros();
@@ -333,74 +483,106 @@ function aplicarOrden(columna, direccion) {
     cargarDatos();
 }
 
+// Filtrar búsqueda
 function filtrarBusqueda(columna, valor) {
-    if (valor.trim() === '') delete filtrosActivos[columna];
-    else filtrosActivos[columna] = valor;
-    paginaActual = 1;
-    cargarDatos();
-}
-
-function filtrarNumerico(columna, tipo, valor) {
-    if (!filtrosActivos[columna]) filtrosActivos[columna] = {};
-    if (valor === '') delete filtrosActivos[columna][tipo];
-    else filtrosActivos[columna][tipo] = valor;
-    if (Object.keys(filtrosActivos[columna]).length === 0) delete filtrosActivos[columna];
-    paginaActual = 1;
-    cargarDatos();
-}
-
-function toggleOpcionFiltro(columna, valor, checked) {
-    if (!filtrosActivos[columna]) filtrosActivos[columna] = [];
-    if (checked) {
-        if (!filtrosActivos[columna].includes(valor)) filtrosActivos[columna].push(valor);
+    if (valor.trim() === '') {
+        delete filtrosActivos[columna];
     } else {
-        filtrosActivos[columna] = filtrosActivos[columna].filter(v => v !== valor);
-        if (filtrosActivos[columna].length === 0) delete filtrosActivos[columna];
+        filtrosActivos[columna] = valor;
     }
     paginaActual = 1;
     cargarDatos();
 }
 
+// Toggle opción filtro
+function toggleOpcionFiltro(columna, valor, checked) {
+    if (!filtrosActivos[columna]) {
+        filtrosActivos[columna] = [];
+    }
+    if (checked) {
+        if (!filtrosActivos[columna].includes(valor)) {
+            filtrosActivos[columna].push(valor);
+        }
+    } else {
+        filtrosActivos[columna] = filtrosActivos[columna].filter(v => v !== valor);
+        if (filtrosActivos[columna].length === 0) {
+            delete filtrosActivos[columna];
+        }
+    }
+    paginaActual = 1;
+    cargarDatos();
+}
+
+// Cambiar registros por página
 function cambiarRegistrosPorPagina() {
     registrosPorPagina = parseInt($('#registrosPorPagina').val());
     paginaActual = 1;
     cargarDatos();
 }
 
-function renderizarPaginacion(total) {
+// Renderizar paginación
+function renderizarPaginacion(totalRegistros) {
+    const totalPaginas = Math.ceil(totalRegistros / registrosPorPagina);
     const paginacion = $('#paginacion');
     paginacion.empty();
-    const totalPaginas = Math.ceil(total / registrosPorPagina);
-    if (totalPaginas <= 1) return;
 
-    paginacion.append(`<button class="pagination-btn" onclick="cambiarPagina(${paginaActual - 1})" ${paginaActual === 1 ? 'disabled' : ''}><i class="bi bi-chevron-left"></i></button>`);
-    for (let i = 1; i <= totalPaginas; i++) {
-        if (i === 1 || i === totalPaginas || (i >= paginaActual - 1 && i <= paginaActual + 1)) {
-            paginacion.append(`<button class="pagination-btn ${i === paginaActual ? 'active' : ''}" onclick="cambiarPagina(${i})">${i}</button>`);
-        } else if (i === 2 || i === totalPaginas - 1) {
+    paginacion.append(`
+        <button class="pagination-btn" onclick="cambiarPagina(${paginaActual - 1})" ${paginaActual === 1 ? 'disabled' : ''}>
+            <i class="bi bi-chevron-left"></i>
+        </button>
+    `);
+
+    let inicio = Math.max(1, paginaActual - 2);
+    let fin = Math.min(totalPaginas, paginaActual + 2);
+
+    if (inicio > 1) {
+        paginacion.append(`<button class="pagination-btn" onclick="cambiarPagina(1)">1</button>`);
+        if (inicio > 2) {
             paginacion.append(`<span class="pagination-btn" disabled>...</span>`);
         }
     }
-    paginacion.append(`<button class="pagination-btn" onclick="cambiarPagina(${paginaActual + 1})" ${paginaActual === totalPaginas ? 'disabled' : ''}><i class="bi bi-chevron-right"></i></button>`);
+
+    for (let i = inicio; i <= fin; i++) {
+        const activeClass = i === paginaActual ? 'active' : '';
+        paginacion.append(`<button class="pagination-btn ${activeClass}" onclick="cambiarPagina(${i})">${i}</button>`);
+    }
+
+    if (fin < totalPaginas) {
+        if (fin < totalPaginas - 1) {
+            paginacion.append(`<span class="pagination-btn" disabled>...</span>`);
+        }
+        paginacion.append(`<button class="pagination-btn" onclick="cambiarPagina(${totalPaginas})">${totalPaginas}</button>`);
+    }
+
+    paginacion.append(`
+        <button class="pagination-btn" onclick="cambiarPagina(${paginaActual + 1})" ${paginaActual === totalPaginas ? 'disabled' : ''}>
+            <i class="bi bi-chevron-right"></i>
+        </button>
+    `);
 }
 
-function cambiarPagina(p) {
-    if (p < 1 || p > Math.ceil(totalRegistros / registrosPorPagina)) return;
-    paginaActual = p;
+// Cambiar página
+function cambiarPagina(pagina) {
+    if (pagina < 1 || pagina > Math.ceil(totalRegistros / registrosPorPagina)) return;
+    paginaActual = pagina;
     cargarDatos();
 }
 
+// Buscar en opciones
 function buscarEnOpciones(input) {
     const busqueda = input.value.toLowerCase();
-    $(input).siblings('.filter-options').find('.filter-option').each(function () {
-        $(this).toggle($(this).text().toLowerCase().includes(busqueda));
+    const opciones = $(input).siblings('.filter-options').find('.filter-option');
+    opciones.each(function () {
+        const texto = $(this).text().toLowerCase();
+        $(this).toggle(texto.includes(busqueda));
     });
 }
 
+// Formatear fecha
 function formatearFecha(fecha) {
     if (!fecha) return '-';
-    const d = new Date(fecha);
-    if (isNaN(d.getTime())) return fecha;
     const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-    return `${String(d.getDate()).padStart(2, '0')}-${meses[d.getMonth()]}-${String(d.getFullYear()).slice(-2)}`;
+    const d = new Date(fecha);
+    const año = String(d.getFullYear()).slice(-2);
+    return `${String(d.getDate()).padStart(2, '0')}-${meses[d.getMonth()]}-${año}`;
 }
