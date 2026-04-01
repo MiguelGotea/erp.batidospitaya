@@ -20,23 +20,11 @@ if (!tienePermiso('reembolsos_ia_plantilla', 'vista', $cargoOperario)) {
     exit();
 }
 
-// Obtener proveedores para el select
+// Obtener proveedores para el select (usado en el modal de nuevo, si aplica)
 $stmtProv = $conn->query("SELECT id, nombre FROM proveedores WHERE vigente = 1 ORDER BY nombre ASC");
 $proveedores = $stmtProv->fetchAll(PDO::FETCH_ASSOC);
 
-// Obtener historial
-$stmtHist = $conn->prepare("
-    SELECT s.*, p.nombre as proveedor_nombre, cp.banco, cp.numero_cuenta, o.Nombre as usuario_nombre,
-           CONCAT(cc.Codigo, ' - ', cc.Nombre) as ceco_nombre
-    FROM reembolsos_solicitudes s
-    LEFT JOIN proveedores p ON s.id_proveedor = p.id
-    LEFT JOIN cuenta_proveedor cp ON s.id_cuenta_proveedor = cp.id
-    LEFT JOIN Operarios o ON s.usuario_registro = o.CodOperario
-    LEFT JOIN CentroCostos cc ON s.ceco = cc.Codigo
-    ORDER BY s.created_at DESC
-");
-$stmtHist->execute();
-$historial = $stmtHist->fetchAll(PDO::FETCH_ASSOC);
+// Nota: El historial ahora se carga vía AJAX para soportar filtros de encabezado
 ?>
 
 <!DOCTYPE html>
@@ -83,52 +71,68 @@ $historial = $stmtHist->fetchAll(PDO::FETCH_ASSOC);
                 <div class="card premium-card">
                     <div class="card-body p-0">
                         <div class="table-responsive">
-                            <table class="table table-hover mb-0">
+                            <table class="table table-hover mb-0" id="tablaReembolsos">
                                 <thead>
                                     <tr>
-                                        <th>Fecha</th>
-                                        <th>Proveedor</th>
-                                        <th>Concepto</th>
-                                        <th>CECO</th>
-                                        <th>Monto</th>
-                                        <th>Estado</th>
-                                        <th>Registrado por</th>
-                                        <th class="text-center">Acciones</th>
+                                        <th data-column="fecha_solicitud" data-type="daterange">
+                                            Fecha
+                                            <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                        </th>
+                                        <th data-column="proveedor_nombre" data-type="text">
+                                            Proveedor
+                                            <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                        </th>
+                                        <th data-column="concepto" data-type="text">
+                                            Concepto
+                                            <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                        </th>
+                                        <th data-column="ceco" data-type="list">
+                                            CECO
+                                            <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                        </th>
+                                        <th data-column="total_cordobas" data-type="number">
+                                            Monto
+                                            <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                        </th>
+                                        <th data-column="estado" data-type="list">
+                                            Estado
+                                            <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                        </th>
+                                        <th data-column="usuario_nombre" data-type="text">
+                                            Registrado por
+                                            <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                        </th>
+                                        <th class="text-center" style="width: 120px;">Acciones</th>
                                     </tr>
                                 </thead>
-                                <tbody>
-                                    <?php if (empty($historial)): ?>
-                                        <tr>
-                                            <td colspan="8" class="text-center py-4 text-muted">No hay solicitudes registradas.</td>
-                                        </tr>
-                                    <?php endif; ?>
-                                    <?php foreach ($historial as $reg): ?>
+                                <tbody id="tablaReembolsosBody">
                                     <tr>
-                                        <td><?= formatoFechaCorta($reg['fecha_solicitud']) ?></td>
-                                        <td><?= $reg['proveedor_nombre'] ?? '<span class="text-muted">N/A</span>' ?></td>
-                                        <td><?= $reg['concepto'] ?></td>
-                                        <td><span class="badge bg-light text-dark"><?= $reg['ceco_nombre'] ?? $reg['ceco'] ?></span></td>
-                                        <td class="fw-bold text-primary"><?= $reg['moneda'] == 'Dolares' ? 'US$' : 'C$' ?> <?= number_format($reg['total_cordobas'], 2) ?></td>
-                                        <td>
-                                            <span class="badge bg-<?= $reg['estado'] == 'pendiente' ? 'warning text-dark' : 'success' ?>">
-                                                <?= strtoupper($reg['estado']) ?>
-                                            </span>
-                                        </td>
-                                        <td><?= $reg['usuario_nombre'] ?></td>
-                                        <td class="text-center">
-                                            <a href="reembolsos_ia_imprimir.php?id=<?= $reg['id'] ?>&fotos=1" target="_blank" class="btn btn-sm btn-outline-success" title="Imprimir Reembolso">
-                                                <i class="fas fa-print"></i>
-                                            </a>
-                                            <button class="btn btn-sm btn-outline-primary" onclick="verDetalle(<?= $reg['id'] ?>)" title="Ver Detalle">
-                                                <i class="fas fa-eye"></i>
-                                            </button>
+                                        <td colspan="8" class="text-center py-4">
+                                            <div class="spinner-border text-primary" role="status">
+                                                <span class="visually-hidden">Cargando...</span>
+                                            </div>
                                         </td>
                                     </tr>
-                                    <?php endforeach; ?>
                                 </tbody>
                             </table>
                         </div>
                     </div>
+                </div>
+
+                <!-- Paginación -->
+                <div class="d-flex justify-content-between align-items-center mt-3 mb-5">
+                    <div class="d-flex align-items-center gap-2">
+                        <label class="mb-0 registros-info">Mostrar:</label>
+                        <select class="form-select form-select-sm" id="registrosPorPagina" 
+                                style="width: auto;" onchange="cambiarRegistrosPorPagina()">
+                            <option value="10">10</option>
+                            <option value="25" selected>25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                        <span class="mb-0 registros-info">registros</span>
+                    </div>
+                    <div id="paginacion"></div>
                 </div>
             </div>
         </div>
@@ -181,11 +185,7 @@ $historial = $stmtHist->fetchAll(PDO::FETCH_ASSOC);
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script>
-        function verDetalle(id) {
-            location.href = 'reembolsos_ia_nuevo.php?id=' + id;
-        }
-    </script>
+    <script src="js/reembolsos_ia_historial.js?v=<?php echo mt_rand(1, 10000); ?>"></script>
 
 </body>
 </html>
