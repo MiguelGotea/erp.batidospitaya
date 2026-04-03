@@ -14,6 +14,8 @@ if (!tienePermiso('historial_clientes_club', 'vista', $cargoOperario)) {
     header('Location: /login.php');
     exit();
 }
+
+$tienePermisoVistaCedula = tienePermiso('historial_clientes_club', 'vista_cedula', $cargoOperario);
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -45,7 +47,8 @@ if (!tienePermiso('historial_clientes_club', 'vista', $cargoOperario)) {
                     <?php endif; ?>
                 </div>
                 <div class="table-responsive">
-                    <table class="table table-hover historial-table" id="tablaClientes">
+                    <table class="table table-hover historial-table" id="tablaClientes" 
+                           data-permiso-cedula="<?php echo $tienePermisoVistaCedula ? 'true' : 'false'; ?>">
                         <thead>
                             <tr>
                                 <th data-column="membresia" data-type="text">
@@ -60,6 +63,12 @@ if (!tienePermiso('historial_clientes_club', 'vista', $cargoOperario)) {
                                     Apellido
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
+                                <?php if ($tienePermisoVistaCedula): ?>
+                                    <th data-column="cedula" data-type="text">
+                                        Cédula
+                                        <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                    </th>
+                                <?php endif; ?>
                                 <th data-column="celular" data-type="text">
                                     Celular
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>

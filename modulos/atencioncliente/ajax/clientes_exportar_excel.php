@@ -12,6 +12,8 @@ if (!tienePermiso('historial_clientes_club', 'descargar', $cargoOperario)) {
     die("No tienes permiso para descargar este reporte.");
 }
 
+$tienePermisoVistaCedula = tienePermiso('historial_clientes_club', 'vista_cedula', $cargoOperario);
+
 try {
     $filtros = isset($_POST['filtros']) ? json_decode($_POST['filtros'], true) : [];
     $orden = isset($_POST['orden']) ? json_decode($_POST['orden'], true) : ['columna' => null, 'direccion' => 'asc'];
@@ -83,7 +85,8 @@ try {
                 correo,
                 fecha_registro,
                 nombre_sucursal,
-                ultima_compra
+                ultima_compra,
+                cedula
             FROM (
                 SELECT 
                     c.membresia,
@@ -132,6 +135,9 @@ try {
                     <th>Correo</th>
                     <th>Fecha Inscripción</th>
                     <th>Última Compra</th>
+                    <?php if ($tienePermisoVistaCedula): ?>
+                        <th>Cédula</th>
+                    <?php endif; ?>
                     <th>Sucursal</th>
                 </tr>
             </thead>
@@ -147,6 +153,9 @@ try {
         echo '<td>' . htmlspecialchars((string) ($dato['correo'] ?? '')) . '</td>';
         echo '<td>' . htmlspecialchars((string) ($dato['fecha_registro'] ?? '')) . '</td>';
         echo '<td>' . htmlspecialchars((string) ($dato['ultima_compra'] ?? '-')) . '</td>';
+        if ($tienePermisoVistaCedula) {
+            echo '<td>' . htmlspecialchars((string) ($dato['cedula'] ?? '')) . '</td>';
+        }
         echo '<td>' . htmlspecialchars((string) ($dato['nombre_sucursal'] ?? '')) . '</td>';
         echo '</tr>';
     }

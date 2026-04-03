@@ -17,7 +17,7 @@ try {
     $params = [];
 
     // Filtros de texto
-    $filtrosTexto = ['membresia', 'nombre', 'apellido', 'celular', 'correo'];
+    $filtrosTexto = ['membresia', 'nombre', 'apellido', 'celular', 'correo', 'cedula'];
     foreach ($filtrosTexto as $campo) {
         if (isset($filtros[$campo]) && $filtros[$campo] !== '') {
             $where[] = "$campo LIKE :$campo";
@@ -65,7 +65,7 @@ try {
     // Construir ORDER BY
     $orderClause = '';
     if ($orden['columna']) {
-        $columnas_validas = ['membresia', 'nombre', 'apellido', 'celular', 'fecha_nacimiento', 'correo', 'fecha_registro', 'nombre_sucursal', 'ultima_compra'];
+        $columnas_validas = ['membresia', 'nombre', 'apellido', 'celular', 'fecha_nacimiento', 'correo', 'fecha_registro', 'nombre_sucursal', 'ultima_compra', 'cedula'];
         if (in_array($orden['columna'], $columnas_validas)) {
             $direccion = strtoupper($orden['direccion']) === 'DESC' ? 'DESC' : 'ASC';
             $orderClause = "ORDER BY {$orden['columna']} $direccion";
@@ -96,6 +96,7 @@ try {
                     celular,
                     fecha_nacimiento,
                     correo,
+                    cedula,
                     fecha_registro,
                     nombre_sucursal,
                     (SELECT MAX(v.Fecha) 

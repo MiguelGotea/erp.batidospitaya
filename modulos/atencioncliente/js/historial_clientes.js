@@ -66,7 +66,8 @@ function renderizarTabla(datos) {
     tbody.empty();
 
     if (datos.length === 0) {
-        tbody.append('<tr><td colspan="10" class="text-center py-4">No se encontraron registros</td></tr>');
+        const numColumnas = $('#tablaClientes thead tr th').length;
+        tbody.append(`<tr><td colspan="${numColumnas}" class="text-center py-4">No se encontraron registros</td></tr>`);
         return;
     }
 
@@ -76,6 +77,11 @@ function renderizarTabla(datos) {
         tr.append(`<td>${row.membresia || '-'}</td>`);
         tr.append(`<td>${row.nombre || '-'}</td>`);
         tr.append(`<td>${row.apellido || '-'}</td>`);
+
+        if ($('#tablaClientes').data('permiso-cedula')) {
+            tr.append(`<td>${row.cedula || '-'}</td>`);
+        }
+
         tr.append(`<td>${row.celular || '-'}</td>`);
         tr.append(`<td>${formatearFecha(row.fecha_nacimiento)}</td>`);
         tr.append(`<td>${row.correo || '-'}</td>`);
