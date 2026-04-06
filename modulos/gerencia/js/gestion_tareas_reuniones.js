@@ -156,6 +156,9 @@ function renderizarDatos(grupos) {
         }
         cont.append(crearGrupoHtml(grupo));
     });
+
+    // Detectar solapamientos después de renderizar todo
+    setTimeout(revisarSolapamientos, 100);
 }
 
 function crearSeparadorMes(fecha) {
@@ -257,6 +260,25 @@ function crearItemHtml(item, hoy) {
                 </div>
             </div>
 
+            <div class="item-schedule-row">
+                <div class="schedule-capsule" onclick="event.stopPropagation()">
+                    <button class="btn-sched-adj" onclick="ajustarDuracion(${item.id}, -30)" title="-30 min">
+                        <i class="bi bi-dash"></i>
+                    </button>
+                    <input type="time" class="sched-time" 
+                           value="${item.tipo === 'reunion' ? (item.fecha_reunion || '').substring(11, 16) : (item.hora_tarea || '08:00').substring(0, 5)}"
+                           onchange="actualizarHoraDirecto(${item.id}, this.value)"
+                           data-item-id="${item.id}">
+                    <div class="sched-dur" title="Duración actual">
+                        ${item.duracion_min || 60}m
+                    </div>
+                    <button class="btn-sched-adj" onclick="ajustarDuracion(${item.id}, 30)" title="+30 min">
+                        <i class="bi bi-plus"></i>
+                    </button>
+                </div>
+                <div id="suggestion-wrap-${item.id}"></div>
+            </div>
+
             
             <div class="item-meta-row">
                 ${item.tipo === 'tarea' ? `
@@ -275,12 +297,6 @@ function crearItemHtml(item, hoy) {
                 </div>
                 ` : ''}
                 <div class="item-meta-col">
-                    ${item.tipo === 'tarea' && item.hora_tarea ? `
-                        <div class="item-time-badge" title="Hora estimada de inicio">
-                            <i class="bi bi-clock-fill me-1"></i>
-                            ${item.hora_tarea.substring(0, 5)}
-                        </div>
-                    ` : ''}
                     <span class="badge-estado ${item.estado}">${formatearEstado(item.estado)}</span>
                 </div>
                 <div class="item-meta-col">
@@ -602,7 +618,156 @@ function moverVencidasHoy() {
     });
 }
 
-// ── Prioridad (Toggle Premium 3 Estados) ─────────────
+// ── Programación y Solapamientos ─────────────────────
+
+function revisarSolapamientos() {
+    // Limpiar estados previos
+    $('.item-card-row').removeClass('conflict-overlap');
+    $('.conflict-badge').remove();
+    $('.suggestion-btn').remove();
+
+    $('.grupo-body').each(function () {
+        const items = [];
+        $(this).find('.item-card-row').each(function () {
+            const card = $(this);
+            const id = card.data('id');
+            const tipo = card.data('tipo');
+            
+            // Obtener hora y duración desde el DOM o estado
+            const horaStr = card.find('.sched-time').val();
+            const dur = parseInt(card.find('.sched-dur').text()) || 60;
+            
+            if (!horaStr) return;
+
+            const [h, m] = horaStr.split(':').map(Number);
+            const inicio = h * 60 + m;
+            const fin = inicio + dur;
+
+            items.push({ id, inicio, fin, card });
+        });
+
+        // Detectar cruces
+        for (let i = 0; i < items.length; i++) {
+            for (let j = i + 1; j < items.length; j++) {
+                const a = items[i];
+                const b = items[j];
+
+                // Si se traslapan
+                if (a.inicio < b.fin && b.inicio < a.fin) {
+                    a.card.addClass('conflict-overlap');
+                    b.card.addClass('conflict-overlap');
+                    
+                    // Añadir badges de conflicto si no existen
+                    if (!a.card.find('.conflict-badge').length) {
+                        a.card.append('<span class="conflict-badge"><i class="bi bi-exclamation-triangle-fill"></i> Solapamiento</span>');
+                        añadirBotonSugerencia(a.card, a.id);
+                    }
+                    if (!b.card.find('.conflict-badge').length) {
+                        b.card.append('<span class="conflict-badge"><i class="bi bi-exclamation-triangle-fill"></i> Solapamiento</span>');
+                        añadirBotonSugerencia(b.card, b.id);
+                    }
+                }
+            }
+        }
+    });
+}
+
+function añadirBotonSugerencia(card, id) {
+    if (card.find('.suggestion-btn').length) return;
+    const btn = $(`<button class="suggestion-btn" onclick="event.stopPropagation(); aplicarSugerencia(${id})">
+        <i class="bi bi-magic me-1"></i> Resolver
+    </button>`);
+    card.find('.item-schedule-row').append(btn);
+}
+
+function actualizarHoraDirecto(id, nuevaHora) {
+    ejecutarCambioHorario(id, nuevaHora, null);
+}
+
+function ajustarDuracion(id, delta) {
+    const card = $(`.item-card-row[data-id="${id}"]`);
+    let durActual = parseInt(card.find('.sched-dur').text()) || 60;
+    let nuevaDur = Math.max(15, durActual + delta);
+    
+    ejecutarCambioHorario(id, null, nuevaDur);
+}
+
+function ejecutarCambioHorario(id, hora, duracion) {
+    $.ajax({
+        url: 'ajax/gestion_tareas_reuniones_actualizar_horario.php',
+        method: 'POST',
+        data: { id: id, hora_tarea: hora, duracion_min: duracion },
+        dataType: 'json',
+        success: function (r) {
+            if (r.success) {
+                // Actualizar visualmente sin recargar todo si es posible
+                const card = $(`.item-card-row[data-id="${id}"]`);
+                if (duracion !== null) card.find('.sched-dur').text(duracion + 'm');
+                // En lugar de recargar todo, revisamos solapamientos
+                revisarSolapamientos();
+            } else {
+                Swal.fire('Error', r.message, 'error');
+            }
+        },
+        error: function () { Swal.fire('Error', 'No se pudo actualizar el horario', 'error'); }
+    });
+}
+
+function aplicarSugerencia(id) {
+    const card = $(`.item-card-row[data-id="${id}"]`);
+    const grupoBody = card.closest('.grupo-body');
+    
+    // Obtener todos los items del día
+    const scheduled = [];
+    grupoBody.find('.item-card-row').each(function () {
+        const c = $(this);
+        const cid = c.data('id');
+        if (cid === id) return;
+
+        const hStr = c.find('.sched-time').val();
+        const d = parseInt(c.find('.sched-dur').text()) || 60;
+        if (!hStr) return;
+
+        const [h, m] = hStr.split(':').map(Number);
+        const start = h * 60 + m;
+        scheduled.push({ start, end: start + d });
+    });
+
+    // Ordenar por inicio
+    scheduled.sort((a,b) => a.start - b.start);
+
+    // Encontrar el primer hueco disponible después del último o entre ellos
+    // Empezamos a las 08:00 (480 min)
+    let suggestedStart = 480; 
+    const durecionReq = parseInt(card.find('.sched-dur').text()) || 60;
+
+    for (let slot of scheduled) {
+        if (suggestedStart + durecionReq <= slot.start) {
+            // Cabe aquí
+            break;
+        }
+        suggestedStart = Math.max(suggestedStart, slot.end);
+    }
+
+    // Convertir min a HH:mm
+    const hh = Math.floor(suggestedStart / 60).toString().padStart(2, '0');
+    const mm = (suggestedStart % 60).toString().padStart(2, '0');
+    const horaFinal = `${hh}:${mm}`;
+
+    Swal.fire({
+        title: 'Sugerencia de Agenda',
+        text: `¿Mover a las ${horaFinal} para evitar conflictos?`,
+        icon: 'info',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, mover',
+        cancelButtonText: 'No'
+    }).then(res => {
+        if (res.isConfirmed) {
+            card.find('.sched-time').val(horaFinal);
+            ejecutarCambioHorario(id, horaFinal, null);
+        }
+    });
+}
 function cambiarPrioridadToggle(id, nueva) {
     const toggle = $(`#toggle-prio-${id}`);
     const actual = toggle.attr('data-priority');
