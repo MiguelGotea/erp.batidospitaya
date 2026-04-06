@@ -267,13 +267,13 @@ function crearItemHtml(item, hoy) {
                 <div class="time-range-wrap" onclick="event.stopPropagation()">
                     <div class="time-selector-premium">
                         <div class="ts-unit">
-                            <i class="bi bi-chevron-up ts-arrow" onclick="ajustarHora(${item.id}, 1)"></i>
+                            <i class="bi bi-chevron-up ts-arrow" onclick="ajustarHora(this, ${item.id}, 1)"></i>
                             <span class="ts-val" id="ts-h-${item.id}">${(item.tipo === 'reunion' ? (item.fecha_reunion || '').substring(11, 13) : (item.hora_tarea || '08:00').substring(0, 2))}</span>
-                            <i class="bi bi-chevron-down ts-arrow" onclick="ajustarHora(${item.id}, -1)"></i>
+                            <i class="bi bi-chevron-down ts-arrow" onclick="ajustarHora(this, ${item.id}, -1)"></i>
                         </div>
                         <span class="time-sep">:</span>
                         <div class="ts-unit">
-                            <span class="ts-min-toggle" onclick="toggleMinutos(${item.id})" id="ts-m-${item.id}">
+                            <span class="ts-min-toggle" onclick="toggleMinutos(this, ${item.id})" id="ts-m-${item.id}">
                                 ${(item.tipo === 'reunion' ? (item.fecha_reunion || '').substring(14, 16) : (item.hora_tarea || '08:00').substring(3, 5))}
                             </span>
                         </div>
@@ -285,11 +285,11 @@ function crearItemHtml(item, hoy) {
                 </div>
                 
                 <div class="duration-stepper" onclick="event.stopPropagation()">
-                    <button class="btn-dur-adj" onclick="ajustarDuracion(${item.id}, -30)" title="-30 min">
+                    <button class="btn-dur-adj" onclick="ajustarDuracion(this, ${item.id}, -30)" title="-30 min">
                         <i class="bi bi-dash"></i>
                     </button>
                     <span class="dur-val" id="dur-val-${item.id}">${item.duracion_min || 60}m</span>
-                    <button class="btn-dur-adj" onclick="ajustarDuracion(${item.id}, 30)" title="+30 min">
+                    <button class="btn-dur-adj" onclick="ajustarDuracion(this, ${item.id}, 30)" title="+30 min">
                         <i class="bi bi-plus"></i>
                     </button>
                 </div>
@@ -691,30 +691,39 @@ function añadirBotonResolver(card, id) {
     card.append(btn);
 }
 
-function ajustarHora(id, delta) {
-    const hEl = $(`#ts-h-${id}`);
+function ajustarHora(el, id, delta) {
+    const wrap = $(el).closest('.time-selector-premium');
+    const hEl = wrap.find('.ts-val');
+    const mEl = wrap.find('.ts-min-toggle');
+
     let h = parseInt(hEl.text());
     h = (h + delta + 24) % 24;
     const hStr = h.toString().padStart(2, '0');
     hEl.text(hStr);
 
-    const mStr = $(`#ts-m-${id}`).text();
+    const mStr = mEl.text();
     ejecutarCambioHorario(id, `${hStr}:${mStr}`, null);
 }
 
-function toggleMinutos(id) {
-    const mEl = $(`#ts-m-${id}`);
-    const actual = mEl.text();
+function toggleMinutos(el, id) {
+    const wrap = $(el).closest('.time-selector-premium');
+    const hEl = wrap.find('.ts-val');
+    const mEl = wrap.find('.ts-min-toggle');
+
+    const actual = mEl.text().trim();
     const nuevo = actual === '00' ? '30' : '00';
     mEl.text(nuevo);
 
-    const hStr = $(`#ts-h-${id}`).text();
+    const hStr = hEl.text();
     ejecutarCambioHorario(id, `${hStr}:${nuevo}`, null);
 }
 
 function calcularHoraFin(inicio, duracion) {
-    if (!inicio) return '';
-    const [h, m] = inicio.split(':').map(Number);
+    if (!inicio || inicio.length < 5) return '';
+    const parts = inicio.split(':');
+    if (parts.length < 2) return '';
+    const h = parseInt(parts[0]);
+    const m = parseInt(parts[1]);
     let totalMin = h * 60 + m + parseInt(duracion);
     
     const fh = Math.floor((totalMin / 60) % 24).toString().padStart(2, '0');
@@ -722,11 +731,13 @@ function calcularHoraFin(inicio, duracion) {
     return `${fh}:${fm}`;
 }
 
-function ajustarDuracion(id, delta) {
-    const dEl = $(`#dur-val-${id}`);
+function ajustarDuracion(el, id, delta) {
+    const wrap = $(el).closest('.duration-stepper');
+    const dEl = wrap.find('.dur-val');
     let durActual = parseInt(dEl.text()) || 60;
     let nuevaDur = Math.max(15, durActual + delta);
     
+    dEl.text(nuevaDur + 'm'); // Actualización visual inmediata
     ejecutarCambioHorario(id, null, nuevaDur);
 }
 
