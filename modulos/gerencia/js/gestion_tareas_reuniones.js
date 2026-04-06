@@ -829,7 +829,8 @@ function dibujarLineaAhora() {
     $('.now-indicator-row').remove();
 
     const hoy = obtenerFechaHoy();
-    const grupoHoy = $(`.grupo-body[data-date="${hoy}"]`);
+    // Corregir selector: el atributo es data-fecha-grupo, no data-date
+    const grupoHoy = $(`.grupo-body[data-fecha-grupo="${hoy}"]`);
     if (!grupoHoy.length) return;
 
     const ahora = new Date();
@@ -837,8 +838,19 @@ function dibujarLineaAhora() {
 
     let insertado = false;
     grupoHoy.find('.item-card-row').each(function () {
-        const h = $(this).find('.ts-val').first().text();
-        const m = $(this).find('.ts-min-toggle').first().text();
+        // Intentar obtener hora de selector premium o de resumen de texto
+        let h = $(this).find('.ts-val').text().trim();
+        let m = $(this).find('.ts-min-toggle').text().trim();
+
+        if (!h || !m) {
+            const fullTime = $(this).find('.st-time').first().text().trim();
+            if (fullTime && fullTime.includes(':')) {
+                const parts = fullTime.split(':');
+                h = parts[0];
+                m = parts[1];
+            }
+        }
+
         if (!h || !m) return;
 
         const minItem = parseInt(h) * 60 + parseInt(m);
