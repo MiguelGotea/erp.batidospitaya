@@ -5,7 +5,6 @@ require_once '../../../core/database/conexion.php';
 require_once '../../../core/helpers/funciones.php';
 header('Content-Type: application/json');
 
-
 try {
     global $conn;
     $id = intval($_POST['id'] ?? 0);
@@ -29,7 +28,7 @@ try {
 
     if (isset($_POST['hora_tarea']) && $_POST['hora_tarea'] !== '') {
         $horaTarea = trim($_POST['hora_tarea']);
-        
+
         // Asegurar formato HH:mm
         if (strlen($horaTarea) === 4 && strpos($horaTarea, ':') === 1) {
             $horaTarea = '0' . $horaTarea;
