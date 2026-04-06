@@ -136,7 +136,7 @@ $permisoCancelar        = tienePermiso('gestion_tareas_reuniones', 'cancelar_tar
                             <label for="descripcionTarea" class="form-label">Descripción</label>
                             <textarea class="form-control" id="descripcionTarea" name="descripcion" rows="4" placeholder="Detalla el objetivo de la tarea..."></textarea>
                         </div>
-                        <div class="row g-3">
+                        <div class="row g-3 mb-3">
                             <div class="col-md-4">
                                 <label for="cargoAsignadoTarea" class="form-label">Asignar a *</label>
                                 <select class="form-select" id="cargoAsignadoTarea" name="cod_cargo_asignado" required>
@@ -154,6 +154,16 @@ $permisoCancelar        = tienePermiso('gestion_tareas_reuniones', 'cancelar_tar
                                     <option value="media" selected>Media</option>
                                     <option value="alta">Alta</option>
                                 </select>
+                            </div>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="horaTarea" class="form-label">Hora Estimada Inicio</label>
+                                <input type="time" class="form-control" id="horaTarea" name="hora_tarea">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="duracionTarea" class="form-label">Duración (min)</label>
+                                <input type="number" class="form-control" id="duracionTarea" name="duracion_min" value="60" min="1">
                             </div>
                         </div>
                         <div class="mb-3 mt-3">
@@ -195,7 +205,7 @@ $permisoCancelar        = tienePermiso('gestion_tareas_reuniones', 'cancelar_tar
                             <label for="descripcionTareaSolicitud" class="form-label">Descripción</label>
                             <textarea class="form-control" id="descripcionTareaSolicitud" name="descripcion" rows="4" placeholder="Detalla lo que se requiere..."></textarea>
                         </div>
-                        <div class="row g-3">
+                        <div class="row g-3 mb-3">
                             <div class="col-md-4">
                                 <label for="cargoAsignadoTareaSolicitud" class="form-label">Solicitar a *</label>
                                 <select class="form-select" id="cargoAsignadoTareaSolicitud" name="cod_cargo_asignado" required>
@@ -213,6 +223,16 @@ $permisoCancelar        = tienePermiso('gestion_tareas_reuniones', 'cancelar_tar
                                     <option value="media" selected>Media</option>
                                     <option value="alta">Alta</option>
                                 </select>
+                            </div>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="horaTareaSolicitud" class="form-label">Hora Estimada Inicio</label>
+                                <input type="time" class="form-control" id="horaTareaSolicitud" name="hora_tarea">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="duracionTareaSolicitud" class="form-label">Duración (min)</label>
+                                <input type="number" class="form-control" id="duracionTareaSolicitud" name="duracion_min" value="60" min="1">
                             </div>
                         </div>
                         <div class="mb-3 mt-3">

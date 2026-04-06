@@ -347,6 +347,19 @@ body.is-dragging {
     white-space: nowrap;
 }
 
+.item-time-badge {
+    display: inline-flex;
+    align-items: center;
+    background: #f0f4f3;
+    color: #0E544C;
+    padding: 2px 7px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 10.5px;
+    margin-right: 4px;
+    border: 1px solid #d4e6e3;
+}
+
 /* ── Badges ──────────────────────────────────────── */
 .badge-estado {
     padding: 2px 8px;
@@ -661,121 +674,77 @@ body.is-dragging {
 .drag-handle:hover { color: #888; }
 .drag-handle:active { cursor: grabbing; }
 
-/* ── Priority Picker Premium ── */
-.priority-picker-wrap {
+/* ── Priority Toggle Premium ── */
+.priority-toggle-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.priority-toggle-premium {
     position: relative;
-    z-index: 10;
-}
-
-/* ── Priority Wheel Picker Premium ── */
-.priority-picker-wrap.expanded {
-    z-index: 10000 !important;
-}
-
-.priority-wheel-container {
-    position: absolute;
-    top: 50%;
-    left: 0;
-    transform: translateY(-50%) scale(0);
-    width: 110px;
-    height: 180px;
-    /* Quitamos el fondo sólido para que no se vea como una "caja" encerrada */
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    overflow: visible; /* Permitir que la magnificación respire */
-    z-index: 1000;
-    opacity: 0;
-    pointer-events: none;
-    transition: transform 0.4s cubic-bezier(0.19, 1, 0.22, 1), opacity 0.2s;
-    user-select: none;
-    perspective: 1000px;
-}
-
-.priority-picker-wrap.expanded .priority-wheel-container {
-    transform: translateY(-50%) scale(1);
-    opacity: 1;
-    pointer-events: auto;
-}
-
-.wheel-track {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 100%;
-}
-
-.wheel-lens {
-    position: absolute;
-    top: 50%;
-    left: -5px;
-    width: calc(100% + 10px);
-    height: 52px;
-    transform: translateY(-50%);
-    /* Eliminamos fondo, sombras y bordes redondeados para evitar la "caja" */
-    background: transparent;
-    border-top: 1px solid rgba(0,0,0,0.1);
-    border-bottom: 1px solid rgba(0,0,0,0.1);
-    pointer-events: none;
-    z-index: 5;
-}
-
-.p-opt {
-    width: 100%;
-    height: 50px;
+    width: 66px;
+    height: 24px;
+    background: #eef2f1;
+    border-radius: 20px;
     display: flex;
     align-items: center;
-    justify-content: center;
-    font-size: 11px;
-    font-weight: 800;
-    text-transform: uppercase;
-    color: #fff;
-    transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+    justify-content: space-between;
+    padding: 0 4px;
     cursor: pointer;
-    transform-style: preserve-3d;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.06);
+    border: 1px solid #dde8e6;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.priority-badge {
-    padding: 3px 10px;
-    border-radius: 7px;
-    font-size: 10px;
-    font-weight: 700;
-    text-transform: uppercase;
-    color: #fff;
-    transition: transform 0.2s;
-    cursor: pointer;
-    display: inline-block;
-    min-width: 55px;
-    text-align: center;
-}
-.priority-badge:hover { transform: scale(1.05); }
-
-/* Wheel Magnification Effect - Only Scale, No Shadows */
-.p-opt.focus {
-    transform: scale(1.4);
-    z-index: 10;
-    opacity: 1;
-    filter: brightness(1.05);
+.pt-dot {
+    position: absolute;
+    top: 3px;
+    width: 16px;
+    height: 16px;
+    background: #94a3b8; /* Default gray if no state */
+    border-radius: 50%;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    z-index: 2;
 }
 
-.p-opt.prev {
-    transform: translateY(-5px) scale(0.85);
-    opacity: 1;
+/* Baja: Izquierda (Azul) */
+.priority-toggle-premium[data-priority="baja"] .pt-dot {
+    left: 4px;
+    background: #1e88e5;
+    box-shadow: 0 1px 6px rgba(30, 136, 229, 0.4);
+}
+/* Media: Centro (Amarillo) */
+.priority-toggle-premium[data-priority="media"] .pt-dot {
+    left: 24px;
+    background: #ffb300;
+    box-shadow: 0 1px 6px rgba(255, 179, 0, 0.4);
+}
+/* Alta: Derecha (Rojo) */
+.priority-toggle-premium[data-priority="alta"] .pt-dot {
+    left: 44px;
+    background: #e53935;
+    box-shadow: 0 1px 6px rgba(229, 57, 53, 0.4);
 }
 
-.p-opt.next {
-    transform: translateY(5px) scale(0.85);
-    opacity: 1;
+/* Null / Default state */
+.priority-toggle-premium[data-priority=""] .pt-dot {
+    left: 24px;
+    background: #94a3b8;
 }
 
-.p-opt.hidden {
-    display: none;
+/* Zonas de clic para las 3 posiciones */
+.pt-zone {
+    flex: 1;
+    height: 100%;
+    z-index: 3;
 }
 
-.p-opt.alta, .priority-badge.alta  { background-color: #e53935; }
-.p-opt.media, .priority-badge.media { background-color: #ffb300; }
-.p-opt.baja, .priority-badge.baja  { background-color: #1e88e5; }
+.priority-toggle-premium:hover {
+    border-color: #51B8AC;
+    background: #fdfdfd;
+}
 
 /* Badge extra para reuniones concluidas por fecha */
 .badge-estado.concluida { background: #f3e8fd; color: #7b2d8b; }

@@ -191,7 +191,13 @@ function agruparPorMes($items)
             $wa = $prioridadWeight($a['prioridad'] ?? 'media');
             $wb = $prioridadWeight($b['prioridad'] ?? 'media');
             if ($wa !== $wb) return $wa - $wb;
-            // Si tienen misma prioridad, mantener orden cronológico (por ID o hora si aplica)
+
+            // Si tienen misma prioridad, ordenar por hora
+            $ha = $a['tipo'] === 'reunion' ? substr($a['fecha_reunion'], 11, 8) : ($a['hora_tarea'] ?? '23:59:59');
+            $hb = $b['tipo'] === 'reunion' ? substr($b['fecha_reunion'], 11, 8) : ($b['hora_tarea'] ?? '23:59:59');
+            
+            if ($ha !== $hb) return strcmp($ha, $hb);
+
             return $a['id'] - $b['id'];
         });
     }

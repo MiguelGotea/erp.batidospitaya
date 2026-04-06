@@ -261,22 +261,26 @@ function crearItemHtml(item, hoy) {
             <div class="item-meta-row">
                 ${item.tipo === 'tarea' ? `
                 <div class="item-meta-col">
-                    <div class="priority-picker-wrap" id="picker-wrap-${item.id}" data-current="${item.prioridad || 'media'}" onclick="event.stopPropagation(); expandirPrioridad(${item.id})">
-                        <span class="priority-badge ${item.prioridad || 'media'}" id="badge-prio-${item.id}">
-                            ${item.prioridad || 'media'}
-                        </span>
-                        <div class="priority-wheel-container">
-                            <div class="wheel-track">
-                                <div class="p-opt baja" data-value="baja" onclick="event.stopPropagation(); confirmarPrioridad(${item.id}, 'baja')">Baja</div>
-                                <div class="p-opt media" data-value="media" onclick="event.stopPropagation(); confirmarPrioridad(${item.id}, 'media')">Media</div>
-                                <div class="p-opt alta" data-value="alta" onclick="event.stopPropagation(); confirmarPrioridad(${item.id}, 'alta')">Alta</div>
-                            </div>
-                            <div class="wheel-lens"></div>
+                    <div class="priority-toggle-container" onclick="event.stopPropagation();">
+                        <div class="priority-toggle-premium" 
+                             id="toggle-prio-${item.id}" 
+                             data-priority="${item.prioridad || 'media'}"
+                             title="Prioridad: ${item.prioridad || 'media'}">
+                            <div class="pt-dot"></div>
+                            <div class="pt-zone" onclick="cambiarPrioridadToggle(${item.id}, 'baja')" title="Baja"></div>
+                            <div class="pt-zone" onclick="cambiarPrioridadToggle(${item.id}, 'media')" title="Media"></div>
+                            <div class="pt-zone" onclick="cambiarPrioridadToggle(${item.id}, 'alta')" title="Alta"></div>
                         </div>
                     </div>
                 </div>
                 ` : ''}
                 <div class="item-meta-col">
+                    ${item.tipo === 'tarea' && item.hora_tarea ? `
+                        <div class="item-time-badge" title="Hora estimada de inicio">
+                            <i class="bi bi-clock-fill me-1"></i>
+                            ${item.hora_tarea.substring(0, 5)}
+                        </div>
+                    ` : ''}
                     <span class="badge-estado ${item.estado}">${formatearEstado(item.estado)}</span>
                 </div>
                 <div class="item-meta-col">
@@ -598,119 +602,37 @@ function moverVencidasHoy() {
     });
 }
 
-// ── Prioridad (Wheel Picker Vertical Premium) ────────
-function expandirPrioridad(id) {
-    const wrap = $(`#picker-wrap-${id}`);
-    const isExpanding = !wrap.hasClass('expanded');
+// ── Prioridad (Toggle Premium 3 Estados) ─────────────
+function cambiarPrioridadToggle(id, nueva) {
+    const toggle = $(`#toggle-prio-${id}`);
+    const actual = toggle.attr('data-priority');
+    if (actual === nueva) return;
 
-    // Cerrar cualquier otro abierto
-    $('.priority-picker-wrap').not(wrap).removeClass('expanded');
+    // Efecto visual inmediato
+    toggle.attr('data-priority', nueva);
+    toggle.attr('title', 'Prioridad: ' + nueva);
 
-    if (isExpanding) {
-        wrap.addClass('expanded');
-        initWheelPicker(id);
-    }
-
-    // Cerrar al hacer clic fuera
-    $(document).off('click.closePicker').on('click.closePicker', function (e) {
-        if (!$(e.target).closest('.priority-picker-wrap').length) {
-            $('.priority-picker-wrap').removeClass('expanded');
-            $(document).off('click.closePicker');
-        }
-    });
-}
-
-function initWheelPicker(id) {
-    const wrap = $(`#picker-wrap-${id}`);
-    const container = wrap.find('.priority-wheel-container');
-    const options = ['alta', 'media', 'baja']; // Orden de importancia
-    let currentVal = wrap.attr('data-current') || 'media';
-    let currentIdx = options.indexOf(currentVal);
-
-    // Función para actualizar la "rueda" visualmente
-    function updateWheelVisuals(idx) {
-        currentIdx = idx; // Actualizar el índice dinámico
-        const items = wrap.find('.p-opt');
-        items.removeClass('focus next prev hidden');
-
-        items.each(function () {
-            const val = $(this).attr('data-value');
-            const i = options.indexOf(val);
-
-
-            if (i === idx) {
-                $(this).addClass('focus');
-            } else if (i === (idx + 1) % 3) {
-                $(this).addClass('next');
-            } else if (i === (idx - 1 + 3) % 3) {
-                $(this).addClass('prev');
-            } else {
-                $(this).addClass('hidden');
-            }
-        });
-    }
-
-    updateWheelVisuals(currentIdx);
-
-    // Scroll wheel interaction
-    container.off('wheel').on('wheel', function (e) {
-        e.preventDefault();
-        e.stopPropagation();
-
-        if (e.originalEvent.deltaY > 0) {
-            currentIdx = (currentIdx + 1) % 3;
-        } else {
-            currentIdx = (currentIdx - 1 + 3) % 3;
-        }
-
-        updateWheelVisuals(currentIdx);
-    });
-
-    // Mouse focus interaction (movimiento del mouse para elegir)
-    container.off('mousemove').on('mousemove', function (e) {
-        const rect = this.getBoundingClientRect();
-        const relY = e.clientY - rect.top;
-        const height = rect.height;
-
-        let targetIdx;
-        // La interacción debe ser relativa a la posición actual para evitar saltos bruscos
-        if (relY < height * 0.38) targetIdx = (currentIdx - 1 + 3) % 3;
-        else if (relY > height * 0.62) targetIdx = (currentIdx + 1) % 3;
-        else targetIdx = currentIdx;
-
-        updateWheelVisuals(targetIdx);
-    });
-
-    // Resetear al salir el mouse para que vuelva a la selección confirmada (el valor de data-current)
-    container.off('mouseleave').on('mouseleave', function () {
-        const confirmedVal = wrap.attr('data-current') || 'media';
-        updateWheelVisuals(options.indexOf(confirmedVal));
-    });
-
-    // CLICK EN CUALQUIER PARTE DE LA RUEDA CONFIRMA LA SELECCIÓN ACTUAL VISUAL
-    container.off('click').on('click', function (e) {
-        e.stopPropagation();
-        // Confirmamos el valor que tenemos actualmente en el foco visual
-        const valueToSet = options[currentIdx];
-        confirmarPrioridad(id, valueToSet);
-    });
-}
-
-function confirmarPrioridad(id, nueva) {
     $.ajax({
         url: 'ajax/gestion_tareas_reuniones_actualizar_prioridad.php',
         method: 'POST',
         data: { id: id, prioridad: nueva },
         dataType: 'json',
         success: function (r) {
-            if (r.success) {
-                $('.priority-picker-wrap').removeClass('expanded');
-                cargarDatos();
-            } else {
+            if (!r.success) {
+                // Revertir si falla
+                toggle.attr('data-priority', actual);
+                toggle.attr('title', 'Prioridad: ' + actual);
                 Swal.fire('Error', r.message, 'error');
+            } else {
+                // Opcional: recargar datos para refrescar ordenación si es necesario
+                // Aunque el cambio visual ya se hizo, la ordenación puede cambiar
+                cargarDatos();
             }
         },
-        error: function () { Swal.fire('Error', 'No se pudo cambiar la prioridad', 'error'); }
+        error: function () {
+            toggle.attr('data-priority', actual);
+            Swal.fire('Error', 'No se pudo cambiar la prioridad', 'error');
+        }
     });
 }
 

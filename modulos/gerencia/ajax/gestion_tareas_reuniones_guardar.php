@@ -21,6 +21,8 @@ try {
     $codCargoAsignado = intval($_POST['cod_cargo_asignado'] ?? 0);
     $fechaMeta = $_POST['fecha_meta'] ?? '';
     $prioridad = $_POST['prioridad'] ?? 'media';
+    $horaTarea = !empty($_POST['hora_tarea']) ? $_POST['hora_tarea'] : null;
+    $duracionMin = intval($_POST['duracion_min'] ?? 60);
 
     if (empty($titulo) || $codCargoAsignado <= 0 || empty($fechaMeta)) {
         throw new Exception('Datos incompletos');
@@ -32,10 +34,10 @@ try {
     // Insertar tarea
     $sql = "INSERT INTO gestion_tareas_reuniones_items 
             (tipo, titulo, descripcion, cod_cargo_asignado, cod_cargo_creador, 
-             cod_operario_creador, fecha_meta, estado, prioridad, fecha_creacion) 
+             cod_operario_creador, fecha_meta, hora_tarea, duracion_min, estado, prioridad, fecha_creacion) 
             VALUES 
             ('tarea', :titulo, :descripcion, :cod_cargo_asignado, :cod_cargo_creador, 
-             :cod_operario_creador, :fecha_meta, :estado, :prioridad, NOW())";
+             :cod_operario_creador, :fecha_meta, :hora_tarea, :duracion_min, :estado, :prioridad, NOW())";
 
     $stmt = $conn->prepare($sql);
     $stmt->execute([
@@ -45,6 +47,8 @@ try {
         ':cod_cargo_creador' => $codCargo,
         ':cod_operario_creador' => $codOperario,
         ':fecha_meta' => $fechaMeta,
+        ':hora_tarea' => $horaTarea,
+        ':duracion_min' => $duracionMin,
         ':estado' => $estado,
         ':prioridad' => $prioridad
     ]);

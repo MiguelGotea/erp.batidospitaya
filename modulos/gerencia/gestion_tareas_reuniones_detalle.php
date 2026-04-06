@@ -208,6 +208,18 @@ if ($esReunion) {
                                                 <?php endif; ?>
                                             </p>
                                         </div>
+                                        <div class="col-md-3">
+                                            <label class="fw-bold small text-muted">Hora Estimada:</label>
+                                            <p class="mb-0 small">
+                                                <?php echo $item['hora_tarea'] ? substr($item['hora_tarea'], 0, 5) : '—'; ?>
+                                            </p>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="fw-bold small text-muted">Duración:</label>
+                                            <p class="mb-0 small">
+                                                <?php echo $item['duracion_min'] ? $item['duracion_min'] . ' min' : '—'; ?>
+                                            </p>
+                                        </div>
                                     <?php else: ?>
                                         <div class="col-md-6">
                                             <label class="fw-bold small text-muted">Fecha de Reunión:</label>
