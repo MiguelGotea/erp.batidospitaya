@@ -261,22 +261,35 @@ function crearItemHtml(item, hoy) {
             </div>
 
             <div class="item-schedule-row">
-                <div class="schedule-capsule" onclick="event.stopPropagation()">
-                    <button class="btn-sched-adj" onclick="ajustarDuracion(${item.id}, -30)" title="-30 min">
+                <div class="time-range-wrap" onclick="event.stopPropagation()">
+                    <div class="time-selector-premium">
+                        <div class="ts-unit">
+                            <i class="bi bi-chevron-up ts-arrow" onclick="ajustarHora(${item.id}, 1)"></i>
+                            <span class="ts-val" id="ts-h-${item.id}">${(item.tipo === 'reunion' ? (item.fecha_reunion || '').substring(11, 13) : (item.hora_tarea || '08:00').substring(0, 2))}</span>
+                            <i class="bi bi-chevron-down ts-arrow" onclick="ajustarHora(${item.id}, -1)"></i>
+                        </div>
+                        <span class="time-sep">:</span>
+                        <div class="ts-unit">
+                            <span class="ts-min-toggle" onclick="toggleMinutos(${item.id})" id="ts-m-${item.id}">
+                                ${(item.tipo === 'reunion' ? (item.fecha_reunion || '').substring(14, 16) : (item.hora_tarea || '08:00').substring(3, 5))}
+                            </span>
+                        </div>
+                    </div>
+                    <span class="time-sep">-</span>
+                    <span class="end-time-display" id="end-time-${item.id}">
+                        ${calcularHoraFin((item.tipo === 'reunion' ? (item.fecha_reunion || '').substring(11, 16) : (item.hora_tarea || '08:00')), (item.duracion_min || 60))}
+                    </span>
+                </div>
+                
+                <div class="duration-stepper" onclick="event.stopPropagation()">
+                    <button class="btn-dur-adj" onclick="ajustarDuracion(${item.id}, -30)" title="-30 min">
                         <i class="bi bi-dash"></i>
                     </button>
-                    <input type="time" class="sched-time" 
-                           value="${item.tipo === 'reunion' ? (item.fecha_reunion || '').substring(11, 16) : (item.hora_tarea || '08:00').substring(0, 5)}"
-                           onchange="actualizarHoraDirecto(${item.id}, this.value)"
-                           data-item-id="${item.id}">
-                    <div class="sched-dur" title="Duración actual">
-                        ${item.duracion_min || 60}m
-                    </div>
-                    <button class="btn-sched-adj" onclick="ajustarDuracion(${item.id}, 30)" title="+30 min">
+                    <span class="dur-val" id="dur-val-${item.id}">${item.duracion_min || 60}m</span>
+                    <button class="btn-dur-adj" onclick="ajustarDuracion(${item.id}, 30)" title="+30 min">
                         <i class="bi bi-plus"></i>
                     </button>
                 </div>
-                <div id="suggestion-wrap-${item.id}"></div>
             </div>
 
             
@@ -548,37 +561,6 @@ function onDragEnd(e) {
     }
 }
 
-// habilitarDropZone solo establece el data-attribute (detección en onDragMove)
-function habilitarDropZone(bodyEl) {
-    // El dataset.fechaGrupo ya se establece en crearGrupoHtml, nada más necesario
-}
-
-
-// ── Posponer AJAX ────────────────────────────────────
-function posponerTareaAjax(id, nuevaFecha) {
-    $.ajax({
-        url: 'ajax/gestion_tareas_reuniones_posponer.php',
-        method: 'POST',
-        data: { id: id, nueva_fecha: nuevaFecha },
-        dataType: 'json',
-        success: function (r) {
-            if (r.success) {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Reagendada',
-                    text: `Nueva fecha: ${formatearFecha(nuevaFecha)}`,
-                    timer: 1800,
-                    showConfirmButton: false
-                });
-                cargarDatos();
-            } else {
-                Swal.fire('Error', r.message || 'No se pudo reagendar', 'error');
-            }
-        },
-        error: function () { Swal.fire('Error', 'No se pudo reagendar la tarea', 'error'); }
-    });
-}
-
 // ── Mover vencidas a hoy ───────────────────────────
 function moverVencidasHoy() {
     Swal.fire({
@@ -623,8 +605,8 @@ function moverVencidasHoy() {
 function revisarSolapamientos() {
     // Limpiar estados previos
     $('.item-card-row').removeClass('conflict-overlap');
-    $('.conflict-badge').remove();
-    $('.suggestion-btn').remove();
+    $('.conflict-led').remove();
+    $('.resolver-mini-btn').remove();
 
     $('.grupo-body').each(function () {
         const items = [];
@@ -633,14 +615,14 @@ function revisarSolapamientos() {
             const id = card.data('id');
             const tipo = card.data('tipo');
             
-            // Obtener hora y duración desde el DOM o estado
-            const horaStr = card.find('.sched-time').val();
-            const dur = parseInt(card.find('.sched-dur').text()) || 60;
+            // Reconstruir hora desde el selector premium
+            const h = card.find(`#ts-h-${id}`).text();
+            const m = card.find(`#ts-m-${id}`).text();
+            const dur = parseInt(card.find(`#dur-val-${id}`).text()) || 60;
             
-            if (!horaStr) return;
+            if (!h || !m) return;
 
-            const [h, m] = horaStr.split(':').map(Number);
-            const inicio = h * 60 + m;
+            const inicio = parseInt(h) * 60 + parseInt(m);
             const fin = inicio + dur;
 
             items.push({ id, inicio, fin, card });
@@ -652,19 +634,17 @@ function revisarSolapamientos() {
                 const a = items[i];
                 const b = items[j];
 
-                // Si se traslapan
                 if (a.inicio < b.fin && b.inicio < a.fin) {
                     a.card.addClass('conflict-overlap');
                     b.card.addClass('conflict-overlap');
                     
-                    // Añadir badges de conflicto si no existen
-                    if (!a.card.find('.conflict-badge').length) {
-                        a.card.append('<span class="conflict-badge"><i class="bi bi-exclamation-triangle-fill"></i> Solapamiento</span>');
-                        añadirBotonSugerencia(a.card, a.id);
+                    if (!a.card.find('.conflict-led').length) {
+                        a.card.append('<div class="conflict-led" title="Conflicto de horario"></div>');
+                        añadirBotonResolver(a.card, a.id);
                     }
-                    if (!b.card.find('.conflict-badge').length) {
-                        b.card.append('<span class="conflict-badge"><i class="bi bi-exclamation-triangle-fill"></i> Solapamiento</span>');
-                        añadirBotonSugerencia(b.card, b.id);
+                    if (!b.card.find('.conflict-led').length) {
+                        b.card.append('<div class="conflict-led" title="Conflicto de horario"></div>');
+                        añadirBotonResolver(b.card, b.id);
                     }
                 }
             }
@@ -672,21 +652,48 @@ function revisarSolapamientos() {
     });
 }
 
-function añadirBotonSugerencia(card, id) {
-    if (card.find('.suggestion-btn').length) return;
-    const btn = $(`<button class="suggestion-btn" onclick="event.stopPropagation(); aplicarSugerencia(${id})">
-        <i class="bi bi-magic me-1"></i> Resolver
+function añadirBotonResolver(card, id) {
+    if (card.find('.resolver-mini-btn').length) return;
+    const btn = $(`<button class="resolver-mini-btn" onclick="event.stopPropagation(); aplicarSugerencia(${id})" title="Resolver conflicto automáticamente">
+        <i class="bi bi-magic"></i>
     </button>`);
-    card.find('.item-schedule-row').append(btn);
+    card.append(btn);
 }
 
-function actualizarHoraDirecto(id, nuevaHora) {
-    ejecutarCambioHorario(id, nuevaHora, null);
+function ajustarHora(id, delta) {
+    const hEl = $(`#ts-h-${id}`);
+    let h = parseInt(hEl.text());
+    h = (h + delta + 24) % 24;
+    const hStr = h.toString().padStart(2, '0');
+    hEl.text(hStr);
+
+    const mStr = $(`#ts-m-${id}`).text();
+    ejecutarCambioHorario(id, `${hStr}:${mStr}`, null);
+}
+
+function toggleMinutos(id) {
+    const mEl = $(`#ts-m-${id}`);
+    const actual = mEl.text();
+    const nuevo = actual === '00' ? '30' : '00';
+    mEl.text(nuevo);
+
+    const hStr = $(`#ts-h-${id}`).text();
+    ejecutarCambioHorario(id, `${hStr}:${nuevo}`, null);
+}
+
+function calcularHoraFin(inicio, duracion) {
+    if (!inicio) return '';
+    const [h, m] = inicio.split(':').map(Number);
+    let totalMin = h * 60 + m + parseInt(duracion);
+    
+    const fh = Math.floor((totalMin / 60) % 24).toString().padStart(2, '0');
+    const fm = (totalMin % 60).toString().padStart(2, '0');
+    return `${fh}:${fm}`;
 }
 
 function ajustarDuracion(id, delta) {
-    const card = $(`.item-card-row[data-id="${id}"]`);
-    let durActual = parseInt(card.find('.sched-dur').text()) || 60;
+    const dEl = $(`#dur-val-${id}`);
+    let durActual = parseInt(dEl.text()) || 60;
     let nuevaDur = Math.max(15, durActual + delta);
     
     ejecutarCambioHorario(id, null, nuevaDur);
@@ -700,10 +707,15 @@ function ejecutarCambioHorario(id, hora, duracion) {
         dataType: 'json',
         success: function (r) {
             if (r.success) {
-                // Actualizar visualmente sin recargar todo si es posible
                 const card = $(`.item-card-row[data-id="${id}"]`);
-                if (duracion !== null) card.find('.sched-dur').text(duracion + 'm');
-                // En lugar de recargar todo, revisamos solapamientos
+                if (duracion !== null) card.find(`#dur-val-${id}`).text(duracion + 'm');
+                
+                // Actualizar hora fin visual
+                const hStart = card.find(`#ts-h-${id}`).text();
+                const mStart = card.find(`#ts-m-${id}`).text();
+                const d = parseInt(card.find(`#dur-val-${id}`).text()) || 60;
+                card.find(`#end-time-${id}`).text(calcularHoraFin(`${hStart}:${mStart}`, d));
+
                 revisarSolapamientos();
             } else {
                 Swal.fire('Error', r.message, 'error');
@@ -717,39 +729,30 @@ function aplicarSugerencia(id) {
     const card = $(`.item-card-row[data-id="${id}"]`);
     const grupoBody = card.closest('.grupo-body');
     
-    // Obtener todos los items del día
     const scheduled = [];
     grupoBody.find('.item-card-row').each(function () {
-        const c = $(this);
-        const cid = c.data('id');
+        const cid = $(this).data('id');
         if (cid === id) return;
 
-        const hStr = c.find('.sched-time').val();
-        const d = parseInt(c.find('.sched-dur').text()) || 60;
-        if (!hStr) return;
+        const h = $(this).find(`#ts-h-${cid}`).text();
+        const m = $(this).find(`#ts-m-${cid}`).text();
+        const d = parseInt($(this).find(`#dur-val-${cid}`).text()) || 60;
+        if (!h || !m) return;
 
-        const [h, m] = hStr.split(':').map(Number);
-        const start = h * 60 + m;
+        const start = parseInt(h) * 60 + parseInt(m);
         scheduled.push({ start, end: start + d });
     });
 
-    // Ordenar por inicio
     scheduled.sort((a,b) => a.start - b.start);
 
-    // Encontrar el primer hueco disponible después del último o entre ellos
-    // Empezamos a las 08:00 (480 min)
-    let suggestedStart = 480; 
-    const durecionReq = parseInt(card.find('.sched-dur').text()) || 60;
+    let suggestedStart = 480; // 08:00
+    const durReq = parseInt(card.find(`#dur-val-${id}`).text()) || 60;
 
     for (let slot of scheduled) {
-        if (suggestedStart + durecionReq <= slot.start) {
-            // Cabe aquí
-            break;
-        }
+        if (suggestedStart + durReq <= slot.start) break;
         suggestedStart = Math.max(suggestedStart, slot.end);
     }
 
-    // Convertir min a HH:mm
     const hh = Math.floor(suggestedStart / 60).toString().padStart(2, '0');
     const mm = (suggestedStart % 60).toString().padStart(2, '0');
     const horaFinal = `${hh}:${mm}`;
@@ -763,7 +766,8 @@ function aplicarSugerencia(id) {
         cancelButtonText: 'No'
     }).then(res => {
         if (res.isConfirmed) {
-            card.find('.sched-time').val(horaFinal);
+            card.find(`#ts-h-${id}`).text(hh);
+            card.find(`#ts-m-${id}`).text(mm);
             ejecutarCambioHorario(id, horaFinal, null);
         }
     });
