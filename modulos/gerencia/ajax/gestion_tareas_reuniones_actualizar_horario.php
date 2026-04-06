@@ -28,7 +28,13 @@ try {
     $params = [':id' => $id];
 
     if (isset($_POST['hora_tarea']) && $_POST['hora_tarea'] !== '') {
-        $horaTarea = $_POST['hora_tarea'];
+        $horaTarea = trim($_POST['hora_tarea']);
+        
+        // Asegurar formato HH:mm
+        if (strlen($horaTarea) === 4 && strpos($horaTarea, ':') === 1) {
+            $horaTarea = '0' . $horaTarea;
+        }
+
         if ($item['tipo'] === 'reunion') {
             $fechaSolo = substr($item['fecha_reunion'] ?? date('Y-m-d'), 0, 10);
             $nuevaFechaHora = $fechaSolo . ' ' . $horaTarea . ':00';

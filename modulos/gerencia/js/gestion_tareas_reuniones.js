@@ -273,15 +273,11 @@ function crearItemHtml(item, hoy) {
                         </div>
                         <span class="time-sep">:</span>
                         <div class="ts-unit">
-                            <span class="ts-min-toggle" onclick="toggleMinutos(this, ${item.id})" id="ts-m-${item.id}">
-                                ${(item.tipo === 'reunion' ? (item.fecha_reunion || '').substring(14, 16) : (item.hora_tarea || '08:00').substring(3, 5))}
-                            </span>
+                            <span class="ts-min-toggle" onclick="toggleMinutos(this, ${item.id})" id="ts-m-${item.id}">${(item.tipo === 'reunion' ? (item.fecha_reunion || '').substring(14, 16) : (item.hora_tarea || '08:00').substring(3, 5))}</span>
                         </div>
                     </div>
                     <span class="time-sep">-</span>
-                    <span class="end-time-display" id="end-time-${item.id}">
-                        ${calcularHoraFin((item.tipo === 'reunion' ? (item.fecha_reunion || '').substring(11, 16) : (item.hora_tarea || '08:00')), (item.duracion_min || 60))}
-                    </span>
+                    <span class="end-time-display" id="end-time-${item.id}">${calcularHoraFin((item.tipo === 'reunion' ? (item.fecha_reunion || '').substring(11, 16) : (item.hora_tarea || '08:00').substring(0, 5)), (item.duracion_min || 60))}</span>
                 </div>
                 
                 <div class="duration-stepper" onclick="event.stopPropagation()">
@@ -701,7 +697,7 @@ function ajustarHora(el, id, delta) {
     const hStr = h.toString().padStart(2, '0');
     hEl.text(hStr);
 
-    const mStr = mEl.text();
+    const mStr = mEl.text().trim();
     ejecutarCambioHorario(id, `${hStr}:${mStr}`, null);
 }
 
