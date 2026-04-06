@@ -305,14 +305,16 @@ function crearItemHtml(item, hoy) {
                 ${item.tipo === 'tarea' ? `
                 <div class="item-meta-col">
                     <div class="priority-toggle-container" onclick="event.stopPropagation();">
-                        <div class="priority-toggle-premium" 
+                        <div class="priority-toggle-premium ${item.estado === 'finalizado' || item.estado === 'cancelado' ? 'is-readonly' : ''}" 
                              id="toggle-prio-${item.id}" 
                              data-priority="${item.prioridad || 'media'}"
                              title="Prioridad: ${item.prioridad || 'media'}">
                             <div class="pt-dot"></div>
-                            <div class="pt-zone" onclick="cambiarPrioridadToggle(${item.id}, 'baja')" title="Baja"></div>
-                            <div class="pt-zone" onclick="cambiarPrioridadToggle(${item.id}, 'media')" title="Media"></div>
-                            <div class="pt-zone" onclick="cambiarPrioridadToggle(${item.id}, 'alta')" title="Alta"></div>
+                            ${item.estado !== 'finalizado' && item.estado !== 'cancelado' ? `
+                                <div class="pt-zone" onclick="cambiarPrioridadToggle(${item.id}, 'baja')" title="Baja"></div>
+                                <div class="pt-zone" onclick="cambiarPrioridadToggle(${item.id}, 'media')" title="Media"></div>
+                                <div class="pt-zone" onclick="cambiarPrioridadToggle(${item.id}, 'alta')" title="Alta"></div>
+                            ` : ''}
                         </div>
                     </div>
                 </div>

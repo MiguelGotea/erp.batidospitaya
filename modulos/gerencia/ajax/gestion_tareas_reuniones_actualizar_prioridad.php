@@ -17,8 +17,18 @@ try {
         throw new Exception('Datos inválidos');
     }
 
-    // Verificar que el item sea una tarea y que el usuario tenga permiso
-    // (Omitimos verificación exhaustiva de permisos por brevedad, asumiendo que el JS solo permite al responsable/creador)
+    // Verificar estado e item sea una tarea
+    $stmtCheck = $conn->prepare("SELECT estado FROM gestion_tareas_reuniones_items WHERE id = ? AND tipo = 'tarea'");
+    $stmtCheck->execute([$id]);
+    $item = $stmtCheck->fetch();
+
+    if (!$item) {
+        throw new Exception('Tarea no encontrada');
+    }
+
+    if ($item['estado'] === 'finalizado' || $item['estado'] === 'cancelado') {
+        throw new Exception('No se puede cambiar la prioridad de una tarea finalizada o cancelada.');
+    }
     
     $sql = "UPDATE gestion_tareas_reuniones_items SET prioridad = :prioridad WHERE id = :id AND tipo = 'tarea'";
     $stmt = $conn->prepare($sql);

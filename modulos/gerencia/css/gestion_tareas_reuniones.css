@@ -959,5 +959,21 @@ body.is-dragging {
     background: #fdfdfd;
 }
 
+.priority-toggle-premium.is-readonly {
+    cursor: default;
+    background: #f4f6f5;
+    border-color: #e0eae8;
+    box-shadow: none;
+    opacity: 0.85;
+}
+.priority-toggle-premium.is-readonly:hover {
+    border-color: #e0eae8;
+    background: #f4f6f5;
+}
+.priority-toggle-premium.is-readonly .pt-dot {
+    filter: grayscale(0.5);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+}
+
 /* Badge extra para reuniones concluidas por fecha */
 .badge-estado.concluida { background: #f3e8fd; color: #7b2d8b; }
