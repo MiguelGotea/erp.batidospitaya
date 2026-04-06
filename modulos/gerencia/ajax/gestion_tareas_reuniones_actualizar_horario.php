@@ -15,13 +15,18 @@ try {
         throw new Exception('ID inválido');
     }
 
-    // Obtener info actual para saber si es reunión o tarea
-    $stmtInfo = $conn->prepare("SELECT tipo, fecha_reunion FROM gestion_tareas_reuniones_items WHERE id = ?");
+    // Obtener info actual para saber si es reunión o tarea y su estado
+    $stmtInfo = $conn->prepare("SELECT tipo, fecha_reunion, estado FROM gestion_tareas_reuniones_items WHERE id = ?");
     $stmtInfo->execute([$id]);
     $item = $stmtInfo->fetch();
 
     if (!$item)
         throw new Exception('Item no encontrado');
+
+    // Bloquear si ya está finalizada o cancelada
+    if ($item['estado'] === 'finalizado' || $item['estado'] === 'cancelado') {
+        throw new Exception('No se puede modificar el horario de una tarea o reunión finalizada o cancelada.');
+    }
 
     $updates = [];
     $params = [':id' => $id];

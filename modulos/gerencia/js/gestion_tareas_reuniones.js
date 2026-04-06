@@ -265,22 +265,26 @@ function crearItemHtml(item, hoy) {
 
             <div class="item-schedule-row">
                 <div class="time-range-wrap" onclick="event.stopPropagation()">
-                    <div class="time-selector-premium">
+                    <div class="time-selector-premium ${item.estado === 'finalizado' || item.estado === 'cancelado' ? 'is-readonly' : ''}">
                         <div class="ts-unit">
-                            <i class="bi bi-chevron-up ts-arrow" onclick="ajustarHora(this, ${item.id}, 1)"></i>
+                            ${item.estado !== 'finalizado' && item.estado !== 'cancelado' ? `
+                                <i class="bi bi-chevron-up ts-arrow" onclick="ajustarHora(this, ${item.id}, 1)"></i>
+                            ` : ''}
                             <span class="ts-val" id="ts-h-${item.id}">${(item.tipo === 'reunion' ? (item.fecha_reunion || '').substring(11, 13) : (item.hora_tarea || '08:00').substring(0, 2))}</span>
-                            <i class="bi bi-chevron-down ts-arrow" onclick="ajustarHora(this, ${item.id}, -1)"></i>
+                            ${item.estado !== 'finalizado' && item.estado !== 'cancelado' ? `
+                                <i class="bi bi-chevron-down ts-arrow" onclick="ajustarHora(this, ${item.id}, -1)"></i>
+                            ` : ''}
                         </div>
                         <span class="time-sep">:</span>
                         <div class="ts-unit">
-                            <span class="ts-min-toggle" onclick="toggleMinutos(this, ${item.id})" id="ts-m-${item.id}">${(item.tipo === 'reunion' ? (item.fecha_reunion || '').substring(14, 16) : (item.hora_tarea || '08:00').substring(3, 5))}</span>
+                            <span class="ts-min-toggle" ${item.estado !== 'finalizado' && item.estado !== 'cancelado' ? `onclick="toggleMinutos(this, ${item.id})"` : ''} id="ts-m-${item.id}">${(item.tipo === 'reunion' ? (item.fecha_reunion || '').substring(14, 16) : (item.hora_tarea || '08:00').substring(3, 5))}</span>
                         </div>
                     </div>
                     <span class="time-sep">-</span>
                     <span class="end-time-display" id="end-time-${item.id}">${calcularHoraFin((item.tipo === 'reunion' ? (item.fecha_reunion || '').substring(11, 16) : (item.hora_tarea || '08:00').substring(0, 5)), (item.duracion_min || 60))}</span>
                 </div>
                 
-                <div class="duration-stepper" onclick="event.stopPropagation()">
+                <div class="duration-stepper" onclick="event.stopPropagation()" ${item.estado === 'finalizado' || item.estado === 'cancelado' ? 'style="display:none;"' : ''}>
                     <button class="btn-dur-adj" onclick="ajustarDuracion(this, ${item.id}, -30)" title="-30 min">
                         <i class="bi bi-dash"></i>
                     </button>
@@ -289,6 +293,11 @@ function crearItemHtml(item, hoy) {
                         <i class="bi bi-plus"></i>
                     </button>
                 </div>
+                ${item.estado === 'finalizado' || item.estado === 'cancelado' ? `
+                    <div class="duration-readonly-val">
+                        <i class="bi bi-clock-history me-1"></i> ${item.duracion_min || 60}m
+                    </div>
+                ` : ''}
             </div>
 
             
