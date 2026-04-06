@@ -158,7 +158,10 @@ function renderizarDatos(grupos) {
     });
 
     // Detectar solapamientos después de renderizar todo
-    setTimeout(revisarSolapamientos, 100);
+    setTimeout(() => {
+        revisarSolapamientos();
+        dibujarLineaAhora();
+    }, 100);
 }
 
 function crearSeparadorMes(fecha) {
@@ -561,6 +564,34 @@ function onDragEnd(e) {
     }
 }
 
+function habilitarDropZone(bodyEl) {
+    // El dataset.fechaGrupo ya se establece en crearGrupoHtml
+}
+
+function posponerTareaAjax(id, nuevaFecha) {
+    $.ajax({
+        url: 'ajax/gestion_tareas_reuniones_posponer.php',
+        method: 'POST',
+        data: { id: id, nueva_fecha: nuevaFecha },
+        dataType: 'json',
+        success: function (r) {
+            if (r.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Reagendada',
+                    text: `Nueva fecha: ${formatearFecha(nuevaFecha)}`,
+                    timer: 1800,
+                    showConfirmButton: false
+                });
+                cargarDatos();
+            } else {
+                Swal.fire('Error', r.message || 'No se pudo reagendar', 'error');
+            }
+        },
+        error: function () { Swal.fire('Error', 'No se pudo reagendar la tarea', 'error'); }
+    });
+}
+
 // ── Mover vencidas a hoy ───────────────────────────
 function moverVencidasHoy() {
     Swal.fire({
@@ -717,6 +748,7 @@ function ejecutarCambioHorario(id, hora, duracion) {
                 card.find(`#end-time-${id}`).text(calcularHoraFin(`${hStart}:${mStart}`, d));
 
                 revisarSolapamientos();
+                dibujarLineaAhora();
             } else {
                 Swal.fire('Error', r.message, 'error');
             }
@@ -771,6 +803,46 @@ function aplicarSugerencia(id) {
             ejecutarCambioHorario(id, horaFinal, null);
         }
     });
+}
+
+function dibujarLineaAhora() {
+    $('.now-indicator-row').remove();
+
+    const hoy = obtenerFechaHoy();
+    const grupoHoy = $(`.grupo-body[data-date="${hoy}"]`);
+    if (!grupoHoy.length) return;
+
+    const ahora = new Date();
+    const minAhora = ahora.getHours() * 60 + ahora.getMinutes();
+
+    let insertado = false;
+    grupoHoy.find('.item-card-row').each(function () {
+        const h = $(this).find('.ts-val').first().text();
+        const m = $(this).find('.ts-min-toggle').first().text();
+        if (!h || !m) return;
+
+        const minItem = parseInt(h) * 60 + parseInt(m);
+
+        if (minAhora < minItem) {
+            $(this).before(`
+                <div class="now-indicator-row">
+                    <div class="now-line"></div>
+                    <div class="now-label">Ahora</div>
+                </div>
+            `);
+            insertado = true;
+            return false; // break each
+        }
+    });
+
+    if (!insertado) {
+        grupoHoy.append(`
+            <div class="now-indicator-row">
+                <div class="now-line"></div>
+                <div class="now-label">Ahora</div>
+            </div>
+        `);
+    }
 }
 function cambiarPrioridadToggle(id, nueva) {
     const toggle = $(`#toggle-prio-${id}`);
