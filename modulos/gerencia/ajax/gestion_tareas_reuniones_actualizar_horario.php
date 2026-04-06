@@ -5,7 +5,6 @@ require_once '../../../core/database/conexion.php';
 require_once '../../../core/helpers/funciones.php';
 header('Content-Type: application/json');
 
-
 try {
     global $conn;
     $id = intval($_POST['id'] ?? 0);
