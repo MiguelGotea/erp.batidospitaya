@@ -3,6 +3,7 @@
  * Actualizar la prioridad de una tarea
  */
 
+
 require_once '../../../core/auth/auth.php';
 require_once '../../../core/database/conexion.php';
 
@@ -29,7 +30,7 @@ try {
     if ($item['estado'] === 'finalizado' || $item['estado'] === 'cancelado') {
         throw new Exception('No se puede cambiar la prioridad de una tarea finalizada o cancelada.');
     }
-    
+
     $sql = "UPDATE gestion_tareas_reuniones_items SET prioridad = :prioridad WHERE id = :id AND tipo = 'tarea'";
     $stmt = $conn->prepare($sql);
     $stmt->execute([
