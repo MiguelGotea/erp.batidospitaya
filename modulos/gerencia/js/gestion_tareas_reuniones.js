@@ -731,10 +731,14 @@ function ajustarDuracion(id, delta) {
 }
 
 function ejecutarCambioHorario(id, hora, duracion) {
+    const dataObj = { id: id };
+    if (hora !== null) dataObj.hora_tarea = hora;
+    if (duracion !== null) dataObj.duracion_min = duracion;
+
     $.ajax({
         url: 'ajax/gestion_tareas_reuniones_actualizar_horario.php',
         method: 'POST',
-        data: { id: id, hora_tarea: hora, duracion_min: duracion },
+        data: dataObj,
         dataType: 'json',
         success: function (r) {
             if (r.success) {

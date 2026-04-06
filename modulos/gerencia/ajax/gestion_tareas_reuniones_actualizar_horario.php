@@ -27,22 +27,22 @@ try {
     $updates = [];
     $params = [':id' => $id];
 
-    if ($horaTarea !== null) {
+    if (isset($_POST['hora_tarea']) && $_POST['hora_tarea'] !== '') {
+        $horaTarea = $_POST['hora_tarea'];
         if ($item['tipo'] === 'reunion') {
-            // Actualizar solo la parte de la hora de fecha_reunion
             $fechaSolo = substr($item['fecha_reunion'] ?? date('Y-m-d'), 0, 10);
             $nuevaFechaHora = $fechaSolo . ' ' . $horaTarea . ':00';
             $updates[] = "fecha_reunion = :fecha_reunion";
             $params[':fecha_reunion'] = $nuevaFechaHora;
         } else {
             $updates[] = "hora_tarea = :hora_tarea";
-            $params[':hora_tarea'] = $horaTarea === 'null' ? null : $horaTarea;
+            $params[':hora_tarea'] = $horaTarea;
         }
     }
 
-    if ($duracionMin !== null) {
+    if (isset($_POST['duracion_min']) && $_POST['duracion_min'] !== '') {
         $updates[] = "duracion_min = :duracion_min";
-        $params[':duracion_min'] = $duracionMin;
+        $params[':duracion_min'] = intval($_POST['duracion_min']);
     }
 
     if (empty($updates)) {
