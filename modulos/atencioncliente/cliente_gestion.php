@@ -33,6 +33,11 @@ $puedeEditar = tienePermiso('clientes_club_pos', 'edicion', $cargoOperario);
     <link rel="icon" href="../../assets/img/icon12.png" type="image/png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    
+    <!-- Flatpickr -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" type="text/css" href="https://npmcdn.com/flatpickr/dist/themes/material_teal.css">
+    
     <link rel="stylesheet" href="/core/assets/css/global_tools.css?v=<?php echo mt_rand(1, 10000); ?>">
     
     <style>
@@ -197,7 +202,7 @@ $puedeEditar = tienePermiso('clientes_club_pos', 'edicion', $cargoOperario);
 
         /* Buttons */
         .btn-premium {
-            background: linear-gradient(135deg, var(--pitaya-teal) 0%, var(--pitaya-teal-dark) 100%);
+            background: var(--pitaya-teal);
             color: white;
             border: none;
             border-radius: 12px;
@@ -211,10 +216,10 @@ $puedeEditar = tienePermiso('clientes_club_pos', 'edicion', $cargoOperario);
         }
 
         .btn-premium:hover {
+            background: var(--pitaya-teal-dark);
             transform: translateY(-2px);
             box-shadow: 0 8px 20px rgba(81, 184, 172, 0.4);
             color: white;
-            opacity: 0.95;
         }
 
         .btn-premium:active {
@@ -373,6 +378,10 @@ $puedeEditar = tienePermiso('clientes_club_pos', 'edicion', $cargoOperario);
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <!-- Flatpickr -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
     <script>
         const CONFIG = {
             membresia: '<?php echo $membresia; ?>',
@@ -430,6 +439,22 @@ $puedeEditar = tienePermiso('clientes_club_pos', 'edicion', $cargoOperario);
                     $('#fullName_display').text(nombre + ' ' + apellido);
                     $('#avatar_display').text(nombre.charAt(0));
                 }
+
+                // Initialize Flatpickr after data is loaded
+                flatpickr("#fecha_nacimiento", {
+                    locale: "es",
+                    dateFormat: "Y-m-d",
+                    altInput: true,
+                    altFormat: "d \\de F \\de Y",
+                    allowInput: true,
+                    monthSelectorType: 'dropdown',
+                    yearSelectorType: 'dropdown',
+                    maxDate: "today",
+                    // Range of years for birth date
+                    onReady: function(selectedDates, dateStr, instance) {
+                        const yearSelect = instance.yearElements[0];
+                    }
+                });
             }
         });
     </script>
