@@ -227,7 +227,7 @@ class Ticket
 
     public function getSucursales()
     {
-        return $this->db->fetchAll("SELECT codigo as cod_sucursal, nombre as nombre_sucursal FROM sucursales ORDER BY nombre");
+        return $this->db->fetchAll("SELECT codigo as cod_sucursal, nombre as nombre_sucursal FROM sucursales WHERE activa = 1 ORDER BY nombre");
     }
 
     public function getEquipos()
