@@ -116,12 +116,12 @@ function verHistorialProductos(membresia) {
 
 // Ver perfil del cliente
 function verPerfilCliente(membresia) {
-    window.location.href = '../POS/cliente_gestion.php?membresia=' + encodeURIComponent(membresia) + '&modo=view';
+    window.location.href = 'cliente_gestion.php?membresia=' + encodeURIComponent(membresia) + '&modo=view';
 }
 
 // Editar perfil del cliente
 function editarPerfilCliente(membresia) {
-    window.location.href = '../POS/cliente_gestion.php?membresia=' + encodeURIComponent(membresia) + '&modo=edit';
+    window.location.href = 'cliente_gestion.php?membresia=' + encodeURIComponent(membresia) + '&modo=edit';
 }
 
 // Toggle filtro
