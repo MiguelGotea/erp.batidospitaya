@@ -17,6 +17,7 @@ if (!tienePermiso('clientes_club_pos', 'vista', $cargoOperario)) {
 $membresia = isset($_GET['membresia']) ? $_GET['membresia'] : '';
 $puedeEditar = tienePermiso('clientes_club_pos', 'edicion', $cargoOperario);
 
+
 ?>
 <!DOCTYPE html>
 <html lang="es">
