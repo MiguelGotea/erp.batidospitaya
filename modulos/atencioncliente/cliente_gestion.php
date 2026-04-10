@@ -242,6 +242,65 @@ $puedeEditar = tienePermiso('clientes_club_pos', 'edicion', $cargoOperario);
             border-radius: 0 12px 12px 0;
         }
 
+        /* Flatpickr Premium Tweaks */
+        .flatpickr-calendar {
+            border-radius: 15px !important;
+            box-shadow: 0 15px 45px rgba(0,0,0,0.1) !important;
+            border: 1px solid rgba(0,0,0,0.05) !important;
+            padding: 5px;
+        }
+
+        .flatpickr-months {
+            padding: 10px 0;
+        }
+
+        .flatpickr-month {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 15px;
+        }
+
+        .flatpickr-current-month {
+            position: relative !important;
+            width: auto !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 10px !important;
+            padding: 0 !important;
+            left: 0 !important;
+        }
+
+        .flatpickr-monthDropdown-months {
+            font-weight: 700 !important;
+            color: var(--pitaya-teal-dark) !important;
+            font-size: 1.1rem !important;
+        }
+
+        .numInputWrapper {
+            width: 70px !important;
+            background: #f8f9fc;
+            border-radius: 6px;
+            padding: 2px 5px;
+        }
+
+        .numInputWrapper input {
+            font-weight: 700 !important;
+            color: var(--pitaya-teal-dark) !important;
+            font-size: 1.1rem !important;
+        }
+
+        .flatpickr-day.selected {
+            background: var(--pitaya-teal) !important;
+            border-color: var(--pitaya-teal) !important;
+        }
+
+        .flatpickr-day:hover {
+            background: var(--pitaya-teal-light) !important;
+            border-color: var(--pitaya-teal-light) !important;
+            color: var(--pitaya-teal-dark) !important;
+        }
+
         @media (max-width: 768px) {
             .profile-info-wrapper {
                 flex-direction: column;
@@ -448,11 +507,12 @@ $puedeEditar = tienePermiso('clientes_club_pos', 'edicion', $cargoOperario);
                     altFormat: "d \\de F \\de Y",
                     allowInput: true,
                     monthSelectorType: 'dropdown',
-                    yearSelectorType: 'dropdown',
                     maxDate: "today",
-                    // Range of years for birth date
+                    showMonths: 1,
                     onReady: function(selectedDates, dateStr, instance) {
-                        const yearSelect = instance.yearElements[0];
+                        // Ensure the year input is easily accessible
+                        const yearInput = instance.yearElements[0];
+                        yearInput.title = "Clic para escribir el año";
                     }
                 });
             }
