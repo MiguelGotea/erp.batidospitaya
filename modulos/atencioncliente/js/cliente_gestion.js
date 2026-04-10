@@ -35,7 +35,7 @@ function cargarDatosCliente() {
                 $('#fecha_nacimiento').val(d.fecha_nacimiento);
                 $('#nombre_sucursal').val(d.nombre_sucursal || 'N/A');
                 $('#fecha_registro').val(d.fecha_registro);
-                $('#puntos_iniciales').val(d.puntos_iniciales || 0);
+
             } else {
                 Swal.fire('Error', response.message, 'error');
             }
