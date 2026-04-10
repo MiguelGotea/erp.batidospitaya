@@ -449,3 +449,76 @@ body {
     font-size: 14px;
     color: #495057;
 }
+
+/* --- ESTILOS COMPLEMENTARIOS PARA NUEVA SOLICITUD (EXCEL STYLE) --- */
+
+.excel-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.excel-table thead th {
+    background-color: var(--color-header-tabla) !important;
+    color: white !important;
+    padding: 12px 15px;
+    font-size: 13px;
+    text-transform: uppercase;
+    font-weight: 600;
+    border-right: 1px solid rgba(255,255,255,0.1);
+}
+
+.excel-table thead th:last-child {
+    border-right: none;
+}
+
+.excel-table tbody td {
+    border-bottom: 1px solid #f0f0f0;
+    border-right: 1px solid #f0f0f0;
+    padding: 0; /* Para que el input llene la celda */
+    vertical-align: middle;
+}
+
+.excel-table tbody td:last-child {
+    border-right: none;
+}
+
+.excel-input {
+    width: 100%;
+    border: 2px solid transparent;
+    padding: 12px 15px;
+    background: transparent;
+    outline: none;
+    transition: all 0.2s;
+    font-size: 14px;
+}
+
+.excel-input:focus {
+    background-color: #fff;
+    border-color: var(--color-principal);
+    box-shadow: inset 0 0 0 1px rgba(81, 184, 172, 0.1);
+}
+
+.excel-input[type="number"] {
+    text-align: center;
+}
+
+.preview-img {
+    width: 45px;
+    height: 45px;
+    object-fit: cover;
+    border-radius: 8px;
+    cursor: pointer;
+    border: 1px solid #ddd;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    transition: transform 0.2s;
+}
+
+.preview-img:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.empty-row {
+    background-color: #fafafa;
+}

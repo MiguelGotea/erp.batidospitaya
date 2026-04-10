@@ -47,7 +47,7 @@ $tituloPagina = $editingId ? 'Editar Solicitud IA' : 'Nueva Solicitud: Reembolso
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     
     <!-- Estilos Globales y Específicos -->
-    <link rel="stylesheet" href="/assets/css/global_tools.css?v=<?php echo mt_rand(1, 10000); ?>">
+    <link rel="stylesheet" href="/core/assets/css/global_tools.css?v=<?php echo mt_rand(1, 10000); ?>">
     <link rel="stylesheet" href="/core/assets/css/modales_premium.css">
     <link rel="stylesheet" href="css/reembolsos_ia_historial.css?v=<?php echo mt_rand(1, 10000); ?>">
     <style>
@@ -154,7 +154,7 @@ $tituloPagina = $editingId ? 'Editar Solicitud IA' : 'Nueva Solicitud: Reembolso
                             </div>
 
                             <div class="table-responsive border rounded-4 bg-white shadow-sm overflow-hidden mb-4">
-                                <table class="excel-table mb-0" id="tablaDetalles">
+                                <table class="table table-bordered excel-table mb-0" id="tablaDetalles">
                                     <thead>
                                         <tr>
                                             <th style="width: 100px;">Cant.</th>
