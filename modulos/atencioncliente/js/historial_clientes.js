@@ -95,11 +95,8 @@ function renderizarTabla(datos) {
                 <button class="btn-accion" title="Ver Historial de Compras" onclick="verHistorialProductos('${row.membresia}')">
                     <i class="bi bi-cart"></i>
                 </button>
-                <button class="btn btn-sm btn-outline-primary" title="Ver Perfil" onclick="verPerfilCliente('${row.membresia}')">
-                    <i class="bi bi-eye"></i>
-                </button>
-                <button class="btn btn-sm btn-outline-success" title="Editar Perfil" onclick="editarPerfilCliente('${row.membresia}')">
-                    <i class="bi bi-pencil"></i>
+                <button class="btn btn-sm btn-outline-primary" title="Gestionar Cliente" onclick="gestionarCliente('${row.membresia}')">
+                    <i class="bi bi-person-gear"></i>
                 </button>
             </div>
         `;
@@ -114,14 +111,9 @@ function verHistorialProductos(membresia) {
     window.location.href = 'historial_productos.php?membresia=' + encodeURIComponent(membresia);
 }
 
-// Ver perfil del cliente
-function verPerfilCliente(membresia) {
-    window.location.href = 'cliente_gestion.php?membresia=' + encodeURIComponent(membresia) + '&modo=view';
-}
-
-// Editar perfil del cliente
-function editarPerfilCliente(membresia) {
-    window.location.href = 'cliente_gestion.php?membresia=' + encodeURIComponent(membresia) + '&modo=edit';
+// Gestionar perfil del cliente
+function gestionarCliente(membresia) {
+    window.location.href = 'cliente_gestion.php?membresia=' + encodeURIComponent(membresia);
 }
 
 // Toggle filtro

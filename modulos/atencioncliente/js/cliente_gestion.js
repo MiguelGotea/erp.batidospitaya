@@ -75,9 +75,7 @@ function guardarCambios() {
                 dataType: 'json',
                 success: function(response) {
                     if (response.success) {
-                        Swal.fire('¡Éxito!', response.message, 'success').then(() => {
-                            window.location.href = '?membresia=' + encodeURIComponent(CONFIG.membresia) + '&modo=view';
-                        });
+                        Swal.fire('¡Éxito!', response.message, 'success');
                     } else {
                         Swal.fire('Error', response.message, 'error');
                     }
