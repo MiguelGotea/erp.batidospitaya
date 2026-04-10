@@ -58,13 +58,6 @@ $proveedores = $stmtProv->fetchAll(PDO::FETCH_ASSOC);
                 <div class="row mb-4 align-items-center">
                     <div class="col">
                     </div>
-                    <div class="col-auto">
-                        <?php if (tienePermiso('reembolsos_ia_plantilla', 'nuevo_registro', $cargoOperario)): ?>
-                        <a href="reembolsos_ia_nuevo.php" class="btn-floating-pitaya" title="Nuevo Resumen">
-                            <i class="fas fa-plus"></i>
-                        </a>
-                        <?php endif; ?>
-                    </div>
                 </div>
 
                 <!-- Historial -->
@@ -134,6 +127,12 @@ $proveedores = $stmtProv->fetchAll(PDO::FETCH_ASSOC);
             </div>
         </div>
     </div>
+
+    <?php if (tienePermiso('reembolsos_ia_plantilla', 'nuevo_registro', $cargoOperario)): ?>
+    <a href="reembolsos_ia_nuevo.php" class="btn-floating-pitaya" title="Nuevo Resumen">
+        <i class="fas fa-plus"></i>
+    </a>
+    <?php endif; ?>
 
     <!-- Modal de Ayuda Universal -->
     <div class="modal fade" id="pageHelpModal" tabindex="-1" aria-labelledby="pageHelpModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
