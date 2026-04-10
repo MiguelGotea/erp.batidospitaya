@@ -56,6 +56,8 @@ function getColorEstado($estado)
             return '#ffc107';
         case 'finalizado':
             return '#28a745';
+        case 'cancelado':
+            return '#dc3545';
         default:
             return '#6c757d';
     }

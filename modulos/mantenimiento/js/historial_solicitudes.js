@@ -98,14 +98,16 @@ const coloresEstado = {
     'solicitado': '#6c757d',
     'clasificado': '#17a2b8',
     'agendado': '#ffc107',
-    'finalizado': '#28a745'
+    'finalizado': '#28a745',
+    'cancelado': '#dc3545'
 };
 
 const textosEstado = {
     'solicitado': 'Solicitado',
     'clasificado': 'Clasificado',
     'agendado': 'Agendado',
-    'finalizado': 'Finalizado'
+    'finalizado': 'Finalizado',
+    'cancelado': 'Cancelado'
 };
 
 const textosTipo = {
@@ -591,7 +593,6 @@ function cargarOpcionesFiltro(panel, columna, tipo) {
                 if (columna === 'nombre_sucursal' && filtroSucursalBloqueado && codigoSucursalBusqueda) {
                     if (!filtrosActivos[columna] || !filtrosActivos[columna].includes(codigoSucursalBusqueda)) {
                         filtrosActivos[columna] = [codigoSucursalBusqueda];
-                        paginaActual = 1;
                         cargarDatos();
                     }
                 }

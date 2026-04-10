@@ -27,7 +27,7 @@ if ($ticket_id <= 0) {
     exit;
 }
 
-$estados_validos = ['solicitado', 'clasificado', 'agendado', 'finalizado'];
+$estados_validos = ['solicitado', 'clasificado', 'agendado', 'finalizado', 'cancelado'];
 if (!in_array($status, $estados_validos)) {
     echo json_encode(['success' => false, 'message' => 'Estado inválido'], JSON_UNESCAPED_UNICODE);
     exit;

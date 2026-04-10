@@ -666,14 +666,16 @@ body {
     right: 35px;
     z-index: 1000;
     display: flex;
-    flex-direction: column; /* Cambiado a column normal */
+    flex-direction: column;
+    /* Cambiado a column normal */
     align-items: flex-end;
     gap: 15px;
-    pointer-events: none; /* El contenedor no bloquea clics fuera de los botones */
+    pointer-events: none;
+    /* El contenedor no bloquea clics fuera de los botones */
 }
 
 /* IMPORTANTE: Los hijos deben recibir clics */
-.fab-container > * {
+.fab-container>* {
     pointer-events: auto;
 }
 
@@ -687,7 +689,8 @@ body {
 
 .fab-options {
     display: flex;
-    flex-direction: column; /* Cambiado a column normal */
+    flex-direction: column;
+    /* Cambiado a column normal */
     align-items: flex-end;
     gap: 12px;
     opacity: 0;
@@ -720,11 +723,11 @@ body {
     font-size: 0.85rem;
     font-weight: 600;
     white-space: nowrap;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     opacity: 0;
     transform: translateX(10px);
     transition: all 0.3s ease;
-    border: 1px solid rgba(255,255,255,0.2);
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .fab-option:hover .fab-label,
@@ -743,7 +746,7 @@ body {
     align-items: center;
     justify-content: center;
     font-size: 18px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
     border: 2px solid #51B8AC;
     transition: all 0.3s ease;
 }
@@ -860,7 +863,7 @@ body {
     .quick-access-wrapper {
         padding: 10px;
     }
-    
+
     .branch-chip {
         padding: 6px 12px;
         font-size: 0.8rem;
@@ -916,6 +919,5 @@ body {
 .opcion-modal-pitaya:hover {
     opacity: 0.8;
     transform: translateY(-1px);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
