@@ -761,3 +761,124 @@ body {
 .fab-container.active .btn-floating-pitaya i {
     transform: rotate(135deg);
 }
+
+/* ========== PANEL DE ACCESO RÁPIDO ========== */
+.quick-access-wrapper {
+    margin-bottom: 20px;
+    padding: 15px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(14, 84, 76, 0.05);
+    border-left: 5px solid #51B8AC;
+}
+
+.quick-access-title {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #666;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.quick-access-title i {
+    color: #51B8AC;
+    font-size: 1.1rem;
+}
+
+.quick-access-chips {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    padding-bottom: 5px;
+    scrollbar-width: thin;
+    scrollbar-color: #51B8AC #f1f1f1;
+}
+
+.quick-access-chips::-webkit-scrollbar {
+    height: 4px;
+}
+
+.quick-access-chips::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.quick-access-chips::-webkit-scrollbar-thumb {
+    background: #51B8AC;
+    border-radius: 10px;
+}
+
+.branch-chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background-color: #f8f9fa;
+    border: 2px solid #e9ecef;
+    border-radius: 50px;
+    color: #495057;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    white-space: nowrap;
+    user-select: none;
+}
+
+.branch-chip i {
+    font-size: 0.9rem;
+    color: #51B8AC;
+    transition: color 0.3s;
+}
+
+.branch-chip:hover {
+    border-color: #51B8AC;
+    background-color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(81, 184, 172, 0.15);
+}
+
+.branch-chip.active {
+    background-color: #51B8AC;
+    border-color: #51B8AC;
+    color: white;
+    box-shadow: 0 4px 12px rgba(81, 184, 172, 0.3);
+}
+
+.branch-chip.active i {
+    color: white;
+}
+
+.branch-chip.clear-filters {
+    background-color: #fff;
+    border-color: #dc3545;
+    color: #dc3545;
+}
+
+.branch-chip.clear-filters i {
+    color: #dc3545;
+}
+
+.branch-chip.clear-filters:hover {
+    background-color: #dc3545;
+    color: white;
+}
+
+.branch-chip.clear-filters:hover i {
+    color: white;
+}
+
+@media (max-width: 768px) {
+    .quick-access-wrapper {
+        padding: 10px;
+    }
+    
+    .branch-chip {
+        padding: 6px 12px;
+        font-size: 0.8rem;
+    }
+}

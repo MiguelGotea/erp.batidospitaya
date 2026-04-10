@@ -108,6 +108,30 @@ function getTextoUrgencia($nivel)
             <div class="container-fluid p-3">
                 <!-- Header -->
 
+                <!-- Panel de Acceso Rápido -->
+                <div class="quick-access-wrapper">
+                    <div class="quick-access-title">
+                        <i class="bi bi-lightning-charge-fill"></i>
+                        Accesos Rápidos por Sucursal
+                    </div>
+                    <div class="quick-access-chips" id="quickAccessChips">
+                        <div class="branch-chip clear-filters" onclick="limpiarFiltrosAccesoRapido()">
+                            <i class="bi bi-trash"></i> Limpiar Filtros
+                        </div>
+                        <?php foreach ($sucursales as $suc): ?>
+                            <?php 
+                                // Si el filtro de sucursal está bloqueado, solo mostrar la sucursal del usuario
+                                if ($filtro_sucursal_bloqueado && $suc['nombre_sucursal'] !== $codigo_sucursal_busqueda) continue;
+                            ?>
+                            <div class="branch-chip" data-sucursal="<?php echo $suc['nombre_sucursal']; ?>" 
+                                 onclick="aplicarAccesoRapido('<?php echo $suc['nombre_sucursal']; ?>', this)">
+                                <i class="bi bi-shop"></i>
+                                <?php echo $suc['nombre_sucursal']; ?>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+
                 <!-- Tabla de solicitudes -->
                 <div class="table-responsive">
                     <table class="table table-hover historial-table" id="tablaSolicitudes">

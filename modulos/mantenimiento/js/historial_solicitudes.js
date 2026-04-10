@@ -921,3 +921,47 @@ function seleccionarFecha(fecha, columna) {
         actualizarCalendario(columna);
     }
 }
+
+// ========== FUNCIONES ACCESO RÁPIDO SUCURSAL ==========
+
+function aplicarAccesoRapido(sucursal, element) {
+    // 1. Limpiar filtros actuales
+    filtrosActivos = {};
+
+    // 2. Aplicar filtros solicitados
+    filtrosActivos['nombre_sucursal'] = [sucursal];
+    filtrosActivos['status'] = ['solicitado', 'agendado'];
+    filtrosActivos['tipo_formulario'] = ['mantenimiento_general'];
+
+    // 3. UI Update: Marcar chip activo
+    $('.branch-chip').removeClass('active');
+    $(element).addClass('active');
+
+    // 4. Recargar datos
+    paginaActual = 1;
+    cargarDatos();
+    actualizarIndicadoresFiltros();
+
+    // 5. Scroll suave a la tabla si es necesario
+    $('html, body').animate({
+        scrollTop: $("#tablaSolicitudes").offset().top - 100
+    }, 500);
+}
+
+function limpiarFiltrosAccesoRapido() {
+    // Limpiar objeto de filtros
+    filtrosActivos = {};
+
+    // Si el filtro de sucursal está bloqueado, restaurar el filtro por defecto
+    if (typeof filtroSucursalBloqueado !== 'undefined' && filtroSucursalBloqueado && typeof codigoSucursalBusqueda !== 'undefined') {
+        filtrosActivos['nombre_sucursal'] = [codigoSucursalBusqueda];
+    }
+
+    // UI Update: Quitar activos de chips
+    $('.branch-chip').removeClass('active');
+
+    // Recargar datos
+    paginaActual = 1;
+    cargarDatos();
+    actualizarIndicadoresFiltros();
+}
