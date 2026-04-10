@@ -52,20 +52,22 @@ $detalles = $stmtDet->fetchAll(PDO::FETCH_ASSOC);
     <style>
         @page {
             size: letter;
-            margin: 10mm;
+            margin: 5mm;
         }
         body {
-            font-family: Arial, sans-serif;
-            font-size: 10px;
-            color: #333;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            font-size: 11px;
+            color: #1a1a1a;
             margin: 0;
             padding: 0;
             background-color: #fff;
         }
         .container {
-            width: 190mm; /* Ancho estándar para carta con márgenes */
-            margin: 0 auto;
-            border: 1px solid #000;
+            width: 205mm;
+            margin: 5mm auto;
+            border: 1.5px solid #000;
+            background: #fff;
+            box-shadow: 0 0 10px rgba(0,0,0,0.05); /* Sutil en pantalla */
         }
         table {
             width: 100%;
@@ -74,42 +76,48 @@ $detalles = $stmtDet->fetchAll(PDO::FETCH_ASSOC);
         }
         th, td {
             border: 1px solid #000;
-            padding: 3px 6px;
+            padding: 6px 10px;
             text-align: left;
-            word-wrap: break-word; /* Evita que el texto largo rompa la tabla */
+            word-wrap: break-word;
         }
         .header-title {
             text-align: center;
-            font-weight: bold;
-            font-size: 12px;
-            background-color: #fff;
-            padding: 6px;
+            font-weight: 800;
+            font-size: 16px;
+            background-color: #fcfcfc;
+            padding: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
         .v-label {
-            background-color: #f8f9fa;
+            background-color: #fcfcfc;
             font-weight: bold;
-            width: 60px;
+            width: 80px;
+            color: #444;
         }
         .v-value {
-            color: #0000FF;
-            font-weight: bold;
+            color: #0044CC;
+            font-weight: 700;
         }
         .table-main th {
             text-align: center;
             text-transform: uppercase;
-            font-size: 9px;
-            padding: 5px;
+            font-size: 10px;
+            font-weight: 800;
+            padding: 8px;
             background-color: #f2f2f2;
+            border-bottom: 2px solid #000;
         }
         .table-main td {
             height: 18px;
         }
         .text-center { text-align: center; }
         .text-right { text-align: right; }
-        .bg-blue { color: #0000FF; }
+        .bg-blue { color: #0044CC; }
         .total-row {
-            background-color: #fff;
-            font-weight: bold;
+            background-color: #fcfcfc;
+            font-weight: 800;
+            font-size: 12px;
         }
         .footer-table td {
             border: 1px solid #000;
@@ -383,7 +391,7 @@ $detalles = $stmtDet->fetchAll(PDO::FETCH_ASSOC);
                 $chunks = array_chunk($fotos, 2); 
                 foreach ($chunks as $index => $chunk):
             ?>
-                <div class="page-break" style="width: 190mm; margin: 10mm auto 0; border: 1px solid #000; height: 255mm;">
+                <div class="page-break" style="width: 205mm; margin: 5mm auto 0; border: 1.5px solid #000; height: 265mm; background: #fff;">
                     <?php foreach ($chunk as $subIndex => $fotoPath): ?>
                         <?php 
                             $photoIndex = ($cabeEnPrimeraHoja ? $index * 2 + $subIndex + 2 : $index * 2 + $subIndex + 1);
