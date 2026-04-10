@@ -792,24 +792,8 @@ body {
 .quick-access-chips {
     display: flex;
     gap: 10px;
-    overflow-x: auto;
+    flex-wrap: wrap;
     padding-bottom: 5px;
-    scrollbar-width: thin;
-    scrollbar-color: #51B8AC #f1f1f1;
-}
-
-.quick-access-chips::-webkit-scrollbar {
-    height: 4px;
-}
-
-.quick-access-chips::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 10px;
-}
-
-.quick-access-chips::-webkit-scrollbar-thumb {
-    background: #51B8AC;
-    border-radius: 10px;
 }
 
 .branch-chip {
