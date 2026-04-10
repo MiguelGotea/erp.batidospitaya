@@ -255,7 +255,8 @@ function getTextoUrgencia($nivel)
         const codigoSucursalBusqueda = '<?php echo $codigo_sucursal_busqueda; ?>';
         const cargoOperario = <?php echo $cargoOperario; ?>;
         const permisos = {
-            'cambiar_urgencia': <?php echo tienePermiso('historial_solicitudes_mantenimiento', 'cambiar_urgencia', $cargoOperario) ? 'true' : 'false'; ?>
+            'cambiar_urgencia': <?php echo tienePermiso('historial_solicitudes_mantenimiento', 'cambiar_urgencia', $cargoOperario) ? 'true' : 'false'; ?>,
+            'super_edicion': <?php echo tienePermiso('historial_solicitudes_mantenimiento', 'super_edicion', $cargoOperario) ? 'true' : 'false'; ?>
         };
 
         function tienepermiso(accion) {

@@ -101,6 +101,18 @@ const coloresEstado = {
     'finalizado': '#28a745'
 };
 
+const textosEstado = {
+    'solicitado': 'Solicitado',
+    'clasificado': 'Clasificado',
+    'agendado': 'Agendado',
+    'finalizado': 'Finalizado'
+};
+
+const textosTipo = {
+    'mantenimiento': 'Mantenimiento',
+    'cambio_equipos': 'Cambio Equipo'
+};
+
 // Inicializar al cargar la página
 $(document).ready(function () {
     cargarDatos();
@@ -191,7 +203,7 @@ function renderizarTabla(datos) {
         tr.append(`<td>${formatearFecha(row.created_at)}</td>`);
 
         // Título
-        tr.append(`<td class="col-titulo">${row.titulo}</td>`);
+        tr.append(`<td class="col-titulo">${renderizarTituloEditable(row.id, row.titulo)}</td>`);
 
         // Descripción
         tr.append(`<td class="col-descripcion">${row.descripcion}</td>`);
@@ -200,9 +212,7 @@ function renderizarTabla(datos) {
         tr.append(`<td class="col-sucursal">${row.nombre_sucursal}</td>`);
 
         // Tipo
-        const tipoClass = row.tipo_formulario === 'cambio_equipos' ? 'cambio-equipo' : 'mantenimiento';
-        const tipoText = row.tipo_formulario === 'cambio_equipos' ? 'Cambio Equipo' : 'Mantenimiento';
-        tr.append(`<td><span class="badge-tipo ${tipoClass}">${tipoText}</span></td>`);
+        tr.append(`<td>${renderizarTipoEditable(row.id, row.tipo_formulario)}</td>`);
 
         // Urgencia
         tr.append(`<td>${renderizarUrgencia(row.id, row.nivel_urgencia)}</td>`);
@@ -211,8 +221,7 @@ function renderizarTabla(datos) {
         tr.append(`<td>${renderizarTiempoEstimado(row.id, row.tiempo_estimado)}</td>`);
 
         // Estado
-        const colorEstado = coloresEstado[row.status] || '#6c757d';
-        tr.append(`<td><span class="badge-estado" style="background-color: ${colorEstado};">${row.status}</span></td>`);
+        tr.append(`<td>${renderizarEstadoEditable(row.id, row.status)}</td>`);
 
         // Agendado - con estilos según estado
         const fechaAgendadoHTML = renderizarFechaAgendado(row.fecha_inicio, row.status);
@@ -964,4 +973,225 @@ function limpiarFiltrosAccesoRapido() {
     paginaActual = 1;
     cargarDatos();
     actualizarIndicadoresFiltros();
+}
+// ========== FUNCIONES DE SUPER EDICIÓN ==========
+
+// Renderizar título editable
+function renderizarTituloEditable(ticketId, titulo) {
+    const permiteEditar = tienepermiso('super_edicion');
+    
+    if (!permiteEditar) {
+        return titulo;
+    }
+
+    return `
+        <div class="titulo-editable" onclick="habilitarEdicionTitulo(this, ${ticketId}, '${titulo.replace(/'/g, "\\'")}')">
+            ${titulo}
+        </div>
+    `;
+}
+
+// Habilitar edición de título
+function habilitarEdicionTitulo(container, ticketId, tituloActual) {
+    if ($(container).find('input').length > 0) return;
+
+    const input = $(`<input type="text" class="form-control form-control-sm input-inline-titulo" 
+                            value="${tituloActual}" 
+                            style="width: 100%; height: 26px; padding: 2px; font-size: 0.85rem;">`);
+
+    $(container).html(input);
+    input.focus().select();
+
+    input.on('blur', function () {
+        const nuevoTitulo = $(this).val().trim();
+        if (nuevoTitulo === '' || nuevoTitulo === tituloActual) {
+            $(container).html(tituloActual);
+        } else {
+            actualizarTitulo(ticketId, nuevoTitulo);
+        }
+    });
+
+    input.on('keyup', function (e) {
+        if (e.key === 'Enter') {
+            $(this).blur();
+        } else if (e.key === 'Escape') {
+            $(container).html(tituloActual);
+        }
+    });
+}
+
+// Actualizar título
+function actualizarTitulo(ticketId, nuevoTitulo) {
+    $.ajax({
+        url: 'ajax/historial_actualizar_titulo.php',
+        method: 'POST',
+        data: {
+            ticket_id: ticketId,
+            titulo: nuevoTitulo
+        },
+        dataType: 'json',
+        success: function (response) {
+            if (response.success) {
+                cargarDatos();
+            } else {
+                alert('Error: ' + response.message);
+                cargarDatos(); // Revertir UI
+            }
+        },
+        error: function () {
+            alert('Error al actualizar el título');
+            cargarDatos();
+        }
+    });
+}
+
+// Renderizar tipo editable
+function renderizarTipoEditable(ticketId, tipoActual) {
+    const tipoClass = tipoActual === 'cambio_equipos' ? 'cambio-equipo' : 'mantenimiento';
+    const tipoText = textosTipo[tipoActual] || tipoActual;
+    const permiteEditar = tienepermiso('super_edicion');
+    
+    const cursor = permiteEditar ? 'pointer' : 'default';
+    const onClick = permiteEditar ? `onclick="cambiarTipo(${ticketId}, '${tipoActual}')"` : '';
+
+    return `<span class="badge-tipo ${tipoClass} editable-badge" style="cursor: ${cursor};" ${onClick}>${tipoText}</span>`;
+}
+
+// Cambiar tipo
+function cambiarTipo(ticketId, tipoActual) {
+    const opciones = `
+        <div style="padding: 0.5rem;">
+            <div style="font-weight: 600; margin-bottom: 0.5rem;">Seleccionar tipo:</div>
+            ${Object.keys(textosTipo).map(tipo => {
+        const selected = tipo === tipoActual ? '✓ ' : '';
+        const texto = textosTipo[tipo];
+        return `
+                    <div class="opcion-modal-pitaya" 
+                         onclick="actualizarTipo(${ticketId}, '${tipo}')">
+                        <span>${selected}${texto}</span>
+                    </div>
+                `;
+    }).join('')}
+        </div>
+    `;
+
+    abrirModalPitaya('modalTipoSolicitud', 'Tipo de Solicitud', opciones);
+}
+
+// Actualizar tipo
+function actualizarTipo(ticketId, nuevoTipo) {
+    $('#modalTipoSolicitud').modal('hide');
+
+    $.ajax({
+        url: 'ajax/historial_actualizar_tipo.php',
+        method: 'POST',
+        data: {
+            ticket_id: ticketId,
+            tipo: nuevoTipo
+        },
+        dataType: 'json',
+        success: function (response) {
+            if (response.success) {
+                cargarDatos();
+            } else {
+                alert('Error: ' + response.message);
+            }
+        },
+        error: function () {
+            alert('Error al actualizar el tipo');
+        }
+    });
+}
+
+// Renderizar estado editable
+function renderizarEstadoEditable(ticketId, statusActual) {
+    const colorEstado = coloresEstado[statusActual] || '#6c757d';
+    const permiteEditar = tienepermiso('super_edicion');
+    
+    const cursor = permiteEditar ? 'pointer' : 'default';
+    const onClick = permiteEditar ? `onclick="cambiarEstado(${ticketId}, '${statusActual}')"` : '';
+
+    return `<span class="badge-estado editable-badge" style="background-color: ${colorEstado}; cursor: ${cursor};" ${onClick}>${textosEstado[statusActual] || statusActual}</span>`;
+}
+
+// Cambiar estado
+function cambiarEstado(ticketId, statusActual) {
+    const opciones = `
+        <div style="padding: 0.5rem;">
+            <div style="font-weight: 600; margin-bottom: 0.5rem;">Seleccionar estado:</div>
+            ${Object.keys(textosEstado).map(status => {
+        const color = coloresEstado[status];
+        const selected = status === statusActual ? '✓ ' : '';
+        const texto = textosEstado[status];
+        return `
+                    <div class="opcion-modal-pitaya" 
+                         style="background-color: ${color}; color: white;"
+                         onclick="actualizarEstado(${ticketId}, '${status}')">
+                        <span>${selected}${texto}</span>
+                    </div>
+                `;
+    }).join('')}
+        </div>
+    `;
+
+    abrirModalPitaya('modalEstadoSolicitud', 'Estado de la Solicitud', opciones);
+}
+
+// Actualizar estado
+function actualizarEstado(ticketId, nuevoStatus) {
+    $('#modalEstadoSolicitud').modal('hide');
+
+    $.ajax({
+        url: 'ajax/historial_actualizar_status.php',
+        method: 'POST',
+        data: {
+            ticket_id: ticketId,
+            status: nuevoStatus
+        },
+        dataType: 'json',
+        success: function (response) {
+            if (response.success) {
+                cargarDatos();
+            } else {
+                alert('Error: ' + response.message);
+            }
+        },
+        error: function () {
+            alert('Error al actualizar el estado');
+        }
+    });
+}
+
+// Función genérica para abrir modales estilo pitaya
+function abrirModalPitaya(id, titulo, contenido) {
+    // Cerrar modal anterior si existe
+    const modalAnterior = document.getElementById(id);
+    if (modalAnterior) {
+        $(modalAnterior).modal('hide');
+        modalAnterior.remove();
+    }
+
+    const modalHtml = `
+        <div class="modal fade" id="${id}" tabindex="-1">
+            <div class="modal-dialog modal-sm">
+                <div class="modal-content">
+                    <div class="modal-header" style="background-color: #0E544C; color: white; padding: 0.75rem 1rem;">
+                        <h6 class="modal-title mb-0">${titulo}</h6>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body p-0">
+                        ${contenido}
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    $('body').append(modalHtml);
+    const modal = new bootstrap.Modal(document.getElementById(id));
+    modal.show();
+
+    $(`#${id}`).on('hidden.bs.modal', function () {
+        $(this).remove();
+    });
 }

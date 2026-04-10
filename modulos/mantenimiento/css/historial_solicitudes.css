@@ -866,3 +866,56 @@ body {
         font-size: 0.8rem;
     }
 }
+
+/* Estilos de Super Edición */
+.titulo-editable {
+    cursor: pointer;
+    padding: 2px 4px;
+    border-radius: 4px;
+    transition: all 0.2s;
+    border: 1px solid transparent;
+}
+
+.titulo-editable:hover {
+    background-color: #f0f7f6;
+    border-color: #51B8AC;
+    color: #0E544C;
+}
+
+.input-inline-titulo {
+    font-weight: 600;
+    color: #0E544C;
+    border-color: #51B8AC !important;
+    box-shadow: 0 0 0 0.15rem rgba(81, 184, 172, 0.25) !important;
+}
+
+.editable-badge {
+    transition: all 0.2s;
+}
+
+.editable-badge:hover {
+    filter: brightness(0.9);
+    transform: scale(1.05);
+}
+
+.opcion-modal-pitaya {
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    border-radius: 3px;
+    margin: 0.25rem 0.5rem;
+    background-color: #f8f9fa;
+    color: #333;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.opcion-modal-pitaya:hover {
+    opacity: 0.8;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+}
