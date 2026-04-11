@@ -579,10 +579,17 @@ function cambiarPagina(pagina) {
 // Formatear fecha
 function formatearFecha(fecha) {
     if (!fecha) return '-';
+    // La fecha viene en formato YYYY-MM-DD del servidor
+    const partes = fecha.split('-');
+    if (partes.length !== 3) return fecha;
+
     const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-    const d = new Date(fecha);
-    const año = String(d.getFullYear()).slice(-2);
-    return `${String(d.getDate()).padStart(2, '0')}-${meses[d.getMonth()]}-${año}`;
+    const año = partes[0].slice(-2); // Últimos 2 dígitos del año
+    const mesIdx = parseInt(partes[1]) - 1; // Mes es 1-indexed en la cadena
+    const mes = meses[mesIdx] || partes[1];
+    const dia = partes[2];
+
+    return `${dia}-${mes}-${año}`;
 }
 // Formatear hora
 function formatearHora(hora) {
