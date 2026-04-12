@@ -1,4 +1,4 @@
-name: 🚀 Deploy ERP - 17 Módulos
+name: 🚀 Deploy ERP - 19 Módulos
 
 on:
   push:
@@ -39,6 +39,7 @@ jobs:
           "sucursales"
           "tecnicodesarrollohumano"
           "ventas"
+          "productos"
         )
         
         for MODULE in "${MODULES[@]}"; do
@@ -102,6 +103,7 @@ jobs:
           "sucursales"
           "tecnicodesarrollohumano"
           "ventas"
+          "productos"
         )
         
         for MODULE in "${MODULES[@]}"; do
@@ -117,6 +119,6 @@ jobs:
         
     - name: ✅ Verificar deploy
       run: |
-        echo "✅ Deploy completado para los 17 módulos + Core raíz"
+        echo "✅ Deploy completado para los 19 módulos + Core raíz"
         echo "🌐 Sitio: https://erp.batidospitaya.com"
         echo "🖥️ Servidor: ${{ secrets.HOSTINGER_HOST }}:65002"

@@ -11,7 +11,7 @@
 # Las 3 carpetas compartidas (core, docs, .agent) son trackeadas en GitHub
 # pero excluidas del host vía --exclude en deploy-erp.yml
 
-# Excluir todo en modulos EXCEPTO los modulos permitidos (15 en total)
+# Excluir todo en modulos EXCEPTO los modulos permitidos (19 en total)
 /modulos/*
 !/modulos/atencioncliente/
 !/modulos/auxiliaradministrativo/
@@ -31,6 +31,7 @@
 !/modulos/sucursales/
 !/modulos/tecnicodesarrollohumano/
 !/modulos/ventas/
+!/modulos/productos/
 
 # Excluir todo dentro de uploads (pero mantener las carpetas)
 /modulos/atencioncliente/uploads/*
@@ -51,3 +52,4 @@
 /modulos/sucursales/uploads/*
 /modulos/tecnicodesarrollohumano/uploads/*
 /modulos/ventas/uploads/*
+/modulos/productos/uploads/*
