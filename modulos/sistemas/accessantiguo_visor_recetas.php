@@ -722,26 +722,41 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                 // - Misma unidad:  srCant / ppCant
                 // - Unidad distinta: (srCant × factor) / ppCant
                 //   donde factor = conversion_unidad_producto.cantidad para [unidadIngrediente → unidadERP]
+                // - P1 (porción directa): resultado redondeado al 0.5 más cercano
+                //   ej: 1.2→1.0  1.4→1.5  1.8→2.0  (Math.round(x*2)/2)
                 let celCantERP = '—';
                 if (ir && ir.cantidad != null) {
-                    const ppCant = parseFloat(ir.cantidad);
-                    const srCant = parseFloat(ingr.Cantidad);
-                    const factor = (ir.factor_conversion != null) ? parseFloat(ir.factor_conversion) : 1;
+                    const ppCant  = parseFloat(ir.cantidad);
+                    const srCant  = parseFloat(ingr.Cantidad);
+                    const factor  = (ir.factor_conversion != null) ? parseFloat(ir.factor_conversion) : 1;
+                    const esDirP1 = ingr.metodo_cotizacion === 'directa';
 
                     if (ppCant > 0 && !isNaN(srCant)) {
                         const resultado = (srCant * factor) / ppCant;
-                        const display = resultado % 1 === 0
-                            ? resultado.toString()
-                            : parseFloat(resultado.toFixed(4)).toString();
+
+                        let display;
+                        if (esDirP1) {
+                            // Redondear al 0.5 más cercano para porciones directas
+                            const redondeado = Math.round(resultado * 2) / 2;
+                            display = redondeado % 1 === 0
+                                ? redondeado.toString()
+                                : redondeado.toFixed(1);
+                        } else {
+                            display = resultado % 1 === 0
+                                ? resultado.toString()
+                                : parseFloat(resultado.toFixed(4)).toString();
+                        }
 
                         if (factor !== 1 && ir.factor_conversion != null) {
                             // Mostrar conversión aplicada en tooltip
-                            celCantERP = `<span title="${srCant} ${esc(ingr.UnidadIngrediente)} × ${factor} ÷ ${ppCant} ${esc(ir.unidadNueva)}">${display}</span>`;
+                            const exacto = parseFloat(resultado.toFixed(4));
+                            celCantERP = `<span title="${srCant} ${esc(ingr.UnidadIngrediente)} × ${factor} ÷ ${ppCant} ${esc(ir.unidadNueva)} = ${exacto}">${display}</span>`;
                         } else {
                             celCantERP = display;
                         }
                     }
                 }
+
 
                 // Presentación Uso: el producto que actualmente sirve al consumo
                 let celPresentacionUso;
