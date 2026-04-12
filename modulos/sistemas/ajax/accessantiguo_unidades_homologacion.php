@@ -65,23 +65,24 @@ function resolverUnidadERP(PDO $conn, string $unidadAntigua): ?array
         $nombrePrincipal = $unidad['nombre'];
 
         // ── Paso 2: Unidades relacionadas por conversión ──────────────────────
+        // IMPORTANTE: usar ? posicionales, no :id repetido → evita PDO HY093
         $stmtConv = $conn->prepare("
             SELECT
                 CASE
-                    WHEN c.id_unidad_producto_inicio = :id THEN uf.nombre
+                    WHEN c.id_unidad_producto_inicio = ? THEN uf.nombre
                     ELSE ui.nombre
                 END                      AS nombre_relacionado,
                 CASE
-                    WHEN c.id_unidad_producto_inicio = :id THEN c.cantidad
+                    WHEN c.id_unidad_producto_inicio = ? THEN c.cantidad
                     ELSE (1 / c.cantidad)
                 END                      AS factor_a_relacionado
             FROM conversion_unidad_producto c
             JOIN unidad_producto ui ON ui.id = c.id_unidad_producto_inicio
             JOIN unidad_producto uf ON uf.id = c.id_unidad_producto_final
-            WHERE c.id_unidad_producto_inicio = :id
-               OR c.id_unidad_producto_final  = :id
+            WHERE c.id_unidad_producto_inicio = ?
+               OR c.id_unidad_producto_final  = ?
         ");
-        $stmtConv->execute([':id' => $unidadId]);
+        $stmtConv->execute([$unidadId, $unidadId, $unidadId, $unidadId]);
 
         $convertibles = [];
         $conversiones = [];
