@@ -762,6 +762,209 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
         // ── Init ──────────────────────────────────────────────────────────────
         cargarGrupos();
     </script>
+    <!-- ══════════════════════════════════════════════════════════════════
+         MODAL DE AYUDA — Visor de Recetas
+         Abierto por openPageHelp() del header universal
+    ═══════════════════════════════════════════════════════════════════ -->
+    <div class="modal fade" id="pageHelpModal" tabindex="-1" aria-labelledby="pageHelpModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-content">
+
+                <div class="modal-header" style="background:linear-gradient(135deg,#1a3a2a,#2d7a50);color:#fff">
+                    <h5 class="modal-title" id="pageHelpModalLabel">
+                        <i class="fas fa-blender me-2"></i> Guía — Visor de Recetas (Access → ERP)
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body" style="font-size:.88rem;line-height:1.65">
+
+                    <!-- ── SECCIÓN 1: ¿Qué hace esta página? ─────────────────────── -->
+                    <h6 class="fw-bold text-success mb-2"><i class="fas fa-info-circle me-1"></i> ¿Qué hace esta página?</h6>
+                    <p>
+                        Permite consultar las recetas del <strong>sistema Access antiguo</strong> y ver, para cada
+                        ingrediente, cómo se resuelve su presentación comercial (cotización) y cómo se traduce
+                        al nuevo ERP (Pitaya). Cada receta se consulta por Grupo → Producto → Versión/Tamaño.
+                    </p>
+
+                    <hr>
+
+                    <!-- ── SECCIÓN 2: Sistema de Prioridades para Cotización ──────── -->
+                    <h6 class="fw-bold text-success mb-2"><i class="fas fa-layer-group me-1"></i> Sistema de Prioridades — Resolución de Cotización</h6>
+                    <p>Para cada ingrediente de la receta, el sistema busca su presentación comercial (cotización)
+                       siguiendo este orden de prioridad:</p>
+
+                    <div class="table-responsive mb-3">
+                        <table class="table table-sm table-bordered align-middle mb-0">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th style="width:100px">Prioridad</th>
+                                    <th>Condición de Búsqueda</th>
+                                    <th style="width:130px">Badge en tabla</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="fw-bold text-primary">🔵 1 — Porción</td>
+                                    <td>
+                                        El campo <code>SubReceta.codporcion</code> tiene valor (≠ NULL y &gt; 0).<br>
+                                        Se usa directamente como <code>CodCotizacion</code> en la tabla
+                                        <code>Cotizaciones</code>. Indica que la receta especifica
+                                        una presentación exacta ("porción mapeada").
+                                    </td>
+                                    <td><span style="font-size:.72rem;background:#e3f2fd;color:#1565c0;border-radius:3px;padding:2px 7px">porción</span></td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold text-purple" style="color:#6a1b9a">🟣 2 — Base</td>
+                                    <td>
+                                        <code>codporcion</code> es NULL. Se busca en <code>Cotizaciones</code> el
+                                        registro base del ingrediente donde <code>Conversion&nbsp;=&nbsp;1</code>
+                                        <strong>y</strong> <code>Prioridad&nbsp;=&nbsp;1</code>.
+                                    </td>
+                                    <td><span style="font-size:.72rem;background:#f3e5f5;color:#6a1b9a;border-radius:3px;padding:2px 7px">Conversión=1</span></td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold" style="color:#e65100">🟠 3 — Prioritaria</td>
+                                    <td>
+                                        Si no se encontró nada en Prioridad 2, se busca cualquier cotización del
+                                        ingrediente que cumpla:
+                                        <ul class="mb-0 mt-1">
+                                            <li><code>Subproducto IS NULL OR Subproducto ≠ 1</code> (no es subproducto)</li>
+                                            <li><code>Marca ≠ 'Almacen Global'</code></li>
+                                            <li><code>Prioridad = 1</code></li>
+                                        </ul>
+                                        Se toma el primer resultado encontrado.
+                                    </td>
+                                    <td><span style="font-size:.72rem;background:#fff8e1;color:#e65100;border-radius:3px;padding:2px 7px">Prioritaria</span></td>
+                                </tr>
+                                <tr class="table-danger">
+                                    <td class="fw-bold text-danger">🔴 Sin cotización</td>
+                                    <td>Ninguna de las 3 prioridades encontró un resultado.</td>
+                                    <td><span style="font-size:.72rem;color:#e57373;font-style:italic">Sin cotización</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <hr>
+
+                    <!-- ── SECCIÓN 3: Estructura de la tabla ─────────────────────── -->
+                    <h6 class="fw-bold text-success mb-2"><i class="fas fa-table me-1"></i> Estructura de la Tabla — 3 Segmentos</h6>
+                    <p>La tabla de ingredientes está dividida en <strong>3 segmentos visuales</strong>:</p>
+
+                    <!-- Segmento 1 -->
+                    <div class="p-2 mb-2 rounded" style="background:#e8f5e9;border-left:4px solid #40916c">
+                        <strong><i class="fas fa-database me-1 text-success"></i> Estructura Access</strong>
+                        <p class="mb-1 mt-1" style="font-size:.82rem">Datos tal como están en el sistema Access original.</p>
+                        <table class="table table-sm table-bordered mb-0" style="font-size:.8rem">
+                            <thead class="table-success">
+                                <tr><th>Columna</th><th>Contenido</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td><strong>Nombre</strong></td><td>Nombre del ingrediente (<code>DBIngredientes.Nombre</code>) + código debajo. Tachado si está inactivo.</td></tr>
+                                <tr><td><strong>Unidad Base</strong></td><td>Unidad de medida del ingrediente (<code>DBIngredientes.Unidad</code>).</td></tr>
+                                <tr><td><strong>Cantidad</strong></td><td>Cantidad usada en la receta (<code>SubReceta.Cantidad</code>).</td></tr>
+                                <tr><td><strong>Porción</strong></td><td>Código de porción asignado (<code>SubReceta.codporcion</code>). Muestra "—" si no tiene.</td></tr>
+                                <tr>
+                                    <td><strong>Cotización</strong></td>
+                                    <td>
+                                        Muestra: <code>NombreIngrediente · Marca · Linea · Capacidad</code>
+                                        (campos de <code>Cotizaciones</code>).<br>
+                                        Si alguno de los campos está vacío en la BD, se omite del texto.
+                                        Si no hay cotización resuelta, muestra "Sin cotización" en rojo.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Segmento 2 -->
+                    <div class="p-2 mb-2 rounded" style="background:#e8eaf6;border-left:4px solid #5c7aff">
+                        <strong><i class="fas fa-receipt me-1" style="color:#3949ab"></i> Comanda Access</strong>
+                        <p class="mb-1 mt-1" style="font-size:.82rem">Vista orientada a cómo se preparaba la comanda en Access.</p>
+                        <table class="table table-sm table-bordered mb-0" style="font-size:.8rem">
+                            <thead style="background:#c5cae9">
+                                <tr><th>Columna</th><th>Prioridad 1 (porción)</th><th>Prioridad 2 y 3</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Orden</strong></td>
+                                    <td colspan="2"><code>SubReceta.ordenreceta</code> (número de orden en la receta).</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Tipo</strong></td>
+                                    <td colspan="2">Tipo de ingrediente: B (Batido base), L (Líquido/extra), P (Porcionado).</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Nombre</strong></td>
+                                    <td><code>NombreIngrediente (Marca, Linea, Capacidad)</code><br><small>Los datos entre paréntesis vienen de la cotización.</small></td>
+                                    <td><code>NombreIngrediente (UnidadBase)</code><br><small>La unidad entre paréntesis es la misma que "Unidad Base" de Estructura Access.</small></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Cantidad</strong></td>
+                                    <td>
+                                        <code>SubReceta.Cantidad ÷ Cotizacion.Conversion</code><br>
+                                        <small>Expresa qué fracción de la presentación se consume por receta.</small>
+                                    </td>
+                                    <td>
+                                        Misma cantidad que "Cantidad" de Estructura Access<br>
+                                        (<code>SubReceta.Cantidad</code> sin transformar).
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Segmento 3 -->
+                    <div class="p-2 mb-3 rounded" style="background:#f3e5f5;border-left:4px solid #9c27b0">
+                        <strong><i class="fas fa-layer-group me-1" style="color:#7b1fa2"></i> Nuevo Sistema (ERP)</strong>
+                        <p class="mb-1 mt-1" style="font-size:.82rem">Traducción del ingrediente al catálogo del nuevo ERP Pitaya.</p>
+                        <table class="table table-sm table-bordered mb-0" style="font-size:.8rem">
+                            <thead style="background:#e1bee7">
+                                <tr><th>Estado</th><th>¿Qué muestra?</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><span class="badge" style="background:#c8e6c9;color:#1b5e20">✓ Traducido</span></td>
+                                    <td>Nombre del producto en el nuevo ERP, unidad, cantidad y producto maestro.
+                                        Si fue resuelto automáticamente por maestro + unidad, muestra badge
+                                        <span style="background:#e8f5e9;color:#2e7d32;font-size:.72rem;border-radius:3px;padding:1px 5px">AUTO</span>.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><span style="color:#888;font-style:italic;font-size:.82rem">⚠ Sin mapeo</span></td>
+                                    <td>Hay cotización resuelta pero el ingrediente no tiene mapeo en el diccionario del ERP.</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="text-danger" style="font-style:italic;font-size:.82rem">✕ No resuelto</span></td>
+                                    <td>Sin cotización y sin traducción. El ingrediente no pudo resolverse en ningún paso.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <hr>
+
+                    <!-- ── SECCIÓN 4: Resumen estadístico ────────────────────────── -->
+                    <h6 class="fw-bold text-success mb-2"><i class="fas fa-chart-bar me-1"></i> Barra de Resumen</h6>
+                    <p>Encima de la tabla se muestra un resumen con los conteos de:</p>
+                    <ul class="mb-0">
+                        <li><strong>Total de ingredientes</strong> en la receta.</li>
+                        <li class="text-success"><strong>Traducidos al nuevo ERP</strong> — tienen producto mapeado.</li>
+                        <li class="text-warning"><strong>Con cotización pero sin mapeo</strong> — cotización encontrada pero sin entrada en el diccionario ERP.</li>
+                        <li class="text-danger"><strong>Sin cotización resuelta</strong> — ninguna de las 3 prioridades encontró resultado.</li>
+                    </ul>
+
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
 </body>
 
 </html>
