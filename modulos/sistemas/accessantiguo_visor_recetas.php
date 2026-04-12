@@ -31,30 +31,6 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
             background: #f0f2f5;
         }
 
-        /* ── Header ─────────────────────────────────────────── */
-        .page-header {
-            background: linear-gradient(135deg, #1a3a2a 0%, #2d7a50 100%);
-            color: #fff;
-            border-radius: 12px;
-            padding: 18px 24px;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 14px;
-        }
-
-        .page-header h1 {
-            font-size: 1.35rem;
-            margin: 0;
-            font-weight: 700;
-        }
-
-        .page-header p {
-            margin: 3px 0 0;
-            font-size: .82rem;
-            opacity: .8;
-        }
-
         /* ── Panel selectores ───────────────────────────────── */
         .panel-selector {
             background: #fff;
@@ -307,15 +283,6 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
         <div class="sub-container">
             <?php echo renderHeader($usuario, false, 'Visor de Recetas'); ?>
 
-            <!-- Header -->
-            <div class="page-header">
-                <div style="font-size:2rem; opacity:.85"><i class="fas fa-blender"></i></div>
-                <div>
-                    <h1>Visor de Recetas</h1>
-                    <p>Consulta de recetas del sistema antiguo con traducción al nuevo ERP de productos</p>
-                </div>
-            </div>
-
             <!-- Selectores -->
             <div class="panel-selector">
                 <div class="row g-3 align-items-end">
@@ -385,13 +352,16 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                         <thead>
                             <!-- ── Fila de segmentos ── -->
                             <tr>
-                                <th colspan="5" class="text-center" style="background:#1b4332;border-right:3px solid #40916c;letter-spacing:.05em;font-size:.7rem;padding:6px 10px">
+                                <th colspan="5" class="text-center"
+                                    style="background:#1b4332;border-right:3px solid #40916c;letter-spacing:.05em;font-size:.7rem;padding:6px 10px">
                                     <i class="fas fa-database me-1"></i> Estructura Access
                                 </th>
-                                <th colspan="4" class="text-center" style="background:#1a237e;border-right:3px solid #5c7aff;letter-spacing:.05em;font-size:.7rem;padding:6px 10px">
+                                <th colspan="4" class="text-center"
+                                    style="background:#1a237e;border-right:3px solid #5c7aff;letter-spacing:.05em;font-size:.7rem;padding:6px 10px">
                                     <i class="fas fa-receipt me-1"></i> Comanda Access
                                 </th>
-                                <th class="text-center" style="background:#4a148c;letter-spacing:.05em;font-size:.7rem;padding:6px 10px">
+                                <th class="text-center"
+                                    style="background:#4a148c;letter-spacing:.05em;font-size:.7rem;padding:6px 10px">
                                     <i class="fas fa-layer-group me-1"></i> Nuevo Sistema
                                 </th>
                             </tr>
