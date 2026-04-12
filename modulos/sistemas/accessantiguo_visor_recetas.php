@@ -659,13 +659,20 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                 const insumoChip = ingr.InsumoClave ? `<span class="chip-clave ms-1">Clave</span>` : '';
                 const unidad = ingr.UnidadIngrediente ? `<small class="text-muted"> ${esc(ingr.UnidadIngrediente)}</small>` : '';
 
-                // Cotización (sin número)
+                // Cotización
                 const cot = ingr.cotizacion;
+                const metodoCot = ingr.metodo_cotizacion;
+                let cotBadge = '';
+                if (metodoCot === 'directa') {
+                    cotBadge = '<span style="font-size:.65rem;background:#e3f2fd;color:#1565c0;border-radius:3px;padding:1px 5px;display:inline-block;margin-top:3px">porción</span>';
+                } else if (metodoCot === 'conversion1') {
+                    cotBadge = '<span style="font-size:.65rem;background:#f3e5f5;color:#6a1b9a;border-radius:3px;padding:1px 5px;display:inline-block;margin-top:3px">Conversión=1</span>';
+                } else if (metodoCot === 'prioritaria') {
+                    cotBadge = '<span style="font-size:.65rem;background:#fff8e1;color:#e65100;border-radius:3px;padding:1px 5px;display:inline-block;margin-top:3px">Prioritaria</span>';
+                }
+                const infoTexto = cot ? [cot.Marca, cot.Linea, cot.Capacidad].filter(Boolean).join(' · ') : '';
                 const cotHTML = cot
-                    ? `<div style="font-size:.75rem;color:#333">${[cot.Marca, cot.Linea, cot.Capacidad].filter(Boolean).join(' · ')}</div>
-                       ${ingr.codporcion
-                        ? '<span style="font-size:.65rem;background:#e3f2fd;color:#1565c0;border-radius:3px;padding:1px 5px">por porción</span>'
-                        : '<span style="font-size:.65rem;background:#f3e5f5;color:#6a1b9a;border-radius:3px;padding:1px 5px">Conversión=1</span>'}`
+                    ? `<div style="font-size:.75rem;color:#333">${infoTexto || '<span style="color:#bbb;font-style:italic">Sin detalle</span>'}</div>${cotBadge}`
                     : `<span class="sin-cot">Sin cotización</span>`;
 
                 // Traducción nuevo ERP

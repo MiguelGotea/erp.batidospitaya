@@ -84,9 +84,11 @@ try {
         $codIngrediente = $ingr['CodIngrediente'];
         $codporcion = $ingr['codporcion'];
 
-        // 1) Resolver CodCotizacion
+        $cotizacion = null;
+        $ingr['metodo_cotizacion'] = null;
+
+        // 1) Prioridad 1: codporcion ES el CodCotizacion directamente
         if ($codporcion !== null && $codporcion > 0) {
-            // codporcion ES el CodCotizacion directamente
             $stmtCot = $conn->prepare("
                 SELECT CodCotizacion, Marca, Linea, Capacidad, Unidad, Conversion
                 FROM Cotizaciones
@@ -94,8 +96,12 @@ try {
                 LIMIT 1
             ");
             $stmtCot->execute([':cc' => $codporcion]);
+            $cotizacion = $stmtCot->fetch(PDO::FETCH_ASSOC);
+            if ($cotizacion) {
+                $ingr['metodo_cotizacion'] = 'directa';
+            }
         } else {
-            // Buscar en Cotizaciones el registro base (Conversion = 1) del ingrediente
+            // 2) Prioridad 2: registro base del ingrediente con Conversion = 1
             $stmtCot = $conn->prepare("
                 SELECT CodCotizacion, Marca, Linea, Capacidad, Unidad, Conversion
                 FROM Cotizaciones
@@ -103,8 +109,27 @@ try {
                 LIMIT 1
             ");
             $stmtCot->execute([':ci' => $codIngrediente]);
+            $cotizacion = $stmtCot->fetch(PDO::FETCH_ASSOC);
+            if ($cotizacion) {
+                $ingr['metodo_cotizacion'] = 'conversion1';
+            } else {
+                // 3) Prioridad 3: cotización prioritaria (sin subproducto, sin Almacen Global, Prioridad=1)
+                $stmtCot3 = $conn->prepare("
+                    SELECT CodCotizacion, Marca, Linea, Capacidad, Unidad, Conversion
+                    FROM Cotizaciones
+                    WHERE CodIngrediente = :ci
+                      AND (Subproducto IS NULL OR Subproducto != 1)
+                      AND Marca != 'Almacen Global'
+                      AND Prioridad = 1
+                    LIMIT 1
+                ");
+                $stmtCot3->execute([':ci' => $codIngrediente]);
+                $cotizacion = $stmtCot3->fetch(PDO::FETCH_ASSOC);
+                if ($cotizacion) {
+                    $ingr['metodo_cotizacion'] = 'prioritaria';
+                }
+            }
         }
-        $cotizacion = $stmtCot->fetch(PDO::FETCH_ASSOC);
 
         $ingr['cotizacion'] = $cotizacion ?: null;
         $codCotizacion = $cotizacion['CodCotizacion'] ?? null;
