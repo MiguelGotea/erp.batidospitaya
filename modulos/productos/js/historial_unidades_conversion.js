@@ -88,11 +88,17 @@ function renderizarTabla(datos) {
         const tr = $('<tr>');
 
         tr.append(`<td><strong>${row.nombre}</strong></td>`);
+        tr.append(`<td><span class="badge bg-secondary">${row.abreviado || '-'}</span></td>`);
+        tr.append(`<td><small class="text-muted">${row.nombres_opcionales || '-'}</small></td>`);
         tr.append(`<td>${row.observaciones || '-'}</td>`);
 
         // Botones de acciones - solo si tiene permiso
         if (row.puede_crear) {
             let btnAcciones = `
+                <button class="btn-accion btn-editar" onclick="abrirModalEditarUnidad(${row.id}, '${row.nombre}', '${row.abreviado || ''}', '${row.nombres_opcionales || ''}', '${row.observaciones || ''}')" 
+                        title="Editar unidad">
+                    <i class="bi bi-pencil"></i>
+                </button>
                 <button class="btn-accion btn-conversion" onclick="abrirModalConversion(${row.id}, '${row.nombre}')" 
                         title="Nueva conversión desde ${row.nombre}">
                     <i class="bi bi-arrow-left-right"></i>
@@ -114,6 +120,17 @@ function abrirModalNuevaUnidad() {
     $('#modalUnidadTitulo').text('Nueva Unidad');
     $('#formUnidad')[0].reset();
     $('#unidadId').val('');
+    modalUnidad.show();
+}
+
+function abrirModalEditarUnidad(id, nombre, abreviado, nombres_opcionales, observaciones) {
+    $('#modalUnidadTitulo').text('Editar Unidad');
+    $('#formUnidad')[0].reset();
+    $('#unidadId').val(id);
+    $('#nombreUnidad').val(nombre);
+    $('#abreviadoUnidad').val(abreviado);
+    $('#nombresOpcionales').val(nombres_opcionales);
+    $('#observaciones').val(observaciones);
     modalUnidad.show();
 }
 

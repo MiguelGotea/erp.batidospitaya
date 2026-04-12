@@ -60,6 +60,14 @@ $puedeCrear = tienePermiso('unidades_conversion_productos', 'nuevo_registro', $c
                                     Nombre
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
+                                <th data-column="abreviado" data-type="text">
+                                    Abreviado
+                                    <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                </th>
+                                <th data-column="nombres_opcionales" data-type="text">
+                                    Nombres Opcionales
+                                    <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                </th>
                                 <th data-column="observaciones" data-type="text">
                                     Observaciones
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
@@ -108,6 +116,19 @@ $puedeCrear = tienePermiso('unidades_conversion_productos', 'nuevo_registro', $c
                             <label for="nombreUnidad" class="form-label">Nombre de la Unidad *</label>
                             <input type="text" class="form-control" id="nombreUnidad" name="nombre" 
                                    required maxlength="100" placeholder="Ej: Kilogramos, Litros, Onzas">
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="abreviadoUnidad" class="form-label">Abreviado</label>
+                                <input type="text" class="form-control" id="abreviadoUnidad" name="abreviado" 
+                                       maxlength="50" placeholder="Ej: kg">
+                            </div>
+                            <div class="col-md-8 mb-3">
+                                <label for="nombresOpcionales" class="form-label">Nombres Opcionales</label>
+                                <input type="text" class="form-control" id="nombresOpcionales" name="nombres_opcionales" 
+                                       placeholder="Ej: kilo, kilos (separados por comas)">
+                            </div>
                         </div>
 
                         <div class="mb-3">

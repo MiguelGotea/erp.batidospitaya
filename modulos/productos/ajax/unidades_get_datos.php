@@ -36,6 +36,18 @@ try {
         $params[":nombre"] = '%' . $filtros['nombre'] . '%';
     }
     
+    // Filtro de texto (abreviado)
+    if (isset($filtros['abreviado']) && $filtros['abreviado'] !== '') {
+        $where[] = "u.abreviado LIKE :abreviado";
+        $params[":abreviado"] = '%' . $filtros['abreviado'] . '%';
+    }
+    
+    // Filtro de texto (nombres_opcionales)
+    if (isset($filtros['nombres_opcionales']) && $filtros['nombres_opcionales'] !== '') {
+        $where[] = "u.nombres_opcionales LIKE :nombres_opcionales";
+        $params[":nombres_opcionales"] = '%' . $filtros['nombres_opcionales'] . '%';
+    }
+    
     // Filtro de texto (observaciones)
     if (isset($filtros['observaciones']) && $filtros['observaciones'] !== '') {
         $where[] = "u.observaciones LIKE :observaciones";
@@ -47,7 +59,7 @@ try {
     // Construir ORDER BY
     $orderClause = '';
     if ($orden['columna']) {
-        $columnas_validas = ['nombre', 'observaciones'];
+        $columnas_validas = ['nombre', 'abreviado', 'nombres_opcionales', 'observaciones'];
         if (in_array($orden['columna'], $columnas_validas)) {
             $direccion = strtoupper($orden['direccion']) === 'DESC' ? 'DESC' : 'ASC';
             $orderClause = "ORDER BY u.{$orden['columna']} $direccion";
@@ -66,6 +78,8 @@ try {
     $sql = "SELECT 
                 u.id,
                 u.nombre,
+                u.abreviado,
+                u.nombres_opcionales,
                 u.observaciones,
                 u.fecha_creacion,
                 CONCAT(o.Nombre, ' ', o.Apellido) as usuario_creacion

@@ -22,6 +22,8 @@ try {
     $accion = isset($_POST['accion']) ? $_POST['accion'] : '';
     $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
     $nombre = isset($_POST['nombre']) ? trim($_POST['nombre']) : '';
+    $abreviado = isset($_POST['abreviado']) ? trim($_POST['abreviado']) : '';
+    $nombres_opcionales = isset($_POST['nombres_opcionales']) ? trim($_POST['nombres_opcionales']) : '';
     $observaciones = isset($_POST['observaciones']) ? trim($_POST['observaciones']) : '';
     
     // Validaciones
@@ -31,6 +33,10 @@ try {
     
     if (strlen($nombre) > 100) {
         throw new Exception('El nombre no puede exceder 100 caracteres');
+    }
+    
+    if (strlen($abreviado) > 50) {
+        throw new Exception('El texto abreviado no puede exceder 50 caracteres');
     }
     
     if (strlen($observaciones) > 255) {
@@ -49,11 +55,13 @@ try {
         }
         
         // Insertar nueva unidad
-        $sql = "INSERT INTO unidad_producto (nombre, observaciones, usuario_creacion) 
-                VALUES (:nombre, :observaciones, :usuario_creacion)";
+        $sql = "INSERT INTO unidad_producto (nombre, abreviado, nombres_opcionales, observaciones, usuario_creacion) 
+                VALUES (:nombre, :abreviado, :nombres_opcionales, :observaciones, :usuario_creacion)";
         
         $stmt = $conn->prepare($sql);
         $stmt->bindValue(':nombre', $nombre);
+        $stmt->bindValue(':abreviado', $abreviado);
+        $stmt->bindValue(':nombres_opcionales', $nombres_opcionales);
         $stmt->bindValue(':observaciones', $observaciones);
         $stmt->bindValue(':usuario_creacion', $codOperario, PDO::PARAM_INT);
         $stmt->execute();
@@ -83,6 +91,8 @@ try {
         // Actualizar unidad
         $sql = "UPDATE unidad_producto 
                 SET nombre = :nombre,
+                    abreviado = :abreviado,
+                    nombres_opcionales = :nombres_opcionales,
                     observaciones = :observaciones,
                     fecha_modificacion = NOW(),
                     usuario_modificacion = :usuario_modificacion
@@ -90,6 +100,8 @@ try {
         
         $stmt = $conn->prepare($sql);
         $stmt->bindValue(':nombre', $nombre);
+        $stmt->bindValue(':abreviado', $abreviado);
+        $stmt->bindValue(':nombres_opcionales', $nombres_opcionales);
         $stmt->bindValue(':observaciones', $observaciones);
         $stmt->bindValue(':usuario_modificacion', $codOperario, PDO::PARAM_INT);
         $stmt->bindValue(':id', $id, PDO::PARAM_INT);
