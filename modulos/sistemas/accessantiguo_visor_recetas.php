@@ -945,15 +945,15 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                                 </tr>
                                 <tr>
                                     <td><strong>Nombre</strong></td>
-                                    <td><code>NombreIngrediente (Marca, Linea, Capacidad)</code><br><small>Los datos
+                                    <td><code>DBIngredientes.Nombre (Marca, Linea, Capacidad)</code><br><small>Los datos
                                             entre paréntesis vienen de la cotización.</small></td>
                                     <td>
                                         <strong>Con ajuste de preparación</strong> (si
                                         <code>DBIngredientes.presentacionpreparacion</code>
                                         y <code>conversionpreparacion</code> tienen valor):<br>
-                                        <code>NombreIngrediente (presentacionpreparacion)</code><br>
+                                        <code>DBIngredientes.Nombre (presentacionpreparacion)</code><br>
                                         <strong>Sin ajuste:</strong><br>
-                                        <code>NombreIngrediente (UnidadBase)</code>
+                                        <code>DBIngredientes.Nombre (UnidadBase)</code>
                                     </td>
                                 </tr>
                                 <tr>
