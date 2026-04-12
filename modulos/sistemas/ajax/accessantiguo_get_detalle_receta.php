@@ -308,6 +308,30 @@ try {
                         // ya conocida de nuevo_producto (Onzas Peso, Litros, etc.)
                         if (!$irRow && $unidadResERP !== '') {
                             $irRow = buscarPresentacionPorUnidades($conn, $idMaestroERP, [$unidadResERP]);
+                            if ($irRow) {
+                                // Buscar factor de conversión entre la unidad del ingrediente y la encontrada
+                                // usando ? posicionales (evita HY093 con named params repetidos)
+                                try {
+                                    $stmtFact = $conn->prepare("
+                                        SELECT c.cantidad, c.id_unidad_producto_inicio
+                                        FROM conversion_unidad_producto c
+                                        JOIN unidad_producto ui ON ui.id = c.id_unidad_producto_inicio
+                                        JOIN unidad_producto uf ON uf.id = c.id_unidad_producto_final
+                                        WHERE (LOWER(ui.abreviado) = ? OR LOWER(ui.nombre) = ?)
+                                          AND LOWER(uf.nombre) = ?
+                                        LIMIT 1
+                                    ");
+                                    $uOrig = strtolower($ingr['UnidadIngrediente']);
+                                    $uDest = strtolower($irRow['unidadNueva']);
+                                    $stmtFact->execute([$uOrig, $uOrig, $uDest]);
+                                    $factRow = $stmtFact->fetch(PDO::FETCH_ASSOC);
+                                    if ($factRow) {
+                                        $irRow['factor_conversion'] = (float)$factRow['cantidad'];
+                                    }
+                                } catch (\Exception $e) {
+                                    // Factor no encontrado — quantity se mostrará sin conversión
+                                }
+                            }
                         }
                     }
 
