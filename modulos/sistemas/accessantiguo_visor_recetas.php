@@ -757,6 +757,7 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                     }
                 }
 
+
                 // Presentación Uso: el producto que actualmente sirve al consumo
                 let celPresentacionUso;
                 if (np) {
