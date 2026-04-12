@@ -17,16 +17,19 @@
 /**
  * Resuelve la unidad del sistema Access al registro de unidad_producto
  * y expande con unidades relacionadas por conversión.
+ * También detecta coincidencias secundarias (otras unidades ERP que comparten
+ * el mismo string, ej: "oz" = Onzas Peso (primaria) y Onzas Líquidas (secundaria)).
  *
  * @param PDO    $conn          Conexión activa
  * @param string $unidadAntigua Unidad del sistema Access (ej: "gr", "oz", "unid")
  * @return array|null  {
- *   id:           int
- *   nombre:       string    – nombre canónico ERP (ej: "Gramos")
- *   directos:     string[]  – [nombre] – misma unidad
- *   convertibles: string[]  – nombres relacionados por conversión
- *   todos:        string[]  – directos + convertibles
- *   conversiones: [{nombre, factor}]
+ *   id:             int
+ *   nombre:         string    – nombre canónico ERP (ej: "Gramos")
+ *   directos:       string[]  – [nombre] – coincidencia principal
+ *   multi_directos: string[]  – directos + coincidencias secundarias del mismo string
+ *   convertibles:   string[]  – nombres relacionados por conversión
+ *   todos:          string[]  – multi_directos + convertibles
+ *   conversiones:   [{nombre, factor}]
  * }
  */
 function resolverUnidadERP(PDO $conn, string $unidadAntigua): ?array
@@ -98,15 +101,37 @@ function resolverUnidadERP(PDO $conn, string $unidadAntigua): ?array
         }
 
         $directos = [$nombrePrincipal];
-        $todos    = array_merge($directos, $convertibles);
+
+        // ── Paso 3: Coincidencias secundarias ──────────────────────────────────
+        // Otras unidades ERP con el mismo string en abreviado/nombre/nombres_opcionales.
+        // Ej: 'oz' aparece también en nombres_opcionales de Onzas Liquidas.
+        $stmtSec = $conn->prepare("
+            SELECT nombre
+            FROM unidad_producto
+            WHERE id != ?
+              AND (
+                LOWER(abreviado) = ?
+                OR LOWER(nombre) = ?
+                OR FIND_IN_SET(
+                    ?,
+                    LOWER(REPLACE(REPLACE(nombres_opcionales, ', ', ','), ' ,', ','))
+                ) > 0
+              )
+        ");
+        $stmtSec->execute([$unidadId, $u, $u, $u]);
+        $secundarias   = array_column($stmtSec->fetchAll(PDO::FETCH_ASSOC), 'nombre');
+        $multiDirectos = array_merge($directos, $secundarias);
+
+        $todos = array_merge($multiDirectos, $convertibles);
 
         return [
-            'id'           => $unidadId,
-            'nombre'       => $nombrePrincipal,
-            'directos'     => $directos,
-            'convertibles' => $convertibles,
-            'todos'        => $todos,
-            'conversiones' => $conversiones,
+            'id'             => $unidadId,
+            'nombre'         => $nombrePrincipal,
+            'directos'       => $directos,
+            'multi_directos' => $multiDirectos,
+            'convertibles'   => $convertibles,
+            'todos'          => $todos,
+            'conversiones'   => $conversiones,
         ];
 
     } catch (\Exception $e) {
@@ -147,6 +172,9 @@ function buscarPresentacionPorUnidades(PDO $conn, int $idMaestro, array $nombres
           AND u.nombre IN ($placeholders)
           AND pp.Id_receta_producto IS NULL
           AND pp.Activo = 'SI'
+        ORDER BY
+            CASE WHEN pp.cantidad = 1 THEN 0 ELSE 1 END ASC,
+            pp.cantidad ASC
         LIMIT 1
     ");
     $stmt->execute(array_merge([$idMaestro], $nombres));

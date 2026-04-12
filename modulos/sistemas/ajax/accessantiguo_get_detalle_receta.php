@@ -287,8 +287,14 @@ try {
 
                     if ($idMaestroERP) {
                         if ($resolucion) {
-                            // Nivel 1: buscar presentación con unidad directa (ej: Gramos)
-                            $irRow = buscarPresentacionPorUnidades($conn, $idMaestroERP, $resolucion['directos']);
+                            // Nivel 1: buscar presentación con TODAS las unidades que
+                            // coinciden con la unidad del ingrediente (principal + secundarias).
+                            // Ej: 'oz' → ['Onzas Peso', 'Onzas Liquidas']
+                            $irRow = buscarPresentacionPorUnidades(
+                                $conn,
+                                $idMaestroERP,
+                                $resolucion['multi_directos'] ?? $resolucion['directos']
+                            );
 
                             // Nivel 2: buscar con unidades convertibles (ej: Onzas Peso)
                             if (!$irRow && !empty($resolucion['convertibles'])) {
