@@ -197,33 +197,43 @@ try {
             $idMaestro = $masterInfo['id_producto_maestro'] ?? null;
 
             if ($idMaestro) {
-                // Homologación de unidades vía librería
-                $unidadesBusqueda = obtenerUnidadesERPSimilares($ingr['UnidadIngrediente']);
+                // Homologación de unidades vía DB dinámica
+                $resAuto = null;
+                $resUnidad = resolverUnidadERP($conn, $ingr['UnidadIngrediente']);
 
-                // Paso 4: Buscar presentación por Maestro + Unidad (que no sea receta)
-                $placeholders = implode(',', array_fill(0, count($unidadesBusqueda), '?'));
-                $sqlFinal = "
-                    SELECT 
-                        pp.id       AS id_presentacion,
-                        pp.SKU,
-                        pp.Nombre   AS NombreNuevo,
-                        pp.cantidad,
-                        pp.Activo   AS activoNuevo,
-                        u.Nombre    AS unidadNueva,
-                        pm.id       AS id_maestro,
-                        pm.Nombre   AS productoMaestro
-                    FROM producto_presentacion pp
-                    INNER JOIN producto_maestro pm ON pm.id = pp.id_producto_maestro
-                    LEFT JOIN unidad_producto u    ON u.id = pp.id_unidad_producto
-                    WHERE pp.id_producto_maestro = ?
-                      AND u.Nombre IN ($placeholders)
-                      AND pp.Id_receta_producto IS NULL
-                      AND pp.Activo = 'SI'
-                    LIMIT 1
-                ";
-                $stmtFinal = $conn->prepare($sqlFinal);
-                $stmtFinal->execute(array_merge([$idMaestro], $unidadesBusqueda));
-                $resAuto = $stmtFinal->fetch(PDO::FETCH_ASSOC);
+                if ($resUnidad) {
+                    // Buscar presentación con unidad directa del ingrediente
+                    $resAuto = buscarPresentacionPorUnidades($conn, $idMaestro, $resUnidad['directos']);
+
+                    // Si no hay directa, buscar con unidades convertibles
+                    if (!$resAuto && !empty($resUnidad['convertibles'])) {
+                        $resAuto = buscarPresentacionPorUnidades($conn, $idMaestro, $resUnidad['convertibles']);
+                    }
+                }
+
+                // Fallback: buscar cualquier presentación activa no-receta del maestro
+                if (!$resAuto) {
+                    $stmtAny = $conn->prepare("
+                        SELECT
+                            pp.id       AS id_presentacion,
+                            pp.SKU,
+                            pp.Nombre   AS NombreNuevo,
+                            pp.cantidad,
+                            pp.Activo   AS activoNuevo,
+                            u.nombre    AS unidadNueva,
+                            pm.id       AS id_maestro,
+                            pm.Nombre   AS productoMaestro
+                        FROM producto_presentacion pp
+                        INNER JOIN producto_maestro pm ON pm.id = pp.id_producto_maestro
+                        LEFT JOIN unidad_producto u    ON u.id  = pp.id_unidad_producto
+                        WHERE pp.id_producto_maestro = ?
+                          AND pp.Id_receta_producto IS NULL
+                          AND pp.Activo = 'SI'
+                        LIMIT 1
+                    ");
+                    $stmtAny->execute([$idMaestro]);
+                    $resAuto = $stmtAny->fetch(PDO::FETCH_ASSOC) ?: null;
+                }
 
                 if ($resAuto) {
                     $ingr['nuevo_producto'] = $resAuto;
@@ -273,29 +283,36 @@ try {
                 } else {
                     $ingr['escenario_erp'] = 'diferente_presentacion';
                     $idMaestroERP = $ingr['nuevo_producto']['id_maestro'] ?? null;
+                    $irRow = null;
 
-                    if ($idMaestroERP && $resolucion) {
-                        // Intentar primero con unidad directa (ej: Gramos)
-                        $irRow = buscarPresentacionPorUnidades($conn, $idMaestroERP, $resolucion['directos']);
+                    if ($idMaestroERP) {
+                        if ($resolucion) {
+                            // Nivel 1: buscar presentación con unidad directa (ej: Gramos)
+                            $irRow = buscarPresentacionPorUnidades($conn, $idMaestroERP, $resolucion['directos']);
 
-                        // Si no existe presentación directa, buscar con unidades convertibles
-                        // (ej: Onzas Peso cuando el ingrediente es gr pero solo hay oz en ERP)
-                        if (!$irRow && !empty($resolucion['convertibles'])) {
-                            $irRow = buscarPresentacionPorUnidades($conn, $idMaestroERP, $resolucion['convertibles']);
-                            if ($irRow) {
-                                // Guardar el factor de conversión para el cálculo de cantidad
-                                foreach ($resolucion['conversiones'] as $conv) {
-                                    if ($conv['nombre'] === $irRow['unidadNueva']) {
-                                        $irRow['factor_conversion'] = $conv['factor'];
-                                        break;
+                            // Nivel 2: buscar con unidades convertibles (ej: Onzas Peso)
+                            if (!$irRow && !empty($resolucion['convertibles'])) {
+                                $irRow = buscarPresentacionPorUnidades($conn, $idMaestroERP, $resolucion['convertibles']);
+                                if ($irRow) {
+                                    foreach ($resolucion['conversiones'] as $conv) {
+                                        if ($conv['nombre'] === $irRow['unidadNueva']) {
+                                            $irRow['factor_conversion'] = $conv['factor'];
+                                            break;
+                                        }
                                     }
                                 }
                             }
                         }
 
-                        if ($irRow) {
-                            $ingr['insumo_receta'] = $irRow;
+                        // Nivel 3: si resolverUnidadERP falló o no encontró, usar la unidad
+                        // ya conocida de nuevo_producto (Onzas Peso, Litros, etc.)
+                        if (!$irRow && $unidadResERP !== '') {
+                            $irRow = buscarPresentacionPorUnidades($conn, $idMaestroERP, [$unidadResERP]);
                         }
+                    }
+
+                    if ($irRow) {
+                        $ingr['insumo_receta'] = $irRow;
                     }
                 }
             }
