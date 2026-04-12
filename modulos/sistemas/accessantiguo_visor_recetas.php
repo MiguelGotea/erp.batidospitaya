@@ -953,7 +953,7 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                                         y <code>conversionpreparacion</code> tienen valor):<br>
                                         <code>DBIngredientes.Nombre (presentacionpreparacion)</code><br>
                                         <strong>Sin ajuste:</strong><br>
-                                        <code>DBIngredientes.Nombre (UnidadBase)</code>
+                                        <code>DBIngredientes.Nombre (DBIngredientes.Unidad)</code>
                                     </td>
                                 </tr>
                                 <tr>
