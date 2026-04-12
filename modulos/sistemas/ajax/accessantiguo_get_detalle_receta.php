@@ -67,10 +67,12 @@ try {
             sr.InsumoClave,
             sr.tiposervido,
             sr.ordenreceta,
-            i.Nombre         AS NombreIngrediente,
-            i.Unidad         AS UnidadIngrediente,
-            i.Tipo           AS TipoIngrediente,
-            i.Vigente        AS VigenteIngrediente
+            i.Nombre                AS NombreIngrediente,
+            i.Unidad                AS UnidadIngrediente,
+            i.Tipo                  AS TipoIngrediente,
+            i.Vigente               AS VigenteIngrediente,
+            i.presentacionpreparacion,
+            i.conversionpreparacion
         FROM SubReceta sr
         LEFT JOIN DBIngredientes i ON i.CodIngrediente = sr.CodIngrediente
         WHERE sr.CodBatido = :cb

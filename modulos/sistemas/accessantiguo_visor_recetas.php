@@ -672,9 +672,10 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                     const extras = [cot?.Marca, cot?.Linea, cot?.Capacidad].filter(Boolean).join(', ');
                     comandaNombre = ingrNombre + (extras ? ` (${extras})` : '');
                 } else {
-                    // Prioridad 2+: Nombre (Unidad Base)
-                    const unidadBase = ingr.UnidadIngrediente || '';
-                    comandaNombre = ingrNombre + (unidadBase ? ` (${unidadBase})` : '');
+                    // Prioridad 2+: si tiene campos de preparación usar presentacionpreparacion, si no UnidadBase
+                    const tienePrep = ingr.presentacionpreparacion != null && ingr.conversionpreparacion != null;
+                    const etiqueta  = tienePrep ? ingr.presentacionpreparacion : (ingr.UnidadIngrediente || '');
+                    comandaNombre = ingrNombre + (etiqueta ? ` (${etiqueta})` : '');
                 }
 
                 // ── Comanda Access: Cantidad ─────────────────────────────────────────
@@ -687,8 +688,12 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                         ? (cant / conv).toFixed(4).replace(/\.?0+$/, '')
                         : '—';
                 } else {
-                    // Prioridad 2+: Cantidad de Estructura Access directamente
-                    comandaCantidad = ingr.Cantidad ?? '—';
+                    // Prioridad 2+: si hay ajuste de preparación → Cantidad / conversionpreparacion
+                    const convPrep  = parseFloat(ingr.conversionpreparacion);
+                    const tienePrep = ingr.presentacionpreparacion != null && !isNaN(convPrep) && convPrep !== 0;
+                    comandaCantidad = (tienePrep && !isNaN(cant))
+                        ? (cant / convPrep).toFixed(4).replace(/\.?0+$/, '')
+                        : (ingr.Cantidad ?? '—');
                 }
 
                 // ── Traducción nuevo ERP ─────────────────────────────────────────
@@ -898,7 +903,13 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                                 <tr>
                                     <td><strong>Nombre</strong></td>
                                     <td><code>NombreIngrediente (Marca, Linea, Capacidad)</code><br><small>Los datos entre paréntesis vienen de la cotización.</small></td>
-                                    <td><code>NombreIngrediente (UnidadBase)</code><br><small>La unidad entre paréntesis es la misma que "Unidad Base" de Estructura Access.</small></td>
+                                    <td>
+                                        <strong>Con ajuste de preparación</strong> (si <code>DBIngredientes.presentacionpreparacion</code>
+                                        y <code>conversionpreparacion</code> tienen valor):<br>
+                                        <code>NombreIngrediente (presentacionpreparacion)</code><br>
+                                        <strong>Sin ajuste:</strong><br>
+                                        <code>NombreIngrediente (UnidadBase)</code>
+                                    </td>
                                 </tr>
                                 <tr>
                                     <td><strong>Cantidad</strong></td>
@@ -907,12 +918,22 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                                         <small>Expresa qué fracción de la presentación se consume por receta.</small>
                                     </td>
                                     <td>
-                                        Misma cantidad que "Cantidad" de Estructura Access<br>
-                                        (<code>SubReceta.Cantidad</code> sin transformar).
+                                        <strong>Con ajuste de preparación:</strong><br>
+                                        <code>SubReceta.Cantidad ÷ DBIngredientes.conversionpreparacion</code><br>
+                                        <small>Ejemplo: Maní Horneado 24gr ÷ conversionpreparacion = cantidad en unidad de preparación.</small><br>
+                                        <strong>Sin ajuste:</strong><br>
+                                        <code>SubReceta.Cantidad</code> (igual a Estructura Access).
                                     </td>
                                 </tr>
                             </tbody>
                         </table>
+                        <div class="mt-2 p-2 rounded" style="background:#fff3e0;font-size:.78rem;border-left:3px solid #ff9800">
+                            <i class="fas fa-info-circle me-1 text-warning"></i>
+                            <strong>Ajuste de preparación:</strong> aplica únicamente en Prioridad 2 y 3.
+                            Ambos campos (<code>presentacionpreparacion</code> y <code>conversionpreparacion</code>)
+                            deben tener valor en <code>DBIngredientes</code>; si cualquiera es NULL se usa el
+                            comportamiento estándar (UnidadBase / Cantidad sin transformar).
+                        </div>
                     </div>
 
                     <!-- Segmento 3 -->
