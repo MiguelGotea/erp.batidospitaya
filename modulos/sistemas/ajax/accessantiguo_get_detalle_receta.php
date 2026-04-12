@@ -263,10 +263,32 @@ try {
         $ingr['escenario_erp'] = 'sin_mapeo';
 
         if ($ingr['nuevo_producto']) {
-            // Prioridad 1 (porción directa): el item mapeado ES el insumo receta — sin comparar unidades
+            // Prioridad 1 (porción directa): el item mapeado ES el insumo receta.
+            // Aunque la porción ya está resuelta, la unidad del ingrediente en Access
+            // puede diferir de la del ERP (ej: gr en Access vs Onzas Peso en ERP).
+            // Se resuelve el factor de conversión para que la cantidad sea correcta.
             if (($ingr['metodo_cotizacion'] ?? '') === 'directa') {
                 $ingr['escenario_erp'] = 'directo';
                 $ingr['insumo_receta'] = $ingr['nuevo_producto'];
+
+                // Resolver factor si la unidad Access ≠ unidad ERP
+                $unidadAccessP1 = trim($ingr['UnidadIngrediente'] ?? '');
+                $unidadERP_P1   = trim($ingr['insumo_receta']['unidadNueva'] ?? '');
+                if ($unidadAccessP1 !== '' && $unidadERP_P1 !== '') {
+                    $resP1 = resolverUnidadERP($conn, $unidadAccessP1);
+                    if ($resP1) {
+                        $multiP1 = $resP1['multi_directos'] ?? $resP1['directos'];
+                        // Si la unidad ERP NO está en el grupo de la unidad Access → mismatch
+                        if (!in_array($unidadERP_P1, $multiP1)) {
+                            foreach ($resP1['conversiones'] as $conv) {
+                                if ($conv['nombre'] === $unidadERP_P1) {
+                                    $ingr['insumo_receta']['factor_conversion'] = $conv['factor'];
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
             } else {
                 // Prioridad 2 y 3: resolución dinámica desde DB
                 // 1) Resolver la unidad Access → registro ERP + unidades convertibles
