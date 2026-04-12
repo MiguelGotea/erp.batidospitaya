@@ -665,16 +665,31 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                     ? `<div style="font-size:.75rem;color:#333">${infoTexto || '<span style="color:#bbb;font-style:italic">Sin detalle</span>'}</div>${cotBadge}`
                     : `<span class="sin-cot">Sin cotización</span>`;
 
-                // ── Comanda Access: Nombre (ingrediente + marca + linea) ─────────
-                const comandaNombre = [ingrNombre, cot ? cot.Marca : null, cot ? cot.Linea : null]
-                    .filter(Boolean).join(' · ');
+                // ── Comanda Access: Nombre ───────────────────────────────────────────
+                let comandaNombre;
+                if (metodoCot === 'directa') {
+                    // Prioridad 1: Nombre (Marca, Linea, Capacidad)
+                    const extras = [cot?.Marca, cot?.Linea, cot?.Capacidad].filter(Boolean).join(', ');
+                    comandaNombre = ingrNombre + (extras ? ` (${extras})` : '');
+                } else {
+                    // Prioridad 2+: Nombre (Unidad Base)
+                    const unidadBase = ingr.UnidadIngrediente || '';
+                    comandaNombre = ingrNombre + (unidadBase ? ` (${unidadBase})` : '');
+                }
 
-                // ── Comanda Access: Cantidad (solo porciones mapeadas = directa) ──────
+                // ── Comanda Access: Cantidad ─────────────────────────────────────────
                 const conv = cot ? parseFloat(cot.Conversion) : NaN;
                 const cant = parseFloat(ingr.Cantidad);
-                const comandaCantidad = (metodoCot === 'directa' && !isNaN(conv) && !isNaN(cant) && conv !== 0)
-                    ? (cant / conv).toFixed(4).replace(/\.?0+$/, '')
-                    : '—';
+                let comandaCantidad;
+                if (metodoCot === 'directa') {
+                    // Prioridad 1: SubReceta.Cantidad / Cotizacion.Conversion
+                    comandaCantidad = (!isNaN(conv) && !isNaN(cant) && conv !== 0)
+                        ? (cant / conv).toFixed(4).replace(/\.?0+$/, '')
+                        : '—';
+                } else {
+                    // Prioridad 2+: Cantidad de Estructura Access directamente
+                    comandaCantidad = ingr.Cantidad ?? '—';
+                }
 
                 // ── Traducción nuevo ERP ─────────────────────────────────────────
                 let tradHTML;
