@@ -633,6 +633,7 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                 return;
             }
 
+
             tbody.innerHTML = ingredientes.map((ingr, idx) => {
                 const tipo = ingr.Tipo || '—';
                 const filaClass = `fila-${tipo}`;
