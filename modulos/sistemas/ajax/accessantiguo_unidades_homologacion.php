@@ -1,76 +1,150 @@
 <?php
 /**
- * unidades_homologacion.php
- * Librería de equivalencias entre unidades del sistema antiguo y el nuevo ERP.
+ * accessantiguo_unidades_homologacion.php
+ *
+ * Resolución DINÁMICA de unidades del sistema Access al catálogo ERP,
+ * usando las tablas:
+ *   - unidad_producto             (id, nombre, abreviado, nombres_opcionales)
+ *   - conversion_unidad_producto  (id_inicio, id_final, cantidad)
+ *
+ * Flujo de resolución:
+ *   1. Busca la unidad ERP por abreviado exacto, luego nombre exacto,
+ *      luego token exacto en nombres_opcionales (vía FIND_IN_SET).
+ *   2. Si no encuentra presentación directa, expande a unidades relacionadas
+ *      por conversion_unidad_producto y devuelve el factor de conversión.
  */
 
 /**
- * Retorna un array de nombres de unidades del nuevo ERP que son equivalentes
- * a la unidad del sistema antiguo proporcionada.
- * 
- * @param string $unidadAntigua
- * @return array
+ * Resuelve la unidad del sistema Access al registro de unidad_producto
+ * y expande con unidades relacionadas por conversión.
+ *
+ * @param PDO    $conn          Conexión activa
+ * @param string $unidadAntigua Unidad del sistema Access (ej: "gr", "oz", "unid")
+ * @return array|null  {
+ *   id:           int
+ *   nombre:       string    – nombre canónico ERP (ej: "Gramos")
+ *   directos:     string[]  – [nombre] – misma unidad
+ *   convertibles: string[]  – nombres relacionados por conversión
+ *   todos:        string[]  – directos + convertibles
+ *   conversiones: [{nombre, factor}]
+ * }
  */
-function obtenerUnidadesERPSimilares($unidadAntigua)
+function resolverUnidadERP(PDO $conn, string $unidadAntigua): ?array
 {
-    if (!$unidadAntigua)
-        return [];
-
     $u = strtolower(trim($unidadAntigua));
+    if ($u === '') return null;
 
-    // Mapeo inverso: unidad antigua (lower) => [Nombres exactos en el nuevo ERP]
-    $map = [
-        'oz' => ['Onzas Liquidas', 'Onzas Peso'],
-        'fl oz' => ['Onzas Liquidas'],
-        'wt oz' => ['Onzas Peso'],
-        'onzas liquidas' => ['Onzas Liquidas'],
-        'onzas peso' => ['Onzas Peso'],
-        'onza' => ['Onzas Liquidas', 'Onzas Peso'],
-        'ml' => ['Mililitros'],
-        'ml.' => ['Mililitros'],
-        'mls' => ['Mililitros'],
-        'mililitros' => ['Mililitros'],
-        'lt' => ['Litros'],
-        'l' => ['Litros'],
-        'l.' => ['Litros'],
-        'litros' => ['Litros'],
-        'gr' => ['Gramos'],
-        'g' => ['Gramos'],
-        'g.' => ['Gramos'],
-        'grs' => ['Gramos'],
-        'gramos' => ['Gramos'],
-        'kg' => ['Kilogramos'],
-        'kilos' => ['Kilogramos'],
-        'kilogramos' => ['Kilogramos'],
-        'lb' => ['Libras'],
-        'lbs' => ['Libras'],
-        'libra' => ['Libras'],
-        'libras' => ['Libras'],
-        'tza' => ['Tazas'],
-        'taza' => ['Tazas'],
-        'tazas' => ['Tazas'],
-        'cda' => ['Cucharadas'],
-        'cucharada' => ['Cucharadas'],
-        'cucharadas' => ['Cucharadas'],
-        'tbsp' => ['Cucharadas'],
-        'u' => ['Unidades'],
-        'unid' => ['Unidades'],
-        'und'  => ['Unidades'],
-        'pza'  => ['Unidades'],
-        'pzas' => ['Unidades'],
-        'unidad' => ['Unidades'],
-        'unidades' => ['Unidades'],
-        'pieza' => ['Unidades'],
-        'piezas' => ['Unidades'],
-        'pz' => ['Unidades'],
-        'rama' => ['Rama'],
-        'ramas' => ['Rama'],
-        'moño' => ['Moño'],
-        'moños' => ['Moño'],
-        'cajilla' => ['Cajilla'],
-        'cajillas' => ['Cajilla']
+    // ── Paso 1: Localizar la unidad ERP ──────────────────────────────────────
+    // Prioridad: abreviado exacto → nombre exacto → token en nombres_opcionales
+    // Usamos FIND_IN_SET después de normalizar la coma-lista (quitar espacios)
+    // para evitar falsos positivos del LIKE (ej: 'l' dentro de 'ml.')
+    $stmtU = $conn->prepare("
+        SELECT id, nombre
+        FROM unidad_producto
+        WHERE LOWER(abreviado) = ?
+           OR LOWER(nombre) = ?
+           OR FIND_IN_SET(
+               ?,
+               LOWER(REPLACE(REPLACE(nombres_opcionales, ', ', ','), ' ,', ','))
+           ) > 0
+        ORDER BY
+            CASE
+                WHEN LOWER(abreviado) = ? THEN 1
+                WHEN LOWER(nombre)    = ? THEN 2
+                ELSE 3
+            END
+        LIMIT 1
+    ");
+    $stmtU->execute([$u, $u, $u, $u, $u]);
+    $unidad = $stmtU->fetch(PDO::FETCH_ASSOC);
+
+    if (!$unidad) return null;
+
+    $unidadId        = (int)$unidad['id'];
+    $nombrePrincipal = $unidad['nombre'];
+
+    // ── Paso 2: Unidades relacionadas por conversión ──────────────────────────
+    // Busca en ambas direcciones (inicio→final y final→inicio).
+    // El factor queda expresado como "1 [unidadResuelta] = factor [relacionado]".
+    $stmtConv = $conn->prepare("
+        SELECT
+            CASE
+                WHEN c.id_unidad_producto_inicio = :id THEN uf.nombre
+                ELSE ui.nombre
+            END                      AS nombre_relacionado,
+            CASE
+                WHEN c.id_unidad_producto_inicio = :id THEN c.cantidad
+                ELSE (1 / c.cantidad)
+            END                      AS factor_a_relacionado
+        FROM conversion_unidad_producto c
+        JOIN unidad_producto ui ON ui.id = c.id_unidad_producto_inicio
+        JOIN unidad_producto uf ON uf.id = c.id_unidad_producto_final
+        WHERE c.id_unidad_producto_inicio = :id
+           OR c.id_unidad_producto_final  = :id
+    ");
+    $stmtConv->execute([':id' => $unidadId]);
+
+    $convertibles = [];
+    $conversiones = [];
+    foreach ($stmtConv->fetchAll(PDO::FETCH_ASSOC) as $row) {
+        $nom = $row['nombre_relacionado'];
+        if (!in_array($nom, $convertibles)) {
+            $convertibles[] = $nom;
+            $conversiones[] = [
+                'nombre' => $nom,
+                'factor' => (float)$row['factor_a_relacionado'],
+            ];
+        }
+    }
+
+    $directos = [$nombrePrincipal];
+    $todos    = array_merge($directos, $convertibles);
+
+    return [
+        'id'           => $unidadId,
+        'nombre'       => $nombrePrincipal,
+        'directos'     => $directos,
+        'convertibles' => $convertibles,
+        'todos'        => $todos,
+        'conversiones' => $conversiones,
     ];
+}
 
-    return $map[$u] ?? [$unidadAntigua]; // Si no hay mapeo, devuelve la misma (case-insensitive fallback)
+/**
+ * Busca la primera presentación activa de un producto maestro
+ * cuya unidad esté en la lista de nombres proporcionados.
+ *
+ * @param PDO    $conn      Conexión activa
+ * @param int    $idMaestro producto_maestro.id
+ * @param array  $nombres   unidad_producto.nombre a buscar (IN)
+ * @return array|null
+ */
+function buscarPresentacionPorUnidades(PDO $conn, int $idMaestro, array $nombres): ?array
+{
+    if (empty($nombres)) return null;
+
+    $placeholders = implode(',', array_fill(0, count($nombres), '?'));
+    $stmt = $conn->prepare("
+        SELECT
+            pp.id       AS id_presentacion,
+            pp.SKU,
+            pp.Nombre   AS NombreNuevo,
+            pp.cantidad,
+            pp.Activo   AS activoNuevo,
+            u.nombre    AS unidadNueva,
+            pm.id       AS id_maestro,
+            pm.Nombre   AS productoMaestro
+        FROM producto_presentacion pp
+        INNER JOIN producto_maestro pm ON pm.id = pp.id_producto_maestro
+        LEFT  JOIN unidad_producto  u  ON u.id  = pp.id_unidad_producto
+        WHERE pp.id_producto_maestro = ?
+          AND u.nombre IN ($placeholders)
+          AND pp.Id_receta_producto IS NULL
+          AND pp.Activo = 'SI'
+        LIMIT 1
+    ");
+    $stmt->execute(array_merge([$idMaestro], $nombres));
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    return $row ?: null;
 }
 ?>

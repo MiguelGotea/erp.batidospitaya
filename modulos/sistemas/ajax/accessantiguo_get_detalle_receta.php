@@ -258,47 +258,41 @@ try {
                 $ingr['escenario_erp'] = 'directo';
                 $ingr['insumo_receta'] = $ingr['nuevo_producto'];
             } else {
-                // Prioridad 2 y 3: comparar unidades para determinar si hay presentación equivalente
-                // (ej: "gr" → ["Gramos"], "lb" → ["Libras"], "oz" → ["Onzas Liquidas","Onzas Peso"])
-                $unidadesERP = obtenerUnidadesERPSimilares($ingr['UnidadIngrediente']);
-                $unidadERP   = trim($ingr['nuevo_producto']['unidadNueva'] ?? '');
+                // Prioridad 2 y 3: resolución dinámica desde DB
+                // 1) Resolver la unidad Access → registro ERP + unidades convertibles
+                $resolucion   = resolverUnidadERP($conn, $ingr['UnidadIngrediente']);
+                $unidadResERP = trim($ingr['nuevo_producto']['unidadNueva'] ?? '');
 
-                // ¿La unidad resuelta en el ERP pertenece al grupo equivalente del ingrediente?
-                $esDirecto = !empty($unidadesERP) && in_array($unidadERP, $unidadesERP);
+                // 2) ¿La presentación ERP ya resuelta está en el mismo grupo de unidad?
+                $esDirecto = $resolucion && in_array($unidadResERP, $resolucion['directos']);
 
                 if ($esDirecto) {
-                    // Mismo grupo de unidades → Insumo Receta = Presentación Uso
+                    // Misma unidad → Insumo Receta = Presentación Uso
                     $ingr['escenario_erp'] = 'directo';
                     $ingr['insumo_receta'] = $ingr['nuevo_producto'];
                 } else {
-                    // Unidad diferente → buscar presentación del mismo maestro
-                    // cuya unidad esté en el grupo equivalente del ingrediente
                     $ingr['escenario_erp'] = 'diferente_presentacion';
                     $idMaestroERP = $ingr['nuevo_producto']['id_maestro'] ?? null;
 
-                    if ($idMaestroERP && !empty($unidadesERP)) {
-                        $placeholdersIR = implode(',', array_fill(0, count($unidadesERP), '?'));
-                        $stmtIR = $conn->prepare("
-                            SELECT
-                                pp.id       AS id_presentacion,
-                                pp.SKU,
-                                pp.Nombre   AS NombreNuevo,
-                                pp.cantidad,
-                                pp.Activo   AS activoNuevo,
-                                u.nombre    AS unidadNueva,
-                                pm.id       AS id_maestro,
-                                pm.Nombre   AS productoMaestro
-                            FROM producto_presentacion pp
-                            INNER JOIN producto_maestro pm ON pm.id = pp.id_producto_maestro
-                            LEFT JOIN unidad_producto u    ON u.id = pp.id_unidad_producto
-                            WHERE pp.id_producto_maestro = ?
-                              AND u.nombre IN ($placeholdersIR)
-                              AND pp.Id_receta_producto IS NULL
-                              AND pp.Activo = 'SI'
-                            LIMIT 1
-                        ");
-                        $stmtIR->execute(array_merge([$idMaestroERP], $unidadesERP));
-                        $irRow = $stmtIR->fetch(PDO::FETCH_ASSOC);
+                    if ($idMaestroERP && $resolucion) {
+                        // Intentar primero con unidad directa (ej: Gramos)
+                        $irRow = buscarPresentacionPorUnidades($conn, $idMaestroERP, $resolucion['directos']);
+
+                        // Si no existe presentación directa, buscar con unidades convertibles
+                        // (ej: Onzas Peso cuando el ingrediente es gr pero solo hay oz en ERP)
+                        if (!$irRow && !empty($resolucion['convertibles'])) {
+                            $irRow = buscarPresentacionPorUnidades($conn, $idMaestroERP, $resolucion['convertibles']);
+                            if ($irRow) {
+                                // Guardar el factor de conversión para el cálculo de cantidad
+                                foreach ($resolucion['conversiones'] as $conv) {
+                                    if ($conv['nombre'] === $irRow['unidadNueva']) {
+                                        $irRow['factor_conversion'] = $conv['factor'];
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+
                         if ($irRow) {
                             $ingr['insumo_receta'] = $irRow;
                         }
