@@ -718,13 +718,28 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                     celInsumoReceta = `<span class="traduccion-na text-danger"><i class="fas fa-times-circle me-1"></i>No resuelto</span>`;
                 }
 
-                // Cantidad ERP: SubReceta.Cantidad / insumo_receta.cantidad
+                // Cantidad ERP:
+                // - Misma unidad:  srCant / ppCant
+                // - Unidad distinta: (srCant × factor) / ppCant
+                //   donde factor = conversion_unidad_producto.cantidad para [unidadIngrediente → unidadERP]
                 let celCantERP = '—';
                 if (ir && ir.cantidad != null) {
-                    const ppCant = parseFloat(ir.cantidad);
-                    const srCant = parseFloat(ingr.Cantidad);
+                    const ppCant  = parseFloat(ir.cantidad);
+                    const srCant  = parseFloat(ingr.Cantidad);
+                    const factor  = (ir.factor_conversion != null) ? parseFloat(ir.factor_conversion) : 1;
+
                     if (ppCant > 0 && !isNaN(srCant)) {
-                        celCantERP = (srCant / ppCant).toFixed(4).replace(/\.?0+$/, '');
+                        const resultado = (srCant * factor) / ppCant;
+                        const display   = resultado % 1 === 0
+                            ? resultado.toString()
+                            : parseFloat(resultado.toFixed(4)).toString();
+
+                        if (factor !== 1 && ir.factor_conversion != null) {
+                            // Mostrar conversión aplicada en tooltip
+                            celCantERP = `<span title="${srCant} ${esc(ingr.UnidadIngrediente)} × ${factor} ÷ ${ppCant} ${esc(ir.unidadNueva)}">${display}</span>`;
+                        } else {
+                            celCantERP = display;
+                        }
                     }
                 }
 
