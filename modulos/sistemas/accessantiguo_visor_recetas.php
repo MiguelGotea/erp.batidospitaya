@@ -674,7 +674,7 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                 } else {
                     // Prioridad 2+: si tiene campos de preparación usar presentacionpreparacion, si no UnidadBase
                     const tienePrep = ingr.presentacionpreparacion != null && ingr.conversionpreparacion != null;
-                    const etiqueta  = tienePrep ? ingr.presentacionpreparacion : (ingr.UnidadIngrediente || '');
+                    const etiqueta = tienePrep ? ingr.presentacionpreparacion : (ingr.UnidadIngrediente || '');
                     comandaNombre = ingrNombre + (etiqueta ? ` (${etiqueta})` : '');
                 }
 
@@ -689,7 +689,7 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                         : '—';
                 } else {
                     // Prioridad 2+: si hay ajuste de preparación → Cantidad / conversionpreparacion
-                    const convPrep  = parseFloat(ingr.conversionpreparacion);
+                    const convPrep = parseFloat(ingr.conversionpreparacion);
                     const tienePrep = ingr.presentacionpreparacion != null && !isNaN(convPrep) && convPrep !== 0;
                     comandaCantidad = (tienePrep && !isNaN(cant))
                         ? (cant / convPrep).toFixed(4).replace(/\.?0+$/, '')
@@ -766,6 +766,7 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
 
         // ── Init ──────────────────────────────────────────────────────────────
         cargarGrupos();
+
     </script>
     <!-- ══════════════════════════════════════════════════════════════════
          MODAL DE AYUDA — Visor de Recetas
@@ -785,7 +786,8 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                 <div class="modal-body" style="font-size:.88rem;line-height:1.65">
 
                     <!-- ── SECCIÓN 1: ¿Qué hace esta página? ─────────────────────── -->
-                    <h6 class="fw-bold text-success mb-2"><i class="fas fa-info-circle me-1"></i> ¿Qué hace esta página?</h6>
+                    <h6 class="fw-bold text-success mb-2"><i class="fas fa-info-circle me-1"></i> ¿Qué hace esta página?
+                    </h6>
                     <p>
                         Permite consultar las recetas del <strong>sistema Access antiguo</strong> y ver, para cada
                         ingrediente, cómo se resuelve su presentación comercial (cotización) y cómo se traduce
@@ -795,9 +797,10 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                     <hr>
 
                     <!-- ── SECCIÓN 2: Sistema de Prioridades para Cotización ──────── -->
-                    <h6 class="fw-bold text-success mb-2"><i class="fas fa-layer-group me-1"></i> Sistema de Prioridades — Resolución de Cotización</h6>
+                    <h6 class="fw-bold text-success mb-2"><i class="fas fa-layer-group me-1"></i> Sistema de Prioridades
+                        — Resolución de Cotización</h6>
                     <p>Para cada ingrediente de la receta, el sistema busca su presentación comercial (cotización)
-                       siguiendo este orden de prioridad:</p>
+                        siguiendo este orden de prioridad:</p>
 
                     <div class="table-responsive mb-3">
                         <table class="table table-sm table-bordered align-middle mb-0">
@@ -817,7 +820,9 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                                         <code>Cotizaciones</code>. Indica que la receta especifica
                                         una presentación exacta ("porción mapeada").
                                     </td>
-                                    <td><span style="font-size:.72rem;background:#e3f2fd;color:#1565c0;border-radius:3px;padding:2px 7px">porción</span></td>
+                                    <td><span
+                                            style="font-size:.72rem;background:#e3f2fd;color:#1565c0;border-radius:3px;padding:2px 7px">porción</span>
+                                    </td>
                                 </tr>
                                 <tr>
                                     <td class="fw-bold text-purple" style="color:#6a1b9a">🟣 2 — Base</td>
@@ -827,11 +832,14 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                                         <ul class="mb-0 mt-1">
                                             <li><code>Conversion = 1</code></li>
                                             <li><code>Prioridad = 1</code></li>
-                                            <li><code>Subproducto IS NULL OR Subproducto ≠ 1</code> (no es subproducto)</li>
+                                            <li><code>Subproducto IS NULL OR Subproducto ≠ 1</code> (no es subproducto)
+                                            </li>
                                             <li><code>Marca IS NULL OR Marca ≠ 'Almacen Global'</code></li>
                                         </ul>
                                     </td>
-                                    <td><span style="font-size:.72rem;background:#f3e5f5;color:#6a1b9a;border-radius:3px;padding:2px 7px">Conversión=1</span></td>
+                                    <td><span
+                                            style="font-size:.72rem;background:#f3e5f5;color:#6a1b9a;border-radius:3px;padding:2px 7px">Conversión=1</span>
+                                    </td>
                                 </tr>
                                 <tr>
                                     <td class="fw-bold" style="color:#e65100">🟠 3 — Prioritaria</td>
@@ -839,18 +847,22 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                                         Si no se encontró nada en Prioridad 2, se busca cualquier cotización del
                                         ingrediente que cumpla:
                                         <ul class="mb-0 mt-1">
-                                            <li><code>Subproducto IS NULL OR Subproducto ≠ 1</code> (no es subproducto)</li>
+                                            <li><code>Subproducto IS NULL OR Subproducto ≠ 1</code> (no es subproducto)
+                                            </li>
                                             <li><code>Marca ≠ 'Almacen Global'</code></li>
                                             <li><code>Prioridad = 1</code></li>
                                         </ul>
                                         Se toma el primer resultado encontrado.
                                     </td>
-                                    <td><span style="font-size:.72rem;background:#fff8e1;color:#e65100;border-radius:3px;padding:2px 7px">Prioritaria</span></td>
+                                    <td><span
+                                            style="font-size:.72rem;background:#fff8e1;color:#e65100;border-radius:3px;padding:2px 7px">Prioritaria</span>
+                                    </td>
                                 </tr>
                                 <tr class="table-danger">
                                     <td class="fw-bold text-danger">🔴 Sin cotización</td>
                                     <td>Ninguna de las 3 prioridades encontró un resultado.</td>
-                                    <td><span style="font-size:.72rem;color:#e57373;font-style:italic">Sin cotización</span></td>
+                                    <td><span style="font-size:.72rem;color:#e57373;font-style:italic">Sin
+                                            cotización</span></td>
                                 </tr>
                             </tbody>
                         </table>
@@ -859,22 +871,41 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                     <hr>
 
                     <!-- ── SECCIÓN 3: Estructura de la tabla ─────────────────────── -->
-                    <h6 class="fw-bold text-success mb-2"><i class="fas fa-table me-1"></i> Estructura de la Tabla — 3 Segmentos</h6>
+                    <h6 class="fw-bold text-success mb-2"><i class="fas fa-table me-1"></i> Estructura de la Tabla — 3
+                        Segmentos</h6>
                     <p>La tabla de ingredientes está dividida en <strong>3 segmentos visuales</strong>:</p>
 
                     <!-- Segmento 1 -->
                     <div class="p-2 mb-2 rounded" style="background:#e8f5e9;border-left:4px solid #40916c">
                         <strong><i class="fas fa-database me-1 text-success"></i> Estructura Access</strong>
-                        <p class="mb-1 mt-1" style="font-size:.82rem">Datos tal como están en el sistema Access original.</p>
+                        <p class="mb-1 mt-1" style="font-size:.82rem">Datos tal como están en el sistema Access
+                            original.</p>
                         <table class="table table-sm table-bordered mb-0" style="font-size:.8rem">
                             <thead class="table-success">
-                                <tr><th>Columna</th><th>Contenido</th></tr>
+                                <tr>
+                                    <th>Columna</th>
+                                    <th>Contenido</th>
+                                </tr>
                             </thead>
                             <tbody>
-                                <tr><td><strong>Nombre</strong></td><td>Nombre del ingrediente (<code>DBIngredientes.Nombre</code>) + código debajo. Tachado si está inactivo.</td></tr>
-                                <tr><td><strong>Unidad Base</strong></td><td>Unidad de medida del ingrediente (<code>DBIngredientes.Unidad</code>).</td></tr>
-                                <tr><td><strong>Cantidad</strong></td><td>Cantidad usada en la receta (<code>SubReceta.Cantidad</code>).</td></tr>
-                                <tr><td><strong>Porción</strong></td><td>Código de porción asignado (<code>SubReceta.codporcion</code>). Muestra "—" si no tiene.</td></tr>
+                                <tr>
+                                    <td><strong>Nombre</strong></td>
+                                    <td>Nombre del ingrediente (<code>DBIngredientes.Nombre</code>) + código debajo.
+                                        Tachado si está inactivo.</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Unidad Base</strong></td>
+                                    <td>Unidad de medida del ingrediente (<code>DBIngredientes.Unidad</code>).</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Cantidad</strong></td>
+                                    <td>Cantidad usada en la receta (<code>SubReceta.Cantidad</code>).</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Porción</strong></td>
+                                    <td>Código de porción asignado (<code>SubReceta.codporcion</code>). Muestra "—" si
+                                        no tiene.</td>
+                                </tr>
                                 <tr>
                                     <td><strong>Cotización</strong></td>
                                     <td>
@@ -891,25 +922,34 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                     <!-- Segmento 2 -->
                     <div class="p-2 mb-2 rounded" style="background:#e8eaf6;border-left:4px solid #5c7aff">
                         <strong><i class="fas fa-receipt me-1" style="color:#3949ab"></i> Comanda Access</strong>
-                        <p class="mb-1 mt-1" style="font-size:.82rem">Vista orientada a cómo se preparaba la comanda en Access.</p>
+                        <p class="mb-1 mt-1" style="font-size:.82rem">Vista orientada a cómo se preparaba la comanda en
+                            Access.</p>
                         <table class="table table-sm table-bordered mb-0" style="font-size:.8rem">
                             <thead style="background:#c5cae9">
-                                <tr><th>Columna</th><th>Prioridad 1 (porción)</th><th>Prioridad 2 y 3</th></tr>
+                                <tr>
+                                    <th>Columna</th>
+                                    <th>Prioridad 1 (porción)</th>
+                                    <th>Prioridad 2 y 3</th>
+                                </tr>
                             </thead>
                             <tbody>
                                 <tr>
                                     <td><strong>Orden</strong></td>
-                                    <td colspan="2"><code>SubReceta.ordenreceta</code> (número de orden en la receta).</td>
+                                    <td colspan="2"><code>SubReceta.ordenreceta</code> (número de orden en la receta).
+                                    </td>
                                 </tr>
                                 <tr>
                                     <td><strong>Tipo</strong></td>
-                                    <td colspan="2">Tipo de ingrediente: B (Batido base), L (Líquido/extra), P (Porcionado).</td>
+                                    <td colspan="2">Tipo de ingrediente: B (Batido base), L (Líquido/extra), P
+                                        (Porcionado).</td>
                                 </tr>
                                 <tr>
                                     <td><strong>Nombre</strong></td>
-                                    <td><code>NombreIngrediente (Marca, Linea, Capacidad)</code><br><small>Los datos entre paréntesis vienen de la cotización.</small></td>
+                                    <td><code>NombreIngrediente (Marca, Linea, Capacidad)</code><br><small>Los datos
+                                            entre paréntesis vienen de la cotización.</small></td>
                                     <td>
-                                        <strong>Con ajuste de preparación</strong> (si <code>DBIngredientes.presentacionpreparacion</code>
+                                        <strong>Con ajuste de preparación</strong> (si
+                                        <code>DBIngredientes.presentacionpreparacion</code>
                                         y <code>conversionpreparacion</code> tienen valor):<br>
                                         <code>NombreIngrediente (presentacionpreparacion)</code><br>
                                         <strong>Sin ajuste:</strong><br>
@@ -925,14 +965,16 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                                     <td>
                                         <strong>Con ajuste de preparación:</strong><br>
                                         <code>SubReceta.Cantidad ÷ DBIngredientes.conversionpreparacion</code><br>
-                                        <small>Ejemplo: Maní Horneado 24gr ÷ conversionpreparacion = cantidad en unidad de preparación.</small><br>
+                                        <small>Ejemplo: Maní Horneado 24gr ÷ conversionpreparacion = cantidad en unidad
+                                            de preparación.</small><br>
                                         <strong>Sin ajuste:</strong><br>
                                         <code>SubReceta.Cantidad</code> (igual a Estructura Access).
                                     </td>
                                 </tr>
                             </tbody>
                         </table>
-                        <div class="mt-2 p-2 rounded" style="background:#fff3e0;font-size:.78rem;border-left:3px solid #ff9800">
+                        <div class="mt-2 p-2 rounded"
+                            style="background:#fff3e0;font-size:.78rem;border-left:3px solid #ff9800">
                             <i class="fas fa-info-circle me-1 text-warning"></i>
                             <strong>Ajuste de preparación:</strong> aplica únicamente en Prioridad 2 y 3.
                             Ambos campos (<code>presentacionpreparacion</code> y <code>conversionpreparacion</code>)
@@ -943,27 +985,38 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
 
                     <!-- Segmento 3 -->
                     <div class="p-2 mb-3 rounded" style="background:#f3e5f5;border-left:4px solid #9c27b0">
-                        <strong><i class="fas fa-layer-group me-1" style="color:#7b1fa2"></i> Nuevo Sistema (ERP)</strong>
-                        <p class="mb-1 mt-1" style="font-size:.82rem">Traducción del ingrediente al catálogo del nuevo ERP Pitaya.</p>
+                        <strong><i class="fas fa-layer-group me-1" style="color:#7b1fa2"></i> Nuevo Sistema
+                            (ERP)</strong>
+                        <p class="mb-1 mt-1" style="font-size:.82rem">Traducción del ingrediente al catálogo del nuevo
+                            ERP Pitaya.</p>
                         <table class="table table-sm table-bordered mb-0" style="font-size:.8rem">
                             <thead style="background:#e1bee7">
-                                <tr><th>Estado</th><th>¿Qué muestra?</th></tr>
+                                <tr>
+                                    <th>Estado</th>
+                                    <th>¿Qué muestra?</th>
+                                </tr>
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td><span class="badge" style="background:#c8e6c9;color:#1b5e20">✓ Traducido</span></td>
+                                    <td><span class="badge" style="background:#c8e6c9;color:#1b5e20">✓ Traducido</span>
+                                    </td>
                                     <td>Nombre del producto en el nuevo ERP, unidad, cantidad y producto maestro.
                                         Si fue resuelto automáticamente por maestro + unidad, muestra badge
-                                        <span style="background:#e8f5e9;color:#2e7d32;font-size:.72rem;border-radius:3px;padding:1px 5px">AUTO</span>.
+                                        <span
+                                            style="background:#e8f5e9;color:#2e7d32;font-size:.72rem;border-radius:3px;padding:1px 5px">AUTO</span>.
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td><span style="color:#888;font-style:italic;font-size:.82rem">⚠ Sin mapeo</span></td>
-                                    <td>Hay cotización resuelta pero el ingrediente no tiene mapeo en el diccionario del ERP.</td>
+                                    <td><span style="color:#888;font-style:italic;font-size:.82rem">⚠ Sin mapeo</span>
+                                    </td>
+                                    <td>Hay cotización resuelta pero el ingrediente no tiene mapeo en el diccionario del
+                                        ERP.</td>
                                 </tr>
                                 <tr>
-                                    <td><span class="text-danger" style="font-style:italic;font-size:.82rem">✕ No resuelto</span></td>
-                                    <td>Sin cotización y sin traducción. El ingrediente no pudo resolverse en ningún paso.</td>
+                                    <td><span class="text-danger" style="font-style:italic;font-size:.82rem">✕ No
+                                            resuelto</span></td>
+                                    <td>Sin cotización y sin traducción. El ingrediente no pudo resolverse en ningún
+                                        paso.</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -976,9 +1029,12 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                     <p>Encima de la tabla se muestra un resumen con los conteos de:</p>
                     <ul class="mb-0">
                         <li><strong>Total de ingredientes</strong> en la receta.</li>
-                        <li class="text-success"><strong>Traducidos al nuevo ERP</strong> — tienen producto mapeado.</li>
-                        <li class="text-warning"><strong>Con cotización pero sin mapeo</strong> — cotización encontrada pero sin entrada en el diccionario ERP.</li>
-                        <li class="text-danger"><strong>Sin cotización resuelta</strong> — ninguna de las 3 prioridades encontró resultado.</li>
+                        <li class="text-success"><strong>Traducidos al nuevo ERP</strong> — tienen producto mapeado.
+                        </li>
+                        <li class="text-warning"><strong>Con cotización pero sin mapeo</strong> — cotización encontrada
+                            pero sin entrada en el diccionario ERP.</li>
+                        <li class="text-danger"><strong>Sin cotización resuelta</strong> — ninguna de las 3 prioridades
+                            encontró resultado.</li>
                     </ul>
 
                 </div>
