@@ -34,80 +34,85 @@ function resolverUnidadERP(PDO $conn, string $unidadAntigua): ?array
     $u = strtolower(trim($unidadAntigua));
     if ($u === '') return null;
 
-    // ── Paso 1: Localizar la unidad ERP ──────────────────────────────────────
-    // Prioridad: abreviado exacto → nombre exacto → token en nombres_opcionales
-    // Usamos FIND_IN_SET después de normalizar la coma-lista (quitar espacios)
-    // para evitar falsos positivos del LIKE (ej: 'l' dentro de 'ml.')
-    $stmtU = $conn->prepare("
-        SELECT id, nombre
-        FROM unidad_producto
-        WHERE LOWER(abreviado) = ?
-           OR LOWER(nombre) = ?
-           OR FIND_IN_SET(
-               ?,
-               LOWER(REPLACE(REPLACE(nombres_opcionales, ', ', ','), ' ,', ','))
-           ) > 0
-        ORDER BY
-            CASE
-                WHEN LOWER(abreviado) = ? THEN 1
-                WHEN LOWER(nombre)    = ? THEN 2
-                ELSE 3
-            END
-        LIMIT 1
-    ");
-    $stmtU->execute([$u, $u, $u, $u, $u]);
-    $unidad = $stmtU->fetch(PDO::FETCH_ASSOC);
+    try {
+        // ── Paso 1: Localizar la unidad ERP ──────────────────────────────────
+        // Prioridad: abreviado exacto → nombre exacto → token en nombres_opcionales
+        // Usamos FIND_IN_SET después de normalizar la coma-lista (quitar espacios)
+        // para evitar falsos positivos del LIKE (ej: 'l' dentro de 'ml.')
+        $stmtU = $conn->prepare("
+            SELECT id, nombre
+            FROM unidad_producto
+            WHERE LOWER(abreviado) = ?
+               OR LOWER(nombre) = ?
+               OR FIND_IN_SET(
+                   ?,
+                   LOWER(REPLACE(REPLACE(nombres_opcionales, ', ', ','), ' ,', ','))
+               ) > 0
+            ORDER BY
+                CASE
+                    WHEN LOWER(abreviado) = ? THEN 1
+                    WHEN LOWER(nombre)    = ? THEN 2
+                    ELSE 3
+                END
+            LIMIT 1
+        ");
+        $stmtU->execute([$u, $u, $u, $u, $u]);
+        $unidad = $stmtU->fetch(PDO::FETCH_ASSOC);
 
-    if (!$unidad) return null;
+        if (!$unidad) return null;
 
-    $unidadId        = (int)$unidad['id'];
-    $nombrePrincipal = $unidad['nombre'];
+        $unidadId        = (int)$unidad['id'];
+        $nombrePrincipal = $unidad['nombre'];
 
-    // ── Paso 2: Unidades relacionadas por conversión ──────────────────────────
-    // Busca en ambas direcciones (inicio→final y final→inicio).
-    // El factor queda expresado como "1 [unidadResuelta] = factor [relacionado]".
-    $stmtConv = $conn->prepare("
-        SELECT
-            CASE
-                WHEN c.id_unidad_producto_inicio = :id THEN uf.nombre
-                ELSE ui.nombre
-            END                      AS nombre_relacionado,
-            CASE
-                WHEN c.id_unidad_producto_inicio = :id THEN c.cantidad
-                ELSE (1 / c.cantidad)
-            END                      AS factor_a_relacionado
-        FROM conversion_unidad_producto c
-        JOIN unidad_producto ui ON ui.id = c.id_unidad_producto_inicio
-        JOIN unidad_producto uf ON uf.id = c.id_unidad_producto_final
-        WHERE c.id_unidad_producto_inicio = :id
-           OR c.id_unidad_producto_final  = :id
-    ");
-    $stmtConv->execute([':id' => $unidadId]);
+        // ── Paso 2: Unidades relacionadas por conversión ──────────────────────
+        $stmtConv = $conn->prepare("
+            SELECT
+                CASE
+                    WHEN c.id_unidad_producto_inicio = :id THEN uf.nombre
+                    ELSE ui.nombre
+                END                      AS nombre_relacionado,
+                CASE
+                    WHEN c.id_unidad_producto_inicio = :id THEN c.cantidad
+                    ELSE (1 / c.cantidad)
+                END                      AS factor_a_relacionado
+            FROM conversion_unidad_producto c
+            JOIN unidad_producto ui ON ui.id = c.id_unidad_producto_inicio
+            JOIN unidad_producto uf ON uf.id = c.id_unidad_producto_final
+            WHERE c.id_unidad_producto_inicio = :id
+               OR c.id_unidad_producto_final  = :id
+        ");
+        $stmtConv->execute([':id' => $unidadId]);
 
-    $convertibles = [];
-    $conversiones = [];
-    foreach ($stmtConv->fetchAll(PDO::FETCH_ASSOC) as $row) {
-        $nom = $row['nombre_relacionado'];
-        if (!in_array($nom, $convertibles)) {
-            $convertibles[] = $nom;
-            $conversiones[] = [
-                'nombre' => $nom,
-                'factor' => (float)$row['factor_a_relacionado'],
-            ];
+        $convertibles = [];
+        $conversiones = [];
+        foreach ($stmtConv->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $nom = $row['nombre_relacionado'];
+            if (!in_array($nom, $convertibles)) {
+                $convertibles[] = $nom;
+                $conversiones[] = [
+                    'nombre' => $nom,
+                    'factor' => (float)$row['factor_a_relacionado'],
+                ];
+            }
         }
+
+        $directos = [$nombrePrincipal];
+        $todos    = array_merge($directos, $convertibles);
+
+        return [
+            'id'           => $unidadId,
+            'nombre'       => $nombrePrincipal,
+            'directos'     => $directos,
+            'convertibles' => $convertibles,
+            'todos'        => $todos,
+            'conversiones' => $conversiones,
+        ];
+
+    } catch (\Exception $e) {
+        // Si la columna aún no existe en DB o cualquier error SQL → falla silenciosa
+        error_log('[resolverUnidadERP] Error: ' . $e->getMessage() . ' | unidad: ' . $unidadAntigua);
+        return null;
     }
-
-    $directos = [$nombrePrincipal];
-    $todos    = array_merge($directos, $convertibles);
-
-    return [
-        'id'           => $unidadId,
-        'nombre'       => $nombrePrincipal,
-        'directos'     => $directos,
-        'convertibles' => $convertibles,
-        'todos'        => $todos,
-        'conversiones' => $conversiones,
-    ];
 }
 
 /**
