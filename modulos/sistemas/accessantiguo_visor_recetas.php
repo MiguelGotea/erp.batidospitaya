@@ -360,7 +360,7 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                                     style="background:#1a237e;border-right:3px solid #5c7aff;letter-spacing:.05em;font-size:.7rem;padding:6px 10px">
                                     <i class="fas fa-receipt me-1"></i> Comanda Access
                                 </th>
-                                <th class="text-center"
+                                <th colspan="3" class="text-center"
                                     style="background:#4a148c;letter-spacing:.05em;font-size:.7rem;padding:6px 10px">
                                     <i class="fas fa-layer-group me-1"></i> Nuevo Sistema
                                 </th>
@@ -376,7 +376,9 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                                 <th style="width:50px">Tipo</th>
                                 <th>Nombre</th>
                                 <th style="width:75px;border-right:3px solid #5c7aff">Cantidad</th>
-                                <th class="col-traduccion">Producto Nuevo (ERP)</th>
+                                <th>Insumo Receta</th>
+                                <th style="width:80px">Cantidad</th>
+                                <th>Presentación Uso</th>
                             </tr>
                         </thead>
                         <tbody id="tbodyReceta"></tbody>
@@ -696,39 +698,63 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                         : (ingr.Cantidad ?? '—');
                 }
 
-                // ── Traducción nuevo ERP ─────────────────────────────────────────
-                let tradHTML;
-                const np = ingr.nuevo_producto;
-                if (np) {
-                    const activoTag = np.activoNuevo === 'NO'
-                        ? `<span style="font-size:.65rem;background:#fdd;color:#c0392b;border-radius:3px;padding:1px 5px;margin-left:4px">INACTIVO</span>` : '';
-                    const autoTag = ingr.metodo_resolucion === 'maestro'
-                        ? `<span style="font-size:.65rem;background:#e8f5e9;color:#2e7d32;border-radius:3px;padding:1px 5px;margin-left:4px" title="Resuelto automáticamente por maestro + unidad">AUTO</span>` : '';
+                // ── Nuevo Sistema: 3 columnas ────────────────────────────────────
+                const np        = ingr.nuevo_producto;
+                const ir        = ingr.insumo_receta;
+                const escenario = ingr.escenario_erp;
 
-                    // Variedades
-                    let variedadesHTML = '';
-                    if (np.variedades && np.variedades.length > 0) {
-                        variedadesHTML = `
-                            <select class="form-select form-select-sm mt-1" style="font-size: .75rem; padding: 2px 5px; height: auto;">
-                                ${np.variedades.map(v => `
-                                    <option value="${v.id}" ${v.es_principal == 1 ? 'selected' : ''}>
-                                        ${esc(v.nombre)} ${v.es_principal == 1 ? '(Principal)' : ''}
-                                    </option>
-                                `).join('')}
-                            </select>
-                        `;
-                    }
-
-                    tradHTML = `<div class="traduccion-ok">
-                        <div class="d-flex align-items-center gap-1 mb-1">${activoTag}${autoTag}</div>
-                        <div class="nom-nuevo">${esc(np.NombreNuevo)}</div>
-                        ${variedadesHTML}
-                        <div class="uni-nuevo mt-1">${esc(np.unidadNueva || '')}${np.cantidad ? ' · ' + np.cantidad : ''} ${esc(np.productoMaestro || '')}</div>
-                    </div>`;
+                // Insumo Receta: la presentación que coincide con la unidad del ingrediente
+                let celInsumoReceta;
+                if (ir) {
+                    const irActivo = ir.activoNuevo === 'NO'
+                        ? `<span style="font-size:.65rem;background:#fdd;color:#c0392b;border-radius:3px;padding:1px 5px">INACTIVO</span>` : '';
+                    celInsumoReceta = `<div class="nom-nuevo">${esc(ir.NombreNuevo)}${irActivo}</div>
+                        <div class="uni-nuevo">${esc(ir.unidadNueva || '')}${ir.cantidad ? ' · ' + ir.cantidad : ''}</div>`;
+                } else if (np) {
+                    celInsumoReceta = `<span class="traduccion-na"><i class="fas fa-search me-1 text-warning"></i>Sin equiv. de unidad</span>`;
                 } else if (cot) {
-                    tradHTML = `<span class="traduccion-na"><i class="fas fa-exclamation-triangle me-1 text-warning"></i>Sin mapeo</span>`;
+                    celInsumoReceta = `<span class="traduccion-na"><i class="fas fa-exclamation-triangle me-1 text-warning"></i>Sin mapeo</span>`;
                 } else {
-                    tradHTML = `<span class="traduccion-na text-danger"><i class="fas fa-times-circle me-1"></i>No resuelto</span>`;
+                    celInsumoReceta = `<span class="traduccion-na text-danger"><i class="fas fa-times-circle me-1"></i>No resuelto</span>`;
+                }
+
+                // Cantidad ERP: SubReceta.Cantidad / insumo_receta.cantidad
+                let celCantERP = '—';
+                if (ir && ir.cantidad != null) {
+                    const ppCant = parseFloat(ir.cantidad);
+                    const srCant = parseFloat(ingr.Cantidad);
+                    if (ppCant > 0 && !isNaN(srCant)) {
+                        celCantERP = (srCant / ppCant).toFixed(4).replace(/\.?0+$/, '');
+                    }
+                }
+
+                // Presentación Uso: el producto que actualmente sirve al consumo
+                let celPresentacionUso;
+                if (np) {
+                    if (escenario === 'directo') {
+                        celPresentacionUso = `<span style="font-size:.75rem;color:#888;font-style:italic">↑ Misma presentación</span>`;
+                    } else {
+                        const activoTag = np.activoNuevo === 'NO'
+                            ? `<span style="font-size:.65rem;background:#fdd;color:#c0392b;border-radius:3px;padding:1px 5px;margin-left:4px">INACTIVO</span>` : '';
+                        const autoTag = ingr.metodo_resolucion === 'maestro'
+                            ? `<span style="font-size:.65rem;background:#e8f5e9;color:#2e7d32;border-radius:3px;padding:1px 5px;margin-left:4px" title="Resuelto automáticamente por maestro + unidad">AUTO</span>` : '';
+                        let variedadesHTML = '';
+                        if (np.variedades && np.variedades.length > 0) {
+                            variedadesHTML = `<select class="form-select form-select-sm mt-1" style="font-size:.75rem;padding:2px 5px;height:auto">
+                                ${np.variedades.map(v => `<option value="${v.id}" ${v.es_principal == 1 ? 'selected' : ''}>${esc(v.nombre)} ${v.es_principal == 1 ? '(Principal)' : ''}</option>`).join('')}
+                            </select>`;
+                        }
+                        celPresentacionUso = `<div class="traduccion-ok">
+                            <div class="d-flex align-items-center gap-1 mb-1">${activoTag}${autoTag}</div>
+                            <div class="nom-nuevo">${esc(np.NombreNuevo)}</div>
+                            ${variedadesHTML}
+                            <div class="uni-nuevo mt-1">${esc(np.unidadNueva || '')}${np.cantidad ? ' · ' + np.cantidad : ''} ${esc(np.productoMaestro || '')}</div>
+                        </div>`;
+                    }
+                } else if (cot) {
+                    celPresentacionUso = `<span class="traduccion-na"><i class="fas fa-exclamation-triangle me-1 text-warning"></i>Sin mapeo</span>`;
+                } else {
+                    celPresentacionUso = `<span class="traduccion-na text-danger"><i class="fas fa-times-circle me-1"></i>No resuelto</span>`;
                 }
 
                 return `<tr class="${filaClass}">
@@ -747,7 +773,9 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                     <td style="font-size:.8rem">${esc(comandaNombre)}</td>
                     <td class="text-center fw-semibold" style="border-right:3px solid #5c7aff;font-size:.8rem">${comandaCantidad}</td>
                     <!-- Nuevo Sistema -->
-                    <td class="col-traduccion">${tradHTML}</td>
+                    <td>${celInsumoReceta}</td>
+                    <td class="text-center fw-semibold">${celCantERP}</td>
+                    <td>${celPresentacionUso}</td>
                 </tr>`;
             }).join('');
 

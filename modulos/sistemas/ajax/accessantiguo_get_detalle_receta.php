@@ -210,6 +210,7 @@ try {
                         pp.cantidad,
                         pp.Activo   AS activoNuevo,
                         u.Nombre    AS unidadNueva,
+                        pm.id       AS id_maestro,
                         pm.Nombre   AS productoMaestro
                     FROM producto_presentacion pp
                     INNER JOIN producto_maestro pm ON pm.id = pp.id_producto_maestro
@@ -245,6 +246,52 @@ try {
             ");
             $stmtVar->execute([':idp' => $ingr['nuevo_producto']['id_presentacion']]);
             $ingr['nuevo_producto']['variedades'] = $stmtVar->fetchAll(PDO::FETCH_ASSOC);
+        }
+
+        // 4) Determinar escenario ERP e Insumo Receta (para las 3 columnas de Nuevo Sistema)
+        $ingr['insumo_receta'] = null;
+        $ingr['escenario_erp'] = 'sin_mapeo';
+
+        if ($ingr['nuevo_producto']) {
+            $unidadIngr = trim($ingr['UnidadIngrediente'] ?? '');
+            $unidadERP  = trim($ingr['nuevo_producto']['unidadNueva'] ?? '');
+
+            if ($unidadIngr !== '' && strtolower($unidadIngr) === strtolower($unidadERP)) {
+                // Unidad del ingrediente coincide con la presentación ERP resuelta → mismo item
+                $ingr['escenario_erp'] = 'directo';
+                $ingr['insumo_receta'] = $ingr['nuevo_producto'];
+            } else {
+                // Unidad diferente → buscar presentación del mismo maestro que coincida con DBIngredientes.Unidad
+                $ingr['escenario_erp'] = 'diferente_presentacion';
+                $idMaestroERP = $ingr['nuevo_producto']['id_maestro'] ?? null;
+
+                if ($idMaestroERP && $unidadIngr !== '') {
+                    $stmtIR = $conn->prepare("
+                        SELECT
+                            pp.id       AS id_presentacion,
+                            pp.SKU,
+                            pp.Nombre   AS NombreNuevo,
+                            pp.cantidad,
+                            pp.Activo   AS activoNuevo,
+                            u.Nombre    AS unidadNueva,
+                            pm.id       AS id_maestro,
+                            pm.Nombre   AS productoMaestro
+                        FROM producto_presentacion pp
+                        INNER JOIN producto_maestro pm ON pm.id = pp.id_producto_maestro
+                        LEFT JOIN unidad_producto u    ON u.id = pp.id_unidad_producto
+                        WHERE pp.id_producto_maestro = :idm
+                          AND u.Nombre = :uni
+                          AND pp.Id_receta_producto IS NULL
+                          AND pp.Activo = 'SI'
+                        LIMIT 1
+                    ");
+                    $stmtIR->execute([':idm' => $idMaestroERP, ':uni' => $unidadIngr]);
+                    $irRow = $stmtIR->fetch(PDO::FETCH_ASSOC);
+                    if ($irRow) {
+                        $ingr['insumo_receta'] = $irRow;
+                    }
+                }
+            }
         }
     }
     unset($ingr); // romper referencia
