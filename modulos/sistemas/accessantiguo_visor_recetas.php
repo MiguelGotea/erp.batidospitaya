@@ -823,8 +823,13 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                                     <td class="fw-bold text-purple" style="color:#6a1b9a">🟣 2 — Base</td>
                                     <td>
                                         <code>codporcion</code> es NULL. Se busca en <code>Cotizaciones</code> el
-                                        registro base del ingrediente donde <code>Conversion&nbsp;=&nbsp;1</code>
-                                        <strong>y</strong> <code>Prioridad&nbsp;=&nbsp;1</code>.
+                                        registro base del ingrediente donde:
+                                        <ul class="mb-0 mt-1">
+                                            <li><code>Conversion = 1</code></li>
+                                            <li><code>Prioridad = 1</code></li>
+                                            <li><code>Subproducto IS NULL OR Subproducto ≠ 1</code> (no es subproducto)</li>
+                                            <li><code>Marca IS NULL OR Marca ≠ 'Almacen Global'</code></li>
+                                        </ul>
                                     </td>
                                     <td><span style="font-size:.72rem;background:#f3e5f5;color:#6a1b9a;border-radius:3px;padding:2px 7px">Conversión=1</span></td>
                                 </tr>
