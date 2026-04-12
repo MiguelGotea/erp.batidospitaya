@@ -699,8 +699,8 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                 }
 
                 // ── Nuevo Sistema: 3 columnas ────────────────────────────────────
-                const np        = ingr.nuevo_producto;
-                const ir        = ingr.insumo_receta;
+                const np = ingr.nuevo_producto;
+                const ir = ingr.insumo_receta;
                 const escenario = ingr.escenario_erp;
 
                 // Insumo Receta: la presentación que coincide con la unidad del ingrediente
@@ -724,13 +724,13 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                 //   donde factor = conversion_unidad_producto.cantidad para [unidadIngrediente → unidadERP]
                 let celCantERP = '—';
                 if (ir && ir.cantidad != null) {
-                    const ppCant  = parseFloat(ir.cantidad);
-                    const srCant  = parseFloat(ingr.Cantidad);
-                    const factor  = (ir.factor_conversion != null) ? parseFloat(ir.factor_conversion) : 1;
+                    const ppCant = parseFloat(ir.cantidad);
+                    const srCant = parseFloat(ingr.Cantidad);
+                    const factor = (ir.factor_conversion != null) ? parseFloat(ir.factor_conversion) : 1;
 
                     if (ppCant > 0 && !isNaN(srCant)) {
                         const resultado = (srCant * factor) / ppCant;
-                        const display   = resultado % 1 === 0
+                        const display = resultado % 1 === 0
                             ? resultado.toString()
                             : parseFloat(resultado.toFixed(4)).toString();
 
@@ -767,6 +767,7 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                 } else {
                     celPresentacionUso = `<span class="traduccion-na text-danger"><i class="fas fa-times-circle me-1"></i>No resuelto</span>`;
                 }
+
 
                 return `<tr class="${filaClass}">
                     <!-- Estructura Access -->
