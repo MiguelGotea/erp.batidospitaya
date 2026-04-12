@@ -270,7 +270,7 @@ try {
             } else {
                 // Prioridad 2 y 3: resolución dinámica desde DB
                 // 1) Resolver la unidad Access → registro ERP + unidades convertibles
-                $resolucion   = resolverUnidadERP($conn, $ingr['UnidadIngrediente']);
+                $resolucion = resolverUnidadERP($conn, $ingr['UnidadIngrediente']);
                 $unidadResERP = trim($ingr['nuevo_producto']['unidadNueva'] ?? '');
 
                 // 2) ¿La presentación ERP ya resuelta está en el mismo grupo de unidad?
@@ -326,7 +326,7 @@ try {
                                     $stmtFact->execute([$uOrig, $uOrig, $uDest]);
                                     $factRow = $stmtFact->fetch(PDO::FETCH_ASSOC);
                                     if ($factRow) {
-                                        $irRow['factor_conversion'] = (float)$factRow['cantidad'];
+                                        $irRow['factor_conversion'] = (float) $factRow['cantidad'];
                                     }
                                 } catch (\Exception $e) {
                                     // Factor no encontrado — quantity se mostrará sin conversión
@@ -342,6 +342,7 @@ try {
             }
         }
     }
+
     unset($ingr); // romper referencia
 
     echo json_encode([
