@@ -726,9 +726,9 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                 //   ej: 1.2→1.0  1.4→1.5  1.8→2.0  (Math.round(x*2)/2)
                 let celCantERP = '—';
                 if (ir && ir.cantidad != null) {
-                    const ppCant  = parseFloat(ir.cantidad);
-                    const srCant  = parseFloat(ingr.Cantidad);
-                    const factor  = (ir.factor_conversion != null) ? parseFloat(ir.factor_conversion) : 1;
+                    const ppCant = parseFloat(ir.cantidad);
+                    const srCant = parseFloat(ingr.Cantidad);
+                    const factor = (ir.factor_conversion != null) ? parseFloat(ir.factor_conversion) : 1;
                     const esDirP1 = ingr.metodo_cotizacion === 'directa';
 
                     if (ppCant > 0 && !isNaN(srCant)) {
@@ -756,7 +756,6 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                         }
                     }
                 }
-
 
                 // Presentación Uso: el producto que actualmente sirve al consumo
                 let celPresentacionUso;
