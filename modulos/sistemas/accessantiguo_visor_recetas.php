@@ -731,26 +731,22 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                 // Presentación Uso: el producto que actualmente sirve al consumo
                 let celPresentacionUso;
                 if (np) {
-                    if (escenario === 'directo') {
-                        celPresentacionUso = `<span style="font-size:.75rem;color:#888;font-style:italic">↑ Misma presentación</span>`;
-                    } else {
-                        const activoTag = np.activoNuevo === 'NO'
-                            ? `<span style="font-size:.65rem;background:#fdd;color:#c0392b;border-radius:3px;padding:1px 5px;margin-left:4px">INACTIVO</span>` : '';
-                        const autoTag = ingr.metodo_resolucion === 'maestro'
-                            ? `<span style="font-size:.65rem;background:#e8f5e9;color:#2e7d32;border-radius:3px;padding:1px 5px;margin-left:4px" title="Resuelto automáticamente por maestro + unidad">AUTO</span>` : '';
-                        let variedadesHTML = '';
-                        if (np.variedades && np.variedades.length > 0) {
-                            variedadesHTML = `<select class="form-select form-select-sm mt-1" style="font-size:.75rem;padding:2px 5px;height:auto">
-                                ${np.variedades.map(v => `<option value="${v.id}" ${v.es_principal == 1 ? 'selected' : ''}>${esc(v.nombre)} ${v.es_principal == 1 ? '(Principal)' : ''}</option>`).join('')}
-                            </select>`;
-                        }
-                        celPresentacionUso = `<div class="traduccion-ok">
-                            <div class="d-flex align-items-center gap-1 mb-1">${activoTag}${autoTag}</div>
-                            <div class="nom-nuevo">${esc(np.NombreNuevo)}</div>
-                            ${variedadesHTML}
-                            <div class="uni-nuevo mt-1">${esc(np.unidadNueva || '')}${np.cantidad ? ' · ' + np.cantidad : ''} ${esc(np.productoMaestro || '')}</div>
-                        </div>`;
+                    const activoTag = np.activoNuevo === 'NO'
+                        ? `<span style="font-size:.65rem;background:#fdd;color:#c0392b;border-radius:3px;padding:1px 5px;margin-left:4px">INACTIVO</span>` : '';
+                    const autoTag = ingr.metodo_resolucion === 'maestro'
+                        ? `<span style="font-size:.65rem;background:#e8f5e9;color:#2e7d32;border-radius:3px;padding:1px 5px;margin-left:4px" title="Resuelto automáticamente por maestro + unidad">AUTO</span>` : '';
+                    let variedadesHTML = '';
+                    if (np.variedades && np.variedades.length > 0) {
+                        variedadesHTML = `<select class="form-select form-select-sm mt-1" style="font-size:.75rem;padding:2px 5px;height:auto">
+                            ${np.variedades.map(v => `<option value="${v.id}" ${v.es_principal == 1 ? 'selected' : ''}>${esc(v.nombre)} ${v.es_principal == 1 ? '(Principal)' : ''}</option>`).join('')}
+                        </select>`;
                     }
+                    celPresentacionUso = `<div class="traduccion-ok">
+                        <div class="d-flex align-items-center gap-1 mb-1">${activoTag}${autoTag}</div>
+                        <div class="nom-nuevo">${esc(np.NombreNuevo)}</div>
+                        ${variedadesHTML}
+                        <div class="uni-nuevo mt-1">${esc(np.unidadNueva || '')}${np.cantidad ? ' · ' + np.cantidad : ''} ${esc(np.productoMaestro || '')}</div>
+                    </div>`;
                 } else if (cot) {
                     celPresentacionUso = `<span class="traduccion-na"><i class="fas fa-exclamation-triangle me-1 text-warning"></i>Sin mapeo</span>`;
                 } else {
