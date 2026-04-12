@@ -253,19 +253,26 @@ try {
         $ingr['escenario_erp'] = 'sin_mapeo';
 
         if ($ingr['nuevo_producto']) {
-            $unidadIngr = trim($ingr['UnidadIngrediente'] ?? '');
-            $unidadERP  = trim($ingr['nuevo_producto']['unidadNueva'] ?? '');
+            // Obtener los nombres ERP equivalentes para la unidad abreviada del ingrediente
+            // (ej: "gr" → ["Gramos"], "lb" → ["Libras"], "oz" → ["Onzas Liquidas","Onzas Peso"])
+            $unidadesERP = obtenerUnidadesERPSimilares($ingr['UnidadIngrediente']);
+            $unidadERP   = trim($ingr['nuevo_producto']['unidadNueva'] ?? '');
 
-            if ($unidadIngr !== '' && strtolower($unidadIngr) === strtolower($unidadERP)) {
-                // Unidad del ingrediente coincide con la presentación ERP resuelta → mismo item
+            // ¿La unidad resuelta en el ERP pertenece al grupo equivalente del ingrediente?
+            $esDirecto = !empty($unidadesERP) && in_array($unidadERP, $unidadesERP);
+
+            if ($esDirecto) {
+                // Mismo grupo de unidades → Insumo Receta = Presentación Uso
                 $ingr['escenario_erp'] = 'directo';
                 $ingr['insumo_receta'] = $ingr['nuevo_producto'];
             } else {
-                // Unidad diferente → buscar presentación del mismo maestro que coincida con DBIngredientes.Unidad
+                // Unidad diferente → buscar presentación del mismo maestro
+                // cuya unidad esté en el grupo equivalente del ingrediente
                 $ingr['escenario_erp'] = 'diferente_presentacion';
                 $idMaestroERP = $ingr['nuevo_producto']['id_maestro'] ?? null;
 
-                if ($idMaestroERP && $unidadIngr !== '') {
+                if ($idMaestroERP && !empty($unidadesERP)) {
+                    $placeholdersIR = implode(',', array_fill(0, count($unidadesERP), '?'));
                     $stmtIR = $conn->prepare("
                         SELECT
                             pp.id       AS id_presentacion,
@@ -273,19 +280,19 @@ try {
                             pp.Nombre   AS NombreNuevo,
                             pp.cantidad,
                             pp.Activo   AS activoNuevo,
-                            u.Nombre    AS unidadNueva,
+                            u.nombre    AS unidadNueva,
                             pm.id       AS id_maestro,
                             pm.Nombre   AS productoMaestro
                         FROM producto_presentacion pp
                         INNER JOIN producto_maestro pm ON pm.id = pp.id_producto_maestro
                         LEFT JOIN unidad_producto u    ON u.id = pp.id_unidad_producto
-                        WHERE pp.id_producto_maestro = :idm
-                          AND u.Nombre = :uni
+                        WHERE pp.id_producto_maestro = ?
+                          AND u.nombre IN ($placeholdersIR)
                           AND pp.Id_receta_producto IS NULL
                           AND pp.Activo = 'SI'
                         LIMIT 1
                     ");
-                    $stmtIR->execute([':idm' => $idMaestroERP, ':uni' => $unidadIngr]);
+                    $stmtIR->execute(array_merge([$idMaestroERP], $unidadesERP));
                     $irRow = $stmtIR->fetch(PDO::FETCH_ASSOC);
                     if ($irRow) {
                         $ingr['insumo_receta'] = $irRow;
