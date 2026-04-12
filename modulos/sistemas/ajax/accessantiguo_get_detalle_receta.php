@@ -119,7 +119,7 @@ try {
                     FROM Cotizaciones
                     WHERE CodIngrediente = :ci
                       AND (Subproducto IS NULL OR Subproducto != 1)
-                      AND Marca != 'Almacen Global'
+                      AND (Marca IS NULL OR Marca != 'Almacen Global')
                       AND Prioridad = 1
                     LIMIT 1
                 ");
