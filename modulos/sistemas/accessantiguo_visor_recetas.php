@@ -941,7 +941,7 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                                 <tr>
                                     <td><strong>Tipo</strong></td>
                                     <td colspan="2">Tipo de ingrediente: B (Base), L (Líquido/Hielo), P
-                                        (Empaque).</td>
+                                        (Empaque), etc.</td>
                                 </tr>
                                 <tr>
                                     <td><strong>Nombre</strong></td>
