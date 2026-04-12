@@ -668,11 +668,11 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                 const comandaNombre = [ingrNombre, cot ? cot.Marca : null, cot ? cot.Linea : null]
                     .filter(Boolean).join(' · ');
 
-                // ── Comanda Access: Cantidad (Conversion / raciones) ─────────────
+                // ── Comanda Access: Cantidad (solo porciones mapeadas = directa) ──────
                 const conv = cot ? parseFloat(cot.Conversion) : NaN;
                 const cant = parseFloat(ingr.Cantidad);
-                const comandaCantidad = (!isNaN(conv) && !isNaN(cant) && cant !== 0)
-                    ? (conv / cant).toFixed(4).replace(/\.?0+$/, '')
+                const comandaCantidad = (metodoCot === 'directa' && !isNaN(conv) && !isNaN(cant) && conv !== 0)
+                    ? (cant / conv).toFixed(4).replace(/\.?0+$/, '')
                     : '—';
 
                 // ── Traducción nuevo ERP ─────────────────────────────────────────
