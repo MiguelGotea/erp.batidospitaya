@@ -101,11 +101,11 @@ try {
                 $ingr['metodo_cotizacion'] = 'directa';
             }
         } else {
-            // 2) Prioridad 2: registro base del ingrediente con Conversion = 1
+            // 2) Prioridad 2: registro base del ingrediente con Conversion = 1 y Prioridad = 1
             $stmtCot = $conn->prepare("
                 SELECT CodCotizacion, Marca, Linea, Capacidad, Unidad, Conversion
                 FROM Cotizaciones
-                WHERE CodIngrediente = :ci AND Conversion = 1
+                WHERE CodIngrediente = :ci AND Conversion = 1 AND Prioridad = 1
                 LIMIT 1
             ");
             $stmtCot->execute([':ci' => $codIngrediente]);

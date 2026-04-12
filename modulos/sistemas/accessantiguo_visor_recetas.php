@@ -383,13 +383,29 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                     style="border-radius:12px; box-shadow:0 1px 6px rgba(0,0,0,.09); overflow:hidden;">
                     <table class="table table-hover mb-0 table-receta" id="tablaReceta">
                         <thead>
+                            <!-- ── Fila de segmentos ── -->
                             <tr>
-                                <th style="width:40px">Orden</th>
-                                <th>Ingrediente</th>
-                                <th style="width:80px">Cantidad</th>
-                                <th style="width:55px">Tipo</th>
-                                <th style="width:80px">Porción</th>
-                                <th style="width:160px">Cotización</th>
+                                <th colspan="5" class="text-center" style="background:#1b4332;border-right:3px solid #40916c;letter-spacing:.05em;font-size:.7rem;padding:6px 10px">
+                                    <i class="fas fa-database me-1"></i> Estructura Access
+                                </th>
+                                <th colspan="4" class="text-center" style="background:#1a237e;border-right:3px solid #5c7aff;letter-spacing:.05em;font-size:.7rem;padding:6px 10px">
+                                    <i class="fas fa-receipt me-1"></i> Comanda Access
+                                </th>
+                                <th class="text-center" style="background:#4a148c;letter-spacing:.05em;font-size:.7rem;padding:6px 10px">
+                                    <i class="fas fa-layer-group me-1"></i> Nuevo Sistema
+                                </th>
+                            </tr>
+                            <!-- ── Columnas individuales ── -->
+                            <tr>
+                                <th>Nombre</th>
+                                <th style="width:85px">Unidad Base</th>
+                                <th style="width:75px">Cantidad</th>
+                                <th style="width:75px">Porción</th>
+                                <th style="width:150px;border-right:3px solid #40916c">Cotización</th>
+                                <th style="width:45px">Orden</th>
+                                <th style="width:50px">Tipo</th>
+                                <th>Nombre</th>
+                                <th style="width:75px;border-right:3px solid #5c7aff">Cantidad</th>
                                 <th class="col-traduccion">Producto Nuevo (ERP)</th>
                             </tr>
                         </thead>
@@ -642,7 +658,7 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
             const tbody = document.getElementById('tbodyReceta');
 
             if (!ingredientes.length) {
-                tbody.innerHTML = `<tr><td colspan="7" class="text-center text-muted py-5">
+                tbody.innerHTML = `<tr><td colspan="10" class="text-center text-muted py-5">
             <i class="fas fa-exclamation-circle me-2"></i>Esta receta no tiene ingredientes registrados.</td></tr>`;
                 show('panelReceta');
                 return;
@@ -670,12 +686,27 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                 } else if (metodoCot === 'prioritaria') {
                     cotBadge = '<span style="font-size:.65rem;background:#fff8e1;color:#e65100;border-radius:3px;padding:1px 5px;display:inline-block;margin-top:3px">Prioritaria</span>';
                 }
-                const infoTexto = cot ? [cot.Marca, cot.Linea, cot.Capacidad].filter(Boolean).join(' · ') : '';
+                // ── Cotización: texto con NombreIngrediente al inicio ───────────
+                const ingrNombre = ingr.NombreIngrediente || ingr.CodIngrediente;
+                const infoTexto = cot
+                    ? [ingrNombre, cot.Marca, cot.Linea, cot.Capacidad].filter(Boolean).join(' · ')
+                    : '';
                 const cotHTML = cot
                     ? `<div style="font-size:.75rem;color:#333">${infoTexto || '<span style="color:#bbb;font-style:italic">Sin detalle</span>'}</div>${cotBadge}`
                     : `<span class="sin-cot">Sin cotización</span>`;
 
-                // Traducción nuevo ERP
+                // ── Comanda Access: Nombre (ingrediente + marca + linea) ─────────
+                const comandaNombre = [ingrNombre, cot ? cot.Marca : null, cot ? cot.Linea : null]
+                    .filter(Boolean).join(' · ');
+
+                // ── Comanda Access: Cantidad (Conversion / raciones) ─────────────
+                const conv = cot ? parseFloat(cot.Conversion) : NaN;
+                const cant = parseFloat(ingr.Cantidad);
+                const comandaCantidad = (!isNaN(conv) && !isNaN(cant) && cant !== 0)
+                    ? (conv / cant).toFixed(4).replace(/\.?0+$/, '')
+                    : '—';
+
+                // ── Traducción nuevo ERP ─────────────────────────────────────────
                 let tradHTML;
                 const np = ingr.nuevo_producto;
                 if (np) {
@@ -711,15 +742,21 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                 }
 
                 return `<tr class="${filaClass}">
-                    <td class="text-center text-muted">${ingr.ordenreceta ?? idx + 1}</td>
+                    <!-- Estructura Access -->
                     <td>
-                        <div class="${nomClass}">${esc(ingr.NombreIngrediente || ingr.CodIngrediente)}${unidad}${nomBadge}${insumoChip}</div>
+                        <div class="${nomClass}">${esc(ingrNombre)}${nomBadge}${insumoChip}</div>
                         <small class="text-muted">${esc(ingr.CodIngrediente)}</small>
                     </td>
+                    <td class="text-center text-muted" style="font-size:.8rem">${esc(ingr.UnidadIngrediente || '—')}</td>
                     <td class="text-center fw-semibold">${ingr.Cantidad ?? '—'}</td>
-                    <td class="text-center"><span class="badge bg-secondary">${esc(tipo)}</span></td>
                     <td class="text-center text-muted">${ingr.codporcion || '—'}</td>
-                    <td>${cotHTML}</td>
+                    <td style="border-right:3px solid #40916c">${cotHTML}</td>
+                    <!-- Comanda Access -->
+                    <td class="text-center text-muted">${ingr.ordenreceta ?? idx + 1}</td>
+                    <td class="text-center"><span class="badge bg-secondary">${esc(tipo)}</span></td>
+                    <td style="font-size:.8rem">${esc(comandaNombre)}</td>
+                    <td class="text-center fw-semibold" style="border-right:3px solid #5c7aff;font-size:.8rem">${comandaCantidad}</td>
+                    <!-- Nuevo Sistema -->
                     <td class="col-traduccion">${tradHTML}</td>
                 </tr>`;
             }).join('');
