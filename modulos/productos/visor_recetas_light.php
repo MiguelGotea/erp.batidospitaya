@@ -57,7 +57,8 @@ if (!tienePermiso('recetario_access_traducido', 'vista', $cargoOperario)) {
             background: #fff;
             border-radius: 16px;
             box-shadow: 0 2px 12px rgba(0,0,0,.08);
-            overflow: hidden;
+            /* overflow:hidden eliminado — clipaba los desplegables de grupo */
+            overflow: visible;
             position: sticky;
             top: 16px;
             max-height: calc(100vh - 100px);
@@ -115,7 +116,9 @@ if (!tienePermiso('recetario_access_traducido', 'vista', $cargoOperario)) {
 
         .vrl-menu-body {
             overflow-y: auto;
+            overflow-x: hidden;
             flex: 1;
+            border-radius: 0 0 16px 16px; /* mantiene bordes redondeados sin overflow:hidden en padre */
         }
 
         .vrl-menu-body::-webkit-scrollbar { width: 4px; }
@@ -176,13 +179,11 @@ if (!tienePermiso('recetario_access_traducido', 'vista', $cargoOperario)) {
         .vrl-grupo-btn.active .chevron { transform: rotate(180deg); }
 
         /* Lista de productos dentro del grupo */
+        /* display se controla via JS (style.display) para evitar conflictos de especificidad */
         .vrl-productos-list {
-            display: none;
             background: #fafafa;
             border-bottom: 1px solid #eee;
         }
-
-        .vrl-productos-list.open { display: block; }
 
         .vrl-prod-item {
             padding: 9px 18px 9px 54px;
@@ -726,6 +727,8 @@ if (!tienePermiso('recetario_access_traducido', 'vista', $cargoOperario)) {
             todosGrupos = data.grupos;
             renderMenu(todosGrupos);
             // Registrar listener UNA sola vez — sobrevive re-renders del menú
+            // Todos los .vrl-productos-list empiezan ocultos (JS controla display)
+            document.querySelectorAll('.vrl-productos-list').forEach(el => el.style.display = 'none');
             document.getElementById('menuBody').addEventListener('click', onMenuClick);
         } catch(e) {
             document.getElementById('menuBody').innerHTML =
@@ -762,13 +765,19 @@ if (!tienePermiso('recetario_access_traducido', 'vista', $cargoOperario)) {
             </button>
             <div class="vrl-productos-list" id="${gid}">`;
 
-            // Guardar el índice del producto en data-prodidx (índice en el array)
-            // para recuperarlo sin depender del nombre como clave
-            g.productos.forEach((p, pIdx) => {
+            // Guardar el índice del producto relativo a todosGrupos (no al array filtrado)
+            // para que la búsqueda no desalinee los índices
+            const grupoOriginal = todosGrupos.find(og => String(og.CodGrupo) === String(g.CodGrupo));
+            g.productos.forEach(p => {
+                // Obtener el índice real desde todosGrupos
+                const prodIdxReal = grupoOriginal
+                    ? grupoOriginal.productos.findIndex(op => op.Nombre === p.Nombre)
+                    : -1;
+                if (prodIdxReal < 0) return; // no debería pasar
                 html += `
                 <div class="vrl-prod-item"
                      data-codgrupo="${esc(String(g.CodGrupo))}"
-                     data-prodidx="${pIdx}">
+                     data-prodidx="${prodIdxReal}">
                     <span class="prod-nombre">${esc(p.Nombre)}</span>
                     <span class="prod-versiones-count">${p.versiones.length}v</span>
                 </div>`;
@@ -800,20 +809,27 @@ if (!tienePermiso('recetario_access_traducido', 'vista', $cargoOperario)) {
         }
     }
 
-    // ── Toggle grupo ──────────────────────────────────────────────────
+    // ── Toggle grupo ─────────────────────────────────────────────────
+    // Usa style.display directamente (más confiable que CSS class con posibles conflictos)
     function toggleGrupo(codGrupo) {
         const lista = document.getElementById(`grupo-${codGrupo}`);
         if (!lista) return;
-        const isOpen = lista.classList.contains('open');
-        // Cerrar todos
-        document.querySelectorAll('.vrl-productos-list.open').forEach(el => el.classList.remove('open'));
+
+        const isOpen = lista.style.display === 'block';
+
+        // Cerrar TODOS los grupos abiertos
+        document.querySelectorAll('.vrl-productos-list').forEach(el => {
+            el.style.display = 'none';
+        });
         document.querySelectorAll('.vrl-grupo-btn.active').forEach(el => el.classList.remove('active'));
-        // Abrir el clickeado (si no estaba abierto)
+
+        // Si no estaba abierto → abrirlo
         if (!isOpen) {
-            lista.classList.add('open');
-            // El botón tiene id="btn-grupo-{codGrupo}"
-            const btnEl = document.querySelector(`[data-codgrupo="${codGrupo}"].vrl-grupo-btn`);
+            lista.style.display = 'block';
+            const btnEl = document.querySelector(`[data-codgrupo="${CSS.escape(String(codGrupo))}"].vrl-grupo-btn`);
             if (btnEl) btnEl.classList.add('active');
+            // Scroll suave para que el grupo quede visible en el menú
+            lista.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
     }
 
@@ -1077,9 +1093,14 @@ if (!tienePermiso('recetario_access_traducido', 'vista', $cargoOperario)) {
     // ── Búsqueda en menú ─────────────────────────────────────────────
     document.getElementById('inputBuscar').addEventListener('input', function() {
         const q = this.value.trim().toLowerCase();
-        if (!q) { renderMenu(todosGrupos); return; }
+        if (!q) {
+            renderMenu(todosGrupos);
+            // Ocultar todos los grupos recién renderizados
+            document.querySelectorAll('.vrl-productos-list').forEach(el => el.style.display = 'none');
+            return;
+        }
 
-        // Filtrar árbol
+        // Filtrar árbol (solo grupos, los productos se mantienen con índice original)
         const filtrado = todosGrupos.map(g => ({
             ...g,
             productos: g.productos.filter(p => p.Nombre.toLowerCase().includes(q))
@@ -1087,12 +1108,12 @@ if (!tienePermiso('recetario_access_traducido', 'vista', $cargoOperario)) {
 
         renderMenu(filtrado);
 
-        // Abrir todos los grupos con resultados
+        // Abrir todos los grupos con resultados (via style.display)
         filtrado.forEach(g => {
             const lista = document.getElementById(`grupo-${g.CodGrupo}`);
-            const btn   = document.querySelector(`[onclick="toggleGrupo('${g.CodGrupo}')"]`);
-            if (lista) lista.classList.add('open');
-            if (btn)   btn.classList.add('active');
+            const btnEl = document.querySelector(`[data-codgrupo="${CSS.escape(String(g.CodGrupo))}"].vrl-grupo-btn`);
+            if (lista)  lista.style.display = 'block';
+            if (btnEl)  btnEl.classList.add('active');
         });
     });
 
