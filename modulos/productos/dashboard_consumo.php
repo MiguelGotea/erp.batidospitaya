@@ -47,36 +47,26 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                 <!-- ══════════════════════════════════════════ -->
                 <!--  PANEL DE FILTROS                         -->
                 <!-- ══════════════════════════════════════════ -->
-                <div class="dc-filtros-card card border-0 shadow-sm mb-2">
+                <div class="dc-filtros-card card border-0 shadow-sm mb-3">
                     <div class="card-body py-2 px-3">
                         <div class="row g-2 align-items-end">
 
-                            <!-- Año -->
-                            <div class="col-6 col-md-2 col-lg-1">
-                                <label class="dc-label" for="filtroAnio">
-                                    <i class="fas fa-calendar me-1"></i>Año
-                                </label>
-                                <select class="form-select form-select-sm dc-select" id="filtroAnio">
-                                    <!-- Poblado por JS -->
-                                </select>
-                            </div>
-
-                            <!-- Semana Desde (número libre) -->
-                            <div class="col-6 col-md-2 col-lg-1">
+                            <!-- Semana Desde -->
+                            <div class="col-6 col-md-2 col-lg-2">
                                 <label class="dc-label" for="filtroSemanaDesde">
-                                    <i class="fas fa-calendar-week me-1"></i>Sem. Desde
+                                    <i class="fas fa-hashtag me-1"></i>Semana Desde
                                 </label>
                                 <input type="number" class="form-control form-control-sm dc-input-semana"
-                                    id="filtroSemanaDesde" min="1" max="999" placeholder="Ej: 10">
+                                    id="filtroSemanaDesde" min="1" max="9999" placeholder="Ej: 10">
                             </div>
 
-                            <!-- Semana Hasta (número libre) -->
-                            <div class="col-6 col-md-2 col-lg-1">
+                            <!-- Semana Hasta -->
+                            <div class="col-6 col-md-2 col-lg-2">
                                 <label class="dc-label" for="filtroSemanaHasta">
-                                    <i class="fas fa-calendar-week me-1"></i>Sem. Hasta
+                                    <i class="fas fa-hashtag me-1"></i>Semana Hasta
                                 </label>
                                 <input type="number" class="form-control form-control-sm dc-input-semana"
-                                    id="filtroSemanaHasta" min="1" max="999" placeholder="Ej: 14">
+                                    id="filtroSemanaHasta" min="1" max="9999" placeholder="Ej: 14">
                             </div>
 
                             <!-- Sucursales -->
@@ -98,27 +88,29 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                                 </select>
                             </div>
 
-                            <!-- Botones -->
-                            <div class="col-12 col-md-12 col-lg-2 d-flex gap-2 justify-content-end">
-                                <button class="btn btn-sm dc-btn-primary" id="btnAplicar">
-                                    <i class="fas fa-search me-1"></i>Analizar
-                                </button>
-                                <?php if ($puedeExportar): ?>
-                                <button class="btn btn-sm dc-btn-export" id="btnExportar" disabled>
-                                    <i class="fas fa-file-csv me-1"></i>CSV
-                                </button>
-                                <?php endif; ?>
+                            <!-- Botones + Semana actual -->
+                            <div class="col-12 col-md-12 col-lg-2 d-flex flex-column gap-1 align-items-end">
+                                <div class="d-flex gap-2 w-100 justify-content-end">
+                                    <button class="btn btn-sm dc-btn-primary" id="btnAplicar">
+                                        <i class="fas fa-search me-1"></i>Analizar
+                                    </button>
+                                    <?php if ($puedeExportar): ?>
+                                    <button class="btn btn-sm dc-btn-export" id="btnExportar" disabled>
+                                        <i class="fas fa-file-csv me-1"></i>CSV
+                                    </button>
+                                    <?php endif; ?>
+                                </div>
+                                <!-- Badge semana actual -->
+                                <div id="badgeSemanaActual" class="dc-badge-semana-actual d-none">
+                                    <i class="fas fa-calendar-check me-1"></i>
+                                    Semana actual:
+                                    <strong id="semanaActualNum">—</strong>
+                                    <span class="dc-sem-rango" id="semanaActualRango"></span>
+                                </div>
                             </div>
+
                         </div>
                     </div>
-                </div>
-
-                <!-- Semana actual informativa -->
-                <div class="dc-semana-actual-bar mb-3" id="barSemanaActual" style="display:none">
-                    <i class="fas fa-clock me-1"></i>
-                    Semana actual del sistema:
-                    <span class="dc-semana-actual-num" id="semanaActualNum">—</span>
-                    <span class="dc-semana-actual-rango" id="semanaActualRango"></span>
                 </div>
 
                 <!-- ══════════════════════════════════════════ -->

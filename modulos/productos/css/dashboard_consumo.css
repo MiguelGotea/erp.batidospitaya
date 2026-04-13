@@ -47,6 +47,44 @@ body { font-family: var(--dc-font); background: var(--dc-bg); }
     box-shadow: 0 0 0 .15rem rgba(81,184,172,.25);
 }
 
+/* Input número de semana */
+.dc-input-semana {
+    border-radius: 8px;
+    border: 1px solid #d9e0e8;
+    font-size: .82rem;
+    font-weight: 600;
+    text-align: center;
+    color: var(--dc-verde);
+}
+.dc-input-semana:focus {
+    border-color: var(--dc-verde-soft);
+    box-shadow: 0 0 0 .15rem rgba(81,184,172,.25);
+}
+
+/* Badge semana actual (dentro de la filtros card) */
+.dc-badge-semana-actual {
+    font-size: .72rem;
+    font-weight: 600;
+    color: var(--dc-verde);
+    background: #edf6f5;
+    border: 1.5px solid var(--dc-verde-soft);
+    border-radius: 20px;
+    padding: 3px 12px;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    animation: fadeInDown .3s ease;
+}
+.dc-badge-semana-actual .dc-sem-rango {
+    color: #889;
+    font-weight: 400;
+}
+@keyframes fadeInDown {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
 /* ── Botones ── */
 .dc-btn-primary {
     background: var(--dc-verde);

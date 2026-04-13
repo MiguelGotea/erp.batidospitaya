@@ -4,8 +4,8 @@
    modulos/productos/ajax/dashboard_consumo_get_datos.php
 
    Parámetros POST:
-     semana_desde_id  (int)   - id en SemanasSistema
-     semana_hasta_id  (int)   - id en SemanasSistema
+     semana_desde_num (int)   - numero_semana en SemanasSistema
+     semana_hasta_num (int)   - numero_semana en SemanasSistema
      sucursales       (array) - códigos de sucursales (vacío = todas)
      id_insumo        (int)   - opcional, filtrar un insumo ERP específico
 
@@ -34,45 +34,47 @@ if (!tienePermiso('dashboard_consumo_insumos', 'vista', $cargoOperario)) {
 }
 
 // ── Parámetros ────────────────────────────────────────────────────────
-$semanaDesdeId = isset($_POST['semana_desde_id']) ? (int)$_POST['semana_desde_id'] : 0;
-$semanaHastaId = isset($_POST['semana_hasta_id']) ? (int)$_POST['semana_hasta_id'] : 0;
+$semanaDesdeNum = isset($_POST['semana_desde_num']) ? (int)$_POST['semana_desde_num'] : 0;
+$semanaHastaNum = isset($_POST['semana_hasta_num']) ? (int)$_POST['semana_hasta_num'] : 0;
 $sucursalesPost = isset($_POST['sucursales']) ? (array)$_POST['sucursales'] : [];
-$idInsumo      = isset($_POST['id_insumo']) ? (int)$_POST['id_insumo'] : 0;
+$idInsumo       = isset($_POST['id_insumo']) ? (int)$_POST['id_insumo'] : 0;
 
-if (!$semanaDesdeId || !$semanaHastaId) {
-    echo json_encode(['ok' => false, 'msg' => 'Parámetros de semana requeridos.']);
+// Normalizar: desde <= hasta
+$numDesde = min($semanaDesdeNum, $semanaHastaNum);
+$numHasta = max($semanaDesdeNum, $semanaHastaNum);
+
+if (!$numDesde || !$numHasta) {
+    echo json_encode(['ok' => false, 'msg' => 'Ingresa el número de semana de inicio y fin.']);
     exit();
 }
 
 try {
-    // ── 1. Obtener rango de fechas de las semanas ──────────────────────
+    // ── 1. Obtener rango de fechas por numero_semana ───────────────────
     $stmtSem = $conn->prepare("
-        SELECT 
-            MIN(ss.fecha_inicio)    AS fecha_desde,
-            MAX(ss.fecha_fin)       AS fecha_hasta,
-            MIN(ss.numero_semana)   AS sem_num_desde,
-            MAX(ss.numero_semana)   AS sem_num_hasta
+        SELECT
+            MIN(ss.fecha_inicio) AS fecha_desde,
+            MAX(ss.fecha_fin)    AS fecha_hasta
         FROM SemanasSistema ss
-        WHERE ss.id BETWEEN :desde AND :hasta
+        WHERE ss.numero_semana BETWEEN :desde AND :hasta
     ");
-    $stmtSem->execute([':desde' => min($semanaDesdeId, $semanaHastaId), ':hasta' => max($semanaDesdeId, $semanaHastaId)]);
+    $stmtSem->execute([':desde' => $numDesde, ':hasta' => $numHasta]);
     $rango = $stmtSem->fetch(PDO::FETCH_ASSOC);
 
     if (!$rango || !$rango['fecha_desde']) {
-        echo json_encode(['ok' => false, 'msg' => 'Rango de semanas no encontrado.']);
+        echo json_encode(['ok' => false, 'msg' => "No se encontraron semanas {$numDesde} a {$numHasta} en el sistema."]);
         exit();
     }
 
-    // ── 2. Obtener todas las semanas del rango con sus fechas ──────────
+    // ── 2. Obtener todas las semanas del rango ─────────────────────────
     $stmtSems = $conn->prepare("
         SELECT ss.id, ss.numero_semana, ss.anio, ss.fecha_inicio, ss.fecha_fin
         FROM SemanasSistema ss
-        WHERE ss.id BETWEEN :desde AND :hasta
-        ORDER BY ss.anio ASC, ss.numero_semana ASC
+        WHERE ss.numero_semana BETWEEN :desde AND :hasta
+        ORDER BY ss.numero_semana ASC
     ");
-    $stmtSems->execute([':desde' => min($semanaDesdeId, $semanaHastaId), ':hasta' => max($semanaDesdeId, $semanaHastaId)]);
+    $stmtSems->execute([':desde' => $numDesde, ':hasta' => $numHasta]);
     $semanasRango = $stmtSems->fetchAll(PDO::FETCH_ASSOC);
-    $semanasMap = []; // [numero_semana] => [id, label, fecha_inicio, fecha_fin]
+    $semanasMap = [];
     foreach ($semanasRango as $s) {
         $semanasMap[(int)$s['numero_semana']] = $s;
     }

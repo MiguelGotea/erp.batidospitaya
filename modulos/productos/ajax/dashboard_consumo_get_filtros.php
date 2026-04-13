@@ -2,8 +2,8 @@
 /* ============================================================
    AJAX: Obtener filtros del dashboard de consumo
    modulos/productos/ajax/dashboard_consumo_get_filtros.php
-   Devuelve: semanas (SemanasSistema), sucursales activas,
-             insumos ERP que aparecen en SubReceta mapeada
+   Devuelve: semana_actual (basada en CURDATE), sucursales activas,
+             insumos ERP mapeados desde SubReceta
    ============================================================ */
 require_once '../../../core/auth/auth.php';
 require_once '../../../core/database/conexion.php';
@@ -21,28 +21,20 @@ if (!tienePermiso('dashboard_consumo_insumos', 'vista', $cargoOperario)) {
 }
 
 try {
-    // ── Semanas del sistema (últimas 52 + próximas 4) ──────────────────
-    $stmtSem = $conn->prepare("
-        SELECT ss.id, ss.numero_semana, ss.anio, ss.fecha_inicio, ss.fecha_fin
+    // ── Semana actual: la semana que contiene la fecha de hoy ─────────
+    $stmtSemActual = $conn->prepare("
+        SELECT
+            ss.numero_semana,
+            ss.anio,
+            ss.fecha_inicio,
+            ss.fecha_fin
         FROM SemanasSistema ss
-        ORDER BY ss.anio DESC, ss.numero_semana DESC
-        LIMIT 80
+        WHERE CURDATE() BETWEEN ss.fecha_inicio AND ss.fecha_fin
+        ORDER BY ss.fecha_inicio DESC
+        LIMIT 1
     ");
-    $stmtSem->execute();
-    $semanas = $stmtSem->fetchAll(PDO::FETCH_ASSOC);
-
-    // Formatear para el select
-    $semanasFormateadas = array_map(function ($s) {
-        return [
-            'id'    => $s['id'],
-            'label' => 'Sem ' . $s['numero_semana'] . ' / ' . $s['anio']
-                     . ' (' . date('d/M', strtotime($s['fecha_inicio'])) . '–' . date('d/M', strtotime($s['fecha_fin'])) . ')',
-            'numero_semana' => (int)$s['numero_semana'],
-            'anio'          => (int)$s['anio'],
-            'fecha_inicio'  => $s['fecha_inicio'],
-            'fecha_fin'     => $s['fecha_fin'],
-        ];
-    }, $semanas);
+    $stmtSemActual->execute();
+    $semanaActual = $stmtSemActual->fetch(PDO::FETCH_ASSOC);
 
     // ── Sucursales activas ─────────────────────────────────────────────
     $stmtSuc = $conn->prepare("
@@ -55,8 +47,7 @@ try {
     $stmtSuc->execute();
     $sucursales = $stmtSuc->fetchAll(PDO::FETCH_ASSOC);
 
-    // ── Insumos ERP que aparecem en SubReceta (con mapeo) ─────────────
-    // Solo los que están en el diccionario (presentaciones simples + globales)
+    // ── Insumos ERP mapeados desde SubReceta ──────────────────────────
     $stmtIns = $conn->prepare("
         SELECT DISTINCT
             pp.id,
@@ -82,10 +73,15 @@ try {
     $insumos = $stmtIns->fetchAll(PDO::FETCH_ASSOC);
 
     echo json_encode([
-        'ok'        => true,
-        'semanas'   => $semanasFormateadas,
-        'sucursales'=> $sucursales,
-        'insumos'   => $insumos,
+        'ok'           => true,
+        'semana_actual' => $semanaActual ? [
+            'numero_semana' => (int)$semanaActual['numero_semana'],
+            'anio'          => (int)$semanaActual['anio'],
+            'fecha_inicio'  => $semanaActual['fecha_inicio'],
+            'fecha_fin'     => $semanaActual['fecha_fin'],
+        ] : null,
+        'sucursales' => $sucursales,
+        'insumos'    => $insumos,
     ]);
 
 } catch (Exception $e) {

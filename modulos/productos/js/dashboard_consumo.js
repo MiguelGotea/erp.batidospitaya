@@ -27,7 +27,7 @@ let modoChart      = 'bar';  // 'bar' | 'line'
    ════════════════════════════════════════════════════════════ */
 $(document).ready(function () {
     inicializarSelect2();
-    cargarFiltros();
+    cargarFiltros();     // carga semana actual + sucursales + insumos
     bindEventos();
 });
 
@@ -82,7 +82,7 @@ function bindEventos() {
 }
 
 /* ════════════════════════════════════════════════════════════
-   CARGAR FILTROS
+   CARGAR FILTROS — detecta semana actual + puebla sucursales e insumos
    ════════════════════════════════════════════════════════════ */
 async function cargarFiltros() {
     try {
@@ -96,30 +96,29 @@ async function cargarFiltros() {
             return;
         }
 
-        // Semanas
-        $semDesde.empty();
-        $semHasta.empty();
-        resp.semanas.forEach(s => {
-            const opt = `<option value="${s.id}" data-num="${s.numero_semana}" data-anio="${s.anio}">${s.label}</option>`;
-            $semDesde.append(opt);
-            $semHasta.append($(opt).clone());
-        });
-        // Por defecto: últimas 4 semanas
-        if (resp.semanas.length >= 4) {
-            $semDesde.val(resp.semanas[3].id);
-            $semHasta.val(resp.semanas[0].id);
-        } else if (resp.semanas.length > 0) {
-            $semDesde.val(resp.semanas[resp.semanas.length - 1].id);
-            $semHasta.val(resp.semanas[0].id);
+        // ── Semana actual ───────────────────────────────────────
+        if (resp.semana_actual) {
+            const sa = resp.semana_actual;
+            $('#semanaActualNum').text(`Sem. ${sa.numero_semana} / ${sa.anio}`);
+            $('#semanaActualRango').text(
+                ` (${formatFecha(sa.fecha_inicio)}–${formatFecha(sa.fecha_fin)})`
+            );
+            $('#badgeSemanaActual').removeClass('d-none');
+
+            // Pre-cargar rango por defecto: 4 semanas hasta la actual
+            const semHasta = sa.numero_semana;
+            const semDesde = Math.max(1, semHasta - 3); // las 4 semanas previas
+            $semDesde.val(semDesde);
+            $semHasta.val(semHasta);
         }
 
-        // Sucursales
+        // ── Sucursales ─────────────────────────────────────────
         $sucursales.empty();
         resp.sucursales.forEach(s => {
             $sucursales.append(`<option value="${s.codigo}">${s.nombre}</option>`);
         });
 
-        // Insumos
+        // ── Insumos ───────────────────────────────────────────
         $insumo.empty().append('<option value="">Todos los insumos</option>');
         resp.insumos.forEach(i => {
             const tipoLabel = i.es_global == 1 ? ' [Global]' : '';
@@ -135,13 +134,16 @@ async function cargarFiltros() {
    CARGAR DATOS (ANALIZAR)
    ════════════════════════════════════════════════════════════ */
 async function cargarDatos() {
-    const semDesdeId = $semDesde.val();
-    const semHastaId = $semHasta.val();
+    const semDesdeNum = parseInt($semDesde.val());
+    const semHastaNum = parseInt($semHasta.val());
 
-    if (!semDesdeId || !semHastaId) {
-        Swal.fire({ icon: 'warning', title: 'Filtros requeridos', text: 'Selecciona el rango de semanas.', confirmButtonColor: '#0E544C' });
+    if (!semDesdeNum || !semHastaNum || isNaN(semDesdeNum) || isNaN(semHastaNum)) {
+        Swal.fire({ icon: 'warning', title: 'Semanas requeridas', text: 'Ingresa los números de semana de inicio y fin.', confirmButtonColor: '#0E544C' });
         return;
     }
+
+    const semD = Math.min(semDesdeNum, semHastaNum);
+    const semH = Math.max(semDesdeNum, semHastaNum);
 
     const sucursalesSelec = $sucursales.val() || [];
     const idInsumo        = $insumo.val() || 0;
@@ -153,8 +155,8 @@ async function cargarDatos() {
 
     try {
         const formData = new FormData();
-        formData.append('semana_desde_id', semDesdeId);
-        formData.append('semana_hasta_id', semHastaId);
+        formData.append('semana_desde_num', semD);
+        formData.append('semana_hasta_num', semH);
         sucursalesSelec.forEach(s => formData.append('sucursales[]', s));
         formData.append('id_insumo', idInsumo);
 
@@ -180,8 +182,8 @@ async function cargarDatos() {
 
         datosActuales = resp;
         // Guardar info de semanas para exportar
-        datosActuales._semDesde = obtenerNumSemana(semDesdeId);
-        datosActuales._semHasta = obtenerNumSemana(semHastaId);
+        datosActuales._semDesde = semD;
+        datosActuales._semHasta = semH;
 
         renderDashboard(resp);
         mostrarEstado('datos');
