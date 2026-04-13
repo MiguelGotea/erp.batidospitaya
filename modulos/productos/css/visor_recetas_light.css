@@ -21,7 +21,7 @@ body {
 /* ── Layout principal: dos columnas ─────────────────────────── */
 .vrl-layout {
     display: grid;
-    grid-template-columns: 420px 1fr;
+    grid-template-columns: 500px 1fr;
     gap: 16px;
     align-items: start;
 }
@@ -105,63 +105,48 @@ body {
 .vrl-menu-body::-webkit-scrollbar-track { background: #f5f5f5; }
 .vrl-menu-body::-webkit-scrollbar-thumb { background: #ccc; border-radius: 4px; }
 
-/* Grupo accordion ───────────────────────────────────────────── */
-.vrl-grupo-btn {
-    width: 100%;
-    background: none;
-    border: none;
-    text-align: left;
-    padding: 11px 18px;
-    font-family: 'Outfit', sans-serif;
-    font-size: .83rem;
-    font-weight: 700;
-    color: var(--vrl-primary);
+/* Cabecera de grupo (divisor visual) ────────────────────────── */
+.vrl-grupo-header {
     display: flex;
     align-items: center;
     gap: 8px;
-    cursor: pointer;
-    border-bottom: 1px solid #f0f2f5;
-    transition: background .15s;
+    padding: 8px 14px 6px;
+    background: #f0f4f2;
+    border-bottom: 1px solid #dce8e2;
+    border-top: 1px solid #dce8e2;
+    position: sticky;
+    top: 0;
+    z-index: 2;
 }
 
-.vrl-grupo-btn:hover  { background: #f6fff8; }
-.vrl-grupo-btn.active { background: #e8f5e9; color: #1b4332; }
-
-.vrl-grupo-btn .grupo-icon {
-    width: 28px;
-    height: 28px;
-    border-radius: 8px;
+.vrl-grupo-header .grupo-icon-sm {
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: .75rem;
+    font-size: .65rem;
     color: #fff;
     flex-shrink: 0;
 }
 
-.vrl-grupo-btn .grupo-count {
-    margin-left: auto;
-    font-size: .72rem;
+.vrl-grupo-header .grupo-header-nombre {
+    font-size: .75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--vrl-primary);
+    flex: 1;
+}
+
+.vrl-grupo-header .grupo-count {
+    font-size: .68rem;
     font-weight: 600;
-    background: #e8f5e9;
+    background: #d4ede3;
     color: var(--vrl-mid);
     border-radius: 20px;
     padding: 1px 8px;
-}
-
-.vrl-grupo-btn .chevron {
-    margin-left: 4px;
-    font-size: .65rem;
-    color: #aaa;
-    transition: transform .2s;
-}
-
-.vrl-grupo-btn.active .chevron { transform: rotate(180deg); }
-
-/* Lista de productos (display controlado por JS) ───────────── */
-.vrl-productos-list {
-    background: #fafafa;
-    border-bottom: 1px solid #eee;
 }
 
 .vrl-prod-item {
@@ -201,7 +186,10 @@ body {
 }
 
 /* ── Panel derecho — Contenido ───────────────────────────────── */
-.vrl-content { min-height: 400px; }
+.vrl-content {
+    min-height: 400px;
+    max-width: 780px;
+}
 
 /* ── Barra de carga (menu-loading) ───────────────────────────── */
 .menu-loading {
