@@ -78,15 +78,7 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                                 </select>
                             </div>
 
-                            <!-- Insumo ERP (opcional) -->
-                            <div class="col-12 col-md-4 col-lg-3">
-                                <label class="dc-label" for="filtroInsumo">
-                                    <i class="fas fa-box me-1"></i>Insumo (opcional)
-                                </label>
-                                <select class="form-select form-select-sm dc-select" id="filtroInsumo">
-                                    <option value="">Todos los insumos</option>
-                                </select>
-                            </div>
+
 
                             <!-- Semana Actual y Botones -->
                             <div class="col-12 col-md-12 col-lg-3 d-flex flex-wrap gap-2 justify-content-end align-items-center">
@@ -138,7 +130,7 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
 
                     <!-- KPI Cards -->
                     <div class="row g-3 mb-3" id="kpiRow">
-                        <div class="col-6 col-lg-3">
+                        <div class="col-6 col-lg-4">
                             <div class="dc-kpi-card" id="kpiTotal">
                                 <div class="dc-kpi-icon" style="color:#51B8AC"><i class="fas fa-boxes"></i></div>
                                 <div class="dc-kpi-label">Consumo Total (período)</div>
@@ -146,7 +138,7 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                                 <div class="dc-kpi-sub" id="kpiTotalSub"></div>
                             </div>
                         </div>
-                        <div class="col-6 col-lg-3">
+                        <div class="col-6 col-lg-4">
                             <div class="dc-kpi-card" id="kpiPico">
                                 <div class="dc-kpi-icon" style="color:#e67e22"><i class="fas fa-fire"></i></div>
                                 <div class="dc-kpi-label">Semana de Mayor Consumo</div>
@@ -154,7 +146,7 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                                 <div class="dc-kpi-sub" id="kpiPicoSub"></div>
                             </div>
                         </div>
-                        <div class="col-6 col-lg-3">
+                        <div class="col-6 col-lg-4">
                             <div class="dc-kpi-card" id="kpiProy">
                                 <div class="dc-kpi-icon" style="color:#27ae60"><i class="fas fa-chart-line"></i></div>
                                 <div class="dc-kpi-label">Proyección · Próx. 4 Semanas</div>
@@ -162,24 +154,20 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                                 <div class="dc-kpi-sub" id="kpiProySub"></div>
                             </div>
                         </div>
-                        <div class="col-6 col-lg-3">
-                            <div class="dc-kpi-card" id="kpiAlertas">
-                                <div class="dc-kpi-icon" style="color:#e74c3c"><i class="fas fa-exclamation-triangle"></i></div>
-                                <div class="dc-kpi-label">Insumos Sin Mapeo ERP</div>
-                                <div class="dc-kpi-valor" id="kpiAlertasVal">—</div>
-                                <div class="dc-kpi-sub" id="kpiAlertasSub"></div>
-                            </div>
-                        </div>
                     </div>
 
-                    <!-- Gráfico Tendencia -->
-                    <div class="card border-0 shadow-sm mb-3 d-none" id="cardTendencia">
+                    <!-- Panel de Análisis por Insumo ——————————————————————————— -->
+                    <div class="card border-0 shadow-sm mb-3" id="cardTendencia">
                         <div class="card-body">
-                            <div class="d-flex align-items-center justify-content-between mb-2">
+                            <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
                                 <h6 class="dc-seccion-titulo mb-0" id="tituloTendencia">
-                                    <i class="fas fa-chart-line me-2"></i>Tendencia de Consumo por Semana
+                                    <i class="fas fa-chart-line me-2"></i>Análisis de Insumo
                                 </h6>
-                                <div class="d-flex gap-2">
+                                <div class="d-flex gap-2 align-items-center flex-wrap">
+                                    <select class="form-select form-select-sm dc-select" id="chartInsumoSel"
+                                        style="min-width:220px;max-width:360px;font-size:.78rem">
+                                        <option value="">— Selecciona un insumo —</option>
+                                    </select>
                                     <button class="btn btn-xs dc-chip active" id="chartModoBarra" data-modo="bar">
                                         <i class="fas fa-chart-bar me-1"></i>Barras
                                     </button>
@@ -188,7 +176,11 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                                     </button>
                                 </div>
                             </div>
-                            <div class="dc-chart-wrap">
+                            <div id="chartPlaceholder" class="text-center py-5" style="color:#b0c8c5">
+                                <i class="fas fa-hand-point-up fa-2x mb-2 d-block"></i>
+                                <span class="text-muted" style="font-size:.85rem">Selecciona un insumo de la lista para ver su tendencia de consumo por semana.</span>
+                            </div>
+                            <div class="dc-chart-wrap d-none" id="chartWrap">
                                 <canvas id="chartTendencia"></canvas>
                             </div>
                         </div>
@@ -211,12 +203,7 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                                 <i class="fas fa-th me-1"></i>Mapa de Calor por Local
                             </button>
                         </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="dc-tab-btn" id="tabSinMapeoBtn" data-bs-toggle="tab" data-bs-target="#tabSinMapeo" role="tab">
-                                <i class="fas fa-exclamation-triangle me-1"></i>Sin Mapeo
-                                <span class="dc-badge-alerta d-none" id="badgeSinMapeo">0</span>
-                            </button>
-                        </li>
+
                     </ul>
 
                     <div class="tab-content" id="dashTabContent">
@@ -323,38 +310,7 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                             </div>
                         </div>
 
-                        <!-- TAB 4: SIN MAPEO -->
-                        <div class="tab-pane fade" id="tabSinMapeo" role="tabpanel">
-                            <div class="card border-0 shadow-sm">
-                                <div class="card-body p-0">
-                                    <div class="dc-tabla-toolbar px-3 py-2">
-                                        <span class="text-muted small">
-                                            <i class="fas fa-exclamation-triangle me-1 text-warning"></i>
-                                            Ingredientes de receta sin mapeo en <code>diccionario_productos_legado</code>.
-                                            Su consumo no está siendo registrado en el análisis ERP.
-                                        </span>
-                                    </div>
-                                    <div class="table-responsive">
-                                        <table class="table table-hover dc-tabla mb-0" id="tablaSinMapeo">
-                                            <thead>
-                                                <tr>
-                                                    <th>CodIngrediente</th>
-                                                    <th>Nombre Ingrediente</th>
-                                                    <th>Unidad Access</th>
-                                                    <th class="text-center">Productos Afectados</th>
-                                                    <th class="text-end">Ventas Afectadas</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody id="tbodySinMapeo">
-                                                <tr>
-                                                    <td colspan="5" class="text-center text-muted py-4">Sin datos.</td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+
 
                     </div><!-- /tab-content -->
 

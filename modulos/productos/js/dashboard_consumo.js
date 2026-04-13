@@ -9,9 +9,9 @@
 const $semDesde    = $('#filtroSemanaDesde');
 const $semHasta    = $('#filtroSemanaHasta');
 const $sucursales  = $('#filtroSucursales');
-const $insumo      = $('#filtroInsumo');
 const $btnAplicar  = $('#btnAplicar');
 const $btnExportar = $('#btnExportar');
+
 
 const $panelInicial = $('#panelInicial');
 const $panelLoader  = $('#panelLoader');
@@ -38,13 +38,15 @@ function inicializarSelect2() {
         allowClear: true,
         width: '100%',
     });
-    $insumo.select2({
-        placeholder: 'Todos los insumos',
+    // Selector de insumo en el panel de análisis (se puebla al cargar datos)
+    $('#chartInsumoSel').select2({
+        placeholder: '— Selecciona un insumo —',
         allowClear: true,
         width: '100%',
         dropdownAutoWidth: true,
     });
 }
+
 
 /* ── Ligar eventos ────────────────────────────────────────── */
 function bindEventos() {
@@ -55,9 +57,24 @@ function bindEventos() {
         modoChart = $(this).data('modo');
         $('#chartModoBarra, #chartModoLinea').removeClass('active');
         $(this).addClass('active');
-        // Solo re-renderizar si el card está visible (insumo específico seleccionado)
-        if (datosActuales && !$('#cardTendencia').hasClass('d-none')) {
+        if (datosActuales && !$('#chartWrap').hasClass('d-none')) {
             renderGrafico(datosActuales);
+        }
+    });
+
+    // Cambiar insumo en el panel de análisis → re-renderizar gráfico
+    $('#chartInsumoSel').on('change', function () {
+        if (!datosActuales) return;
+        const idSel = parseInt($(this).val()) || 0;
+        if (idSel > 0) {
+            $('#chartPlaceholder').addClass('d-none');
+            $('#chartWrap').removeClass('d-none');
+            renderGrafico(datosActuales);
+        } else {
+            $('#chartPlaceholder').removeClass('d-none');
+            $('#chartWrap').addClass('d-none');
+            if (chartTendencia) { chartTendencia.destroy(); chartTendencia = null; }
+            $('#tituloTendencia').html('<i class="fas fa-chart-line me-2"></i>Análisis de Insumo');
         }
     });
 
@@ -114,13 +131,6 @@ async function cargarFiltros() {
             $sucursales.append(`<option value="${s.codigo}">${s.nombre}</option>`);
         });
 
-        // ── Insumos ───────────────────────────────────────────
-        $insumo.empty().append('<option value="">Todos los insumos</option>');
-        resp.insumos.forEach(i => {
-            const tipoLabel = i.es_global == 1 ? ' [Global]' : '';
-            $insumo.append(`<option value="${i.id}">${i.nombre_completo}${tipoLabel}</option>`);
-        });
-
     } catch (err) {
         console.error('Error cargando filtros:', err);
     }
@@ -142,7 +152,6 @@ async function cargarDatos() {
     const semH = Math.max(semDesdeNum, semHastaNum);
 
     const sucursalesSelec = $sucursales.val() || [];
-    const idInsumo        = $insumo.val() || 0;
 
     // Mostrar loader
     mostrarEstado('loader');
@@ -154,7 +163,6 @@ async function cargarDatos() {
         formData.append('semana_desde_num', semD);
         formData.append('semana_hasta_num', semH);
         sucursalesSelec.forEach(s => formData.append('sucursales[]', s));
-        formData.append('id_insumo', idInsumo);
 
         const resp = await $.ajax({
             url: 'ajax/dashboard_consumo_get_datos.php',
@@ -215,21 +223,10 @@ function mostrarEstado(estado) {
    ════════════════════════════════════════════════════════════ */
 function renderDashboard(data) {
     renderKPIs(data);
-
-    // Mostrar gráfico SOLO cuando hay un insumo específico seleccionado
-    const idInsumoSel = parseInt($insumo.val()) || 0;
-    if (idInsumoSel > 0 && data.consumo.length > 0) {
-        $('#cardTendencia').removeClass('d-none');
-        renderGrafico(data);
-    } else {
-        $('#cardTendencia').addClass('d-none');
-        if (chartTendencia) { chartTendencia.destroy(); chartTendencia = null; }
-    }
-
+    renderInsumoSel(data);   // poblar selector del panel de análisis
     renderTablaHistorial(data);
     renderTablaProyeccion(data);
     renderHeatmapSelector(data);
-    renderTabSinMapeo(data);
 }
 
 /* ── KPIs ─────────────────────────────────────────────────── */
@@ -251,31 +248,27 @@ function renderKPIs(data) {
     // Proyección 4 semanas
     $('#kpiProyVal').text(formatNum(data.proyeccion_total));
     $('#kpiProySub').text('Basado en promedio del período');
-
-    // Sin mapeo
-    const nSinMapeo = data.num_sin_mapeo || 0;
-    $('#kpiAlertasVal').text(nSinMapeo);
-    $('#kpiAlertasSub').text(nSinMapeo > 0 ? 'Ingredientes no contabilizados' : 'Todo mapeado ✓');
-    $('#kpiAlertas .dc-kpi-icon').css('color', nSinMapeo > 0 ? '#e74c3c' : '#27ae60');
-
-    // Badge en tab
-    if (nSinMapeo > 0) {
-        $('#badgeSinMapeo').removeClass('d-none').text(nSinMapeo);
-    } else {
-        $('#badgeSinMapeo').addClass('d-none');
-    }
 }
+
 
 /* ── Gráfico de Tendencia (solo con insumo específico) ───── */
 function renderGrafico(data) {
-    const idInsumoSel = parseInt($insumo.val()) || 0;
-    if (!idInsumoSel) return;
+    const idInsumoSel = parseInt($('#chartInsumoSel').val()) || 0;
+    if (!idInsumoSel) {
+        $('#chartPlaceholder').removeClass('d-none');
+        $('#chartWrap').addClass('d-none');
+        return;
+    }
 
     const item = data.consumo.find(c => c.id == idInsumoSel);
     if (!item) {
-        $('#cardTendencia').addClass('d-none');
+        $('#chartPlaceholder').removeClass('d-none');
+        $('#chartWrap').addClass('d-none');
         return;
     }
+
+    $('#chartPlaceholder').addClass('d-none');
+    $('#chartWrap').removeClass('d-none');
 
     // Actualizar título con nombre del insumo
     $('#tituloTendencia').html(
@@ -441,6 +434,32 @@ function renderTablaProyeccion(data) {
     }
 
     $('#tbodyProyeccion').html(html);
+}
+
+/* ── Selector de insumo en panel de análisis ────────────── */
+function renderInsumoSel(data) {
+    const $sel = $('#chartInsumoSel');
+    const prevVal = $sel.val();   // conservar selección si ya hay una al recargar
+
+    $sel.empty().append('<option value="">— Selecciona un insumo —</option>');
+    data.consumo.forEach(item => {
+        const tipoLabel = item.es_global ? ' [Global]' : '';
+        $sel.append(`<option value="${item.id}">${escHtml(item.nombre)}${tipoLabel}</option>`);
+    });
+
+    // Si ya había una selección válida, restaurarla y re-renderizar
+    if (prevVal && $sel.find(`option[value="${prevVal}"]`).length) {
+        $sel.val(prevVal).trigger('change');
+    } else {
+        // Estado inicial: mostrar placeholder
+        $('#chartPlaceholder').removeClass('d-none');
+        $('#chartWrap').addClass('d-none');
+        if (chartTendencia) { chartTendencia.destroy(); chartTendencia = null; }
+        $('#tituloTendencia').html('<i class="fas fa-chart-line me-2"></i>Análisis de Insumo');
+    }
+
+    // Notificar a Select2 que hay nuevas opciones
+    $sel.trigger('change.select2');
 }
 
 /* ── Selector de insumos en heatmap ─────────────────────── */
