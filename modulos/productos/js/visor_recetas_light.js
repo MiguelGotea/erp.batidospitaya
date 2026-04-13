@@ -89,17 +89,12 @@ function renderMenu(grupos) {
         </button>
         <div class="vrl-productos-list" id="${gid}">`;
 
-        // Índice relativo a todosGrupos para que la búsqueda no desalinee
-        const grupoOriginal = todosGrupos.find(og => String(og.CodGrupo) === String(g.CodGrupo));
+        // Usamos data-nombre en lugar de data-prodidx para evitar discrepancias de índice
         g.productos.forEach(p => {
-            const prodIdxReal = grupoOriginal
-                ? grupoOriginal.productos.findIndex(op => op.Nombre === p.Nombre)
-                : -1;
-            if (prodIdxReal < 0) return;
             html += `
             <div class="vrl-prod-item"
                  data-codgrupo="${esc(String(g.CodGrupo))}"
-                 data-prodidx="${prodIdxReal}">
+                 data-nombre="${esc(String(p.Nombre ?? ''))}">
                 <span class="prod-nombre">${esc(p.Nombre)}</span>
                 <span class="prod-versiones-count">${p.versiones.length}v</span>
             </div>`;
@@ -121,8 +116,8 @@ function onMenuClick(e) {
     const itemProd = e.target.closest('.vrl-prod-item');
     if (itemProd) {
         const codGrupo = itemProd.dataset.codgrupo;
-        const prodIdx  = parseInt(itemProd.dataset.prodidx, 10);
-        seleccionarProductoPorIdx(codGrupo, prodIdx, itemProd);
+        const nombre   = itemProd.dataset.nombre;
+        seleccionarProductoPorNombre(codGrupo, nombre, itemProd);
     }
 }
 
@@ -158,7 +153,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const filtrado = todosGrupos.map(g => ({
             ...g,
-            productos: g.productos.filter(p => p.Nombre.toLowerCase().includes(q))
+            productos: g.productos.filter(p => p.Nombre != null && p.Nombre.toLowerCase().includes(q))
         })).filter(g => g.productos.length > 0);
 
         renderMenu(filtrado);
@@ -177,14 +172,14 @@ document.addEventListener('DOMContentLoaded', () => {
    SELECCIÓN DE PRODUCTO Y VERSIÓN
    ═══════════════════════════════════════════════════════════════ */
 
-/* ── Seleccionar producto (2 clicks: grupo → producto) ──────── */
-function seleccionarProductoPorIdx(codGrupo, prodIdx, elClicked) {
+/* ── Seleccionar producto por nombre ────────────────────────── */
+function seleccionarProductoPorNombre(codGrupo, nombre, elClicked) {
     document.querySelectorAll('.vrl-prod-item.selected').forEach(el => el.classList.remove('selected'));
     if (elClicked) elClicked.classList.add('selected');
 
     const grupo = todosGrupos.find(g => String(g.CodGrupo) === String(codGrupo));
     if (!grupo) return;
-    const prod = grupo.productos[prodIdx];
+    const prod = grupo.productos.find(p => String(p.Nombre ?? '') === String(nombre));
     if (!prod) return;
 
     productoActual = prod;

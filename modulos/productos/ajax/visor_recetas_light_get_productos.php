@@ -72,8 +72,9 @@ try {
 
         if (!isset($grupos[$cg]['productos'][$nom])) {
             $grupos[$cg]['productos'][$nom] = [
-                'Nombre'    => $nom,
-                'versiones' => [],
+                'Nombre'      => $nom,
+                'NombreGrupo' => $row['NombreGrupo'],
+                'versiones'   => [],
             ];
         }
 
