@@ -195,13 +195,12 @@ body {
 }
 
 .vrl-prod-item .prod-nombre {
+    display: block;
+    white-space: nowrap;
     overflow: hidden;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2; /* Truncado a 2 líneas */
+    text-overflow: ellipsis;
     line-height: 1.3;
-    max-height: 2.6em; /* Fallback de altura para silenciar advertencias de IDE */
-    word-break: break-word;
+    max-width: 100%;
 }
 
 /* ── Panel derecho — Contenido ───────────────────────────────── */
