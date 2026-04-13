@@ -1083,12 +1083,25 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                                     </tr>
                                 </tbody>
                             </table>
-                            <p style="font-size:.78rem;margin-bottom:0">
+                            <p style="font-size:.78rem;margin-bottom:6px">
                                 Una vez localizada la cotización, se busca su mapeo en
                                 <code>diccionario_productos_legado → producto_presentacion</code>.
                                 Si no existe mapeo directo, se intenta resolución automática por
                                 <strong>Maestro + Unidad</strong> (muestra badge <span style="background:#e8f5e9;color:#2e7d32;font-size:.72rem;border-radius:3px;padding:1px 5px">AUTO</span>).
                             </p>
+                            <div class="p-2 rounded" style="background:#ede7f6;font-size:.77rem;border-left:3px solid #7c4dff">
+                                <i class="fas fa-puzzle-piece me-1" style="color:#6a1b9a"></i>
+                                <strong>Pre-verificación: Receta Global.</strong>
+                                Antes de ejecutar P1/P2/P3 de resolución de unidades, el sistema comprueba si
+                                <code>producto_presentacion.Id_receta_producto IS NOT NULL</code>.
+                                Si es así, se trata de un <strong>producto compuesto</strong> cuyos campos
+                                <code>cantidad</code>, <code>id_unidad_producto</code> e <code>id_producto_maestro</code>
+                                son NULL en la base de datos. En ese caso se asignan valores fijos
+                                (<em>cantidad=1, unidad=Unidades</em>) y se omite toda la búsqueda de
+                                equivalencias de unidad — la columna Cantidad mostrará directamente la
+                                cantidad del ingrediente en Access. Se identifica con el badge
+                                <span style="font-size:.72rem;background:#e8eaf6;color:#3949ab;border-radius:3px;padding:1px 5px">📋 Receta</span>.
+                            </div>
                         </div>
 
                         <hr class="my-2">
