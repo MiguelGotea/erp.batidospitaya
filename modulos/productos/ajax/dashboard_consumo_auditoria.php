@@ -16,7 +16,7 @@ require_once '../../../core/permissions/permissions.php';
 header('Content-Type: application/json; charset=utf-8');
 set_time_limit(60);
 
-$usuario       = obtenerUsuarioActual();
+$usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
 
 if (!tienePermiso('dashboard_consumo_insumos', 'vista', $cargoOperario)) {
@@ -25,10 +25,10 @@ if (!tienePermiso('dashboard_consumo_insumos', 'vista', $cargoOperario)) {
     exit();
 }
 
-$idPP           = isset($_POST['id_presentacion'])  ? (int)$_POST['id_presentacion']  : 0;
-$numDesde       = isset($_POST['semana_desde_num']) ? (int)$_POST['semana_desde_num'] : 0;
-$numHasta       = isset($_POST['semana_hasta_num']) ? (int)$_POST['semana_hasta_num'] : 0;
-$sucursalesPost = isset($_POST['sucursales'])       ? (array)$_POST['sucursales']     : [];
+$idPP = isset($_POST['id_presentacion']) ? (int) $_POST['id_presentacion'] : 0;
+$numDesde = isset($_POST['semana_desde_num']) ? (int) $_POST['semana_desde_num'] : 0;
+$numHasta = isset($_POST['semana_hasta_num']) ? (int) $_POST['semana_hasta_num'] : 0;
+$sucursalesPost = isset($_POST['sucursales']) ? (array) $_POST['sucursales'] : [];
 
 if (!$idPP || !$numDesde || !$numHasta) {
     echo json_encode(['ok' => false, 'msg' => 'Parámetros incompletos.']);
@@ -36,6 +36,7 @@ if (!$idPP || !$numDesde || !$numHasta) {
 }
 $numDesde = min($numDesde, $numHasta);
 $numHasta = max($numDesde, $numHasta);
+
 
 try {
     /* ── Rango de fechas ─────────────────────────────────── */
@@ -71,10 +72,10 @@ try {
         exit();
     }
 
-    $ppCantBase = max((float)$ppDat['pp_cantidad'], 0.001);
-    $esGlobal   = !empty($ppDat['Id_receta_producto']);
-    $idMaestro  = (int)$ppDat['id_producto_maestro'];
-    $idUnidERP  = (int)$ppDat['id_unidad_producto'];
+    $ppCantBase = max((float) $ppDat['pp_cantidad'], 0.001);
+    $esGlobal = !empty($ppDat['Id_receta_producto']);
+    $idMaestro = (int) $ppDat['id_producto_maestro'];
+    $idUnidERP = (int) $ppDat['id_unidad_producto'];
 
     /* ── CodCotizacion(es) que apuntan a esta presentación ── */
     $stmtCods = $conn->prepare("
@@ -94,11 +95,11 @@ try {
        Nota: el filtro de sucursales también usa ? para evitar
        mezclar named y positional en PDO.
     --------------------------------------------------------- */
-    $phCod    = implode(',', array_fill(0, count($codCots), '?'));
+    $phCod = implode(',', array_fill(0, count($codCots), '?'));
     $whereSuc = '';
     $sucParams = [];
     if (!empty($sucursalesPost)) {
-        $whereSuc  = ' AND v.local IN (' . implode(',', array_fill(0, count($sucursalesPost), '?')) . ')';
+        $whereSuc = ' AND v.local IN (' . implode(',', array_fill(0, count($sucursalesPost), '?')) . ')';
         $sucParams = array_values($sucursalesPost);
     }
 
@@ -148,9 +149,12 @@ try {
         $numDesde,              // v.Semana BETWEEN ? ...
         $numHasta,
     ];
-    foreach ($sucParams as $s) $positional[] = $s;       // sucursales IN (?)
-    foreach ($codCots  as $c) $positional[] = $c;        // codporcion IN (?)
-    foreach ($codCots  as $c) $positional[] = $c;        // subquery CodCotizacion IN (?)
+    foreach ($sucParams as $s)
+        $positional[] = $s;       // sucursales IN (?)
+    foreach ($codCots as $c)
+        $positional[] = $c;        // codporcion IN (?)
+    foreach ($codCots as $c)
+        $positional[] = $c;        // subquery CodCotizacion IN (?)
 
     $stmtV = $conn->prepare($sql);
     $stmtV->execute($positional);
@@ -163,14 +167,16 @@ try {
 
     $unidadPorNombre = [];
     foreach ($todasUnidades as $u) {
-        $uid = (int)$u['id'];
+        $uid = (int) $u['id'];
         $unidadPorNombre[strtolower(trim($u['nombre']))] = $uid;
         $abr = strtolower(trim($u['abreviado'] ?? ''));
-        if ($abr) $unidadPorNombre[$abr] = $uid;
+        if ($abr)
+            $unidadPorNombre[$abr] = $uid;
         if (!empty($u['nombres_opcionales'])) {
             foreach (preg_split('/[,;|]+/', $u['nombres_opcionales']) as $alias) {
                 $ak = strtolower(trim($alias));
-                if ($ak) $unidadPorNombre[$ak] = $uid;
+                if ($ak)
+                    $unidadPorNombre[$ak] = $uid;
             }
         }
     }
@@ -182,9 +188,9 @@ try {
     $stmtConv->execute();
     $convIndex = [];
     foreach ($stmtConv->fetchAll(PDO::FETCH_ASSOC) as $cv) {
-        $ini = (int)$cv['id_unidad_producto_inicio'];
-        $fin = (int)$cv['id_unidad_producto_final'];
-        $fac = (float)$cv['cantidad'];
+        $ini = (int) $cv['id_unidad_producto_inicio'];
+        $fin = (int) $cv['id_unidad_producto_final'];
+        $fac = (float) $cv['cantidad'];
         $convIndex[$ini][$fin] = $fac;
         $convIndex[$fin][$ini] = ($fac != 0) ? 1 / $fac : 0;
     }
@@ -201,7 +207,7 @@ try {
         ");
         $stmtPM->execute([$idMaestro]);
         foreach ($stmtPM->fetchAll(PDO::FETCH_ASSOC) as $pp) {
-            $presentPorMaestro[(int)$pp['id_unidad_producto']] = $pp;
+            $presentPorMaestro[(int) $pp['id_unidad_producto']] = $pp;
         }
     }
 
@@ -212,15 +218,15 @@ try {
     $filas = [];
 
     foreach ($ventas as $v) {
-        $unidAcc   = $v['unidad_access'] ?? '';
-        $codporc   = $v['codporcion'];
-        $cantTotal = (float)$v['cant_total_raw'];
+        $unidAcc = $v['unidad_access'] ?? '';
+        $codporc = $v['codporcion'];
+        $cantTotal = (float) $v['cant_total_raw'];
 
         // ¿Es P1? (codporcion apunta directamente a esta presentación)
-        $esP1 = !empty($codporc) && isset($codCotSet[(string)$codporc]);
+        $esP1 = !empty($codporc) && isset($codCotSet[(string) $codporc]);
 
-        $factor     = 1.0;
-        $ppCant     = $ppCantBase;
+        $factor = 1.0;
+        $ppCant = $ppCantBase;
         $nivelUsado = 'mismo';
         $consumoCrudo = 0.0;
         $consumoFinal = 0.0;
@@ -228,7 +234,7 @@ try {
         if ($esGlobal) {
             $consumoCrudo = $cantTotal;
             $consumoFinal = $cantTotal;
-            $nivelUsado   = 'global';
+            $nivelUsado = 'global';
         } else {
             // Resolver factor de conversión de unidad
             $idUnidAcc = $unidadPorNombre[strtolower(trim($unidAcc))] ?? null;
@@ -236,14 +242,14 @@ try {
             if ($idUnidAcc && $idUnidAcc !== $idUnidERP) {
                 $factorDir = $convIndex[$idUnidAcc][$idUnidERP] ?? null;
                 if ($factorDir !== null) {
-                    $factor     = $factorDir;
+                    $factor = $factorDir;
                     $nivelUsado = 'conversion_directa';
                 } else {
                     // Nivel 2: presentación del maestro con la unidad de Access
                     $ppAlt = $presentPorMaestro[$idUnidAcc] ?? null;
                     if ($ppAlt) {
-                        $ppCant     = max((float)$ppAlt['pp_cantidad'], 0.001);
-                        $factor     = 1.0;
+                        $ppCant = max((float) $ppAlt['pp_cantidad'], 0.001);
+                        $factor = 1.0;
                         $nivelUsado = 'nivel2_maestro';
                     } else {
                         // Nivel 3: buscar via conversiones disponibles
@@ -251,14 +257,15 @@ try {
                             foreach ($convIndex[$idUnidAcc] as $idDest => $fconv) {
                                 $ppC = $presentPorMaestro[$idDest] ?? null;
                                 if ($ppC) {
-                                    $ppCant     = max((float)$ppC['pp_cantidad'], 0.001);
-                                    $factor     = $fconv;
+                                    $ppCant = max((float) $ppC['pp_cantidad'], 0.001);
+                                    $factor = $fconv;
                                     $nivelUsado = 'nivel3_conversion';
                                     break;
                                 }
                             }
                         }
-                        if ($nivelUsado === 'mismo') $nivelUsado = 'factor1_fallback';
+                        if ($nivelUsado === 'mismo')
+                            $nivelUsado = 'factor1_fallback';
                     }
                 }
             }
@@ -269,40 +276,40 @@ try {
         }
 
         $filas[] = [
-            'folio'              => $v['Folio'] ?? '—',
-            'fecha'              => $v['Fecha'],
-            'semana'             => (int)$v['semana'],
-            'sucursal'           => $v['sucursal'],
-            'nombre_batido'      => $v['nombre_batido'] ?? $v['CodProducto'],
+            'folio' => $v['Folio'] ?? '—',
+            'fecha' => $v['Fecha'],
+            'semana' => (int) $v['semana'],
+            'sucursal' => $v['sucursal'],
+            'nombre_batido' => $v['nombre_batido'] ?? $v['CodProducto'],
             'nombre_ingrediente' => $v['nombre_ingrediente'],
-            'unidad_access'      => $unidAcc,
-            'codporcion'         => $codporc,
-            'cant_receta'        => (float)$v['cant_receta'],
-            'ventas'             => (float)$v['ventas'],
-            'cant_total'         => round($cantTotal, 4),
-            'factor'             => round($factor, 6),
-            'pp_cantidad'        => $ppCant,
-            'consumo_crudo'      => round($consumoCrudo, 4),
-            'consumo_final'      => $consumoFinal,
-            'es_p1'              => $esP1,
-            'nivel'              => $nivelUsado,
-            'genera_decimal'     => $esP1 && (abs($consumoCrudo - $consumoFinal) > 0.001),
+            'unidad_access' => $unidAcc,
+            'codporcion' => $codporc,
+            'cant_receta' => (float) $v['cant_receta'],
+            'ventas' => (float) $v['ventas'],
+            'cant_total' => round($cantTotal, 4),
+            'factor' => round($factor, 6),
+            'pp_cantidad' => $ppCant,
+            'consumo_crudo' => round($consumoCrudo, 4),
+            'consumo_final' => $consumoFinal,
+            'es_p1' => $esP1,
+            'nivel' => $nivelUsado,
+            'genera_decimal' => $esP1 && (abs($consumoCrudo - $consumoFinal) > 0.001),
         ];
     }
 
     echo json_encode([
-        'ok'            => true,
-        'presentacion'  => [
-            'id'        => $idPP,
-            'nombre'    => $ppDat['Nombre'],
-            'unidad'    => $ppDat['unidad_erp'],
-            'pp_cant'   => $ppCantBase,
+        'ok' => true,
+        'presentacion' => [
+            'id' => $idPP,
+            'nombre' => $ppDat['Nombre'],
+            'unidad' => $ppDat['unidad_erp'],
+            'pp_cant' => $ppCantBase,
             'es_global' => $esGlobal,
         ],
-        'filas'         => $filas,
-        'total_filas'   => count($filas),
+        'filas' => $filas,
+        'total_filas' => count($filas),
         'total_consumo' => round(array_sum(array_column($filas, 'consumo_final')), 4),
-        'cod_cots'      => $codCots,
+        'cod_cots' => $codCots,
     ]);
 
 } catch (Exception $e) {
