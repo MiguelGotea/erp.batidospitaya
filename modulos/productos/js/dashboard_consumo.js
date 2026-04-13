@@ -372,7 +372,9 @@ function renderTablaHistorial(data) {
             html += `
             <tr>
                 <td>
-                    <div class="fw-bold" style="font-size:.82rem">${escHtml(item.nombre)}</div>
+                    <div class="fw-bold" style="font-size:.82rem">${escHtml(item.nombre)}
+                        ${item.es_p1 ? '<span class="ms-1" style="font-size:.65rem;background:#e8f5e9;color:#2e7d32;border-radius:3px;padding:1px 5px">P1</span>' : ''}
+                    </div>
                     <div class="text-muted" style="font-size:.72rem">${escHtml(item.maestro)}</div>
                 </td>
                 <td>${escHtml(item.unidad)}</td>
@@ -386,9 +388,12 @@ function renderTablaHistorial(data) {
                 </td>
                 <td class="text-center">${Object.keys(item.por_semana).length}</td>
                 <td class="text-center">${tipoBadge}</td>
-                <td class="text-center">
-                    <button class="btn-desglose" onclick="mostrarDesglose(${item.id})">
+                <td class="text-center" style="white-space:nowrap">
+                    <button class="btn-desglose" onclick="mostrarDesglose(${item.id})" title="Desglose por semana/sucursal">
                         <i class="fas fa-expand-arrows-alt me-1"></i>Ver
+                    </button>
+                    <button class="btn-desglose ms-1" style="background:#fff3e0;color:#e65100;border:1px solid #ffb74d" onclick="mostrarAuditoria(${item.id})" title="Auditoría venta por venta">
+                        <i class="fas fa-microscope"></i>
                     </button>
                 </td>
             </tr>`;
@@ -602,6 +607,132 @@ window.mostrarDesglose = function (idInsumo) {
     const modal = new bootstrap.Modal(document.getElementById('modalDesglose'));
     modal.show();
 };
+
+/* ── Modal Auditoría venta × venta ───────────────────────── */
+window.mostrarAuditoria = function (idInsumo) {
+    if (!datosActuales) return;
+    const item = datosActuales.consumo.find(c => c.id == idInsumo);
+    if (!item) return;
+
+    const semD = datosActuales._semDesde;
+    const semH = datosActuales._semHasta;
+    const sucs = $sucursales.val() || [];
+
+    // Abrir modal con loader
+    $('#modalAuditoriaLabel').html(`<i class="fas fa-microscope me-2"></i>${escHtml(item.nombre)} — Auditoría de cálculo`);
+    $('#modalAuditoriaContenido').html(`
+        <div class="text-center py-5">
+            <i class="fas fa-spinner fa-spin fa-2x text-muted"></i>
+            <div class="mt-2 text-muted">Cargando ventas individuales…</div>
+        </div>
+    `);
+    const modal = new bootstrap.Modal(document.getElementById('modalAuditoria'));
+    modal.show();
+
+    const fd = new FormData();
+    fd.append('id_presentacion', idInsumo);
+    fd.append('semana_desde_num', semD);
+    fd.append('semana_hasta_num', semH);
+    sucs.forEach(s => fd.append('sucursales[]', s));
+
+    $.ajax({
+        url: 'ajax/dashboard_consumo_auditoria.php',
+        type: 'POST',
+        data: fd,
+        processData: false,
+        contentType: false,
+    }).done(function (resp) {
+        if (!resp.ok) {
+            $('#modalAuditoriaContenido').html(`<div class="alert alert-danger">${escHtml(resp.msg)}</div>`);
+            return;
+        }
+
+        const pp = resp.presentacion;
+        const filas = resp.filas;
+        const nDec  = filas.filter(f => f.genera_decimal).length;
+
+        let thead = `<tr style="font-size:.72rem;position:sticky;top:0;background:#fff;z-index:1">
+            <th>Sem</th><th>Sucursal</th><th>Fecha</th><th>Batido</th>
+            <th>Ingrediente</th><th>Und.Access</th><th style="text-align:right">Ventas</th>
+            <th style="text-align:right">Cant.Receta</th><th style="text-align:right">Total raw</th>
+            <th style="text-align:right">Factor</th><th style="text-align:right">pp_cant</th>
+            <th style="text-align:right">Crudo</th><th style="text-align:right">Final</th>
+            <th>P1</th><th>Nivel</th>
+        </tr>`;
+
+        let tbody = '';
+        let sumCrudo = 0, sumFinal = 0;
+        filas.forEach(f => {
+            sumCrudo += f.consumo_crudo;
+            sumFinal += f.consumo_final;
+            const rowStyle = f.genera_decimal
+                ? 'background:#fff8e1'
+                : (f.es_p1 ? 'background:#f1f8e9' : '');
+            const p1badge = f.es_p1
+                ? '<span style="font-size:.65rem;background:#c8e6c9;color:#2e7d32;border-radius:3px;padding:1px 4px">P1</span>'
+                : '<span style="font-size:.65rem;color:#aaa">—</span>';
+            const diffBadge = f.genera_decimal
+                ? `<span style="font-size:.65rem;background:#ffe082;border-radius:3px;padding:1px 4px" title="Crudo: ${f.consumo_crudo}">Δ${round05(f.consumo_crudo).toFixed(1)}</span>`
+                : '';
+            tbody += `<tr style="font-size:.72rem;${rowStyle}">
+                <td>${f.semana}</td>
+                <td>${escHtml(f.sucursal)}</td>
+                <td style="white-space:nowrap">${f.fecha}</td>
+                <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escHtml(f.nombre_batido)}">${escHtml(f.nombre_batido)}</td>
+                <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escHtml(f.nombre_ingrediente)}">${escHtml(f.nombre_ingrediente)}</td>
+                <td>${escHtml(f.unidad_access)}</td>
+                <td class="text-end">${f.ventas}</td>
+                <td class="text-end">${f.cant_receta}</td>
+                <td class="text-end">${f.cant_total}</td>
+                <td class="text-end" style="color:#1565c0">${f.factor}</td>
+                <td class="text-end">${f.pp_cantidad}</td>
+                <td class="text-end" style="color:#555">${f.consumo_crudo}</td>
+                <td class="text-end fw-bold" style="color:#0E544C">${f.consumo_final} ${diffBadge}</td>
+                <td>${p1badge}</td>
+                <td style="font-size:.65rem;color:#777">${escHtml(f.nivel)}</td>
+            </tr>`;
+        });
+
+        // Totales
+        tbody += `<tr style="background:#e8f5e9;font-weight:700;font-size:.73rem">
+            <td colspan="11" class="text-end">TOTAL</td>
+            <td class="text-end">${round2(sumCrudo)}</td>
+            <td class="text-end" style="color:#0E544C">${round2(sumFinal)}</td>
+            <td colspan="2"></td>
+        </tr>`;
+
+        const alertaHtml = nDec > 0
+            ? `<div class="alert alert-warning py-2 mb-2" style="font-size:.8rem">
+                <i class="fas fa-exclamation-triangle me-1"></i>
+                <strong>${nDec} fila(s)</strong> tenían consumo crudo con décimas ≠ 0.5 y fueron redondeadas (fondo amarillo).
+               </div>`
+            : `<div class="alert alert-success py-2 mb-2" style="font-size:.8rem">
+                <i class="fas fa-check-circle me-1"></i> Todos los cálculos P1 caen exactamente en múltiplos de 0.5.
+               </div>`;
+
+        const infoHtml = `<div class="mb-2 d-flex gap-3" style="font-size:.8rem">
+            <span><strong>Presentación:</strong> ${escHtml(pp.nombre)}</span>
+            <span><strong>Unidad ERP:</strong> ${escHtml(pp.unidad)}</span>
+            <span><strong>pp_cantidad:</strong> ${pp.pp_cant}</span>
+            <span><strong>Filas:</strong> ${resp.total_filas}</span>
+        </div>`;
+
+        const html = `
+            ${infoHtml}${alertaHtml}
+            <div class="table-responsive" style="max-height:60vh;overflow-y:auto">
+                <table class="table table-hover dc-tabla mb-0" style="font-size:.72rem">
+                    <thead>${thead}</thead>
+                    <tbody>${tbody}</tbody>
+                </table>
+            </div>
+        `;
+        $('#modalAuditoriaContenido').html(html);
+    }).fail(function () {
+        $('#modalAuditoriaContenido').html('<div class="alert alert-danger">Error de conexión.</div>');
+    });
+};
+
+function round05(n) { return Math.round(parseFloat(n) * 2) / 2; }
 
 /* ── Exportar CSV ─────────────────────────────────────────── */
 function exportarCSV() {

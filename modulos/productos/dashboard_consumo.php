@@ -386,6 +386,30 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
             </div>
 
             <!-- ══════════════════════════════════════════ -->
+            <!--  MODAL AUDITORÍA VENTA × VENTA           -->
+            <!-- ══════════════════════════════════════════ -->
+            <div class="modal fade" id="modalAuditoria" tabindex="-1" aria-labelledby="modalAuditoriaLabel" aria-hidden="true">
+                <div class="modal-dialog modal-xl modal-dialog-scrollable">
+                    <div class="modal-content border-0 shadow">
+                        <div class="modal-header" style="background:#e65100;color:#fff">
+                            <h5 class="modal-title" id="modalAuditoriaLabel">
+                                <i class="fas fa-microscope me-2"></i>Auditoría de Cálculo
+                            </h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body p-0">
+                            <div id="modalAuditoriaContenido" class="p-3"></div>
+                        </div>
+                        <div class="modal-footer py-1" style="font-size:.75rem;color:#888">
+                            <span><span style="background:#f1f8e9;padding:2px 6px;border-radius:3px">Verde</span> = P1 redondeado OK &nbsp;|&nbsp;
+                            <span style="background:#fff8e1;padding:2px 6px;border-radius:3px">Amarillo</span> = Crudo con decimal → redondeado a 0.5</span>
+                            <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ══════════════════════════════════════════ -->
             <!--  MODAL DE AYUDA                           -->
             <!-- ══════════════════════════════════════════ -->
             <div class="modal fade" id="pageHelpModal" tabindex="-1"

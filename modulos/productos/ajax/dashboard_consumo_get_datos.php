@@ -290,6 +290,7 @@ try {
        ══════════════════════════════════════════════════════════ */
     $consumoAgg    = [];   // [id_pp][sucursal][semana] => float
     $metaPP        = [];   // [id_pp] => {nombre, maestro, unidad, es_global}
+    $esP1Map       = [];   // [id_pp] => bool  (true si TODOS sus mapeos vinieron de P1)
     $sinMapeo      = [];
     $sinMapeoSet   = [];
     $sucursalesSet = [];
@@ -415,6 +416,10 @@ try {
                 'unidad'   => $unidadPorId[$idUnidERP]['nombre'] ?? $mapeo['unidad_erp'] ?? '',
                 'es_global'=> $esGlobal,
             ];
+            $esP1Map[$idPP] = $esP1;  // inicializar con el primer mapeo
+        } else {
+            // Si alguna fila del mismo idPP NO es P1, el item deja de ser puro P1
+            if (!$esP1) $esP1Map[$idPP] = false;
         }
 
         if (!isset($consumoAgg[$idPP]))             $consumoAgg[$idPP] = [];
@@ -431,7 +436,12 @@ try {
 
     $listaConsumo = [];
     foreach ($consumoAgg as $idPP => $porSuc) {
-        $meta          = $metaPP[$idPP];
+        $meta  = $metaPP[$idPP];
+        $itemEsP1 = !empty($esP1Map[$idPP]);   // ¿todas las filas de este idPP son P1?
+
+        // Función local de redondeo: P1 → 0.5, resto → 4 decimales
+        $rnd = fn($v) => $itemEsP1 ? (round($v * 2) / 2) : round($v, 4);
+
         $totalGeneral  = 0;
         $consPorSem    = [];
         $porSucRes     = [];
@@ -443,7 +453,12 @@ try {
                 $totSuc       += $c;
                 $consPorSem[$sem] = ($consPorSem[$sem] ?? 0) + $c;
             }
-            $porSucRes[$suc] = round($totSuc, 4);
+            $porSucRes[$suc] = $rnd($totSuc);
+        }
+
+        // Redondear acumulados por semana al 0.5 si es P1
+        foreach ($consPorSem as $s => $c) {
+            $consPorSem[$s] = $rnd($c);
         }
 
         $semanaPico = null; $semanaLow = null;
@@ -453,6 +468,7 @@ try {
             if ($c < $minC) { $minC = $c; $semanaLow  = $s; }
         }
 
+        $totalGeneral = $rnd($totalGeneral);
         $n          = count($consPorSem);
         $promSemana = $n > 0 ? $totalGeneral / $n : 0;
 
@@ -467,12 +483,12 @@ try {
             elseif ($p2 < $p1 * 0.95) $tendencia = 'down';
         }
 
-        // Desglose semana × sucursal
+        // Desglose semana × sucursal (redondeado al 0.5 si es P1)
         $desgloseSemsuc = [];
         foreach ($semanasNros as $sem) {
             $desgloseSemsuc[$sem] = [];
             foreach ($sucursalesPresentes as $suc) {
-                $desgloseSemsuc[$sem][$suc] = round((float)($consumoAgg[$idPP][$suc][$sem] ?? 0), 4);
+                $desgloseSemsuc[$sem][$suc] = $rnd((float)($consumoAgg[$idPP][$suc][$sem] ?? 0));
             }
         }
 
@@ -482,14 +498,15 @@ try {
             'maestro'          => $meta['maestro'],
             'unidad'           => $meta['unidad'],
             'es_global'        => (bool)$meta['es_global'],
-            'total'            => round($totalGeneral, 4),
-            'prom_semana'      => round($promSemana, 4),
-            'proyeccion_4sem'  => round($promSemana * 4, 4),
-            'stock_min'        => round($promSemana, 4),
-            'stock_max'        => round($promSemana * 2, 4),
+            'es_p1'            => $itemEsP1,
+            'total'            => $totalGeneral,
+            'prom_semana'      => round($promSemana, $itemEsP1 ? 1 : 4),
+            'proyeccion_4sem'  => round($promSemana * 4, $itemEsP1 ? 1 : 4),
+            'stock_min'        => round($promSemana, $itemEsP1 ? 1 : 4),
+            'stock_max'        => round($promSemana * 2, $itemEsP1 ? 1 : 4),
             'semana_pico_num'  => $semanaPico,
             'semana_low_num'   => $semanaLow,
-            'max_consumo_sem'  => round($maxC, 4),
+            'max_consumo_sem'  => $rnd($maxC),
             'tendencia'        => $tendencia,
             'por_semana'       => $consPorSem,
             'por_sucursal'     => $porSucRes,
