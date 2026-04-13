@@ -78,17 +78,17 @@ function renderMenu(grupos) {
         const color = colorMap[String(g.CodGrupo)] || GRUPO_COLORES[0];
         const nombre = g.alias || g.NombreGrupo;
 
-        // Cabecera de grupo — solo visual, no clickeable
+        // Caja contenedora de grupo para mejor encapsulación
+        html += `<div class="vrl-group-box">`;
+
+        // Cabecera de grupo — Limpia, sin íconos irrelevantes
         html += `
         <div class="vrl-grupo-header">
-            <span class="grupo-icon-sm" style="background:${color}">
-                <i class="fas fa-box-open"></i>
-            </span>
             <span class="grupo-header-nombre">${esc(nombre)}</span>
             <span class="grupo-count">${g.productos.length}</span>
         </div>`;
 
-        // Productos directamente visibles — 1 solo click carga la receta
+        // Productos en cuadrícula
         html += `<div class="vrl-products-grid">`;
         g.productos.forEach(p => {
             html += `
@@ -99,6 +99,8 @@ function renderMenu(grupos) {
             </div>`;
         });
         html += `</div>`;
+        
+        html += `</div> <!-- .vrl-group-box -->`;
     });
 
     body.innerHTML = html;
