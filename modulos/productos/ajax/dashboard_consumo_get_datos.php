@@ -304,11 +304,13 @@ try {
         $sucursalesSet[$sucursal] = true;
 
         // ── Resolver mapeo (P1 / P2 / P3) ──
-        $mapeo = null;
+        $mapeo  = null;
+        $esP1   = false;   // P1 = porción mapeada → redondear al 0.5 más cercano
 
         // P1: codporcion directo
         if (!empty($codporcion) && isset($diccionarioMap[(string)$codporcion])) {
             $mapeo = $diccionarioMap[(string)$codporcion];
+            $esP1  = true;
         }
         // P2: cotización base
         if (!$mapeo && isset($cotMap[$codIng]['p2'])) {
@@ -397,6 +399,11 @@ try {
 
             // Fórmula: consumo = (cant_total * factor) / pp_cantidad
             $consumido = ($cantTotal * $factor) / $ppCant;
+
+            // P1: porciones físicas → solo enteros o mitades (redondear al 0.5 más cercano)
+            if ($esP1) {
+                $consumido = round($consumido * 2) / 2;
+            }
         }
 
         // ── Guardar metadata ──────────────────────────────────

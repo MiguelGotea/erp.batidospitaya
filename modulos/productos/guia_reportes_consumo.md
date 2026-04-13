@@ -77,6 +77,8 @@ LIMIT 1;
 ```
 
 > Con P1, la cantidad en la comanda Access es `SubReceta.Cantidad / Cotizacion.Conversion`.
+> **Las porciones P1 son unidades físicas** que solo se manipulan enteras o a la mitad.
+> El consumo calculado se redondea al múltiplo de 0.5 más cercano (ver Paso 5).
 
 #### P2 — Cotización base (`codporcion IS NULL`, existe cot. base)
 
@@ -217,12 +219,40 @@ LIMIT 1;
 cantidad_erp = (SubReceta.Cantidad × factor_conversion) / pp_cantidad
 ```
 
-| Caso | Factor | pp_cantidad | Fórmula |
-|---|---|---|---|
-| Misma unidad | `1` | Cantidad de la presentación | `SubReceta.Cantidad / pp_cantidad` |
-| Unidad distinta con conversión | `0.035` (ej: gr→oz) | Cantidad de la presentación | `(SubReceta.Cantidad × 0.035) / pp_cantidad` |
-| P1 porción directa | igual a los anteriores | Cantidad de la presentación | Redondeado al 0.5 más cercano: `Math.round(resultado × 2) / 2` |
-| Receta Global | `1` | `1` | `SubReceta.Cantidad` (sin división) |
+| Caso | Factor | pp_cantidad | Fórmula | Redondeo |
+|---|---|---|---|---|
+| Misma unidad | `1` | Cantidad de la presentación | `SubReceta.Cantidad / pp_cantidad` | Ninguno (4 decimales) |
+| Unidad distinta con conversión | `0.035` (ej: gr→oz) | Cantidad de la presentación | `(SubReceta.Cantidad × 0.035) / pp_cantidad` | Ninguno (4 decimales) |
+| **P1 porción directa** | igual a los anteriores | Cantidad de la presentación | `(SubReceta.Cantidad × factor) / pp_cantidad` | **Al 0.5 más cercano** |
+| Receta Global | `1` | `1` | `SubReceta.Cantidad` (sin división) | Ninguno |
+
+#### Regla de redondeo P1 — porciones físicas
+
+Las porciones P1 representan unidades que se manipulan físicamente: enteras o a la mitad.
+No tiene sentido expresar «1.037 porciones», por lo que el resultado se ajusta al múltiplo
+de `0.5` más cercano:
+
+```
+consumo_p1_redondeado = round(consumo_crudo × 2) / 2
+```
+
+> **Ejemplo real:**
+> - Receta en Access: **30 g** de fresa
+> - Presentación ERP mapeada vía P1: **1 oz** (= 28.3495 g)
+> - Factor de conversión gr→oz: `0.035274`
+> - `consumo_crudo = (30 × 0.035274) / 1 = 1.0582`
+> - `round(1.0582 × 2) / 2 = round(2.1164) / 2 = 2 / 2 = **1.0**`
+>
+> Para 100 ventas: consumo crudo = 105.82 porciones → redondeado = **106.0**
+
+En PHP:
+
+```php
+// Solo aplica cuando el mapeo provino de P1 (codporcion)
+if ($esP1) {
+    $consumido = round($consumido * 2) / 2;
+}
+```
 
 **Consumo total de una presentación ERP en un período:**
 
