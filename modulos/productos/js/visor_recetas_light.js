@@ -248,6 +248,7 @@ function renderBarraProducto(prod, codActivo) {
         chipsHtml = `<span class="bp-chip active" style="cursor:default">${esc(label)}${pyHtml}</span>`;
     }
 
+
     const grupoTag = prod.NombreGrupo
         ? `<span class="bp-grupo">${esc(prod.NombreGrupo)}</span>` : '';
 
