@@ -293,7 +293,7 @@ try {
         }
 
         $filas[] = [
-            'folio' => $v['Folio'] ?? '—',
+            'cod_pedido' => $v['CodPedido'] ?? '—',
             'fecha' => $v['Fecha'],
             'semana' => (int) $v['semana'],
             'sucursal' => $v['sucursal'],
