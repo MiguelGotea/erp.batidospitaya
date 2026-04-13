@@ -89,6 +89,7 @@ function renderMenu(grupos) {
         </div>`;
 
         // Productos directamente visibles — 1 solo click carga la receta
+        html += `<div class="vrl-products-grid">`;
         g.productos.forEach(p => {
             html += `
             <div class="vrl-prod-item"
@@ -98,6 +99,7 @@ function renderMenu(grupos) {
                 <span class="prod-versiones-count">${p.versiones.length}v</span>
             </div>`;
         });
+        html += `</div>`;
     });
 
     body.innerHTML = html;
