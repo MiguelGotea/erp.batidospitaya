@@ -10,7 +10,7 @@ require_once '../../core/permissions/permissions.php';
 $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
 
-if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
+if (!tienePermiso('recetario_access_traducido', 'vista', $cargoOperario)) {
     header('Location: ../../index.php');
     exit();
 }

@@ -27,7 +27,7 @@ try {
         echo json_encode(['success' => false, 'message' => 'No autenticado']);
         exit;
     }
-    if (!tienePermiso('visor_recetas', 'vista', $usuario['CodNivelesCargos'])) {
+    if (!tienePermiso('recetario_access_traducido', 'vista', $usuario['CodNivelesCargos'])) {
         echo json_encode(['success' => false, 'message' => 'Sin permiso']);
         exit;
     }
