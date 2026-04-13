@@ -657,7 +657,7 @@ window.mostrarAuditoria = function (idInsumo) {
             <th style="text-align:right">Cant.Receta</th><th style="text-align:right">Total raw</th>
             <th style="text-align:right">Factor</th><th style="text-align:right">pp_cant</th>
             <th style="text-align:right">Crudo</th><th style="text-align:right">Final</th>
-            <th>P1</th><th>Nivel</th>
+            <th>Tipo</th><th>Nivel</th>
         </tr>`;
 
         let tbody = '';
@@ -665,16 +665,26 @@ window.mostrarAuditoria = function (idInsumo) {
         filas.forEach(f => {
             sumCrudo += f.consumo_crudo;
             sumFinal += f.consumo_final;
-            const rowStyle = f.genera_decimal
+            const tipoMapeo = f.tipo_mapeo || (f.es_p1 ? 'P1' : 'P2');
+            const tipoBadgeStyle = tipoMapeo === 'P1'
+                ? 'background:#c8e6c9;color:#1b5e20'
+                : tipoMapeo === 'P2'
+                    ? 'background:#bbdefb;color:#0d47a1'
+                    : 'background:#ffe0b2;color:#bf360c';
+            const tipoMapeoHtml = `<span style="font-size:.65rem;border-radius:3px;padding:1px 5px;font-weight:700;${tipoBadgeStyle}">${tipoMapeo}</span>`;
+
+            const rowBg = f.genera_decimal
                 ? 'background:#fff8e1'
-                : (f.es_p1 ? 'background:#f1f8e9' : '');
-            const p1badge = f.es_p1
-                ? '<span style="font-size:.65rem;background:#c8e6c9;color:#2e7d32;border-radius:3px;padding:1px 4px">P1</span>'
-                : '<span style="font-size:.65rem;color:#aaa">—</span>';
+                : tipoMapeo === 'P1'
+                    ? 'background:#f1f8e9'
+                    : tipoMapeo === 'P2'
+                        ? 'background:#f3f8ff'
+                        : 'background:#fff8f2';
+
             const diffBadge = f.genera_decimal
                 ? `<span style="font-size:.65rem;background:#ffe082;border-radius:3px;padding:1px 4px" title="Crudo: ${f.consumo_crudo}">Δ${round05(f.consumo_crudo).toFixed(1)}</span>`
                 : '';
-            tbody += `<tr style="font-size:.72rem;${rowStyle}">
+            tbody += `<tr style="font-size:.72rem;${rowBg}">
                 <td>${f.semana}</td>
                 <td>${escHtml(f.sucursal)}</td>
                 <td style="white-space:nowrap">${f.fecha}</td>
@@ -688,7 +698,7 @@ window.mostrarAuditoria = function (idInsumo) {
                 <td class="text-end">${f.pp_cantidad}</td>
                 <td class="text-end" style="color:#555">${f.consumo_crudo}</td>
                 <td class="text-end fw-bold" style="color:#0E544C">${f.consumo_final} ${diffBadge}</td>
-                <td>${p1badge}</td>
+                <td>${tipoMapeoHtml}</td>
                 <td style="font-size:.65rem;color:#777">${escHtml(f.nivel)}</td>
             </tr>`;
         });
@@ -704,11 +714,21 @@ window.mostrarAuditoria = function (idInsumo) {
         const alertaHtml = nDec > 0
             ? `<div class="alert alert-warning py-2 mb-2" style="font-size:.8rem">
                 <i class="fas fa-exclamation-triangle me-1"></i>
-                <strong>${nDec} fila(s)</strong> tenían consumo crudo con décimas ≠ 0.5 y fueron redondeadas (fondo amarillo).
+                <strong>${nDec} fila(s) P1</strong> tuvieron consumo crudo redondeado al 0.5 más cercano (fondo amarillo).
                </div>`
             : `<div class="alert alert-success py-2 mb-2" style="font-size:.8rem">
                 <i class="fas fa-check-circle me-1"></i> Todos los cálculos P1 caen exactamente en múltiplos de 0.5.
                </div>`;
+
+        // Leyenda de tipos de mapeo
+        const leyendaHtml = `<div class="d-flex gap-2 mb-2 flex-wrap" style="font-size:.75rem">
+            <span style="background:#c8e6c9;color:#1b5e20;border-radius:3px;padding:1px 7px;font-weight:700">P1</span>
+            <span style="color:#555">Porción directa — redondea al 0.5 más cercano</span>
+            <span class="ms-3" style="background:#bbdefb;color:#0d47a1;border-radius:3px;padding:1px 7px;font-weight:700">P2</span>
+            <span style="color:#555">Cotización base — 4 decimales</span>
+            <span class="ms-3" style="background:#ffe0b2;color:#bf360c;border-radius:3px;padding:1px 7px;font-weight:700">P3</span>
+            <span style="color:#555">Fallback — 4 decimales</span>
+        </div>`;
 
         const infoHtml = `<div class="mb-2 d-flex gap-3" style="font-size:.8rem">
             <span><strong>Presentación:</strong> ${escHtml(pp.nombre)}</span>
@@ -718,7 +738,7 @@ window.mostrarAuditoria = function (idInsumo) {
         </div>`;
 
         const html = `
-            ${infoHtml}${alertaHtml}
+            ${infoHtml}${leyendaHtml}${alertaHtml}
             <div class="table-responsive" style="max-height:60vh;overflow-y:auto">
                 <table class="table table-hover dc-tabla mb-0" style="font-size:.72rem">
                     <thead>${thead}</thead>

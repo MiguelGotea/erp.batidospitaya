@@ -276,6 +276,35 @@ try {
     /* ── Set de codCots para detectar P1 ─────────────────── */
     $codCotSet = array_flip(array_map('strval', $codCots));
 
+    /* ── Cargar cotizaciones para detectar P2 vs P3 ─────── */
+    // Indexar por CodIngrediente: p2 y p3
+    $codIngList = [];
+    foreach ($ventas as $vv) { $codIngList[$vv['CodIngrediente']] = true; }
+    $codIngArr = array_keys($codIngList);
+    $cotP2P3Map = [];
+    if (!empty($codIngArr)) {
+        $phCot2 = implode(',', array_fill(0, count($codIngArr), '?'));
+        $stmtCot2 = $conn->prepare("
+            SELECT CodIngrediente, CodCotizacion, Conversion, Prioridad
+            FROM Cotizaciones
+            WHERE CodIngrediente IN ($phCot2)
+              AND (Subproducto IS NULL OR Subproducto != 1)
+              AND (Marca IS NULL OR Marca != 'Almacen Global')
+            ORDER BY CodIngrediente, Conversion DESC, Prioridad ASC
+        ");
+        $stmtCot2->execute(array_values($codIngArr));
+        foreach ($stmtCot2->fetchAll(PDO::FETCH_ASSOC) as $ct) {
+            $ci = $ct['CodIngrediente'];
+            if (!isset($cotP2P3Map[$ci])) $cotP2P3Map[$ci] = ['p2' => null, 'p3' => null];
+            if ($ct['Conversion'] == 1 && $ct['Prioridad'] == 1 && !$cotP2P3Map[$ci]['p2']) {
+                $cotP2P3Map[$ci]['p2'] = (string)$ct['CodCotizacion'];
+            }
+            if (!$cotP2P3Map[$ci]['p3']) {
+                $cotP2P3Map[$ci]['p3'] = (string)$ct['CodCotizacion'];
+            }
+        }
+    }
+
     /* ── Calcular detalle fila por fila ─────────────────── */
     $filas = [];
 
@@ -333,8 +362,25 @@ try {
             }
 
             $consumoCrudo = ($cantTotal * $factor) / $ppCant;
-            // P1: redondear al 0.5 más cercano
-            $consumoFinal = $esP1 ? (round($consumoCrudo * 2) / 2) : $consumoCrudo;
+            // P1: redondear al 0.5 más cercano | P2/P3: redondear a 4 decimales
+            if ($esP1) {
+                $consumoFinal = round($consumoCrudo * 2) / 2;
+            } else {
+                $consumoFinal = round($consumoCrudo, 4);
+            }
+        }
+
+        // Determinar tipo de mapeo para auditoría (P1 / P2 / P3)
+        $codIngFila = $v['CodIngrediente'];
+        if ($esP1) {
+            $tipoMapeo = 'P1';
+        } elseif (
+            isset($cotP2P3Map[$codIngFila]['p2']) &&
+            in_array($cotP2P3Map[$codIngFila]['p2'], array_map('strval', $codCots))
+        ) {
+            $tipoMapeo = 'P2';
+        } else {
+            $tipoMapeo = 'P3';
         }
 
         $filas[] = [
@@ -351,10 +397,11 @@ try {
             'factor'             => round($factor, 6),
             'pp_cantidad'        => $ppCant,
             'consumo_crudo'      => round($consumoCrudo, 4),
-            'consumo_final' => $consumoFinal,
-            'es_p1' => $esP1,
-            'nivel' => $nivelUsado,
-            'genera_decimal' => $esP1 && (abs($consumoCrudo - $consumoFinal) > 0.001),
+            'consumo_final'      => $consumoFinal,
+            'es_p1'              => $esP1,
+            'tipo_mapeo'         => $tipoMapeo,
+            'nivel'              => $nivelUsado,
+            'genera_decimal'     => $esP1 && (abs($consumoCrudo - $consumoFinal) > 0.001),
         ];
     }
 
