@@ -703,13 +703,19 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                 const ir = ingr.insumo_receta;
                 const escenario = ingr.escenario_erp;
 
-                // Insumo Receta: la presentación que coincide con la unidad del ingrediente
+                // Insumo Receta
+                const recetaTag = `<span style="font-size:.65rem;background:#e8eaf6;color:#3949ab;border-radius:3px;padding:1px 5px;margin-left:4px" title="Producto compuesto — receta_producto_global">&#128203; Receta</span>`;
+
                 let celInsumoReceta;
-                if (ir) {
+                if (escenario === 'receta_global' && ir) {
+                    // Es un compuesto: unidad=Unidades, cantidad=1, sin conversión
+                    celInsumoReceta = `<div class="nom-nuevo">${esc(ir.NombreNuevo)}${recetaTag}</div>
+                        <div class="uni-nuevo">Unidades &middot; 1</div>`;
+                } else if (ir) {
                     const irActivo = ir.activoNuevo === 'NO'
                         ? `<span style="font-size:.65rem;background:#fdd;color:#c0392b;border-radius:3px;padding:1px 5px">INACTIVO</span>` : '';
                     celInsumoReceta = `<div class="nom-nuevo">${esc(ir.NombreNuevo)}${irActivo}</div>
-                        <div class="uni-nuevo">${esc(ir.unidadNueva || '')}${ir.cantidad ? ' · ' + ir.cantidad : ''}</div>`;
+                        <div class="uni-nuevo">${esc(ir.unidadNueva || '')}${ir.cantidad ? ' &middot; ' + ir.cantidad : ''}</div>`;
                 } else if (np) {
                     celInsumoReceta = `<span class="traduccion-na"><i class="fas fa-search me-1 text-warning"></i>Sin equiv. de unidad</span>`;
                 } else if (cot) {
@@ -718,14 +724,13 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                     celInsumoReceta = `<span class="traduccion-na text-danger"><i class="fas fa-times-circle me-1"></i>No resuelto</span>`;
                 }
 
-                // Cantidad ERP:
-                // - Misma unidad:  srCant / ppCant
-                // - Unidad distinta: (srCant × factor) / ppCant
-                //   donde factor = conversion_unidad_producto.cantidad para [unidadIngrediente → unidadERP]
-                // - P1 (porción directa): resultado redondeado al 0.5 más cercano
-                //   ej: 1.2→1.0  1.4→1.5  1.8→2.0  (Math.round(x*2)/2)
+                // Cantidad ERP
                 let celCantERP = '—';
-                if (ir && ir.cantidad != null) {
+                if (escenario === 'receta_global') {
+                    // Compuesto: ppCant=1, factor=1 → Cantidad = srCant tal cual
+                    const srCantR = parseFloat(ingr.Cantidad);
+                    celCantERP = isNaN(srCantR) ? '—' : (srCantR % 1 === 0 ? srCantR.toString() : srCantR.toFixed(4).replace(/\.?0+$/, ''));
+                } else if (ir && ir.cantidad != null) {
                     const ppCant = parseFloat(ir.cantidad);
                     const srCant = parseFloat(ingr.Cantidad);
                     const factor = (ir.factor_conversion != null) ? parseFloat(ir.factor_conversion) : 1;
@@ -736,7 +741,6 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
 
                         let display;
                         if (esDirP1) {
-                            // Redondear al 0.5 más cercano para porciones directas
                             const redondeado = Math.round(resultado * 2) / 2;
                             display = redondeado % 1 === 0
                                 ? redondeado.toString()
@@ -748,7 +752,6 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                         }
 
                         if (factor !== 1 && ir.factor_conversion != null) {
-                            // Mostrar conversión aplicada en tooltip
                             const exacto = parseFloat(resultado.toFixed(4));
                             celCantERP = `<span title="${srCant} ${esc(ingr.UnidadIngrediente)} × ${factor} ÷ ${ppCant} ${esc(ir.unidadNueva)} = ${exacto}">${display}</span>`;
                         } else {
@@ -757,14 +760,14 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                     }
                 }
 
-
-                // Presentación Uso: el producto que actualmente sirve al consumo
+                // Presentación Uso
                 let celPresentacionUso;
                 if (np) {
                     const activoTag = np.activoNuevo === 'NO'
                         ? `<span style="font-size:.65rem;background:#fdd;color:#c0392b;border-radius:3px;padding:1px 5px;margin-left:4px">INACTIVO</span>` : '';
                     const autoTag = ingr.metodo_resolucion === 'maestro'
                         ? `<span style="font-size:.65rem;background:#e8f5e9;color:#2e7d32;border-radius:3px;padding:1px 5px;margin-left:4px" title="Resuelto automáticamente por maestro + unidad">AUTO</span>` : '';
+                    const npRecipeTag = escenario === 'receta_global' ? recetaTag : '';
                     let variedadesHTML = '';
                     if (np.variedades && np.variedades.length > 0) {
                         variedadesHTML = `<select class="form-select form-select-sm mt-1" style="font-size:.75rem;padding:2px 5px;height:auto">
@@ -772,10 +775,10 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                         </select>`;
                     }
                     celPresentacionUso = `<div class="traduccion-ok">
-                        <div class="d-flex align-items-center gap-1 mb-1">${activoTag}${autoTag}</div>
+                        <div class="d-flex align-items-center gap-1 mb-1">${activoTag}${autoTag}${npRecipeTag}</div>
                         <div class="nom-nuevo">${esc(np.NombreNuevo)}</div>
                         ${variedadesHTML}
-                        <div class="uni-nuevo mt-1">${esc(np.unidadNueva || '')}${np.cantidad ? ' · ' + np.cantidad : ''} ${esc(np.productoMaestro || '')}</div>
+                        <div class="uni-nuevo mt-1">${esc(np.unidadNueva || '')}${np.cantidad ? ' &middot; ' + np.cantidad : ''} ${esc(np.productoMaestro || '')}</div>
                     </div>`;
                 } else if (cot) {
                     celPresentacionUso = `<span class="traduccion-na"><i class="fas fa-exclamation-triangle me-1 text-warning"></i>Sin mapeo</span>`;
@@ -1102,10 +1105,11 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                             </p>
                             <ul style="font-size:.79rem;margin-bottom:0">
                                 <li><strong>Nombre</strong>: <code>producto_presentacion.Nombre</code> del ERP.</li>
-                                <li><strong>Unidad · Cantidad</strong>: unidad de medida y cantidad por presentación (ej: <em>Litros · 1.00</em>).</li>
+                                <li><strong>Unidad · Cantidad</strong>: unidad de medida y cantidad por presentación (ej: <em>Litros · 1.00</em>). Para recetas compuestas muestra <em>Unidades · 1</em>.</li>
                                 <li><strong>Variedades</strong>: si el producto tiene variedades (sabores, tamaños), se muestran en un select desplegable con la variedad principal preseleccionada.</li>
                                 <li><strong>Badge INACTIVO</strong>: el producto está marcado como <code>Activo = 'NO'</code> en el ERP.</li>
                                 <li><strong>Badge AUTO</strong>: fue resuelto automáticamente por Maestro + Unidad (no por diccionario directo).</li>
+                                <li><strong>Badge 📋 Receta</strong>: el mapeo apunta a un <strong>producto compuesto</strong> (<code>producto_presentacion.Id_receta_producto IS NOT NULL</code>). Sus componentes se definen en <code>receta_producto_global</code> / <code>componentes_receta_producto</code>. Cantidad = Access qty / 1 = misma cantidad.</li>
                             </ul>
                         </div>
 
@@ -1187,8 +1191,12 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                             <p style="font-size:.79rem;margin-bottom:4px"><strong>Estados posibles del Insumo Receta:</strong></p>
                             <table class="table table-sm table-bordered mb-0" style="font-size:.78rem">
                                 <tbody>
+                                    <tr style="background:#ede7f6">
+                                        <td style="width:160px"><span style="color:#3949ab;font-style:italic">📋 Nombre ERP <span style="font-size:.7rem;background:#e8eaf6;border-radius:3px;padding:1px 4px">Receta</span></span></td>
+                                        <td>El producto mapeado es un <strong>compuesto / receta global</strong> (<code>Id_receta_producto IS NOT NULL</code>). Los campos <code>cantidad</code>, <code>id_unidad_producto</code> y <code>id_producto_maestro</code> son NULL en BD. El sistema asigna automáticamente <em>cantidad=1, unidad=Unidades</em> y muestra la cantidad Access sin conversión. No se ejecutan los 3 niveles de búsqueda de unidad.</td>
+                                    </tr>
                                     <tr>
-                                        <td style="width:160px"><em>Nombre del producto ERP</em></td>
+                                        <td><em>Nombre del producto ERP</em></td>
                                         <td>Insumo resuelto correctamente con unidad equivalente encontrada.</td>
                                     </tr>
                                     <tr>

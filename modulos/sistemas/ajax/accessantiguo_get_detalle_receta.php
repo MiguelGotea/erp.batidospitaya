@@ -149,15 +149,16 @@ try {
         if ($codCotizacion) {
             $stmtDic = $conn->prepare("
                 SELECT
-                    d.id        AS mapeo_id,
-                    pp.id       AS id_presentacion,
+                    d.id                  AS mapeo_id,
+                    pp.id                 AS id_presentacion,
                     pp.SKU,
-                    pp.Nombre   AS NombreNuevo,
+                    pp.Nombre             AS NombreNuevo,
                     pp.cantidad,
-                    pp.Activo   AS activoNuevo,
-                    u.Nombre    AS unidadNueva,
-                    pm.id       AS id_maestro,
-                    pm.Nombre   AS productoMaestro
+                    pp.Activo             AS activoNuevo,
+                    pp.Id_receta_producto  AS id_receta_producto,
+                    u.Nombre              AS unidadNueva,
+                    pm.id                 AS id_maestro,
+                    pm.Nombre             AS productoMaestro
                 FROM diccionario_productos_legado d
                 INNER JOIN producto_presentacion pp ON pp.id = d.id_producto_presentacion
                 LEFT JOIN unidad_producto u          ON u.id = pp.id_unidad_producto
@@ -263,6 +264,20 @@ try {
         $ingr['escenario_erp'] = 'sin_mapeo';
 
         if ($ingr['nuevo_producto']) {
+
+            // ── Caso especial: Receta Global ─────────────────────────────────────
+            // producto_presentacion.Id_receta_producto IS NOT NULL → es un compuesto.
+            // Sus campos cantidad / id_unidad_producto / id_producto_maestro son NULL.
+            // Tratamiento: cantidad=1, unidad=Unidades, factor=1, Insumo=mismo producto.
+            if (!empty($ingr['nuevo_producto']['id_receta_producto'])) {
+                $ingr['escenario_erp'] = 'receta_global';
+                $ingr['nuevo_producto']['cantidad']    = 1;
+                $ingr['nuevo_producto']['unidadNueva'] = 'Unidades';
+                $ingr['insumo_receta'] = array_merge($ingr['nuevo_producto'], [
+                    'factor_conversion' => null,  // sin conversión, factor implícito = 1
+                ]);
+            } else {
+            // ── Lógica normal: presentación simple ───────────────────────────────
             // Prioridad 1 (porción directa): el item mapeado ES el insumo receta.
             // Aunque la porción ya está resuelta, la unidad del ingrediente en Access
             // puede diferir de la del ERP (ej: gr en Access vs Onzas Peso en ERP).
@@ -368,6 +383,7 @@ try {
                     }
                 }
             }
+            } // fin else: lógica normal (no es receta_global)
         }
     }
 
