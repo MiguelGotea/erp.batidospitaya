@@ -108,74 +108,90 @@ try {
         exit();
     }
 
-    /* ── Construir query de ventas (todo positional ?) ──────
-       Nota: el filtro de sucursales también usa ? para evitar
-       mezclar named y positional en PDO.
+    /* ── Pre-fetchear CodIngredientes para la presentación ──
+       Evita la subquery correlated que mata el performance.
+       Obtenemos el CodIngrediente vía Cotizaciones para los
+       codCots que NO son P1 (codporcion IS NULL path).
     --------------------------------------------------------- */
-    $phCod = implode(',', array_fill(0, count($codCots), '?'));
+    $codIngs = [];
+    if (!empty($codCots)) {
+        $phC2 = implode(',', array_fill(0, count($codCots), '?'));
+        $stmtCI = $conn->prepare("
+            SELECT DISTINCT CodIngrediente
+            FROM Cotizaciones
+            WHERE CodCotizacion IN ($phC2)
+        ");
+        $stmtCI->execute(array_values($codCots));
+        $codIngs = array_column($stmtCI->fetchAll(PDO::FETCH_ASSOC), 'CodIngrediente');
+    }
+
+    /* ── Construir query de ventas — sin subquery, con GROUP BY ──
+       Agrupamos por (CodIngrediente, codporcion, local, Fecha) igual
+       que get_datos.php para evitar timeout en tablas grandes.
+       Mostramos máx 2000 grupos (suficiente para auditoría).
+    --------------------------------------------------------------- */
+    $phCod    = implode(',', array_fill(0, count($codCots), '?'));
     $whereSuc = '';
     $sucParams = [];
     if (!empty($sucursalesPost)) {
-        $whereSuc = ' AND v.local IN (' . implode(',', array_fill(0, count($sucursalesPost), '?')) . ')';
+        $whereSuc  = ' AND v.local IN (' . implode(',', array_fill(0, count($sucursalesPost), '?')) . ')';
         $sucParams = array_values($sucursalesPost);
+    }
+
+    // Condición de filtro de ingrediente/porcion (sin subquery)
+    $whereIngrediente = "sr.codporcion IN ($phCod)";
+    $ingParams = array_values($codCots);   // para codporcion IN
+
+    if (!empty($codIngs)) {
+        $phIng = implode(',', array_fill(0, count($codIngs), '?'));
+        $whereIngrediente .= " OR (sr.codporcion IS NULL AND sr.CodIngrediente IN ($phIng))";
+        $ingParams = array_merge($ingParams, array_values($codIngs));
     }
 
     $sql = "
         SELECT
-            v.CodPedido,
             v.Fecha,
             v.Semana             AS semana,
             v.local              AS sucursal,
             v.DBBatidos_Nombre   AS nombre_batido,
             v.CodProducto,
-            v.Cantidad           AS ventas,
             sr.CodIngrediente,
             ing.Nombre           AS nombre_ingrediente,
             ing.Unidad           AS unidad_access,
             sr.Cantidad          AS cant_receta,
             sr.codporcion,
-            (v.Cantidad * sr.Cantidad) AS cant_total_raw
+            SUM(v.Cantidad)               AS ventas_sum,
+            SUM(v.Cantidad * sr.Cantidad) AS cant_total_raw
         FROM VentasGlobalesAccessCSV v
-        INNER JOIN SubReceta sr       ON sr.CodBatido         = v.CodProducto
-        INNER JOIN DBIngredientes ing ON ing.CodIngrediente   = sr.CodIngrediente
+        INNER JOIN SubReceta sr       ON sr.CodBatido       = v.CodProducto
+        INNER JOIN DBIngredientes ing ON ing.CodIngrediente = sr.CodIngrediente
         WHERE v.Anulado = 0
-          AND v.Fecha   BETWEEN ? AND ?
-          AND v.Semana  BETWEEN ? AND ?
+          AND v.Fecha  BETWEEN ? AND ?
+          AND v.Semana BETWEEN ? AND ?
           AND v.CodProducto IS NOT NULL
           {$whereSuc}
-          AND (
-              sr.codporcion IN ({$phCod})
-              OR (
-                  sr.codporcion IS NULL
-                  AND sr.CodIngrediente IN (
-                      SELECT c.CodIngrediente
-                      FROM Cotizaciones c
-                      WHERE c.CodCotizacion IN ({$phCod})
-                  )
-              )
-          )
-        ORDER BY v.Semana ASC, v.local ASC, v.Fecha ASC, v.CodPedido ASC
-        LIMIT 5000
+          AND ({$whereIngrediente})
+        GROUP BY v.Fecha, v.Semana, v.local, v.DBBatidos_Nombre,
+                 v.CodProducto, sr.CodIngrediente, ing.Nombre,
+                 ing.Unidad, sr.Cantidad, sr.codporcion
+        ORDER BY v.Semana ASC, v.local ASC, v.Fecha ASC
+        LIMIT 2000
     ";
 
-
-    // Construir array de parámetros en el mismo orden que los ?
+    // Parámetros en orden: fechas → semanas → sucursales → ingredientes/porciones
     $positional = [
-        $rango['fecha_desde'],  // v.Fecha BETWEEN ? ...
+        $rango['fecha_desde'],
         $rango['fecha_hasta'],
-        $numDesde,              // v.Semana BETWEEN ? ...
+        $numDesde,
         $numHasta,
     ];
-    foreach ($sucParams as $s)
-        $positional[] = $s;       // sucursales IN (?)
-    foreach ($codCots as $c)
-        $positional[] = $c;        // codporcion IN (?)
-    foreach ($codCots as $c)
-        $positional[] = $c;        // subquery CodCotizacion IN (?)
+    foreach ($sucParams as $s) $positional[] = $s;
+    foreach ($ingParams as $p) $positional[] = $p;
 
     $stmtV = $conn->prepare($sql);
     $stmtV->execute($positional);
     $ventas = $stmtV->fetchAll(PDO::FETCH_ASSOC);
+
 
     /* ── Pre-cargar unidades y conversiones ─────────────── */
     $stmtAllU = $conn->prepare("SELECT id, nombre, abreviado, nombres_opcionales FROM unidad_producto");
@@ -293,20 +309,19 @@ try {
         }
 
         $filas[] = [
-            'cod_pedido' => $v['CodPedido'] ?? '—',
-            'fecha' => $v['Fecha'],
-            'semana' => (int) $v['semana'],
-            'sucursal' => $v['sucursal'],
-            'nombre_batido' => $v['nombre_batido'] ?? $v['CodProducto'],
+            'fecha'              => $v['Fecha'],
+            'semana'             => (int)$v['semana'],
+            'sucursal'           => $v['sucursal'],
+            'nombre_batido'      => $v['nombre_batido'] ?? $v['CodProducto'],
             'nombre_ingrediente' => $v['nombre_ingrediente'],
-            'unidad_access' => $unidAcc,
-            'codporcion' => $codporc,
-            'cant_receta' => (float) $v['cant_receta'],
-            'ventas' => (float) $v['ventas'],
-            'cant_total' => round($cantTotal, 4),
-            'factor' => round($factor, 6),
-            'pp_cantidad' => $ppCant,
-            'consumo_crudo' => round($consumoCrudo, 4),
+            'unidad_access'      => $unidAcc,
+            'codporcion'         => $codporc,
+            'cant_receta'        => (float)$v['cant_receta'],
+            'ventas'             => round((float)$v['ventas_sum'], 2),
+            'cant_total'         => round($cantTotal, 4),
+            'factor'             => round($factor, 6),
+            'pp_cantidad'        => $ppCant,
+            'consumo_crudo'      => round($consumoCrudo, 4),
             'consumo_final' => $consumoFinal,
             'es_p1' => $esP1,
             'nivel' => $nivelUsado,
