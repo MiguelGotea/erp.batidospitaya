@@ -73,12 +73,12 @@ function renderMenu(grupos) {
     grupos.forEach((g, gIdx) => {
         const color = GRUPO_COLORES[gIdx % GRUPO_COLORES.length];
         const totalProds = g.productos.length;
-        const gid = `grupo-${g.CodGrupo}`;
+        const gid = `vrl-lista-${g.CodGrupo}`;
         const nombre = g.alias || g.NombreGrupo;
 
         // data-codgrupo en lugar de onclick con JSON (seguro ante caracteres especiales)
         html += `
-        <button class="vrl-grupo-btn" id="btn-${gid}"
+        <button class="vrl-grupo-btn" id="vrl-btn-${g.CodGrupo}"
                 data-codgrupo="${esc(String(g.CodGrupo))}">
             <span class="grupo-icon" style="background:${color}">
                 <i class="fas fa-box-open"></i>
@@ -88,6 +88,7 @@ function renderMenu(grupos) {
             <i class="fas fa-chevron-down chevron"></i>
         </button>
         <div class="vrl-productos-list" id="${gid}">`;
+
 
         // Usamos data-nombre en lugar de data-prodidx para evitar discrepancias de índice
         g.productos.forEach(p => {
@@ -123,7 +124,7 @@ function onMenuClick(e) {
 
 /* ── Toggle grupo ────────────────────────────────────────────── */
 function toggleGrupo(codGrupo) {
-    const lista = document.getElementById(`grupo-${codGrupo}`);
+    const lista = document.getElementById(`vrl-lista-${codGrupo}`);
     if (!lista) return;
 
     const isOpen = lista.style.display === 'block';
@@ -160,7 +161,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Abrir automáticamente todos los grupos con resultados
         filtrado.forEach(g => {
-            const lista = document.getElementById(`grupo-${g.CodGrupo}`);
+            const lista = document.getElementById(`vrl-lista-${g.CodGrupo}`);
             const btnEl = document.querySelector(`[data-codgrupo="${CSS.escape(String(g.CodGrupo))}"].vrl-grupo-btn`);
             if (lista) lista.style.display = 'block';
             if (btnEl) btnEl.classList.add('active');
