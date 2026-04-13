@@ -108,15 +108,11 @@ try {
         exit();
     }
 
-    /* ── Pre-fetchear CodIngredientes para la presentación ──
-       Evita la subquery correlated que mata el performance.
-       Obtenemos el CodIngrediente vía Cotizaciones para los
-       codCots que NO son P1 (codporcion IS NULL path).
-    --------------------------------------------------------- */
+    /* ── PASO A: CodIngredientes vía Cotizaciones (path P2) ─ */
     $codIngs = [];
     if (!empty($codCots)) {
-        $phC2 = implode(',', array_fill(0, count($codCots), '?'));
-        $stmtCI = $conn->prepare("
+        $phC2    = implode(',', array_fill(0, count($codCots), '?'));
+        $stmtCI  = $conn->prepare("
             SELECT DISTINCT CodIngrediente
             FROM Cotizaciones
             WHERE CodCotizacion IN ($phC2)
@@ -125,12 +121,50 @@ try {
         $codIngs = array_column($stmtCI->fetchAll(PDO::FETCH_ASSOC), 'CodIngrediente');
     }
 
-    /* ── Construir query de ventas — sin subquery, con GROUP BY ──
-       Agrupamos por (CodIngrediente, codporcion, local, Fecha) igual
-       que get_datos.php para evitar timeout en tablas grandes.
-       Mostramos máx 2000 grupos (suficiente para auditoría).
-    --------------------------------------------------------------- */
-    $phCod    = implode(',', array_fill(0, count($codCots), '?'));
+    /* ── PASO B: CodBatidos desde SubReceta ─────────────────
+       SubReceta es pequeña → consulta rápida.
+       Obtenemos todos los CodBatido que usan esta porción
+       o ingrediente, para luego filtrar VentasGlobalesAccessCSV
+       por CodProducto IN (...) usando su índice idx_codproducto.
+    ---------------------------------------------------------- */
+    $whereIngSR = '';
+    $ingParamsSR = [];
+
+    if (!empty($codCots)) {
+        $phCod = implode(',', array_fill(0, count($codCots), '?'));
+        $whereIngSR    = "sr.codporcion IN ($phCod)";
+        $ingParamsSR   = array_values($codCots);
+    }
+    if (!empty($codIngs)) {
+        $phIng = implode(',', array_fill(0, count($codIngs), '?'));
+        $whereIngSR   .= ($whereIngSR ? ' OR ' : '') .
+                         "(sr.codporcion IS NULL AND sr.CodIngrediente IN ($phIng))";
+        $ingParamsSR   = array_merge($ingParamsSR, array_values($codIngs));
+    }
+
+    $codBatidos = [];
+    if ($whereIngSR) {
+        $stmtSR = $conn->prepare("
+            SELECT DISTINCT sr.CodBatido
+            FROM SubReceta sr
+            WHERE $whereIngSR
+        ");
+        $stmtSR->execute($ingParamsSR);
+        $codBatidos = array_column($stmtSR->fetchAll(PDO::FETCH_ASSOC), 'CodBatido');
+    }
+
+    if (empty($codBatidos)) {
+        echo json_encode(['ok' => false, 'msg' => 'No hay batidos que usen este ingrediente/porción.']);
+        exit();
+    }
+
+    /* ── PASO C: Query principal — usa idx_codproducto ──────
+       Al filtrar v.CodProducto IN (...codBatidos...) el motor
+       usa el índice de VentasGlobalesAccessCSV en lugar de
+       hacer full scan. Luego el JOIN con SubReceta aplica solo
+       sobre los productos relevantes.
+    ---------------------------------------------------------- */
+    $phBat    = implode(',', array_fill(0, count($codBatidos), '?'));
     $whereSuc = '';
     $sucParams = [];
     if (!empty($sucursalesPost)) {
@@ -138,15 +172,8 @@ try {
         $sucParams = array_values($sucursalesPost);
     }
 
-    // Condición de filtro de ingrediente/porcion (sin subquery)
-    $whereIngrediente = "sr.codporcion IN ($phCod)";
-    $ingParams = array_values($codCots);   // para codporcion IN
-
-    if (!empty($codIngs)) {
-        $phIng = implode(',', array_fill(0, count($codIngs), '?'));
-        $whereIngrediente .= " OR (sr.codporcion IS NULL AND sr.CodIngrediente IN ($phIng))";
-        $ingParams = array_merge($ingParams, array_values($codIngs));
-    }
+    // Reconstruir WHERE ingrediente para el JOIN (igual que arriba)
+    $whereIngJoin = $whereIngSR;   // reutiliza la misma condición
 
     $sql = "
         SELECT
@@ -166,11 +193,11 @@ try {
         INNER JOIN SubReceta sr       ON sr.CodBatido       = v.CodProducto
         INNER JOIN DBIngredientes ing ON ing.CodIngrediente = sr.CodIngrediente
         WHERE v.Anulado = 0
-          AND v.Fecha  BETWEEN ? AND ?
-          AND v.Semana BETWEEN ? AND ?
-          AND v.CodProducto IS NOT NULL
+          AND v.Fecha   BETWEEN ? AND ?
+          AND v.Semana  BETWEEN ? AND ?
+          AND v.CodProducto IN ($phBat)
           {$whereSuc}
-          AND ({$whereIngrediente})
+          AND ($whereIngJoin)
         GROUP BY v.Fecha, v.Semana, v.local, v.DBBatidos_Nombre,
                  v.CodProducto, sr.CodIngrediente, ing.Nombre,
                  ing.Unidad, sr.Cantidad, sr.codporcion
@@ -178,19 +205,20 @@ try {
         LIMIT 2000
     ";
 
-    // Parámetros en orden: fechas → semanas → sucursales → ingredientes/porciones
     $positional = [
         $rango['fecha_desde'],
         $rango['fecha_hasta'],
         $numDesde,
         $numHasta,
     ];
-    foreach ($sucParams as $s) $positional[] = $s;
-    foreach ($ingParams as $p) $positional[] = $p;
+    foreach ($codBatidos as $b) $positional[] = $b;   // CodProducto IN
+    foreach ($sucParams  as $s) $positional[] = $s;   // sucursales IN
+    foreach ($ingParamsSR as $p) $positional[] = $p;  // WHERE ingrediente JOIN
 
     $stmtV = $conn->prepare($sql);
     $stmtV->execute($positional);
     $ventas = $stmtV->fetchAll(PDO::FETCH_ASSOC);
+
 
 
     /* ── Pre-cargar unidades y conversiones ─────────────── */
