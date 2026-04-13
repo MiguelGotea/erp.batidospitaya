@@ -773,11 +773,13 @@ function exportarCSV() {
     if (tabActivo === 'tabSinMapeoBtn')   modo = 'sin_mapeo';
 
     const payload = {
-        consumo:    datosActuales.consumo,
-        semanas:    datosActuales.semanas,
-        sin_mapeo:  datosActuales.sin_mapeo,
-        sem_desde:  datosActuales._semDesde,
-        sem_hasta:  datosActuales._semHasta,
+        consumo:           datosActuales.consumo,
+        semanas:           datosActuales.semanas,
+        sin_mapeo:         datosActuales.sin_mapeo,
+        sucursales:        datosActuales.sucursales        || [],
+        sucursales_nombres: datosActuales.sucursales_nombres || {},
+        sem_desde:         datosActuales._semDesde,
+        sem_hasta:         datosActuales._semHasta,
         modo,
     };
 
@@ -804,7 +806,7 @@ function exportarCSV() {
         const url  = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href     = url;
-        link.download = `consumo_insumos_sem${datosActuales._semDesde}_${datosActuales._semHasta}_${modo}.csv`;
+        link.download = `consumo_insumos_sem${datosActuales._semDesde}_${datosActuales._semHasta}.xlsx`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
