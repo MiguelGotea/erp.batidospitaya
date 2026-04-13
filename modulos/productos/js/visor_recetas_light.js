@@ -159,6 +159,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         renderMenu(filtrado);
 
+
         // Abrir automáticamente todos los grupos con resultados
         filtrado.forEach(g => {
             const lista = document.getElementById(`vrl-lista-${g.CodGrupo}`);
