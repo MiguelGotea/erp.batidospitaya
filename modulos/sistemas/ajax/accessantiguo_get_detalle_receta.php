@@ -145,6 +145,7 @@ try {
         $ingr['nuevo_producto'] = null;
         $ingr['metodo_resolucion'] = 'ninguno';
 
+
         // Intentar resolución directa primero (si hay CodCotizacion)
         if ($codCotizacion) {
             $stmtDic = $conn->prepare("
@@ -271,91 +272,91 @@ try {
             // Tratamiento: cantidad=1, unidad=Unidades, factor=1, Insumo=mismo producto.
             if (!empty($ingr['nuevo_producto']['id_receta_producto'])) {
                 $ingr['escenario_erp'] = 'receta_global';
-                $ingr['nuevo_producto']['cantidad']    = 1;
+                $ingr['nuevo_producto']['cantidad'] = 1;
                 $ingr['nuevo_producto']['unidadNueva'] = 'Unidades';
                 $ingr['insumo_receta'] = array_merge($ingr['nuevo_producto'], [
                     'factor_conversion' => null,  // sin conversión, factor implícito = 1
                 ]);
             } else {
-            // ── Lógica normal: presentación simple ───────────────────────────────
-            // Prioridad 1 (porción directa): el item mapeado ES el insumo receta.
-            // Aunque la porción ya está resuelta, la unidad del ingrediente en Access
-            // puede diferir de la del ERP (ej: gr en Access vs Onzas Peso en ERP).
-            // Se resuelve el factor de conversión para que la cantidad sea correcta.
-            if (($ingr['metodo_cotizacion'] ?? '') === 'directa') {
-                $ingr['escenario_erp'] = 'directo';
-                $ingr['insumo_receta'] = $ingr['nuevo_producto'];
-
-                // Resolver factor si la unidad Access ≠ unidad ERP
-                $unidadAccessP1 = trim($ingr['UnidadIngrediente'] ?? '');
-                $unidadERP_P1   = trim($ingr['insumo_receta']['unidadNueva'] ?? '');
-                if ($unidadAccessP1 !== '' && $unidadERP_P1 !== '') {
-                    $resP1 = resolverUnidadERP($conn, $unidadAccessP1);
-                    if ($resP1) {
-                        $multiP1 = $resP1['multi_directos'] ?? $resP1['directos'];
-                        // Si la unidad ERP NO está en el grupo de la unidad Access → mismatch
-                        if (!in_array($unidadERP_P1, $multiP1)) {
-                            foreach ($resP1['conversiones'] as $conv) {
-                                if ($conv['nombre'] === $unidadERP_P1) {
-                                    $ingr['insumo_receta']['factor_conversion'] = $conv['factor'];
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                }
-            } else {
-                // Prioridad 2 y 3: resolución dinámica desde DB
-                // 1) Resolver la unidad Access → registro ERP + unidades convertibles
-                $resolucion = resolverUnidadERP($conn, $ingr['UnidadIngrediente']);
-                $unidadResERP = trim($ingr['nuevo_producto']['unidadNueva'] ?? '');
-
-                // 2) ¿La presentación ERP ya resuelta está en el mismo grupo de unidad?
-                $esDirecto = $resolucion && in_array($unidadResERP, $resolucion['directos']);
-
-                if ($esDirecto) {
-                    // Misma unidad → Insumo Receta = Presentación Uso
+                // ── Lógica normal: presentación simple ───────────────────────────────
+                // Prioridad 1 (porción directa): el item mapeado ES el insumo receta.
+                // Aunque la porción ya está resuelta, la unidad del ingrediente en Access
+                // puede diferir de la del ERP (ej: gr en Access vs Onzas Peso en ERP).
+                // Se resuelve el factor de conversión para que la cantidad sea correcta.
+                if (($ingr['metodo_cotizacion'] ?? '') === 'directa') {
                     $ingr['escenario_erp'] = 'directo';
                     $ingr['insumo_receta'] = $ingr['nuevo_producto'];
-                } else {
-                    $ingr['escenario_erp'] = 'diferente_presentacion';
-                    $idMaestroERP = $ingr['nuevo_producto']['id_maestro'] ?? null;
-                    $irRow = null;
 
-                    if ($idMaestroERP) {
-                        if ($resolucion) {
-                            // Nivel 1: buscar presentación con TODAS las unidades que
-                            // coinciden con la unidad del ingrediente (principal + secundarias).
-                            // Ej: 'oz' → ['Onzas Peso', 'Onzas Liquidas']
-                            $irRow = buscarPresentacionPorUnidades(
-                                $conn,
-                                $idMaestroERP,
-                                $resolucion['multi_directos'] ?? $resolucion['directos']
-                            );
-
-                            // Nivel 2: buscar con unidades convertibles (ej: Onzas Peso)
-                            if (!$irRow && !empty($resolucion['convertibles'])) {
-                                $irRow = buscarPresentacionPorUnidades($conn, $idMaestroERP, $resolucion['convertibles']);
-                                if ($irRow) {
-                                    foreach ($resolucion['conversiones'] as $conv) {
-                                        if ($conv['nombre'] === $irRow['unidadNueva']) {
-                                            $irRow['factor_conversion'] = $conv['factor'];
-                                            break;
-                                        }
+                    // Resolver factor si la unidad Access ≠ unidad ERP
+                    $unidadAccessP1 = trim($ingr['UnidadIngrediente'] ?? '');
+                    $unidadERP_P1 = trim($ingr['insumo_receta']['unidadNueva'] ?? '');
+                    if ($unidadAccessP1 !== '' && $unidadERP_P1 !== '') {
+                        $resP1 = resolverUnidadERP($conn, $unidadAccessP1);
+                        if ($resP1) {
+                            $multiP1 = $resP1['multi_directos'] ?? $resP1['directos'];
+                            // Si la unidad ERP NO está en el grupo de la unidad Access → mismatch
+                            if (!in_array($unidadERP_P1, $multiP1)) {
+                                foreach ($resP1['conversiones'] as $conv) {
+                                    if ($conv['nombre'] === $unidadERP_P1) {
+                                        $ingr['insumo_receta']['factor_conversion'] = $conv['factor'];
+                                        break;
                                     }
                                 }
                             }
                         }
+                    }
+                } else {
+                    // Prioridad 2 y 3: resolución dinámica desde DB
+                    // 1) Resolver la unidad Access → registro ERP + unidades convertibles
+                    $resolucion = resolverUnidadERP($conn, $ingr['UnidadIngrediente']);
+                    $unidadResERP = trim($ingr['nuevo_producto']['unidadNueva'] ?? '');
 
-                        // Nivel 3: si resolverUnidadERP falló o no encontró, usar la unidad
-                        // ya conocida de nuevo_producto (Onzas Peso, Litros, etc.)
-                        if (!$irRow && $unidadResERP !== '') {
-                            $irRow = buscarPresentacionPorUnidades($conn, $idMaestroERP, [$unidadResERP]);
-                            if ($irRow) {
-                                // Buscar factor de conversión entre la unidad del ingrediente y la encontrada
-                                // usando ? posicionales (evita HY093 con named params repetidos)
-                                try {
-                                    $stmtFact = $conn->prepare("
+                    // 2) ¿La presentación ERP ya resuelta está en el mismo grupo de unidad?
+                    $esDirecto = $resolucion && in_array($unidadResERP, $resolucion['directos']);
+
+                    if ($esDirecto) {
+                        // Misma unidad → Insumo Receta = Presentación Uso
+                        $ingr['escenario_erp'] = 'directo';
+                        $ingr['insumo_receta'] = $ingr['nuevo_producto'];
+                    } else {
+                        $ingr['escenario_erp'] = 'diferente_presentacion';
+                        $idMaestroERP = $ingr['nuevo_producto']['id_maestro'] ?? null;
+                        $irRow = null;
+
+                        if ($idMaestroERP) {
+                            if ($resolucion) {
+                                // Nivel 1: buscar presentación con TODAS las unidades que
+                                // coinciden con la unidad del ingrediente (principal + secundarias).
+                                // Ej: 'oz' → ['Onzas Peso', 'Onzas Liquidas']
+                                $irRow = buscarPresentacionPorUnidades(
+                                    $conn,
+                                    $idMaestroERP,
+                                    $resolucion['multi_directos'] ?? $resolucion['directos']
+                                );
+
+                                // Nivel 2: buscar con unidades convertibles (ej: Onzas Peso)
+                                if (!$irRow && !empty($resolucion['convertibles'])) {
+                                    $irRow = buscarPresentacionPorUnidades($conn, $idMaestroERP, $resolucion['convertibles']);
+                                    if ($irRow) {
+                                        foreach ($resolucion['conversiones'] as $conv) {
+                                            if ($conv['nombre'] === $irRow['unidadNueva']) {
+                                                $irRow['factor_conversion'] = $conv['factor'];
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Nivel 3: si resolverUnidadERP falló o no encontró, usar la unidad
+                            // ya conocida de nuevo_producto (Onzas Peso, Litros, etc.)
+                            if (!$irRow && $unidadResERP !== '') {
+                                $irRow = buscarPresentacionPorUnidades($conn, $idMaestroERP, [$unidadResERP]);
+                                if ($irRow) {
+                                    // Buscar factor de conversión entre la unidad del ingrediente y la encontrada
+                                    // usando ? posicionales (evita HY093 con named params repetidos)
+                                    try {
+                                        $stmtFact = $conn->prepare("
                                         SELECT c.cantidad, c.id_unidad_producto_inicio
                                         FROM conversion_unidad_producto c
                                         JOIN unidad_producto ui ON ui.id = c.id_unidad_producto_inicio
@@ -364,25 +365,25 @@ try {
                                           AND LOWER(uf.nombre) = ?
                                         LIMIT 1
                                     ");
-                                    $uOrig = strtolower($ingr['UnidadIngrediente']);
-                                    $uDest = strtolower($irRow['unidadNueva']);
-                                    $stmtFact->execute([$uOrig, $uOrig, $uDest]);
-                                    $factRow = $stmtFact->fetch(PDO::FETCH_ASSOC);
-                                    if ($factRow) {
-                                        $irRow['factor_conversion'] = (float) $factRow['cantidad'];
+                                        $uOrig = strtolower($ingr['UnidadIngrediente']);
+                                        $uDest = strtolower($irRow['unidadNueva']);
+                                        $stmtFact->execute([$uOrig, $uOrig, $uDest]);
+                                        $factRow = $stmtFact->fetch(PDO::FETCH_ASSOC);
+                                        if ($factRow) {
+                                            $irRow['factor_conversion'] = (float) $factRow['cantidad'];
+                                        }
+                                    } catch (\Exception $e) {
+                                        // Factor no encontrado — quantity se mostrará sin conversión
                                     }
-                                } catch (\Exception $e) {
-                                    // Factor no encontrado — quantity se mostrará sin conversión
                                 }
                             }
                         }
-                    }
 
-                    if ($irRow) {
-                        $ingr['insumo_receta'] = $irRow;
+                        if ($irRow) {
+                            $ingr['insumo_receta'] = $irRow;
+                        }
                     }
                 }
-            }
             } // fin else: lógica normal (no es receta_global)
         }
     }
