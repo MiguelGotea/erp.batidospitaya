@@ -101,13 +101,13 @@ async function cargarFiltros() {
             const sa = resp.semana_actual;
             $('#semanaActualNum').text(`Sem. ${sa.numero_semana} / ${sa.anio}`);
             $('#semanaActualRango').text(
-                ` (${formatFecha(sa.fecha_inicio)}–${formatFecha(sa.fecha_fin)})`
+                ` · ${formatFecha(sa.fecha_inicio)} – ${formatFecha(sa.fecha_fin)}`
             );
-            $('#badgeSemanaActual').removeClass('d-none');
+            $('#rowSemanaActual').show();   // ← muestra la fila separada
 
             // Pre-cargar rango por defecto: 4 semanas hasta la actual
             const semHasta = sa.numero_semana;
-            const semDesde = Math.max(1, semHasta - 3); // las 4 semanas previas
+            const semDesde = Math.max(1, semHasta - 3);
             $semDesde.val(semDesde);
             $semHasta.val(semHasta);
         }

@@ -88,26 +88,31 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                                 </select>
                             </div>
 
-                            <!-- Botones + Semana actual -->
-                            <div class="col-12 col-md-12 col-lg-2 d-flex flex-column gap-1 align-items-end">
-                                <div class="d-flex gap-2 w-100 justify-content-end">
-                                    <button class="btn btn-sm dc-btn-primary" id="btnAplicar">
-                                        <i class="fas fa-search me-1"></i>Analizar
-                                    </button>
-                                    <?php if ($puedeExportar): ?>
-                                    <button class="btn btn-sm dc-btn-export" id="btnExportar" disabled>
-                                        <i class="fas fa-file-csv me-1"></i>CSV
-                                    </button>
-                                    <?php endif; ?>
-                                </div>
-                                <!-- Badge semana actual -->
-                                <div id="badgeSemanaActual" class="dc-badge-semana-actual d-none">
-                                    <i class="fas fa-calendar-check me-1"></i>
-                                    Semana actual:
+                            <!-- Botones -->
+                            <div class="col-12 col-md-12 col-lg-2 d-flex gap-2 justify-content-end">
+                                <button class="btn btn-sm dc-btn-primary" id="btnAplicar">
+                                    <i class="fas fa-search me-1"></i>Analizar
+                                </button>
+                                <?php if ($puedeExportar): ?>
+                                <button class="btn btn-sm dc-btn-export" id="btnExportar" disabled>
+                                    <i class="fas fa-file-csv me-1"></i>CSV
+                                </button>
+                                <?php endif; ?>
+                            </div>
+
+                        </div><!-- /row filtros -->
+
+                        <!-- Semana actual: fila separada, siempre visible -->
+                        <div class="row mt-1" id="rowSemanaActual" style="display:none">
+                            <div class="col-12">
+                                <div id="badgeSemanaActual" class="dc-badge-semana-actual">
+                                    <i class="fas fa-calendar-check"></i>
+                                    Semana actual del sistema:
                                     <strong id="semanaActualNum">—</strong>
                                     <span class="dc-sem-rango" id="semanaActualRango"></span>
                                 </div>
                             </div>
+                        </div>
 
                         </div>
                     </div>
@@ -494,6 +499,7 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script>const PUEDE_EXPORTAR = <?php echo $puedeExportar ? 'true' : 'false'; ?>;</script>
     <script src="js/dashboard_consumo.js?v=<?php echo mt_rand(1, 10000); ?>"></script>

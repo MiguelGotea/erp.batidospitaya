@@ -266,22 +266,27 @@ try {
         $u = strtolower(trim($unidadAccess));
         if (isset($cacheUnidad[$u])) return $cacheUnidad[$u];
 
-        // Búsqueda primaria
+        if ($u === '') {
+            $cacheUnidad[$u] = null;
+            return null;
+        }
+
+        // Búsqueda primaria — usar parámetros únicos para evitar problema con repeated named params
         $stmt = $conn->prepare("
             SELECT id, nombre, abreviado
             FROM unidad_producto
-            WHERE LOWER(abreviado) = :u
-               OR LOWER(nombre)    = :u
-               OR FIND_IN_SET(:u, LOWER(REPLACE(REPLACE(IFNULL(nombres_opcionales,''), ', ', ','), ' ,', ','))) > 0
+            WHERE LOWER(abreviado) = :u1
+               OR LOWER(nombre)    = :u2
+               OR FIND_IN_SET(:u3, LOWER(REPLACE(REPLACE(IFNULL(nombres_opcionales,''), ', ', ','), ' ,', ''))) > 0
             ORDER BY
                 CASE
-                    WHEN LOWER(abreviado) = :u THEN 1
-                    WHEN LOWER(nombre)    = :u THEN 2
+                    WHEN LOWER(abreviado) = :u4 THEN 1
+                    WHEN LOWER(nombre)    = :u5 THEN 2
                     ELSE 3
                 END
             LIMIT 1
         ");
-        $stmt->execute([':u' => $u]);
+        $stmt->execute([':u1' => $u, ':u2' => $u, ':u3' => $u, ':u4' => $u, ':u5' => $u]);
         $primaria = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if (!$primaria) {
@@ -291,22 +296,22 @@ try {
 
         $id_primaria = $primaria['id'];
 
-        // Búsquedas secundarias (multi_directos)
+        // Búsquedas secundarias — solo parámetros nombrados (sin mezcla con ?)
         $stmt2 = $conn->prepare("
             SELECT nombre
             FROM unidad_producto
-            WHERE id != ?
+            WHERE id != :id_exc
               AND (
-                LOWER(abreviado) = :u
-                OR LOWER(nombre) = :u
-                OR FIND_IN_SET(:u, LOWER(REPLACE(REPLACE(IFNULL(nombres_opcionales,''), ', ', ','), ' ,', ','))) > 0
+                LOWER(abreviado) = :u1
+                OR LOWER(nombre) = :u2
+                OR FIND_IN_SET(:u3, LOWER(REPLACE(REPLACE(IFNULL(nombres_opcionales,''), ', ', ','), ' ,', ''))) > 0
               )
         ");
-        $stmt2->execute([$id_primaria, ':u' => $u, ':u' => $u, ':u' => $u]);
+        $stmt2->execute([':id_exc' => $id_primaria, ':u1' => $u, ':u2' => $u, ':u3' => $u]);
         $multiDirectos = array_column($stmt2->fetchAll(PDO::FETCH_ASSOC), 'nombre');
         $multiDirectos[] = $primaria['nombre']; // incluir la primaria
 
-        // Unidades convertibles
+        // Unidades convertibles (solo positional, consistente)
         $stmt3 = $conn->prepare("
             SELECT
                 CASE WHEN c.id_unidad_producto_inicio = ? THEN uf.nombre  ELSE ui.nombre  END AS nombre_relacionado,
@@ -321,10 +326,10 @@ try {
         $convertibles = $stmt3->fetchAll(PDO::FETCH_ASSOC);
 
         $result = [
-            'id_primaria'   => $id_primaria,
-            'nombre'        => $primaria['nombre'],
-            'multi_directos'=> $multiDirectos,
-            'convertibles'  => $convertibles,  // [{nombre_relacionado, factor_conversion}]
+            'id_primaria'    => $id_primaria,
+            'nombre'         => $primaria['nombre'],
+            'multi_directos' => $multiDirectos,
+            'convertibles'   => $convertibles,
         ];
         $cacheUnidad[$u] = $result;
         return $result;
