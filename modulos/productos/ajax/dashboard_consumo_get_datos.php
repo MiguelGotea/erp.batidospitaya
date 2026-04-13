@@ -1,28 +1,21 @@
 <?php
 /* ============================================================
-   AJAX: Obtener datos de consumo — Núcleo del Dashboard
+   AJAX: Obtener datos de consumo — Versión Optimizada (bulk)
    modulos/productos/ajax/dashboard_consumo_get_datos.php
 
-   Parámetros POST:
-     semana_desde_num (int)   - numero_semana en SemanasSistema
-     semana_hasta_num (int)   - numero_semana en SemanasSistema
-     sucursales       (array) - códigos de sucursales (vacío = todas)
-     id_insumo        (int)   - opcional, filtrar un insumo ERP específico
-
-   Algoritmo:
-     1. Obtener rango de fechas de las semanas seleccionadas
-     2. Obtener ventas del período (Anulado=0)
-     3. Por cada CodProducto, resolver SubReceta
-     4. Por cada ingrediente, traducir a ERP (P1/P2/P3/AUTO)
-     5. Calcular consumo: (SubReceta.Cantidad × factor) / pp.cantidad × ventas
-     6. Agregar por {id_presentacion_erp, semana, sucursal}
+   Estrategia anti-timeout:
+     1. Una sola query SQL agrega el consumo por
+        (CodIngrediente, codporcion, sucursal, semana).
+     2. Se pre-cargan todos los mapeos en bulk (8-10 queries).
+     3. El loop PHP solo hace lookups en arrays en memoria.
    ============================================================ */
 require_once '../../../core/auth/auth.php';
 require_once '../../../core/database/conexion.php';
 require_once '../../../core/permissions/permissions.php';
 
 header('Content-Type: application/json; charset=utf-8');
-set_time_limit(120); // El cálculo puede tardar
+set_time_limit(0);    // Sin límite: dejamos que MySQL haga el trabajo pesado
+ini_set('memory_limit', '256M');
 
 $usuario       = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
@@ -33,631 +26,494 @@ if (!tienePermiso('dashboard_consumo_insumos', 'vista', $cargoOperario)) {
     exit();
 }
 
-// ── Parámetros ────────────────────────────────────────────────────────
-$semanaDesdeNum = isset($_POST['semana_desde_num']) ? (int)$_POST['semana_desde_num'] : 0;
-$semanaHastaNum = isset($_POST['semana_hasta_num']) ? (int)$_POST['semana_hasta_num'] : 0;
-$sucursalesPost = isset($_POST['sucursales']) ? (array)$_POST['sucursales'] : [];
-$idInsumo       = isset($_POST['id_insumo']) ? (int)$_POST['id_insumo'] : 0;
-
-// Normalizar: desde <= hasta
-$numDesde = min($semanaDesdeNum, $semanaHastaNum);
-$numHasta = max($semanaDesdeNum, $semanaHastaNum);
+/* ── Parámetros ────────────────────────────────────────────── */
+$numDesde       = isset($_POST['semana_desde_num']) ? (int)$_POST['semana_desde_num'] : 0;
+$numHasta       = isset($_POST['semana_hasta_num']) ? (int)$_POST['semana_hasta_num'] : 0;
+$sucursalesPost = isset($_POST['sucursales'])       ? (array)$_POST['sucursales']     : [];
+$idInsumo       = isset($_POST['id_insumo'])        ? (int)$_POST['id_insumo']        : 0;
 
 if (!$numDesde || !$numHasta) {
-    echo json_encode(['ok' => false, 'msg' => 'Ingresa el número de semana de inicio y fin.']);
+    echo json_encode(['ok' => false, 'msg' => 'Ingresa los números de semana de inicio y fin.']);
     exit();
 }
+$numDesde = min($numDesde, $numHasta);
+$numHasta = max($numDesde, $numHasta);
 
 try {
-    // ── 1. Obtener rango de fechas por numero_semana ───────────────────
-    $stmtSem = $conn->prepare("
-        SELECT
-            MIN(ss.fecha_inicio) AS fecha_desde,
-            MAX(ss.fecha_fin)    AS fecha_hasta
-        FROM SemanasSistema ss
-        WHERE ss.numero_semana BETWEEN :desde AND :hasta
+    /* ══════════════════════════════════════════════════════════
+       PASO 1: Rango de fechas y semanas (solo 2 queries)
+       ══════════════════════════════════════════════════════════ */
+    $stmtRango = $conn->prepare("
+        SELECT MIN(fecha_inicio) AS fecha_desde, MAX(fecha_fin) AS fecha_hasta
+        FROM SemanasSistema
+        WHERE numero_semana BETWEEN :d AND :h
     ");
-    $stmtSem->execute([':desde' => $numDesde, ':hasta' => $numHasta]);
-    $rango = $stmtSem->fetch(PDO::FETCH_ASSOC);
+    $stmtRango->execute([':d' => $numDesde, ':h' => $numHasta]);
+    $rango = $stmtRango->fetch(PDO::FETCH_ASSOC);
 
     if (!$rango || !$rango['fecha_desde']) {
-        echo json_encode(['ok' => false, 'msg' => "No se encontraron semanas {$numDesde} a {$numHasta} en el sistema."]);
+        echo json_encode(['ok' => false, 'msg' => "No hay semanas {$numDesde}–{$numHasta} en el sistema."]);
         exit();
     }
 
-    // ── 2. Obtener todas las semanas del rango ─────────────────────────
     $stmtSems = $conn->prepare("
-        SELECT ss.id, ss.numero_semana, ss.anio, ss.fecha_inicio, ss.fecha_fin
-        FROM SemanasSistema ss
-        WHERE ss.numero_semana BETWEEN :desde AND :hasta
-        ORDER BY ss.numero_semana ASC
+        SELECT id, numero_semana, anio, fecha_inicio, fecha_fin
+        FROM SemanasSistema
+        WHERE numero_semana BETWEEN :d AND :h
+        ORDER BY numero_semana ASC
     ");
-    $stmtSems->execute([':desde' => $numDesde, ':hasta' => $numHasta]);
+    $stmtSems->execute([':d' => $numDesde, ':h' => $numHasta]);
     $semanasRango = $stmtSems->fetchAll(PDO::FETCH_ASSOC);
-    $semanasMap = [];
+    $semanasMap   = [];
     foreach ($semanasRango as $s) {
         $semanasMap[(int)$s['numero_semana']] = $s;
     }
 
-    // ── 3. Obtener ventas del período ─────────────────────────────────
-    // VentasGlobalesAccessCSV.Semana corresponde a SemanasSistema.numero_semana
-    // Filtramos por Anulado=0 y fechas del rango
-
-    $where_suc = '';
-    $params    = [
+    /* ══════════════════════════════════════════════════════════
+       PASO 2: Agregación principal en SQL
+       Una sola query que une Ventas × SubReceta y devuelve
+       consumo por (CodIngrediente, codporcion, sucursal, semana)
+       ══════════════════════════════════════════════════════════ */
+    $whereSuc = '';
+    $paramsSql = [
         ':fecha_desde' => $rango['fecha_desde'],
         ':fecha_hasta' => $rango['fecha_hasta'],
+        ':sem_desde'   => $numDesde,
+        ':sem_hasta'   => $numHasta,
     ];
-
     if (!empty($sucursalesPost)) {
-        $placeholders = [];
-        foreach ($sucursalesPost as $i => $suc) {
-            $key = ':suc' . $i;
-            $placeholders[] = $key;
-            $params[$key]   = $suc;
+        $phSuc = [];
+        foreach ($sucursalesPost as $i => $s) {
+            $k = ':suc' . $i;
+            $phSuc[]      = $k;
+            $paramsSql[$k] = $s;
         }
-        $where_suc = ' AND v.local IN (' . implode(',', $placeholders) . ')';
+        $whereSuc = ' AND v.local IN (' . implode(',', $phSuc) . ')';
     }
 
-    $sqlVentas = "
+    $sqlAgregado = "
         SELECT
-            v.CodProducto,
-            v.local         AS sucursal_codigo,
-            v.Semana        AS numero_semana,
-            SUM(v.Cantidad) AS total_vendido
+            v.local              AS sucursal,
+            v.Semana             AS semana,
+            sr.CodIngrediente    AS cod_ingrediente,
+            sr.codporcion        AS codporcion,
+            SUM(v.Cantidad * sr.Cantidad) AS cant_total
         FROM VentasGlobalesAccessCSV v
+        INNER JOIN SubReceta sr ON sr.CodBatido = v.CodProducto
         WHERE v.Anulado = 0
           AND v.Fecha BETWEEN :fecha_desde AND :fecha_hasta
+          AND v.Semana BETWEEN :sem_desde AND :sem_hasta
           AND v.CodProducto IS NOT NULL
-          AND v.Semana IS NOT NULL
-          $where_suc
-        GROUP BY v.CodProducto, v.local, v.Semana
+          $whereSuc
+        GROUP BY v.local, v.Semana, sr.CodIngrediente, sr.codporcion
         ORDER BY v.Semana ASC
     ";
+    $stmtAgg = $conn->prepare($sqlAgregado);
+    $stmtAgg->execute($paramsSql);
+    $filas = $stmtAgg->fetchAll(PDO::FETCH_ASSOC);
 
-    $stmtVentas = $conn->prepare($sqlVentas);
-    $stmtVentas->execute($params);
-    $ventas = $stmtVentas->fetchAll(PDO::FETCH_ASSOC);
-
-    if (empty($ventas)) {
+    if (empty($filas)) {
         echo json_encode([
-            'ok' => true,
-            'msg' => 'Sin ventas en el período seleccionado.',
-            'consumo'    => [],
-            'sin_mapeo'  => [],
-            'semanas'    => array_values($semanasMap),
-            'sucursales' => [],
+            'ok'        => true,
+            'msg'       => 'Sin ventas válidas en el período.',
+            'consumo'   => [],
+            'sin_mapeo' => [],
+            'semanas'   => array_values($semanasRango),
+            'sucursales'=> [],
         ]);
         exit();
     }
 
-    // ── 4. Colectar CodProductos únicos ───────────────────────────────
-    $codProductosUnicos = array_unique(array_column($ventas, 'CodProducto'));
-    $sucursalesPresentes = array_unique(array_column($ventas, 'sucursal_codigo'));
+    /* ══════════════════════════════════════════════════════════
+       PASO 3: Pre-cargar todos los mapeos en BULK
+       ══════════════════════════════════════════════════════════ */
 
-    // ── 5. Cargar SubRecetas de todos los productos ───────────────────
-    $placeholdersProd = implode(',', array_fill(0, count($codProductosUnicos), '?'));
-    $stmtSub = $conn->prepare("
-        SELECT sr.CodBatido, sr.CodIngrediente, sr.Cantidad, sr.codporcion, sr.ordenreceta
-        FROM SubReceta sr
-        WHERE sr.CodBatido IN ($placeholdersProd)
-        ORDER BY sr.CodBatido, sr.ordenreceta ASC
+    // 3a. Ingredientes únicos
+    $codsIng = array_unique(array_column($filas, 'cod_ingrediente'));
+    $phIng   = implode(',', array_fill(0, count($codsIng), '?'));
+
+    // 3b. Unidades de ingredientes (DBIngredientes)
+    $stmtUnd = $conn->prepare("
+        SELECT CodIngrediente, Nombre, Unidad
+        FROM DBIngredientes
+        WHERE CodIngrediente IN ($phIng)
     ");
-    $stmtSub->execute(array_values($codProductosUnicos));
-    $subRecetasRaw = $stmtSub->fetchAll(PDO::FETCH_ASSOC);
-
-    // Indexar por CodBatido
-    $subRecetasPorProd = [];
-    foreach ($subRecetasRaw as $sr) {
-        $subRecetasPorProd[$sr['CodBatido']][] = $sr;
+    $stmtUnd->execute(array_values($codsIng));
+    $dbIngredientes = [];
+    foreach ($stmtUnd->fetchAll(PDO::FETCH_ASSOC) as $row) {
+        $dbIngredientes[$row['CodIngrediente']] = $row;
     }
 
-    // ── 6. Cargar unidades de DBIngredientes ─────────────────────────
-    $codIngredientes = array_unique(array_column($subRecetasRaw, 'CodIngrediente'));
-    $ingredientesMaestro = [];
-    if (!empty($codIngredientes)) {
-        $phIng = implode(',', array_fill(0, count($codIngredientes), '?'));
-        $stmtIng = $conn->prepare("
-            SELECT i.CodIngrediente, i.Nombre, i.Unidad
-            FROM DBIngredientes i
-            WHERE i.CodIngrediente IN ($phIng)
-        ");
-        $stmtIng->execute(array_values($codIngredientes));
-        foreach ($stmtIng->fetchAll(PDO::FETCH_ASSOC) as $ing) {
-            $ingredientesMaestro[$ing['CodIngrediente']] = $ing;
+    // 3c. Cotizaciones (P2 = Conversion+Prioridad, P3 = fallback)
+    $stmtCot = $conn->prepare("
+        SELECT CodIngrediente, CodCotizacion, Conversion, Prioridad, Subproducto, Marca
+        FROM Cotizaciones
+        WHERE CodIngrediente IN ($phIng)
+          AND (Subproducto IS NULL OR Subproducto != 1)
+          AND (Marca IS NULL OR Marca != 'Almacen Global')
+        ORDER BY CodIngrediente, Conversion DESC, Prioridad ASC
+    ");
+    $stmtCot->execute(array_values($codsIng));
+    // Indexar: $cotMap[CodIngrediente] = ['p2' => CodCotizacion, 'p3' => CodCotizacion]
+    $cotMap = [];
+    foreach ($stmtCot->fetchAll(PDO::FETCH_ASSOC) as $c) {
+        $ci = $c['CodIngrediente'];
+        if (!isset($cotMap[$ci])) $cotMap[$ci] = ['p2' => null, 'p3' => null];
+        if ($c['Conversion'] == 1 && $c['Prioridad'] == 1 && !$cotMap[$ci]['p2']) {
+            $cotMap[$ci]['p2'] = $c['CodCotizacion'];
+        }
+        if (!$cotMap[$ci]['p3']) {
+            $cotMap[$ci]['p3'] = $c['CodCotizacion'];
         }
     }
 
-    // ── 7. Función: Resolver cotización (P1 / P2 / P3) ────────────────
-    // Cachemos para no repetir queries iguales
-    $cacheMapeo    = []; // [clave_cotizacion] => { id_presentacion, pp_cantidad, unidad_erp, es_global, id_maestro }
-    $cacheUnidad   = []; // [unidad_access_lower] => { id_primaria, nombre, multi_directos, convertibles }
-    $cachePresentacion = []; // [id_maestro.'_'.str_unidades] => { id_presentacion, pp_cantidad, unidad_erp, factor }
+    // 3d. Recolectar todos los CodCotizacion a buscar en el diccionario
+    $codCotBuscar = array_unique(array_filter(array_merge(
+        array_column($filas, 'codporcion'),         // P1
+        array_column($cotMap, 'p2'),                 // P2
+        array_column($cotMap, 'p3')                  // P3
+    )));
+    $codCotBuscar = array_filter($codCotBuscar, fn($v) => $v !== null && $v !== '');
 
-    /**
-     * Resolver mapeo ERP desde CodCotizacion
-     */
-    function resolverMapeoERP($conn, $codCotizacion, &$cacheMapeo) {
-        $key = (int)$codCotizacion;
-        if (isset($cacheMapeo[$key])) return $cacheMapeo[$key];
-
-        $stmt = $conn->prepare("
+    $diccionarioMap = []; // [CodCotizacion] => {id, cantidad, Id_receta_producto, unidad_erp, id_maestro, id_unidad_erp, ...}
+    if (!empty($codCotBuscar)) {
+        $phCot = implode(',', array_fill(0, count($codCotBuscar), '?'));
+        $stmtDic = $conn->prepare("
             SELECT
+                d.CodCotizacion,
                 pp.id               AS id_presentacion,
                 pp.cantidad         AS pp_cantidad,
                 pp.Id_receta_producto,
-                pp.Activo,
+                pp.id_producto_maestro AS id_maestro,
+                pp.Nombre           AS nombre_presentacion,
+                u.id                AS id_unidad_erp,
                 u.nombre            AS unidad_erp,
                 u.abreviado         AS unidad_erp_abrev,
-                pm.id               AS id_maestro,
-                pm.Nombre           AS nombre_maestro,
-                pp.Nombre           AS nombre_presentacion
+                u.nombres_opcionales,
+                pm.Nombre           AS nombre_maestro
             FROM diccionario_productos_legado d
             INNER JOIN producto_presentacion pp ON pp.id = d.id_producto_presentacion
             LEFT  JOIN unidad_producto u         ON u.id  = pp.id_unidad_producto
             LEFT  JOIN producto_maestro pm       ON pm.id = pp.id_producto_maestro
-            WHERE d.CodCotizacion = ?
-            LIMIT 1
+            WHERE d.CodCotizacion IN ($phCot)
+              AND pp.Activo = 'SI'
         ");
-        $stmt->execute([$key]);
-        $r = $stmt->fetch(PDO::FETCH_ASSOC);
-        $cacheMapeo[$key] = $r ?: null;
-        return $cacheMapeo[$key];
-    }
-
-    /**
-     * Obtener CodCotizacion base (P2: Conversion=1, Prioridad=1)
-     */
-    function obtenerCotizacionBase($conn, $codIngrediente) {
-        $stmt = $conn->prepare("
-            SELECT c.CodCotizacion
-            FROM Cotizaciones c
-            WHERE c.CodIngrediente = ?
-              AND (c.Subproducto IS NULL OR c.Subproducto != 1)
-              AND (c.Marca IS NULL OR c.Marca != 'Almacen Global')
-              AND c.Conversion = 1
-              AND c.Prioridad = 1
-            LIMIT 1
-        ");
-        $stmt->execute([$codIngrediente]);
-        $r = $stmt->fetch(PDO::FETCH_ASSOC);
-        return $r ? $r['CodCotizacion'] : null;
-    }
-
-    /**
-     * Obtener CodCotizacion fallback (P3)
-     */
-    function obtenerCotizacionFallback($conn, $codIngrediente) {
-        $stmt = $conn->prepare("
-            SELECT c.CodCotizacion
-            FROM Cotizaciones c
-            WHERE c.CodIngrediente = ?
-              AND (c.Subproducto IS NULL OR c.Subproducto != 1)
-              AND (c.Marca IS NULL OR c.Marca != 'Almacen Global')
-            LIMIT 1
-        ");
-        $stmt->execute([$codIngrediente]);
-        $r = $stmt->fetch(PDO::FETCH_ASSOC);
-        return $r ? $r['CodCotizacion'] : null;
-    }
-
-    /**
-     * AUTO: Rastreo por maestro + unidad cuando no hay mapeo por cotización
-     */
-    function rastreoAutoMaestro($conn, $codIngrediente) {
-        $stmt = $conn->prepare("
-            SELECT pp.id_producto_maestro
-            FROM Cotizaciones c
-            INNER JOIN diccionario_productos_legado d ON d.CodCotizacion = c.CodCotizacion
-            INNER JOIN producto_presentacion pp ON pp.id = d.id_producto_presentacion
-            WHERE c.CodIngrediente = ?
-              AND pp.Id_receta_producto IS NULL
-            LIMIT 1
-        ");
-        $stmt->execute([$codIngrediente]);
-        $r = $stmt->fetch(PDO::FETCH_ASSOC);
-        return $r ? $r['id_producto_maestro'] : null;
-    }
-
-    /**
-     * Resolver unidad Access → ERP (primaria, multi_directos, convertibles)
-     */
-    function resolverUnidadERP($conn, $unidadAccess, &$cacheUnidad) {
-        $u = strtolower(trim($unidadAccess));
-        if (isset($cacheUnidad[$u])) return $cacheUnidad[$u];
-
-        if ($u === '') {
-            $cacheUnidad[$u] = null;
-            return null;
+        $stmtDic->execute(array_values($codCotBuscar));
+        foreach ($stmtDic->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $diccionarioMap[(string)$row['CodCotizacion']] = $row;
         }
-
-        // Búsqueda primaria — usar parámetros únicos para evitar problema con repeated named params
-        $stmt = $conn->prepare("
-            SELECT id, nombre, abreviado
-            FROM unidad_producto
-            WHERE LOWER(abreviado) = :u1
-               OR LOWER(nombre)    = :u2
-               OR FIND_IN_SET(:u3, LOWER(REPLACE(REPLACE(IFNULL(nombres_opcionales,''), ', ', ','), ' ,', ''))) > 0
-            ORDER BY
-                CASE
-                    WHEN LOWER(abreviado) = :u4 THEN 1
-                    WHEN LOWER(nombre)    = :u5 THEN 2
-                    ELSE 3
-                END
-            LIMIT 1
-        ");
-        $stmt->execute([':u1' => $u, ':u2' => $u, ':u3' => $u, ':u4' => $u, ':u5' => $u]);
-        $primaria = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        if (!$primaria) {
-            $cacheUnidad[$u] = null;
-            return null;
-        }
-
-        $id_primaria = $primaria['id'];
-
-        // Búsquedas secundarias — solo parámetros nombrados (sin mezcla con ?)
-        $stmt2 = $conn->prepare("
-            SELECT nombre
-            FROM unidad_producto
-            WHERE id != :id_exc
-              AND (
-                LOWER(abreviado) = :u1
-                OR LOWER(nombre) = :u2
-                OR FIND_IN_SET(:u3, LOWER(REPLACE(REPLACE(IFNULL(nombres_opcionales,''), ', ', ','), ' ,', ''))) > 0
-              )
-        ");
-        $stmt2->execute([':id_exc' => $id_primaria, ':u1' => $u, ':u2' => $u, ':u3' => $u]);
-        $multiDirectos = array_column($stmt2->fetchAll(PDO::FETCH_ASSOC), 'nombre');
-        $multiDirectos[] = $primaria['nombre']; // incluir la primaria
-
-        // Unidades convertibles (solo positional, consistente)
-        $stmt3 = $conn->prepare("
-            SELECT
-                CASE WHEN c.id_unidad_producto_inicio = ? THEN uf.nombre  ELSE ui.nombre  END AS nombre_relacionado,
-                CASE WHEN c.id_unidad_producto_inicio = ? THEN c.cantidad ELSE (1/c.cantidad) END AS factor_conversion
-            FROM conversion_unidad_producto c
-            JOIN unidad_producto ui ON ui.id = c.id_unidad_producto_inicio
-            JOIN unidad_producto uf ON uf.id = c.id_unidad_producto_final
-            WHERE c.id_unidad_producto_inicio = ?
-               OR c.id_unidad_producto_final  = ?
-        ");
-        $stmt3->execute([$id_primaria, $id_primaria, $id_primaria, $id_primaria]);
-        $convertibles = $stmt3->fetchAll(PDO::FETCH_ASSOC);
-
-        $result = [
-            'id_primaria'    => $id_primaria,
-            'nombre'         => $primaria['nombre'],
-            'multi_directos' => $multiDirectos,
-            'convertibles'   => $convertibles,
-        ];
-        $cacheUnidad[$u] = $result;
-        return $result;
     }
 
-    /**
-     * Buscar presentación del maestro por lista de unidades (Nivel 1/2/3)
-     */
-    function buscarPresentacionPorUnidades($conn, $idMaestro, $listaUnidades) {
-        if (empty($listaUnidades)) return null;
-        $ph = implode(',', array_fill(0, count($listaUnidades), '?'));
-        $stmt = $conn->prepare("
-            SELECT
-                pp.id       AS id_presentacion,
-                pp.Nombre   AS nombre_erp,
-                pp.cantidad AS pp_cantidad,
-                u.nombre    AS unidad_erp
+    // 3e. Pre-cargar TODAS las unidades (tabla pequeña, < 50 filas normalmente)
+    $stmtAllU = $conn->prepare("SELECT id, nombre, abreviado, nombres_opcionales FROM unidad_producto");
+    $stmtAllU->execute();
+    $todasUnidades = $stmtAllU->fetchAll(PDO::FETCH_ASSOC);
+
+    // Crear índice: nombre/abreviado/alias → id
+    $unidadPorNombre = [];
+    foreach ($todasUnidades as $u) {
+        $uid  = (int)$u['id'];
+        $unom = strtolower(trim($u['nombre']));
+        $uabr = strtolower(trim($u['abreviado'] ?? ''));
+        $unidadPorNombre[$unom] = $uid;
+        if ($uabr) $unidadPorNombre[$uabr] = $uid;
+        if (!empty($u['nombres_opcionales'])) {
+            foreach (preg_split('/[,;|]+/', $u['nombres_opcionales']) as $alias) {
+                $ak = strtolower(trim($alias));
+                if ($ak) $unidadPorNombre[$ak] = $uid;
+            }
+        }
+    }
+    // Índice por id para lookup rápido
+    $unidadPorId = [];
+    foreach ($todasUnidades as $u) {
+        $unidadPorId[(int)$u['id']] = $u;
+    }
+
+    // 3f. Pre-cargar TODAS las conversiones (tabla pequeña)
+    $stmtConv = $conn->prepare("
+        SELECT id_unidad_producto_inicio, id_unidad_producto_final, cantidad
+        FROM conversion_unidad_producto
+    ");
+    $stmtConv->execute();
+    // Índice: [inicio][final] => factor, [final][inicio] => 1/factor
+    $convIndex = [];
+    foreach ($stmtConv->fetchAll(PDO::FETCH_ASSOC) as $c) {
+        $ini = (int)$c['id_unidad_producto_inicio'];
+        $fin = (int)$c['id_unidad_producto_final'];
+        $fac = (float)$c['cantidad'];
+        $convIndex[$ini][$fin] = $fac;
+        $convIndex[$fin][$ini] = ($fac != 0) ? 1 / $fac : 0;
+    }
+
+    // 3g. Pre-cargar presentaciones por maestro (Nivel AUTO)
+    // Todas las presentaciones simples (no globales) de los maestros relevantes
+    $idMaestrosDict = array_unique(array_filter(array_column($diccionarioMap, 'id_maestro')));
+    $presentPorMaestro = []; // [id_maestro][id_unidad] => {id_presentacion, pp_cantidad, unidad}
+    if (!empty($idMaestrosDict)) {
+        $phMa = implode(',', array_fill(0, count($idMaestrosDict), '?'));
+        $stmtPP = $conn->prepare("
+            SELECT pp.id, pp.id_producto_maestro, pp.cantidad AS pp_cantidad,
+                   pp.id_unidad_producto, u.nombre AS unidad_nombre
             FROM producto_presentacion pp
             LEFT JOIN unidad_producto u ON u.id = pp.id_unidad_producto
-            WHERE pp.id_producto_maestro = ?
-              AND u.nombre IN ($ph)
+            WHERE pp.id_producto_maestro IN ($phMa)
               AND pp.Id_receta_producto IS NULL
               AND pp.Activo = 'SI'
-            ORDER BY
-                CASE WHEN pp.cantidad = 1 THEN 0 ELSE 1 END ASC,
-                pp.cantidad ASC
-            LIMIT 1
         ");
-        $params = array_merge([$idMaestro], $listaUnidades);
-        $stmt->execute($params);
-        return $stmt->fetch(PDO::FETCH_ASSOC);
+        $stmtPP->execute(array_values($idMaestrosDict));
+        foreach ($stmtPP->fetchAll(PDO::FETCH_ASSOC) as $pp) {
+            $presentPorMaestro[(int)$pp['id_producto_maestro']][(int)$pp['id_unidad_producto']] = $pp;
+        }
     }
 
-    // ── 8. Estructura de resultados ───────────────────────────────────
-    // consumo[id_presentacion_erp][sucursal][numero_semana] = cantidad_consumida
-    $consumoAgregado = [];
-    $presentacionesMeta = []; // metadata de la presentación ERP
-    $sinMapeo = [];           // ingredientes sin mapeo
-    $sinMapeoSet = [];        // para no duplicar
+    /* ══════════════════════════════════════════════════════════
+       PASO 4: Función de resolución de unidades (PHP puro)
+       Solo usa los arrays pre-cargados — sin queries
+       ══════════════════════════════════════════════════════════ */
+    function resolverUnidadId($nombreAccess, &$unidadPorNombre) {
+        $k = strtolower(trim($nombreAccess));
+        return $unidadPorNombre[$k] ?? null;
+    }
 
-    // ── 9. Procesar cada venta ────────────────────────────────────────
-    foreach ($ventas as $venta) {
-        $codProducto   = $venta['CodProducto'];
-        $sucursalCod   = $venta['sucursal_codigo'];
-        $numSemana     = (int)$venta['numero_semana'];
-        $totalVendido  = (float)$venta['total_vendido'];
+    function resolverFactorConversion($idOrigen, $idDestino, &$convIndex) {
+        if ($idOrigen === $idDestino) return 1.0;
+        return $convIndex[$idOrigen][$idDestino] ?? null;
+    }
 
-        if (!isset($subRecetasPorProd[$codProducto])) continue;
+    function buscarPresentacionEnMaestro($idMaestro, $idUnidad, &$presentPorMaestro) {
+        return $presentPorMaestro[$idMaestro][$idUnidad] ?? null;
+    }
 
-        foreach ($subRecetasPorProd[$codProducto] as $sr) {
-            $codIng    = $sr['CodIngrediente'];
-            $cantSR    = (float)$sr['Cantidad'];
-            $codporcion = $sr['codporcion'];
+    /* ══════════════════════════════════════════════════════════
+       PASO 5: Loop de resolución — PHP puro (sin DB)
+       ══════════════════════════════════════════════════════════ */
+    $consumoAgg    = [];   // [id_pp][sucursal][semana] => float
+    $metaPP        = [];   // [id_pp] => {nombre, maestro, unidad, es_global}
+    $sinMapeo      = [];
+    $sinMapeoSet   = [];
+    $sucursalesSet = [];
 
-            $id_presentacion_erp  = null;
-            $pp_cantidad          = 1.0;
-            $unidad_erp           = '';
-            $es_global            = false;
-            $factor               = 1.0;
-            $nombre_presentacion  = '';
-            $nombre_maestro       = '';
+    foreach ($filas as $fila) {
+        $codIng    = $fila['cod_ingrediente'];
+        $codporcion = $fila['codporcion'];
+        $sucursal  = $fila['sucursal'];
+        $semana    = (int)$fila['semana'];
+        $cantTotal = (float)$fila['cant_total'];
 
-            // ── PRE: Resolver ID de cotización ──────────────────────
-            $mapeo = null;
+        $sucursalesSet[$sucursal] = true;
 
-            // P1: codporcion directo
-            if (!empty($codporcion)) {
-                $mapeo = resolverMapeoERP($conn, $codporcion, $cacheMapeo);
-            }
+        // ── Resolver mapeo (P1 / P2 / P3) ──
+        $mapeo = null;
 
-            // P2: Cotización base
-            if (!$mapeo) {
-                $codCot = obtenerCotizacionBase($conn, $codIng);
-                if ($codCot) {
-                    $mapeo = resolverMapeoERP($conn, $codCot, $cacheMapeo);
-                }
-            }
+        // P1: codporcion directo
+        if (!empty($codporcion) && isset($diccionarioMap[(string)$codporcion])) {
+            $mapeo = $diccionarioMap[(string)$codporcion];
+        }
+        // P2: cotización base
+        if (!$mapeo && isset($cotMap[$codIng]['p2'])) {
+            $ck = (string)$cotMap[$codIng]['p2'];
+            if (isset($diccionarioMap[$ck])) $mapeo = $diccionarioMap[$ck];
+        }
+        // P3: fallback
+        if (!$mapeo && isset($cotMap[$codIng]['p3'])) {
+            $ck = (string)$cotMap[$codIng]['p3'];
+            if (isset($diccionarioMap[$ck])) $mapeo = $diccionarioMap[$ck];
+        }
 
-            // P3: Fallback cotización
-            if (!$mapeo) {
-                $codCot = obtenerCotizacionFallback($conn, $codIng);
-                if ($codCot) {
-                    $mapeo = resolverMapeoERP($conn, $codCot, $cacheMapeo);
-                }
-            }
-
-            // ── Sin mapeo: registrar y saltar ─────────────────────
-            if (!$mapeo) {
-                $keyNoMapeo = $codIng;
-                if (!isset($sinMapeoSet[$keyNoMapeo])) {
-                    $sinMapeoSet[$keyNoMapeo] = true;
-                    $ingData = $ingredientesMaestro[$codIng] ?? [];
-                    $sinMapeo[] = [
-                        'cod_ingrediente'   => $codIng,
-                        'nombre'            => $ingData['Nombre'] ?? 'Desconocido',
-                        'unidad_access'     => $ingData['Unidad'] ?? '',
-                        'productos_afectados' => [],
-                        'ventas_afectadas'    => 0,
-                    ];
-                }
-                // Contar ventas afectadas (simple)
+        // Sin mapeo
+        if (!$mapeo) {
+            if (!isset($sinMapeoSet[$codIng])) {
+                $sinMapeoSet[$codIng] = true;
+                $sinMapeo[] = [
+                    'cod_ingrediente'  => $codIng,
+                    'nombre'           => $dbIngredientes[$codIng]['Nombre'] ?? 'Desconocido',
+                    'unidad_access'    => $dbIngredientes[$codIng]['Unidad'] ?? '',
+                    'num_productos'    => 1,
+                    'ventas_afectadas' => round($cantTotal, 2),
+                ];
+            } else {
                 foreach ($sinMapeo as &$sm) {
                     if ($sm['cod_ingrediente'] === $codIng) {
-                        if (!in_array($codProducto, $sm['productos_afectados'])) {
-                            $sm['productos_afectados'][] = $codProducto;
-                        }
-                        $sm['ventas_afectadas'] += $totalVendido;
+                        $sm['ventas_afectadas'] += $cantTotal;
                         break;
                     }
                 }
                 unset($sm);
-                continue;
             }
+            continue;
+        }
 
-            $id_presentacion_erp = $mapeo['id_presentacion'];
-            $pp_cantidad         = max((float)$mapeo['pp_cantidad'], 0.001);
-            $unidad_erp          = $mapeo['unidad_erp'] ?? '';
-            $es_global           = !empty($mapeo['Id_receta_producto']);
-            $id_maestro          = $mapeo['id_maestro'];
-            $nombre_presentacion = $mapeo['nombre_presentacion'] ?? '';
-            $nombre_maestro      = $mapeo['nombre_maestro'] ?? '';
+        // ── ¿Receta global? ─────────────────────────────────
+        $esGlobal  = !empty($mapeo['Id_receta_producto']);
+        $idPP      = (int)$mapeo['id_presentacion'];
+        $ppCant    = max((float)$mapeo['pp_cantidad'], 0.001);
+        $idMaestro = (int)$mapeo['id_maestro'];
+        $idUnidERP = (int)$mapeo['id_unidad_erp'];
 
-            // ── PRE-CHECK: ¿Receta Global? ──────────────────────────
-            if ($es_global) {
-                // consumo = SubReceta.Cantidad × total_vendido (sin conversión)
-                $cantidad_consumida = $cantSR * $totalVendido;
-                $factor = 1.0;
-            } else {
-                // Resolver unidad Access → ERP
-                $unidadAccess = $ingredientesMaestro[$codIng]['Unidad'] ?? '';
-                $unidadResolta = resolverUnidadERP($conn, $unidadAccess, $cacheUnidad);
+        // Filtro opcional por insumo
+        if ($idInsumo > 0 && $idPP !== $idInsumo) continue;
 
-                if (!$unidadResolta) {
-                    // Sin resolución de unidad → continuar con factor=1
-                    $factor = 1.0;
+        if ($esGlobal) {
+            // Fórmula global: consumo = cant_total (ya es sum(ventas * cantidad_receta))
+            $consumido = $cantTotal;
+        } else {
+            // ── Resolver conversión de unidad ────────────────
+            $unidadAccess = $dbIngredientes[$codIng]['Unidad'] ?? '';
+            $idUnidAccess = resolverUnidadId($unidadAccess, $unidadPorNombre);
+            $factor = 1.0;
+
+            if ($idUnidAccess && $idUnidAccess !== $idUnidERP) {
+                // Nivel 1: conversión directa
+                $factorDir = resolverFactorConversion($idUnidAccess, $idUnidERP, $convIndex);
+                if ($factorDir !== null) {
+                    $factor = $factorDir;
                 } else {
-                    $factor = 1.0; // Nivel 1 por defecto
-
-                    // ── AUTO: buscar presentación si el mapeo inicial no tiene el maestro correcto
-                    if ($id_maestro) {
-                        // Nivel 1: buscar por multi_directos
-                        $presentacionN1 = buscarPresentacionPorUnidades($conn, $id_maestro, $unidadResolta['multi_directos']);
-                        if ($presentacionN1) {
-                            // Usar la presentación encontrada por unidad directa
-                            $pp_cantidad = max((float)$presentacionN1['pp_cantidad'], 0.001);
-                            $unidad_erp  = $presentacionN1['unidad_erp'];
-                            $id_presentacion_erp = $presentacionN1['id_presentacion'];
-                            $nombre_presentacion = $presentacionN1['nombre_erp'];
-                            $factor = 1.0;
-                        } else {
-                            // Nivel 2: buscar con convertibles
-                            foreach ($unidadResolta['convertibles'] as $conv) {
-                                $presentacionN2 = buscarPresentacionPorUnidades($conn, $id_maestro, [$conv['nombre_relacionado']]);
-                                if ($presentacionN2) {
-                                    $pp_cantidad = max((float)$presentacionN2['pp_cantidad'], 0.001);
-                                    $unidad_erp  = $presentacionN2['unidad_erp'];
-                                    $id_presentacion_erp = $presentacionN2['id_presentacion'];
-                                    $nombre_presentacion = $presentacionN2['nombre_erp'];
-                                    $factor = (float)$conv['factor_conversion'];
+                    // Nivel 2: buscar presentación del maestro con unidad de access
+                    $ppAlt = buscarPresentacionEnMaestro($idMaestro, $idUnidAccess, $presentPorMaestro);
+                    if ($ppAlt) {
+                        $idPP   = (int)$ppAlt['id'];
+                        $ppCant = max((float)$ppAlt['pp_cantidad'], 0.001);
+                        $idUnidERP = (int)$ppAlt['id_unidad_producto'];
+                        $factor = 1.0;
+                    } else {
+                        // Nivel 3: buscar via conversiones disponibles para el maestro
+                        if (isset($convIndex[$idUnidAccess])) {
+                            foreach ($convIndex[$idUnidAccess] as $idDestino => $factorConv) {
+                                $ppConv = buscarPresentacionEnMaestro($idMaestro, $idDestino, $presentPorMaestro);
+                                if ($ppConv) {
+                                    $idPP   = (int)$ppConv['id'];
+                                    $ppCant = max((float)$ppConv['pp_cantidad'], 0.001);
+                                    $idUnidERP = $idDestino;
+                                    $factor = $factorConv;
                                     break;
                                 }
                             }
                         }
+                        // Si no hay conversión, continúa con factor=1 (mejor que nada)
                     }
                 }
-
-                // Fórmula: cantidad_erp = (Cantidad_subreceta × factor) / pp_cantidad × ventas
-                $cantidad_consumida = ($cantSR * $factor / $pp_cantidad) * $totalVendido;
             }
 
-            // ── Filtro por insumo específico ───────────────────────
-            if ($idInsumo > 0 && (int)$id_presentacion_erp !== $idInsumo) {
-                continue;
-            }
-
-            // ── Acumular ───────────────────────────────────────────
-            $pid = (int)$id_presentacion_erp;
-
-            // Guardar metadata de la presentación (solo una vez)
-            if (!isset($presentacionesMeta[$pid])) {
-                $presentacionesMeta[$pid] = [
-                    'id'          => $pid,
-                    'nombre'      => $nombre_presentacion,
-                    'maestro'     => $nombre_maestro,
-                    'unidad'      => $unidad_erp,
-                    'es_global'   => $es_global,
-                ];
-            }
-
-            if (!isset($consumoAgregado[$pid])) $consumoAgregado[$pid] = [];
-            if (!isset($consumoAgregado[$pid][$sucursalCod])) $consumoAgregado[$pid][$sucursalCod] = [];
-            if (!isset($consumoAgregado[$pid][$sucursalCod][$numSemana])) {
-                $consumoAgregado[$pid][$sucursalCod][$numSemana] = 0;
-            }
-
-            $consumoAgregado[$pid][$sucursalCod][$numSemana] += $cantidad_consumida;
+            // Fórmula: consumo = (cant_total * factor) / pp_cantidad
+            $consumido = ($cantTotal * $factor) / $ppCant;
         }
-    } // fin foreach ventas
 
-    // ── 10. Construir respuesta ───────────────────────────────────────
+        // ── Guardar metadata ──────────────────────────────────
+        if (!isset($metaPP[$idPP])) {
+            $metaPP[$idPP] = [
+                'id'       => $idPP,
+                'nombre'   => $mapeo['nombre_presentacion'],
+                'maestro'  => $mapeo['nombre_maestro'],
+                'unidad'   => $unidadPorId[$idUnidERP]['nombre'] ?? $mapeo['unidad_erp'] ?? '',
+                'es_global'=> $esGlobal,
+            ];
+        }
+
+        if (!isset($consumoAgg[$idPP]))             $consumoAgg[$idPP] = [];
+        if (!isset($consumoAgg[$idPP][$sucursal]))  $consumoAgg[$idPP][$sucursal] = [];
+        if (!isset($consumoAgg[$idPP][$sucursal][$semana])) $consumoAgg[$idPP][$sucursal][$semana] = 0;
+        $consumoAgg[$idPP][$sucursal][$semana] += $consumido;
+    }
+
+    /* ══════════════════════════════════════════════════════════
+       PASO 6: Calcular estadísticas y construir respuesta
+       ══════════════════════════════════════════════════════════ */
+    $sucursalesPresentes = array_keys($sucursalesSet);
+    $semanasNros         = array_keys($semanasMap);
+
     $listaConsumo = [];
-    $semanasNros  = array_keys($semanasMap); // números de semana del rango
+    foreach ($consumoAgg as $idPP => $porSuc) {
+        $meta          = $metaPP[$idPP];
+        $totalGeneral  = 0;
+        $consPorSem    = [];
+        $porSucRes     = [];
 
-    foreach ($consumoAgregado as $pid => $porSucursal) {
-        $meta = $presentacionesMeta[$pid];
-
-        // Calcular totales y estadísticas
-        $totalGeneral = 0;
-        $consumoPorSemana = []; // [semana_num] => total_todas_sucursales
-        $porSucursalResumen = [];
-
-        foreach ($porSucursal as $suc => $porSemana) {
-            $totalSuc = 0;
-            foreach ($porSemana as $sem => $cant) {
-                $totalGeneral += $cant;
-                $totalSuc     += $cant;
-                if (!isset($consumoPorSemana[$sem])) $consumoPorSemana[$sem] = 0;
-                $consumoPorSemana[$sem] += $cant;
+        foreach ($porSuc as $suc => $porSem) {
+            $totSuc = 0;
+            foreach ($porSem as $sem => $c) {
+                $totalGeneral += $c;
+                $totSuc       += $c;
+                $consPorSem[$sem] = ($consPorSem[$sem] ?? 0) + $c;
             }
-            $porSucursalResumen[$suc] = round($totalSuc, 4);
+            $porSucRes[$suc] = round($totSuc, 4);
         }
 
-        // Semana pico y baja
-        $semanaPico = null;
-        $semanaLow  = null;
-        $maxCons = -1;
-        $minCons = PHP_INT_MAX;
-        foreach ($consumoPorSemana as $sem => $cons) {
-            if ($cons > $maxCons) { $maxCons = $cons; $semanaPico = $sem; }
-            if ($cons < $minCons) { $minCons  = $cons; $semanaLow  = $sem; }
+        $semanaPico = null; $semanaLow = null;
+        $maxC = -1; $minC = PHP_INT_MAX;
+        foreach ($consPorSem as $s => $c) {
+            if ($c > $maxC) { $maxC = $c; $semanaPico = $s; }
+            if ($c < $minC) { $minC = $c; $semanaLow  = $s; }
         }
 
-        // Promedio por semana (semanas con venta, no el total del rango)
-        $semanasConDatos = count($consumoPorSemana);
-        $promSemana      = $semanasConDatos > 0 ? $totalGeneral / $semanasConDatos : 0;
+        $n          = count($consPorSem);
+        $promSemana = $n > 0 ? $totalGeneral / $n : 0;
 
-        // Proyección 4 semanas (promedio ponderado simple)
-        $proyeccion4sem = $promSemana * 4;
-
-        // Stock mínimo = 1 semana, máximo = 2 semanas
-        $stockMin = $promSemana;
-        $stockMax = $promSemana * 2;
-
-        // Tendencia (comparar primera vs última mitad del período)
+        // Tendencia
         $tendencia = 'flat';
-        if (count($consumoPorSemana) >= 2) {
-            $semsOrden = array_keys($consumoPorSemana);
-            sort($semsOrden);
-            $mitad = (int)(count($semsOrden) / 2);
-            $primMitad = array_slice($semsOrden, 0, $mitad);
-            $segMitad  = array_slice($semsOrden, $mitad);
-            $promPrim = array_sum(array_intersect_key($consumoPorSemana, array_flip($primMitad))) / max(count($primMitad), 1);
-            $promSeg  = array_sum(array_intersect_key($consumoPorSemana, array_flip($segMitad)))  / max(count($segMitad),  1);
-            if ($promSeg > $promPrim * 1.05)      $tendencia = 'up';
-            elseif ($promSeg < $promPrim * 0.95)  $tendencia = 'down';
+        if ($n >= 2) {
+            $ks  = array_keys($consPorSem); sort($ks);
+            $mid = (int)($n / 2);
+            $p1  = array_sum(array_intersect_key($consPorSem, array_flip(array_slice($ks, 0, $mid)))) / max($mid, 1);
+            $p2  = array_sum(array_intersect_key($consPorSem, array_flip(array_slice($ks, $mid))))   / max($n - $mid, 1);
+            if ($p2 > $p1 * 1.05) $tendencia = 'up';
+            elseif ($p2 < $p1 * 0.95) $tendencia = 'down';
         }
 
-        // Construir desglose semanal completo (para heatmap y gráfico)
-        $desgloseSemanal = [];
-        foreach ($semanasNros as $semNum) {
-            $desgloseSemanal[$semNum] = [];
+        // Desglose semana × sucursal
+        $desgloseSemsuc = [];
+        foreach ($semanasNros as $sem) {
+            $desgloseSemsuc[$sem] = [];
             foreach ($sucursalesPresentes as $suc) {
-                $desgloseSemanal[$semNum][$suc] = round((float)($consumoAgregado[$pid][$suc][$semNum] ?? 0), 4);
+                $desgloseSemsuc[$sem][$suc] = round((float)($consumoAgg[$idPP][$suc][$sem] ?? 0), 4);
             }
         }
 
         $listaConsumo[] = [
-            'id'                => $pid,
-            'nombre'            => $meta['nombre'],
-            'maestro'           => $meta['maestro'],
-            'unidad'            => $meta['unidad'],
-            'es_global'         => (bool)$meta['es_global'],
-            'total'             => round($totalGeneral, 4),
-            'prom_semana'       => round($promSemana, 4),
-            'proyeccion_4sem'   => round($proyeccion4sem, 4),
-            'stock_min'         => round($stockMin, 4),
-            'stock_max'         => round($stockMax, 4),
-            'semana_pico_num'   => $semanaPico,
-            'semana_low_num'    => $semanaLow,
-            'max_consumo_sem'   => round($maxCons, 4),
-            'tendencia'         => $tendencia,
-            'por_semana'        => $consumoPorSemana,     // {semana_num: total}
-            'por_sucursal'      => $porSucursalResumen,   // {suc_cod: total}
-            'desglose_semxsuc'  => $desgloseSemanal,      // {semana: {suc: cant}}
+            'id'               => $idPP,
+            'nombre'           => $meta['nombre'],
+            'maestro'          => $meta['maestro'],
+            'unidad'           => $meta['unidad'],
+            'es_global'        => (bool)$meta['es_global'],
+            'total'            => round($totalGeneral, 4),
+            'prom_semana'      => round($promSemana, 4),
+            'proyeccion_4sem'  => round($promSemana * 4, 4),
+            'stock_min'        => round($promSemana, 4),
+            'stock_max'        => round($promSemana * 2, 4),
+            'semana_pico_num'  => $semanaPico,
+            'semana_low_num'   => $semanaLow,
+            'max_consumo_sem'  => round($maxC, 4),
+            'tendencia'        => $tendencia,
+            'por_semana'       => $consPorSem,
+            'por_sucursal'     => $porSucRes,
+            'desglose_semxsuc' => $desgloseSemsuc,
         ];
     }
 
-    // Ordenar por consumo total descendente
     usort($listaConsumo, fn($a, $b) => $b['total'] <=> $a['total']);
 
-    // Limpiar sinMapeo: contar productos únicos afectados
-    foreach ($sinMapeo as &$sm) {
-        $sm['num_productos'] = count($sm['productos_afectados']);
-        $sm['ventas_afectadas'] = round($sm['ventas_afectadas'], 2);
-        unset($sm['productos_afectados']); // No serializar el array completo
-    }
-    unset($sm);
-
-    // ── Estadísticas globales ─────────────────────────────────────────
-    $consumoTotalGeneral = array_sum(array_column($listaConsumo, 'total'));
-    $proySumaTotal = array_sum(array_column($listaConsumo, 'proyeccion_4sem'));
-
-    // Semana pico global (la semana con mayor suma de todos los insumos)
-    $sumasPorSemana = [];
-    foreach ($listaConsumo as $item) {
-        foreach ($item['por_semana'] as $sem => $cant) {
-            if (!isset($sumasPorSemana[$sem])) $sumasPorSemana[$sem] = 0;
-            $sumasPorSemana[$sem] += $cant;
+    // Estadísticas globales
+    $totalGeneral = array_sum(array_column($listaConsumo, 'total'));
+    $proyTotal    = array_sum(array_column($listaConsumo, 'proyeccion_4sem'));
+    $sumasPorSem  = [];
+    foreach ($listaConsumo as $it) {
+        foreach ($it['por_semana'] as $s => $c) {
+            $sumasPorSem[$s] = ($sumasPorSem[$s] ?? 0) + $c;
         }
     }
-    $semanaPicoGlobal = null;
-    if (!empty($sumasPorSemana)) {
-        $semanaPicoGlobal = array_search(max($sumasPorSemana), $sumasPorSemana);
-    }
+    $picoGlobal = !empty($sumasPorSem) ? array_search(max($sumasPorSem), $sumasPorSem) : null;
 
     echo json_encode([
-        'ok'                  => true,
-        'consumo'             => $listaConsumo,
-        'sin_mapeo'           => $sinMapeo,
-        'semanas'             => array_values(array_map(function($s) {
-            return ['id' => $s['id'], 'numero_semana' => (int)$s['numero_semana'], 'anio' => (int)$s['anio'], 'fecha_inicio' => $s['fecha_inicio'], 'fecha_fin' => $s['fecha_fin']];
-        }, $semanasRango)),
-        'sucursales'          => $sucursalesPresentes,
-        'total_general'       => round($consumoTotalGeneral, 4),
-        'proyeccion_total'    => round($proySumaTotal, 4),
-        'semana_pico_global'  => $semanaPicoGlobal,
-        'num_sin_mapeo'       => count($sinMapeo),
-        'num_insumos'         => count($listaConsumo),
+        'ok'                 => true,
+        'consumo'            => $listaConsumo,
+        'sin_mapeo'          => $sinMapeo,
+        'semanas'            => array_values($semanasRango),
+        'sucursales'         => $sucursalesPresentes,
+        'total_general'      => round($totalGeneral, 4),
+        'proyeccion_total'   => round($proyTotal, 4),
+        'semana_pico_global' => $picoGlobal,
+        'num_sin_mapeo'      => count($sinMapeo),
+        'num_insumos'        => count($listaConsumo),
     ]);
 
 } catch (Exception $e) {
