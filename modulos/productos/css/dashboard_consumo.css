@@ -382,6 +382,78 @@ body { font-family: var(--dc-font); background: var(--dc-bg); }
     letter-spacing: .5px;
 }
 
+/* ── Panel de Insumo Analizado (selector + KPIs + gráfico) ── */
+.dc-insumo-panel {
+    background: var(--dc-card-bg);
+    border-radius: var(--dc-radius);
+    box-shadow: 0 4px 18px rgba(14,84,76,.10);
+    border: 1.5px solid rgba(81,184,172,.30);
+    overflow: hidden;
+}
+
+/* Barra superior del panel */
+.dc-insumo-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    padding: 14px 20px;
+    background: linear-gradient(135deg, #0E544C 0%, #1a7a71 100%);
+    border-bottom: 2px solid rgba(81,184,172,.4);
+}
+
+.dc-insumo-panel-title {
+    font-size: .82rem;
+    font-weight: 700;
+    color: #fff;
+    text-transform: uppercase;
+    letter-spacing: .6px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+}
+.dc-insumo-panel-title .fa-filter { color: #51B8AC; }
+
+.dc-insumo-panel-hint {
+    font-weight: 400;
+    font-size: .72rem;
+    color: rgba(255,255,255,.65);
+    text-transform: none;
+    letter-spacing: 0;
+    white-space: normal;
+}
+
+/* Selector de insumo dentro del header */
+.dc-insumo-sel-wrap {
+    flex: 1;
+    min-width: 240px;
+    max-width: 460px;
+}
+.dc-insumo-sel-main {
+    font-size: .84rem !important;
+    font-weight: 600 !important;
+    border-radius: 8px !important;
+    border: 2px solid rgba(81,184,172,.5) !important;
+    background: rgba(255,255,255,.96) !important;
+    color: var(--dc-verde) !important;
+    padding: 6px 12px !important;
+    transition: border-color .2s, box-shadow .2s;
+}
+.dc-insumo-sel-main:focus {
+    border-color: #51B8AC !important;
+    box-shadow: 0 0 0 3px rgba(81,184,172,.25) !important;
+    outline: none;
+}
+
+/* Cuerpo del panel: KPIs + gráfico */
+.dc-insumo-panel-body {
+    padding: 18px 20px 16px;
+    border-left: 4px solid var(--dc-verde-soft);
+    background: linear-gradient(180deg, rgba(81,184,172,.04) 0%, transparent 60%);
+}
+
 /* ── Select2 override ── */
 .select2-container--default .select2-selection--single,
 .select2-container--default .select2-selection--multiple {

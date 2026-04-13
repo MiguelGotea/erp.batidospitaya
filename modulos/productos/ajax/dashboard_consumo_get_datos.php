@@ -295,6 +295,16 @@ try {
     $sinMapeoSet   = [];
     $sucursalesSet = [];
 
+    // Pre-cargar nombres de sucursales (codigo => nombre)
+    $stmtNombresSuc = $conn->prepare("
+        SELECT codigo, nombre FROM sucursales
+    ");
+    $stmtNombresSuc->execute();
+    $nombresSucursales = [];  // [codigo] => nombre
+    foreach ($stmtNombresSuc->fetchAll(PDO::FETCH_ASSOC) as $sRow) {
+        $nombresSucursales[$sRow['codigo']] = $sRow['nombre'];
+    }
+
     foreach ($filas as $fila) {
         $codIng    = $fila['cod_ingrediente'];
         $codporcion = $fila['codporcion'];
@@ -527,12 +537,19 @@ try {
     }
     $picoGlobal = !empty($sumasPorSem) ? array_search(max($sumasPorSem), $sumasPorSem) : null;
 
+    // Construir mapa codigo => nombre para las sucursales presentes
+    $sucursalesNombresMap = [];
+    foreach ($sucursalesPresentes as $cod) {
+        $sucursalesNombresMap[$cod] = $nombresSucursales[$cod] ?? $cod;
+    }
+
     echo json_encode([
         'ok'                 => true,
         'consumo'            => $listaConsumo,
         'sin_mapeo'          => $sinMapeo,
         'semanas'            => array_values($semanasRango),
         'sucursales'         => $sucursalesPresentes,
+        'sucursales_nombres' => $sucursalesNombresMap,
         'total_general'      => round($totalGeneral, 4),
         'proyeccion_total'   => round($proyTotal, 4),
         'semana_pico_global' => $picoGlobal,

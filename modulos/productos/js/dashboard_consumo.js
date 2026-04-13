@@ -38,13 +38,6 @@ function inicializarSelect2() {
         allowClear: true,
         width: '100%',
     });
-    // Selector de insumo en el panel de análisis (se puebla al cargar datos)
-    $('#chartInsumoSel').select2({
-        placeholder: '— Selecciona un insumo —',
-        allowClear: true,
-        width: '100%',
-        dropdownAutoWidth: true,
-    });
 }
 
 
@@ -473,11 +466,8 @@ function renderInsumoSel(data) {
         $('#chartPlaceholder').removeClass('d-none');
         $('#chartWrap').addClass('d-none');
         if (chartTendencia) { chartTendencia.destroy(); chartTendencia = null; }
-        $('#tituloTendencia').html('<i class="fas fa-chart-line me-2"></i>Análisis de Insumo');
+        $('#tituloTendencia').html('<i class="fas fa-chart-line me-2"></i>Tendencia');
     }
-
-    // Notificar a Select2 que hay nuevas opciones
-    $sel.trigger('change.select2');
 }
 
 /* ── Selector de insumos en heatmap ─────────────────────── */
@@ -513,6 +503,8 @@ function renderHeatmap(data, idInsumo) {
 
     const sucursales  = data.sucursales;
     const semanas     = data.semanas;
+    // Mapa codigo -> nombre (fallback al codigo si no existe)
+    const nombres     = data.sucursales_nombres || {};
 
     // Valor máximo para normalizar
     let maxVal = 0;
@@ -523,10 +515,11 @@ function renderHeatmap(data, idInsumo) {
         });
     });
 
-    // Encabezados: sucursales
+    // Encabezados: nombres de sucursales (no códigos)
     let theadHtml = '<tr><th>Semana</th>';
     sucursales.forEach(suc => {
-        theadHtml += `<th>${escHtml(suc)}</th>`;
+        const nombreLocal = nombres[suc] || suc;
+        theadHtml += `<th title="${escHtml(suc)}">${escHtml(nombreLocal)}</th>`;
     });
     theadHtml += '<th>Total Sem.</th></tr>';
 
@@ -536,10 +529,11 @@ function renderHeatmap(data, idInsumo) {
         let totalSem = 0;
         let fila = `<tr><td class="fw-bold">${s.numero_semana}</td>`;
         sucursales.forEach(suc => {
+            const nombreLocal = nombres[suc] || suc;
             const v = item.desglose_semxsuc[s.numero_semana]?.[suc] || 0;
             totalSem += v;
             const intensidad = maxVal > 0 ? Math.ceil((v / maxVal) * 10) : 0;
-            fila += `<td class="hm-${intensidad}" title="${suc}: ${formatNum(v)} ${escHtml(item.unidad)}">${v > 0 ? formatNum(v) : ''}</td>`;
+            fila += `<td class="hm-${intensidad}" title="${escHtml(nombreLocal)}: ${formatNum(v)} ${escHtml(item.unidad)}">${v > 0 ? formatNum(v) : ''}</td>`;
         });
         fila += `<td class="fw-bold text-end">${formatNum(totalSem)}</td></tr>`;
         tbodyHtml += fila;
@@ -564,34 +558,6 @@ function renderHeatmap(data, idInsumo) {
         </div>
     `;
     $cont.html(html);
-}
-
-/* ── Selector de insumo en panel de análisis ─────────────── */
-function renderInsumoSel(data) {
-    const $sel    = $('#chartInsumoSel');
-    const prevVal = $sel.val();   // conservar selección si ya había una al recargar
-
-    $sel.empty().append('<option value="">— Selecciona un insumo —</option>');
-    data.consumo.forEach(item => {
-        const tipoLabel = item.es_global ? ' [Global]' : '';
-        $sel.append(`<option value="${item.id}">${escHtml(item.nombre)}${tipoLabel}</option>`);
-    });
-
-    // Notificar a Select2 si está activo
-    if ($sel.hasClass('select2-hidden-accessible')) {
-        $sel.trigger('change.select2');
-    }
-
-    // Restaurar selección anterior si sigue existiendo en la lista
-    if (prevVal && $sel.find(`option[value="${prevVal}"]`).length) {
-        $sel.val(prevVal).trigger('change');
-    } else {
-        // Estado inicial: mostrar placeholder y resetear título
-        $('#chartPlaceholder').removeClass('d-none');
-        $('#chartWrap').addClass('d-none');
-        if (chartTendencia) { chartTendencia.destroy(); chartTendencia = null; }
-        $('#tituloTendencia').html('<i class="fas fa-chart-line me-2"></i>Análisis de Insumo');
-    }
 }
 
 /* ── Modal Desglose ──────────────────────────────────────── */

@@ -128,63 +128,82 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                 <!-- ══════════════════════════════════════════ -->
                 <div id="panelDatos" class="d-none">
 
-                    <!-- KPI Cards -->
-                    <div class="row g-3 mb-3" id="kpiRow">
-                        <div class="col-6 col-lg-4">
-                            <div class="dc-kpi-card" id="kpiTotal">
-                                <div class="dc-kpi-icon" style="color:#51B8AC"><i class="fas fa-boxes"></i></div>
-                                <div class="dc-kpi-label">Consumo Total (período)</div>
-                                <div class="dc-kpi-valor" id="kpiTotalVal">—</div>
-                                <div class="dc-kpi-sub" id="kpiTotalSub"></div>
-                            </div>
-                        </div>
-                        <div class="col-6 col-lg-4">
-                            <div class="dc-kpi-card" id="kpiPico">
-                                <div class="dc-kpi-icon" style="color:#e67e22"><i class="fas fa-fire"></i></div>
-                                <div class="dc-kpi-label">Semana de Mayor Consumo</div>
-                                <div class="dc-kpi-valor" id="kpiPicoVal">—</div>
-                                <div class="dc-kpi-sub" id="kpiPicoSub"></div>
-                            </div>
-                        </div>
-                        <div class="col-6 col-lg-4">
-                            <div class="dc-kpi-card" id="kpiProy">
-                                <div class="dc-kpi-icon" style="color:#27ae60"><i class="fas fa-chart-line"></i></div>
-                                <div class="dc-kpi-label">Proyección · Próx. 4 Semanas</div>
-                                <div class="dc-kpi-valor" id="kpiProyVal">—</div>
-                                <div class="dc-kpi-sub" id="kpiProySub"></div>
-                            </div>
-                        </div>
-                    </div>
+                    <!-- ═══════════════════════════════════════════════════════ -->
+                    <!-- PANEL INSUMO: Selector + KPIs + Gráfico (todo ligado)  -->
+                    <!-- ═══════════════════════════════════════════════════════ -->
+                    <div class="dc-insumo-panel mb-3">
 
-                    <!-- Panel de Análisis por Insumo ——————————————————————————— -->
-                    <div class="card border-0 shadow-sm mb-3" id="cardTendencia">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
-                                <h6 class="dc-seccion-titulo mb-0" id="tituloTendencia">
-                                    <i class="fas fa-chart-line me-2"></i>Análisis de Insumo
-                                </h6>
-                                <div class="d-flex gap-2 align-items-center flex-wrap">
-                                    <select class="form-select form-select-sm dc-select" id="chartInsumoSel"
-                                        style="min-width:220px;max-width:360px;font-size:.78rem">
-                                        <option value="">— Selecciona un insumo —</option>
-                                    </select>
-                                    <button class="btn btn-xs dc-chip active" id="chartModoBarra" data-modo="bar">
-                                        <i class="fas fa-chart-bar me-1"></i>Barras
-                                    </button>
-                                    <button class="btn btn-xs dc-chip" id="chartModoLinea" data-modo="line">
-                                        <i class="fas fa-chart-line me-1"></i>Línea
-                                    </button>
+                        <!-- Encabezado con selector de insumo -->
+                        <div class="dc-insumo-panel-header">
+                            <div class="dc-insumo-panel-title">
+                                <i class="fas fa-filter me-2"></i>
+                                Insumo Analizado
+                                <span class="dc-insumo-panel-hint">— selecciona para ver KPIs, tendencia y métricas</span>
+                            </div>
+                            <div class="dc-insumo-sel-wrap">
+                                <select class="form-select form-select-sm dc-select dc-insumo-sel-main" id="chartInsumoSel">
+                                    <option value="">— Selecciona un insumo —</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- KPI Cards (controladas por el selector) -->
+                        <div class="dc-insumo-panel-body">
+                            <div class="row g-3 mb-3" id="kpiRow">
+                                <div class="col-6 col-lg-4">
+                                    <div class="dc-kpi-card" id="kpiTotal">
+                                        <div class="dc-kpi-icon" style="color:#51B8AC"><i class="fas fa-boxes"></i></div>
+                                        <div class="dc-kpi-label">Consumo Total (período)</div>
+                                        <div class="dc-kpi-valor" id="kpiTotalVal">—</div>
+                                        <div class="dc-kpi-sub" id="kpiTotalSub"></div>
+                                    </div>
+                                </div>
+                                <div class="col-6 col-lg-4">
+                                    <div class="dc-kpi-card" id="kpiPico">
+                                        <div class="dc-kpi-icon" style="color:#e67e22"><i class="fas fa-fire"></i></div>
+                                        <div class="dc-kpi-label">Semana de Mayor Consumo</div>
+                                        <div class="dc-kpi-valor" id="kpiPicoVal">—</div>
+                                        <div class="dc-kpi-sub" id="kpiPicoSub"></div>
+                                    </div>
+                                </div>
+                                <div class="col-6 col-lg-4">
+                                    <div class="dc-kpi-card" id="kpiProy">
+                                        <div class="dc-kpi-icon" style="color:#27ae60"><i class="fas fa-chart-line"></i></div>
+                                        <div class="dc-kpi-label">Proyección · Próx. 4 Semanas</div>
+                                        <div class="dc-kpi-valor" id="kpiProyVal">—</div>
+                                        <div class="dc-kpi-sub" id="kpiProySub"></div>
+                                    </div>
                                 </div>
                             </div>
-                            <div id="chartPlaceholder" class="text-center py-5" style="color:#b0c8c5">
-                                <i class="fas fa-hand-point-up fa-2x mb-2 d-block"></i>
-                                <span class="text-muted" style="font-size:.85rem">Selecciona un insumo de la lista para ver su tendencia de consumo por semana.</span>
+
+                            <!-- Gráfico de Tendencia -->
+                            <div class="card border-0" id="cardTendencia" style="background:transparent">
+                                <div class="card-body px-0 pb-0 pt-2">
+                                    <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+                                        <h6 class="dc-seccion-titulo mb-0" id="tituloTendencia">
+                                            <i class="fas fa-chart-line me-2"></i>Tendencia
+                                        </h6>
+                                        <div class="d-flex gap-2 align-items-center">
+                                            <button class="btn btn-xs dc-chip active" id="chartModoBarra" data-modo="bar">
+                                                <i class="fas fa-chart-bar me-1"></i>Barras
+                                            </button>
+                                            <button class="btn btn-xs dc-chip" id="chartModoLinea" data-modo="line">
+                                                <i class="fas fa-chart-line me-1"></i>Línea
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div id="chartPlaceholder" class="text-center py-5" style="color:#b0c8c5">
+                                        <i class="fas fa-hand-point-up fa-2x mb-2 d-block"></i>
+                                        <span class="text-muted" style="font-size:.85rem">Selecciona un insumo para ver su tendencia de consumo por semana.</span>
+                                    </div>
+                                    <div class="dc-chart-wrap d-none" id="chartWrap">
+                                        <canvas id="chartTendencia"></canvas>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="dc-chart-wrap d-none" id="chartWrap">
-                                <canvas id="chartTendencia"></canvas>
-                            </div>
-                        </div>
-                    </div>
+
+                        </div><!-- /dc-insumo-panel-body -->
+                    </div><!-- /dc-insumo-panel -->
 
                     <!-- Tab Bar -->
                     <ul class="nav dc-tabs mb-2" id="dashTabs" role="tablist">
