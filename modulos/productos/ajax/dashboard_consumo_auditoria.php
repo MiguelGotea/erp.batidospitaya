@@ -25,10 +25,10 @@ if (!tienePermiso('dashboard_consumo_insumos', 'vista', $cargoOperario)) {
     exit();
 }
 
-$idPP        = isset($_POST['id_presentacion'])  ? (int)$_POST['id_presentacion']  : 0;
-$numDesde    = isset($_POST['semana_desde_num']) ? (int)$_POST['semana_desde_num'] : 0;
-$numHasta    = isset($_POST['semana_hasta_num']) ? (int)$_POST['semana_hasta_num'] : 0;
-$sucursalesPost = isset($_POST['sucursales'])    ? (array)$_POST['sucursales']     : [];
+$idPP           = isset($_POST['id_presentacion'])  ? (int)$_POST['id_presentacion']  : 0;
+$numDesde       = isset($_POST['semana_desde_num']) ? (int)$_POST['semana_desde_num'] : 0;
+$numHasta       = isset($_POST['semana_hasta_num']) ? (int)$_POST['semana_hasta_num'] : 0;
+$sucursalesPost = isset($_POST['sucursales'])       ? (array)$_POST['sucursales']     : [];
 
 if (!$idPP || !$numDesde || !$numHasta) {
     echo json_encode(['ok' => false, 'msg' => 'Parámetros incompletos.']);
@@ -42,9 +42,9 @@ try {
     $stmtRango = $conn->prepare("
         SELECT MIN(fecha_inicio) AS fecha_desde, MAX(fecha_fin) AS fecha_hasta
         FROM SemanasSistema
-        WHERE numero_semana BETWEEN :d AND :h
+        WHERE numero_semana BETWEEN ? AND ?
     ");
-    $stmtRango->execute([':d' => $numDesde, ':h' => $numHasta]);
+    $stmtRango->execute([$numDesde, $numHasta]);
     $rango = $stmtRango->fetch(PDO::FETCH_ASSOC);
 
     if (!$rango || !$rango['fecha_desde']) {
@@ -57,12 +57,13 @@ try {
         SELECT pp.id, pp.Nombre, pp.cantidad AS pp_cantidad,
                pp.Id_receta_producto,
                pp.id_producto_maestro,
+               pp.id_unidad_producto,
                u.nombre AS unidad_erp
         FROM producto_presentacion pp
         LEFT JOIN unidad_producto u ON u.id = pp.id_unidad_producto
-        WHERE pp.id = :id
+        WHERE pp.id = ?
     ");
-    $stmtPP->execute([':id' => $idPP]);
+    $stmtPP->execute([$idPP]);
     $ppDat = $stmtPP->fetch(PDO::FETCH_ASSOC);
 
     if (!$ppDat) {
@@ -70,119 +71,69 @@ try {
         exit();
     }
 
-    $ppCantBase  = max((float)$ppDat['pp_cantidad'], 0.001);
-    $esGlobal    = !empty($ppDat['Id_receta_producto']);
-    $idMaestro   = (int)$ppDat['id_producto_maestro'];
+    $ppCantBase = max((float)$ppDat['pp_cantidad'], 0.001);
+    $esGlobal   = !empty($ppDat['Id_receta_producto']);
+    $idMaestro  = (int)$ppDat['id_producto_maestro'];
+    $idUnidERP  = (int)$ppDat['id_unidad_producto'];
 
     /* ── CodCotizacion(es) que apuntan a esta presentación ── */
     $stmtCods = $conn->prepare("
         SELECT d.CodCotizacion
         FROM diccionario_productos_legado d
-        WHERE d.id_producto_presentacion = :id
+        WHERE d.id_producto_presentacion = ?
     ");
-    $stmtCods->execute([':id' => $idPP]);
+    $stmtCods->execute([$idPP]);
     $codCots = array_column($stmtCods->fetchAll(PDO::FETCH_ASSOC), 'CodCotizacion');
 
     if (empty($codCots)) {
-        echo json_encode(['ok' => false, 'msg' => 'Esta presentación no tiene CodCotizacion mapeado.']);
+        echo json_encode(['ok' => false, 'msg' => 'Esta presentación no tiene CodCotizacion mapeado en el diccionario.']);
         exit();
     }
 
-    /* ── Query ventas individuales (sin GROUP BY) ─────────── */
+    /* ── Construir query de ventas (todo positional ?) ──────
+       Nota: el filtro de sucursales también usa ? para evitar
+       mezclar named y positional en PDO.
+    --------------------------------------------------------- */
+    $phCod    = implode(',', array_fill(0, count($codCots), '?'));
     $whereSuc = '';
-    $params = [
-        ':fecha_desde' => $rango['fecha_desde'],
-        ':fecha_hasta' => $rango['fecha_hasta'],
-        ':sem_desde'   => $numDesde,
-        ':sem_hasta'   => $numHasta,
-    ];
+    $sucParams = [];
     if (!empty($sucursalesPost)) {
-        $phSuc = [];
-        foreach ($sucursalesPost as $i => $s) {
-            $k = ':suc' . $i;
-            $phSuc[]    = $k;
-            $params[$k] = $s;
-        }
-        $whereSuc = ' AND v.local IN (' . implode(',', $phSuc) . ')';
+        $whereSuc  = ' AND v.local IN (' . implode(',', array_fill(0, count($sucursalesPost), '?')) . ')';
+        $sucParams = array_values($sucursalesPost);
     }
 
-    // Construir IN para CodCotizacion
-    $phCod = implode(',', array_fill(0, count($codCots), '?'));
-    // Necesitamos mezclar params: usamos statement separado
-
-    $sqlVentas = "
+    $sql = "
         SELECT
             v.Folio,
             v.Fecha,
-            v.Semana       AS semana,
-            v.local        AS sucursal,
-            b.Nombre       AS nombre_batido,
+            v.Semana          AS semana,
+            v.local           AS sucursal,
+            b.Nombre          AS nombre_batido,
             v.CodProducto,
-            v.Cantidad     AS ventas,
+            v.Cantidad        AS ventas,
             sr.CodIngrediente,
-            ing.Nombre     AS nombre_ingrediente,
-            ing.Unidad     AS unidad_access,
-            sr.Cantidad    AS cant_receta,
+            ing.Nombre        AS nombre_ingrediente,
+            ing.Unidad        AS unidad_access,
+            sr.Cantidad       AS cant_receta,
             sr.codporcion,
             (v.Cantidad * sr.Cantidad) AS cant_total_raw
         FROM VentasGlobalesAccessCSV v
-        INNER JOIN SubReceta sr ON sr.CodBatido = v.CodProducto
+        INNER JOIN SubReceta sr     ON sr.CodBatido        = v.CodProducto
         INNER JOIN DBIngredientes ing ON ing.CodIngrediente = sr.CodIngrediente
-        LEFT  JOIN Batidos b ON b.CodBatido = v.CodProducto
+        LEFT  JOIN Batidos b        ON b.CodBatido         = v.CodProducto
         WHERE v.Anulado = 0
-          AND v.Fecha BETWEEN :fecha_desde AND :fecha_hasta
-          AND v.Semana BETWEEN :sem_desde AND :sem_hasta
-          AND v.CodProducto IS NOT NULL
-          $whereSuc
-          AND (
-              sr.codporcion IN ($phCod)
-              OR (
-                  sr.codporcion IS NULL
-                  AND sr.CodIngrediente IN (
-                      SELECT c.CodIngrediente
-                      FROM Cotizaciones c
-                      WHERE c.CodCotizacion IN ($phCod)
-                  )
-              )
-          )
-        ORDER BY v.Semana ASC, v.local ASC, v.Fecha ASC, v.Folio ASC
-        LIMIT 5000
-    ";
-
-    // Preparar con parámetros mixtos (named + positional no mezclan en PDO)
-    // Convertir todo a positional
-    $sqlPos  = "
-        SELECT
-            v.Folio,
-            v.Fecha,
-            v.Semana       AS semana,
-            v.local        AS sucursal,
-            b.Nombre       AS nombre_batido,
-            v.CodProducto,
-            v.Cantidad     AS ventas,
-            sr.CodIngrediente,
-            ing.Nombre     AS nombre_ingrediente,
-            ing.Unidad     AS unidad_access,
-            sr.Cantidad    AS cant_receta,
-            sr.codporcion,
-            (v.Cantidad * sr.Cantidad) AS cant_total_raw
-        FROM VentasGlobalesAccessCSV v
-        INNER JOIN SubReceta sr ON sr.CodBatido = v.CodProducto
-        INNER JOIN DBIngredientes ing ON ing.CodIngrediente = sr.CodIngrediente
-        LEFT  JOIN Batidos b ON b.CodBatido = v.CodProducto
-        WHERE v.Anulado = 0
-          AND v.Fecha BETWEEN ? AND ?
-          AND v.Semana BETWEEN ? AND ?
+          AND v.Fecha   BETWEEN ? AND ?
+          AND v.Semana  BETWEEN ? AND ?
           AND v.CodProducto IS NOT NULL
           {$whereSuc}
           AND (
-              sr.codporcion IN ($phCod)
+              sr.codporcion IN ({$phCod})
               OR (
                   sr.codporcion IS NULL
                   AND sr.CodIngrediente IN (
                       SELECT c.CodIngrediente
                       FROM Cotizaciones c
-                      WHERE c.CodCotizacion IN ($phCod)
+                      WHERE c.CodCotizacion IN ({$phCod})
                   )
               )
           )
@@ -190,26 +141,22 @@ try {
         LIMIT 5000
     ";
 
-    // Armar array positional
+    // Construir array de parámetros en el mismo orden que los ?
     $positional = [
-        $rango['fecha_desde'],
+        $rango['fecha_desde'],  // v.Fecha BETWEEN ? ...
         $rango['fecha_hasta'],
-        $numDesde,
+        $numDesde,              // v.Semana BETWEEN ? ...
         $numHasta,
     ];
-    if (!empty($sucursalesPost)) {
-        foreach ($sucursalesPost as $s) $positional[] = $s;
-    }
-    // codporcion IN
-    foreach ($codCots as $c) $positional[] = $c;
-    // CodIngrediente IN (subquery)
-    foreach ($codCots as $c) $positional[] = $c;
+    foreach ($sucParams as $s) $positional[] = $s;       // sucursales IN (?)
+    foreach ($codCots  as $c) $positional[] = $c;        // codporcion IN (?)
+    foreach ($codCots  as $c) $positional[] = $c;        // subquery CodCotizacion IN (?)
 
-    $stmtV = $conn->prepare($sqlPos);
+    $stmtV = $conn->prepare($sql);
     $stmtV->execute($positional);
     $ventas = $stmtV->fetchAll(PDO::FETCH_ASSOC);
 
-    /* ── Cargar conversiones y unidades (igual que get_datos) */
+    /* ── Pre-cargar unidades y conversiones ─────────────── */
     $stmtAllU = $conn->prepare("SELECT id, nombre, abreviado, nombres_opcionales FROM unidad_producto");
     $stmtAllU->execute();
     $todasUnidades = $stmtAllU->fetchAll(PDO::FETCH_ASSOC);
@@ -217,20 +164,21 @@ try {
     $unidadPorNombre = [];
     foreach ($todasUnidades as $u) {
         $uid = (int)$u['id'];
-        $unidadPorNombre[strtolower(trim($u['nombre']))]    = $uid;
-        $ak = strtolower(trim($u['abreviado'] ?? ''));
-        if ($ak) $unidadPorNombre[$ak] = $uid;
+        $unidadPorNombre[strtolower(trim($u['nombre']))] = $uid;
+        $abr = strtolower(trim($u['abreviado'] ?? ''));
+        if ($abr) $unidadPorNombre[$abr] = $uid;
         if (!empty($u['nombres_opcionales'])) {
             foreach (preg_split('/[,;|]+/', $u['nombres_opcionales']) as $alias) {
-                $ak2 = strtolower(trim($alias));
-                if ($ak2) $unidadPorNombre[$ak2] = $uid;
+                $ak = strtolower(trim($alias));
+                if ($ak) $unidadPorNombre[$ak] = $uid;
             }
         }
     }
-    $unidadPorId = [];
-    foreach ($todasUnidades as $u) $unidadPorId[(int)$u['id']] = $u;
 
-    $stmtConv = $conn->prepare("SELECT id_unidad_producto_inicio, id_unidad_producto_final, cantidad FROM conversion_unidad_producto");
+    $stmtConv = $conn->prepare("
+        SELECT id_unidad_producto_inicio, id_unidad_producto_final, cantidad
+        FROM conversion_unidad_producto
+    ");
     $stmtConv->execute();
     $convIndex = [];
     foreach ($stmtConv->fetchAll(PDO::FETCH_ASSOC) as $cv) {
@@ -241,62 +189,67 @@ try {
         $convIndex[$fin][$ini] = ($fac != 0) ? 1 / $fac : 0;
     }
 
-    /* ── Unidad ERP de la presentación ───────────────────── */
-    $stmtUid = $conn->prepare("SELECT id_unidad_producto FROM producto_presentacion WHERE id = ?");
-    $stmtUid->execute([$idPP]);
-    $idUnidERP = (int)($stmtUid->fetchColumn() ?: 0);
-
-    /* ── Presentaciones del maestro para nivel 2/3 ───────── */
+    /* ── Presentaciones del maestro para niveles 2/3 ─────── */
     $presentPorMaestro = [];
     if ($idMaestro) {
         $stmtPM = $conn->prepare("
-            SELECT pp.id, pp.id_producto_maestro, pp.cantidad AS pp_cantidad,
-                   pp.id_unidad_producto, u.nombre AS unidad_nombre
+            SELECT pp.id, pp.cantidad AS pp_cantidad, pp.id_unidad_producto
             FROM producto_presentacion pp
-            LEFT JOIN unidad_producto u ON u.id = pp.id_unidad_producto
             WHERE pp.id_producto_maestro = ?
               AND pp.Id_receta_producto IS NULL
               AND pp.Activo = 'SI'
         ");
         $stmtPM->execute([$idMaestro]);
         foreach ($stmtPM->fetchAll(PDO::FETCH_ASSOC) as $pp) {
-            $presentPorMaestro[$idMaestro][(int)$pp['id_unidad_producto']] = $pp;
+            $presentPorMaestro[(int)$pp['id_unidad_producto']] = $pp;
         }
     }
 
-    /* ── Calcular detalle por fila ───────────────────────── */
-    $filas = [];
+    /* ── Set de codCots para detectar P1 ─────────────────── */
     $codCotSet = array_flip(array_map('strval', $codCots));
 
+    /* ── Calcular detalle fila por fila ─────────────────── */
+    $filas = [];
+
     foreach ($ventas as $v) {
-        $unidAcc  = $v['unidad_access'] ?? '';
-        $codporc  = $v['codporcion'];
-        $esP1     = isset($codCotSet[(string)$codporc]);
+        $unidAcc   = $v['unidad_access'] ?? '';
+        $codporc   = $v['codporcion'];
+        $cantTotal = (float)$v['cant_total_raw'];
 
-        // Resolver factor
-        $factor   = 1.0;
-        $ppCant   = $ppCantBase;
+        // ¿Es P1? (codporcion apunta directamente a esta presentación)
+        $esP1 = !empty($codporc) && isset($codCotSet[(string)$codporc]);
+
+        $factor     = 1.0;
+        $ppCant     = $ppCantBase;
         $nivelUsado = 'mismo';
+        $consumoCrudo = 0.0;
+        $consumoFinal = 0.0;
 
-        if (!$esGlobal) {
+        if ($esGlobal) {
+            $consumoCrudo = $cantTotal;
+            $consumoFinal = $cantTotal;
+            $nivelUsado   = 'global';
+        } else {
+            // Resolver factor de conversión de unidad
             $idUnidAcc = $unidadPorNombre[strtolower(trim($unidAcc))] ?? null;
+
             if ($idUnidAcc && $idUnidAcc !== $idUnidERP) {
                 $factorDir = $convIndex[$idUnidAcc][$idUnidERP] ?? null;
                 if ($factorDir !== null) {
                     $factor     = $factorDir;
                     $nivelUsado = 'conversion_directa';
                 } else {
-                    // Nivel 2
-                    $ppAlt = $presentPorMaestro[$idMaestro][$idUnidAcc] ?? null;
+                    // Nivel 2: presentación del maestro con la unidad de Access
+                    $ppAlt = $presentPorMaestro[$idUnidAcc] ?? null;
                     if ($ppAlt) {
                         $ppCant     = max((float)$ppAlt['pp_cantidad'], 0.001);
                         $factor     = 1.0;
                         $nivelUsado = 'nivel2_maestro';
                     } else {
-                        // Nivel 3
+                        // Nivel 3: buscar via conversiones disponibles
                         if (isset($convIndex[$idUnidAcc])) {
                             foreach ($convIndex[$idUnidAcc] as $idDest => $fconv) {
-                                $ppC = $presentPorMaestro[$idMaestro][$idDest] ?? null;
+                                $ppC = $presentPorMaestro[$idDest] ?? null;
                                 if ($ppC) {
                                     $ppCant     = max((float)$ppC['pp_cantidad'], 0.001);
                                     $factor     = $fconv;
@@ -310,54 +263,49 @@ try {
                 }
             }
 
-            $cantTotal    = (float)$v['cant_total_raw'];
             $consumoCrudo = ($cantTotal * $factor) / $ppCant;
+            // P1: redondear al 0.5 más cercano
             $consumoFinal = $esP1 ? (round($consumoCrudo * 2) / 2) : $consumoCrudo;
-        } else {
-            $cantTotal    = (float)$v['cant_total_raw'];
-            $consumoCrudo = $cantTotal;
-            $consumoFinal = $cantTotal;
-            $nivelUsado   = 'global';
         }
 
         $filas[] = [
-            'folio'           => $v['Folio'] ?? '—',
-            'fecha'           => $v['Fecha'],
-            'semana'          => (int)$v['semana'],
-            'sucursal'        => $v['sucursal'],
-            'nombre_batido'   => $v['nombre_batido'] ?? $v['CodProducto'],
+            'folio'              => $v['Folio'] ?? '—',
+            'fecha'              => $v['Fecha'],
+            'semana'             => (int)$v['semana'],
+            'sucursal'           => $v['sucursal'],
+            'nombre_batido'      => $v['nombre_batido'] ?? $v['CodProducto'],
             'nombre_ingrediente' => $v['nombre_ingrediente'],
-            'unidad_access'   => $unidAcc,
-            'codporcion'      => $codporc,
-            'cant_receta'     => (float)$v['cant_receta'],
-            'ventas'          => (float)$v['ventas'],
-            'cant_total'      => round($cantTotal, 4),
-            'factor'          => round($factor, 6),
-            'pp_cantidad'     => $ppCant,
-            'consumo_crudo'   => round($consumoCrudo, 4),
-            'consumo_final'   => $consumoFinal,
-            'es_p1'           => $esP1,
-            'nivel'           => $nivelUsado,
-            'genera_decimal'  => $esP1 && (abs($consumoCrudo - $consumoFinal) > 0.001),
+            'unidad_access'      => $unidAcc,
+            'codporcion'         => $codporc,
+            'cant_receta'        => (float)$v['cant_receta'],
+            'ventas'             => (float)$v['ventas'],
+            'cant_total'         => round($cantTotal, 4),
+            'factor'             => round($factor, 6),
+            'pp_cantidad'        => $ppCant,
+            'consumo_crudo'      => round($consumoCrudo, 4),
+            'consumo_final'      => $consumoFinal,
+            'es_p1'              => $esP1,
+            'nivel'              => $nivelUsado,
+            'genera_decimal'     => $esP1 && (abs($consumoCrudo - $consumoFinal) > 0.001),
         ];
     }
 
     echo json_encode([
-        'ok'         => true,
-        'presentacion' => [
-            'id'       => $idPP,
-            'nombre'   => $ppDat['Nombre'],
-            'unidad'   => $ppDat['unidad_erp'],
-            'pp_cant'  => $ppCantBase,
-            'es_global'=> $esGlobal,
+        'ok'            => true,
+        'presentacion'  => [
+            'id'        => $idPP,
+            'nombre'    => $ppDat['Nombre'],
+            'unidad'    => $ppDat['unidad_erp'],
+            'pp_cant'   => $ppCantBase,
+            'es_global' => $esGlobal,
         ],
-        'filas'      => $filas,
-        'total_filas'=> count($filas),
+        'filas'         => $filas,
+        'total_filas'   => count($filas),
         'total_consumo' => round(array_sum(array_column($filas, 'consumo_final')), 4),
-        'cod_cots'   => $codCots,
+        'cod_cots'      => $codCots,
     ]);
 
 } catch (Exception $e) {
     http_response_code(500);
-    echo json_encode(['ok' => false, 'msg' => 'Error: ' . $e->getMessage()]);
+    echo json_encode(['ok' => false, 'msg' => 'Error interno: ' . $e->getMessage()]);
 }
