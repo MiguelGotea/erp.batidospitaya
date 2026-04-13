@@ -55,9 +55,8 @@ if (!tienePermiso('recetario_access_traducido', 'vista', $cargoOperario)) {
         /* ── Panel izquierdo — Menú de productos ─────────────────── */
         .vrl-menu {
             background: #fff;
-            border-radius: 16px;
-            box-shadow: 0 2px 12px rgba(0,0,0,.08);
-            /* overflow:hidden eliminado — clipaba los desplegables de grupo */
+            border-radius: 12px;
+            box-shadow: 0 1px 6px rgba(0,0,0,.10);
             overflow: visible;
             position: sticky;
             top: 16px;
@@ -67,19 +66,20 @@ if (!tienePermiso('recetario_access_traducido', 'vista', $cargoOperario)) {
         }
 
         .vrl-menu-header {
-            background: linear-gradient(135deg, #1a3a2a 0%, #2d6a4f 100%);
-            padding: 16px 20px 14px;
+            background: #1a3a2a;
+            padding: 14px 18px 12px;
             color: #fff;
             flex-shrink: 0;
+            border-radius: 12px 12px 0 0;
         }
 
         .vrl-menu-header h6 {
-            font-size: .8rem;
+            font-size: .75rem;
             font-weight: 700;
-            letter-spacing: .08em;
+            letter-spacing: .07em;
             text-transform: uppercase;
             margin: 0 0 10px;
-            color: #95d5b2;
+            color: #74c69d;
         }
 
         .vrl-search-wrap {
@@ -274,10 +274,10 @@ if (!tienePermiso('recetario_access_traducido', 'vista', $cargoOperario)) {
         }
 
         .vrl-chip.selected {
-            background: linear-gradient(135deg, #1b4332, #2d6a4f);
-            border-color: #1b4332;
+            background: #1a3a2a;
+            border-color: #1a3a2a;
             color: #fff;
-            box-shadow: 0 4px 12px rgba(27,67,50,.3);
+            box-shadow: 0 2px 6px rgba(26,58,42,.25);
         }
 
         .vrl-chip .chip-code {
@@ -309,85 +309,79 @@ if (!tienePermiso('recetario_access_traducido', 'vista', $cargoOperario)) {
 
         .badge-pedidosya i { font-size: .6rem; }
 
-        /* ── Card batido seleccionado ─────────────────────────────── */
-        .vrl-card-producto {
-            background: linear-gradient(135deg, #1b4332 0%, #2d6a4f 50%, #40916c 100%);
-            border-radius: 14px;
-            padding: 16px 22px;
-            margin-bottom: 14px;
+        /* ── Barra producto activo (single row) ─────────────────── */
+        .vrl-barra-producto {
+            background: #1a3a2a;
+            border-radius: 10px;
+            padding: 10px 16px;
+            margin-bottom: 12px;
             color: #fff;
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            flex-wrap: wrap;
             gap: 12px;
+            flex-wrap: wrap;
         }
 
-        .vrl-card-producto .prod-nombre {
-            font-size: 1.15rem;
-            font-weight: 800;
-            line-height: 1.2;
+        .vrl-barra-producto .bp-nombre {
+            font-size: .95rem;
+            font-weight: 700;
+            flex: 1;
         }
 
-        .vrl-card-producto .prod-codigo {
+        .vrl-barra-producto .bp-codigo {
             font-family: 'Courier New', monospace;
-            font-size: .8rem;
-            background: rgba(255,255,255,.15);
-            border-radius: 6px;
-            padding: 2px 10px;
-            display: inline-block;
-            margin-top: 4px;
+            font-size: .75rem;
+            background: rgba(255,255,255,.12);
+            border-radius: 5px;
+            padding: 2px 8px;
         }
 
-        .vrl-card-producto .prod-badges {
+        .vrl-barra-producto .bp-grupo {
+            font-size: .72rem;
+            color: rgba(255,255,255,.6);
+        }
+
+        /* Chips de versión dentro de la barra */
+        .bp-chips {
             display: flex;
-            gap: 8px;
+            gap: 6px;
             flex-wrap: wrap;
             align-items: center;
         }
 
-        .vrl-card-producto .prod-meta {
-            font-size: .78rem;
-            color: rgba(255,255,255,.75);
-        }
-
-        .vrl-card-producto .prod-meta span {
-            color: #fff;
+        .bp-chip {
+            font-size: .75rem;
             font-weight: 600;
+            padding: 3px 11px;
+            border-radius: 20px;
+            border: 1.5px solid rgba(255,255,255,.3);
+            cursor: pointer;
+            color: rgba(255,255,255,.8);
+            transition: all .15s;
+            background: transparent;
+            font-family: 'Outfit', sans-serif;
+            white-space: nowrap;
         }
 
-        /* ── Barra resumen ────────────────────────────────────────── */
-        .vrl-resumen {
+        .bp-chip:hover {
+            background: rgba(255,255,255,.15);
+            color: #fff;
+        }
+
+        .bp-chip.active {
             background: #fff;
-            border-radius: 12px;
-            padding: 12px 20px;
-            margin-bottom: 14px;
-            display: flex;
-            gap: 20px;
-            align-items: center;
-            flex-wrap: wrap;
-            box-shadow: 0 1px 6px rgba(0,0,0,.06);
+            color: #1a3a2a;
+            border-color: #fff;
+            font-weight: 700;
         }
 
-        .vrl-resumen-item {
-            font-size: .8rem;
-            color: #555;
-        }
-
-        .vrl-resumen-item .num {
-            font-size: 1.15rem;
-            font-weight: 800;
-            color: #1b4332;
-        }
-
-        .vrl-resumen-item.warn .num { color: #e65100; }
-        .vrl-resumen-item.danger .num { color: #c62828; }
+        /* resumen bar eliminada */
 
         /* ── Tabla receta ─────────────────────────────────────────── */
         .vrl-table-wrap {
             background: #fff;
-            border-radius: 14px;
-            box-shadow: 0 2px 10px rgba(0,0,0,.07);
+            border-radius: 10px;
+            box-shadow: 0 1px 6px rgba(0,0,0,.08);
             overflow: hidden;
         }
 
@@ -402,38 +396,15 @@ if (!tienePermiso('recetario_access_traducido', 'vista', $cargoOperario)) {
             z-index: 2;
         }
 
-        /* Fila segmento */
-        .table-receta-light .seg-comanda th {
-            background: #1a237e;
-            color: #c5cae9;
-            font-size: .68rem;
-            font-weight: 600;
-            letter-spacing: .06em;
-            text-transform: uppercase;
-            padding: 5px 10px;
-            border: none;
-        }
-
-        .table-receta-light .seg-nuevo th {
-            background: #4a148c;
-            color: #ce93d8;
-            font-size: .68rem;
-            font-weight: 600;
-            letter-spacing: .06em;
-            text-transform: uppercase;
-            padding: 5px 10px;
-            border: none;
-        }
-
-        /* Fila de columnas */
+        /* Una sola fila de cabecera — sin segmentos */
         .table-receta-light .cols-row th {
             background: #1a3a2a;
             color: #fff;
-            font-size: .74rem;
+            font-size: .73rem;
             font-weight: 600;
             white-space: nowrap;
             vertical-align: middle;
-            padding: 8px 12px;
+            padding: 9px 12px;
             border: none;
         }
 
@@ -620,25 +591,13 @@ if (!tienePermiso('recetario_access_traducido', 'vista', $cargoOperario)) {
                 <!-- ══ Columna derecha — Contenido ══ -->
                 <main class="vrl-content" id="vrlContent">
 
-                    <!-- Panel versiones (visible cuando se elige un producto) -->
-                    <div class="vrl-versiones-panel d-none" id="panelVersiones">
-                        <div class="vrl-versiones-title">
-                            <i class="fas fa-tag me-1"></i>
-                            Selecciona una versión / tamaño
-                        </div>
-                        <div class="vrl-chips-wrap" id="chipsVersiones"></div>
-                    </div>
-
-                    <!-- Card producto seleccionado -->
-                    <div class="vrl-card-producto d-none" id="cardProducto"></div>
-
-                    <!-- Resumen -->
-                    <div class="vrl-resumen d-none" id="barraResumen"></div>
+                    <!-- Barra producto + versiones (una sola fila compacta) -->
+                    <div class="vrl-barra-producto d-none" id="barraProducto"></div>
 
                     <!-- Spinner -->
                     <div class="vrl-spinner" id="spinnerReceta">
-                        <div class="spinner-border text-success mb-3" style="width:2.5rem;height:2.5rem"></div>
-                        <div style="font-size:.9rem">Cargando receta…</div>
+                        <div class="spinner-border text-success mb-3" style="width:2rem;height:2rem"></div>
+                        <div style="font-size:.88rem">Cargando receta…</div>
                     </div>
 
                     <!-- Empty state -->
@@ -652,24 +611,12 @@ if (!tienePermiso('recetario_access_traducido', 'vista', $cargoOperario)) {
                         <div class="table-responsive">
                             <table class="table table-hover mb-0 table-receta-light" id="tablaReceta">
                                 <thead>
-                                    <!-- Segmentos -->
-                                    <tr>
-                                        <th colspan="2" class="seg-comanda text-center"
-                                            style="background:#1a237e;color:#c5cae9;font-size:.68rem;font-weight:600;letter-spacing:.06em;padding:5px 10px;border:none;">
-                                            <i class="fas fa-receipt me-1"></i> Comanda Access
-                                        </th>
-                                        <th colspan="3" class="seg-nuevo text-center"
-                                            style="background:#4a148c;color:#ce93d8;font-size:.68rem;font-weight:600;letter-spacing:.06em;padding:5px 10px;border:none;">
-                                            <i class="fas fa-layer-group me-1"></i> Nuevo Sistema ERP
-                                        </th>
-                                    </tr>
-                                    <!-- Columnas -->
                                     <tr class="cols-row">
-                                        <th style="width:50px">Orden</th>
-                                        <th style="width:55px">Tipo</th>
-                                        <th class="td-sep-left">Insumo Receta</th>
-                                        <th style="width:80px;text-align:center">Cantidad</th>
-                                        <th style="min-width:180px">Presentación Uso</th>
+                                        <th style="width:46px">Orden</th>
+                                        <th style="width:52px">Tipo</th>
+                                        <th>Insumo Receta</th>
+                                        <th style="width:75px;text-align:center">Cantidad</th>
+                                        <th style="min-width:170px">Presentación Uso</th>
                                     </tr>
                                 </thead>
                                 <tbody id="tbodyReceta"></tbody>
@@ -847,54 +794,31 @@ if (!tienePermiso('recetario_access_traducido', 'vista', $cargoOperario)) {
         versionActual  = null;
 
         resetContenido();
-        renderVersiones(prod);
+
+        // FLUJO 2 CLICKS: auto-seleccionar la primera versión inmediatamente
+        // Los chips quedan dentro de la barra para cambiar sin click extra
+        const v0 = prod.versiones[0];
+        if (v0) seleccionarVersion(v0.CodBatido);
     }
 
-    // ── Renderizar chips de versión ────────────────────────────────────
-    function renderVersiones(prod) {
-        const chips  = document.getElementById('chipsVersiones');
-        const panel  = document.getElementById('panelVersiones');
-
-        let html = '';
-        prod.versiones.forEach(v => {
-            const esPY  = esPedidosYa(v.CodBatido);
-            const pyBadge = esPY
-                ? `<span class="badge-pedidosya"><i class="fas fa-motorcycle"></i> PedidosYa</span>`
-                : '';
-            const medida = v.Medida ? `<span class="chip-medida">· ${esc(v.Medida)}</span>` : '';
-            html += `
-            <div class="vrl-chip" onclick="seleccionarVersion('${esc(v.CodBatido)}')"
-                 id="chip-${esc(v.CodBatido)}">
-                <span class="chip-code">${esc(v.CodBatido)}</span>
-                ${medida}
-                ${pyBadge}
-            </div>`;
-        });
-
-        chips.innerHTML = html;
-        panel.classList.remove('d-none');
-
-        // Si solo hay una versión, seleccionarla automáticamente
-        if (prod.versiones.length === 1) {
-            seleccionarVersion(prod.versiones[0].CodBatido);
-        }
+    // ── Mapeo de etiquetas de tamaño ───────────────────────────
+    const MEDIDA_OZ = { 'gigantona': '20oz', 'mediano': '16oz', 'pequeño': '12oz' };
+    function labelMedida(medida) {
+        if (!medida) return '';
+        const oz = MEDIDA_OZ[medida.toLowerCase()];
+        return oz ? `${medida} ${oz}` : medida;
     }
 
-    // ── Seleccionar versión ───────────────────────────────────────────
+    // ── Seleccionar versión ──────────────────────────────────────
     function seleccionarVersion(codBatido) {
-        // Highlight chip
-        document.querySelectorAll('.vrl-chip.selected').forEach(el => el.classList.remove('selected'));
-        const chipEl = document.getElementById(`chip-${codBatido}`);
-        if (chipEl) chipEl.classList.add('selected');
-
-        // Buscar versión
         if (!productoActual) return;
         versionActual = productoActual.versiones.find(v => v.CodBatido === codBatido);
 
-        // Ocultar tabla anterior
+        // Actualizar barra con los chips de versión
+        renderBarraProducto(productoActual, codBatido);
+
+        // Mostrar spinner, limpiar tabla
         hide('panelTabla');
-        hide('cardProducto');
-        hide('barraResumen');
         hide('panelVacio');
         document.getElementById('spinnerReceta').style.display = 'block';
         document.getElementById('tbodyReceta').innerHTML = '';
@@ -905,8 +829,6 @@ if (!tienePermiso('recetario_access_traducido', 'vista', $cargoOperario)) {
             .then(data => {
                 document.getElementById('spinnerReceta').style.display = 'none';
                 if (!data.success) { show('panelVacio'); return; }
-                renderCardProducto(data.batido);
-                renderResumen(data.ingredientes);
                 renderTabla(data.ingredientes);
             })
             .catch(() => {
@@ -915,53 +837,40 @@ if (!tienePermiso('recetario_access_traducido', 'vista', $cargoOperario)) {
             });
     }
 
-    // ── Card producto ─────────────────────────────────────────────────
-    function renderCardProducto(b) {
-        const esPY = esPedidosYa(b.CodBatido);
-        const pyBadge = esPY
-            ? `<span class="badge-pedidosya"><i class="fas fa-motorcycle me-1"></i>PedidosYa</span>` : '';
-        const precioHTML = b.Precio
-            ? `<div class="prod-meta mt-1"><span>C$ ${b.Precio}</span></div>` : '';
+    // ── Barra compacta producto + chips de versión (una sola fila) ──────
+    function renderBarraProducto(prod, codActivo) {
+        const barra = document.getElementById('barraProducto');
 
-        document.getElementById('cardProducto').innerHTML = `
-            <div>
-                <div class="prod-nombre">${esc(b.Nombre)}</div>
-                <div class="prod-codigo">${esc(b.CodBatido)}${b.Medida ? ' · ' + esc(b.Medida) : ''}</div>
-                ${precioHTML}
-            </div>
-            <div class="prod-badges">
-                ${pyBadge}
-                <span style="font-size:.75rem;background:rgba(255,255,255,.15);border-radius:6px;padding:4px 12px;color:rgba(255,255,255,.85)">
-                    <i class="fas fa-layer-group me-1"></i>${esc(b.NombreGrupo)}
-                </span>
-            </div>`;
-        show('cardProducto');
-    }
+        // Chips de versión (solo si hay más de una)
+        let chipsHtml = '';
+        if (prod.versiones.length > 1) {
+            chipsHtml = `<div class="bp-chips">`;
+            prod.versiones.forEach(v => {
+                const esPY   = esPedidosYa(v.CodBatido);
+                const pyHtml = esPY ? ` <span class="badge-pedidosya" style="font-size:.55rem;padding:1px 5px"><i class="fas fa-motorcycle"></i></span>` : '';
+                const label  = labelMedida(v.Medida) || v.CodBatido;
+                const activo = v.CodBatido === codActivo ? 'active' : '';
+                chipsHtml += `<button class="bp-chip ${activo}" data-cod="${esc(v.CodBatido)}"
+                    onclick="seleccionarVersion('${esc(v.CodBatido)}')">${esc(label)}${pyHtml}</button>`;
+            });
+            chipsHtml += `</div>`;
+        } else if (prod.versiones.length === 1) {
+            const v = prod.versiones[0];
+            const esPY   = esPedidosYa(v.CodBatido);
+            const pyHtml = esPY ? ` <span class="badge-pedidosya" style="font-size:.55rem;padding:1px 5px"><i class="fas fa-motorcycle"></i></span>` : '';
+            const label  = labelMedida(v.Medida) || v.CodBatido;
+            chipsHtml = `<span class="bp-chip active" style="cursor:default">${esc(label)}${pyHtml}</span>`;
+        }
 
-    // ── Resumen ───────────────────────────────────────────────────────
-    function renderResumen(ingredientes) {
-        const total      = ingredientes.length;
-        const traducidos = ingredientes.filter(i => i.nuevo_producto).length;
-        const pendientes = total - traducidos;
+        const grupoTag = prod.NombreGrupo
+            ? `<span class="bp-grupo">${esc(prod.NombreGrupo)}</span>` : '';
 
-        document.getElementById('barraResumen').innerHTML = `
-            <div class="vrl-resumen-item">
-                <span class="num">${total}</span>
-                <span class="text-muted ms-1">ingredientes</span>
-            </div>
-            <div class="vr"></div>
-            <div class="vrl-resumen-item">
-                <span class="num">${traducidos}</span>
-                <span class="ms-1 text-success">resueltos en ERP</span>
-            </div>
-            ${pendientes > 0
-                ? `<div class="vr"></div>
-                   <div class="vrl-resumen-item danger">
-                       <span class="num">${pendientes}</span>
-                       <span class="ms-1 text-muted">sin resolver</span>
-                   </div>`
-                : ''}`;
-        show('barraResumen');
+        barra.innerHTML = `
+            <span class="bp-nombre">${esc(prod.Nombre)}</span>
+            ${grupoTag}
+            ${chipsHtml}`;
+
+        barra.classList.remove('d-none');
     }
 
     // ── Tabla de ingredientes (solo Nuevo Sistema + Orden + Tipo) ──────
@@ -1081,13 +990,12 @@ if (!tienePermiso('recetario_access_traducido', 'vista', $cargoOperario)) {
 
     // ── Reset contenido ───────────────────────────────────────────────
     function resetContenido() {
-        hide('cardProducto');
-        hide('barraResumen');
+        const barra = document.getElementById('barraProducto');
+        if (barra) barra.classList.add('d-none');
         hide('panelTabla');
         hide('panelVacio');
         document.getElementById('spinnerReceta').style.display = 'none';
         document.getElementById('tbodyReceta').innerHTML = '';
-        // No ocultar versiones aquí, se gestiona en seleccionarProducto
     }
 
     // ── Búsqueda en menú ─────────────────────────────────────────────
