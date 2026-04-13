@@ -1038,43 +1038,221 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                         </div>
                     </div>
 
-                    <!-- Segmento 3 -->
-                    <div class="p-2 mb-3 rounded" style="background:#f3e5f5;border-left:4px solid #9c27b0">
-                        <strong><i class="fas fa-layer-group me-1" style="color:#7b1fa2"></i> Nuevo Sistema
-                            (ERP)</strong>
-                        <p class="mb-1 mt-1" style="font-size:.82rem">Traducción del ingrediente al catálogo del nuevo
-                            ERP Pitaya.</p>
-                        <table class="table table-sm table-bordered mb-0" style="font-size:.8rem">
-                            <thead style="background:#e1bee7">
-                                <tr>
-                                    <th>Estado</th>
-                                    <th>¿Qué muestra?</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td><span class="badge" style="background:#c8e6c9;color:#1b5e20">✓ Traducido</span>
-                                    </td>
-                                    <td>Nombre del producto en el nuevo ERP, unidad, cantidad y producto maestro.
-                                        Si fue resuelto automáticamente por maestro + unidad, muestra badge
-                                        <span
-                                            style="background:#e8f5e9;color:#2e7d32;font-size:.72rem;border-radius:3px;padding:1px 5px">AUTO</span>.
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td><span style="color:#888;font-style:italic;font-size:.82rem">⚠ Sin mapeo</span>
-                                    </td>
-                                    <td>Hay cotización resuelta pero el ingrediente no tiene mapeo en el diccionario del
-                                        ERP.</td>
-                                </tr>
-                                <tr>
-                                    <td><span class="text-danger" style="font-style:italic;font-size:.82rem">✕ No
-                                            resuelto</span></td>
-                                    <td>Sin cotización y sin traducción. El ingrediente no pudo resolverse en ningún
-                                        paso.</td>
-                                </tr>
-                            </tbody>
-                        </table>
+                    <!-- Segmento 3 — NUEVO SISTEMA (ERP) — Guía completa -->
+                    <div class="p-3 mb-3 rounded" style="background:#f3e5f5;border-left:4px solid #9c27b0">
+                        <strong><i class="fas fa-layer-group me-1" style="color:#7b1fa2"></i> Nuevo Sistema (ERP)</strong>
+                        <p class="mb-2 mt-1" style="font-size:.82rem">
+                            El segmento <em>Nuevo Sistema</em> traduce cada ingrediente del catálogo antiguo (Access) al
+                            catálogo del nuevo ERP Pitaya. Se compone de <strong>3 columnas</strong>:
+                            <span class="badge" style="background:#9c27b0;color:#fff">Insumo Receta</span>
+                            <span class="badge" style="background:#7b1fa2;color:#fff">Cantidad</span>
+                            <span class="badge" style="background:#6a1b9a;color:#fff">Presentación Uso</span>
+                        </p>
+
+                        <!-- ── 3.1 Ruta de resolución de cotización ──────────── -->
+                        <div class="mb-3">
+                            <h6 style="font-size:.82rem;color:#6a1b9a;font-weight:700">
+                                <i class="fas fa-route me-1"></i> Prioridades de resolución de cotización
+                            </h6>
+                            <p style="font-size:.79rem;margin-bottom:6px">
+                                El sistema sigue 3 prioridades para encontrar la cotización y el producto ERP
+                                correspondiente a cada ingrediente:
+                            </p>
+                            <table class="table table-sm table-bordered mb-2" style="font-size:.79rem">
+                                <thead style="background:#e1bee7">
+                                    <tr><th style="width:110px">Prioridad</th><th>Origen</th><th>Condición</th></tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><strong>P1 — Porción directa</strong></td>
+                                        <td>El ingrediente tiene un <code>codporcion</code> asignado que apunta directamente a una cotización mapeada en el <em>diccionario ERP</em>.</td>
+                                        <td><code>SubReceta.codporcion</code> no nulo</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>P2 — Cotización base</strong></td>
+                                        <td>Se busca la cotización con <code>Conversion=1</code> y <code>Prioridad=1</code> para el ingrediente, excluyendo subproductos y "Almacen Global".</td>
+                                        <td><code>codporcion</code> es nulo y existe cotiz. base</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>P3 — Prioritaria</strong></td>
+                                        <td>Cualquier cotización activa del ingrediente (sin filtro de conversión/prioridad), como fallback final.</td>
+                                        <td>No hubo P1 ni P2</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <p style="font-size:.78rem;margin-bottom:0">
+                                Una vez localizada la cotización, se busca su mapeo en
+                                <code>diccionario_productos_legado → producto_presentacion</code>.
+                                Si no existe mapeo directo, se intenta resolución automática por
+                                <strong>Maestro + Unidad</strong> (muestra badge <span style="background:#e8f5e9;color:#2e7d32;font-size:.72rem;border-radius:3px;padding:1px 5px">AUTO</span>).
+                            </p>
+                        </div>
+
+                        <hr class="my-2">
+
+                        <!-- ── 3.2 Columna: Presentación Uso ────────────────── -->
+                        <div class="mb-3">
+                            <h6 style="font-size:.82rem;color:#6a1b9a;font-weight:700">
+                                <i class="fas fa-box-open me-1"></i> Columna: Presentación Uso
+                            </h6>
+                            <p style="font-size:.79rem;margin-bottom:4px">
+                                Muestra el producto del nuevo ERP que actualmente se usa como cotización para
+                                ese ingrediente. Es el resultado directo del mapeo P1/P2/P3 en el diccionario,
+                                <strong>sin importar si la unidad coincide con la de la receta</strong>.
+                            </p>
+                            <ul style="font-size:.79rem;margin-bottom:0">
+                                <li><strong>Nombre</strong>: <code>producto_presentacion.Nombre</code> del ERP.</li>
+                                <li><strong>Unidad · Cantidad</strong>: unidad de medida y cantidad por presentación (ej: <em>Litros · 1.00</em>).</li>
+                                <li><strong>Variedades</strong>: si el producto tiene variedades (sabores, tamaños), se muestran en un select desplegable con la variedad principal preseleccionada.</li>
+                                <li><strong>Badge INACTIVO</strong>: el producto está marcado como <code>Activo = 'NO'</code> en el ERP.</li>
+                                <li><strong>Badge AUTO</strong>: fue resuelto automáticamente por Maestro + Unidad (no por diccionario directo).</li>
+                            </ul>
+                        </div>
+
+                        <hr class="my-2">
+
+                        <!-- ── 3.3 Columna: Insumo Receta ───────────────────── -->
+                        <div class="mb-3">
+                            <h6 style="font-size:.82rem;color:#6a1b9a;font-weight:700">
+                                <i class="fas fa-list-check me-1"></i> Columna: Insumo Receta
+                            </h6>
+                            <p style="font-size:.79rem;margin-bottom:6px">
+                                Es la presentación del ERP <strong>cuya unidad coincide (o se convierte) con la unidad del ingrediente en Access</strong>.
+                                Se calcula independientemente de Presentación Uso y puede ser la misma u otra presentación del mismo producto maestro.
+                            </p>
+
+                            <p style="font-size:.79rem;font-weight:600;margin-bottom:4px">Algoritmo de resolución en 3 niveles:</p>
+                            <table class="table table-sm table-bordered mb-2" style="font-size:.78rem">
+                                <thead style="background:#e1bee7">
+                                    <tr><th style="width:100px">Nivel</th><th>Qué hace</th><th>Ejemplo</th></tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><strong>Nivel 1</strong><br><small>multi_directos</small></td>
+                                        <td>
+                                            Resuelve la unidad Access a su(s) equivalente(s) ERP buscando en:
+                                            <ol class="mb-0" style="padding-left:16px">
+                                                <li><code>unidad_producto.abreviado</code> exacto</li>
+                                                <li><code>unidad_producto.nombre</code> exacto</li>
+                                                <li>Token en <code>nombres_opcionales</code> (FIND_IN_SET)</li>
+                                            </ol>
+                                            Además de la coincidencia principal, incluye <em>coincidencias secundarias</em>:
+                                            otras unidades ERP que también contienen ese string.
+                                            Busca presentaciones del mismo maestro con cualquiera de esas unidades,
+                                            dando prioridad a las de <code>cantidad = 1</code>.
+                                        </td>
+                                        <td>
+                                            <code>"oz"</code> → Onzas Peso (principal) + Onzas Liquidas (secundaria)<br>
+                                            Busca en ambas unidades → elige <em>Leche Entera oz</em> (1 Onzas Liquidas) ✓
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Nivel 2</strong><br><small>convertibles</small></td>
+                                        <td>
+                                            Si Nivel 1 no encontró presentación, busca unidades <em>relacionadas por conversión</em>
+                                            en <code>conversion_unidad_producto</code>.
+                                            Si encuentra, guarda el <code>factor_conversion</code> para el cálculo de cantidad.
+                                        </td>
+                                        <td>
+                                            <code>"gr"</code> → Gramos. Sin presentación en Gramos.<br>
+                                            Conversión Gramos ↔ Onzas Peso (factor 0.035).<br>
+                                            Busca en Onzas Peso → <em>Mani Horneado oz</em> ✓<br>
+                                            <code>factor_conversion = 0.035</code>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Nivel 3</strong><br><small>fallback ERP</small></td>
+                                        <td>
+                                            Si aún no encontró, busca directamente con la unidad de <em>Presentación Uso</em>
+                                            (la unidad ya resuelta del producto mapeado).
+                                            También intenta recuperar el factor de conversión automáticamente.
+                                        </td>
+                                        <td>
+                                            Cuando Niveles 1 y 2 fallan, se usa la unidad de la Presentación Uso
+                                            (ej: Litros) y se busca la conversión gr→Litros en la tabla.
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+
+                            <div class="p-2 rounded mb-2" style="background:#fff3e0;font-size:.77rem;border-left:3px solid #ff9800">
+                                <i class="fas fa-wrench me-1 text-warning"></i>
+                                <strong>Para mejorar la resolución:</strong> registra conversiones entre unidades en
+                                <em>Historial de Conversiones</em> (módulo Productos). A más conversiones registradas,
+                                más preciso es el Nivel 2. Si una unidad Access no se reconoce, verifica que exista
+                                en <code>unidad_producto</code> con el <strong>abreviado</strong> o en
+                                <strong>nombres_opcionales</strong> correcto.
+                            </div>
+
+                            <p style="font-size:.79rem;margin-bottom:4px"><strong>Estados posibles del Insumo Receta:</strong></p>
+                            <table class="table table-sm table-bordered mb-0" style="font-size:.78rem">
+                                <tbody>
+                                    <tr>
+                                        <td style="width:160px"><em>Nombre del producto ERP</em></td>
+                                        <td>Insumo resuelto correctamente con unidad equivalente encontrada.</td>
+                                    </tr>
+                                    <tr>
+                                        <td><span style="color:#888;font-style:italic">⚠ Sin equiv. de unidad</span></td>
+                                        <td>Hay Presentación Uso pero ninguno de los 3 niveles encontró una presentación en la unidad del ingrediente. Revisar conversiones y unidades en el ERP.</td>
+                                    </tr>
+                                    <tr>
+                                        <td><span style="color:#888;font-style:italic">⚠ Sin mapeo</span></td>
+                                        <td>Hay cotización resuelta pero no existe mapeo en el diccionario ERP.</td>
+                                    </tr>
+                                    <tr>
+                                        <td><span class="text-danger" style="font-style:italic">✕ No resuelto</span></td>
+                                        <td>Sin cotización y sin traducción posible por ninguna prioridad.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <hr class="my-2">
+
+                        <!-- ── 3.4 Columna: Cantidad ─────────────────────────── -->
+                        <div class="mb-1">
+                            <h6 style="font-size:.82rem;color:#6a1b9a;font-weight:700">
+                                <i class="fas fa-calculator me-1"></i> Columna: Cantidad
+                            </h6>
+                            <p style="font-size:.79rem;margin-bottom:6px">
+                                Indica <strong>cuántas unidades de la presentación del Insumo Receta</strong>
+                                se necesitan para cumplir con la cantidad de la SubReceta.
+                            </p>
+                            <table class="table table-sm table-bordered mb-2" style="font-size:.78rem">
+                                <thead style="background:#e1bee7">
+                                    <tr><th>Caso</th><th>Fórmula</th><th>Ejemplo</th></tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><strong>Misma unidad</strong></td>
+                                        <td><code>Cantidad_Access ÷ ppCant</code></td>
+                                        <td>Leche 4 oz ÷ 1 oz/und = <strong>4</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Unidad diferente con conversión</strong></td>
+                                        <td><code>(Cantidad_Access × factor) ÷ ppCant</code><br><small>factor = cantidad en tabla de conversiones (ej: 1 gr = 0.035 oz)</small></td>
+                                        <td>Mani 24 gr × 0.035 ÷ 1 oz/und = <strong>0.84</strong><br>
+                                            <small>Pasa el cursor sobre el número para ver la fórmula exacta.</small></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>P1 (porción directa)</strong></td>
+                                        <td>Igual que los casos anteriores pero <strong>redondeado al 0.5 más cercano</strong>:<br>
+                                            <code>Math.round(resultado × 2) / 2</code></td>
+                                        <td>
+                                            Piña 120 gr × 0.035 ÷ 4 oz/und = 1.05 → <strong>1.0</strong><br>
+                                            1.26 → <strong>1.5</strong> &nbsp;|&nbsp; 1.75 → <strong>2.0</strong>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <div class="p-2 rounded" style="background:#e8f5e9;font-size:.77rem;border-left:3px solid #4caf50">
+                                <i class="fas fa-lightbulb me-1 text-success"></i>
+                                <strong>¿Por qué el redondeo a 0.5 solo en P1?</strong> Las porciones directas son cantidades
+                                de preparación manejadas por el personal (½ porción, 1 porción, 1½ porción). Expresarlas
+                                con más de 1 decimal no aporta precisión operativa; el resto de ingredientes (P2/P3) son
+                                insumos a granel donde sí importa la precisión decimal.
+                            </div>
+                        </div>
                     </div>
 
                     <hr>
