@@ -21,7 +21,7 @@ body {
 /* ── Layout principal: dos columnas ─────────────────────────── */
 .vrl-layout {
     display: grid;
-    grid-template-columns: 320px 1fr;
+    grid-template-columns: 420px 1fr;
     gap: 16px;
     align-items: start;
 }
@@ -233,6 +233,23 @@ body {
 .vrl-barra-producto .bp-grupo {
     font-size: .72rem;
     color: rgba(255,255,255,.6);
+}
+
+.vrl-barra-producto .bp-cod {
+    font-size: .72rem;
+    color: rgba(255,255,255,.55);
+    background: rgba(255,255,255,.08);
+    border-radius: 6px;
+    padding: 2px 8px;
+    white-space: nowrap;
+    font-family: monospace;
+}
+
+.vrl-barra-producto .bp-precio {
+    font-size: .78rem;
+    font-weight: 700;
+    color: var(--vrl-accent);
+    white-space: nowrap;
 }
 
 /* Chips de versión dentro de la barra ───────────────────────── */

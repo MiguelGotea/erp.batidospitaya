@@ -88,7 +88,6 @@ if (!tienePermiso('recetario_access_traducido', 'vista', $cargoOperario)) {
                                         <th style="width:52px">Tipo</th>
                                         <th>Insumo Receta</th>
                                         <th style="width:75px;text-align:center">Cantidad</th>
-                                        <th style="min-width:170px">Presentación Uso</th>
                                     </tr>
                                 </thead>
                                 <tbody id="tbodyReceta"></tbody>

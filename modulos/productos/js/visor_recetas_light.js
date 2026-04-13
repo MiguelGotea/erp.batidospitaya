@@ -251,9 +251,18 @@ function renderBarraProducto(prod, codActivo) {
     const grupoTag = prod.NombreGrupo
         ? `<span class="bp-grupo">${esc(prod.NombreGrupo)}</span>` : '';
 
+    // Datos extra: código y precio de la versión activa
+    const vActiva = prod.versiones.find(v => v.CodBatido === codActivo) || prod.versiones[0];
+    const codTag = vActiva?.CodBatido
+        ? `<span class="bp-cod"><i class="fas fa-barcode me-1" style="opacity:.5"></i>${esc(vActiva.CodBatido)}</span>` : '';
+    const precioTag = vActiva?.Precio != null
+        ? `<span class="bp-precio"><i class="fas fa-tag me-1" style="opacity:.5"></i>C$ ${Number(vActiva.Precio).toLocaleString('es-NI')}</span>` : '';
+
     barra.innerHTML = `
         <span class="bp-nombre">${esc(prod.Nombre)}</span>
         ${grupoTag}
+        ${codTag}
+        ${precioTag}
         ${chipsHtml}`;
 
     barra.classList.remove('d-none');
@@ -276,7 +285,7 @@ function renderTabla(ingredientes) {
     const tbody = document.getElementById('tbodyReceta');
 
     if (!ingredientes.length) {
-        tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-5">
+        tbody.innerHTML = `<tr><td colspan="4" class="text-center text-muted py-5">
             <i class="fas fa-exclamation-circle me-2"></i>Receta sin ingredientes registrados.</td></tr>`;
         show('panelTabla');
         return;
@@ -346,38 +355,12 @@ function renderTabla(ingredientes) {
                 }
             }
         }
-
-        // ── Presentación Uso ───────────────────────────────────────
-        let celPresentacion;
-        if (np) {
-            const inacTag = np.activoNuevo === 'NO'
-                ? `<span class="tag-inactivo ms-1">INACTIVO</span>` : '';
-            const autoTag = ingr.metodo_resolucion === 'maestro'
-                ? `<span style="font-size:.62rem;background:#e8f5e9;color:#2e7d32;border-radius:3px;padding:1px 5px;margin-left:4px">AUTO</span>` : '';
-            const npRecetaTag = escenario === 'receta_global' ? recetaTag : '';
-            let varHTML = '';
-            if (np.variedades && np.variedades.length > 0) {
-                varHTML = `<div style="font-size:.72rem;color:#aaa;margin-top:2px">
-                    ${np.variedades.map(v => `<span style="margin-right:5px">${esc(v.nombre)}${v.es_principal == 1 ? ' ★' : ''}</span>`).join('')}
-                </div>`;
-            }
-            celPresentacion = `<div class="cel-insumo">
-                <div class="nom-erp">${esc(np.NombreNuevo)}${inacTag}${autoTag}${npRecetaTag}</div>
-                <div class="uni-erp">${esc(np.unidadNueva || '')}${np.cantidad ? ' · ' + np.cantidad : ''}${np.productoMaestro ? ' — ' + esc(np.productoMaestro) : ''}</div>
-                ${varHTML}
-            </div>`;
-        } else if (ingr.cotizacion) {
-            celPresentacion = `<span class="cel-na"><i class="fas fa-exclamation-triangle me-1 text-warning"></i>Sin mapeo</span>`;
-        } else {
-            celPresentacion = `<span class="cel-error"><i class="fas fa-times-circle me-1"></i>No resuelto</span>`;
-        }
-
+        // ── Eliminada columna Presentación Uso ──────────────────
         return `<tr class="${filaClass}">
             <td class="text-center"><span class="orden-num">${orden}</span></td>
             <td class="text-center">${tipoBadge}</td>
             <td class="td-sep-left">${celInsumo}</td>
             <td class="text-center fw-bold" style="font-size:.9rem">${celCantidad}</td>
-            <td>${celPresentacion}</td>
         </tr>`;
     }).join('');
 
