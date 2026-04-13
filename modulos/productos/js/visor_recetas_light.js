@@ -257,6 +257,7 @@ function renderTabla(ingredientes) {
         const tipoCls = tipoClasses[tipo] || 'badge-tipo-X';
         const tipoBadge = `<span class="badge-tipo ${tipoCls}">${esc(tipo)}</span>`;
 
+
         // ── Insumo Receta ──────────────────────────────────────────
         const ir = ingr.insumo_receta;
         const np = ingr.nuevo_producto;
