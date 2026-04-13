@@ -47,32 +47,40 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                 <!-- ══════════════════════════════════════════ -->
                 <!--  PANEL DE FILTROS                         -->
                 <!-- ══════════════════════════════════════════ -->
-                <div class="dc-filtros-card card border-0 shadow-sm mb-3">
+                <div class="dc-filtros-card card border-0 shadow-sm mb-2">
                     <div class="card-body py-2 px-3">
                         <div class="row g-2 align-items-end">
 
-                            <!-- Semana desde -->
-                            <div class="col-12 col-md-3 col-lg-2">
-                                <label class="dc-label" for="filtroSemanaDesde">
-                                    <i class="fas fa-calendar-week me-1"></i>Semana Desde
+                            <!-- Año -->
+                            <div class="col-6 col-md-2 col-lg-1">
+                                <label class="dc-label" for="filtroAnio">
+                                    <i class="fas fa-calendar me-1"></i>Año
                                 </label>
-                                <select class="form-select form-select-sm dc-select" id="filtroSemanaDesde">
-                                    <option value="">Cargando…</option>
+                                <select class="form-select form-select-sm dc-select" id="filtroAnio">
+                                    <!-- Poblado por JS -->
                                 </select>
                             </div>
 
-                            <!-- Semana hasta -->
-                            <div class="col-12 col-md-3 col-lg-2">
-                                <label class="dc-label" for="filtroSemanaHasta">
-                                    <i class="fas fa-calendar-week me-1"></i>Semana Hasta
+                            <!-- Semana Desde (número libre) -->
+                            <div class="col-6 col-md-2 col-lg-1">
+                                <label class="dc-label" for="filtroSemanaDesde">
+                                    <i class="fas fa-calendar-week me-1"></i>Sem. Desde
                                 </label>
-                                <select class="form-select form-select-sm dc-select" id="filtroSemanaHasta">
-                                    <option value="">Cargando…</option>
-                                </select>
+                                <input type="number" class="form-control form-control-sm dc-input-semana"
+                                    id="filtroSemanaDesde" min="1" max="999" placeholder="Ej: 10">
+                            </div>
+
+                            <!-- Semana Hasta (número libre) -->
+                            <div class="col-6 col-md-2 col-lg-1">
+                                <label class="dc-label" for="filtroSemanaHasta">
+                                    <i class="fas fa-calendar-week me-1"></i>Sem. Hasta
+                                </label>
+                                <input type="number" class="form-control form-control-sm dc-input-semana"
+                                    id="filtroSemanaHasta" min="1" max="999" placeholder="Ej: 14">
                             </div>
 
                             <!-- Sucursales -->
-                            <div class="col-12 col-md-4 col-lg-3">
+                            <div class="col-12 col-md-3 col-lg-3">
                                 <label class="dc-label" for="filtroSucursales">
                                     <i class="fas fa-store me-1"></i>Sucursales
                                 </label>
@@ -80,7 +88,7 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                                 </select>
                             </div>
 
-                            <!-- Insumo ERP (opcional, búsqueda) -->
+                            <!-- Insumo ERP (opcional) -->
                             <div class="col-12 col-md-4 col-lg-3">
                                 <label class="dc-label" for="filtroInsumo">
                                     <i class="fas fa-box me-1"></i>Insumo (opcional)
@@ -103,6 +111,14 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                             </div>
                         </div>
                     </div>
+                </div>
+
+                <!-- Semana actual informativa -->
+                <div class="dc-semana-actual-bar mb-3" id="barSemanaActual" style="display:none">
+                    <i class="fas fa-clock me-1"></i>
+                    Semana actual del sistema:
+                    <span class="dc-semana-actual-num" id="semanaActualNum">—</span>
+                    <span class="dc-semana-actual-rango" id="semanaActualRango"></span>
                 </div>
 
                 <!-- ══════════════════════════════════════════ -->
@@ -400,7 +416,8 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                                                 <i class="fas fa-filter me-2"></i>Cómo Usar los Filtros
                                             </h6>
                                             <p class="small text-muted mb-0">
-                                                <strong>Semana Desde / Hasta:</strong> Selecciona el rango de semanas del sistema a analizar.<br><br>
+                                                <strong>Año + Sem. Desde / Hasta:</strong> Ingresa el número de semana directamente (ej: 10 a 14). El año se selecciona en el primer campo.<br><br>
+                                                El badge <strong>"Semana actual"</strong> debajo de los filtros te indica en qué semana estás.<br><br>
                                                 <strong>Sucursales:</strong> Deja vacío para analizar todas, o selecciona específicas.<br><br>
                                                 <strong>Insumo:</strong> Opcional. Filtra el análisis a un insumo ERP específico.<br><br>
                                                 Haz clic en <strong>Analizar</strong> para cargar los datos.
