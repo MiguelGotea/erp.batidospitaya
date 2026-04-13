@@ -55,12 +55,10 @@ function bindEventos() {
         modoChart = $(this).data('modo');
         $('#chartModoBarra, #chartModoLinea').removeClass('active');
         $(this).addClass('active');
-        if (datosActuales) renderGrafico(datosActuales);
-    });
-
-    // Cambiar insumo en gráfico
-    $('#chartInsumoFiltro').on('change', function () {
-        if (datosActuales) renderGrafico(datosActuales);
+        // Solo re-renderizar si el card está visible (insumo específico seleccionado)
+        if (datosActuales && !$('#cardTendencia').hasClass('d-none')) {
+            renderGrafico(datosActuales);
+        }
     });
 
     // Buscar en tabla historial
@@ -217,7 +215,17 @@ function mostrarEstado(estado) {
    ════════════════════════════════════════════════════════════ */
 function renderDashboard(data) {
     renderKPIs(data);
-    renderGrafico(data);
+
+    // Mostrar gráfico SOLO cuando hay un insumo específico seleccionado
+    const idInsumoSel = parseInt($insumo.val()) || 0;
+    if (idInsumoSel > 0 && data.consumo.length > 0) {
+        $('#cardTendencia').removeClass('d-none');
+        renderGrafico(data);
+    } else {
+        $('#cardTendencia').addClass('d-none');
+        if (chartTendencia) { chartTendencia.destroy(); chartTendencia = null; }
+    }
+
     renderTablaHistorial(data);
     renderTablaProyeccion(data);
     renderHeatmapSelector(data);
@@ -258,60 +266,55 @@ function renderKPIs(data) {
     }
 }
 
-/* ── Gráfico de Tendencia ─────────────────────────────────── */
+/* ── Gráfico de Tendencia (solo con insumo específico) ───── */
 function renderGrafico(data) {
-    const modoInsumo = $('#chartInsumoFiltro').val(); // 'top5' | 'todos'
+    const idInsumoSel = parseInt($insumo.val()) || 0;
+    if (!idInsumoSel) return;
 
-    // Labels del eje X = solo número de semana
-    const labels     = data.semanas.map(s => `${s.numero_semana}`);
+    const item = data.consumo.find(c => c.id == idInsumoSel);
+    if (!item) {
+        $('#cardTendencia').addClass('d-none');
+        return;
+    }
+
+    // Actualizar título con nombre del insumo
+    $('#tituloTendencia').html(
+        `<i class="fas fa-chart-line me-2"></i>Tendencia: <strong>${escHtml(item.nombre)}</strong>` +
+        `<span class="ms-2 text-muted" style="font-size:.72rem;font-weight:400">${escHtml(item.unidad)}</span>`
+    );
+
+    const labels      = data.semanas.map(s => `Sem ${s.numero_semana}`);
     const semanasNros = data.semanas.map(s => s.numero_semana);
+    const valores     = semanasNros.map(n => round2(item.por_semana[n] || 0));
 
-    let datasets = [];
-
-    if (modoInsumo === 'todos' || !modoInsumo) {
-        // Suma de todos los insumos por semana
-        const sumas = {};
-        semanasNros.forEach(n => { sumas[n] = 0; });
-        data.consumo.forEach(item => {
-            semanasNros.forEach(n => {
-                sumas[n] += (item.por_semana[n] || 0);
-            });
-        });
-        datasets.push({
-            label: 'Consumo Total',
-            data: semanasNros.map(n => round2(sumas[n])),
-            backgroundColor: 'rgba(81,184,172,.4)',
+    // Línea de promedio como referencia visual
+    const prom = item.prom_semana || 0;
+    const datasets = [
+        {
+            label: item.nombre.length > 35 ? item.nombre.substring(0, 33) + '…' : item.nombre,
+            data: valores,
+            backgroundColor: 'rgba(81,184,172,.35)',
             borderColor: '#0E544C',
             borderWidth: 2,
             tension: 0.3,
             fill: modoChart === 'line',
             pointRadius: 4,
             pointBackgroundColor: '#0E544C',
-        });
-    } else {
-        // Top 5 insumos por consumo total
-        const top5 = [...data.consumo].sort((a, b) => b.total - a.total).slice(0, 5);
-        const colores = ['#0E544C', '#51B8AC', '#e67e22', '#3498db', '#9b59b6'];
-        top5.forEach((item, i) => {
-            datasets.push({
-                label: item.nombre.length > 30 ? item.nombre.substring(0, 28) + '…' : item.nombre,
-                data: semanasNros.map(n => round2(item.por_semana[n] || 0)),
-                backgroundColor: colores[i] + '66',
-                borderColor: colores[i],
-                borderWidth: 2,
-                tension: 0.3,
-                fill: false,
-                pointRadius: 3,
-                pointBackgroundColor: colores[i],
-            });
-        });
-    }
+        },
+        {
+            label: `Prom./sem: ${formatNum(prom)} ${escHtml(item.unidad)}`,
+            data: semanasNros.map(() => round2(prom)),
+            borderColor: '#e67e22',
+            borderWidth: 1.5,
+            borderDash: [5, 4],
+            pointRadius: 0,
+            fill: false,
+            tension: 0,
+            type: 'line',
+        },
+    ];
 
-    // Destruir chart anterior
-    if (chartTendencia) {
-        chartTendencia.destroy();
-        chartTendencia = null;
-    }
+    if (chartTendencia) { chartTendencia.destroy(); chartTendencia = null; }
 
     const ctx = document.getElementById('chartTendencia').getContext('2d');
     chartTendencia = new Chart(ctx, {
@@ -339,10 +342,7 @@ function renderGrafico(data) {
                 },
                 y: {
                     grid: { color: '#e8f0f4' },
-                    ticks: {
-                        font: { size: 10 },
-                        callback: v => formatNum(v),
-                    },
+                    ticks: { font: { size: 10 }, callback: v => formatNum(v) },
                     beginAtZero: true,
                 },
             },

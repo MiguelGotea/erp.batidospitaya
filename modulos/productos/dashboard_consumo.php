@@ -173,10 +173,10 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                     </div>
 
                     <!-- Gráfico Tendencia -->
-                    <div class="card border-0 shadow-sm mb-3">
+                    <div class="card border-0 shadow-sm mb-3 d-none" id="cardTendencia">
                         <div class="card-body">
                             <div class="d-flex align-items-center justify-content-between mb-2">
-                                <h6 class="dc-seccion-titulo mb-0">
+                                <h6 class="dc-seccion-titulo mb-0" id="tituloTendencia">
                                     <i class="fas fa-chart-line me-2"></i>Tendencia de Consumo por Semana
                                 </h6>
                                 <div class="d-flex gap-2">
@@ -186,10 +186,6 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                                     <button class="btn btn-xs dc-chip" id="chartModoLinea" data-modo="line">
                                         <i class="fas fa-chart-line me-1"></i>Línea
                                     </button>
-                                    <select class="form-select form-select-sm dc-select" id="chartInsumoFiltro" style="max-width:220px;font-size:.78rem">
-                                        <option value="top5">Top 5 insumos</option>
-                                        <option value="todos">Todos (suma)</option>
-                                    </select>
                                 </div>
                             </div>
                             <div class="dc-chart-wrap">
@@ -401,8 +397,12 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                             <div id="modalAuditoriaContenido" class="p-3"></div>
                         </div>
                         <div class="modal-footer py-1" style="font-size:.75rem;color:#888">
-                            <span><span style="background:#f1f8e9;padding:2px 6px;border-radius:3px">Verde</span> = P1 redondeado OK &nbsp;|&nbsp;
-                            <span style="background:#fff8e1;padding:2px 6px;border-radius:3px">Amarillo</span> = Crudo con decimal → redondeado a 0.5</span>
+                            <span>
+                                <span style="background:#c8e6c9;padding:2px 6px;border-radius:3px;color:#1b5e20;font-weight:700">P1</span> Porción directa → 0.5 &nbsp;|
+                                <span style="background:#bbdefb;padding:2px 6px;border-radius:3px;color:#0d47a1;font-weight:700">P2</span> Cotización base → 4 dec &nbsp;|
+                                <span style="background:#ffe0b2;padding:2px 6px;border-radius:3px;color:#bf360c;font-weight:700">P3</span> Fallback → 4 dec &nbsp;|
+                                <span style="background:#fff8e1;padding:2px 6px;border-radius:3px">Amarillo</span> = Crudo redondeado
+                            </span>
                             <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cerrar</button>
                         </div>
                     </div>

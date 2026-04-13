@@ -219,12 +219,20 @@ LIMIT 1;
 cantidad_erp = (SubReceta.Cantidad × factor_conversion) / pp_cantidad
 ```
 
-| Caso | Factor | pp_cantidad | Fórmula | Redondeo |
-|---|---|---|---|---|
-| Misma unidad | `1` | Cantidad de la presentación | `SubReceta.Cantidad / pp_cantidad` | Ninguno (4 decimales) |
-| Unidad distinta con conversión | `0.035` (ej: gr→oz) | Cantidad de la presentación | `(SubReceta.Cantidad × 0.035) / pp_cantidad` | Ninguno (4 decimales) |
-| **P1 porción directa** | igual a los anteriores | Cantidad de la presentación | `(SubReceta.Cantidad × factor) / pp_cantidad` | **Al 0.5 más cercano** |
-| Receta Global | `1` | `1` | `SubReceta.Cantidad` (sin división) | Ninguno |
+| Caso | Tipo mapeo | Factor | pp_cantidad | Fórmula | Redondeo |
+|---|---|---|---|---|---|
+| Porción directa | **P1** | igual a los anteriores | Cantidad de la presentación | `(SubReceta.Cantidad × factor) / pp_cantidad` | **Al 0.5 más cercano** |
+| Cotización base (`Conversion=1`, `Prioridad=1`) | **P2** | `1` o conversión | Cantidad de la presentación | `(SubReceta.Cantidad × factor) / pp_cantidad` | **4 decimales** |
+| Fallback (cualquier cotización disponible) | **P3** | `1` o conversión | Cantidad de la presentación | `(SubReceta.Cantidad × factor) / pp_cantidad` | **4 decimales** |
+| Receta Global | — | `1` | `1` | `SubReceta.Cantidad` (sin división) | — |
+
+#### Tipos de mapeo y sus reglas de redondeo
+
+| Tipo | Origen del mapeo | Regla de redondeo | Color en auditoría |
+|---|---|---|---|
+| **P1** | `SubReceta.codporcion` apunta directamente a un `CodCotizacion` mapeado | `round(x × 2) / 2` → múltiplo de 0.5 | 🟢 Verde |
+| **P2** | Cotización con `Conversion=1` y `Prioridad=1` para el ingrediente | `round(x, 4)` → 4 decimales | 🔵 Azul |
+| **P3** | Primera cotización disponible para el ingrediente (fallback) | `round(x, 4)` → 4 decimales | 🟠 Naranja |
 
 #### Regla de redondeo P1 — porciones físicas
 
@@ -245,12 +253,28 @@ consumo_p1_redondeado = round(consumo_crudo × 2) / 2
 >
 > Para 100 ventas: consumo crudo = 105.82 porciones → redondeado = **106.0**
 
+#### Regla de redondeo P2 / P3 — ingredientes volumétricos o gravimétricos
+
+Los ingredientes mapeados por cotización base (P2) o fallback (P3) pueden consumirse
+en fracciones de gramo, mililitro u otra unidad continua. El resultado se expresa con
+**4 decimales** para preservar precisión en el consumo total acumulado.
+
+> **Ejemplo:**
+> - Receta en Access: **15 g** de proteína (P2, sin codporcion)
+> - Presentación ERP: **500 g** (pp_cantidad = 500)
+> - `consumo_crudo = 15 / 500 = 0.03`
+> - `consumo_final = round(0.03, 4) = **0.0300**`
+>
+> Para 1 000 ventas: consumo total = **30.0000** unidades de 500 g
+
 En PHP:
 
 ```php
-// Solo aplica cuando el mapeo provino de P1 (codporcion)
+// Redondeo según tipo de mapeo
 if ($esP1) {
-    $consumido = round($consumido * 2) / 2;
+    $consumoFinal = round($consumoCrudo * 2) / 2;   // múltiplo de 0.5
+} else {
+    $consumoFinal = round($consumoCrudo, 4);          // P2 y P3: 4 decimales
 }
 ```
 
@@ -457,4 +481,4 @@ HistorialBatidos (CodBatido, Fecha, Cantidad vendida)
 
 ---
 
-*Generado: 2026-04-12 | Referencia: `accessantiguo_get_detalle_receta.php` + `accessantiguo_unidades_homologacion.php`*
+*Generado: 2026-04-12 | Actualizado: 2026-04-13 — Redondeo P2/P3 a 4 decimales, campo `tipo_mapeo` en auditoría | Referencia: `dashboard_consumo_get_datos.php` + `dashboard_consumo_auditoria.php`*
