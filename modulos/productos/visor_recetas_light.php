@@ -759,7 +759,6 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
             <div class="vrl-productos-list" id="${gid}">`;
 
             g.productos.forEach(p => {
-                const pid = CSS.escape(`prod-${g.CodGrupo}-${p.Nombre}`);
                 html += `
                 <div class="vrl-prod-item" id="prod-${esc(g.CodGrupo)}-${esc(p.Nombre)}"
                      onclick="seleccionarProducto(${g.CodGrupo}, ${JSON.stringify(p.Nombre)})">
@@ -777,7 +776,6 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
     // ── Toggle grupo ──────────────────────────────────────────────────
     function toggleGrupo(codGrupo) {
         const lista = document.getElementById(`grupo-${codGrupo}`);
-        const btn   = document.getElementById(`btn-grupo-${codGrupo}`);
         if (!lista) return;
         const isOpen = lista.classList.contains('open');
         // Cerrar todos
