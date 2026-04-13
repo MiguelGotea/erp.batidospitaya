@@ -1,564 +1,36 @@
 <?php
-// visor_recetas_light.php
-$version = mt_rand(1, 10000);
-
+/* ============================================================
+   VISOR DE RECETAS LIGHT — Consulta de Recetas (solo lectura)
+   modulos/productos/visor_recetas_light.php
+   ============================================================ */
 require_once '../../core/auth/auth.php';
 require_once '../../core/layout/menu_lateral.php';
 require_once '../../core/layout/header_universal.php';
 require_once '../../core/permissions/permissions.php';
 
-$usuario = obtenerUsuarioActual();
+$usuario      = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
 
 if (!tienePermiso('recetario_access_traducido', 'vista', $cargoOperario)) {
-    header('Location: ../../index.php');
+    header('Location: /login.php');
     exit();
 }
 ?>
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Consulta de Recetas | Productos</title>
-    <meta name="description" content="Visor compacto de recetas del sistema ERP Pitaya. Consulta rápida sin edición.">
-    <link rel="icon" href="../../core/assets/img/icon12.png" type="image/png">
+    <title>Consulta de Recetas · Pitaya ERP</title>
+    <meta name="description" content="Visor compacto de recetas para auditoría rápida de productos">
+
+    <link rel="icon" href="../../assets/img/icon12.png" type="image/png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="/assets/css/global_tools.css?v=<?php echo $version; ?>">
-
-    <style>
-        /* ── Base ──────────────────────────────────────────────── */
-        body {
-            background: #f0f2f5;
-            font-family: 'Outfit', sans-serif;
-        }
-
-        /* ── Layout principal: dos columnas ─────────────────────── */
-        .vrl-layout {
-            display: grid;
-            grid-template-columns: 320px 1fr;
-            gap: 16px;
-            align-items: start;
-        }
-
-        @media (max-width: 1024px) {
-            .vrl-layout {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        /* ── Panel izquierdo — Menú de productos ─────────────────── */
-        .vrl-menu {
-            background: #fff;
-            border-radius: 12px;
-            box-shadow: 0 1px 6px rgba(0,0,0,.10);
-            overflow: visible;
-            position: sticky;
-            top: 16px;
-            max-height: calc(100vh - 100px);
-            display: flex;
-            flex-direction: column;
-        }
-
-        .vrl-menu-header {
-            background: #1a3a2a;
-            padding: 14px 18px 12px;
-            color: #fff;
-            flex-shrink: 0;
-            border-radius: 12px 12px 0 0;
-        }
-
-        .vrl-menu-header h6 {
-            font-size: .75rem;
-            font-weight: 700;
-            letter-spacing: .07em;
-            text-transform: uppercase;
-            margin: 0 0 10px;
-            color: #74c69d;
-        }
-
-        .vrl-search-wrap {
-            position: relative;
-        }
-
-        .vrl-search {
-            width: 100%;
-            background: rgba(255,255,255,.12);
-            border: 1.5px solid rgba(255,255,255,.25);
-            border-radius: 10px;
-            padding: 8px 14px 8px 36px;
-            color: #fff;
-            font-size: .85rem;
-            font-family: 'Outfit', sans-serif;
-            outline: none;
-            transition: border-color .2s, background .2s;
-        }
-
-        .vrl-search::placeholder { color: rgba(255,255,255,.5); }
-        .vrl-search:focus {
-            border-color: rgba(255,255,255,.6);
-            background: rgba(255,255,255,.18);
-        }
-
-        .vrl-search-icon {
-            position: absolute;
-            left: 11px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: rgba(255,255,255,.5);
-            font-size: .8rem;
-        }
-
-        .vrl-menu-body {
-            overflow-y: auto;
-            overflow-x: hidden;
-            flex: 1;
-            border-radius: 0 0 16px 16px; /* mantiene bordes redondeados sin overflow:hidden en padre */
-        }
-
-        .vrl-menu-body::-webkit-scrollbar { width: 4px; }
-        .vrl-menu-body::-webkit-scrollbar-track { background: #f5f5f5; }
-        .vrl-menu-body::-webkit-scrollbar-thumb { background: #ccc; border-radius: 4px; }
-
-        /* Grupo accordion */
-        .vrl-grupo-btn {
-            width: 100%;
-            background: none;
-            border: none;
-            text-align: left;
-            padding: 11px 18px;
-            font-family: 'Outfit', sans-serif;
-            font-size: .83rem;
-            font-weight: 700;
-            color: #1a3a2a;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            cursor: pointer;
-            border-bottom: 1px solid #f0f2f5;
-            transition: background .15s;
-        }
-
-        .vrl-grupo-btn:hover { background: #f6fff8; }
-        .vrl-grupo-btn.active { background: #e8f5e9; color: #1b4332; }
-
-        .vrl-grupo-btn .grupo-icon {
-            width: 28px;
-            height: 28px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: .75rem;
-            color: #fff;
-            flex-shrink: 0;
-        }
-
-        .vrl-grupo-btn .grupo-count {
-            margin-left: auto;
-            font-size: .72rem;
-            font-weight: 600;
-            background: #e8f5e9;
-            color: #2d6a4f;
-            border-radius: 20px;
-            padding: 1px 8px;
-        }
-
-        .vrl-grupo-btn .chevron {
-            margin-left: 4px;
-            font-size: .65rem;
-            color: #aaa;
-            transition: transform .2s;
-        }
-
-        .vrl-grupo-btn.active .chevron { transform: rotate(180deg); }
-
-        /* Lista de productos dentro del grupo */
-        /* display se controla via JS (style.display) para evitar conflictos de especificidad */
-        .vrl-productos-list {
-            background: #fafafa;
-            border-bottom: 1px solid #eee;
-        }
-
-        .vrl-prod-item {
-            padding: 9px 18px 9px 54px;
-            font-size: .82rem;
-            color: #333;
-            cursor: pointer;
-            transition: background .12s;
-            border-bottom: 1px solid #f0f0f0;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 6px;
-        }
-
-        .vrl-prod-item:last-child { border-bottom: none; }
-        .vrl-prod-item:hover { background: #e8f5e9; color: #1b4332; }
-        .vrl-prod-item.selected {
-            background: linear-gradient(90deg, #d4ede3, #e8f5e9);
-            color: #1b4332;
-            font-weight: 600;
-            border-left: 3px solid #40916c;
-        }
-
-        .vrl-prod-item .prod-versiones-count {
-            font-size: .7rem;
-            color: #888;
-            background: #ececec;
-            border-radius: 10px;
-            padding: 1px 7px;
-            flex-shrink: 0;
-        }
-
-        .vrl-prod-item.selected .prod-versiones-count {
-            background: #b7e4c7;
-            color: #1b4332;
-        }
-
-        /* ── Panel derecho — Contenido ───────────────────────────── */
-        .vrl-content {
-            min-height: 400px;
-        }
-
-        /* ── Panel versiones ─────────────────────────────────────── */
-        .vrl-versiones-panel {
-            background: #fff;
-            border-radius: 14px;
-            box-shadow: 0 2px 10px rgba(0,0,0,.07);
-            padding: 18px 20px;
-            margin-bottom: 14px;
-        }
-
-        .vrl-versiones-title {
-            font-size: .75rem;
-            font-weight: 700;
-            letter-spacing: .08em;
-            text-transform: uppercase;
-            color: #888;
-            margin-bottom: 12px;
-        }
-
-        .vrl-chips-wrap {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-
-        /* Chip de versión */
-        .vrl-chip {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            padding: 7px 14px;
-            border-radius: 50px;
-            background: #f0f2f5;
-            border: 2px solid transparent;
-            cursor: pointer;
-            font-size: .82rem;
-            font-weight: 600;
-            color: #444;
-            transition: all .18s;
-            font-family: 'Outfit', sans-serif;
-        }
-
-        .vrl-chip:hover {
-            background: #e8f5e9;
-            border-color: #74c69d;
-            color: #1b4332;
-        }
-
-        .vrl-chip.selected {
-            background: #1a3a2a;
-            border-color: #1a3a2a;
-            color: #fff;
-            box-shadow: 0 2px 6px rgba(26,58,42,.25);
-        }
-
-        .vrl-chip .chip-code {
-            font-size: .78rem;
-            font-weight: 700;
-            font-family: 'Courier New', monospace;
-        }
-
-        .vrl-chip .chip-medida {
-            font-size: .73rem;
-            opacity: .75;
-        }
-
-        /* Badge PedidosYa */
-        .badge-pedidosya {
-            display: inline-flex;
-            align-items: center;
-            gap: 3px;
-            background: linear-gradient(135deg, #ff3008, #ff6b35);
-            color: #fff;
-            font-size: .63rem;
-            font-weight: 700;
-            border-radius: 20px;
-            padding: 2px 7px;
-            letter-spacing: .03em;
-            box-shadow: 0 2px 6px rgba(255,48,8,.35);
-            flex-shrink: 0;
-        }
-
-        .badge-pedidosya i { font-size: .6rem; }
-
-        /* ── Barra producto activo (single row) ─────────────────── */
-        .vrl-barra-producto {
-            background: #1a3a2a;
-            border-radius: 10px;
-            padding: 10px 16px;
-            margin-bottom: 12px;
-            color: #fff;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-
-        .vrl-barra-producto .bp-nombre {
-            font-size: .95rem;
-            font-weight: 700;
-            flex: 1;
-        }
-
-        .vrl-barra-producto .bp-codigo {
-            font-family: 'Courier New', monospace;
-            font-size: .75rem;
-            background: rgba(255,255,255,.12);
-            border-radius: 5px;
-            padding: 2px 8px;
-        }
-
-        .vrl-barra-producto .bp-grupo {
-            font-size: .72rem;
-            color: rgba(255,255,255,.6);
-        }
-
-        /* Chips de versión dentro de la barra */
-        .bp-chips {
-            display: flex;
-            gap: 6px;
-            flex-wrap: wrap;
-            align-items: center;
-        }
-
-        .bp-chip {
-            font-size: .75rem;
-            font-weight: 600;
-            padding: 3px 11px;
-            border-radius: 20px;
-            border: 1.5px solid rgba(255,255,255,.3);
-            cursor: pointer;
-            color: rgba(255,255,255,.8);
-            transition: all .15s;
-            background: transparent;
-            font-family: 'Outfit', sans-serif;
-            white-space: nowrap;
-        }
-
-        .bp-chip:hover {
-            background: rgba(255,255,255,.15);
-            color: #fff;
-        }
-
-        .bp-chip.active {
-            background: #fff;
-            color: #1a3a2a;
-            border-color: #fff;
-            font-weight: 700;
-        }
-
-        /* resumen bar eliminada */
-
-        /* ── Tabla receta ─────────────────────────────────────────── */
-        .vrl-table-wrap {
-            background: #fff;
-            border-radius: 10px;
-            box-shadow: 0 1px 6px rgba(0,0,0,.08);
-            overflow: hidden;
-        }
-
-        .table-receta-light {
-            font-size: .82rem;
-            margin: 0;
-        }
-
-        .table-receta-light thead {
-            position: sticky;
-            top: 0;
-            z-index: 2;
-        }
-
-        /* Una sola fila de cabecera — sin segmentos */
-        .table-receta-light .cols-row th {
-            background: #1a3a2a;
-            color: #fff;
-            font-size: .73rem;
-            font-weight: 600;
-            white-space: nowrap;
-            vertical-align: middle;
-            padding: 9px 12px;
-            border: none;
-        }
-
-        .table-receta-light tbody td {
-            vertical-align: middle;
-            border-bottom: 1px solid #f0f2f5;
-            padding: 9px 12px;
-        }
-
-        .table-receta-light tbody tr:hover { background: #f8fffe; }
-        .table-receta-light tbody tr:last-child td { border-bottom: none; }
-
-        /* Stripe tipo */
-        .fila-B { border-left: 3px solid #4e73df; }
-        .fila-L { border-left: 3px solid #f6c23e; }
-        .fila-P { border-left: 3px solid #858796; }
-
-        /* Separador visual comanda → nuevo */
-        .td-sep-left {
-            border-left: 3px solid #7c4dff !important;
-        }
-
-        /* ── Badges de tipo ─────────────────────────────────────── */
-        .badge-tipo {
-            font-size: .68rem;
-            font-weight: 700;
-            border-radius: 6px;
-            padding: 2px 8px;
-            white-space: nowrap;
-        }
-
-        .badge-tipo-B { background: #e8eaf6; color: #3949ab; }
-        .badge-tipo-L { background: #fff8e1; color: #f57f17; }
-        .badge-tipo-P { background: #f3e5f5; color: #7b1fa2; }
-        .badge-tipo-X { background: #eeeeee; color: #555; }
-
-        /* ── Celdas Nuevo Sistema ───────────────────────────────── */
-        .cel-insumo {
-            line-height: 1.3;
-        }
-
-        .cel-insumo .sku {
-            font-size: .68rem;
-            background: #e8f5e9;
-            color: #1b5e20;
-            border-radius: 4px;
-            padding: 1px 6px;
-            font-weight: 700;
-            font-family: 'Courier New', monospace;
-            margin-right: 4px;
-        }
-
-        .cel-insumo .nom-erp {
-            font-size: .84rem;
-            color: #1b4332;
-            font-weight: 600;
-        }
-
-        .cel-insumo .uni-erp {
-            font-size: .72rem;
-            color: #777;
-        }
-
-        .cel-insumo .tag-receta {
-            font-size: .62rem;
-            background: #e8eaf6;
-            color: #3949ab;
-            border-radius: 3px;
-            padding: 1px 5px;
-            margin-left: 4px;
-        }
-
-        .cel-insumo .tag-inactivo {
-            font-size: .62rem;
-            background: #fdd;
-            color: #c0392b;
-            border-radius: 3px;
-            padding: 1px 5px;
-        }
-
-        .cel-na {
-            font-size: .75rem;
-            color: #bbb;
-            font-style: italic;
-        }
-
-        .cel-error {
-            font-size: .75rem;
-            color: #e57373;
-            font-style: italic;
-        }
-
-        /* ── Panel vacío ────────────────────────────────────────── */
-        .vrl-empty {
-            text-align: center;
-            padding: 80px 30px;
-            color: #bbb;
-            background: #fff;
-            border-radius: 14px;
-            box-shadow: 0 2px 10px rgba(0,0,0,.07);
-        }
-
-        .vrl-empty .empty-icon {
-            font-size: 3.5rem;
-            margin-bottom: 16px;
-            display: block;
-            opacity: .35;
-        }
-
-        .vrl-empty p {
-            font-size: .9rem;
-            margin: 0;
-        }
-
-        /* ── Spinner ─────────────────────────────────────────────── */
-        .vrl-spinner {
-            display: none;
-            text-align: center;
-            padding: 80px 30px;
-            background: #fff;
-            border-radius: 14px;
-            box-shadow: 0 2px 10px rgba(0,0,0,.07);
-            color: #555;
-        }
-
-        /* ── Loading overlay menu ────────────────────────────────── */
-        .menu-loading {
-            padding: 30px;
-            text-align: center;
-            color: #aaa;
-            font-size: .85rem;
-        }
-
-        /* ── Divider ─────────────────────────────────────────────── */
-        .vrl-divider {
-            height: 1px;
-            background: linear-gradient(90deg, transparent, #ddd, transparent);
-            margin: 2px 0;
-        }
-
-        /* ── Contador receta ─────────────────────────────────────── */
-        .orden-num {
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            background: #e8f5e9;
-            color: #1b4332;
-            font-size: .72rem;
-            font-weight: 700;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-        }
-    </style>
+    <link rel="stylesheet" href="/assets/css/global_tools.css?v=<?php echo mt_rand(1, 10000); ?>">
+    <link rel="stylesheet" href="css/visor_recetas_light.css?v=<?php echo mt_rand(1, 10000); ?>">
 </head>
 
 <body>
@@ -568,7 +40,7 @@ if (!tienePermiso('recetario_access_traducido', 'vista', $cargoOperario)) {
         <div class="sub-container">
             <?php echo renderHeader($usuario, false, 'Consulta de Recetas'); ?>
 
-            <div class="vrl-layout">
+            <div class="vrl-layout p-3">
 
                 <!-- ══ Columna izquierda — Menú de productos ══ -->
                 <aside class="vrl-menu" id="vrlMenu">
@@ -577,7 +49,7 @@ if (!tienePermiso('recetario_access_traducido', 'vista', $cargoOperario)) {
                         <div class="vrl-search-wrap">
                             <i class="fas fa-search vrl-search-icon"></i>
                             <input type="text" class="vrl-search" id="inputBuscar"
-                                placeholder="Buscar producto…" autocomplete="off">
+                                   placeholder="Buscar producto…" autocomplete="off">
                         </div>
                     </div>
                     <div class="vrl-menu-body" id="menuBody">
@@ -591,22 +63,22 @@ if (!tienePermiso('recetario_access_traducido', 'vista', $cargoOperario)) {
                 <!-- ══ Columna derecha — Contenido ══ -->
                 <main class="vrl-content" id="vrlContent">
 
-                    <!-- Barra producto + versiones (una sola fila compacta) -->
+                    <!-- Barra compacta: nombre + grupo + chips de versión -->
                     <div class="vrl-barra-producto d-none" id="barraProducto"></div>
 
-                    <!-- Spinner -->
+                    <!-- Spinner de carga de receta -->
                     <div class="vrl-spinner" id="spinnerReceta">
                         <div class="spinner-border text-success mb-3" style="width:2rem;height:2rem"></div>
                         <div style="font-size:.88rem">Cargando receta…</div>
                     </div>
 
-                    <!-- Empty state -->
+                    <!-- Estado vacío inicial -->
                     <div class="vrl-empty" id="panelVacio">
                         <i class="fas fa-blender empty-icon"></i>
                         <p>Elige un grupo y un producto<br>del menú para ver su receta</p>
                     </div>
 
-                    <!-- Tabla receta -->
+                    <!-- Tabla de receta -->
                     <div class="vrl-table-wrap d-none" id="panelTabla">
                         <div class="table-responsive">
                             <table class="table table-hover mb-0 table-receta-light" id="tablaReceta">
@@ -625,409 +97,75 @@ if (!tienePermiso('recetario_access_traducido', 'vista', $cargoOperario)) {
                     </div>
 
                 </main>
+
             </div><!-- /vrl-layout -->
 
         </div><!-- /sub-container -->
     </div><!-- /main-container -->
 
+    <!-- Modal de Ayuda -->
+    <div class="modal fade" id="pageHelpModal" tabindex="-1"
+         aria-labelledby="pageHelpModalLabel" aria-hidden="true"
+         data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header" style="background:#1a3a2a;color:#fff">
+                    <h5 class="modal-title" id="pageHelpModalLabel">
+                        <i class="fas fa-info-circle me-2"></i> Guía — Consulta de Recetas
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="card h-100 border-0 bg-light">
+                                <div class="card-body">
+                                    <h6 class="fw-bold border-bottom pb-2" style="color:#1a3a2a">
+                                        <i class="fas fa-mouse-pointer me-2"></i>Cómo navegar (2 clicks)
+                                    </h6>
+                                    <p class="small text-muted mb-0">
+                                        <strong>Click 1:</strong> Abre un grupo del menú izquierdo.<br>
+                                        <strong>Click 2:</strong> Selecciona un producto — la receta se carga automáticamente.<br>
+                                        Si el producto tiene múltiples versiones, usa los chips de la barra superior para cambiar entre ellas.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card h-100 border-0 bg-light">
+                                <div class="card-body">
+                                    <h6 class="fw-bold border-bottom pb-2" style="color:#1a3a2a">
+                                        <i class="fas fa-table me-2"></i>Columnas de la tabla
+                                    </h6>
+                                    <p class="small text-muted mb-0">
+                                        <strong>Orden:</strong> Posición en la comanda Access.<br>
+                                        <strong>Tipo:</strong> B = Bebida, L = Líquido, P = Polvo.<br>
+                                        <strong>Insumo Receta:</strong> Ingrediente mapeado en el nuevo ERP.<br>
+                                        <strong>Cantidad y Presentación:</strong> Calculados según unidades y factores de conversión.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="alert alert-info py-2 px-3 small mb-0">
+                                <strong><i class="fas fa-motorcycle me-1"></i> Badge PedidosYa:</strong>
+                                Se muestra en versiones cuyo código termina en <code>d</code> (ej: <code>201Gv11d</code>).
+                                Gigantona = 20oz · Mediano = 16oz.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        #pageHelpModal { z-index: 1060 !important; }
+        .modal-backdrop { z-index: 1050 !important; }
+    </style>
+
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
-    <script>
-    /* =====================================================================
-       VISOR DE RECETAS LIGHT — JS
-       ===================================================================== */
-
-    const AJAX_PRODUCTOS  = 'ajax/visor_recetas_light_get_productos.php';
-    const AJAX_RECETA     = '../sistemas/ajax/accessantiguo_get_detalle_receta.php';
-
-    // Paleta de colores para grupos (cicla sobre los grupos)
-    const GRUPO_COLORES = [
-        '#2d6a4f','#1565c0','#6a1b9a','#c62828','#e65100',
-        '#00838f','#4527a0','#2e7d32','#4e342e','#ad1457',
-    ];
-
-    // ── Utilidades ─────────────────────────────────────────────────────
-    function esc(s) {
-        if (s === null || s === undefined) return '';
-        return String(s)
-            .replace(/&/g,'&amp;').replace(/</g,'&lt;')
-            .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-    }
-    function show(id) { document.getElementById(id).classList.remove('d-none'); }
-    function hide(id) { document.getElementById(id).classList.add('d-none'); }
-    function esPedidosYa(cod) {
-        return typeof cod === 'string' && cod.toLowerCase().endsWith('d');
-    }
-
-    // ── Estado ─────────────────────────────────────────────────────────
-    let todosGrupos = [];          // árbol completo cargado
-    let productoActual = null;     // { Nombre, versiones: [] }
-    let versionActual  = null;     // { CodBatido, Medida, Precio }
-
-    // ── Cargar árbol de productos ───────────────────────────────────────
-    async function iniciarMenu() {
-        try {
-            const res = await fetch(AJAX_PRODUCTOS);
-            const data = await res.json();
-            if (!data.success) throw new Error(data.message);
-            todosGrupos = data.grupos;
-            renderMenu(todosGrupos);
-            // Registrar listener UNA sola vez — sobrevive re-renders del menú
-            // Todos los .vrl-productos-list empiezan ocultos (JS controla display)
-            document.querySelectorAll('.vrl-productos-list').forEach(el => el.style.display = 'none');
-            document.getElementById('menuBody').addEventListener('click', onMenuClick);
-        } catch(e) {
-            document.getElementById('menuBody').innerHTML =
-                `<div class="menu-loading text-danger"><i class="fas fa-exclamation-circle me-1"></i>Error al cargar</div>`;
-        }
-    }
-
-    // ── Renderizar menú ────────────────────────────────────────────────
-    function renderMenu(grupos) {
-        const body = document.getElementById('menuBody');
-        if (!grupos.length) {
-            body.innerHTML = `<div class="menu-loading">Sin productos activos</div>`;
-            return;
-        }
-
-        let html = '';
-        grupos.forEach((g, gIdx) => {
-            const color      = GRUPO_COLORES[gIdx % GRUPO_COLORES.length];
-            const totalProds = g.productos.length;
-            const gid        = `grupo-${g.CodGrupo}`;
-            const nombre     = g.alias || g.NombreGrupo;
-
-            // Usar data-codgrupo en lugar de onclick con JSON para evitar rotura
-            // con nombres que contienen comillas, apóstrofes, etc.
-            html += `
-            <button class="vrl-grupo-btn" id="btn-${gid}"
-                    data-codgrupo="${esc(String(g.CodGrupo))}">
-                <span class="grupo-icon" style="background:${color}">
-                    <i class="fas fa-box-open"></i>
-                </span>
-                <span class="flex-grow-1 text-start" style="font-size:.81rem">${esc(nombre)}</span>
-                <span class="grupo-count">${totalProds}</span>
-                <i class="fas fa-chevron-down chevron"></i>
-            </button>
-            <div class="vrl-productos-list" id="${gid}">`;
-
-            // Guardar el índice del producto relativo a todosGrupos (no al array filtrado)
-            // para que la búsqueda no desalinee los índices
-            const grupoOriginal = todosGrupos.find(og => String(og.CodGrupo) === String(g.CodGrupo));
-            g.productos.forEach(p => {
-                // Obtener el índice real desde todosGrupos
-                const prodIdxReal = grupoOriginal
-                    ? grupoOriginal.productos.findIndex(op => op.Nombre === p.Nombre)
-                    : -1;
-                if (prodIdxReal < 0) return; // no debería pasar
-                html += `
-                <div class="vrl-prod-item"
-                     data-codgrupo="${esc(String(g.CodGrupo))}"
-                     data-prodidx="${prodIdxReal}">
-                    <span class="prod-nombre">${esc(p.Nombre)}</span>
-                    <span class="prod-versiones-count">${p.versiones.length}v</span>
-                </div>`;
-            });
-
-            html += `</div>`;
-        });
-
-        body.innerHTML = html;
-        // (el listener se registra una sola vez desde iniciarMenu)
-    }
-
-    // ── Event delegation para el menú ────────────────────────────────
-    // Se registra UNA sola vez en el body del menú después de renderizar
-    let _menuListenerActive = false;
-    function onMenuClick(e) {
-        // Click en botón de grupo
-        const btnGrupo = e.target.closest('.vrl-grupo-btn');
-        if (btnGrupo) {
-            toggleGrupo(btnGrupo.dataset.codgrupo);
-            return;
-        }
-        // Click en producto
-        const itemProd = e.target.closest('.vrl-prod-item');
-        if (itemProd) {
-            const codGrupo = itemProd.dataset.codgrupo;
-            const prodIdx  = parseInt(itemProd.dataset.prodidx, 10);
-            seleccionarProductoPorIdx(codGrupo, prodIdx, itemProd);
-        }
-    }
-
-    // ── Toggle grupo ─────────────────────────────────────────────────
-    // Usa style.display directamente (más confiable que CSS class con posibles conflictos)
-    function toggleGrupo(codGrupo) {
-        const lista = document.getElementById(`grupo-${codGrupo}`);
-        if (!lista) return;
-
-        const isOpen = lista.style.display === 'block';
-
-        // Cerrar TODOS los grupos abiertos
-        document.querySelectorAll('.vrl-productos-list').forEach(el => {
-            el.style.display = 'none';
-        });
-        document.querySelectorAll('.vrl-grupo-btn.active').forEach(el => el.classList.remove('active'));
-
-        // Si no estaba abierto → abrirlo
-        if (!isOpen) {
-            lista.style.display = 'block';
-            const btnEl = document.querySelector(`[data-codgrupo="${CSS.escape(String(codGrupo))}"].vrl-grupo-btn`);
-            if (btnEl) btnEl.classList.add('active');
-            // Scroll suave para que el grupo quede visible en el menú
-            lista.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        }
-    }
-
-    // ── Seleccionar producto por índice (seguro para cualquier nombre) ──
-    function seleccionarProductoPorIdx(codGrupo, prodIdx, elClicked) {
-        document.querySelectorAll('.vrl-prod-item.selected').forEach(el => el.classList.remove('selected'));
-        if (elClicked) elClicked.classList.add('selected');
-
-        const grupo = todosGrupos.find(g => String(g.CodGrupo) === String(codGrupo));
-        if (!grupo) return;
-        const prod = grupo.productos[prodIdx];
-        if (!prod) return;
-
-        productoActual = prod;
-        versionActual  = null;
-
-        resetContenido();
-
-        // FLUJO 2 CLICKS: auto-seleccionar la primera versión inmediatamente
-        // Los chips quedan dentro de la barra para cambiar sin click extra
-        const v0 = prod.versiones[0];
-        if (v0) seleccionarVersion(v0.CodBatido);
-    }
-
-    // ── Mapeo de etiquetas de tamaño ───────────────────────────
-    const MEDIDA_OZ = { 'gigantona': '20oz', 'mediano': '16oz', 'pequeño': '12oz' };
-    function labelMedida(medida) {
-        if (!medida) return '';
-        const oz = MEDIDA_OZ[medida.toLowerCase()];
-        return oz ? `${medida} ${oz}` : medida;
-    }
-
-    // ── Seleccionar versión ──────────────────────────────────────
-    function seleccionarVersion(codBatido) {
-        if (!productoActual) return;
-        versionActual = productoActual.versiones.find(v => v.CodBatido === codBatido);
-
-        // Actualizar barra con los chips de versión
-        renderBarraProducto(productoActual, codBatido);
-
-        // Mostrar spinner, limpiar tabla
-        hide('panelTabla');
-        hide('panelVacio');
-        document.getElementById('spinnerReceta').style.display = 'block';
-        document.getElementById('tbodyReceta').innerHTML = '';
-
-        // Cargar receta
-        fetch(`${AJAX_RECETA}?cod_batido=${encodeURIComponent(codBatido)}`)
-            .then(r => r.json())
-            .then(data => {
-                document.getElementById('spinnerReceta').style.display = 'none';
-                if (!data.success) { show('panelVacio'); return; }
-                renderTabla(data.ingredientes);
-            })
-            .catch(() => {
-                document.getElementById('spinnerReceta').style.display = 'none';
-                show('panelVacio');
-            });
-    }
-
-    // ── Barra compacta producto + chips de versión (una sola fila) ──────
-    function renderBarraProducto(prod, codActivo) {
-        const barra = document.getElementById('barraProducto');
-
-        // Chips de versión (solo si hay más de una)
-        let chipsHtml = '';
-        if (prod.versiones.length > 1) {
-            chipsHtml = `<div class="bp-chips">`;
-            prod.versiones.forEach(v => {
-                const esPY   = esPedidosYa(v.CodBatido);
-                const pyHtml = esPY ? ` <span class="badge-pedidosya" style="font-size:.55rem;padding:1px 5px"><i class="fas fa-motorcycle"></i></span>` : '';
-                const label  = labelMedida(v.Medida) || v.CodBatido;
-                const activo = v.CodBatido === codActivo ? 'active' : '';
-                chipsHtml += `<button class="bp-chip ${activo}" data-cod="${esc(v.CodBatido)}"
-                    onclick="seleccionarVersion('${esc(v.CodBatido)}')">${esc(label)}${pyHtml}</button>`;
-            });
-            chipsHtml += `</div>`;
-        } else if (prod.versiones.length === 1) {
-            const v = prod.versiones[0];
-            const esPY   = esPedidosYa(v.CodBatido);
-            const pyHtml = esPY ? ` <span class="badge-pedidosya" style="font-size:.55rem;padding:1px 5px"><i class="fas fa-motorcycle"></i></span>` : '';
-            const label  = labelMedida(v.Medida) || v.CodBatido;
-            chipsHtml = `<span class="bp-chip active" style="cursor:default">${esc(label)}${pyHtml}</span>`;
-        }
-
-        const grupoTag = prod.NombreGrupo
-            ? `<span class="bp-grupo">${esc(prod.NombreGrupo)}</span>` : '';
-
-        barra.innerHTML = `
-            <span class="bp-nombre">${esc(prod.Nombre)}</span>
-            ${grupoTag}
-            ${chipsHtml}`;
-
-        barra.classList.remove('d-none');
-    }
-
-    // ── Tabla de ingredientes (solo Nuevo Sistema + Orden + Tipo) ──────
-    function renderTabla(ingredientes) {
-        const tbody = document.getElementById('tbodyReceta');
-
-        if (!ingredientes.length) {
-            tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-5">
-                <i class="fas fa-exclamation-circle me-2"></i>Receta sin ingredientes registrados.</td></tr>`;
-            show('panelTabla');
-            return;
-        }
-
-        tbody.innerHTML = ingredientes.map((ingr, idx) => {
-            const tipo      = ingr.Tipo || '—';
-            const orden     = ingr.ordenreceta ?? (idx + 1);
-            const filaClass = `fila-${tipo}`;
-
-            // Badge de tipo
-            const tipoClasses = { B:'badge-tipo-B', L:'badge-tipo-L', P:'badge-tipo-P' };
-            const tipoCls = tipoClasses[tipo] || 'badge-tipo-X';
-            const tipoBadge = `<span class="badge-tipo ${tipoCls}">${esc(tipo)}</span>`;
-
-            // ── Insumo Receta ────────────────────────────────────────
-            const ir        = ingr.insumo_receta;
-            const np        = ingr.nuevo_producto;
-            const escenario = ingr.escenario_erp;
-            const recetaTag = `<span class="tag-receta">📋 Receta</span>`;
-
-            let celInsumo;
-            if (escenario === 'receta_global' && ir) {
-                celInsumo = `<div class="cel-insumo">
-                    <div class="nom-erp">${esc(ir.NombreNuevo)}${recetaTag}</div>
-                    <div class="uni-erp">Unidades · 1</div>
-                </div>`;
-            } else if (ir) {
-                const inacTag = ir.activoNuevo === 'NO'
-                    ? `<span class="tag-inactivo ms-1">INACTIVO</span>` : '';
-                celInsumo = `<div class="cel-insumo">
-                    <div class="nom-erp">${esc(ir.NombreNuevo)}${inacTag}</div>
-                    <div class="uni-erp">${esc(ir.unidadNueva || '')}${ir.cantidad ? ' · ' + ir.cantidad : ''}</div>
-                </div>`;
-            } else if (np) {
-                celInsumo = `<span class="cel-na"><i class="fas fa-search me-1 text-warning"></i>Sin equiv. de unidad</span>`;
-            } else if (ingr.cotizacion) {
-                celInsumo = `<span class="cel-na"><i class="fas fa-exclamation-triangle me-1 text-warning"></i>Sin mapeo ERP</span>`;
-            } else {
-                celInsumo = `<span class="cel-error"><i class="fas fa-times-circle me-1"></i>No resuelto</span>`;
-            }
-
-            // ── Cantidad ERP ─────────────────────────────────────────
-            let celCantidad = '—';
-            if (escenario === 'receta_global') {
-                const srCant = parseFloat(ingr.Cantidad);
-                celCantidad = isNaN(srCant) ? '—'
-                    : (srCant % 1 === 0 ? srCant.toString() : srCant.toFixed(4).replace(/\.?0+$/, ''));
-            } else if (ir && ir.cantidad != null) {
-                const ppCant = parseFloat(ir.cantidad);
-                const srCant = parseFloat(ingr.Cantidad);
-                const factor = ir.factor_conversion != null ? parseFloat(ir.factor_conversion) : 1;
-                const esDirP1 = ingr.metodo_cotizacion === 'directa';
-                if (ppCant > 0 && !isNaN(srCant)) {
-                    const resultado = (srCant * factor) / ppCant;
-                    if (esDirP1) {
-                        const r = Math.round(resultado * 2) / 2;
-                        celCantidad = r % 1 === 0 ? r.toString() : r.toFixed(1);
-                    } else {
-                        celCantidad = resultado % 1 === 0
-                            ? resultado.toString()
-                            : parseFloat(resultado.toFixed(4)).toString();
-                    }
-                    if (factor !== 1 && ir.factor_conversion != null) {
-                        const exacto = parseFloat(resultado.toFixed(4));
-                        celCantidad = `<span title="${ingr.Cantidad} × ${factor} ÷ ${ppCant} = ${exacto}">${celCantidad}</span>`;
-                    }
-                }
-            }
-
-            // ── Presentación Uso ─────────────────────────────────────
-            let celPresentacion;
-            if (np) {
-                const inacTag = np.activoNuevo === 'NO'
-                    ? `<span class="tag-inactivo ms-1">INACTIVO</span>` : '';
-                const autoTag = ingr.metodo_resolucion === 'maestro'
-                    ? `<span style="font-size:.62rem;background:#e8f5e9;color:#2e7d32;border-radius:3px;padding:1px 5px;margin-left:4px">AUTO</span>` : '';
-                const npRecetaTag = escenario === 'receta_global' ? recetaTag : '';
-                let varHTML = '';
-                if (np.variedades && np.variedades.length > 0) {
-                    varHTML = `<div style="font-size:.72rem;color:#aaa;margin-top:2px">
-                        ${np.variedades.map(v => `<span style="margin-right:5px">${esc(v.nombre)}${v.es_principal==1?' ★':''}</span>`).join('')}
-                    </div>`;
-                }
-                celPresentacion = `<div class="cel-insumo">
-                    <div class="nom-erp">${esc(np.NombreNuevo)}${inacTag}${autoTag}${npRecetaTag}</div>
-                    <div class="uni-erp">${esc(np.unidadNueva || '')}${np.cantidad ? ' · ' + np.cantidad : ''}${np.productoMaestro ? ' — ' + esc(np.productoMaestro) : ''}</div>
-                    ${varHTML}
-                </div>`;
-            } else if (ingr.cotizacion) {
-                celPresentacion = `<span class="cel-na"><i class="fas fa-exclamation-triangle me-1 text-warning"></i>Sin mapeo</span>`;
-            } else {
-                celPresentacion = `<span class="cel-error"><i class="fas fa-times-circle me-1"></i>No resuelto</span>`;
-            }
-
-            return `<tr class="${filaClass}">
-                <td class="text-center">
-                    <span class="orden-num">${orden}</span>
-                </td>
-                <td class="text-center">${tipoBadge}</td>
-                <td class="td-sep-left">${celInsumo}</td>
-                <td class="text-center fw-bold" style="font-size:.9rem">${celCantidad}</td>
-                <td>${celPresentacion}</td>
-            </tr>`;
-        }).join('');
-
-        show('panelTabla');
-    }
-
-    // ── Reset contenido ───────────────────────────────────────────────
-    function resetContenido() {
-        const barra = document.getElementById('barraProducto');
-        if (barra) barra.classList.add('d-none');
-        hide('panelTabla');
-        hide('panelVacio');
-        document.getElementById('spinnerReceta').style.display = 'none';
-        document.getElementById('tbodyReceta').innerHTML = '';
-    }
-
-    // ── Búsqueda en menú ─────────────────────────────────────────────
-    document.getElementById('inputBuscar').addEventListener('input', function() {
-        const q = this.value.trim().toLowerCase();
-        if (!q) {
-            renderMenu(todosGrupos);
-            // Ocultar todos los grupos recién renderizados
-            document.querySelectorAll('.vrl-productos-list').forEach(el => el.style.display = 'none');
-            return;
-        }
-
-        // Filtrar árbol (solo grupos, los productos se mantienen con índice original)
-        const filtrado = todosGrupos.map(g => ({
-            ...g,
-            productos: g.productos.filter(p => p.Nombre.toLowerCase().includes(q))
-        })).filter(g => g.productos.length > 0);
-
-        renderMenu(filtrado);
-
-        // Abrir todos los grupos con resultados (via style.display)
-        filtrado.forEach(g => {
-            const lista = document.getElementById(`grupo-${g.CodGrupo}`);
-            const btnEl = document.querySelector(`[data-codgrupo="${CSS.escape(String(g.CodGrupo))}"].vrl-grupo-btn`);
-            if (lista)  lista.style.display = 'block';
-            if (btnEl)  btnEl.classList.add('active');
-        });
-    });
-
-    // ── Init ──────────────────────────────────────────────────────────
-    iniciarMenu();
-
-    </script>
+    <script src="js/visor_recetas_light.js?v=<?php echo mt_rand(1, 10000); ?>"></script>
 </body>
 </html>
