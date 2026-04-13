@@ -14,7 +14,8 @@ require_once '../../../core/database/conexion.php';
 require_once '../../../core/permissions/permissions.php';
 
 header('Content-Type: application/json; charset=utf-8');
-set_time_limit(60);
+set_time_limit(0);       // sin límite: la query pesada la hace MySQL
+ini_set('memory_limit', '256M');
 error_reporting(E_ALL);
 ini_set('display_errors', '0');  // no mezclar HTML con JSON
 
@@ -178,42 +179,38 @@ try {
     $sql = "
         SELECT
             v.Fecha,
-            v.Semana             AS semana,
-            v.local              AS sucursal,
-            v.DBBatidos_Nombre   AS nombre_batido,
+            v.Semana                      AS semana,
+            v.local                       AS sucursal,
+            ANY_VALUE(v.DBBatidos_Nombre) AS nombre_batido,
             v.CodProducto,
             sr.CodIngrediente,
-            ing.Nombre           AS nombre_ingrediente,
-            ing.Unidad           AS unidad_access,
-            sr.Cantidad          AS cant_receta,
+            ANY_VALUE(ing.Nombre)         AS nombre_ingrediente,
+            ANY_VALUE(ing.Unidad)         AS unidad_access,
+            sr.Cantidad                   AS cant_receta,
             sr.codporcion,
             SUM(v.Cantidad)               AS ventas_sum,
             SUM(v.Cantidad * sr.Cantidad) AS cant_total_raw
         FROM VentasGlobalesAccessCSV v
         INNER JOIN SubReceta sr       ON sr.CodBatido       = v.CodProducto
+                                     AND ($whereIngJoin)
         INNER JOIN DBIngredientes ing ON ing.CodIngrediente = sr.CodIngrediente
         WHERE v.Anulado = 0
-          AND v.Fecha   BETWEEN ? AND ?
           AND v.Semana  BETWEEN ? AND ?
           AND v.CodProducto IN ($phBat)
           {$whereSuc}
-          AND ($whereIngJoin)
-        GROUP BY v.Fecha, v.Semana, v.local, v.DBBatidos_Nombre,
-                 v.CodProducto, sr.CodIngrediente, ing.Nombre,
-                 ing.Unidad, sr.Cantidad, sr.codporcion
+        GROUP BY v.Semana, v.local, v.Fecha, v.CodProducto,
+                 sr.CodIngrediente, sr.Cantidad, sr.codporcion
         ORDER BY v.Semana ASC, v.local ASC, v.Fecha ASC
-        LIMIT 2000
+        LIMIT 5000
     ";
 
     $positional = [
-        $rango['fecha_desde'],
-        $rango['fecha_hasta'],
         $numDesde,
         $numHasta,
     ];
-    foreach ($codBatidos as $b) $positional[] = $b;   // CodProducto IN
-    foreach ($sucParams  as $s) $positional[] = $s;   // sucursales IN
-    foreach ($ingParamsSR as $p) $positional[] = $p;  // WHERE ingrediente JOIN
+    foreach ($codBatidos  as $b) $positional[] = $b;   // CodProducto IN
+    foreach ($sucParams   as $s) $positional[] = $s;   // sucursales IN
+    foreach ($ingParamsSR as $p) $positional[] = $p;  // ON ingrediente JOIN
 
     $stmtV = $conn->prepare($sql);
     $stmtV->execute($positional);
