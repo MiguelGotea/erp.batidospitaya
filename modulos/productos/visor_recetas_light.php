@@ -740,15 +740,17 @@ if (!tienePermiso('recetario_access_traducido', 'vista', $cargoOperario)) {
         }
 
         let html = '';
-        grupos.forEach((g, idx) => {
-            const color  = GRUPO_COLORES[idx % GRUPO_COLORES.length];
+        grupos.forEach((g, gIdx) => {
+            const color      = GRUPO_COLORES[gIdx % GRUPO_COLORES.length];
             const totalProds = g.productos.length;
-            const gid    = `grupo-${g.CodGrupo}`;
-            const nombre = g.alias || g.NombreGrupo;
+            const gid        = `grupo-${g.CodGrupo}`;
+            const nombre     = g.alias || g.NombreGrupo;
 
+            // Usar data-codgrupo en lugar de onclick con JSON para evitar rotura
+            // con nombres que contienen comillas, apóstrofes, etc.
             html += `
             <button class="vrl-grupo-btn" id="btn-${gid}"
-                    onclick="toggleGrupo('${g.CodGrupo}')">
+                    data-codgrupo="${esc(String(g.CodGrupo))}">
                 <span class="grupo-icon" style="background:${color}">
                     <i class="fas fa-box-open"></i>
                 </span>
@@ -758,10 +760,13 @@ if (!tienePermiso('recetario_access_traducido', 'vista', $cargoOperario)) {
             </button>
             <div class="vrl-productos-list" id="${gid}">`;
 
-            g.productos.forEach(p => {
+            // Guardar el índice del producto en data-prodidx (índice en el array)
+            // para recuperarlo sin depender del nombre como clave
+            g.productos.forEach((p, pIdx) => {
                 html += `
-                <div class="vrl-prod-item" id="prod-${esc(g.CodGrupo)}-${esc(p.Nombre)}"
-                     onclick="seleccionarProducto(${g.CodGrupo}, ${JSON.stringify(p.Nombre)})">
+                <div class="vrl-prod-item"
+                     data-codgrupo="${esc(String(g.CodGrupo))}"
+                     data-prodidx="${pIdx}">
                     <span class="prod-nombre">${esc(p.Nombre)}</span>
                     <span class="prod-versiones-count">${p.versiones.length}v</span>
                 </div>`;
@@ -771,6 +776,28 @@ if (!tienePermiso('recetario_access_traducido', 'vista', $cargoOperario)) {
         });
 
         body.innerHTML = html;
+
+        // Event delegation: un solo listener en el contenedor
+        body.addEventListener('click', onMenuClick, { once: false });
+    }
+
+    // ── Event delegation para el menú ────────────────────────────────
+    // Se registra UNA sola vez en el body del menú después de renderizar
+    let _menuListenerActive = false;
+    function onMenuClick(e) {
+        // Click en botón de grupo
+        const btnGrupo = e.target.closest('.vrl-grupo-btn');
+        if (btnGrupo) {
+            toggleGrupo(btnGrupo.dataset.codgrupo);
+            return;
+        }
+        // Click en producto
+        const itemProd = e.target.closest('.vrl-prod-item');
+        if (itemProd) {
+            const codGrupo = itemProd.dataset.codgrupo;
+            const prodIdx  = parseInt(itemProd.dataset.prodidx, 10);
+            seleccionarProductoPorIdx(codGrupo, prodIdx, itemProd);
+        }
     }
 
     // ── Toggle grupo ──────────────────────────────────────────────────
@@ -784,24 +811,21 @@ if (!tienePermiso('recetario_access_traducido', 'vista', $cargoOperario)) {
         // Abrir el clickeado (si no estaba abierto)
         if (!isOpen) {
             lista.classList.add('open');
-            const btnEl = document.querySelector(`[onclick="toggleGrupo('${codGrupo}')"]`);
+            const btnEl = document.getElementById(`btn-grupo-${codGrupo}`);
             if (btnEl) btnEl.classList.add('active');
         }
     }
 
-    // ── Seleccionar producto ──────────────────────────────────────────
-    function seleccionarProducto(codGrupo, nombre) {
-        // Marcar activo
+    // ── Seleccionar producto por índice (seguro para cualquier nombre) ──
+    function seleccionarProductoPorIdx(codGrupo, prodIdx, elClicked) {
         document.querySelectorAll('.vrl-prod-item.selected').forEach(el => el.classList.remove('selected'));
-        const id = `prod-${codGrupo}-${nombre}`;
-        const el = document.getElementById(id);
-        if (el) el.classList.add('selected');
+        if (elClicked) elClicked.classList.add('selected');
 
-        // Buscar producto en árbol
-        const grupo = todosGrupos.find(g => g.CodGrupo == codGrupo);
+        const grupo = todosGrupos.find(g => String(g.CodGrupo) === String(codGrupo));
         if (!grupo) return;
-        const prod = grupo.productos.find(p => p.Nombre === nombre);
+        const prod = grupo.productos[prodIdx];
         if (!prod) return;
+
         productoActual = prod;
         versionActual  = null;
 
