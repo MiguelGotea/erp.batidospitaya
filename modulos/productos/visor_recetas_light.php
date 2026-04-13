@@ -8,7 +8,7 @@ require_once '../../core/layout/menu_lateral.php';
 require_once '../../core/layout/header_universal.php';
 require_once '../../core/permissions/permissions.php';
 
-$usuario      = obtenerUsuarioActual();
+$usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
 
 if (!tienePermiso('recetario_access_traducido', 'vista', $cargoOperario)) {
@@ -18,6 +18,7 @@ if (!tienePermiso('recetario_access_traducido', 'vista', $cargoOperario)) {
 ?>
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -42,14 +43,15 @@ if (!tienePermiso('recetario_access_traducido', 'vista', $cargoOperario)) {
 
             <div class="vrl-layout p-3">
 
+
                 <!-- ══ Columna izquierda — Menú de productos ══ -->
                 <aside class="vrl-menu" id="vrlMenu">
                     <div class="vrl-menu-header">
                         <h6><i class="fas fa-blender me-1"></i> Menú de Productos</h6>
                         <div class="vrl-search-wrap">
                             <i class="fas fa-search vrl-search-icon"></i>
-                            <input type="text" class="vrl-search" id="inputBuscar"
-                                   placeholder="Buscar producto…" autocomplete="off">
+                            <input type="text" class="vrl-search" id="inputBuscar" placeholder="Buscar producto…"
+                                autocomplete="off">
                         </div>
                     </div>
                     <div class="vrl-menu-body" id="menuBody">
@@ -103,9 +105,8 @@ if (!tienePermiso('recetario_access_traducido', 'vista', $cargoOperario)) {
     </div><!-- /main-container -->
 
     <!-- Modal de Ayuda -->
-    <div class="modal fade" id="pageHelpModal" tabindex="-1"
-         aria-labelledby="pageHelpModalLabel" aria-hidden="true"
-         data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal fade" id="pageHelpModal" tabindex="-1" aria-labelledby="pageHelpModalLabel" aria-hidden="true"
+        data-bs-backdrop="static" data-bs-keyboard="false">
         <div class="modal-dialog modal-lg">
             <div class="modal-content border-0 shadow">
                 <div class="modal-header" style="background:#1a3a2a;color:#fff">
@@ -124,8 +125,10 @@ if (!tienePermiso('recetario_access_traducido', 'vista', $cargoOperario)) {
                                     </h6>
                                     <p class="small text-muted mb-0">
                                         <strong>Click 1:</strong> Abre un grupo del menú izquierdo.<br>
-                                        <strong>Click 2:</strong> Selecciona un producto — la receta se carga automáticamente.<br>
-                                        Si el producto tiene múltiples versiones, usa los chips de la barra superior para cambiar entre ellas.
+                                        <strong>Click 2:</strong> Selecciona un producto — la receta se carga
+                                        automáticamente.<br>
+                                        Si el producto tiene múltiples versiones, usa los chips de la barra superior
+                                        para cambiar entre ellas.
                                     </p>
                                 </div>
                             </div>
@@ -140,7 +143,8 @@ if (!tienePermiso('recetario_access_traducido', 'vista', $cargoOperario)) {
                                         <strong>Orden:</strong> Posición en la comanda Access.<br>
                                         <strong>Tipo:</strong> B = Bebida, L = Líquido, P = Polvo.<br>
                                         <strong>Insumo Receta:</strong> Ingrediente mapeado en el nuevo ERP.<br>
-                                        <strong>Cantidad y Presentación:</strong> Calculados según unidades y factores de conversión.
+                                        <strong>Cantidad y Presentación:</strong> Calculados según unidades y factores
+                                        de conversión.
                                     </p>
                                 </div>
                             </div>
@@ -148,7 +152,8 @@ if (!tienePermiso('recetario_access_traducido', 'vista', $cargoOperario)) {
                         <div class="col-12">
                             <div class="alert alert-info py-2 px-3 small mb-0">
                                 <strong><i class="fas fa-motorcycle me-1"></i> Badge PedidosYa:</strong>
-                                Se muestra en versiones cuyo código termina en <code>d</code> (ej: <code>201Gv11d</code>).
+                                Se muestra en versiones cuyo código termina en <code>d</code> (ej:
+                                <code>201Gv11d</code>).
                                 Gigantona = 20oz · Mediano = 16oz.
                             </div>
                         </div>
@@ -159,12 +164,18 @@ if (!tienePermiso('recetario_access_traducido', 'vista', $cargoOperario)) {
     </div>
 
     <style>
-        #pageHelpModal { z-index: 1060 !important; }
-        .modal-backdrop { z-index: 1050 !important; }
+        #pageHelpModal {
+            z-index: 1060 !important;
+        }
+
+        .modal-backdrop {
+            z-index: 1050 !important;
+        }
     </style>
 
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="js/visor_recetas_light.js?v=<?php echo mt_rand(1, 10000); ?>"></script>
 </body>
+
 </html>
