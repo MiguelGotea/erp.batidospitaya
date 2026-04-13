@@ -179,14 +179,14 @@ try {
     $sql = "
         SELECT
             v.Fecha,
-            v.Semana                      AS semana,
-            v.local                       AS sucursal,
-            ANY_VALUE(v.DBBatidos_Nombre) AS nombre_batido,
+            v.Semana             AS semana,
+            v.local              AS sucursal,
+            v.DBBatidos_Nombre   AS nombre_batido,
             v.CodProducto,
             sr.CodIngrediente,
-            ANY_VALUE(ing.Nombre)         AS nombre_ingrediente,
-            ANY_VALUE(ing.Unidad)         AS unidad_access,
-            sr.Cantidad                   AS cant_receta,
+            ing.Nombre           AS nombre_ingrediente,
+            ing.Unidad           AS unidad_access,
+            sr.Cantidad          AS cant_receta,
             sr.codporcion,
             SUM(v.Cantidad)               AS ventas_sum,
             SUM(v.Cantidad * sr.Cantidad) AS cant_total_raw
