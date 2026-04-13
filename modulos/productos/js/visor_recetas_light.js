@@ -96,7 +96,6 @@ function renderMenu(grupos) {
                  data-codgrupo="${esc(String(g.CodGrupo))}"
                  data-nombre="${esc(String(p.Nombre ?? ''))}">
                 <span class="prod-nombre">${esc(p.Nombre)}</span>
-                <span class="prod-versiones-count">${p.versiones.length}v</span>
             </div>`;
         });
         html += `</div>`;
