@@ -122,7 +122,7 @@ try {
 
     $sql = "
         SELECT
-            v.Folio,
+            v.CodPedido,
             v.Fecha,
             v.Semana             AS semana,
             v.local              AS sucursal,
@@ -154,7 +154,7 @@ try {
                   )
               )
           )
-        ORDER BY v.Semana ASC, v.local ASC, v.Fecha ASC, v.Folio ASC
+        ORDER BY v.Semana ASC, v.local ASC, v.Fecha ASC, v.CodPedido ASC
         LIMIT 5000
     ";
 
