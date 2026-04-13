@@ -1,0 +1,386 @@
+/* ============================================================
+   DASHBOARD CONSUMO DE INSUMOS — CSS
+   modulos/productos/css/dashboard_consumo.css
+   ============================================================ */
+
+/* ── Variables ── */
+:root {
+    --dc-verde:      #0E544C;
+    --dc-verde-soft: #51B8AC;
+    --dc-bg:         #f4f6f8;
+    --dc-card-bg:    #ffffff;
+    --dc-label-color:#445566;
+    --dc-font:       'Calibri', sans-serif;
+    --dc-radius:     10px;
+    --dc-shadow:     0 2px 10px rgba(0,0,0,.07);
+}
+
+body { font-family: var(--dc-font); background: var(--dc-bg); }
+
+/* ── Wrapper ── */
+.dc-wrapper { max-width: 100%; }
+
+/* ── Filtros card ── */
+.dc-filtros-card {
+    border-radius: var(--dc-radius) !important;
+    box-shadow: var(--dc-shadow) !important;
+    border-top: 3px solid var(--dc-verde-soft) !important;
+}
+
+.dc-label {
+    font-size: .75rem;
+    font-weight: 600;
+    color: var(--dc-label-color);
+    text-transform: uppercase;
+    letter-spacing: .4px;
+    display: block;
+    margin-bottom: 3px;
+}
+
+.dc-select, .form-select.dc-select {
+    border-radius: 8px;
+    border: 1px solid #d9e0e8;
+    font-size: .82rem;
+}
+.dc-select:focus {
+    border-color: var(--dc-verde-soft);
+    box-shadow: 0 0 0 .15rem rgba(81,184,172,.25);
+}
+
+/* ── Botones ── */
+.dc-btn-primary {
+    background: var(--dc-verde);
+    color: #fff;
+    border-radius: 8px;
+    border: none;
+    font-weight: 600;
+    padding: 6px 18px;
+    transition: background .2s;
+}
+.dc-btn-primary:hover  { background: #0a3e38; color:#fff; }
+.dc-btn-export {
+    background: #fff;
+    color: var(--dc-verde);
+    border: 1.5px solid var(--dc-verde);
+    border-radius: 8px;
+    font-weight: 600;
+    padding: 5px 14px;
+    transition: all .2s;
+}
+.dc-btn-export:hover:not(:disabled) { background: var(--dc-verde); color:#fff; }
+.dc-btn-export:disabled { opacity:.5; cursor:not-allowed; }
+
+/* ── Estado inicial ── */
+.dc-empty-state {
+    text-align: center;
+    padding: 80px 20px;
+    color: #8899aa;
+}
+.dc-empty-icon {
+    font-size: 3.5rem;
+    color: #ccd8e0;
+    margin-bottom: 16px;
+}
+.dc-empty-state h5 { color: #556677; }
+
+/* ── Loader ── */
+.dc-loader {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 80px 20px;
+}
+.dc-loader-inner { text-align: center; }
+.dc-spinner {
+    width: 2.5rem;
+    height: 2.5rem;
+    color: var(--dc-verde-soft);
+    margin-bottom: 16px;
+}
+.dc-loader-text {
+    font-size: .9rem;
+    color: #556;
+    line-height: 1.6;
+}
+
+/* ── KPI Cards ── */
+.dc-kpi-card {
+    background: var(--dc-card-bg);
+    border-radius: var(--dc-radius);
+    padding: 18px 16px;
+    box-shadow: var(--dc-shadow);
+    height: 100%;
+    transition: transform .2s, box-shadow .2s;
+    cursor: default;
+    position: relative;
+    overflow: hidden;
+}
+.dc-kpi-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--dc-verde-soft);
+    border-radius: var(--dc-radius) var(--dc-radius) 0 0;
+}
+.dc-kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,0,0,.1);
+}
+.dc-kpi-icon {
+    font-size: 1.4rem;
+    margin-bottom: 8px;
+}
+.dc-kpi-label {
+    font-size: .72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    color: #889;
+    margin-bottom: 4px;
+}
+.dc-kpi-valor {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--dc-verde);
+    line-height: 1.1;
+}
+.dc-kpi-sub {
+    font-size: .75rem;
+    color: #99aabb;
+    margin-top: 4px;
+}
+
+/* ── Gráfico ── */
+.dc-chart-wrap {
+    height: 280px;
+    position: relative;
+}
+
+/* ── Chips de modo ── */
+.dc-chip {
+    font-size: .75rem;
+    border-radius: 20px;
+    padding: 3px 14px;
+    border: 1.5px solid #d0dce8;
+    background: #fff;
+    color: #556;
+    font-weight: 600;
+    transition: all .18s;
+}
+.dc-chip.active, .dc-chip:hover {
+    background: var(--dc-verde);
+    color: #fff;
+    border-color: var(--dc-verde);
+}
+
+/* ── Tabs ── */
+.dc-tabs {
+    display: flex;
+    gap: 4px;
+    border-bottom: 2px solid #e4ecf2;
+    padding-bottom: 0;
+    list-style: none;
+    margin: 0;
+    padding-left: 0;
+}
+.dc-tab-btn {
+    border: none;
+    background: none;
+    padding: 8px 18px;
+    font-size: .82rem;
+    font-weight: 600;
+    color: #788;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    cursor: pointer;
+    border-radius: 6px 6px 0 0;
+    transition: all .18s;
+    position: relative;
+}
+.dc-tab-btn:hover  { background: #f0f6f8; color: var(--dc-verde); }
+.dc-tab-btn.active { color: var(--dc-verde); border-bottom-color: var(--dc-verde); background: #fff; }
+
+/* ── Badge alerta ── */
+.dc-badge-alerta {
+    background: #e74c3c;
+    color: #fff;
+    border-radius: 20px;
+    font-size: .65rem;
+    padding: 1px 7px;
+    margin-left: 6px;
+    font-weight: 700;
+    vertical-align: middle;
+}
+
+/* ── Tabla ── */
+.dc-tabla {
+    font-size: .82rem;
+}
+.dc-tabla thead th {
+    background: var(--dc-verde);
+    color: #fff;
+    font-size: .75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .4px;
+    padding: 10px 12px;
+    border: none;
+    white-space: nowrap;
+}
+.dc-tabla tbody tr {
+    transition: background .14s;
+}
+.dc-tabla tbody tr:hover { background: #f0f8f6; }
+.dc-tabla tbody td {
+    padding: 9px 12px;
+    vertical-align: middle;
+    border-color: #edf2f7;
+}
+
+.dc-tabla-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #f8fbfc;
+    border-bottom: 1px solid #e8f0f4;
+    min-height: 42px;
+}
+.dc-result-count { font-size: .78rem; color: #889; }
+
+/* Badge tipo receta global */
+.badge-global {
+    background: #2ecc71;
+    color: #fff;
+    border-radius: 6px;
+    font-size: .68rem;
+    padding: 2px 7px;
+    font-weight: 700;
+}
+.badge-normal {
+    background: #51B8AC;
+    color: #fff;
+    border-radius: 6px;
+    font-size: .68rem;
+    padding: 2px 7px;
+    font-weight: 700;
+}
+.badge-sinmapeo {
+    background: #e74c3c;
+    color: #fff;
+    border-radius: 6px;
+    font-size: .68rem;
+    padding: 2px 7px;
+    font-weight: 700;
+}
+
+/* ── Indicador de tendencia ── */
+.dc-trend-up   { color: #27ae60; font-weight: 700; }
+.dc-trend-down { color: #e74c3c; font-weight: 700; }
+.dc-trend-flat { color: #95a5a6; font-weight: 700; }
+
+/* ── Botón desglose ── */
+.btn-desglose {
+    font-size: .72rem;
+    padding: 3px 10px;
+    border-radius: 6px;
+    border: 1.5px solid var(--dc-verde-soft);
+    background: transparent;
+    color: var(--dc-verde);
+    cursor: pointer;
+    transition: all .18s;
+}
+.btn-desglose:hover { background: var(--dc-verde-soft); color: #fff; }
+
+/* ── Heatmap ── */
+.dc-heatmap-container { overflow-x: auto; }
+
+.dc-heatmap-table {
+    font-size: .72rem;
+    border-collapse: collapse;
+    min-width: 100%;
+}
+.dc-heatmap-table th {
+    background: var(--dc-verde);
+    color: #fff;
+    padding: 7px 12px;
+    white-space: nowrap;
+    text-align: center;
+    font-weight: 600;
+}
+.dc-heatmap-table td {
+    padding: 7px 12px;
+    text-align: center;
+    border: 1px solid #e8f0f4;
+    white-space: nowrap;
+    transition: opacity .2s;
+}
+.dc-heatmap-table td:first-child {
+    background: #f0f6f8;
+    font-weight: 600;
+    text-align: left;
+    color: #445;
+}
+
+/* Intensidad de color heatmap (CSS classes generadas dinámicamente desde JS) */
+.hm-0  { background: #ffffff; }
+.hm-1  { background: #e8f6f4; }
+.hm-2  { background: #c8ece9; }
+.hm-3  { background: #a0ddd9; }
+.hm-4  { background: #6ecdc8; }
+.hm-5  { background: #51B8AC; color:#fff; }
+.hm-6  { background: #3d9e93; color:#fff; }
+.hm-7  { background: #2e817a; color:#fff; }
+.hm-8  { background: #1e6560; color:#fff; }
+.hm-9  { background: #0E544C; color:#fff; }
+.hm-10 { background: #062e29; color:#fff; }
+
+/* ── Sección título ── */
+.dc-seccion-titulo {
+    font-size: .88rem;
+    font-weight: 700;
+    color: var(--dc-verde);
+    text-transform: uppercase;
+    letter-spacing: .5px;
+}
+
+/* ── Select2 override ── */
+.select2-container--default .select2-selection--single,
+.select2-container--default .select2-selection--multiple {
+    border-radius: 8px !important;
+    border: 1px solid #d9e0e8 !important;
+    font-size: .82rem !important;
+    min-height: 31px !important;
+}
+.select2-container--default .select2-results__option--highlighted {
+    background-color: var(--dc-verde-soft) !important;
+}
+.select2-container--default .select2-selection--multiple .select2-selection__choice {
+    background: var(--dc-verde-soft) !important;
+    border: none !important;
+    color: #fff !important;
+    border-radius: 4px !important;
+    font-size: .73rem !important;
+}
+
+/* ── Modal desglose ── */
+#modalDesgloseContenido .dc-tabla thead th { font-size: .72rem; }
+
+/* ── Número de semana badge ── */
+.dc-semana-badge {
+    background: #edf6f5;
+    border: 1px solid var(--dc-verde-soft);
+    color: var(--dc-verde);
+    border-radius: 4px;
+    font-size: .7rem;
+    padding: 1px 6px;
+    font-weight: 700;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+    .dc-kpi-valor { font-size: 1.2rem; }
+    .dc-chart-wrap { height: 220px; }
+    .dc-tabs { flex-wrap: wrap; }
+    .dc-tab-btn { font-size: .75rem; padding: 6px 12px; }
+}
