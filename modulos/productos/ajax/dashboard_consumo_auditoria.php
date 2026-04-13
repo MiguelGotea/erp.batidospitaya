@@ -123,21 +123,20 @@ try {
         SELECT
             v.Folio,
             v.Fecha,
-            v.Semana          AS semana,
-            v.local           AS sucursal,
-            b.Nombre          AS nombre_batido,
+            v.Semana             AS semana,
+            v.local              AS sucursal,
+            v.DBBatidos_Nombre   AS nombre_batido,
             v.CodProducto,
-            v.Cantidad        AS ventas,
+            v.Cantidad           AS ventas,
             sr.CodIngrediente,
-            ing.Nombre        AS nombre_ingrediente,
-            ing.Unidad        AS unidad_access,
-            sr.Cantidad       AS cant_receta,
+            ing.Nombre           AS nombre_ingrediente,
+            ing.Unidad           AS unidad_access,
+            sr.Cantidad          AS cant_receta,
             sr.codporcion,
             (v.Cantidad * sr.Cantidad) AS cant_total_raw
         FROM VentasGlobalesAccessCSV v
-        INNER JOIN SubReceta sr     ON sr.CodBatido        = v.CodProducto
-        INNER JOIN DBIngredientes ing ON ing.CodIngrediente = sr.CodIngrediente
-        LEFT  JOIN Batidos b        ON b.CodBatido         = v.CodProducto
+        INNER JOIN SubReceta sr       ON sr.CodBatido         = v.CodProducto
+        INNER JOIN DBIngredientes ing ON ing.CodIngrediente   = sr.CodIngrediente
         WHERE v.Anulado = 0
           AND v.Fecha   BETWEEN ? AND ?
           AND v.Semana  BETWEEN ? AND ?
