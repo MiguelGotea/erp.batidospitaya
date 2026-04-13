@@ -725,6 +725,8 @@ if (!tienePermiso('recetario_access_traducido', 'vista', $cargoOperario)) {
             if (!data.success) throw new Error(data.message);
             todosGrupos = data.grupos;
             renderMenu(todosGrupos);
+            // Registrar listener UNA sola vez — sobrevive re-renders del menú
+            document.getElementById('menuBody').addEventListener('click', onMenuClick);
         } catch(e) {
             document.getElementById('menuBody').innerHTML =
                 `<div class="menu-loading text-danger"><i class="fas fa-exclamation-circle me-1"></i>Error al cargar</div>`;
@@ -776,9 +778,7 @@ if (!tienePermiso('recetario_access_traducido', 'vista', $cargoOperario)) {
         });
 
         body.innerHTML = html;
-
-        // Event delegation: un solo listener en el contenedor
-        body.addEventListener('click', onMenuClick, { once: false });
+        // (el listener se registra una sola vez desde iniciarMenu)
     }
 
     // ── Event delegation para el menú ────────────────────────────────
@@ -811,7 +811,8 @@ if (!tienePermiso('recetario_access_traducido', 'vista', $cargoOperario)) {
         // Abrir el clickeado (si no estaba abierto)
         if (!isOpen) {
             lista.classList.add('open');
-            const btnEl = document.getElementById(`btn-grupo-${codGrupo}`);
+            // El botón tiene id="btn-grupo-{codGrupo}"
+            const btnEl = document.querySelector(`[data-codgrupo="${codGrupo}"].vrl-grupo-btn`);
             if (btnEl) btnEl.classList.add('active');
         }
     }
