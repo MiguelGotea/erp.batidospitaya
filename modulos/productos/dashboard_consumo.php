@@ -70,7 +70,7 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                             </div>
 
                             <!-- Sucursales -->
-                            <div class="col-12 col-md-3 col-lg-3">
+                            <div class="col-12 col-md-3 col-lg-2">
                                 <label class="dc-label" for="filtroSucursales">
                                     <i class="fas fa-store me-1"></i>Sucursales
                                 </label>
@@ -88,8 +88,14 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                                 </select>
                             </div>
 
-                            <!-- Botones -->
-                            <div class="col-12 col-md-12 col-lg-2 d-flex gap-2 justify-content-end">
+                            <!-- Semana Actual y Botones -->
+                            <div class="col-12 col-md-12 col-lg-3 d-flex flex-wrap gap-2 justify-content-end align-items-center">
+                                <div id="badgeSemanaActual" class="dc-badge-semana-actual" style="display:none">
+                                    <i class="fas fa-calendar-check text-primary"></i>
+                                    Sem. Actual: <strong id="semanaActualNum">—</strong>
+                                    <span class="dc-sem-rango" id="semanaActualRango"></span>
+                                </div>
+
                                 <button class="btn btn-sm dc-btn-primary" id="btnAplicar">
                                     <i class="fas fa-search me-1"></i>Analizar
                                 </button>
@@ -102,17 +108,6 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
 
                         </div><!-- /row filtros -->
 
-                        <!-- Semana actual: fila separada, siempre visible -->
-                        <div class="row mt-1" id="rowSemanaActual" style="display:none">
-                            <div class="col-12">
-                                <div id="badgeSemanaActual" class="dc-badge-semana-actual">
-                                    <i class="fas fa-calendar-check"></i>
-                                    Semana actual del sistema:
-                                    <strong id="semanaActualNum">—</strong>
-                                    <span class="dc-sem-rango" id="semanaActualRango"></span>
-                                </div>
-                            </div>
-                        </div>
 
                         </div>
                     </div>

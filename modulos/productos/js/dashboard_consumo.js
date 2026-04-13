@@ -101,7 +101,7 @@ async function cargarFiltros() {
             const sa = resp.semana_actual;
             $('#semanaActualNum').text(sa.numero_semana);
             $('#semanaActualRango').text('');
-            $('#rowSemanaActual').show();
+            $('#badgeSemanaActual').show();
 
             // Pre-cargar rango por defecto: 4 semanas hasta la actual
             const semHasta = sa.numero_semana;
