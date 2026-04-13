@@ -15,6 +15,22 @@ require_once '../../../core/permissions/permissions.php';
 
 header('Content-Type: application/json; charset=utf-8');
 set_time_limit(60);
+error_reporting(E_ALL);
+ini_set('display_errors', '0');  // no mezclar HTML con JSON
+
+// Convertir warnings/errors a excepciones atrapables
+set_error_handler(function($errno, $errstr, $errfile, $errline) {
+    throw new ErrorException($errstr, 0, $errno, $errfile, $errline);
+});
+
+// Capturar errores fatales que no lanza exception
+register_shutdown_function(function () {
+    $e = error_get_last();
+    if ($e && in_array($e['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR])) {
+        if (!headers_sent()) http_response_code(500);
+        echo json_encode(['ok' => false, 'msg' => 'Fatal: ' . $e['message'] . ' en ' . $e['file'] . ':' . $e['line']]);
+    }
+});
 
 $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
@@ -312,7 +328,11 @@ try {
         'cod_cots' => $codCots,
     ]);
 
-} catch (Exception $e) {
+} catch (Throwable $e) {
     http_response_code(500);
-    echo json_encode(['ok' => false, 'msg' => 'Error interno: ' . $e->getMessage()]);
+    echo json_encode([
+        'ok'  => false,
+        'msg' => 'Error: ' . $e->getMessage()
+              . ' en ' . basename($e->getFile()) . ':' . $e->getLine(),
+    ]);
 }
