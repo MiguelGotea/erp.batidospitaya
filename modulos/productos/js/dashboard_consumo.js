@@ -99,11 +99,9 @@ async function cargarFiltros() {
         // ── Semana actual ───────────────────────────────────────
         if (resp.semana_actual) {
             const sa = resp.semana_actual;
-            $('#semanaActualNum').text(`Sem. ${sa.numero_semana} / ${sa.anio}`);
-            $('#semanaActualRango').text(
-                ` · ${formatFecha(sa.fecha_inicio)} – ${formatFecha(sa.fecha_fin)}`
-            );
-            $('#rowSemanaActual').show();   // ← muestra la fila separada
+            $('#semanaActualNum').text(sa.numero_semana);
+            $('#semanaActualRango').text('');
+            $('#rowSemanaActual').show();
 
             // Pre-cargar rango por defecto: 4 semanas hasta la actual
             const semHasta = sa.numero_semana;
@@ -264,8 +262,8 @@ function renderKPIs(data) {
 function renderGrafico(data) {
     const modoInsumo = $('#chartInsumoFiltro').val(); // 'top5' | 'todos'
 
-    // Labels del eje X = semanas del rango
-    const labels = data.semanas.map(s => `S${s.numero_semana}/${s.anio}`);
+    // Labels del eje X = solo número de semana
+    const labels     = data.semanas.map(s => `${s.numero_semana}`);
     const semanasNros = data.semanas.map(s => s.numero_semana);
 
     let datasets = [];
@@ -494,7 +492,7 @@ function renderHeatmap(data, idInsumo) {
     let tbodyHtml = '';
     semanas.forEach(s => {
         let totalSem = 0;
-        let fila = `<tr><td class="fw-bold">S${s.numero_semana}<br><small class="text-muted">${formatFecha(s.fecha_inicio)}</small></td>`;
+        let fila = `<tr><td class="fw-bold">${s.numero_semana}</td>`;
         sucursales.forEach(suc => {
             const v = item.desglose_semxsuc[s.numero_semana]?.[suc] || 0;
             totalSem += v;
@@ -569,8 +567,7 @@ window.mostrarDesglose = function (idInsumo) {
 
     semanas.forEach(sem => {
         let totalSem = 0;
-        let fila = `<tr><td><span class="dc-semana-badge">Sem ${sem.numero_semana}/${sem.anio}</span><br>
-            <small class="text-muted">${formatFecha(sem.fecha_inicio)}–${formatFecha(sem.fecha_fin)}</small></td>`;
+        let fila = `<tr><td><span class="dc-semana-badge">${sem.numero_semana}</span></td>`;
         sucursales.forEach(suc => {
             const v = item.desglose_semxsuc[sem.numero_semana]?.[suc] || 0;
             totalSem += v;
