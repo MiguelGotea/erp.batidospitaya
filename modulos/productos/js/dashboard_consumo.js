@@ -62,19 +62,22 @@ function bindEventos() {
         }
     });
 
-    // Cambiar insumo en el panel de análisis → re-renderizar gráfico
+    // Cambiar insumo en el panel de análisis → re-renderizar gráfico + KPIs
     $('#chartInsumoSel').on('change', function () {
         if (!datosActuales) return;
         const idSel = parseInt($(this).val()) || 0;
         if (idSel > 0) {
+            const item = datosActuales.consumo.find(c => c.id == idSel);
             $('#chartPlaceholder').addClass('d-none');
             $('#chartWrap').removeClass('d-none');
+            renderKPIs(datosActuales, item);
             renderGrafico(datosActuales);
         } else {
             $('#chartPlaceholder').removeClass('d-none');
             $('#chartWrap').addClass('d-none');
             if (chartTendencia) { chartTendencia.destroy(); chartTendencia = null; }
             $('#tituloTendencia').html('<i class="fas fa-chart-line me-2"></i>Análisis de Insumo');
+            renderKPIs(datosActuales, null);
         }
     });
 
@@ -178,7 +181,7 @@ async function cargarDatos() {
             return;
         }
 
-        if (resp.consumo.length === 0 && resp.sin_mapeo.length === 0) {
+        if (resp.consumo.length === 0) {
             mostrarEstado('inicial');
             Swal.fire({ icon: 'info', title: 'Sin datos', text: 'No hay ventas válidas en el período seleccionado.', confirmButtonColor: '#0E544C' });
             return;
@@ -222,32 +225,47 @@ function mostrarEstado(estado) {
    RENDER COMPLETO DEL DASHBOARD
    ════════════════════════════════════════════════════════════ */
 function renderDashboard(data) {
-    renderKPIs(data);
-    renderInsumoSel(data);   // poblar selector del panel de análisis
+    renderKPIs(data, null);      // placeholder hasta que se elija insumo
+    renderInsumoSel(data);       // poblar selector del panel de análisis
     renderTablaHistorial(data);
     renderTablaProyeccion(data);
     renderHeatmapSelector(data);
 }
 
-/* ── KPIs ─────────────────────────────────────────────────── */
-function renderKPIs(data) {
-    // Total general (suma de todos los consumos, número de insumos únicos)
-    $('#kpiTotalVal').text(formatNum(data.total_general));
-    $('#kpiTotalSub').text(`${data.num_insumos} insumos analizados`);
+/* ── KPIs — muestran datos del insumo seleccionado ───────── */
+function renderKPIs(data, item) {
+    if (item) {
+        // Insumo específico seleccionado
+        $('#kpiTotalVal').text(formatNum(item.total));
+        $('#kpiTotalSub').html(
+            `<span style="color:#51B8AC;font-weight:600">${escHtml(item.nombre)}</span>` +
+            ` · ${escHtml(item.unidad)}`
+        );
 
-    // Semana pico
-    if (data.semana_pico_global) {
-        const semPico = data.semanas.find(s => s.numero_semana == data.semana_pico_global);
-        $('#kpiPicoVal').text(`Sem. ${data.semana_pico_global}`);
-        $('#kpiPicoSub').text(semPico ? `${formatFecha(semPico.fecha_inicio)}–${formatFecha(semPico.fecha_fin)}` : '');
+        if (item.semana_pico_num) {
+            const semPico = data.semanas.find(s => s.numero_semana == item.semana_pico_num);
+            $('#kpiPicoVal').text(`Sem. ${item.semana_pico_num}`);
+            $('#kpiPicoSub').text(semPico
+                ? `${formatFecha(semPico.fecha_inicio)}–${formatFecha(semPico.fecha_fin)}`
+                : '');
+        } else {
+            $('#kpiPicoVal').text('—');
+            $('#kpiPicoSub').text('');
+        }
+
+        $('#kpiProyVal').text(formatNum(item.proyeccion_4sem));
+        $('#kpiProySub').text(`Prom. ${formatNum(item.prom_semana)} ${escHtml(item.unidad)}/sem`);
+
     } else {
+        // Sin selección: placeholder
+        const n = data ? data.num_insumos : 0;
+        $('#kpiTotalVal').text('—');
+        $('#kpiTotalSub').text(n > 0 ? `${n} insumos cargados · selecciona uno` : '');
         $('#kpiPicoVal').text('—');
         $('#kpiPicoSub').text('');
+        $('#kpiProyVal').text('—');
+        $('#kpiProySub').text('Selecciona un insumo del panel');
     }
-
-    // Proyección 4 semanas
-    $('#kpiProyVal').text(formatNum(data.proyeccion_total));
-    $('#kpiProySub').text('Basado en promedio del período');
 }
 
 
@@ -548,27 +566,32 @@ function renderHeatmap(data, idInsumo) {
     $cont.html(html);
 }
 
-/* ── Tab Sin Mapeo ───────────────────────────────────────── */
-function renderTabSinMapeo(data) {
-    let html = '';
-    if (!data.sin_mapeo || data.sin_mapeo.length === 0) {
-        html = `<tr><td colspan="5" class="text-center text-muted py-4">
-            <i class="fas fa-check-circle fa-2x text-success mb-2 d-block"></i>
-            Todos los ingredientes tienen mapeo ERP.
-        </td></tr>`;
-    } else {
-        data.sin_mapeo.forEach(sm => {
-            html += `
-            <tr>
-                <td><code>${escHtml(sm.cod_ingrediente)}</code></td>
-                <td>${escHtml(sm.nombre)}</td>
-                <td><span class="badge-sinmapeo">${escHtml(sm.unidad_access)}</span></td>
-                <td class="text-center fw-bold">${sm.num_productos}</td>
-                <td class="text-end">${formatNum(sm.ventas_afectadas)}</td>
-            </tr>`;
-        });
+/* ── Selector de insumo en panel de análisis ─────────────── */
+function renderInsumoSel(data) {
+    const $sel    = $('#chartInsumoSel');
+    const prevVal = $sel.val();   // conservar selección si ya había una al recargar
+
+    $sel.empty().append('<option value="">— Selecciona un insumo —</option>');
+    data.consumo.forEach(item => {
+        const tipoLabel = item.es_global ? ' [Global]' : '';
+        $sel.append(`<option value="${item.id}">${escHtml(item.nombre)}${tipoLabel}</option>`);
+    });
+
+    // Notificar a Select2 si está activo
+    if ($sel.hasClass('select2-hidden-accessible')) {
+        $sel.trigger('change.select2');
     }
-    $('#tbodySinMapeo').html(html);
+
+    // Restaurar selección anterior si sigue existiendo en la lista
+    if (prevVal && $sel.find(`option[value="${prevVal}"]`).length) {
+        $sel.val(prevVal).trigger('change');
+    } else {
+        // Estado inicial: mostrar placeholder y resetear título
+        $('#chartPlaceholder').removeClass('d-none');
+        $('#chartWrap').addClass('d-none');
+        if (chartTendencia) { chartTendencia.destroy(); chartTendencia = null; }
+        $('#tituloTendencia').html('<i class="fas fa-chart-line me-2"></i>Análisis de Insumo');
+    }
 }
 
 /* ── Modal Desglose ──────────────────────────────────────── */
