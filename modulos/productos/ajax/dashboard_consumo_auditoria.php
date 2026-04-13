@@ -19,7 +19,7 @@ error_reporting(E_ALL);
 ini_set('display_errors', '0');  // no mezclar HTML con JSON
 
 // Convertir warnings/errors a excepciones atrapables
-set_error_handler(function($errno, $errstr, $errfile, $errline) {
+set_error_handler(function ($errno, $errstr, $errfile, $errline) {
     throw new ErrorException($errstr, 0, $errno, $errfile, $errline);
 });
 
@@ -27,7 +27,8 @@ set_error_handler(function($errno, $errstr, $errfile, $errline) {
 register_shutdown_function(function () {
     $e = error_get_last();
     if ($e && in_array($e['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR])) {
-        if (!headers_sent()) http_response_code(500);
+        if (!headers_sent())
+            http_response_code(500);
         echo json_encode(['ok' => false, 'msg' => 'Fatal: ' . $e['message'] . ' en ' . $e['file'] . ':' . $e['line']]);
     }
 });
@@ -156,6 +157,7 @@ try {
         ORDER BY v.Semana ASC, v.local ASC, v.Fecha ASC, v.Folio ASC
         LIMIT 5000
     ";
+
 
     // Construir array de parámetros en el mismo orden que los ?
     $positional = [
@@ -330,8 +332,8 @@ try {
 } catch (Throwable $e) {
     http_response_code(500);
     echo json_encode([
-        'ok'  => false,
+        'ok' => false,
         'msg' => 'Error: ' . $e->getMessage()
-              . ' en ' . basename($e->getFile()) . ':' . $e->getLine(),
+            . ' en ' . basename($e->getFile()) . ':' . $e->getLine(),
     ]);
 }
