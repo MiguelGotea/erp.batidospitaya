@@ -39,16 +39,47 @@ try {
             $stmt = $conn->prepare($sql);
             $stmt->execute([$valor, $usuario['CodOperario'], $id]);
         } elseif (!empty($dia_entrega)) {
-            // Actualizamos el registro por Producto, Sucursal y Día
-            $sql = "UPDATE compra_local_configuracion_despacho 
-                    SET $campo = ?, 
-                        usuario_modificacion = ?, 
-                        fecha_modificacion = CURRENT_TIMESTAMP 
-                    WHERE id_producto_presentacion = ? 
-                    AND codigo_sucursal = ?
-                    AND dia_entrega = ?";
-            $stmt = $conn->prepare($sql);
-            $stmt->execute([$valor, $usuario['CodOperario'], $id_producto, $codigo_sucursal, $dia_entrega]);
+            // Verificar si existe el registro para este día (puede faltar en locales con datos incompletos)
+            $sql_check = "SELECT id FROM compra_local_configuracion_despacho 
+                          WHERE id_producto_presentacion = ? 
+                          AND codigo_sucursal = ? 
+                          AND dia_entrega = ?";
+            $stmt_check = $conn->prepare($sql_check);
+            $stmt_check->execute([$id_producto, $codigo_sucursal, $dia_entrega]);
+            $registro_existente = $stmt_check->fetch(PDO::FETCH_ASSOC);
+
+            if ($registro_existente) {
+                // El registro existe, actualizar normalmente
+                $sql = "UPDATE compra_local_configuracion_despacho 
+                        SET $campo = ?, 
+                            usuario_modificacion = ?, 
+                            fecha_modificacion = CURRENT_TIMESTAMP 
+                        WHERE id_producto_presentacion = ? 
+                        AND codigo_sucursal = ?
+                        AND dia_entrega = ?";
+                $stmt = $conn->prepare($sql);
+                $stmt->execute([$valor, $usuario['CodOperario'], $id_producto, $codigo_sucursal, $dia_entrega]);
+            } else {
+                // El registro no existe (dato incompleto), insertar el registro faltante con el valor indicado
+                $campos_insert = ['is_delivery' => 0, 'base_consumption' => 0, 'event_factor' => 1];
+                $campos_insert[$campo] = $valor;
+                $sql_insert = "INSERT INTO compra_local_configuracion_despacho 
+                               (id_producto_presentacion, codigo_sucursal, dia_entrega, status, is_delivery, 
+                                base_consumption, event_factor, pedido_minimo, usuario_creacion)
+                               SELECT ?, ?, ?, status, ?, ?, ?, pedido_minimo, ?
+                               FROM compra_local_configuracion_despacho
+                               WHERE id_producto_presentacion = ? AND codigo_sucursal = ?
+                               LIMIT 1";
+                $stmt_insert = $conn->prepare($sql_insert);
+                $stmt_insert->execute([
+                    $id_producto, $codigo_sucursal, $dia_entrega,
+                    $campos_insert['is_delivery'],
+                    $campos_insert['base_consumption'],
+                    $campos_insert['event_factor'],
+                    $usuario['CodOperario'],
+                    $id_producto, $codigo_sucursal
+                ]);
+            }
         } else {
             throw new Exception('Se requiere ID o Día de Entrega para este campo');
         }

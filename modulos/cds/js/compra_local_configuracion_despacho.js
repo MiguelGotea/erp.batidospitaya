@@ -1,4 +1,4 @@
-﻿/* ===================================================
+/* ===================================================
    Configuración de Plan de Despacho - JavaScript
    =================================================== */
 
@@ -391,21 +391,20 @@ function toggleStatus(idProducto, codigoSucursal, activo) {
 
 // Agregar producto nuevo
 function agregarProducto(idProducto, codigoSucursal) {
-    // Crear registro inicial sin d├¡as de entrega
+    // Crear los 7 registros de la semana (todos inactivos por defecto)
     $.ajax({
         url: 'ajax/compra_local_configuracion_despacho_guardar.php',
         method: 'POST',
         data: {
             id_producto_presentacion: idProducto,
             codigo_sucursal: codigoSucursal,
-            dia_entrega: 1, // D├¡a inicial por defecto
             crear_nuevo: true
         },
         dataType: 'json',
         success: function (response) {
             if (response.success) {
                 cargarConfiguracion(codigoSucursal);
-                mostrarExito('Producto agregado. Configure los d├¡as de entrega.');
+                mostrarExito('Producto agregado. Active los días de entrega deseados.');
             } else {
                 mostrarError('Error al agregar producto: ' + response.message);
             }
