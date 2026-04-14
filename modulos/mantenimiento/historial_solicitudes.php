@@ -140,6 +140,9 @@ function getTextoUrgencia($nivel)
                                 <i class="bi bi-file-earmark-excel-fill"></i>
                                 <span>Informe Global</span>
                             </button>
+                            <span class="informe-global-hint">
+                                <i class="bi bi-info-circle"></i> Exporta todos los registros con los filtros aplicados actualmente
+                            </span>
                         </div>
                     </div>
                 <?php endif; ?>

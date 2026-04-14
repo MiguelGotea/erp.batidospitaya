@@ -948,3 +948,90 @@ body {
     transform: translateY(-1px);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
+
+/* ========== BOTÓN INFORME GLOBAL EXCEL ========== */
+.quick-access-export-row {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px dashed #e0e0e0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.btn-informe-global {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 20px;
+    background: linear-gradient(135deg, #217346 0%, #1a5c38 100%);
+    color: white;
+    border: none;
+    border-radius: 50px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 3px 10px rgba(33, 115, 70, 0.3);
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+    user-select: none;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+
+.btn-informe-global i {
+    font-size: 1rem;
+    transition: transform 0.3s;
+}
+
+.btn-informe-global:hover:not(:disabled) {
+    background: linear-gradient(135deg, #1a5c38 0%, #0e3d25 100%);
+    box-shadow: 0 6px 18px rgba(33, 115, 70, 0.45);
+    transform: translateY(-2px);
+}
+
+.btn-informe-global:hover:not(:disabled) i {
+    transform: scale(1.15);
+}
+
+.btn-informe-global:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(33, 115, 70, 0.3);
+}
+
+.btn-informe-global:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.btn-informe-global.loading {
+    background: linear-gradient(135deg, #2e8b57 0%, #217346 100%);
+    cursor: wait;
+}
+
+.btn-informe-global.loading i {
+    animation: spin-excel 0.8s linear infinite;
+}
+
+@keyframes spin-excel {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
+
+.informe-global-hint {
+    font-size: 0.75rem;
+    color: #888;
+    font-style: italic;
+}
+
+@media (max-width: 768px) {
+    .quick-access-export-row {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .btn-informe-global {
+        width: 100%;
+        justify-content: center;
+    }
+}

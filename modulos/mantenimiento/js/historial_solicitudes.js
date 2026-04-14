@@ -1283,3 +1283,55 @@ function actualizarResolucion(ticketId, nuevaResolucion) {
     });
 }
 
+// ========== INFORME GLOBAL EXCEL ==========
+
+/**
+ * Descarga un Excel con TODOS los registros que cumplen los filtros activos.
+ * Usa un formulario oculto + POST para que el navegador active el attachment.
+ */
+function descargarInformeGlobal() {
+    const btn = document.getElementById('btnInformeGlobal');
+    if (!btn) return;
+
+    // Estado de carga
+    btn.disabled = true;
+    btn.classList.add('loading');
+    btn.innerHTML = '<i class="bi bi-arrow-repeat"></i> <span>Generando...</span>';
+
+    // Construir un formulario temporal oculto
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = 'ajax/historial_export_excel.php';
+    form.style.display = 'none';
+
+    // Campo: filtros (JSON idéntico al que usa cargarDatos)
+    const inputFiltros = document.createElement('input');
+    inputFiltros.type = 'hidden';
+    inputFiltros.name = 'filtros';
+    inputFiltros.value = JSON.stringify(filtrosActivos);
+
+    // Campo: orden
+    const inputOrden = document.createElement('input');
+    inputOrden.type = 'hidden';
+    inputOrden.name = 'orden';
+    inputOrden.value = JSON.stringify(ordenActivo);
+
+    form.appendChild(inputFiltros);
+    form.appendChild(inputOrden);
+    document.body.appendChild(form);
+    form.submit();
+
+    // Limpiar el formulario del DOM
+    setTimeout(function () {
+        document.body.removeChild(form);
+    }, 1000);
+
+    // Restaurar botón después de unos segundos
+    // (no hay evento "descarga completada" en submit nativo)
+    setTimeout(function () {
+        btn.disabled = false;
+        btn.classList.remove('loading');
+        btn.innerHTML = '<i class="bi bi-file-earmark-excel-fill"></i> <span>Informe Global</span>';
+    }, 4000);
+}
+
