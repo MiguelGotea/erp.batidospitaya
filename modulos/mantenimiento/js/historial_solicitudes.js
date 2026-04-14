@@ -194,7 +194,7 @@ function renderizarTabla(datos) {
     tbody.empty();
 
     if (datos.length === 0) {
-        tbody.append('<tr><td colspan="9" class="text-center py-4">No se encontraron registros</td></tr>');
+        tbody.append('<tr><td colspan="11" class="text-center py-4">No se encontraron registros</td></tr>');
         return;
     }
 
@@ -209,6 +209,9 @@ function renderizarTabla(datos) {
 
         // Descripción
         tr.append(`<td class="col-descripcion">${row.descripcion}</td>`);
+
+        // Resolución
+        tr.append(`<td class="col-resolucion">${renderizarResolucionEditable(row.id, row.resolucion)}</td>`);
 
         // Sucursal
         tr.append(`<td class="col-sucursal">${row.nombre_sucursal}</td>`);
@@ -1196,3 +1199,87 @@ function abrirModalPitaya(id, titulo, contenido) {
         $(this).remove();
     });
 }
+
+// ========== FUNCIONES PARA RESOLUCIÓN ==========
+
+// Renderizar resolución editable
+function renderizarResolucionEditable(ticketId, resolucion) {
+    const res = resolucion || '';
+    const permiteEditar = tienepermiso('editar_resolucion');
+    const displayRes = res.replace(/\n/g, '<br>');
+    const emptyClass = !res ? 'text-muted italic' : '';
+    const texto = res || 'Sin resolución aún...';
+    
+    if (!permiteEditar) {
+        return `<div class="resolucion-text ${emptyClass}">${displayRes || texto}</div>`;
+    }
+
+    return `
+        <div class="resolucion-editable ${emptyClass}" 
+             onclick="habilitarEdicionResolucion(this, ${ticketId}, '${res.replace(/'/g, "\\'").replace(/\n/g, "\\n")}')">
+            ${displayRes || texto}
+        </div>
+    `;
+}
+
+// Habilitar edición de resolución
+function habilitarEdicionResolucion(container, ticketId, resolucionActual) {
+    if ($(container).find('textarea').length > 0) return;
+
+    const textarea = $(`<textarea class="form-control form-control-sm input-inline-resolucion" 
+                                style="width: 100%; min-height: 80px; font-size: 0.85rem; padding: 4px;">${resolucionActual}</textarea>`);
+
+    $(container).html(textarea);
+    textarea.focus();
+    
+    // Mover cursor al final
+    const len = textarea.val().length;
+    textarea[0].setSelectionRange(len, len);
+
+    textarea.on('blur', function () {
+        const nuevaResolucion = $(this).val().trim();
+        if (nuevaResolucion === resolucionActual) {
+            const displayRes = resolucionActual.replace(/\n/g, '<br>');
+            const texto = resolucionActual || 'Sin resolución aún...';
+            const emptyClass = !resolucionActual ? 'text-muted italic' : '';
+            $(container).html(displayRes || texto).addClass(emptyClass);
+        } else {
+            actualizarResolucion(ticketId, nuevaResolucion);
+        }
+    });
+
+    textarea.on('keyup', function (e) {
+        if (e.key === 'Escape') {
+            const displayRes = resolucionActual.replace(/\n/g, '<br>');
+            const texto = resolucionActual || 'Sin resolución aún...';
+            const emptyClass = !resolucionActual ? 'text-muted italic' : '';
+            $(container).html(displayRes || texto).addClass(emptyClass);
+        }
+    });
+}
+
+// Actualizar resolución
+function actualizarResolucion(ticketId, nuevaResolucion) {
+    $.ajax({
+        url: 'ajax/historial_actualizar_resolucion.php',
+        method: 'POST',
+        data: {
+            ticket_id: ticketId,
+            resolucion: nuevaResolucion
+        },
+        dataType: 'json',
+        success: function (response) {
+            if (response.success) {
+                cargarDatos();
+            } else {
+                alert('Error: ' + response.message);
+                cargarDatos(); // Revertir UI
+            }
+        },
+        error: function () {
+            alert('Error al actualizar la resolución');
+            cargarDatos();
+        }
+    });
+}
+

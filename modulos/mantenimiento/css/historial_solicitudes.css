@@ -90,6 +90,33 @@ body {
     font-size: 0.85rem;
 }
 
+.col-resolucion {
+    max-width: 250px;
+    font-size: 0.85rem;
+    color: #444;
+}
+
+.resolucion-editable {
+    cursor: pointer;
+    min-height: 24px;
+    padding: 4px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.resolucion-editable:hover {
+    background-color: #f0f7f6;
+    outline: 1px dashed #51B8AC;
+}
+
+.italic {
+    font-style: italic;
+}
+
+.text-muted {
+    color: #999;
+}
+
 .col-agendado {
     font-size: 0.85rem;
     font-weight: 600;

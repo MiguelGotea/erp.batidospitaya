@@ -153,6 +153,9 @@ function getTextoUrgencia($nivel)
                                     Descripción
                                     <i class="fas fa-filter filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
+                                <th data-column="resolucion">
+                                    Resolución
+                                </th>
                                 <th data-column="nombre_sucursal" data-type="list">
                                     Sucursal
                                     <i class="fas fa-filter filter-icon" onclick="toggleFilter(this)"></i>
@@ -258,7 +261,8 @@ function getTextoUrgencia($nivel)
         const cargoOperario = <?php echo $cargoOperario; ?>;
         const permisos = {
             'cambiar_urgencia': <?php echo tienePermiso('historial_solicitudes_mantenimiento', 'cambiar_urgencia', $cargoOperario) ? 'true' : 'false'; ?>,
-            'super_edicion': <?php echo tienePermiso('historial_solicitudes_mantenimiento', 'super_edicion', $cargoOperario) ? 'true' : 'false'; ?>
+            'super_edicion': <?php echo tienePermiso('historial_solicitudes_mantenimiento', 'super_edicion', $cargoOperario) ? 'true' : 'false'; ?>,
+            'editar_resolucion': <?php echo tienePermiso('historial_solicitudes_mantenimiento', 'editar_resolucion', $cargoOperario) ? 'true' : 'false'; ?>
         };
 
         function tienepermiso(accion) {
