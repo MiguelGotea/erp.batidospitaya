@@ -1303,14 +1303,10 @@ function descargarInformeGlobal() {
     btn.classList.add('loading');
     btn.innerHTML = '<i class="bi bi-arrow-repeat"></i> <span>Generando...</span>';
 
-    // ── Filtros del informe: igual que aplicarAccesoRapido ────────────────────
+    // ── Filtros del informe (SIEMPRE todas las sucursales) ───────────────────
     const filtrosExport = {};
 
-    // Respetar el chip de sucursal si está activo
-    if (filtrosActivos['nombre_sucursal'] && filtrosActivos['nombre_sucursal'].length > 0) {
-        filtrosExport['nombre_sucursal'] = filtrosActivos['nombre_sucursal'];
-    }
-    // Filtros FIJOS del acceso rápido (siempre)
+    // Sin filtro de sucursal: el informe es global (todas las sucursales)
     filtrosExport['status']          = ['solicitado', 'agendado'];
     filtrosExport['tipo_formulario'] = ['mantenimiento_general'];
     // ─────────────────────────────────────────────────────────────────────────
