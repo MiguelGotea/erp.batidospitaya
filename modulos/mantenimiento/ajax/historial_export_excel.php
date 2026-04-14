@@ -165,28 +165,28 @@ try {
 <body>
     <table border="0">
         <tr>
-            <td colspan="11" style="font-size:16pt; font-weight:bold; color:#0E544C;">
+            <td colspan="8" style="font-size:16pt; font-weight:bold; color:#0E544C;">
                 Informe Global — Historial de Solicitudes de Mantenimiento
             </td>
         </tr>
         <tr>
-            <td colspan="11" style="color:#555555; font-size:10pt;">
+            <td colspan="8" style="color:#555555; font-size:10pt;">
                 Generado el: <?php echo date('d/m/Y H:i:s'); ?>
             </td>
         </tr>
         <?php if (!empty($filtrosDesc)): ?>
         <tr>
-            <td colspan="11" style="color:#555555; font-size:10pt;">
+            <td colspan="8" style="color:#555555; font-size:10pt;">
                 Filtros aplicados: <?php echo htmlspecialchars(implode(' | ', $filtrosDesc)); ?>
             </td>
         </tr>
         <?php endif; ?>
         <tr>
-            <td colspan="11" style="color:#888888; font-size:9pt;">
+            <td colspan="8" style="color:#888888; font-size:9pt;">
                 Total de registros: <?php echo count($datos); ?>
             </td>
         </tr>
-        <tr><td colspan="11"></td></tr>
+        <tr><td colspan="8"></td></tr>
     </table>
 
     <table border="1" cellspacing="0" cellpadding="4">
@@ -197,12 +197,9 @@ try {
                 <th>Descripción</th>
                 <th>Resolución</th>
                 <th>Sucursal</th>
-                <th>Tipo</th>
                 <th>Urgencia</th>
                 <th>Tiempo (H)</th>
                 <th>Estado</th>
-                <th>Agendado</th>
-                <th>Creado Por</th>
             </tr>
         </thead>
         <tbody>
@@ -251,12 +248,9 @@ try {
                 <td style="max-width:300px;"><?php echo $descripcion; ?></td>
                 <td style="max-width:300px;"><?php echo $resolucion; ?></td>
                 <td><?php echo $sucursal; ?></td>
-                <td style="text-align:center;"><?php echo $tipo; ?></td>
                 <td style="text-align:center; background-color:<?php echo $colorUrg; ?>; color:#FFFFFF; font-weight:bold;"><?php echo $urgencia; ?></td>
                 <td style="text-align:center;"><?php echo $tiempo; ?></td>
                 <td style="text-align:center; background-color:<?php echo $colorEst; ?>; color:#FFFFFF; font-weight:bold;"><?php echo $estado; ?></td>
-                <td style="white-space:nowrap;"><?php echo $agendado; ?></td>
-                <td><?php echo $creadoPor; ?></td>
             </tr>
         <?php endforeach; ?>
         </tbody>
