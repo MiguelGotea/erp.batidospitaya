@@ -28,6 +28,8 @@ try {
     $campos_diarios = ['is_delivery', 'base_consumption', 'event_factor'];
 
 
+    $fue_insert = false;
+
     if (in_array($campo, $campos_diarios)) {
         if (!empty($id)) {
             // Actualizamos el registro específico por ID
@@ -79,6 +81,7 @@ try {
                     $usuario['CodOperario'],
                     $id_producto, $codigo_sucursal
                 ]);
+                $fue_insert = true;
             }
         } else {
             throw new Exception('Se requiere ID o Día de Entrega para este campo');
@@ -96,8 +99,9 @@ try {
     }
 
     echo json_encode([
-        'success' => true,
-        'message' => 'Configuración actualizada'
+        'success'  => true,
+        'message'  => 'Configuración actualizada',
+        'inserted' => $fue_insert
     ]);
 
 } catch (Exception $e) {

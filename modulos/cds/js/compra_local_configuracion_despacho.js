@@ -330,22 +330,28 @@ function updateField(idProducto, codigoSucursal, campo, valor, diaEntrega = null
         dataType: 'json',
         success: function (response) {
             if (response.success) {
-                // Actualizar en el objeto local
-                if (configuraciones[codigoSucursal]) {
-                    configuraciones[codigoSucursal].forEach(item => {
-                        if (item.id_producto_presentacion == idProducto) {
-                            if (diaEntrega === null || item.dia_entrega == diaEntrega) {
-                                item[campo] = valor;
+                if (response.inserted) {
+                    // Se creó un registro nuevo: el caché no tiene el ID real,
+                    // recargar desde el servidor para reflejar el cambio correctamente
+                    delete configuraciones[codigoSucursal];
+                    cargarConfiguracion(codigoSucursal);
+                } else {
+                    // Actualizar en el objeto local
+                    if (configuraciones[codigoSucursal]) {
+                        configuraciones[codigoSucursal].forEach(item => {
+                            if (item.id_producto_presentacion == idProducto) {
+                                if (diaEntrega === null || item.dia_entrega == diaEntrega) {
+                                    item[campo] = valor;
+                                }
                             }
-                        }
-                    });
+                        });
+                    }
+                    // Si cambiamos is_delivery, refrescamos para actualizar iconos
+                    if (campo === 'is_delivery') {
+                        renderizarTabla(codigoSucursal);
+                    }
                 }
                 mostrarExito('Configuración actualizada');
-
-                // Si cambiamos is_delivery, refrescamos para actualizar iconos
-                if (campo === 'is_delivery') {
-                    renderizarTabla(codigoSucursal);
-                }
             } else {
                 mostrarError('Error al actualizar: ' + response.message);
                 cargarConfiguracion(codigoSucursal);
