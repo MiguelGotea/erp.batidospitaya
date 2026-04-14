@@ -1286,8 +1286,13 @@ function actualizarResolucion(ticketId, nuevaResolucion) {
 // ========== INFORME GLOBAL EXCEL ==========
 
 /**
- * Descarga un Excel con TODOS los registros que cumplen los filtros activos.
- * Usa un formulario oculto + POST para que el navegador active el attachment.
+ * Descarga un Excel con los registros que cumplen los mismos filtros
+ * que aplican los botones de "Acceso Rápido por Sucursal":
+ *   - status:         ['solicitado', 'agendado']    (NO finalizados/cancelados)
+ *   - tipo_formulario: ['mantenimiento_general']
+ *   - nombre_sucursal: si hay un chip activo se respeta; si no, todas las sucursales
+ *
+ * Usa formulario POST oculto para que el navegador active el attachment.
  */
 function descargarInformeGlobal() {
     const btn = document.getElementById('btnInformeGlobal');
@@ -1298,22 +1303,32 @@ function descargarInformeGlobal() {
     btn.classList.add('loading');
     btn.innerHTML = '<i class="bi bi-arrow-repeat"></i> <span>Generando...</span>';
 
-    // Construir un formulario temporal oculto
+    // ── Filtros del informe: igual que aplicarAccesoRapido ────────────────────
+    const filtrosExport = {};
+
+    // Respetar el chip de sucursal si está activo
+    if (filtrosActivos['nombre_sucursal'] && filtrosActivos['nombre_sucursal'].length > 0) {
+        filtrosExport['nombre_sucursal'] = filtrosActivos['nombre_sucursal'];
+    }
+    // Filtros FIJOS del acceso rápido (siempre)
+    filtrosExport['status']          = ['solicitado', 'agendado'];
+    filtrosExport['tipo_formulario'] = ['mantenimiento_general'];
+    // ─────────────────────────────────────────────────────────────────────────
+
+    // Construir formulario temporal oculto
     const form = document.createElement('form');
     form.method = 'POST';
     form.action = 'ajax/historial_export_excel.php';
     form.style.display = 'none';
 
-    // Campo: filtros (JSON idéntico al que usa cargarDatos)
     const inputFiltros = document.createElement('input');
-    inputFiltros.type = 'hidden';
-    inputFiltros.name = 'filtros';
-    inputFiltros.value = JSON.stringify(filtrosActivos);
+    inputFiltros.type  = 'hidden';
+    inputFiltros.name  = 'filtros';
+    inputFiltros.value = JSON.stringify(filtrosExport);
 
-    // Campo: orden
     const inputOrden = document.createElement('input');
-    inputOrden.type = 'hidden';
-    inputOrden.name = 'orden';
+    inputOrden.type  = 'hidden';
+    inputOrden.name  = 'orden';
     inputOrden.value = JSON.stringify(ordenActivo);
 
     form.appendChild(inputFiltros);
@@ -1321,13 +1336,14 @@ function descargarInformeGlobal() {
     document.body.appendChild(form);
     form.submit();
 
-    // Limpiar el formulario del DOM
+    // Limpiar formulario del DOM tras el submit
     setTimeout(function () {
-        document.body.removeChild(form);
+        if (document.body.contains(form)) {
+            document.body.removeChild(form);
+        }
     }, 1000);
 
-    // Restaurar botón después de unos segundos
-    // (no hay evento "descarga completada" en submit nativo)
+    // Restaurar botón (no existe evento "descarga completada" en submit nativo)
     setTimeout(function () {
         btn.disabled = false;
         btn.classList.remove('loading');
