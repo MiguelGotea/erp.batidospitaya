@@ -158,9 +158,8 @@ function procesarDatos() {
                 };
             }
 
-            // Sumar si ya existe (por seguridad)
-            const cantActual = productosMap[item.id_producto_presentacion].sucursales[detalle.codigo_sucursal].pedidos[item.dia_entrega] || 0;
-            productosMap[item.id_producto_presentacion].sucursales[detalle.codigo_sucursal].pedidos[item.dia_entrega] = cantActual + detalle.cantidad;
+            // Registrar el pedido (puede ser 0 si es pedido faltante)
+            productosMap[item.id_producto_presentacion].sucursales[detalle.codigo_sucursal].pedidos[item.dia_entrega] = detalle.cantidad;
         });
     });
 
@@ -304,16 +303,31 @@ function renderizarTablaProducto(producto) {
         `;
 
         diasConfig.forEach((dia, index) => {
-            const cantidad = sucursal.pedidos[dia.entrega] || 0;
+            const cantidad = sucursal.pedidos[dia.entrega];
             const esHoy = dia.num === diaHoy;
+            const esConfigurado = cantidad !== undefined;
+            const esFaltante = esConfigurado && cantidad === 0;
 
             if (cantidad > 0) {
                 totalesPorDia[index] += cantidad;
             }
 
+            let cellContent = formatCantidad(cantidad);
+            let cellClass = "";
+
+            if (esFaltante) {
+                cellClass = "missing-order";
+                cellContent = `<i class="fas fa-exclamation-triangle missing-order-icon"></i> 0`;
+            } else if (cantidad > 0) {
+                cellClass = "has-value data-cell";
+            } else {
+                cellClass = "no-value data-cell";
+                cellContent = "-";
+            }
+
             html += `
-                <td class="data-cell ${cantidad > 0 ? 'has-value' : 'no-value'} ${esHoy ? 'today-column' : ''}">
-                    ${formatCantidad(cantidad)}
+                <td class="${cellClass} ${esHoy ? 'today-column' : ''}">
+                    ${cellContent}
                 </td>
             `;
         });

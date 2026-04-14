@@ -31,46 +31,61 @@ try {
         $params[] = $filtro_sucursal;
     }
 
-    // Construir query base - consultar historial de pedidos con agregación por sucursal
+    // Construir query - Generar rango de fechas y unir con configuración para ver pedidos esperados
     $sql = "SELECT 
-                clph.id_producto_presentacion,
+                clcd.id_producto_presentacion,
                 pp.Nombre as nombre_producto,
                 pp.SKU,
-                DAYOFWEEK(clph.fecha_entrega) as dia_entrega,
-                SUM(clph.cantidad_pedido) as total_cantidad,
-                COUNT(DISTINCT clph.codigo_sucursal) as num_sucursales,
+                DAYOFWEEK(dates.fecha_entrega) as dia_entrega_mysql,
+                SUM(IFNULL(clph.cantidad_total, 0)) as total_cantidad,
+                COUNT(DISTINCT clcd.codigo_sucursal) as num_sucursales,
                 GROUP_CONCAT(
-                    detalles.info_suc SEPARATOR '|'
+                    CONCAT(s.codigo, ':', s.nombre, ':', IFNULL(clph.cantidad_total, 0)) SEPARATOR '|'
                 ) as detalles_sucursales
-            FROM compra_local_pedidos_historico clph
-            INNER JOIN producto_presentacion pp ON clph.id_producto_presentacion = pp.id
-            INNER JOIN (
+            FROM (
+                SELECT ? as fecha_entrega 
+                UNION SELECT DATE_ADD(?, INTERVAL 1 DAY)
+                UNION SELECT DATE_ADD(?, INTERVAL 2 DAY)
+                UNION SELECT DATE_ADD(?, INTERVAL 3 DAY)
+                UNION SELECT DATE_ADD(?, INTERVAL 4 DAY)
+                UNION SELECT DATE_ADD(?, INTERVAL 5 DAY)
+                UNION SELECT DATE_ADD(?, INTERVAL 6 DAY)
+            ) dates
+            INNER JOIN compra_local_configuracion_despacho clcd ON clcd.dia_entrega = (IF(DAYOFWEEK(dates.fecha_entrega)=1, 7, DAYOFWEEK(dates.fecha_entrega)-1))
+            INNER JOIN producto_presentacion pp ON clcd.id_producto_presentacion = pp.id
+            INNER JOIN sucursales s ON clcd.codigo_sucursal = s.codigo
+            LEFT JOIN (
                 SELECT 
                     id_producto_presentacion, 
-                    fecha_entrega, 
-                    codigo_sucursal,
-                    CONCAT(s.codigo, ':', s.nombre, ':', SUM(cantidad_pedido)) as info_suc
-                FROM compra_local_pedidos_historico clph_sub
-                INNER JOIN sucursales s ON clph_sub.codigo_sucursal = s.codigo
-                WHERE clph_sub.cantidad_pedido > 0
-                GROUP BY id_producto_presentacion, fecha_entrega, codigo_sucursal
-            ) detalles ON clph.id_producto_presentacion = detalles.id_producto_presentacion 
-                       AND clph.fecha_entrega = detalles.fecha_entrega 
-                       AND clph.codigo_sucursal = detalles.codigo_sucursal
-            WHERE clph.cantidad_pedido > 0
-            AND $filtro_fechas $where_sucursal
-            GROUP BY clph.id_producto_presentacion, pp.Nombre, pp.SKU, dia_entrega
-            ORDER BY pp.Nombre, dia_entrega";
+                    codigo_sucursal, 
+                    fecha_entrega,
+                    SUM(cantidad_pedido) as cantidad_total
+                FROM compra_local_pedidos_historico
+                GROUP BY id_producto_presentacion, codigo_sucursal, fecha_entrega
+            ) clph ON clph.id_producto_presentacion = clcd.id_producto_presentacion 
+                                                        AND clph.codigo_sucursal = clcd.codigo_sucursal 
+                                                        AND clph.fecha_entrega = dates.fecha_entrega
+            WHERE clcd.status = 'activo' AND clcd.is_delivery = 1
+            $where_sucursal
+            GROUP BY clcd.id_producto_presentacion, pp.Nombre, pp.SKU, dates.fecha_entrega
+            ORDER BY pp.Nombre, dates.fecha_entrega";
+
+    // Preparar parámetros para la subquery de fechas (7 veces) y el resto
+    $query_params = array_fill(0, 7, $fecha_inicio);
+    if (!empty($filtro_sucursal)) {
+        $query_params[] = $filtro_sucursal;
+    }
 
     $stmt = $conn->prepare($sql);
-    $stmt->execute($params);
+    $stmt->execute($query_params);
     $consolidado = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     // Procesar detalles de sucursales y convertir DAYOFWEEK a formato 1-7
     foreach ($consolidado as &$item) {
         // Convertir DAYOFWEEK (1=Dom, 2=Lun) a nuestro formato (1=Lun, 7=Dom)
-        $dia_mysql = $item['dia_entrega'];
+        $dia_mysql = $item['dia_entrega_mysql'];
         $item['dia_entrega'] = ($dia_mysql == 1) ? 7 : ($dia_mysql - 1);
+        unset($item['dia_entrega_mysql']);
 
         $detalles = [];
         if (!empty($item['detalles_sucursales'])) {
