@@ -94,8 +94,19 @@ function renderizarTabs() {
 // ====================================================
 function cambiarSucursal(codigo) {
     currentSucursal = codigo;
+    
+    // Mostrar loader inmediatamente si no hay datos en cache
     if (!configuraciones[codigo]) {
+        $(`#panel-${codigo}`).html(`
+            <div class="loader-container">
+                <div class="loader"></div>
+                <span class="small text-muted">Cargando configuración...</span>
+            </div>
+        `);
         cargarConfiguracion(codigo);
+    } else {
+        // Si hay cache, renderizar de inmediato
+        renderizarContenido(codigo);
     }
 }
 
@@ -141,6 +152,8 @@ function renderizarContenido(codigo) {
            </span>`
         : '';
 
+    const onFocusAttr = 'onfocus="this.dataset.initial = this.value"';
+
     const cardEncabezado = `
         <div class="card-encabezado">
             <div class="card-header-custom">
@@ -160,6 +173,7 @@ function renderizarContenido(codigo) {
                                value="${dataSuc.dias_stock_minimo ?? ''}"
                                placeholder="Ej: 3"
                                ${roAttr}
+                               ${onFocusAttr}
                                onblur="guardarSucursal('${codigo}', 'dias_stock_minimo', this.value, this)">
                     </div>
                     <div class="campo-encabezado">
@@ -172,6 +186,7 @@ function renderizarContenido(codigo) {
                                value="${dataSuc.capacidad_congelados ?? ''}"
                                placeholder="Ej: 150.00"
                                ${roAttr}
+                               ${onFocusAttr}
                                onblur="guardarSucursal('${codigo}', 'capacidad_congelados', this.value, this)">
                     </div>
                 </div>
@@ -207,6 +222,7 @@ function renderizarContenido(codigo) {
                            value="${fila.dias_ciclo ?? ''}"
                            placeholder="—"
                            ${roAttr}
+                           ${onFocusAttr}
                            onblur="guardarProducto('${codigo}', '${cat.codigo}', 'dias_ciclo', this.value, this)">
                 </td>
                 <td>
@@ -215,6 +231,7 @@ function renderizarContenido(codigo) {
                            value="${fila.dias_desfase ?? ''}"
                            placeholder="—"
                            ${roAttr}
+                           ${onFocusAttr}
                            onblur="guardarProducto('${codigo}', '${cat.codigo}', 'dias_desfase', this.value, this)">
                 </td>
                 <td>
@@ -223,6 +240,7 @@ function renderizarContenido(codigo) {
                            value="${fila.dias_abastecimiento_despacho ?? ''}"
                            placeholder="—"
                            ${roAttr}
+                           ${onFocusAttr}
                            onblur="guardarProducto('${codigo}', '${cat.codigo}', 'dias_abastecimiento_despacho', this.value, this)">
                 </td>
                 <td>
@@ -231,6 +249,7 @@ function renderizarContenido(codigo) {
                            value="${fila.ajuste_demanda ?? ''}"
                            placeholder="Ej: 1.05"
                            ${roAttr}
+                           ${onFocusAttr}
                            onblur="guardarProducto('${codigo}', '${cat.codigo}', 'ajuste_demanda', this.value, this)">
                 </td>
             </tr>
@@ -270,8 +289,10 @@ function renderizarContenido(codigo) {
 // ====================================================
 function guardarSucursal(codigoSucursal, campo, valor, inputEl) {
     if (!puedeEditar) return;
-    if (valor === '') return; // no guardar vacíos
-
+    
+    // Evitar guardado si el valor no ha cambiado
+    if (valor === (inputEl.dataset.initial ?? '')) return;
+    
     const $input = $(inputEl);
     $input.addClass('guardando');
 
@@ -310,7 +331,9 @@ function guardarSucursal(codigoSucursal, campo, valor, inputEl) {
 // ====================================================
 function guardarProducto(codigoSucursal, codigoInsumo, campo, valor, inputEl) {
     if (!puedeEditar) return;
-    if (valor === '') return; // no guardar vacíos
+    
+    // Evitar guardado si el valor no ha cambiado
+    if (valor === (inputEl.dataset.initial ?? '')) return;
 
     const $input = $(inputEl);
     $input.addClass('guardando');
