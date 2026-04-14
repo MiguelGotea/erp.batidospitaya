@@ -133,6 +133,14 @@ function getTextoUrgencia($nivel)
                                 </div>
                             <?php endforeach; ?>
                         </div>
+
+                        <!-- Botón Informe Global Excel -->
+                        <div class="quick-access-export-row">
+                            <button id="btnInformeGlobal" class="btn-informe-global" onclick="descargarInformeGlobal()" title="Descargar informe Excel con los filtros activos">
+                                <i class="bi bi-file-earmark-excel-fill"></i>
+                                <span>Informe Global</span>
+                            </button>
+                        </div>
                     </div>
                 <?php endif; ?>
 
