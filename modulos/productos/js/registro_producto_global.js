@@ -206,6 +206,7 @@ async function cargarDatosProducto() {
             $('#esComprable').prop('checked', p.es_comprable === 'SI');
             $('#esFabricable').prop('checked', p.es_fabricable === 'SI');
             $('#compraTienda').prop('checked', parseInt(p.compra_tienda) === 1);
+            $('#categoriaInsumo').val(p.categoria_insumo || '');
 
             if (p.id_subgrupo_presentacion_producto) {
                 $('#grupo').val(p.id_grupo);
@@ -366,12 +367,54 @@ async function guardarProducto() {
                 // Recargar datos
                 cargarDatosProducto();
             }
-        } else {
-            Swal.fire('Error', data.message, 'error');
         }
     } catch (error) {
         console.error('Error guardando producto:', error);
         Swal.fire('Error', 'Error al guardar el producto', 'error');
+    }
+}
+
+// ============================================
+// ACTUALIZACIÓN INLINE DE CAMPOS
+// ============================================
+
+async function guardarCampoInline(campo, valor) {
+    if (idProductoActual === 0) {
+        // Si el producto es nuevo, no hacemos nada extra, se guardará con el botón principal
+        return;
+    }
+
+    try {
+        const formData = new FormData();
+        formData.append('id', idProductoActual);
+        formData.append('campo', campo);
+        formData.append('valor', valor);
+
+        const response = await fetch('ajax/registro_producto_update_campo_inline.php', {
+            method: 'POST',
+            body: formData
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            // Notificación sutil (Toast)
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 2000,
+                timerProgressBar: true
+            });
+            Toast.fire({
+                icon: 'success',
+                title: 'Campo actualizado'
+            });
+        } else {
+            Swal.fire('Error', data.message, 'error');
+        }
+    } catch (error) {
+        console.error('Error en actualización inline:', error);
     }
 }
 

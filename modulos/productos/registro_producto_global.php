@@ -168,6 +168,19 @@ if ($esNuevo && !$puedeCrear) {
                                             <option value="">Seleccione grupo primero...</option>
                                         </select>
                                     </div>
+                                    <div class="col-md-6">
+                                        <label for="categoriaInsumo" class="form-label">Categoría Insumo (Mapeo)</label>
+                                        <select class="form-select" id="categoriaInsumo" name="categoria_insumo" onchange="guardarCampoInline('categoria_insumo', this.value)">
+                                            <option value="">Seleccione...</option>
+                                            <option value="A">A - Frescos</option>
+                                            <option value="B">B - Congelados</option>
+                                            <option value="C">C - Fresas</option>
+                                            <option value="D">D - Desechables</option>
+                                            <option value="E">E - Fijos</option>
+                                            <option value="F">F - Secos y Preparación</option>
+                                            <option value="G">G - Productos de Mostrador</option>
+                                        </select>
+                                    </div>
                                 </div>
                             </div>
 

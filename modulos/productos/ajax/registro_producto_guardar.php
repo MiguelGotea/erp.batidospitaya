@@ -22,6 +22,8 @@ try {
         ? (int) $_POST['id_subgrupo_presentacion_producto']
         : null;
 
+    $categoriaInsumo = isset($_POST['categoria_insumo']) ? trim($_POST['categoria_insumo']) : null;
+
     // Activo siempre es 'SI' por defecto (no hay checkbox en el formulario)
     $activo = 'SI';
 
@@ -99,6 +101,7 @@ try {
                 Activo = :activo,
                 cantidad = :cantidad,
                 compra_tienda = :compra_tienda,
+                categoria_insumo = :categoria_insumo,
                 usuario_modificacion = :usuario_mod,
                 fecha_modificacion = NOW()
                 WHERE id = :id";
@@ -116,6 +119,7 @@ try {
             ':activo' => $activo,
             ':cantidad' => ($tieneReceta && $cantidad == 0) ? null : $cantidad,
             ':compra_tienda' => $compraTienda,
+            ':categoria_insumo' => $categoriaInsumo,
             ':usuario_mod' => $usuarioId,
             ':id' => $id
         ]);
@@ -128,12 +132,12 @@ try {
                 (SKU, Nombre, id_producto_maestro, id_unidad_producto, 
                  es_vendible, es_comprable, es_fabricable, 
                  id_subgrupo_presentacion_producto, 
-                 Activo, cantidad, compra_tienda, usuario_creacion)
+                 Activo, cantidad, compra_tienda, categoria_insumo, usuario_creacion)
                 VALUES 
                 (:sku, :nombre, :id_producto_maestro, :id_unidad_producto,
                  :es_vendible, :es_comprable, :es_fabricable,
                  :id_subgrupo,
-                 :activo, :cantidad, :compra_tienda, :usuario_creacion)";
+                 :activo, :cantidad, :compra_tienda, :categoria_insumo, :usuario_creacion)";
 
         $stmt = $conn->prepare($sql);
         $stmt->execute([
@@ -148,6 +152,7 @@ try {
             ':activo' => $activo,
             ':cantidad' => ($tieneReceta && $cantidad == 0) ? null : $cantidad,
             ':compra_tienda' => $compraTienda,
+            ':categoria_insumo' => $categoriaInsumo,
             ':usuario_creacion' => $usuarioId
         ]);
 
