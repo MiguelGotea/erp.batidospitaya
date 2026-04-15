@@ -268,8 +268,9 @@ function renderizarTablaProducto(producto) {
         `;
     }
 
-    // Solo resaltar "hoy" si estamos viendo la semana actual
-    const diaHoy = semanaOffset === 0 ? getDiaHoy() : -1;
+    // Determinar índice de hoy (1-7)
+    const todayIdx = getDiaHoy();
+    
     let html = `
         <div class="table-responsive mt-2">
             <table class="table consolidado-table">
@@ -297,8 +298,6 @@ function renderizarTablaProducto(producto) {
     `;
 
     const totalesPorDia = new Array(8).fill(0);
-
-    const todayIdx = getDiaHoy();
     
     sucursalesProducto.forEach(sucursal => {
         html += `
