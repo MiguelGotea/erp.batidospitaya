@@ -10,7 +10,7 @@ let semanaOffset = 0; // 0 = semana actual, -1 = semana pasada, etc.
 
 // Días de la semana para el encabezado (Perspectiva de Pedido)
 const diasConfig = [
-    { num: 7, entrega: 1, nombre: 'Dom (Ant)', info: 'Se Despacha Lunes', isPrev: true },
+    { num: 7, entrega: 1, nombre: 'Dom (Pasado)', info: 'Se Despacha Lunes', isPrev: true },
     { num: 1, entrega: 2, nombre: 'Lun', info: 'Se Despacha Martes' },
     { num: 2, entrega: 3, nombre: 'Mar', info: 'Se Despacha Miércoles' },
     { num: 3, entrega: 4, nombre: 'Mié', info: 'Se Despacha Jueves' },
@@ -287,7 +287,6 @@ function renderizarTablaProducto(producto) {
                                         ${dia.nombre}${esHoy ? ' (HOY)' : ''}
                                     </span>
                                     <span class="delivery-label">${dia.info}</span>
-                                    ${dia.isPrev ? '<span class="badge bg-secondary x-small mt-1">S. Ant.</span>' : ''}
                                 </div>
                             </th>
                         `;
