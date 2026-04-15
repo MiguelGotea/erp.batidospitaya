@@ -9,7 +9,7 @@ const CAT_LABELS = {
     A: 'Frescos', B: 'Congelados', C: 'Fresas',
     D: 'Desechables', E: 'Fijos', F: 'Secos y Preparación', G: 'Productos de Mostrador'
 };
-const CAT_ORDER = ['A','B','C','D','E','F','G'];
+const CAT_ORDER = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
 
 // Estado global
 let datosResultado = [];   // Array completo de productos devuelto por el AJAX
@@ -26,9 +26,12 @@ $(document).ready(function () {
     // Búsqueda en tabla
     $('#buscarProducto').on('input', function () {
         const q = $(this).val().toLowerCase();
-        $('#tbodyProductos tr').not('.fila-grupo-header').each(function () {
+        $('#tbodyProductos tr').not('.fila-grupo-header, .ps-fila-indicadores').each(function () {
             const txt = $(this).text().toLowerCase();
-            $(this).toggle(txt.includes(q));
+            const visible = txt.includes(q);
+            $(this).toggle(visible);
+            // También toggle a su fila de indicadores correspondiente
+            $(this).next('.ps-fila-indicadores').toggle(visible);
         });
         // Ocultar headers de grupo vacíos
         $('#tbodyProductos tr.fila-grupo-header').each(function () {
@@ -85,9 +88,9 @@ function cargarSemanaActual() {
 // Calcular pedido sugerido
 // ====================================================
 function calcularPedido() {
-    const desde     = parseInt($('#filtroSemanaDesde').val());
-    const hasta     = parseInt($('#filtroSemanaHasta').val());
-    const sucursal  = $('#filtroSucursal').val();
+    const desde = parseInt($('#filtroSemanaDesde').val());
+    const hasta = parseInt($('#filtroSemanaHasta').val());
+    const sucursal = $('#filtroSucursal').val();
 
     // Validaciones
     if (!desde || !hasta) {
@@ -189,11 +192,11 @@ function renderizarResultados(res) {
 // Construir fila de la tabla
 // ====================================================
 function buildFila(p, cat) {
-    const catBadge  = cat !== '_sin_cat'
+    const catBadge = cat !== '_sin_cat'
         ? `<span class="cat-badge cat-${cat}-bg">${cat}</span>`
         : '<span class="val-na">—</span>';
 
-    const fmt  = (v, d = 4) => v !== null && v !== undefined ? Number(v).toLocaleString('es-NI', { minimumFractionDigits: d, maximumFractionDigits: d }) : '<span class="val-na">N/A</span>';
+    const fmt = (v, d = 4) => v !== null && v !== undefined ? Number(v).toLocaleString('es-NI', { minimumFractionDigits: d, maximumFractionDigits: d }) : '<span class="val-na">N/A</span>';
     const fmt2 = (v) => fmt(v, 2);
 
     // Stock max final con badge "Ajustado" para congelados (B)
@@ -225,6 +228,20 @@ function buildFila(p, cat) {
     // Pedido sugerido inicial
     const pedidoHtml = buildPedidoHtml(p.stock_max_final, inventarioVal !== '' ? Number(inventarioVal) : null);
 
+    // Indicadores detallados (para verificación)
+    const detalleHtml = `
+        <tr class="ps-fila-indicadores cat-${cat !== '_sin_cat' ? cat : 'X'}" data-id-pp-ref="${p.id_pp}">
+            <td colspan="12">
+                <div class="ps-indicadores-container">
+                    <span class="ps-ind-item" title="Ajuste Demanda"><b>Adj:</b> ${fmt(p.ajuste_demanda * 100, 2)}%</span>
+                    <span class="ps-ind-item" title="Días Ciclo"><b>Ciclo:</b> ${fmt(p.dias_ciclo, 0)}d</span>
+                    <span class="ps-ind-item" title="Días Desfase"><b>Desfase:</b> ${fmt(p.dias_desfase, 0)}d</span>
+                    <span class="ps-ind-item" title="Días Stock Mínimo"><b>S.Mín:</b> ${fmt(p.dias_stock_min, 0)}d</span>
+                </div>
+            </td>
+        </tr>
+    `;
+
     return `
         <tr class="cat-${cat !== '_sin_cat' ? cat : 'X'}" data-id-pp="${p.id_pp}">
             <td class="col-producto"><span class="fw-500">${escHtml(p.nombre)}</span></td>
@@ -240,6 +257,7 @@ function buildFila(p, cat) {
             <td class="text-center col-inventario">${inputHtml}</td>
             <td class="text-center col-pedido" id="pedido-${p.id_pp}">${pedidoHtml}</td>
         </tr>
+        ${detalleHtml}
     `;
 }
 
@@ -264,9 +282,9 @@ function buildPedidoHtml(stockMaxFinal, inventario) {
 // Recalcular pedido en tiempo real al cambiar inventario
 // ====================================================
 function recalcularPedidoFila(inputEl) {
-    const idPP         = inputEl.dataset.idPp;
+    const idPP = inputEl.dataset.idPp;
     const stockMaxFinal = parseFloat(inputEl.dataset.stockMaxFinal);
-    const inventario   = inputEl.value !== '' ? parseFloat(inputEl.value) : null;
+    const inventario = inputEl.value !== '' ? parseFloat(inputEl.value) : null;
 
     $(`#pedido-${idPP}`).html(buildPedidoHtml(
         isNaN(stockMaxFinal) ? null : stockMaxFinal,
@@ -328,5 +346,5 @@ function guardarInventario() {
 // Utilidades
 // ====================================================
 function escHtml(str) {
-    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }

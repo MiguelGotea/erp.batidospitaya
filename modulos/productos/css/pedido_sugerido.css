@@ -288,6 +288,29 @@ html { overflow-y: scroll; }
 /* Valor numérico NA */
 .val-na { color: #adb5bd; font-size: 12px; }
 
+/* Fila de indicadores (debug/verificación) */
+.ps-fila-indicadores td {
+    padding: 2px 12px 10px 12px !important;
+    border-top: none !important;
+}
+.ps-indicadores-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    background: #fdfdfd;
+    border: 1px dashed #ced4da;
+    border-radius: 6px;
+    padding: 6px 12px;
+}
+.ps-ind-item {
+    font-size: 11px;
+    color: #6c757d;
+}
+.ps-ind-item b {
+    color: var(--pitaya-dark);
+    margin-right: 2px;
+}
+
 /* =====================
    Responsive
    ===================== */
