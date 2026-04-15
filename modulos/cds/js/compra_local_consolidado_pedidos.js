@@ -10,6 +10,7 @@ let semanaOffset = 0; // 0 = semana actual, -1 = semana pasada, etc.
 
 // Días de la semana para el encabezado (Perspectiva de Pedido)
 const diasConfig = [
+    { num: 7, entrega: 1, nombre: 'Dom (Ant)', info: 'Se Despacha Lunes', isPrev: true },
     { num: 1, entrega: 2, nombre: 'Lun', info: 'Se Despacha Martes' },
     { num: 2, entrega: 3, nombre: 'Mar', info: 'Se Despacha Miércoles' },
     { num: 3, entrega: 4, nombre: 'Mié', info: 'Se Despacha Jueves' },
@@ -275,16 +276,17 @@ function renderizarTablaProducto(producto) {
                 <thead>
                     <tr>
                         <th>Sucursal</th>
-                        ${diasConfig.map(dia => {
-        const esHoy = dia.num === diaHoy;
+                        ${diasConfig.map((dia, index) => {
+        const esHoy = semanaOffset === 0 && index === todayIdx;
         return `
-                            <th class="${esHoy ? 'today-column' : ''}">
+                            <th class="${esHoy ? 'today-column' : ''} ${dia.isPrev ? 'prev-week-column' : ''}">
                                 <div class="day-header">
                                     <span class="day-name">
                                         ${esHoy ? '<i class="fas fa-star text-warning me-1"></i>' : ''}
                                         ${dia.nombre}${esHoy ? ' (HOY)' : ''}
                                     </span>
                                     <span class="delivery-label">${dia.info}</span>
+                                    ${dia.isPrev ? '<span class="badge bg-secondary x-small mt-1">S. Ant.</span>' : ''}
                                 </div>
                             </th>
                         `;
@@ -294,8 +296,10 @@ function renderizarTablaProducto(producto) {
                 <tbody>
     `;
 
-    const totalesPorDia = new Array(7).fill(0);
+    const totalesPorDia = new Array(8).fill(0);
 
+    const todayIdx = getDiaHoy();
+    
     sucursalesProducto.forEach(sucursal => {
         html += `
             <tr>
@@ -303,12 +307,12 @@ function renderizarTablaProducto(producto) {
         `;
 
         diasConfig.forEach((dia, index) => {
-            const cantidad = sucursal.pedidos[dia.entrega];
-            const esHoy = semanaOffset === 0 && dia.num === getDiaHoy();
+            const cantidad = sucursal.pedidos[index]; // Ahora usamos el índice como llave
+            const esHoy = semanaOffset === 0 && index === todayIdx;
             const esConfigurado = cantidad !== undefined;
-
+            
             // Solo mostrar alerta si es configurado, cantidad es 0 Y es hoy o un día pasado
-            const esPasadoOHoy = semanaOffset < 0 || (semanaOffset === 0 && dia.num <= getDiaHoy());
+            const esPasadoOHoy = semanaOffset < 0 || (semanaOffset === 0 && index <= todayIdx);
             const esFaltante = esConfigurado && cantidad === 0 && esPasadoOHoy;
 
             if (cantidad > 0) {
@@ -346,7 +350,7 @@ function renderizarTablaProducto(producto) {
                 <tr class="totals-row">
                     <td><strong>TOTAL</strong></td>
                     ${totalesPorDia.map((total, index) => `
-                        <td class="${diasConfig[index].num === diaHoy ? 'today-column' : ''}">
+                        <td class="${semanaOffset === 0 && index === todayIdx ? 'today-column' : ''}">
                             <strong>${formatCantidad(total)}</strong>
                         </td>
                     `).join('')}

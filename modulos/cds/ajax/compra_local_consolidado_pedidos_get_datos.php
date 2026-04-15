@@ -36,20 +36,21 @@ try {
                 clcd.id_producto_presentacion,
                 pp.Nombre as nombre_producto,
                 pp.SKU,
-                DAYOFWEEK(dates.fecha_entrega) as dia_entrega_mysql,
+                dates.idx as dia_idx,
                 SUM(IFNULL(clph.cantidad_total, 0)) as total_cantidad,
                 COUNT(DISTINCT clcd.codigo_sucursal) as num_sucursales,
                 GROUP_CONCAT(
                     CONCAT(s.codigo, ':', s.nombre, ':', IFNULL(clph.cantidad_total, 0)) SEPARATOR '|'
                 ) as detalles_sucursales
             FROM (
-                SELECT ? as fecha_entrega 
-                UNION SELECT DATE_ADD(?, INTERVAL 1 DAY)
-                UNION SELECT DATE_ADD(?, INTERVAL 2 DAY)
-                UNION SELECT DATE_ADD(?, INTERVAL 3 DAY)
-                UNION SELECT DATE_ADD(?, INTERVAL 4 DAY)
-                UNION SELECT DATE_ADD(?, INTERVAL 5 DAY)
-                UNION SELECT DATE_ADD(?, INTERVAL 6 DAY)
+                SELECT 0 as idx, DATE_SUB(?, INTERVAL 1 DAY) as fecha_entrega 
+                UNION SELECT 1, ?
+                UNION SELECT 2, DATE_ADD(?, INTERVAL 1 DAY)
+                UNION SELECT 3, DATE_ADD(?, INTERVAL 2 DAY)
+                UNION SELECT 4, DATE_ADD(?, INTERVAL 3 DAY)
+                UNION SELECT 5, DATE_ADD(?, INTERVAL 4 DAY)
+                UNION SELECT 6, DATE_ADD(?, INTERVAL 5 DAY)
+                UNION SELECT 7, DATE_ADD(?, INTERVAL 6 DAY)
             ) dates
             INNER JOIN compra_local_configuracion_despacho clcd ON clcd.dia_entrega = (IF(DAYOFWEEK(dates.fecha_entrega)=1, 7, DAYOFWEEK(dates.fecha_entrega)-1))
             INNER JOIN producto_presentacion pp ON clcd.id_producto_presentacion = pp.id
@@ -67,11 +68,11 @@ try {
                                                         AND clph.fecha_entrega = dates.fecha_entrega
             WHERE clcd.status = 'activo' AND clcd.is_delivery = 1
             $where_sucursal
-            GROUP BY clcd.id_producto_presentacion, pp.Nombre, pp.SKU, dates.fecha_entrega
-            ORDER BY pp.Nombre, dates.fecha_entrega";
+            GROUP BY clcd.id_producto_presentacion, pp.Nombre, pp.SKU, dates.idx
+            ORDER BY pp.Nombre, dates.idx";
 
-    // Preparar parámetros para la subquery de fechas (7 veces) y el resto
-    $query_params = array_fill(0, 7, $fecha_inicio);
+    // Preparar parámetros para la subquery de fechas (8 veces) y el resto
+    $query_params = array_fill(0, 8, $fecha_inicio);
     if (!empty($filtro_sucursal)) {
         $query_params[] = $filtro_sucursal;
     }
@@ -80,12 +81,10 @@ try {
     $stmt->execute($query_params);
     $consolidado = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // Procesar detalles de sucursales y convertir DAYOFWEEK a formato 1-7
+    // Procesar detalles de sucursales
     foreach ($consolidado as &$item) {
-        // Convertir DAYOFWEEK (1=Dom, 2=Lun) a nuestro formato (1=Lun, 7=Dom)
-        $dia_mysql = $item['dia_entrega_mysql'];
-        $item['dia_entrega'] = ($dia_mysql == 1) ? 7 : ($dia_mysql - 1);
-        unset($item['dia_entrega_mysql']);
+        $item['dia_entrega'] = intval($item['dia_idx']);
+        unset($item['dia_idx']);
 
         $detalles = [];
         if (!empty($item['detalles_sucursales'])) {
