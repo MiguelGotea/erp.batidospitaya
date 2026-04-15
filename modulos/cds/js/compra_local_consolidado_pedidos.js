@@ -304,9 +304,12 @@ function renderizarTablaProducto(producto) {
 
         diasConfig.forEach((dia, index) => {
             const cantidad = sucursal.pedidos[dia.entrega];
-            const esHoy = dia.num === diaHoy;
+            const esHoy = semanaOffset === 0 && dia.num === getDiaHoy();
             const esConfigurado = cantidad !== undefined;
-            const esFaltante = esConfigurado && cantidad === 0;
+            
+            // Solo mostrar alerta si es configurado, cantidad es 0 Y es hoy o un día pasado
+            const esPasadoOHoy = semanaOffset < 0 || (semanaOffset === 0 && dia.num <= getDiaHoy());
+            const esFaltante = esConfigurado && cantidad === 0 && esPasadoOHoy;
 
             if (cantidad > 0) {
                 totalesPorDia[index] += cantidad;
