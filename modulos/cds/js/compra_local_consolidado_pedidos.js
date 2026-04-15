@@ -306,7 +306,7 @@ function renderizarTablaProducto(producto) {
             const cantidad = sucursal.pedidos[dia.entrega];
             const esHoy = semanaOffset === 0 && dia.num === getDiaHoy();
             const esConfigurado = cantidad !== undefined;
-            
+
             // Solo mostrar alerta si es configurado, cantidad es 0 Y es hoy o un día pasado
             const esPasadoOHoy = semanaOffset < 0 || (semanaOffset === 0 && dia.num <= getDiaHoy());
             const esFaltante = esConfigurado && cantidad === 0 && esPasadoOHoy;
@@ -314,6 +314,7 @@ function renderizarTablaProducto(producto) {
             if (cantidad > 0) {
                 totalesPorDia[index] += cantidad;
             }
+
 
             let cellContent = formatCantidad(cantidad);
             let cellClass = "";
