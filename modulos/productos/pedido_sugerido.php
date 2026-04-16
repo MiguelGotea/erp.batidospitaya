@@ -221,6 +221,121 @@ $version     = mt_rand(1, 10000);
     <script>
         const PUEDE_EDITAR = <?php echo $puedeEditar ? 'true' : 'false'; ?>;
     </script>
+    <!-- ===================================================
+         MODAL DE AYUDA TÉCNICA (GUÍA DE USO)
+         =================================================== -->
+    <div class="modal fade" id="pageHelpModal" tabindex="-1" aria-labelledby="pageHelpModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 15px;">
+                <div class="modal-header" style="background: var(--pitaya-dark); color: white; border-radius: 15px 15px 0 0;">
+                    <h5 class="modal-title d-flex align-items-center gap-2" id="pageHelpModalLabel">
+                        <i class="bi bi-info-circle-fill"></i> Guía Técnica: Pedido Sugerido
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <!-- Introducción -->
+                    <div class="mb-4">
+                        <h6 class="fw-bold text-dark border-bottom pb-2">¿Qué es el Pedido Sugerido?</h6>
+                        <p class="text-secondary small">
+                            Es una herramienta inteligente que analiza automáticamente el <b>historial de ventas y movimientos de inventario</b> del periodo que seleccionaste. Su objetivo es calcular la cantidad óptima de producto que debes solicitar para mantener la tienda operando sin interrupciones.
+                        </p>
+                        <p class="text-secondary small">
+                            A diferencia de un pedido manual, este sistema considera no solo cuánto vendes, sino también la <b>variabilidad del consumo</b> y el tiempo que tarda el proveedor en entregarte, asegurando que siempre tengas un "colchón" de seguridad y que el pedido no exceda la capacidad física de tus estantes o congeladores.
+                        </p>
+                    </div>
+
+                    <!-- Fórmulas -->
+                    <div class="row g-4 mb-4">
+                        <div class="col-md-6">
+                            <div class="p-3 bg-light rounded-3 h-100 border">
+                                <h6 class="fw-bold small mb-2"><i class="bi bi-calculator me-1"></i> Demanda Base</h6>
+                                <ul class="small text-muted mb-0">
+                                    <li><b>Consumo Semanal:</b> Promedio + Desv. Estándar (Colchón de seguridad).</li>
+                                    <li><b>Ajuste demanda:</b> Afecta directamente al consumo proyectado (+/- %).</li>
+                                    <li><b>Consumo Diario:</b> (Semanal × Ajuste) ÷ 7 días.</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="p-3 bg-light rounded-3 h-100 border">
+                                <h6 class="fw-bold small mb-2"><i class="bi bi-box-seam me-1"></i> Niveles de Stock</h6>
+                                <ul class="small text-muted mb-0">
+                                    <li><b>Stock Mín:</b> Nivel crítico (Consumo Diario × Días Stock Mínimo).</li>
+                                    <li><b>Stock Máx:</b> Capacidad teórica ideal (Consumo Diario × Ciclo + Desfase + Stock Mín).</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Factor de Congelados -->
+                    <div class="mb-4 p-3 bg-opacity-10 bg-info rounded-3 border-info border border-opacity-25">
+                        <h6 class="fw-bold small text-info-emphasis d-flex align-items-center gap-2">
+                            <i class="bi bi-snow2"></i> Capacidad de Congelados (Ajuste B)
+                        </h6>
+                        <p class="text-secondary small mb-0">
+                            Si la suma de los <b>Stock Máximos</b> de la Categoría B excede la capacidad de la sucursal, el sistema aplica un **Factor de Reducción Proporcional** (nunca mayor a 1.0). 
+                            Esto garantiza que el pedido sugerido no exceda lo que físicamente cabe en los congeladores.
+                        </p>
+                    </div>
+
+                    <!-- Glosario de Variables -->
+                    <div class="mb-4">
+                        <h6 class="fw-bold text-dark border-bottom pb-2">Glosario de Columnas y Variables</h6>
+                        
+                        <div class="row g-3 mt-1">
+                            <!-- Tabla Principal -->
+                            <div class="col-md-6">
+                                <h7 class="fw-bold text-primary small d-block mb-2">Columnas Principales</h7>
+                                <ul class="list-unstyled small text-muted">
+                                    <li class="mb-1"><b>Prom. Consumo:</b> El promedio de lo consumido por semana en las fechas filtradas.</li>
+                                    <li class="mb-1"><b>Desv. Estándar:</b> Qué tanto varía el consumo semana a semana (mide la incertidumbre).</li>
+                                    <li class="mb-1"><b>Cons. Semanal:</b> La demanda base "segura" (Promedio + Desviación).</li>
+                                    <li class="mb-1"><b>Cap. Base (Final):</b> El Stock Máximo ya ajustado a lo que cabe físicamente en tienda.</li>
+                                    <li class="mb-1"><b>Sugerencia:</b> La resta entre el Stock Máximo Final y tu Inventario Actual.</li>
+                                </ul>
+                            </div>
+                            <!-- Desglose Hover -->
+                            <div class="col-md-6 border-start ps-3">
+                                <h7 class="fw-bold text-primary small d-block mb-2">Indicadores (Hover)</h7>
+                                <ul class="list-unstyled small text-muted">
+                                    <li class="mb-1"><b>Adj:</b> Porcentaje manual de aumento o disminución de la demanda.</li>
+                                    <li class="mb-1"><b>Ciclo:</b> Cuántos días pasan entre un pedido y el siguiente.</li>
+                                    <li class="mb-1"><b>Desfase:</b> Cuántos días tarda el proveedor en entregar el producto.</li>
+                                    <li class="mb-1"><b>S.Mín:</b> Días de reserva que quieres tener siempre "por si acaso".</li>
+                                    <li class="mb-1"><b>C.Diario:</b> El consumo por día exacto usado para calcular los stocks.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Leyenda de Estados -->
+                    <div class="mb-2">
+                        <h6 class="fw-bold text-dark small border-bottom pb-2">Indicadores de Pedido</h6>
+                        <div class="d-flex flex-column gap-2 mt-3">
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="badge bg-success" style="width: 85px;">ÓPTIMO</span>
+                                <span class="small text-muted">Stock actual suficiente según días de ciclo y seguridad.</span>
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="badge bg-warning text-dark" style="width: 85px;">PEDIR</span>
+                                <span class="small text-muted">Es necesario reordenar para no caer por debajo del mínimo.</span>
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="badge bg-secondary" style="width: 85px;">N/A</span>
+                                <span class="small text-muted">Producto sin parámetros logísticos configurados.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Entendido</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Principal -->
     <script src="js/pedido_sugerido.js?v=<?php echo $version; ?>"></script>
 </body>
 </html>

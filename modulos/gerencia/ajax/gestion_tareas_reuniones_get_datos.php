@@ -24,9 +24,12 @@ try {
     $finalizados = [];
     $hoyStr = date('Y-m-d');
 
+    $sinFecha = [];
     switch ($agrupacion) {
         case 'mes':
-            $grupos = agruparPorMes($items);
+            $resultado = agruparPorMes($items);
+            $grupos    = $resultado['grupos'];
+            $sinFecha  = $resultado['sin_fecha'];
             // Historial: tareas finalizadas/canceladas + reuniones cuya fecha ya pasó
             foreach ($items as $it) {
                 if ($it['tipo'] === 'tarea' && in_array($it['estado'], ['finalizado', 'cancelado'])) {
@@ -59,6 +62,7 @@ try {
     echo json_encode([
         'success'     => true,
         'grupos'      => $grupos,
+        'sin_fecha'   => $sinFecha,
         'finalizados' => $finalizados
     ]);
 
@@ -123,8 +127,9 @@ function obtenerItemsUsuario($conn, $codCargo)
             ORDER BY 
                 CASE 
                     WHEN i.tipo = 'reunion' THEN i.fecha_reunion
+                    WHEN i.fecha_meta IS NULL THEN '9999-12-31'
                     ELSE i.fecha_meta
-                END ASC";
+                END ASC, i.id ASC";
 
     $stmt = $conn->prepare($sql);
     $stmt->execute([
@@ -166,9 +171,16 @@ function agruparPorMes($items)
                $meses[(int)$d->format('n') - 1];
     };
 
-    // Indexar items por fecha (YYYY-MM-DD)
+    // Separar tareas sin fecha_meta (pendientes de asignar)
+    $sinFecha = [];
     $itemsByDate = [];
     foreach ($items as $item) {
+        // Tareas sin fecha_meta → panel especial
+        if ($item['tipo'] === 'tarea' && empty($item['fecha_meta'])
+            && !in_array($item['estado'], ['finalizado', 'cancelado'])) {
+            $sinFecha[] = $item;
+            continue;
+        }
         $fecha = $item['tipo'] === 'reunion'
             ? substr($item['fecha_reunion'] ?? '', 0, 10)
             : ($item['fecha_meta'] ?? '');
@@ -250,7 +262,7 @@ function agruparPorMes($items)
     }
 
     ksort($grupos);
-    return array_values($grupos);
+    return ['grupos' => array_values($grupos), 'sin_fecha' => $sinFecha];
 }
 
 /**

@@ -123,10 +123,20 @@ function cargarDatos() {
         success: function (r) {
             const tieneGrupos = r.success && r.grupos && r.grupos.length > 0;
             const tieneFinalizados = agrupacionActual === 'mes' && r.finalizados && r.finalizados.length > 0;
+            const tieneSinFecha = agrupacionActual === 'mes' && r.sin_fecha && r.sin_fecha.length > 0;
+
+            // Panel de pendientes sin fecha (PRIMERO, antes de los grupos)
+            if (tieneSinFecha) {
+                $('#contenedorTareasReuniones').empty();
+                renderizarSinFecha(r.sin_fecha);
+            } else if (tieneGrupos) {
+                // limpiar solo si no hubo sin_fecha que ya lo hizo
+                $('#contenedorTareasReuniones').empty();
+            }
 
             if (tieneGrupos) {
                 renderizarDatos(r.grupos);
-            } else {
+            } else if (!tieneSinFecha) {
                 mostrarEstadoVacio();
             }
             if (tieneFinalizados) {
@@ -139,7 +149,7 @@ function cargarDatos() {
 
 // ── Renderizar ───────────────────────────────────────
 function renderizarDatos(grupos) {
-    const cont = $('#contenedorTareasReuniones').empty();
+    const cont = $('#contenedorTareasReuniones'); // NO vaciar aquí — el caller lo hizo
 
     // En vista mes: detectar cambio de mes para insertar separador
     let mesAnterior = null;
@@ -162,6 +172,104 @@ function renderizarDatos(grupos) {
         revisarSolapamientos();
         dibujarLineaAhora();
     }, 100);
+}
+
+// ── Panel «Pendientes de Asignar» ───────────────────
+function renderizarSinFecha(items) {
+    const hoy = obtenerFechaHoy();
+    const panel = $(`
+        <div class="sin-fecha-panel" id="panelSinFecha">
+            <div class="sin-fecha-header">
+                <span class="sin-fecha-title">
+                    <i class="bi bi-hourglass-split"></i>
+                    Pendientes de Asignar
+                </span>
+                <span class="sin-fecha-badge">${items.length} sin fecha</span>
+            </div>
+            <div class="sin-fecha-body" id="sinFechaBody">
+            </div>
+            <div class="sin-fecha-hint">
+                <i class="bi bi-arrow-down-circle-fill"></i>
+                Arrastra las tarjetas hacia un día para asignar su fecha
+            </div>
+        </div>
+    `);
+
+    const body = panel.find('#sinFechaBody');
+    items.forEach(item => body.append(crearItemSinFechaHtml(item, hoy)));
+    $('#contenedorTareasReuniones').append(panel);
+}
+
+function crearItemSinFechaHtml(item, hoy) {
+    const progreso = Math.round(item.progreso || 0);
+    const card = $(`
+        <div class="item-card-row item-sin-fecha"
+             data-id="${item.id}"
+             data-tipo="${item.tipo}"
+             data-fecha=""
+             data-estado="${item.estado}">
+
+            <div class="drag-handle" title="Arrastrar para asignar fecha">
+                <i class="bi bi-grip-vertical"></i>
+            </div>
+
+            <div class="item-icon-small tarea">
+                <i class="bi bi-file-earmark-text"></i>
+            </div>
+
+            <div class="item-main-info" style="cursor:pointer;" onclick="verDetalle(${item.id})">
+                <div class="item-title-block">
+                    <div class="item-titulo-text">${escapeHtml(item.titulo)}</div>
+                    ${item.descripcion
+                        ? `<div class="item-descripcion-preview">${escapeHtml(stripHtml(item.descripcion))}</div>`
+                        : ''}
+                </div>
+            </div>
+
+            <div class="item-meta-row">
+                ${item.tipo === 'tarea' ? `
+                <div class="item-meta-col">
+                    <div class="priority-toggle-container" onclick="event.stopPropagation();">
+                        <div class="priority-toggle-premium ${item.estado === 'finalizado' || item.estado === 'cancelado' ? 'is-readonly' : ''}" 
+                             id="toggle-prio-${item.id}" 
+                             data-priority="${item.prioridad || 'media'}"
+                             title="Prioridad: ${item.prioridad || 'media'}">
+                            <div class="pt-dot"></div>
+                            ${item.estado !== 'finalizado' && item.estado !== 'cancelado' ? `
+                                <div class="pt-zone" onclick="cambiarPrioridadToggle(${item.id}, 'baja')" title="Baja"></div>
+                                <div class="pt-zone" onclick="cambiarPrioridadToggle(${item.id}, 'media')" title="Media"></div>
+                                <div class="pt-zone" onclick="cambiarPrioridadToggle(${item.id}, 'alta')" title="Alta"></div>
+                            ` : ''}
+                        </div>
+                    </div>
+                </div>
+                ` : ''}
+                <div class="item-meta-col">
+                    <span class="badge-estado ${item.estado}">${formatearEstado(item.estado)}</span>
+                </div>
+                <div class="item-meta-col">
+                    ${crearAvatarHtml(item)}
+                </div>
+            </div>
+
+            <div class="item-progreso-row">
+                <div class="progreso-compacto">
+                    <div class="progreso-barra-small">
+                        <div class="progreso-fill-small ${progreso >= 100 ? 'completo' : ''}" style="width:${progreso}%"></div>
+                    </div>
+                    <span class="progreso-porcentaje">${progreso}%</span>
+                </div>
+            </div>
+
+            <div class="item-acciones-row" onclick="event.stopPropagation()">
+                ${crearAccionesHtml(item)}
+            </div>
+        </div>
+    `);
+
+    // Drag habilitado — fechaOrigen vacía indica que viene del panel sin fecha
+    habilitarDrag(card[0], { ...item, fecha_meta: '' });
+    return card;
 }
 
 function crearSeparadorMes(fecha) {
@@ -565,6 +673,8 @@ function onDragEnd(e) {
     if (activeZone) {
         const fechaDest = activeZone.dataset.fechaGrupo;
         const hoy = obtenerFechaHoy();
+        // Permitir drop si la fecha destino es hoy o futuro
+        // y es diferente de la fecha origen (o no tenía fecha origen)
         if (fechaDest && fechaDest >= hoy && fechaDest !== fechaOrigen) {
             posponerTareaAjax(id, fechaDest);
         }
