@@ -314,8 +314,8 @@ require_once '../../core/layout/header_universal.php';
 
                                     <div class="alert alert-warning py-2 small">
                                         <i class="bi bi-exclamation-triangle me-1"></i>
-                                        <strong>Anti-ban:</strong> Delays de 8–25s. Máx. 100/día por grupo.
-                                        <br><strong>Horario:</strong> 7:00 AM - 10:00 PM.
+                                        <strong>Anti-ban:</strong> Delays de 45–90s. Máx. 80/día.
+                                        <br><strong>Horario:</strong> Sin restricción de horario.
                                     </div>
                                 </div>
                             </div>

@@ -288,19 +288,54 @@ html { overflow-y: scroll; }
 /* Valor numérico NA */
 .val-na { color: #adb5bd; font-size: 12px; }
 
-/* Fila de indicadores (debug/verificación) */
-.ps-fila-indicadores td {
-    padding: 2px 12px 10px 12px !important;
-    border-top: none !important;
+/* Fila de indicadores (efecto drawer ultra-suave) */
+.ps-fila-indicadores {
+    /* No usamos display:none para permitir animaciones de los hijos */
+    visibility: hidden;
+    line-height: 0;
 }
+
+/* Cuando se hace hover en el producto o en la fila de indicadores, ambas deben resaltar */
+.ps-fila-producto:hover,
+.ps-fila-producto:hover + .ps-fila-indicadores,
+.ps-fila-indicadores:hover {
+    background-color: var(--pitaya-hover) !important;
+    visibility: visible;
+}
+
+.ps-fila-indicadores td {
+    padding: 0 !important;
+    border-top: none !important;
+    height: 0;
+}
+
+.ps-indicadores-wrapper {
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(-8px);
+    transition: max-height 0.6s cubic-bezier(0.4, 0, 0.2, 1), 
+                opacity 0.5s ease-in-out, 
+                transform 0.6s cubic-bezier(0.4, 0, 0.2, 1),
+                padding 0.6s ease;
+}
+
+/* Despliegue amigable y fluido */
+.ps-fila-producto:hover + .ps-fila-indicadores .ps-indicadores-wrapper,
+.ps-fila-indicadores:hover .ps-indicadores-wrapper {
+    max-height: 150px;
+    opacity: 1;
+    transform: translateY(0);
+    padding: 4px 14px 18px 14px;
+}
+
 .ps-indicadores-container {
     display: flex;
     flex-wrap: wrap;
     gap: 15px;
-    background: #fdfdfd;
-    border: 1px dashed #ced4da;
+    background: transparent; /* Ahora es transparente para integrarse */
     border-radius: 6px;
-    padding: 6px 12px;
+    padding: 6px 14px;
 }
 .ps-ind-item {
     font-size: 11px;

@@ -17,6 +17,8 @@ try {
     $esComprable = isset($_POST['es_comprable']) && $_POST['es_comprable'] === 'SI' ? 'SI' : 'NO';
     $esFabricable = isset($_POST['es_fabricable']) && $_POST['es_fabricable'] === 'SI' ? 'SI' : 'NO';
     $compraTienda = isset($_POST['compra_tienda']) && intval($_POST['compra_tienda']) === 1 ? 1 : 0;
+    $presBasica = isset($_POST['presentacion_basica_inventario']) && intval($_POST['presentacion_basica_inventario']) === 1 ? 1 : 0;
+    $presDespacho = isset($_POST['presentacion_despacho']) && intval($_POST['presentacion_despacho']) === 1 ? 1 : 0;
 
     $idSubgrupo = isset($_POST['id_subgrupo_presentacion_producto']) && $_POST['id_subgrupo_presentacion_producto'] !== ''
         ? (int) $_POST['id_subgrupo_presentacion_producto']
@@ -102,6 +104,8 @@ try {
                 cantidad = :cantidad,
                 compra_tienda = :compra_tienda,
                 categoria_insumo = :categoria_insumo,
+                presentacion_basica_inventario = :pres_basica,
+                presentacion_despacho = :pres_despacho,
                 usuario_modificacion = :usuario_mod,
                 fecha_modificacion = NOW()
                 WHERE id = :id";
@@ -120,6 +124,8 @@ try {
             ':cantidad' => ($tieneReceta && $cantidad == 0) ? null : $cantidad,
             ':compra_tienda' => $compraTienda,
             ':categoria_insumo' => $categoriaInsumo,
+            ':pres_basica' => $presBasica,
+            ':pres_despacho' => $presDespacho,
             ':usuario_mod' => $usuarioId,
             ':id' => $id
         ]);
@@ -132,12 +138,14 @@ try {
                 (SKU, Nombre, id_producto_maestro, id_unidad_producto, 
                  es_vendible, es_comprable, es_fabricable, 
                  id_subgrupo_presentacion_producto, 
-                 Activo, cantidad, compra_tienda, categoria_insumo, usuario_creacion)
+                 Activo, cantidad, compra_tienda, categoria_insumo, 
+                 presentacion_basica_inventario, presentacion_despacho, usuario_creacion)
                 VALUES 
                 (:sku, :nombre, :id_producto_maestro, :id_unidad_producto,
                  :es_vendible, :es_comprable, :es_fabricable,
                  :id_subgrupo,
-                 :activo, :cantidad, :compra_tienda, :categoria_insumo, :usuario_creacion)";
+                 :activo, :cantidad, :compra_tienda, :categoria_insumo, 
+                 :pres_basica, :pres_despacho, :usuario_creacion)";
 
         $stmt = $conn->prepare($sql);
         $stmt->execute([
@@ -153,6 +161,8 @@ try {
             ':cantidad' => ($tieneReceta && $cantidad == 0) ? null : $cantidad,
             ':compra_tienda' => $compraTienda,
             ':categoria_insumo' => $categoriaInsumo,
+            ':pres_basica' => $presBasica,
+            ':pres_despacho' => $presDespacho,
             ':usuario_creacion' => $usuarioId
         ]);
 

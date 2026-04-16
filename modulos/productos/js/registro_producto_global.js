@@ -206,6 +206,8 @@ async function cargarDatosProducto() {
             $('#esComprable').prop('checked', p.es_comprable === 'SI');
             $('#esFabricable').prop('checked', p.es_fabricable === 'SI');
             $('#compraTienda').prop('checked', parseInt(p.compra_tienda) === 1);
+            $('#presentacionBasica').prop('checked', parseInt(p.presentacion_basica_inventario) === 1);
+            $('#presentacionDespacho').prop('checked', parseInt(p.presentacion_despacho) === 1);
             $('#categoriaInsumo').val(p.categoria_insumo || '');
 
             if (p.id_subgrupo_presentacion_producto) {
@@ -333,6 +335,8 @@ async function guardarProducto() {
     formData.set('es_comprable', $('#esComprable').is(':checked') ? 'SI' : 'NO');
     formData.set('es_fabricable', $('#esFabricable').is(':checked') ? 'SI' : 'NO');
     formData.set('compra_tienda', $('#compraTienda').is(':checked') ? 1 : 0);
+    formData.set('presentacion_basica_inventario', $('#presentacionBasica').is(':checked') ? 1 : 0);
+    formData.set('presentacion_despacho', $('#presentacionDespacho').is(':checked') ? 1 : 0);
     formData.set('tiene_receta', $('#tieneReceta').is(':checked') ? 1 : 0);
 
     // Agregar datos de los arreglos locales (JSON)

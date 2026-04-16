@@ -143,14 +143,14 @@ if ($esNuevo && !$puedeCrear) {
                                         </div>
                                     </div>
                                     <div class="col-md-6">
-                                        <label class="form-label d-block">¿Es comprable para facturas?</label>
-                                        <div class="form-check form-switch">
-                                            <input class="form-check-input" type="checkbox" role="switch"
-                                                id="compraTienda" name="compra_tienda" value="1"
-                                                style="width:2.4em; height:1.2em; cursor:pointer;">
-                                            <label class="form-check-label" for="compraTienda"
-                                                style="font-size:.875rem; margin-left:.4rem;">
-                                                Disponible para comprar en Tienda
+                                        <div class="toggle-container" style="margin-top: 2rem;">
+                                            <span class="toggle-label">¿Es comprable para facturas?</span>
+                                            <label class="switch">
+                                                <input type="checkbox" id="compraTienda" name="compra_tienda" value="1">
+                                                <span class="slider round">
+                                                    <i class="bi bi-check check-icon"></i>
+                                                    <i class="bi bi-x x-icon"></i>
+                                                </span>
                                             </label>
                                         </div>
                                     </div>
@@ -180,6 +180,30 @@ if ($esNuevo && !$puedeCrear) {
                                             <option value="F">F - Secos y Preparación</option>
                                             <option value="G">G - Productos de Mostrador</option>
                                         </select>
+                                    </div>
+
+                                    <!-- Nuevos Toggles Logísticos -->
+                                    <div class="col-md-6 d-flex flex-column gap-2 justify-content-end pb-1">
+                                        <div class="toggle-container mb-1">
+                                            <span class="toggle-label" style="font-size: 0.85rem;">Presentación Básica de Inventario</span>
+                                            <label class="switch">
+                                                <input type="checkbox" id="presentacionBasica" name="presentacion_basica_inventario" value="1">
+                                                <span class="slider round">
+                                                    <i class="bi bi-check check-icon"></i>
+                                                    <i class="bi bi-x x-icon"></i>
+                                                </span>
+                                            </label>
+                                        </div>
+                                        <div class="toggle-container">
+                                            <span class="toggle-label" style="font-size: 0.85rem;">¿Es Producto Presentación?</span>
+                                            <label class="switch">
+                                                <input type="checkbox" id="presentacionDespacho" name="presentacion_despacho" value="1">
+                                                <span class="slider round">
+                                                    <i class="bi bi-check check-icon"></i>
+                                                    <i class="bi bi-x x-icon"></i>
+                                                </span>
+                                            </label>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

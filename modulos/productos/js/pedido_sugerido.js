@@ -26,12 +26,16 @@ $(document).ready(function () {
     // Búsqueda en tabla
     $('#buscarProducto').on('input', function () {
         const q = $(this).val().toLowerCase();
-        $('#tbodyProductos tr').not('.fila-grupo-header, .ps-fila-indicadores').each(function () {
+        $('#tbodyProductos tr.ps-fila-producto').each(function () {
             const txt = $(this).text().toLowerCase();
-            const visible = txt.includes(q);
-            $(this).toggle(visible);
-            // También toggle a su fila de indicadores correspondiente
-            $(this).next('.ps-fila-indicadores').toggle(visible);
+            const idParent = $(this).data('id');
+            if (txt.includes(q)) {
+                $(this).show();
+                $(`.ps-fila-indicadores[data-parent="${idParent}"]`).show();
+            } else {
+                $(this).hide();
+                $(`.ps-fila-indicadores[data-parent="${idParent}"]`).hide();
+            }
         });
         // Ocultar headers de grupo vacíos
         $('#tbodyProductos tr.fila-grupo-header').each(function () {
@@ -230,20 +234,23 @@ function buildFila(p, cat) {
 
     // Indicadores detallados (para verificación)
     const detalleHtml = `
-        <tr class="ps-fila-indicadores cat-${cat !== '_sin_cat' ? cat : 'X'}" data-id-pp-ref="${p.id_pp}">
+        <tr class="ps-fila-indicadores cat-${cat !== '_sin_cat' ? cat : 'X'}" data-parent="${p.id_pp}">
             <td colspan="12">
-                <div class="ps-indicadores-container">
-                    <span class="ps-ind-item" title="Ajuste Demanda"><b>Adj:</b> ${fmt(p.ajuste_demanda * 100, 2)}%</span>
-                    <span class="ps-ind-item" title="Días Ciclo"><b>Ciclo:</b> ${fmt(p.dias_ciclo, 0)}d</span>
-                    <span class="ps-ind-item" title="Días Desfase"><b>Desfase:</b> ${fmt(p.dias_desfase, 0)}d</span>
-                    <span class="ps-ind-item" title="Días Stock Mínimo"><b>S.Mín:</b> ${fmt(p.dias_stock_min, 0)}d</span>
+                <div class="ps-indicadores-wrapper">
+                    <div class="ps-indicadores-container">
+                        <span class="ps-ind-item" title="Ajuste Demanda"><b>Adj:</b> ${fmt(p.ajuste_demanda * 100, 2)}%</span>
+                        <span class="ps-ind-item" title="Días Ciclo"><b>Ciclo:</b> ${p.dias_ciclo}d</span>
+                        <span class="ps-ind-item" title="Días Desfase"><b>Desf:</b> ${p.dias_desfase}d</span>
+                        <span class="ps-ind-item" title="Días Stock Mínimo"><b>S.Mín:</b> ${p.dias_stock_min}d</span>
+                        <span class="ps-ind-item" title="Consumo Diario Final"><b>C.Diario:</b> ${fmt(p.cons_diario, 4)}</span>
+                    </div>
                 </div>
             </td>
         </tr>
     `;
 
     return `
-        <tr class="cat-${cat !== '_sin_cat' ? cat : 'X'}" data-id-pp="${p.id_pp}">
+        <tr class="ps-fila-producto cat-${cat !== '_sin_cat' ? cat : 'X'}" data-id="${p.id_pp}">
             <td class="col-producto"><span class="fw-500">${escHtml(p.nombre)}</span></td>
             <td class="text-center">${catBadge}</td>
             <td>${escHtml(p.unidad || '—')}</td>
