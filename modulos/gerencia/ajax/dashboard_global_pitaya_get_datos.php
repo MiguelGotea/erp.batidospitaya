@@ -575,17 +575,22 @@ try {
     $mesActualEstimado = null;
 
     if ($lastMesTend === $mesActualStr && $diaHoy > 1) {
-        // Extrapolar el mes actual a mes completo (ventas/días_transcurridos × días_en_mes)
-        $ventasParciales  = (float)$tendenciaMensual[$nmeses-1]['total'];
-        $diasTranscurridos = max(1, $diaHoy - 1);  // ventas hasta ayer
-        $ventaEstimada    = round($ventasParciales / $diasTranscurridos * $diasEnMes, 2);
+        // Obtener ventas reales hasta ayer para una proyección más pura
+        $sqlHastaAyer = "SELECT SUM(Precio) as total FROM VentasGlobalesAccessCSV WHERE Fecha BETWEEN :ini AND :ayer AND Anulado = 0";
+        $stAyer = $conn->prepare($sqlHastaAyer);
+        $stAyer->execute([':ini' => date('Y-m-01'), ':ayer' => date('Y-m-d', strtotime('-1 day'))]);
+        $ventasHastaAyer = (float)($stAyer->fetch(PDO::FETCH_ASSOC)['total'] ?? 0);
+
+        $ventaEstimada    = round($ventasHastaAyer / $diasTranscurridos * $diasEnMes, 2);
         $tiendasMesAct    = max(1, (int)($tendenciaMensual[$nmeses-1]['tiendas_activas_mes'] ?? $baseTiendas));
         $mesActualEstimado = [
-            'mes'             => $mesActualStr,
-            'ventas'          => $ventaEstimada,
-            'venta_por_tienda'=> round($ventaEstimada / $tiendasMesAct, 2),
+            'mes'                 => $mesActualStr,
+            'ventas'              => $ventaEstimada,
+            'ventas_reales_ayer'  => $ventasHastaAyer,
+            'dias_transcurridos'  => $diasTranscurridos,
+            'venta_por_tienda'    => round($ventaEstimada / $tiendasMesAct, 2),
             'tiendas_activas_mes' => $tiendasMesAct,
-            'estimado'        => true,
+            'estimado'            => true,
         ];
         $nc = $nmeses - 1;  // meses completos para regresión
     } else {

@@ -307,6 +307,17 @@ function renderTendenciaMensual(meses, proyeccion, mesEstimado) {
                             if (!ctx.raw) return null;
                             if (ctx.dataset.yAxisID === 'y2') return ` ${ctx.dataset.label}: ${fmtMoney(ctx.raw, true)}/suc.`;
                             return ` ${ctx.dataset.label}: ${fmtMoney(ctx.raw, true)}`;
+                        },
+                        afterLabel: ctx => {
+                            // Si es el mes estimado (identificado por el asterisco en el label)
+                            const label = ctx.chart.data.labels[ctx.dataIndex];
+                            if (typeof label === 'string' && label.includes('*') && mesEstimado) {
+                                return [
+                                    ` Real (hasta ayer): ${fmtMoney(mesEstimado.ventas_reales_ayer)}`,
+                                    ` Días usados: ${mesEstimado.dias_transcurridos} días`
+                                ];
+                            }
+                            return null;
                         }
                     }
                 }
