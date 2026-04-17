@@ -608,26 +608,32 @@ try {
     // Mes base para la proyección = último mes completo
     $lastMesCompleto = $nc > 0 ? $tendenciaMensual[$nc-1]['mes'] : date('Y-m', strtotime('-1 month'));
 
-    // Meses restantes hasta Dic 2028
-    $refTs       = strtotime($lastMesCompleto . '-01');
-    $metaFinalTs = strtotime('2028-12-01');
-    $mesesHastaDic2028 = max(12, (int)round(($metaFinalTs - $refTs) / (30.44 * 86400)));
-
     // Ritmos mensuales SIN cierres (política nueva = nunca más se cierra una tienda)
-    $ritmoHistMens  = $ritmoAperturasBruto / 12;   // histórico bruto todo el tiempo
-    $ritmoRecMens   = $ritmoAperReciente   / 12;   // reciente 2 años bruto
-    $ritmoMetaMens  = $mesesHastaDic2028 > 0       // para llegar a 40 exacto en Dic 2028
-        ? ($metaExpansion - $baseTiendas) / $mesesHastaDic2028
-        : 0;
+    $ritmoHistMens = $ritmoAperturasBruto / 12;   // histórico bruto todo el tiempo
+    $ritmoRecMens  = $ritmoAperReciente   / 12;   // reciente 2 años bruto
 
+    // Generar proyección mes a mes hasta Dic 2028 (enfoque por fecha, no por count)
     $proyeccionTendencia = [];
-    for ($i = 1; $i <= $mesesHastaDic2028; $i++) {
-        $mesTs    = strtotime($lastMesCompleto . '-01 +' . $i . ' month');
-        $mesLabel = date('Y-m', $mesTs);
+    $cursorTs  = strtotime($lastMesCompleto . '-01 +1 month');   // primer mes proyectado
+    $finalTs   = strtotime('2028-12-01');
+    $totalMeses = 0;
+
+    // Pre-scan para saber cuántos meses hay → permite calcular ritmoMetaMens exacto
+    $scanTs = $cursorTs;
+    while ($scanTs <= $finalTs) {
+        $totalMeses++;
+        $scanTs = strtotime(date('Y-m-01', $scanTs) . ' +1 month');
+    }
+    $ritmoMetaMens = $totalMeses > 0 ? ($metaExpansion - $baseTiendas) / $totalMeses : 0;
+
+    $i = 0;
+    while ($cursorTs <= $finalTs) {
+        $i++;
+        $mesLabel = date('Y-m', $cursorTs);
 
         // VPT proyectado por regresión, acotado al −25%/+35% del último real
-        $vptReg      = $intercept2 + $slope2 * ($nc - 1 + $i);
-        $vptProy     = max($lastVptCompleto * 0.75, min($lastVptCompleto * 1.35, $vptReg));
+        $vptReg  = $intercept2 + $slope2 * ($nc - 1 + $i);
+        $vptProy = max($lastVptCompleto * 0.75, min($lastVptCompleto * 1.35, $vptReg));
 
         // Tiendas esperadas por escenario (sin cierres → solo sube)
         $tHist = min($metaExpansion, $baseTiendas + $ritmoHistMens * $i);
@@ -644,6 +650,8 @@ try {
             'ventas_rec'   => round($vptProy * $tRec,  2),  // Moderado
             'ventas_meta'  => round($vptProy * $tMeta, 2),  // Optimista → 40 en 2028
         ];
+
+        $cursorTs = strtotime(date('Y-m-01', $cursorTs) . ' +1 month');
     }
 
     // ────────────────────────────────────────────
