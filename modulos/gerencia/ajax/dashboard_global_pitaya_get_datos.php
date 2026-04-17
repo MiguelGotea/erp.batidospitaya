@@ -520,9 +520,9 @@ try {
     // Proyección al ritmo histórico neto
     $proyHistorica = (int)round($tiendasActualesTotal + $ritmoHistorico * $aniosRestantes);
 
-    // Ritmo necesario (solo aperturas brutas necesarias para compensar cierres y llegar a 40)
+    // Ritmo necesario (sin cierres futuros — política nueva)
     $ritmoNecesario = $aniosRestantes > 0
-        ? round(($metaExpansion - $tiendasActualesTotal + $ritmoCieReciente * $aniosRestantes) / $aniosRestantes, 1)
+        ? round(($metaExpansion - $tiendasActualesTotal) / $aniosRestantes, 1)
         : 0;
 
     // Viabilidad: ritmo neto reciente vs necesario
@@ -550,60 +550,98 @@ try {
         'total_abiertas_alguna'   => $totalAbiertasAlguna,
     ];
 
-    // ────────────────────────────────────────────────────────────────
-    // PROYECCIÓN INTELIGENTE DE TENDENCIA (12 meses hacia adelante)
-    // Metodología:
-    //  1. Regresión lineal sobre venta_por_tienda de los últimos 12 m.
-    //  2. Tiendas esperadas = activas + ritmo_mensual_aperturas * i
-    //  3. Ventas proyectadas = vpt_proyectado * tiendas_esperadas
-    //  4. Se aplica cap de ±25% sobre el último VPT observado
-    // ────────────────────────────────────────────────────────────────
-    $nmeses = count($tendenciaMensual);
-    $vptSeries  = array_values(array_map(fn($m) => (float)$m['venta_por_tienda'], $tendenciaMensual));
-    $ventSeries = array_values(array_map(fn($m) => (float)$m['total'], $tendenciaMensual));
+    // ────────────────────────────────────────────────────────────────────
+    // PROYECCIÓN INTELIGENTE — 3 ESCENARIOS hasta Diciembre 2028
+    //
+    // Contexto: política de NO más cierres → proyecciones son solo aperturas.
+    // Escenario 1 (Conservador):  ritmo histórico bruto de aperturas desde el inicio
+    // Escenario 2 (Moderado):     ritmo bruto de los últimos 2 años
+    // Escenario 3 (Optimista):    crecimiento lineal hasta llegar a 40 en Dic 2028
+    // VPT: regresión lineal sobre los meses COMPLETOS (excluye el mes en curso)
+    // ────────────────────────────────────────────────────────────────────
+    $mesActualStr = date('Y-m');  // e.g. '2026-04'
+    $diaHoy       = (int)date('j');
+    $diasEnMes    = (int)date('t');
 
-    // Regresión lineal mínima cuadrados sobre VPT
-    $sumX=0; $sumY=0; $sumXY=0; $sumXX=0;
-    for ($i=0; $i<$nmeses; $i++) {
-        $sumX  += $i;
-        $sumY  += $vptSeries[$i];
-        $sumXY += $i * $vptSeries[$i];
-        $sumXX += $i * $i;
-    }
-    $denom = $nmeses * $sumXX - $sumX * $sumX;
-    $slope = $denom != 0 ? ($nmeses * $sumXY - $sumX * $sumY) / $denom : 0;
-    $intercept = $nmeses > 0 ? ($sumY - $slope * $sumX) / $nmeses : 0;
-
-    // Ritmo mensual de aperturas del plan de expansión
-    $ritmoMensualApert = $aperturasPorAnioNecesarias / 12;
-
-    // Últimos valores de referencia
-    $lastVpt  = !empty($vptSeries)  ? end($vptSeries)  : 0;
-    $lastMes  = !empty($tendenciaMensual) ? $tendenciaMensual[$nmeses-1]['mes'] : date('Y-m');
+    // Variables base para proyección
+    $nmeses      = count($tendenciaMensual);
+    $vptSeries   = array_values(array_map(fn($m) => (float)$m['venta_por_tienda'], $tendenciaMensual));
     $baseTiendas = $tiendasActualesTotal;
+    $lastVpt     = !empty($vptSeries) ? end($vptSeries) : 0;
+
+    // Separar mes actual (incompleto) del histórico de meses completos
+    $lastMesTend      = !empty($tendenciaMensual) ? $tendenciaMensual[$nmeses-1]['mes'] : $mesActualStr;
+    $mesActualEstimado = null;
+
+    if ($lastMesTend === $mesActualStr && $diaHoy > 1) {
+        // Extrapolar el mes actual a mes completo (ventas/días_transcurridos × días_en_mes)
+        $ventasParciales  = (float)$tendenciaMensual[$nmeses-1]['total'];
+        $diasTranscurridos = max(1, $diaHoy - 1);  // ventas hasta ayer
+        $ventaEstimada    = round($ventasParciales / $diasTranscurridos * $diasEnMes, 2);
+        $tiendasMesAct    = max(1, (int)($tendenciaMensual[$nmeses-1]['tiendas_activas_mes'] ?? $baseTiendas));
+        $mesActualEstimado = [
+            'mes'             => $mesActualStr,
+            'ventas'          => $ventaEstimada,
+            'venta_por_tienda'=> round($ventaEstimada / $tiendasMesAct, 2),
+            'tiendas_activas_mes' => $tiendasMesAct,
+            'estimado'        => true,
+        ];
+        $nc = $nmeses - 1;  // meses completos para regresión
+    } else {
+        $nc = $nmeses;
+    }
+
+    // Regresión lineal sobre VPT de los meses COMPLETOS solamente
+    $vptCompletos = array_slice($vptSeries, 0, $nc);
+    $sx=0; $sy=0; $sxy=0; $sxx=0;
+    for ($i=0; $i<$nc; $i++) {
+        $sx  += $i;   $sy  += $vptCompletos[$i];
+        $sxy += $i * $vptCompletos[$i];
+        $sxx += $i * $i;
+    }
+    $den2  = $nc * $sxx - $sx * $sx;
+    $slope2     = $den2 != 0 ? ($nc * $sxy - $sx * $sy) / $den2 : 0;
+    $intercept2 = $nc > 0    ? ($sy - $slope2 * $sx) / $nc       : 0;
+    $lastVptCompleto = $nc > 0 ? $vptCompletos[$nc-1] : ($lastVpt ?: 1);
+
+    // Mes base para la proyección = último mes completo
+    $lastMesCompleto = $nc > 0 ? $tendenciaMensual[$nc-1]['mes'] : date('Y-m', strtotime('-1 month'));
+
+    // Meses restantes hasta Dic 2028
+    $refTs       = strtotime($lastMesCompleto . '-01');
+    $metaFinalTs = strtotime('2028-12-01');
+    $mesesHastaDic2028 = max(12, (int)round(($metaFinalTs - $refTs) / (30.44 * 86400)));
+
+    // Ritmos mensuales SIN cierres (política nueva = nunca más se cierra una tienda)
+    $ritmoHistMens  = $ritmoAperturasBruto / 12;   // histórico bruto todo el tiempo
+    $ritmoRecMens   = $ritmoAperReciente   / 12;   // reciente 2 años bruto
+    $ritmoMetaMens  = $mesesHastaDic2028 > 0       // para llegar a 40 exacto en Dic 2028
+        ? ($metaExpansion - $baseTiendas) / $mesesHastaDic2028
+        : 0;
 
     $proyeccionTendencia = [];
-    for ($i=1; $i<=12; $i++) {
-        $mesTs    = strtotime($lastMes . '-01 +' . $i . ' month');
+    for ($i = 1; $i <= $mesesHastaDic2028; $i++) {
+        $mesTs    = strtotime($lastMesCompleto . '-01 +' . $i . ' month');
         $mesLabel = date('Y-m', $mesTs);
 
-        // VPT proyectado por regresión, acotado al ±25% del último real
-        $vptReg       = $intercept + $slope * ($nmeses - 1 + $i);
-        $vptProyectado = max($lastVpt * 0.80, min($lastVpt * 1.25, $vptReg));
+        // VPT proyectado por regresión, acotado al −25%/+35% del último real
+        $vptReg      = $intercept2 + $slope2 * ($nc - 1 + $i);
+        $vptProy     = max($lastVptCompleto * 0.75, min($lastVptCompleto * 1.35, $vptReg));
 
-        // Tiendas esperadas ese mes con plan de expansión
-        $tiendasEsperadas = min($metaExpansion, (float)($baseTiendas + $ritmoMensualApert * $i));
-
-        // Escenario conservador (sin nuevas tiendas) y optimista (con nuevas tiendas)
-        $ventasConservadoras = round($vptProyectado * $baseTiendas, 2);
-        $ventasOptimistas    = round($vptProyectado * $tiendasEsperadas, 2);
+        // Tiendas esperadas por escenario (sin cierres → solo sube)
+        $tHist = min($metaExpansion, $baseTiendas + $ritmoHistMens * $i);
+        $tRec  = min($metaExpansion, $baseTiendas + $ritmoRecMens  * $i);
+        $tMeta = min($metaExpansion, $baseTiendas + $ritmoMetaMens * $i);
 
         $proyeccionTendencia[] = [
             'mes'          => $mesLabel,
-            'ventas'       => $ventasOptimistas,
-            'ventas_sin_exp' => $ventasConservadoras,
-            'vpt'          => round($vptProyectado, 2),
-            'tiendas'      => round($tiendasEsperadas, 1),
+            'vpt'          => round($vptProy, 2),
+            'tiendas_hist' => round($tHist, 1),
+            'tiendas_rec'  => round($tRec,  1),
+            'tiendas_meta' => round($tMeta, 1),
+            'ventas_hist'  => round($vptProy * $tHist, 2),  // Conservador
+            'ventas_rec'   => round($vptProy * $tRec,  2),  // Moderado
+            'ventas_meta'  => round($vptProy * $tMeta, 2),  // Optimista → 40 en 2028
         ];
     }
 
@@ -627,6 +665,7 @@ try {
             'cumplimiento'  => $cumplimiento,
         ],
         'tendencia_mensual'      => $tendenciaMensual,
+        'mes_actual_estimado'    => $mesActualEstimado,
         'proyeccion_tendencia'   => $proyeccionTendencia,
         'ranking_tiendas'   => array_map(function($r) use ($metaMap) {
             $meta = $metaMap[$r['tienda']] ?? 0;

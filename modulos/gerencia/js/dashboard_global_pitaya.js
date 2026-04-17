@@ -114,7 +114,7 @@ function renderTodo(data) {
     if (tabActivo === 'anual' && data.expansion?.ventas_por_anio) {
         renderTendenciaAnual(data.expansion.ventas_por_anio);
     } else {
-        renderTendenciaMensual(data.tendencia_mensual, data.proyeccion_tendencia || null);
+        renderTendenciaMensual(data.tendencia_mensual, data.proyeccion_tendencia || null, data.mes_actual_estimado || null);
     }
     renderRanking(data.ranking_tiendas, data.periodo);
     renderClub(data.club);
@@ -164,7 +164,7 @@ function renderVentas(v, meta) {
 }
 
 
-function renderTendenciaMensual(meses, proyeccion) {
+function renderTendenciaMensual(meses, proyeccion, mesEstimado) {
     const ctx = document.getElementById('chartTendenciaVentas');
     if (!ctx) return;
     if (chartTendencia) chartTendencia.destroy();
@@ -172,53 +172,73 @@ function renderTendenciaMensual(meses, proyeccion) {
     const MESES_STR = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
     const fmtMes = s => { const [y,m] = s.split('-'); return MESES_STR[+m-1] + " '" + y.slice(2); };
 
-    // Labels históricos + proyectados
-    const labelsHist = meses.map(m => fmtMes(m.mes));
+    // Meses completos (sin el mes actual parcial)
+    const mesActualStr = new Date().toISOString().slice(0,7);
+    const histCompletos = meses.filter(m => m.mes !== mesActualStr);
+
+    // Labels: histórico + estimado del mes actual + proyección
+    const labelsHist = histCompletos.map(m => fmtMes(m.mes));
+    const labelEst   = mesEstimado ? [fmtMes(mesEstimado.mes) + ' *'] : [];
     const labelsProy = (proyeccion || []).map(p => fmtMes(p.mes));
-    const allLabels  = [...labelsHist, ...labelsProy];
+    const allLabels  = [...labelsHist, ...labelEst, ...labelsProy];
     const nH = labelsHist.length;
+    const nE = labelEst.length;
+    const nTotal = nH + nE;
 
-    // Dataset 1: Barras ventas totales históricas
-    const ventasHist = meses.map(m => convertir(parseFloat(m.total)));
-    const ventasPad  = [...ventasHist, ...Array(labelsProy.length).fill(null)];
+    // Dataset 1: Barras ventas totales (meses completos)
+    const ventasHist = histCompletos.map(m => convertir(parseFloat(m.total)));
+    // Estimado del mes actual (barra semitransparente)
+    const ventasEst  = mesEstimado ? [convertir(parseFloat(mesEstimado.ventas))] : [];
+    const ventasPad  = [...ventasHist, ...ventasEst, ...Array(labelsProy.length).fill(null)];
+    const barColors  = [
+        ...ventasHist.map((_, i) => i === nH - 1 ? 'rgba(81,184,172,0.75)' : 'rgba(81,184,172,0.38)'),
+        ...ventasEst.map(() => 'rgba(81,184,172,0.22)'), // estimado más claro
+        ...Array(labelsProy.length).fill(null)
+    ];
 
-    // Dataset 2: Línea VPT (ventas/tienda) histórico — eje derecho
-    const vptHist = meses.map(m => convertir(parseFloat(m.venta_por_tienda || 0)));
-    const vptPad  = [...vptHist, ...Array(labelsProy.length).fill(null)];
+    // Dataset 2: VPT histórico (eje derecho)
+    const vptHist = histCompletos.map(m => convertir(parseFloat(m.venta_por_tienda || 0)));
+    const vptEst  = mesEstimado ? [convertir(parseFloat(mesEstimado.venta_por_tienda || 0))] : [];
+    const vptPad  = [...vptHist, ...vptEst, ...Array(labelsProy.length).fill(null)];
 
-    // Dataset 3 & 4: Proyección con y sin expansión
-    const proyPad      = [...Array(nH).fill(null), ...(proyeccion||[]).map(p => convertir(p.ventas))];
-    const proyPadConv  = [...Array(nH).fill(null), ...(proyeccion||[]).map(p => convertir(p.ventas_sin_exp))];
+    // Datasets proyección: 3 escenarios (offset nH+nE columnas de null al inicio)
+    const pad = n => Array(nTotal).fill(null);
+    const proyHist = [...pad(), ...(proyeccion||[]).map(p => convertir(p.ventas_hist))];
+    const proyRec  = [...pad(), ...(proyeccion||[]).map(p => convertir(p.ventas_rec))];
+    const proyMeta = [...pad(), ...(proyeccion||[]).map(p => convertir(p.ventas_meta))];
 
     chartTendencia = new Chart(ctx, {
         data: {
             labels: allLabels,
             datasets: [
-                // Barras históricas
-                { type:'bar',  label:'Ventas totales',
-                  data: ventasPad,
-                  backgroundColor: ventasPad.map((_, i) => i === nH-1 ? 'rgba(81,184,172,0.7)' : 'rgba(81,184,172,0.35)'),
-                  borderRadius: 5, yAxisID:'y' },
+                // Barras históricas + estimado
+                { type:'bar', label:'Ventas reales',
+                  data: ventasPad, backgroundColor: barColors,
+                  borderRadius:5, yAxisID:'y' },
 
-                // Línea ventas/sucursal (eje der.)
+                // VPT histórico (eje derecho)
                 { type:'line', label:'Venta/sucursal',
                   data: vptPad,
                   borderColor: DA_COLORS.yellow, backgroundColor:'transparent',
-                  pointRadius:4, tension:0.3, yAxisID:'y2' },
+                  pointRadius:3, tension:0.3, yAxisID:'y2', borderWidth:2 },
 
-                // Proyección con expansión
-                { type:'line', label:'Proyección (con nuevas tiendas)',
-                  data: proyPad,
-                  borderColor: DA_COLORS.primary, borderDash:[5,4],
-                  pointRadius:3, fill:false, tension:0.3, yAxisID:'y',
-                  borderWidth:2 },
+                // Escenario 1: Conservador (ritmo histórico)
+                { type:'line', label:'Conservador (ritmo histórico)',
+                  data: proyHist,
+                  borderColor: DA_COLORS.muted, borderDash:[4,3],
+                  pointRadius:0, fill:false, tension:0.3, yAxisID:'y', borderWidth:1.5 },
 
-                // Proyección sin expansión
-                { type:'line', label:'Proyección (sin nuevas tiendas)',
-                  data: proyPadConv,
-                  borderColor: DA_COLORS.muted, borderDash:[3,3],
-                  pointRadius:2, fill:false, tension:0.3, yAxisID:'y',
-                  borderWidth:1.5 },
+                // Escenario 2: Moderado (ritmo últimos 2 años)
+                { type:'line', label:'Moderado (ritmo reciente)',
+                  data: proyRec,
+                  borderColor: DA_COLORS.primary, borderDash:[5,3],
+                  pointRadius:0, fill:false, tension:0.3, yAxisID:'y', borderWidth:2 },
+
+                // Escenario 3: Optimista (40 tiendas Dic 2028)
+                { type:'line', label:'Optimista (meta 40 × 2028)',
+                  data: proyMeta,
+                  borderColor: DA_COLORS.green, borderDash:[6,2],
+                  pointRadius:0, fill:false, tension:0.3, yAxisID:'y', borderWidth:2.5 },
             ]
         },
         options: {
@@ -229,6 +249,7 @@ function renderTendenciaMensual(meses, proyeccion) {
                 tooltip: {
                     callbacks: {
                         label: ctx => {
+                            if (!ctx.raw) return null;
                             if (ctx.dataset.yAxisID === 'y2') return ` ${ctx.dataset.label}: ${fmtMoney(ctx.raw)}/suc.`;
                             return ` ${ctx.dataset.label}: ${fmtMoney(ctx.raw)}`;
                         }
@@ -236,7 +257,7 @@ function renderTendenciaMensual(meses, proyeccion) {
                 }
             },
             scales: {
-                x:  { ticks:{ color:DA_COLORS.muted, maxRotation:45 }, grid:{ color:DA_COLORS.grid } },
+                x:  { ticks:{ color:DA_COLORS.muted, maxRotation:45, autoSkip:true, maxTicksLimit:18 }, grid:{ color:DA_COLORS.grid } },
                 y:  { position:'left',  ticks:{ color:DA_COLORS.muted, callback:v=>simbolo()+' '+fmtN(v) }, grid:{ color:DA_COLORS.grid },
                       title:{ display:true, text:'Ventas totales', color:DA_COLORS.muted, font:{size:10} } },
                 y2: { position:'right', ticks:{ color:DA_COLORS.yellow, callback:v=>simbolo()+' '+fmtN(v) }, grid:{ display:false },
@@ -598,13 +619,17 @@ function renderExpansion(exp) {
             data: {
                 labels: todosAnios,
                 datasets: [
-                    { type:'bar',  label:'Aperturas',   data: nuevasData, backgroundColor:'rgba(81,184,172,0.45)', borderRadius:4, yAxisID:'y1' },
-                    { type:'bar',  label:'Cierres',      data: todosAnios.map(a => { const r = exp.acumulado_por_anio.find(x=>x.anio===a); return r ? -(r.cierres||0) : 0; }),
-                                   backgroundColor:'rgba(217,83,79,0.4)', borderRadius:4, yAxisID:'y1' },
-                    { type:'line', label:'Acumulado bruto', data: acumData, borderColor: DA_COLORS.primary, backgroundColor:'rgba(81,184,172,0.07)', fill:true, tension:0.3, pointRadius:4 },
-                    { type:'line', label:'Neto activas',    data: todosAnios.map(a => { const r = exp.acumulado_por_anio.find(x=>x.anio===a); return r ? r.neto : null; }),
-                                   borderColor: DA_COLORS.green, borderDash:[4,2], pointRadius:3, fill:false, tension:0.3 },
-                    { type:'line', label:'Proyección → 40', data: proyData, borderColor: DA_COLORS.orange, borderDash:[6,4], pointRadius:3, fill:false, tension:0.2 },
+                    { type:'bar',  label:'Aperturas/año',
+                      data: nuevasData,
+                      backgroundColor:'rgba(81,184,172,0.45)', borderRadius:4, yAxisID:'y1' },
+                    { type:'line', label:'Acumulado real',
+                      data: acumData,
+                      borderColor: DA_COLORS.primary, backgroundColor:'rgba(81,184,172,0.07)',
+                      fill:true, tension:0.3, pointRadius:4 },
+                    { type:'line', label:'Proyección → 40',
+                      data: proyData,
+                      borderColor: DA_COLORS.orange, borderDash:[6,4],
+                      pointRadius:3, fill:false, tension:0.2 },
                 ]
             },
             options: {
@@ -669,54 +694,41 @@ function renderExpansion(exp) {
     }).join('');
 }
 
-// ── VIABILIDAD ────────────────────────────────────────
+// ── VIABILIDAD ─────────────────────────────────────
 function renderViabilidad(v, tActual) {
     const coloresMap = { viable: '#3aaa82', posible: '#e07b39', desafiante: '#d9534f' };
     const labelMap   = { viable: 'Viable', posible: 'Posible con esfuerzo', desafiante: 'Desafiante' };
     const color = coloresMap[v.estado] ?? DA_COLORS.muted;
 
     setText('viaRitmoHistorico', fmtN(v.ritmo_historico, 1) + '/año');
-
-    const netoSufijo = (v.tasa_cierre_reciente > 0)
-        ? ' (' + fmtN(v.ritmo_neto_reciente, 1) + ' neto)'
-        : '';
-    setText('viaRitmoReciente',  fmtN(v.ritmo_reciente, 1) + '/año' + netoSufijo);
+    setText('viaRitmoReciente',  fmtN(v.ritmo_reciente,  1) + '/año');
     setText('viaRitmoNecesario', fmtN(v.ritmo_necesario, 1) + '/año');
-
-    const proyLabel = (v.proyeccion_neta !== v.proyeccion_bruta)
-        ? fmtN(v.proyeccion_neta) + ' \u2013 ' + fmtN(v.proyeccion_bruta) + ' tiendas'
-        : fmtN(v.proyeccion_neta) + ' tiendas';
-    setText('viaProyeccionReciente', proyLabel);
+    setText('viaProyeccionReciente',
+        fmtN(v.proyeccion_historica) + ' (hist.) – ' + fmtN(v.proyeccion_bruta) + ' (rec.) tiendas');
 
     const estadoEl = document.getElementById('viaEstado');
-    if (estadoEl) {
-        estadoEl.textContent = labelMap[v.estado] ?? v.estado;
-        estadoEl.style.color = color;
-    }
+    if (estadoEl) { estadoEl.textContent = labelMap[v.estado] ?? v.estado; estadoEl.style.color = color; }
+    setText('viaRatio', fmtPct(v.ratio_viabilidad) + ' del ritmo necesario');
 
-    const cerText = (v.total_cerradas > 0)
-        ? ' | ' + v.total_cerradas + ' cerradas (\u2248' + fmtN(v.tasa_cierre, 2) + '/a\u00f1o)'
-        : '';
-    setText('viaRatio', fmtPct(v.ratio_viabilidad) + ' del ritmo necesario' + cerText);
-
+    // ── Añadir 2 escenarios de ritmo al gráfico de expansión (sin cierres futuros) ──
     if (!chartExpTiendas) return;
-    const yaAgregado = chartExpTiendas.data.datasets.some(function(d) { return d.label === 'Proy. neta'; });
+    const yaAgregado = chartExpTiendas.data.datasets.some(d => d.label === 'Escen. Hist.');
     if (yaAgregado) return;
 
     const anioActual  = new Date().getFullYear();
     const chartLabels = chartExpTiendas.data.labels;
     const base = tActual || 0;
 
-    const proyNetaData  = chartLabels.map(function(a) {
-        return a < anioActual ? null : Math.round(Math.min(45, base + (a - anioActual) * v.ritmo_neto_reciente));
-    });
-    const proyBrutaData = chartLabels.map(function(a) {
-        return a < anioActual ? null : Math.round(Math.min(45, base + (a - anioActual) * v.ritmo_reciente));
-    });
+    // Escenario histórico bruto (ritmo de apertura desde el inicio)
+    const e1 = chartLabels.map(a =>
+        a < anioActual ? null : Math.round(Math.min(42, base + (a - anioActual) * v.ritmo_apertura_bruto)));
+    // Escenario reciente bruto (ritmo apertura últimos 2 años)
+    const e2 = chartLabels.map(a =>
+        a < anioActual ? null : Math.round(Math.min(42, base + (a - anioActual) * v.ritmo_reciente)));
 
     chartExpTiendas.data.datasets.push(
-        { type:'line', label:'Proy. neta',  data: proyNetaData,  borderColor: color,           borderDash:[3,3], pointRadius:0, fill:false, tension:0.2, borderWidth:2.5 },
-        { type:'line', label:'Proy. bruta', data: proyBrutaData, borderColor: DA_COLORS.yellow, borderDash:[4,2], pointRadius:0, fill:false, tension:0.2, borderWidth:1.5 }
+        { type:'line', label:'Escen. Hist.',    data: e1, borderColor: DA_COLORS.muted, borderDash:[3,3], pointRadius:0, fill:false, tension:0.2, borderWidth:1.5 },
+        { type:'line', label:'Escen. Reciente', data: e2, borderColor: color,           borderDash:[4,2], pointRadius:0, fill:false, tension:0.2, borderWidth:2   }
     );
     chartExpTiendas.update();
 }
@@ -746,7 +758,7 @@ document.querySelectorAll('#tabsTendencia .da-tab').forEach(btn => {
         if (this.dataset.tab === 'anual' && DA_LAST.expansion?.ventas_por_anio) {
             renderTendenciaAnual(DA_LAST.expansion.ventas_por_anio);
         } else {
-            renderTendenciaMensual(DA_LAST.tendencia_mensual, DA_LAST.proyeccion_tendencia || null);
+            renderTendenciaMensual(DA_LAST.tendencia_mensual, DA_LAST.proyeccion_tendencia || null, DA_LAST.mes_actual_estimado || null);
         }
     });
 });
