@@ -60,6 +60,15 @@ function fmtC(n) {
     if (n >= 1_000)     return 'C$ ' + (n / 1_000).toFixed(1) + 'K';
     return 'C$ ' + parseFloat(n).toLocaleString('es-NI', { minimumFractionDigits: 0 });
 }
+// Abreviado para ejes (sin prefijo C$ en todos los casos, sólo sufijo)
+function fmtAxisMoney(n) {
+    if (n === null || n === undefined) return '';
+    const v = convertir(n);
+    const sym = simbolo();
+    if (Math.abs(v) >= 1_000_000) return sym + ' ' + (v / 1_000_000).toFixed(1) + 'M';
+    if (Math.abs(v) >= 1_000)     return sym + ' ' + (v / 1_000).toFixed(0) + 'K';
+    return sym + ' ' + Math.round(v);
+}
 function fmtN(n, dec = 0) {
     if (n === null || n === undefined) return '—';
     return parseFloat(n).toLocaleString('es-NI', { minimumFractionDigits: dec, maximumFractionDigits: dec });
@@ -201,11 +210,22 @@ function renderTendenciaMensual(meses, proyeccion, mesEstimado) {
     const vptEst  = mesEstimado ? [convertir(parseFloat(mesEstimado.venta_por_tienda || 0))] : [];
     const vptPad  = [...vptHist, ...vptEst, ...Array(labelsProy.length).fill(null)];
 
-    // Datasets proyección: 3 escenarios (offset nH+nE columnas de null al inicio)
-    const pad = n => Array(nTotal).fill(null);
-    const proyHist = [...pad(), ...(proyeccion||[]).map(p => convertir(p.ventas_hist))];
-    const proyRec  = [...pad(), ...(proyeccion||[]).map(p => convertir(p.ventas_rec))];
-    const proyMeta = [...pad(), ...(proyeccion||[]).map(p => convertir(p.ventas_meta))];
+    // ── Punto de anclaje para continuidad de las líneas de proyección ──
+    // El último valor real/estimado se pone en la posición nTotal-1 (último mes real/estimado)
+    // y luego la proyección continúa desde ahí en adelante.
+    const anchorVentas = mesEstimado
+        ? convertir(parseFloat(mesEstimado.ventas))
+        : (ventasHist.length ? ventasHist[ventasHist.length - 1] : 0);
+
+    // Datasets proyección con anclaje: null×(nTotal-1), anchor, proyección...
+    const buildProy = (vals) => [
+        ...Array(nTotal - 1).fill(null),
+        anchorVentas,   // punto de continuidad (mismo valor del último real/estimado)
+        ...vals
+    ];
+    const proyHist = buildProy((proyeccion||[]).map(p => convertir(p.ventas_hist)));
+    const proyRec  = buildProy((proyeccion||[]).map(p => convertir(p.ventas_rec)));
+    const proyMeta = buildProy((proyeccion||[]).map(p => convertir(p.ventas_meta)));
 
     chartTendencia = new Chart(ctx, {
         data: {
@@ -258,9 +278,9 @@ function renderTendenciaMensual(meses, proyeccion, mesEstimado) {
             },
             scales: {
                 x:  { ticks:{ color:DA_COLORS.muted, maxRotation:45, autoSkip:true, maxTicksLimit:18 }, grid:{ color:DA_COLORS.grid } },
-                y:  { position:'left',  ticks:{ color:DA_COLORS.muted, callback:v=>simbolo()+' '+fmtN(v) }, grid:{ color:DA_COLORS.grid },
+                y:  { position:'left',  ticks:{ color:DA_COLORS.muted, callback: v => fmtAxisMoney(v) }, grid:{ color:DA_COLORS.grid },
                       title:{ display:true, text:'Ventas totales', color:DA_COLORS.muted, font:{size:10} } },
-                y2: { position:'right', ticks:{ color:DA_COLORS.yellow, callback:v=>simbolo()+' '+fmtN(v) }, grid:{ display:false },
+                y2: { position:'right', ticks:{ color:DA_COLORS.yellow, callback: v => fmtAxisMoney(v) }, grid:{ display:false },
                       title:{ display:true, text:'Venta/sucursal', color:DA_COLORS.yellow, font:{size:10} } },
             }
         }
@@ -608,12 +628,23 @@ function renderExpansion(exp) {
         const histAcum   = exp.acumulado_por_anio.map(r => r.acumulado);
         const histNuevas = exp.acumulado_por_anio.map(r => r.nuevas);
         const proyAnios  = exp.proyeccion.map(r => r.anio);
+        // Proyección lineal → 40 (para todos los años futuros)
         const proyVals   = exp.proyeccion.map(r => r.proyectado);
-        // Unir todos los años
-        const todosAnios = [...new Set([...histAnios, ...proyAnios])].sort();
+        // Unir todos los años (histórico + hasta 2028)
+        const anioActualChart = new Date().getFullYear();
+        const aniosMeta  = [];
+        for (let y = anioActualChart; y <= 2028; y++) aniosMeta.push(y);
+        const todosAnios = [...new Set([...histAnios, ...aniosMeta])].sort();
         const acumData   = todosAnios.map(a => { const r = exp.acumulado_por_anio.find(x=>x.anio===a); return r ? r.acumulado : null; });
         const proyData   = todosAnios.map(a => { const r = exp.proyeccion.find(x=>x.anio===a); return r ? r.proyectado : null; });
         const nuevasData = todosAnios.map(a => { const r = exp.acumulado_por_anio.find(x=>x.anio===a); return r ? r.nuevas : 0; });
+
+        // ── 3 escenarios desde año actual ──
+        // Se calculan provisionalmente aquí con ritmos del objeto viabilidad (si existe)
+        // renderViabilidad() los sustituirá/actualizará con los definitivos
+        const baseT = exp.tiendas_actuales || 0;
+        const e1Data = todosAnios.map(a => a < anioActualChart ? null : Math.round(Math.min(42, baseT)));
+        const e2Data = todosAnios.map(a => a < anioActualChart ? null : Math.round(Math.min(42, baseT)));
 
         chartExpTiendas = new Chart(ctxT, {
             data: {
@@ -630,12 +661,21 @@ function renderExpansion(exp) {
                       data: proyData,
                       borderColor: DA_COLORS.orange, borderDash:[6,4],
                       pointRadius:3, fill:false, tension:0.2 },
+                    // Escenarios histórico y reciente — se rellenan en renderViabilidad()
+                    { type:'line', label:'Escen. Hist.',
+                      data: e1Data,
+                      borderColor: DA_COLORS.muted, borderDash:[3,3],
+                      pointRadius:0, fill:false, tension:0.2, borderWidth:1.5 },
+                    { type:'line', label:'Escen. Reciente',
+                      data: e2Data,
+                      borderColor: DA_COLORS.red, borderDash:[4,2],
+                      pointRadius:0, fill:false, tension:0.2, borderWidth:2 },
                 ]
             },
             options: {
                 responsive: true,
                 interaction: { mode:'index', intersect:false },
-                plugins: { legend:{ labels:{ color: DA_COLORS.muted, font:{size:11} } }, tooltip:{callbacks:{label:ctx=>` ${ctx.dataset.label}: ${ctx.raw}`}} },
+                plugins: { legend:{ labels:{ color: DA_COLORS.muted, font:{size:11} } }, tooltip:{callbacks:{label:ctx=>` ${ctx.dataset.label}: ${ctx.raw !== null ? ctx.raw : '—'}`}} },
                 scales: {
                     x:  { ticks:{color:DA_COLORS.muted}, grid:{color:DA_COLORS.grid} },
                     y:  { ticks:{color:DA_COLORS.muted, stepSize:2}, grid:{color:DA_COLORS.grid}, title:{display:true,text:'Tiendas acum.',color:DA_COLORS.muted} },
@@ -710,26 +750,25 @@ function renderViabilidad(v, tActual) {
     if (estadoEl) { estadoEl.textContent = labelMap[v.estado] ?? v.estado; estadoEl.style.color = color; }
     setText('viaRatio', fmtPct(v.ratio_viabilidad) + ' del ritmo necesario');
 
-    // ── Añadir 2 escenarios de ritmo al gráfico de expansión (sin cierres futuros) ──
+    // ── Actualizar los 2 escenarios de ritmo ya presentes en el gráfico ──
     if (!chartExpTiendas) return;
-    const yaAgregado = chartExpTiendas.data.datasets.some(d => d.label === 'Escen. Hist.');
-    if (yaAgregado) return;
 
     const anioActual  = new Date().getFullYear();
     const chartLabels = chartExpTiendas.data.labels;
     const base = tActual || 0;
 
-    // Escenario histórico bruto (ritmo de apertura desde el inicio)
+    // Escenario histórico bruto: anclar en anioActual con base, luego crecer
     const e1 = chartLabels.map(a =>
         a < anioActual ? null : Math.round(Math.min(42, base + (a - anioActual) * v.ritmo_apertura_bruto)));
-    // Escenario reciente bruto (ritmo apertura últimos 2 años)
+    // Escenario reciente bruto: anclar en anioActual con base, luego crecer
     const e2 = chartLabels.map(a =>
         a < anioActual ? null : Math.round(Math.min(42, base + (a - anioActual) * v.ritmo_reciente)));
 
-    chartExpTiendas.data.datasets.push(
-        { type:'line', label:'Escen. Hist.',    data: e1, borderColor: DA_COLORS.muted, borderDash:[3,3], pointRadius:0, fill:false, tension:0.2, borderWidth:1.5 },
-        { type:'line', label:'Escen. Reciente', data: e2, borderColor: color,           borderDash:[4,2], pointRadius:0, fill:false, tension:0.2, borderWidth:2   }
-    );
+    // Encontrar los datasets por label y actualizar sus datos
+    const dsHist = chartExpTiendas.data.datasets.find(d => d.label === 'Escen. Hist.');
+    const dsRec  = chartExpTiendas.data.datasets.find(d => d.label === 'Escen. Reciente');
+    if (dsHist) { dsHist.data = e1; dsHist.borderColor = DA_COLORS.muted; }
+    if (dsRec)  { dsRec.data  = e2; dsRec.borderColor  = color; }
     chartExpTiendas.update();
 }
 
