@@ -681,19 +681,18 @@ try {
         $ventasAnioActualEst = $ventasMesesPasados + $ventasMesActualEst + $ventasRestantesEst;
         
         // Ahora proyectamos 2027, 2028, 2029
-        $anioAnterior = $anioActual - 1;
-        $ventasAnioAnterior = 0;
-        foreach($ventasPorAnio as $v) if((int)$v['anio'] == $anioAnterior) $ventasAnioAnterior = (float)$v['ventas'];
+        // Usamos el VPT mensual más reciente como base anualizada para que la proyección sea continua con el rendimiento de 2026
+        $vptMensualActual = $nc > 0 ? $vptCompletos[$nc-1] : ($lastVpt ?: 0);
+        $vptAnualBase     = $vptMensualActual * 12; 
         
-        $tiendasAnioAnterior = 14; 
-        foreach($expansion as $e) if((int)$e['anio'] == $anioAnterior) $tiendasAnioAnterior = $e['acumulado'];
-        
-        $vptAnualBase = $tiendasAnioAnterior > 0 ? $ventasAnioAnterior / $tiendasAnioAnterior : 0;
-        $slopeAnual   = $slope2 * 12;
+        // Pendiente anual: crecimiento del VPT anualizado
+        $slopeAnualVPT = $slope2 * 144; 
 
         for ($j = 1; $j <= 3; $j++) {
             $anioProy = $anioActual + $j;
-            $vptY = max($vptAnualBase * 0.8, $vptAnualBase + $slopeAnual * ($anioProy - $anioAnterior));
+            
+            // VPT Proyectado: Base actual + crecimiento acumulado por años
+            $vptY = max($vptAnualBase * 0.75, $vptAnualBase + $slopeAnualVPT * $j);
             
             $tHist = min($metaExpansion + 10, $tiendasActualesTotal + $ritmoHistorico * ($anioProy - $anioActual));
             $tRec  = min($metaExpansion + 10, $tiendasActualesTotal + $ritmoNetReciente * ($anioProy - $anioActual));
