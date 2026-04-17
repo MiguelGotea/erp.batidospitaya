@@ -114,7 +114,7 @@ function renderTodo(data) {
     if (tabActivo === 'anual' && data.expansion?.ventas_por_anio) {
         renderTendenciaAnual(data.expansion.ventas_por_anio);
     } else {
-        renderTendenciaMensual(data.tendencia_mensual);
+        renderTendenciaMensual(data.tendencia_mensual, data.proyeccion_tendencia || null);
     }
     renderRanking(data.ranking_tiendas, data.periodo);
     renderClub(data.club);
@@ -163,53 +163,112 @@ function renderVentas(v, meta) {
     }
 }
 
-// ── 2. TENDENCIA VENTAS ───────────────────────────────
-function buildTendenciaChart(labels, datos, labelStr) {
+
+function renderTendenciaMensual(meses, proyeccion) {
     const ctx = document.getElementById('chartTendenciaVentas');
     if (!ctx) return;
     if (chartTendencia) chartTendencia.destroy();
-    const dataConv = datos.map(d => convertir(d));
+
+    const MESES_STR = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+    const fmtMes = s => { const [y,m] = s.split('-'); return MESES_STR[+m-1] + " '" + y.slice(2); };
+
+    // Labels históricos + proyectados
+    const labelsHist = meses.map(m => fmtMes(m.mes));
+    const labelsProy = (proyeccion || []).map(p => fmtMes(p.mes));
+    const allLabels  = [...labelsHist, ...labelsProy];
+    const nH = labelsHist.length;
+
+    // Dataset 1: Barras ventas totales históricas
+    const ventasHist = meses.map(m => convertir(parseFloat(m.total)));
+    const ventasPad  = [...ventasHist, ...Array(labelsProy.length).fill(null)];
+
+    // Dataset 2: Línea VPT (ventas/tienda) histórico — eje derecho
+    const vptHist = meses.map(m => convertir(parseFloat(m.venta_por_tienda || 0)));
+    const vptPad  = [...vptHist, ...Array(labelsProy.length).fill(null)];
+
+    // Dataset 3 & 4: Proyección con y sin expansión
+    const proyPad      = [...Array(nH).fill(null), ...(proyeccion||[]).map(p => convertir(p.ventas))];
+    const proyPadConv  = [...Array(nH).fill(null), ...(proyeccion||[]).map(p => convertir(p.ventas_sin_exp))];
+
     chartTendencia = new Chart(ctx, {
-        type: 'bar',
         data: {
-            labels,
-            datasets: [{
-                label: labelStr,
-                data: dataConv,
-                backgroundColor: dataConv.map((_, i) => i === dataConv.length - 1 ? DA_COLORS.primary : 'rgba(81,184,172,0.35)'),
-                borderColor: DA_COLORS.primary,
-                borderWidth: 1,
-                borderRadius: 6,
-            }]
+            labels: allLabels,
+            datasets: [
+                // Barras históricas
+                { type:'bar',  label:'Ventas totales',
+                  data: ventasPad,
+                  backgroundColor: ventasPad.map((_, i) => i === nH-1 ? 'rgba(81,184,172,0.7)' : 'rgba(81,184,172,0.35)'),
+                  borderRadius: 5, yAxisID:'y' },
+
+                // Línea ventas/sucursal (eje der.)
+                { type:'line', label:'Venta/sucursal',
+                  data: vptPad,
+                  borderColor: DA_COLORS.yellow, backgroundColor:'transparent',
+                  pointRadius:4, tension:0.3, yAxisID:'y2' },
+
+                // Proyección con expansión
+                { type:'line', label:'Proyección (con nuevas tiendas)',
+                  data: proyPad,
+                  borderColor: DA_COLORS.primary, borderDash:[5,4],
+                  pointRadius:3, fill:false, tension:0.3, yAxisID:'y',
+                  borderWidth:2 },
+
+                // Proyección sin expansión
+                { type:'line', label:'Proyección (sin nuevas tiendas)',
+                  data: proyPadConv,
+                  borderColor: DA_COLORS.muted, borderDash:[3,3],
+                  pointRadius:2, fill:false, tension:0.3, yAxisID:'y',
+                  borderWidth:1.5 },
+            ]
         },
         options: {
             responsive: true,
+            interaction: { mode:'index', intersect:false },
             plugins: {
-                legend: { display: false },
-                tooltip: { callbacks: { label: ctx => ' ' + fmtMoney(ctx.raw * DA_TC) } }
+                legend: { labels: { color: DA_COLORS.muted, font:{size:11}, boxWidth:12 } },
+                tooltip: {
+                    callbacks: {
+                        label: ctx => {
+                            if (ctx.dataset.yAxisID === 'y2') return ` ${ctx.dataset.label}: ${fmtMoney(ctx.raw)}/suc.`;
+                            return ` ${ctx.dataset.label}: ${fmtMoney(ctx.raw)}`;
+                        }
+                    }
+                }
             },
             scales: {
-                x: { ticks: { color: DA_COLORS.muted }, grid: { color: DA_COLORS.grid } },
-                y: {
-                    ticks: { color: DA_COLORS.muted, callback: v => simbolo() + ' ' + fmtN(v) },
-                    grid: { color: DA_COLORS.grid }
-                }
+                x:  { ticks:{ color:DA_COLORS.muted, maxRotation:45 }, grid:{ color:DA_COLORS.grid } },
+                y:  { position:'left',  ticks:{ color:DA_COLORS.muted, callback:v=>simbolo()+' '+fmtN(v) }, grid:{ color:DA_COLORS.grid },
+                      title:{ display:true, text:'Ventas totales', color:DA_COLORS.muted, font:{size:10} } },
+                y2: { position:'right', ticks:{ color:DA_COLORS.yellow, callback:v=>simbolo()+' '+fmtN(v) }, grid:{ display:false },
+                      title:{ display:true, text:'Venta/sucursal', color:DA_COLORS.yellow, font:{size:10} } },
             }
         }
     });
 }
 
-function renderTendenciaMensual(meses) {
-    const labels = meses.map(m => {
-        const [y, mo] = m.mes.split('-');
-        return ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'][parseInt(mo)-1] + " '" + y.slice(2);
-    });
-    buildTendenciaChart(labels, meses.map(m => parseFloat(m.total)), 'Ventas Mensual');
-}
-
 function renderTendenciaAnual(anios) {
-    const labels = anios.map(a => String(a.anio));
-    buildTendenciaChart(labels, anios.map(a => parseFloat(a.ventas)), 'Ventas Anual');
+    const ctx = document.getElementById('chartTendenciaVentas');
+    if (!ctx) return;
+    if (chartTendencia) chartTendencia.destroy();
+    const labels  = anios.map(a => String(a.anio));
+    const datos   = anios.map(a => convertir(parseFloat(a.ventas)));
+    chartTendencia = new Chart(ctx, {
+        type:'bar',
+        data: {
+            labels,
+            datasets: [{ label:'Ventas Anual', data: datos,
+                backgroundColor: datos.map((_,i)=>i===datos.length-1?DA_COLORS.primary:'rgba(81,184,172,0.35)'),
+                borderRadius:6 }]
+        },
+        options: {
+            responsive:true,
+            plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label:ctx=>` ${fmtMoney(ctx.raw)}` } } },
+            scales:{
+                x:{ ticks:{ color:DA_COLORS.muted }, grid:{ color:DA_COLORS.grid } },
+                y:{ ticks:{ color:DA_COLORS.muted, callback:v=>simbolo()+' '+fmtN(v) }, grid:{ color:DA_COLORS.grid } }
+            }
+        }
+    });
 }
 
 // ── 3. RANKING TIENDAS ────────────────────────────────
@@ -687,7 +746,7 @@ document.querySelectorAll('#tabsTendencia .da-tab').forEach(btn => {
         if (this.dataset.tab === 'anual' && DA_LAST.expansion?.ventas_por_anio) {
             renderTendenciaAnual(DA_LAST.expansion.ventas_por_anio);
         } else {
-            renderTendenciaMensual(DA_LAST.tendencia_mensual);
+            renderTendenciaMensual(DA_LAST.tendencia_mensual, DA_LAST.proyeccion_tendencia || null);
         }
     });
 });

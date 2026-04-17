@@ -95,11 +95,29 @@ try {
     // ────────────────────────────────────────────
     // 3. TENDENCIA VENTAS POR MES (últimos 12 meses)
     // ────────────────────────────────────────────
+    // Tendencia mensual: ventas + tiendas activas ese mes + venta/tienda
+    // Tiendas activas en un mes = sucursal=1, abrió antes del fin de ese mes
+    //   y (aún activa OR cerró después de ese mes)
     $sqlTendMensual = "
-        SELECT mes, total FROM (
+        SELECT
+            sub.mes,
+            sub.total,
+            sub.pedidos,
+            (
+                SELECT COUNT(*)
+                FROM sucursales s2
+                WHERE s2.sucursal = 1
+                  AND s2.Fecha_Apertura <= LAST_DAY(CONCAT(sub.mes, '-01'))
+                  AND (
+                        s2.activa = 1
+                        OR s2.Fecha_Cierre > LAST_DAY(CONCAT(sub.mes, '-01'))
+                  )
+            ) AS tiendas_activas_mes
+        FROM (
             SELECT
                 DATE_FORMAT(Fecha, '%Y-%m') AS mes,
-                SUM(CASE WHEN Anulado = 0 THEN Precio ELSE 0 END) AS total
+                SUM(CASE WHEN Anulado = 0 THEN Precio ELSE 0 END) AS total,
+                COUNT(DISTINCT CASE WHEN Anulado=0 THEN CodPedido ELSE NULL END) AS pedidos
             FROM VentasGlobalesAccessCSV
             WHERE Fecha >= DATE_SUB(:hoy, INTERVAL 12 MONTH)
             GROUP BY DATE_FORMAT(Fecha, '%Y-%m')
@@ -109,6 +127,13 @@ try {
     $stTM = $conn->prepare($sqlTendMensual);
     $stTM->execute([':hoy' => $hoy]);
     $tendenciaMensual = $stTM->fetchAll(PDO::FETCH_ASSOC);
+    // Calcular venta_por_tienda para cada mes
+    foreach ($tendenciaMensual as &$tm) {
+        $t = max(1, (int)$tm['tiendas_activas_mes']);
+        $tm['venta_por_tienda'] = round((float)$tm['total'] / $t, 2);
+    }
+    unset($tm);
+
 
     // ────────────────────────────────────────────
     // 4. RANKING TIENDAS
@@ -502,6 +527,63 @@ try {
         'total_abiertas_alguna'   => $totalAbiertasAlguna,
     ];
 
+    // ────────────────────────────────────────────────────────────────
+    // PROYECCIÓN INTELIGENTE DE TENDENCIA (12 meses hacia adelante)
+    // Metodología:
+    //  1. Regresión lineal sobre venta_por_tienda de los últimos 12 m.
+    //  2. Tiendas esperadas = activas + ritmo_mensual_aperturas * i
+    //  3. Ventas proyectadas = vpt_proyectado * tiendas_esperadas
+    //  4. Se aplica cap de ±25% sobre el último VPT observado
+    // ────────────────────────────────────────────────────────────────
+    $nmeses = count($tendenciaMensual);
+    $vptSeries  = array_values(array_map(fn($m) => (float)$m['venta_por_tienda'], $tendenciaMensual));
+    $ventSeries = array_values(array_map(fn($m) => (float)$m['total'], $tendenciaMensual));
+
+    // Regresión lineal mínima cuadrados sobre VPT
+    $sumX=0; $sumY=0; $sumXY=0; $sumXX=0;
+    for ($i=0; $i<$nmeses; $i++) {
+        $sumX  += $i;
+        $sumY  += $vptSeries[$i];
+        $sumXY += $i * $vptSeries[$i];
+        $sumXX += $i * $i;
+    }
+    $denom = $nmeses * $sumXX - $sumX * $sumX;
+    $slope = $denom != 0 ? ($nmeses * $sumXY - $sumX * $sumY) / $denom : 0;
+    $intercept = $nmeses > 0 ? ($sumY - $slope * $sumX) / $nmeses : 0;
+
+    // Ritmo mensual de aperturas del plan de expansión
+    $ritmoMensualApert = $aperturasPorAnioNecesarias / 12;
+
+    // Últimos valores de referencia
+    $lastVpt  = !empty($vptSeries)  ? end($vptSeries)  : 0;
+    $lastMes  = !empty($tendenciaMensual) ? $tendenciaMensual[$nmeses-1]['mes'] : date('Y-m');
+    $baseTiendas = $tiendasActualesTotal;
+
+    $proyeccionTendencia = [];
+    for ($i=1; $i<=12; $i++) {
+        $mesTs    = strtotime($lastMes . '-01 +' . $i . ' month');
+        $mesLabel = date('Y-m', $mesTs);
+
+        // VPT proyectado por regresión, acotado al ±25% del último real
+        $vptReg       = $intercept + $slope * ($nmeses - 1 + $i);
+        $vptProyectado = max($lastVpt * 0.80, min($lastVpt * 1.25, $vptReg));
+
+        // Tiendas esperadas ese mes con plan de expansión
+        $tiendasEsperadas = min($metaExpansion, (float)($baseTiendas + $ritmoMensualApert * $i));
+
+        // Escenario conservador (sin nuevas tiendas) y optimista (con nuevas tiendas)
+        $ventasConservadoras = round($vptProyectado * $baseTiendas, 2);
+        $ventasOptimistas    = round($vptProyectado * $tiendasEsperadas, 2);
+
+        $proyeccionTendencia[] = [
+            'mes'          => $mesLabel,
+            'ventas'       => $ventasOptimistas,
+            'ventas_sin_exp' => $ventasConservadoras,
+            'vpt'          => round($vptProyectado, 2),
+            'tiendas'      => round($tiendasEsperadas, 1),
+        ];
+    }
+
     // ────────────────────────────────────────────
     // CONSTRUIR RESPUESTA
     // ────────────────────────────────────────────
@@ -520,7 +602,8 @@ try {
             'total'         => $metaTotal,
             'cumplimiento'  => $cumplimiento,
         ],
-        'tendencia_mensual' => $tendenciaMensual,
+        'tendencia_mensual'      => $tendenciaMensual,
+        'proyeccion_tendencia'   => $proyeccionTendencia,
         'ranking_tiendas'   => array_map(function($r) use ($metaMap) {
             $meta = $metaMap[$r['tienda']] ?? 0;
             return [
