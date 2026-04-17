@@ -201,7 +201,7 @@ function agruparPorMes($items)
     $getHora = function ($item) {
         return $item['tipo'] === 'reunion'
             ? substr($item['fecha_reunion'] ?? '', 11, 8)
-            : ($item['hora_tarea'] ?? '23:59:59');
+            : ($item['hora_tarea'] ?? '08:00:00'); // NULL hora = 08:00 (igual que el JS)
     };
 
     $sortByHora = function ($a, $b) use ($prioridadWeight, $getHora) {
