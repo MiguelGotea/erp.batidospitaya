@@ -18,6 +18,21 @@ if (!tienePermiso('pedido_sugerido', 'vista', $cargoOperario)) {
 
 $puedeEditar = tienePermiso('pedido_sugerido', 'edicion', $cargoOperario);
 $version     = mt_rand(1, 10000);
+
+// --- Predeterminar Semanas (Server-Side para evitar delay) ---
+$semActual = '';
+$semDesdeDefault = '';
+$semHastaDefault = '';
+try {
+    require_once '../../core/database/conexion.php';
+    $stmtSem = $conn->query("SELECT numero_semana FROM SemanasSistema WHERE CURDATE() BETWEEN fecha_inicio AND fecha_fin LIMIT 1");
+    $resSem = $stmtSem->fetch(PDO::FETCH_ASSOC);
+    if ($resSem) {
+        $semActual = (int)$resSem['numero_semana'];
+        $semDesdeDefault = $semActual - 6;
+        $semHastaDefault = $semActual - 1;
+    }
+} catch (Exception $e) { /* Silencioso */ }
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -59,7 +74,8 @@ $version     = mt_rand(1, 10000);
                                     <i class="fas fa-hashtag me-1"></i>Semana Desde
                                 </label>
                                 <input type="number" class="form-control form-control-sm ps-input-semana"
-                                    id="filtroSemanaDesde" min="1" max="9999" placeholder="Ej: 535">
+                                    id="filtroSemanaDesde" min="1" max="9999" placeholder="Ej: 535"
+                                    value="<?php echo $semDesdeDefault; ?>">
                             </div>
 
                             <!-- Semana Hasta -->
@@ -68,7 +84,8 @@ $version     = mt_rand(1, 10000);
                                     <i class="fas fa-hashtag me-1"></i>Semana Hasta
                                 </label>
                                 <input type="number" class="form-control form-control-sm ps-input-semana"
-                                    id="filtroSemanaHasta" min="1" max="9999" placeholder="Ej: 538">
+                                    id="filtroSemanaHasta" min="1" max="9999" placeholder="Ej: 538"
+                                    value="<?php echo $semHastaDefault; ?>">
                             </div>
 
                             <!-- Sucursal (obligatorio) -->
@@ -82,11 +99,11 @@ $version     = mt_rand(1, 10000);
                                 </select>
                             </div>
 
-                            <!-- Semana actial + Botón -->
+                            <!-- Semana actual + Botón -->
                             <div class="col-12 col-md-5 d-flex flex-wrap gap-2 justify-content-end align-items-center">
-                                <div id="badgeSemanaActual" class="ps-badge-semana d-none">
+                                <div id="badgeSemanaActual" class="ps-badge-semana <?php echo !empty($semActual) ? '' : 'd-none'; ?>">
                                     <i class="fas fa-calendar-check"></i>
-                                    Sem. actual: <strong id="semanaActualNum">—</strong>
+                                    Sem. actual: <strong id="semanaActualNum"><?php echo $semActual; ?></strong>
                                 </div>
                                 <button class="btn btn-sm ps-btn-primary" id="btnCalcular">
                                     <i class="fas fa-calculator me-1"></i>Calcular
@@ -171,11 +188,6 @@ $version     = mt_rand(1, 10000);
                                     <input type="text" class="form-control form-control-sm"
                                         id="buscarProducto" placeholder="Buscar producto…"
                                         style="max-width:200px">
-                                    <?php if ($puedeEditar): ?>
-                                    <button class="btn btn-sm ps-btn-save" id="btnGuardarInventario">
-                                        <i class="fas fa-save me-1"></i>Guardar Inventario
-                                    </button>
-                                    <?php endif; ?>
                                 </div>
                             </div>
                             <div class="table-responsive" id="tablaWrapper">
@@ -333,6 +345,13 @@ $version     = mt_rand(1, 10000);
                 </div>
             </div>
         </div>
+    </div>
+
+    <!-- Botón guardar flotante (se activa al detectar cambios) -->
+    <div class="floating-save-btn" id="btnGuardarFlotante" style="display: none;">
+        <button class="btn btn-success rounded-pill px-4 shadow-lg" onclick="guardarInventario()">
+            <i class="bi bi-save2-fill me-2"></i> Guardar Inventario
+        </button>
     </div>
 
     <!-- JavaScript Principal -->

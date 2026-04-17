@@ -13,6 +13,7 @@ const CAT_ORDER = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
 
 // Estado global
 let datosResultado = [];   // Array completo de productos devuelto por el AJAX
+let inventarioInicial = {}; // Mapa para detectar cambios de edición [id_pp: valor]
 
 // ====================================================
 // Inicialización
@@ -45,9 +46,8 @@ $(document).ready(function () {
         });
     });
 
-    if (PUEDE_EDITAR) {
-        $('#btnGuardarInventario').on('click', guardarInventario);
-    }
+    // El botón de guardado ahora es flotante y se maneja por su selector directo o función onclick
+
 });
 
 // ====================================================
@@ -80,8 +80,7 @@ function cargarSemanaActual() {
         dataType: 'json',
         success: function (res) {
             if (res.ok && res.semana_actual && res.semana_actual.numero_semana) {
-                $('#semanaActualNum').text(res.semana_actual.numero_semana);
-                $('#badgeSemanaActual').removeClass('d-none');
+                // Ya se maneja desde el servidor en el render inicial
             }
         },
         error: function () { /* silencioso — el badge simplemente no aparece */ }
@@ -141,6 +140,9 @@ function calcularPedido() {
 // Renderizar KPIs y tabla
 // ====================================================
 function renderizarResultados(res) {
+    // Resetear rastreador de cambios
+    inventarioInicial = {};
+    $('#btnGuardarFlotante').removeClass('active');
     // KPIs
     $('#kpiNSemanas').text(res.n_semanas);
     $('#kpiNProductos').text(res.productos.length);
@@ -182,6 +184,8 @@ function renderizarResultados(res) {
 
         items.forEach(p => {
             totalFilas++;
+            // Registrar valor inicial para detección de cambios
+            inventarioInicial[p.id_pp] = (p.inventario_actual !== null) ? parseFloat(p.inventario_actual) : null;
             html += buildFila(p, cat);
         });
     });
@@ -289,7 +293,7 @@ function buildPedidoHtml(stockMaxFinal, inventario) {
 // Recalcular pedido en tiempo real al cambiar inventario
 // ====================================================
 function recalcularPedidoFila(inputEl) {
-    const idPP = inputEl.dataset.idPp;
+    const idPP = parseInt(inputEl.dataset.idPp);
     const stockMaxFinal = parseFloat(inputEl.dataset.stockMaxFinal);
     const inventario = inputEl.value !== '' ? parseFloat(inputEl.value) : null;
 
@@ -297,6 +301,33 @@ function recalcularPedidoFila(inputEl) {
         isNaN(stockMaxFinal) ? null : stockMaxFinal,
         inventario
     ));
+
+    // Verificar si hay cambios con respecto a los valores iniciales
+    verificarCambios();
+}
+
+// ====================================================
+// Verificar si hay cambios pendientes de guardar
+// ====================================================
+function verificarCambios() {
+    let hayCambios = false;
+
+    $('.input-inventario').each(function () {
+        const id = parseInt($(this).data('id-pp'));
+        const valActual = $(this).val() !== '' ? parseFloat($(this).val()) : null;
+        const valInicial = inventarioInicial[id];
+
+        if (valActual !== valInicial) {
+            hayCambios = true;
+            return false; // Break loop
+        }
+    });
+
+    if (hayCambios) {
+        $('#btnGuardarFlotante').addClass('active');
+    } else {
+        $('#btnGuardarFlotante').removeClass('active');
+    }
 }
 
 // ====================================================
@@ -322,7 +353,8 @@ function guardarInventario() {
         return Swal.fire({ icon: 'info', title: 'Sin datos', text: 'No hay valores de inventario ingresados.', confirmButtonColor: '#51B8AC' });
     }
 
-    $('#btnGuardarInventario').prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i>Guardando…');
+    const $btnFlotante = $('#btnGuardarFlotante button');
+    $btnFlotante.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i>Guardando…');
 
     $.ajax({
         url: 'ajax/pedido_sugerido_guardar_inventario.php',
@@ -331,8 +363,18 @@ function guardarInventario() {
         contentType: 'application/json',
         dataType: 'json',
         success: function (res) {
-            $('#btnGuardarInventario').prop('disabled', false).html('<i class="fas fa-save me-1"></i>Guardar Inventario');
+            $btnFlotante.prop('disabled', false).html('<i class="bi bi-save2-fill me-2"></i> Guardar Inventario');
             if (res.ok) {
+                // Actualizar inventarioInicial con los nuevos valores guardados
+                $('.input-inventario').each(function () {
+                    const id = $(this).data('id-pp');
+                    const val = $(this).val().trim();
+                    inventarioInicial[id] = (val !== '') ? parseFloat(val) : null;
+                });
+                
+                // Ocultar botón flotante
+                $('#btnGuardarFlotante').removeClass('active');
+
                 Swal.fire({
                     icon: 'success', title: 'Guardado', toast: true, position: 'top-end',
                     text: `${res.guardados} registro${res.guardados !== 1 ? 's' : ''} guardado${res.guardados !== 1 ? 's' : ''}.`,
@@ -343,7 +385,7 @@ function guardarInventario() {
             }
         },
         error: function () {
-            $('#btnGuardarInventario').prop('disabled', false).html('<i class="fas fa-save me-1"></i>Guardar Inventario');
+            $btnFlotante.prop('disabled', false).html('<i class="bi bi-save2-fill me-2"></i> Guardar Inventario');
             Swal.fire({ icon: 'error', title: 'Error de conexión', confirmButtonColor: '#51B8AC' });
         }
     });
