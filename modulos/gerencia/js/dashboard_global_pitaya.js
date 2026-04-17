@@ -108,7 +108,13 @@ function setLoader(on) {
 
 function renderTodo(data) {
     renderVentas(data.ventas, data.meta);
-    renderTendencia(data.tendencia_mensual);
+    // Gráfica tendencia según tab activo
+    const tabActivo = document.querySelector('#tabsTendencia .da-tab.active')?.dataset.tab ?? 'mensual';
+    if (tabActivo === 'anual' && data.expansion?.ventas_por_anio) {
+        renderTendenciaAnual(data.expansion.ventas_por_anio);
+    } else {
+        renderTendenciaMensual(data.tendencia_mensual);
+    }
     renderRanking(data.ranking_tiendas, data.periodo);
     renderClub(data.club);
     renderSegmentosRFM(data.segmentos_rfm);
@@ -154,48 +160,52 @@ function renderVentas(v, meta) {
 }
 
 // ── 2. TENDENCIA VENTAS ───────────────────────────────
-function renderTendencia(meses) {
-    const labels = meses.map(m => {
-        const [y, mo] = m.mes.split('-');
-        return ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'][parseInt(mo)-1] + ' ' + y.slice(2);
-    });
-    const datos  = meses.map(m => parseFloat(m.total));
-
+function buildTendenciaChart(labels, datos, labelStr) {
     const ctx = document.getElementById('chartTendenciaVentas');
     if (!ctx) return;
     if (chartTendencia) chartTendencia.destroy();
-
+    const dataConv = datos.map(d => convertir(d));
     chartTendencia = new Chart(ctx, {
         type: 'bar',
         data: {
             labels,
             datasets: [{
-                label: 'Ventas C$',
-                data: datos,
-                backgroundColor: datos.map((_, i) => i === datos.length - 1 ? DA_COLORS.primary : 'rgba(81,184,172,0.35)'),
+                label: labelStr,
+                data: dataConv,
+                backgroundColor: dataConv.map((_, i) => i === dataConv.length - 1 ? DA_COLORS.primary : 'rgba(81,184,172,0.35)'),
                 borderColor: DA_COLORS.primary,
                 borderWidth: 1,
                 borderRadius: 6,
             }]
         },
         options: {
-            ...CHART_DEFAULTS,
             responsive: true,
             plugins: {
-                ...CHART_DEFAULTS.plugins,
-                tooltip: {
-                    callbacks: { label: ctx => ' ' + fmtC(ctx.raw) }
-                }
+                legend: { display: false },
+                tooltip: { callbacks: { label: ctx => ' ' + fmtMoney(ctx.raw * DA_TC) } }
             },
             scales: {
                 x: { ticks: { color: DA_COLORS.muted }, grid: { color: DA_COLORS.grid } },
                 y: {
-                    ticks: { color: DA_COLORS.muted, callback: v => fmtC(v) },
+                    ticks: { color: DA_COLORS.muted, callback: v => simbolo() + ' ' + fmtN(v) },
                     grid: { color: DA_COLORS.grid }
                 }
             }
         }
     });
+}
+
+function renderTendenciaMensual(meses) {
+    const labels = meses.map(m => {
+        const [y, mo] = m.mes.split('-');
+        return ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'][parseInt(mo)-1] + " '" + y.slice(2);
+    });
+    buildTendenciaChart(labels, meses.map(m => parseFloat(m.total)), 'Ventas Mensual');
+}
+
+function renderTendenciaAnual(anios) {
+    const labels = anios.map(a => String(a.anio));
+    buildTendenciaChart(labels, anios.map(a => parseFloat(a.ventas)), 'Ventas Anual');
 }
 
 // ── 3. RANKING TIENDAS ────────────────────────────────
@@ -612,7 +622,13 @@ document.querySelectorAll('#tabsTendencia .da-tab').forEach(btn => {
     btn.addEventListener('click', function () {
         document.querySelectorAll('#tabsTendencia .da-tab').forEach(b => b.classList.remove('active'));
         this.classList.add('active');
-        cargarDashboard();
+        if (!DA_LAST) return;
+        // Cambiar sin recargar servidor
+        if (this.dataset.tab === 'anual' && DA_LAST.expansion?.ventas_por_anio) {
+            renderTendenciaAnual(DA_LAST.expansion.ventas_por_anio);
+        } else {
+            renderTendenciaMensual(DA_LAST.tendencia_mensual);
+        }
     });
 });
 
