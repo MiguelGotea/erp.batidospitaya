@@ -9,7 +9,7 @@ require_once '../../core/layout/menu_lateral.php';
 require_once '../../core/layout/header_universal.php';
 require_once '../../core/permissions/permissions.php';
 
-$usuario       = obtenerUsuarioActual();
+$usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
 
 if (!tienePermiso('dashboard_global_pitaya', 'vista', $cargoOperario)) {
@@ -17,9 +17,9 @@ if (!tienePermiso('dashboard_global_pitaya', 'vista', $cargoOperario)) {
     exit();
 }
 
-$mesActual  = date('n');
+$mesActual = date('n');
 $anioActual = date('Y');
-$hoy        = date('Y-m-d');
+$hoy = date('Y-m-d');
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -35,7 +35,8 @@ $hoy        = date('Y-m-d');
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="/assets/css/global_tools.css?v=<?php echo mt_rand(1, 10000); ?>">
     <link rel="stylesheet" href="css/dashboard_global_pitaya.css?v=<?php echo mt_rand(1, 10000); ?>">
 </head>
@@ -59,7 +60,8 @@ $hoy        = date('Y-m-d');
                             Inteligencia de Negocio &amp; Crecimiento
                         </div>
                         <h1 class="da-hero-title">Centro de Inteligencia <span>Pitaya</span></h1>
-                        <p class="da-hero-sub">Visión estratégica en tiempo real · <?php echo date('d \d\e F, Y'); ?></p>
+                        <p class="da-hero-sub">Visión estratégica en tiempo real · <?php echo date('d \d\e F, Y'); ?>
+                        </p>
                     </div>
                     <div class="da-hero-right">
                         <div class="da-store-counter">
@@ -85,9 +87,10 @@ $hoy        = date('Y-m-d');
                             <div class="da-tc-wrap">
                                 <label class="da-tc-label">Tipo de Cambio</label>
                                 <div class="da-tc-input-wrap">
-                                    <span class="da-tc-prefix">C$ 1 =</span>
-                                    <input type="number" id="inputTipoCambio" value="36.5" min="1" step="0.1" class="da-tc-input">
-                                    <span class="da-tc-suffix">US$</span>
+                                    <span class="da-tc-prefix">US$ 1 =</span>
+                                    <input type="number" id="inputTipoCambio" value="36.5" min="1" step="0.1"
+                                        class="da-tc-input">
+                                    <span class="da-tc-suffix">C$</span>
                                 </div>
                             </div>
                             <div class="da-cur-toggle" id="currencyToggle">
@@ -432,7 +435,10 @@ $hoy        = date('Y-m-d');
                                     </tr>
                                 </thead>
                                 <tbody id="tbodyAperturas">
-                                    <tr><td colspan="6" class="text-center py-4 text-muted"><i class="fas fa-spinner fa-spin me-2"></i>Cargando…</td></tr>
+                                    <tr>
+                                        <td colspan="6" class="text-center py-4 text-muted"><i
+                                                class="fas fa-spinner fa-spin me-2"></i>Cargando…</td>
+                                    </tr>
                                 </tbody>
                             </table>
                         </div>
@@ -501,8 +507,7 @@ $hoy        = date('Y-m-d');
     <!-- ══════════════════════════════════════════ -->
     <!--  MODAL DE AYUDA                           -->
     <!-- ══════════════════════════════════════════ -->
-    <div class="modal fade" id="pageHelpModal" tabindex="-1"
-        data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal fade" id="pageHelpModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
         <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content border-0 shadow-lg">
                 <div class="modal-header da-modal-header">
@@ -516,32 +521,46 @@ $hoy        = date('Y-m-d');
                         <div class="col-md-6">
                             <div class="card border-0 bg-light h-100">
                                 <div class="card-body">
-                                    <h6 class="fw-bold" style="color:#0E544C"><i class="fas fa-chart-line me-2"></i>Ventas</h6>
-                                    <p class="small text-muted mb-0">Datos de <code>VentasGlobalesAccessCSV</code>. Solo pedidos <strong>no anulados</strong>. Usa el toggle <strong>C$ / US$</strong> en el encabezado para cambiar moneda. El tipo de cambio es configurable. El ticket promedio es monto total ÷ pedidos únicos.</p>
+                                    <h6 class="fw-bold" style="color:#0E544C"><i
+                                            class="fas fa-chart-line me-2"></i>Ventas</h6>
+                                    <p class="small text-muted mb-0">Datos de <code>VentasGlobalesAccessCSV</code>. Solo
+                                        pedidos <strong>no anulados</strong>. Usa el toggle <strong>C$ / US$</strong> en
+                                        el encabezado para cambiar moneda. El tipo de cambio es configurable. El ticket
+                                        promedio es monto total ÷ pedidos únicos.</p>
                                 </div>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="card border-0 bg-light h-100">
                                 <div class="card-body">
-                                    <h6 class="fw-bold" style="color:#0E544C"><i class="fas fa-users me-2"></i>Club Pitaya</h6>
-                                    <p class="small text-muted mb-0">Los <strong>Socios Activos</strong> son quienes compraron en los últimos 60 días. El <strong>Churn Rate</strong> = socios sin compra &gt;60 días / total con al menos 1 compra. El <strong>LTV</strong> es la suma histórica de compras por cliente.</p>
+                                    <h6 class="fw-bold" style="color:#0E544C"><i class="fas fa-users me-2"></i>Club
+                                        Pitaya</h6>
+                                    <p class="small text-muted mb-0">Los <strong>Socios Activos</strong> son quienes
+                                        compraron en los últimos 60 días. El <strong>Churn Rate</strong> = socios sin
+                                        compra &gt;60 días / total con al menos 1 compra. El <strong>LTV</strong> es la
+                                        suma histórica de compras por cliente.</p>
                                 </div>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="card border-0 bg-light h-100">
                                 <div class="card-body">
-                                    <h6 class="fw-bold" style="color:#0E544C"><i class="fas fa-bullseye me-2"></i>Metas</h6>
-                                    <p class="small text-muted mb-0">Las metas se registran en la tabla <code>ventas_meta</code> por sucursal y fecha. El cumplimiento compara las ventas reales del período con la meta acumulada del mismo período.</p>
+                                    <h6 class="fw-bold" style="color:#0E544C"><i class="fas fa-bullseye me-2"></i>Metas
+                                    </h6>
+                                    <p class="small text-muted mb-0">Las metas se registran en la tabla
+                                        <code>ventas_meta</code> por sucursal y fecha. El cumplimiento compara las
+                                        ventas reales del período con la meta acumulada del mismo período.</p>
                                 </div>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="card border-0 bg-light h-100">
                                 <div class="card-body">
-                                    <h6 class="fw-bold" style="color:#0E544C"><i class="fas fa-rocket me-2"></i>Expansión 2028</h6>
-                                    <p class="small text-muted mb-0">Panel estático basado en la visión estratégica: <strong>14 tiendas actuales → 40 para 2028</strong>. Muestra el avance porcentual y las aperturas anuales necesarias para cumplir la meta.</p>
+                                    <h6 class="fw-bold" style="color:#0E544C"><i
+                                            class="fas fa-rocket me-2"></i>Expansión 2028</h6>
+                                    <p class="small text-muted mb-0">Panel estático basado en la visión estratégica:
+                                        <strong>14 tiendas actuales → 40 para 2028</strong>. Muestra el avance
+                                        porcentual y las aperturas anuales necesarias para cumplir la meta.</p>
                                 </div>
                             </div>
                         </div>

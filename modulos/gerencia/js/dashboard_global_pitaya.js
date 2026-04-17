@@ -390,7 +390,7 @@ function renderTablaTiendas(tiendas) {
     tbody.innerHTML = tiendas.map((t, i) => {
         const cumplBadge = t.cumplimiento !== null
             ? `<span class="da-cumpl-badge ${t.cumplimiento >= 100 ? 'da-cumpl-high' : t.cumplimiento >= 80 ? 'da-cumpl-mid' : 'da-cumpl-low'}">${fmtPct(t.cumplimiento)}</span>`
-            : '<span class="da-cumpl-badge" style="background:rgba(255,255,255,0.05);color:#8b949e">Sin meta</span>';
+            : '<span class="da-cumpl-badge" style="color:#a8b4ae;">Sin meta</span>';
         const minibar = Array.from({ length: 5 }, () => {
             const h = 30 + Math.random() * 70;
             return `<div class="da-bar-mini" style="height:${h}%;opacity:0.55;"></div>`;
