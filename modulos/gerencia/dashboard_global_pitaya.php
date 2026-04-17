@@ -347,41 +347,98 @@ $hoy        = date('Y-m-d');
                     <i class="fas fa-rocket"></i> Plan de Expansión — Pitaya 2028
                 </div>
 
-                <div class="da-expansion-panel">
-                    <div class="da-expansion-progress">
-                        <div class="da-exp-header">
-                            <span class="da-exp-label">Progreso de Expansión</span>
-                            <span class="da-exp-meta" id="expProgreso">14 / 40 Tiendas</span>
-                        </div>
-                        <div class="da-exp-track">
-                            <div class="da-exp-fill" id="expFill" style="width: 35%"></div>
-                        </div>
-                        <div class="da-exp-legend">
-                            <span><i class="fas fa-circle" style="color:#51B8AC"></i> Operativas: <strong id="expOperativas">14</strong></span>
-                            <span><i class="fas fa-circle" style="color:#f39c12"></i> Faltantes: <strong id="expFaltantes">26</strong></span>
-                            <span><i class="fas fa-circle" style="color:#2c3e50"></i> Meta 2028: <strong>40</strong></span>
+
+                <!-- KPIs de expansión -->
+                <div class="da-kpi-grid da-kpi-grid-5" style="margin-bottom:16px">
+                    <div class="da-kpi-card">
+                        <div class="da-kpi-icon-wrap teal"><i class="fas fa-store"></i></div>
+                        <div class="da-kpi-body">
+                            <div class="da-kpi-label">Tiendas Activas</div>
+                            <div class="da-kpi-valor" id="expTiendasActivas">—</div>
+                            <div class="da-kpi-sub">de 40 (meta 2028)</div>
                         </div>
                     </div>
-
-                    <div class="da-expansion-kpis">
-                        <div class="da-exp-kpi">
-                            <div class="da-exp-kpi-val">35%</div>
-                            <div class="da-exp-kpi-label">Avance</div>
+                    <div class="da-kpi-card">
+                        <div class="da-kpi-icon-wrap green"><i class="fas fa-percentage"></i></div>
+                        <div class="da-kpi-body">
+                            <div class="da-kpi-label">Avance Meta 2028</div>
+                            <div class="da-kpi-valor" id="expAvancePct">—</div>
+                            <div class="da-progress-wrap" style="margin-top:6px">
+                                <div class="da-progress-bar" id="progressExpansion"></div>
+                            </div>
                         </div>
-                        <div class="da-exp-kpi">
-                            <div class="da-exp-kpi-val da-green" id="expNewYear">~5</div>
-                            <div class="da-exp-kpi-label">Aperturas Anuales Requeridas</div>
+                    </div>
+                    <div class="da-kpi-card">
+                        <div class="da-kpi-icon-wrap orange"><i class="fas fa-calendar-plus"></i></div>
+                        <div class="da-kpi-body">
+                            <div class="da-kpi-label">Aperturas necesarias/año</div>
+                            <div class="da-kpi-valor" id="expApertNecesarias">—</div>
+                            <div class="da-kpi-sub">para llegar a 40 en 2028</div>
                         </div>
-                        <div class="da-exp-kpi">
-                            <div class="da-exp-kpi-val" id="expAnosRestantes">2</div>
-                            <div class="da-exp-kpi-label">Años para Meta</div>
+                    </div>
+                    <div class="da-kpi-card">
+                        <div class="da-kpi-icon-wrap purple"><i class="fas fa-calendar-check"></i></div>
+                        <div class="da-kpi-body">
+                            <div class="da-kpi-label">Primera Apertura</div>
+                            <div class="da-kpi-valor" id="expPrimeraApertura" style="font-size:1.2rem">—</div>
                         </div>
-                        <div class="da-exp-kpi">
-                            <div class="da-exp-kpi-val da-teal" id="expIncrementoVentaEsp">+186%</div>
-                            <div class="da-exp-kpi-label">Incremento Ventas Esperado</div>
+                    </div>
+                    <div class="da-kpi-card">
+                        <div class="da-kpi-icon-wrap primary"><i class="fas fa-chart-line"></i></div>
+                        <div class="da-kpi-body">
+                            <div class="da-kpi-label">Crecimiento Ventas Total</div>
+                            <div class="da-kpi-valor" id="expCrecimientoVentas" style="color:#3fb950">—</div>
                         </div>
                     </div>
                 </div>
+
+                <!-- Gráficas de expansión -->
+                <div class="da-row-2col" style="margin-bottom:16px">
+                    <div class="da-card">
+                        <div class="da-card-header">
+                            <h3><i class="fas fa-rocket me-2"></i>Crecimiento de Tiendas vs Meta 2028</h3>
+                        </div>
+                        <div class="da-card-body">
+                            <canvas id="chartExpansionTiendas" height="240"></canvas>
+                        </div>
+                    </div>
+                    <div class="da-card">
+                        <div class="da-card-header">
+                            <h3><i class="fas fa-chart-area me-2"></i>Ventas Históricas por Año</h3>
+                        </div>
+                        <div class="da-card-body">
+                            <canvas id="chartVentasAnio" height="240"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabla historial de aperturas -->
+                <div class="da-card da-card-full" style="margin-bottom:16px">
+                    <div class="da-card-header">
+                        <h3><i class="fas fa-history me-2"></i>Historial de Aperturas</h3>
+                        <span class="da-badge-period">Orden cronológico desde la primera tienda</span>
+                    </div>
+                    <div class="da-card-body p-0">
+                        <div class="table-responsive">
+                            <table class="da-table" id="tablaAperturas">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Tienda</th>
+                                        <th>Fecha Apertura</th>
+                                        <th class="text-end">Ventas Históricas</th>
+                                        <th class="text-center">Años operando</th>
+                                        <th class="text-center">% del total ventas</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbodyAperturas">
+                                    <tr><td colspan="6" class="text-center py-4 text-muted"><i class="fas fa-spinner fa-spin me-2"></i>Cargando…</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
 
                 <!-- ══════════════════════════════════════════ -->
                 <!--  SECCIÓN 6: TABLA COMPARATIVA TIENDAS    -->
