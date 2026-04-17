@@ -609,21 +609,16 @@ try {
     $lastMesCompleto = $nc > 0 ? $tendenciaMensual[$nc-1]['mes'] : date('Y-m', strtotime('-1 month'));
 
     // Ritmos mensuales SIN cierres (política nueva = nunca más se cierra una tienda)
-    $ritmoHistMens = $ritmoAperturasBruto / 12;   // histórico bruto todo el tiempo
-    $ritmoRecMens  = $ritmoAperReciente   / 12;   // reciente 2 años bruto
+    $ritmoHistMens = $ritmoAperturasBruto / 12;
+    $ritmoRecMens  = $ritmoAperReciente   / 12;
 
-    // Generar proyección mes a mes hasta Dic 2028 (enfoque por fecha, no por count)
+    // Proyección: próximos 12 meses desde el último mes completo
     $proyeccionTendencia = [];
-    $cursorTs  = strtotime($lastMesCompleto . '-01 +1 month');   // primer mes proyectado
-    $finalTs   = strtotime('2028-12-01');
-    $totalMeses = 0;
+    $cursorTs = strtotime($lastMesCompleto . '-01 +1 month');   // primer mes proyectado
+    $finalTs  = strtotime($lastMesCompleto . '-01 +12 month');  // 12 meses después
+    $totalMeses = 12;
 
-    // Pre-scan para saber cuántos meses hay → permite calcular ritmoMetaMens exacto
-    $scanTs = $cursorTs;
-    while ($scanTs <= $finalTs) {
-        $totalMeses++;
-        $scanTs = strtotime(date('Y-m-01', $scanTs) . ' +1 month');
-    }
+    // Ritmo optimista: llegar a 40 exactamente en mes 12
     $ritmoMetaMens = $totalMeses > 0 ? ($metaExpansion - $baseTiendas) / $totalMeses : 0;
 
     $i = 0;
@@ -648,7 +643,7 @@ try {
             'tiendas_meta' => round($tMeta, 1),
             'ventas_hist'  => round($vptProy * $tHist, 2),  // Conservador
             'ventas_rec'   => round($vptProy * $tRec,  2),  // Moderado
-            'ventas_meta'  => round($vptProy * $tMeta, 2),  // Optimista → 40 en 2028
+            'ventas_meta'  => round($vptProy * $tMeta, 2),  // Optimista
         ];
 
         $cursorTs = strtotime(date('Y-m-01', $cursorTs) . ' +1 month');
