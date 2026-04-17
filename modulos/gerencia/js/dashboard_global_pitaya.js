@@ -22,25 +22,27 @@ function simbolo() {
     return DA_MONEDA === 'USD' ? 'US$' : 'C$';
 }
 
-// ── Colores corporativos ──────────────────────────────
+// ── Colores corporativos — paleta cálida clara ───────
 const DA_COLORS = {
     primary:  '#51B8AC',
-    green:    '#3fb950',
-    red:      '#f85149',
-    orange:   '#f0883e',
-    purple:   '#bc8cff',
-    yellow:   '#e3b341',
-    muted:    '#8b949e',
-    bg3:      '#21262d',
-    grid:     'rgba(255,255,255,0.06)',
+    primaryD: '#0E544C',
+    green:    '#3aaa82',
+    red:      '#d9534f',
+    orange:   '#e07b39',
+    purple:   '#7c6bc9',
+    yellow:   '#c9a227',
+    muted:    '#a8b4ae',
+    bg3:      '#e0ddd8',
+    grid:     'rgba(0,0,0,0.06)',
+    text:     '#2d3a35',
 };
 
 const CHART_DEFAULTS = {
-    color: '#e6edf3',
-    plugins: { legend: { labels: { color: '#8b949e', font: { family: 'Inter', size: 11 } } } },
+    color: '#2d3a35',
+    plugins: { legend: { labels: { color: '#7a8a84', font: { family: 'Inter', size: 11 } } } },
     scales: {
-        x: { ticks: { color: '#8b949e' }, grid: { color: DA_COLORS.grid } },
-        y: { ticks: { color: '#8b949e' }, grid: { color: DA_COLORS.grid } }
+        x: { ticks: { color: '#7a8a84' }, grid: { color: DA_COLORS.grid } },
+        y: { ticks: { color: '#7a8a84' }, grid: { color: DA_COLORS.grid } }
     }
 };
 
@@ -252,7 +254,7 @@ function renderSegmentosRFM(segs) {
         type: 'doughnut',
         data: {
             labels: segs.map(s => s.segmento),
-            datasets: [{ data: segs.map(s => s.total), backgroundColor: PALETTE, borderWidth: 2, borderColor: '#161b22' }]
+            datasets: [{ data: segs.map(s => s.total), backgroundColor: PALETTE, borderWidth: 2, borderColor: '#f0ede8' }]
         },
         options: {
             responsive: true,
@@ -280,7 +282,7 @@ function renderParticipacion(club) {
             datasets: [{
                 data: [club_pct, otros_pct],
                 backgroundColor: [DA_COLORS.primary, DA_COLORS.bg3],
-                borderWidth: 2, borderColor: '#161b22'
+                borderWidth: 2, borderColor: '#f0ede8'
             }]
         },
         options: {
@@ -391,11 +393,11 @@ function renderTablaTiendas(tiendas) {
             : '<span class="da-cumpl-badge" style="background:rgba(255,255,255,0.05);color:#8b949e">Sin meta</span>';
         const minibar = Array.from({ length: 5 }, () => {
             const h = 30 + Math.random() * 70;
-            return `<div class="da-bar-mini" style="height:${h}%;opacity:0.5;"></div>`;
+            return `<div class="da-bar-mini" style="height:${h}%;opacity:0.55;"></div>`;
         }).join('');
         return `
         <tr>
-            <td style="color:#8b949e;font-weight:700">${i+1}</td>
+            <td style="color:#a8b4ae;font-weight:700">${i+1}</td>
             <td><span style="font-weight:600">${t.tienda}</span></td>
             <td class="text-end">${fmtMoney(t.ventas)}</td>
             <td class="text-end">${fmtMoney(t.meta)}</td>
@@ -585,17 +587,17 @@ function renderExpansion(exp) {
         const anosOp = s.fecha_apertura ? Math.floor((hoyTs - new Date(s.fecha_apertura).getTime())/31536000000) : '?';
         const pctVentas = (s.ventas_historico/totalVentas*100).toFixed(1);
         return `<tr>
-            <td style="color:#8b949e;font-weight:700">${i+1}</td>
+            <td style="color:#a8b4ae;font-weight:700">${i+1}</td>
             <td style="font-weight:600">${s.nombre}</td>
             <td>${s.fecha_apertura ?? '—'}</td>
             <td class="text-end">${fmtMoney(s.ventas_historico)}</td>
             <td class="text-center">${anosOp} años</td>
             <td class="text-center">
                 <div style="display:flex;align-items:center;gap:6px;justify-content:center">
-                    <div style="width:80px;height:6px;background:#21262d;border-radius:4px;overflow:hidden">
-                        <div style="width:${pctVentas}%;height:100%;background:#51B8AC;border-radius:4px"></div>
+                    <div style="width:80px;height:7px;background:#cac7c2;border-radius:50px;overflow:hidden;box-shadow:inset 2px 2px 4px #b5b2ad,inset -2px -2px 4px #fff">
+                        <div style="width:${pctVentas}%;height:100%;background:linear-gradient(90deg,#51B8AC,#0E544C);border-radius:50px"></div>
                     </div>
-                    <span style="font-size:.78rem;color:#8b949e">${pctVentas}%</span>
+                    <span style="font-size:.78rem;color:#7a8a84">${pctVentas}%</span>
                 </div>
             </td>
         </tr>`;
@@ -639,7 +641,7 @@ document.getElementById('selectorAnio')?.addEventListener('change',   cargarDash
 
 // ── Init ──────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', function () {
-    Chart.defaults.color = '#8b949e';
+    Chart.defaults.color = '#7a8a84';
     Chart.defaults.font.family = 'Inter';
     cargarDashboard();
 });
