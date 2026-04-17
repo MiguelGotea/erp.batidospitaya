@@ -62,9 +62,14 @@ try {
     }
 
     // Calcular días de diferencia para el mensaje
-    $fechaAnterior = new DateTime($item['fecha_meta']);
-    $diff          = $fechaAnterior->diff($dateObj);
-    $diasDiff      = (int) $diff->format('%r%a'); // positivo = hacia el futuro
+    // Guard: fecha_meta puede ser NULL para tareas sin fecha asignada
+    $diasDiff   = 0;
+    $esSinFecha = empty($item['fecha_meta']);
+    if (!$esSinFecha) {
+        $fechaAnterior = new DateTime($item['fecha_meta']);
+        $diff          = $fechaAnterior->diff($dateObj);
+        $diasDiff      = (int) $diff->format('%r%a'); // positivo = hacia el futuro
+    }
 
     // Actualizar fecha_meta
     $sqlUpdate = "UPDATE gestion_tareas_reuniones_items
@@ -98,9 +103,13 @@ try {
     }
 
     // Respuesta
-    $mensajeDias = $diasDiff >= 0
-        ? "Postergada " . ($diasDiff === 0 ? "al día de hoy" : "{$diasDiff} día(s) hacia adelante")
-        : "Adelantada " . abs($diasDiff) . " día(s)";
+    if ($esSinFecha) {
+        $mensajeDias = "Fecha asignada correctamente.";
+    } else {
+        $mensajeDias = $diasDiff >= 0
+            ? "Postergada " . ($diasDiff === 0 ? "al día de hoy" : "{$diasDiff} día(s) hacia adelante")
+            : "Adelantada " . abs($diasDiff) . " día(s)";
+    }
 
     echo json_encode([
         'success'       => true,
