@@ -3,6 +3,8 @@
  * AJAX — Dashboard Global Pitaya · KPIs estratégicos
  * modulos/gerencia/ajax/dashboard_global_pitaya_get_datos.php
  */
+ob_start(); // Buffer any stray output (warnings, notices, deprecations)
+
 require_once '../../../core/auth/auth.php';
 require_once '../../../core/database/conexion.php';
 require_once '../../../core/permissions/permissions.php';
@@ -13,6 +15,7 @@ $usuario       = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
 
 if (!tienePermiso('dashboard_global_pitaya', 'vista', $cargoOperario)) {
+    ob_clean();
     echo json_encode(['success' => false, 'message' => 'Sin acceso']);
     exit;
 }
@@ -95,41 +98,61 @@ try {
     // ────────────────────────────────────────────
     // 3. TENDENCIA VENTAS POR MES (últimos 12 meses)
     // ────────────────────────────────────────────
-    // Tendencia mensual: ventas + tiendas activas ese mes + venta/tienda
-    // Tiendas activas en un mes = sucursal=1, abrió antes del fin de ese mes
-    //   y (aún activa OR cerró después de ese mes)
-    $sqlTendMensual = "
-        SELECT
-            sub.mes,
-            sub.total,
-            sub.pedidos,
-            (
-                SELECT COUNT(*)
-                FROM sucursales s2
-                WHERE s2.sucursal = 1
-                  AND s2.Fecha_Apertura <= LAST_DAY(CONCAT(sub.mes, '-01'))
-                  AND (
-                        s2.activa = 1
-                        OR s2.Fecha_Cierre > LAST_DAY(CONCAT(sub.mes, '-01'))
-                  )
-            ) AS tiendas_activas_mes
-        FROM (
+    // Intentar la query enriquecida con subquery de tiendas activas por mes.
+    // Si la tabla sucursales no tiene Fecha_Cierre o hay timeout, usamos fallback simple.
+    try {
+        $sqlTendMensual = "
             SELECT
-                DATE_FORMAT(Fecha, '%Y-%m') AS mes,
-                SUM(CASE WHEN Anulado = 0 THEN Precio ELSE 0 END) AS total,
-                COUNT(DISTINCT CASE WHEN Anulado=0 THEN CodPedido ELSE NULL END) AS pedidos
-            FROM VentasGlobalesAccessCSV
-            WHERE Fecha >= DATE_SUB(:hoy, INTERVAL 12 MONTH)
-            GROUP BY DATE_FORMAT(Fecha, '%Y-%m')
-        ) sub
-        ORDER BY mes ASC
-    ";
-    $stTM = $conn->prepare($sqlTendMensual);
-    $stTM->execute([':hoy' => $hoy]);
-    $tendenciaMensual = $stTM->fetchAll(PDO::FETCH_ASSOC);
-    // Calcular venta_por_tienda para cada mes
+                sub.mes,
+                sub.total,
+                sub.pedidos,
+                (
+                    SELECT COUNT(*)
+                    FROM sucursales s2
+                    WHERE s2.sucursal = 1
+                      AND s2.Fecha_Apertura <= LAST_DAY(CONCAT(sub.mes, '-01'))
+                      AND (
+                            s2.activa = 1
+                            OR s2.Fecha_Cierre > LAST_DAY(CONCAT(sub.mes, '-01'))
+                      )
+                ) AS tiendas_activas_mes
+            FROM (
+                SELECT
+                    DATE_FORMAT(Fecha, '%Y-%m') AS mes,
+                    SUM(CASE WHEN Anulado = 0 THEN Precio ELSE 0 END) AS total,
+                    COUNT(DISTINCT CASE WHEN Anulado=0 THEN CodPedido ELSE NULL END) AS pedidos
+                FROM VentasGlobalesAccessCSV
+                WHERE Fecha >= DATE_SUB(:hoy, INTERVAL 12 MONTH)
+                GROUP BY DATE_FORMAT(Fecha, '%Y-%m')
+            ) sub
+            ORDER BY mes ASC
+        ";
+        $stTM = $conn->prepare($sqlTendMensual);
+        $stTM->execute([':hoy' => $hoy]);
+        $tendenciaMensual = $stTM->fetchAll(PDO::FETCH_ASSOC);
+    } catch (Exception $e) {
+        // Fallback: query simple sin subquery de tiendas
+        $sqlTendSimple = "
+            SELECT mes, total, pedidos, NULL AS tiendas_activas_mes FROM (
+                SELECT
+                    DATE_FORMAT(Fecha, '%Y-%m') AS mes,
+                    SUM(CASE WHEN Anulado = 0 THEN Precio ELSE 0 END) AS total,
+                    COUNT(DISTINCT CASE WHEN Anulado=0 THEN CodPedido ELSE NULL END) AS pedidos
+                FROM VentasGlobalesAccessCSV
+                WHERE Fecha >= DATE_SUB(:hoy, INTERVAL 12 MONTH)
+                GROUP BY DATE_FORMAT(Fecha, '%Y-%m')
+            ) sub ORDER BY mes ASC
+        ";
+        $stTM = $conn->prepare($sqlTendSimple);
+        $stTM->execute([':hoy' => $hoy]);
+        $tendenciaMensual = $stTM->fetchAll(PDO::FETCH_ASSOC);
+    }
+    // Calcular venta_por_tienda (usa tiendas_activas_mes o fallback al total de activas)
+    $tiendasActivasFallback = $conn->query(
+        "SELECT COUNT(*) FROM sucursales WHERE sucursal=1 AND activa=1"
+    )->fetchColumn() ?: 14;
     foreach ($tendenciaMensual as &$tm) {
-        $t = max(1, (int)$tm['tiendas_activas_mes']);
+        $t = max(1, (int)($tm['tiendas_activas_mes'] ?? $tiendasActivasFallback));
         $tm['venta_por_tienda'] = round((float)$tm['total'] / $t, 2);
     }
     unset($tm);
@@ -587,6 +610,7 @@ try {
     // ────────────────────────────────────────────
     // CONSTRUIR RESPUESTA
     // ────────────────────────────────────────────
+    ob_clean(); // Descartar cualquier warning/notice de PHP antes del JSON
     echo json_encode([
         'success' => true,
         'periodo' => ['ini' => $ini, 'fin' => $fin],
@@ -656,7 +680,8 @@ try {
         ],
     ], JSON_UNESCAPED_UNICODE);
 
-} catch (Exception $e) {
+} catch (\Throwable $e) {
+    ob_clean();
     echo json_encode([
         'success' => false,
         'message' => 'Error al obtener datos: ' . $e->getMessage()
