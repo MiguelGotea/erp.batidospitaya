@@ -327,17 +327,23 @@ try {
     // 10. EXPANSIÓN — Datos históricos de aperturas
     // ────────────────────────────────────────────
     // REGLA: tienda activa = sucursal=1 AND activa=1
+    // Para el HISTORIAL de aperturas incluimos TODAS las que alguna vez abrieron (activa 0 y 1)
+    // para reflejar el ritmo bruto real de crecimiento.
     $sqlSucursalesApertura = "
-        SELECT id, codigo, nombre, Fecha_Apertura,
+        SELECT id, codigo, nombre, Fecha_Apertura, activa,
+               IF(activa=0, Fecha_Cierre, NULL) AS fecha_cierre,
                YEAR(Fecha_Apertura) AS anio_apertura
         FROM sucursales
         WHERE sucursal = 1
-          AND activa    = 1
           AND Fecha_Apertura IS NOT NULL
         ORDER BY Fecha_Apertura ASC
     ";
     $stSA = $conn->query($sqlSucursalesApertura);
     $sucursalesApertura = $stSA->fetchAll(PDO::FETCH_ASSOC);
+
+    // Separar las cerradas para calcular el ritmo de cierres
+    $cerradas = array_filter($sucursalesApertura, fn($s) => (int)$s['activa'] === 0 && $s['fecha_cierre']);
+    $totalCerradas = count($cerradas);
 
     // Ventas totales y primer año por tienda
     $sqlVentasTienda = "
@@ -367,23 +373,46 @@ try {
     $stVA = $conn->query($sqlVentasAnio);
     $ventasPorAnio = $stVA->fetchAll(PDO::FETCH_ASSOC);
 
-    // Calcular acumulado de tiendas por año en PHP
+    // Calcular acumulado de aperturas brutas por año en PHP
+    // y cierres por año para mostrar el neto
     $aperturasPorAnio = [];
+    $cierresPorAnio   = [];
     foreach ($sucursalesApertura as $s) {
         $a = (int)$s['anio_apertura'];
         $aperturasPorAnio[$a] = ($aperturasPorAnio[$a] ?? 0) + 1;
     }
+    foreach ($cerradas as $s) {
+        if ($s['fecha_cierre']) {
+            $ac = (int)date('Y', strtotime($s['fecha_cierre']));
+            $cierresPorAnio[$ac] = ($cierresPorAnio[$ac] ?? 0) + 1;
+        }
+    }
     ksort($aperturasPorAnio);
     $expansion = [];
-    $acum = 0;
-    foreach ($aperturasPorAnio as $anio => $nuevas) {
-        $acum += $nuevas;
-        $expansion[] = ['anio' => $anio, 'nuevas' => $nuevas, 'acumulado' => $acum];
+    $acumBruto = 0;
+    $acumNeto  = 0;
+    $allAnios  = array_unique(array_merge(array_keys($aperturasPorAnio), array_keys($cierresPorAnio)));
+    sort($allAnios);
+    foreach ($allAnios as $anio) {
+        $nuevas  = $aperturasPorAnio[$anio] ?? 0;
+        $cerr    = $cierresPorAnio[$anio]   ?? 0;
+        $acumBruto += $nuevas;
+        $acumNeto  += ($nuevas - $cerr);
+        $expansion[] = [
+            'anio'      => $anio,
+            'nuevas'    => $nuevas,
+            'cierres'   => $cerr,
+            'acumulado' => $acumBruto,   // bruto (total abiertos alguna vez)
+            'neto'      => $acumNeto,    // neto (activas si no hubiera más cierres pendientes)
+        ];
     }
+    // El acumulado neto real es el count de activas
+    $tiendasActivasActuales = $tiendasActualesTotal; // ya filtrado activa=1
 
-    // Proyección lineal hacia 40 tiendas en 2028
+    // Proyección lineal hacia 40 tiendas en 2028 (basada en activas)
     $anioActualExp  = (int)date('Y');
-    $tiendasActualesTotal = $acum;
+    $tiendasActualesTotal = $tiendasActualesTotal; // activa=1
+    $totalAbiertasAlguna  = count($sucursalesApertura); // todas las que han existido
     $metaExpansion  = 40;
     $anioMeta       = 2028;
     $aniosRestantes = max(1, $anioMeta - $anioActualExp);
@@ -409,43 +438,68 @@ try {
         ];
     }, $sucursalesApertura);
 
-    // ── Viabilidad: ritmo histórico y proyección realista ──
-    $hoyTs      = time();
+    // ── Viabilidad mejorada con cierres ──
+    $hoyTs        = time();
     $primeraFecha = !empty($sucursalesApertura) ? $sucursalesApertura[0]['Fecha_Apertura'] : null;
     $aniosDesdeInicio = $primeraFecha
         ? max(0.5, ($hoyTs - strtotime($primeraFecha)) / 31536000)
         : 1;
-    $ritmoHistorico = round($tiendasActualesTotal / $aniosDesdeInicio, 2); // aperturas/año promedio
 
-    // Ritmo reciente: tiendas abiertas en los últimos 2 años completos
+    // Ritmo bruto de aperturas (todo lo que se ha abierto, incluyendo cerradas)
+    $ritmoAperturasBruto = round($totalAbiertasAlguna / $aniosDesdeInicio, 2);
+
+    // Ritmo neto histórico (activas hoy / años desde inicio)
+    $ritmoHistorico = round($tiendasActualesTotal / $aniosDesdeInicio, 2);
+
+    // Tasa de cierre anual
+    $tasaCierre = round($totalCerradas / $aniosDesdeInicio, 2);
+
+    // Ritmo reciente BRUTO (aperturas brutas en últimos 2 años)
     $anioCorte = $anioActualExp - 2;
-    $recientes  = array_filter($sucursalesApertura, fn($s) => (int)$s['anio_apertura'] >= $anioCorte);
-    $ritmoReciente = count($recientes) > 0 ? round(count($recientes) / 2, 2) : $ritmoHistorico;
+    $recientesBruto = array_filter($sucursalesApertura, fn($s) => (int)$s['anio_apertura'] >= $anioCorte);
+    $recientesCerr  = array_filter($cerradas, function($s) use ($anioCorte) {
+        if (!$s['fecha_cierre']) return false;
+        return (int)date('Y', strtotime($s['fecha_cierre'])) >= $anioCorte;
+    });
+    $ritmoAperReciente = count($recientesBruto) > 0 ? round(count($recientesBruto) / 2, 2) : $ritmoAperturasBruto;
+    $ritmoCieReciente  = count($recientesCerr)  > 0 ? round(count($recientesCerr)  / 2, 2) : $tasaCierre;
+    $ritmoNetReciente  = round($ritmoAperReciente - $ritmoCieReciente, 2);
 
-    // Proyección al ritmo histórico
+    // Proyección NETA al ritmo reciente (considerando cierres)
+    $proyReciente  = (int)round($tiendasActualesTotal + $ritmoNetReciente  * $aniosRestantes);
+    // Proyección BRUTA al ritmo reciente (sin descontar cierres potenciales)
+    $proyBruta     = (int)round($tiendasActualesTotal + $ritmoAperReciente * $aniosRestantes);
+    // Proyección al ritmo histórico neto
     $proyHistorica = (int)round($tiendasActualesTotal + $ritmoHistorico * $aniosRestantes);
-    // Proyección al ritmo reciente (más conservador / realista)
-    $proyReciente  = (int)round($tiendasActualesTotal + $ritmoReciente  * $aniosRestantes);
 
-    // Ritmo necesario para llegar a 40
-    $ritmoNecesario = $aniosRestantes > 0 ? round(($metaExpansion - $tiendasActualesTotal) / $aniosRestantes, 1) : 0;
+    // Ritmo necesario (solo aperturas brutas necesarias para compensar cierres y llegar a 40)
+    $ritmoNecesario = $aniosRestantes > 0
+        ? round(($metaExpansion - $tiendasActualesTotal + $ritmoCieReciente * $aniosRestantes) / $aniosRestantes, 1)
+        : 0;
 
-    // ¿Es viable? ratio ritmo_reciente vs necesario
-    $ratioViabilidad = $ritmoNecesario > 0 ? round($ritmoReciente / $ritmoNecesario * 100, 1) : 100;
-    if ($ratioViabilidad >= 100)      $viabilidadLabel = 'viable';
-    elseif ($ratioViabilidad >= 70)   $viabilidadLabel = 'posible';
-    else                               $viabilidadLabel = 'desafiante';
+    // Viabilidad: ritmo neto reciente vs necesario
+    $ratioViabilidad = $ritmoNecesario > 0 ? round($ritmoAperReciente / $ritmoNecesario * 100, 1) : 100;
+    if ($ratioViabilidad >= 100)     $viabilidadLabel = 'viable';
+    elseif ($ratioViabilidad >= 70)  $viabilidadLabel = 'posible';
+    else                              $viabilidadLabel = 'desafiante';
 
     $viabilidad = [
-        'ritmo_historico'    => $ritmoHistorico,
-        'ritmo_reciente'     => $ritmoReciente,
-        'ritmo_necesario'    => $ritmoNecesario,
-        'proyeccion_historica' => min($metaExpansion + 5, $proyHistorica),
-        'proyeccion_reciente'  => min($metaExpansion + 5, $proyReciente),
-        'ratio_viabilidad'   => $ratioViabilidad,
-        'estado'             => $viabilidadLabel,
-        'anios_desde_inicio' => round($aniosDesdeInicio, 1),
-        'anos_restantes'     => $aniosRestantes,
+        'ritmo_historico'         => $ritmoHistorico,
+        'ritmo_apertura_bruto'    => $ritmoAperturasBruto,
+        'ritmo_reciente'          => $ritmoAperReciente,
+        'ritmo_neto_reciente'     => $ritmoNetReciente,
+        'tasa_cierre'             => $tasaCierre,
+        'tasa_cierre_reciente'    => $ritmoCieReciente,
+        'ritmo_necesario'         => $ritmoNecesario,
+        'proyeccion_neta'         => min($metaExpansion + 5, $proyReciente),
+        'proyeccion_bruta'        => min($metaExpansion + 5, $proyBruta),
+        'proyeccion_historica'    => min($metaExpansion + 5, $proyHistorica),
+        'ratio_viabilidad'        => $ratioViabilidad,
+        'estado'                  => $viabilidadLabel,
+        'anios_desde_inicio'      => round($aniosDesdeInicio, 1),
+        'anos_restantes'          => $aniosRestantes,
+        'total_cerradas'          => $totalCerradas,
+        'total_abiertas_alguna'   => $totalAbiertasAlguna,
     ];
 
     // ────────────────────────────────────────────
@@ -505,10 +559,12 @@ try {
         }, $detalleTiendas),
         'expansion' => [
             'sucursales'            => $listaSucursales,
-            'acumulado_por_anio'    => $expansion,
+            'acumulado_por_anio'    => $expansion,   // incluye nuevas, cierres, acumulado bruto, neto
             'ventas_por_anio'       => $ventasPorAnio,
             'proyeccion'            => $proyeccion,
             'tiendas_actuales'      => $tiendasActualesTotal,
+            'total_abiertas'        => $totalAbiertasAlguna,
+            'total_cerradas'        => $totalCerradas,
             'meta'                  => $metaExpansion,
             'anio_meta'             => $anioMeta,
             'aperturas_necesarias'  => $aperturasPorAnioNecesarias,

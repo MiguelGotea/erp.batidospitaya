@@ -539,9 +539,13 @@ function renderExpansion(exp) {
             data: {
                 labels: todosAnios,
                 datasets: [
-                    { type:'bar',  label:'Nuevas ese año', data: nuevasData, backgroundColor:'rgba(81,184,172,0.4)', borderRadius:4, yAxisID:'y1' },
-                    { type:'line', label:'Acumulado real', data: acumData,   borderColor: DA_COLORS.primary, backgroundColor:'rgba(81,184,172,0.1)', fill:true, tension:0.3, pointRadius:5 },
-                    { type:'line', label:'Proyección → 40', data: proyData,  borderColor: DA_COLORS.orange, borderDash:[6,4], pointRadius:3, fill:false, tension:0.2 },
+                    { type:'bar',  label:'Aperturas',   data: nuevasData, backgroundColor:'rgba(81,184,172,0.45)', borderRadius:4, yAxisID:'y1' },
+                    { type:'bar',  label:'Cierres',      data: todosAnios.map(a => { const r = exp.acumulado_por_anio.find(x=>x.anio===a); return r ? -(r.cierres||0) : 0; }),
+                                   backgroundColor:'rgba(217,83,79,0.4)', borderRadius:4, yAxisID:'y1' },
+                    { type:'line', label:'Acumulado bruto', data: acumData, borderColor: DA_COLORS.primary, backgroundColor:'rgba(81,184,172,0.07)', fill:true, tension:0.3, pointRadius:4 },
+                    { type:'line', label:'Neto activas',    data: todosAnios.map(a => { const r = exp.acumulado_por_anio.find(x=>x.anio===a); return r ? r.neto : null; }),
+                                   borderColor: DA_COLORS.green, borderDash:[4,2], pointRadius:3, fill:false, tension:0.3 },
+                    { type:'line', label:'Proyección → 40', data: proyData, borderColor: DA_COLORS.orange, borderDash:[6,4], pointRadius:3, fill:false, tension:0.2 },
                 ]
             },
             options: {
@@ -608,34 +612,52 @@ function renderExpansion(exp) {
 
 // ── VIABILIDAD ────────────────────────────────────────
 function renderViabilidad(v, tActual) {
-    const colores = { viable: '#3aaa82', posible: '#e07b39', desafiante: '#d9534f' };
-    const labels  = { viable: '✅ Viable', posible: '⚠️ Posible con esfuerzo', desafiante: '🔴 Desafiante' };
-    const color   = colores[v.estado] ?? DA_COLORS.muted;
+    const coloresMap = { viable: '#3aaa82', posible: '#e07b39', desafiante: '#d9534f' };
+    const labelMap   = { viable: 'Viable', posible: 'Posible con esfuerzo', desafiante: 'Desafiante' };
+    const color = coloresMap[v.estado] ?? DA_COLORS.muted;
 
-    setText('viaRitmoHistorico',   fmtN(v.ritmo_historico, 1) + '/año');
-    setText('viaRitmoReciente',    fmtN(v.ritmo_reciente,  1) + '/año');
-    setText('viaRitmoNecesario',   fmtN(v.ritmo_necesario, 1) + '/año');
-    setText('viaProyeccionReciente', fmtN(v.proyeccion_reciente) + ' tiendas');
+    setText('viaRitmoHistorico', fmtN(v.ritmo_historico, 1) + '/año');
+
+    const netoSufijo = (v.tasa_cierre_reciente > 0)
+        ? ' (' + fmtN(v.ritmo_neto_reciente, 1) + ' neto)'
+        : '';
+    setText('viaRitmoReciente',  fmtN(v.ritmo_reciente, 1) + '/año' + netoSufijo);
+    setText('viaRitmoNecesario', fmtN(v.ritmo_necesario, 1) + '/año');
+
+    const proyLabel = (v.proyeccion_neta !== v.proyeccion_bruta)
+        ? fmtN(v.proyeccion_neta) + ' \u2013 ' + fmtN(v.proyeccion_bruta) + ' tiendas'
+        : fmtN(v.proyeccion_neta) + ' tiendas';
+    setText('viaProyeccionReciente', proyLabel);
 
     const estadoEl = document.getElementById('viaEstado');
-    if (estadoEl) { estadoEl.textContent = labels[v.estado] ?? v.estado; estadoEl.style.color = color; }
-    setText('viaRatio', `${fmtPct(v.ratio_viabilidad)} del ritmo necesario`);
+    if (estadoEl) {
+        estadoEl.textContent = labelMap[v.estado] ?? v.estado;
+        estadoEl.style.color = color;
+    }
 
-    // Agregar líneas de proyección al chart de tiendas si ya existe
+    const cerText = (v.total_cerradas > 0)
+        ? ' | ' + v.total_cerradas + ' cerradas (\u2248' + fmtN(v.tasa_cierre, 2) + '/a\u00f1o)'
+        : '';
+    setText('viaRatio', fmtPct(v.ratio_viabilidad) + ' del ritmo necesario' + cerText);
+
     if (!chartExpTiendas) return;
-    const tieneReciente = chartExpTiendas.data.datasets.some(d => d.label === 'Proy. ritmo reciente');
-    if (tieneReciente) return;
+    const yaAgregado = chartExpTiendas.data.datasets.some(function(d) { return d.label === 'Proy. neta'; });
+    if (yaAgregado) return;
 
-    const anioActual = new Date().getFullYear();
+    const anioActual  = new Date().getFullYear();
     const chartLabels = chartExpTiendas.data.labels;
     const base = tActual || 0;
 
-    const proyRecData  = chartLabels.map(a => a < anioActual ? null : Math.min(45, base + (a - anioActual) * v.ritmo_reciente));
-    const proyHistData = chartLabels.map(a => a < anioActual ? null : Math.min(45, base + (a - anioActual) * v.ritmo_historico));
+    const proyNetaData  = chartLabels.map(function(a) {
+        return a < anioActual ? null : Math.round(Math.min(45, base + (a - anioActual) * v.ritmo_neto_reciente));
+    });
+    const proyBrutaData = chartLabels.map(function(a) {
+        return a < anioActual ? null : Math.round(Math.min(45, base + (a - anioActual) * v.ritmo_reciente));
+    });
 
     chartExpTiendas.data.datasets.push(
-        { type:'line', label:'Proy. ritmo reciente',   data: proyRecData,  borderColor: color,            borderDash:[3,3], pointRadius:0, fill:false, tension:0.2, borderWidth:2 },
-        { type:'line', label:'Proy. ritmo histórico',  data: proyHistData, borderColor: DA_COLORS.purple,  borderDash:[3,3], pointRadius:0, fill:false, tension:0.2, borderWidth:1.5 }
+        { type:'line', label:'Proy. neta',  data: proyNetaData,  borderColor: color,           borderDash:[3,3], pointRadius:0, fill:false, tension:0.2, borderWidth:2.5 },
+        { type:'line', label:'Proy. bruta', data: proyBrutaData, borderColor: DA_COLORS.yellow, borderDash:[4,2], pointRadius:0, fill:false, tension:0.2, borderWidth:1.5 }
     );
     chartExpTiendas.update();
 }
