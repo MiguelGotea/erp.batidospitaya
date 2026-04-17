@@ -1,8 +1,8 @@
 <?php
 /**
- * Dashboard Accionistas — Mesa de Socios y Accionistas
- * modulos/gerencia/dashboard_accionistas.php
- * Vista ejecutiva con los KPIs más relevantes de Batidos Pitaya
+ * Dashboard Global Pitaya
+ * modulos/gerencia/dashboard_global_pitaya.php
+ * Vista ejecutiva de KPIs estratégicos de Batidos Pitaya
  */
 require_once '../../core/auth/auth.php';
 require_once '../../core/layout/menu_lateral.php';
@@ -40,12 +40,12 @@ $hoy        = date('Y-m-d');
     <link rel="stylesheet" href="css/dashboard_global_pitaya.css?v=<?php echo mt_rand(1, 10000); ?>">
 </head>
 
-<body id="dashboardAccionistas">
+<body id="dashboardGlobalPitaya">
     <?php echo renderMenuLateral($cargoOperario); ?>
 
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, 'Dashboard Accionistas'); ?>
+            <?php echo renderHeader($usuario, false, 'Dashboard Global Pitaya'); ?>
 
             <div class="da-wrapper">
 
@@ -55,8 +55,8 @@ $hoy        = date('Y-m-d');
                 <div class="da-hero">
                     <div class="da-hero-left">
                         <div class="da-hero-badge">
-                            <i class="fas fa-crown"></i>
-                            Mesa de Socios &amp; Accionistas
+                            <i class="fas fa-chart-network"></i>
+                            Inteligencia de Negocio &amp; Crecimiento
                         </div>
                         <h1 class="da-hero-title">Centro de Inteligencia <span>Pitaya</span></h1>
                         <p class="da-hero-sub">Visión estratégica en tiempo real · <?php echo date('d \d\e F, Y'); ?></p>
@@ -159,17 +159,6 @@ $hoy        = date('Y-m-d');
                         </div>
                     </div>
 
-                    <!-- Ventas en USD -->
-                    <div class="da-kpi-card" id="cardVentasUSD">
-                        <div class="da-kpi-icon-wrap purple">
-                            <i class="fas fa-coins"></i>
-                        </div>
-                        <div class="da-kpi-body">
-                            <div class="da-kpi-label">Ventas en USD (÷7)</div>
-                            <div class="da-kpi-valor" id="kpiVentasUSD">—</div>
-                            <div class="da-kpi-sub" id="subVentasUSD">Córdobas → Dólares</div>
-                        </div>
-                    </div>
 
                     <!-- Transacciones -->
                     <div class="da-kpi-card" id="cardTransacciones">
@@ -461,7 +450,7 @@ $hoy        = date('Y-m-d');
             <div class="modal-content border-0 shadow-lg">
                 <div class="modal-header da-modal-header">
                     <h5 class="modal-title">
-                        <i class="fas fa-crown me-2"></i>Guía — Dashboard Accionistas
+                        <i class="fas fa-chart-network me-2"></i>Guía — Dashboard Global Pitaya
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
@@ -471,7 +460,7 @@ $hoy        = date('Y-m-d');
                             <div class="card border-0 bg-light h-100">
                                 <div class="card-body">
                                     <h6 class="fw-bold" style="color:#0E544C"><i class="fas fa-chart-line me-2"></i>Ventas</h6>
-                                    <p class="small text-muted mb-0">Datos extraídos de <code>VentasGlobalesAccessCSV</code>. Solo pedidos <strong>no anulados</strong>. Las ventas en USD usan la tasa de C$7 por dólar. El ticket promedio es el monto total ÷ número de pedidos únicos.</p>
+                                    <p class="small text-muted mb-0">Datos de <code>VentasGlobalesAccessCSV</code>. Solo pedidos <strong>no anulados</strong>. Usa el toggle <strong>C$ / US$</strong> en el encabezado para cambiar moneda. El tipo de cambio es configurable. El ticket promedio es monto total ÷ pedidos únicos.</p>
                                 </div>
                             </div>
                         </div>
