@@ -29,10 +29,11 @@ try {
     $resSem = $stmtSem->fetch(PDO::FETCH_ASSOC);
     if ($resSem) {
         $semActual = (int)$resSem['numero_semana'];
-        $semDesdeDefault = $semActual - 6;
+        $semDesdeDefault = $semActual - 5;
         $semHastaDefault = $semActual - 1;
     }
-} catch (Exception $e) { /* Silencioso */ }
+} catch (Exception $e) { /* Silencioso */
+}
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -286,7 +287,7 @@ try {
                             <i class="bi bi-snow2"></i> Capacidad de Congelados (Ajuste B)
                         </h6>
                         <p class="text-secondary small mb-0">
-                            Si la suma de los <b>Stock Máximos</b> de la Categoría B excede la capacidad de la sucursal, el sistema aplica un **Factor de Reducción Proporcional** (nunca mayor a 1.0). 
+                            Si la suma de los <b>Stock Máximos</b> de la Categoría B excede la capacidad de la sucursal, el sistema aplica un **Factor de Reducción Proporcional** (nunca mayor a 1.0).
                             Esto garantiza que el pedido sugerido no exceda lo que físicamente cabe en los congeladores.
                         </p>
                     </div>
@@ -294,7 +295,7 @@ try {
                     <!-- Glosario de Variables -->
                     <div class="mb-4">
                         <h6 class="fw-bold text-dark border-bottom pb-2">Glosario de Columnas y Variables</h6>
-                        
+
                         <div class="row g-3 mt-1">
                             <!-- Tabla Principal -->
                             <div class="col-md-6">
@@ -357,4 +358,5 @@ try {
     <!-- JavaScript Principal -->
     <script src="js/pedido_sugerido.js?v=<?php echo $version; ?>"></script>
 </body>
+
 </html>

@@ -12,9 +12,9 @@ let DA_LAST    = null;  // última respuesta del servidor
 function convertir(monto) {
     return DA_MONEDA === 'USD' ? monto / DA_TC : monto;
 }
-function fmtMoney(n) {
+function fmtMoney(n, skipConvert = false) {
     if (n === null || n === undefined) return '—';
-    const v = convertir(n);
+    const v = skipConvert ? n : convertir(n);
     if (DA_MONEDA === 'USD') return fmtUSD(v);
     return fmtC(v);
 }
@@ -61,9 +61,9 @@ function fmtC(n) {
     return 'C$ ' + parseFloat(n).toLocaleString('es-NI', { minimumFractionDigits: 0 });
 }
 // Abreviado para ejes (sin prefijo C$ en todos los casos, sólo sufijo)
-function fmtAxisMoney(n) {
+function fmtAxisMoney(n, skipConvert = false) {
     if (n === null || n === undefined) return '';
-    const v = convertir(n);
+    const v = skipConvert ? n : convertir(n);
     const sym = simbolo();
     if (Math.abs(v) >= 1_000_000) return sym + ' ' + (v / 1_000_000).toFixed(1) + 'M';
     if (Math.abs(v) >= 1_000)     return sym + ' ' + (v / 1_000).toFixed(0) + 'K';
@@ -294,17 +294,17 @@ function renderTendenciaMensual(meses, proyeccion, mesEstimado) {
                     callbacks: {
                         label: ctx => {
                             if (!ctx.raw) return null;
-                            if (ctx.dataset.yAxisID === 'y2') return ` ${ctx.dataset.label}: ${fmtMoney(ctx.raw)}/suc.`;
-                            return ` ${ctx.dataset.label}: ${fmtMoney(ctx.raw)}`;
+                            if (ctx.dataset.yAxisID === 'y2') return ` ${ctx.dataset.label}: ${fmtMoney(ctx.raw, true)}/suc.`;
+                            return ` ${ctx.dataset.label}: ${fmtMoney(ctx.raw, true)}`;
                         }
                     }
                 }
             },
             scales: {
                 x:  { ticks:{ color:DA_COLORS.muted, maxRotation:45, autoSkip:true, maxTicksLimit:18 }, grid:{ color:DA_COLORS.grid } },
-                y:  { position:'left',  ticks:{ color:DA_COLORS.muted, callback: v => fmtAxisMoney(v) }, grid:{ color:DA_COLORS.grid },
+                y:  { position:'left',  ticks:{ color:DA_COLORS.muted, callback: v => fmtAxisMoney(v, true) }, grid:{ color:DA_COLORS.grid },
                       title:{ display:true, text:'Ventas totales', color:DA_COLORS.muted, font:{size:10} } },
-                y2: { position:'right', ticks:{ color:DA_COLORS.yellow, callback: v => fmtAxisMoney(v) }, grid:{ display:false },
+                y2: { position:'right', ticks:{ color:DA_COLORS.yellow, callback: v => fmtAxisMoney(v, true) }, grid:{ display:false },
                       title:{ display:true, text:'Venta/sucursal', color:DA_COLORS.yellow, font:{size:10} } },
             }
         }
@@ -461,8 +461,8 @@ function renderMixCategorias(cats) {
         data: {
             labels: cats.map(c => c.categoria),
             datasets: [{
-                label: 'Ventas C$',
-                data: cats.map(c => parseFloat(c.monto)),
+                label: 'Ventas',
+                data: cats.map(c => convertir(parseFloat(c.monto))),
                 backgroundColor: cats.map((_, i) => PALETTE[i % PALETTE.length]),
                 borderRadius: 6, borderWidth: 0,
             }]
@@ -472,10 +472,10 @@ function renderMixCategorias(cats) {
             responsive: true,
             plugins: {
                 legend: { display: false },
-                tooltip: { callbacks: { label: ctx => ' ' + fmtC(ctx.raw) } }
+                tooltip: { callbacks: { label: ctx => ' ' + fmtMoney(ctx.raw, true) } }
             },
             scales: {
-                x: { ticks: { color: DA_COLORS.muted, callback: v => fmtC(v) }, grid: { color: DA_COLORS.grid } },
+                x: { ticks: { color: DA_COLORS.muted, callback: v => fmtAxisMoney(v, true) }, grid: { color: DA_COLORS.grid } },
                 y: { ticks: { color: DA_COLORS.muted }, grid: { color: DA_COLORS.grid } }
             }
         }
@@ -697,10 +697,10 @@ function renderExpansion(exp) {
             },
             options: {
                 responsive:true,
-                plugins:{ legend:{display:false}, tooltip:{callbacks:{label:ctx=>` ${fmtMoney(convertir(ctx.raw) === ctx.raw ? ctx.raw * DA_TC : ctx.raw)}`}} },
+                plugins:{ legend:{display:false}, tooltip:{callbacks:{label:ctx=>` ${fmtMoney(ctx.raw, true)}`}} },
                 scales: {
                     x:{ticks:{color:DA_COLORS.muted},grid:{color:DA_COLORS.grid}},
-                    y:{ticks:{color:DA_COLORS.muted, callback:v=>simbolo()+' '+fmtN(v)},grid:{color:DA_COLORS.grid}}
+                    y:{ticks:{color:DA_COLORS.muted, callback:v=>fmtAxisMoney(v, true)},grid:{color:DA_COLORS.grid}}
                 }
             }
         });
