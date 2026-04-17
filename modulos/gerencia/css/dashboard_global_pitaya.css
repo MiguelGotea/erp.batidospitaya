@@ -218,6 +218,22 @@ body { background: var(--neu-bg); }
 }
 .da-section-title i { color: var(--pitaya-teal); font-size: 0.9rem; }
 
+/* Badge de período dentro de section-title — queda entre el texto y la línea ::after */
+.da-section-badge {
+    background: var(--neu-bg);
+    box-shadow: var(--neu-in-sm);
+    color: var(--pitaya-teal);
+    font-size: 0.67rem;
+    font-weight: 700;
+    padding: 3px 11px;
+    border-radius: 50px;
+    letter-spacing: 0.2px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    /* Sin order: el badge queda naturalmente antes del ::after (flex:1)
+       que sigue extendiéndose hasta el borde derecho del contenedor */
+}
+
 /* ── KPI GRID ───────────────────────────────────────────────── */
 .da-kpi-grid {
     display: grid;

@@ -118,6 +118,7 @@ function setLoader(on) {
 }
 
 function renderTodo(data) {
+    actualizarBadgesPeriodo(data.periodo);
     renderVentas(data.ventas, data.meta);
     renderTendenciaMensual(data.tendencia_mensual, data.proyeccion_tendencia || null, data.mes_actual_estimado || null);
     renderRanking(data.ranking_tiendas, data.periodo);
@@ -133,6 +134,29 @@ function renderTodo(data) {
         if (data.expansion.viabilidad) renderViabilidad(data.expansion.viabilidad, data.expansion.tiendas_actuales);
     }
     renderAlertas(data);
+}
+
+// ── Badges de período ─────────────────────────────────────────
+/**
+ * Actualiza todas las etiquetas de rango de fechas del dashboard.
+ * periodo = { ini: 'YYYY-MM-DD', fin: 'YYYY-MM-DD', label: '...' }
+ */
+function actualizarBadgesPeriodo(periodo) {
+    if (!periodo) return;
+    const texto = `${periodo.ini} → ${periodo.fin}`;
+    const ids = [
+        'badgePeriodoVentas',
+        'badgePeriodoTendencia',
+        'badgePeriodoRanking',
+        'badgePeriodoClub',
+        'badgePeriodoRFM',
+        'badgePeriodoParticipacion',
+        'badgePeriodoProductos',
+        'badgePeriodoTop10',
+        'badgePeriodoMix',
+        'badgePeriodoTablaTiendas',
+    ];
+    ids.forEach(id => setText(id, texto));
 }
 
 // ── 1. VENTAS ─────────────────────────────────────────
@@ -295,8 +319,6 @@ function renderRanking(ranking, periodo) {
     if (!cont) return;
 
     const max = ranking.length ? Math.max(...ranking.map(r => r.ventas)) : 1;
-    const badgePer = document.getElementById('badgePeriodoRanking');
-    if (badgePer && periodo) badgePer.textContent = `${periodo.ini} → ${periodo.fin}`;
 
     cont.innerHTML = ranking.slice(0, 12).map((r, i) => {
         const pct    = max > 0 ? (r.ventas / max * 100) : 0;

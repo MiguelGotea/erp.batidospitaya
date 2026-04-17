@@ -117,6 +117,7 @@ $hoy = date('Y-m-d');
                 <!-- ══════════════════════════════════════════ -->
                 <div class="da-section-title">
                     <i class="fas fa-chart-line"></i> Desempeño de Ventas
+                    <span class="da-badge-period da-section-badge" id="badgePeriodoVentas">—</span>
                 </div>
 
                 <div class="da-kpi-grid" id="gridVentas">
@@ -197,8 +198,11 @@ $hoy = date('Y-m-d');
                     <div class="da-card da-card-lg">
                         <div class="da-card-header">
                             <h3><i class="fas fa-chart-bar me-2"></i>Tendencia de Ventas</h3>
-                            <div class="da-card-tabs" id="tabsTendencia">
-                                <button class="da-tab active" data-tab="mensual">Mensual</button>
+                            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                                <span class="da-badge-period" id="badgePeriodoTendencia">—</span>
+                                <div class="da-card-tabs" id="tabsTendencia">
+                                    <button class="da-tab active" data-tab="mensual">Mensual</button>
+                                </div>
                             </div>
                         </div>
                         <div class="da-card-body">
@@ -225,6 +229,7 @@ $hoy = date('Y-m-d');
                 <!-- ══════════════════════════════════════════ -->
                 <div class="da-section-title">
                     <i class="fas fa-users"></i> Club Pitaya — Inteligencia de Clientes
+                    <span class="da-badge-period da-section-badge" id="badgePeriodoClub">—</span>
                 </div>
 
                 <div class="da-kpi-grid da-kpi-grid-5" id="gridClub">
@@ -290,6 +295,7 @@ $hoy = date('Y-m-d');
                     <div class="da-card">
                         <div class="da-card-header">
                             <h3><i class="fas fa-chart-pie me-2"></i>Segmentos RFM</h3>
+                            <span class="da-badge-period" id="badgePeriodoRFM">—</span>
                         </div>
                         <div class="da-card-body">
                             <canvas id="chartRFMSegmentos" height="200"></canvas>
@@ -299,6 +305,7 @@ $hoy = date('Y-m-d');
                     <div class="da-card">
                         <div class="da-card-header">
                             <h3><i class="fas fa-user-friends me-2"></i>Participación Club en Ventas</h3>
+                            <span class="da-badge-period" id="badgePeriodoParticipacion">—</span>
                         </div>
                         <div class="da-card-body">
                             <canvas id="chartParticipacionClub" height="200"></canvas>
@@ -320,12 +327,14 @@ $hoy = date('Y-m-d');
                 <!-- ══════════════════════════════════════════ -->
                 <div class="da-section-title">
                     <i class="fas fa-star"></i> Productos Estrella &amp; Mix de Ventas
+                    <span class="da-badge-period da-section-badge" id="badgePeriodoProductos">—</span>
                 </div>
 
                 <div class="da-row-2col">
                     <div class="da-card">
                         <div class="da-card-header">
                             <h3><i class="fas fa-blender me-2"></i>Top 10 Productos</h3>
+                            <span class="da-badge-period" id="badgePeriodoTop10">—</span>
                         </div>
                         <div class="da-card-body da-scroll">
                             <div id="topProductos" class="da-top-list"></div>
@@ -335,6 +344,7 @@ $hoy = date('Y-m-d');
                     <div class="da-card">
                         <div class="da-card-header">
                             <h3><i class="fas fa-chart-doughnut me-2"></i>Mix por Categoría</h3>
+                            <span class="da-badge-period" id="badgePeriodoMix">—</span>
                         </div>
                         <div class="da-card-body">
                             <canvas id="chartMixCategorias" height="220"></canvas>
@@ -503,7 +513,10 @@ $hoy = date('Y-m-d');
                 <div class="da-card da-card-full">
                     <div class="da-card-header">
                         <h3><i class="fas fa-store-alt me-2"></i>Todas las Tiendas</h3>
-                        <input type="text" id="buscadorTiendas" class="da-input-search" placeholder="Buscar tienda…">
+                        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                            <span class="da-badge-period" id="badgePeriodoTablaTiendas">—</span>
+                            <input type="text" id="buscadorTiendas" class="da-input-search" placeholder="Buscar tienda…">
+                        </div>
                     </div>
                     <div class="da-card-body p-0">
                         <div class="table-responsive">
