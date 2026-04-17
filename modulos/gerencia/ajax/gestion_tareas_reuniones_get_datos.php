@@ -188,7 +188,7 @@ function agruparPorMes($items)
         $itemsByDate[$fecha][] = $item;
     }
 
-    // Ordenar items de cada día por prioridad
+    // Ordenar items de cada día: PRIMERO activos por hora, LUEGO finalizados/cancelados por hora
     $prioridadWeight = function ($p) {
         switch ($p) {
             case 'alta': return 1;
@@ -198,21 +198,28 @@ function agruparPorMes($items)
         }
     };
 
+    $getHora = function ($item) {
+        return $item['tipo'] === 'reunion'
+            ? substr($item['fecha_reunion'] ?? '', 11, 8)
+            : ($item['hora_tarea'] ?? '23:59:59');
+    };
+
+    $sortByHora = function ($a, $b) use ($prioridadWeight, $getHora) {
+        $ha = $getHora($a);
+        $hb = $getHora($b);
+        if ($ha !== $hb) return strcmp($ha, $hb);
+        $wa = $prioridadWeight($a['prioridad'] ?? 'media');
+        $wb = $prioridadWeight($b['prioridad'] ?? 'media');
+        if ($wa !== $wb) return $wa - $wb;
+        return $a['id'] - $b['id'];
+    };
+
     foreach ($itemsByDate as &$itemsDia) {
-        usort($itemsDia, function ($a, $b) use ($prioridadWeight) {
-            // Primario: Ordenar por hora
-            $ha = $a['tipo'] === 'reunion' ? substr($a['fecha_reunion'], 11, 8) : ($a['hora_tarea'] ?? '23:59:59');
-            $hb = $b['tipo'] === 'reunion' ? substr($b['fecha_reunion'], 11, 8) : ($b['hora_tarea'] ?? '23:59:59');
-            
-            if ($ha !== $hb) return strcmp($ha, $hb);
-
-            // Secundario: Mismo horario, ordenar por prioridad
-            $wa = $prioridadWeight($a['prioridad'] ?? 'media');
-            $wb = $prioridadWeight($b['prioridad'] ?? 'media');
-            if ($wa !== $wb) return $wa - $wb;
-
-            return $a['id'] - $b['id'];
-        });
+        $activos     = array_values(array_filter($itemsDia, fn($i) => !in_array($i['estado'], ['finalizado', 'cancelado'])));
+        $terminados  = array_values(array_filter($itemsDia, fn($i) =>  in_array($i['estado'], ['finalizado', 'cancelado'])));
+        usort($activos,    $sortByHora);
+        usort($terminados, $sortByHora);
+        $itemsDia = array_merge($activos, $terminados);
     }
     unset($itemsDia);
 

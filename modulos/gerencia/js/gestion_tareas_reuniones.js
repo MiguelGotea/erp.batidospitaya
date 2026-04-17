@@ -933,8 +933,49 @@ function aplicarSugerencia(id) {
             card.find(`#ts-h-${id}`).text(hh);
             card.find(`#ts-m-${id}`).text(mm);
             ejecutarCambioHorario(id, horaFinal, null);
+            // Reordenar inmediatamente en el DOM
+            setTimeout(() => reordenarCardsEnGrupo(grupoBody[0]), 150);
         }
     });
+}
+
+/**
+ * Reordena físicamente las .item-card-row dentro de un grupo-body
+ * según la hora mostrada en el time-selector-premium.
+ * Las tarjetas sin selector de hora (finalizadas/canceladas) van al final.
+ */
+function reordenarCardsEnGrupo(bodyEl) {
+    const $body = $(bodyEl);
+    const cards = $body.find('.item-card-row').toArray();
+
+    cards.sort((a, b) => {
+        const idA = $(a).data('id');
+        const idB = $(b).data('id');
+
+        // ¿Tiene selector de hora activo?
+        const hA = $(`#ts-h-${idA}`).text().trim();
+        const mA = $(`#ts-m-${idA}`).text().trim();
+        const hB = $(`#ts-h-${idB}`).text().trim();
+        const mB = $(`#ts-m-${idB}`).text().trim();
+
+        const tieneHoraA = hA !== '';
+        const tieneHoraB = hB !== '';
+
+        // Sin selector (finalizadas) van al final
+        if (!tieneHoraA && tieneHoraB) return 1;
+        if (tieneHoraA && !tieneHoraB) return -1;
+        if (!tieneHoraA && !tieneHoraB) return 0;
+
+        const minA = parseInt(hA) * 60 + parseInt(mA);
+        const minB = parseInt(hB) * 60 + parseInt(mB);
+        return minA - minB;
+    });
+
+    // Reinsertar en el nuevo orden (preserva los separadores y hints que no son cards)
+    cards.forEach(c => $body.append(c));
+
+    revisarSolapamientos();
+    dibujarLineaAhora();
 }
 
 function dibujarLineaAhora() {
