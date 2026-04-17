@@ -830,7 +830,14 @@ function renderExpansion(exp) {
                     legend: { display: true, labels: { color: DA_COLORS.muted, font: { size: 10 }, boxWidth: 10 } },
                     tooltip: {
                         callbacks: {
-                            label: ctx => ` ${ctx.dataset.label}: ${fmtMoney(ctx.raw, true)}`
+                            label: ctx => ` ${ctx.dataset.label}: ${fmtMoney(ctx.raw, true)}`,
+                            beforeBody: items => {
+                                const label = items[0].label;
+                                if (typeof label === 'string' && label.includes('*') && exp.anio_actual_estimado) {
+                                    return `Real a la fecha: ${fmtMoney(exp.anio_actual_estimado.ventas_reales)}\n`;
+                                }
+                                return null;
+                            }
                         }
                     }
                 },

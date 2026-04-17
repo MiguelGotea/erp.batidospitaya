@@ -771,7 +771,11 @@ try {
             'sucursales'            => $listaSucursales,
             'acumulado_por_anio'    => $expansion,   // incluye nuevas, cierres, acumulado bruto, neto
             'ventas_por_anio'       => $ventasPorAnio,
-            'anio_actual_estimado'  => $ventasAnioActualEst > 0 ? ['anio' => $anioActual, 'ventas' => $ventasAnioActualEst] : null,
+            'anio_actual_estimado'  => $ventasAnioActualEst > 0 ? [
+                'anio' => $anioActual, 
+                'ventas' => $ventasAnioActualEst,
+                'ventas_reales' => $ventasMesesPasados + $ventasHastaAyer
+            ] : null,
             'proyeccion_anual'      => $proyeccionAnual,
             'proyeccion'            => $proyeccion,
             'tiendas_actuales'      => $tiendasActualesTotal,
