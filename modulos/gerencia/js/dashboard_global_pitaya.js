@@ -132,7 +132,7 @@ function renderTodo(data) {
     renderTablaTiendas(data.detalle_tiendas);
     if (data.expansion) {
         renderExpansion(data.expansion);
-        if (data.expansion.viabilidad) renderViabilidad(data.expansion.viabilidad, data.expansion.tiendas_actuales);
+        if (data.expansion.viabilidad) renderViabilidad(data.expansion.viabilidad, data.expansion);
     }
     renderAlertas(data);
 }
@@ -878,7 +878,7 @@ function renderExpansion(exp) {
 }
 
 // ── VIABILIDAD ─────────────────────────────────────
-function renderViabilidad(v, tActual) {
+function renderViabilidad(v, exp) {
     const coloresMap = { viable: '#3aaa82', posible: '#e07b39', desafiante: '#d9534f' };
     const labelMap = { viable: 'Viable', posible: 'Posible con esfuerzo', desafiante: 'Desafiante' };
     const color = coloresMap[v.estado] ?? DA_COLORS.muted;
@@ -898,7 +898,7 @@ function renderViabilidad(v, tActual) {
 
     const anioActual = new Date().getFullYear();
     const chartLabels = chartExpTiendas.data.labels;
-    const base = tActual || 0;
+    const base = exp.tiendas_actuales || 0;
 
     // Escenario histórico bruto: anclar en el último valor real del año actual
     const lastReal = exp.acumulado_por_anio.find(x => x.anio === anioActual)?.neto || base;
