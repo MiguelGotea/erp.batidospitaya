@@ -692,7 +692,7 @@ function renderExpansion(exp) {
                     {
                         type: 'bar', label: 'Aperturas/año',
                         data: nuevasData,
-                        backgroundColor: 'rgba(81,184,172,0.45)', borderRadius: 4, yAxisID: 'y1'
+                        backgroundColor: 'rgba(81,184,172,0.45)', borderRadius: 4, yAxisID: 'y'
                     },
                     {
                         type: 'line', label: 'Acumulado real',
@@ -750,8 +750,7 @@ function renderExpansion(exp) {
                 },
                 scales: {
                     x: { ticks: { color: DA_COLORS.muted }, grid: { color: DA_COLORS.grid } },
-                    y: { ticks: { color: DA_COLORS.muted, stepSize: 2 }, grid: { color: DA_COLORS.grid }, title: { display: true, text: 'Tiendas acum.', color: DA_COLORS.muted } },
-                    y1: { position: 'right', ticks: { color: DA_COLORS.muted }, grid: { display: false }, title: { display: true, text: 'Nuevas/año', color: DA_COLORS.muted } },
+                    y: { ticks: { color: DA_COLORS.muted, stepSize: 2 }, grid: { color: DA_COLORS.grid }, title: { display: true, text: 'Tiendas', color: DA_COLORS.muted } },
                 }
             }
         });
