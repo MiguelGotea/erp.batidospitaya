@@ -221,11 +221,11 @@ body { background: var(--neu-bg); }
 /* ── KPI GRID ───────────────────────────────────────────────── */
 .da-kpi-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 18px;
     margin-bottom: 18px;
 }
-.da-kpi-grid-5 { grid-template-columns: repeat(auto-fill, minmax(185px, 1fr)); }
+.da-kpi-grid-5 { grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); }
 
 .da-kpi-card {
     background: var(--neu-bg);
