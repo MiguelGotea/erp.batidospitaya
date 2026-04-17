@@ -98,12 +98,14 @@ try {
     // 3. TENDENCIA VENTAS POR MES (últimos 12 meses)
     // ────────────────────────────────────────────
     $sqlTendMensual = "
-        SELECT
-            DATE_FORMAT(Fecha, '%Y-%m') AS mes,
-            SUM(CASE WHEN Anulado = 0 THEN Precio ELSE 0 END) AS total
-        FROM VentasGlobalesAccessCSV
-        WHERE Fecha >= DATE_SUB(:hoy, INTERVAL 12 MONTH)
-        GROUP BY mes
+        SELECT mes, total FROM (
+            SELECT
+                DATE_FORMAT(Fecha, '%Y-%m') AS mes,
+                SUM(CASE WHEN Anulado = 0 THEN Precio ELSE 0 END) AS total
+            FROM VentasGlobalesAccessCSV
+            WHERE Fecha >= DATE_SUB(:hoy, INTERVAL 12 MONTH)
+            GROUP BY DATE_FORMAT(Fecha, '%Y-%m')
+        ) sub
         ORDER BY mes ASC
     ";
     $stTM = $conn->prepare($sqlTendMensual);
@@ -216,10 +218,13 @@ try {
 
     // Nuevos socios por mes (últimos 8 meses)
     $sqlNuevosMes = "
-        SELECT DATE_FORMAT(fecha_registro,'%Y-%m') AS mes, COUNT(*) AS total
-        FROM clientesclub
-        WHERE fecha_registro >= DATE_SUB(:hoy, INTERVAL 8 MONTH)
-        GROUP BY mes ORDER BY mes ASC
+        SELECT mes, total FROM (
+            SELECT DATE_FORMAT(fecha_registro,'%Y-%m') AS mes, COUNT(*) AS total
+            FROM clientesclub
+            WHERE fecha_registro >= DATE_SUB(:hoy, INTERVAL 8 MONTH)
+            GROUP BY DATE_FORMAT(fecha_registro,'%Y-%m')
+        ) sub
+        ORDER BY mes ASC
     ";
     $stNM = $conn->prepare($sqlNuevosMes);
     $stNM->execute([':hoy' => $hoy]);
@@ -249,12 +254,14 @@ try {
     // 7. MIX POR CATEGORÍA (NombreGrupo)
     // ────────────────────────────────────────────
     $sqlCat = "
-        SELECT
-            COALESCE(NombreGrupo, 'Otro') AS categoria,
-            SUM(CASE WHEN Anulado = 0 THEN Precio ELSE 0 END) AS monto
-        FROM VentasGlobalesAccessCSV
-        WHERE Fecha BETWEEN :ini AND :fin
-        GROUP BY categoria
+        SELECT categoria, monto FROM (
+            SELECT
+                COALESCE(NombreGrupo, 'Otro') AS categoria,
+                SUM(CASE WHEN Anulado = 0 THEN Precio ELSE 0 END) AS monto
+            FROM VentasGlobalesAccessCSV
+            WHERE Fecha BETWEEN :ini AND :fin
+            GROUP BY COALESCE(NombreGrupo, 'Otro')
+        ) sub
         ORDER BY monto DESC
         LIMIT 8
     ";
@@ -272,27 +279,33 @@ try {
         ['segmento' => 'Perdidos',   'count' => 0],
         ['segmento' => 'Nuevos',     'count' => 0],
     ];
+    // Calcular segmentos RFM en PHP para evitar limitaciones de MySQL con GROUP BY alias
     $sqlSeg = "
-        SELECT
-            CASE
-                WHEN DATEDIFF(:hoy, MAX(Fecha)) <= 15 AND COUNT(DISTINCT CodPedido) >= 10 THEN 'Campeones'
-                WHEN DATEDIFF(:hoy2, MAX(Fecha)) <= 30 AND COUNT(DISTINCT CodPedido) >= 5  THEN 'Fieles'
-                WHEN DATEDIFF(:hoy3, MAX(Fecha)) BETWEEN 31 AND 60                         THEN 'En Riesgo'
-                WHEN DATEDIFF(:hoy4, MAX(Fecha)) > 60                                      THEN 'Perdidos'
-                ELSE 'Nuevos'
-            END AS segmento,
-            COUNT(*) AS total
-        FROM (
-            SELECT CodCliente, MAX(Fecha) AS Fecha, COUNT(DISTINCT CodPedido) AS CodPedido
-            FROM VentasGlobalesAccessCSV
-            WHERE Anulado = 0 AND CodCliente > 0
-            GROUP BY CodCliente
-        ) t
-        GROUP BY segmento
+        SELECT CodCliente,
+               MAX(Fecha)               AS ultima_compra,
+               COUNT(DISTINCT CodPedido) AS frecuencia
+        FROM VentasGlobalesAccessCSV
+        WHERE Anulado = 0 AND CodCliente > 0
+        GROUP BY CodCliente
     ";
-    $stSeg = $conn->prepare($sqlSeg);
-    $stSeg->execute([':hoy' => $hoy, ':hoy2' => $hoy, ':hoy3' => $hoy, ':hoy4' => $hoy]);
-    $segmentos = $stSeg->fetchAll(PDO::FETCH_ASSOC);
+    $stSeg = $conn->query($sqlSeg);
+    $clientesRFM = $stSeg->fetchAll(PDO::FETCH_ASSOC);
+
+    $contadores = ['Campeones' => 0, 'Fieles' => 0, 'En Riesgo' => 0, 'Perdidos' => 0, 'Nuevos' => 0];
+    $hoyTs = strtotime($hoy);
+    foreach ($clientesRFM as $c) {
+        $diasInactivo = (int)(($hoyTs - strtotime($c['ultima_compra'])) / 86400);
+        $freq         = (int)$c['frecuencia'];
+        if ($diasInactivo <= 15 && $freq >= 10)       $contadores['Campeones']++;
+        elseif ($diasInactivo <= 30 && $freq >= 5)    $contadores['Fieles']++;
+        elseif ($diasInactivo <= 60)                  $contadores['En Riesgo']++;
+        elseif ($diasInactivo > 60)                   $contadores['Perdidos']++;
+        else                                          $contadores['Nuevos']++;
+    }
+    $segmentos = [];
+    foreach ($contadores as $seg => $cnt) {
+        $segmentos[] = ['segmento' => $seg, 'total' => $cnt];
+    }
 
     // ────────────────────────────────────────────
     // 9. TABLA DETALLE POR TIENDA (cumplimiento, ticket, club)
