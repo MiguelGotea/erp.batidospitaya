@@ -173,19 +173,27 @@ try {
     $idRecetaProducto = null;
 
     if ($tieneReceta) {
-        // CORREGIDO: Buscar si ya existe una receta para este producto directamente en la tabla de recetas
-        // Esto evita el error de "Duplicate entry" si el producto no tiene el ID de receta vinculado pero la receta ya existe
-        $sqlCheckReceta = "SELECT id FROM receta_producto_global WHERE id_presentacion_producto = :id_p";
-        $stmtCheckReceta = $conn->prepare($sqlCheckReceta);
-        $stmtCheckReceta->execute([':id_p' => $idProducto]);
-        $idRecetaExistente = $stmtCheckReceta->fetchColumn();
+        // 1. PRIORIDAD: Buscar si el producto ya tiene un Id_receta_producto vinculado
+        $sqlRecetaActual = "SELECT Id_receta_producto FROM producto_presentacion WHERE id = :id";
+        $stmtRecetaActual = $conn->prepare($sqlRecetaActual);
+        $stmtRecetaActual->execute([':id' => $idProducto]);
+        $idRecetaProducto = $stmtRecetaActual->fetchColumn();
 
-        if ($idRecetaExistente) {
+        // 2. RESPALDO: Si no tiene el ID vinculado, buscar si existe una receta con este id_presentacion_producto
+        if (!$idRecetaProducto) {
+            $sqlCheckReceta = "SELECT id FROM receta_producto_global WHERE id_presentacion_producto = :id_p LIMIT 1";
+            $stmtCheckReceta = $conn->prepare($sqlCheckReceta);
+            $stmtCheckReceta->execute([':id_p' => $idProducto]);
+            $idRecetaProducto = $stmtCheckReceta->fetchColumn();
+        }
+
+        if ($idRecetaProducto) {
             // Actualizar receta existente
             $sqlUpdateReceta = "UPDATE receta_producto_global SET
                                nombre = :nombre,
                                id_tipo_receta = :id_tipo,
                                descripcion = :descripcion,
+                               id_presentacion_producto = :id_p,
                                usuario_modificacion = :usuario_mod,
                                fecha_modificacion = NOW()
                                WHERE id = :id_receta";
@@ -195,11 +203,10 @@ try {
                 ':nombre' => $nombreReceta,
                 ':id_tipo' => $idTipoReceta,
                 ':descripcion' => $descripcionReceta,
+                ':id_p' => $idProducto,
                 ':usuario_mod' => $usuarioId,
-                ':id_receta' => $idRecetaExistente
+                ':id_receta' => $idRecetaProducto
             ]);
-
-            $idRecetaProducto = $idRecetaExistente;
         } else {
             // Crear nueva receta
             $sqlInsertReceta = "INSERT INTO receta_producto_global 
@@ -218,52 +225,75 @@ try {
             $idRecetaProducto = $conn->lastInsertId();
         }
 
-        // Actualizar el producto con el ID de la receta (por si no estaba vinculado)
+        // Asegurarse de que el producto esté vinculado a ESTA receta (por si acaso)
         $sqlUpdateProductoReceta = "UPDATE producto_presentacion SET Id_receta_producto = :id_receta WHERE id = :id";
         $stmtUpdateProductoReceta = $conn->prepare($sqlUpdateProductoReceta);
         $stmtUpdateProductoReceta->execute([
             ':id_receta' => $idRecetaProducto,
             ':id' => $idProducto
         ]);
+
     } else {
-        // CORREGIDO: Si NO tiene receta, asegurarse de limpiar el campo en el producto
+        // Si NO tiene receta, asegurarse de limpiar el campo en el producto
         $sqlUpdateProductoReceta = "UPDATE producto_presentacion SET Id_receta_producto = NULL WHERE id = :id";
         $stmtUpdateProductoReceta = $conn->prepare($sqlUpdateProductoReceta);
         $stmtUpdateProductoReceta->execute([':id' => $idProducto]);
     }
 
-    // Confirmar transacción de producto y receta básica
-    // (Mantendremos la transacción abierta para los componentes, variaciones y fichas)
+    // GESTIONAR COMPONENTES (Si hay receta identificada o creada)
+    $debugInfo = [
+        'id_receta' => $idRecetaProducto,
+        'num_componentes_recibidos' => 0
+    ];
 
-    // 1. GESTIONAR COMPONENTES (Si hay receta)
-    if ($idRecetaProducto) {
-        $componentes = isset($_POST['componentes']) ? json_decode($_POST['componentes'], true) : [];
-        if (json_last_error() === JSON_ERROR_NONE) {
-            // Eliminar componentes anteriores
-            $sqlDeleteComp = "DELETE FROM componentes_receta_producto WHERE id_receta_producto_global = :id_receta";
-            $stmtDeleteComp = $conn->prepare($sqlDeleteComp);
-            $stmtDeleteComp->execute([':id_receta' => $idRecetaProducto]);
+    if ($idRecetaProducto && $idRecetaProducto > 0) {
+        $componentesRaw = isset($_POST['componentes']) ? $_POST['componentes'] : '[]';
+        $componentes = json_decode($componentesRaw, true);
+        
+        // VALIDACIÓN ESTRICTA: Si no es un JSON válido, lanzamos error para que no sea una falla silenciosa
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            throw new Exception('Error de formato en el listado de componentes: ' . json_last_error_msg());
+        }
 
-            // Insertar nuevos componentes
-            if (!empty($componentes)) {
-                $sqlInsertComp = "INSERT INTO componentes_receta_producto 
-                                 (id_receta_producto_global, id_presentacion_producto, nombre, cantidad, notas, orden, usuario_creacion)
-                                 VALUES (:id_receta, :id_pp, :nombre, :cant, :notas, :orden, :user)";
-                $stmtInsertComp = $conn->prepare($sqlInsertComp);
-                foreach ($componentes as $index => $comp) {
-                    $stmtInsertComp->execute([
-                        ':id_receta' => $idRecetaProducto,
-                        ':id_pp' => $comp['id_presentacion_producto'],
-                        ':nombre' => $comp['nombre_producto'], // Agregado campo nombre obligatorio
-                        ':cant' => $comp['cantidad'],
-                        ':notas' => $comp['notas'] ?? '',
-                        ':orden' => $index + 1,
-                        ':user' => $usuarioId
-                    ]);
+        if (!is_array($componentes)) {
+            throw new Exception('El listado de componentes debe ser un arreglo.');
+        }
+
+        $debugInfo['num_componentes_recibidos'] = count($componentes);
+
+        // 1. Eliminar TODOS los componentes anteriores vinculados a esta receta específica
+        $sqlDeleteComp = "DELETE FROM componentes_receta_producto WHERE id_receta_producto_global = :id_receta";
+        $stmtDeleteComp = $conn->prepare($sqlDeleteComp);
+        $stmtDeleteComp->execute([':id_receta' => $idRecetaProducto]);
+
+        // 2. Insertar los nuevos componentes del arreglo (si los hay)
+        if (!empty($componentes)) {
+            $sqlInsertComp = "INSERT INTO componentes_receta_producto 
+                             (id_receta_producto_global, id_presentacion_producto, nombre, cantidad, notas, orden, usuario_creacion)
+                             VALUES (:id_receta, :id_pp, :nombre, :cant, :notas, :orden, :user)";
+            $stmtInsertComp = $conn->prepare($sqlInsertComp);
+            
+            foreach ($componentes as $index => $comp) {
+                // Validar datos mínimos del componente
+                if (!isset($comp['id_presentacion_producto'])) {
+                    throw new Exception("Error en el componente #" . ($index + 1) . ": ID de producto no definido.");
                 }
+
+                $stmtInsertComp->execute([
+                    ':id_receta' => $idRecetaProducto,
+                    ':id_pp' => $comp['id_presentacion_producto'],
+                    ':nombre' => isset($comp['nombre_producto']) ? $comp['nombre_producto'] : 'Componente',
+                    ':cant' => $comp['cantidad'],
+                    ':notas' => isset($comp['notas']) ? $comp['notas'] : '',
+                    ':orden' => $index + 1,
+                    ':user' => $usuarioId
+                ]);
             }
         }
+    } else if ($tieneReceta) {
+        throw new Exception('Se marcó que tiene receta pero no se pudo identificar o crear el registro de receta global.');
     }
+
 
     // 2. GESTIONAR VARIACIONES
     $variaciones = isset($_POST['variaciones']) ? json_decode($_POST['variaciones'], true) : [];

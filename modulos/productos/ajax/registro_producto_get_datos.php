@@ -26,15 +26,30 @@ try {
         throw new Exception('Producto no encontrado');
     }
 
-    // Receta (si existe) - Buscar por id_presentacion_producto para evitar problemas de case-sensitivity o vínculos rotos
-    $sqlReceta = "SELECT * FROM receta_producto_global WHERE id_presentacion_producto = :id_producto";
-    $stmtReceta = $conn->prepare($sqlReceta);
-    $stmtReceta->execute([':id_producto' => $id]);
-    $receta = $stmtReceta->fetch();
+    // 1. PRIORIDAD: Buscar si el producto ya tiene un Id_receta_producto vinculado
+    $idRecetaProducto = $producto['Id_receta_producto'];
+
+    // 2. RESPALDO: Si no tiene el ID vinculado, buscar si existe una receta con este id_presentacion_producto
+    if (!$idRecetaProducto) {
+        $sqlReceta = "SELECT * FROM receta_producto_global WHERE id_presentacion_producto = :id_producto LIMIT 1";
+        $stmtReceta = $conn->prepare($sqlReceta);
+        $stmtReceta->execute([':id_producto' => $id]);
+        $receta = $stmtReceta->fetch(PDO::FETCH_ASSOC);
+        if ($receta) {
+            $idRecetaProducto = $receta['id'];
+        }
+    } else {
+        // Cargar los datos de la receta vinculada
+        $sqlReceta = "SELECT * FROM receta_producto_global WHERE id = :id_receta";
+        $stmtReceta = $conn->prepare($sqlReceta);
+        $stmtReceta->execute([':id_receta' => $idRecetaProducto]);
+        $receta = $stmtReceta->fetch(PDO::FETCH_ASSOC);
+    }
 
     // Componentes de la receta
     $componentes = [];
     if ($receta) {
+        // Cargar componentes de ESTA receta específica
         $sqlComp = "SELECT c.*, 
                            pp.Nombre as nombre_producto,
                            up.nombre as unidad
@@ -42,7 +57,7 @@ try {
                     INNER JOIN producto_presentacion pp ON c.id_presentacion_producto = pp.id
                     LEFT JOIN unidad_producto up ON pp.id_unidad_producto = up.id
                     WHERE c.id_receta_producto_global = :id_receta
-                    ORDER BY c.orden, c.id";
+                    ORDER BY c.orden ASC";
 
         $stmtComp = $conn->prepare($sqlComp);
         $stmtComp->execute([':id_receta' => $receta['id']]);

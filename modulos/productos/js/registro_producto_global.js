@@ -188,9 +188,9 @@ async function cargarSubgrupos() {
 // CARGAR DATOS DEL PRODUCTO (EDICIÓN)
 // ============================================
 
-async function cargarDatosProducto() {
+async function cargarDatosProducto(cacheBuster = '') {
     try {
-        const response = await fetch(`ajax/registro_producto_get_datos.php?id=${idProductoActual}`);
+        const response = await fetch(`ajax/registro_producto_get_datos.php?id=${idProductoActual}${cacheBuster}`);
         const data = await response.json();
 
         if (data.success) {
@@ -225,10 +225,8 @@ async function cargarDatosProducto() {
                 $('#descripcionReceta').val(data.receta.descripcion);
 
                 // Cargar componentes
-                if (data.componentes) {
-                    componentesReceta = data.componentes;
-                    renderizarComponentes();
-                }
+                componentesReceta = data.componentes || [];
+                renderizarComponentes();
             } else {
                 $('#tieneReceta').prop('checked', false);
                 toggleReceta();
@@ -344,15 +342,6 @@ async function guardarProducto() {
     formData.append('variaciones', JSON.stringify(variacionesLocal));
     formData.append('fichas', JSON.stringify(fichaTecnicaLocal));
 
-    // Mostrar loader
-    Swal.fire({
-        title: 'Guardando...',
-        allowOutsideClick: false,
-        didOpen: () => {
-            Swal.showLoading();
-        }
-    });
-
     try {
         const response = await fetch('ajax/registro_producto_guardar.php', {
             method: 'POST',
@@ -368,13 +357,16 @@ async function guardarProducto() {
             if (idProductoActual === 0 && data.id_producto) {
                 window.location.href = `registro_producto_global.php?id=${data.id_producto}`;
             } else {
-                // Recargar datos
-                cargarDatosProducto();
+                // Recargar datos con cache-busting
+                const cacheBuster = `&_=${new Date().getTime()}`;
+                cargarDatosProducto(cacheBuster);
             }
+        } else {
+            Swal.fire('Error', data.message, 'error');
         }
     } catch (error) {
         console.error('Error guardando producto:', error);
-        Swal.fire('Error', 'Error al guardar el producto', 'error');
+        Swal.fire('Error', 'Ocurrió un error al intentar guardar el producto', 'error');
     }
 }
 
@@ -468,7 +460,7 @@ function agregarComponenteInline() {
 async function eliminarComponente(id) {
     const result = await Swal.fire({
         title: '¿Eliminar componente?',
-        text: 'Este cambio se aplicará al guardar el producto',
+        text: 'Esta acción borrará el componente de forma definitiva.',
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#dc3545',
@@ -477,6 +469,29 @@ async function eliminarComponente(id) {
     });
 
     if (result.isConfirmed) {
+        // Si el ID es positivo, ya existe en la base de datos
+        if (id > 0) {
+            try {
+                const response = await fetch('ajax/registro_producto_eliminar_componente.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: id })
+                });
+
+                const data = await response.json();
+                if (!data.success) {
+                    throw new Exception(data.message);
+                }
+
+                Swal.fire('Eliminado', 'El componente ha sido borrado físicamente.', 'success');
+            } catch (error) {
+                console.error('Error al eliminar componente:', error);
+                Swal.fire('Error', 'No se pudo eliminar de la base de datos: ' + error.message, 'error');
+                return; // Abortar borrado local si falla el servidor
+            }
+        }
+
+        // Borrar del arreglo local y actualizar UI
         componentesReceta = componentesReceta.filter(c => c.id != id);
         renderizarComponentes();
         actualizarBadges();
@@ -501,7 +516,7 @@ function renderizarComponentes() {
                 <td>${comp.cantidad} ${comp.unidad}</td>
                 <td>${comp.notas || '-'}</td>
                 <td>
-                    <button class="btn-accion btn-eliminar" onclick="eliminarComponente(${comp.id})">
+                    <button type="button" class="btn-accion btn-eliminar" onclick="eliminarComponente(${comp.id})">
                         <i class="bi bi-trash"></i>
                     </button>
                 </td>
@@ -857,7 +872,7 @@ function renderizarArchivos(archivos) {
                     <a href="${rutaNormalizada}" target="_blank" class="btn-accion btn-ver">
                         <i class="bi bi-eye"></i>
                     </a>
-                    <button class="btn-accion btn-eliminar" onclick="eliminarArchivo(${a.id})">
+                    <button type="button" class="btn-accion btn-eliminar" onclick="eliminarArchivo(${a.id})">
                         <i class="bi bi-trash"></i>
                     </button>
                 </div>
