@@ -198,11 +198,8 @@ $hoy = date('Y-m-d');
                     <div class="da-card da-card-lg">
                         <div class="da-card-header">
                             <h3><i class="fas fa-chart-bar me-2"></i>Tendencia de Ventas</h3>
-                            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-                                <span class="da-badge-period" id="badgePeriodoTendencia">—</span>
-                                <div class="da-card-tabs" id="tabsTendencia">
-                                    <button class="da-tab active" data-tab="mensual">Mensual</button>
-                                </div>
+                            <div class="da-card-tabs" id="tabsTendencia">
+                                <button class="da-tab active" data-tab="mensual">Mensual</button>
                             </div>
                         </div>
                         <div class="da-card-body">

@@ -146,7 +146,6 @@ function actualizarBadgesPeriodo(periodo) {
     const texto = `${periodo.ini} → ${periodo.fin}`;
     const ids = [
         'badgePeriodoVentas',
-        'badgePeriodoTendencia',
         'badgePeriodoRanking',
         'badgePeriodoClub',
         'badgePeriodoRFM',
