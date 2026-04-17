@@ -199,7 +199,6 @@ $hoy = date('Y-m-d');
                             <h3><i class="fas fa-chart-bar me-2"></i>Tendencia de Ventas</h3>
                             <div class="da-card-tabs" id="tabsTendencia">
                                 <button class="da-tab active" data-tab="mensual">Mensual</button>
-                                <button class="da-tab" data-tab="anual">Anual</button>
                             </div>
                         </div>
                         <div class="da-card-body">
@@ -446,22 +445,20 @@ $hoy = date('Y-m-d');
                         </div>
                     </div>
                 </div>
-                <div class="da-row-2col" style="margin-bottom:16px">
-                    <div class="da-card">
-                        <div class="da-card-header">
-                            <h3><i class="fas fa-rocket me-2"></i>Crecimiento de Tiendas vs Meta 2028</h3>
-                        </div>
-                        <div class="da-card-body">
-                            <canvas id="chartExpansionTiendas" height="240"></canvas>
-                        </div>
+                <div class="da-card da-card-full" style="margin-bottom:16px">
+                    <div class="da-card-header">
+                        <h3><i class="fas fa-rocket me-2"></i>Crecimiento de Tiendas vs Meta 2028</h3>
                     </div>
-                    <div class="da-card">
-                        <div class="da-card-header">
-                            <h3><i class="fas fa-chart-area me-2"></i>Ventas Históricas por Año</h3>
-                        </div>
-                        <div class="da-card-body">
-                            <canvas id="chartVentasAnio" height="240"></canvas>
-                        </div>
+                    <div class="da-card-body">
+                        <canvas id="chartExpansionTiendas" height="160"></canvas>
+                    </div>
+                </div>
+                <div class="da-card da-card-full" style="margin-bottom:16px">
+                    <div class="da-card-header">
+                        <h3><i class="fas fa-chart-area me-2"></i>Ventas Históricas por Año</h3>
+                    </div>
+                    <div class="da-card-body">
+                        <canvas id="chartVentasAnio" height="160"></canvas>
                     </div>
                 </div>
 

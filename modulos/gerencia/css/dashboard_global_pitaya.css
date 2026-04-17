@@ -309,7 +309,7 @@ body { background: var(--neu-bg); }
     box-shadow: var(--neu-md);
     overflow: hidden;
 }
-.da-card-full { margin-bottom: 18px; }
+.da-card-full { margin-bottom: 18px; width: 100%; display: block; }
 .da-card-lg   { flex: 1.8; }
 
 .da-card-header {

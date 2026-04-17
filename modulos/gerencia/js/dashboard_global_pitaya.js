@@ -119,12 +119,7 @@ function setLoader(on) {
 
 function renderTodo(data) {
     renderVentas(data.ventas, data.meta);
-    const tabActivo = document.querySelector('#tabsTendencia .da-tab.active')?.dataset.tab ?? 'mensual';
-    if (tabActivo === 'anual' && data.expansion?.ventas_por_anio) {
-        renderTendenciaAnual(data.expansion.ventas_por_anio);
-    } else {
-        renderTendenciaMensual(data.tendencia_mensual, data.proyeccion_tendencia || null, data.mes_actual_estimado || null);
-    }
+    renderTendenciaMensual(data.tendencia_mensual, data.proyeccion_tendencia || null, data.mes_actual_estimado || null);
     renderRanking(data.ranking_tiendas, data.periodo);
     renderClub(data.club);
     renderSegmentosRFM(data.segmentos_rfm);
@@ -293,30 +288,6 @@ function renderTendenciaMensual(meses, proyeccion, mesEstimado) {
     });
 }
 
-function renderTendenciaAnual(anios) {
-    const ctx = document.getElementById('chartTendenciaVentas');
-    if (!ctx) return;
-    if (chartTendencia) chartTendencia.destroy();
-    const labels  = anios.map(a => String(a.anio));
-    const datos   = anios.map(a => convertir(parseFloat(a.ventas)));
-    chartTendencia = new Chart(ctx, {
-        type:'bar',
-        data: {
-            labels,
-            datasets: [{ label:'Ventas Anual', data: datos,
-                backgroundColor: datos.map((_,i)=>i===datos.length-1?DA_COLORS.primary:'rgba(81,184,172,0.35)'),
-                borderRadius:6 }]
-        },
-        options: {
-            responsive:true,
-            plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label:ctx=>` ${fmtMoney(ctx.raw)}` } } },
-            scales:{
-                x:{ ticks:{ color:DA_COLORS.muted }, grid:{ color:DA_COLORS.grid } },
-                y:{ ticks:{ color:DA_COLORS.muted, callback:v=>simbolo()+' '+fmtN(v) }, grid:{ color:DA_COLORS.grid } }
-            }
-        }
-    });
-}
 
 // ── 3. RANKING TIENDAS ────────────────────────────────
 function renderRanking(ranking, periodo) {
@@ -793,20 +764,8 @@ document.getElementById('inputTipoCambio')?.addEventListener('change', function(
     if (DA_LAST) renderTodo(DA_LAST);
 });
 
-// ── Tabs tendencia ────────────────────────────────────
-document.querySelectorAll('#tabsTendencia .da-tab').forEach(btn => {
-    btn.addEventListener('click', function () {
-        document.querySelectorAll('#tabsTendencia .da-tab').forEach(b => b.classList.remove('active'));
-        this.classList.add('active');
-        if (!DA_LAST) return;
-        // Cambiar sin recargar servidor
-        if (this.dataset.tab === 'anual' && DA_LAST.expansion?.ventas_por_anio) {
-            renderTendenciaAnual(DA_LAST.expansion.ventas_por_anio);
-        } else {
-            renderTendenciaMensual(DA_LAST.tendencia_mensual, DA_LAST.proyeccion_tendencia || null, DA_LAST.mes_actual_estimado || null);
-        }
-    });
-});
+// ── Tabs tendencia (solo Mensual) ────────────────────
+// El tab único "Mensual" no requiere listener de cambio.
 
 // ── Botón actualizar ──────────────────────────────────
 document.getElementById('btnActualizar')?.addEventListener('click', cargarDashboard);
