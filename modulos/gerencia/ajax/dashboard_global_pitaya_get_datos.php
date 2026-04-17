@@ -148,9 +148,11 @@ try {
         $tendenciaMensual = $stTM->fetchAll(PDO::FETCH_ASSOC);
     }
     // Calcular venta_por_tienda (usa tiendas_activas_mes o fallback al total de activas)
-    $tiendasActivasFallback = $conn->query(
+    // Tiendas activas actuales — se usa en expansión y proyección
+    $tiendasActualesTotal = (int)($conn->query(
         "SELECT COUNT(*) FROM sucursales WHERE sucursal=1 AND activa=1"
-    )->fetchColumn() ?: 14;
+    )->fetchColumn() ?: 14);
+    $tiendasActivasFallback = $tiendasActualesTotal;
     foreach ($tendenciaMensual as &$tm) {
         $t = max(1, (int)($tm['tiendas_activas_mes'] ?? $tiendasActivasFallback));
         $tm['venta_por_tienda'] = round((float)$tm['total'] / $t, 2);
@@ -454,12 +456,11 @@ try {
             'neto'      => $acumNeto,    // neto (activas si no hubiera más cierres pendientes)
         ];
     }
-    // El acumulado neto real es el count de activas
-    $tiendasActivasActuales = $tiendasActualesTotal; // ya filtrado activa=1
+    // El acumulado neto real es el count de activas (ya definido arriba)
+    $tiendasActivasActuales = $tiendasActualesTotal;
 
     // Proyección lineal hacia 40 tiendas en 2028 (basada en activas)
     $anioActualExp  = (int)date('Y');
-    $tiendasActualesTotal = $tiendasActualesTotal; // activa=1
     $totalAbiertasAlguna  = count($sucursalesApertura); // todas las que han existido
     $metaExpansion  = 40;
     $anioMeta       = 2028;

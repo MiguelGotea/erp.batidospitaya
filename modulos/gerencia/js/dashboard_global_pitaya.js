@@ -185,10 +185,14 @@ function renderTendenciaMensual(meses, proyeccion, mesEstimado) {
     const mesActualStr = new Date().toISOString().slice(0,7);
     const histCompletos = meses.filter(m => m.mes !== mesActualStr);
 
-    // Labels: histórico + estimado del mes actual + proyección
-    const labelsHist = histCompletos.map(m => fmtMes(m.mes));
-    const labelEst   = mesEstimado ? [fmtMes(mesEstimado.mes) + ' *'] : [];
-    const labelsProy = (proyeccion || []).map(p => fmtMes(p.mes));
+    // ── Solapamiento: PHP proyección[0] = mismo mes que mesEstimado ──
+    // El PHP arranca desde lastMesCompleto+1 que coincide con el mes actual estimado.
+    // Hay que saltarlo para que la primera proyección sea el mes SIGUIENTE.
+    const skipProy  = mesEstimado ? 1 : 0;
+    const proySlice = (proyeccion || []).slice(skipProy);
+
+    // Re-construir labels de proyección sin el mes solapado
+    const labelsProy = proySlice.map(p => fmtMes(p.mes));
     const allLabels  = [...labelsHist, ...labelEst, ...labelsProy];
     const nH = labelsHist.length;
     const nE = labelEst.length;
@@ -201,7 +205,7 @@ function renderTendenciaMensual(meses, proyeccion, mesEstimado) {
     const ventasPad  = [...ventasHist, ...ventasEst, ...Array(labelsProy.length).fill(null)];
     const barColors  = [
         ...ventasHist.map((_, i) => i === nH - 1 ? 'rgba(81,184,172,0.75)' : 'rgba(81,184,172,0.38)'),
-        ...ventasEst.map(() => 'rgba(81,184,172,0.22)'), // estimado más claro
+        ...ventasEst.map(() => 'rgba(81,184,172,0.22)'),
         ...Array(labelsProy.length).fill(null)
     ];
 
@@ -210,22 +214,20 @@ function renderTendenciaMensual(meses, proyeccion, mesEstimado) {
     const vptEst  = mesEstimado ? [convertir(parseFloat(mesEstimado.venta_por_tienda || 0))] : [];
     const vptPad  = [...vptHist, ...vptEst, ...Array(labelsProy.length).fill(null)];
 
-    // ── Punto de anclaje para continuidad de las líneas de proyección ──
-    // El último valor real/estimado se pone en la posición nTotal-1 (último mes real/estimado)
-    // y luego la proyección continúa desde ahí en adelante.
+    // ── Anclaje: el último punto real/estimado conecta con la proyección ──
     const anchorVentas = mesEstimado
         ? convertir(parseFloat(mesEstimado.ventas))
         : (ventasHist.length ? ventasHist[ventasHist.length - 1] : 0);
 
-    // Datasets proyección con anclaje: null×(nTotal-1), anchor, proyección...
+    // Construir series de proyección: (nTotal-1) nulls + anchor + valores futuros
     const buildProy = (vals) => [
         ...Array(nTotal - 1).fill(null),
-        anchorVentas,   // punto de continuidad (mismo valor del último real/estimado)
+        anchorVentas,
         ...vals
     ];
-    const proyHist = buildProy((proyeccion||[]).map(p => convertir(p.ventas_hist)));
-    const proyRec  = buildProy((proyeccion||[]).map(p => convertir(p.ventas_rec)));
-    const proyMeta = buildProy((proyeccion||[]).map(p => convertir(p.ventas_meta)));
+    const proyHist = buildProy(proySlice.map(p => convertir(p.ventas_hist)));
+    const proyRec  = buildProy(proySlice.map(p => convertir(p.ventas_rec)));
+    const proyMeta = buildProy(proySlice.map(p => convertir(p.ventas_meta)));
 
     chartTendencia = new Chart(ctx, {
         data: {

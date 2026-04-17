@@ -191,7 +191,7 @@ $hoy = date('Y-m-d');
                 <!-- ══════════════════════════════════════════ -->
                 <!--  SECCIÓN 2: VENTAS POR TIENDA + GRÁFICA   -->
                 <!-- ══════════════════════════════════════════ -->
-                <div class="da-row-2col">
+                <div class="da-row-2col" style="grid-template-columns:2fr 1fr">
 
                     <!-- Gráfica Ventas Mensuales -->
                     <div class="da-card da-card-lg">
