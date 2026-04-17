@@ -563,6 +563,7 @@ try {
     $mesActualStr = date('Y-m');  // e.g. '2026-04'
     $diaHoy       = (int)date('j');
     $diasEnMes    = (int)date('t');
+    $diasTranscurridos = max(1, $diaHoy - 1);
 
     // Variables base para proyección
     $nmeses      = count($tendenciaMensual);
@@ -654,6 +655,54 @@ try {
         $cursorTs = strtotime(date('Y-m-01', $cursorTs) . ' +1 month');
     }
 
+    // ────────────────────────────────────────────────────────────────────
+    // 11. PROYECCIÓN ANUAL (3 años adicionales)
+    // ────────────────────────────────────────────────────────────────────
+    $ventasAnioActualEst = 0;
+    $proyeccionAnual     = [];
+    $anioActual          = (int)date('Y');
+
+    if ($mesActualEstimado) {
+        // Estimar cierre de 2026: Meses pasados + Mes actual estimado + Meses restantes proyectados
+        $mesesPasados2026 = array_filter($tendenciaMensual, fn($m) => str_starts_with($m['mes'], $anioActual . '-') && $m['mes'] < $mesActualStr);
+        $ventasMesesPasados = array_sum(array_map(fn($m) => (float)$m['total'], $mesesPasados2026));
+        
+        $ventasMesActualEst = $mesActualEstimado['ventas'];
+        
+        $mesesRestantes2026 = array_filter($proyeccionTendencia, fn($m) => str_starts_with($m['mes'], $anioActual . '-'));
+        $ventasRestantesEst = array_sum(array_map(fn($m) => (float)$m['ventas_rec'], $mesesRestantes2026)); 
+        
+        $ventasAnioActualEst = $ventasMesesPasados + $ventasMesActualEst + $ventasRestantesEst;
+        
+        // Ahora proyectamos 2027, 2028, 2029
+        $anioAnterior = $anioActual - 1;
+        $ventasAnioAnterior = 0;
+        foreach($ventasPorAnio as $v) if((int)$v['anio'] == $anioAnterior) $ventasAnioAnterior = (float)$v['ventas'];
+        
+        $tiendasAnioAnterior = 14; 
+        foreach($expansion as $e) if((int)$e['anio'] == $anioAnterior) $tiendasAnioAnterior = $e['acumulado'];
+        
+        $vptAnualBase = $tiendasAnioAnterior > 0 ? $ventasAnioAnterior / $tiendasAnioAnterior : 0;
+        $slopeAnual   = $slope2 * 12;
+
+        for ($j = 1; $j <= 3; $j++) {
+            $anioProy = $anioActual + $j;
+            $vptY = max($vptAnualBase * 0.8, $vptAnualBase + $slopeAnual * ($anioProy - $anioAnterior));
+            
+            $tHist = min($metaExpansion + 10, $tiendasActualesTotal + $ritmoHistorico * ($anioProy - $anioActual));
+            $tRec  = min($metaExpansion + 10, $tiendasActualesTotal + $ritmoNetReciente * ($anioProy - $anioActual));
+            $tMeta = min($metaExpansion + 10, $tiendasActualesTotal + $ritmoNecesario * ($anioProy - $anioActual));
+
+            $proyeccionAnual[] = [
+                'anio'         => $anioProy,
+                'vpt'          => round($vptY, 2),
+                'ventas_hist'  => round($vptY * $tHist, 2),
+                'ventas_rec'   => round($vptY * $tRec,  2),
+                'ventas_meta'  => round($vptY * $tMeta, 2),
+            ];
+        }
+    }
+
     // ────────────────────────────────────────────
     // CONSTRUIR RESPUESTA
     // ────────────────────────────────────────────
@@ -716,6 +765,8 @@ try {
             'sucursales'            => $listaSucursales,
             'acumulado_por_anio'    => $expansion,   // incluye nuevas, cierres, acumulado bruto, neto
             'ventas_por_anio'       => $ventasPorAnio,
+            'anio_actual_estimado'  => $ventasAnioActualEst > 0 ? ['anio' => $anioActual, 'ventas' => $ventasAnioActualEst] : null,
+            'proyeccion_anual'      => $proyeccionAnual,
             'proyeccion'            => $proyeccion,
             'tiendas_actuales'      => $tiendasActualesTotal,
             'total_abiertas'        => $totalAbiertasAlguna,

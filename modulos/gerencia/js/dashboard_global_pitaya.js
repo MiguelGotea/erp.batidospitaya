@@ -741,22 +741,87 @@ function renderExpansion(exp) {
     const ctxV = document.getElementById('chartVentasAnio');
     if (ctxV && exp.ventas_por_anio.length) {
         if (chartVentasAnio) chartVentasAnio.destroy();
+
+        const anioActual = new Date().getFullYear();
+        const histAnios = exp.ventas_por_anio.filter(v => parseInt(v.anio) < anioActual);
+        const labelsHist = histAnios.map(v => v.anio);
+        
+        const labelEst = exp.anio_actual_estimado ? [exp.anio_actual_estimado.anio + ' *'] : [];
+        const labelsProy = (exp.proyeccion_anual || []).map(v => v.anio);
+        
+        const allLabels = [...labelsHist, ...labelEst, ...labelsProy];
+        
+        // Data Histórica
+        const dataHist = histAnios.map(v => convertir(parseFloat(v.ventas)));
+        // Data Estimada (Año actual)
+        const dataEst = exp.anio_actual_estimado ? [convertir(exp.anio_actual_estimado.ventas)] : [];
+        
+        const nTotalHist = labelsHist.length + labelEst.length;
+        
+        // Series para Barras (Histórico + Estimado)
+        const barsData = [...dataHist, ...dataEst, ...Array(labelsProy.length).fill(null)];
+        const barColors = [
+            ...dataHist.map(() => 'rgba(81,184,172,0.35)'),
+            ...dataEst.map(() => 'rgba(81,184,172,0.22)'),
+            ...Array(labelsProy.length).fill(null)
+        ];
+
+        // Anclaje: el último punto real/estimado conecta con la proyección
+        const anchor = dataEst.length ? dataEst[0] : (dataHist.length ? dataHist[dataHist.length - 1] : 0);
+        
+        const buildProy = (vals) => [
+            ...Array(nTotalHist - 1).fill(null),
+            anchor,
+            ...vals
+        ];
+
+        const proyHist = buildProy((exp.proyeccion_anual || []).map(p => convertir(p.ventas_hist)));
+        const proyRec = buildProy((exp.proyeccion_anual || []).map(p => convertir(p.ventas_rec)));
+        const proyMeta = buildProy((exp.proyeccion_anual || []).map(p => convertir(p.ventas_meta)));
+
         chartVentasAnio = new Chart(ctxV, {
-            type: 'bar',
             data: {
-                labels: exp.ventas_por_anio.map(r => r.anio),
-                datasets: [{
-                    label: 'Ventas', data: exp.ventas_por_anio.map(r => convertir(parseFloat(r.ventas))),
-                    backgroundColor: exp.ventas_por_anio.map((_, i) => i === exp.ventas_por_anio.length - 1 ? DA_COLORS.primary : 'rgba(81,184,172,0.35)'),
-                    borderRadius: 6
-                }]
+                labels: allLabels,
+                datasets: [
+                    {
+                        type: 'bar', label: 'Ventas reales/est.',
+                        data: barsData, backgroundColor: barColors, borderRadius: 6
+                    },
+                    {
+                        type: 'line', label: 'Conservador',
+                        data: proyHist, borderColor: DA_COLORS.muted, borderDash: [4, 3],
+                        pointRadius: 0, fill: false, tension: 0.3, borderWidth: 1.5
+                    },
+                    {
+                        type: 'line', label: 'Moderado',
+                        data: proyRec, borderColor: DA_COLORS.primary, borderDash: [5, 3],
+                        pointRadius: 0, fill: false, tension: 0.3, borderWidth: 2
+                    },
+                    {
+                        type: 'line', label: 'Optimista',
+                        data: proyMeta, borderColor: DA_COLORS.green, borderDash: [6, 2],
+                        pointRadius: 0, fill: false, tension: 0.3, borderWidth: 2.5
+                    }
+                ]
             },
             options: {
                 responsive: true,
-                plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${fmtMoney(ctx.raw, true)}` } } },
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: { display: true, labels: { color: DA_COLORS.muted, font: { size: 10 }, boxWidth: 10 } },
+                    tooltip: {
+                        callbacks: {
+                            label: ctx => ` ${ctx.dataset.label}: ${fmtMoney(ctx.raw, true)}`
+                        }
+                    }
+                },
                 scales: {
                     x: { ticks: { color: DA_COLORS.muted }, grid: { color: DA_COLORS.grid } },
-                    y: { ticks: { color: DA_COLORS.muted, callback: v => fmtAxisMoney(v, true) }, grid: { color: DA_COLORS.grid } }
+                    y: { 
+                        ticks: { color: DA_COLORS.muted, callback: v => fmtAxisMoney(v, true) }, 
+                        grid: { color: DA_COLORS.grid },
+                        title: { display: true, text: 'Ventas anuales', color: DA_COLORS.muted, font: { size: 10 } }
+                    }
                 }
             }
         });
