@@ -677,9 +677,10 @@ function renderExpansion(exp) {
         const aniosMeta = [];
         for (let y = anioActualChart; y <= 2028; y++) aniosMeta.push(y);
         const todosAnios = [...new Set([...histAnios, ...aniosMeta])].sort();
-        const acumData = todosAnios.map(a => { const r = exp.acumulado_por_anio.find(x => x.anio === a); return r ? r.acumulado : null; });
+        const acumData = todosAnios.map(a => { const r = exp.acumulado_por_anio.find(x => x.anio === a); return r ? r.neto : null; });
         const proyData = todosAnios.map(a => { const r = exp.proyeccion.find(x => x.anio === a); return r ? r.proyectado : null; });
         const nuevasData = todosAnios.map(a => { const r = exp.acumulado_por_anio.find(x => x.anio === a); return r ? r.nuevas : 0; });
+        const cierresData = todosAnios.map(a => { const r = exp.acumulado_por_anio.find(x => x.anio === a); return r ? r.cierres : 0; });
 
         // ── 3 escenarios desde año actual ──
         // Se calculan provisionalmente aquí con ritmos del objeto viabilidad (si existe)
@@ -727,7 +728,30 @@ function renderExpansion(exp) {
             options: {
                 responsive: true,
                 interaction: { mode: 'index', intersect: false },
-                plugins: { legend: { labels: { color: DA_COLORS.muted, font: { size: 11 } } }, tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.raw !== null ? ctx.raw : '—'}` } } },
+                plugins: {
+                    legend: { labels: { color: DA_COLORS.muted, font: { size: 11 } } },
+                    tooltip: {
+                        callbacks: {
+                            label: ctx => {
+                                const val = ctx.raw;
+                                if (val === null) return null;
+                                return ` ${ctx.dataset.label}: ${val}`;
+                            },
+                            afterBody: (items) => {
+                                const idx = items[0].dataIndex;
+                                const anio = todosAnios[idx];
+                                const r = exp.acumulado_por_anio.find(x => x.anio === anio);
+                                if (r) {
+                                    return [
+                                        ` Aperturas: ${r.nuevas}`,
+                                        ` Cierres: ${r.cierres}`
+                                    ];
+                                }
+                                return null;
+                            }
+                        }
+                    }
+                },
                 scales: {
                     x: { ticks: { color: DA_COLORS.muted }, grid: { color: DA_COLORS.grid } },
                     y: { ticks: { color: DA_COLORS.muted, stepSize: 2 }, grid: { color: DA_COLORS.grid }, title: { display: true, text: 'Tiendas acum.', color: DA_COLORS.muted } },
@@ -876,12 +900,14 @@ function renderViabilidad(v, tActual) {
     const chartLabels = chartExpTiendas.data.labels;
     const base = tActual || 0;
 
-    // Escenario histórico bruto: anclar en anioActual con base, luego crecer
+    // Escenario histórico bruto: anclar en el último valor real del año actual
+    const lastReal = exp.acumulado_por_anio.find(x => x.anio === anioActual)?.neto || base;
+
     const e1 = chartLabels.map(a =>
-        a < anioActual ? null : Math.round(Math.min(42, base + (a - anioActual) * v.ritmo_apertura_bruto)));
-    // Escenario reciente bruto: anclar en anioActual con base, luego crecer
+        a < anioActual ? null : Math.round(Math.min(42, lastReal + (a - anioActual) * v.ritmo_apertura_bruto)));
+    // Escenario reciente bruto: anclar en el último valor real del año actual
     const e2 = chartLabels.map(a =>
-        a < anioActual ? null : Math.round(Math.min(42, base + (a - anioActual) * v.ritmo_reciente)));
+        a < anioActual ? null : Math.round(Math.min(42, lastReal + (a - anioActual) * v.ritmo_reciente)));
 
     // Encontrar los datasets por label y actualizar sus datos
     const dsHist = chartExpTiendas.data.datasets.find(d => d.label === 'Escen. Hist.');

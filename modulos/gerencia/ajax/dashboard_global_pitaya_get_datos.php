@@ -392,7 +392,8 @@ try {
     $sucursalesApertura = $stSA->fetchAll(PDO::FETCH_ASSOC);
 
     // Separar las cerradas para calcular el ritmo de cierres
-    $cerradas = array_filter($sucursalesApertura, fn($s) => (int)$s['activa'] === 0 && $s['fecha_cierre']);
+    // Consideramos cerrada cualquier tienda con activa=0
+    $cerradas = array_filter($sucursalesApertura, fn($s) => (int)$s['activa'] === 0);
     $totalCerradas = count($cerradas);
 
     // Ventas totales y primer año por tienda
@@ -432,10 +433,14 @@ try {
         $aperturasPorAnio[$a] = ($aperturasPorAnio[$a] ?? 0) + 1;
     }
     foreach ($cerradas as $s) {
-        if ($s['fecha_cierre']) {
-            $ac = (int)date('Y', strtotime($s['fecha_cierre']));
-            $cierresPorAnio[$ac] = ($cierresPorAnio[$ac] ?? 0) + 1;
+        $fechaCie = $s['fecha_cierre'];
+        if ($fechaCie) {
+            $ac = (int)date('Y', strtotime($fechaCie));
+        } else {
+            // Fallback: si no hay fecha de cierre, usamos el año de apertura (fue un cierre rápido o error de data)
+            $ac = (int)$s['anio_apertura'];
         }
+        $cierresPorAnio[$ac] = ($cierresPorAnio[$ac] ?? 0) + 1;
     }
     ksort($aperturasPorAnio);
     $expansion = [];
@@ -469,7 +474,8 @@ try {
 
     // Línea de proyección (desde hoy hasta 2028)
     $proyeccion = [];
-    $proyAcum = $tiendasActualesTotal;
+    // Usamos el acumulado neto del historial para que la línea sea continua
+    $proyAcum = $acumNeto; 
     for ($y = $anioActualExp; $y <= $anioMeta; $y++) {
         $proyeccion[] = ['anio' => $y, 'proyectado' => $proyAcum];
         $proyAcum = min($metaExpansion, $proyAcum + $aperturasPorAnioNecesarias);
