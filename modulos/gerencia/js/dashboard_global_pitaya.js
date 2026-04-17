@@ -185,6 +185,10 @@ function renderTendenciaMensual(meses, proyeccion, mesEstimado) {
     const mesActualStr = new Date().toISOString().slice(0,7);
     const histCompletos = meses.filter(m => m.mes !== mesActualStr);
 
+    // Labels histórico + mes estimado actual
+    const labelsHist = histCompletos.map(m => fmtMes(m.mes));
+    const labelEst   = mesEstimado ? [fmtMes(mesEstimado.mes) + ' *'] : [];
+
     // ── Solapamiento: PHP proyección[0] = mismo mes que mesEstimado ──
     // El PHP arranca desde lastMesCompleto+1 que coincide con el mes actual estimado.
     // Hay que saltarlo para que la primera proyección sea el mes SIGUIENTE.
