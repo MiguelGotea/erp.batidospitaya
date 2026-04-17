@@ -110,7 +110,6 @@ function setLoader(on) {
 
 function renderTodo(data) {
     renderVentas(data.ventas, data.meta);
-    // Gráfica tendencia según tab activo
     const tabActivo = document.querySelector('#tabsTendencia .da-tab.active')?.dataset.tab ?? 'mensual';
     if (tabActivo === 'anual' && data.expansion?.ventas_por_anio) {
         renderTendenciaAnual(data.expansion.ventas_por_anio);
@@ -125,7 +124,10 @@ function renderTodo(data) {
     renderTopProductos(data.top_productos);
     renderMixCategorias(data.mix_categorias);
     renderTablaTiendas(data.detalle_tiendas);
-    if (data.expansion) renderExpansion(data.expansion);
+    if (data.expansion) {
+        renderExpansion(data.expansion);
+        if (data.expansion.viabilidad) renderViabilidad(data.expansion.viabilidad, data.expansion.tiendas_actuales);
+    }
     renderAlertas(data);
 }
 
@@ -602,6 +604,40 @@ function renderExpansion(exp) {
             </td>
         </tr>`;
     }).join('');
+}
+
+// ── VIABILIDAD ────────────────────────────────────────
+function renderViabilidad(v, tActual) {
+    const colores = { viable: '#3aaa82', posible: '#e07b39', desafiante: '#d9534f' };
+    const labels  = { viable: '✅ Viable', posible: '⚠️ Posible con esfuerzo', desafiante: '🔴 Desafiante' };
+    const color   = colores[v.estado] ?? DA_COLORS.muted;
+
+    setText('viaRitmoHistorico',   fmtN(v.ritmo_historico, 1) + '/año');
+    setText('viaRitmoReciente',    fmtN(v.ritmo_reciente,  1) + '/año');
+    setText('viaRitmoNecesario',   fmtN(v.ritmo_necesario, 1) + '/año');
+    setText('viaProyeccionReciente', fmtN(v.proyeccion_reciente) + ' tiendas');
+
+    const estadoEl = document.getElementById('viaEstado');
+    if (estadoEl) { estadoEl.textContent = labels[v.estado] ?? v.estado; estadoEl.style.color = color; }
+    setText('viaRatio', `${fmtPct(v.ratio_viabilidad)} del ritmo necesario`);
+
+    // Agregar líneas de proyección al chart de tiendas si ya existe
+    if (!chartExpTiendas) return;
+    const tieneReciente = chartExpTiendas.data.datasets.some(d => d.label === 'Proy. ritmo reciente');
+    if (tieneReciente) return;
+
+    const anioActual = new Date().getFullYear();
+    const chartLabels = chartExpTiendas.data.labels;
+    const base = tActual || 0;
+
+    const proyRecData  = chartLabels.map(a => a < anioActual ? null : Math.min(45, base + (a - anioActual) * v.ritmo_reciente));
+    const proyHistData = chartLabels.map(a => a < anioActual ? null : Math.min(45, base + (a - anioActual) * v.ritmo_historico));
+
+    chartExpTiendas.data.datasets.push(
+        { type:'line', label:'Proy. ritmo reciente',   data: proyRecData,  borderColor: color,            borderDash:[3,3], pointRadius:0, fill:false, tension:0.2, borderWidth:2 },
+        { type:'line', label:'Proy. ritmo histórico',  data: proyHistData, borderColor: DA_COLORS.purple,  borderDash:[3,3], pointRadius:0, fill:false, tension:0.2, borderWidth:1.5 }
+    );
+    chartExpTiendas.update();
 }
 
 // ── Toggle Moneda ─────────────────────────────────────

@@ -326,11 +326,13 @@ try {
     // ────────────────────────────────────────────
     // 10. EXPANSIÓN — Datos históricos de aperturas
     // ────────────────────────────────────────────
+    // REGLA: tienda activa = sucursal=1 AND activa=1
     $sqlSucursalesApertura = "
         SELECT id, codigo, nombre, Fecha_Apertura,
                YEAR(Fecha_Apertura) AS anio_apertura
         FROM sucursales
         WHERE sucursal = 1
+          AND activa    = 1
           AND Fecha_Apertura IS NOT NULL
         ORDER BY Fecha_Apertura ASC
     ";
@@ -352,12 +354,13 @@ try {
         $vtMap[$r['Sucursal_Nombre']] = $r;
     }
 
-    // Ventas por año (histórico completo)
+    // Ventas por año — solo desde 2024 (base de datos contiene datos desde 2024)
     $sqlVentasAnio = "
         SELECT anio, ventas FROM (
             SELECT YEAR(Fecha) AS anio,
                    SUM(CASE WHEN Anulado=0 THEN Precio ELSE 0 END) AS ventas
             FROM VentasGlobalesAccessCSV
+            WHERE YEAR(Fecha) >= 2024
             GROUP BY YEAR(Fecha)
         ) sub ORDER BY anio ASC
     ";
@@ -398,13 +401,52 @@ try {
     $listaSucursales = array_map(function($s) use ($vtMap) {
         $info = $vtMap[$s['nombre']] ?? null;
         return [
-            'nombre'          => $s['nombre'],
-            'fecha_apertura'  => $s['Fecha_Apertura'],
-            'anio_apertura'   => (int)$s['anio_apertura'],
-            'ventas_historico'=> $info ? (float)$info['ventas_total_historico'] : 0,
+            'nombre'            => $s['nombre'],
+            'fecha_apertura'    => $s['Fecha_Apertura'],
+            'anio_apertura'     => (int)$s['anio_apertura'],
+            'ventas_historico'  => $info ? (float)$info['ventas_total_historico'] : 0,
             'primer_anio_venta' => $info ? (int)$info['primer_anio_venta'] : null,
         ];
     }, $sucursalesApertura);
+
+    // ── Viabilidad: ritmo histórico y proyección realista ──
+    $hoyTs      = time();
+    $primeraFecha = !empty($sucursalesApertura) ? $sucursalesApertura[0]['Fecha_Apertura'] : null;
+    $aniosDesdeInicio = $primeraFecha
+        ? max(0.5, ($hoyTs - strtotime($primeraFecha)) / 31536000)
+        : 1;
+    $ritmoHistorico = round($tiendasActualesTotal / $aniosDesdeInicio, 2); // aperturas/año promedio
+
+    // Ritmo reciente: tiendas abiertas en los últimos 2 años completos
+    $anioCorte = $anioActualExp - 2;
+    $recientes  = array_filter($sucursalesApertura, fn($s) => (int)$s['anio_apertura'] >= $anioCorte);
+    $ritmoReciente = count($recientes) > 0 ? round(count($recientes) / 2, 2) : $ritmoHistorico;
+
+    // Proyección al ritmo histórico
+    $proyHistorica = (int)round($tiendasActualesTotal + $ritmoHistorico * $aniosRestantes);
+    // Proyección al ritmo reciente (más conservador / realista)
+    $proyReciente  = (int)round($tiendasActualesTotal + $ritmoReciente  * $aniosRestantes);
+
+    // Ritmo necesario para llegar a 40
+    $ritmoNecesario = $aniosRestantes > 0 ? round(($metaExpansion - $tiendasActualesTotal) / $aniosRestantes, 1) : 0;
+
+    // ¿Es viable? ratio ritmo_reciente vs necesario
+    $ratioViabilidad = $ritmoNecesario > 0 ? round($ritmoReciente / $ritmoNecesario * 100, 1) : 100;
+    if ($ratioViabilidad >= 100)      $viabilidadLabel = 'viable';
+    elseif ($ratioViabilidad >= 70)   $viabilidadLabel = 'posible';
+    else                               $viabilidadLabel = 'desafiante';
+
+    $viabilidad = [
+        'ritmo_historico'    => $ritmoHistorico,
+        'ritmo_reciente'     => $ritmoReciente,
+        'ritmo_necesario'    => $ritmoNecesario,
+        'proyeccion_historica' => min($metaExpansion + 5, $proyHistorica),
+        'proyeccion_reciente'  => min($metaExpansion + 5, $proyReciente),
+        'ratio_viabilidad'   => $ratioViabilidad,
+        'estado'             => $viabilidadLabel,
+        'anios_desde_inicio' => round($aniosDesdeInicio, 1),
+        'anos_restantes'     => $aniosRestantes,
+    ];
 
     // ────────────────────────────────────────────
     // CONSTRUIR RESPUESTA
@@ -471,6 +513,7 @@ try {
             'anio_meta'             => $anioMeta,
             'aperturas_necesarias'  => $aperturasPorAnioNecesarias,
             'avance_pct'            => round($tiendasActualesTotal / $metaExpansion * 100, 1),
+            'viabilidad'            => $viabilidad,
         ],
     ], JSON_UNESCAPED_UNICODE);
 

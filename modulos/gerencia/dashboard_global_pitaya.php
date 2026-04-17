@@ -395,7 +395,57 @@ $hoy = date('Y-m-d');
                     </div>
                 </div>
 
-                <!-- Gráficas de expansión -->
+                <!-- Métricas de viabilidad -->
+                <div class="da-card da-card-full" style="margin-bottom:18px" id="cardViabilidad">
+                    <div class="da-card-header">
+                        <h3><i class="fas fa-traffic-light me-2"></i>Viabilidad Meta 2028 — Análisis de Ritmo Real</h3>
+                        <span class="da-badge-period">Basado en historial de aperturas</span>
+                    </div>
+                    <div class="da-card-body">
+                        <div class="da-kpi-grid da-kpi-grid-5" style="margin-bottom:0">
+                            <div class="da-kpi-card">
+                                <div class="da-kpi-icon-wrap primary"><i class="fas fa-tachometer-alt"></i></div>
+                                <div class="da-kpi-body">
+                                    <div class="da-kpi-label">Ritmo Histórico Promedio</div>
+                                    <div class="da-kpi-valor" id="viaRitmoHistorico">—</div>
+                                    <div class="da-kpi-sub">aperturas/año (desde inicio)</div>
+                                </div>
+                            </div>
+                            <div class="da-kpi-card">
+                                <div class="da-kpi-icon-wrap orange"><i class="fas fa-clock"></i></div>
+                                <div class="da-kpi-body">
+                                    <div class="da-kpi-label">Ritmo Reciente (últ. 2 años)</div>
+                                    <div class="da-kpi-valor" id="viaRitmoReciente">—</div>
+                                    <div class="da-kpi-sub">aperturas/año</div>
+                                </div>
+                            </div>
+                            <div class="da-kpi-card">
+                                <div class="da-kpi-icon-wrap warning"><i class="fas fa-bullseye"></i></div>
+                                <div class="da-kpi-body">
+                                    <div class="da-kpi-label">Ritmo Necesario</div>
+                                    <div class="da-kpi-valor" id="viaRitmoNecesario">—</div>
+                                    <div class="da-kpi-sub">para llegar a 40 en 2028</div>
+                                </div>
+                            </div>
+                            <div class="da-kpi-card">
+                                <div class="da-kpi-icon-wrap teal"><i class="fas fa-map-marker-alt"></i></div>
+                                <div class="da-kpi-body">
+                                    <div class="da-kpi-label">Proyección Realista 2028</div>
+                                    <div class="da-kpi-valor" id="viaProyeccionReciente">—</div>
+                                    <div class="da-kpi-sub">tiendas al ritmo reciente</div>
+                                </div>
+                            </div>
+                            <div class="da-kpi-card">
+                                <div class="da-kpi-icon-wrap green"><i class="fas fa-check-double"></i></div>
+                                <div class="da-kpi-body">
+                                    <div class="da-kpi-label">Estado Viabilidad</div>
+                                    <div class="da-kpi-valor" id="viaEstado" style="font-size:1.1rem">—</div>
+                                    <div class="da-kpi-sub" id="viaRatio"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <div class="da-row-2col" style="margin-bottom:16px">
                     <div class="da-card">
                         <div class="da-card-header">
@@ -558,9 +608,21 @@ $hoy = date('Y-m-d');
                                 <div class="card-body">
                                     <h6 class="fw-bold" style="color:#0E544C"><i
                                             class="fas fa-rocket me-2"></i>Expansión 2028</h6>
-                                    <p class="small text-muted mb-0">Panel estático basado en la visión estratégica:
-                                        <strong>14 tiendas actuales → 40 para 2028</strong>. Muestra el avance
-                                        porcentual y las aperturas anuales necesarias para cumplir la meta.</p>
+                                    <p class="small text-muted mb-0">
+                                        <strong>¿Qué es una tienda activa?</strong> Solo se cuentan sucursales con
+                                        <code>sucursal=1</code> (canal de tienda, no canales alternativos) y
+                                        <code>activa=1</code> (no cerradas). El contador del encabezado usa exactamente
+                                        este filtro. Existen otras entidades que facturan (otros canales) que se excluyen.
+                                        <br><br>
+                                        <strong>Datos de ventas históricas:</strong> La base de datos solo conserva
+                                        registros de facturación desde <strong>2024 en adelante</strong> por optimización
+                                        de memoria. Las fechas de apertura en tabla <code>sucursales</code> sí son
+                                        completas desde la primera tienda. Las gráficas de ventas por año reflejan solo
+                                        2024+. <br><br>
+                                        <strong>Viabilidad:</strong> Se calcula el ritmo histórico y reciente de
+                                        aperturas para proyectar cuántas tiendas se tendrán en 2028 al ritmo actual, y
+                                        cuántas aperturas/año serían necesarias para cumplir la meta de 40.
+                                    </p>
                                 </div>
                             </div>
                         </div>
