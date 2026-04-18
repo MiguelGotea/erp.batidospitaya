@@ -617,28 +617,34 @@ try {
         $nc = $nmeses;
     }
 
-    // Regresión lineal sobre VPT de los meses COMPLETOS solamente
+    // ── Regresión lineal sobre VPT ─────────────────────────────────────────
+    // Incluimos los meses COMPLETOS + el mes actual estimado (si existe) como
+    // punto adicional. Esto hace que la regresión refleje el desempeño ACTUAL
+    // de Abril y no solo el histórico hasta Marzo, evitando que Mayo proyectado
+    // quede por debajo del anchor de Abril.
     $vptCompletos = array_slice($vptSeries, 0, $nc);
+
+    // Agregar VPT de Abril estimado como último punto de regresión
+    $vptParaReg = $vptCompletos;
+    if ($mesActualEstimado && $mesActualEstimado['venta_por_tienda'] > 0) {
+        $vptParaReg[] = $mesActualEstimado['venta_por_tienda'];
+    }
+    $nReg = count($vptParaReg);
+
     $sx=0; $sy=0; $sxy=0; $sxx=0;
-    for ($i=0; $i<$nc; $i++) {
-        $sx  += $i;   $sy  += $vptCompletos[$i];
-        $sxy += $i * $vptCompletos[$i];
+    for ($i=0; $i<$nReg; $i++) {
+        $sx  += $i;   $sy  += $vptParaReg[$i];
+        $sxy += $i * $vptParaReg[$i];
         $sxx += $i * $i;
     }
-    $den2  = $nc * $sxx - $sx * $sx;
-    $slope2     = $den2 != 0 ? ($nc * $sxy - $sx * $sy) / $den2 : 0;
-    $intercept2 = $nc > 0    ? ($sy - $slope2 * $sx) / $nc       : 0;
+    $den2       = $nReg * $sxx - $sx * $sx;
+    $slope2     = $den2 != 0 ? ($nReg * $sxy - $sx * $sy) / $den2 : 0;
+    $intercept2 = $nReg > 0  ? ($sy - $slope2 * $sx) / $nReg      : 0;
 
-    // ── Base de referencia para la proyección ──────────────────────────────
-    // Si el mes actual ya tiene datos estimados (ej: Abril en curso), lo usamos
-    // como punto de partida del VPT en lugar del último mes completo (Marzo).
-    // Esto evita que Mayo proyectado quede por debajo de Abril estimado cuando
-    // Abril está teniendo mejor rendimiento que la regresión sobre meses pasados.
-    if ($mesActualEstimado) {
-        $lastVptCompleto = $mesActualEstimado['venta_por_tienda'];
-    } else {
-        $lastVptCompleto = $nc > 0 ? $vptCompletos[$nc-1] : ($lastVpt ?: 1);
-    }
+    // Base de referencia = VPT del mes actual estimado (Abril), o último mes completo
+    $lastVptCompleto = $mesActualEstimado
+        ? $mesActualEstimado['venta_por_tienda']
+        : ($nc > 0 ? $vptCompletos[$nc-1] : ($lastVpt ?: 1));
 
     // Mes base para la proyección = último mes completo
     $lastMesCompleto = $nc > 0 ? $tendenciaMensual[$nc-1]['mes'] : date('Y-m', strtotime('-1 month'));
@@ -661,9 +667,10 @@ try {
         $i++;
         $mesLabel = date('Y-m', $cursorTs);
 
-        // VPT proyectado por regresión, acotado al −25%/+35% del VPT de referencia
-        // (ahora la base es el VPT del mes actual estimado, no el último mes completo)
-        $vptReg  = $intercept2 + $slope2 * ($nc - 1 + $i);
+        // VPT proyectado: regresión que ya incluye Abril, acotado al ±25%/35%
+        // del VPT de referencia (Abril estimado) para evitar saltos bruscos.
+        // El índice x de los meses futuros arranca desde $nReg (posición siguiente a Abril).
+        $vptReg  = $intercept2 + $slope2 * ($nReg - 1 + $i);
         $vptProy = max($lastVptCompleto * 0.75, min($lastVptCompleto * 1.35, $vptReg));
 
         // Tiendas esperadas por escenario (sin cierres → solo sube)

@@ -237,19 +237,25 @@ function renderTendenciaMensual(meses, proyeccion, mesEstimado) {
     const vptEst = mesEstimado ? [convertir(parseFloat(mesEstimado.venta_por_tienda || 0))] : [];
     const vptPad = [...vptHist, ...vptEst, ...Array(labelsProy.length).fill(null)];
 
-    // ── Anclaje: el último punto real/estimado conecta con la proyección ──
-    const anchorVentas = mesEstimado
-        ? convertir(parseFloat(mesEstimado.ventas))
-        : (ventasHist.length ? ventasHist[ventasHist.length - 1] : 0);
+    // ── Anclaje: usar el ÚLTIMO MES COMPLETO (Marzo) como punto de arranque ──
+    // El estimado de Abril es una extrapolación (ventas_16_días × 30/16) que puede
+    // inflar el punto de partida y hacer que Mayo proyectado parezca menor.
+    // Anclando en Marzo (dato real) y usando spanGaps:true en las líneas,
+    // Chart.js dibuja la proyección pasando por Abril hasta Mayo de forma continua.
+    const anchorVentas = ventasHist.length
+        ? ventasHist[ventasHist.length - 1]   // último mes completo = Marzo
+        : 0;
 
-    // Construir series de proyección: (nTotal-1) nulls + anchor + valores futuros
+    // Construir series de proyección:
+    //   (nH-1) nulls → anchor en Marzo → null en Abril (spanGaps lo conecta) → Mayo en adelante
     const buildProy = (vals) => [
-        ...Array(nTotal - 1).fill(null),
+        ...Array(nH - 1).fill(null),
         anchorVentas,
+        ...Array(nE).fill(null),   // Abril: null (la línea pasa por encima de la barra)
         ...vals
     ];
     const proyHist = buildProy(proySlice.map(p => convertir(p.ventas_hist)));
-    const proyRec = buildProy(proySlice.map(p => convertir(p.ventas_rec)));
+    const proyRec  = buildProy(proySlice.map(p => convertir(p.ventas_rec)));
     const proyMeta = buildProy(proySlice.map(p => convertir(p.ventas_meta)));
 
     chartTendencia = new Chart(ctx, {
@@ -272,11 +278,13 @@ function renderTendenciaMensual(meses, proyeccion, mesEstimado) {
                 },
 
                 // Escenario 1: Conservador (ritmo histórico)
+                // spanGaps:true → dibuja la línea a través del null de Abril, conectando Marzo→Mayo
                 {
                     type: 'line', label: 'Conservador (ritmo histórico)',
                     data: proyHist,
                     borderColor: DA_COLORS.muted, borderDash: [4, 3],
-                    pointRadius: 0, fill: false, tension: 0.3, yAxisID: 'y', borderWidth: 1.5
+                    pointRadius: 0, fill: false, tension: 0.3, yAxisID: 'y', borderWidth: 1.5,
+                    spanGaps: true
                 },
 
                 // Escenario 2: Moderado (ritmo últimos 2 años)
@@ -284,7 +292,8 @@ function renderTendenciaMensual(meses, proyeccion, mesEstimado) {
                     type: 'line', label: 'Moderado (ritmo reciente)',
                     data: proyRec,
                     borderColor: DA_COLORS.primary, borderDash: [5, 3],
-                    pointRadius: 0, fill: false, tension: 0.3, yAxisID: 'y', borderWidth: 2
+                    pointRadius: 0, fill: false, tension: 0.3, yAxisID: 'y', borderWidth: 2,
+                    spanGaps: true
                 },
 
                 // Escenario 3: Optimista (40 tiendas Dic 2028)
@@ -292,7 +301,8 @@ function renderTendenciaMensual(meses, proyeccion, mesEstimado) {
                     type: 'line', label: 'Optimista (meta 40 × 2028)',
                     data: proyMeta,
                     borderColor: DA_COLORS.green, borderDash: [6, 2],
-                    pointRadius: 0, fill: false, tension: 0.3, yAxisID: 'y', borderWidth: 2.5
+                    pointRadius: 0, fill: false, tension: 0.3, yAxisID: 'y', borderWidth: 2.5,
+                    spanGaps: true
                 },
             ]
         },
