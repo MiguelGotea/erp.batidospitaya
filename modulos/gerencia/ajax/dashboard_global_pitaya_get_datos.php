@@ -65,6 +65,7 @@ try {
         INNER JOIN sucursales s ON s.codigo = v.local
         WHERE v.Fecha BETWEEN :ini AND :fin
           AND s.sucursal = 1
+          AND s.activa = 1
     ";
     $st = $conn->prepare($sqlVentas);
     $st->execute([':ini' => $ini, ':fin' => $fin]);
@@ -130,6 +131,7 @@ try {
                 INNER JOIN sucursales s ON s.codigo = v.local
                 WHERE v.Fecha >= DATE_SUB(:hoy, INTERVAL 12 MONTH)
                   AND s.sucursal = 1
+                  AND s.activa = 1
                 GROUP BY DATE_FORMAT(v.Fecha, '%Y-%m')
             ) sub
             ORDER BY mes ASC
@@ -262,10 +264,13 @@ try {
     // Participación club en ventas (período)
     $sqlPart = "
         SELECT
-            SUM(CASE WHEN Anulado = 0 THEN Precio ELSE 0 END) AS total_ventas,
-            SUM(CASE WHEN Anulado = 0 AND CodCliente > 0 THEN Precio ELSE 0 END) AS ventas_club
-        FROM VentasGlobalesAccessCSV
-        WHERE Fecha BETWEEN :ini AND :fin
+            SUM(CASE WHEN v.Anulado = 0 THEN v.Precio ELSE 0 END) AS total_ventas,
+            SUM(CASE WHEN v.Anulado = 0 AND v.CodCliente > 0 THEN v.Precio ELSE 0 END) AS ventas_club
+        FROM VentasGlobalesAccessCSV v
+        INNER JOIN sucursales s ON s.codigo = v.local
+        WHERE v.Fecha BETWEEN :ini AND :fin
+          AND s.sucursal = 1
+          AND s.activa = 1
     ";
     $stPart = $conn->prepare($sqlPart);
     $stPart->execute([':ini' => $ini, ':fin' => $fin]);
@@ -292,14 +297,17 @@ try {
     // ────────────────────────────────────────────
     $sqlTop = "
         SELECT
-            DBBatidos_Nombre AS producto,
-            SUM(CASE WHEN Anulado = 0 THEN Cantidad ELSE 0 END) AS cantidad,
-            SUM(CASE WHEN Anulado = 0 THEN Precio ELSE 0 END)   AS monto
-        FROM VentasGlobalesAccessCSV
-        WHERE Fecha BETWEEN :ini AND :fin
-          AND DBBatidos_Nombre IS NOT NULL
-          AND DBBatidos_Nombre != ''
-        GROUP BY DBBatidos_Nombre
+            v.DBBatidos_Nombre AS producto,
+            SUM(CASE WHEN v.Anulado = 0 THEN v.Cantidad ELSE 0 END) AS cantidad,
+            SUM(CASE WHEN v.Anulado = 0 THEN v.Precio ELSE 0 END)   AS monto
+        FROM VentasGlobalesAccessCSV v
+        INNER JOIN sucursales s ON s.codigo = v.local
+        WHERE v.Fecha BETWEEN :ini AND :fin
+          AND v.DBBatidos_Nombre IS NOT NULL
+          AND v.DBBatidos_Nombre != ''
+          AND s.sucursal = 1
+          AND s.activa = 1
+        GROUP BY v.DBBatidos_Nombre
         ORDER BY monto DESC
         LIMIT 10
     ";
@@ -313,11 +321,14 @@ try {
     $sqlCat = "
         SELECT categoria, monto FROM (
             SELECT
-                COALESCE(NombreGrupo, 'Otro') AS categoria,
-                SUM(CASE WHEN Anulado = 0 THEN Precio ELSE 0 END) AS monto
-            FROM VentasGlobalesAccessCSV
-            WHERE Fecha BETWEEN :ini AND :fin
-            GROUP BY COALESCE(NombreGrupo, 'Otro')
+                COALESCE(v.NombreGrupo, 'Otro') AS categoria,
+                SUM(CASE WHEN v.Anulado = 0 THEN v.Precio ELSE 0 END) AS monto
+            FROM VentasGlobalesAccessCSV v
+            INNER JOIN sucursales s ON s.codigo = v.local
+            WHERE v.Fecha BETWEEN :ini AND :fin
+              AND s.sucursal = 1
+              AND s.activa = 1
+            GROUP BY COALESCE(v.NombreGrupo, 'Otro')
         ) sub
         ORDER BY monto DESC
         LIMIT 8
@@ -410,11 +421,13 @@ try {
     // Ventas totales y primer año por tienda
     $sqlVentasTienda = "
         SELECT
-            Sucursal_Nombre,
-            YEAR(MIN(Fecha))  AS primer_anio_venta,
-            SUM(CASE WHEN Anulado=0 THEN Precio ELSE 0 END) AS ventas_total_historico
-        FROM VentasGlobalesAccessCSV
-        GROUP BY Sucursal_Nombre
+            v.Sucursal_Nombre,
+            YEAR(MIN(v.Fecha))  AS primer_anio_venta,
+            SUM(CASE WHEN v.Anulado=0 THEN v.Precio ELSE 0 END) AS ventas_total_historico
+        FROM VentasGlobalesAccessCSV v
+        INNER JOIN sucursales s ON s.codigo = v.local
+        WHERE s.sucursal = 1
+        GROUP BY v.Sucursal_Nombre
     ";
     $stVT = $conn->query($sqlVentasTienda);
     $vtMap = [];
@@ -425,11 +438,14 @@ try {
     // Ventas por año — solo desde 2024 (base de datos contiene datos desde 2024)
     $sqlVentasAnio = "
         SELECT anio, ventas FROM (
-            SELECT YEAR(Fecha) AS anio,
-                   SUM(CASE WHEN Anulado=0 THEN Precio ELSE 0 END) AS ventas
-            FROM VentasGlobalesAccessCSV
-            WHERE YEAR(Fecha) >= 2024
-            GROUP BY YEAR(Fecha)
+            SELECT YEAR(v.Fecha) AS anio,
+                   SUM(CASE WHEN v.Anulado=0 THEN v.Precio ELSE 0 END) AS ventas
+            FROM VentasGlobalesAccessCSV v
+            INNER JOIN sucursales s ON s.codigo = v.local
+            WHERE YEAR(v.Fecha) >= 2024
+              AND s.sucursal = 1
+              AND s.activa = 1
+            GROUP BY YEAR(v.Fecha)
         ) sub ORDER BY anio ASC
     ";
     $stVA = $conn->query($sqlVentasAnio);
@@ -596,7 +612,15 @@ try {
 
     if ($lastMesTend === $mesActualStr && $diaHoy > 1) {
         // Obtener ventas reales hasta ayer para una proyección más pura
-        $sqlHastaAyer = "SELECT SUM(Precio) as total FROM VentasGlobalesAccessCSV WHERE Fecha BETWEEN :ini AND :ayer AND Anulado = 0";
+        $sqlHastaAyer = "
+            SELECT SUM(v.Precio) as total
+            FROM VentasGlobalesAccessCSV v
+            INNER JOIN sucursales s ON s.codigo = v.local
+            WHERE v.Fecha BETWEEN :ini AND :ayer
+              AND v.Anulado = 0
+              AND s.sucursal = 1
+              AND s.activa = 1
+        ";
         $stAyer = $conn->prepare($sqlHastaAyer);
         $stAyer->execute([':ini' => date('Y-m-01'), ':ayer' => date('Y-m-d', strtotime('-1 day'))]);
         $ventasHastaAyer = (float)($stAyer->fetch(PDO::FETCH_ASSOC)['total'] ?? 0);
