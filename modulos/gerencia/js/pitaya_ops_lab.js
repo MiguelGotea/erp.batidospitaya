@@ -30,8 +30,12 @@ const OPS = {
         this.cargarSucursales();
         this.bindTabs();
         document.getElementById('opsBtnCargar').addEventListener('click', () => this.cargarTab(this.tabActivo));
-        Chart.defaults.color = '#8b949e';
-        Chart.defaults.borderColor = 'rgba(48,54,61,0.6)';
+        
+        // Chart.js Defaults for Neumorphism
+        const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        Chart.defaults.color = isDark ? '#8b949e' : '#718096';
+        Chart.defaults.borderColor = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
+        Chart.defaults.font.family = "'Inter', sans-serif";
     },
 
     tabActivo: 'resumen',
@@ -120,23 +124,40 @@ const OPS = {
         const mixData   = d.mix_global.map(x => +x.pedidos);
         const mixColors = mixLabels.map(l => this.COLORES[l] || this.COLORES.Otro);
         this.destroyChart('chartMixGlobal');
+        const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const bg = isDark ? '#1e2027' : '#e0e5ec';
+        
         OPS.charts.chartMixGlobal = new Chart(document.getElementById('chartMixGlobal'), {
             type: 'doughnut',
-            data: { labels: mixLabels, datasets: [{ data: mixData, backgroundColor: mixColors, borderColor: '#161b22', borderWidth: 3, hoverOffset: 6 }] },
-            options: { plugins: { legend: { position: 'bottom' } }, cutout: '60%' }
+            data: { 
+                labels: mixLabels, 
+                datasets: [{ 
+                    data: mixData, 
+                    backgroundColor: mixColors, 
+                    borderColor: bg, 
+                    borderWidth: 5, 
+                    hoverOffset: 10 
+                }] 
+            },
+            options: { 
+                plugins: { legend: { position: 'bottom' } }, 
+                cutout: '70%',
+                responsive: true,
+                maintainAspectRatio: false
+            }
         });
 
         // Horas pico
         document.getElementById('horasPicoList').innerHTML = d.horas_pico.map((h,i) => `
-            <div style="display:flex;align-items:center;gap:14px;padding:12px 0;border-bottom:1px solid var(--ops-border)">
-                <div style="font-size:1.6rem;font-weight:800;color:var(--ops-accent);width:32px;text-align:center">${i+1}</div>
+            <div style="display:flex;align-items:center;gap:18px;padding:16px 0;border-bottom:1px solid rgba(0,0,0,0.03)">
+                <div style="font-size:1.8rem;font-weight:900;color:var(--ops-teal);width:40px;text-align:center;opacity:0.2">${i+1}</div>
                 <div>
-                    <div style="font-weight:700;font-size:1rem">${h.hora}:00 – ${h.hora}:59</div>
-                    <div style="color:var(--ops-text-muted);font-size:.82rem">${this.num(h.pedidos)} pedidos</div>
+                    <div style="font-weight:800;font-size:1.05rem;color:var(--ops-text)">${h.hora}:00 – ${h.hora}:59</div>
+                    <div style="color:var(--ops-text-muted);font-size:.85rem">${this.num(h.pedidos)} pedidos acumulados</div>
                 </div>
                 <div style="margin-left:auto">
-                    <div class="ops-progress-track" style="width:120px">
-                        <div class="ops-progress-fill" style="width:${Math.round(h.pedidos/d.horas_pico[0].pedidos*100)}%"></div>
+                    <div class="ops-progress-track" style="width:140px;height:8px;box-shadow:var(--neu-inset-shadow)">
+                        <div class="ops-progress-fill" style="width:${Math.round(h.pedidos/d.horas_pico[0].pedidos*100)}%;background:var(--ops-teal)"></div>
                     </div>
                 </div>
             </div>
@@ -167,10 +188,10 @@ const OPS = {
                 datasets: [{
                     label: 'λ Pedidos/hora',
                     data: lambdas,
-                    backgroundColor: lambdas.map(v => `rgba(63,186,158,${0.3 + 0.7*(v/maxL)})`),
-                    borderColor: '#3fba9e',
-                    borderWidth: 1,
-                    borderRadius: 5,
+                    backgroundColor: lambdas.map(v => `rgba(14,84,76,${0.4 + 0.6*(v/maxL)})`),
+                    borderColor: 'transparent',
+                    borderWidth: 0,
+                    borderRadius: 8,
                 }]
             },
             options: {
@@ -330,12 +351,20 @@ const OPS = {
         // Doughnut
         const labels = kpis.map(([n]) => `${n} estación${+n>1?'es':''}`);
         const data   = kpis.map(([,c]) => c);
-        const colors = ['#3fba9e','#f0883e','#f85149'];
+        const colors = ['#0E544C','#e67e22','#d9534f'];
+        const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const bg = isDark ? '#1e2027' : '#e0e5ec';
+
         this.destroyChart('chartMultiDist');
         OPS.charts.chartMultiDist = new Chart(document.getElementById('chartMultiDist'), {
             type: 'doughnut',
-            data: { labels, datasets: [{ data, backgroundColor: colors, borderColor:'#161b22', borderWidth:3, hoverOffset:6 }] },
-            options: { plugins:{ legend:{ position:'bottom' } }, cutout:'55%' }
+            data: { labels, datasets: [{ data, backgroundColor: colors, borderColor: bg, borderWidth: 5, hoverOffset: 10 }] },
+            options: { 
+                plugins:{ legend:{ position:'bottom' } }, 
+                cutout:'65%',
+                responsive: true,
+                maintainAspectRatio: false
+            }
         });
 
         // Tabla
