@@ -518,6 +518,7 @@ try {
             $llegadas[] = $byHora[$h] ?? ['hora' => $h, 'lambda' => 0];
         }
 
+
         // Mix por hora
         $sqlMix = "
             SELECT HOUR(v.HoraCreado) AS hora,
