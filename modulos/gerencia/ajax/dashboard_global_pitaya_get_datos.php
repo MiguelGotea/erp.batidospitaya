@@ -62,7 +62,7 @@ try {
             COUNT(DISTINCT CASE WHEN v.Anulado = 0 THEN v.CodPedido ELSE NULL END)        AS total_pedidos,
             COUNT(DISTINCT CASE WHEN v.Anulado = 0 THEN v.Sucursal_Nombre ELSE NULL END)  AS tiendas_activas
         FROM VentasGlobalesAccessCSV v
-        INNER JOIN sucursales s ON s.nombre = v.Sucursal_Nombre
+        INNER JOIN sucursales s ON s.codigo = v.local
         WHERE v.Fecha BETWEEN :ini AND :fin
           AND s.sucursal = 1
     ";
@@ -127,7 +127,7 @@ try {
                     SUM(CASE WHEN v.Anulado = 0 THEN v.Precio ELSE 0 END) AS total,
                     COUNT(DISTINCT CASE WHEN v.Anulado = 0 THEN v.CodPedido ELSE NULL END) AS pedidos
                 FROM VentasGlobalesAccessCSV v
-                INNER JOIN sucursales s ON s.nombre = v.Sucursal_Nombre
+                INNER JOIN sucursales s ON s.codigo = v.local
                 WHERE v.Fecha >= DATE_SUB(:hoy, INTERVAL 12 MONTH)
                   AND s.sucursal = 1
                 GROUP BY DATE_FORMAT(v.Fecha, '%Y-%m')
@@ -176,7 +176,7 @@ try {
             SUM(CASE WHEN v.Anulado = 0 THEN v.Precio ELSE 0 END)                    AS ventas,
             COUNT(DISTINCT CASE WHEN v.Anulado = 0 THEN v.CodPedido ELSE NULL END)   AS pedidos
         FROM VentasGlobalesAccessCSV v
-        INNER JOIN sucursales s ON s.nombre = v.Sucursal_Nombre
+        INNER JOIN sucursales s ON s.codigo = v.local
         WHERE v.Fecha BETWEEN :ini AND :fin
           AND s.sucursal = 1
         GROUP BY v.Sucursal_Nombre
@@ -374,7 +374,7 @@ try {
             COUNT(DISTINCT CASE WHEN v.Anulado = 0 THEN v.CodPedido ELSE NULL END)   AS pedidos,
             COUNT(DISTINCT CASE WHEN v.Anulado = 0 AND v.CodCliente > 0 THEN v.CodCliente ELSE NULL END) AS socios
         FROM VentasGlobalesAccessCSV v
-        INNER JOIN sucursales s ON s.nombre = v.Sucursal_Nombre
+        INNER JOIN sucursales s ON s.codigo = v.local
         WHERE v.Fecha BETWEEN :ini AND :fin
           AND s.sucursal = 1
         GROUP BY v.Sucursal_Nombre
