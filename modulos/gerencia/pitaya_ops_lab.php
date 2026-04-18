@@ -163,18 +163,18 @@ $finDefault = date('Y-m-t', strtotime('-1 month'));
             <div class="ops-loader-ring"></div><span>Calculando tiempos…</span>
           </div>
           <div id="cycleContent" style="display:none">
-            <div class="ops-section-title"><i class="fas fa-stopwatch"></i> Tiempos de Ciclo por Estación</div>
+            <div class="ops-section-title"><i class="fas fa-stopwatch"></i> Tiempos de Proceso — Análisis de Caja</div>
             <div class="ops-kpi-grid" id="kpiGridCycle"></div>
             <div class="ops-grid-2">
               <div class="ops-card">
                 <div class="ops-card-header">
-                  <h3><i class="fas fa-chart-bar"></i> Lead Time vs Cycle Time (min)</h3>
+                  <h3><i class="fas fa-chart-bar"></i> Tiempo de Caja vs Tiempo Ingreso Productos (min)</h3>
                 </div>
                 <div class="ops-card-body"><canvas id="chartCycleTimes" height="250"></canvas></div>
               </div>
               <div class="ops-card">
                 <div class="ops-card-header">
-                  <h3><i class="fas fa-hourglass-half"></i> Tiempo en Cola Promedio</h3>
+                  <h3><i class="fas fa-hourglass-half"></i> Diferencia: Caja vs Ingreso Productos</h3>
                 </div>
                 <div class="ops-card-body"><canvas id="chartQueueTime" height="250"></canvas></div>
               </div>
@@ -190,11 +190,11 @@ $finDefault = date('Y-m-t', strtotime('-1 month'));
                       <tr>
                         <th>Estación</th>
                         <th>Registros</th>
-                        <th>Lead Time Prom</th>
-                        <th>Cycle Time Prom</th>
-                        <th>Cola Prom</th>
-                        <th>Lead Mín</th>
-                        <th>Lead Máx</th>
+                        <th>Tiempo de Caja Prom<br><small style="font-weight:400;opacity:.7">HoraCreado→HoraImpreso</small></th>
+                        <th>Ingreso Productos Prom<br><small style="font-weight:400;opacity:.7">HoraIngresoProducto→HoraImpreso</small></th>
+                        <th>Diferencia Prom</th>
+                        <th>Caja Mín</th>
+                        <th>Caja Máx</th>
                         <th>Std Dev</th>
                       </tr>
                     </thead>
@@ -712,12 +712,14 @@ $finDefault = date('Y-m-t', strtotime('-1 month'));
 
           <!-- Cycle Times -->
           <div style="background:white;border:1px solid #e0f0ee;border-radius:10px;padding:14px 18px;margin-bottom:12px;">
-            <div style="font-weight:700;color:#0E544C;margin-bottom:6px;"><i class="fas fa-stopwatch me-1" style="color:#51B8AC;"></i>3. Cycle Times</div>
-            <p style="font-size:.84rem;margin:0;line-height:1.6;color:#444;">Tiempos medidos desde la BD real:<br>
-            • <strong>Lead Time</strong>: desde <code>HoraCreado</code> (pedido en caja) hasta <code>HoraImpreso</code> (entrega al cliente).<br>
-            • <strong>Cycle Time</strong>: desde <code>HoraIngresoProducto</code> (inicio de preparación, justo después de imprimir comanda) hasta <code>HoraImpreso</code>.<br>
-            • <strong>Cola Prom</strong>: Lead − Cycle = tiempo que esperó antes de ser preparado.<br>
-            Outliers mayores a 2 horas se excluyen automáticamente.</p>
+            <div style="font-weight:700;color:#0E544C;margin-bottom:6px;"><i class="fas fa-stopwatch me-1" style="color:#51B8AC;"></i>3. Tiempos de Proceso — Análisis de Caja</div>
+            <p style="font-size:.84rem;margin:0;line-height:1.6;color:#444;">
+              <strong>⚠️ Importante:</strong> El sistema <strong>no registra la hora de entrega del producto</strong> al cliente. Los tiempos medidos desde BD son del proceso de caja:<br>
+              &bull; <strong>Tiempo de Caja</strong> (<code>HoraCreado → HoraImpreso</code>): desde que el cajero inicia la factura hasta que se imprime y manda la comanda a las estaciones. Refleja la eficiencia del proceso de facturación.<br>
+              &bull; <strong>Tiempo Ingreso Productos</strong> (<code>HoraIngresoProducto → HoraImpreso</code>): desde que se empiezan a ingresar ítems hasta que se imprime. Subconjunto del anterior.<br>
+              &bull; <strong>Tiempo de preparación</strong> (post-HoraImpreso): NO medible desde BD — se estima con los parámetros configurados en la pestaña Configuración.<br>
+              Outliers mayores a 2 horas se excluyen automáticamente.
+            </p>
           </div>
 
           <!-- Mix Estaciones -->
@@ -771,9 +773,10 @@ $finDefault = date('Y-m-t', strtotime('-1 month'));
             <thead><tr style="background:#e8f5f3;"><th style="padding:8px 12px;text-align:left;width:28%;">Término</th><th style="padding:8px 12px;text-align:left;">Definición</th></tr></thead>
             <tbody>
               <tr style="border-bottom:1px solid #eee;"><td style="padding:8px 12px;font-weight:600;">λ (Lambda)</td><td style="padding:8px 12px;">Tasa de llegada Poisson: pedidos promedio que llegan por hora. Derivada de datos reales ÷ días observados.</td></tr>
-              <tr style="border-bottom:1px solid #eee;"><td style="padding:8px 12px;font-weight:600;">Lead Time</td><td style="padding:8px 12px;">Tiempo total desde que el cliente ordena (<code>HoraCreado</code>) hasta que recibe su pedido (<code>HoraImpreso</code>).</td></tr>
-              <tr style="border-bottom:1px solid #eee;"><td style="padding:8px 12px;font-weight:600;">Cycle Time</td><td style="padding:8px 12px;">Tiempo de preparación activa: desde que la comanda llega a la estación (<code>HoraIngresoProducto</code>) hasta entrega.</td></tr>
-              <tr style="border-bottom:1px solid #eee;"><td style="padding:8px 12px;font-weight:600;">Wq (Tiempo en Cola)</td><td style="padding:8px 12px;">Lead Time − Cycle Time. Tiempo que el pedido esperó sin ser atendido. Indica nivel de saturación.</td></tr>
+              <tr style="border-bottom:1px solid #eee;"><td style="padding:8px 12px;font-weight:600;">Lead Time</td><td style="padding:8px 12px;"><strong>No medible directamente en BD</strong>. Sería HoraCreado → entrega al cliente, pero no se registra la hora de entrega. El Lead Time real = Tiempo de Caja + Tiempo de Preparación (estimado).</td></tr>
+              <tr style="border-bottom:1px solid #eee;"><td style="padding:8px 12px;font-weight:600;">Tiempo de Caja</td><td style="padding:8px 12px;"><code>HoraCreado → HoraImpreso</code>. Tiempo que tarda el cajero en facturar e imprimir la comanda. Inicio del proceso de preparación.</td></tr>
+              <tr style="border-bottom:1px solid #eee;"><td style="padding:8px 12px;font-weight:600;">Tiempo Ingreso Productos</td><td style="padding:8px 12px;"><code>HoraIngresoProducto → HoraImpreso</code>. Subconjunto del tiempo de caja: desde que se empiezan a ingresar ítems hasta imprimir.</td></tr>
+              <tr style="border-bottom:1px solid #eee;"><td style="padding:8px 12px;font-weight:600;">Wq (Diferencia)</td><td style="padding:8px 12px;">Tiempo de Caja − Tiempo Ingreso Productos. Tiempo previo al ingreso de productos en la misma facturación.</td></tr>
               <tr style="border-bottom:1px solid #eee;"><td style="padding:8px 12px;font-weight:600;">WIP</td><td style="padding:8px 12px;">Work In Process: máxima cantidad de pedidos simultáneos en cola de una estación durante la simulación.</td></tr>
               <tr style="border-bottom:1px solid #eee;"><td style="padding:8px 12px;font-weight:600;">Throughput</td><td style="padding:8px 12px;">Pedidos completados por hora en cada estación. Capacidad real de producción.</td></tr>
               <tr style="border-bottom:1px solid #eee;"><td style="padding:8px 12px;font-weight:600;">Utilización %</td><td style="padding:8px 12px;">% del tiempo que el equipo está ocupado procesando. &gt;85% = cuello de botella. Ideal: 70-80%.</td></tr>

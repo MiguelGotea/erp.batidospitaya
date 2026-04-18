@@ -272,7 +272,12 @@ try {
     }
 
     // ════════════════════════════════════════════════════════════════════════
-    // ACCIÓN: cycle_times — lead/cycle time proxy desde BD real
+    // ACCIÓN: cycle_times — tiempos de caja y preparación desde BD real
+    // NOTA: No existe timestamp de entrega al cliente en BD.
+    //   - tiempo_caja     : HoraCreado → HoraImpreso (cajero factura e imprime comanda)
+    //   - tiempo_ingreso  : HoraIngresoProducto → HoraImpreso (ingreso de productos al facturar)
+    //   Ambos son proxy del proceso de caja, NO del tiempo total al cliente.
+    //   El tiempo de preparación real (post-HoraImpreso) se estima vía config.
     // ════════════════════════════════════════════════════════════════════════
     if ($accion === 'cycle_times') {
         $sql = "
@@ -283,14 +288,14 @@ try {
                     WHEN g.Tipo = 'Bowl'                 THEN 'Bowl'
                     ELSE 'Otro'
                 END AS estacion,
-                COUNT(*)                                                                  AS registros,
-                AVG(TIMESTAMPDIFF(SECOND, v.HoraCreado, v.HoraImpreso))                  AS lead_time_prom_seg,
-                AVG(TIMESTAMPDIFF(SECOND, v.HoraIngresoProducto, v.HoraImpreso))          AS cycle_time_prom_seg,
-                MIN(TIMESTAMPDIFF(SECOND, v.HoraCreado, v.HoraImpreso))                  AS lead_min_seg,
-                MAX(TIMESTAMPDIFF(SECOND, v.HoraCreado, v.HoraImpreso))                  AS lead_max_seg,
-                -- Percentil aproximado vía subconsulta no disponible en todas versiones,
-                -- usamos desviación estándar como proxy de variabilidad
-                STDDEV(TIMESTAMPDIFF(SECOND, v.HoraCreado, v.HoraImpreso))               AS lead_stddev_seg
+                COUNT(*)                                                                    AS registros,
+                -- Tiempo de caja: HoraCreado → HoraImpreso (facturación completa + impresión comanda)
+                AVG(TIMESTAMPDIFF(SECOND, v.HoraCreado, v.HoraImpreso))                    AS tiempo_caja_prom_seg,
+                MIN(TIMESTAMPDIFF(SECOND, v.HoraCreado, v.HoraImpreso))                    AS tiempo_caja_min_seg,
+                MAX(TIMESTAMPDIFF(SECOND, v.HoraCreado, v.HoraImpreso))                    AS tiempo_caja_max_seg,
+                STDDEV(TIMESTAMPDIFF(SECOND, v.HoraCreado, v.HoraImpreso))                 AS tiempo_caja_stddev_seg,
+                -- Tiempo de ingreso: HoraIngresoProducto → HoraImpreso (ingreso de items en caja)
+                AVG(TIMESTAMPDIFF(SECOND, v.HoraIngresoProducto, v.HoraImpreso))           AS tiempo_ingreso_prom_seg
             FROM VentasGlobalesAccessCSV v
             INNER JOIN sucursales s ON s.codigo = v.local
             INNER JOIN DBBatidos b ON b.CodBatido = v.CodProducto

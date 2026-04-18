@@ -234,18 +234,21 @@ const OPS = {
         document.getElementById('kpiGridCycle').innerHTML = cts.map(c => {
             const col = c.estacion === 'Batido' ? 'blue' : c.estacion === 'Waffle' ? 'gold' : 'purple';
             const icon = c.estacion === 'Batido' ? 'fa-blender' : c.estacion === 'Waffle' ? 'fa-bread-slice' : 'fa-bowl-food';
-            return this.kpiCard(col, icon, `Lead Time ${c.estacion}`, `${c.lead_time_prom_min} min`, `Cola: ${c.queue_time_prom_min} min · ${this.num(c.registros)} registros`);
+            return this.kpiCard(col, icon,
+                `Tiempo de Caja — ${c.estacion}`,
+                `${c.tiempo_caja_prom_min ?? c.lead_time_prom_min} min`,
+                `Ingreso productos: ${c.tiempo_ingreso_prom_min ?? c.cycle_time_prom_min} min · ${this.num(c.registros)} registros`);
         }).join('');
 
-        // Bar chart lead vs cycle
+        // Bar chart: tiempo de caja vs tiempo ingreso productos
         this.destroyChart('chartCycleTimes');
         OPS.charts.chartCycleTimes = new Chart(document.getElementById('chartCycleTimes'), {
             type: 'bar',
             data: {
                 labels,
                 datasets: [
-                    { label: 'Lead Time (min)', data: cts.map(c => c.lead_time_prom_min), backgroundColor: colors.map(c => c + 'aa'), borderColor: colors, borderWidth: 2, borderRadius: 5 },
-                    { label: 'Cycle Time (min)', data: cts.map(c => c.cycle_time_prom_min), backgroundColor: colors.map(c => c + '44'), borderColor: colors, borderWidth: 2, borderRadius: 5, borderDash: [5, 4] },
+                    { label: 'Tiempo de Caja (HoraCreado→HoraImpreso)', data: cts.map(c => c.tiempo_caja_prom_min ?? c.lead_time_prom_min), backgroundColor: colors.map(c => c + 'aa'), borderColor: colors, borderWidth: 2, borderRadius: 5 },
+                    { label: 'Ingreso Productos (HoraIngresoProducto→HoraImpreso)', data: cts.map(c => c.tiempo_ingreso_prom_min ?? c.cycle_time_prom_min), backgroundColor: colors.map(c => c + '44'), borderColor: colors, borderWidth: 2, borderRadius: 5 },
                 ]
             },
             options: { plugins: { legend: { position: 'bottom' } }, scales: { y: { beginAtZero: true, title: { display: true, text: 'Minutos' } } } }
@@ -274,12 +277,12 @@ const OPS = {
             <tr>
                 <td><span class="badge-estacion badge-${c.estacion.toLowerCase()}">${c.estacion}</span></td>
                 <td>${this.num(c.registros)}</td>
-                <td><strong>${c.lead_time_prom_min}</strong> min</td>
-                <td>${c.cycle_time_prom_min} min</td>
+                <td><strong>${c.tiempo_caja_prom_min ?? c.lead_time_prom_min}</strong> min</td>
+                <td>${c.tiempo_ingreso_prom_min ?? c.cycle_time_prom_min} min</td>
                 <td>${c.queue_time_prom_min} min</td>
-                <td class="muted">${c.lead_min_min} min</td>
-                <td class="muted">${c.lead_max_min} min</td>
-                <td class="muted">±${c.lead_stddev_min} min</td>
+                <td class="muted">${c.lead_min_min ?? c.tiempo_caja_min_min} min</td>
+                <td class="muted">${c.lead_max_min ?? c.tiempo_caja_max_min} min</td>
+                <td class="muted">±${c.lead_stddev_min ?? c.tiempo_caja_std_min} min</td>
             </tr>
         `).join('');
 
