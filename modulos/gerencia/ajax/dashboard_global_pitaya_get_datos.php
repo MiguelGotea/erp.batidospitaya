@@ -628,7 +628,17 @@ try {
     $den2  = $nc * $sxx - $sx * $sx;
     $slope2     = $den2 != 0 ? ($nc * $sxy - $sx * $sy) / $den2 : 0;
     $intercept2 = $nc > 0    ? ($sy - $slope2 * $sx) / $nc       : 0;
-    $lastVptCompleto = $nc > 0 ? $vptCompletos[$nc-1] : ($lastVpt ?: 1);
+
+    // ── Base de referencia para la proyección ──────────────────────────────
+    // Si el mes actual ya tiene datos estimados (ej: Abril en curso), lo usamos
+    // como punto de partida del VPT en lugar del último mes completo (Marzo).
+    // Esto evita que Mayo proyectado quede por debajo de Abril estimado cuando
+    // Abril está teniendo mejor rendimiento que la regresión sobre meses pasados.
+    if ($mesActualEstimado) {
+        $lastVptCompleto = $mesActualEstimado['venta_por_tienda'];
+    } else {
+        $lastVptCompleto = $nc > 0 ? $vptCompletos[$nc-1] : ($lastVpt ?: 1);
+    }
 
     // Mes base para la proyección = último mes completo
     $lastMesCompleto = $nc > 0 ? $tendenciaMensual[$nc-1]['mes'] : date('Y-m', strtotime('-1 month'));
@@ -651,7 +661,8 @@ try {
         $i++;
         $mesLabel = date('Y-m', $cursorTs);
 
-        // VPT proyectado por regresión, acotado al −25%/+35% del último real
+        // VPT proyectado por regresión, acotado al −25%/+35% del VPT de referencia
+        // (ahora la base es el VPT del mes actual estimado, no el último mes completo)
         $vptReg  = $intercept2 + $slope2 * ($nc - 1 + $i);
         $vptProy = max($lastVptCompleto * 0.75, min($lastVptCompleto * 1.35, $vptReg));
 
@@ -694,9 +705,11 @@ try {
         $ventasAnioActualEst = $ventasMesesPasados + $ventasMesActualEst + $ventasRestantesEst;
         
         // Ahora proyectamos 2027, 2028, 2029
-        // Usamos el VPT mensual más reciente como base anualizada para que la proyección sea continua con el rendimiento de 2026
-        $vptMensualActual = $nc > 0 ? $vptCompletos[$nc-1] : ($lastVpt ?: 0);
-        $vptAnualBase     = $vptMensualActual * 12; 
+        // Usamos $lastVptCompleto (que ya apunta al VPT del mes actual estimado si existe,
+        // o al último mes completo si no) para que la base anualizada sea consistente
+        // con el punto de arranque de la proyección mensual.
+        $vptMensualActual = $lastVptCompleto;
+        $vptAnualBase     = $vptMensualActual * 12;
         
         // Pendiente anual: crecimiento del VPT anualizado
         $slopeAnualVPT = $slope2 * 144; 
