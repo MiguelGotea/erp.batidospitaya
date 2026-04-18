@@ -26,7 +26,9 @@ $anio    = (int)($_POST['anio'] ?? date('Y'));
 // ────────────────────────────────────────────────
 // Calcular rango de fechas según período
 // ────────────────────────────────────────────────
-$hoy = date('Y-m-d');
+$hoy  = date('Y-m-d');
+$ayer = date('Y-m-d', strtotime('-1 day'));
+
 switch ($periodo) {
     case 'mes_anterior':
         $ini = date('Y-m-01', strtotime('first day of last month'));
@@ -37,15 +39,16 @@ switch ($periodo) {
         $qIni  = ((int)ceil($mes / 3) - 1) * 3 + 1;
         $ini   = "$anio-" . str_pad($qIni, 2, '0', STR_PAD_LEFT) . "-01";
         $fin   = date('Y-m-t', strtotime("$anio-" . str_pad($qIni + 2, 2, '0', STR_PAD_LEFT) . "-01"));
-        if ($fin > $hoy) $fin = $hoy;
+        if ($fin > $ayer) $fin = $ayer;
         break;
     case 'anio':
         $ini = "$anio-01-01";
-        $fin = ($anio == date('Y')) ? $hoy : "$anio-12-31";
+        $fin = ($anio == date('Y')) ? $ayer : "$anio-12-31";
         break;
     default: // mes_actual
         $ini = date('Y-m-01');
-        $fin = $hoy;
+        $fin = $ayer;
+        if ($fin < $ini) $fin = $ini; // Caso día 1 del mes
         break;
 }
 
