@@ -7,7 +7,7 @@
 :root {
     /* Neumorphism Core (Forced Light Mode - Pastel Palette) */
     --neu-bg:          #f6f6f6;
-    --neu-shadow-dark: #d1d9e6; /* Pronounced shadow with a hint of blue-gray for depth */
+    --neu-shadow-dark: #d6d6d6; /* Neutral gray for a cleaner, more harmonious relief */
     --neu-shadow-light:#ffffff;
     
     /* Pitaya Accents (New Branding) */
@@ -24,8 +24,8 @@
     --ops-blue:        #64b5f6;
     
     /* Typography */
-    --ops-text:        #37474f;
-    --ops-text-muted:  #78909c;
+    --ops-text:        #455a64; /* Deep slate gray for high contrast */
+    --ops-text-muted:  #757575; /* Neutral muted gray */
     --ops-font:        'Inter', sans-serif;
     
     /* Neumorphic Tokens (More pronounced relief) */
