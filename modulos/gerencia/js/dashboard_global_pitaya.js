@@ -673,7 +673,12 @@ function renderExpansion(exp) {
         const aniosMeta = [];
         for (let y = anioActualChart; y <= 2028; y++) aniosMeta.push(y);
         const todosAnios = [...new Set([...histAnios, ...aniosMeta])].sort();
-        const acumData = todosAnios.map(a => { const r = exp.acumulado_por_anio.find(x => x.anio === a); return r ? r.neto : null; });
+        let lastAcum = 0;
+        const acumData = todosAnios.map(a => {
+            const r = exp.acumulado_por_anio.find(x => x.anio === a);
+            if (r) lastAcum = r.neto;
+            return (a <= anioActualChart || r) ? lastAcum : null;
+        });
         const proyData = todosAnios.map(a => { const r = exp.proyeccion.find(x => x.anio === a); return r ? r.proyectado : null; });
         const nuevasData = todosAnios.map(a => { const r = exp.acumulado_por_anio.find(x => x.anio === a); return r ? r.nuevas : 0; });
         const cierresData = todosAnios.map(a => { const r = exp.acumulado_por_anio.find(x => x.anio === a); return r ? r.cierres : 0; });
@@ -859,11 +864,19 @@ function renderExpansion(exp) {
     const totalVentas = exp.sucursales.reduce((s, r) => s + r.ventas_historico, 0) || 1;
     const hoyTs = Date.now();
     tbA.innerHTML = exp.sucursales.map((s, i) => {
-        const anosOp = s.fecha_apertura ? Math.floor((hoyTs - new Date(s.fecha_apertura).getTime()) / 31536000000) : '?';
+        const fechaFin = s.activa === 0 && s.fecha_cierre ? new Date(s.fecha_cierre) : new Date(hoyTs);
+        const fechaIni = s.fecha_apertura ? new Date(s.fecha_apertura) : null;
+        const anosOp = fechaIni ? Math.floor((fechaFin.getTime() - fechaIni.getTime()) / 31536000000) : '?';
         const pctVentas = (s.ventas_historico / totalVentas * 100).toFixed(1);
-        return `<tr>
+        const status = s.activa === 0 ? '<span class="badge bg-secondary ms-2" style="font-size:0.6rem; vertical-align:middle; opacity:0.8">Cerrada</span>' : '';
+        const rowStyle = s.activa === 0 ? 'style="opacity:0.75; background: rgba(0,0,0,0.02)"' : '';
+
+        return `<tr ${rowStyle}>
             <td style="color:#a8b4ae;font-weight:700">${i + 1}</td>
-            <td style="font-weight:600">${s.nombre}</td>
+            <td style="font-weight:600">
+                ${s.nombre} ${status}
+                ${s.activa === 0 && s.fecha_cierre ? `<div style="font-size:0.65rem; color:#d9534f; font-weight:400">Cerró: ${s.fecha_cierre}</div>` : ''}
+            </td>
             <td>${s.fecha_apertura ?? '—'}</td>
             <td class="text-end">${fmtMoney(s.ventas_historico)}</td>
             <td class="text-center">${anosOp} años</td>

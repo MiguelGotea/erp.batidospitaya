@@ -116,7 +116,7 @@ try {
                       AND s2.Fecha_Apertura <= LAST_DAY(CONCAT(sub.mes, '-01'))
                       AND (
                             s2.activa = 1
-                            OR s2.Fecha_Cierre > LAST_DAY(CONCAT(sub.mes, '-01'))
+                            OR s2.Fecha_Cierre >= CONCAT(sub.mes, '-01')
                       )
                 ) AS tiendas_activas_mes
             FROM (
@@ -490,6 +490,8 @@ try {
         return [
             'nombre'            => $s['nombre'],
             'fecha_apertura'    => $s['Fecha_Apertura'],
+            'fecha_cierre'      => $s['fecha_cierre'],
+            'activa'            => (int)$s['activa'],
             'anio_apertura'     => (int)$s['anio_apertura'],
             'ventas_historico'  => $info ? (float)$info['ventas_total_historico'] : 0,
             'primer_anio_venta' => $info ? (int)$info['primer_anio_venta'] : null,
