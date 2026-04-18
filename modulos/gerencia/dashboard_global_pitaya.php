@@ -574,67 +574,179 @@ $hoy = date('Y-m-d');
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body p-4">
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <div class="card border-0 bg-light h-100">
-                                <div class="card-body">
-                                    <h6 class="fw-bold" style="color:#0E544C"><i
-                                            class="fas fa-chart-line me-2"></i>Ventas</h6>
-                                    <p class="small text-muted mb-0">Datos de <code>VentasGlobalesAccessCSV</code>. Solo
-                                        pedidos <strong>no anulados</strong>. Usa el toggle <strong>C$ / US$</strong> en
-                                        el encabezado para cambiar moneda. El tipo de cambio es configurable. El ticket
-                                        promedio es monto total ÷ pedidos únicos.</p>
-                                </div>
-                            </div>
+
+                    <!-- ── REGLA DE ORO: Filtros de datos ── -->
+                    <div class="alert alert-info border-0 mb-4" style="background:#e8f4fd;border-left:4px solid #0E544C !important;border-radius:8px">
+                        <h6 class="fw-bold mb-2" style="color:#0E544C"><i class="fas fa-filter me-2"></i>Regla de Oro — ¿Qué datos se consideran?</h6>
+                        <p class="small mb-2">Todo el dashboard filtra por <strong>tipo de canal</strong> y <strong>estado operativo</strong> de la sucursal según el contexto del indicador:</p>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-bordered mb-0 small">
+                                <thead style="background:#0E544C;color:#fff">
+                                    <tr>
+                                        <th>Tipo de dato</th>
+                                        <th class="text-center"><code style="color:#aff">sucursal = 1</code></th>
+                                        <th class="text-center"><code style="color:#aff">activa = 1</code></th>
+                                        <th>¿Por qué?</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr class="table-success">
+                                        <td><strong>KPIs del período actual</strong><br><small class="text-muted">Ventas, ticket, ranking, top productos, mix categorías, participación club</small></td>
+                                        <td class="text-center">✅ Siempre</td>
+                                        <td class="text-center">✅ Sí</td>
+                                        <td class="small">Solo reflejan tiendas actualmente en operación. Una tienda cerrada no genera ventas hoy.</td>
+                                    </tr>
+                                    <tr class="table-warning">
+                                        <td><strong>Histórico de ventas (gráficas de tendencia)</strong><br><small class="text-muted">Tendencia mensual 12 meses, ventas por año en expansión</small></td>
+                                        <td class="text-center">✅ Siempre</td>
+                                        <td class="text-center">❌ No</td>
+                                        <td class="small">Si una tienda tuvo ventas antes de cerrar, esas ventas <em>sí ocurrieron</em> y deben reflejarse en el historial real.</td>
+                                    </tr>
+                                    <tr class="table-light">
+                                        <td><strong>Métricas de Club Pitaya</strong><br><small class="text-muted">Socios activos, churn, LTV, RFM, universo</small></td>
+                                        <td class="text-center">❌ N/A</td>
+                                        <td class="text-center">❌ N/A</td>
+                                        <td class="small">Son métricas de <em>clientes</em>, no de sucursales. Un cliente que compró en una tienda cerrada sigue siendo un cliente activo.</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Estado actual de tiendas</strong><br><small class="text-muted">Contador del encabezado, proyección de expansión</small></td>
+                                        <td class="text-center">✅ Siempre</td>
+                                        <td class="text-center">✅ Sí</td>
+                                        <td class="small">Para contar <em>cuántas tiendas operan hoy</em> solo importan las activas.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
-                        <div class="col-md-6">
-                            <div class="card border-0 bg-light h-100">
-                                <div class="card-body">
-                                    <h6 class="fw-bold" style="color:#0E544C"><i class="fas fa-users me-2"></i>Club
-                                        Pitaya</h6>
-                                    <p class="small text-muted mb-0">Los <strong>Socios Activos</strong> son quienes
-                                        compraron en los últimos 60 días. El <strong>Churn Rate</strong> = socios sin
-                                        compra &gt;60 días / total con al menos 1 compra. El <strong>LTV</strong> es la
-                                        suma histórica de compras por cliente.</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="card border-0 bg-light h-100">
-                                <div class="card-body">
-                                    <h6 class="fw-bold" style="color:#0E544C"><i class="fas fa-bullseye me-2"></i>Metas
-                                    </h6>
-                                    <p class="small text-muted mb-0">Las metas se registran en la tabla
-                                        <code>ventas_meta</code> por sucursal y fecha. El cumplimiento compara las
-                                        ventas reales del período con la meta acumulada del mismo período.</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="card border-0 bg-light h-100">
-                                <div class="card-body">
-                                    <h6 class="fw-bold" style="color:#0E544C"><i
-                                            class="fas fa-rocket me-2"></i>Expansión 2028</h6>
-                                    <p class="small text-muted mb-0">
-                                        <strong>¿Qué es una tienda activa?</strong> Solo se cuentan sucursales con
-                                        <code>sucursal=1</code> (canal de tienda, no canales alternativos) y
-                                        <code>activa=1</code> (no cerradas). El contador del encabezado usa exactamente
-                                        este filtro. Existen otras entidades que facturan (otros canales) que se excluyen.
-                                        <br><br>
-                                        <strong>Datos de ventas históricas:</strong> La base de datos solo conserva
-                                        registros de facturación desde <strong>2024 en adelante</strong> por optimización
-                                        de memoria. Las fechas de apertura en tabla <code>sucursales</code> sí son
-                                        completas desde la primera tienda. Las gráficas de ventas por año reflejan solo
-                                        2024+. <br><br>
-                                        <strong>Viabilidad:</strong> Se calcula el ritmo histórico y reciente de
-                                        aperturas para proyectar cuántas tiendas se tendrán en 2028 al ritmo actual, y
-                                        cuántas aperturas/año serían necesarias para cumplir la meta de 40.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
+                        <p class="small mt-2 mb-0 text-muted"><i class="fas fa-info-circle me-1"></i><strong>sucursal = 1</strong> diferencia las tiendas oficiales de la cadena de otros canales o entidades que también registran facturación en el sistema (ej. producción, ventas internas). Siempre se aplica.</p>
                     </div>
-                </div>
+
+                    <!-- ── Secciones ── -->
+                    <div class="row g-3">
+
+                        <!-- Ventas y KPIs -->
+                        <div class="col-md-6">
+                            <div class="card border-0 h-100" style="background:#f8fffe">
+                                <div class="card-body">
+                                    <h6 class="fw-bold mb-2" style="color:#0E544C"><i class="fas fa-chart-line me-2"></i>Ventas & KPIs del Período</h6>
+                                    <p class="small text-muted mb-2">Fuente: <code>VentasGlobalesAccessCSV</code> filtrada por <code>sucursal=1 AND activa=1</code>. Solo pedidos <strong>no anulados</strong> (<code>Anulado=0</code>).</p>
+                                    <ul class="small text-muted mb-0 ps-3">
+                                        <li><strong>Ventas Totales:</strong> suma de <code>Precio</code> en el rango de fechas seleccionado.</li>
+                                        <li><strong>Ticket Promedio:</strong> Ventas Totales ÷ pedidos únicos (<code>CodPedido</code> distintos).</li>
+                                        <li><strong>Venta Prom./Tienda:</strong> Ventas Totales ÷ número de tiendas que facturaron en el período.</li>
+                                        <li><strong>▲/▼ vs período anterior:</strong> compara automáticamente con el período inmediatamente anterior de igual duración.</li>
+                                        <li><strong>Moneda:</strong> todos los valores están en C$ nativos; el toggle US$ divide por el tipo de cambio ingresado.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tendencia de Ventas -->
+                        <div class="col-md-6">
+                            <div class="card border-0 h-100" style="background:#f8fffe">
+                                <div class="card-body">
+                                    <h6 class="fw-bold mb-2" style="color:#0E544C"><i class="fas fa-chart-bar me-2"></i>Tendencia de Ventas (Gráfica)</h6>
+                                    <p class="small text-muted mb-2">Filtro: <code>sucursal=1</code> — <strong>incluye tiendas cerradas</strong> si facturaron en ese mes.</p>
+                                    <ul class="small text-muted mb-0 ps-3">
+                                        <li><strong>Barras (Ventas reales):</strong> ventas totales por mes, últimos 12 meses completos.</li>
+                                        <li><strong>Barra con * (Abr '26):</strong> mes actual — estimado extrapolando las ventas reales hasta ayer al mes completo.</li>
+                                        <li><strong>Línea dorada (Venta/sucursal):</strong> ventas ÷ tiendas activas <em>ese mes</em>; eje derecho. Permite ver eficiencia por tienda independiente del número de sucursales.</li>
+                                        <li><strong>Líneas punteadas (proyección):</strong> arrancan desde el último mes completo.
+                                            <ul class="mt-1">
+                                                <li><strong>Conservador:</strong> ritmo histórico de aperturas desde el inicio.</li>
+                                                <li><strong>Moderado:</strong> ritmo de aperturas de los últimos 2 años.</li>
+                                                <li><strong>Optimista:</strong> aperturas lineales exactas para llegar a 40 tiendas en Dic 2028.</li>
+                                            </ul>
+                                        </li>
+                                        <li><strong>Tooltip en el mes de inicio de proyección:</strong> muestra "→ Proyección desde este punto ↗".</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Club Pitaya -->
+                        <div class="col-md-6">
+                            <div class="card border-0 h-100" style="background:#f8fffe">
+                                <div class="card-body">
+                                    <h6 class="fw-bold mb-2" style="color:#0E544C"><i class="fas fa-users me-2"></i>Club Pitaya — Métricas de Clientes</h6>
+                                    <p class="small text-muted mb-2">Fuente: <code>clientesclub</code> y <code>VentasGlobalesAccessCSV</code>. <strong>No se filtra por sucursal</strong> — son métricas del cliente, no de la tienda.</p>
+                                    <ul class="small text-muted mb-0 ps-3">
+                                        <li><strong>Socios Activos:</strong> clientes con al menos 1 compra en los últimos 60 días.</li>
+                                        <li><strong>Churn Rate:</strong> clientes sin compra en más de 60 días ÷ universo total con al menos 1 compra histórica.</li>
+                                        <li><strong>LTV Promedio:</strong> suma histórica de compras por cliente, promediada sobre todos los clientes.</li>
+                                        <li><strong>Participación Club:</strong> ventas de clientes identificados (CodCliente > 0) ÷ ventas totales del período. <em>Este sí filtra sucursal=1 y activa=1.</em></li>
+                                        <li><strong>RFM:</strong> Campeones (≤15 días inactivo, ≥10 compras), Fieles (≤30 días, ≥5 compras), En Riesgo (≤60 días), Perdidos (>60 días).</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Metas -->
+                        <div class="col-md-6">
+                            <div class="card border-0 h-100" style="background:#f8fffe">
+                                <div class="card-body">
+                                    <h6 class="fw-bold mb-2" style="color:#0E544C"><i class="fas fa-bullseye me-2"></i>Metas & Cumplimiento</h6>
+                                    <p class="small text-muted mb-2">Fuente: tabla <code>ventas_meta</code> cruzada con <code>sucursales</code> (sucursal=1, activa=1).</p>
+                                    <ul class="small text-muted mb-0 ps-3">
+                                        <li>Las metas se registran por sucursal y fecha en la tabla <code>ventas_meta</code>.</li>
+                                        <li>El cumplimiento compara ventas reales del período vs la meta acumulada del mismo rango de fechas.</li>
+                                        <li>Si una sucursal no tiene meta registrada, aparece como "Sin meta" en la tabla de tiendas.</li>
+                                        <li><span style="color:#3fb950">■</span> Verde ≥100% &nbsp;|&nbsp; <span style="color:#e3b341">■</span> Ámbar ≥80% &nbsp;|&nbsp; <span style="color:#f85149">■</span> Rojo &lt;80%.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Productos y Mix -->
+                        <div class="col-md-6">
+                            <div class="card border-0 h-100" style="background:#f8fffe">
+                                <div class="card-body">
+                                    <h6 class="fw-bold mb-2" style="color:#0E544C"><i class="fas fa-blender me-2"></i>Top Productos & Mix por Categoría</h6>
+                                    <p class="small text-muted mb-2">Filtro: <code>sucursal=1 AND activa=1</code>, período seleccionado, solo pedidos no anulados.</p>
+                                    <ul class="small text-muted mb-0 ps-3">
+                                        <li><strong>Top 10:</strong> ordenados por monto facturado (<code>Precio</code>), no por unidades.</li>
+                                        <li><strong>Mix Categorías:</strong> agrupado por <code>NombreGrupo</code>; los sin categoría aparecen como "Otro".</li>
+                                        <li>Ambos reflejan exactamente el período y las tiendas del selector de período del encabezado.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Expansión -->
+                        <div class="col-md-6">
+                            <div class="card border-0 h-100" style="background:#f8fffe">
+                                <div class="card-body">
+                                    <h6 class="fw-bold mb-2" style="color:#0E544C"><i class="fas fa-rocket me-2"></i>Expansión — Plan 2028</h6>
+                                    <p class="small text-muted mb-2">Filtro historial de ventas: <code>sucursal=1</code> (sin filtro activa — incluye tiendas cerradas con facturación real). Estado actual de tiendas: <code>sucursal=1 AND activa=1</code>.</p>
+                                    <ul class="small text-muted mb-0 ps-3">
+                                        <li><strong>Tiendas Activas (encabezado):</strong> <code>sucursal=1 AND activa=1</code> — solo tiendas operando hoy.</li>
+                                        <li><strong>Ventas por Año (gráfica histórica):</strong> incluye todo <code>sucursal=1</code> desde 2024. Las tiendas cerradas que operaron en ese año sí aportan.</li>
+                                        <li><strong>Historial de Aperturas:</strong> ventas históricas por tienda solo con <code>sucursal=1</code>; incluye cerradas para mostrar el aporte real en su tiempo activo.</li>
+                                        <li><strong>Ritmo Histórico:</strong> aperturas brutas desde el inicio ÷ años transcurridos.</li>
+                                        <li><strong>Ritmo Reciente:</strong> aperturas en últimos 2 años ÷ 2.</li>
+                                        <li><strong>Viabilidad:</strong> compara ritmo reciente vs aperturas/año necesarias para llegar a 40 en 2028.</li>
+                                        <li><strong>Base de datos:</strong> ventas de facturación disponibles desde <strong>2024 en adelante</strong> por optimización de almacenamiento. Fechas de apertura en <code>sucursales</code> sí son completas desde la primera tienda.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Período -->
+                        <div class="col-12">
+                            <div class="card border-0" style="background:#fffbf0;border-left:4px solid #c9a227 !important">
+                                <div class="card-body py-2">
+                                    <h6 class="fw-bold mb-1" style="color:#7a6200"><i class="fas fa-calendar-alt me-2"></i>Selector de Período</h6>
+                                    <div class="row small text-muted">
+                                        <div class="col-md-3"><strong>Mes Actual:</strong> del 1° del mes a ayer (el sistema excluye el día de hoy ya que los datos se sincronizan nocturnamente).</div>
+                                        <div class="col-md-3"><strong>Mes Anterior:</strong> del 1° al último día del mes pasado completo.</div>
+                                        <div class="col-md-3"><strong>Trimestre:</strong> el trimestre calendario en curso hasta ayer.</div>
+                                        <div class="col-md-3"><strong>Año Completo:</strong> del 1 Ene al 31 Dic del año seleccionado (o hasta ayer si es el año actual).</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div><!-- /row -->
+                </div><!-- /modal-body -->
             </div>
         </div>
     </div>
