@@ -632,7 +632,7 @@ $hoy = date('Y-m-d');
                                     <ul class="small text-muted mb-0 ps-3">
                                         <li><strong>Ventas Totales:</strong> suma de <code>Precio</code> en el rango de fechas seleccionado.</li>
                                         <li><strong>Ticket Promedio:</strong> Ventas Totales ÷ pedidos únicos (<code>CodPedido</code> distintos).</li>
-                                        <li><strong>Venta Prom./Tienda:</strong> Ventas Totales ÷ número de tiendas que facturaron en el período.</li>
+                                        <li><strong>Venta Prom./Tienda:</strong> promedio <em>normalizado</em> — para cada tienda se calcula su venta diaria (<code>ventas ÷ días activos en el período</code>) y se proyecta al período completo. Así una tienda que abrió a mitad de mes no deprime el promedio. Ver sección <em>"Sucursales Nuevas"</em> más abajo.</li>
                                         <li><strong>▲/▼ vs período anterior:</strong> compara automáticamente con el período inmediatamente anterior de igual duración.</li>
                                         <li><strong>Moneda:</strong> todos los valores están en C$ nativos; el toggle US$ divide por el tipo de cambio ingresado.</li>
                                     </ul>
@@ -649,7 +649,7 @@ $hoy = date('Y-m-d');
                                     <ul class="small text-muted mb-0 ps-3">
                                         <li><strong>Barras (Ventas reales):</strong> ventas totales por mes, últimos 12 meses completos.</li>
                                         <li><strong>Barra con * (Abr '26):</strong> mes actual — estimado extrapolando las ventas reales hasta ayer al mes completo.</li>
-                                        <li><strong>Línea dorada (Venta/sucursal):</strong> ventas ÷ tiendas activas <em>ese mes</em>; eje derecho. Permite ver eficiencia por tienda independiente del número de sucursales.</li>
+                                        <li><strong>Línea dorada (Venta/sucursal):</strong> promedio <em>normalizado</em> por tienda para ese mes — cada tienda aporta su <code>venta diaria × días del mes</code>, independientemente de cuándo abrió. Eje derecho. Ver sección <em>"Sucursales Nuevas"</em>.</li>
                                         <li><strong>Líneas punteadas (proyección):</strong> arrancan desde el último mes completo.
                                             <ul class="mt-1">
                                                 <li><strong>Conservador:</strong> ritmo histórico de aperturas desde el inicio.</li>
@@ -688,10 +688,66 @@ $hoy = date('Y-m-d');
                                     <p class="small text-muted mb-2">Fuente: tabla <code>ventas_meta</code> cruzada con <code>sucursales</code> (sucursal=1, activa=1).</p>
                                     <ul class="small text-muted mb-0 ps-3">
                                         <li>Las metas se registran por sucursal y fecha en la tabla <code>ventas_meta</code>.</li>
-                                        <li>El cumplimiento compara ventas reales del período vs la meta acumulada del mismo rango de fechas.</li>
+                                        <li>El cumplimiento compara ventas reales del período vs la meta <em>prorated</em>. Si una sucursal abrió a mitad del período, su meta se ajusta proporcionalmente (<code>meta_DB × días_activos ÷ días_período</code>). Ver sección <em>"Sucursales Nuevas"</em>.</li>
                                         <li>Si una sucursal no tiene meta registrada, aparece como "Sin meta" en la tabla de tiendas.</li>
                                         <li><span style="color:#3fb950">■</span> Verde ≥100% &nbsp;|&nbsp; <span style="color:#e3b341">■</span> Ámbar ≥80% &nbsp;|&nbsp; <span style="color:#f85149">■</span> Rojo &lt;80%.</li>
                                     </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ── SUCURSALES NUEVAS ── -->
+                        <div class="col-12">
+                            <div class="card border-0" style="background:#f0faf4;border-left:4px solid #3fb950 !important;border-radius:8px">
+                                <div class="card-body">
+                                    <h6 class="fw-bold mb-2" style="color:#1a6e30">
+                                        <i class="fas fa-store-alt me-2"></i>Sucursales Nuevas — Apertura a Mitad de Período
+                                    </h6>
+                                    <p class="small text-muted mb-2">
+                                        Cuando una sucursal abre después del primer día del período (ej. día 15 de un mes de 30), sus ventas solo reflejan los días que estuvo activa. Sin corrección, esto distorsiona 3 indicadores. El sistema aplica <strong>normalización por días activos</strong> usando <code>sucursales.Fecha_Apertura</code> como referencia.
+                                    </p>
+                                    <div class="table-responsive">
+                                        <table class="table table-sm table-bordered mb-2 small">
+                                            <thead style="background:#1a6e30;color:#fff">
+                                                <tr>
+                                                    <th>Indicador</th>
+                                                    <th>Problema sin corrección</th>
+                                                    <th>Cómo se corrige</th>
+                                                    <th>Fórmula</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td><strong>Venta Prom. / Tienda</strong></td>
+                                                    <td class="text-danger">La tienda nueva suma pocos días de ventas pero cuenta como tienda completa → promedio artificialmente bajo.</td>
+                                                    <td class="text-success">Se calcula la <em>venta diaria</em> de cada tienda y se proyecta al período completo antes de promediar.</td>
+                                                    <td><code>venta_diaria = ventas ÷ días_activos<br>venta_norm = venta_diaria × días_período<br>VPT = promedio(venta_norm)</code></td>
+                                                </tr>
+                                                <tr>
+                                                    <td><strong>Cumplimiento de Meta</strong></td>
+                                                    <td class="text-danger">La meta cargada en BD puede ser la meta del mes completo, pero la tienda solo tuvo X días para cumplirla.</td>
+                                                    <td class="text-success">La meta se proratea: se exige solo la fracción proporcional a los días activos de la sucursal.</td>
+                                                    <td><code>días_activos = DATEDIFF(fin, MAX(ini, Fecha_Apertura))+1<br>meta_efectiva = meta_DB × (días_activos ÷ días_período)</code></td>
+                                                </tr>
+                                                <tr>
+                                                    <td><strong>Ranking Tiendas</strong></td>
+                                                    <td class="text-danger">La tienda nueva aparece en los últimos lugares y su cumplimiento se compara contra una meta de mes completo.</td>
+                                                    <td class="text-success">El ranking muestra ventas reales + campos adicionales: <code>es_nueva</code>, <code>dias_activos</code>, <code>venta_diaria</code>, <code>venta_normalizada</code> y la meta prorated.</td>
+                                                    <td>Igual que Cumplimiento de Meta. La columna «Venta Norm.» permite comparación justa.</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><strong>Gráfica Tendencia — Línea Venta/Sucursal</strong></td>
+                                                    <td class="text-danger">El mes de apertura muestra un VPT bajo porque la nueva tienda aportó pocos días de ventas.</td>
+                                                    <td class="text-success">Para cada mes, se calcula la venta diaria de cada tienda dentro de ese mes y se proyecta a los días totales del mes.</td>
+                                                    <td><code>dias_activos_mes = DATEDIFF(ultimo_dia_mes, MAX(ini_mes, Fecha_Apertura))+1<br>vpt_mes = promedio(ventas_tienda ÷ dias_activos_mes × dias_en_mes)</code></td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <p class="small text-muted mb-0">
+                                        <i class="fas fa-info-circle me-1 text-success"></i>
+                                        <strong>Nota:</strong> Las <strong>Ventas Totales del período</strong> siempre reflejan el monto real facturado (sin inflación). Solo los indicadores de <em>promedio</em>, <em>cumplimiento</em> y <em>eficiencia por tienda</em> se normalizan para garantizar comparaciones justas entre sucursales con distinta antigüedad en el período.
+                                    </p>
                                 </div>
                             </div>
                         </div>
