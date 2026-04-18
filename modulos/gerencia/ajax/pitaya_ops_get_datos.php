@@ -569,12 +569,14 @@ try {
     // ════════════════════════════════════════════════════════════════════════
     if ($accion === 'lean_data') {
         $sqlTotal = "
-            SELECT COUNT(DISTINCT CodPedido) AS total,
-                   SUM(Anulado) AS anulados,
-                   COUNT(DISTINCT Fecha) AS dias
+            SELECT
+                COUNT(DISTINCT CASE WHEN v.Anulado = 0 THEN v.CodPedido END) AS total,
+                COUNT(DISTINCT CASE WHEN v.Anulado = 1 THEN v.CodPedido END) AS anulados,
+                COUNT(DISTINCT v.Fecha) AS dias
             FROM VentasGlobalesAccessCSV v
             INNER JOIN sucursales s ON s.codigo = v.local
             WHERE v.Fecha BETWEEN :ini AND :fin AND s.sucursal = 1 $filtroSuc";
+
         $params = array_merge([':ini' => $ini, ':fin' => $fin], $paramsSuc);
         $stT = $conn->prepare($sqlTotal);
         $stT->execute($params);
