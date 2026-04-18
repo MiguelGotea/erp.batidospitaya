@@ -7,10 +7,10 @@
 const OPS = {
     AJAX: 'ajax/pitaya_ops_get_datos.php',
     COLORES: {
-        Batido: '#64b5f6',
-        Waffle: '#ffb74d',
-        Bowl:   '#ba68c8',
-        Otro:   '#78909c',
+        Batido: '#64b5f6', // Light Blue
+        Waffle: '#ffb74d', // Light Gold
+        Bowl:   '#a567d1', // Light Purple
+        Otro:   '#b0bec5', // Muted Gray-Blue
     },
     charts: {},
 
@@ -31,9 +31,9 @@ const OPS = {
         this.bindTabs();
         document.getElementById('opsBtnCargar').addEventListener('click', () => this.cargarTab(this.tabActivo));
         
-        // Chart.js Defaults (Forced Light Mode)
-        Chart.defaults.color = '#718096';
-        Chart.defaults.borderColor = 'rgba(0,0,0,0.05)';
+        // Chart.js Defaults (Forced Light Mode - Pastel Palette)
+        Chart.defaults.color = '#78909c';
+        Chart.defaults.borderColor = 'rgba(0,0,0,0.03)';
         Chart.defaults.font.family = "'Inter', sans-serif";
     },
 
@@ -123,7 +123,7 @@ const OPS = {
         const mixData   = d.mix_global.map(x => +x.pedidos);
         const mixColors = mixLabels.map(l => this.COLORES[l] || this.COLORES.Otro);
         this.destroyChart('chartMixGlobal');
-        const bg = '#eef6f5'; // New Pastel Teal Background
+        const bg = '#f6f6f6'; // Forced Light Mode
         
         OPS.charts.chartMixGlobal = new Chart(document.getElementById('chartMixGlobal'), {
             type: 'doughnut',
@@ -186,7 +186,7 @@ const OPS = {
                 datasets: [{
                     label: 'λ Pedidos/hora',
                     data: lambdas,
-                    backgroundColor: lambdas.map(v => `rgba(81,184,172,${0.4 + 0.6*(v/maxL)})`),
+                    backgroundColor: lambdas.map(v => `rgba(81, 184, 172, ${0.4 + 0.6*(v/maxL)})`),
                     borderColor: 'transparent',
                     borderWidth: 0,
                     borderRadius: 10,
@@ -349,8 +349,8 @@ const OPS = {
         // Doughnut
         const labels = kpis.map(([n]) => `${n} estación${+n>1?'es':''}`);
         const data   = kpis.map(([,c]) => c);
-        const colors = ['#51B8AC','#ffa726','#ef5350'];
-        const bg = '#eef6f5'; // New Pastel Teal Background
+        const colors = ['#51B8AC','#e67e22','#e57373'];
+        const bg = '#f6f6f6'; // Forced Light Mode
 
         this.destroyChart('chartMultiDist');
         OPS.charts.chartMultiDist = new Chart(document.getElementById('chartMultiDist'), {
