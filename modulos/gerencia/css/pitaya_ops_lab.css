@@ -5,16 +5,16 @@
 
 /* ── Variables ─────────────────────────────────────────────── */
 :root {
-    /* Neumorphism Core (Light Mode by default for Soft UI) */
-    --neu-bg:          #e0e5ec;
-    --neu-shadow-dark: #b8bec7;
+    /* Neumorphism Core (Matched to Global #F6F6F6) */
+    --neu-bg:          #F6F6F6;
+    --neu-shadow-dark: #d1d9e6;
     --neu-shadow-light:#ffffff;
     
-    /* Pitaya Accents */
-    --ops-teal:        #0E544C;
-    --ops-teal-light:  #1a7a6f;
-    --ops-accent:      #3fba9e;
-    --ops-accent2:     #58d3b4;
+    /* Pitaya Accents (Updated to #51B8AC) */
+    --ops-teal:        #51B8AC;
+    --ops-teal-light:  #6cc7bc;
+    --ops-accent:      #51B8AC;
+    --ops-accent2:     #7bd1c7;
     
     /* Semantic Colors */
     --ops-red:         #d9534f;

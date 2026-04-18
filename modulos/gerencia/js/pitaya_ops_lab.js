@@ -123,7 +123,7 @@ const OPS = {
         const mixData   = d.mix_global.map(x => +x.pedidos);
         const mixColors = mixLabels.map(l => this.COLORES[l] || this.COLORES.Otro);
         this.destroyChart('chartMixGlobal');
-        const bg = '#e0e5ec'; // Forced Light Mode
+        const bg = '#F6F6F6'; // Matched to Global Background
         
         OPS.charts.chartMixGlobal = new Chart(document.getElementById('chartMixGlobal'), {
             type: 'doughnut',
@@ -186,7 +186,7 @@ const OPS = {
                 datasets: [{
                     label: 'λ Pedidos/hora',
                     data: lambdas,
-                    backgroundColor: lambdas.map(v => `rgba(14,84,76,${0.4 + 0.6*(v/maxL)})`),
+                    backgroundColor: lambdas.map(v => `rgba(81,184,172,${0.4 + 0.6*(v/maxL)})`),
                     borderColor: 'transparent',
                     borderWidth: 0,
                     borderRadius: 8,
@@ -349,8 +349,8 @@ const OPS = {
         // Doughnut
         const labels = kpis.map(([n]) => `${n} estación${+n>1?'es':''}`);
         const data   = kpis.map(([,c]) => c);
-        const colors = ['#0E544C','#e67e22','#d9534f'];
-        const bg = '#e0e5ec'; // Forced Light Mode
+        const colors = ['#51B8AC','#e67e22','#d9534f'];
+        const bg = '#F6F6F6'; // Matched to Global Background
 
         this.destroyChart('chartMultiDist');
         OPS.charts.chartMultiDist = new Chart(document.getElementById('chartMultiDist'), {
