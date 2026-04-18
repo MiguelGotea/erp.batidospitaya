@@ -5,10 +5,11 @@
 
 /* ── Variables ─────────────────────────────────────────────── */
 :root {
-    /* Neumorphism Core (Matched to Global Body) */
-    --neu-bg:          #f6f6f6;
-    --neu-shadow-dark: #d1d1d1;
+    /* Neumorphism Core (Two-Tone System) */
+    --neu-bg:          #f0ede8;
+    --neu-shadow-dark: #cec7bc;
     --neu-shadow-light:#ffffff;
+    --ops-page-bg:     #f6f6f6;
     
     /* Pitaya Accents */
     --ops-teal:        #51B8AC;
@@ -41,7 +42,7 @@
 
 /* ── Base ───────────────────────────────────────────────────── */
 #opsLabWrapper {
-    background: var(--neu-bg);
+    background: var(--ops-page-bg);
     min-height: 100vh;
     font-family: var(--ops-font);
     color: var(--ops-text);

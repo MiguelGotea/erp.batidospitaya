@@ -123,7 +123,7 @@ const OPS = {
         const mixData   = d.mix_global.map(x => +x.pedidos);
         const mixColors = mixLabels.map(l => this.COLORES[l] || this.COLORES.Otro);
         this.destroyChart('chartMixGlobal');
-        const bg = '#f6f6f6'; // Matched to Global Body
+        const bg = '#f0ede8'; // Matched to Component BG
         
         OPS.charts.chartMixGlobal = new Chart(document.getElementById('chartMixGlobal'), {
             type: 'doughnut',
@@ -350,7 +350,7 @@ const OPS = {
         const labels = kpis.map(([n]) => `${n} estación${+n>1?'es':''}`);
         const data   = kpis.map(([,c]) => c);
         const colors = ['#51B8AC','#e67e22','#d9534f'];
-        const bg = '#f6f6f6'; // Matched to Global Body
+        const bg = '#f0ede8'; // Matched to Component BG
 
         this.destroyChart('chartMultiDist');
         OPS.charts.chartMultiDist = new Chart(document.getElementById('chartMultiDist'), {
