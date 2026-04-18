@@ -7,7 +7,7 @@ $(document).ready(function () {
 function cargarDatos() {
     $('#tablaMetasBody').html(`
         <tr>
-            <td colspan="14" class="text-center py-5">
+            <td colspan="15" class="text-center py-5">
                 <div class="spinner-border text-primary" role="status">
                     <span class="visually-hidden">Cargando...</span>
                 </div>
@@ -41,13 +41,26 @@ function renderizarTabla(sucursales, metas) {
     tbody.empty();
 
     if (sucursales.length === 0) {
-        tbody.append('<tr><td colspan="14" class="text-center py-4">No hay sucursales registradas</td></tr>');
+        tbody.append('<tr><td colspan="15" class="text-center py-4">No hay sucursales registradas</td></tr>');
         return;
     }
 
     sucursales.forEach(suc => {
         const tr = $('<tr>');
         tr.append(`<td class="sticky-col">${suc.nombre}</td>`);
+
+        // Columna VMTAP (Toggle)
+        const checked = parseInt(suc.VMTAP) === 1 ? 'checked' : '';
+        const toggleHtml = `
+            <td class="text-center">
+                <div class="form-check form-switch d-inline-block">
+                    <input class="form-check-input vmtap-toggle" type="checkbox" 
+                           data-sucursal="${suc.codigo}" ${checked} 
+                           ${!PUEDE_EDITAR ? 'disabled' : ''}>
+                </div>
+            </td>
+        `;
+        tr.append(toggleHtml);
 
         let anualSum = 0;
         for (let mes = 1; mes <= 12; mes++) {
@@ -151,3 +164,36 @@ function cambiarAnio(delta) {
     $('#txtAnio, #valAnio').text(anioSeleccionado);
     cargarDatos();
 }
+$(document).on('change', '.vmtap-toggle', function () {
+    const checkbox = $(this);
+    const codSucursal = checkbox.data('sucursal');
+    const valor = checkbox.is(':checked') ? 1 : 0;
+
+    // Deshabilitar temporalmente
+    checkbox.prop('disabled', true);
+
+    $.ajax({
+        url: 'ajax/ventas_meta_ajax.php',
+        method: 'POST',
+        data: {
+            action: 'save_vmtap',
+            cod_sucursal: codSucursal,
+            valor: valor
+        },
+        dataType: 'json',
+        success: function (response) {
+            checkbox.prop('disabled', false);
+            if (!response.success) {
+                Swal.fire('Error', response.message, 'error');
+                // Revertir estado
+                checkbox.prop('checked', !valor);
+            }
+        },
+        error: function () {
+            checkbox.prop('disabled', false);
+            Swal.fire('Error', 'Error de conexión', 'error');
+            // Revertir estado
+            checkbox.prop('checked', !valor);
+        }
+    });
+});

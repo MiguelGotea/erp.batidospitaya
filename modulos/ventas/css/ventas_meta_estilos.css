@@ -18,8 +18,12 @@
     position: sticky;
     top: 0;
     z-index: 10;
-    width: 7.5%;
+    width: 6.5%;
     /* Ancho aprox para meses */
+}
+
+.meta-table thead th.vmtap-col {
+    width: 6%;
 }
 
 .meta-table thead th.sticky-col {
@@ -27,7 +31,7 @@
     left: 0;
     z-index: 20;
     background-color: #0E544C !important;
-    width: 15%;
+    width: 13%;
     /* Ancho para nombre de sucursal */
 }
 

@@ -61,6 +61,7 @@ $anioActual = date('Y');
                                 <thead>
                                     <tr>
                                         <th class="sticky-col">Sucursal</th>
+                                        <th class="text-center vmtap-col">VMTAP</th>
                                         <th>Ene</th>
                                         <th>Feb</th>
                                         <th>Mar</th>

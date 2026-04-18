@@ -21,7 +21,7 @@ if ($action === 'get_data') {
 
     try {
         // 1. Obtener sucursales
-        $stmtSuc = $conn->query("SELECT codigo, nombre FROM sucursales WHERE sucursal = 1 AND activa = 1 ORDER BY nombre ASC");
+        $stmtSuc = $conn->query("SELECT codigo, nombre, VMTAP FROM sucursales WHERE sucursal = 1 AND activa = 1 ORDER BY nombre ASC");
         $sucursales = $stmtSuc->fetchAll(PDO::FETCH_ASSOC);
 
         // 2. Obtener metas registradas para el año
@@ -97,6 +97,28 @@ if ($action === 'save_meta') {
     } catch (PDOException $e) {
         if ($conn->inTransaction())
             $conn->rollBack();
+        header('Content-Type: application/json');
+        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+    }
+}
+if ($action === 'save_vmtap') {
+    if (!tienePermiso('ventas_meta', 'edicion', $cargoOperario)) {
+        header('Content-Type: application/json');
+        echo json_encode(['success' => false, 'message' => 'Sin permiso de edición']);
+        exit;
+    }
+
+    $codSucursal = $_POST['cod_sucursal'];
+    $valor = intval($_POST['valor']);
+
+    try {
+        $stmt = $conn->prepare("UPDATE sucursales SET VMTAP = ? WHERE codigo = ?");
+        $stmt->execute([$valor, $codSucursal]);
+
+        header('Content-Type: application/json');
+        echo json_encode(['success' => true]);
+
+    } catch (PDOException $e) {
         header('Content-Type: application/json');
         echo json_encode(['success' => false, 'message' => $e->getMessage()]);
     }
