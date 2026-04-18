@@ -662,8 +662,8 @@ try {
     $proyReciente = (int) round($tiendasActualesTotal + $ritmoNetReciente * $aniosRestantes);
     // Proyección BRUTA al ritmo reciente (sin descontar cierres potenciales)
     $proyBruta = (int) round($tiendasActualesTotal + $ritmoAperReciente * $aniosRestantes);
-    // Proyección al ritmo histórico neto
-    $proyHistorica = (int) round($tiendasActualesTotal + $ritmoHistorico * $aniosRestantes);
+    // Proyección al ritmo histórico bruto (aperturas)
+    $proyHistorica = (int) round($tiendasActualesTotal + $ritmoAperturasBruto * $aniosRestantes);
 
     // Ritmo necesario (sin cierres futuros — política nueva)
     $ritmoNecesario = $aniosRestantes > 0
@@ -680,7 +680,7 @@ try {
         $viabilidadLabel = 'desafiante';
 
     $viabilidad = [
-        'ritmo_historico' => $ritmoHistorico,
+        'ritmo_historico' => $ritmoAperturasBruto,
         'ritmo_apertura_bruto' => $ritmoAperturasBruto,
         'ritmo_reciente' => $ritmoAperReciente,
         'ritmo_neto_reciente' => $ritmoNetReciente,
