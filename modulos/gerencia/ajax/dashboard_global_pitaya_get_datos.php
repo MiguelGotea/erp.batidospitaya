@@ -133,7 +133,7 @@ try {
                 INNER JOIN sucursales s ON s.codigo = v.local
                 WHERE v.Fecha >= DATE_SUB(:hoy, INTERVAL 12 MONTH)
                   AND s.sucursal = 1
-                  AND s.activa = 1
+                  -- Sin filtro activa: el historial incluye sucursales cerradas que facturaron
                 GROUP BY DATE_FORMAT(v.Fecha, '%Y-%m')
             ) sub
             ORDER BY mes ASC
@@ -142,16 +142,18 @@ try {
         $stTM->execute([':hoy' => $hoy]);
         $tendenciaMensual = $stTM->fetchAll(PDO::FETCH_ASSOC);
     } catch (Exception $e) {
-        // Fallback: query simple sin subquery de tiendas
+        // Fallback: query simple con JOIN a sucursales (sin activa — histórico)
         $sqlTendSimple = "
             SELECT mes, total, pedidos, NULL AS tiendas_activas_mes FROM (
                 SELECT
-                    DATE_FORMAT(Fecha, '%Y-%m') AS mes,
-                    SUM(CASE WHEN Anulado = 0 THEN Precio ELSE 0 END) AS total,
-                    COUNT(DISTINCT CASE WHEN Anulado=0 THEN CodPedido ELSE NULL END) AS pedidos
-                FROM VentasGlobalesAccessCSV
-                WHERE Fecha >= DATE_SUB(:hoy, INTERVAL 12 MONTH)
-                GROUP BY DATE_FORMAT(Fecha, '%Y-%m')
+                    DATE_FORMAT(v.Fecha, '%Y-%m') AS mes,
+                    SUM(CASE WHEN v.Anulado = 0 THEN v.Precio ELSE 0 END) AS total,
+                    COUNT(DISTINCT CASE WHEN v.Anulado = 0 THEN v.CodPedido ELSE NULL END) AS pedidos
+                FROM VentasGlobalesAccessCSV v
+                INNER JOIN sucursales s ON s.codigo = v.local
+                WHERE v.Fecha >= DATE_SUB(:hoy, INTERVAL 12 MONTH)
+                  AND s.sucursal = 1
+                GROUP BY DATE_FORMAT(v.Fecha, '%Y-%m')
             ) sub ORDER BY mes ASC
         ";
         $stTM = $conn->prepare($sqlTendSimple);
@@ -451,7 +453,7 @@ try {
             INNER JOIN sucursales s ON s.codigo = v.local
             WHERE YEAR(v.Fecha) >= 2024
               AND s.sucursal = 1
-              AND s.activa = 1
+              -- Sin filtro activa: el historial de expansión incluye sucursales cerradas
             GROUP BY YEAR(v.Fecha)
         ) sub ORDER BY anio ASC
     ";
