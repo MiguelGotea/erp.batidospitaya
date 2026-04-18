@@ -77,7 +77,52 @@ try {
     $totalPedidos = (int) ($ventas['total_pedidos'] ?? 0);
     $tiendasActivas = (int) ($ventas['tiendas_activas'] ?? 0);
     $ticketPromedio = $totalPedidos > 0 ? round($ventasTotales / $totalPedidos, 2) : 0;
-    $ventaPorTienda = $tiendasActivas > 0 ? round($ventasTotales / $tiendasActivas, 2) : 0;
+
+    // ── Venta Prom. / Tienda — Opción B: normalización por días activos (Fecha_Apertura) ──
+    // Para tiendas que abrieron a mitad del período, calculamos su venta DIARIA y la
+    // proyectamos al período completo, evitando que "hundan" el promedio de las demás.
+    $diasPeriodo = max(1, (int) ((strtotime($fin) - strtotime($ini)) / 86400) + 1);
+
+    $sqlVPTNorm = "
+        SELECT
+            v.Sucursal_Nombre                                                              AS tienda,
+            s.Fecha_Apertura,
+            GREATEST(1, DATEDIFF(:fin_n, GREATEST(:ini_n, DATE(s.Fecha_Apertura))) + 1)   AS dias_activos,
+            SUM(CASE WHEN v.Anulado = 0 THEN v.Precio ELSE 0 END)                        AS ventas,
+            COUNT(DISTINCT CASE WHEN v.Anulado = 0 THEN v.CodPedido ELSE NULL END)        AS pedidos
+        FROM VentasGlobalesAccessCSV v
+        INNER JOIN sucursales s ON s.codigo = v.local
+        WHERE v.Fecha BETWEEN :ini_n2 AND :fin_n2
+          AND s.sucursal = 1
+          AND s.activa   = 1
+        GROUP BY v.Sucursal_Nombre, s.Fecha_Apertura
+    ";
+    $stVN = $conn->prepare($sqlVPTNorm);
+    $stVN->execute([':ini_n' => $ini, ':fin_n' => $fin, ':ini_n2' => $ini, ':fin_n2' => $fin]);
+    $vptRows = $stVN->fetchAll(PDO::FETCH_ASSOC);
+
+    // Construir mapa de datos normalizados por tienda
+    $tiendaDataMap = [];
+    $vptNormList   = [];
+    foreach ($vptRows as $row) {
+        $diasAct       = max(1, (int) $row['dias_activos']);
+        $esTiendaNueva = $row['Fecha_Apertura'] > $ini;
+        $ventaDiaria   = (float) $row['ventas'] / $diasAct;
+        $ventaNorm     = round($ventaDiaria * $diasPeriodo, 2);
+        $vptNormList[] = $ventaNorm;
+        $tiendaDataMap[$row['tienda']] = [
+            'fecha_apertura'    => $row['Fecha_Apertura'],
+            'dias_activos'      => $diasAct,
+            'es_nueva'          => $esTiendaNueva,
+            'venta_diaria'      => round($ventaDiaria, 2),
+            'venta_normalizada' => $ventaNorm,
+        ];
+    }
+    // VPT normalizado: promedio de (venta_diaria × días_período) por tienda
+    $tiendasActivas = count($vptNormList);
+    $ventaPorTienda = $tiendasActivas > 0
+        ? round(array_sum($vptNormList) / $tiendasActivas, 2)
+        : 0;
 
     // ── Período anterior para tendencia ──
     $dias = (strtotime($fin) - strtotime($ini)) / 86400 + 1;
@@ -89,18 +134,42 @@ try {
     $ventasPrevTotal = round($ventasPrev['ventas_totales'] ?? 0, 2);
     $trendPct = $ventasPrevTotal > 0 ? round(($ventasTotales - $ventasPrevTotal) / $ventasPrevTotal * 100, 1) : null;
 
-    // ────────────────────────────────────────────
-    // 2. METAS DEL PERÍODO
-    // ────────────────────────────────────────────
-    $sqlMeta = "
-        SELECT SUM(meta) AS meta_total
-        FROM ventas_meta
-        WHERE fecha BETWEEN :ini AND :fin
+    // ────────────────────────────────────────────────────────────────────
+    // 2. METAS DEL PERÍODO — con prorrateo para sucursales nuevas
+    // ────────────────────────────────────────────────────────────────────
+    // Si la tienda abrió a mitad del período (Fecha_Apertura > ini), la meta
+    // "justa" que le corresponde es: meta_DB × (dias_activos / dias_periodo).
+    // Esto normaliza tanto el cumplimiento global como el ranking por tienda.
+    $sqlMetaDetalle = "
+        SELECT
+            s.nombre                                                                       AS tienda,
+            s.Fecha_Apertura,
+            GREATEST(1, DATEDIFF(:fin_md, GREATEST(:ini_md, DATE(s.Fecha_Apertura))) + 1) AS dias_activos,
+            COALESCE(SUM(vm.meta), 0)                                                     AS meta_db
+        FROM sucursales s
+        LEFT JOIN ventas_meta vm
+               ON vm.cod_sucursal = s.codigo
+              AND vm.fecha BETWEEN :ini_md2 AND :fin_md2
+        WHERE s.sucursal = 1
+          AND s.activa   = 1
+        GROUP BY s.codigo, s.nombre, s.Fecha_Apertura
     ";
-    $stm = $conn->prepare($sqlMeta);
-    $stm->execute([':ini' => $ini, ':fin' => $fin]);
-    $metaRow = $stm->fetch(PDO::FETCH_ASSOC);
-    $metaTotal = round($metaRow['meta_total'] ?? 0, 2);
+    $stMD = $conn->prepare($sqlMetaDetalle);
+    $stMD->execute([':ini_md' => $ini, ':fin_md' => $fin, ':ini_md2' => $ini, ':fin_md2' => $fin]);
+    $metaDetalleRows = $stMD->fetchAll(PDO::FETCH_ASSOC);
+
+    $metaTotal = 0.0;
+    $metaMap   = [];  // nombre_tienda => meta efectiva (prorated)
+    foreach ($metaDetalleRows as $md) {
+        $diasAct      = max(1, (int) $md['dias_activos']);
+        $metaDB       = (float) $md['meta_db'];
+        // Prorratear: si abrió en el período, solo se le exige la fracción proporcional
+        $metaEfectiva = $diasPeriodo > 0
+            ? round($metaDB * ($diasAct / $diasPeriodo), 2)
+            : $metaDB;
+        $metaTotal += $metaEfectiva;
+        $metaMap[$md['tienda']] = $metaEfectiva;
+    }
     $cumplimiento = $metaTotal > 0 ? round($ventasTotales / $metaTotal * 100, 1) : 0;
 
     // ────────────────────────────────────────────
@@ -192,21 +261,8 @@ try {
     $stR->execute([':ini' => $ini, ':fin' => $fin]);
     $rankingTiendas = $stR->fetchAll(PDO::FETCH_ASSOC);
 
-    // Adjuntar metas por tienda al ranking
-    $sqlMetaTienda = "
-        SELECT s.codigo, s.nombre, SUM(vm.meta) AS meta_total
-        FROM sucursales s
-        LEFT JOIN ventas_meta vm ON vm.cod_sucursal = s.codigo AND vm.fecha BETWEEN :ini AND :fin
-        WHERE s.sucursal = 1 AND s.activa = 1
-        GROUP BY s.codigo, s.nombre
-    ";
-    $stMT = $conn->prepare($sqlMetaTienda);
-    $stMT->execute([':ini' => $ini, ':fin' => $fin]);
-    $metasPorTienda = $stMT->fetchAll(PDO::FETCH_ASSOC);
-    $metaMap = [];
-    foreach ($metasPorTienda as $m) {
-        $metaMap[$m['nombre']] = (float) ($m['meta_total'] ?? 0);
-    }
+    // $metaMap ya fue construido en la sección 2 con valores prorrateados por Fecha_Apertura.
+    // No se requiere query adicional aquí.
 
     // ────────────────────────────────────────────
     // 5. CLUB PITAYA — KPIs
@@ -804,14 +860,23 @@ try {
         'tendencia_mensual' => $tendenciaMensual,
         'mes_actual_estimado' => $mesActualEstimado,
         'proyeccion_tendencia' => $proyeccionTendencia,
-        'ranking_tiendas' => array_map(function ($r) use ($metaMap) {
-            $meta = $metaMap[$r['tienda']] ?? 0;
+        'ranking_tiendas' => array_map(function ($r) use ($metaMap, $tiendaDataMap, $diasPeriodo) {
+            $meta    = $metaMap[$r['tienda']] ?? 0;
+            $td      = $tiendaDataMap[$r['tienda']] ?? null;
+            $diasAct = $td ? $td['dias_activos'] : $diasPeriodo;
+            $eNueva  = $td ? $td['es_nueva']     : false;
+            $vDiaria = $diasAct > 0 ? round((float) $r['ventas'] / $diasAct, 2) : 0;
+            $vNorm   = round($vDiaria * $diasPeriodo, 2);
             return [
-                'tienda' => $r['tienda'],
-                'ventas' => (float) $r['ventas'],
-                'pedidos' => (int) $r['pedidos'],
-                'meta' => $meta,
-                'cumplimiento' => $meta > 0 ? round((float) $r['ventas'] / $meta * 100, 1) : null,
+                'tienda'            => $r['tienda'],
+                'ventas'            => (float) $r['ventas'],
+                'pedidos'           => (int) $r['pedidos'],
+                'meta'              => $meta,
+                'cumplimiento'      => $meta > 0 ? round((float) $r['ventas'] / $meta * 100, 1) : null,
+                'es_nueva'          => $eNueva,
+                'dias_activos'      => $diasAct,
+                'venta_diaria'      => $vDiaria,
+                'venta_normalizada' => $vNorm,
             ];
         }, $rankingTiendas),
         'club' => [
@@ -827,17 +892,26 @@ try {
         'top_productos' => $topProductos,
         'mix_categorias' => $mixCategorias,
         'segmentos_rfm' => $segmentos,
-        'detalle_tiendas' => array_map(function ($r) use ($metaMap) {
-            $meta = $metaMap[$r['tienda']] ?? 0;
-            $ped = (int) $r['pedidos'];
+        'detalle_tiendas' => array_map(function ($r) use ($metaMap, $tiendaDataMap, $diasPeriodo) {
+            $meta    = $metaMap[$r['tienda']] ?? 0;
+            $ped     = (int) $r['pedidos'];
+            $td      = $tiendaDataMap[$r['tienda']] ?? null;
+            $diasAct = $td ? $td['dias_activos'] : $diasPeriodo;
+            $eNueva  = $td ? $td['es_nueva']     : false;
+            $vDiaria = $diasAct > 0 ? round((float) $r['ventas'] / $diasAct, 2) : 0;
+            $vNorm   = round($vDiaria * $diasPeriodo, 2);
             return [
-                'tienda' => $r['tienda'],
-                'ventas' => (float) $r['ventas'],
-                'pedidos' => $ped,
-                'ticket' => $ped > 0 ? round((float) $r['ventas'] / $ped, 2) : 0,
-                'miembros_club' => (int) $r['socios'],
-                'meta' => $meta,
-                'cumplimiento' => $meta > 0 ? round((float) $r['ventas'] / $meta * 100, 1) : null,
+                'tienda'            => $r['tienda'],
+                'ventas'            => (float) $r['ventas'],
+                'pedidos'           => $ped,
+                'ticket'            => $ped > 0 ? round((float) $r['ventas'] / $ped, 2) : 0,
+                'miembros_club'     => (int) $r['socios'],
+                'meta'              => $meta,
+                'cumplimiento'      => $meta > 0 ? round((float) $r['ventas'] / $meta * 100, 1) : null,
+                'es_nueva'          => $eNueva,
+                'dias_activos'      => $diasAct,
+                'venta_diaria'      => $vDiaria,
+                'venta_normalizada' => $vNorm,
             ];
         }, $detalleTiendas),
         'expansion' => [
