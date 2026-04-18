@@ -31,10 +31,9 @@ const OPS = {
         this.bindTabs();
         document.getElementById('opsBtnCargar').addEventListener('click', () => this.cargarTab(this.tabActivo));
         
-        // Chart.js Defaults for Neumorphism
-        const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        Chart.defaults.color = isDark ? '#8b949e' : '#718096';
-        Chart.defaults.borderColor = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
+        // Chart.js Defaults (Forced Light Mode)
+        Chart.defaults.color = '#718096';
+        Chart.defaults.borderColor = 'rgba(0,0,0,0.05)';
         Chart.defaults.font.family = "'Inter', sans-serif";
     },
 
@@ -124,8 +123,7 @@ const OPS = {
         const mixData   = d.mix_global.map(x => +x.pedidos);
         const mixColors = mixLabels.map(l => this.COLORES[l] || this.COLORES.Otro);
         this.destroyChart('chartMixGlobal');
-        const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        const bg = isDark ? '#1e2027' : '#e0e5ec';
+        const bg = '#e0e5ec'; // Forced Light Mode
         
         OPS.charts.chartMixGlobal = new Chart(document.getElementById('chartMixGlobal'), {
             type: 'doughnut',
@@ -352,8 +350,7 @@ const OPS = {
         const labels = kpis.map(([n]) => `${n} estación${+n>1?'es':''}`);
         const data   = kpis.map(([,c]) => c);
         const colors = ['#0E544C','#e67e22','#d9534f'];
-        const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        const bg = isDark ? '#1e2027' : '#e0e5ec';
+        const bg = '#e0e5ec'; // Forced Light Mode
 
         this.destroyChart('chartMultiDist');
         OPS.charts.chartMultiDist = new Chart(document.getElementById('chartMultiDist'), {

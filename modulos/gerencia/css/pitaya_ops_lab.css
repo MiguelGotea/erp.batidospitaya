@@ -39,17 +39,6 @@
                          calc(-1 * var(--neu-dist)) calc(-1 * var(--neu-dist)) var(--neu-blur) var(--neu-shadow-light);
 }
 
-/* Dark Mode Neumorphism */
-@media (prefers-color-scheme: dark) {
-    :root {
-        --neu-bg:          #1e2027;
-        --neu-shadow-dark: #15171d;
-        --neu-shadow-light:#272a33;
-        --ops-text:        #e6edf3;
-        --ops-text-muted:  #8b949e;
-    }
-}
-
 /* ── Base ───────────────────────────────────────────────────── */
 #opsLabWrapper {
     background: var(--neu-bg);
