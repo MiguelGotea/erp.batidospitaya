@@ -442,7 +442,6 @@ try {
         $vtMap[$r['Sucursal_Nombre']] = $r;
     }
 
-
     // Ventas por año — solo desde 2024 (base de datos contiene datos desde 2024)
     $sqlVentasAnio = "
         SELECT anio, ventas FROM (
