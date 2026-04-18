@@ -58,11 +58,13 @@ try {
     // ────────────────────────────────────────────
     $sqlVentas = "
         SELECT
-            SUM(CASE WHEN Anulado = 0 THEN Precio ELSE 0 END)                        AS ventas_totales,
-            COUNT(DISTINCT CASE WHEN Anulado = 0 THEN CodPedido ELSE NULL END)        AS total_pedidos,
-            COUNT(DISTINCT CASE WHEN Anulado = 0 THEN Sucursal_Nombre ELSE NULL END)  AS tiendas_activas
-        FROM VentasGlobalesAccessCSV
-        WHERE Fecha BETWEEN :ini AND :fin
+            SUM(CASE WHEN v.Anulado = 0 THEN v.Precio ELSE 0 END)                        AS ventas_totales,
+            COUNT(DISTINCT CASE WHEN v.Anulado = 0 THEN v.CodPedido ELSE NULL END)        AS total_pedidos,
+            COUNT(DISTINCT CASE WHEN v.Anulado = 0 THEN v.Sucursal_Nombre ELSE NULL END)  AS tiendas_activas
+        FROM VentasGlobalesAccessCSV v
+        INNER JOIN sucursales s ON s.nombre = v.Sucursal_Nombre
+        WHERE v.Fecha BETWEEN :ini AND :fin
+          AND s.sucursal = 1
     ";
     $st = $conn->prepare($sqlVentas);
     $st->execute([':ini' => $ini, ':fin' => $fin]);
@@ -121,12 +123,14 @@ try {
                 ) AS tiendas_activas_mes
             FROM (
                 SELECT
-                    DATE_FORMAT(Fecha, '%Y-%m') AS mes,
-                    SUM(CASE WHEN Anulado = 0 THEN Precio ELSE 0 END) AS total,
-                    COUNT(DISTINCT CASE WHEN Anulado=0 THEN CodPedido ELSE NULL END) AS pedidos
-                FROM VentasGlobalesAccessCSV
-                WHERE Fecha >= DATE_SUB(:hoy, INTERVAL 12 MONTH)
-                GROUP BY DATE_FORMAT(Fecha, '%Y-%m')
+                    DATE_FORMAT(v.Fecha, '%Y-%m') AS mes,
+                    SUM(CASE WHEN v.Anulado = 0 THEN v.Precio ELSE 0 END) AS total,
+                    COUNT(DISTINCT CASE WHEN v.Anulado = 0 THEN v.CodPedido ELSE NULL END) AS pedidos
+                FROM VentasGlobalesAccessCSV v
+                INNER JOIN sucursales s ON s.nombre = v.Sucursal_Nombre
+                WHERE v.Fecha >= DATE_SUB(:hoy, INTERVAL 12 MONTH)
+                  AND s.sucursal = 1
+                GROUP BY DATE_FORMAT(v.Fecha, '%Y-%m')
             ) sub
             ORDER BY mes ASC
         ";
@@ -168,12 +172,14 @@ try {
     // ────────────────────────────────────────────
     $sqlRanking = "
         SELECT
-            Sucursal_Nombre AS tienda,
-            SUM(CASE WHEN Anulado = 0 THEN Precio ELSE 0 END)                    AS ventas,
-            COUNT(DISTINCT CASE WHEN Anulado = 0 THEN CodPedido ELSE NULL END)   AS pedidos
-        FROM VentasGlobalesAccessCSV
-        WHERE Fecha BETWEEN :ini AND :fin
-        GROUP BY Sucursal_Nombre
+            v.Sucursal_Nombre AS tienda,
+            SUM(CASE WHEN v.Anulado = 0 THEN v.Precio ELSE 0 END)                    AS ventas,
+            COUNT(DISTINCT CASE WHEN v.Anulado = 0 THEN v.CodPedido ELSE NULL END)   AS pedidos
+        FROM VentasGlobalesAccessCSV v
+        INNER JOIN sucursales s ON s.nombre = v.Sucursal_Nombre
+        WHERE v.Fecha BETWEEN :ini AND :fin
+          AND s.sucursal = 1
+        GROUP BY v.Sucursal_Nombre
         ORDER BY ventas DESC
     ";
     $stR = $conn->prepare($sqlRanking);
@@ -368,7 +374,9 @@ try {
             COUNT(DISTINCT CASE WHEN v.Anulado = 0 THEN v.CodPedido ELSE NULL END)   AS pedidos,
             COUNT(DISTINCT CASE WHEN v.Anulado = 0 AND v.CodCliente > 0 THEN v.CodCliente ELSE NULL END) AS socios
         FROM VentasGlobalesAccessCSV v
+        INNER JOIN sucursales s ON s.nombre = v.Sucursal_Nombre
         WHERE v.Fecha BETWEEN :ini AND :fin
+          AND s.sucursal = 1
         GROUP BY v.Sucursal_Nombre
         ORDER BY ventas DESC
     ";
