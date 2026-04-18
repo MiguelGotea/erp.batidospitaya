@@ -11,7 +11,7 @@ require_once '../../../core/permissions/permissions.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
-$usuario       = obtenerUsuarioActual();
+$usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
 
 if (!tienePermiso('dashboard_global_pitaya', 'vista', $cargoOperario)) {
@@ -21,25 +21,26 @@ if (!tienePermiso('dashboard_global_pitaya', 'vista', $cargoOperario)) {
 }
 
 $periodo = $_POST['periodo'] ?? 'mes_actual';
-$anio    = (int)($_POST['anio'] ?? date('Y'));
+$anio = (int) ($_POST['anio'] ?? date('Y'));
 
 // ────────────────────────────────────────────────
 // Calcular rango de fechas según período
 // ────────────────────────────────────────────────
-$hoy  = date('Y-m-d');
+$hoy = date('Y-m-d');
 $ayer = date('Y-m-d', strtotime('-1 day'));
 
 switch ($periodo) {
     case 'mes_anterior':
         $ini = date('Y-m-01', strtotime('first day of last month'));
-        $fin = date('Y-m-t',  strtotime('last day of last month'));
+        $fin = date('Y-m-t', strtotime('last day of last month'));
         break;
     case 'trimestre':
-        $mes   = (int)date('n');
-        $qIni  = ((int)ceil($mes / 3) - 1) * 3 + 1;
-        $ini   = "$anio-" . str_pad($qIni, 2, '0', STR_PAD_LEFT) . "-01";
-        $fin   = date('Y-m-t', strtotime("$anio-" . str_pad($qIni + 2, 2, '0', STR_PAD_LEFT) . "-01"));
-        if ($fin > $ayer) $fin = $ayer;
+        $mes = (int) date('n');
+        $qIni = ((int) ceil($mes / 3) - 1) * 3 + 1;
+        $ini = "$anio-" . str_pad($qIni, 2, '0', STR_PAD_LEFT) . "-01";
+        $fin = date('Y-m-t', strtotime("$anio-" . str_pad($qIni + 2, 2, '0', STR_PAD_LEFT) . "-01"));
+        if ($fin > $ayer)
+            $fin = $ayer;
         break;
     case 'anio':
         $ini = "$anio-01-01";
@@ -48,7 +49,8 @@ switch ($periodo) {
     default: // mes_actual
         $ini = date('Y-m-01');
         $fin = $ayer;
-        if ($fin < $ini) $fin = $ini; // Caso día 1 del mes
+        if ($fin < $ini)
+            $fin = $ini; // Caso día 1 del mes
         break;
 }
 
@@ -71,21 +73,21 @@ try {
     $st->execute([':ini' => $ini, ':fin' => $fin]);
     $ventas = $st->fetch(PDO::FETCH_ASSOC);
 
-    $ventasTotales  = round($ventas['ventas_totales'] ?? 0, 2);
-    $totalPedidos   = (int)($ventas['total_pedidos'] ?? 0);
-    $tiendasActivas = (int)($ventas['tiendas_activas'] ?? 0);
+    $ventasTotales = round($ventas['ventas_totales'] ?? 0, 2);
+    $totalPedidos = (int) ($ventas['total_pedidos'] ?? 0);
+    $tiendasActivas = (int) ($ventas['tiendas_activas'] ?? 0);
     $ticketPromedio = $totalPedidos > 0 ? round($ventasTotales / $totalPedidos, 2) : 0;
     $ventaPorTienda = $tiendasActivas > 0 ? round($ventasTotales / $tiendasActivas, 2) : 0;
 
     // ── Período anterior para tendencia ──
-    $dias     = (strtotime($fin) - strtotime($ini)) / 86400 + 1;
-    $iniPrev  = date('Y-m-d', strtotime($ini) - $dias * 86400);
-    $finPrev  = date('Y-m-d', strtotime($ini) - 86400);
-    $stPrev   = $conn->prepare($sqlVentas);
+    $dias = (strtotime($fin) - strtotime($ini)) / 86400 + 1;
+    $iniPrev = date('Y-m-d', strtotime($ini) - $dias * 86400);
+    $finPrev = date('Y-m-d', strtotime($ini) - 86400);
+    $stPrev = $conn->prepare($sqlVentas);
     $stPrev->execute([':ini' => $iniPrev, ':fin' => $finPrev]);
     $ventasPrev = $stPrev->fetch(PDO::FETCH_ASSOC);
     $ventasPrevTotal = round($ventasPrev['ventas_totales'] ?? 0, 2);
-    $trendPct  = $ventasPrevTotal > 0 ? round(($ventasTotales - $ventasPrevTotal) / $ventasPrevTotal * 100, 1) : null;
+    $trendPct = $ventasPrevTotal > 0 ? round(($ventasTotales - $ventasPrevTotal) / $ventasPrevTotal * 100, 1) : null;
 
     // ────────────────────────────────────────────
     // 2. METAS DEL PERÍODO
@@ -97,8 +99,8 @@ try {
     ";
     $stm = $conn->prepare($sqlMeta);
     $stm->execute([':ini' => $ini, ':fin' => $fin]);
-    $metaRow    = $stm->fetch(PDO::FETCH_ASSOC);
-    $metaTotal  = round($metaRow['meta_total'] ?? 0, 2);
+    $metaRow = $stm->fetch(PDO::FETCH_ASSOC);
+    $metaTotal = round($metaRow['meta_total'] ?? 0, 2);
     $cumplimiento = $metaTotal > 0 ? round($ventasTotales / $metaTotal * 100, 1) : 0;
 
     // ────────────────────────────────────────────
@@ -158,13 +160,13 @@ try {
     }
     // Calcular venta_por_tienda (usa tiendas_activas_mes o fallback al total de activas)
     // Tiendas activas actuales — se usa en expansión y proyección
-    $tiendasActualesTotal = (int)($conn->query(
+    $tiendasActualesTotal = (int) ($conn->query(
         "SELECT COUNT(*) FROM sucursales WHERE sucursal=1 AND activa=1"
     )->fetchColumn() ?: 14);
     $tiendasActivasFallback = $tiendasActualesTotal;
     foreach ($tendenciaMensual as &$tm) {
-        $t = max(1, (int)($tm['tiendas_activas_mes'] ?? $tiendasActivasFallback));
-        $tm['venta_por_tienda'] = round((float)$tm['total'] / $t, 2);
+        $t = max(1, (int) ($tm['tiendas_activas_mes'] ?? $tiendasActivasFallback));
+        $tm['venta_por_tienda'] = round((float) $tm['total'] / $t, 2);
     }
     unset($tm);
 
@@ -201,7 +203,7 @@ try {
     $metasPorTienda = $stMT->fetchAll(PDO::FETCH_ASSOC);
     $metaMap = [];
     foreach ($metasPorTienda as $m) {
-        $metaMap[$m['nombre']] = (float)($m['meta_total'] ?? 0);
+        $metaMap[$m['nombre']] = (float) ($m['meta_total'] ?? 0);
     }
 
     // ────────────────────────────────────────────
@@ -209,13 +211,13 @@ try {
     // ────────────────────────────────────────────
     // Total membresías
     $stClubTotal = $conn->query("SELECT COUNT(*) as total FROM clientesclub");
-    $totalMembresias = (int)$stClubTotal->fetch(PDO::FETCH_ASSOC)['total'];
+    $totalMembresias = (int) $stClubTotal->fetch(PDO::FETCH_ASSOC)['total'];
 
     // Nuevos socios en período
     $sqlNuevos = "SELECT COUNT(*) as nuevos FROM clientesclub WHERE fecha_registro BETWEEN :ini AND :fin";
     $stN = $conn->prepare($sqlNuevos);
     $stN->execute([':ini' => $ini, ':fin' => $fin]);
-    $nuevosSocios = (int)$stN->fetch(PDO::FETCH_ASSOC)['nuevos'];
+    $nuevosSocios = (int) $stN->fetch(PDO::FETCH_ASSOC)['nuevos'];
 
     // Socios activos (última compra ≤ 60 días)
     $sqlActivos = "
@@ -226,11 +228,11 @@ try {
     ";
     $stA = $conn->prepare($sqlActivos);
     $stA->execute([':hoy' => $hoy]);
-    $sociosActivos = (int)$stA->fetch(PDO::FETCH_ASSOC)['activos'];
+    $sociosActivos = (int) $stA->fetch(PDO::FETCH_ASSOC)['activos'];
 
     // Universo con compra
     $stUni = $conn->query("SELECT COUNT(DISTINCT CodCliente) AS universo FROM VentasGlobalesAccessCSV WHERE Anulado = 0 AND CodCliente > 0");
-    $universo = (int)$stUni->fetch(PDO::FETCH_ASSOC)['universo'];
+    $universo = (int) $stUni->fetch(PDO::FETCH_ASSOC)['universo'];
 
     // Socios perdidos (>60 días) — churn
     $sqlPerdidos = "
@@ -245,7 +247,7 @@ try {
     ";
     $stP = $conn->prepare($sqlPerdidos);
     $stP->execute([':hoy' => $hoy]);
-    $perdidos = (int)$stP->fetch(PDO::FETCH_ASSOC)['perdidos'];
+    $perdidos = (int) $stP->fetch(PDO::FETCH_ASSOC)['perdidos'];
     $churnRate = $universo > 0 ? round($perdidos / $universo * 100, 1) : 0;
 
     // LTV Promedio (top 1000 para eficiencia)
@@ -274,7 +276,7 @@ try {
     ";
     $stPart = $conn->prepare($sqlPart);
     $stPart->execute([':ini' => $ini, ':fin' => $fin]);
-    $partRow  = $stPart->fetch(PDO::FETCH_ASSOC);
+    $partRow = $stPart->fetch(PDO::FETCH_ASSOC);
     $partClub = $partRow['total_ventas'] > 0
         ? round($partRow['ventas_club'] / $partRow['total_ventas'] * 100, 1) : 0;
 
@@ -341,11 +343,11 @@ try {
     // 8. SEGMENTOS RFM (simplificado)
     // ────────────────────────────────────────────
     $segmentos = [
-        ['segmento' => 'Campeones',  'count' => 0],
-        ['segmento' => 'Fieles',     'count' => 0],
-        ['segmento' => 'En Riesgo',  'count' => 0],
-        ['segmento' => 'Perdidos',   'count' => 0],
-        ['segmento' => 'Nuevos',     'count' => 0],
+        ['segmento' => 'Campeones', 'count' => 0],
+        ['segmento' => 'Fieles', 'count' => 0],
+        ['segmento' => 'En Riesgo', 'count' => 0],
+        ['segmento' => 'Perdidos', 'count' => 0],
+        ['segmento' => 'Nuevos', 'count' => 0],
     ];
     // Calcular segmentos RFM en PHP para evitar limitaciones de MySQL con GROUP BY alias
     $sqlSeg = "
@@ -362,13 +364,18 @@ try {
     $contadores = ['Campeones' => 0, 'Fieles' => 0, 'En Riesgo' => 0, 'Perdidos' => 0, 'Nuevos' => 0];
     $hoyTs = strtotime($hoy);
     foreach ($clientesRFM as $c) {
-        $diasInactivo = (int)(($hoyTs - strtotime($c['ultima_compra'])) / 86400);
-        $freq         = (int)$c['frecuencia'];
-        if ($diasInactivo <= 15 && $freq >= 10)       $contadores['Campeones']++;
-        elseif ($diasInactivo <= 30 && $freq >= 5)    $contadores['Fieles']++;
-        elseif ($diasInactivo <= 60)                  $contadores['En Riesgo']++;
-        elseif ($diasInactivo > 60)                   $contadores['Perdidos']++;
-        else                                          $contadores['Nuevos']++;
+        $diasInactivo = (int) (($hoyTs - strtotime($c['ultima_compra'])) / 86400);
+        $freq = (int) $c['frecuencia'];
+        if ($diasInactivo <= 15 && $freq >= 10)
+            $contadores['Campeones']++;
+        elseif ($diasInactivo <= 30 && $freq >= 5)
+            $contadores['Fieles']++;
+        elseif ($diasInactivo <= 60)
+            $contadores['En Riesgo']++;
+        elseif ($diasInactivo > 60)
+            $contadores['Perdidos']++;
+        else
+            $contadores['Nuevos']++;
     }
     $segmentos = [];
     foreach ($contadores as $seg => $cnt) {
@@ -415,7 +422,7 @@ try {
 
     // Separar las cerradas para calcular el ritmo de cierres
     // Consideramos cerrada cualquier tienda con activa=0
-    $cerradas = array_filter($sucursalesApertura, fn($s) => (int)$s['activa'] === 0);
+    $cerradas = array_filter($sucursalesApertura, fn($s) => (int) $s['activa'] === 0);
     $totalCerradas = count($cerradas);
 
     // Ventas totales y primer año por tienda
@@ -434,6 +441,7 @@ try {
     foreach ($stVT->fetchAll(PDO::FETCH_ASSOC) as $r) {
         $vtMap[$r['Sucursal_Nombre']] = $r;
     }
+
 
     // Ventas por año — solo desde 2024 (base de datos contiene datos desde 2024)
     $sqlVentasAnio = "
@@ -454,76 +462,76 @@ try {
     // Calcular acumulado de aperturas brutas por año en PHP
     // y cierres por año para mostrar el neto
     $aperturasPorAnio = [];
-    $cierresPorAnio   = [];
+    $cierresPorAnio = [];
     foreach ($sucursalesApertura as $s) {
-        $a = (int)$s['anio_apertura'];
+        $a = (int) $s['anio_apertura'];
         $aperturasPorAnio[$a] = ($aperturasPorAnio[$a] ?? 0) + 1;
     }
     foreach ($cerradas as $s) {
         $fechaCie = $s['fecha_cierre'];
         if ($fechaCie) {
-            $ac = (int)date('Y', strtotime($fechaCie));
+            $ac = (int) date('Y', strtotime($fechaCie));
         } else {
             // Fallback: si no hay fecha de cierre, usamos el año de apertura (fue un cierre rápido o error de data)
-            $ac = (int)$s['anio_apertura'];
+            $ac = (int) $s['anio_apertura'];
         }
         $cierresPorAnio[$ac] = ($cierresPorAnio[$ac] ?? 0) + 1;
     }
     ksort($aperturasPorAnio);
     $expansion = [];
     $acumBruto = 0;
-    $acumNeto  = 0;
-    $allAnios  = array_unique(array_merge(array_keys($aperturasPorAnio), array_keys($cierresPorAnio)));
+    $acumNeto = 0;
+    $allAnios = array_unique(array_merge(array_keys($aperturasPorAnio), array_keys($cierresPorAnio)));
     sort($allAnios);
     foreach ($allAnios as $anio) {
-        $nuevas  = $aperturasPorAnio[$anio] ?? 0;
-        $cerr    = $cierresPorAnio[$anio]   ?? 0;
+        $nuevas = $aperturasPorAnio[$anio] ?? 0;
+        $cerr = $cierresPorAnio[$anio] ?? 0;
         $acumBruto += $nuevas;
-        $acumNeto  += ($nuevas - $cerr);
+        $acumNeto += ($nuevas - $cerr);
         $expansion[] = [
-            'anio'      => $anio,
-            'nuevas'    => $nuevas,
-            'cierres'   => $cerr,
+            'anio' => $anio,
+            'nuevas' => $nuevas,
+            'cierres' => $cerr,
             'acumulado' => $acumBruto,   // bruto (total abiertos alguna vez)
-            'neto'      => $acumNeto,    // neto (activas si no hubiera más cierres pendientes)
+            'neto' => $acumNeto,    // neto (activas si no hubiera más cierres pendientes)
         ];
     }
     // El acumulado neto real es el count de activas (ya definido arriba)
     $tiendasActivasActuales = $tiendasActualesTotal;
 
     // Proyección lineal hacia 40 tiendas en 2028 (basada en activas)
-    $anioActualExp  = (int)date('Y');
-    $totalAbiertasAlguna  = count($sucursalesApertura); // todas las que han existido
-    $metaExpansion  = 40;
-    $anioMeta       = 2028;
+    $anioActualExp = (int) date('Y');
+    $totalAbiertasAlguna = count($sucursalesApertura); // todas las que han existido
+    $metaExpansion = 40;
+    $anioMeta = 2028;
     $aniosRestantes = max(1, $anioMeta - $anioActualExp);
     $aperturasPorAnioNecesarias = ceil(($metaExpansion - $tiendasActualesTotal) / $aniosRestantes);
 
     // Línea de proyección (desde hoy hasta 2028)
     $proyeccion = [];
     // Usamos el acumulado neto del historial para que la línea sea continua
-    $proyAcum = $acumNeto; 
+    $proyAcum = $acumNeto;
     for ($y = $anioActualExp; $y <= $anioMeta; $y++) {
         $proyeccion[] = ['anio' => $y, 'proyectado' => $proyAcum];
         $proyAcum = min($metaExpansion, $proyAcum + $aperturasPorAnioNecesarias);
     }
 
     // Enriquecer lista de sucursales con ventas
-    $listaSucursales = array_map(function($s) use ($vtMap) {
+    $listaSucursales = array_map(function ($s) use ($vtMap) {
         $info = $vtMap[$s['nombre']] ?? null;
         return [
-            'nombre'            => $s['nombre'],
-            'fecha_apertura'    => $s['Fecha_Apertura'],
-            'fecha_cierre'      => $s['fecha_cierre'],
-            'activa'            => (int)$s['activa'],
-            'anio_apertura'     => (int)$s['anio_apertura'],
-            'ventas_historico'  => $info ? (float)$info['ventas_total_historico'] : 0,
-            'primer_anio_venta' => $info ? (int)$info['primer_anio_venta'] : null,
+            'nombre' => $s['nombre'],
+            'fecha_apertura' => $s['Fecha_Apertura'],
+            'fecha_cierre' => $s['fecha_cierre'],
+            'activa' => (int) $s['activa'],
+            'anio_apertura' => (int) $s['anio_apertura'],
+            'ventas_historico' => $info ? (float) $info['ventas_total_historico'] : 0,
+            'primer_anio_venta' => $info ? (int) $info['primer_anio_venta'] : null,
         ];
     }, $sucursalesApertura);
 
     // ── Viabilidad mejorada con cierres ──
-    $hoyTs        = time();
+    $hoyTs = time();
     $primeraFecha = !empty($sucursalesApertura) ? $sucursalesApertura[0]['Fecha_Apertura'] : null;
     $aniosDesdeInicio = $primeraFecha
         ? max(0.5, ($hoyTs - strtotime($primeraFecha)) / 31536000)
@@ -540,21 +548,22 @@ try {
 
     // Ritmo reciente BRUTO (aperturas brutas en últimos 2 años)
     $anioCorte = $anioActualExp - 2;
-    $recientesBruto = array_filter($sucursalesApertura, fn($s) => (int)$s['anio_apertura'] >= $anioCorte);
-    $recientesCerr  = array_filter($cerradas, function($s) use ($anioCorte) {
-        if (!$s['fecha_cierre']) return false;
-        return (int)date('Y', strtotime($s['fecha_cierre'])) >= $anioCorte;
+    $recientesBruto = array_filter($sucursalesApertura, fn($s) => (int) $s['anio_apertura'] >= $anioCorte);
+    $recientesCerr = array_filter($cerradas, function ($s) use ($anioCorte) {
+        if (!$s['fecha_cierre'])
+            return false;
+        return (int) date('Y', strtotime($s['fecha_cierre'])) >= $anioCorte;
     });
     $ritmoAperReciente = count($recientesBruto) > 0 ? round(count($recientesBruto) / 2, 2) : $ritmoAperturasBruto;
-    $ritmoCieReciente  = count($recientesCerr)  > 0 ? round(count($recientesCerr)  / 2, 2) : $tasaCierre;
-    $ritmoNetReciente  = round($ritmoAperReciente - $ritmoCieReciente, 2);
+    $ritmoCieReciente = count($recientesCerr) > 0 ? round(count($recientesCerr) / 2, 2) : $tasaCierre;
+    $ritmoNetReciente = round($ritmoAperReciente - $ritmoCieReciente, 2);
 
     // Proyección NETA al ritmo reciente (considerando cierres)
-    $proyReciente  = (int)round($tiendasActualesTotal + $ritmoNetReciente  * $aniosRestantes);
+    $proyReciente = (int) round($tiendasActualesTotal + $ritmoNetReciente * $aniosRestantes);
     // Proyección BRUTA al ritmo reciente (sin descontar cierres potenciales)
-    $proyBruta     = (int)round($tiendasActualesTotal + $ritmoAperReciente * $aniosRestantes);
+    $proyBruta = (int) round($tiendasActualesTotal + $ritmoAperReciente * $aniosRestantes);
     // Proyección al ritmo histórico neto
-    $proyHistorica = (int)round($tiendasActualesTotal + $ritmoHistorico * $aniosRestantes);
+    $proyHistorica = (int) round($tiendasActualesTotal + $ritmoHistorico * $aniosRestantes);
 
     // Ritmo necesario (sin cierres futuros — política nueva)
     $ritmoNecesario = $aniosRestantes > 0
@@ -563,27 +572,30 @@ try {
 
     // Viabilidad: ritmo neto reciente vs necesario
     $ratioViabilidad = $ritmoNecesario > 0 ? round($ritmoAperReciente / $ritmoNecesario * 100, 1) : 100;
-    if ($ratioViabilidad >= 100)     $viabilidadLabel = 'viable';
-    elseif ($ratioViabilidad >= 70)  $viabilidadLabel = 'posible';
-    else                              $viabilidadLabel = 'desafiante';
+    if ($ratioViabilidad >= 100)
+        $viabilidadLabel = 'viable';
+    elseif ($ratioViabilidad >= 70)
+        $viabilidadLabel = 'posible';
+    else
+        $viabilidadLabel = 'desafiante';
 
     $viabilidad = [
-        'ritmo_historico'         => $ritmoHistorico,
-        'ritmo_apertura_bruto'    => $ritmoAperturasBruto,
-        'ritmo_reciente'          => $ritmoAperReciente,
-        'ritmo_neto_reciente'     => $ritmoNetReciente,
-        'tasa_cierre'             => $tasaCierre,
-        'tasa_cierre_reciente'    => $ritmoCieReciente,
-        'ritmo_necesario'         => $ritmoNecesario,
-        'proyeccion_neta'         => min($metaExpansion + 5, $proyReciente),
-        'proyeccion_bruta'        => min($metaExpansion + 5, $proyBruta),
-        'proyeccion_historica'    => min($metaExpansion + 5, $proyHistorica),
-        'ratio_viabilidad'        => $ratioViabilidad,
-        'estado'                  => $viabilidadLabel,
-        'anios_desde_inicio'      => round($aniosDesdeInicio, 1),
-        'anos_restantes'          => $aniosRestantes,
-        'total_cerradas'          => $totalCerradas,
-        'total_abiertas_alguna'   => $totalAbiertasAlguna,
+        'ritmo_historico' => $ritmoHistorico,
+        'ritmo_apertura_bruto' => $ritmoAperturasBruto,
+        'ritmo_reciente' => $ritmoAperReciente,
+        'ritmo_neto_reciente' => $ritmoNetReciente,
+        'tasa_cierre' => $tasaCierre,
+        'tasa_cierre_reciente' => $ritmoCieReciente,
+        'ritmo_necesario' => $ritmoNecesario,
+        'proyeccion_neta' => min($metaExpansion + 5, $proyReciente),
+        'proyeccion_bruta' => min($metaExpansion + 5, $proyBruta),
+        'proyeccion_historica' => min($metaExpansion + 5, $proyHistorica),
+        'ratio_viabilidad' => $ratioViabilidad,
+        'estado' => $viabilidadLabel,
+        'anios_desde_inicio' => round($aniosDesdeInicio, 1),
+        'anos_restantes' => $aniosRestantes,
+        'total_cerradas' => $totalCerradas,
+        'total_abiertas_alguna' => $totalAbiertasAlguna,
     ];
 
     // ────────────────────────────────────────────────────────────────────
@@ -596,18 +608,18 @@ try {
     // VPT: regresión lineal sobre los meses COMPLETOS (excluye el mes en curso)
     // ────────────────────────────────────────────────────────────────────
     $mesActualStr = date('Y-m');  // e.g. '2026-04'
-    $diaHoy       = (int)date('j');
-    $diasEnMes    = (int)date('t');
+    $diaHoy = (int) date('j');
+    $diasEnMes = (int) date('t');
     $diasTranscurridos = max(1, $diaHoy - 1);
 
     // Variables base para proyección
-    $nmeses      = count($tendenciaMensual);
-    $vptSeries   = array_values(array_map(fn($m) => (float)$m['venta_por_tienda'], $tendenciaMensual));
+    $nmeses = count($tendenciaMensual);
+    $vptSeries = array_values(array_map(fn($m) => (float) $m['venta_por_tienda'], $tendenciaMensual));
     $baseTiendas = $tiendasActualesTotal;
-    $lastVpt     = !empty($vptSeries) ? end($vptSeries) : 0;
+    $lastVpt = !empty($vptSeries) ? end($vptSeries) : 0;
 
     // Separar mes actual (incompleto) del histórico de meses completos
-    $lastMesTend      = !empty($tendenciaMensual) ? $tendenciaMensual[$nmeses-1]['mes'] : $mesActualStr;
+    $lastMesTend = !empty($tendenciaMensual) ? $tendenciaMensual[$nmeses - 1]['mes'] : $mesActualStr;
     $mesActualEstimado = null;
 
     if ($lastMesTend === $mesActualStr && $diaHoy > 1) {
@@ -623,18 +635,18 @@ try {
         ";
         $stAyer = $conn->prepare($sqlHastaAyer);
         $stAyer->execute([':ini' => date('Y-m-01'), ':ayer' => date('Y-m-d', strtotime('-1 day'))]);
-        $ventasHastaAyer = (float)($stAyer->fetch(PDO::FETCH_ASSOC)['total'] ?? 0);
+        $ventasHastaAyer = (float) ($stAyer->fetch(PDO::FETCH_ASSOC)['total'] ?? 0);
 
-        $ventaEstimada    = round($ventasHastaAyer / $diasTranscurridos * $diasEnMes, 2);
-        $tiendasMesAct    = max(1, (int)($tendenciaMensual[$nmeses-1]['tiendas_activas_mes'] ?? $baseTiendas));
+        $ventaEstimada = round($ventasHastaAyer / $diasTranscurridos * $diasEnMes, 2);
+        $tiendasMesAct = max(1, (int) ($tendenciaMensual[$nmeses - 1]['tiendas_activas_mes'] ?? $baseTiendas));
         $mesActualEstimado = [
-            'mes'                 => $mesActualStr,
-            'ventas'              => $ventaEstimada,
-            'ventas_reales_ayer'  => $ventasHastaAyer,
-            'dias_transcurridos'  => $diasTranscurridos,
-            'venta_por_tienda'    => round($ventaEstimada / $tiendasMesAct, 2),
+            'mes' => $mesActualStr,
+            'ventas' => $ventaEstimada,
+            'ventas_reales_ayer' => $ventasHastaAyer,
+            'dias_transcurridos' => $diasTranscurridos,
+            'venta_por_tienda' => round($ventaEstimada / $tiendasMesAct, 2),
             'tiendas_activas_mes' => $tiendasMesAct,
-            'estimado'            => true,
+            'estimado' => true,
         ];
         $nc = $nmeses - 1;  // meses completos para regresión
     } else {
@@ -655,32 +667,36 @@ try {
     }
     $nReg = count($vptParaReg);
 
-    $sx=0; $sy=0; $sxy=0; $sxx=0;
-    for ($i=0; $i<$nReg; $i++) {
-        $sx  += $i;   $sy  += $vptParaReg[$i];
+    $sx = 0;
+    $sy = 0;
+    $sxy = 0;
+    $sxx = 0;
+    for ($i = 0; $i < $nReg; $i++) {
+        $sx += $i;
+        $sy += $vptParaReg[$i];
         $sxy += $i * $vptParaReg[$i];
         $sxx += $i * $i;
     }
-    $den2       = $nReg * $sxx - $sx * $sx;
-    $slope2     = $den2 != 0 ? ($nReg * $sxy - $sx * $sy) / $den2 : 0;
-    $intercept2 = $nReg > 0  ? ($sy - $slope2 * $sx) / $nReg      : 0;
+    $den2 = $nReg * $sxx - $sx * $sx;
+    $slope2 = $den2 != 0 ? ($nReg * $sxy - $sx * $sy) / $den2 : 0;
+    $intercept2 = $nReg > 0 ? ($sy - $slope2 * $sx) / $nReg : 0;
 
     // Base de referencia = VPT del mes actual estimado (Abril), o último mes completo
     $lastVptCompleto = $mesActualEstimado
         ? $mesActualEstimado['venta_por_tienda']
-        : ($nc > 0 ? $vptCompletos[$nc-1] : ($lastVpt ?: 1));
+        : ($nc > 0 ? $vptCompletos[$nc - 1] : ($lastVpt ?: 1));
 
     // Mes base para la proyección = último mes completo
-    $lastMesCompleto = $nc > 0 ? $tendenciaMensual[$nc-1]['mes'] : date('Y-m', strtotime('-1 month'));
+    $lastMesCompleto = $nc > 0 ? $tendenciaMensual[$nc - 1]['mes'] : date('Y-m', strtotime('-1 month'));
 
     // Ritmos mensuales SIN cierres (política nueva = nunca más se cierra una tienda)
     $ritmoHistMens = $ritmoAperturasBruto / 12;
-    $ritmoRecMens  = $ritmoAperReciente   / 12;
+    $ritmoRecMens = $ritmoAperReciente / 12;
 
     // Proyección: próximos 12 meses desde el último mes completo
     $proyeccionTendencia = [];
     $cursorTs = strtotime($lastMesCompleto . '-01 +1 month');   // primer mes proyectado
-    $finalTs  = strtotime($lastMesCompleto . '-01 +12 month');  // 12 meses después
+    $finalTs = strtotime($lastMesCompleto . '-01 +12 month');  // 12 meses después
     $totalMeses = 12;
 
     // Ritmo optimista: llegar a 40 exactamente en mes 12
@@ -694,23 +710,23 @@ try {
         // VPT proyectado: regresión que ya incluye Abril, acotado al ±25%/35%
         // del VPT de referencia (Abril estimado) para evitar saltos bruscos.
         // El índice x de los meses futuros arranca desde $nReg (posición siguiente a Abril).
-        $vptReg  = $intercept2 + $slope2 * ($nReg - 1 + $i);
+        $vptReg = $intercept2 + $slope2 * ($nReg - 1 + $i);
         $vptProy = max($lastVptCompleto * 0.75, min($lastVptCompleto * 1.35, $vptReg));
 
         // Tiendas esperadas por escenario (sin cierres → solo sube)
         $tHist = min($metaExpansion, $baseTiendas + $ritmoHistMens * $i);
-        $tRec  = min($metaExpansion, $baseTiendas + $ritmoRecMens  * $i);
+        $tRec = min($metaExpansion, $baseTiendas + $ritmoRecMens * $i);
         $tMeta = min($metaExpansion, $baseTiendas + $ritmoMetaMens * $i);
 
         $proyeccionTendencia[] = [
-            'mes'          => $mesLabel,
-            'vpt'          => round($vptProy, 2),
+            'mes' => $mesLabel,
+            'vpt' => round($vptProy, 2),
             'tiendas_hist' => round($tHist, 1),
-            'tiendas_rec'  => round($tRec,  1),
+            'tiendas_rec' => round($tRec, 1),
             'tiendas_meta' => round($tMeta, 1),
-            'ventas_hist'  => round($vptProy * $tHist, 2),  // Conservador
-            'ventas_rec'   => round($vptProy * $tRec,  2),  // Moderado
-            'ventas_meta'  => round($vptProy * $tMeta, 2),  // Optimista
+            'ventas_hist' => round($vptProy * $tHist, 2),  // Conservador
+            'ventas_rec' => round($vptProy * $tRec, 2),  // Moderado
+            'ventas_meta' => round($vptProy * $tMeta, 2),  // Optimista
         ];
 
         $cursorTs = strtotime(date('Y-m-01', $cursorTs) . ' +1 month');
@@ -720,47 +736,47 @@ try {
     // 11. PROYECCIÓN ANUAL (3 años adicionales)
     // ────────────────────────────────────────────────────────────────────
     $ventasAnioActualEst = 0;
-    $proyeccionAnual     = [];
-    $anioActual          = (int)date('Y');
+    $proyeccionAnual = [];
+    $anioActual = (int) date('Y');
 
     if ($mesActualEstimado) {
         // Estimar cierre de 2026: Meses pasados + Mes actual estimado + Meses restantes proyectados
         $mesesPasados2026 = array_filter($tendenciaMensual, fn($m) => str_starts_with($m['mes'], $anioActual . '-') && $m['mes'] < $mesActualStr);
-        $ventasMesesPasados = array_sum(array_map(fn($m) => (float)$m['total'], $mesesPasados2026));
-        
+        $ventasMesesPasados = array_sum(array_map(fn($m) => (float) $m['total'], $mesesPasados2026));
+
         $ventasMesActualEst = $mesActualEstimado['ventas'];
-        
+
         $mesesRestantes2026 = array_filter($proyeccionTendencia, fn($m) => str_starts_with($m['mes'], $anioActual . '-'));
-        $ventasRestantesEst = array_sum(array_map(fn($m) => (float)$m['ventas_rec'], $mesesRestantes2026)); 
-        
+        $ventasRestantesEst = array_sum(array_map(fn($m) => (float) $m['ventas_rec'], $mesesRestantes2026));
+
         $ventasAnioActualEst = $ventasMesesPasados + $ventasMesActualEst + $ventasRestantesEst;
-        
+
         // Ahora proyectamos 2027, 2028, 2029
         // Usamos $lastVptCompleto (que ya apunta al VPT del mes actual estimado si existe,
         // o al último mes completo si no) para que la base anualizada sea consistente
         // con el punto de arranque de la proyección mensual.
         $vptMensualActual = $lastVptCompleto;
-        $vptAnualBase     = $vptMensualActual * 12;
-        
+        $vptAnualBase = $vptMensualActual * 12;
+
         // Pendiente anual: crecimiento del VPT anualizado
-        $slopeAnualVPT = $slope2 * 144; 
+        $slopeAnualVPT = $slope2 * 144;
 
         for ($j = 1; $j <= 3; $j++) {
             $anioProy = $anioActual + $j;
-            
+
             // VPT Proyectado: Base actual + crecimiento acumulado por años
             $vptY = max($vptAnualBase * 0.75, $vptAnualBase + $slopeAnualVPT * $j);
-            
+
             $tHist = min($metaExpansion + 10, $tiendasActualesTotal + $ritmoHistorico * ($anioProy - $anioActual));
-            $tRec  = min($metaExpansion + 10, $tiendasActualesTotal + $ritmoNetReciente * ($anioProy - $anioActual));
+            $tRec = min($metaExpansion + 10, $tiendasActualesTotal + $ritmoNetReciente * ($anioProy - $anioActual));
             $tMeta = min($metaExpansion + 10, $tiendasActualesTotal + $ritmoNecesario * ($anioProy - $anioActual));
 
             $proyeccionAnual[] = [
-                'anio'         => $anioProy,
-                'vpt'          => round($vptY, 2),
-                'ventas_hist'  => round($vptY * $tHist, 2),
-                'ventas_rec'   => round($vptY * $tRec,  2),
-                'ventas_meta'  => round($vptY * $tMeta, 2),
+                'anio' => $anioProy,
+                'vpt' => round($vptY, 2),
+                'ventas_hist' => round($vptY * $tHist, 2),
+                'ventas_rec' => round($vptY * $tRec, 2),
+                'ventas_meta' => round($vptY * $tMeta, 2),
             ];
         }
     }
@@ -773,75 +789,75 @@ try {
         'success' => true,
         'periodo' => ['ini' => $ini, 'fin' => $fin],
         'ventas' => [
-            'totales'       => $ventasTotales,
+            'totales' => $ventasTotales,
             'total_pedidos' => $totalPedidos,
-            'ticket_prom'   => $ticketPromedio,
-            'por_tienda'    => $ventaPorTienda,
-            'trend_pct'     => $trendPct,
-            'prev_total'    => $ventasPrevTotal,
+            'ticket_prom' => $ticketPromedio,
+            'por_tienda' => $ventaPorTienda,
+            'trend_pct' => $trendPct,
+            'prev_total' => $ventasPrevTotal,
         ],
         'meta' => [
-            'total'         => $metaTotal,
-            'cumplimiento'  => $cumplimiento,
+            'total' => $metaTotal,
+            'cumplimiento' => $cumplimiento,
         ],
-        'tendencia_mensual'      => $tendenciaMensual,
-        'mes_actual_estimado'    => $mesActualEstimado,
-        'proyeccion_tendencia'   => $proyeccionTendencia,
-        'ranking_tiendas'   => array_map(function($r) use ($metaMap) {
+        'tendencia_mensual' => $tendenciaMensual,
+        'mes_actual_estimado' => $mesActualEstimado,
+        'proyeccion_tendencia' => $proyeccionTendencia,
+        'ranking_tiendas' => array_map(function ($r) use ($metaMap) {
             $meta = $metaMap[$r['tienda']] ?? 0;
             return [
-                'tienda'      => $r['tienda'],
-                'ventas'      => (float)$r['ventas'],
-                'pedidos'     => (int)$r['pedidos'],
-                'meta'        => $meta,
-                'cumplimiento'=> $meta > 0 ? round((float)$r['ventas'] / $meta * 100, 1) : null,
+                'tienda' => $r['tienda'],
+                'ventas' => (float) $r['ventas'],
+                'pedidos' => (int) $r['pedidos'],
+                'meta' => $meta,
+                'cumplimiento' => $meta > 0 ? round((float) $r['ventas'] / $meta * 100, 1) : null,
             ];
         }, $rankingTiendas),
         'club' => [
             'total_membresias' => $totalMembresias,
-            'socios_activos'   => $sociosActivos,
-            'nuevos'           => $nuevosSocios,
-            'churn_rate'       => $churnRate,
-            'ltv_promedio'     => $ltvPromedio,
-            'universo'         => $universo,
-            'participacion'    => $partClub,
+            'socios_activos' => $sociosActivos,
+            'nuevos' => $nuevosSocios,
+            'churn_rate' => $churnRate,
+            'ltv_promedio' => $ltvPromedio,
+            'universo' => $universo,
+            'participacion' => $partClub,
         ],
-        'nuevos_por_mes'  => $nuevosPorMes,
-        'top_productos'   => $topProductos,
-        'mix_categorias'  => $mixCategorias,
-        'segmentos_rfm'   => $segmentos,
-        'detalle_tiendas' => array_map(function($r) use ($metaMap) {
+        'nuevos_por_mes' => $nuevosPorMes,
+        'top_productos' => $topProductos,
+        'mix_categorias' => $mixCategorias,
+        'segmentos_rfm' => $segmentos,
+        'detalle_tiendas' => array_map(function ($r) use ($metaMap) {
             $meta = $metaMap[$r['tienda']] ?? 0;
-            $ped  = (int)$r['pedidos'];
+            $ped = (int) $r['pedidos'];
             return [
-                'tienda'       => $r['tienda'],
-                'ventas'       => (float)$r['ventas'],
-                'pedidos'      => $ped,
-                'ticket'       => $ped > 0 ? round((float)$r['ventas'] / $ped, 2) : 0,
-                'miembros_club'=> (int)$r['socios'],
-                'meta'         => $meta,
-                'cumplimiento' => $meta > 0 ? round((float)$r['ventas'] / $meta * 100, 1) : null,
+                'tienda' => $r['tienda'],
+                'ventas' => (float) $r['ventas'],
+                'pedidos' => $ped,
+                'ticket' => $ped > 0 ? round((float) $r['ventas'] / $ped, 2) : 0,
+                'miembros_club' => (int) $r['socios'],
+                'meta' => $meta,
+                'cumplimiento' => $meta > 0 ? round((float) $r['ventas'] / $meta * 100, 1) : null,
             ];
         }, $detalleTiendas),
         'expansion' => [
-            'sucursales'            => $listaSucursales,
-            'acumulado_por_anio'    => $expansion,   // incluye nuevas, cierres, acumulado bruto, neto
-            'ventas_por_anio'       => $ventasPorAnio,
-            'anio_actual_estimado'  => $ventasAnioActualEst > 0 ? [
-                'anio' => $anioActual, 
+            'sucursales' => $listaSucursales,
+            'acumulado_por_anio' => $expansion,   // incluye nuevas, cierres, acumulado bruto, neto
+            'ventas_por_anio' => $ventasPorAnio,
+            'anio_actual_estimado' => $ventasAnioActualEst > 0 ? [
+                'anio' => $anioActual,
                 'ventas' => $ventasAnioActualEst,
                 'ventas_reales' => $ventasMesesPasados + $ventasHastaAyer
             ] : null,
-            'proyeccion_anual'      => $proyeccionAnual,
-            'proyeccion'            => $proyeccion,
-            'tiendas_actuales'      => $tiendasActualesTotal,
-            'total_abiertas'        => $totalAbiertasAlguna,
-            'total_cerradas'        => $totalCerradas,
-            'meta'                  => $metaExpansion,
-            'anio_meta'             => $anioMeta,
-            'aperturas_necesarias'  => $aperturasPorAnioNecesarias,
-            'avance_pct'            => round($tiendasActualesTotal / $metaExpansion * 100, 1),
-            'viabilidad'            => $viabilidad,
+            'proyeccion_anual' => $proyeccionAnual,
+            'proyeccion' => $proyeccion,
+            'tiendas_actuales' => $tiendasActualesTotal,
+            'total_abiertas' => $totalAbiertasAlguna,
+            'total_cerradas' => $totalCerradas,
+            'meta' => $metaExpansion,
+            'anio_meta' => $anioMeta,
+            'aperturas_necesarias' => $aperturasPorAnioNecesarias,
+            'avance_pct' => round($tiendasActualesTotal / $metaExpansion * 100, 1),
+            'viabilidad' => $viabilidad,
         ],
     ], JSON_UNESCAPED_UNICODE);
 
