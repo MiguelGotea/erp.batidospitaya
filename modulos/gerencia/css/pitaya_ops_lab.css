@@ -1,0 +1,516 @@
+/* ============================================================
+   PITAYA OPS LAB — Estilos Premium
+   modulos/gerencia/css/pitaya_ops_lab.css
+   ============================================================ */
+
+/* ── Variables ─────────────────────────────────────────────── */
+:root {
+    --ops-bg:          #0d1117;
+    --ops-surface:     #161b22;
+    --ops-surface2:    #1c2330;
+    --ops-border:      #30363d;
+    --ops-teal:        #0E544C;
+    --ops-teal-light:  #14756a;
+    --ops-teal-glow:   rgba(14, 84, 76, 0.35);
+    --ops-accent:      #3fba9e;
+    --ops-accent2:     #58d3b4;
+    --ops-gold:        #e3b341;
+    --ops-red:         #f85149;
+    --ops-green:       #3fb950;
+    --ops-purple:      #a371f7;
+    --ops-orange:      #f0883e;
+    --ops-blue:        #58a6ff;
+    --ops-text:        #e6edf3;
+    --ops-text-muted:  #8b949e;
+    --ops-font:        'Inter', sans-serif;
+    --ops-radius:      12px;
+    --ops-radius-sm:   8px;
+    --ops-shadow:      0 8px 32px rgba(0,0,0,.45);
+    --ops-shadow-sm:   0 4px 16px rgba(0,0,0,.3);
+}
+
+/* ── Base ───────────────────────────────────────────────────── */
+#opsLabWrapper {
+    background: var(--ops-bg);
+    min-height: 100vh;
+    font-family: var(--ops-font);
+    color: var(--ops-text);
+    padding: 24px 28px 60px;
+}
+
+/* ── HERO ───────────────────────────────────────────────────── */
+.ops-hero {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-bottom: 28px;
+    padding: 28px 32px;
+    background: linear-gradient(135deg, #0E544C 0%, #0d2a27 60%, #0d1117 100%);
+    border-radius: var(--ops-radius);
+    border: 1px solid #1e5049;
+    position: relative;
+    overflow: hidden;
+}
+.ops-hero::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 300px; height: 300px;
+    background: radial-gradient(circle, rgba(63,186,158,.15) 0%, transparent 70%);
+    pointer-events: none;
+}
+.ops-hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-size: .72rem;
+    font-weight: 600;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--ops-accent2);
+    background: rgba(63,186,158,.12);
+    border: 1px solid rgba(63,186,158,.3);
+    padding: 4px 12px;
+    border-radius: 20px;
+    margin-bottom: 10px;
+}
+.ops-hero-title {
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1.2;
+    color: #fff;
+    margin: 0 0 6px;
+}
+.ops-hero-title span { color: var(--ops-accent2); }
+.ops-hero-sub {
+    font-size: .9rem;
+    color: rgba(255,255,255,.6);
+    margin: 0;
+}
+.ops-hero-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+/* ── Selects / Inputs ───────────────────────────────────────── */
+.ops-select, .ops-input {
+    background: rgba(0,0,0,.4);
+    border: 1px solid var(--ops-border);
+    color: var(--ops-text);
+    padding: 8px 12px;
+    border-radius: var(--ops-radius-sm);
+    font-size: .85rem;
+    font-family: var(--ops-font);
+    outline: none;
+    transition: border-color .2s;
+}
+.ops-select:focus, .ops-input:focus {
+    border-color: var(--ops-accent);
+    box-shadow: 0 0 0 3px rgba(63,186,158,.15);
+}
+.ops-select option { background: #1c2330; }
+
+/* ── Buttons ───────────────────────────────────────────────── */
+.ops-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 18px;
+    border-radius: var(--ops-radius-sm);
+    font-size: .85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .2s;
+    border: 1px solid transparent;
+}
+.ops-btn-primary {
+    background: var(--ops-teal);
+    color: #fff;
+    border-color: var(--ops-teal-light);
+}
+.ops-btn-primary:hover {
+    background: var(--ops-teal-light);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px var(--ops-teal-glow);
+}
+.ops-btn-ghost {
+    background: transparent;
+    color: var(--ops-text-muted);
+    border-color: var(--ops-border);
+}
+.ops-btn-ghost:hover { background: rgba(255,255,255,.06); color: var(--ops-text); }
+.ops-btn-sm { padding: 5px 12px; font-size: .78rem; }
+
+/* ── Tabs de navegación ─────────────────────────────────────── */
+.ops-tabs {
+    display: flex;
+    gap: 4px;
+    background: var(--ops-surface);
+    border: 1px solid var(--ops-border);
+    border-radius: var(--ops-radius);
+    padding: 5px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+}
+.ops-tab {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 9px 18px;
+    border-radius: var(--ops-radius-sm);
+    font-size: .85rem;
+    font-weight: 600;
+    color: var(--ops-text-muted);
+    cursor: pointer;
+    transition: all .2s;
+    border: 1px solid transparent;
+    background: transparent;
+}
+.ops-tab:hover { color: var(--ops-text); background: rgba(255,255,255,.05); }
+.ops-tab.active {
+    background: var(--ops-teal);
+    color: #fff;
+    border-color: var(--ops-teal-light);
+    box-shadow: 0 2px 12px var(--ops-teal-glow);
+}
+.ops-tab i { font-size: .95rem; }
+
+/* ── Cards ──────────────────────────────────────────────────── */
+.ops-card {
+    background: var(--ops-surface);
+    border: 1px solid var(--ops-border);
+    border-radius: var(--ops-radius);
+    box-shadow: var(--ops-shadow-sm);
+    overflow: hidden;
+    margin-bottom: 20px;
+}
+.ops-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--ops-border);
+    background: var(--ops-surface2);
+    flex-wrap: wrap;
+    gap: 10px;
+}
+.ops-card-header h3 {
+    font-size: .95rem;
+    font-weight: 700;
+    color: var(--ops-text);
+    margin: 0;
+}
+.ops-card-header h3 i { color: var(--ops-accent); margin-right: 8px; }
+.ops-card-body { padding: 20px; }
+.ops-card-body.p-0 { padding: 0; }
+
+/* ── KPI Cards ──────────────────────────────────────────────── */
+.ops-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
+}
+.ops-kpi-card {
+    background: var(--ops-surface);
+    border: 1px solid var(--ops-border);
+    border-radius: var(--ops-radius);
+    padding: 18px 20px;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    transition: transform .2s, border-color .2s;
+    position: relative;
+    overflow: hidden;
+}
+.ops-kpi-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--ops-teal);
+    opacity: 0;
+    transition: opacity .2s;
+}
+.ops-kpi-card:hover { transform: translateY(-2px); border-color: #444d56; }
+.ops-kpi-card:hover::before { opacity: 1; }
+.ops-kpi-icon {
+    width: 44px; height: 44px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+.ops-kpi-icon.teal    { background: rgba(14,84,76,.3);    color: var(--ops-accent2); }
+.ops-kpi-icon.gold    { background: rgba(227,179,65,.2);  color: var(--ops-gold); }
+.ops-kpi-icon.red     { background: rgba(248,81,73,.2);   color: var(--ops-red); }
+.ops-kpi-icon.green   { background: rgba(63,185,80,.2);   color: var(--ops-green); }
+.ops-kpi-icon.purple  { background: rgba(163,113,247,.2); color: var(--ops-purple); }
+.ops-kpi-icon.orange  { background: rgba(240,136,62,.2);  color: var(--ops-orange); }
+.ops-kpi-icon.blue    { background: rgba(88,166,255,.2);  color: var(--ops-blue); }
+.ops-kpi-body { flex: 1; min-width: 0; }
+.ops-kpi-label { font-size: .75rem; color: var(--ops-text-muted); font-weight: 500; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 4px; }
+.ops-kpi-valor { font-size: 1.6rem; font-weight: 800; color: var(--ops-text); line-height: 1.2; }
+.ops-kpi-sub   { font-size: .75rem; color: var(--ops-text-muted); margin-top: 3px; }
+
+/* ── Section title ──────────────────────────────────────────── */
+.ops-section-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--ops-text);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 28px 0 16px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--ops-border);
+}
+.ops-section-title i { color: var(--ops-accent); }
+.ops-badge {
+    font-size: .72rem;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 20px;
+    background: rgba(63,186,158,.12);
+    color: var(--ops-accent2);
+    border: 1px solid rgba(63,186,158,.25);
+    margin-left: auto;
+}
+
+/* ── Grid layouts ───────────────────────────────────────────── */
+.ops-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.ops-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+.ops-grid-auto { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 20px; }
+@media (max-width: 900px) {
+    .ops-grid-2, .ops-grid-3 { grid-template-columns: 1fr; }
+}
+
+/* ── Chart containers ───────────────────────────────────────── */
+.ops-chart-wrap { position: relative; width: 100%; }
+
+/* ── Tabla ──────────────────────────────────────────────────── */
+.ops-table-wrap { overflow-x: auto; }
+.ops-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .84rem;
+}
+.ops-table thead tr {
+    background: var(--ops-surface2);
+}
+.ops-table thead th {
+    padding: 10px 14px;
+    font-weight: 600;
+    font-size: .78rem;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--ops-text-muted);
+    border-bottom: 1px solid var(--ops-border);
+    white-space: nowrap;
+}
+.ops-table tbody tr {
+    border-bottom: 1px solid rgba(48,54,61,.6);
+    transition: background .15s;
+}
+.ops-table tbody tr:hover { background: rgba(255,255,255,.03); }
+.ops-table td {
+    padding: 10px 14px;
+    vertical-align: middle;
+    color: var(--ops-text);
+}
+.ops-table td.muted { color: var(--ops-text-muted); }
+
+/* ── Badges de estación ─────────────────────────────────────── */
+.badge-estacion {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: .73rem;
+    font-weight: 700;
+}
+.badge-batido { background: rgba(88,166,255,.15); color: var(--ops-blue); border: 1px solid rgba(88,166,255,.3); }
+.badge-waffle { background: rgba(227,179,65,.15);  color: var(--ops-gold); border: 1px solid rgba(227,179,65,.3); }
+.badge-bowl   { background: rgba(163,113,247,.15); color: var(--ops-purple); border: 1px solid rgba(163,113,247,.3); }
+
+/* ── Progress bars ──────────────────────────────────────────── */
+.ops-progress-track {
+    width: 100%;
+    height: 6px;
+    background: rgba(255,255,255,.08);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 6px;
+}
+.ops-progress-fill {
+    height: 100%;
+    border-radius: 4px;
+    background: linear-gradient(90deg, var(--ops-teal), var(--ops-accent));
+    transition: width .6s cubic-bezier(.4,0,.2,1);
+}
+
+/* ── Config panel (inputs editables) ────────────────────────── */
+.ops-config-group {
+    background: var(--ops-surface2);
+    border: 1px solid var(--ops-border);
+    border-radius: var(--ops-radius-sm);
+    padding: 16px;
+    margin-bottom: 16px;
+}
+.ops-config-group-title {
+    font-size: .8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: var(--ops-accent);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.ops-config-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+}
+.ops-config-label {
+    flex: 1;
+    min-width: 200px;
+    font-size: .84rem;
+    color: var(--ops-text);
+}
+.ops-config-label small {
+    display: block;
+    color: var(--ops-text-muted);
+    font-size: .74rem;
+}
+.ops-config-input {
+    width: 110px;
+    background: rgba(0,0,0,.4);
+    border: 1px solid var(--ops-border);
+    color: var(--ops-text);
+    padding: 6px 10px;
+    border-radius: var(--ops-radius-sm);
+    font-size: .85rem;
+    font-family: var(--ops-font);
+    text-align: right;
+    transition: border-color .2s;
+}
+.ops-config-input:focus {
+    outline: none;
+    border-color: var(--ops-accent);
+    box-shadow: 0 0 0 2px rgba(63,186,158,.15);
+}
+.ops-config-unit {
+    width: 50px;
+    font-size: .78rem;
+    color: var(--ops-text-muted);
+}
+.ops-config-save-btn {
+    padding: 4px 12px;
+    font-size: .78rem;
+    font-weight: 600;
+    border-radius: 6px;
+    cursor: pointer;
+    background: var(--ops-teal);
+    color: #fff;
+    border: none;
+    transition: all .2s;
+    opacity: 0;
+    pointer-events: none;
+}
+.ops-config-input:focus ~ .ops-config-save-btn,
+.ops-config-input.dirty ~ .ops-config-save-btn {
+    opacity: 1;
+    pointer-events: auto;
+}
+.ops-config-save-btn:hover { background: var(--ops-teal-light); }
+.ops-config-save-btn.saved { background: var(--ops-green); }
+
+/* ── Loader ─────────────────────────────────────────────────── */
+.ops-loader {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px;
+    gap: 14px;
+    color: var(--ops-text-muted);
+    font-size: .9rem;
+}
+.ops-loader-ring {
+    width: 38px; height: 38px;
+    border: 3px solid rgba(63,186,158,.2);
+    border-top-color: var(--ops-accent);
+    border-radius: 50%;
+    animation: opsSpin .7s linear infinite;
+}
+@keyframes opsSpin { to { transform: rotate(360deg); } }
+
+/* ── Toast ──────────────────────────────────────────────────── */
+.ops-toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 18px;
+    border-radius: var(--ops-radius-sm);
+    font-size: .86rem;
+    font-weight: 600;
+    box-shadow: 0 8px 24px rgba(0,0,0,.5);
+    animation: opsToastIn .3s ease;
+    max-width: 320px;
+}
+.ops-toast.success { background: var(--ops-green); color: #fff; }
+.ops-toast.error   { background: var(--ops-red);   color: #fff; }
+.ops-toast.info    { background: var(--ops-blue);  color: #fff; }
+@keyframes opsToastIn { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+
+/* ── Panel de tabs (contenido) ──────────────────────────────── */
+.ops-tab-panel { display: none; }
+.ops-tab-panel.active { display: block; }
+
+/* ── Multi-estación pills ───────────────────────────────────── */
+.ops-combo-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+.ops-combo-pill .badge-estacion { margin: 1px; }
+
+/* ── Heatmap (llegadas) ─────────────────────────────────────── */
+.ops-heatmap {
+    display: grid;
+    grid-template-columns: 40px repeat(17, 1fr);
+    gap: 4px;
+    font-size: .75rem;
+}
+.ops-heatmap-label { color: var(--ops-text-muted); text-align: right; padding-right: 6px; display: flex; align-items: center; justify-content: flex-end; }
+.ops-heatmap-cell {
+    height: 32px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: .72rem;
+    color: rgba(255,255,255,.9);
+    transition: transform .15s;
+    cursor: default;
+}
+.ops-heatmap-cell:hover { transform: scale(1.12); z-index: 2; }
+
+/* ── Scrollbar ──────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #30363d; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #444d56; }
