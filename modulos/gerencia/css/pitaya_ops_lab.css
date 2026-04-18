@@ -5,47 +5,43 @@
 
 /* ── Variables ─────────────────────────────────────────────── */
 :root {
-    /* Neumorphism Core - Harmonious Teal Palette (#51B8AC base) */
-    --neu-bg:          #e0efee;
-    --neu-shadow-dark: #b8d1ce;
+    /* Neumorphism Core (Pastel Teal Theme) */
+    --neu-bg:          #eef6f5;
+    --neu-shadow-dark: #ccdcdb;
     --neu-shadow-light:#ffffff;
     
-    /* Pitaya Accents */
+    /* Pitaya Accents (Based on #51B8AC) */
     --ops-teal:        #51B8AC;
-    --ops-teal-light:  #6ec8bd;
+    --ops-teal-light:  #7ecbc2;
     --ops-accent:      #51B8AC;
-    --ops-accent2:     #3d8e85;
+    --ops-accent2:     #8fd3cc;
     
-    /* Semantic Colors */
+    /* Semantic Colors (Softer versions) */
     --ops-red:         #e57373;
     --ops-green:       #81c784;
-    --ops-gold:        #ffd54f;
+    --ops-gold:        #ffb74d;
     --ops-purple:      #ba68c8;
     --ops-blue:        #64b5f6;
     
     /* Typography */
-    --ops-text:        #2c4a47;
-    --ops-text-muted:  #608581;
+    --ops-text:        #37474f;
+    --ops-text-muted:  #78909c;
     --ops-font:        'Inter', sans-serif;
     
-    /* Neumorphic Tokens - Pronounced Relief */
+    /* Neumorphic Tokens (Pronounced relief) */
     --neu-radius:      24px;
     --neu-radius-sm:   14px;
-    --neu-blur:        16px;
+    --neu-blur:        14px;
     --neu-dist:        8px;
-    --neu-inset-shadow: inset 5px 5px 10px var(--neu-shadow-dark), 
-                        inset -5px -5px 10px var(--neu-shadow-light);
+    --neu-inset-shadow: inset 4px 4px 10px var(--neu-shadow-dark), 
+                        inset -4px -4px 10px var(--neu-shadow-light);
     --neu-raised-shadow: var(--neu-dist) var(--neu-dist) var(--neu-blur) var(--neu-shadow-dark), 
                          calc(-1 * var(--neu-dist)) calc(-1 * var(--neu-dist)) var(--neu-blur) var(--neu-shadow-light);
 }
 
-/* Force Global Background Harmonization */
-body, .main-container, #opsLabWrapper {
-    background-color: var(--neu-bg) !important;
-}
-
 /* ── Base ───────────────────────────────────────────────────── */
 #opsLabWrapper {
+    background: var(--neu-bg);
     min-height: 100vh;
     font-family: var(--ops-font);
     color: var(--ops-text);
@@ -213,8 +209,8 @@ body, .main-container, #opsLabWrapper {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 20px 24px;
-    border-bottom: 1px solid rgba(0,0,0,0.03);
+    padding: 22px 28px;
+    border-bottom: 2px solid rgba(81, 184, 172, 0.08);
     background: transparent;
     flex-wrap: wrap;
     gap: 12px;
@@ -272,21 +268,21 @@ body, .main-container, #opsLabWrapper {
 
 /* ── Section title ──────────────────────────────────────────── */
 .ops-section-title {
-    font-size: 1.2rem;
-    font-weight: 800;
+    font-size: 1.25rem;
+    font-weight: 900;
     color: var(--ops-text);
     display: flex;
     align-items: center;
     gap: 12px;
-    margin: 40px 0 20px;
-    padding-bottom: 12px;
-    border-bottom: 2px solid rgba(81, 184, 172, 0.1);
+    margin: 48px 0 24px;
+    padding-bottom: 14px;
+    border-bottom: 3px solid rgba(81, 184, 172, 0.12);
 }
 .ops-section-title i { color: var(--ops-teal); }
 .ops-badge {
-    font-size: .75rem;
-    font-weight: 700;
-    padding: 4px 14px;
+    font-size: .8rem;
+    font-weight: 800;
+    padding: 6px 18px;
     border-radius: 20px;
     background: var(--neu-bg);
     box-shadow: var(--neu-raised-shadow);
@@ -316,17 +312,17 @@ body, .main-container, #opsLabWrapper {
     background: transparent;
 }
 .ops-table thead th {
-    padding: 14px 18px;
-    font-weight: 700;
-    font-size: .8rem;
+    padding: 16px 20px;
+    font-weight: 800;
+    font-size: .82rem;
     text-transform: uppercase;
-    letter-spacing: .06em;
+    letter-spacing: .08em;
     color: var(--ops-text-muted);
-    border-bottom: 2px solid rgba(0,0,0,0.05);
+    border-bottom: 3px solid rgba(81, 184, 172, 0.1);
     white-space: nowrap;
 }
 .ops-table tbody tr {
-    border-bottom: 1px solid rgba(0,0,0,0.03);
+    border-bottom: 1px solid rgba(81, 184, 172, 0.05);
     transition: background .15s;
 }
 .ops-table tbody tr:hover { background: rgba(0,0,0,0.01); }
@@ -361,7 +357,7 @@ body, .main-container, #opsLabWrapper {
 .ops-progress-fill {
     height: 100%;
     border-radius: 4px;
-    background: linear-gradient(90deg, var(--ops-teal), var(--ops-teal-light));
+    background: linear-gradient(90deg, var(--ops-teal), var(--ops-accent));
     transition: width .6s cubic-bezier(.4,0,.2,1);
 }
 

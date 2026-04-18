@@ -7,10 +7,10 @@
 const OPS = {
     AJAX: 'ajax/pitaya_ops_get_datos.php',
     COLORES: {
-        Batido: '#58a6ff',
-        Waffle: '#e3b341',
-        Bowl:   '#a371f7',
-        Otro:   '#8b949e',
+        Batido: '#64b5f6',
+        Waffle: '#ffb74d',
+        Bowl:   '#ba68c8',
+        Otro:   '#78909c',
     },
     charts: {},
 
@@ -31,9 +31,9 @@ const OPS = {
         this.bindTabs();
         document.getElementById('opsBtnCargar').addEventListener('click', () => this.cargarTab(this.tabActivo));
         
-        // Chart.js Defaults (Forced Harmonious Light Mode)
-        Chart.defaults.color = '#608581';
-        Chart.defaults.borderColor = 'rgba(81, 184, 172, 0.1)';
+        // Chart.js Defaults (Forced Light Mode)
+        Chart.defaults.color = '#718096';
+        Chart.defaults.borderColor = 'rgba(0,0,0,0.05)';
         Chart.defaults.font.family = "'Inter', sans-serif";
     },
 
@@ -123,7 +123,7 @@ const OPS = {
         const mixData   = d.mix_global.map(x => +x.pedidos);
         const mixColors = mixLabels.map(l => this.COLORES[l] || this.COLORES.Otro);
         this.destroyChart('chartMixGlobal');
-        const bg = '#e0efee'; // Forced Harmonious Teal Mode
+        const bg = '#eef6f5'; // New Pastel Teal Background
         
         OPS.charts.chartMixGlobal = new Chart(document.getElementById('chartMixGlobal'), {
             type: 'doughnut',
@@ -133,13 +133,13 @@ const OPS = {
                     data: mixData, 
                     backgroundColor: mixColors, 
                     borderColor: bg, 
-                    borderWidth: 5, 
-                    hoverOffset: 10 
+                    borderWidth: 6, 
+                    hoverOffset: 12 
                 }] 
             },
             options: { 
                 plugins: { legend: { position: 'bottom' } }, 
-                cutout: '70%',
+                cutout: '75%',
                 responsive: true,
                 maintainAspectRatio: false
             }
@@ -186,10 +186,10 @@ const OPS = {
                 datasets: [{
                     label: 'λ Pedidos/hora',
                     data: lambdas,
-                    backgroundColor: lambdas.map(v => `rgba(14,84,76,${0.4 + 0.6*(v/maxL)})`),
+                    backgroundColor: lambdas.map(v => `rgba(81,184,172,${0.4 + 0.6*(v/maxL)})`),
                     borderColor: 'transparent',
                     borderWidth: 0,
-                    borderRadius: 8,
+                    borderRadius: 10,
                 }]
             },
             options: {
@@ -349,16 +349,16 @@ const OPS = {
         // Doughnut
         const labels = kpis.map(([n]) => `${n} estación${+n>1?'es':''}`);
         const data   = kpis.map(([,c]) => c);
-        const colors = ['#51B8AC','#e67e22','#e57373'];
-        const bg = '#e0efee'; // Forced Harmonious Teal Mode
+        const colors = ['#51B8AC','#ffa726','#ef5350'];
+        const bg = '#eef6f5'; // New Pastel Teal Background
 
         this.destroyChart('chartMultiDist');
         OPS.charts.chartMultiDist = new Chart(document.getElementById('chartMultiDist'), {
             type: 'doughnut',
-            data: { labels, datasets: [{ data, backgroundColor: colors, borderColor: bg, borderWidth: 5, hoverOffset: 10 }] },
+            data: { labels, datasets: [{ data, backgroundColor: colors, borderColor: bg, borderWidth: 6, hoverOffset: 12 }] },
             options: { 
                 plugins:{ legend:{ position:'bottom' } }, 
-                cutout:'65%',
+                cutout:'70%',
                 responsive: true,
                 maintainAspectRatio: false
             }
