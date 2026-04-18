@@ -123,7 +123,7 @@ const OPS = {
         const mixData   = d.mix_global.map(x => +x.pedidos);
         const mixColors = mixLabels.map(l => this.COLORES[l] || this.COLORES.Otro);
         this.destroyChart('chartMixGlobal');
-        const bg = '#e6f0ef'; // Turquoise Forced Light Mode
+        const bg = '#f4f7f6'; // Matched to Sub-Container
         
         OPS.charts.chartMixGlobal = new Chart(document.getElementById('chartMixGlobal'), {
             type: 'doughnut',
@@ -350,7 +350,7 @@ const OPS = {
         const labels = kpis.map(([n]) => `${n} estación${+n>1?'es':''}`);
         const data   = kpis.map(([,c]) => c);
         const colors = ['#51B8AC','#e67e22','#d9534f'];
-        const bg = '#e6f0ef'; // Turquoise Forced Light Mode
+        const bg = '#f4f7f6'; // Matched to Sub-Container
 
         this.destroyChart('chartMultiDist');
         OPS.charts.chartMultiDist = new Chart(document.getElementById('chartMultiDist'), {
