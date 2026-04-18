@@ -314,9 +314,20 @@ function renderTendenciaMensual(meses, proyeccion, mesEstimado) {
                 tooltip: {
                     callbacks: {
                         label: ctx => {
-                            if (!ctx.raw) return null;
+                            if (ctx.raw === null || ctx.raw === undefined) return null;
+                            // En el punto anchor (Marzo, índice nH-1) los 3 escenarios
+                            // comparten el mismo valor — ocultarlos para evitar redundancia.
+                            const PROY_LABELS = ['Conservador (ritmo histórico)', 'Moderado (ritmo reciente)', 'Optimista (meta 40 × 2028)'];
+                            if (PROY_LABELS.includes(ctx.dataset.label) && ctx.dataIndex === nH - 1) return null;
                             if (ctx.dataset.yAxisID === 'y2') return ` ${ctx.dataset.label}: ${fmtMoney(ctx.raw, true)}/suc.`;
                             return ` ${ctx.dataset.label}: ${fmtMoney(ctx.raw, true)}`;
+                        },
+                        afterBody: items => {
+                            // Mostrar hint en el punto anchor (Marzo) para orientar al usuario
+                            if (items[0].dataIndex === nH - 1) {
+                                return ['', '  → Proyección desde este punto ↗'];
+                            }
+                            return null;
                         },
                         beforeBody: items => {
                             const label = items[0].label;
