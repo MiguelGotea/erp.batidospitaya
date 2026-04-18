@@ -103,18 +103,18 @@ try {
 
     // Construir mapa de datos normalizados por tienda
     $tiendaDataMap = [];
-    $vptNormList   = [];
+    $vptNormList = [];
     foreach ($vptRows as $row) {
-        $diasAct       = max(1, (int) $row['dias_activos']);
+        $diasAct = max(1, (int) $row['dias_activos']);
         $esTiendaNueva = $row['Fecha_Apertura'] > $ini;
-        $ventaDiaria   = (float) $row['ventas'] / $diasAct;
-        $ventaNorm     = round($ventaDiaria * $diasPeriodo, 2);
+        $ventaDiaria = (float) $row['ventas'] / $diasAct;
+        $ventaNorm = round($ventaDiaria * $diasPeriodo, 2);
         $vptNormList[] = $ventaNorm;
         $tiendaDataMap[$row['tienda']] = [
-            'fecha_apertura'    => $row['Fecha_Apertura'],
-            'dias_activos'      => $diasAct,
-            'es_nueva'          => $esTiendaNueva,
-            'venta_diaria'      => round($ventaDiaria, 2),
+            'fecha_apertura' => $row['Fecha_Apertura'],
+            'dias_activos' => $diasAct,
+            'es_nueva' => $esTiendaNueva,
+            'venta_diaria' => round($ventaDiaria, 2),
             'venta_normalizada' => $ventaNorm,
         ];
     }
@@ -159,10 +159,10 @@ try {
     $metaDetalleRows = $stMD->fetchAll(PDO::FETCH_ASSOC);
 
     $metaTotal = 0.0;
-    $metaMap   = [];  // nombre_tienda => meta efectiva (prorated)
+    $metaMap = [];  // nombre_tienda => meta efectiva (prorated)
     foreach ($metaDetalleRows as $md) {
-        $diasAct      = max(1, (int) $md['dias_activos']);
-        $metaDB       = (float) $md['meta_db'];
+        $diasAct = max(1, (int) $md['dias_activos']);
+        $metaDB = (float) $md['meta_db'];
         // Prorratear: si abrió en el período, solo se le exige la fracción proporcional
         $metaEfectiva = $diasPeriodo > 0
             ? round($metaDB * ($diasAct / $diasPeriodo), 2)
@@ -171,6 +171,7 @@ try {
         $metaMap[$md['tienda']] = $metaEfectiva;
     }
     $cumplimiento = $metaTotal > 0 ? round($ventasTotales / $metaTotal * 100, 1) : 0;
+
 
     // ────────────────────────────────────────────
     // 3. TENDENCIA VENTAS POR MES (últimos 12 meses)
@@ -210,17 +211,17 @@ try {
         // Agrupar por mes y calcular VPT normalizado (Opción B)
         $tendByMes = [];
         foreach ($tendPorTiendaRows as $tr) {
-            $mes       = $tr['mes'];
-            $diasMes   = max(1, (int) $tr['dias_en_mes']);
-            $diasAct   = max(1, (int) $tr['dias_activos_mes']);
-            $vDiaria   = (float) $tr['ventas'] / $diasAct;
-            $vNorm     = $vDiaria * $diasMes;   // proyectado al mes completo
+            $mes = $tr['mes'];
+            $diasMes = max(1, (int) $tr['dias_en_mes']);
+            $diasAct = max(1, (int) $tr['dias_activos_mes']);
+            $vDiaria = (float) $tr['ventas'] / $diasAct;
+            $vNorm = $vDiaria * $diasMes;   // proyectado al mes completo
             if (!isset($tendByMes[$mes])) {
                 $tendByMes[$mes] = ['total' => 0, 'pedidos' => 0, 'vpt_norm_list' => []];
             }
-            $tendByMes[$mes]['total']            += (float) $tr['ventas'];
-            $tendByMes[$mes]['pedidos']          += (int)   $tr['pedidos'];
-            $tendByMes[$mes]['vpt_norm_list'][]   = $vNorm;
+            $tendByMes[$mes]['total'] += (float) $tr['ventas'];
+            $tendByMes[$mes]['pedidos'] += (int) $tr['pedidos'];
+            $tendByMes[$mes]['vpt_norm_list'][] = $vNorm;
         }
 
         $tendenciaMensual = [];
@@ -228,11 +229,11 @@ try {
             $nT = count($data['vpt_norm_list']);
             $vptNorm = $nT > 0 ? round(array_sum($data['vpt_norm_list']) / $nT, 2) : 0;
             $tendenciaMensual[] = [
-                'mes'                => $mes,
-                'total'              => round($data['total'], 2),
-                'pedidos'            => $data['pedidos'],
-                'tiendas_activas_mes'=> $nT,
-                'venta_por_tienda'   => $vptNorm,   // ya normalizado (Opción B)
+                'mes' => $mes,
+                'total' => round($data['total'], 2),
+                'pedidos' => $data['pedidos'],
+                'tiendas_activas_mes' => $nT,
+                'venta_por_tienda' => $vptNorm,   // ya normalizado (Opción B)
             ];
         }
         // Asegurar orden ascendente
@@ -903,21 +904,21 @@ try {
         'mes_actual_estimado' => $mesActualEstimado,
         'proyeccion_tendencia' => $proyeccionTendencia,
         'ranking_tiendas' => array_map(function ($r) use ($metaMap, $tiendaDataMap, $diasPeriodo) {
-            $meta    = $metaMap[$r['tienda']] ?? 0;
-            $td      = $tiendaDataMap[$r['tienda']] ?? null;
+            $meta = $metaMap[$r['tienda']] ?? 0;
+            $td = $tiendaDataMap[$r['tienda']] ?? null;
             $diasAct = $td ? $td['dias_activos'] : $diasPeriodo;
-            $eNueva  = $td ? $td['es_nueva']     : false;
+            $eNueva = $td ? $td['es_nueva'] : false;
             $vDiaria = $diasAct > 0 ? round((float) $r['ventas'] / $diasAct, 2) : 0;
-            $vNorm   = round($vDiaria * $diasPeriodo, 2);
+            $vNorm = round($vDiaria * $diasPeriodo, 2);
             return [
-                'tienda'            => $r['tienda'],
-                'ventas'            => (float) $r['ventas'],
-                'pedidos'           => (int) $r['pedidos'],
-                'meta'              => $meta,
-                'cumplimiento'      => $meta > 0 ? round((float) $r['ventas'] / $meta * 100, 1) : null,
-                'es_nueva'          => $eNueva,
-                'dias_activos'      => $diasAct,
-                'venta_diaria'      => $vDiaria,
+                'tienda' => $r['tienda'],
+                'ventas' => (float) $r['ventas'],
+                'pedidos' => (int) $r['pedidos'],
+                'meta' => $meta,
+                'cumplimiento' => $meta > 0 ? round((float) $r['ventas'] / $meta * 100, 1) : null,
+                'es_nueva' => $eNueva,
+                'dias_activos' => $diasAct,
+                'venta_diaria' => $vDiaria,
                 'venta_normalizada' => $vNorm,
             ];
         }, $rankingTiendas),
@@ -935,24 +936,24 @@ try {
         'mix_categorias' => $mixCategorias,
         'segmentos_rfm' => $segmentos,
         'detalle_tiendas' => array_map(function ($r) use ($metaMap, $tiendaDataMap, $diasPeriodo) {
-            $meta    = $metaMap[$r['tienda']] ?? 0;
-            $ped     = (int) $r['pedidos'];
-            $td      = $tiendaDataMap[$r['tienda']] ?? null;
+            $meta = $metaMap[$r['tienda']] ?? 0;
+            $ped = (int) $r['pedidos'];
+            $td = $tiendaDataMap[$r['tienda']] ?? null;
             $diasAct = $td ? $td['dias_activos'] : $diasPeriodo;
-            $eNueva  = $td ? $td['es_nueva']     : false;
+            $eNueva = $td ? $td['es_nueva'] : false;
             $vDiaria = $diasAct > 0 ? round((float) $r['ventas'] / $diasAct, 2) : 0;
-            $vNorm   = round($vDiaria * $diasPeriodo, 2);
+            $vNorm = round($vDiaria * $diasPeriodo, 2);
             return [
-                'tienda'            => $r['tienda'],
-                'ventas'            => (float) $r['ventas'],
-                'pedidos'           => $ped,
-                'ticket'            => $ped > 0 ? round((float) $r['ventas'] / $ped, 2) : 0,
-                'miembros_club'     => (int) $r['socios'],
-                'meta'              => $meta,
-                'cumplimiento'      => $meta > 0 ? round((float) $r['ventas'] / $meta * 100, 1) : null,
-                'es_nueva'          => $eNueva,
-                'dias_activos'      => $diasAct,
-                'venta_diaria'      => $vDiaria,
+                'tienda' => $r['tienda'],
+                'ventas' => (float) $r['ventas'],
+                'pedidos' => $ped,
+                'ticket' => $ped > 0 ? round((float) $r['ventas'] / $ped, 2) : 0,
+                'miembros_club' => (int) $r['socios'],
+                'meta' => $meta,
+                'cumplimiento' => $meta > 0 ? round((float) $r['ventas'] / $meta * 100, 1) : null,
+                'es_nueva' => $eNueva,
+                'dias_activos' => $diasAct,
+                'venta_diaria' => $vDiaria,
                 'venta_normalizada' => $vNorm,
             ];
         }, $detalleTiendas),
