@@ -198,7 +198,7 @@ try {
                 HOUR(v.HoraCreado)          AS hora,
                 CASE
                     WHEN g.Tipo IN ('Batido','Limonada') THEN 'Batido'
-                    WHEN g.Tipo = 'Waffle'               THEN 'Waffle'
+                    WHEN g.Tipo = 'Waffles'              THEN 'Waffle'
                     WHEN g.Tipo = 'Bowl'                 THEN 'Bowl'
                     ELSE 'Otro'
                 END                          AS estacion,
@@ -219,7 +219,7 @@ try {
             GROUP BY HOUR(v.HoraCreado),
                      CASE
                          WHEN g.Tipo IN ('Batido','Limonada') THEN 'Batido'
-                         WHEN g.Tipo = 'Waffle'               THEN 'Waffle'
+                         WHEN g.Tipo = 'Waffles'              THEN 'Waffle'
                          WHEN g.Tipo = 'Bowl'                 THEN 'Bowl'
                          ELSE 'Otro'
                      END
@@ -275,7 +275,7 @@ try {
             SELECT
                 CASE
                     WHEN g.Tipo IN ('Batido','Limonada') THEN 'Batido'
-                    WHEN g.Tipo = 'Waffle'               THEN 'Waffle'
+                    WHEN g.Tipo = 'Waffles'              THEN 'Waffle'
                     WHEN g.Tipo = 'Bowl'                 THEN 'Bowl'
                     ELSE 'Otro'
                 END AS estacion,
@@ -345,14 +345,14 @@ try {
                     COUNT(DISTINCT
                         CASE
                             WHEN g.Tipo IN ('Batido','Limonada') THEN 'Batido'
-                            WHEN g.Tipo = 'Waffle'               THEN 'Waffle'
+                            WHEN g.Tipo = 'Waffles'               THEN 'Waffle'
                             WHEN g.Tipo = 'Bowl'                 THEN 'Bowl'
                         END
                     ) AS num_estaciones,
                     GROUP_CONCAT(DISTINCT
                         CASE
                             WHEN g.Tipo IN ('Batido','Limonada') THEN 'Batido'
-                            WHEN g.Tipo = 'Waffle'               THEN 'Waffle'
+                            WHEN g.Tipo = 'Waffles'               THEN 'Waffle'
                             WHEN g.Tipo = 'Bowl'                 THEN 'Bowl'
                         END
                         ORDER BY g.Tipo
@@ -365,7 +365,7 @@ try {
                 WHERE v.Anulado = 0
                   AND v.Fecha BETWEEN :ini AND :fin
                   AND s.sucursal = 1
-                  AND g.Tipo IN ('Batido','Limonada','Waffle','Bowl')
+                  AND g.Tipo IN ('Batido','Limonada','Waffles','Bowl')
                   $filtroSuc
                   $filtroDia
                 GROUP BY v.CodPedido
@@ -431,7 +431,7 @@ try {
             SELECT
                 CASE
                     WHEN g.Tipo IN ('Batido','Limonada') THEN 'Batido'
-                    WHEN g.Tipo = 'Waffle'               THEN 'Waffle'
+                    WHEN g.Tipo = 'Waffles'              THEN 'Waffle'
                     WHEN g.Tipo = 'Bowl'                 THEN 'Bowl'
                     ELSE 'Otro'
                 END AS estacion,
