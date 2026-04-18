@@ -20,8 +20,8 @@ require_once '../../../core/permissions/permissions.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
-$usuario    = obtenerUsuarioActual();
-$cargo      = $usuario['CodNivelesCargos'];
+$usuario = obtenerUsuarioActual();
+$cargo = $usuario['CodNivelesCargos'];
 
 if (!tienePermiso('pitaya_ops_lab', 'vista', $cargo)) {
     ob_clean();
@@ -29,27 +29,31 @@ if (!tienePermiso('pitaya_ops_lab', 'vista', $cargo)) {
     exit;
 }
 
-$accion      = $_POST['accion']       ?? 'sucursales';
+$accion = $_POST['accion'] ?? 'sucursales';
 $codSucursal = $_POST['cod_sucursal'] ?? null;
-$ini         = $_POST['ini']          ?? date('Y-m-01', strtotime('-1 month'));
-$fin         = $_POST['fin']          ?? date('Y-m-t', strtotime('-1 month'));
-$tipoDia     = $_POST['tipo_dia']     ?? 'todos';
-$turno       = $_POST['turno']        ?? 'todos';
+$ini = $_POST['ini'] ?? date('Y-m-01', strtotime('-1 month'));
+$fin = $_POST['fin'] ?? date('Y-m-t', strtotime('-1 month'));
+$tipoDia = $_POST['tipo_dia'] ?? 'todos';
+$turno = $_POST['turno'] ?? 'todos';
 
 // ── Helper: filtros de día y turno ────────────────────────────────────────────
 // tipoDia: 1=Domingo,2=Lunes,...,7=Sábado  → fin_semana = 1,6,7
-$filtroDia  = '';
-if ($tipoDia === 'fin_semana')    $filtroDia = "AND DAYOFWEEK(v.Fecha) IN (1, 6, 7)";
-if ($tipoDia === 'entre_semana')  $filtroDia = "AND DAYOFWEEK(v.Fecha) NOT IN (1, 6, 7)";
+$filtroDia = '';
+if ($tipoDia === 'fin_semana')
+    $filtroDia = "AND DAYOFWEEK(v.Fecha) IN (1, 6, 7)";
+if ($tipoDia === 'entre_semana')
+    $filtroDia = "AND DAYOFWEEK(v.Fecha) NOT IN (1, 6, 7)";
 
 // Turno: mañana = HoraCreado <= '14:00:00', tarde = HoraCreado > '14:00:00'
 $filtroTurno = '';
-if ($turno === 'manana') $filtroTurno = "AND TIME(v.HoraCreado) <= '14:00:00'";
-if ($turno === 'tarde')  $filtroTurno = "AND TIME(v.HoraCreado) > '14:00:00'";
+if ($turno === 'manana')
+    $filtroTurno = "AND TIME(v.HoraCreado) <= '14:00:00'";
+if ($turno === 'tarde')
+    $filtroTurno = "AND TIME(v.HoraCreado) > '14:00:00'";
 
 // Filtro de sucursal — si no viene, todas
-$filtroSuc   = $codSucursal ? "AND v.local = :cod_suc" : "";
-$paramsSuc   = $codSucursal ? [':cod_suc' => $codSucursal] : [];
+$filtroSuc = $codSucursal ? "AND v.local = :cod_suc" : "";
+$paramsSuc = $codSucursal ? [':cod_suc' => $codSucursal] : [];
 
 try {
     // ════════════════════════════════════════════════════════════════════════
@@ -81,7 +85,7 @@ try {
         $config = [];
         foreach ($rows as $r) {
             $config[$r['tipo_estacion']][$r['parametro']] = [
-                'valor'       => (float) $r['valor'],
+                'valor' => (float) $r['valor'],
                 'descripcion' => $r['descripcion'],
             ];
         }
@@ -95,9 +99,9 @@ try {
     // ACCIÓN: guardar_config — actualizar un parámetro
     // ════════════════════════════════════════════════════════════════════════
     if ($accion === 'guardar_config') {
-        $tipoEst  = $_POST['tipo_estacion'] ?? null;
-        $param    = $_POST['parametro']     ?? null;
-        $valor    = $_POST['valor']         ?? null;
+        $tipoEst = $_POST['tipo_estacion'] ?? null;
+        $param = $_POST['parametro'] ?? null;
+        $valor = $_POST['valor'] ?? null;
 
         if (!$tipoEst || !$param || $valor === null) {
             ob_clean();
@@ -112,8 +116,8 @@ try {
         );
         $st->execute([
             ':valor' => (float) $valor,
-            ':usr'   => $usuario['CodOperario'] ?? null,
-            ':tipo'  => $tipoEst,
+            ':usr' => $usuario['CodOperario'] ?? null,
+            ':tipo' => $tipoEst,
             ':param' => $param,
         ]);
 
@@ -163,8 +167,8 @@ try {
                 $byHora[$hora] = ['pedidos_total' => 0, 'dias_obs' => 0, 'unidades' => 0];
             }
             $byHora[$hora]['pedidos_total'] += (int) $r['pedidos'];
-            $byHora[$hora]['dias_obs']      += (int) $r['dias_observados'];
-            $byHora[$hora]['unidades']      += (float) $r['unidades_total'];
+            $byHora[$hora]['dias_obs'] += (int) $r['dias_observados'];
+            $byHora[$hora]['unidades'] += (float) $r['unidades_total'];
         }
 
         $llegadasPorHora = [];
@@ -172,19 +176,19 @@ try {
             $d = $byHora[$h] ?? ['pedidos_total' => 0, 'dias_obs' => 1, 'unidades' => 0];
             $diasObs = max(1, $d['dias_obs']);
             $llegadasPorHora[] = [
-                'hora'          => $h,
-                'lambda'        => round($d['pedidos_total'] / $diasObs, 2),  // pedidos/hora promedio
+                'hora' => $h,
+                'lambda' => round($d['pedidos_total'] / $diasObs, 2),  // pedidos/hora promedio
                 'pedidos_total' => (int) $d['pedidos_total'],
-                'dias_obs'      => $diasObs,
+                'dias_obs' => $diasObs,
                 'unidades_prom' => round($d['unidades'] / $diasObs, 2),
             ];
         }
 
         ob_clean();
         echo json_encode([
-            'success'         => true,
+            'success' => true,
             'llegadas_por_hora' => $llegadasPorHora,
-            'raw'             => $rows,
+            'raw' => $rows,
         ]);
         exit;
     }
@@ -241,7 +245,7 @@ try {
             $diasObs = max(1, (int) $r['dias_obs']);
             $pedidosProm = round((int) $r['pedidos'] / $diasObs, 2);
             $est = $r['estacion'];
-            $mixPorHora[$h][$est]  += $pedidosProm;
+            $mixPorHora[$h][$est] += $pedidosProm;
             $mixPorHora[$h]['total'] += $pedidosProm;
         }
 
@@ -250,15 +254,15 @@ try {
         foreach ($mixPorHora as $h => $data) {
             $total = max(1, $data['total']);
             $resultado[] = [
-                'hora'        => $h,
-                'Batido'      => round($data['Batido'], 2),
-                'Waffle'      => round($data['Waffle'], 2),
-                'Bowl'        => round($data['Bowl'], 2),
-                'Otro'        => round($data['Otro'], 2),
-                'total'       => round($total, 2),
-                'pct_Batido'  => round($data['Batido'] / $total * 100, 1),
-                'pct_Waffle'  => round($data['Waffle'] / $total * 100, 1),
-                'pct_Bowl'    => round($data['Bowl']   / $total * 100, 1),
+                'hora' => $h,
+                'Batido' => round($data['Batido'], 2),
+                'Waffle' => round($data['Waffle'], 2),
+                'Bowl' => round($data['Bowl'], 2),
+                'Otro' => round($data['Otro'], 2),
+                'total' => round($total, 2),
+                'pct_Batido' => round($data['Batido'] / $total * 100, 1),
+                'pct_Waffle' => round($data['Waffle'] / $total * 100, 1),
+                'pct_Bowl' => round($data['Bowl'] / $total * 100, 1),
             ];
         }
 
@@ -312,15 +316,15 @@ try {
 
         $cycleTimes = array_map(function ($r) {
             return [
-                'estacion'             => $r['estacion'],
-                'registros'            => (int) $r['registros'],
-                'lead_time_prom_min'   => round((float) $r['lead_time_prom_seg'] / 60, 2),
-                'cycle_time_prom_min'  => round((float) $r['cycle_time_prom_seg'] / 60, 2),
-                'lead_min_min'         => round((float) $r['lead_min_seg'] / 60, 2),
-                'lead_max_min'         => round((float) $r['lead_max_seg'] / 60, 2),
-                'lead_stddev_min'      => round((float) $r['lead_stddev_seg'] / 60, 2),
+                'estacion' => $r['estacion'],
+                'registros' => (int) $r['registros'],
+                'lead_time_prom_min' => round((float) $r['lead_time_prom_seg'] / 60, 2),
+                'cycle_time_prom_min' => round((float) $r['cycle_time_prom_seg'] / 60, 2),
+                'lead_min_min' => round((float) $r['lead_min_seg'] / 60, 2),
+                'lead_max_min' => round((float) $r['lead_max_seg'] / 60, 2),
+                'lead_stddev_min' => round((float) $r['lead_stddev_seg'] / 60, 2),
                 // Tiempo en cola = Lead Time − Cycle Time (tiempo esperando en fila)
-                'queue_time_prom_min'  => round(((float) $r['lead_time_prom_seg'] - (float) $r['cycle_time_prom_seg']) / 60, 2),
+                'queue_time_prom_min' => round(((float) $r['lead_time_prom_seg'] - (float) $r['cycle_time_prom_seg']) / 60, 2),
             ];
         }, $rows);
 
@@ -382,19 +386,19 @@ try {
         $totalPedidos = array_sum(array_column($rows, 'num_pedidos'));
         $resultado = array_map(function ($r) use ($totalPedidos) {
             return [
-                'num_estaciones'   => (int) $r['num_estaciones'],
+                'num_estaciones' => (int) $r['num_estaciones'],
                 'estaciones_combo' => $r['estaciones_combo'],
-                'num_pedidos'      => (int) $r['num_pedidos'],
-                'items_prom'       => round((float) $r['items_prom'], 2),
-                'pct'              => $totalPedidos > 0 ? round((int) $r['num_pedidos'] / $totalPedidos * 100, 1) : 0,
+                'num_pedidos' => (int) $r['num_pedidos'],
+                'items_prom' => round((float) $r['items_prom'], 2),
+                'pct' => $totalPedidos > 0 ? round((int) $r['num_pedidos'] / $totalPedidos * 100, 1) : 0,
             ];
         }, $rows);
 
         ob_clean();
         echo json_encode([
-            'success'       => true,
+            'success' => true,
             'multi_estacion' => $resultado,
-            'total_pedidos'  => $totalPedidos,
+            'total_pedidos' => $totalPedidos,
         ]);
         exit;
     }
@@ -475,13 +479,155 @@ try {
 
         ob_clean();
         echo json_encode([
-            'success'     => true,
-            'resumen'     => $resumenRows,
-            'mix_global'  => $mixGlobal,
-            'horas_pico'  => $horasPico,
+            'success' => true,
+            'resumen' => $resumenRows,
+            'mix_global' => $mixGlobal,
+            'horas_pico' => $horasPico,
         ]);
         exit;
     }
+
+
+    // ════════════════════════════════════════════════════════════════════════
+    // ACCIÓN: lambda_simulador — llegadas + mix por hora para el DES
+    // ════════════════════════════════════════════════════════════════════════
+    if ($accion === 'lambda_simulador') {
+        // Llegadas por hora
+        $sqlLam = "
+            SELECT HOUR(v.HoraCreado) AS hora,
+                   COUNT(DISTINCT v.CodPedido) AS pedidos,
+                   COUNT(DISTINCT v.Fecha) AS dias_obs
+            FROM VentasGlobalesAccessCSV v
+            INNER JOIN sucursales s ON s.codigo = v.local
+            WHERE v.Anulado = 0 AND v.Fecha BETWEEN :ini AND :fin
+              AND v.HoraCreado IS NOT NULL AND s.sucursal = 1
+              $filtroSuc $filtroDia $filtroTurno
+            GROUP BY HOUR(v.HoraCreado) ORDER BY hora ASC";
+        $params = array_merge([':ini' => $ini, ':fin' => $fin], $paramsSuc);
+        $st = $conn->prepare($sqlLam);
+        $st->execute($params);
+        $rowsLam = $st->fetchAll(PDO::FETCH_ASSOC);
+        $byHora = [];
+        foreach ($rowsLam as $r) {
+            $h = (int) $r['hora'];
+            $d = max(1, (int) $r['dias_obs']);
+            $byHora[$h] = ['hora' => $h, 'lambda' => round($r['pedidos'] / $d, 2)];
+        }
+        $llegadas = [];
+        for ($h = 6; $h <= 22; $h++) {
+            $llegadas[] = $byHora[$h] ?? ['hora' => $h, 'lambda' => 0];
+        }
+
+        // Mix por hora
+        $sqlMix = "
+            SELECT HOUR(v.HoraCreado) AS hora,
+                CASE WHEN g.Tipo IN ('Batido','Limonada') THEN 'Batido'
+                     WHEN g.Tipo = 'Waffles' THEN 'Waffle'
+                     WHEN g.Tipo = 'Bowl'    THEN 'Bowl' ELSE 'Otro' END AS estacion,
+                COUNT(DISTINCT v.CodPedido) AS pedidos,
+                COUNT(DISTINCT v.Fecha) AS dias_obs
+            FROM VentasGlobalesAccessCSV v
+            INNER JOIN sucursales s ON s.codigo = v.local
+            INNER JOIN DBBatidos b ON b.CodBatido = v.CodProducto
+            INNER JOIN GrupoProductosVenta g ON g.CodGrupo = b.CodGrupo
+            WHERE v.Anulado = 0 AND v.Fecha BETWEEN :ini AND :fin
+              AND v.HoraCreado IS NOT NULL AND s.sucursal = 1
+              $filtroSuc $filtroDia $filtroTurno
+            GROUP BY HOUR(v.HoraCreado), estacion ORDER BY hora ASC";
+        $stM = $conn->prepare($sqlMix);
+        $stM->execute($params);
+        $rowsMix = $stM->fetchAll(PDO::FETCH_ASSOC);
+        $mixRaw = [];
+        foreach ($rowsMix as $r) {
+            $h = (int) $r['hora'];
+            $d = max(1, (int) $r['dias_obs']);
+            if (!isset($mixRaw[$h]))
+                $mixRaw[$h] = ['hora' => $h, 'Batido' => 0, 'Waffle' => 0, 'Bowl' => 0, 'total' => 0];
+            $pp = (int) $r['pedidos'] / $d;
+            $mixRaw[$h][$r['estacion']] += $pp;
+            $mixRaw[$h]['total'] += $pp;
+        }
+        $mixArr = [];
+        for ($h = 6; $h <= 22; $h++) {
+            $d = $mixRaw[$h] ?? ['hora' => $h, 'Batido' => 0, 'Waffle' => 0, 'Bowl' => 0, 'total' => 0];
+            $tot = max(1, $d['total']);
+            $mixArr[] = [
+                'hora' => $h,
+                'pct_Batido' => round($d['Batido'] / $tot * 100, 1),
+                'pct_Waffle' => round($d['Waffle'] / $tot * 100, 1),
+                'pct_Bowl' => round($d['Bowl'] / $tot * 100, 1),
+            ];
+        }
+        ob_clean();
+        echo json_encode(['success' => true, 'llegadas_por_hora' => $llegadas, 'mix_por_hora' => $mixArr]);
+        exit;
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // ACCIÓN: lean_data — DPMO, anulaciones, pedidos/día
+    // ════════════════════════════════════════════════════════════════════════
+    if ($accion === 'lean_data') {
+        $sqlTotal = "
+            SELECT COUNT(DISTINCT CodPedido) AS total,
+                   SUM(Anulado) AS anulados,
+                   COUNT(DISTINCT Fecha) AS dias
+            FROM VentasGlobalesAccessCSV v
+            INNER JOIN sucursales s ON s.codigo = v.local
+            WHERE v.Fecha BETWEEN :ini AND :fin AND s.sucursal = 1 $filtroSuc";
+        $params = array_merge([':ini' => $ini, ':fin' => $fin], $paramsSuc);
+        $stT = $conn->prepare($sqlTotal);
+        $stT->execute($params);
+        $rowT = $stT->fetch(PDO::FETCH_ASSOC);
+
+        $sqlMotivos = "
+            SELECT COALESCE(NULLIF(TRIM(MotivoAnulado),''), 'Sin motivo') AS motivo,
+                   COUNT(*) AS cantidad
+            FROM VentasGlobalesAccessCSV v
+            INNER JOIN sucursales s ON s.codigo = v.local
+            WHERE v.Anulado = 1 AND v.Fecha BETWEEN :ini AND :fin
+              AND s.sucursal = 1 $filtroSuc
+            GROUP BY motivo ORDER BY cantidad DESC LIMIT 10";
+        $stM = $conn->prepare($sqlMotivos);
+        $stM->execute($params);
+        $motivos = $stM->fetchAll(PDO::FETCH_ASSOC);
+
+        $dias = max(1, (int) $rowT['dias']);
+        ob_clean();
+        echo json_encode([
+            'success' => true,
+            'total_pedidos' => (int) $rowT['total'],
+            'total_anulados' => (int) $rowT['anulados'],
+            'pedidos_dia' => round($rowT['total'] / $dias, 2),
+            'motivos' => $motivos,
+        ]);
+        exit;
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // ACCIÓN: control_chart_data — lead time diario para X-bar chart
+    // ════════════════════════════════════════════════════════════════════════
+    if ($accion === 'control_chart_data') {
+        $sql = "
+            SELECT DATE_FORMAT(v.Fecha,'%Y-%m-%d') AS fecha,
+                   ROUND(AVG(TIMESTAMPDIFF(SECOND, v.HoraCreado, v.HoraImpreso))/60, 2) AS lead_avg,
+                   ROUND(STDDEV(TIMESTAMPDIFF(SECOND, v.HoraCreado, v.HoraImpreso))/60, 2) AS lead_std,
+                   COUNT(DISTINCT v.CodPedido) AS pedidos
+            FROM VentasGlobalesAccessCSV v
+            INNER JOIN sucursales s ON s.codigo = v.local
+            WHERE v.Anulado = 0 AND v.HoraCreado IS NOT NULL AND v.HoraImpreso IS NOT NULL
+              AND TIMESTAMPDIFF(SECOND, v.HoraCreado, v.HoraImpreso) BETWEEN 10 AND 7200
+              AND v.Fecha BETWEEN :ini AND :fin AND s.sucursal = 1
+              $filtroSuc $filtroDia $filtroTurno
+            GROUP BY v.Fecha HAVING pedidos >= 3 ORDER BY v.Fecha ASC";
+        $params = array_merge([':ini' => $ini, ':fin' => $fin], $paramsSuc);
+        $st = $conn->prepare($sql);
+        $st->execute($params);
+        $rows = $st->fetchAll(PDO::FETCH_ASSOC);
+        ob_clean();
+        echo json_encode(['success' => true, 'control_chart' => $rows]);
+        exit;
+    }
+
 
     ob_clean();
     echo json_encode(['success' => false, 'message' => 'Acción no reconocida: ' . htmlspecialchars($accion)]);
