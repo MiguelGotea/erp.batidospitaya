@@ -5,43 +5,47 @@
 
 /* ── Variables ─────────────────────────────────────────────── */
 :root {
-    /* Neumorphism Core (Matched to Global #F6F6F6) */
-    --neu-bg:          #F6F6F6;
-    --neu-shadow-dark: #d1d9e6;
+    /* Neumorphism Core - Harmonious Teal Palette (#51B8AC base) */
+    --neu-bg:          #e0efee;
+    --neu-shadow-dark: #b8d1ce;
     --neu-shadow-light:#ffffff;
     
-    /* Pitaya Accents (Updated to #51B8AC) */
+    /* Pitaya Accents */
     --ops-teal:        #51B8AC;
-    --ops-teal-light:  #6cc7bc;
+    --ops-teal-light:  #6ec8bd;
     --ops-accent:      #51B8AC;
-    --ops-accent2:     #7bd1c7;
+    --ops-accent2:     #3d8e85;
     
     /* Semantic Colors */
-    --ops-red:         #d9534f;
-    --ops-green:       #5cb85c;
-    --ops-gold:        #f0ad4e;
-    --ops-purple:      #8e44ad;
-    --ops-blue:        #3498db;
+    --ops-red:         #e57373;
+    --ops-green:       #81c784;
+    --ops-gold:        #ffd54f;
+    --ops-purple:      #ba68c8;
+    --ops-blue:        #64b5f6;
     
     /* Typography */
-    --ops-text:        #2d3748;
-    --ops-text-muted:  #718096;
+    --ops-text:        #2c4a47;
+    --ops-text-muted:  #608581;
     --ops-font:        'Inter', sans-serif;
     
-    /* Neumorphic Tokens */
-    --neu-radius:      20px;
-    --neu-radius-sm:   12px;
-    --neu-blur:        12px;
-    --neu-dist:        6px;
-    --neu-inset-shadow: inset 4px 4px 8px var(--neu-shadow-dark), 
-                        inset -4px -4px 8px var(--neu-shadow-light);
+    /* Neumorphic Tokens - Pronounced Relief */
+    --neu-radius:      24px;
+    --neu-radius-sm:   14px;
+    --neu-blur:        16px;
+    --neu-dist:        8px;
+    --neu-inset-shadow: inset 5px 5px 10px var(--neu-shadow-dark), 
+                        inset -5px -5px 10px var(--neu-shadow-light);
     --neu-raised-shadow: var(--neu-dist) var(--neu-dist) var(--neu-blur) var(--neu-shadow-dark), 
                          calc(-1 * var(--neu-dist)) calc(-1 * var(--neu-dist)) var(--neu-blur) var(--neu-shadow-light);
 }
 
+/* Force Global Background Harmonization */
+body, .main-container, #opsLabWrapper {
+    background-color: var(--neu-bg) !important;
+}
+
 /* ── Base ───────────────────────────────────────────────────── */
 #opsLabWrapper {
-    background: var(--neu-bg);
     min-height: 100vh;
     font-family: var(--ops-font);
     color: var(--ops-text);
@@ -268,7 +272,7 @@
 
 /* ── Section title ──────────────────────────────────────────── */
 .ops-section-title {
-    font-size: 1.15rem;
+    font-size: 1.2rem;
     font-weight: 800;
     color: var(--ops-text);
     display: flex;
@@ -276,7 +280,7 @@
     gap: 12px;
     margin: 40px 0 20px;
     padding-bottom: 12px;
-    border-bottom: 2px solid rgba(0,0,0,0.05);
+    border-bottom: 2px solid rgba(81, 184, 172, 0.1);
 }
 .ops-section-title i { color: var(--ops-teal); }
 .ops-badge {
@@ -357,7 +361,7 @@
 .ops-progress-fill {
     height: 100%;
     border-radius: 4px;
-    background: linear-gradient(90deg, var(--ops-teal), var(--ops-accent));
+    background: linear-gradient(90deg, var(--ops-teal), var(--ops-teal-light));
     transition: width .6s cubic-bezier(.4,0,.2,1);
 }
 
