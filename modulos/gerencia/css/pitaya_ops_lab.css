@@ -5,9 +5,9 @@
 
 /* ── Variables ─────────────────────────────────────────────── */
 :root {
-    /* Neumorphism Core (Matched to Sub-Container) */
-    --neu-bg:          #f4f7f6;
-    --neu-shadow-dark: #d6e0de;
+    /* Neumorphism Core (Matched to Global Body) */
+    --neu-bg:          #f6f6f6;
+    --neu-shadow-dark: #d1d1d1;
     --neu-shadow-light:#ffffff;
     
     /* Pitaya Accents */
