@@ -115,11 +115,48 @@ try {
         $row['PuntosAcumulados'] = round($puntosAcumulados, 2);
         $puntosAcumulados -= floatval($row['PuntosTotales']);
     }
+
+    // Obtener todos los movimientos para el gráfico
+    $sqlGrafico = "SELECT 
+                        VentasGlobalesAccessCSV.Fecha,
+                        VentasGlobalesAccessCSV.DBBatidos_Nombre,
+                        promociones_access_csv.Nombre as NombrePromocion,
+                        CASE 
+                            WHEN VentasGlobalesAccessCSV.Anulado = 0 THEN (VentasGlobalesAccessCSV.Cantidad * VentasGlobalesAccessCSV.Puntos)
+                            ELSE 0 
+                        END as PuntosTotales
+                    FROM VentasGlobalesAccessCSV
+                    LEFT JOIN DBBatidos ON VentasGlobalesAccessCSV.CodProducto = DBBatidos.CodBatido
+                    LEFT JOIN promociones_access_csv ON VentasGlobalesAccessCSV.CodigoPromocion = promociones_access_csv.CodPromocion
+                    WHERE VentasGlobalesAccessCSV.CodCliente = :membresia
+                    AND VentasGlobalesAccessCSV.Anulado = 0
+                    AND (DBBatidos.CodGrupo IS NULL OR (DBBatidos.CodGrupo != 25 AND DBBatidos.CodGrupo != 11))
+                    HAVING PuntosTotales != 0
+                    ORDER BY VentasGlobalesAccessCSV.Fecha ASC, VentasGlobalesAccessCSV.Hora ASC";
+    
+    $stmtGrafico = $conn->prepare($sqlGrafico);
+    $stmtGrafico->execute([':membresia' => $membresia]);
+    $movimientos = $stmtGrafico->fetchAll();
+
+    // Calcular puntos acumulados para el gráfico (empezando desde puntos iniciales)
+    $puntosAcumGrafico = $puntosIniciales;
+    $movimientosProcesados = [];
+    foreach ($movimientos as $mov) {
+        $puntosAcumGrafico += floatval($mov['PuntosTotales']);
+        $movimientosProcesados[] = [
+            'fecha' => $mov['Fecha'],
+            'puntos' => round($puntosAcumGrafico, 2),
+            'producto' => $mov['DBBatidos_Nombre'],
+            'promocion' => $mov['NombrePromocion'] ?: 'Sin promoción',
+            'cambio' => $mov['PuntosTotales']
+        ];
+    }
     
     echo json_encode([
         'success' => true,
         'cliente' => $cliente,
         'datos' => $datos,
+        'movimientos_grafico' => $movimientosProcesados,
         'total_registros' => $totalRegistros,
         'debug' => [
             'puntos_iniciales' => $puntosIniciales,

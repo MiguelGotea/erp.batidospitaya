@@ -35,6 +35,7 @@ if (empty($membresia)) {
     <link rel="icon" href="../../assets/img/icon12.png" type="image/png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="css/historial_productos.css?v=<?php echo mt_rand(1, 10000); ?>">
 </head>
 
@@ -46,9 +47,18 @@ if (empty($membresia)) {
             <?php echo renderHeader($usuario, false, 'Historial de Productos Vendidos'); ?>
 
             <div class="container-fluid p-3">
-                <!-- Info del cliente -->
-                <div class="mb-3">
+                <!-- Info del cliente y Toggle de Gráfico -->
+                <div class="d-flex justify-content-between align-items-center mb-3">
                     <div id="infoCliente" class="info-cliente"></div>
+                    <div class="form-check form-switch custom-toggle">
+                        <input class="form-check-input" type="checkbox" role="switch" id="toggleGrafico" onchange="toggleGrafico()">
+                        <label class="form-check-label" for="toggleGrafico">Ver Gráfico de Puntos</label>
+                    </div>
+                </div>
+
+                <!-- Contenedor del Gráfico -->
+                <div id="contenedorGrafico" class="mb-4" style="display: none; height: 350px;">
+                    <canvas id="graficoPuntos"></canvas>
                 </div>
 
                 <div class="table-responsive">

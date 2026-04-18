@@ -2,6 +2,8 @@ let paginaActual = 1;
 let registrosPorPagina = 25;
 let totalRegistros = 0;
 let membresiaActual = '';
+let myChart = null;
+let datosGrafico = [];
 
 // Inicializar
 $(document).ready(function() {
@@ -40,6 +42,12 @@ function cargarDatos() {
                 if (response.datos.length > 0) {
                     renderizarTabla(response.datos);
                     renderizarPaginacion(response.total_registros);
+                    
+                    // Guardar datos para el gráfico y actualizar si es visible
+                    datosGrafico = response.movimientos_grafico;
+                    if ($('#toggleGrafico').is(':checked')) {
+                        renderizarGrafico();
+                    }
                 } else {
                     mostrarMensajeVacio('No se encontraron productos para esta membresía');
                 }
@@ -189,4 +197,91 @@ function formatearFecha(fecha) {
 function formatearHora(hora) {
     if (!hora) return '-';
     return hora.substring(0, 5);
+}
+
+// Alternar visibilidad del gráfico
+function toggleGrafico() {
+    const visible = $('#toggleGrafico').is(':checked');
+    if (visible) {
+        $('#contenedorGrafico').slideDown(400, function() {
+            renderizarGrafico();
+        });
+    } else {
+        $('#contenedorGrafico').slideUp(400);
+    }
+}
+
+// Renderizar el gráfico de comportamiento de puntos
+function renderizarGrafico() {
+    if (!datosGrafico || datosGrafico.length === 0) return;
+
+    const ctx = document.getElementById('graficoPuntos').getContext('2d');
+    
+    // Destruir gráfico anterior si existe
+    if (myChart) {
+        myChart.destroy();
+    }
+
+    const labels = datosGrafico.map(d => formatearFecha(d.fecha));
+    const dataPoints = datosGrafico.map(d => d.puntos);
+
+    myChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Puntos Acumulados',
+                data: dataPoints,
+                borderColor: '#e91e63',
+                backgroundColor: 'rgba(233, 30, 99, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.3,
+                pointRadius: 4,
+                pointHoverRadius: 6,
+                pointBackgroundColor: '#e91e63'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        title: function(context) {
+                            const index = context[0].dataIndex;
+                            const d = datosGrafico[index];
+                            return `${formatearFecha(d.fecha)}`;
+                        },
+                        label: function(context) {
+                            const index = context.dataIndex;
+                            const d = datosGrafico[index];
+                            const cambio = d.cambio > 0 ? `+${d.cambio}` : d.cambio;
+                            return [
+                                `Puntos: ${d.puntos} (${cambio})`,
+                                `Producto: ${d.producto}`,
+                                `Promoción: ${d.promocion}`
+                            ];
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: false,
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.05)'
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    }
+                }
+            }
+        }
+    });
 }

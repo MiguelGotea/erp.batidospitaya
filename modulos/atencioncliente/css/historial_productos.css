@@ -196,3 +196,32 @@ body {
         gap: 12px;
     }
 }
+
+/* Custom Toggle Switch */
+.custom-toggle .form-check-input {
+    width: 3em;
+    height: 1.5em;
+    cursor: pointer;
+}
+
+.custom-toggle .form-check-input:checked {
+    background-color: #51B8AC;
+    border-color: #51B8AC;
+}
+
+.custom-toggle .form-check-label {
+    margin-left: 10px;
+    font-weight: 500;
+    color: #444;
+    cursor: pointer;
+    user-select: none;
+}
+
+/* Chart Container */
+#contenedorGrafico {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    border: 1px solid #e9ecef;
+}
