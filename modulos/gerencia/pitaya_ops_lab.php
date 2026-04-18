@@ -82,6 +82,8 @@ $finDefault = date('Y-m-t', strtotime('-1 month'));
           <button class="ops-tab" data-tab="estaciones"><i class="fas fa-layer-group"></i> Mix Estaciones</button>
           <button class="ops-tab" data-tab="multi"><i class="fas fa-project-diagram"></i> Multi-Estación</button>
           <button class="ops-tab" data-tab="config"><i class="fas fa-sliders-h"></i> Configuración</button>
+          <button class="ops-tab" data-tab="simulador"><i class="fas fa-dice-d20"></i> Simulador DES</button>
+          <button class="ops-tab" data-tab="lean"><i class="fas fa-leaf"></i> Lean 6σ</button>
         </div>
 
         <!-- PANEL: RESUMEN -->
@@ -298,6 +300,347 @@ $finDefault = date('Y-m-t', strtotime('-1 month'));
             <div id="configPanels"></div>
           </div>
         </div>
+
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <!-- PANEL: SIMULADOR DES                                      -->
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <div class="ops-tab-panel" id="panelSimulador">
+          <div id="simLoader" class="ops-loader" style="display:none">
+            <div class="ops-loader-ring"></div><span>Ejecutando simulación…</span>
+          </div>
+
+          <div class="ops-section-title"><i class="fas fa-dice-d20"></i> Simulador de Eventos Discretos (DES)</div>
+
+          <!-- Controles del simulador -->
+          <div class="ops-sim-controls ops-card">
+            <div class="ops-card-header">
+              <h3><i class="fas fa-sliders-h"></i> Parámetros de Escenario</h3>
+            </div>
+            <div class="ops-card-body">
+              <div class="ops-sim-grid">
+
+                <!-- Columna filtros -->
+                <div class="ops-sim-col">
+                  <div class="ops-sim-section-label">Contexto</div>
+                  <div class="ops-sim-field">
+                    <label>Turno simulado</label>
+                    <select id="simTurno" class="ops-select">
+                      <option value="manana">Mañana (6am–2pm)</option>
+                      <option value="tarde">Tarde (2pm–10pm)</option>
+                      <option value="completo" selected>Día completo</option>
+                    </select>
+                  </div>
+                  <div class="ops-sim-field">
+                    <label>Tipo de día</label>
+                    <select id="simTipoDia" class="ops-select">
+                      <option value="todos" selected>Todos los días</option>
+                      <option value="entre_semana">Entre semana</option>
+                      <option value="fin_semana">Fin de semana</option>
+                    </select>
+                  </div>
+                  <div class="ops-sim-field">
+                    <label>Personas disponibles: <strong id="simPersonasVal">3</strong></label>
+                    <input type="range" id="simPersonas" min="2" max="7" value="3" class="ops-slider">
+                    <div class="ops-slider-ticks">
+                      <span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span></div>
+                  </div>
+                </div>
+
+                <!-- Estación Batidos -->
+                <div class="ops-sim-col">
+                  <div class="ops-sim-section-label" style="color:var(--ops-blue)"><i class="fas fa-blender"></i>
+                    Batidos</div>
+                  <div class="ops-sim-field">
+                    <label>Licuado (min): <strong id="sBatLicVal">2.0</strong></label>
+                    <input type="range" id="sBatLic" min="1" max="5" step="0.25" value="2"
+                      class="ops-slider ops-slider-blue">
+                  </div>
+                  <div class="ops-sim-field">
+                    <label>Servido+sellado (min): <strong id="sBatSerVal">0.5</strong></label>
+                    <input type="range" id="sBatSer" min="0.25" max="2" step="0.25" value="0.5"
+                      class="ops-slider ops-slider-blue">
+                  </div>
+                  <div class="ops-sim-field">
+                    <label>Limpieza (min): <strong id="sBatLimVal">1.0</strong></label>
+                    <input type="range" id="sBatLim" min="0.5" max="3" step="0.25" value="1"
+                      class="ops-slider ops-slider-blue">
+                  </div>
+                  <div class="ops-sim-field">
+                    <label>Nº Licuadoras</label>
+                    <select id="sBatMaq" class="ops-select">
+                      <option value="1">1</option>
+                      <option value="2" selected>2</option>
+                      <option value="3">3</option>
+                      <option value="4">4</option>
+                    </select>
+                  </div>
+                  <div class="ops-sim-field">
+                    <label>Max batch</label>
+                    <select id="sBatBatch" class="ops-select">
+                      <option value="1">1</option>
+                      <option value="2">2</option>
+                      <option value="3" selected>3</option>
+                    </select>
+                  </div>
+                </div>
+
+                <!-- Estación Waffles -->
+                <div class="ops-sim-col">
+                  <div class="ops-sim-section-label" style="color:var(--ops-gold)"><i class="fas fa-bread-slice"></i>
+                    Waffles</div>
+                  <div class="ops-sim-field">
+                    <label>Mezcla (min): <strong id="sWafMezVal">2.0</strong></label>
+                    <input type="range" id="sWafMez" min="1" max="5" step="0.25" value="2"
+                      class="ops-slider ops-slider-gold">
+                  </div>
+                  <div class="ops-sim-field">
+                    <label>Cocción (min): <strong id="sWafCocVal">5.0</strong></label>
+                    <input type="range" id="sWafCoc" min="3" max="8" step="0.25" value="5"
+                      class="ops-slider ops-slider-gold">
+                  </div>
+                  <div class="ops-sim-field">
+                    <label>Emplato (min): <strong id="sWafEmpVal">1.0</strong></label>
+                    <input type="range" id="sWafEmp" min="0.5" max="3" step="0.25" value="1"
+                      class="ops-slider ops-slider-gold">
+                  </div>
+                  <div class="ops-sim-field">
+                    <label>Limpieza (min): <strong id="sWafLimVal">1.0</strong></label>
+                    <input type="range" id="sWafLim" min="0.5" max="3" step="0.25" value="1"
+                      class="ops-slider ops-slider-gold">
+                  </div>
+                  <div class="ops-sim-field">
+                    <label>Nº Waffleras</label>
+                    <select id="sWafMaq" class="ops-select">
+                      <option value="1">1</option>
+                      <option value="2" selected>2</option>
+                      <option value="3">3</option>
+                      <option value="4">4</option>
+                    </select>
+                  </div>
+                </div>
+
+                <!-- Estación Bowl -->
+                <div class="ops-sim-col">
+                  <div class="ops-sim-section-label" style="color:var(--ops-purple)"><i class="fas fa-bowl-food"></i>
+                    Bowl</div>
+                  <div class="ops-sim-field">
+                    <label>Licuado (min): <strong id="sBowLicVal">3.0</strong></label>
+                    <input type="range" id="sBowLic" min="1" max="6" step="0.25" value="3"
+                      class="ops-slider ops-slider-purple">
+                  </div>
+                  <div class="ops-sim-field">
+                    <label>Servido+decorado (min): <strong id="sBowSerVal">2.0</strong></label>
+                    <input type="range" id="sBowSer" min="1" max="4" step="0.25" value="2"
+                      class="ops-slider ops-slider-purple">
+                  </div>
+                  <div class="ops-sim-field">
+                    <label>Limpieza (min): <strong id="sBowLimVal">1.0</strong></label>
+                    <input type="range" id="sBowLim" min="0.5" max="3" step="0.25" value="1"
+                      class="ops-slider ops-slider-purple">
+                  </div>
+                  <div class="ops-sim-field">
+                    <label>Nº Motores</label>
+                    <select id="sBowMaq" class="ops-select">
+                      <option value="1" selected>1</option>
+                      <option value="2">2</option>
+                      <option value="3">3</option>
+                    </select>
+                  </div>
+                  <div class="ops-sim-field">
+                    <label>Max batch</label>
+                    <select id="sBowBatch" class="ops-select">
+                      <option value="1">1</option>
+                      <option value="2" selected>2</option>
+                    </select>
+                  </div>
+                </div>
+
+              </div><!-- /ops-sim-grid -->
+
+              <div class="ops-sim-actions">
+                <button class="ops-btn ops-btn-primary ops-btn-run" id="btnEjecutarSim">
+                  <i class="fas fa-play-circle"></i> Ejecutar Simulación
+                </button>
+                <button class="ops-btn ops-btn-ghost" id="btnCompararSim">
+                  <i class="fas fa-chart-bar"></i> Comparar con escenario base
+                </button>
+              </div>
+            </div>
+          </div><!-- /ops-sim-controls -->
+
+          <!-- Resultados -->
+          <div id="simResultados" style="display:none">
+
+            <!-- Gauge de cuellos de botella -->
+            <div class="ops-section-title"><i class="fas fa-exclamation-triangle"></i> Análisis de Cuellos de Botella
+            </div>
+            <div class="ops-sim-gauges" id="simGaugesWrap"></div>
+
+            <!-- Throughput por hora -->
+            <div class="ops-card">
+              <div class="ops-card-header">
+                <h3><i class="fas fa-chart-bar"></i> Throughput por Hora (pedidos completados)</h3>
+                <span class="ops-badge" id="badgeSimThroughput">—</span>
+              </div>
+              <div class="ops-card-body">
+                <div class="ops-chart-wrap"><canvas id="chartSimThroughput" height="220"></canvas></div>
+              </div>
+            </div>
+
+            <!-- Timeline Gantt -->
+            <div class="ops-card">
+              <div class="ops-card-header">
+                <h3><i class="fas fa-stream"></i> Timeline de Equipos (vista Gantt simplificada)</h3>
+              </div>
+              <div class="ops-card-body p-0">
+                <div id="simGanttWrap" class="ops-gantt-wrap"></div>
+              </div>
+            </div>
+
+            <!-- Tabla resumen -->
+            <div class="ops-card">
+              <div class="ops-card-header">
+                <h3><i class="fas fa-table"></i> Métricas por Estación</h3>
+              </div>
+              <div class="ops-card-body p-0">
+                <div class="ops-table-wrap">
+                  <table class="ops-table">
+                    <thead>
+                      <tr>
+                        <th>Estación</th>
+                        <th>Utilización %</th>
+                        <th>Cola Prom (min)</th>
+                        <th>Wq Prom (min)</th>
+                        <th>WIP Máx</th>
+                        <th>Throughput</th>
+                      </tr>
+                    </thead>
+                    <tbody id="tbodySimMetricas"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <!-- Panel de recomendaciones -->
+            <div class="ops-card" id="simRecomendaciones">
+              <div class="ops-card-header">
+                <h3><i class="fas fa-lightbulb"></i> Recomendaciones Automáticas</h3>
+              </div>
+              <div class="ops-card-body" id="simRecomBody"></div>
+            </div>
+
+            <!-- Comparativa (aparece solo al comparar) -->
+            <div id="simComparativaWrap" style="display:none">
+              <div class="ops-section-title"><i class="fas fa-balance-scale"></i> Comparativa: Base vs Modificado</div>
+              <div class="ops-card">
+                <div class="ops-card-body p-0">
+                  <div class="ops-table-wrap">
+                    <table class="ops-table" id="tbodySimComparativa"></table>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div><!-- /simResultados -->
+        </div><!-- /panelSimulador -->
+
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <!-- PANEL: LEAN SIX SIGMA                                    -->
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <div class="ops-tab-panel" id="panelLean">
+          <div id="leanLoader" class="ops-loader">
+            <div class="ops-loader-ring"></div><span>Calculando métricas Lean…</span>
+          </div>
+          <div id="leanContent" style="display:none">
+
+            <!-- Panel 1: OEE -->
+            <div class="ops-section-title"><i class="fas fa-gauge-high"></i> Disponibilidad OEE</div>
+            <div class="ops-grid-2" style="margin-bottom:28px">
+              <div class="ops-card">
+                <div class="ops-card-header">
+                  <h3><i class="fas fa-circle-notch"></i> OEE — Overall Equipment Effectiveness</h3>
+                </div>
+                <div class="ops-card-body" style="display:flex;align-items:center;gap:36px;flex-wrap:wrap">
+                  <div id="oeeGaugeWrap"></div>
+                  <div id="oeeDesglose" style="flex:1;min-width:220px"></div>
+                </div>
+              </div>
+              <div class="ops-card">
+                <div class="ops-card-header">
+                  <h3><i class="fas fa-clock"></i> Desglose de Tiempo Disponible</h3>
+                </div>
+                <div class="ops-card-body">
+                  <div class="ops-chart-wrap"><canvas id="chartOeeDesglose" height="220"></canvas></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Panel 2: Takt Time -->
+            <div class="ops-section-title"><i class="fas fa-tachometer-alt"></i> Takt Time vs Cycle Time</div>
+            <div class="ops-card">
+              <div class="ops-card-header">
+                <h3><i class="fas fa-chart-bar"></i> Comparativa Takt Time por Estación</h3>
+                <span class="ops-badge" id="badgeTaktTime">— min/pedido</span>
+              </div>
+              <div class="ops-card-body">
+                <div class="ops-chart-wrap"><canvas id="chartTaktTime" height="220"></canvas></div>
+                <div id="taktAlerta" style="margin-top:16px"></div>
+              </div>
+            </div>
+
+            <!-- Panel 3: DPMO -->
+            <div class="ops-section-title"><i class="fas fa-sigma"></i> DPMO y Nivel Sigma</div>
+            <div class="ops-grid-2" style="margin-bottom:28px">
+              <div class="ops-card">
+                <div class="ops-card-header">
+                  <h3><i class="fas fa-circle-notch"></i> Nivel Sigma del Proceso</h3>
+                </div>
+                <div class="ops-card-body" style="display:flex;align-items:center;gap:36px;flex-wrap:wrap">
+                  <div id="sigmaGaugeWrap"></div>
+                  <div id="sigmaDesglose" style="flex:1;min-width:180px"></div>
+                </div>
+              </div>
+              <div class="ops-card">
+                <div class="ops-card-header">
+                  <h3><i class="fas fa-table"></i> Detalle Anulaciones</h3>
+                </div>
+                <div class="ops-card-body p-0">
+                  <div class="ops-table-wrap">
+                    <table class="ops-table">
+                      <thead>
+                        <tr>
+                          <th>Motivo</th>
+                          <th>Cantidad</th>
+                          <th>%</th>
+                        </tr>
+                      </thead>
+                      <tbody id="tbodyAnulaciones"></tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Panel 4: 7 Desperdicios -->
+            <div class="ops-section-title"><i class="fas fa-trash-alt"></i> 7 Desperdicios (Muda)</div>
+            <div class="ops-muda-grid" id="mudaGrid"></div>
+
+            <!-- Panel 5: Control Chart -->
+            <div class="ops-section-title"><i class="fas fa-chart-line"></i> Control Chart — Lead Time Diario (X-bar)
+            </div>
+            <div class="ops-card">
+              <div class="ops-card-header">
+                <h3><i class="fas fa-chart-line"></i> Gráfica de Control de Lead Time</h3>
+                <span class="ops-badge" id="badgeControlChart">—</span>
+              </div>
+              <div class="ops-card-body">
+                <div class="ops-chart-wrap"><canvas id="chartControlChart" height="260"></canvas></div>
+                <div id="controlChartAlerta" style="margin-top:14px"></div>
+              </div>
+            </div>
+
+          </div><!-- /leanContent -->
+        </div><!-- /panelLean -->
 
         <div style="height:40px"></div>
       </div><!-- /opsLabWrapper -->
