@@ -62,6 +62,7 @@ if (empty($membresia)) {
                                 <th>Producto</th>
                                 <th>Medida</th>
                                 <th>Cantidad</th>
+                                <th>Promoción</th>
                                 <th>Puntos Totales</th>
                                 <th>Puntos Acumulados</th>
                             </tr>

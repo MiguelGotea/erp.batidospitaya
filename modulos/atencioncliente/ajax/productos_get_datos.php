@@ -88,12 +88,14 @@ try {
                 VentasGlobalesAccessCSV.Cantidad,
                 VentasGlobalesAccessCSV.Puntos,
                 VentasGlobalesAccessCSV.Anulado,
+                promociones_access_csv.Nombre as NombrePromocion,
                 CASE 
                     WHEN VentasGlobalesAccessCSV.Anulado = 0 THEN (VentasGlobalesAccessCSV.Cantidad * VentasGlobalesAccessCSV.Puntos)
                     ELSE 0 
                 END as PuntosTotales
             FROM VentasGlobalesAccessCSV
             LEFT JOIN DBBatidos ON VentasGlobalesAccessCSV.CodProducto = DBBatidos.CodBatido
+            LEFT JOIN promociones_access_csv ON VentasGlobalesAccessCSV.CodigoPromocion = promociones_access_csv.CodPromocion
             WHERE VentasGlobalesAccessCSV.CodCliente = :membresia
             AND (DBBatidos.CodGrupo IS NULL OR (DBBatidos.CodGrupo != 25 AND DBBatidos.CodGrupo != 11))
             ORDER BY VentasGlobalesAccessCSV.Fecha DESC, VentasGlobalesAccessCSV.Hora DESC

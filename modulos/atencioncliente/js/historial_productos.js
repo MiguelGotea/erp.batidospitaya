@@ -97,6 +97,7 @@ function renderizarTabla(datos) {
         tr.append(`<td>${row.DBBatidos_Nombre || '-'}</td>`);
         tr.append(`<td>${row.Medida || '-'}</td>`);
         tr.append(`<td>${row.Cantidad || 0}</td>`);
+        tr.append(`<td>${row.NombrePromocion || '-'}</td>`);
         tr.append(`<td class="col-puntos-totales">${row.PuntosTotales || 0}</td>`);
         tr.append(`<td class="col-puntos-acumulados">${row.PuntosAcumulados || 0}</td>`);
         
@@ -109,7 +110,7 @@ function mostrarMensajeVacio(mensaje) {
     const tbody = $('#tablaProductosBody');
     tbody.html(`
         <tr>
-            <td colspan="9" class="empty-state">
+            <td colspan="10" class="empty-state">
                 <i class="bi bi-inbox"></i>
                 <p>${mensaje}</p>
             </td>
