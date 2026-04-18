@@ -175,69 +175,111 @@ try {
     // ────────────────────────────────────────────
     // 3. TENDENCIA VENTAS POR MES (últimos 12 meses)
     // ────────────────────────────────────────────
-    // Intentar la query enriquecida con subquery de tiendas activas por mes.
-    // Si la tabla sucursales no tiene Fecha_Cierre o hay timeout, usamos fallback simple.
+    // Opción B aplicada al histórico mensual:
+    // Para cada mes, obtenemos ventas por tienda + su Fecha_Apertura.
+    // Calculamos días activos de cada tienda EN ese mes específico, luego:
+    //   venta_diaria_tienda  = ventas_tienda / dias_activos_en_ese_mes
+    //   venta_normalizada    = venta_diaria_tienda × dias_totales_del_mes
+    // VPT mensual = promedio(venta_normalizada) → meses con aperturas no quedan deprimidos.
     try {
-        $sqlTendMensual = "
+        $sqlTendPorTienda = "
             SELECT
-                sub.mes,
-                sub.total,
-                sub.pedidos,
-                (
-                    SELECT COUNT(*)
-                    FROM sucursales s2
-                    WHERE s2.sucursal = 1
-                      AND s2.Fecha_Apertura <= LAST_DAY(CONCAT(sub.mes, '-01'))
-                      AND (
-                            s2.activa = 1
-                            OR s2.Fecha_Cierre >= CONCAT(sub.mes, '-01')
-                      )
-                ) AS tiendas_activas_mes
-            FROM (
-                SELECT
-                    DATE_FORMAT(v.Fecha, '%Y-%m') AS mes,
-                    SUM(CASE WHEN v.Anulado = 0 THEN v.Precio ELSE 0 END) AS total,
-                    COUNT(DISTINCT CASE WHEN v.Anulado = 0 THEN v.CodPedido ELSE NULL END) AS pedidos
-                FROM VentasGlobalesAccessCSV v
-                INNER JOIN sucursales s ON s.codigo = v.local
-                WHERE v.Fecha >= DATE_SUB(:hoy, INTERVAL 12 MONTH)
-                  AND s.sucursal = 1
-                  -- Sin filtro activa: el historial incluye sucursales cerradas que facturaron
-                GROUP BY DATE_FORMAT(v.Fecha, '%Y-%m')
-            ) sub
+                DATE_FORMAT(v.Fecha, '%Y-%m')                                              AS mes,
+                v.Sucursal_Nombre                                                          AS tienda,
+                s.Fecha_Apertura,
+                DAY(LAST_DAY(MIN(v.Fecha)))                                                AS dias_en_mes,
+                GREATEST(1,
+                    DATEDIFF(
+                        LAST_DAY(MIN(v.Fecha)),
+                        GREATEST(DATE_FORMAT(MIN(v.Fecha), '%Y-%m-01'), DATE(s.Fecha_Apertura))
+                    ) + 1
+                )                                                                          AS dias_activos_mes,
+                SUM(CASE WHEN v.Anulado = 0 THEN v.Precio ELSE 0 END)                    AS ventas,
+                COUNT(DISTINCT CASE WHEN v.Anulado = 0 THEN v.CodPedido ELSE NULL END)   AS pedidos
+            FROM VentasGlobalesAccessCSV v
+            INNER JOIN sucursales s ON s.codigo = v.local
+            WHERE v.Fecha >= DATE_SUB(:hoy_t, INTERVAL 12 MONTH)
+              AND s.sucursal = 1
+            GROUP BY DATE_FORMAT(v.Fecha, '%Y-%m'), v.Sucursal_Nombre, s.Fecha_Apertura
             ORDER BY mes ASC
         ";
-        $stTM = $conn->prepare($sqlTendMensual);
-        $stTM->execute([':hoy' => $hoy]);
-        $tendenciaMensual = $stTM->fetchAll(PDO::FETCH_ASSOC);
+        $stTPT = $conn->prepare($sqlTendPorTienda);
+        $stTPT->execute([':hoy_t' => $hoy]);
+        $tendPorTiendaRows = $stTPT->fetchAll(PDO::FETCH_ASSOC);
+
+        // Agrupar por mes y calcular VPT normalizado (Opción B)
+        $tendByMes = [];
+        foreach ($tendPorTiendaRows as $tr) {
+            $mes       = $tr['mes'];
+            $diasMes   = max(1, (int) $tr['dias_en_mes']);
+            $diasAct   = max(1, (int) $tr['dias_activos_mes']);
+            $vDiaria   = (float) $tr['ventas'] / $diasAct;
+            $vNorm     = $vDiaria * $diasMes;   // proyectado al mes completo
+            if (!isset($tendByMes[$mes])) {
+                $tendByMes[$mes] = ['total' => 0, 'pedidos' => 0, 'vpt_norm_list' => []];
+            }
+            $tendByMes[$mes]['total']            += (float) $tr['ventas'];
+            $tendByMes[$mes]['pedidos']          += (int)   $tr['pedidos'];
+            $tendByMes[$mes]['vpt_norm_list'][]   = $vNorm;
+        }
+
+        $tendenciaMensual = [];
+        foreach ($tendByMes as $mes => $data) {
+            $nT = count($data['vpt_norm_list']);
+            $vptNorm = $nT > 0 ? round(array_sum($data['vpt_norm_list']) / $nT, 2) : 0;
+            $tendenciaMensual[] = [
+                'mes'                => $mes,
+                'total'              => round($data['total'], 2),
+                'pedidos'            => $data['pedidos'],
+                'tiendas_activas_mes'=> $nT,
+                'venta_por_tienda'   => $vptNorm,   // ya normalizado (Opción B)
+            ];
+        }
+        // Asegurar orden ascendente
+        usort($tendenciaMensual, fn($a, $b) => strcmp($a['mes'], $b['mes']));
+
     } catch (Exception $e) {
-        // Fallback: query simple con JOIN a sucursales (sin activa — histórico)
-        $sqlTendSimple = "
-            SELECT mes, total, pedidos, NULL AS tiendas_activas_mes FROM (
+        // Fallback: división simple (sin normalización)
+        try {
+            $sqlTendSimple = "
                 SELECT
-                    DATE_FORMAT(v.Fecha, '%Y-%m') AS mes,
-                    SUM(CASE WHEN v.Anulado = 0 THEN v.Precio ELSE 0 END) AS total,
-                    COUNT(DISTINCT CASE WHEN v.Anulado = 0 THEN v.CodPedido ELSE NULL END) AS pedidos
-                FROM VentasGlobalesAccessCSV v
-                INNER JOIN sucursales s ON s.codigo = v.local
-                WHERE v.Fecha >= DATE_SUB(:hoy, INTERVAL 12 MONTH)
-                  AND s.sucursal = 1
-                GROUP BY DATE_FORMAT(v.Fecha, '%Y-%m')
-            ) sub ORDER BY mes ASC
-        ";
-        $stTM = $conn->prepare($sqlTendSimple);
-        $stTM->execute([':hoy' => $hoy]);
-        $tendenciaMensual = $stTM->fetchAll(PDO::FETCH_ASSOC);
+                    sub.mes, sub.total, sub.pedidos,
+                    (
+                        SELECT COUNT(*) FROM sucursales s2
+                        WHERE s2.sucursal = 1
+                          AND s2.Fecha_Apertura <= LAST_DAY(CONCAT(sub.mes, '-01'))
+                          AND (s2.activa = 1 OR s2.Fecha_Cierre >= CONCAT(sub.mes, '-01'))
+                    ) AS tiendas_activas_mes
+                FROM (
+                    SELECT DATE_FORMAT(v.Fecha,'%Y-%m') AS mes,
+                           SUM(CASE WHEN v.Anulado=0 THEN v.Precio ELSE 0 END) AS total,
+                           COUNT(DISTINCT CASE WHEN v.Anulado=0 THEN v.CodPedido ELSE NULL END) AS pedidos
+                    FROM VentasGlobalesAccessCSV v
+                    INNER JOIN sucursales s ON s.codigo = v.local
+                    WHERE v.Fecha >= DATE_SUB(:hoy, INTERVAL 12 MONTH) AND s.sucursal = 1
+                    GROUP BY DATE_FORMAT(v.Fecha,'%Y-%m')
+                ) sub ORDER BY mes ASC
+            ";
+            $stTM = $conn->prepare($sqlTendSimple);
+            $stTM->execute([':hoy' => $hoy]);
+            $tendenciaMensual = $stTM->fetchAll(PDO::FETCH_ASSOC);
+        } catch (Exception $e2) {
+            $tendenciaMensual = [];
+        }
     }
-    // Calcular venta_por_tienda (usa tiendas_activas_mes o fallback al total de activas)
+
     // Tiendas activas actuales — se usa en expansión y proyección
     $tiendasActualesTotal = (int) ($conn->query(
         "SELECT COUNT(*) FROM sucursales WHERE sucursal=1 AND activa=1"
     )->fetchColumn() ?: 14);
     $tiendasActivasFallback = $tiendasActualesTotal;
+
+    // Si vino del fallback (sin normalización), calcular venta_por_tienda simple
     foreach ($tendenciaMensual as &$tm) {
-        $t = max(1, (int) ($tm['tiendas_activas_mes'] ?? $tiendasActivasFallback));
-        $tm['venta_por_tienda'] = round((float) $tm['total'] / $t, 2);
+        if (!isset($tm['venta_por_tienda'])) {
+            $t = max(1, (int) ($tm['tiendas_activas_mes'] ?? $tiendasActivasFallback));
+            $tm['venta_por_tienda'] = round((float) $tm['total'] / $t, 2);
+        }
     }
     unset($tm);
 
