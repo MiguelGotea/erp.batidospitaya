@@ -5,17 +5,16 @@
 
 /* ── Variables ─────────────────────────────────────────────── */
 :root {
-    /* Neumorphism Core (Two-Tone System) */
-    --neu-bg:          #f0ede8;
-    --neu-shadow-dark: #cec7bc;
+    /* Neumorphism Core (Light Mode by default for Soft UI) */
+    --neu-bg:          #e0e5ec;
+    --neu-shadow-dark: #b8bec7;
     --neu-shadow-light:#ffffff;
-    --ops-page-bg:     #f6f6f6;
     
     /* Pitaya Accents */
-    --ops-teal:        #51B8AC;
-    --ops-teal-light:  #6ec7bd;
-    --ops-accent:      #51B8AC;
-    --ops-accent2:     #76c7bd;
+    --ops-teal:        #0E544C;
+    --ops-teal-light:  #1a7a6f;
+    --ops-accent:      #3fba9e;
+    --ops-accent2:     #58d3b4;
     
     /* Semantic Colors */
     --ops-red:         #d9534f;
@@ -42,7 +41,7 @@
 
 /* ── Base ───────────────────────────────────────────────────── */
 #opsLabWrapper {
-    background: var(--ops-page-bg);
+    background: var(--neu-bg);
     min-height: 100vh;
     font-family: var(--ops-font);
     color: var(--ops-text);
