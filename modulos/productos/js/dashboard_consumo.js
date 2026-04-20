@@ -122,11 +122,11 @@ async function cargarFiltros() {
         }
 
         // ── Sucursales ─────────────────────────────────────────
-        $sucursales.empty();
+        $sucursales.empty().append('<option></option>'); // Opción vacía para el placeholder
         resp.sucursales.forEach(s => {
             $sucursales.append(`<option value="${s.codigo}">${s.nombre}</option>`);
         });
-        $sucursales.trigger('change');
+        $sucursales.val(null).trigger('change');
 
     } catch (err) {
         console.error('Error cargando filtros:', err);
