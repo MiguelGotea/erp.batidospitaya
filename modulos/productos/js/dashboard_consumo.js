@@ -353,6 +353,7 @@ function renderGrafico(data) {
     // Proyección con regresión lineal (mínimos cuadrados) sobre semanas completas
     const ultimaSem = semanasNros[semanasNros.length - 1];
     let proyW1 = round2(promCalc), proyW2 = round2(promCalc), proyW3 = round2(promCalc);
+    let regSlope = 0, regIntercept = promCalc;  // fallback: línea plana en promCalc
     if (semanasCalc.length >= 2) {
         const xV    = semanasCalc;
         const yV    = semanasCalc.map(n => item.por_semana[n] || 0);
@@ -363,13 +364,17 @@ function renderGrafico(data) {
         const sumX2 = xV.reduce((acc, x)    => acc + x * x, 0);
         const denom = n_ * sumX2 - sumX * sumX;
         if (Math.abs(denom) > 0.001) {
-            const slope     = (n_ * sumXY - sumX * sumY) / denom;
-            const intercept = (sumY - slope * sumX) / n_;
-            proyW1 = Math.max(0, round2(slope * (ultimaSem + 1) + intercept));
-            proyW2 = Math.max(0, round2(slope * (ultimaSem + 2) + intercept));
-            proyW3 = Math.max(0, round2(slope * (ultimaSem + 3) + intercept));
+            regSlope     = (n_ * sumXY - sumX * sumY) / denom;
+            regIntercept = (sumY - regSlope * sumX) / n_;
+            proyW1 = Math.max(0, round2(regSlope * (ultimaSem + 1) + regIntercept));
+            proyW2 = Math.max(0, round2(regSlope * (ultimaSem + 2) + regIntercept));
+            proyW3 = Math.max(0, round2(regSlope * (ultimaSem + 3) + regIntercept));
         }
     }
+    // Estimado de cierre para la semana en curso (basado en regresión)
+    const proyActual = esSemActualEnRango
+        ? Math.max(0, round2(regSlope * semanaActual + regIntercept))
+        : null;
 
     // ── Detectar si hay múltiples sucursales con datos en desglose
     const hayDesglose = sucursales.length > 1 && item.desglose_semxsuc &&
@@ -501,18 +506,22 @@ function renderGrafico(data) {
         }
     });
 
-    // Dataset de proyección: ámbar punteado con tendencia lineal
-    const labelProy = esSemActualEnRango
-        ? `Proyección tendencial (sin sem. ${semanaActual})`
-        : `Proy. próx. 3 sem`;
+    // Dataset de proyección: nace en semana actual (si aplica) y se extiende 3 semanas
+    // Con spanGaps:true la línea conecta automáticamente el punto de sem. actual con las futuras
+    const proyData = [...semanasNros.map(n =>
+        (esSemActualEnRango && n === semanaActual) ? proyActual : null
+    ), proyW1, proyW2, proyW3];
+    const proyPointR = [...semanasNros.map(n =>
+        (esSemActualEnRango && n === semanaActual) ? 5 : 0
+    ), 6, 6, 6];
     datasets.push({
-        label:               `${labelProy}: ${formatNum(proyW1)} / ${formatNum(proyW2)} / ${formatNum(proyW3)} ${escHtml(item.unidad)}`,
-        data:                [...Array(nSems).fill(null), proyW1, proyW2, proyW3],
+        label:               `↗ Proyección`,
+        data:                proyData,
         borderColor:         '#f39c12',
         backgroundColor:     'rgba(243,156,18,.12)',
         borderWidth:         2.5,
         borderDash:          [6, 4],
-        pointRadius:         [...Array(nSems).fill(0), 6, 6, 6],
+        pointRadius:         proyPointR,
         pointStyle:          'triangle',
         pointBackgroundColor: '#f39c12',
         pointBorderColor:    '#fff',
@@ -520,7 +529,7 @@ function renderGrafico(data) {
         fill:                false,
         tension:             0,
         type:                'line',
-        spanGaps:            false,
+        spanGaps:            true,   // conecta sem. actual con las semanas proyectadas
         order:               0,
     });
 
@@ -528,10 +537,9 @@ function renderGrafico(data) {
 
     const ctx = document.getElementById('chartTendencia').getContext('2d');
 
-    // Ajuste altura: si hay muchas sucursales en modo por_sucursal, dar más espacio a la leyenda
+    // Leyenda siempre en la parte inferior para no comprimir el área del gráfico
     const numSucursales = hayDesglose ? sucursales.length : 1;
-    const legendMaxItems = 5; // a partir de aquí poner leyenda a la izquierda
-    const legendPos = numSucursales > legendMaxItems ? 'left' : 'top';
+    const legendPos = numSucursales > 8 ? 'left' : 'bottom';
 
     chartTendencia = new Chart(ctx, {
         type: modoChart,
