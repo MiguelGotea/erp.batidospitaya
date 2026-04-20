@@ -334,6 +334,43 @@ function renderGrafico(data) {
     const nombres     = data.sucursales_nombres || {};
     const prom        = item.prom_semana || 0;
 
+    // ── Excluir semana en curso del promedio y proyección ────────────────────
+    const semanaActual       = parseInt($('#semanaActualNum').text()) || 0;
+    const esSemActualEnRango = semanaActual > 0 && semanasNros.includes(semanaActual);
+    // Semanas completas: excluir la semana en curso si está dentro del rango
+    const semanasCalc = esSemActualEnRango
+        ? semanasNros.filter(n => n !== semanaActual)
+        : semanasNros;
+
+    // Promedio recalculado sin semana en curso
+    let promCalc = prom;
+    if (semanasCalc.length > 0) {
+        const valsCalc = semanasCalc.map(n => item.por_semana[n] || 0);
+        const valsPos  = valsCalc.filter(v => v > 0);
+        promCalc = valsPos.length > 0 ? valsPos.reduce((a, b) => a + b, 0) / valsPos.length : prom;
+    }
+
+    // Proyección con regresión lineal (mínimos cuadrados) sobre semanas completas
+    const ultimaSem = semanasNros[semanasNros.length - 1];
+    let proyW1 = round2(promCalc), proyW2 = round2(promCalc), proyW3 = round2(promCalc);
+    if (semanasCalc.length >= 2) {
+        const xV    = semanasCalc;
+        const yV    = semanasCalc.map(n => item.por_semana[n] || 0);
+        const n_    = xV.length;
+        const sumX  = xV.reduce((a, b) => a + b, 0);
+        const sumY  = yV.reduce((a, b) => a + b, 0);
+        const sumXY = xV.reduce((acc, x, i) => acc + x * yV[i], 0);
+        const sumX2 = xV.reduce((acc, x)    => acc + x * x, 0);
+        const denom = n_ * sumX2 - sumX * sumX;
+        if (Math.abs(denom) > 0.001) {
+            const slope     = (n_ * sumXY - sumX * sumY) / denom;
+            const intercept = (sumY - slope * sumX) / n_;
+            proyW1 = Math.max(0, round2(slope * (ultimaSem + 1) + intercept));
+            proyW2 = Math.max(0, round2(slope * (ultimaSem + 2) + intercept));
+            proyW3 = Math.max(0, round2(slope * (ultimaSem + 3) + intercept));
+        }
+    }
+
     // ── Detectar si hay múltiples sucursales con datos en desglose
     const hayDesglose = sucursales.length > 1 && item.desglose_semxsuc &&
         Object.keys(item.desglose_semxsuc).length > 0;
@@ -403,10 +440,10 @@ function renderGrafico(data) {
             });
         }
 
-        // Promedio punteado (siempre en ambos modos)
+        // Promedio punteado (siempre en ambos modos) — excluye semana en curso
         datasets.push({
-            label:       `Prom./sem: ${formatNum(prom)} ${escHtml(item.unidad)}`,
-            data:        semanasNros.map(() => round2(prom)),
+            label:       `Prom./sem (sem. completas): ${formatNum(round2(promCalc))} ${escHtml(item.unidad)}`,
+            data:        semanasNros.map(() => round2(promCalc)),
             borderColor: '#e67e22',
             borderWidth: 1.5,
             borderDash:  [5, 4],
@@ -433,8 +470,8 @@ function renderGrafico(data) {
                 pointBackgroundColor: '#0E544C',
             },
             {
-                label:       `Prom./sem: ${formatNum(prom)} ${escHtml(item.unidad)}`,
-                data:        semanasNros.map(() => round2(prom)),
+                label:       `Prom./sem (sem. completas): ${formatNum(round2(promCalc))} ${escHtml(item.unidad)}`,
+                data:        semanasNros.map(() => round2(promCalc)),
                 borderColor: '#e67e22',
                 borderWidth: 1.5,
                 borderDash:  [5, 4],
@@ -446,8 +483,7 @@ function renderGrafico(data) {
         ];
     }
 
-    // ── Proyección 3 semanas (siempre en base al total del período) ────────────────
-    const ultimaSem        = semanasNros[semanasNros.length - 1];
+    // ── Proyección 3 semanas (regresión lineal, excluye semana en curso) ──────────
     const labelsExtended   = [
         ...labels,
         `Proy. ${ultimaSem + 1}`,
@@ -465,11 +501,13 @@ function renderGrafico(data) {
         }
     });
 
-    // Dataset de proyección: ámbar punteado, triángulos sólo en las 3 semanas futuras
-    const promTotal = item.prom_semana || 0;
+    // Dataset de proyección: ámbar punteado con tendencia lineal
+    const labelProy = esSemActualEnRango
+        ? `Proyección tendencial (sin sem. ${semanaActual})`
+        : `Proy. próx. 3 sem`;
     datasets.push({
-        label:               `Proy. próx. 3 sem (${formatNum(promTotal)} ${escHtml(item.unidad)}/sem)`,
-        data:                [...Array(nSems).fill(null), round2(promTotal), round2(promTotal), round2(promTotal)],
+        label:               `${labelProy}: ${formatNum(proyW1)} / ${formatNum(proyW2)} / ${formatNum(proyW3)} ${escHtml(item.unidad)}`,
+        data:                [...Array(nSems).fill(null), proyW1, proyW2, proyW3],
         borderColor:         '#f39c12',
         backgroundColor:     'rgba(243,156,18,.12)',
         borderWidth:         2.5,
