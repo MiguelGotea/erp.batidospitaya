@@ -529,9 +529,9 @@ function renderGrafico(data) {
                         // En modo barra apilada: footer muestra el TOTAL de la semana
                         footer: (items) => {
                             if (!esBarraSuc) return undefined;
-                            // Sumar solo los datasets de sucursal (excluir Prom.)
+                            // Excluir Prom./Proy. — sumar solo datasets de sucursal
                             const total = items
-                                .filter(i => !i.dataset.label.startsWith('Prom.'))
+                                .filter(i => i.dataset.label && !i.dataset.label.startsWith('Prom.') && !i.dataset.label.startsWith('Proy.'))
                                 .reduce((acc, i) => acc + (i.parsed.y || 0), 0);
                             return `TOTAL: ${formatNum(round2(total))} ${escHtml(item.unidad)}`;
                         },
@@ -1087,7 +1087,7 @@ function calcularAlertasSobreconsumo(data, kSigma) {
         data.sucursales.forEach(suc => {
             // Serie semanal completa de ESTA sucursal para ESTE insumo
             const serieCompleta = semanasNros.map(n =>
-                item.desglose_semxsuc[n]?.[suc] || 0
+                item.desglose_semxsuc?.[n]?.[suc] || 0
             );
             // Usar solo semanas con venta para calcular μ y σ
             const serieConValor = serieCompleta.filter(v => v > 0);
