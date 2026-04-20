@@ -325,64 +325,77 @@ function renderGrafico(data) {
     // ── Construir datasets
     let datasets = [];
 
+    // Variable que indica si el modo actual apila barras por sucursal
+    const esBarraSuc = hayDesglose && modoVistaSuc === 'por_sucursal' && modoChart === 'bar';
+    const esLineaSuc = hayDesglose && modoVistaSuc === 'por_sucursal' && modoChart === 'line';
+
     if (hayDesglose && modoVistaSuc === 'por_sucursal') {
         // ━━ Modo Multi-Sucursal ━━
 
-        // 1. Una dataset por sucursal (ordenadas por consumo total desc)
+        // Sucursales ordenadas por consumo total desc
         const sucConTotal = sucursales.map((suc, i) => {
             const totalSuc = semanasNros.reduce((acc, n) => acc + (item.desglose_semxsuc[n]?.[suc] || 0), 0);
             return { suc, nombre: nombres[suc] || suc, totalSuc, idx: i };
         }).sort((a, b) => b.totalSuc - a.totalSuc);
 
         sucConTotal.forEach(({ suc, nombre, idx }) => {
-            const color = SUCURSAL_COLORS[idx % SUCURSAL_COLORS.length];
+            const color  = SUCURSAL_COLORS[idx % SUCURSAL_COLORS.length];
             const valores = semanasNros.map(n => round2(item.desglose_semxsuc[n]?.[suc] || 0));
-            const label   = nombre.length > 20 ? nombre.substring(0, 18) + '…' : nombre;
+            const label   = nombre.length > 22 ? nombre.substring(0, 20) + '…' : nombre;
+
+            // En modo BARRA: color sólido (~75% opacidad) para cada segmento apilado
+            const bgColor = esBarraSuc
+                ? color.border.replace('#', 'rgba(').replace(/([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})/i,
+                    (_, r, g, b) => `${parseInt(r,16)},${parseInt(g,16)},${parseInt(b,16)},0.75)`)
+                : color.bg;
 
             datasets.push({
                 label,
                 data: valores,
-                backgroundColor: modoChart === 'bar' ? color.bg : color.bg,
-                borderColor: color.border,
-                borderWidth: modoChart === 'bar' ? 1.5 : 2,
-                tension: 0.3,
-                fill: false,
-                pointRadius: modoChart === 'line' ? 3 : undefined,
+                backgroundColor: bgColor,
+                borderColor:     color.border,
+                borderWidth:     esBarraSuc ? 0.5 : 2,
+                tension:         0.3,
+                fill:            false,
+                pointRadius:     esLineaSuc ? 3 : undefined,
                 pointBackgroundColor: color.border,
-                stack: modoChart === 'bar' ? 'suc' : undefined, // barras apiladas
+                // stack solo en modo barra — Chart.js apila datasets con el mismo stack id
+                stack:           esBarraSuc ? 'suc' : undefined,
             });
         });
 
-        // 2. Total acumulado como línea siempre visible encima
-        const valoresTotal = semanasNros.map(n => round2(item.por_semana[n] || 0));
-        datasets.push({
-            label: 'TOTAL',
-            data: valoresTotal,
-            borderColor: '#0E544C',
-            backgroundColor: 'rgba(14,84,76,.10)',
-            borderWidth: 2.5,
-            type: 'line',       // siempre línea aunque el modo sea barras
-            tension: 0.3,
-            fill: false,
-            pointRadius: 5,
-            pointBackgroundColor: '#0E544C',
-            pointBorderColor: '#fff',
-            pointBorderWidth: 1.5,
-            order: 0,           // dibuja primero (encima)
-        });
+        // En modo LÍNEA: añadir línea TOTAL encima
+        if (esLineaSuc) {
+            const valoresTotal = semanasNros.map(n => round2(item.por_semana[n] || 0));
+            datasets.push({
+                label:            'TOTAL',
+                data:             valoresTotal,
+                borderColor:      '#0E544C',
+                backgroundColor:  'rgba(14,84,76,.10)',
+                borderWidth:      2.5,
+                type:             'line',
+                tension:          0.3,
+                fill:             false,
+                pointRadius:      5,
+                pointBackgroundColor: '#0E544C',
+                pointBorderColor:     '#fff',
+                pointBorderWidth:     1.5,
+                order:            0,
+            });
+        }
 
-        // 3. Promedio punteado
+        // Promedio punteado (siempre en ambos modos)
         datasets.push({
-            label: `Prom./sem: ${formatNum(prom)} ${escHtml(item.unidad)}`,
-            data: semanasNros.map(() => round2(prom)),
+            label:       `Prom./sem: ${formatNum(prom)} ${escHtml(item.unidad)}`,
+            data:        semanasNros.map(() => round2(prom)),
             borderColor: '#e67e22',
             borderWidth: 1.5,
-            borderDash: [5, 4],
+            borderDash:  [5, 4],
             pointRadius: 0,
-            fill: false,
-            tension: 0,
-            type: 'line',
-            order: 1,
+            fill:        false,
+            tension:     0,
+            type:        'line',
+            order:       1,
         });
 
     } else {
@@ -390,26 +403,26 @@ function renderGrafico(data) {
         const valores = semanasNros.map(n => round2(item.por_semana[n] || 0));
         datasets = [
             {
-                label: item.nombre.length > 35 ? item.nombre.substring(0, 33) + '…' : item.nombre,
-                data: valores,
+                label:           item.nombre.length > 35 ? item.nombre.substring(0, 33) + '…' : item.nombre,
+                data:            valores,
                 backgroundColor: 'rgba(81,184,172,.35)',
-                borderColor: '#0E544C',
-                borderWidth: 2,
-                tension: 0.3,
-                fill: modoChart === 'line',
-                pointRadius: 4,
+                borderColor:     '#0E544C',
+                borderWidth:     2,
+                tension:         0.3,
+                fill:            modoChart === 'line',
+                pointRadius:     4,
                 pointBackgroundColor: '#0E544C',
             },
             {
-                label: `Prom./sem: ${formatNum(prom)} ${escHtml(item.unidad)}`,
-                data: semanasNros.map(() => round2(prom)),
+                label:       `Prom./sem: ${formatNum(prom)} ${escHtml(item.unidad)}`,
+                data:        semanasNros.map(() => round2(prom)),
                 borderColor: '#e67e22',
                 borderWidth: 1.5,
-                borderDash: [5, 4],
+                borderDash:  [5, 4],
                 pointRadius: 0,
-                fill: false,
-                tension: 0,
-                type: 'line',
+                fill:        false,
+                tension:     0,
+                type:        'line',
             },
         ];
     }
@@ -445,24 +458,32 @@ function renderGrafico(data) {
                 },
                 tooltip: {
                     callbacks: {
-                        label: ctx => `${ctx.dataset.label}: ${formatNum(ctx.parsed.y)} ${escHtml(item.unidad)}`,
+                        label: ctx => {
+                            // Ocultar promedio del body si hay muchas series
+                            if (ctx.dataset.label && ctx.dataset.label.startsWith('Prom.')) return null;
+                            return `${ctx.dataset.label}: ${formatNum(ctx.parsed.y)} ${escHtml(item.unidad)}`;
+                        },
+                        // En modo barra apilada: footer muestra el TOTAL de la semana
                         footer: (items) => {
-                            // Mostrar total en el tooltip cuando hay desglose
-                            if (hayDesglose && modoVistaSuc === 'por_sucursal') {
-                                // El total ya es un dataset; no duplicar
-                            }
+                            if (!esBarraSuc) return undefined;
+                            // Sumar solo los datasets de sucursal (excluir Prom.)
+                            const total = items
+                                .filter(i => !i.dataset.label.startsWith('Prom.'))
+                                .reduce((acc, i) => acc + (i.parsed.y || 0), 0);
+                            return `TOTAL: ${formatNum(round2(total))} ${escHtml(item.unidad)}`;
                         },
                     },
                 },
             },
             scales: {
                 x: {
-                    stacked: modoChart === 'bar' && hayDesglose && modoVistaSuc === 'por_sucursal',
+                    stacked: esBarraSuc,
                     grid: { color: '#e8f0f4' },
                     ticks: { font: { size: 10 }, maxRotation: 45 },
                 },
                 y: {
-                    stacked: false, // nunca apilar el eje Y (el total ya suma todo)
+                    // stacked:true en modo barra por sucursal → las barras se apilan correctamente
+                    stacked: esBarraSuc,
                     grid: { color: '#e8f0f4' },
                     ticks: { font: { size: 10 }, callback: v => formatNum(v) },
                     beginAtZero: true,
