@@ -148,7 +148,8 @@ async function cargarDatos() {
     const semD = Math.min(semDesdeNum, semHastaNum);
     const semH = Math.max(semDesdeNum, semHastaNum);
 
-    const sucursalesSelec = $sucursales.val() || [];
+    // Filtrar strings vacíos (vienen de la <option></option> del placeholder de Select2)
+    const sucursalesSelec = ($sucursales.val() || []).filter(s => s !== '');
 
     // Mostrar loader
     mostrarEstado('loader');
