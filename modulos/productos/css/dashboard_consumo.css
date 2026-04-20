@@ -617,21 +617,63 @@ body {
     border:        none !important;
     border-radius: 10px !important;
     font-size:     .82rem !important;
-    min-height:    32px !important;
+    min-height:    34px !important;
+    display:       flex !important;
+    align-items:   center !important;
     box-shadow:
         inset 4px 4px 8px var(--neu-shadow-dark),
         inset -4px -4px 8px var(--neu-shadow-light) !important;
 }
+
+/* Ensure placeholder is not cut off in multiple mode */
+.select2-container--default .select2-selection--multiple .select2-selection__rendered {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    padding: 0 8px !important;
+    margin: 0 !important;
+    width: 100%;
+}
+
+.select2-container--default .select2-selection--multiple .select2-search--inline {
+    flex: 1;
+}
+
+.select2-container--default .select2-selection--multiple .select2-search__field {
+    margin: 0 !important;
+    font-family: var(--dc-font) !important;
+    font-size: .82rem !important;
+    height: 30px !important;
+    line-height: 30px !important;
+    width: 100% !important; /* Force width to show full placeholder */
+}
+
 .select2-container--default .select2-results__option--highlighted {
     background-color: var(--neu-accent) !important;
 }
+
 .select2-container--default .select2-selection--multiple .select2-selection__choice {
     background:    var(--neu-accent) !important;
     border:        none !important;
     color:         #fff !important;
     border-radius: 6px !important;
     font-size:     .73rem !important;
+    margin:        3px 4px 3px 0 !important;
+    padding:       1px 8px !important;
+    display:       flex !important;
+    align-items:   center !important;
 }
+
+.select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
+    color: rgba(255,255,255,.7) !important;
+    border: none !important;
+    margin-right: 5px !important;
+}
+.select2-container--default .select2-selection--multiple .select2-selection__choice__remove:hover {
+    color: #fff !important;
+    background: transparent !important;
+}
+
 .select2-dropdown {
     border:        none !important;
     border-radius: var(--neu-radius-sm) !important;
@@ -639,6 +681,7 @@ body {
     box-shadow:
         8px 8px 18px var(--neu-shadow-dark),
         -8px -8px 18px var(--neu-shadow-light) !important;
+    z-index: 1051;
 }
 
 /* ══════════════════════════════════════════════

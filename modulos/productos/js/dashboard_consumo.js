@@ -126,6 +126,7 @@ async function cargarFiltros() {
         resp.sucursales.forEach(s => {
             $sucursales.append(`<option value="${s.codigo}">${s.nombre}</option>`);
         });
+        $sucursales.trigger('change');
 
     } catch (err) {
         console.error('Error cargando filtros:', err);
