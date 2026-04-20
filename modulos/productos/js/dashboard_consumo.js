@@ -448,7 +448,7 @@ function renderGrafico(data) {
         // Promedio punteado (siempre en ambos modos) — excluye semana en curso
         datasets.push({
             label:       `Prom./sem (sem. completas): ${formatNum(round2(promCalc))} ${escHtml(item.unidad)}`,
-            data:        semanasNros.map(() => round2(promCalc)),
+            data:        semanasNros.map(n => (esSemActualEnRango && n === semanaActual) ? null : round2(promCalc)),
             borderColor: '#e67e22',
             borderWidth: 1.5,
             borderDash:  [5, 4],
@@ -476,7 +476,7 @@ function renderGrafico(data) {
             },
             {
                 label:       `Prom./sem (sem. completas): ${formatNum(round2(promCalc))} ${escHtml(item.unidad)}`,
-                data:        semanasNros.map(() => round2(promCalc)),
+                data:        semanasNros.map(n => (esSemActualEnRango && n === semanaActual) ? null : round2(promCalc)),
                 borderColor: '#e67e22',
                 borderWidth: 1.5,
                 borderDash:  [5, 4],
