@@ -1,0 +1,276 @@
+<?php
+require_once '../../../core/auth/auth.php';
+require_once '../../../core/database/conexion.php';
+require_once '../../../core/permissions/permissions.php';
+
+if (isset($conn)) $conn->query("SET time_zone = '-06:00'");
+
+header('Content-Type: application/json');
+ini_set('display_errors', 0);
+error_reporting(E_ALL);
+set_time_limit(300);
+ini_set('memory_limit', '1024M');
+
+if (isset($conn)) {
+    try {
+        @$conn->exec("SET SESSION max_statement_time = 300");
+        @$conn->exec("SET SESSION max_execution_time = 300000");
+    } catch (Exception $e) {}
+}
+
+ob_start();
+
+$usuario = obtenerUsuarioActual();
+$cargoOperario = $usuario['CodNivelesCargos'];
+
+if (!tienePermiso('dashboard_rfm', 'vista', $cargoOperario)) {
+    echo json_encode(['success' => false, 'message' => 'Sin permiso']);
+    exit;
+}
+
+$fecha_inicio   = $_POST['fecha_inicio']   ?? $_GET['fecha_inicio']   ?? date('Y-m-d', strtotime('-90 days'));
+$fecha_fin      = $_POST['fecha_fin']      ?? $_GET['fecha_fin']      ?? date('Y-m-d');
+$sucursal       = $_POST['sucursal']       ?? $_GET['sucursal']       ?? null;
+$umbral_perdido = intval($_POST['umbral_perdido'] ?? $_GET['umbral_perdido'] ?? 60);
+
+// Segmentos y clientes recibidos desde la Fase 1 (via POST)
+$segmentos_json = $_POST['segmentos'] ?? $_GET['segmentos'] ?? '{}';
+$clientes_json  = $_POST['clientes']  ?? $_GET['clientes']  ?? '[]';
+$clientSegments = json_decode($segmentos_json, true) ?: [];
+$clientes       = json_decode($clientes_json, true)  ?: [];
+
+try {
+    $whereSimple = "WHERE Anulado = 0 AND Fecha BETWEEN :f_inicio AND :f_fin";
+    $params = [':f_inicio' => $fecha_inicio, ':f_fin' => $fecha_fin];
+
+    $codigo_local = null;
+    if ($sucursal && $sucursal !== 'todas') {
+        $stmtLoc = $conn->prepare("SELECT codigo FROM sucursales WHERE nombre = :suc");
+        $stmtLoc->execute([':suc' => $sucursal]);
+        $codigo_local = $stmtLoc->fetchColumn() ?: -1;
+        $whereSimple .= " AND local = :suc_local";
+        $params[':suc_local'] = $codigo_local;
+    }
+
+    $paramsFO = [':fo_i' => $fecha_inicio, ':fo_f' => $fecha_fin];
+    $whereSimpleV = str_replace(['Anulado', 'Fecha', ' local '], ['v.Anulado', 'v.Fecha', ' v.local '], $whereSimple);
+    $joinClubOrders = " INNER JOIN (SELECT DISTINCT local, CodPedido FROM VentasGlobalesAccessCSV WHERE CodCliente > 0 AND Fecha BETWEEN :fo_i AND :fo_f AND Anulado = 0) fo ON v.local = fo.local AND v.CodPedido = fo.CodPedido ";
+
+    // 1. Evolución de Segmentos
+    $sqlEvol = "
+        SELECT S.numero_semana as Semana, V.CodPedido, MAX(V.CodCliente) as CodCliente
+        FROM VentasGlobalesAccessCSV V
+        JOIN SemanasSistema S ON V.Fecha BETWEEN S.fecha_inicio AND S.fecha_fin
+        INNER JOIN (
+            SELECT DISTINCT local, CodPedido FROM VentasGlobalesAccessCSV
+            WHERE CodCliente > 0 AND Fecha BETWEEN :fo_i AND :fo_f AND Anulado = 0
+        ) fo ON V.local = fo.local AND V.CodPedido = fo.CodPedido
+        WHERE V.Anulado = 0 AND V.Fecha BETWEEN :f_inicio AND :f_fin
+    ";
+    if ($sucursal && $sucursal !== 'todas') $sqlEvol .= " AND V.local = :suc_local";
+    $sqlEvol .= " GROUP BY S.numero_semana, V.local, V.CodPedido ORDER BY S.fecha_inicio ASC";
+
+    $stmtEvol = $conn->prepare($sqlEvol);
+    $stmtEvol->execute(array_merge($params, $paramsFO));
+    $evolutionRaw = $stmtEvol->fetchAll(PDO::FETCH_ASSOC);
+
+    $evolutionDetail = [];
+    foreach ($evolutionRaw as $row) {
+        $week = 'Sem ' . $row['Semana'];
+        $seg = $clientSegments[$row['CodCliente']] ?? 'Hibernating';
+        if (!isset($evolutionDetail[$week])) {
+            $evolutionDetail[$week] = ['Semana' => $week, 'Champions' => 0, 'Loyal' => 0, 'New' => 0, 'At Risk' => 0, 'Hibernating' => 0, 'Lost' => 0];
+        }
+        $evolutionDetail[$week][$seg]++;
+    }
+    $evolution = array_values($evolutionDetail);
+
+    // 2. Branch Analysis
+    $sqlBranchPeriod = "
+        SELECT s.nombre as Sucursal, SUM(t.MontoPedido) as TotalMonto, COUNT(*) as TotalPedidos
+        FROM (
+            SELECT local, CodPedido, MAX(MontoFactura) as MontoPedido
+            FROM VentasGlobalesAccessCSV $whereSimple
+            AND local IN (SELECT codigo FROM sucursales WHERE VMTAP = 1)
+            GROUP BY local, CodPedido HAVING MAX(CodCliente) > 0
+        ) t JOIN sucursales s ON t.local = s.codigo GROUP BY s.nombre
+    ";
+    $stmtBP = $conn->prepare($sqlBranchPeriod);
+    $stmtBP->execute($params);
+    $period_bench = $stmtBP->fetchAll(PDO::FETCH_GROUP | PDO::FETCH_UNIQUE | PDO::FETCH_ASSOC);
+
+    $stmtActive = $conn->query("SELECT nombre FROM sucursales WHERE VMTAP = 1");
+    $activeBranches = $stmtActive->fetchAll(PDO::FETCH_COLUMN);
+
+    $branch_stats = [];
+    foreach ($clientes as $r) {
+        $bn = $r['Sucursal'] ?: 'Desconocida';
+        if (!in_array($bn, $activeBranches)) continue;
+        if (!isset($branch_stats[$bn])) {
+            $branch_stats[$bn] = [
+                'monto' => 0, 'count' => 0, 'score' => 0,
+                'segments' => [], 'top_customers' => [],
+                'period_monto' => $period_bench[$bn]['TotalMonto'] ?? 0,
+                'period_pedidos' => $period_bench[$bn]['TotalPedidos'] ?? 0
+            ];
+        }
+        $branch_stats[$bn]['monto'] += $r['Monetary'];
+        $branch_stats[$bn]['count']++;
+        $branch_stats[$bn]['score'] += $r['ScoreTotal'];
+        $branch_stats[$bn]['segments'][$r['Segment']] = ($branch_stats[$bn]['segments'][$r['Segment']] ?? 0) + 1;
+        $branch_stats[$bn]['top_customers'][] = ['name' => $r['ClienteNombre'], 'ltv' => $r['Monetary']];
+    }
+    foreach ($branch_stats as $bn => &$stats) {
+        usort($stats['top_customers'], fn($a, $b) => $b['ltv'] <=> $a['ltv']);
+        $stats['top_5_ltv'] = array_slice($stats['top_customers'], 0, 5);
+        unset($stats['top_customers']);
+    }
+    unset($stats);
+
+    // 3. Hábitos
+    $sqlMedida = "
+        SELECT v.Medida, COUNT(*) as Count FROM VentasGlobalesAccessCSV v
+        JOIN DBBatidos d ON v.CodProducto = d.CodBatido
+        JOIN GrupoProductosVenta g ON d.CodGrupo = g.CodGrupo
+        $joinClubOrders $whereSimpleV AND g.Tipo IN ('Batido', 'Limonada') GROUP BY v.Medida
+    ";
+    $stmtMed = $conn->prepare($sqlMedida);
+    $stmtMed->execute(array_merge($params, $paramsFO));
+    $h_medida = $stmtMed->fetchAll(PDO::FETCH_KEY_PAIR);
+
+    $sqlHabits = "
+        SELECT v.Modalidad,
+               (v.CodigoPromocion IS NOT NULL AND v.CodigoPromocion <> '' AND v.CodigoPromocion <> '5') as EsPromo,
+               COUNT(*) as Count
+        FROM VentasGlobalesAccessCSV v
+        JOIN DBBatidos d ON v.CodProducto = d.CodBatido
+        JOIN GrupoProductosVenta g ON d.CodGrupo = g.CodGrupo
+        $joinClubOrders $whereSimpleV
+        AND g.Tipo IN ('Batido', 'Limonada', 'Bowl', 'Membresia', 'Pitaya Store', 'Waffles')
+        GROUP BY v.Modalidad, EsPromo
+    ";
+    $stmtHab = $conn->prepare($sqlHabits);
+    $stmtHab->execute(array_merge($params, $paramsFO));
+    $habits_raw = $stmtHab->fetchAll(PDO::FETCH_ASSOC);
+
+    $h_modalidad = [];
+    $h_promo = ['si' => 0, 'no' => 0];
+    foreach ($habits_raw as $hr) {
+        $modValue = ($hr['Modalidad'] && trim($hr['Modalidad']) !== '') ? $hr['Modalidad'] : 'General';
+        $h_modalidad[$modValue] = ($h_modalidad[$modValue] ?? 0) + $hr['Count'];
+        if ($hr['EsPromo']) $h_promo['si'] += $hr['Count'];
+        else $h_promo['no'] += $hr['Count'];
+    }
+
+    $sqlHeatmap = "
+        SELECT HOUR(v.Hora) as Hour,
+               CASE WHEN DAYOFWEEK(v.Fecha) = 1 THEN 7 ELSE DAYOFWEEK(v.Fecha) - 1 END as Day,
+               COUNT(DISTINCT CONCAT(v.local, '-', v.CodPedido)) as Count
+        FROM VentasGlobalesAccessCSV v $joinClubOrders $whereSimpleV GROUP BY Hour, Day
+    ";
+    $stmtHeat = $conn->prepare($sqlHeatmap);
+    $stmtHeat->execute(array_merge($params, $paramsFO));
+    $heatmap = $stmtHeat->fetchAll(PDO::FETCH_ASSOC);
+
+    $sqlTopProd = "
+        SELECT v.DBBatidos_Nombre as Product, COUNT(*) as Count
+        FROM VentasGlobalesAccessCSV v
+        JOIN DBBatidos d ON v.CodProducto = d.CodBatido
+        JOIN GrupoProductosVenta g ON d.CodGrupo = g.CodGrupo
+        $joinClubOrders $whereSimpleV
+        AND g.Tipo IN ('Batido', 'Bowl', 'Limonada', 'Pitaya Store', 'Waffles')
+        GROUP BY Product ORDER BY Count DESC LIMIT 10
+    ";
+    $stmtTP = $conn->prepare($sqlTopProd);
+    $stmtTP->execute(array_merge($params, $paramsFO));
+    $top_products = $stmtTP->fetchAll(PDO::FETCH_ASSOC);
+
+    // --- UltimoProducto (movido aquí desde Fase 1) ---
+    $ultimo_producto = [];
+    if (!empty($clientes)) {
+        $ids      = array_column($clientes, 'CodCliente');
+        $inClause = implode(',', array_map('intval', $ids));
+        $sqlLast  = "
+            SELECT v.CodCliente, v.DBBatidos_Nombre
+            FROM VentasGlobalesAccessCSV v
+            INNER JOIN (
+                SELECT CodCliente, MAX(Fecha) as MaxF, MAX(Hora) as MaxH
+                FROM VentasGlobalesAccessCSV
+                WHERE CodCliente IN ($inClause) AND Anulado = 0
+                GROUP BY CodCliente
+            ) t ON v.CodCliente = t.CodCliente AND v.Fecha = t.MaxF AND v.Hora = t.MaxH
+        ";
+        $ultimo_producto = $conn->query($sqlLast)->fetchAll(PDO::FETCH_KEY_PAIR);
+    }
+
+    $retention = calculateRetentionDetail($conn, $whereSimple, $params);
+
+    $debug_output = ob_get_clean();
+
+    echo json_encode([
+        'success'         => true,
+        'debug'           => $debug_output,
+        'evolution'       => $evolution,
+        'branch_analysis' => $branch_stats,
+        'retention'       => $retention,
+        'ultimo_producto' => $ultimo_producto,
+        'habits'          => [
+            'top_products' => $top_products,
+            'heatmap'      => $heatmap,
+            'medida'       => $h_medida,
+            'modalidad'    => $h_modalidad,
+            'promo'        => $h_promo
+        ]
+    ]);
+
+} catch (Throwable $e) {
+    ob_get_clean();
+    echo json_encode(['success' => false, 'message' => $e->getMessage(), 'file' => $e->getFile(), 'line' => $e->getLine()]);
+}
+
+function calculateRetentionDetail($conn, $where, $params)
+{
+    try {
+        $i_f = $params[':f_inicio'];
+        $i_t = $params[':f_fin'];
+        $start = new DateTime($i_f);
+        $end   = new DateTime($i_t);
+        $diff  = $start->diff($end)->days + 1;
+
+        $p_start = clone $start; $p_start->modify("-{$diff} days");
+        $p_end   = clone $start; $p_end->modify("-1 day");
+        $p_inicio = $p_start->format('Y-m-d');
+        $p_fin    = $p_end->format('Y-m-d');
+
+        $whereH1 = str_replace([':f_inicio', ':f_fin', ':suc_local'], [':p_inicio', ':p_fin', ':p_suc_local'], $where);
+
+        $paramsH1 = [];
+        if (isset($params[':suc_local'])) $paramsH1[':p_suc_local'] = $params[':suc_local'];
+        $paramsH1[':p_inicio'] = $p_inicio;
+        $paramsH1[':p_fin']    = $p_fin;
+
+        $stmtH1 = $conn->prepare("SELECT COUNT(DISTINCT CodCliente) FROM VentasGlobalesAccessCSV $whereH1 AND CodCliente > 0");
+        $stmtH1->execute($paramsH1);
+        $h1_count = (int)$stmtH1->fetchColumn();
+        if ($h1_count === 0) return ['rate' => 0, 'h1' => 0, 'h2' => 0];
+
+        $paramsCombined = $params;
+        if (isset($params[':suc_local'])) $paramsCombined[':p_suc_local'] = $params[':suc_local'];
+        $paramsCombined[':p_inicio'] = $p_inicio;
+        $paramsCombined[':p_fin']    = $p_fin;
+
+        $sqlH2 = "
+            SELECT COUNT(DISTINCT CodCliente) FROM VentasGlobalesAccessCSV $where
+            AND CodCliente > 0
+            AND CodCliente IN (SELECT CodCliente FROM VentasGlobalesAccessCSV $whereH1 AND CodCliente > 0)
+        ";
+        $stmtH2 = $conn->prepare($sqlH2);
+        $stmtH2->execute($paramsCombined);
+        $h2_retained = (int)$stmtH2->fetchColumn();
+
+        return ['rate' => round(($h2_retained / $h1_count) * 100, 2), 'h1' => $h1_count, 'h2' => $h2_retained];
+    } catch (Exception $e) {
+        return ['rate' => 0, 'h1' => 0, 'h2' => 0, 'error' => $e->getMessage()];
+    }
+}
+?>

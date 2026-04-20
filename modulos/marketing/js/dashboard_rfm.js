@@ -61,31 +61,91 @@ async function cargarDatos() {
     btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-2"></i>Analizando...');
 
     const params = {
-        fecha_inicio: $('#fecha_inicio').val(),
-        fecha_fin: $('#fecha_fin').val(),
-        sucursal: $('#filtro_sucursal').val(),
+        fecha_inicio:   $('#fecha_inicio').val(),
+        fecha_fin:      $('#fecha_fin').val(),
+        sucursal:       $('#filtro_sucursal').val(),
         umbral_perdido: $('#umbral_perdido').val()
     };
 
     try {
+        // ── FASE 1: KPIs, segmentos, tabla ──────────────────────────────
         const query = $.param(params);
-        const response = await fetch(`ajax/dashboard_rfm_get_datos.php?${query}`);
-        const data = await response.json();
+        const res1  = await fetch(`ajax/dashboard_rfm_get_datos.php?${query}`);
+        const data1 = await res1.json();
 
-        if (data.success) {
-            fullClientData = data.individual || [];
-            filteredData = [...fullClientData];
-            currentPage = 1;
-            updateDashboard(data);
-        } else {
-            Swal.fire('Atención', data.message, 'warning');
+        if (!data1.success) {
+            Swal.fire('Atención', data1.message, 'warning');
+            return;
+        }
+
+        fullClientData = data1.individual || [];
+        filteredData   = [...fullClientData];
+        currentPage    = 1;
+        updateDashboard(data1); // renderiza lo que ya tiene (sin hábitos/evolución)
+
+        // ── FASE 2: Evolución, hábitos, retención ───────────────────────
+        mostrarCargandoFase2(true);
+        const body2 = new FormData();
+        Object.entries(params).forEach(([k, v]) => body2.append(k, v));
+        body2.append('segmentos', JSON.stringify(
+            Object.fromEntries((data1.clientes_fase2 || []).map(c => [c.CodCliente, c.Segment]))
+        ));
+        body2.append('clientes', JSON.stringify(data1.clientes_fase2 || []));
+
+        const res2  = await fetch('ajax/dashboard_rfm_get_datos2.php', { method: 'POST', body: body2 });
+        const data2 = await res2.json();
+
+        if (data2.success) {
+            // Actualizar retencion en KPIs
+            if (data2.retention) {
+                animateValue('kpiRetention', data2.retention.rate, false, '%');
+                $('#tipRetention').attr('title',
+                    `<div class="tooltip-data-row"><span>Cohorte (Previo):</span> <span>${data2.retention.h1}</span></div>` +
+                    `<div class="tooltip-data-row"><span>Retornaron:</span> <span>${data2.retention.h2}</span></div>` +
+                    `<div class="tooltip-formula">Clientes del periodo anterior que volvieron en este periodo.</div>`
+                );
+            }
+            updateEvolutionChart(data2.evolution || []);
+            updateBranchCharts(data2.branch_analysis || {}, data1.summary.ticket_club);
+            if (data2.habits) updateHabitSection(data2.habits);
+
+            // Enriquecer UltimoProducto en tabla si viene
+            if (data2.ultimo_producto) {
+                fullClientData.forEach(c => {
+                    c.UltimoProducto = data2.ultimo_producto[c.CodCliente] || '--';
+                });
+                filteredData = [...fullClientData];
+                renderPaginatedTable();
+            }
         }
     } catch (error) {
         console.error(error);
         Swal.fire('Error', 'No se pudo conectar con el servicio de datos.', 'error');
     } finally {
         btn.prop('disabled', false).html('<i class="fas fa-sync-alt me-2"></i>Actualizar');
+        mostrarCargandoFase2(false);
     }
+}
+
+function mostrarCargandoFase2(show) {
+    const ids = ['chartEvolution', 'chartBranchScores', 'chartBranchDistribution',
+                 'chartBranchTicket', 'chartHeatmap', 'chartHabitMeasure',
+                 'chartHabitModality', 'chartHabitPromo'];
+    ids.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const wrapper = el.closest('.card-body') || el.parentElement;
+        if (show) {
+            if (!wrapper.querySelector('.fase2-loading')) {
+                const overlay = document.createElement('div');
+                overlay.className = 'fase2-loading text-center py-3 text-muted small';
+                overlay.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Cargando análisis secundario...';
+                wrapper.prepend(overlay);
+            }
+        } else {
+            wrapper.querySelectorAll('.fase2-loading').forEach(o => o.remove());
+        }
+    });
 }
 
 function actualizarKPIsLocales() {
@@ -112,11 +172,12 @@ function actualizarKPIsLocales() {
 function updateDashboard(data) {
     updateKPIs(data.summary);
     updateSegmentsChart(data.segments, data.segment_revenue);
-    updateEvolutionChart(data.evolution);
+    if (data.evolution && data.evolution.length) updateEvolutionChart(data.evolution);
     actualizarIndicadoresFiltros();
     applyAllFilters();
-    updateBranchCharts(data.branch_analysis, data.summary.ticket_club);
-    updateHabitSection(data.habits);
+    if (data.branch_analysis && Object.keys(data.branch_analysis).length)
+        updateBranchCharts(data.branch_analysis, data.summary.ticket_club);
+    if (data.habits) updateHabitSection(data.habits);
 }
 function updateKPIs(summary) {
     if (!summary) return;

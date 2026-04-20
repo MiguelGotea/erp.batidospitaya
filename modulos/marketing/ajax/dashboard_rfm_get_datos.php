@@ -314,51 +314,8 @@ try {
     // Filtro para pedidos Club (basado en transacción completa) - OPTIMIZADO con JOIN
     $paramsFO = [':fo_i' => $fecha_inicio, ':fo_f' => $fecha_fin];
 
-    // 4. Evolución de Segmentos (Temporal) - Usamos el histórico real y SemanasSistema
-    $sqlEvol = "
-        SELECT 
-            S.numero_semana as Semana, 
-            V.CodPedido, 
-            MAX(V.CodCliente) as CodCliente
-        FROM VentasGlobalesAccessCSV V
-        JOIN SemanasSistema S ON V.Fecha BETWEEN S.fecha_inicio AND S.fecha_fin
-        INNER JOIN (
-            SELECT DISTINCT local, CodPedido 
-            FROM VentasGlobalesAccessCSV 
-            WHERE CodCliente > 0 AND Fecha BETWEEN :fo_i AND :fo_f AND Anulado = 0
-        ) fo ON V.local = fo.local AND V.CodPedido = fo.CodPedido
-        WHERE V.Anulado = 0 AND V.Fecha BETWEEN :f_inicio AND :f_fin
-    ";
-    if ($sucursal && $sucursal !== 'todas') {
-        $sqlEvol .= " AND V.local = :suc_local";
-    }
-    $sqlEvol .= " GROUP BY S.numero_semana, V.local, V.CodPedido ORDER BY S.fecha_inicio ASC";
-    $stmtEvol = $conn->prepare($sqlEvol);
-    $stmtEvol->execute(array_merge($params, $paramsFO));
-    $evolutionRaw = $stmtEvol->fetchAll(PDO::FETCH_ASSOC);
-
-    // Mapear Clientes a Segmentos para la evolución
+    // Evolución y hábitos se cargan en Fase 2
     $clientSegments = array_column($raw_data, 'Segment', 'CodCliente');
-    $evolutionDetail = [];
-
-    foreach ($evolutionRaw as $row) {
-        $week = 'Sem ' . $row['Semana'];
-        $seg = $clientSegments[$row['CodCliente']] ?? 'Hibernating';
-
-        if (!isset($evolutionDetail[$week])) {
-            $evolutionDetail[$week] = [
-                'Semana' => $week,
-                'Champions' => 0,
-                'Loyal' => 0,
-                'New' => 0,
-                'At Risk' => 0,
-                'Hibernating' => 0,
-                'Lost' => 0
-            ];
-        }
-        $evolutionDetail[$week][$seg]++;
-    }
-    $evolution = array_values($evolutionDetail);
 
     // 5. Análisis por Sucursal y Detalle Individual
     $sqlBranchPeriod = "
@@ -436,152 +393,53 @@ try {
     }
     unset($stats);
 
-    // Obtener Último Producto para los top 1000 de forma eficiente
-    if (!empty($raw_data)) {
-        $slice = array_slice($raw_data, 0, 1000);
-        $ids = array_column($slice, 'CodCliente');
-        $inClause = implode(',', array_map('intval', $ids));
+    // UltimoProducto se carga en Fase 2
 
-        $sqlLast = "
-            SELECT v.CodCliente, v.DBBatidos_Nombre 
-            FROM VentasGlobalesAccessCSV v
-            INNER JOIN (
-                SELECT CodCliente, MAX(Fecha) as MaxF, MAX(Hora) as MaxH
-                FROM VentasGlobalesAccessCSV
-                WHERE CodCliente IN ($inClause) AND Anulado = 0
-                GROUP BY CodCliente
-            ) t ON v.CodCliente = t.CodCliente AND v.Fecha = t.MaxF AND v.Hora = t.MaxH
-        ";
-
-        $last_res = $conn->query($sqlLast)->fetchAll(PDO::FETCH_KEY_PAIR);
-        foreach ($raw_data as &$r) {
-            $r['UltimoProducto'] = $last_res[$r['CodCliente']] ?? '--';
-        }
-    }
-
-    // Versión de whereSimple con prefijos para tablas con alias 'v'
-    $whereSimpleV = str_replace(['Anulado', 'Fecha', ' local '], ['v.Anulado', 'v.Fecha', ' v.local '], $whereSimple);
-
-    // 6. Hábitos Expandidos
-    // OPTIMIZACIÓN: Creamos un JOIN común para filtrar pedidos club eficientemente
-    $joinClubOrders = " INNER JOIN (SELECT DISTINCT local, CodPedido FROM VentasGlobalesAccessCSV WHERE CodCliente > 0 AND Fecha BETWEEN :fo_i AND :fo_f AND Anulado = 0) fo ON v.local = fo.local AND v.CodPedido = fo.CodPedido ";
-
-    // 6.1 Medida (Solo Batido y Limonada)
-    $sqlMedida = "
-        SELECT v.Medida, COUNT(*) as Count
-        FROM VentasGlobalesAccessCSV v
-        JOIN DBBatidos d ON v.CodProducto = d.CodBatido
-        JOIN GrupoProductosVenta g ON d.CodGrupo = g.CodGrupo
-        $joinClubOrders
-        $whereSimpleV
-        AND g.Tipo IN ('Batido', 'Limonada')
-        GROUP BY v.Medida
-    ";
-    $stmtMed = $conn->prepare($sqlMedida);
-    $stmtMed->execute(array_merge($params, $paramsFO));
-    $h_medida = $stmtMed->fetchAll(PDO::FETCH_KEY_PAIR);
-
-    // 6.2 Promo (Varios Tipos) y Modalidad (General)
-    $sqlHabits = "
-        SELECT 
-            v.Modalidad, 
-            (v.CodigoPromocion IS NOT NULL AND v.CodigoPromocion <> '' AND v.CodigoPromocion <> '5') as EsPromo, 
-            COUNT(*) as Count
-        FROM VentasGlobalesAccessCSV v
-        JOIN DBBatidos d ON v.CodProducto = d.CodBatido
-        JOIN GrupoProductosVenta g ON d.CodGrupo = g.CodGrupo
-        $joinClubOrders
-        $whereSimpleV
-        AND g.Tipo IN ('Batido', 'Limonada', 'Bowl', 'Membresia', 'Pitaya Store', 'Waffles')
-        GROUP BY v.Modalidad, EsPromo
-    ";
-    $stmtHab = $conn->prepare($sqlHabits);
-    $stmtHab->execute(array_merge($params, $paramsFO));
-    $habits_raw = $stmtHab->fetchAll(PDO::FETCH_ASSOC);
-
-
-    $h_modalidad = [];
-    $h_promo = ['si' => 0, 'no' => 0];
-    foreach ($habits_raw as $hr) {
-        $modValue = ($hr['Modalidad'] && trim($hr['Modalidad']) !== '') ? $hr['Modalidad'] : 'General';
-        $h_modalidad[$modValue] = ($h_modalidad[$modValue] ?? 0) + $hr['Count'];
-
-        if ($hr['EsPromo'])
-            $h_promo['si'] += $hr['Count'];
-        else
-            $h_promo['no'] += $hr['Count'];
-    }
-
-
-    $sqlHeatmap = "
-        SELECT 
-            HOUR(v.Hora) as Hour, 
-            CASE WHEN DAYOFWEEK(v.Fecha) = 1 THEN 7 ELSE DAYOFWEEK(v.Fecha) - 1 END as Day, 
-            COUNT(DISTINCT CONCAT(v.local, '-', v.CodPedido)) as Count 
-        FROM VentasGlobalesAccessCSV v
-        $joinClubOrders
-        $whereSimpleV
-        GROUP BY Hour, Day
-    ";
-    $stmtHeat = $conn->prepare($sqlHeatmap);
-    $stmtHeat->execute(array_merge($params, $paramsFO));
-    $heatmap = $stmtHeat->fetchAll(PDO::FETCH_ASSOC);
-
-    $sqlTopProd = "
-        SELECT 
-            v.DBBatidos_Nombre as Product, 
-            COUNT(*) as Count 
-        FROM VentasGlobalesAccessCSV v
-        JOIN DBBatidos d ON v.CodProducto = d.CodBatido
-        JOIN GrupoProductosVenta g ON d.CodGrupo = g.CodGrupo
-        $joinClubOrders
-        $whereSimpleV
-        AND g.Tipo IN ('Batido', 'Bowl', 'Limonada', 'Pitaya Store', 'Waffles') 
-        GROUP BY Product 
-        ORDER BY Count DESC 
-        LIMIT 10
-    ";
-    $stmtTP = $conn->prepare($sqlTopProd);
-    $stmtTP->execute(array_merge($params, $paramsFO));
-    $top_products = $stmtTP->fetchAll(PDO::FETCH_ASSOC);
+    // Hábitos cargados en Fase 2
 
     // Capturar cualquier salida sucia (warnings/notices) que haya ocurrido
     $debug_output = ob_get_clean();
 
+    // Preparar lista compacta de clientes para Fase 2
+    $clientesCompactos = array_map(fn($r) => [
+        'CodCliente'    => $r['CodCliente'],
+        'Sucursal'      => $r['Sucursal'],
+        'Monetary'      => $r['Monetary'],
+        'ScoreTotal'    => $r['ScoreTotal'],
+        'Segment'       => $r['Segment'],
+        'ClienteNombre' => $r['ClienteNombre'],
+        'Frequency'     => $r['Frequency']
+    ], $raw_data);
+
     echo json_encode([
         'success' => true,
-        'debug' => $debug_output, // Enviamos el debug DENTRO del JSON
+        'debug'   => $debug_output,
         'summary' => [
-            'total_club' => $total_count,
-            'activos' => $activos,
-            'nuevos' => $nuevos_res['Nuevos'],
-            'prev_nuevos' => $prev_nuevos,
-            'en_riesgo' => $en_riesgo,
-            'perdidos' => $perdidos,
-            'avg_ltv' => round($avg_ltv, 2),
-            'ticket_club' => round($ticket_club, 2),
-            'monto_total' => round($sum_m_period, 2),
-            'churn_rate' => round(($perdidos / max(1, $total_count)) * 100, 2),
-            'retention_metrics' => calculateRetentionDetail($conn, $whereSimple, $params),
-            'participacion' => $participacion,
-            'universo_total' => $universo_count,
+            'total_club'       => $total_count,
+            'activos'          => $activos,
+            'nuevos'           => $nuevos_res['Nuevos'],
+            'prev_nuevos'      => $prev_nuevos,
+            'en_riesgo'        => $en_riesgo,
+            'perdidos'         => $perdidos,
+            'avg_ltv'          => round($avg_ltv, 2),
+            'ticket_club'      => round($ticket_club, 2),
+            'monto_total'      => round($sum_m_period, 2),
+            'churn_rate'       => round(($perdidos / max(1, $total_count)) * 100, 2),
+            'retention_metrics'=> ['rate' => 0, 'h1' => 0, 'h2' => 0], // se actualiza en fase 2
+            'participacion'    => $participacion,
+            'universo_total'   => $universo_count,
             'raw' => [
-                'total_pedidos' => $sum_f_period,
+                'total_pedidos'  => $sum_f_period,
                 'total_ingresos' => $sum_m_period
             ]
         ],
-        'segments' => $segments,
+        'segments'        => $segments,
         'segment_revenue' => $segment_revenue,
-        'evolution' => $evolution,
-        'individual' => array_slice($raw_data, 0, 1000),
+        'evolution'       => [],   // se llena en fase 2
+        'individual'      => array_slice($raw_data, 0, 1000),
         'branch_analysis' => $branch_stats,
-        'habits' => [
-            'top_products' => $top_products,
-            'heatmap' => $heatmap,
-            'medida' => $h_medida,
-            'modalidad' => $h_modalidad,
-            'promo' => $h_promo
-        ]
+        'habits'          => null, // se llena en fase 2
+        'clientes_fase2'  => $clientesCompactos // mapa compacto para fase 2
     ]);
 
 } catch (Throwable $e) {
@@ -589,76 +447,5 @@ try {
     echo json_encode(['success' => false, 'message' => $e->getMessage(), 'file' => $e->getFile(), 'line' => $e->getLine()]);
 }
 
-function calculateRetentionDetail($conn, $where, $params)
-{
-    try {
-        // 1. Obtener los límites de tiempo del periodo filtrado
-        $i_f = $params[':f_inicio'];
-        $i_t = $params[':f_fin'];
-
-        $start = new DateTime($i_f);
-        $end = new DateTime($i_t);
-        // Diferencia en días para calcular el periodo anterior equivalente
-        $diff = $start->diff($end)->days + 1;
-
-        $p_start = clone $start;
-        $p_start->modify("-{$diff} days");
-        $p_end = clone $start;
-        $p_end->modify("-1 day");
-
-        $p_inicio = $p_start->format('Y-m-d');
-        $p_fin = $p_end->format('Y-m-d');
-
-        // 2. Definir filtros para el Periodo Anterior (H1 y Subquery de H2)
-        // Usamos prefijos diferentes para los parámetros para evitar colisiones si se usan en el mismo query
-        $whereH1 = str_replace([':f_inicio', ':f_fin', ':suc_local'], [':p_inicio', ':p_fin', ':p_suc_local'], $where);
-
-        $paramsH1 = [];
-        if (isset($params[':suc_local']))
-            $paramsH1[':p_suc_local'] = $params[':suc_local'];
-        $paramsH1[':p_inicio'] = $p_inicio;
-        $paramsH1[':p_fin'] = $p_fin;
-
-        // Conteo H1
-        $sqlH1 = "SELECT COUNT(DISTINCT CodCliente) FROM VentasGlobalesAccessCSV $whereH1 AND CodCliente > 0";
-        $stmtH1 = $conn->prepare($sqlH1);
-        $stmtH1->execute($paramsH1);
-        $h1_count = (int) $stmtH1->fetchColumn();
-
-        if ($h1_count === 0)
-            return ['rate' => 0, 'h1' => 0, 'h2' => 0];
-
-        // 3. Contar cuántos de ese cohort (H1) compraron en el periodo actual (H2)
-        // Combinamos parámetros del periodo actual (:f_...) y del anterior (:p_...)
-        $paramsCombined = $params;
-        if (isset($params[':suc_local']))
-            $paramsCombined[':p_suc_local'] = $params[':suc_local'];
-        $paramsCombined[':p_inicio'] = $p_inicio;
-        $paramsCombined[':p_fin'] = $p_fin;
-
-        $sqlH2 = "
-            SELECT COUNT(DISTINCT CodCliente)
-            FROM VentasGlobalesAccessCSV
-            $where
-            AND CodCliente > 0
-            AND CodCliente IN (
-                SELECT CodCliente 
-                FROM VentasGlobalesAccessCSV 
-                $whereH1 AND CodCliente > 0
-            )
-        ";
-
-        $stmtH2 = $conn->prepare($sqlH2);
-        $stmtH2->execute($paramsCombined);
-        $h2_retained = (int) $stmtH2->fetchColumn();
-
-        return [
-            'rate' => round(($h2_retained / $h1_count) * 100, 2),
-            'h1' => $h1_count,
-            'h2' => $h2_retained
-        ];
-    } catch (Exception $e) {
-        return ['rate' => 0, 'h1' => 0, 'h2' => 0, 'error' => $e->getMessage()];
-    }
-}
+// calculateRetentionDetail movido a dashboard_rfm_get_datos2.php
 ?>
