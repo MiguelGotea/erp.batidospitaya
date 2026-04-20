@@ -78,7 +78,7 @@ if ($mesSeleccionado && !empty($diasSeleccionados)) {
         $cliente['nombre'] = normalizarNombre($cliente['nombre']);
 
         // Validar celular (8 dígitos, sin espacios ni caracteres especiales)
-        $celular = preg_replace('/[^0-9]/', '', $cliente['celular']);
+        $celular = preg_replace('/[^0-9]/', '', (string)($cliente['celular'] ?? ''));
         if (strlen($celular) === 8) {
             $cliente['celular'] = $celular;
             $clientes[] = $cliente;
@@ -407,11 +407,11 @@ if ($mesSeleccionado && !empty($diasSeleccionados)) {
                                     <tbody>
                                         <?php foreach ($clientesInvalidos as $cliente): ?>
                                             <tr>
-                                                <td><?= htmlspecialchars($cliente['membresia']) ?></td>
-                                                <td><?= htmlspecialchars($cliente['nombre']) ?></td>
-                                                <td><?= htmlspecialchars($cliente['apellido']) ?></td>
-                                                <td><?= htmlspecialchars($cliente['celular']) ?></td>
-                                                <td><?= htmlspecialchars($cliente['nombre_sucursal']) ?></td>
+                                                <td><?= htmlspecialchars((string)($cliente['membresia'] ?? '')) ?></td>
+                                                <td><?= htmlspecialchars((string)($cliente['nombre'] ?? '')) ?></td>
+                                                <td><?= htmlspecialchars((string)($cliente['apellido'] ?? '')) ?></td>
+                                                <td><?= htmlspecialchars((string)($cliente['celular'] ?? '')) ?></td>
+                                                <td><?= htmlspecialchars((string)($cliente['nombre_sucursal'] ?? '')) ?></td>
                                                 <td><?= formatoFecha($cliente['fecha_nacimiento']) ?></td>
                                                 <td><?= formatoFecha($cliente['fecha_registro']) ?></td>
                                             </tr>
