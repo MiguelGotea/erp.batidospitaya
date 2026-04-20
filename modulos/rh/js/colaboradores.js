@@ -298,7 +298,54 @@ function crearPanelFiltro(th, columna, tipo, icon) {
     } else if (tipo === 'daterange') {
         crearCalendarioDoble(panel, columna);
         posicionarPanelFiltro(panel, icon);
+    } else if (tipo === 'numrange') {
+        crearPanelNumRange(panel, columna);
+        posicionarPanelFiltro(panel, icon);
     }
+}
+
+// Crear panel de filtro numérico por rango (ej: porcentaje)
+function crearPanelNumRange(panel, columna) {
+    const desdeVal = filtrosActivos[columna]?.desde ?? '';
+    const hastaVal = filtrosActivos[columna]?.hasta ?? '';
+
+    panel.append(`
+        <div class="filter-section" style="margin-top: 12px;">
+            <span class="filter-section-title">Rango (%):</span>
+            <div style="display: flex; align-items: center; gap: 6px; margin-top: 6px;">
+                <input type="number" id="numrange-desde" class="filter-search" 
+                       placeholder="Desde" min="0" max="100" step="1"
+                       value="${desdeVal}"
+                       style="width: 80px;"
+                       oninput="aplicarFiltroNumRange('${columna}')">
+                <span style="color:#888;">–</span>
+                <input type="number" id="numrange-hasta" class="filter-search" 
+                       placeholder="Hasta" min="0" max="100" step="1"
+                       value="${hastaVal}"
+                       style="width: 80px;"
+                       oninput="aplicarFiltroNumRange('${columna}')">
+                <span style="color:#888; font-size:12px;">%</span>
+            </div>
+        </div>
+    `);
+}
+
+// Aplicar filtro de rango numérico
+function aplicarFiltroNumRange(columna) {
+    const desdeRaw = $('#numrange-desde').val();
+    const hastaRaw = $('#numrange-hasta').val();
+
+    const desde = desdeRaw !== '' ? parseFloat(desdeRaw) : null;
+    const hasta = hastaRaw !== '' ? parseFloat(hastaRaw) : null;
+
+    if (desde === null && hasta === null) {
+        delete filtrosActivos[columna];
+    } else {
+        filtrosActivos[columna] = { desde, hasta };
+    }
+
+    paginaActual = 1;
+    cargarDatos();
 }
 
 // Crear calendario para rango de fechas

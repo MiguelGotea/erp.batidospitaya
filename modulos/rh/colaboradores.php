@@ -108,8 +108,9 @@ if (!tienePermiso('gestion_colaboradores', 'vista', $cargoOperario)) {
                                     Tiempo Trabajado
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
-                                <th data-column="porcentaje_llenado" style="width: 100px; text-align: center;">
+                                <th data-column="porcentaje_llenado" data-type="numrange" style="width: 100px; text-align: center;">
                                     % de avance
+                                    <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
                                 <th style="width: 120px; text-align: center;">
                                     Documentos completos

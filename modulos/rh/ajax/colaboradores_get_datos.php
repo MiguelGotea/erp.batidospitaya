@@ -482,6 +482,27 @@ try {
         }
     }
 
+    // Filtrar por porcentaje_llenado (post-proceso, porque se calcula en PHP)
+    if (isset($filtros['porcentaje_llenado']) && is_array($filtros['porcentaje_llenado'])) {
+        $porcDesde = isset($filtros['porcentaje_llenado']['desde']) && $filtros['porcentaje_llenado']['desde'] !== null
+            ? (float) $filtros['porcentaje_llenado']['desde'] : null;
+        $porcHasta = isset($filtros['porcentaje_llenado']['hasta']) && $filtros['porcentaje_llenado']['hasta'] !== null
+            ? (float) $filtros['porcentaje_llenado']['hasta'] : null;
+
+        $datos = array_values(array_filter($datos, function ($row) use ($porcDesde, $porcHasta) {
+            $p = (float) ($row['porcentaje_llenado'] ?? 0);
+            if ($porcDesde !== null && $p < $porcDesde) return false;
+            if ($porcHasta !== null && $p > $porcHasta) return false;
+            return true;
+        }));
+
+        // Ajustar total_registros al subconjunto filtrado
+        $totalRegistros = count($datos);
+
+        // Aplicar paginacion manual al subconjunto
+        $datos = array_slice($datos, $offset, $registros_por_pagina);
+    }
+
     echo json_encode([
         'success' => true,
         'datos' => $datos,
