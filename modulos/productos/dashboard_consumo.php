@@ -149,6 +149,35 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
 
                         <!-- KPI Cards (controladas por el selector) -->
                         <div class="dc-insumo-panel-body">
+
+                            <!-- ═══════════════════════════════════════════════ -->
+                            <!-- PANEL DE ALERTAS DE SOBRECONSUMO               -->
+                            <!-- ═══════════════════════════════════════════════ -->
+                            <div id="panelAlertas" class="dc-alertas-panel mb-3" style="display:none">
+                                <div class="dc-alertas-header" id="alertasHeader">
+                                    <div class="dc-alertas-header-left">
+                                        <span class="dc-alertas-icon"><i class="fas fa-exclamation-triangle"></i></span>
+                                        <span class="dc-alertas-titulo">Sobreconsumo Detectado</span>
+                                        <span class="dc-alertas-badge" id="alertasBadge">0</span>
+                                        <span class="dc-alertas-hint" id="alertasHint"></span>
+                                    </div>
+                                    <div class="dc-alertas-header-right">
+                                        <span class="dc-alertas-sigma-label">Umbral σ:</span>
+                                        <div class="dc-sigma-btns">
+                                            <button class="dc-sigma-btn" data-k="1"   title="Más sensible: detecta desviaciones leves">1σ</button>
+                                            <button class="dc-sigma-btn active" data-k="1.5" title="Balance entre sensibilidad y precisión">1.5σ</button>
+                                            <button class="dc-sigma-btn" data-k="2"   title="Solo spikes severos">2σ</button>
+                                        </div>
+                                        <button class="dc-alertas-toggle" id="alertasToggle" title="Expandir / Contraer">
+                                            <i class="fas fa-chevron-down"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="dc-alertas-body" id="alertasBody">
+                                    <div id="alertasContenido"></div>
+                                </div>
+                            </div>
+
                             <div class="row g-3 mb-3" id="kpiRow">
                                 <div class="col-6 col-lg-4">
                                     <div class="dc-kpi-card" id="kpiTotal">

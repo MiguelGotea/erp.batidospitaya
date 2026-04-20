@@ -755,3 +755,198 @@ body {
     .dc-tabs       { flex-wrap: wrap; }
     .dc-tab-btn    { font-size: .75rem; padding: 7px 13px; }
 }
+
+/* ══════════════════════════════════════════════
+   Panel de Alertas de Sobreconsumo
+   ══════════════════════════════════════════════ */
+
+.dc-alertas-panel {
+    border-radius: var(--neu-radius-sm);
+    overflow:      hidden;
+    background:    var(--neu-bg);
+    border-left:   4px solid #e74c3c;
+    animation:     fadeInDown .3s ease;
+    box-shadow:
+        var(--neu-distance) var(--neu-distance) var(--neu-blur) var(--neu-shadow-dark),
+        calc(-1 * var(--neu-distance)) calc(-1 * var(--neu-distance)) var(--neu-blur) var(--neu-shadow-light);
+}
+
+.dc-alertas-header {
+    display:         flex;
+    align-items:     center;
+    justify-content: space-between;
+    flex-wrap:       wrap;
+    gap:             10px;
+    padding:         11px 18px;
+    background:      linear-gradient(135deg, #c0392b 0%, #e74c3c 100%);
+    cursor:          pointer;
+    user-select:     none;
+    transition:      filter .15s;
+}
+.dc-alertas-header:hover { filter: brightness(1.07); }
+
+.dc-alertas-header-left {
+    display:     flex;
+    align-items: center;
+    gap:         8px;
+    flex-wrap:   wrap;
+}
+
+.dc-alertas-icon {
+    font-size: 1rem;
+    color:     #fff;
+    animation: pulse-alert 2s infinite;
+}
+@keyframes pulse-alert {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: .5; }
+}
+
+.dc-alertas-titulo {
+    font-size:      .82rem;
+    font-weight:    700;
+    color:          #fff;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    white-space:    nowrap;
+}
+
+.dc-alertas-badge {
+    background:    #fff;
+    color:         #c0392b;
+    border-radius: 50px;
+    font-size:     .7rem;
+    font-weight:   800;
+    padding:       1px 9px;
+    min-width:     26px;
+    text-align:    center;
+}
+
+.dc-alertas-hint {
+    font-size:  .72rem;
+    color:      rgba(255,255,255,.72);
+    font-style: italic;
+}
+
+.dc-alertas-header-right {
+    display:     flex;
+    align-items: center;
+    gap:         8px;
+}
+
+.dc-alertas-sigma-label {
+    font-size:   .72rem;
+    color:       rgba(255,255,255,.8);
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.dc-sigma-btns { display: flex; gap: 3px; }
+
+.dc-sigma-btn {
+    font-size:     .72rem;
+    font-weight:   700;
+    padding:       3px 10px;
+    border:        1.5px solid rgba(255,255,255,.5);
+    border-radius: 50px;
+    background:    transparent;
+    color:         rgba(255,255,255,.85);
+    cursor:        pointer;
+    transition:    background .15s, color .15s, border-color .15s;
+    white-space:   nowrap;
+}
+.dc-sigma-btn:hover   { background: rgba(255,255,255,.18); border-color: #fff; }
+.dc-sigma-btn.active  { background: #fff; color: #c0392b; border-color: #fff; }
+
+.dc-alertas-toggle {
+    background:      rgba(255,255,255,.15);
+    border:          none;
+    border-radius:   50%;
+    width:           28px;
+    height:          28px;
+    display:         flex;
+    align-items:     center;
+    justify-content: center;
+    color:           #fff;
+    cursor:          pointer;
+    font-size:       .8rem;
+    transition:      background .15s, transform .28s ease;
+    flex-shrink:     0;
+}
+.dc-alertas-toggle:hover       { background: rgba(255,255,255,.28); }
+.dc-alertas-toggle.rotated     { transform: rotate(-90deg); }
+
+.dc-alertas-body {
+    overflow:   hidden;
+    transition: max-height .32s ease;
+    max-height: 600px;
+}
+.dc-alertas-body.collapsed { max-height: 0; }
+
+/* Tabla interna */
+.dc-alertas-tabla {
+    width:           100%;
+    border-collapse: collapse;
+    font-size:       .78rem;
+}
+.dc-alertas-tabla thead th {
+    background:     rgba(231,76,60,.07);
+    color:          #c0392b;
+    font-size:      .7rem;
+    font-weight:    700;
+    text-transform: uppercase;
+    letter-spacing: .4px;
+    padding:        7px 14px;
+    border-bottom:  2px solid rgba(231,76,60,.15);
+    white-space:    nowrap;
+}
+.dc-alertas-tabla tbody td {
+    padding:        7px 14px;
+    border-bottom:  1px solid rgba(231,76,60,.08);
+    vertical-align: middle;
+    color:          var(--text-primary);
+}
+.dc-alertas-tabla tbody tr:last-child td { border-bottom: none; }
+.dc-alertas-tabla tbody tr:hover { background: rgba(231,76,60,.04); }
+
+/* Badge Z-score por severidad */
+.dc-alerta-zscore {
+    display:       inline-block;
+    font-size:     .7rem;
+    font-weight:   800;
+    border-radius: 6px;
+    padding:       2px 7px;
+    white-space:   nowrap;
+}
+.dc-alerta-zscore.z-critico  { background: #fde8e8; color: #c0392b; }
+.dc-alerta-zscore.z-alto     { background: #fdf0e0; color: #d35400; }
+.dc-alerta-zscore.z-moderado { background: #fefae0; color: #b7950b; }
+
+/* Pill de insumo clickeable */
+.dc-alerta-insumo-pill {
+    display:       inline-block;
+    background:    rgba(14,84,76,.1);
+    color:         var(--neu-accent-dark);
+    border-radius: 6px;
+    font-size:     .7rem;
+    font-weight:   700;
+    padding:       1px 7px;
+    max-width:     170px;
+    overflow:      hidden;
+    text-overflow: ellipsis;
+    white-space:   nowrap;
+    cursor:        pointer;
+    transition:    background .15s;
+    vertical-align: middle;
+}
+.dc-alerta-insumo-pill:hover { background: rgba(14,84,76,.2); }
+
+/* Sin alertas */
+.dc-alertas-vacio {
+    text-align:  center;
+    padding:     16px;
+    color:       #27ae60;
+    font-size:   .82rem;
+    font-weight: 600;
+}
+.dc-alertas-vacio i { margin-right: 6px; }

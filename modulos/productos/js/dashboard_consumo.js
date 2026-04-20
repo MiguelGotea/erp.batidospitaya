@@ -90,6 +90,22 @@ function bindEventos() {
     $('#heatmapInsumoSel').on('change', function () {
         if (datosActuales) renderHeatmap(datosActuales, $(this).val());
     });
+
+    // Panel alertas: toggle cuerpo (evitar propagar si click en sigma btns)
+    $(document).on('click', '#alertasHeader', function (e) {
+        if ($(e.target).closest('.dc-sigma-btns, .dc-sigma-btn').length) return;
+        $('#alertasBody').toggleClass('collapsed');
+        $('#alertasToggle').toggleClass('rotated');
+    });
+
+    // Botones sigma: recalcular alertas en tiempo real
+    $(document).on('click', '.dc-sigma-btn', function (e) {
+        e.stopPropagation();
+        kSigmaActual = parseFloat($(this).data('k'));
+        $('.dc-sigma-btn').removeClass('active');
+        $(this).addClass('active');
+        if (datosActuales) renderPanelAlertas(datosActuales, kSigmaActual);
+    });
 }
 
 /* ════════════════════════════════════════════════════════════
@@ -220,6 +236,7 @@ function mostrarEstado(estado) {
    RENDER COMPLETO DEL DASHBOARD
    ════════════════════════════════════════════════════════════ */
 function renderDashboard(data) {
+    renderPanelAlertas(data, kSigmaActual);  // alertas de sobreconsumo (primero)
     renderKPIs(data, null);      // placeholder hasta que se elija insumo
     renderInsumoSel(data);       // poblar selector del panel de análisis
     renderTablaHistorial(data);
@@ -284,6 +301,7 @@ const SUCURSAL_COLORS = [
 
 /* ── Vista del gráfico: 'total' | 'por_sucursal' ─────────── */
 let modoVistaSuc = 'total';
+let kSigmaActual  = 1.5;   // Factor σ activo para alertas de sobreconsumo
 
 /* ── Gráfico de Tendencia ─────────────────────────────────── */
 function renderGrafico(data) {
@@ -428,6 +446,46 @@ function renderGrafico(data) {
         ];
     }
 
+    // ── Proyección 3 semanas (siempre en base al total del período) ────────────────
+    const ultimaSem        = semanasNros[semanasNros.length - 1];
+    const labelsExtended   = [
+        ...labels,
+        `Proy. ${ultimaSem + 1}`,
+        `Proy. ${ultimaSem + 2}`,
+        `Proy. ${ultimaSem + 3}`,
+    ];
+    const nSems = semanasNros.length;
+
+    // Pad todos los datasets históricos con null para las 3 semanas proyectadas
+    datasets.forEach(ds => {
+        if (!Array.isArray(ds.data)) return;
+        ds.data = [...ds.data, null, null, null];
+        if (Array.isArray(ds.pointRadius)) {
+            ds.pointRadius = [...ds.pointRadius, 0, 0, 0];
+        }
+    });
+
+    // Dataset de proyección: ámbar punteado, triángulos sólo en las 3 semanas futuras
+    const promTotal = item.prom_semana || 0;
+    datasets.push({
+        label:               `Proy. próx. 3 sem (${formatNum(promTotal)} ${escHtml(item.unidad)}/sem)`,
+        data:                [...Array(nSems).fill(null), round2(promTotal), round2(promTotal), round2(promTotal)],
+        borderColor:         '#f39c12',
+        backgroundColor:     'rgba(243,156,18,.12)',
+        borderWidth:         2.5,
+        borderDash:          [6, 4],
+        pointRadius:         [...Array(nSems).fill(0), 6, 6, 6],
+        pointStyle:          'triangle',
+        pointBackgroundColor: '#f39c12',
+        pointBorderColor:    '#fff',
+        pointBorderWidth:    1.5,
+        fill:                false,
+        tension:             0,
+        type:                'line',
+        spanGaps:            false,
+        order:               0,
+    });
+
     if (chartTendencia) { chartTendencia.destroy(); chartTendencia = null; }
 
     const ctx = document.getElementById('chartTendencia').getContext('2d');
@@ -439,7 +497,7 @@ function renderGrafico(data) {
 
     chartTendencia = new Chart(ctx, {
         type: modoChart,
-        data: { labels, datasets },
+        data: { labels: labelsExtended, datasets },
         options: {
             responsive: true,
             maintainAspectRatio: false,
@@ -462,6 +520,10 @@ function renderGrafico(data) {
                         label: ctx => {
                             // Ocultar promedio del body si hay muchas series
                             if (ctx.dataset.label && ctx.dataset.label.startsWith('Prom.')) return null;
+                            // Etiqueta de proyección con ícono de avance
+                            if (ctx.dataset.label && ctx.dataset.label.startsWith('Proy.')) {
+                                return `⏩ ${ctx.dataset.label}: ${formatNum(ctx.parsed.y)} ${escHtml(item.unidad)}`;
+                            }
                             return `${ctx.dataset.label}: ${formatNum(ctx.parsed.y)} ${escHtml(item.unidad)}`;
                         },
                         // En modo barra apilada: footer muestra el TOTAL de la semana
@@ -1006,6 +1068,149 @@ function exportarCSV() {
         Swal.fire({ icon: 'error', title: 'Error al exportar', text: 'No se pudo generar el CSV.', confirmButtonColor: '#0E544C' });
     });
 }
+
+/* ════════════════════════════════════════════════════════════
+   ALERTAS DE SOBRECONSUMO
+   ════════════════════════════════════════════════════════════ */
+
+/**
+ * Por cada sucursal × insumo calcula la serie semanal de esa sucursal
+ * y alerta si alguna semana supera μ_suc + kSigma × σ_suc.
+ * Cada local se compara contra SÍ MISMO (no contra otros locales).
+ */
+function calcularAlertasSobreconsumo(data, kSigma) {
+    const alertas     = [];
+    const nombres     = data.sucursales_nombres || {};
+    const semanasNros = data.semanas.map(s => s.numero_semana);
+
+    data.consumo.forEach(item => {
+        data.sucursales.forEach(suc => {
+            // Serie semanal completa de ESTA sucursal para ESTE insumo
+            const serieCompleta = semanasNros.map(n =>
+                item.desglose_semxsuc[n]?.[suc] || 0
+            );
+            // Usar solo semanas con venta para calcular μ y σ
+            const serieConValor = serieCompleta.filter(v => v > 0);
+            if (serieConValor.length < 2) return; // mínimo 2 semanas
+
+            const mu = serieConValor.reduce((a, b) => a + b, 0) / serieConValor.length;
+            const sigma = Math.sqrt(
+                serieConValor.map(v => (v - mu) ** 2).reduce((a, b) => a + b, 0) / serieConValor.length
+            );
+            if (sigma < 0.001) return; // patrón plano → sin anomalía
+
+            const umbral = mu + kSigma * sigma;
+
+            semanasNros.forEach((n, idx) => {
+                const v = serieCompleta[idx];
+                if (v > umbral) {
+                    alertas.push({
+                        insumo:    item.nombre,
+                        unidad:    item.unidad,
+                        local:     nombres[suc] || suc,
+                        semana:    n,
+                        consumo:   v,
+                        mu, sigma, umbral,
+                        zScore:    (v - mu) / sigma,
+                        pctExceso: Math.round((v - mu) / mu * 100),
+                        idInsumo:  item.id,
+                    });
+                }
+            });
+        });
+    });
+
+    return alertas.sort((a, b) => b.zScore - a.zScore);
+}
+
+/**
+ * Renderiza el panel colapsable de alertas encima de los KPIs.
+ * Si no hay datos suficientes oculta el panel.
+ */
+function renderPanelAlertas(data, kSigma) {
+    const $panel = $('#panelAlertas');
+
+    if (!data || !data.sucursales || data.sucursales.length < 1) {
+        $panel.hide();
+        return;
+    }
+
+    const alertas = calcularAlertasSobreconsumo(data, kSigma);
+    $panel.show();
+
+    if (alertas.length === 0) {
+        $('#alertasBadge').text('0').css({ background: '#27ae60', color: '#fff' });
+        $('#alertasHint').text('sin spikes detectados');
+        // Cambiar cabecera a verde si no hay alertas
+        $('.dc-alertas-header').css('background', 'linear-gradient(135deg,#1a7a41 0%,#27ae60 100%)');
+        $('.dc-alertas-panel').css('border-left-color', '#27ae60');
+        $('#alertasContenido').html(
+            `<div class="dc-alertas-vacio"><i class="fas fa-check-circle"></i>Todos los locales operan dentro del rango normal con umbral ${kSigma}σ</div>`
+        );
+        return;
+    }
+
+    // Restaurar colores de alerta rojo
+    $('.dc-alertas-header').css('background', 'linear-gradient(135deg,#c0392b 0%,#e74c3c 100%)');
+    $('.dc-alertas-panel').css('border-left-color', '#e74c3c');
+    $('#alertasBadge').text(alertas.length).css({ background: '#fff', color: '#c0392b' });
+    $('#alertasHint').text(`umbral: μ_local + ${kSigma}σ_local`);
+
+    let filas = '';
+    alertas.forEach(a => {
+        const zCls = a.zScore >= 2.5 ? 'z-critico' : a.zScore >= 2 ? 'z-alto' : 'z-moderado';
+        filas += `
+        <tr>
+            <td><span class="dc-semana-badge">Sem ${a.semana}</span></td>
+            <td style="font-weight:600;font-size:.78rem">${escHtml(a.local)}</td>
+            <td>
+                <span class="dc-alerta-insumo-pill"
+                    onclick="seleccionarInsumoDesdeAlerta(${a.idInsumo})"
+                    title="Ver tendencia de ${escHtml(a.insumo)}">
+                    ${escHtml(a.insumo)}
+                </span>
+            </td>
+            <td class="text-end fw-bold" style="color:#c0392b">
+                ${formatNum(a.consumo)} ${escHtml(a.unidad)}
+            </td>
+            <td class="text-end" style="color:#888;font-size:.72rem">
+                μ ${formatNum(round2(a.mu))} &nbsp;σ ${formatNum(round2(a.sigma))}
+            </td>
+            <td class="text-end">
+                <span class="dc-alerta-zscore ${zCls}">+${a.zScore.toFixed(2)}σ</span>
+            </td>
+            <td class="text-end" style="color:#c0392b;font-weight:700;font-size:.78rem">
+                +${a.pctExceso}%
+            </td>
+        </tr>`;
+    });
+
+    $('#alertasContenido').html(`
+        <table class="dc-alertas-tabla">
+            <thead>
+                <tr>
+                    <th>Semana</th>
+                    <th>Local</th>
+                    <th>Insumo</th>
+                    <th class="text-end">Consumo Real</th>
+                    <th class="text-end">Referencia (μ / σ)</th>
+                    <th class="text-end">Z-Score</th>
+                    <th class="text-end">% Exceso</th>
+                </tr>
+            </thead>
+            <tbody>${filas}</tbody>
+        </table>
+    `);
+}
+
+/**
+ * Selecciona un insumo desde el panel de alertas → activa el gráfico de tendencia.
+ */
+window.seleccionarInsumoDesdeAlerta = function (idInsumo) {
+    $('#chartInsumoSel').val(idInsumo).trigger('change');
+    const el = document.getElementById('cardTendencia');
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+};
 
 /* ════════════════════════════════════════════════════════════
    UTILIDADES
