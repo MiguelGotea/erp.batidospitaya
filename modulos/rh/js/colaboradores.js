@@ -312,17 +312,17 @@ function crearPanelNumRange(panel, columna) {
     panel.append(`
         <div class="filter-section" style="margin-top: 12px;">
             <span class="filter-section-title">Rango (%):</span>
-            <div style="display: flex; align-items: center; gap: 6px; margin-top: 6px;">
+            <div style="display: flex; align-items: center; gap: 6px; margin-top: 6px; width: 100%;">
                 <input type="number" id="numrange-desde" class="filter-search" 
                        placeholder="Desde" min="0" max="100" step="1"
                        value="${desdeVal}"
-                       style="width: 80px;"
+                       style="flex: 1; min-width: 0;"
                        oninput="aplicarFiltroNumRange('${columna}')">
-                <span style="color:#888;">–</span>
+                <span style="color:#888; flex-shrink:0;">–</span>
                 <input type="number" id="numrange-hasta" class="filter-search" 
                        placeholder="Hasta" min="0" max="100" step="1"
                        value="${hastaVal}"
-                       style="width: 80px;"
+                       style="flex: 1; min-width: 0;"
                        oninput="aplicarFiltroNumRange('${columna}')">
             </div>
         </div>
