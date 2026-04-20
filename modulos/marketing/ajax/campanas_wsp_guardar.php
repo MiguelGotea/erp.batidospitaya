@@ -76,11 +76,30 @@ try {
     ]);
     $campanaId = (int) $conn->lastInsertId();
 
-    // ── Insertar destinatarios ──
+    // ── Insertar destinatarios con hora aleatoria dentro del día ──
+    // Ventana horaria: 08:00 a 21:00 (hora Managua) = 46800 segundos de margen
     $stmtDest = $conn->prepare("
-        INSERT INTO wsp_destinatarios_ (campana_id, id_cliente, nombre, telefono, sucursal)
-        VALUES (:campana_id, :id_cliente, :nombre, :telefono, :sucursal)
+        INSERT INTO wsp_destinatarios_ (campana_id, id_cliente, nombre, telefono, sucursal, hora_envio_programada)
+        VALUES (:campana_id, :id_cliente, :nombre, :telefono, :sucursal, :hora_prog)
     ");
+
+    // Calcular base del día de envío en timestamp
+    $fechaBase = new DateTime($fechaEnvio, new DateTimeZone('America/Managua'));
+    // Inicio de ventana: el mismo día a las 08:00
+    $inicioDia = clone $fechaBase;
+    $inicioDia->setTime(8, 0, 0);
+    // Si la fecha programada es posterior a las 08:00, usar la hora programada como inicio
+    if ($fechaBase > $inicioDia) {
+        $inicioDia = clone $fechaBase;
+    }
+    // Fin de ventana: ese mismo día a las 21:00
+    $finDia = clone $fechaBase;
+    $finDia->setTime(21, 0, 0);
+    // Si el inicio ya supera las 21:00, extender el fin al día siguiente a las 21:00
+    if ($inicioDia >= $finDia) {
+        $finDia->modify('+1 day');
+    }
+    $ventanaSeg = $finDia->getTimestamp() - $inicioDia->getTimestamp();
 
     foreach ($destinatarios as $dest) {
         $idCliente = (int) ($dest['id'] ?? 0);
@@ -91,12 +110,19 @@ try {
         if (!$idCliente || !$telefono)
             continue;
 
+        // Hora aleatoria dentro de la ventana del día
+        $offsetSeg = random_int(0, max(0, $ventanaSeg - 1));
+        $horaIndividual = clone $inicioDia;
+        $horaIndividual->modify("+{$offsetSeg} seconds");
+        $horaProgStr = $horaIndividual->format('Y-m-d H:i:s');
+
         $stmtDest->execute([
             ':campana_id' => $campanaId,
             ':id_cliente' => $idCliente,
-            ':nombre' => $nom,
-            ':telefono' => $telefono,
-            ':sucursal' => $sucursal
+            ':nombre'     => $nom,
+            ':telefono'   => $telefono,
+            ':sucursal'   => $sucursal,
+            ':hora_prog'  => $horaProgStr
         ]);
     }
 
