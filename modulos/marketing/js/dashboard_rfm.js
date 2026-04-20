@@ -83,41 +83,57 @@ async function cargarDatos() {
         currentPage    = 1;
         updateDashboard(data1); // renderiza lo que ya tiene (sin hábitos/evolución)
 
-        // ── FASE 2: Evolución, hábitos, retención ───────────────────────
+        // ── FASE 2: 3 llamadas paralelas ─────────────────────────────────────
         mostrarCargandoFase2(true);
-        const body2 = new FormData();
-        Object.entries(params).forEach(([k, v]) => body2.append(k, v));
-        body2.append('segmentos', JSON.stringify(
-            Object.fromEntries((data1.clientes_fase2 || []).map(c => [c.CodCliente, c.Segment]))
-        ));
-        body2.append('clientes', JSON.stringify(data1.clientes_fase2 || []));
 
-        const res2  = await fetch('ajax/dashboard_rfm_get_datos2.php', { method: 'POST', body: body2 });
-        const data2 = await res2.json();
+        const buildForm = (seccion) => {
+            const f = new FormData();
+            Object.entries(params).forEach(([k, v]) => f.append(k, v));
+            f.append('seccion',   seccion);
+            f.append('segmentos', JSON.stringify(
+                Object.fromEntries((data1.clientes_fase2 || []).map(c => [c.CodCliente, c.Segment]))
+            ));
+            f.append('clientes',  JSON.stringify(data1.clientes_fase2 || []));
+            return f;
+        };
 
-        if (data2.success) {
-            // Actualizar retencion en KPIs
-            if (data2.retention) {
-                animateValue('kpiRetention', data2.retention.rate, false, '%');
-                $('#tipRetention').attr('title',
-                    `<div class="tooltip-data-row"><span>Cohorte (Previo):</span> <span>${data2.retention.h1}</span></div>` +
-                    `<div class="tooltip-data-row"><span>Retornaron:</span> <span>${data2.retention.h2}</span></div>` +
-                    `<div class="tooltip-formula">Clientes del periodo anterior que volvieron en este periodo.</div>`
-                );
+        const fetchSeccion = async (seccion) => {
+            const r = await fetch('ajax/dashboard_rfm_get_datos2.php', { method: 'POST', body: buildForm(seccion) });
+            return r.json();
+        };
+
+        // Lanzar en paralelo y procesar cada una al llegar
+        fetchSeccion('evolucion').then(d => {
+            if (d.success) {
+                updateEvolutionChart(d.evolution || []);
+                if (d.branch_analysis && Object.keys(d.branch_analysis).length)
+                    updateBranchCharts(d.branch_analysis, data1.summary.ticket_club);
             }
-            updateEvolutionChart(data2.evolution || []);
-            updateBranchCharts(data2.branch_analysis || {}, data1.summary.ticket_club);
-            if (data2.habits) updateHabitSection(data2.habits);
+        }).catch(e => console.warn('evolucion error', e));
 
-            // Enriquecer UltimoProducto en tabla si viene
-            if (data2.ultimo_producto) {
-                fullClientData.forEach(c => {
-                    c.UltimoProducto = data2.ultimo_producto[c.CodCliente] || '--';
-                });
-                filteredData = [...fullClientData];
-                renderPaginatedTable();
+        fetchSeccion('habitos').then(d => {
+            if (d.success && d.habits) updateHabitSection(d.habits);
+        }).catch(e => console.warn('habitos error', e));
+
+        fetchSeccion('retencion').then(d => {
+            if (d.success) {
+                if (d.retention) {
+                    animateValue('kpiRetention', d.retention.rate, false, '%');
+                    $('#tipRetention').attr('title',
+                        `<div class="tooltip-data-row"><span>Cohorte (Previo):</span> <span>${d.retention.h1}</span></div>` +
+                        `<div class="tooltip-data-row"><span>Retornaron:</span> <span>${d.retention.h2}</span></div>` +
+                        `<div class="tooltip-formula">Clientes del periodo anterior que volvieron en este periodo.</div>`
+                    );
+                }
+                if (d.ultimo_producto) {
+                    fullClientData.forEach(c => { c.UltimoProducto = d.ultimo_producto[c.CodCliente] || '--'; });
+                    filteredData = [...fullClientData];
+                    renderPaginatedTable();
+                }
             }
-        }
+        }).catch(e => console.warn('retencion error', e))
+          .finally(() => mostrarCargandoFase2(false));
+
     } catch (error) {
         console.error(error);
         Swal.fire('Error', 'No se pudo conectar con el servicio de datos.', 'error');
