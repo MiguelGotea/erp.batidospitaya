@@ -263,7 +263,28 @@ function renderKPIs(data, item) {
 }
 
 
-/* ── Gráfico de Tendencia (solo con insumo específico) ───── */
+/* ── Paleta de colores para sucursales (hasta 14) ─────────── */
+const SUCURSAL_COLORS = [
+    { border: '#0E544C', bg: 'rgba(14,84,76,.25)'    },
+    { border: '#2980b9', bg: 'rgba(41,128,185,.25)'  },
+    { border: '#8e44ad', bg: 'rgba(142,68,173,.25)'  },
+    { border: '#e67e22', bg: 'rgba(230,126,34,.25)'  },
+    { border: '#c0392b', bg: 'rgba(192,57,43,.25)'   },
+    { border: '#16a085', bg: 'rgba(22,160,133,.25)'  },
+    { border: '#d35400', bg: 'rgba(211,84,0,.25)'    },
+    { border: '#27ae60', bg: 'rgba(39,174,96,.25)'   },
+    { border: '#2c3e50', bg: 'rgba(44,62,80,.25)'    },
+    { border: '#f39c12', bg: 'rgba(243,156,18,.25)'  },
+    { border: '#1abc9c', bg: 'rgba(26,188,156,.25)'  },
+    { border: '#9b59b6', bg: 'rgba(155,89,182,.25)'  },
+    { border: '#e74c3c', bg: 'rgba(231,76,60,.25)'   },
+    { border: '#3498db', bg: 'rgba(52,152,219,.25)'  },
+];
+
+/* ── Vista del gráfico: 'total' | 'por_sucursal' ─────────── */
+let modoVistaSuc = 'total';
+
+/* ── Gráfico de Tendencia ─────────────────────────────────── */
 function renderGrafico(data) {
     const idInsumoSel = parseInt($('#chartInsumoSel').val()) || 0;
     if (!idInsumoSel) {
@@ -282,7 +303,7 @@ function renderGrafico(data) {
     $('#chartPlaceholder').addClass('d-none');
     $('#chartWrap').removeClass('d-none');
 
-    // Actualizar título con nombre del insumo
+    // ── Actualizar título
     $('#tituloTendencia').html(
         `<i class="fas fa-chart-line me-2"></i>Tendencia: <strong>${escHtml(item.nombre)}</strong>` +
         `<span class="ms-2 text-muted" style="font-size:.72rem;font-weight:400">${escHtml(item.unidad)}</span>`
@@ -290,23 +311,68 @@ function renderGrafico(data) {
 
     const labels      = data.semanas.map(s => `Sem ${s.numero_semana}`);
     const semanasNros = data.semanas.map(s => s.numero_semana);
-    const valores     = semanasNros.map(n => round2(item.por_semana[n] || 0));
+    const sucursales  = data.sucursales || [];
+    const nombres     = data.sucursales_nombres || {};
+    const prom        = item.prom_semana || 0;
 
-    // Línea de promedio como referencia visual
-    const prom = item.prom_semana || 0;
-    const datasets = [
-        {
-            label: item.nombre.length > 35 ? item.nombre.substring(0, 33) + '…' : item.nombre,
-            data: valores,
-            backgroundColor: 'rgba(81,184,172,.35)',
+    // ── Detectar si hay múltiples sucursales con datos en desglose
+    const hayDesglose = sucursales.length > 1 && item.desglose_semxsuc &&
+        Object.keys(item.desglose_semxsuc).length > 0;
+
+    // ── Mostrar/ocultar el toggle de vista
+    renderToggleVistaSuc(hayDesglose, item, data);
+
+    // ── Construir datasets
+    let datasets = [];
+
+    if (hayDesglose && modoVistaSuc === 'por_sucursal') {
+        // ━━ Modo Multi-Sucursal ━━
+
+        // 1. Una dataset por sucursal (ordenadas por consumo total desc)
+        const sucConTotal = sucursales.map((suc, i) => {
+            const totalSuc = semanasNros.reduce((acc, n) => acc + (item.desglose_semxsuc[n]?.[suc] || 0), 0);
+            return { suc, nombre: nombres[suc] || suc, totalSuc, idx: i };
+        }).sort((a, b) => b.totalSuc - a.totalSuc);
+
+        sucConTotal.forEach(({ suc, nombre, idx }) => {
+            const color = SUCURSAL_COLORS[idx % SUCURSAL_COLORS.length];
+            const valores = semanasNros.map(n => round2(item.desglose_semxsuc[n]?.[suc] || 0));
+            const label   = nombre.length > 20 ? nombre.substring(0, 18) + '…' : nombre;
+
+            datasets.push({
+                label,
+                data: valores,
+                backgroundColor: modoChart === 'bar' ? color.bg : color.bg,
+                borderColor: color.border,
+                borderWidth: modoChart === 'bar' ? 1.5 : 2,
+                tension: 0.3,
+                fill: false,
+                pointRadius: modoChart === 'line' ? 3 : undefined,
+                pointBackgroundColor: color.border,
+                stack: modoChart === 'bar' ? 'suc' : undefined, // barras apiladas
+            });
+        });
+
+        // 2. Total acumulado como línea siempre visible encima
+        const valoresTotal = semanasNros.map(n => round2(item.por_semana[n] || 0));
+        datasets.push({
+            label: 'TOTAL',
+            data: valoresTotal,
             borderColor: '#0E544C',
-            borderWidth: 2,
+            backgroundColor: 'rgba(14,84,76,.10)',
+            borderWidth: 2.5,
+            type: 'line',       // siempre línea aunque el modo sea barras
             tension: 0.3,
-            fill: modoChart === 'line',
-            pointRadius: 4,
+            fill: false,
+            pointRadius: 5,
             pointBackgroundColor: '#0E544C',
-        },
-        {
+            pointBorderColor: '#fff',
+            pointBorderWidth: 1.5,
+            order: 0,           // dibuja primero (encima)
+        });
+
+        // 3. Promedio punteado
+        datasets.push({
             label: `Prom./sem: ${formatNum(prom)} ${escHtml(item.unidad)}`,
             data: semanasNros.map(() => round2(prom)),
             borderColor: '#e67e22',
@@ -316,12 +382,47 @@ function renderGrafico(data) {
             fill: false,
             tension: 0,
             type: 'line',
-        },
-    ];
+            order: 1,
+        });
+
+    } else {
+        // ━━ Modo Total (1 sucursal o modo total seleccionado) ━━
+        const valores = semanasNros.map(n => round2(item.por_semana[n] || 0));
+        datasets = [
+            {
+                label: item.nombre.length > 35 ? item.nombre.substring(0, 33) + '…' : item.nombre,
+                data: valores,
+                backgroundColor: 'rgba(81,184,172,.35)',
+                borderColor: '#0E544C',
+                borderWidth: 2,
+                tension: 0.3,
+                fill: modoChart === 'line',
+                pointRadius: 4,
+                pointBackgroundColor: '#0E544C',
+            },
+            {
+                label: `Prom./sem: ${formatNum(prom)} ${escHtml(item.unidad)}`,
+                data: semanasNros.map(() => round2(prom)),
+                borderColor: '#e67e22',
+                borderWidth: 1.5,
+                borderDash: [5, 4],
+                pointRadius: 0,
+                fill: false,
+                tension: 0,
+                type: 'line',
+            },
+        ];
+    }
 
     if (chartTendencia) { chartTendencia.destroy(); chartTendencia = null; }
 
     const ctx = document.getElementById('chartTendencia').getContext('2d');
+
+    // Ajuste altura: si hay muchas sucursales en modo por_sucursal, dar más espacio a la leyenda
+    const numSucursales = hayDesglose ? sucursales.length : 1;
+    const legendMaxItems = 5; // a partir de aquí poner leyenda a la izquierda
+    const legendPos = numSucursales > legendMaxItems ? 'left' : 'top';
+
     chartTendencia = new Chart(ctx, {
         type: modoChart,
         data: { labels, datasets },
@@ -331,21 +432,37 @@ function renderGrafico(data) {
             interaction: { mode: 'index', intersect: false },
             plugins: {
                 legend: {
-                    position: 'top',
-                    labels: { font: { size: 11, family: 'Calibri' }, padding: 14 },
+                    position: legendPos,
+                    labels: {
+                        font: { size: 10, family: 'Calibri' },
+                        padding: 10,
+                        boxWidth: 12,
+                        // filtrar el dataset "Prom" de la leyenda si hay muchas series
+                        filter: (item) => numSucursales > 6
+                            ? !item.text.startsWith('Prom.')
+                            : true,
+                    },
                 },
                 tooltip: {
                     callbacks: {
-                        label: ctx => `${ctx.dataset.label}: ${formatNum(ctx.parsed.y)}`,
+                        label: ctx => `${ctx.dataset.label}: ${formatNum(ctx.parsed.y)} ${escHtml(item.unidad)}`,
+                        footer: (items) => {
+                            // Mostrar total en el tooltip cuando hay desglose
+                            if (hayDesglose && modoVistaSuc === 'por_sucursal') {
+                                // El total ya es un dataset; no duplicar
+                            }
+                        },
                     },
                 },
             },
             scales: {
                 x: {
+                    stacked: modoChart === 'bar' && hayDesglose && modoVistaSuc === 'por_sucursal',
                     grid: { color: '#e8f0f4' },
                     ticks: { font: { size: 10 }, maxRotation: 45 },
                 },
                 y: {
+                    stacked: false, // nunca apilar el eje Y (el total ya suma todo)
                     grid: { color: '#e8f0f4' },
                     ticks: { font: { size: 10 }, callback: v => formatNum(v) },
                     beginAtZero: true,
@@ -353,6 +470,54 @@ function renderGrafico(data) {
             },
         },
     });
+}
+
+/* ── Toggle Vista Sucursal ───────────────────────────────────
+   Inyecta/actualiza un par de botones "Total / Por Sucursal"
+   al lado de los chips Barras/Línea cuando hay desglose
+   ──────────────────────────────────────────────────────────── */
+function renderToggleVistaSuc(hayDesglose, item, data) {
+    const $existente = $('#toggleVistaSuc');
+
+    if (!hayDesglose) {
+        $existente.remove();
+        modoVistaSuc = 'total';
+        return;
+    }
+
+    if ($existente.length === 0) {
+        // Insertar antes de los chips de modo
+        const html = `
+            <div id="toggleVistaSuc" class="d-flex gap-1 align-items-center ms-2">
+                <span style="font-size:.72rem;color:#889;font-weight:600">Vista:</span>
+                <button class="btn btn-xs dc-chip ${modoVistaSuc === 'total' ? 'active' : ''}"
+                    id="btnVistaTotalSuc" title="Ver consumo acumulado total">
+                    <i class="fas fa-sigma me-1"></i>Total
+                </button>
+                <button class="btn btn-xs dc-chip ${modoVistaSuc === 'por_sucursal' ? 'active' : ''}"
+                    id="btnVistaSucursal" title="Ver consumo desglosado por sucursal">
+                    <i class="fas fa-store me-1"></i>Por Sucursal
+                </button>
+            </div>`;
+        $('#chartModoBarra').closest('.d-flex').append(html);
+
+        $(document).on('click', '#btnVistaTotalSuc', function () {
+            modoVistaSuc = 'total';
+            $('#btnVistaTotalSuc').addClass('active');
+            $('#btnVistaSucursal').removeClass('active');
+            renderGrafico(data);
+        });
+        $(document).on('click', '#btnVistaSucursal', function () {
+            modoVistaSuc = 'por_sucursal';
+            $('#btnVistaSucursal').addClass('active');
+            $('#btnVistaTotalSuc').removeClass('active');
+            renderGrafico(data);
+        });
+    } else {
+        // Actualizar estado activo
+        $('#btnVistaTotalSuc').toggleClass('active', modoVistaSuc === 'total');
+        $('#btnVistaSucursal').toggleClass('active', modoVistaSuc === 'por_sucursal');
+    }
 }
 
 /* ── Tabla Historial ─────────────────────────────────────── */
