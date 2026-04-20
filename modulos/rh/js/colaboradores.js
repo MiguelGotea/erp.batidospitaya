@@ -324,7 +324,7 @@ function crearPanelNumRange(panel, columna) {
                        value="${hastaVal}"
                        style="width: 80px;"
                        oninput="aplicarFiltroNumRange('${columna}')">
-                <span style="color:#888; font-size:12px;">%</span>
+                <span style="color:#888; font-size:12px;"></span>
             </div>
         </div>
     `);
