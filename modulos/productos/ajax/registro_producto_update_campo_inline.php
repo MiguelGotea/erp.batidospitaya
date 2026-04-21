@@ -17,7 +17,7 @@ try {
     }
 
     // Lista blanca de campos permitidos para actualización inline por seguridad
-    $camposPermitidos = ['categoria_insumo'];
+    $camposPermitidos = ['categoria_insumo', 'presentacion'];
     
     if (!in_array($campo, $camposPermitidos)) {
         throw new Exception('Campo no permitido para actualización inline');

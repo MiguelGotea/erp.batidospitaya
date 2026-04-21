@@ -180,6 +180,12 @@ if ($esNuevo && !$puedeCrear) {
                                             <option value="F">F - Secos y Preparación</option>
                                             <option value="G">G - Productos de Mostrador</option>
                                         </select>
+                                    <div class="col-md-6">
+                                        <label for="presentacion" class="form-label">Presentación Comercial</label>
+                                        <input type="text" class="form-control" id="presentacion" name="presentacion" 
+                                            placeholder="Ej: Paquete x 12, Caja x 24" 
+                                            onchange="guardarCampoInline('presentacion', this.value)">
+                                        <div class="form-text" style="font-size: 0.75rem;">Forma comercial en que se vende o adquiere el producto.</div>
                                     </div>
 
                                     <!-- Nuevos Toggles Logísticos -->
@@ -195,7 +201,7 @@ if ($esNuevo && !$puedeCrear) {
                                             </label>
                                         </div>
                                         <div class="toggle-container">
-                                            <span class="toggle-label" style="font-size: 0.85rem;">¿Es Producto Presentación?</span>
+                                            <span class="toggle-label" style="font-size: 0.85rem;">¿Es Producto Despacho?</span>
                                             <label class="switch">
                                                 <input type="checkbox" id="presentacionDespacho" name="presentacion_despacho" value="1">
                                                 <span class="slider round">

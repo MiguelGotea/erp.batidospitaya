@@ -209,6 +209,7 @@ async function cargarDatosProducto(cacheBuster = '') {
             $('#presentacionBasica').prop('checked', parseInt(p.presentacion_basica_inventario) === 1);
             $('#presentacionDespacho').prop('checked', parseInt(p.presentacion_despacho) === 1);
             $('#categoriaInsumo').val(p.categoria_insumo || '');
+            $('#presentacion').val(p.presentacion || '');
 
             if (p.id_subgrupo_presentacion_producto) {
                 $('#grupo').val(p.id_grupo);
