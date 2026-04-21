@@ -11,6 +11,8 @@ require_once '../../../core/database/conexion.php';
 header('Content-Type: application/json');
 
 try {
+    $ahora = date('Y-m-d H:i:s');
+
     // Estado actual de cada PC (último ping por equipo)
     $sqlEstados = "
         SELECT
@@ -22,10 +24,10 @@ try {
             p.version_access,
             p.modulo_activo,
             p.ping_at,
-            TIMESTAMPDIFF(SECOND, p.ping_at, NOW())  AS segundos_sin_ping,
+            TIMESTAMPDIFF(SECOND, p.ping_at, :ahora1)  AS segundos_sin_ping,
             CASE
-                WHEN TIMESTAMPDIFF(SECOND, p.ping_at, NOW()) <= 90   THEN 'online'
-                WHEN TIMESTAMPDIFF(SECOND, p.ping_at, NOW()) <= 300  THEN 'alerta'
+                WHEN TIMESTAMPDIFF(SECOND, p.ping_at, :ahora2) <= 90   THEN 'online'
+                WHEN TIMESTAMPDIFF(SECOND, p.ping_at, :ahora3) <= 300  THEN 'alerta'
                 ELSE 'offline'
             END AS estado,
             COALESCE(s.nombre, p.sucursal_codigo) AS nombre_sucursal
@@ -41,7 +43,12 @@ try {
         LEFT JOIN sucursales s ON s.codigo = p.sucursal_codigo
         ORDER BY s.nombre ASC, p.pc_nombre ASC
     ";
-    $stmtEstados = $conn->query($sqlEstados);
+    $stmtEstados = $conn->prepare($sqlEstados);
+    $stmtEstados->execute([
+        ':ahora1' => $ahora,
+        ':ahora2' => $ahora,
+        ':ahora3' => $ahora
+    ]);
     $pcs = $stmtEstados->fetchAll(PDO::FETCH_ASSOC);
 
     // Resumen por estado
