@@ -877,9 +877,9 @@ body {
 .dc-alertas-toggle.rotated     { transform: rotate(-90deg); }
 
 .dc-alertas-body {
-    overflow:   hidden;
-    transition: max-height .32s ease;
-    max-height: 600px;
+    overflow: hidden;
+    transition: max-height .35s ease;
+    max-height: 9999px;
 }
 .dc-alertas-body.collapsed { max-height: 0; }
 

@@ -1209,7 +1209,13 @@ function calcularAlertasSobreconsumo(data, kSigma) {
         });
     });
 
-    return alertas.sort((a, b) => b.zScore - a.zScore);
+    // Ordenar: semana DESC, luego sucursal ASC, luego insumo ASC
+    return alertas.sort((a, b) => {
+        if (b.semana !== a.semana) return b.semana - a.semana;
+        const locCmp = a.local.localeCompare(b.local, 'es');
+        if (locCmp !== 0) return locCmp;
+        return a.insumo.localeCompare(b.insumo, 'es');
+    });
 }
 
 /**
@@ -1245,50 +1251,71 @@ function renderPanelAlertas(data, kSigma) {
     $('#alertasBadge').text(alertas.length).css({ background: '#fff', color: '#c0392b' });
     $('#alertasHint').text(`umbral: μ_local + ${kSigma}σ_local`);
 
-    let filas = '';
+    // Agrupar por sucursal (ya viene ordenado: semana DESC, local ASC)
+    const grupos = {};
     alertas.forEach(a => {
-        const zCls = a.zScore >= 2.5 ? 'z-critico' : a.zScore >= 2 ? 'z-alto' : 'z-moderado';
+        if (!grupos[a.local]) grupos[a.local] = [];
+        grupos[a.local].push(a);
+    });
+    const localesOrdenados = Object.keys(grupos).sort((a, b) => a.localeCompare(b, 'es'));
+
+    let filas = '';
+    localesOrdenados.forEach(local => {
+        // Fila de encabezado de grupo (sucursal)
         filas += `
-        <tr>
-            <td><span class="dc-semana-badge">Sem ${a.semana}</span></td>
-            <td style="font-weight:600;font-size:.78rem">${escHtml(a.local)}</td>
-            <td>
-                <span class="dc-alerta-insumo-pill"
-                    onclick="seleccionarInsumoDesdeAlerta(${a.idInsumo})"
-                    title="Ver tendencia de ${escHtml(a.insumo)}">
-                    ${escHtml(a.insumo)}
-                </span>
-            </td>
-            <td class="text-end fw-bold" style="color:#c0392b">
-                ${formatNum(a.consumo)} ${escHtml(a.unidad)}
-            </td>
-            <td class="text-end" style="color:#888;font-size:.72rem">
-                μ ${formatNum(round2(a.mu))} &nbsp;σ ${formatNum(round2(a.sigma))}
-            </td>
-            <td class="text-end">
-                <span class="dc-alerta-zscore ${zCls}">+${a.zScore.toFixed(2)}σ</span>
-            </td>
-            <td class="text-end" style="color:#c0392b;font-weight:700;font-size:.78rem">
-                +${a.pctExceso}%
+        <tr style="background:rgba(14,84,76,.08);">
+            <td colspan="7" style="font-weight:700;font-size:.78rem;color:#0E544C;padding:6px 14px;">
+                <i class="fas fa-store me-2" style="opacity:.6"></i>${escHtml(local)}
+                <span style="font-weight:400;font-size:.7rem;color:#888;margin-left:6px">(${grupos[local].length} alerta${grupos[local].length > 1 ? 's' : ''})</span>
             </td>
         </tr>`;
+
+        grupos[local].forEach(a => {
+            const zCls = a.zScore >= 2.5 ? 'z-critico' : a.zScore >= 2 ? 'z-alto' : 'z-moderado';
+            filas += `
+            <tr>
+                <td style="text-align:center;font-weight:700;font-size:.78rem;color:#0E544C">${a.semana}</td>
+                <td style="font-size:.75rem;color:#777;font-style:italic">${escHtml(local)}</td>
+                <td>
+                    <span class="dc-alerta-insumo-pill"
+                        onclick="seleccionarInsumoDesdeAlerta(${a.idInsumo})"
+                        title="Ver tendencia de ${escHtml(a.insumo)}">
+                        ${escHtml(a.insumo)}
+                    </span>
+                </td>
+                <td class="text-end fw-bold" style="color:#c0392b">
+                    ${formatNum(a.consumo)} ${escHtml(a.unidad)}
+                </td>
+                <td class="text-end" style="color:#888;font-size:.72rem">
+                    μ ${formatNum(round2(a.mu))} &nbsp;σ ${formatNum(round2(a.sigma))}
+                </td>
+                <td class="text-end">
+                    <span class="dc-alerta-zscore ${zCls}">+${a.zScore.toFixed(2)}σ</span>
+                </td>
+                <td class="text-end" style="color:#c0392b;font-weight:700;font-size:.78rem">
+                    +${a.pctExceso}%
+                </td>
+            </tr>`;
+        });
     });
 
     $('#alertasContenido').html(`
-        <table class="dc-alertas-tabla">
-            <thead>
-                <tr>
-                    <th>Semana</th>
-                    <th>Tienda</th>
-                    <th>Insumo</th>
-                    <th class="text-end">Consumo Real</th>
-                    <th class="text-end">Referencia (μ / σ)</th>
-                    <th class="text-end">Z-Score</th>
-                    <th class="text-end">% Exceso</th>
-                </tr>
-            </thead>
-            <tbody>${filas}</tbody>
-        </table>
+        <div style="overflow-x:auto;">
+            <table class="dc-alertas-tabla">
+                <thead>
+                    <tr>
+                        <th style="text-align:center">Semana</th>
+                        <th>Tienda</th>
+                        <th>Insumo</th>
+                        <th class="text-end">Consumo Real</th>
+                        <th class="text-end">Referencia (μ / σ)</th>
+                        <th class="text-end">Z-Score</th>
+                        <th class="text-end">% Exceso</th>
+                    </tr>
+                </thead>
+                <tbody>${filas}</tbody>
+            </table>
+        </div>
     `);
 }
 
