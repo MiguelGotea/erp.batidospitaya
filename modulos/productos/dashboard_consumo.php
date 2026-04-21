@@ -248,12 +248,15 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                                     <h6 class="dc-seccion-titulo mb-0" id="tituloTendencia">
                                         <i class="fas fa-chart-line me-2"></i>Tendencia
                                     </h6>
-                                    <div class="d-flex gap-2 align-items-center">
-                                        <button class="btn btn-xs dc-chip active" id="chartModoBarra" data-modo="bar">
+                                    <div class="d-flex gap-1 align-items-center">
+                                        <button class="btn btn-xs dc-chip active" id="chartModoBarras" data-modo="barras">
                                             <i class="fas fa-chart-bar me-1"></i>Barras
                                         </button>
-                                        <button class="btn btn-xs dc-chip" id="chartModoLinea" data-modo="line">
-                                            <i class="fas fa-chart-line me-1"></i>Línea
+                                        <button class="btn btn-xs dc-chip" id="chartModoLineaTotal" data-modo="linea_total">
+                                            <i class="fas fa-chart-line me-1"></i>Línea Total
+                                        </button>
+                                        <button class="btn btn-xs dc-chip" id="chartModoLineaSuc" data-modo="linea_suc">
+                                            <i class="fas fa-store me-1"></i>Línea x Suc.
                                         </button>
                                     </div>
                                 </div>

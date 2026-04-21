@@ -20,7 +20,7 @@ const $panelDatos   = $('#panelDatos');
 /* ── Estado global ───────────────────────────────────────── */
 let datosActuales  = null;   // Respuesta completa del AJAX de datos
 let chartTendencia = null;   // Instancia Chart.js activa
-let modoChart      = 'bar';  // 'bar' | 'line'
+let modoGrafico    = 'barras'; // 'barras' | 'linea_total' | 'linea_suc'
 
 /* ════════════════════════════════════════════════════════════
    INICIALIZACIÓN
@@ -240,10 +240,10 @@ function inicializarSelect2() {
 function bindEventos() {
     $btnAplicar.on('click', cargarDatos);
 
-    // Modo gráfico
-    $('#chartModoBarra, #chartModoLinea').on('click', function () {
-        modoChart = $(this).data('modo');
-        $('#chartModoBarra, #chartModoLinea').removeClass('active');
+    // Modo gráfico — 3 botones directos
+    $('#chartModoBarras, #chartModoLineaTotal, #chartModoLineaSuc').on('click', function () {
+        modoGrafico = $(this).data('modo');
+        $('#chartModoBarras, #chartModoLineaTotal, #chartModoLineaSuc').removeClass('active');
         $(this).addClass('active');
         if (datosActuales && !$('#chartWrap').hasClass('d-none')) {
             renderGrafico(datosActuales);
@@ -488,8 +488,6 @@ const SUCURSAL_COLORS = [
     { border: '#3498db', bg: 'rgba(52,152,219,.25)'  },
 ];
 
-/* ── Vista del gráfico: 'total' | 'por_sucursal' ─────────── */
-let modoVistaSuc = 'total';
 let kSigmaActual  = 1.5;   // Factor σ activo para alertas de sobreconsumo
 
 /* ── Gráfico de Tendencia ─────────────────────────────────── */
@@ -569,17 +567,18 @@ function renderGrafico(data) {
     const hayDesglose = sucursales.length > 1 && item.desglose_semxsuc &&
         Object.keys(item.desglose_semxsuc).length > 0;
 
-    // ── Mostrar/ocultar el toggle de vista
-    renderToggleVistaSuc(hayDesglose, item, data);
-
     // ── Construir datasets
     let datasets = [];
 
-    // Variable que indica si el modo actual apila barras por sucursal
-    const esBarraSuc = hayDesglose && modoVistaSuc === 'por_sucursal' && modoChart === 'bar';
-    const esLineaSuc = hayDesglose && modoVistaSuc === 'por_sucursal' && modoChart === 'line';
+    // Modos derivados del selector unificado
+    const esBarraSuc  = hayDesglose && modoGrafico === 'barras';
+    const esLineaSuc  = hayDesglose && modoGrafico === 'linea_suc';
+    const esLineaTotal = modoGrafico === 'linea_total';
 
-    if (hayDesglose && modoVistaSuc === 'por_sucursal') {
+    // Ocultar botón "Línea x Suc." si no hay desglose
+    $('#chartModoLineaSuc').toggle(hayDesglose);
+
+    if (esLineaSuc || esBarraSuc) {
         // ━━ Modo Multi-Sucursal ━━
 
         // Sucursales ordenadas por consumo total desc
@@ -643,7 +642,7 @@ function renderGrafico(data) {
                 borderColor:     '#0E544C',
                 borderWidth:     2,
                 tension:         0.3,
-                fill:            modoChart === 'line',
+        fill:            esLineaTotal,
                 pointRadius:     4,
                 pointBackgroundColor: '#0E544C',
             },
@@ -709,6 +708,9 @@ function renderGrafico(data) {
         });
     }
 
+    // Tipo de gráfico Chart.js: barras → 'bar', ambas líneas → 'line'
+    const tipoChartJS = modoGrafico === 'barras' ? 'bar' : 'line';
+
     if (chartTendencia) { chartTendencia.destroy(); chartTendencia = null; }
 
     const ctx = document.getElementById('chartTendencia').getContext('2d');
@@ -718,7 +720,7 @@ function renderGrafico(data) {
     const legendPos = numSucursales > 8 ? 'left' : 'bottom';
 
     chartTendencia = new Chart(ctx, {
-        type: modoChart,
+        type: tipoChartJS,
         data: { labels: labelsExtended, datasets },
         options: {
             responsive: true,
@@ -778,53 +780,7 @@ function renderGrafico(data) {
     });
 }
 
-/* ── Toggle Vista Sucursal ───────────────────────────────────
-   Inyecta/actualiza un par de botones "Total / Por Sucursal"
-   al lado de los chips Barras/Línea cuando hay desglose
-   ──────────────────────────────────────────────────────────── */
-function renderToggleVistaSuc(hayDesglose, item, data) {
-    const $existente = $('#toggleVistaSuc');
 
-    if (!hayDesglose) {
-        $existente.remove();
-        modoVistaSuc = 'total';
-        return;
-    }
-
-    if ($existente.length === 0) {
-        // Insertar antes de los chips de modo
-        const html = `
-            <div id="toggleVistaSuc" class="d-flex gap-1 align-items-center ms-2">
-                <span style="font-size:.72rem;color:#889;font-weight:600">Vista:</span>
-                <button class="btn btn-xs dc-chip ${modoVistaSuc === 'total' ? 'active' : ''}"
-                    id="btnVistaTotalSuc" title="Ver consumo acumulado total">
-                    <i class="fas fa-sigma me-1"></i>Total
-                </button>
-                <button class="btn btn-xs dc-chip ${modoVistaSuc === 'por_sucursal' ? 'active' : ''}"
-                    id="btnVistaSucursal" title="Ver consumo desglosado por sucursal">
-                    <i class="fas fa-store me-1"></i>Por Sucursal
-                </button>
-            </div>`;
-        $('#chartModoBarra').closest('.d-flex').append(html);
-
-        $(document).on('click', '#btnVistaTotalSuc', function () {
-            modoVistaSuc = 'total';
-            $('#btnVistaTotalSuc').addClass('active');
-            $('#btnVistaSucursal').removeClass('active');
-            renderGrafico(data);
-        });
-        $(document).on('click', '#btnVistaSucursal', function () {
-            modoVistaSuc = 'por_sucursal';
-            $('#btnVistaSucursal').addClass('active');
-            $('#btnVistaTotalSuc').removeClass('active');
-            renderGrafico(data);
-        });
-    } else {
-        // Actualizar estado activo
-        $('#btnVistaTotalSuc').toggleClass('active', modoVistaSuc === 'total');
-        $('#btnVistaSucursal').toggleClass('active', modoVistaSuc === 'por_sucursal');
-    }
-}
 
 /* ── Tabla Historial ─────────────────────────────────────── */
 function renderTablaHistorial(data) {
