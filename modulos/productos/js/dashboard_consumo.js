@@ -718,7 +718,6 @@ function renderGrafico(data) {
 
     // Leyenda siempre en la parte inferior para no comprimir el área del gráfico
     const numSucursales = hayDesglose ? sucursales.length : 1;
-    const legendPos = numSucursales > 8 ? 'left' : 'bottom';
 
     chartTendencia = new Chart(ctx, {
         type: tipoChartJS,
@@ -729,7 +728,19 @@ function renderGrafico(data) {
             interaction: { mode: 'index', intersect: false },
             plugins: {
                 legend: {
-                    position: legendPos,
+                    position: 'bottom',
+                    onClick: function (e, legendItem, legend) {
+                        // Toggle nativo de Chart.js (ocultar/mostrar dataset al hacer clic en leyenda)
+                        const index = legendItem.datasetIndex;
+                        const ci = legend.chart;
+                        if (ci.isDatasetVisible(index)) {
+                            ci.hide(index);
+                            legendItem.hidden = true;
+                        } else {
+                            ci.show(index);
+                            legendItem.hidden = false;
+                        }
+                    },
                     labels: {
                         font: { size: 10, family: 'Calibri' },
                         padding: 10,
