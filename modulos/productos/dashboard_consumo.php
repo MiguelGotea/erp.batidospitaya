@@ -606,30 +606,53 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                                             <i class="fas fa-chart-line me-2"></i>Panel: Crecimiento Sostenido
                                             <span class="badge ms-2" style="background:#2980b9;color:#fff;font-size:.65rem">Acción: redefinir abastecimiento</span>
                                         </h6>
-                                        <p class="small text-muted mb-1">
+                                        <p class="small text-muted mb-2">
                                             Detecta cuando el consumo de una tienda viene <strong>creciendo semana a semana de forma persistente</strong>,
-                                            aunque no haya superado el umbral de sobreconsumo. Señal para revisar las cantidades base de abastecimiento.
+                                            aunque no haya superado el umbral de sobreconsumo. Señal para revisar las cantidades base de abastecimiento.<br>
+                                            El análisis es por <strong>sucursal × insumo</strong>. La semana en curso se excluye automáticamente (dato incompleto).
                                         </p>
-                                        <div class="p-2 rounded" style="background:#fff;border:1px solid #b3d4f0;font-size:.78rem">
+
+                                        <!-- Indicadores -->
+                                        <div class="p-2 rounded mb-2" style="background:#fff;border:1px solid #b3d4f0;font-size:.78rem">
                                             <strong>Activa cuando ≥ 2 de 3 indicadores superan su umbral:</strong><br><br>
                                             <strong>① Regresión lineal normalizada (β̂/μ):</strong><br>
-                                            &nbsp;Ajusta <code>y = α + β·t</code> sobre las semanas con dato. Umbral: <code>β/μ &gt; 6%/sem</code><br><br>
+                                            &nbsp;Ajusta <code>y = α + β·t</code> sobre las semanas con dato.<br>
+                                            &nbsp;Umbral ajustable con el botón <strong>Umbral β/μ</strong> del panel.<br><br>
                                             <strong>② Mann-Kendall τ:</strong><br>
                                             &nbsp;<code>S = Σ<sub>i&lt;j</sub> sgn(y<sub>j</sub> − y<sub>i</sub>)</code> &nbsp;·&nbsp; <code>τ = S / (n(n−1)/2)</code><br>
-                                            &nbsp;Mide monotonía (τ=1 perfecto, τ=−1 decreciente). Umbral: <code>τ &gt; 0.45</code><br><br>
+                                            &nbsp;Mide monotonía (τ=1 perfecto, τ=−1 decreciente). Umbral fijo: <code>τ &gt; 0.45</code><br><br>
                                             <strong>③ Run-ratio de incrementos:</strong><br>
-                                            &nbsp;Proporción de semanas donde <code>y[t] &gt; y[t−1]</code>. Umbral: <code>&gt; 65%</code><br><br>
+                                            &nbsp;Proporción de semanas donde <code>y[t] &gt; y[t−1]</code>. Umbral fijo: <code>&gt; 65%</code>
+                                        </div>
+
+                                        <!-- Controles -->
+                                        <div class="p-2 rounded mb-2" style="background:#fff;border:1px solid #b3d4f0;font-size:.78rem">
+                                            <strong>Controles del panel:</strong><br><br>
+                                            <strong>Umbral β/μ</strong> — sensibilidad de detección (Indicador ①):<br>
+                                            &nbsp;· <span style="background:#d6eaf8;color:#1a5276;border-radius:4px;padding:1px 6px">3%</span> Sensible — detecta pendientes leves<br>
+                                            &nbsp;· <span style="background:#d6eaf8;color:#1a5276;border-radius:4px;padding:1px 6px">6%</span> Balance recomendado (default)<br>
+                                            &nbsp;· <span style="background:#d6eaf8;color:#1a5276;border-radius:4px;padding:1px 6px">12%</span> Estricto — solo crecimiento claro<br><br>
+                                            <strong>Ver</strong> — filtro de severidad sobre los detectados:<br>
+                                            &nbsp;· <span style="background:#eaf4fc;color:#2e86c1;border-radius:4px;padding:1px 6px">Todos</span> Muestra todos<br>
+                                            &nbsp;· <span style="background:#d6eaf8;color:#1a5276;border-radius:4px;padding:1px 6px">Not+Crít</span> Notable y Crítico<br>
+                                            &nbsp;· <span style="background:#e8daef;color:#7d3c98;border-radius:4px;padding:1px 6px">Críticos</span> Solo Críticos (default)
+                                        </div>
+
+                                        <!-- Severidad -->
+                                        <div class="p-2 rounded" style="background:#fff;border:1px solid #b3d4f0;font-size:.78rem">
                                             <strong>Severidad:</strong><br>
-                                            &nbsp;· <span style="background:#e8daef;color:#7d3c98;border-radius:4px;padding:1px 6px">Crítico</span> 3/3 activos o β/μ &gt; 40%/sem<br>
-                                            &nbsp;· <span style="background:#d6eaf8;color:#1a5276;border-radius:4px;padding:1px 6px">Notable</span> 2/3 + β/μ &gt; 20%/sem<br>
-                                            &nbsp;· <span style="background:#eaf4fc;color:#2e86c1;border-radius:4px;padding:1px 6px">Moderado</span> 2/3 activos
+                                            &nbsp;· <span style="background:#e8daef;color:#7d3c98;border-radius:4px;padding:1px 6px">Crítico</span> 3/3 activos <em>o</em> β/μ &gt; 40%/sem<br>
+                                            &nbsp;· <span style="background:#d6eaf8;color:#1a5276;border-radius:4px;padding:1px 6px">Notable</span> 2/3 activos <em>o</em> β/μ &gt; 20%/sem<br>
+                                            &nbsp;· <span style="background:#eaf4fc;color:#2e86c1;border-radius:4px;padding:1px 6px">Moderado</span> reservado para umbrales bajos
                                         </div>
                                         <p class="small text-muted mt-2 mb-0">
-                                            <i class="fas fa-mouse-pointer me-1"></i>Al hacer clic en un insumo, el gráfico se abre filtrado a esa tienda en modo Línea x Tienda.
+                                            <i class="fas fa-mouse-pointer me-1"></i>Al hacer clic en un insumo, el gráfico se abre filtrado a esa tienda.
+                                            El badge del panel muestra el total detectado; el hint indica cuántos se están mostrando con el filtro activo.
                                         </p>
                                     </div>
                                 </div>
                             </div>
+
                         </div>
 
                         <!-- Nota recetas globales -->
