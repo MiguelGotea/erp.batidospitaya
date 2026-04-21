@@ -614,39 +614,23 @@ function renderGrafico(data) {
             });
         });
 
-        // En modo LÍNEA: añadir línea TOTAL encima
-        if (esLineaSuc) {
-            const valoresTotal = semanasNros.map(n => round2(item.por_semana[n] || 0));
+        // En modo LÍNEA por sucursal: NO se agrega línea TOTAL, Promedio ni Proyección
+        // Solo se muestran las líneas individuales de cada sucursal
+        if (!esLineaSuc) {
+            // Promedio punteado — solo en modo barra por sucursal
             datasets.push({
-                label:            'TOTAL',
-                data:             valoresTotal,
-                borderColor:      '#0E544C',
-                backgroundColor:  'rgba(14,84,76,.10)',
-                borderWidth:      2.5,
-                type:             'line',
-                tension:          0.3,
-                fill:             false,
-                pointRadius:      5,
-                pointBackgroundColor: '#0E544C',
-                pointBorderColor:     '#fff',
-                pointBorderWidth:     1.5,
-                order:            0,
+                label:       `Prom./sem (sem. completas): ${formatNum(round2(promCalc))} ${escHtml(item.unidad)}`,
+                data:        semanasNros.map(n => (esSemActualEnRango && n === semanaActual) ? null : round2(promCalc)),
+                borderColor: '#e67e22',
+                borderWidth: 1.5,
+                borderDash:  [5, 4],
+                pointRadius: 0,
+                fill:        false,
+                tension:     0,
+                type:        'line',
+                order:       1,
             });
         }
-
-        // Promedio punteado (siempre en ambos modos) — excluye semana en curso
-        datasets.push({
-            label:       `Prom./sem (sem. completas): ${formatNum(round2(promCalc))} ${escHtml(item.unidad)}`,
-            data:        semanasNros.map(n => (esSemActualEnRango && n === semanaActual) ? null : round2(promCalc)),
-            borderColor: '#e67e22',
-            borderWidth: 1.5,
-            borderDash:  [5, 4],
-            pointRadius: 0,
-            fill:        false,
-            tension:     0,
-            type:        'line',
-            order:       1,
-        });
 
     } else {
         // ━━ Modo Total (1 sucursal o modo total seleccionado) ━━
@@ -677,8 +661,9 @@ function renderGrafico(data) {
         ];
     }
 
-    // ── Proyección 3 semanas (regresión lineal, excluye semana en curso) ──────────
-    const labelsExtended   = [
+    // ── Proyección 3 semanas — solo en modo Total o Barra por sucursal ─────────
+    // En modo Línea por sucursal (esLineaSuc) NO se muestran semanas proyectadas
+    const labelsExtended = esLineaSuc ? labels : [
         ...labels,
         `Proy. ${ultimaSem + 1}`,
         `Proy. ${ultimaSem + 2}`,
@@ -686,41 +671,43 @@ function renderGrafico(data) {
     ];
     const nSems = semanasNros.length;
 
-    // Pad todos los datasets históricos con null para las 3 semanas proyectadas
-    datasets.forEach(ds => {
-        if (!Array.isArray(ds.data)) return;
-        ds.data = [...ds.data, null, null, null];
-        if (Array.isArray(ds.pointRadius)) {
-            ds.pointRadius = [...ds.pointRadius, 0, 0, 0];
-        }
-    });
+    if (!esLineaSuc) {
+        // Pad todos los datasets históricos con null para las 3 semanas proyectadas
+        datasets.forEach(ds => {
+            if (!Array.isArray(ds.data)) return;
+            ds.data = [...ds.data, null, null, null];
+            if (Array.isArray(ds.pointRadius)) {
+                ds.pointRadius = [...ds.pointRadius, 0, 0, 0];
+            }
+        });
 
-    // Dataset de proyección: nace en semana actual (si aplica) y se extiende 3 semanas
-    // Con spanGaps:true la línea conecta automáticamente el punto de sem. actual con las futuras
-    const proyData = [...semanasNros.map(n =>
-        (esSemActualEnRango && n === semanaActual) ? proyActual : null
-    ), proyW1, proyW2, proyW3];
-    const proyPointR = [...semanasNros.map(n =>
-        (esSemActualEnRango && n === semanaActual) ? 5 : 0
-    ), 6, 6, 6];
-    datasets.push({
-        label:               `↗ Proyección`,
-        data:                proyData,
-        borderColor:         '#f39c12',
-        backgroundColor:     'rgba(243,156,18,.12)',
-        borderWidth:         2.5,
-        borderDash:          [6, 4],
-        pointRadius:         proyPointR,
-        pointStyle:          'triangle',
-        pointBackgroundColor: '#f39c12',
-        pointBorderColor:    '#fff',
-        pointBorderWidth:    1.5,
-        fill:                false,
-        tension:             0,
-        type:                'line',
-        spanGaps:            true,   // conecta sem. actual con las semanas proyectadas
-        order:               0,
-    });
+        // Dataset de proyección: nace en semana actual (si aplica) y se extiende 3 semanas
+        // Con spanGaps:true la línea conecta automáticamente el punto de sem. actual con las futuras
+        const proyData = [...semanasNros.map(n =>
+            (esSemActualEnRango && n === semanaActual) ? proyActual : null
+        ), proyW1, proyW2, proyW3];
+        const proyPointR = [...semanasNros.map(n =>
+            (esSemActualEnRango && n === semanaActual) ? 5 : 0
+        ), 6, 6, 6];
+        datasets.push({
+            label:               `↗ Proyección`,
+            data:                proyData,
+            borderColor:         '#f39c12',
+            backgroundColor:     'rgba(243,156,18,.12)',
+            borderWidth:         2.5,
+            borderDash:          [6, 4],
+            pointRadius:         proyPointR,
+            pointStyle:          'triangle',
+            pointBackgroundColor: '#f39c12',
+            pointBorderColor:    '#fff',
+            pointBorderWidth:    1.5,
+            fill:                false,
+            tension:             0,
+            type:                'line',
+            spanGaps:            true,   // conecta sem. actual con las semanas proyectadas
+            order:               0,
+        });
+    }
 
     if (chartTendencia) { chartTendencia.destroy(); chartTendencia = null; }
 
