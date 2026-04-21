@@ -30,8 +30,7 @@ try {
                 DAYOFWEEK(fecha_entrega) as dia_semana
             FROM compra_local_pedidos_historico
             WHERE codigo_sucursal = ?
-            AND fecha_entrega BETWEEN ? AND ?
-            AND cantidad_pedido > 0";
+            AND fecha_entrega BETWEEN ? AND ?";
 
     $stmt = $conn->prepare($sql);
     $stmt->execute([$codigo_sucursal, $fecha_inicio, $fecha_fin]);

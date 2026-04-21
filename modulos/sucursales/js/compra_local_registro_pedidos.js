@@ -425,7 +425,7 @@ function renderizarTabla() {
 
             // Check if should show urgent icon (today's column, empty, deadline approaching)
             let mostrarAlerta = false;
-            if (esHoy && !cantidad && habilitado && beforeDeadline) {
+            if (esHoy && (cantidad === null || cantidad === undefined || cantidad === "") && habilitado && beforeDeadline) {
                 const { hours, minutes } = calcularTiempoRestante();
                 const totalMinutes = hours * 60 + minutes;
                 mostrarAlerta = totalMinutes < 120; // Show alert if less than 2 hours
@@ -436,7 +436,7 @@ function renderizarTabla() {
 
             // 1. Mostrar Cantidad si existe (independiente de si está bloqueado o no)
             let cantidadHTML = '';
-            if (cantidad) {
+            if (cantidad !== null && cantidad !== undefined && cantidad !== "") {
                 const checkmark = esPasado ? '✓ ' : '';
                 cantidadHTML = `<span class="${esPasado ? 'cantidad-completada' : 'cantidad-display'}">${checkmark}${cantidad}</span>`;
             } else {
@@ -447,7 +447,7 @@ function renderizarTabla() {
             let lockHTML = (tieneConfig && !beforeDeadline && !esPasado) ? '<span class="lock-indicator" title="Plazo vencido">🔒</span>' : '';
 
             // 3. Montar contenido principal
-            if (mostrarAlerta && !cantidad) {
+            if (mostrarAlerta && (cantidad === null || cantidad === undefined || cantidad === "")) {
                 cellContent = `<span class="urgent-badge">🚨</span>` + cantidadHTML;
             } else {
                 cellContent = lockHTML + cantidadHTML;
@@ -536,7 +536,8 @@ function editarCantidad(cell) {
     // Guardar al perder foco o presionar Enter
     input.on('blur keypress', function (e) {
         if (e.type === 'blur' || e.which === 13) {
-            const nuevaCantidad = parseFloat($(this).val()) || 0;
+            const val = $(this).val();
+            const nuevaCantidad = val === "" ? null : parseFloat(val);
             guardarCantidad(productoId, fechaEntrega, nuevaCantidad, cantidadActual, $cell);
         }
     });
@@ -552,7 +553,7 @@ function editarCantidad(cell) {
 // Guardar cantidad
 function guardarCantidad(productoId, fechaEntrega, nuevaCantidad, cantidadAnterior, $cell) {
     // Si no cambió el valor, solo re-renderizar
-    if (nuevaCantidad.toString() === cantidadAnterior.toString()) {
+    if (String(nuevaCantidad) === String(cantidadAnterior)) {
         renderizarTabla();
         return;
     }

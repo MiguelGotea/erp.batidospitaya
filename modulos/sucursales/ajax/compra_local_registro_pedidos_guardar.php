@@ -15,7 +15,8 @@ try {
     $codigo_sucursal = $_POST['codigo_sucursal'] ?? '';
     $id_producto = $_POST['id_producto_presentacion'] ?? '';
     $fecha_entrega = $_POST['fecha_entrega'] ?? '';
-    $cantidad_pedido = $_POST['cantidad_pedido'] ?? 0;
+    $cantidad_pedido_raw = $_POST['cantidad_pedido'] ?? '';
+    $cantidad_pedido = ($cantidad_pedido_raw === '' || $cantidad_pedido_raw === 'null') ? null : $cantidad_pedido_raw;
 
     if (empty($codigo_sucursal) || empty($id_producto) || empty($fecha_entrega)) {
         throw new Exception('Datos incompletos');
@@ -39,8 +40,6 @@ try {
 
     // Obtener día de la semana de la fecha (1=Lun, 7=Dom)
     $dia_semana = $fecha_obj->format('N');
-    if ($dia_semana == 7)
-        $dia_semana = 7; // Domingo
 
     // Verificar que este día esté habilitado en la configuración
     $sql_config = "SELECT id FROM compra_local_configuracion_despacho 
@@ -67,10 +66,10 @@ try {
 
     if ($registro) {
         // Actualizar pedido existente
-        $cantidad_anterior = $registro['cantidad_pedido'] ?? 0;
+        $cantidad_anterior = $registro['cantidad_pedido'];
 
         // Solo actualizar fecha_hora_reportada si el valor cambió
-        if ($cantidad_anterior != $cantidad_pedido) {
+        if ($cantidad_anterior != $cantidad_pedido || ($cantidad_anterior === null && $cantidad_pedido !== null) || ($cantidad_anterior !== null && $cantidad_pedido === null)) {
             $sql = "UPDATE compra_local_pedidos_historico 
                     SET cantidad_pedido = ?, 
                         fecha_hora_reportada = NOW(),
@@ -85,8 +84,8 @@ try {
             ]);
         }
     } else {
-        // Insertar nuevo pedido
-        if ($cantidad_pedido > 0) {
+        // Insertar nuevo pedido (Solo si no es nulo, o si es 0)
+        if ($cantidad_pedido !== null) {
             $sql = "INSERT INTO compra_local_pedidos_historico 
                     (id_producto_presentacion, codigo_sucursal, fecha_entrega, cantidad_pedido, usuario_registro, fecha_hora_reportada)
                     VALUES (?, ?, ?, ?, ?, NOW())";
