@@ -274,7 +274,7 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                                 <div class="dc-kpi-card" id="kpiProy">
                                     <div class="dc-kpi-icon" style="color:#27ae60"><i class="fas fa-chart-line"></i>
                                     </div>
-                                    <div class="dc-kpi-label">Proyección · Próx. 4 Semanas</div>
+                                    <div class="dc-kpi-label">Proyección · Próx. 3 Semanas</div>
                                     <div class="dc-kpi-valor" id="kpiProyVal">—</div>
                                     <div class="dc-kpi-sub" id="kpiProySub"></div>
                                 </div>
@@ -397,7 +397,7 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                                                 <th>Insumo ERP</th>
                                                 <th>Unidad</th>
                                                 <th class="text-end">Prom/Semana</th>
-                                                <th class="text-end">Proyec. 4 Sem.</th>
+                                                <th class="text-end">Proyec. 3 Sem.</th>
                                                 <th class="text-end">Stock Mín</th>
                                                 <th class="text-end">Stock Máx</th>
                                                 <th class="text-end">Semana Pico</th>
@@ -554,7 +554,7 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                                             <i class="fas fa-chart-line me-2"></i>Tab: Proyección y Planificación
                                         </h6>
                                         <p class="small text-muted mb-0">
-                                            Proyección de consumo para las próximas 4 semanas basada en regresión lineal (mínimos cuadrados) sobre las semanas completas.<br><br>
+                                            Proyección de consumo para las próximas 3 semanas basada en regresión lineal (mínimos cuadrados) sobre las semanas completas.<br><br>
                                             Incluye <strong>Stock Mínimo</strong> (1 semana) y <strong>Stock Máximo</strong> (2 semanas) recomendados.
                                         </p>
                                     </div>

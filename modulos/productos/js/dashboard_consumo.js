@@ -499,7 +499,7 @@ function renderKPIs(data, item) {
 
         if (item.semana_pico_num) {
             const semPico = data.semanas.find(s => s.numero_semana == item.semana_pico_num);
-            $('#kpiPicoVal').text(`Sem. ${item.semana_pico_num}`);
+            $('#kpiPicoVal').text(`${item.semana_pico_num}`);
             $('#kpiPicoSub').text(semPico
                 ? `${formatFecha(semPico.fecha_inicio)}–${formatFecha(semPico.fecha_fin)}`
                 : '');
@@ -508,8 +508,53 @@ function renderKPIs(data, item) {
             $('#kpiPicoSub').text('');
         }
 
-        $('#kpiProyVal').text(formatNum(item.proyeccion_4sem));
-        $('#kpiProySub').text(`Prom. ${formatNum(item.prom_semana)} ${escHtml(item.unidad)}/sem`);
+        // Proyección 3 semanas con regresión lineal (misma lógica que el gráfico)
+        const semanasNrosKpi  = data.semanas.map(s => s.numero_semana);
+        const semanaActualKpi = parseInt($('#semanaActualNum').text()) || 0;
+        const esSemActKpi     = semanaActualKpi > 0 && semanasNrosKpi.includes(semanaActualKpi);
+        const semanasCalcKpi  = esSemActKpi
+            ? semanasNrosKpi.filter(n => n !== semanaActualKpi)
+            : semanasNrosKpi;
+        const ultimaSemKpi    = semanasNrosKpi[semanasNrosKpi.length - 1];
+
+        // Promedio sobre semanas completas
+        let promCalcKpi = item.prom_semana || 0;
+        if (semanasCalcKpi.length > 0) {
+            const valsC = semanasCalcKpi.map(n => item.por_semana[n] || 0);
+            const valsP = valsC.filter(v => v > 0);
+            if (valsP.length > 0) promCalcKpi = valsP.reduce((a, b) => a + b, 0) / valsP.length;
+        }
+
+        let kpiProy3 = 0;
+        let kpiProm3 = promCalcKpi;
+        if (semanasCalcKpi.length >= 2) {
+            const xV    = semanasCalcKpi;
+            const yV    = semanasCalcKpi.map(n => item.por_semana[n] || 0);
+            const nk    = xV.length;
+            const sumX  = xV.reduce((a, b) => a + b, 0);
+            const sumY  = yV.reduce((a, b) => a + b, 0);
+            const sumXY = xV.reduce((acc, x, i) => acc + x * yV[i], 0);
+            const sumX2 = xV.reduce((acc, x)    => acc + x * x, 0);
+            const denom = nk * sumX2 - sumX * sumX;
+            if (Math.abs(denom) > 0.001) {
+                const sl = (nk * sumXY - sumX * sumY) / denom;
+                const ic = (sumY - sl * sumX) / nk;
+                const w1 = Math.max(0, sl * (ultimaSemKpi + 1) + ic);
+                const w2 = Math.max(0, sl * (ultimaSemKpi + 2) + ic);
+                const w3 = Math.max(0, sl * (ultimaSemKpi + 3) + ic);
+                kpiProy3 = w1 + w2 + w3;
+                kpiProm3 = kpiProy3 / 3;
+            } else {
+                kpiProy3 = promCalcKpi * 3;
+                kpiProm3 = promCalcKpi;
+            }
+        } else {
+            kpiProy3 = promCalcKpi * 3;
+            kpiProm3 = promCalcKpi;
+        }
+
+        $('#kpiProyVal').text(Math.round(kpiProy3).toLocaleString('es-NI'));
+        $('#kpiProySub').text(`Prom. ${Math.round(kpiProm3).toLocaleString('es-NI')} ${escHtml(item.unidad)}/sem`);
 
     } else {
         // Sin selección: placeholder
@@ -919,6 +964,15 @@ function renderTablaHistorial(data) {
 function renderTablaProyeccion(data) {
     let html = '';
 
+    // Pre-calcular semanas completas (misma lógica que gráfico y KPIs)
+    const semanasNrosTbl  = data.semanas.map(s => s.numero_semana);
+    const semanaActualTbl = parseInt($('#semanaActualNum').text()) || 0;
+    const esSemActTbl     = semanaActualTbl > 0 && semanasNrosTbl.includes(semanaActualTbl);
+    const semanasCalcTbl  = esSemActTbl
+        ? semanasNrosTbl.filter(n => n !== semanaActualTbl)
+        : semanasNrosTbl;
+    const ultimaSemTbl    = semanasNrosTbl[semanasNrosTbl.length - 1];
+
     if (data.consumo.length === 0) {
         html = `<tr><td colspan="9" class="text-center text-muted py-4">Sin datos de proyección.</td></tr>`;
     } else {
@@ -929,6 +983,34 @@ function renderTablaProyeccion(data) {
                     ? `<span class="dc-trend-down"><i class="fas fa-arrow-down me-1"></i>Decreciente</span>`
                     : `<span class="dc-trend-flat"><i class="fas fa-minus me-1"></i>Estable</span>`;
 
+            // Proyección 3 semanas con regresión lineal (misma lógica que gráfico/KPIs)
+            let promCalcTbl = item.prom_semana || 0;
+            if (semanasCalcTbl.length > 0) {
+                const valsC = semanasCalcTbl.map(n => item.por_semana[n] || 0);
+                const valsP = valsC.filter(v => v > 0);
+                if (valsP.length > 0) promCalcTbl = valsP.reduce((a, b) => a + b, 0) / valsP.length;
+            }
+
+            let proy3Tbl = promCalcTbl * 3;
+            if (semanasCalcTbl.length >= 2) {
+                const xV    = semanasCalcTbl;
+                const yV    = semanasCalcTbl.map(n => item.por_semana[n] || 0);
+                const nk    = xV.length;
+                const sumX  = xV.reduce((a, b) => a + b, 0);
+                const sumY  = yV.reduce((a, b) => a + b, 0);
+                const sumXY = xV.reduce((acc, x, i) => acc + x * yV[i], 0);
+                const sumX2 = xV.reduce((acc, x)    => acc + x * x, 0);
+                const denom = nk * sumX2 - sumX * sumX;
+                if (Math.abs(denom) > 0.001) {
+                    const sl = (nk * sumXY - sumX * sumY) / denom;
+                    const ic = (sumY - sl * sumX) / nk;
+                    const w1 = Math.max(0, sl * (ultimaSemTbl + 1) + ic);
+                    const w2 = Math.max(0, sl * (ultimaSemTbl + 2) + ic);
+                    const w3 = Math.max(0, sl * (ultimaSemTbl + 3) + ic);
+                    proy3Tbl = w1 + w2 + w3;
+                }
+            }
+
             html += `
             <tr>
                 <td>
@@ -937,7 +1019,7 @@ function renderTablaProyeccion(data) {
                 </td>
                 <td>${escHtml(item.unidad)}</td>
                 <td class="text-end">${formatNum(item.prom_semana)}</td>
-                <td class="text-end fw-bold" style="color:#0E544C">${formatNum(item.proyeccion_4sem)}</td>
+                <td class="text-end fw-bold" style="color:#0E544C">${Math.round(proy3Tbl).toLocaleString('es-NI')}</td>
                 <td class="text-end" style="color:#e67e22">${formatNum(item.stock_min)}</td>
                 <td class="text-end" style="color:#27ae60">${formatNum(item.stock_max)}</td>
                 <td class="text-end">
