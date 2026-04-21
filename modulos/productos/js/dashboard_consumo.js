@@ -977,12 +977,6 @@ function renderTablaProyeccion(data) {
         html = `<tr><td colspan="9" class="text-center text-muted py-4">Sin datos de proyección.</td></tr>`;
     } else {
         data.consumo.forEach(item => {
-            const trendIcon = item.tendencia === 'up'
-                ? `<span class="dc-trend-up"><i class="fas fa-arrow-up me-1"></i>Creciente</span>`
-                : item.tendencia === 'down'
-                    ? `<span class="dc-trend-down"><i class="fas fa-arrow-down me-1"></i>Decreciente</span>`
-                    : `<span class="dc-trend-flat"><i class="fas fa-minus me-1"></i>Estable</span>`;
-
             // Proyección 3 semanas con regresión lineal (misma lógica que gráfico/KPIs)
             let promCalcTbl = item.prom_semana || 0;
             if (semanasCalcTbl.length > 0) {
@@ -992,6 +986,7 @@ function renderTablaProyeccion(data) {
             }
 
             let proy3Tbl = promCalcTbl * 3;
+            let slTbl    = 0;  // pendiente OLS — usada también para Tendencia
             if (semanasCalcTbl.length >= 2) {
                 const xV    = semanasCalcTbl;
                 const yV    = semanasCalcTbl.map(n => item.por_semana[n] || 0);
@@ -1002,14 +997,28 @@ function renderTablaProyeccion(data) {
                 const sumX2 = xV.reduce((acc, x)    => acc + x * x, 0);
                 const denom = nk * sumX2 - sumX * sumX;
                 if (Math.abs(denom) > 0.001) {
-                    const sl = (nk * sumXY - sumX * sumY) / denom;
-                    const ic = (sumY - sl * sumX) / nk;
-                    const w1 = Math.max(0, sl * (ultimaSemTbl + 1) + ic);
-                    const w2 = Math.max(0, sl * (ultimaSemTbl + 2) + ic);
-                    const w3 = Math.max(0, sl * (ultimaSemTbl + 3) + ic);
-                    proy3Tbl = w1 + w2 + w3;
+                    slTbl        = (nk * sumXY - sumX * sumY) / denom;
+                    const ic     = (sumY - slTbl * sumX) / nk;
+                    const w1     = Math.max(0, slTbl * (ultimaSemTbl + 1) + ic);
+                    const w2     = Math.max(0, slTbl * (ultimaSemTbl + 2) + ic);
+                    const w3     = Math.max(0, slTbl * (ultimaSemTbl + 3) + ic);
+                    proy3Tbl     = w1 + w2 + w3;
                 }
             }
+
+            // Tendencia basada en la pendiente OLS (mismo criterio que el gráfico)
+            // ±5% del promedio por semana como umbral de "estable"
+            const olsThreshold = promCalcTbl * 0.05;
+            const trendOls = slTbl > olsThreshold
+                ? 'up'
+                : slTbl < -olsThreshold
+                    ? 'down'
+                    : 'flat';
+            const trendIcon = trendOls === 'up'
+                ? `<span class="dc-trend-up"><i class="fas fa-arrow-up me-1"></i>Creciente</span>`
+                : trendOls === 'down'
+                    ? `<span class="dc-trend-down"><i class="fas fa-arrow-down me-1"></i>Decreciente</span>`
+                    : `<span class="dc-trend-flat"><i class="fas fa-minus me-1"></i>Estable</span>`;
 
             html += `
             <tr>
