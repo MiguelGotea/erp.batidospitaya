@@ -1430,100 +1430,109 @@ const CREC_MIN_RUN_RATIO  = 0.65;   // ratio de semanas consecutivas en alza
 const CREC_MIN_SEMANAS    = 4;      // mínimo de semanas con dato para calcular
 
 /**
- * Calcula alertas de crecimiento sostenido para cada insumo (total, no por sucursal).
+ * Calcula alertas de crecimiento sostenido por SUCURSAL × INSUMO.
+ * Cada local se compara contra SÍ MISMO (idéntico al panel de sobreconsumo).
  * Devuelve array ordenado por severidad desc, luego β_rel desc.
  */
 function calcularAlertasCrecimiento(data) {
     const alertas     = [];
+    const nombres     = data.sucursales_nombres || {};
     const semanasNros = data.semanas.map(s => s.numero_semana);
 
     data.consumo.forEach(item => {
-        // Usar la serie TOTAL del insumo (suma de todas las sucursales)
-        const serieCompleta = semanasNros.map(n => item.por_semana[n] || 0);
+        data.sucursales.forEach(suc => {
+            // Serie semanal de ESTA sucursal para ESTE insumo
+            const serieCompleta = semanasNros.map(n =>
+                item.desglose_semxsuc?.[n]?.[suc] || 0
+            );
 
-        // Filtrar solo semanas con dato > 0
-        const idx_con_valor = semanasNros
-            .map((n, i) => ({ n, v: serieCompleta[i], i }))
-            .filter(d => d.v > 0);
+            // Filtrar solo semanas con dato > 0
+            const puntos = semanasNros
+                .map((n, i) => ({ n, v: serieCompleta[i] }))
+                .filter(d => d.v > 0);
 
-        if (idx_con_valor.length < CREC_MIN_SEMANAS) return;
+            if (puntos.length < CREC_MIN_SEMANAS) return;
 
-        const ys = idx_con_valor.map(d => d.v);
-        const xs = idx_con_valor.map(d => d.n); // usar número de semana como eje X
-        const N  = ys.length;
+            const ys = puntos.map(d => d.v);
+            const xs = puntos.map(d => d.n);  // número de semana como eje X
+            const N  = ys.length;
 
-        // ── μ global (sobre semanas con valor) ──────────────────────
-        const mu = ys.reduce((a, b) => a + b, 0) / N;
-        if (mu < 0.001) return;
+            // ── μ (sobre semanas con valor) ──────────────────────────
+            const mu = ys.reduce((a, b) => a + b, 0) / N;
+            if (mu < 0.001) return;
 
-        // ── INDICADOR 1: Regresión lineal OLS ───────────────────────
-        const sumX  = xs.reduce((a, b) => a + b, 0);
-        const sumY  = ys.reduce((a, b) => a + b, 0);
-        const sumXY = xs.reduce((acc, x, i) => acc + x * ys[i], 0);
-        const sumX2 = xs.reduce((acc, x) => acc + x * x, 0);
-        const denom = N * sumX2 - sumX * sumX;
-        let slope = 0;
-        if (Math.abs(denom) > 0.001) {
-            slope = (N * sumXY - sumX * sumY) / denom;
-        }
-        const beta_rel = slope / mu;  // pendiente relativa al promedio
-        const ind1     = beta_rel > CREC_MIN_SLOPE_REL;
-
-        // ── INDICADOR 2: Mann-Kendall τ ─────────────────────────────
-        let S = 0;
-        for (let i = 0; i < N - 1; i++) {
-            for (let j = i + 1; j < N; j++) {
-                const diff = ys[j] - ys[i];
-                if (diff > 0)       S++;
-                else if (diff < 0)  S--;
+            // ── INDICADOR 1: Regresión lineal OLS ───────────────────
+            const sumX  = xs.reduce((a, b) => a + b, 0);
+            const sumY  = ys.reduce((a, b) => a + b, 0);
+            const sumXY = xs.reduce((acc, x, i) => acc + x * ys[i], 0);
+            const sumX2 = xs.reduce((acc, x) => acc + x * x, 0);
+            const denom = N * sumX2 - sumX * sumX;
+            let slope = 0;
+            if (Math.abs(denom) > 0.001) {
+                slope = (N * sumXY - sumX * sumY) / denom;
             }
-        }
-        const S_max = N * (N - 1) / 2;
-        const tau   = S_max > 0 ? S / S_max : 0;
-        const ind2  = tau > CREC_MIN_MK_TAU;
+            const beta_rel = slope / mu;
+            const ind1     = beta_rel > CREC_MIN_SLOPE_REL;
 
-        // ── INDICADOR 3: Ratio de incrementos consecutivos ──────────
-        // Evaluar sobre la serie ORDENADA temporalmente (ya lo está)
-        let positivos = 0;
-        for (let i = 1; i < N; i++) {
-            if (ys[i] > ys[i - 1]) positivos++;
-        }
-        const run_ratio = (N > 1) ? positivos / (N - 1) : 0;
-        const ind3      = run_ratio > CREC_MIN_RUN_RATIO;
+            // ── INDICADOR 2: Mann-Kendall τ ──────────────────────────
+            let S = 0;
+            for (let i = 0; i < N - 1; i++) {
+                for (let j = i + 1; j < N; j++) {
+                    const diff = ys[j] - ys[i];
+                    if (diff > 0)      S++;
+                    else if (diff < 0) S--;
+                }
+            }
+            const S_max = N * (N - 1) / 2;
+            const tau   = S_max > 0 ? S / S_max : 0;
+            const ind2  = tau > CREC_MIN_MK_TAU;
 
-        // ── Decisión: ≥ 2 de 3 ─────────────────────────────────────
-        const score = (ind1 ? 1 : 0) + (ind2 ? 1 : 0) + (ind3 ? 1 : 0);
-        if (score < 2) return;
+            // ── INDICADOR 3: Ratio de incrementos consecutivos ───────
+            let positivos = 0;
+            for (let i = 1; i < N; i++) {
+                if (ys[i] > ys[i - 1]) positivos++;
+            }
+            const run_ratio = (N > 1) ? positivos / (N - 1) : 0;
+            const ind3      = run_ratio > CREC_MIN_RUN_RATIO;
 
-        // ── Severidad ───────────────────────────────────────────────
-        let severidad;
-        if (score === 3 || beta_rel > 0.40) {
-            severidad = 'critico';
-        } else if (beta_rel > 0.20) {
-            severidad = 'notable';
-        } else {
-            severidad = 'moderado';
-        }
+            // ── Decisión: ≥ 2 de 3 ──────────────────────────────────
+            const score = (ind1 ? 1 : 0) + (ind2 ? 1 : 0) + (ind3 ? 1 : 0);
+            if (score < 2) return;
 
-        // Crecimiento acumulado estimado en el período analizado
-        const y_inicio = Math.max(0, slope * xs[0] + (sumY - slope * sumX) / N);
-        const y_fin    = Math.max(0, slope * xs[N - 1] + (sumY - slope * sumX) / N);
-        const pct_periodo = y_inicio > 0.001 ? Math.round((y_fin - y_inicio) / y_inicio * 100) : 0;
+            // ── Severidad ────────────────────────────────────────────
+            let severidad;
+            if (score === 3 || beta_rel > 0.40) {
+                severidad = 'critico';
+            } else if (beta_rel > 0.20) {
+                severidad = 'notable';
+            } else {
+                severidad = 'moderado';
+            }
 
-        alertas.push({
-            insumo:      item.nombre,
-            unidad:      item.unidad,
-            idInsumo:    item.id,
-            mu:          round2(mu),
-            beta_rel:    beta_rel,
-            tau:         round2(tau),
-            run_ratio:   round2(run_ratio),
-            score,
-            ind1, ind2, ind3,
-            severidad,
-            pct_semanal: Math.round(beta_rel * 100),
-            pct_periodo,
-            semanas_ok:  N,
+            // Crecimiento acumulado en el período (línea de regresión)
+            const intercept  = (sumY - slope * sumX) / N;
+            const y_inicio   = Math.max(0, slope * xs[0]      + intercept);
+            const y_fin      = Math.max(0, slope * xs[N - 1]  + intercept);
+            const pct_periodo = y_inicio > 0.001
+                ? Math.round((y_fin - y_inicio) / y_inicio * 100)
+                : 0;
+
+            alertas.push({
+                insumo:      item.nombre,
+                unidad:      item.unidad,
+                idInsumo:    item.id,
+                local:       nombres[suc] || suc,
+                mu:          round2(mu),
+                beta_rel,
+                tau:         round2(tau),
+                run_ratio:   round2(run_ratio),
+                score,
+                ind1, ind2, ind3,
+                severidad,
+                pct_semanal: Math.round(beta_rel * 100),
+                pct_periodo,
+                semanas_ok:  N,
+            });
         });
     });
 
@@ -1541,7 +1550,7 @@ function calcularAlertasCrecimiento(data) {
 function renderPanelCrecimiento(data) {
     const $panel = $('#panelCrecimiento');
 
-    if (!data || !data.consumo || data.consumo.length === 0 ||
+    if (!data || !data.sucursales || data.sucursales.length < 1 ||
         !data.semanas || data.semanas.length < CREC_MIN_SEMANAS) {
         $panel.hide();
         return;
@@ -1591,21 +1600,25 @@ function renderPanelCrecimiento(data) {
         // Indicadores activos como pills
         const pill = (activo, label, title) => activo
             ? `<span class="dc-crec-ind-pill active" title="${title}">${label}</span>`
-            : `<span class="dc-crec-ind-pill"       title="${title}">${label}</span>`;
+            : `<span class="dc-crec-ind-pill"        title="${title}">${label}</span>`;
 
         const ind_html = [
-            pill(a.ind1, 'Regresión', `β/μ = ${(a.beta_rel*100).toFixed(1)}%/sem · umbral ${CREC_MIN_SLOPE_REL*100}%`),
+            pill(a.ind1, 'Regresión',    `β/μ = ${(a.beta_rel*100).toFixed(1)}%/sem · umbral ${CREC_MIN_SLOPE_REL*100}%`),
             pill(a.ind2, 'Mann-Kendall', `τ = ${a.tau} · umbral ${CREC_MIN_MK_TAU}`),
-            pill(a.ind3, 'Run-ratio', `${Math.round(a.run_ratio*100)}% incrementos · umbral ${CREC_MIN_RUN_RATIO*100}%`),
+            pill(a.ind3, 'Run-ratio',    `${Math.round(a.run_ratio*100)}% incrementos · umbral ${CREC_MIN_RUN_RATIO*100}%`),
         ].join(' ');
 
-        const insumoEsc = escHtml(a.insumo);
+        const insumoEsc   = escHtml(a.insumo);
+        const localEscAttr = escHtml(a.local);
+        const localEscJS   = a.local.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+
         filas += `
         <tr>
+            <td style="font-size:.75rem;color:#777;font-style:italic">${localEscAttr}</td>
             <td>
                 <span class="dc-crec-insumo-pill"
-                    onclick="seleccionarInsumoDesdeAlerta(${a.idInsumo})"
-                    title="Ver tendencia de ${insumoEsc}">
+                    onclick="seleccionarInsumoDesdeAlerta(${a.idInsumo}, '${localEscJS}')"
+                    title="Ver tendencia de ${insumoEsc} · solo ${localEscAttr}">
                     <i class="fas fa-chart-line me-1" style="font-size:.62rem;opacity:.7"></i>${insumoEsc}
                 </span>
             </td>
@@ -1624,6 +1637,7 @@ function renderPanelCrecimiento(data) {
             <table class="dc-crec-tabla">
                 <thead>
                     <tr>
+                        <th>Tienda</th>
                         <th>Insumo</th>
                         <th class="text-end">Semanas</th>
                         <th class="text-end">Crecim. Semanal</th>
