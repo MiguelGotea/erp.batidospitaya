@@ -246,9 +246,18 @@ function bindEventos() {
         modoGrafico = $(this).data('modo');
         $('#chartModoBarras, #chartModoLineaTotal, #chartModoLineaSuc').removeClass('active');
         $(this).addClass('active');
+        $('#chartLegendReset').hide();  // reset el estado de series ocultas al cambiar modo
         if (datosActuales && !$('#chartWrap').hasClass('d-none')) {
             renderGrafico(datosActuales);
         }
+    });
+
+    // Botón reset de leyenda — mostrar todas las series
+    $('#chartLegendReset').on('click', function () {
+        if (!chartTendencia) return;
+        chartTendencia.data.datasets.forEach((_, i) => chartTendencia.show(i));
+        chartTendencia.update();
+        $(this).hide();
     });
 
     // Cambiar insumo en el panel de análisis → re-renderizar gráfico + KPIs
@@ -730,7 +739,7 @@ function renderGrafico(data) {
                 legend: {
                     position: 'bottom',
                     onClick: function (e, legendItem, legend) {
-                        // Toggle nativo de Chart.js (ocultar/mostrar dataset al hacer clic en leyenda)
+                        // Toggle nativo: ocultar/mostrar dataset al hacer clic en leyenda
                         const index = legendItem.datasetIndex;
                         const ci = legend.chart;
                         if (ci.isDatasetVisible(index)) {
@@ -740,15 +749,24 @@ function renderGrafico(data) {
                             ci.show(index);
                             legendItem.hidden = false;
                         }
+                        // Mostrar/ocultar botón de reset según si hay algo oculto
+                        const hayOcultos = ci.data.datasets.some((_, i) => !ci.isDatasetVisible(i));
+                        $('#chartLegendReset').toggle(hayOcultos);
                     },
                     labels: {
                         font: { size: 10, family: 'Calibri' },
-                        padding: 10,
+                        padding: 12,
                         boxWidth: 12,
+                        usePointStyle: true,
                         // filtrar el dataset "Prom" de la leyenda si hay muchas series
                         filter: (item) => numSucursales > 6
                             ? !item.text.startsWith('Prom.')
                             : true,
+                        generateLabels: function(chart) {
+                            // Usar el generador nativo y añadir el sufijo de hint solo en el primero
+                            const labels = Chart.defaults.plugins.legend.labels.generateLabels(chart);
+                            return labels;
+                        },
                     },
                 },
                 tooltip: {
@@ -790,6 +808,21 @@ function renderGrafico(data) {
             },
         },
     });
+
+    // Ocultar el botón reset (nuevo chart: todas las series visibles)
+    $('#chartLegendReset').hide();
+
+    // Agregar o actualizar el hint de interactividad debajo del chart
+    const $chartParent = $('#chartWrap').parent();
+    $chartParent.find('.dc-chart-legend-hint').remove();
+    if (esLineaSuc || esBarraSuc) {
+        $chartParent.append(
+            '<p class="dc-chart-legend-hint">' +
+            '<i class="fas fa-mouse-pointer" style="margin-right:4px"></i>' +
+            'Haz clic en una tienda de la leyenda para ocultarla del gráfico' +
+            '</p>'
+        );
+    }
 }
 
 
@@ -1280,9 +1313,9 @@ function renderPanelAlertas(data, kSigma) {
                 <td style="font-size:.75rem;color:#777;font-style:italic">${escHtml(local)}</td>
                 <td>
                     <span class="dc-alerta-insumo-pill"
-                        onclick="seleccionarInsumoDesdeAlerta(${a.idInsumo})"
-                        title="Ver tendencia de ${escHtml(a.insumo)}">
-                        ${escHtml(a.insumo)}
+                        onclick="seleccionarInsumoDesdeAlerta(${a.idInsumo}, ${JSON.stringify(a.local)})"
+                        title="Ver tendencia de ${escHtml(a.insumo)} · solo ${escHtml(a.local)}">
+                        <i class="fas fa-chart-line me-1" style="font-size:.62rem;opacity:.7"></i>${escHtml(a.insumo)}
                     </span>
                 </td>
                 <td class="text-end fw-bold" style="color:#c0392b">
@@ -1324,8 +1357,51 @@ function renderPanelAlertas(data, kSigma) {
 /**
  * Selecciona un insumo desde el panel de alertas → activa el gráfico de tendencia.
  */
-window.seleccionarInsumoDesdeAlerta = function (idInsumo) {
+/**
+ * Selecciona insumo desde alerta de sobreconsumo.
+ * También activa el modo "Línea x Tienda" y filtra a solo la tienda del incidente.
+ * @param {number} idInsumo   - ID del insumo a seleccionar
+ * @param {string} [localName] - Nombre exacto de la tienda que tuvo el spike (opcional)
+ */
+window.seleccionarInsumoDesdeAlerta = function (idInsumo, localName) {
+    // 1) Seleccionar el insumo en el dropdown
     $('#chartInsumoSel').val(idInsumo).trigger('change');
+
+    // 2) Cambiar al modo Línea x Tienda
+    modoGrafico = 'linea_suc';
+    $('#chartModoBarras, #chartModoLineaTotal, #chartModoLineaSuc').removeClass('active');
+    $('#chartModoLineaSuc').addClass('active');
+
+    // 3) Re-renderizar con el nuevo modo
+    if (datosActuales) {
+        renderGrafico(datosActuales);
+    }
+
+    // 4) Si se pasó un nombre de tienda, ocultar todos los datasets menos el de esa tienda
+    if (localName && chartTendencia) {
+        // Esperar un tick para que el chart esté completamente renderizado
+        setTimeout(() => {
+            const chart = chartTendencia;
+            if (!chart) return;
+            chart.data.datasets.forEach((ds, i) => {
+                // El label del dataset puede ser truncado, comparamos con startsWith
+                const dsLabel = (ds.label || '').trim();
+                const isTarget = dsLabel === localName ||
+                    localName.startsWith(dsLabel) ||
+                    dsLabel.startsWith(localName.substring(0, Math.min(localName.length, 20)));
+                if (isTarget) {
+                    chart.show(i);
+                } else {
+                    chart.hide(i);
+                }
+            });
+            // Mostrar botón reset ya que hay series ocultas
+            const hayOcultos = chart.data.datasets.some((_, i) => !chart.isDatasetVisible(i));
+            $('#chartLegendReset').toggle(hayOcultos);
+        }, 80);
+    }
+
+    // 5) Scroll al gráfico
     const el = document.getElementById('cardTendencia');
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
 };
