@@ -76,11 +76,44 @@ function construirSQL($estructura)
     // WHERE
     $condiciones = [];
 
-    // Rango temporal
+    // Rango temporal — soporta múltiples tipos de período
     if (isset($estructura['rango_temporal'])) {
         $rango = $estructura['rango_temporal'];
-        $dias = intval($rango['cantidad']);
-        $condiciones[] = "Fecha >= DATE_SUB(CURDATE(), INTERVAL $dias DAY)";
+        $tipo = strtolower(trim($rango['tipo'] ?? 'dias'));
+        $cantidad = max(1, intval($rango['cantidad'] ?? 7));
+
+        switch ($tipo) {
+            case 'dias':
+                $condiciones[] = "Fecha >= DATE_SUB(CURDATE(), INTERVAL $cantidad DAY)";
+                break;
+            case 'semanas':
+                $diasTotal = $cantidad * 7;
+                $condiciones[] = "Fecha >= DATE_SUB(CURDATE(), INTERVAL $diasTotal DAY)";
+                break;
+            case 'meses':
+                $condiciones[] = "Fecha >= DATE_SUB(CURDATE(), INTERVAL $cantidad MONTH)";
+                break;
+            case 'semana_actual':
+                $condiciones[] = "YEARWEEK(Fecha, 1) = YEARWEEK(CURDATE(), 1)";
+                break;
+            case 'mes_actual':
+                $condiciones[] = "YEAR(Fecha) = YEAR(CURDATE()) AND MONTH(Fecha) = MONTH(CURDATE()) AND Fecha <= DATE_SUB(CURDATE(), INTERVAL 1 DAY)";
+                break;
+            case 'mes_anterior':
+                $condiciones[] = "Fecha BETWEEN DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 1 MONTH), '%Y-%m-01') AND LAST_DAY(DATE_SUB(CURDATE(), INTERVAL 1 MONTH))";
+                break;
+            case 'trimestre':
+            case 'trimestre_actual':
+                $condiciones[] = "QUARTER(Fecha) = QUARTER(CURDATE()) AND YEAR(Fecha) = YEAR(CURDATE()) AND Fecha <= DATE_SUB(CURDATE(), INTERVAL 1 DAY)";
+                break;
+            case 'anio':
+            case 'año':
+            case 'anio_actual':
+                $condiciones[] = "YEAR(Fecha) = YEAR(CURDATE()) AND Fecha <= DATE_SUB(CURDATE(), INTERVAL 1 DAY)";
+                break;
+            default:
+                $condiciones[] = "Fecha >= DATE_SUB(CURDATE(), INTERVAL $cantidad DAY)";
+        }
     }
 
     // Filtros
@@ -178,13 +211,21 @@ function escaparColumna($columna)
  */
 function escaparOperador($operador)
 {
-    $operadoresPermitidos = ['=', '>', '<', '>=', '<=', '!=', 'LIKE', 'IN', 'NOT IN'];
+    $operadoresPermitidos = [
+        '=', '>', '<', '>=', '<=', '!=', '<>',
+        'LIKE', 'NOT LIKE',
+        'IN', 'NOT IN',
+        'BETWEEN',
+        'IS NULL', 'IS NOT NULL'
+    ];
 
-    if (!in_array($operador, $operadoresPermitidos)) {
-        throw new Exception('Operador no permitido');
+    $operadorUpper = strtoupper(trim($operador));
+
+    if (!in_array($operadorUpper, $operadoresPermitidos)) {
+        throw new Exception('Operador no permitido: ' . htmlspecialchars($operador));
     }
 
-    return $operador;
+    return $operadorUpper;
 }
 
 /**
@@ -194,10 +235,33 @@ function escaparValor($valor)
 {
     global $conn;
 
+    // NULL / IS NULL / IS NOT NULL no llevan valor
+    if ($valor === null || strtoupper(trim($valor ?? '')) === 'NULL') {
+        return 'NULL';
+    }
+
     if (is_numeric($valor)) {
         return $valor;
     }
 
+    // Detectar expresiones SQL de fecha u otras funciones — NO encapsular entre comillas
+    $expresionesSql = [
+        'CURDATE()', 'NOW()', 'CURTIME()',
+        'DATE_SUB(', 'DATE_ADD(', 'DATE_FORMAT(',
+        'YEARWEEK(', 'YEAR(', 'MONTH(', 'DAY(', 'HOUR(', 'MINUTE(',
+        'LAST_DAY(', 'INTERVAL ', 'DATE(',
+        'STR_TO_DATE(', 'UNIX_TIMESTAMP('
+    ];
+
+    $valorUpper = strtoupper(trim($valor));
+    foreach ($expresionesSql as $expr) {
+        if (strpos($valorUpper, strtoupper($expr)) !== false) {
+            // Es una expresión SQL válida — devolver sin comillas
+            return $valor;
+        }
+    }
+
+    // Valor de texto normal — escapar con PDO::quote()
     return $conn->quote($valor);
 }
 
