@@ -164,6 +164,39 @@ function renderizarTabla(datos) {
         }
         tr.append(`<td>${activoHtml}</td>`);
         
+        // ========== COLUMNAS DE AUDITORÍA (TEMPORALES) ==========
+        
+        // ¿Es Producto Despacho? (Toggle)
+        const checkDespacho = parseInt(row.presentacion_despacho) === 1 ? 'checked' : '';
+        const despachoHtml = `
+            <label class="switch-mini">
+                <input type="checkbox" ${checkDespacho} onchange="guardarCampoInline(${row.id}, 'presentacion_despacho', this.checked ? 1 : 0)">
+                <span class="slider-mini round"></span>
+            </label>
+        `;
+        tr.append(`<td>${despachoHtml}</td>`);
+
+        // Presentación Básica (Toggle)
+        const checkBasica = parseInt(row.presentacion_basica_inventario) === 1 ? 'checked' : '';
+        const basicaHtml = `
+            <label class="switch-mini">
+                <input type="checkbox" ${checkBasica} onchange="guardarCampoInline(${row.id}, 'presentacion_basica_inventario', this.checked ? 1 : 0)">
+                <span class="slider-mini round"></span>
+            </label>
+        `;
+        tr.append(`<td>${basicaHtml}</td>`);
+
+        // Presentación Comercial (Input text)
+        const presHtml = `
+            <input type="text" class="form-control form-control-sm input-audit" 
+                   value="${row.presentacion || ''}" 
+                   placeholder="Ej: Caja x 24"
+                   onchange="guardarCampoInline(${row.id}, 'presentacion', this.value)">
+        `;
+        tr.append(`<td>${presHtml}</td>`);
+
+        // ========== FIN COLUMNAS DE AUDITORÍA ==========
+
         // Botón de acciones
         const btnVer = `
             <button class="btn-accion btn-ver" onclick="verProducto(${row.id})" title="Ver/Editar">
@@ -546,3 +579,31 @@ function buscarEnOpciones(input) {
         $(this).toggle(texto.includes(busqueda));
     });
 }
+
+// ========== FUNCIONES DE AUDITORÍA (TEMPORALES) ==========
+function guardarCampoInline(id, campo, valor) {
+    $.ajax({
+        url: 'ajax/registro_producto_update_campo_inline.php',
+        method: 'POST',
+        data: {
+            id: id,
+            campo: campo,
+            valor: valor
+        },
+        dataType: 'json',
+        success: function(response) {
+            if (response.success) {
+                // Notificación sutil (opcional)
+                console.log('Campo actualizado:', campo, valor);
+            } else {
+                alert('Error al actualizar: ' + response.message);
+                cargarDatos();
+            }
+        },
+        error: function() {
+            alert('Error de conexión al actualizar campo');
+            cargarDatos();
+        }
+    });
+}
+// ========== FIN FUNCIONES DE AUDITORÍA ==========

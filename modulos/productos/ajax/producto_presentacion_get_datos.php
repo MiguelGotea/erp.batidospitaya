@@ -121,7 +121,10 @@ try {
                 CASE 
                     WHEN pp.Id_receta_producto IS NOT NULL THEN 'SI'
                     ELSE 'NO'
-                END as tiene_receta
+                END as tiene_receta,
+                pp.presentacion_despacho,
+                pp.presentacion_basica_inventario,
+                pp.presentacion
             FROM producto_presentacion pp
             LEFT JOIN unidad_producto u ON pp.id_unidad_producto = u.id
             $whereClause

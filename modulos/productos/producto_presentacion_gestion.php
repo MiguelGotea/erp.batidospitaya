@@ -162,6 +162,11 @@ $puedeDesactivar = tienePermiso('producto_presentacion', 'desactivar', $cargoOpe
                                         </div>
                                     </div>
                                 </th>
+                                <!-- COLUMNAS DE AUDITORÍA (TEMPORALES) -->
+                                <th style="width: 120px;">¿Despacho?</th>
+                                <th style="width: 120px;">P. Básica</th>
+                                <th style="width: 180px;">P. Comercial</th>
+                                <!-- FIN COLUMNAS DE AUDITORÍA -->
                                 <th style="width: 100px;">Acciones</th>
                             </tr>
                         </thead>
