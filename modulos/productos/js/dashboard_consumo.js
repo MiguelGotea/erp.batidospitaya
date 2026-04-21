@@ -632,7 +632,7 @@ function renderGrafico(data) {
         }
 
     } else {
-        // ━━ Modo Total (1 sucursal o modo total seleccionado) ━━
+        // ━━ Modo Total / Línea Total (1 línea con promedio y proyección) ━━
         const valores = semanasNros.map(n => round2(item.por_semana[n] || 0));
         datasets = [
             {
@@ -642,7 +642,7 @@ function renderGrafico(data) {
                 borderColor:     '#0E544C',
                 borderWidth:     2,
                 tension:         0.3,
-        fill:            esLineaTotal,
+                fill:            esLineaTotal,
                 pointRadius:     4,
                 pointBackgroundColor: '#0E544C',
             },
