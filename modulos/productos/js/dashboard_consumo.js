@@ -1295,43 +1295,36 @@ function renderPanelAlertas(data, kSigma) {
     $('#alertasBadge').text(alertas.length).css({ background: '#fff', color: '#c0392b' });
     $('#alertasHint').text(`umbral: μ_local + ${kSigma}σ_local`);
 
-    // Agrupar por sucursal (ya viene ordenado: semana DESC, local ASC)
-    const grupos = {};
-    alertas.forEach(a => {
-        if (!grupos[a.local]) grupos[a.local] = [];
-        grupos[a.local].push(a);
-    });
-    const localesOrdenados = Object.keys(grupos).sort((a, b) => a.localeCompare(b, 'es'));
-
+    // Renderizar lista plana ya ordenada: semana DESC → sucursal ASC → insumo ASC
     let filas = '';
-    localesOrdenados.forEach(local => {
-        grupos[local].forEach(a => {
-            const zCls = a.zScore >= 2.5 ? 'z-critico' : a.zScore >= 2 ? 'z-alto' : 'z-moderado';
-            filas += `
-            <tr>
-                <td style="text-align:center;font-weight:700;font-size:.78rem;color:#0E544C">${a.semana}</td>
-                <td style="font-size:.75rem;color:#777;font-style:italic">${escHtml(local)}</td>
-                <td>
-                    <span class="dc-alerta-insumo-pill"
-                        onclick="seleccionarInsumoDesdeAlerta(${a.idInsumo}, ${JSON.stringify(a.local)})"
-                        title="Ver tendencia de ${escHtml(a.insumo)} · solo ${escHtml(a.local)}">
-                        <i class="fas fa-chart-line me-1" style="font-size:.62rem;opacity:.7"></i>${escHtml(a.insumo)}
-                    </span>
-                </td>
-                <td class="text-end fw-bold" style="color:#c0392b">
-                    ${formatNum(a.consumo)} ${escHtml(a.unidad)}
-                </td>
-                <td class="text-end" style="color:#888;font-size:.72rem">
-                    μ ${formatNum(round2(a.mu))} &nbsp;σ ${formatNum(round2(a.sigma))}
-                </td>
-                <td class="text-end">
-                    <span class="dc-alerta-zscore ${zCls}">+${a.zScore.toFixed(2)}σ</span>
-                </td>
-                <td class="text-end" style="color:#c0392b;font-weight:700;font-size:.78rem">
-                    +${a.pctExceso}%
-                </td>
-            </tr>`;
-        });
+    alertas.forEach(a => {
+        const zCls = a.zScore >= 2.5 ? 'z-critico' : a.zScore >= 2 ? 'z-alto' : 'z-moderado';
+        // Escapar el nombre del local para usarlo de forma segura en el atributo onclick
+        const localEscJS = a.local.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+        filas += `
+        <tr>
+            <td style="text-align:center;font-weight:700;font-size:.78rem;color:#0E544C">${a.semana}</td>
+            <td style="font-size:.75rem;color:#777;font-style:italic">${escHtml(a.local)}</td>
+            <td>
+                <span class="dc-alerta-insumo-pill"
+                    onclick="seleccionarInsumoDesdeAlerta(${a.idInsumo}, '${localEscJS}')"
+                    title="Ver tendencia de ${escHtml(a.insumo)} · solo ${escHtml(a.local)}">
+                    <i class="fas fa-chart-line me-1" style="font-size:.62rem;opacity:.7"></i>${escHtml(a.insumo)}
+                </span>
+            </td>
+            <td class="text-end fw-bold" style="color:#c0392b">
+                ${formatNum(a.consumo)} ${escHtml(a.unidad)}
+            </td>
+            <td class="text-end" style="color:#888;font-size:.72rem">
+                μ ${formatNum(round2(a.mu))} &nbsp;σ ${formatNum(round2(a.sigma))}
+            </td>
+            <td class="text-end">
+                <span class="dc-alerta-zscore ${zCls}">+${a.zScore.toFixed(2)}σ</span>
+            </td>
+            <td class="text-end" style="color:#c0392b;font-weight:700;font-size:.78rem">
+                +${a.pctExceso}%
+            </td>
+        </tr>`;
     });
 
     $('#alertasContenido').html(`
