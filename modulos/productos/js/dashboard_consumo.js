@@ -361,9 +361,10 @@ async function cargarFiltros() {
             $semDesde.attr('max', sa.numero_semana);
             $semHasta.attr('max', sa.numero_semana);
 
-            // Pre-cargar rango por defecto: 4 semanas hasta la actual
+            // Pre-cargar rango por defecto: CREC_IDEAL_SEMANAS + 1 (la actual se excluye en cálculo)
+            // 6 semanas completas → seleccionar 7 semanas en el filtro
             const semHasta = sa.numero_semana;
-            const semDesde = Math.max(1, semHasta - 3);
+            const semDesde = Math.max(1, semHasta - (CREC_IDEAL_SEMANAS)); // semHasta - 6 = 7 semanas
             $semDesde.val(semDesde);
             $semHasta.val(semHasta);
         }
@@ -1465,7 +1466,12 @@ window.seleccionarInsumoDesdeAlerta = function (idInsumo, localName) {
 const CREC_MIN_SLOPE_REL  = 0.06;   // β/μ mínimo: 6 % de crecimiento semanal relativo
 const CREC_MIN_MK_TAU     = 0.45;   // τ Mann-Kendall mínimo (0 = sin tendencia, 1 = perfectamente monótono)
 const CREC_MIN_RUN_RATIO  = 0.65;   // ratio de semanas consecutivas en alza
-const CREC_MIN_SEMANAS    = 4;      // mínimo de semanas con dato para calcular
+const CREC_MIN_SEMANAS    = 3;      // mínimo absoluto de semanas con dato para calcular
+                                    // (la semana en curso siempre se excluye, así que
+                                    //  un rango de 4 sem → 3 semanas reales analizadas)
+const CREC_IDEAL_SEMANAS  = 6;      // mínimo para veredicto estadísticamente consistente
+                                    // (Mann-Kendall S_max=15, OLS con 3 DoF)
+                                    // Requiere seleccionar al menos 7 semanas en el filtro
 
 /**
  * Calcula alertas de crecimiento sostenido por SUCURSAL × INSUMO.
@@ -1599,6 +1605,11 @@ function renderPanelCrecimiento(data) {
         return;
     }
 
+    // Semanas reales analizadas (excluye la actual)
+    const semActualN    = parseInt($('#semanaActualNum').text()) || 0;
+    const semsAnalizadas = data.semanas.filter(s => s.numero_semana !== semActualN).length;
+    const bajoideal      = semsAnalizadas < CREC_IDEAL_SEMANAS;
+
     const alertasTodas = calcularAlertasCrecimiento(data, kSlopeActual);
     $panel.show();
 
@@ -1645,7 +1656,7 @@ function renderPanelCrecimiento(data) {
     $('.dc-crec-panel').css('border-left-color', borderCol);
     $badge.text(totalDetectados).css({ background: '#fff', color: '#1a5276' });
     const mostrando = total < totalDetectados ? ` · mostrando ${total}` : '';
-    $hint.text(`${totalDetectados} detectado(s)${mostrando}`);
+    $hint.text(`${semsAnalizadas} sem analizadas · ${totalDetectados} detectado(s)${mostrando}`);
 
     let filas = '';
     alertas.forEach(a => {
@@ -1691,7 +1702,30 @@ function renderPanelCrecimiento(data) {
         </tr>`;
     });
 
+    // Banner de advertencia si las semanas analizadas están por debajo del ideal
+    const warningBanner = bajoideal ? `
+        <div style="
+            background: linear-gradient(135deg,rgba(230,126,34,.12),rgba(230,126,34,.05));
+            border-left: 3px solid #e67e22;
+            padding: 6px 14px;
+            font-size: .72rem;
+            color: #7d6608;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        ">
+            <i class="fas fa-exclamation-triangle" style="color:#e67e22;flex-shrink:0"></i>
+            <span>
+                <strong>Veredicto orientativo</strong> &mdash;
+                se analizaron <strong>${semsAnalizadas} semana(s)</strong> completa(s).
+                Para un veredicto estadísticamente consistente se recomiendan
+                <strong>${CREC_IDEAL_SEMANAS} semanas</strong> 
+                (selecciona al menos <strong>${CREC_IDEAL_SEMANAS + 1} semanas</strong> en el filtro).
+            </span>
+        </div>` : '';
+
     $('#crecimientoContenido').html(`
+        ${warningBanner}
         <div style="overflow-x:auto;">
             <table class="dc-crec-tabla">
                 <thead>
