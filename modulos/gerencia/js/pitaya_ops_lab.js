@@ -55,14 +55,15 @@ const OPS = {
 
     cargarTab(tab) {
         const map = {
-            resumen: () => this.cargarResumen(),
-            llegadas: () => this.cargarLlegadas(),
-            cycle: () => this.cargarCycleTimes(),
-            estaciones: () => this.cargarMixEstaciones(),
-            multi: () => this.cargarMultiEstacion(),
-            config: () => this.cargarConfig(),
-            simulador: () => this.initSimulador(),
-            lean: () => this.cargarLean(),
+            resumen:       () => this.cargarResumen(),
+            llegadas:      () => this.cargarLlegadas(),
+            cycle:         () => this.cargarCycleTimes(),
+            estaciones:    () => this.cargarMixEstaciones(),
+            multi:         () => this.cargarMultiEstacion(),
+            config:        () => this.cargarConfig(),
+            planificador:  () => this.initPlanificador(),
+            simulador:     () => this.initSimulador(),
+            lean:          () => this.cargarLean(),
         };
         if (map[tab]) map[tab]();
     },
@@ -390,6 +391,209 @@ const OPS = {
         }).join('');
 
         this.show('multiContent');
+    },
+
+    // ── PLANIFICADOR DE CAPACIDAD ─────────────────────────────
+    _planBound: false,
+    initPlanificador() {
+        if (!this._planBound) {
+            this._planBound = true;
+            document.getElementById('planUtil').addEventListener('input', () => {
+                document.getElementById('planUtilVal').textContent = document.getElementById('planUtil').value;
+            });
+            document.getElementById('btnCalcularPlan').addEventListener('click', () => this.calcularPlan());
+        }
+    },
+
+    async calcularPlan() {
+        const utilMax = +document.getElementById('planUtil').value / 100;
+        const tipoDia = document.getElementById('planTipoDia').value;
+        const suc     = document.getElementById('opsSucursal').value;
+        const sucNom  = document.getElementById('opsSucursal').selectedOptions[0]?.text || 'Todas las tiendas';
+
+        if (!suc) {
+            this.toast('⚠️ Selecciona una sucursal específica para el planificador', 'info');
+            return;
+        }
+
+        document.getElementById('planLoader').style.display = 'flex';
+        document.getElementById('planResultados').style.display = 'none';
+
+        // Cargar llegadas + mix + config en paralelo
+        const [dLleg, dMix, dCfg] = await Promise.all([
+            this.post({ accion: 'llegadas',       tipo_dia: tipoDia }),
+            this.post({ accion: 'mix_estaciones', tipo_dia: tipoDia }),
+            this.post({ accion: 'config' }),
+        ]);
+
+        document.getElementById('planLoader').style.display = 'none';
+        if (!dLleg.success || !dMix.success || !dCfg.success) {
+            this.toast('Error cargando datos del planificador', 'error');
+            return;
+        }
+
+        // Extraer cycle times de configuración (en minutos)
+        const cfg = dCfg.config;
+        const ctBat = (+(cfg.Batido?.tiempo_licuado_min?.valor  || 2)) + (+(cfg.Batido?.tiempo_servido_min?.valor || 0.5));
+        const ctWaf = (+(cfg.Waffle?.tiempo_mezcla_min?.valor   || 2)) + (+(cfg.Waffle?.tiempo_coccion_min?.valor || 5)) + (+(cfg.Waffle?.tiempo_emplato_min?.valor || 1));
+        const ctBow = (+(cfg.Bowl?.tiempo_licuado_min?.valor    || 3)) + (+(cfg.Bowl?.tiempo_servido_min?.valor  || 2));
+        const batBatch = +(cfg.Batido?.max_batch_size?.valor || 3);
+        const bowBatch = +(cfg.Bowl?.max_batch_size?.valor   || 2);
+
+        // Índices de llegadas y mix por hora
+        const llegIdx = {};
+        dLleg.llegadas_por_hora.forEach(h => { llegIdx[h.hora] = h.lambda; });
+        const mixIdx = {};
+        dMix.mix_por_hora.forEach(h => {
+            mixIdx[h.hora] = {
+                pB: h.pct_Batido / 100,
+                pW: h.pct_Waffle / 100,
+                pO: h.pct_Bowl   / 100,
+            };
+        });
+
+        const lambdaMax = Math.max(...dLleg.llegadas_por_hora.map(h => h.lambda), 0.01);
+        const rows = [];
+        let maxOp = 0, horaPicoOp = 6, maxLam = 0, horaPicoLam = 6;
+
+        for (let hora = 6; hora <= 22; hora++) {
+            const lam  = llegIdx[hora] ?? 0;
+            const mix  = mixIdx[hora] ?? { pB: 0.5, pW: 0.3, pO: 0.2 };
+
+            const lamBat = lam * mix.pB;
+            const lamWaf = lam * mix.pW;
+            const lamBow = lam * mix.pO;
+
+            // M/M/c: c_min = ceil(λ × CT / 60 / utilMax)
+            // Para batidos: batch reduce carga efectiva
+            const cBat = lamBat > 0 ? Math.ceil((lamBat * (ctBat / batBatch)) / 60 / utilMax) : 0;
+            const cWaf = lamWaf > 0 ? Math.ceil((lamWaf * ctWaf)              / 60 / utilMax) : 0;
+            const cBow = lamBow > 0 ? Math.ceil((lamBow * (ctBow / bowBatch)) / 60 / utilMax) : 0;
+
+            // Carga total en persona-minutos por hora
+            const cargaTotal = (lamBat * ctBat + lamWaf * ctWaf + lamBow * ctBow) / 60; // horas-persona
+            // +1 cajero si hay demanda; operarios mín = max(máquinas activas, carga/turno)
+            const estActivas = (cBat > 0 ? 1 : 0) + (cWaf > 0 ? 1 : 0) + (cBow > 0 ? 1 : 0);
+            let opMin = 0;
+            if (lam > 0) {
+                // En waffles pueden trabajar hasta 3 en paralelo, en batidos 1 operario por 2 licuadoras
+                const opBat = Math.ceil(cBat / 2);       // 1 op por cada 2 licuadoras
+                const opWaf = Math.min(cWaf, 3);          // máx 3 en waffles (mezcla/cocción/decorado)
+                const opBow = Math.ceil(cBow / 1);        // 1 op por motor
+                opMin = Math.max(estActivas, opBat + opWaf + opBow) + (lam > 2 ? 1 : 0); // +cajero si hay carga
+            }
+            opMin = Math.min(opMin, 7); // cap máximo físico
+
+            if (opMin > maxOp)  { maxOp = opMin; horaPicoOp = hora; }
+            if (lam > maxLam)   { maxLam = lam;  horaPicoLam = hora; }
+
+            // Nivel de carga
+            const pct = lambdaMax > 0 ? lam / lambdaMax : 0;
+            let nivel = 'BAJA', nivelColor = '#51B8AC33';
+            if (pct > 0.75)     { nivel = 'PICO CRÍTICO'; nivelColor = '#e74c3c22'; }
+            else if (pct > 0.5) { nivel = 'ALTA';         nivelColor = '#e67e2222'; }
+            else if (pct > 0.2) { nivel = 'MEDIA';        nivelColor = '#51B8AC22'; }
+            else if (lam === 0) { nivel = '—';            nivelColor = 'transparent'; }
+
+            rows.push({ hora, lam, lamBat, lamWaf, lamBow, cBat, cWaf, cBow, opMin, nivel, nivelColor, pct });
+        }
+
+        // ── Renderizar alerta de sucursal ─────────────────────
+        document.getElementById('planAlertaSucursal').innerHTML =
+            `<div class="ops-alert ops-alert-ok" style="margin:0;">
+                <i class="fas fa-store me-1"></i> Plan calculado para: <strong>${sucNom}</strong> ·
+                Utilización objetivo: <strong>${Math.round(utilMax*100)}%</strong> · Tipo de día: <strong>${tipoDia}</strong>
+                &nbsp;|&nbsp; <span style="color:var(--ops-red);font-weight:700;">Hora pico demanda: ${horaPicoLam}:00</span> ·
+                <span style="color:var(--ops-teal);font-weight:700;">Máx. operarios requeridos: ${maxOp}</span>
+             </div>`;
+
+        // ── Heatmap ───────────────────────────────────────────
+        document.getElementById('badgePlanHoraPico').textContent = `Pico: ${horaPicoLam}:00 (λ=${maxLam.toFixed(1)})`;
+        document.getElementById('planHeatmap').innerHTML = rows.map(r => {
+            const h = Math.round(40 + r.pct * 120);
+            const bg = r.lam === 0 ? '#f0f0f0'
+                     : r.pct > 0.75 ? '#e74c3c'
+                     : r.pct > 0.5  ? '#e67e22'
+                     : r.pct > 0.2  ? '#51B8AC'
+                     : '#a8d8d3';
+            return `<div title="${r.hora}:00 — λ=${r.lam} · ${r.opMin} operarios" style="display:flex;flex-direction:column;align-items:center;gap:3px;cursor:default;">
+                <div style="width:36px;height:${h}px;background:${bg};border-radius:5px 5px 0 0;transition:height .3s;"></div>
+                <div style="font-size:.68rem;color:#888;">${r.hora}:00</div>
+            </div>`;
+        }).join('');
+
+        // ── Tabla por hora ────────────────────────────────────
+        document.getElementById('badgePlanTotal').textContent = `${rows.filter(r=>r.lam>0).length} horas activas`;
+        document.getElementById('tbodyPlan').innerHTML = rows.map(r => {
+            if (r.lam === 0) return `<tr style="opacity:.4;">
+                <td>${r.hora}:00–${r.hora+1}:00</td>
+                <td colspan="9" style="text-align:center;font-size:.82rem;color:#aaa;">Sin demanda</td>
+            </tr>`;
+            const maqBg  = c => c >= 3 ? 'color:var(--ops-red);font-weight:800;' : c >= 2 ? 'color:var(--ops-gold);font-weight:700;' : '';
+            const opBg   = o => o >= 5 ? 'background:#e74c3c22;' : o >= 4 ? 'background:#e67e2222;' : o >= 3 ? 'background:#fff3cd;' : '';
+            const badge  = (n, c) => `<span style="display:inline-block;background:${c};color:white;border-radius:12px;padding:2px 9px;font-size:.78rem;font-weight:700;">${n}</span>`;
+            const nb = r.nivel === 'PICO CRÍTICO' ? badge(r.nivel,'#e74c3c')
+                     : r.nivel === 'ALTA'         ? badge(r.nivel,'#e67e22')
+                     : r.nivel === 'MEDIA'        ? badge(r.nivel,'#51B8AC')
+                     : `<span style="color:#aaa;font-size:.8rem;">${r.nivel}</span>`;
+            return `<tr style="background:${r.nivelColor};">
+                <td><strong>${r.hora}:00</strong></td>
+                <td><strong>${r.lam.toFixed(1)}</strong></td>
+                <td style="color:var(--ops-blue);">${r.lamBat.toFixed(1)}</td>
+                <td><span style="${maqBg(r.cBat)}">${r.cBat || '—'}</span></td>
+                <td style="color:var(--ops-gold);">${r.lamWaf.toFixed(1)}</td>
+                <td><span style="${maqBg(r.cWaf)}">${r.cWaf || '—'}</span></td>
+                <td style="color:var(--ops-purple);">${r.lamBow.toFixed(1)}</td>
+                <td><span style="${maqBg(r.cBow)}">${r.cBow || '—'}</span></td>
+                <td style="font-size:1.1rem;font-weight:900;text-align:center;${opBg(r.opMin)}">${r.opMin}</td>
+                <td>${nb}</td>
+            </tr>`;
+        }).join('');
+
+        // ── KPIs resumen ──────────────────────────────────────
+        const horasActivas = rows.filter(r => r.lam > 0);
+        const opPromedio   = horasActivas.length ? (horasActivas.reduce((a,r)=>a+r.opMin,0)/horasActivas.length).toFixed(1) : 0;
+        const maqMaxBat    = Math.max(...rows.map(r=>r.cBat));
+        const maqMaxWaf    = Math.max(...rows.map(r=>r.cWaf));
+        const maqMaxBow    = Math.max(...rows.map(r=>r.cBow));
+        document.getElementById('kpiGridPlan').innerHTML = [
+            this.kpiCard('red',    'fa-users',      `Máx. operarios (${horaPicoOp}:00)`, maxOp + ' personas',  `Pico de demanda`),
+            this.kpiCard('teal',   'fa-users',      'Promedio operarios/hora',            opPromedio + ' personas', `Horas activas`),
+            this.kpiCard('blue',   'fa-blender',    'Licuadoras necesarias',              maqMaxBat + ' máx',   `Hora pico batidos`),
+            this.kpiCard('gold',   'fa-bread-slice','Waffleras necesarias',               maqMaxWaf + ' máx',   `Hora pico waffles`),
+            this.kpiCard('purple', 'fa-bowl-food',  'Motores necesarios',                 maqMaxBow + ' máx',   `Hora pico bowls`),
+        ].join('');
+
+        // ── Gráfica stacked ───────────────────────────────────
+        const labels = rows.map(r => r.hora + ':00');
+        this.destroyChart('chartPlanDotacion');
+        OPS.charts.chartPlanDotacion = new Chart(document.getElementById('chartPlanDotacion'), {
+            type: 'bar',
+            data: {
+                labels,
+                datasets: [
+                    { label: 'Operarios recomendados', data: rows.map(r=>r.opMin), backgroundColor: rows.map(r=>
+                        r.pct>0.75?'rgba(231,76,60,.8)':r.pct>0.5?'rgba(230,126,34,.8)':r.pct>0.2?'rgba(81,184,172,.8)':'rgba(200,200,200,.4)'),
+                      borderRadius: 5 },
+                    { label: 'λ demanda (escala)', data: rows.map(r=>+(r.lam/lambdaMax*maxOp).toFixed(2)),
+                      type: 'line', borderColor: '#0E544C', borderWidth: 2, borderDash:[4,3],
+                      pointRadius: 3, tension: 0.4, fill: false, yAxisID: 'y' },
+                ]
+            },
+            options: {
+                plugins: { legend: { position: 'bottom' },
+                    tooltip: { callbacks: { label: ctx => ctx.datasetIndex===0
+                        ? `${ctx.raw} operarios recomendados`
+                        : `Demanda relativa` }}},
+                scales: {
+                    y: { beginAtZero: true, title: { display: true, text: 'Operarios' },
+                         ticks: { stepSize: 1 } }
+                }
+            }
+        });
+
+        document.getElementById('planResultados').style.display = '';
+        this.toast('Plan calculado para ' + sucNom, 'success');
     },
 
     // ── CONFIG ────────────────────────────────────────────────

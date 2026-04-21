@@ -82,6 +82,7 @@ $finDefault = date('Y-m-t', strtotime('-1 month'));
           <button class="ops-tab" data-tab="estaciones"><i class="fas fa-layer-group"></i> Mix Estaciones</button>
           <button class="ops-tab" data-tab="multi"><i class="fas fa-project-diagram"></i> Multi-Estación</button>
           <button class="ops-tab" data-tab="config"><i class="fas fa-sliders-h"></i> Configuración</button>
+          <button class="ops-tab" data-tab="planificador"><i class="fas fa-users-cog"></i> Planificador</button>
           <button class="ops-tab" data-tab="simulador"><i class="fas fa-dice-d20"></i> Simulador DES</button>
           <button class="ops-tab" data-tab="lean"><i class="fas fa-leaf"></i> Lean 6σ</button>
         </div>
@@ -641,6 +642,116 @@ $finDefault = date('Y-m-t', strtotime('-1 month'));
 
           </div><!-- /leanContent -->
         </div><!-- /panelLean -->
+
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <!-- PANEL: PLANIFICADOR DE CAPACIDAD                        -->
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <div class="ops-tab-panel" id="panelPlanificador">
+
+          <div class="ops-section-title"><i class="fas fa-users-cog"></i> Planificador de Capacidad por Hora</div>
+
+          <!-- Controles del planificador -->
+          <div class="ops-card" style="margin-bottom:20px;">
+            <div class="ops-card-header">
+              <h3><i class="fas fa-sliders-h"></i> Parámetros del Plan</h3>
+            </div>
+            <div class="ops-card-body">
+              <div style="display:flex;gap:24px;flex-wrap:wrap;align-items:flex-end;">
+                <div class="ops-sim-field" style="min-width:180px;">
+                  <label>Objetivo utilización máx: <strong id="planUtilVal">80</strong>%</label>
+                  <input type="range" id="planUtil" min="60" max="95" step="5" value="80" class="ops-slider">
+                  <div class="ops-slider-ticks"><span>60%</span><span>75%</span><span>90%</span></div>
+                </div>
+                <div class="ops-sim-field" style="min-width:160px;">
+                  <label>Tipo de día</label>
+                  <select id="planTipoDia" class="ops-select">
+                    <option value="todos">Todos los días</option>
+                    <option value="entre_semana">Entre semana</option>
+                    <option value="fin_semana">Fin de semana</option>
+                  </select>
+                </div>
+                <div class="ops-sim-field">
+                  <label>&nbsp;</label>
+                  <button class="ops-btn ops-btn-primary" id="btnCalcularPlan" style="height:38px;">
+                    <i class="fas fa-calculator"></i> Calcular Plan
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Loader -->
+          <div id="planLoader" class="ops-loader" style="display:none;">
+            <div class="ops-loader-ring"></div><span>Calculando plan de capacidad…</span>
+          </div>
+
+          <!-- Resultados -->
+          <div id="planResultados" style="display:none;">
+
+            <!-- Alerta de sucursal -->
+            <div id="planAlertaSucursal" style="margin-bottom:16px;"></div>
+
+            <!-- Heatmap de demanda -->
+            <div class="ops-card" style="margin-bottom:20px;">
+              <div class="ops-card-header">
+                <h3><i class="fas fa-fire"></i> Heatmap de Demanda por Hora</h3>
+                <span class="ops-badge" id="badgePlanHoraPico">—</span>
+              </div>
+              <div class="ops-card-body">
+                <div id="planHeatmap" style="display:flex;gap:4px;flex-wrap:wrap;align-items:flex-end;"></div>
+                <div style="display:flex;gap:16px;margin-top:12px;font-size:.78rem;color:var(--ops-text-muted);flex-wrap:wrap;">
+                  <span><span style="display:inline-block;width:14px;height:14px;background:#e0f0ee;border-radius:3px;vertical-align:middle;"></span> Baja demanda</span>
+                  <span><span style="display:inline-block;width:14px;height:14px;background:#51B8AC;border-radius:3px;vertical-align:middle;"></span> Media</span>
+                  <span><span style="display:inline-block;width:14px;height:14px;background:#e67e22;border-radius:3px;vertical-align:middle;"></span> Alta</span>
+                  <span><span style="display:inline-block;width:14px;height:14px;background:#e74c3c;border-radius:3px;vertical-align:middle;"></span> Pico crítico</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Tabla de plan por hora -->
+            <div class="ops-card" style="margin-bottom:20px;">
+              <div class="ops-card-header">
+                <h3><i class="fas fa-table"></i> Plan de Dotación por Hora</h3>
+                <span class="ops-badge" id="badgePlanTotal">—</span>
+              </div>
+              <div class="ops-card-body p-0">
+                <div class="ops-table-wrap">
+                  <table class="ops-table" id="tablaPlanDotacion">
+                    <thead>
+                      <tr>
+                        <th>Hora</th>
+                        <th>Demanda<br><small style="font-weight:400;opacity:.7">λ pedidos/h</small></th>
+                        <th style="color:var(--ops-blue);"><i class="fas fa-blender"></i> Batidos<br><small style="font-weight:400;opacity:.7">λ parcial</small></th>
+                        <th style="color:var(--ops-blue);">Licuadoras<br><small style="font-weight:400;opacity:.7">mín</small></th>
+                        <th style="color:var(--ops-gold);"><i class="fas fa-bread-slice"></i> Waffles<br><small style="font-weight:400;opacity:.7">λ parcial</small></th>
+                        <th style="color:var(--ops-gold);">Waffleras<br><small style="font-weight:400;opacity:.7">mín</small></th>
+                        <th style="color:var(--ops-purple);"><i class="fas fa-bowl-food"></i> Bowls<br><small style="font-weight:400;opacity:.7">λ parcial</small></th>
+                        <th style="color:var(--ops-purple);">Motores<br><small style="font-weight:400;opacity:.7">mín</small></th>
+                        <th style="background:#f0f9ff;"><i class="fas fa-users"></i> Operarios<br><small style="font-weight:400;opacity:.7">recomendados</small></th>
+                        <th>Nivel de Carga</th>
+                      </tr>
+                    </thead>
+                    <tbody id="tbodyPlan"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <!-- KPIs resumen del plan -->
+            <div class="ops-kpi-grid" id="kpiGridPlan"></div>
+
+            <!-- Gráfica de operarios por hora -->
+            <div class="ops-card">
+              <div class="ops-card-header">
+                <h3><i class="fas fa-chart-bar"></i> Dotación Recomendada por Hora</h3>
+              </div>
+              <div class="ops-card-body">
+                <div class="ops-chart-wrap"><canvas id="chartPlanDotacion" height="220"></canvas></div>
+              </div>
+            </div>
+
+          </div><!-- /planResultados -->
+        </div><!-- /panelPlanificador -->
 
         <div style="height:40px"></div>
       </div><!-- /opsLabWrapper -->
