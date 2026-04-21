@@ -8,6 +8,7 @@ require_once '../../core/layout/menu_lateral.php';
 require_once '../../core/layout/header_universal.php';
 require_once '../../core/permissions/permissions.php';
 
+
 $usuario = obtenerUsuarioActual();
 $cargo = $usuario['CodNivelesCargos'];
 
@@ -191,8 +192,10 @@ $finDefault = date('Y-m-t', strtotime('-1 month'));
                       <tr>
                         <th>Estación</th>
                         <th>Registros</th>
-                        <th>Tiempo de Caja Prom<br><small style="font-weight:400;opacity:.7">HoraCreado→HoraImpreso</small></th>
-                        <th>Ingreso Productos Prom<br><small style="font-weight:400;opacity:.7">HoraIngresoProducto→HoraImpreso</small></th>
+                        <th>Tiempo de Caja Prom<br><small
+                            style="font-weight:400;opacity:.7">HoraCreado→HoraImpreso</small></th>
+                        <th>Ingreso Productos Prom<br><small
+                            style="font-weight:400;opacity:.7">HoraIngresoProducto→HoraImpreso</small></th>
                         <th>Diferencia Prom</th>
                         <th>Caja Mín</th>
                         <th>Caja Máx</th>
@@ -343,7 +346,8 @@ $finDefault = date('Y-m-t', strtotime('-1 month'));
                     <label>Personas disponibles: <strong id="simPersonasVal">3</strong></label>
                     <input type="range" id="simPersonas" min="2" max="7" value="3" class="ops-slider">
                     <div class="ops-slider-ticks">
-                      <span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span></div>
+                      <span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span>
+                    </div>
                   </div>
                 </div>
 
@@ -699,11 +703,20 @@ $finDefault = date('Y-m-t', strtotime('-1 month'));
               </div>
               <div class="ops-card-body">
                 <div id="planHeatmap" style="display:flex;gap:4px;flex-wrap:wrap;align-items:flex-end;"></div>
-                <div style="display:flex;gap:16px;margin-top:12px;font-size:.78rem;color:var(--ops-text-muted);flex-wrap:wrap;">
-                  <span><span style="display:inline-block;width:14px;height:14px;background:#e0f0ee;border-radius:3px;vertical-align:middle;"></span> Baja demanda</span>
-                  <span><span style="display:inline-block;width:14px;height:14px;background:#51B8AC;border-radius:3px;vertical-align:middle;"></span> Media</span>
-                  <span><span style="display:inline-block;width:14px;height:14px;background:#e67e22;border-radius:3px;vertical-align:middle;"></span> Alta</span>
-                  <span><span style="display:inline-block;width:14px;height:14px;background:#e74c3c;border-radius:3px;vertical-align:middle;"></span> Pico crítico</span>
+                <div
+                  style="display:flex;gap:16px;margin-top:12px;font-size:.78rem;color:var(--ops-text-muted);flex-wrap:wrap;">
+                  <span><span
+                      style="display:inline-block;width:14px;height:14px;background:#e0f0ee;border-radius:3px;vertical-align:middle;"></span>
+                    Baja demanda</span>
+                  <span><span
+                      style="display:inline-block;width:14px;height:14px;background:#51B8AC;border-radius:3px;vertical-align:middle;"></span>
+                    Media</span>
+                  <span><span
+                      style="display:inline-block;width:14px;height:14px;background:#e67e22;border-radius:3px;vertical-align:middle;"></span>
+                    Alta</span>
+                  <span><span
+                      style="display:inline-block;width:14px;height:14px;background:#e74c3c;border-radius:3px;vertical-align:middle;"></span>
+                    Pico crítico</span>
                 </div>
               </div>
             </div>
@@ -721,13 +734,20 @@ $finDefault = date('Y-m-t', strtotime('-1 month'));
                       <tr>
                         <th>Hora</th>
                         <th>Demanda<br><small style="font-weight:400;opacity:.7">λ pedidos/h</small></th>
-                        <th style="color:var(--ops-blue);"><i class="fas fa-blender"></i> Batidos<br><small style="font-weight:400;opacity:.7">λ parcial</small></th>
-                        <th style="color:var(--ops-blue);">Licuadoras<br><small style="font-weight:400;opacity:.7">mín</small></th>
-                        <th style="color:var(--ops-gold);"><i class="fas fa-bread-slice"></i> Waffles<br><small style="font-weight:400;opacity:.7">λ parcial</small></th>
-                        <th style="color:var(--ops-gold);">Waffleras<br><small style="font-weight:400;opacity:.7">mín</small></th>
-                        <th style="color:var(--ops-purple);"><i class="fas fa-bowl-food"></i> Bowls<br><small style="font-weight:400;opacity:.7">λ parcial</small></th>
-                        <th style="color:var(--ops-purple);">Motores<br><small style="font-weight:400;opacity:.7">mín</small></th>
-                        <th style="background:#f0f9ff;"><i class="fas fa-users"></i> Operarios<br><small style="font-weight:400;opacity:.7">recomendados</small></th>
+                        <th style="color:var(--ops-blue);"><i class="fas fa-blender"></i> Batidos<br><small
+                            style="font-weight:400;opacity:.7">λ parcial</small></th>
+                        <th style="color:var(--ops-blue);">Licuadoras<br><small
+                            style="font-weight:400;opacity:.7">mín</small></th>
+                        <th style="color:var(--ops-gold);"><i class="fas fa-bread-slice"></i> Waffles<br><small
+                            style="font-weight:400;opacity:.7">λ parcial</small></th>
+                        <th style="color:var(--ops-gold);">Waffleras<br><small
+                            style="font-weight:400;opacity:.7">mín</small></th>
+                        <th style="color:var(--ops-purple);"><i class="fas fa-bowl-food"></i> Bowls<br><small
+                            style="font-weight:400;opacity:.7">λ parcial</small></th>
+                        <th style="color:var(--ops-purple);">Motores<br><small
+                            style="font-weight:400;opacity:.7">mín</small></th>
+                        <th style="background:#f0f9ff;"><i class="fas fa-users"></i> Operarios<br><small
+                            style="font-weight:400;opacity:.7">recomendados</small></th>
                         <th>Nivel de Carga</th>
                       </tr>
                     </thead>
@@ -769,12 +789,14 @@ $finDefault = date('Y-m-t', strtotime('-1 month'));
       <div class="modal-content" style="border-radius:16px;border:none;font-family:'Inter',sans-serif;">
 
         <!-- Header -->
-        <div class="modal-header" style="background:linear-gradient(135deg,#0E544C,#51B8AC);color:white;border-radius:16px 16px 0 0;padding:20px 28px;">
+        <div class="modal-header"
+          style="background:linear-gradient(135deg,#0E544C,#51B8AC);color:white;border-radius:16px 16px 0 0;padding:20px 28px;">
           <div>
             <h5 class="modal-title fw-800" id="pageHelpModalLabel" style="font-size:1.15rem;font-weight:800;margin:0;">
               <i class="fas fa-flask me-2"></i>Pitaya OPS Lab — Guía de Uso
             </h5>
-            <p style="margin:4px 0 0;font-size:.82rem;opacity:.85;">Ingeniería de Operaciones · Análisis de Capacidad · Simulación DES · Lean Six Sigma</p>
+            <p style="margin:4px 0 0;font-size:.82rem;opacity:.85;">Ingeniería de Operaciones · Análisis de Capacidad ·
+              Simulación DES · Lean Six Sigma</p>
           </div>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
         </div>
@@ -783,138 +805,314 @@ $finDefault = date('Y-m-t', strtotime('-1 month'));
         <div class="modal-body" style="padding:28px;max-height:72vh;overflow-y:auto;background:#fafafa;">
 
           <!-- ── ¿QUÉ ES? ─────────────────────────────────────── -->
-          <div style="background:#e8f5f3;border-left:4px solid #51B8AC;border-radius:8px;padding:14px 18px;margin-bottom:22px;">
+          <div
+            style="background:#e8f5f3;border-left:4px solid #51B8AC;border-radius:8px;padding:14px 18px;margin-bottom:22px;">
             <strong style="color:#0E544C;"><i class="fas fa-info-circle me-1"></i>¿Qué es Pitaya OPS Lab?</strong>
             <p style="margin:6px 0 0;font-size:.875rem;color:#2d6a63;line-height:1.6;">
-              Módulo de <strong>Investigación de Operaciones</strong> que analiza datos reales de ventas para modelar la capacidad de producción, detectar cuellos de botella y simular escenarios de mejora. Usa datos de BD sin necesidad de ingresar información manual.
+              Módulo de <strong>Investigación de Operaciones</strong> que analiza datos reales de ventas para modelar la
+              capacidad de producción, detectar cuellos de botella y simular escenarios de mejora. Usa datos de BD sin
+              necesidad de ingresar información manual.
             </p>
           </div>
 
           <!-- ── FILTROS GLOBALES ───────────────────────────────── -->
-          <h6 style="color:#0E544C;font-weight:700;border-bottom:2px solid #e0f0ee;padding-bottom:6px;margin-bottom:14px;">
+          <h6
+            style="color:#0E544C;font-weight:700;border-bottom:2px solid #e0f0ee;padding-bottom:6px;margin-bottom:14px;">
             <i class="fas fa-filter me-1"></i>Filtros Globales (barra superior)
           </h6>
           <table style="width:100%;font-size:.84rem;border-collapse:collapse;margin-bottom:22px;">
-            <thead><tr style="background:#e8f5f3;"><th style="padding:8px 12px;text-align:left;">Filtro</th><th style="padding:8px 12px;text-align:left;">Descripción</th></tr></thead>
+            <thead>
+              <tr style="background:#e8f5f3;">
+                <th style="padding:8px 12px;text-align:left;">Filtro</th>
+                <th style="padding:8px 12px;text-align:left;">Descripción</th>
+              </tr>
+            </thead>
             <tbody>
-              <tr style="border-bottom:1px solid #eee;"><td style="padding:8px 12px;font-weight:600;">Tienda</td><td style="padding:8px 12px;">Filtra por sucursal. "Todas" muestra datos consolidados de las 14 tiendas.</td></tr>
-              <tr style="border-bottom:1px solid #eee;"><td style="padding:8px 12px;font-weight:600;">Fecha Inicio / Fin</td><td style="padding:8px 12px;">Rango de análisis. Por defecto el mes anterior completo.</td></tr>
-              <tr style="border-bottom:1px solid #eee;"><td style="padding:8px 12px;font-weight:600;">Tipo de Día</td><td style="padding:8px 12px;"><strong>Todos</strong>: lunes-domingo · <strong>Entre semana</strong>: lun-jue · <strong>Fin de semana</strong>: vie-dom.</td></tr>
-              <tr><td style="padding:8px 12px;font-weight:600;">Turno</td><td style="padding:8px 12px;"><strong>Mañana</strong>: pedidos hasta las 14:00 · <strong>Tarde</strong>: pedidos desde las 14:01 · <strong>Ambos</strong>: día completo.</td></tr>
+              <tr style="border-bottom:1px solid #eee;">
+                <td style="padding:8px 12px;font-weight:600;">Tienda</td>
+                <td style="padding:8px 12px;">Filtra por sucursal. "Todas" muestra datos consolidados de las 14 tiendas.
+                </td>
+              </tr>
+              <tr style="border-bottom:1px solid #eee;">
+                <td style="padding:8px 12px;font-weight:600;">Fecha Inicio / Fin</td>
+                <td style="padding:8px 12px;">Rango de análisis. Por defecto el mes anterior completo.</td>
+              </tr>
+              <tr style="border-bottom:1px solid #eee;">
+                <td style="padding:8px 12px;font-weight:600;">Tipo de Día</td>
+                <td style="padding:8px 12px;"><strong>Todos</strong>: lunes-domingo · <strong>Entre semana</strong>:
+                  lun-jue · <strong>Fin de semana</strong>: vie-dom.</td>
+              </tr>
+              <tr>
+                <td style="padding:8px 12px;font-weight:600;">Turno</td>
+                <td style="padding:8px 12px;"><strong>Mañana</strong>: pedidos hasta las 14:00 · <strong>Tarde</strong>:
+                  pedidos desde las 14:01 · <strong>Ambos</strong>: día completo.</td>
+              </tr>
             </tbody>
           </table>
 
           <!-- ── TABS ──────────────────────────────────────────── -->
-          <h6 style="color:#0E544C;font-weight:700;border-bottom:2px solid #e0f0ee;padding-bottom:6px;margin-bottom:14px;">
+          <h6
+            style="color:#0E544C;font-weight:700;border-bottom:2px solid #e0f0ee;padding-bottom:6px;margin-bottom:14px;">
             <i class="fas fa-layer-group me-1"></i>Pestañas del Módulo
           </h6>
 
           <!-- Resumen -->
-          <div style="background:white;border:1px solid #e0f0ee;border-radius:10px;padding:14px 18px;margin-bottom:12px;">
-            <div style="font-weight:700;color:#0E544C;margin-bottom:6px;"><i class="fas fa-chart-pie me-1" style="color:#51B8AC;"></i>1. Resumen</div>
-            <p style="font-size:.84rem;margin:0;line-height:1.6;color:#444;">Vista general del período. Muestra KPIs principales (total pedidos, unidades, ticket promedio, pedidos/día, ventas totales), mix de ventas por estación en donut chart, y las 3 horas de mayor demanda con barra de intensidad.</p>
+          <div
+            style="background:white;border:1px solid #e0f0ee;border-radius:10px;padding:14px 18px;margin-bottom:12px;">
+            <div style="font-weight:700;color:#0E544C;margin-bottom:6px;"><i class="fas fa-chart-pie me-1"
+                style="color:#51B8AC;"></i>1. Resumen</div>
+            <p style="font-size:.84rem;margin:0;line-height:1.6;color:#444;">Vista general del período. Muestra KPIs
+              principales (total pedidos, unidades, ticket promedio, pedidos/día, ventas totales), mix de ventas por
+              estación en donut chart, y las 3 horas de mayor demanda con barra de intensidad.</p>
           </div>
 
           <!-- Llegadas -->
-          <div style="background:white;border:1px solid #e0f0ee;border-radius:10px;padding:14px 18px;margin-bottom:12px;">
-            <div style="font-weight:700;color:#0E544C;margin-bottom:6px;"><i class="fas fa-wave-square me-1" style="color:#51B8AC;"></i>2. Llegadas &amp; λ (Lambda)</div>
-            <p style="font-size:.84rem;margin:0;line-height:1.6;color:#444;">Calcula la <strong>tasa de llegada Poisson (λ)</strong> promedio de pedidos por hora del día. La intensidad de color de cada barra representa la carga relativa. La tabla detalla pedidos totales, días observados y unidades promedio por franja horaria. Útil para planificar turnos.</p>
+          <div
+            style="background:white;border:1px solid #e0f0ee;border-radius:10px;padding:14px 18px;margin-bottom:12px;">
+            <div style="font-weight:700;color:#0E544C;margin-bottom:6px;"><i class="fas fa-wave-square me-1"
+                style="color:#51B8AC;"></i>2. Llegadas &amp; λ (Lambda)</div>
+            <p style="font-size:.84rem;margin:0;line-height:1.6;color:#444;">Calcula la <strong>tasa de llegada Poisson
+                (λ)</strong> promedio de pedidos por hora del día. La intensidad de color de cada barra representa la
+              carga relativa. La tabla detalla pedidos totales, días observados y unidades promedio por franja horaria.
+              Útil para planificar turnos.</p>
           </div>
 
           <!-- Cycle Times -->
-          <div style="background:white;border:1px solid #e0f0ee;border-radius:10px;padding:14px 18px;margin-bottom:12px;">
-            <div style="font-weight:700;color:#0E544C;margin-bottom:6px;"><i class="fas fa-stopwatch me-1" style="color:#51B8AC;"></i>3. Tiempos de Proceso — Análisis de Caja</div>
+          <div
+            style="background:white;border:1px solid #e0f0ee;border-radius:10px;padding:14px 18px;margin-bottom:12px;">
+            <div style="font-weight:700;color:#0E544C;margin-bottom:6px;"><i class="fas fa-stopwatch me-1"
+                style="color:#51B8AC;"></i>3. Tiempos de Proceso — Análisis de Caja</div>
             <p style="font-size:.84rem;margin:0;line-height:1.6;color:#444;">
-              <strong>⚠️ Importante:</strong> El sistema <strong>no registra la hora de entrega del producto</strong> al cliente. Los tiempos medidos desde BD son del proceso de caja:<br>
-              &bull; <strong>Tiempo de Caja</strong> (<code>HoraCreado → HoraImpreso</code>): desde que el cajero inicia la factura hasta que se imprime y manda la comanda a las estaciones. Refleja la eficiencia del proceso de facturación.<br>
-              &bull; <strong>Tiempo Ingreso Productos</strong> (<code>HoraIngresoProducto → HoraImpreso</code>): desde que se empiezan a ingresar ítems hasta que se imprime. Subconjunto del anterior.<br>
-              &bull; <strong>Tiempo de preparación</strong> (post-HoraImpreso): NO medible desde BD — se estima con los parámetros configurados en la pestaña Configuración.<br>
+              <strong>⚠️ Importante:</strong> El sistema <strong>no registra la hora de entrega del producto</strong> al
+              cliente. Los tiempos medidos desde BD son del proceso de caja:<br>
+              &bull; <strong>Tiempo de Caja</strong> (<code>HoraCreado → HoraImpreso</code>): desde que el cajero inicia
+              la factura hasta que se imprime y manda la comanda a las estaciones. Refleja la eficiencia del proceso de
+              facturación.<br>
+              &bull; <strong>Tiempo Ingreso Productos</strong> (<code>HoraIngresoProducto → HoraImpreso</code>): desde
+              que se empiezan a ingresar ítems hasta que se imprime. Subconjunto del anterior.<br>
+              &bull; <strong>Tiempo de preparación</strong> (post-HoraImpreso): NO medible desde BD — se estima con los
+              parámetros configurados en la pestaña Configuración.<br>
               Outliers mayores a 2 horas se excluyen automáticamente.
             </p>
           </div>
 
           <!-- Mix Estaciones -->
-          <div style="background:white;border:1px solid #e0f0ee;border-radius:10px;padding:14px 18px;margin-bottom:12px;">
-            <div style="font-weight:700;color:#0E544C;margin-bottom:6px;"><i class="fas fa-layer-group me-1" style="color:#51B8AC;"></i>4. Mix de Estaciones</div>
-            <p style="font-size:.84rem;margin:0;line-height:1.6;color:#444;">Muestra cuántos pedidos por hora van a cada estación (Batidos, Waffles, Bowls) en gráfica de barras apiladas y tabla de porcentajes. Permite ver en qué horas se concentra la presión sobre cada estación de trabajo.</p>
+          <div
+            style="background:white;border:1px solid #e0f0ee;border-radius:10px;padding:14px 18px;margin-bottom:12px;">
+            <div style="font-weight:700;color:#0E544C;margin-bottom:6px;"><i class="fas fa-layer-group me-1"
+                style="color:#51B8AC;"></i>4. Mix de Estaciones</div>
+            <p style="font-size:.84rem;margin:0;line-height:1.6;color:#444;">Muestra cuántos pedidos por hora van a cada
+              estación (Batidos, Waffles, Bowls) en gráfica de barras apiladas y tabla de porcentajes. Permite ver en
+              qué horas se concentra la presión sobre cada estación de trabajo.</p>
           </div>
 
           <!-- Multi-Estación -->
-          <div style="background:white;border:1px solid #e0f0ee;border-radius:10px;padding:14px 18px;margin-bottom:12px;">
-            <div style="font-weight:700;color:#0E544C;margin-bottom:6px;"><i class="fas fa-project-diagram me-1" style="color:#51B8AC;"></i>5. Multi-Estación</div>
-            <p style="font-size:.84rem;margin:0;line-height:1.6;color:#444;">Analiza pedidos que involucran más de una estación simultáneamente (ej. un pedido con batido + waffle). Muestra el porcentaje de pedidos simples (1 estación), dobles y triples, y las combinaciones más frecuentes. Impacta directamente en el tiempo total de entrega.</p>
+          <div
+            style="background:white;border:1px solid #e0f0ee;border-radius:10px;padding:14px 18px;margin-bottom:12px;">
+            <div style="font-weight:700;color:#0E544C;margin-bottom:6px;"><i class="fas fa-project-diagram me-1"
+                style="color:#51B8AC;"></i>5. Multi-Estación</div>
+            <p style="font-size:.84rem;margin:0;line-height:1.6;color:#444;">Analiza pedidos que involucran más de una
+              estación simultáneamente (ej. un pedido con batido + waffle). Muestra el porcentaje de pedidos simples (1
+              estación), dobles y triples, y las combinaciones más frecuentes. Impacta directamente en el tiempo total
+              de entrega.</p>
           </div>
 
           <!-- Config -->
-          <div style="background:white;border:1px solid #e0f0ee;border-radius:10px;padding:14px 18px;margin-bottom:12px;">
-            <div style="font-weight:700;color:#0E544C;margin-bottom:6px;"><i class="fas fa-sliders-h me-1" style="color:#51B8AC;"></i>6. Configuración Operativa</div>
-            <p style="font-size:.84rem;margin:0;line-height:1.6;color:#444;">Parámetros editables almacenados en BD (<code>ops_config_estaciones</code>). Edita un valor y presiona <kbd>Enter</kbd> o el botón ✓. Los cambios se usan en los cálculos del Simulador DES. Incluye tiempos de proceso, número de equipos, tamaños de batch y parámetros generales de turno.</p>
+          <div
+            style="background:white;border:1px solid #e0f0ee;border-radius:10px;padding:14px 18px;margin-bottom:12px;">
+            <div style="font-weight:700;color:#0E544C;margin-bottom:6px;"><i class="fas fa-sliders-h me-1"
+                style="color:#51B8AC;"></i>6. Configuración Operativa</div>
+            <p style="font-size:.84rem;margin:0;line-height:1.6;color:#444;">Parámetros editables almacenados en BD
+              (<code>ops_config_estaciones</code>). Edita un valor y presiona <kbd>Enter</kbd> o el botón ✓. Los cambios
+              se usan en los cálculos del Simulador DES. Incluye tiempos de proceso, número de equipos, tamaños de batch
+              y parámetros generales de turno.</p>
           </div>
 
           <!-- Simulador -->
-          <div style="background:white;border:1px solid #e0f0ee;border-radius:10px;padding:14px 18px;margin-bottom:12px;">
-            <div style="font-weight:700;color:#0E544C;margin-bottom:6px;"><i class="fas fa-dice-d20 me-1" style="color:#51B8AC;"></i>7. Simulador DES</div>
+          <div
+            style="background:white;border:1px solid #e0f0ee;border-radius:10px;padding:14px 18px;margin-bottom:12px;">
+            <div style="font-weight:700;color:#0E544C;margin-bottom:6px;"><i class="fas fa-dice-d20 me-1"
+                style="color:#51B8AC;"></i>7. Simulador DES</div>
             <p style="font-size:.84rem;margin:0;line-height:1.6;color:#444;">
-              <strong>Motor de Simulación de Eventos Discretos</strong> que usa la distribución real de llegadas (λ por hora) y el mix de estaciones de la BD. Pasos:<br>
+              <strong>Motor de Simulación de Eventos Discretos</strong> que usa la distribución real de llegadas (λ por
+              hora) y el mix de estaciones de la BD. Pasos:<br>
               1. Ajusta los sliders de parámetros (tiempos, máquinas, batch).<br>
               2. Selecciona turno y tipo de día.<br>
               3. Pulsa <strong>Ejecutar Simulación</strong>.<br>
               4. Compara escenarios con <strong>Comparar con escenario base</strong>.<br><br>
-              Los gauges muestran la <strong>utilización de cada estación</strong>. El marcado en rojo como "CUELLO DE BOTELLA" indica la estación con mayor utilización. El Gantt muestra la carga por equipo y hora.
+              Los gauges muestran la <strong>utilización de cada estación</strong>. El marcado en rojo como "CUELLO DE
+              BOTELLA" indica la estación con mayor utilización. El Gantt muestra la carga por equipo y hora.
             </p>
           </div>
 
           <!-- Lean -->
-          <div style="background:white;border:1px solid #e0f0ee;border-radius:10px;padding:14px 18px;margin-bottom:22px;">
-            <div style="font-weight:700;color:#0E544C;margin-bottom:6px;"><i class="fas fa-leaf me-1" style="color:#51B8AC;"></i>8. Lean Six Sigma</div>
+          <div
+            style="background:white;border:1px solid #e0f0ee;border-radius:10px;padding:14px 18px;margin-bottom:22px;">
+            <div style="font-weight:700;color:#0E544C;margin-bottom:6px;"><i class="fas fa-leaf me-1"
+                style="color:#51B8AC;"></i>8. Lean Six Sigma</div>
             <p style="font-size:.84rem;margin:0;line-height:1.6;color:#444;">
-              • <strong>OEE</strong>: Disponibilidad del turno descontando setup (30 min) y limpiezas (6×15 min = 90 min) → 360 min netos de 480.<br>
-              • <strong>Takt Time</strong>: Tiempo disponible ÷ demanda diaria. Si el Cycle Time de una estación supera el Takt Time, no puede seguir el ritmo.<br>
-              • <strong>DPMO / Nivel Sigma</strong>: Defectos (pedidos anulados) por millón de oportunidades → nivel de calidad 1σ–6σ.<br>
+              • <strong>OEE</strong>: Disponibilidad del turno descontando setup (30 min) y limpiezas (6×15 min = 90
+              min) → 360 min netos de 480.<br>
+              • <strong>Takt Time</strong>: Tiempo disponible ÷ demanda diaria. Si el Cycle Time de una estación supera
+              el Takt Time, no puede seguir el ritmo.<br>
+              • <strong>DPMO / Nivel Sigma</strong>: Defectos (pedidos anulados) por millón de oportunidades → nivel de
+              calidad 1σ–6σ.<br>
               • <strong>7 Desperdicios (Muda)</strong>: Diagnóstico visual con semáforo.<br>
-              • <strong>Control Chart X-bar</strong>: Lead time diario con límites UCL/LCL. Puntos fuera = proceso inestable.
+              • <strong>Control Chart X-bar</strong>: Lead time diario con límites UCL/LCL. Puntos fuera = proceso
+              inestable.
             </p>
           </div>
 
           <!-- ── GLOSARIO ────────────────────────────────────────── -->
-          <h6 style="color:#0E544C;font-weight:700;border-bottom:2px solid #e0f0ee;padding-bottom:6px;margin-bottom:14px;">
+          <h6
+            style="color:#0E544C;font-weight:700;border-bottom:2px solid #e0f0ee;padding-bottom:6px;margin-bottom:14px;">
             <i class="fas fa-book me-1"></i>Diccionario de Términos
           </h6>
           <table style="width:100%;font-size:.83rem;border-collapse:collapse;margin-bottom:22px;">
-            <thead><tr style="background:#e8f5f3;"><th style="padding:8px 12px;text-align:left;width:28%;">Término</th><th style="padding:8px 12px;text-align:left;">Definición</th></tr></thead>
+            <thead>
+              <tr style="background:#e8f5f3;">
+                <th style="padding:8px 12px;text-align:left;width:28%;">Término</th>
+                <th style="padding:8px 12px;text-align:left;">Definición</th>
+              </tr>
+            </thead>
             <tbody>
-              <tr style="border-bottom:1px solid #eee;"><td style="padding:8px 12px;font-weight:600;">λ (Lambda)</td><td style="padding:8px 12px;">Tasa de llegada Poisson: pedidos promedio que llegan por hora. Derivada de datos reales ÷ días observados.</td></tr>
-              <tr style="border-bottom:1px solid #eee;"><td style="padding:8px 12px;font-weight:600;">Lead Time</td><td style="padding:8px 12px;"><strong>No medible directamente en BD</strong>. Sería HoraCreado → entrega al cliente, pero no se registra la hora de entrega. El Lead Time real = Tiempo de Caja + Tiempo de Preparación (estimado).</td></tr>
-              <tr style="border-bottom:1px solid #eee;"><td style="padding:8px 12px;font-weight:600;">Tiempo de Caja</td><td style="padding:8px 12px;"><code>HoraCreado → HoraImpreso</code>. Tiempo que tarda el cajero en facturar e imprimir la comanda. Inicio del proceso de preparación.</td></tr>
-              <tr style="border-bottom:1px solid #eee;"><td style="padding:8px 12px;font-weight:600;">Tiempo Ingreso Productos</td><td style="padding:8px 12px;"><code>HoraIngresoProducto → HoraImpreso</code>. Subconjunto del tiempo de caja: desde que se empiezan a ingresar ítems hasta imprimir.</td></tr>
-              <tr style="border-bottom:1px solid #eee;"><td style="padding:8px 12px;font-weight:600;">Wq (Diferencia)</td><td style="padding:8px 12px;">Tiempo de Caja − Tiempo Ingreso Productos. Tiempo previo al ingreso de productos en la misma facturación.</td></tr>
-              <tr style="border-bottom:1px solid #eee;"><td style="padding:8px 12px;font-weight:600;">WIP</td><td style="padding:8px 12px;">Work In Process: máxima cantidad de pedidos simultáneos en cola de una estación durante la simulación.</td></tr>
-              <tr style="border-bottom:1px solid #eee;"><td style="padding:8px 12px;font-weight:600;">Throughput</td><td style="padding:8px 12px;">Pedidos completados por hora en cada estación. Capacidad real de producción.</td></tr>
-              <tr style="border-bottom:1px solid #eee;"><td style="padding:8px 12px;font-weight:600;">Utilización %</td><td style="padding:8px 12px;">% del tiempo que el equipo está ocupado procesando. &gt;85% = cuello de botella. Ideal: 70-80%.</td></tr>
-              <tr style="border-bottom:1px solid #eee;"><td style="padding:8px 12px;font-weight:600;">DES</td><td style="padding:8px 12px;">Discrete Event Simulation. Simula cada llegada de pedido como un evento individual con tiempos variables.</td></tr>
-              <tr style="border-bottom:1px solid #eee;"><td style="padding:8px 12px;font-weight:600;">Cuello de Botella</td><td style="padding:8px 12px;">Estación con mayor utilización que limita el throughput del sistema completo.</td></tr>
-              <tr style="border-bottom:1px solid #eee;"><td style="padding:8px 12px;font-weight:600;">Takt Time</td><td style="padding:8px 12px;">Tiempo disponible ÷ demanda diaria. Ritmo máximo al que el sistema debe producir para satisfacer la demanda.</td></tr>
-              <tr style="border-bottom:1px solid #eee;"><td style="padding:8px 12px;font-weight:600;">OEE</td><td style="padding:8px 12px;">Overall Equipment Effectiveness. Aquí = Disponibilidad: tiempo neto operativo ÷ tiempo total del turno.</td></tr>
-              <tr style="border-bottom:1px solid #eee;"><td style="padding:8px 12px;font-weight:600;">DPMO</td><td style="padding:8px 12px;">Defects Per Million Opportunities. (Anulaciones ÷ Pedidos totales) × 1,000,000. Base para calcular Nivel Sigma.</td></tr>
-              <tr style="border-bottom:1px solid #eee;"><td style="padding:8px 12px;font-weight:600;">Nivel Sigma (σ)</td><td style="padding:8px 12px;">Escala de calidad: 3σ = estándar industria alimentos (66,807 DPMO), 4σ = objetivo Pitaya, 6σ = casi perfección (3.4 DPMO).</td></tr>
-              <tr style="border-bottom:1px solid #eee;"><td style="padding:8px 12px;font-weight:600;">Muda (7 Desperdicios)</td><td style="padding:8px 12px;">Concepto Lean: Sobreproducción, Espera, Transporte, Sobreproceso, Inventario, Movimiento, Defectos.</td></tr>
-              <tr style="border-bottom:1px solid #eee;"><td style="padding:8px 12px;font-weight:600;">Control Chart (X-bar)</td><td style="padding:8px 12px;">Gráfica de control estadístico con UCL (límite superior), LCL (límite inferior) y media. Puntos fuera = causa especial.</td></tr>
-              <tr style="border-bottom:1px solid #eee;"><td style="padding:8px 12px;font-weight:600;">UCL / LCL</td><td style="padding:8px 12px;">Upper/Lower Control Limit = Media ± 3σ. Define el rango de variación "normal" del proceso.</td></tr>
-              <tr style="border-bottom:1px solid #eee;"><td style="padding:8px 12px;font-weight:600;">Pool de Operarios</td><td style="padding:8px 12px;">Modelo donde todos los operarios son polivalentes y se reasignan dinámicamente a la estación con mayor cola.</td></tr>
-              <tr style="border-bottom:1px solid #eee;"><td style="padding:8px 12px;font-weight:600;">Batch</td><td style="padding:8px 12px;">Lote de procesamiento: máx. pedidos del mismo producto procesados en una sola corrida de máquina (ej. 3 batidos en 1 licuada).</td></tr>
-              <tr style="border-bottom:1px solid #eee;"><td style="padding:8px 12px;font-weight:600;">HoraCreado</td><td style="padding:8px 12px;">Momento en que el cajero inicia la factura del pedido. Inicio del Lead Time.</td></tr>
-              <tr style="border-bottom:1px solid #eee;"><td style="padding:8px 12px;font-weight:600;">HoraImpreso</td><td style="padding:8px 12px;">Momento en que se imprime la comanda y pasa a las estaciones de trabajo. Inicio del Cycle Time.</td></tr>
-              <tr style="border-bottom:1px solid #eee;"><td style="padding:8px 12px;font-weight:600;">HoraIngresoProducto</td><td style="padding:8px 12px;">Hora en que se comienza a facturar/registrar productos en el pedido. Corresponde al inicio real de preparación.</td></tr>
-              <tr style="border-bottom:1px solid #eee;"><td style="padding:8px 12px;font-weight:600;">Estación Batido</td><td style="padding:8px 12px;">Incluye <code>GrupoProductosVenta.Tipo = 'Batido'</code> y <code>'Limonada'</code>. Proceso: insumos → licuado (2 min) → servido (0.5 min). 2 licuadoras, batch de 3.</td></tr>
-              <tr style="border-bottom:1px solid #eee;"><td style="padding:8px 12px;font-weight:600;">Estación Waffles</td><td style="padding:8px 12px;"><code>GrupoProductosVenta.Tipo = 'Waffles'</code>. Proceso: mezcla (2 min) → cocción (5 min) → emplato (1 min) → limpieza (1 min). 2 waffleras. Operarios rotan según carga, hasta 3 simultáneos.</td></tr>
-              <tr><td style="padding:8px 12px;font-weight:600;">Estación Bowl</td><td style="padding:8px 12px;"><code>GrupoProductosVenta.Tipo = 'Bowl'</code>. Proceso: insumos → licuado pesado (3 min) → decorado (2 min) → limpieza (1 min). 1 motor, batch de 2.</td></tr>
+              <tr style="border-bottom:1px solid #eee;">
+                <td style="padding:8px 12px;font-weight:600;">λ (Lambda)</td>
+                <td style="padding:8px 12px;">Tasa de llegada Poisson: pedidos promedio que llegan por hora. Derivada de
+                  datos reales ÷ días observados.</td>
+              </tr>
+              <tr style="border-bottom:1px solid #eee;">
+                <td style="padding:8px 12px;font-weight:600;">Lead Time</td>
+                <td style="padding:8px 12px;"><strong>No medible directamente en BD</strong>. Sería HoraCreado → entrega
+                  al cliente, pero no se registra la hora de entrega. El Lead Time real = Tiempo de Caja + Tiempo de
+                  Preparación (estimado).</td>
+              </tr>
+              <tr style="border-bottom:1px solid #eee;">
+                <td style="padding:8px 12px;font-weight:600;">Tiempo de Caja</td>
+                <td style="padding:8px 12px;"><code>HoraCreado → HoraImpreso</code>. Tiempo que tarda el cajero en
+                  facturar e imprimir la comanda. Inicio del proceso de preparación.</td>
+              </tr>
+              <tr style="border-bottom:1px solid #eee;">
+                <td style="padding:8px 12px;font-weight:600;">Tiempo Ingreso Productos</td>
+                <td style="padding:8px 12px;"><code>HoraIngresoProducto → HoraImpreso</code>. Subconjunto del tiempo de
+                  caja: desde que se empiezan a ingresar ítems hasta imprimir.</td>
+              </tr>
+              <tr style="border-bottom:1px solid #eee;">
+                <td style="padding:8px 12px;font-weight:600;">Wq (Diferencia)</td>
+                <td style="padding:8px 12px;">Tiempo de Caja − Tiempo Ingreso Productos. Tiempo previo al ingreso de
+                  productos en la misma facturación.</td>
+              </tr>
+              <tr style="border-bottom:1px solid #eee;">
+                <td style="padding:8px 12px;font-weight:600;">WIP</td>
+                <td style="padding:8px 12px;">Work In Process: máxima cantidad de pedidos simultáneos en cola de una
+                  estación durante la simulación.</td>
+              </tr>
+              <tr style="border-bottom:1px solid #eee;">
+                <td style="padding:8px 12px;font-weight:600;">Throughput</td>
+                <td style="padding:8px 12px;">Pedidos completados por hora en cada estación. Capacidad real de
+                  producción.</td>
+              </tr>
+              <tr style="border-bottom:1px solid #eee;">
+                <td style="padding:8px 12px;font-weight:600;">Utilización %</td>
+                <td style="padding:8px 12px;">% del tiempo que el equipo está ocupado procesando. &gt;85% = cuello de
+                  botella. Ideal: 70-80%.</td>
+              </tr>
+              <tr style="border-bottom:1px solid #eee;">
+                <td style="padding:8px 12px;font-weight:600;">DES</td>
+                <td style="padding:8px 12px;">Discrete Event Simulation. Simula cada llegada de pedido como un evento
+                  individual con tiempos variables.</td>
+              </tr>
+              <tr style="border-bottom:1px solid #eee;">
+                <td style="padding:8px 12px;font-weight:600;">Cuello de Botella</td>
+                <td style="padding:8px 12px;">Estación con mayor utilización que limita el throughput del sistema
+                  completo.</td>
+              </tr>
+              <tr style="border-bottom:1px solid #eee;">
+                <td style="padding:8px 12px;font-weight:600;">Takt Time</td>
+                <td style="padding:8px 12px;">Tiempo disponible ÷ demanda diaria. Ritmo máximo al que el sistema debe
+                  producir para satisfacer la demanda.</td>
+              </tr>
+              <tr style="border-bottom:1px solid #eee;">
+                <td style="padding:8px 12px;font-weight:600;">OEE</td>
+                <td style="padding:8px 12px;">Overall Equipment Effectiveness. Aquí = Disponibilidad: tiempo neto
+                  operativo ÷ tiempo total del turno.</td>
+              </tr>
+              <tr style="border-bottom:1px solid #eee;">
+                <td style="padding:8px 12px;font-weight:600;">DPMO</td>
+                <td style="padding:8px 12px;">Defects Per Million Opportunities. (Anulaciones ÷ Pedidos totales) ×
+                  1,000,000. Base para calcular Nivel Sigma.</td>
+              </tr>
+              <tr style="border-bottom:1px solid #eee;">
+                <td style="padding:8px 12px;font-weight:600;">Nivel Sigma (σ)</td>
+                <td style="padding:8px 12px;">Escala de calidad: 3σ = estándar industria alimentos (66,807 DPMO), 4σ =
+                  objetivo Pitaya, 6σ = casi perfección (3.4 DPMO).</td>
+              </tr>
+              <tr style="border-bottom:1px solid #eee;">
+                <td style="padding:8px 12px;font-weight:600;">Muda (7 Desperdicios)</td>
+                <td style="padding:8px 12px;">Concepto Lean: Sobreproducción, Espera, Transporte, Sobreproceso,
+                  Inventario, Movimiento, Defectos.</td>
+              </tr>
+              <tr style="border-bottom:1px solid #eee;">
+                <td style="padding:8px 12px;font-weight:600;">Control Chart (X-bar)</td>
+                <td style="padding:8px 12px;">Gráfica de control estadístico con UCL (límite superior), LCL (límite
+                  inferior) y media. Puntos fuera = causa especial.</td>
+              </tr>
+              <tr style="border-bottom:1px solid #eee;">
+                <td style="padding:8px 12px;font-weight:600;">UCL / LCL</td>
+                <td style="padding:8px 12px;">Upper/Lower Control Limit = Media ± 3σ. Define el rango de variación
+                  "normal" del proceso.</td>
+              </tr>
+              <tr style="border-bottom:1px solid #eee;">
+                <td style="padding:8px 12px;font-weight:600;">Pool de Operarios</td>
+                <td style="padding:8px 12px;">Modelo donde todos los operarios son polivalentes y se reasignan
+                  dinámicamente a la estación con mayor cola.</td>
+              </tr>
+              <tr style="border-bottom:1px solid #eee;">
+                <td style="padding:8px 12px;font-weight:600;">Batch</td>
+                <td style="padding:8px 12px;">Lote de procesamiento: máx. pedidos del mismo producto procesados en una
+                  sola corrida de máquina (ej. 3 batidos en 1 licuada).</td>
+              </tr>
+              <tr style="border-bottom:1px solid #eee;">
+                <td style="padding:8px 12px;font-weight:600;">HoraCreado</td>
+                <td style="padding:8px 12px;">Momento en que el cajero inicia la factura del pedido. Inicio del Lead
+                  Time.</td>
+              </tr>
+              <tr style="border-bottom:1px solid #eee;">
+                <td style="padding:8px 12px;font-weight:600;">HoraImpreso</td>
+                <td style="padding:8px 12px;">Momento en que se imprime la comanda y pasa a las estaciones de trabajo.
+                  Inicio del Cycle Time.</td>
+              </tr>
+              <tr style="border-bottom:1px solid #eee;">
+                <td style="padding:8px 12px;font-weight:600;">HoraIngresoProducto</td>
+                <td style="padding:8px 12px;">Hora en que se comienza a facturar/registrar productos en el pedido.
+                  Corresponde al inicio real de preparación.</td>
+              </tr>
+              <tr style="border-bottom:1px solid #eee;">
+                <td style="padding:8px 12px;font-weight:600;">Estación Batido</td>
+                <td style="padding:8px 12px;">Incluye <code>GrupoProductosVenta.Tipo = 'Batido'</code> y
+                  <code>'Limonada'</code>. Proceso: insumos → licuado (2 min) → servido (0.5 min). 2 licuadoras, batch
+                  de 3.</td>
+              </tr>
+              <tr style="border-bottom:1px solid #eee;">
+                <td style="padding:8px 12px;font-weight:600;">Estación Waffles</td>
+                <td style="padding:8px 12px;"><code>GrupoProductosVenta.Tipo = 'Waffles'</code>. Proceso: mezcla (2 min)
+                  → cocción (5 min) → emplato (1 min) → limpieza (1 min). 2 waffleras. Operarios rotan según carga,
+                  hasta 3 simultáneos.</td>
+              </tr>
+              <tr>
+                <td style="padding:8px 12px;font-weight:600;">Estación Bowl</td>
+                <td style="padding:8px 12px;"><code>GrupoProductosVenta.Tipo = 'Bowl'</code>. Proceso: insumos → licuado
+                  pesado (3 min) → decorado (2 min) → limpieza (1 min). 1 motor, batch de 2.</td>
+              </tr>
             </tbody>
           </table>
 
           <!-- ── NOTA BD ─────────────────────────────────────────── -->
-          <div style="background:#fff8e1;border-left:4px solid #ffc107;border-radius:8px;padding:12px 16px;font-size:.82rem;color:#6d5102;">
+          <div
+            style="background:#fff8e1;border-left:4px solid #ffc107;border-radius:8px;padding:12px 16px;font-size:.82rem;color:#6d5102;">
             <strong><i class="fas fa-database me-1"></i>Nota técnica — Joins de BD:</strong><br>
-            Para clasificar productos por estación se usa: <code>VentasGlobalesAccessCSV.CodProducto → DBBatidos.CodBatido → DBBatidos.CodGrupo → GrupoProductosVenta.CodGrupo → GrupoProductosVenta.Tipo</code>.<br>
+            Para clasificar productos por estación se usa:
+            <code>VentasGlobalesAccessCSV.CodProducto → DBBatidos.CodBatido → DBBatidos.CodGrupo → GrupoProductosVenta.CodGrupo → GrupoProductosVenta.Tipo</code>.<br>
             Para filtrar por sucursal: <code>VentasGlobalesAccessCSV.local = sucursales.codigo</code> (ambos VARCHAR).
           </div>
 
