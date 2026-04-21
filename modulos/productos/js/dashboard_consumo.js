@@ -31,13 +31,208 @@ $(document).ready(function () {
     bindEventos();
 });
 
-/* ── Inicializar Select2 ──────────────────────────────────── */
+/* ── SucursalPicker — Custom Pill Dropdown ───────────────── */
+const SucPicker = (() => {
+    const MAX_PILLS = 3;   // max pills visibles en trigger (el resto → badge "+N")
+    let _opciones    = []; // { value, label }
+    let _seleccionados = new Set();
+
+    const $trigger   = $('#dcSucTrigger');
+    const $dropdown  = $('#dcSucDropdown');
+    const $list      = $('#dcSucList');
+    const $search    = $('#dcSucSearch');
+    const $pills     = $('#dcSucPills');
+    const $ph        = $('#dcSucPlaceholder');
+    const $badge     = $('#dcSucCountBadge');
+    const $clear     = $('#dcSucClear');
+    const $hiddenSel = $('#filtroSucursales');  // select oculto para compatibilidad
+
+    /* ── Abrir / Cerrar ── */
+    function open() {
+        $trigger.addClass('open').attr('aria-expanded', 'true');
+        $dropdown.addClass('open');
+        $search.val('').trigger('input').focus();
+    }
+    function close() {
+        $trigger.removeClass('open').attr('aria-expanded', 'false');
+        $dropdown.removeClass('open');
+    }
+    function toggle() { $trigger.hasClass('open') ? close() : open(); }
+
+    /* ── Sincronizar select oculto → lo usa cargarDatos() ── */
+    function syncHidden() {
+        $hiddenSel.find('option').prop('selected', false);
+        _seleccionados.forEach(v => {
+            $hiddenSel.find(`option[value="${v}"]`).prop('selected', true);
+        });
+    }
+
+    /* ── Render trigger pills ── */
+    function renderTrigger() {
+        const n = _seleccionados.size;
+        if (n === 0) {
+            $ph.show();
+            $pills.hide().empty();
+            $badge.hide();
+            $clear.hide();
+            return;
+        }
+        $ph.hide();
+        $pills.show();
+        $clear.show();
+
+        const arr = [..._seleccionados];
+        const visible = arr.slice(0, MAX_PILLS);
+        const extra   = arr.length - MAX_PILLS;
+
+        $pills.empty();
+        visible.forEach(v => {
+            const lbl = _opciones.find(o => o.value === v)?.label || v;
+            const shortLbl = lbl.length > 14 ? lbl.substring(0, 12) + '…' : lbl;
+            const $pill = $(`
+                <span class="dc-suc-pill" title="${escHtml(lbl)}">
+                    ${escHtml(shortLbl)}
+                    <button class="dc-suc-pill-remove" data-v="${v}" type="button" title="Quitar">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </span>`);
+            $pills.append($pill);
+        });
+
+        if (extra > 0) {
+            $badge.text(`+${extra} más`).show();
+        } else {
+            $badge.hide();
+        }
+    }
+
+    /* ── Render lista dropdown ── */
+    function renderList(query) {
+        $list.empty();
+        const q = (query || '').toLowerCase();
+        const filtradas = _opciones.filter(o => o.label.toLowerCase().includes(q));
+
+        if (filtradas.length === 0) {
+            $list.append('<div class="dc-suc-empty"><i class="fas fa-search me-1"></i>Sin resultados</div>');
+            return;
+        }
+        filtradas.forEach(o => {
+            const sel = _seleccionados.has(o.value);
+            const $item = $(`
+                <div class="dc-suc-item ${sel ? 'selected' : ''}" data-v="${o.value}" role="option" aria-selected="${sel}">
+                    <span class="dc-suc-checkbox">
+                        <i class="fas fa-check dc-suc-checkbox-icon"></i>
+                    </span>
+                    <span class="dc-suc-item-label" title="${escHtml(o.label)}">${escHtml(o.label)}</span>
+                </div>`);
+            $list.append($item);
+        });
+    }
+
+    /* ── Toggle selección ── */
+    function toggleItem(value) {
+        if (_seleccionados.has(value)) {
+            _seleccionados.delete(value);
+        } else {
+            _seleccionados.add(value);
+        }
+        syncHidden();
+        renderTrigger();
+        renderList($search.val());
+    }
+
+    /* ── API pública ── */
+    function init() {
+        // Trigger click
+        $trigger.on('click', function (e) {
+            // no cerrar si click en pill-remove
+            if ($(e.target).closest('.dc-suc-pill-remove').length) return;
+            toggle();
+        });
+
+        // Pill remove (dentro del trigger)
+        $pills.on('click', '.dc-suc-pill-remove', function (e) {
+            e.stopPropagation();
+            const v = $(this).data('v');
+            _seleccionados.delete(v);
+            syncHidden();
+            renderTrigger();
+            renderList($search.val());
+        });
+
+        // Botón limpiar todos
+        $clear.on('click', function (e) {
+            e.stopPropagation();
+            _seleccionados.clear();
+            syncHidden();
+            renderTrigger();
+            renderList($search.val());
+        });
+
+        // Botón "Todas"
+        $('#dcSucSelAll').on('click', function () {
+            _seleccionados = new Set(_opciones.map(o => o.value));
+            syncHidden();
+            renderTrigger();
+            renderList($search.val());
+        });
+
+        // Botón "Ninguna"
+        $('#dcSucNone').on('click', function () {
+            _seleccionados.clear();
+            syncHidden();
+            renderTrigger();
+            renderList($search.val());
+        });
+
+        // Click en item de lista
+        $list.on('click', '.dc-suc-item', function () {
+            toggleItem($(this).data('v'));
+        });
+
+        // Búsqueda
+        $search.on('input', function () { renderList($(this).val()); });
+
+        // Cerrar al click fuera
+        $(document).on('click.sucpicker', function (e) {
+            if (!$trigger.is(e.target) && $trigger.has(e.target).length === 0
+                && !$dropdown.is(e.target) && $dropdown.has(e.target).length === 0) {
+                close();
+            }
+        });
+
+        // Teclado
+        $trigger.on('keydown', function (e) {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); }
+            if (e.key === 'Escape') close();
+        });
+    }
+
+    function setOpciones(arr) {
+        // arr = [{ value, label }]
+        _opciones = arr;
+        _seleccionados.clear();
+
+        // Rebuild hidden select options
+        $hiddenSel.empty();
+        arr.forEach(o => {
+            $hiddenSel.append(`<option value="${o.value}">${escHtml(o.label)}</option>`);
+        });
+
+        renderTrigger();
+        renderList();
+    }
+
+    function getSelected() {
+        return [..._seleccionados];
+    }
+
+    return { init, setOpciones, getSelected };
+})();
+
 function inicializarSelect2() {
-    $sucursales.select2({
-        placeholder: 'Todas las sucursales',
-        allowClear: true,
-        width: '100%',
-    });
+    // Reemplazado por SucPicker — llamar init al arrancar
+    SucPicker.init();
 }
 
 
@@ -135,11 +330,9 @@ async function cargarFiltros() {
         }
 
         // ── Sucursales ─────────────────────────────────────────
-        $sucursales.empty().append('<option></option>'); // Opción vacía para el placeholder
-        resp.sucursales.forEach(s => {
-            $sucursales.append(`<option value="${s.codigo}">${s.nombre}</option>`);
-        });
-        $sucursales.val(null).trigger('change');
+        SucPicker.setOpciones(
+            resp.sucursales.map(s => ({ value: String(s.codigo), label: s.nombre }))
+        );
 
     } catch (err) {
         console.error('Error cargando filtros:', err);
@@ -161,8 +354,8 @@ async function cargarDatos() {
     const semD = Math.min(semDesdeNum, semHastaNum);
     const semH = Math.max(semDesdeNum, semHastaNum);
 
-    // Filtrar strings vacíos (vienen de la <option></option> del placeholder de Select2)
-    const sucursalesSelec = ($sucursales.val() || []).filter(s => s !== '');
+    // Obtener sucursales seleccionadas del SucPicker custom
+    const sucursalesSelec = SucPicker.getSelected();
 
     // Mostrar loader
     mostrarEstado('loader');
