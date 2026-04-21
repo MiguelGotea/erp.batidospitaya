@@ -1261,15 +1261,6 @@ function renderPanelAlertas(data, kSigma) {
 
     let filas = '';
     localesOrdenados.forEach(local => {
-        // Fila de encabezado de grupo (sucursal)
-        filas += `
-        <tr style="background:rgba(14,84,76,.08);">
-            <td colspan="7" style="font-weight:700;font-size:.78rem;color:#0E544C;padding:6px 14px;">
-                <i class="fas fa-store me-2" style="opacity:.6"></i>${escHtml(local)}
-                <span style="font-weight:400;font-size:.7rem;color:#888;margin-left:6px">(${grupos[local].length} alerta${grupos[local].length > 1 ? 's' : ''})</span>
-            </td>
-        </tr>`;
-
         grupos[local].forEach(a => {
             const zCls = a.zScore >= 2.5 ? 'z-critico' : a.zScore >= 2 ? 'z-alto' : 'z-moderado';
             filas += `
