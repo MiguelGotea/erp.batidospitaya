@@ -71,34 +71,63 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                                     id="filtroSemanaHasta" min="1" max="9999" placeholder="Ej: 14">
                             </div>
 
-                            <!-- Sucursales -->
-                            <div class="col-12 col-md-3 col-lg-2">
-                                <label class="dc-label" for="filtroSucursales">
+                            <!-- Sucursales — Custom Pill Dropdown -->
+                            <div class="col-12 col-md-4 col-lg-4">
+                                <label class="dc-label" for="dcSucTrigger">
                                     <i class="fas fa-store me-1"></i>Sucursales
                                 </label>
-                                <select class="form-select form-select-sm dc-select" id="filtroSucursales" multiple>
-                                </select>
+                                <!-- Trigger visible -->
+                                <div class="dc-suc-trigger" id="dcSucTrigger" tabindex="0" role="button" aria-haspopup="listbox" aria-expanded="false">
+                                    <div class="dc-suc-trigger-inner">
+                                        <span class="dc-suc-placeholder" id="dcSucPlaceholder">
+                                            <i class="fas fa-store me-1" style="opacity:.45"></i>Todas las sucursales
+                                        </span>
+                                        <div class="dc-suc-pills" id="dcSucPills" style="display:none"></div>
+                                    </div>
+                                    <div class="dc-suc-trigger-right">
+                                        <span class="dc-suc-count-badge" id="dcSucCountBadge" style="display:none"></span>
+                                        <button class="dc-suc-clear" id="dcSucClear" title="Quitar todas" style="display:none" type="button">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                        <i class="fas fa-chevron-down dc-suc-chevron" id="dcSucChevron"></i>
+                                    </div>
+                                </div>
+                                <!-- Dropdown panel -->
+                                <div class="dc-suc-dropdown" id="dcSucDropdown" role="listbox" aria-multiselectable="true">
+                                    <div class="dc-suc-search-wrap">
+                                        <i class="fas fa-search dc-suc-search-icon"></i>
+                                        <input type="text" class="dc-suc-search" id="dcSucSearch" placeholder="Buscar sucursal…" autocomplete="off">
+                                    </div>
+                                    <div class="dc-suc-actions">
+                                        <button type="button" class="dc-suc-action-btn" id="dcSucSelAll"><i class="fas fa-check-double me-1"></i>Todas</button>
+                                        <button type="button" class="dc-suc-action-btn" id="dcSucNone"><i class="fas fa-times me-1"></i>Ninguna</button>
+                                    </div>
+                                    <div class="dc-suc-list" id="dcSucList"></div>
+                                </div>
+                                <!-- Select oculto para compatibilidad con el JS existente -->
+                                <select id="filtroSucursales" multiple style="display:none"></select>
                             </div>
 
 
 
                             <!-- Semana Actual y Botones -->
-                            <div
-                                class="col-12 col-md-12 col-lg-3 d-flex flex-wrap gap-2 justify-content-end align-items-center">
+                            <div class="col-12 col-md-12 col-lg-4 d-flex gap-2 justify-content-end align-items-center flex-nowrap">
                                 <div id="badgeSemanaActual" class="dc-badge-semana-actual" style="display:none">
                                     <i class="fas fa-calendar-check text-primary"></i>
                                     Sem. Actual: <strong id="semanaActualNum">—</strong>
                                     <span class="dc-sem-rango" id="semanaActualRango"></span>
                                 </div>
 
-                                <button class="btn btn-sm dc-btn-primary" id="btnAplicar">
-                                    <i class="fas fa-search me-1"></i>Analizar
-                                </button>
-                                <?php if ($puedeExportar): ?>
-                                    <button class="btn btn-sm dc-btn-export" id="btnExportar" disabled>
-                                        <i class="fas fa-file-csv me-1"></i>CSV
+                                <div class="dc-btn-group-actions">
+                                    <button class="btn btn-sm dc-btn-primary" id="btnAplicar">
+                                        <i class="fas fa-search me-1"></i>Analizar
                                     </button>
-                                <?php endif; ?>
+                                    <?php if ($puedeExportar): ?>
+                                        <button class="btn btn-sm dc-btn-export" id="btnExportar" disabled>
+                                            <i class="fas fa-file-csv me-1"></i>CSV
+                                        </button>
+                                    <?php endif; ?>
+                                </div>
                             </div>
 
                         </div><!-- /row filtros -->
