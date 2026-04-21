@@ -327,7 +327,7 @@ $cargoOperario = $usuario['CodNivelesCargos'];
                 </h1>
                 <div class="live-badge">
                     <div class="pulse-dot"></div>
-                    EN VIVO &bull; Actualiza cada 15s
+                    EN VIVO &bull; Actualiza cada 1 min
                 </div>
             </div>
 
@@ -341,17 +341,17 @@ $cargoOperario = $usuario['CodNivelesCargos'];
                 <div class="kpi-card online">
                     <span class="kpi-label">En línea</span>
                     <span class="kpi-num" id="kpi-online">—</span>
-                    <span class="kpi-sub">ping &lt; 90 seg</span>
+                    <span class="kpi-sub">ping &lt; 5 min</span>
                 </div>
                 <div class="kpi-card alerta">
                     <span class="kpi-label">Alerta</span>
                     <span class="kpi-num" id="kpi-alerta">—</span>
-                    <span class="kpi-sub">ping 90–300 seg</span>
+                    <span class="kpi-sub">ping 5–10 min</span>
                 </div>
                 <div class="kpi-card offline">
                     <span class="kpi-label">Sin conexión</span>
                     <span class="kpi-num" id="kpi-offline">—</span>
-                    <span class="kpi-sub">ping &gt; 5 min</span>
+                    <span class="kpi-sub">ping &gt; 10 min</span>
                 </div>
             </div>
 
@@ -411,7 +411,7 @@ $cargoOperario = $usuario['CodNivelesCargos'];
 // ══════════════════════════════════════════════════════════
 //  Monitor de Conexión — Pitaya Systems
 // ══════════════════════════════════════════════════════════
-const POLL_INTERVAL = 15000; // 15 segundos
+const POLL_INTERVAL = 60000; // 1 minuto
 const AJAX_URL      = 'ajax/conexion_monitor_get.php';
 
 let allPCs        = [];
