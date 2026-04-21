@@ -86,10 +86,7 @@ function bindEventos() {
     // Exportar
     $btnExportar.on('click', exportarCSV);
 
-    // Heatmap insumo selector
-    $('#heatmapInsumoSel').on('change', function () {
-        if (datosActuales) renderHeatmap(datosActuales, $(this).val());
-    });
+
 
     // Panel alertas: toggle cuerpo (evitar propagar si click en sigma btns)
     $(document).on('click', '#alertasHeader', function (e) {
@@ -241,7 +238,6 @@ function renderDashboard(data) {
     renderInsumoSel(data);       // poblar selector del panel de análisis
     renderTablaHistorial(data);
     renderTablaProyeccion(data);
-    renderHeatmapSelector(data);
 }
 
 /* ── KPIs — muestran datos del insumo seleccionado ───────── */
@@ -764,96 +760,6 @@ function renderInsumoSel(data) {
         if (chartTendencia) { chartTendencia.destroy(); chartTendencia = null; }
         $('#tituloTendencia').html('<i class="fas fa-chart-line me-2"></i>Tendencia');
     }
-}
-
-/* ── Selector de insumos en heatmap ─────────────────────── */
-function renderHeatmapSelector(data) {
-    const $sel = $('#heatmapInsumoSel');
-    $sel.empty().append('<option value="">— Selecciona un insumo —</option>');
-
-    data.consumo.slice(0, 50).forEach(item => {
-        $sel.append(`<option value="${item.id}">${escHtml(item.nombre)}</option>`);
-    });
-
-    // Auto-seleccionar el primero si hay datos
-    if (data.consumo.length > 0) {
-        $sel.val(data.consumo[0].id);
-        renderHeatmap(data, data.consumo[0].id);
-    }
-}
-
-/* ── Render Heatmap ──────────────────────────────────────── */
-function renderHeatmap(data, idInsumo) {
-    const $cont = $('#heatmapContainer');
-
-    if (!idInsumo) {
-        $cont.html('<div class="text-center text-muted py-4"><i class="fas fa-th fa-2x mb-2 d-block"></i>Selecciona un insumo.</div>');
-        return;
-    }
-
-    const item = data.consumo.find(c => c.id == idInsumo);
-    if (!item) {
-        $cont.html('<div class="text-center text-muted py-4">Insumo no encontrado.</div>');
-        return;
-    }
-
-    const sucursales  = data.sucursales;
-    const semanas     = data.semanas;
-    // Mapa codigo -> nombre (fallback al codigo si no existe)
-    const nombres     = data.sucursales_nombres || {};
-
-    // Valor máximo para normalizar
-    let maxVal = 0;
-    semanas.forEach(s => {
-        sucursales.forEach(suc => {
-            const v = (item.desglose_semxsuc[s.numero_semana]?.[suc] || 0);
-            if (v > maxVal) maxVal = v;
-        });
-    });
-
-    // Encabezados: nombres de sucursales (no códigos)
-    let theadHtml = '<tr><th>Semana</th>';
-    sucursales.forEach(suc => {
-        const nombreLocal = nombres[suc] || suc;
-        theadHtml += `<th title="${escHtml(suc)}">${escHtml(nombreLocal)}</th>`;
-    });
-    theadHtml += '<th>Total Sem.</th></tr>';
-
-    // Filas: semanas
-    let tbodyHtml = '';
-    semanas.forEach(s => {
-        let totalSem = 0;
-        let fila = `<tr><td class="fw-bold">${s.numero_semana}</td>`;
-        sucursales.forEach(suc => {
-            const nombreLocal = nombres[suc] || suc;
-            const v = item.desglose_semxsuc[s.numero_semana]?.[suc] || 0;
-            totalSem += v;
-            const intensidad = maxVal > 0 ? Math.ceil((v / maxVal) * 10) : 0;
-            fila += `<td class="hm-${intensidad}" title="${escHtml(nombreLocal)}: ${formatNum(v)} ${escHtml(item.unidad)}">${v > 0 ? formatNum(v) : ''}</td>`;
-        });
-        fila += `<td class="fw-bold text-end">${formatNum(totalSem)}</td></tr>`;
-        tbodyHtml += fila;
-    });
-
-    const html = `
-        <div style="font-size:.78rem;color:#667;margin-bottom:8px">
-            <strong>${escHtml(item.nombre)}</strong> · ${escHtml(item.unidad)}
-            <span class="ms-3 dc-semana-badge">Total: ${formatNum(item.total)}</span>
-        </div>
-        <table class="dc-heatmap-table">
-            <thead>${theadHtml}</thead>
-            <tbody>${tbodyHtml}</tbody>
-        </table>
-        <div style="margin-top:8px;font-size:.72rem;color:#99a">
-            Color: 
-            <span class="hm-1" style="padding:1px 6px;border-radius:3px">Bajo</span>
-            <span class="mx-1">→</span>
-            <span class="hm-5" style="padding:1px 6px;border-radius:3px">Medio</span>
-            <span class="mx-1">→</span>
-            <span class="hm-10" style="padding:1px 6px;border-radius:3px">Alto</span>
-        </div>
-    `;
-    $cont.html(html);
 }
 
 /* ── Modal Desglose ──────────────────────────────────────── */

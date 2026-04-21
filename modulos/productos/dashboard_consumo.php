@@ -256,12 +256,7 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                             <i class="fas fa-chart-line me-1"></i>Proyección y Planificación
                         </button>
                     </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="dc-tab-btn" id="tabHeatmapBtn" data-bs-toggle="tab" data-bs-target="#tabHeatmap"
-                            role="tab">
-                            <i class="fas fa-th me-1"></i>Mapa de Calor por Local
-                        </button>
-                    </li>
+
 
                 </ul>
 
@@ -341,31 +336,6 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                                             </tr>
                                         </tbody>
                                     </table>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- TAB 3: HEATMAP -->
-                    <div class="tab-pane fade" id="tabHeatmap" role="tabpanel">
-                        <div class="card border-0 shadow-sm">
-                            <div class="card-body p-2">
-                                <p class="small text-muted mb-2 ps-1">
-                                    <i class="fas fa-info-circle me-1"></i>
-                                    Color por intensidad de consumo (relativo al máximo de cada insumo).
-                                    Selecciona un insumo específico para ver su distribución por sucursal.
-                                </p>
-                                <div class="mb-2 ps-1">
-                                    <select class="form-select form-select-sm" id="heatmapInsumoSel"
-                                        style="max-width:300px;display:inline-block">
-                                        <option value="">— Selecciona un insumo —</option>
-                                    </select>
-                                </div>
-                                <div id="heatmapContainer" class="dc-heatmap-container">
-                                    <div class="text-center text-muted py-4">
-                                        <i class="fas fa-th fa-2x mb-2 d-block"></i>
-                                        Selecciona un insumo para ver el mapa de calor.
-                                    </div>
                                 </div>
                             </div>
                         </div>
