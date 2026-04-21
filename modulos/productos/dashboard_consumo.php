@@ -480,8 +480,10 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                         </h5>
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                     </div>
-                    <div class="modal-body">
-                        <div class="row g-3">
+                    <div class="modal-body" style="font-size:.85rem">
+
+                        <!-- ROW 1: Filtros + Traducción -->
+                        <div class="row g-3 mb-3">
                             <div class="col-md-6">
                                 <div class="card h-100 border-0 bg-light">
                                     <div class="card-body">
@@ -489,14 +491,9 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                                             <i class="fas fa-filter me-2"></i>Cómo Usar los Filtros
                                         </h6>
                                         <p class="small text-muted mb-0">
-                                            <strong>Año + Sem. Desde / Hasta:</strong> Ingresa el número de semana
-                                            directamente (ej: 10 a 14). El año se selecciona en el primer campo.<br><br>
-                                            El badge <strong>"Semana actual"</strong> debajo de los filtros te indica en
-                                            qué semana estás.<br><br>
-                                            <strong>Tiendas:</strong> Deja vacío para analizar todas, o selecciona
-                                            específicas.<br><br>
-                                            <strong>Insumo:</strong> Opcional. Filtra el análisis a un insumo ERP
-                                            específico.<br><br>
+                                            <strong>Sem. Desde / Hasta:</strong> Ingresa el número de semana directamente (ej: 10 a 14).<br><br>
+                                            El badge <strong>"Semana actual"</strong> en los filtros te indica en qué semana estás.<br><br>
+                                            <strong>Tiendas:</strong> Deja vacío para analizar todas, o selecciona específicas con el selector de pills.<br><br>
                                             Haz clic en <strong>Analizar</strong> para cargar los datos.
                                         </p>
                                     </div>
@@ -509,69 +506,125 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                                             <i class="fas fa-cogs me-2"></i>Lógica de Traducción Access→ERP
                                         </h6>
                                         <p class="small text-muted mb-0">
-                                            Las ventas se toman de <code>VentasGlobalesAccessCSV</code> (solo no
-                                            anuladas).<br><br>
-                                            Por cada producto vendido, se consulta <code>SubReceta</code> y se traduce
-                                            cada ingrediente al insumo ERP según el algoritmo P1/P2/P3:<br>
-                                            <strong>P1</strong> vía <code>codporcion</code> directo ·
-                                            <strong>P2</strong> vía Cotización base · <strong>P3</strong>
-                                            fallback.<br><br>
-                                            El consumo =
-                                            <code>(Cantidad_receta × factor_conversión) / presentación × ventas</code>
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="card h-100 border-0 bg-light">
-                                    <div class="card-body">
-                                        <h6 class="fw-bold border-bottom pb-2" style="color:#0E544C">
-                                            <i class="fas fa-history me-2"></i>Tab: Historial
-                                        </h6>
-                                        <p class="small text-muted mb-0">
-                                            Muestra el consumo real por insumo ERP en el período seleccionado.
-                                            Haz clic en el botón <strong>Desglose</strong> para ver el detalle semana ×
-                                            local.
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="card h-100 border-0 bg-light">
-                                    <div class="card-body">
-                                        <h6 class="fw-bold border-bottom pb-2" style="color:#0E544C">
-                                            <i class="fas fa-chart-line me-2"></i>Tab: Proyección
-                                        </h6>
-                                        <p class="small text-muted mb-0">
-                                            Proyección de consumo para las próximas 4 semanas basada en el promedio del
-                                            período analizado.
-                                            Incluye <strong>Stock Mínimo</strong> (1 semana) y <strong>Stock
-                                                Máximo</strong> (2 semanas) recomendados.
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="card h-100 border-0 bg-light">
-                                    <div class="card-body">
-                                        <h6 class="fw-bold border-bottom pb-2" style="color:#e74c3c">
-                                            <i class="fas fa-exclamation-triangle me-2"></i>Tab: Sin Mapeo
-                                        </h6>
-                                        <p class="small text-muted mb-0">
-                                            Lista los ingredientes de receta que <strong>no tienen mapeo</strong> en el
-                                            diccionario ERP.
-                                            Estos ingredientes no están siendo contabilizados en el consumo total.
+                                            Las ventas se toman de <code>VentasGlobalesAccessCSV</code> (solo no anuladas).<br><br>
+                                            Por cada producto vendido se traduce cada ingrediente al insumo ERP con el algoritmo <strong>P1/P2/P3</strong>:<br>
+                                            <strong>P1</strong> vía <code>codporcion</code> directo · <strong>P2</strong> vía Cotización base · <strong>P3</strong> fallback.<br><br>
+                                            Consumo = <code>(Cantidad_receta × factor_conversión) / presentación × ventas</code>
                                         </p>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="alert alert-info py-2 px-3 small mt-3 mb-0">
-                            <strong><i class="fas fa-lightbulb me-1"></i>Nota:</strong>
-                            Los insumos que son <strong>Recetas Globales</strong> (compuestos) se calculan como
+
+                        <!-- ROW 2: Tabs -->
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <div class="card h-100 border-0 bg-light">
+                                    <div class="card-body">
+                                        <h6 class="fw-bold border-bottom pb-2" style="color:#0E544C">
+                                            <i class="fas fa-history me-2"></i>Tab: Historial de Consumo
+                                        </h6>
+                                        <p class="small text-muted mb-0">
+                                            Muestra el consumo real por insumo ERP en el período seleccionado.<br><br>
+                                            Haz clic en <strong>Ver</strong> para ver el detalle semana × local, o en
+                                            <strong><i class="fas fa-microscope"></i></strong> para auditar cada venta individual.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card h-100 border-0 bg-light">
+                                    <div class="card-body">
+                                        <h6 class="fw-bold border-bottom pb-2" style="color:#0E544C">
+                                            <i class="fas fa-chart-line me-2"></i>Tab: Proyección y Planificación
+                                        </h6>
+                                        <p class="small text-muted mb-0">
+                                            Proyección de consumo para las próximas 4 semanas basada en regresión lineal (mínimos cuadrados) sobre las semanas completas.<br><br>
+                                            Incluye <strong>Stock Mínimo</strong> (1 semana) y <strong>Stock Máximo</strong> (2 semanas) recomendados.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ROW 3: Alertas -->
+                        <div class="row g-3 mb-3">
+
+                            <!-- Sobreconsumo -->
+                            <div class="col-md-6">
+                                <div class="card h-100 border-0" style="background:#fff5f5;border-left:4px solid #e74c3c !important;">
+                                    <div class="card-body">
+                                        <h6 class="fw-bold border-bottom pb-2" style="color:#c0392b">
+                                            <i class="fas fa-exclamation-triangle me-2"></i>Panel: Sobreconsumo Detectado
+                                            <span class="badge ms-2" style="background:#e74c3c;color:#fff;font-size:.65rem">Acción: reponer stock</span>
+                                        </h6>
+                                        <p class="small text-muted mb-1">
+                                            Detecta <strong>spikes puntuales</strong> en una tienda específica: semanas donde el consumo
+                                            supera el umbral estadístico de esa tienda para ese insumo.
+                                        </p>
+                                        <div class="p-2 rounded" style="background:#fff;border:1px solid #fcc;font-size:.78rem">
+                                            <strong>Fórmula:</strong><br>
+                                            <code>Umbral = μ_local + k·σ_local</code><br>
+                                            <code>Z-score = (consumo − μ) / σ</code><br><br>
+                                            <strong>μ</strong> = promedio de semanas con valor · <strong>σ</strong> = desviación estándar poblacional<br><br>
+                                            <strong>Umbral σ ajustable:</strong><br>
+                                            &nbsp;· <strong>1σ</strong> — Más sensible (detecta desviaciones leves)<br>
+                                            &nbsp;· <strong>1.5σ</strong> — Balance recomendado (default)<br>
+                                            &nbsp;· <strong>2σ</strong> — Solo spikes severos<br><br>
+                                            <strong>Severidad del Z-score:</strong><br>
+                                            &nbsp;· <span style="background:#fde8e8;color:#c0392b;border-radius:4px;padding:1px 6px">Crítico</span> Z ≥ 2.5 &nbsp;
+                                            <span style="background:#fdf0e0;color:#d35400;border-radius:4px;padding:1px 6px">Alto</span> Z ≥ 2 &nbsp;
+                                            <span style="background:#fefae0;color:#b7950b;border-radius:4px;padding:1px 6px">Moderado</span> Z &lt; 2
+                                        </div>
+                                        <p class="small text-muted mt-2 mb-0">
+                                            <i class="fas fa-mouse-pointer me-1"></i>Al hacer clic en un insumo, el gráfico de tendencia se abre filtrado a esa tienda.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Crecimiento Sostenido -->
+                            <div class="col-md-6">
+                                <div class="card h-100 border-0" style="background:#f0f6ff;border-left:4px solid #2980b9 !important;">
+                                    <div class="card-body">
+                                        <h6 class="fw-bold border-bottom pb-2" style="color:#1a5276">
+                                            <i class="fas fa-chart-line me-2"></i>Panel: Crecimiento Sostenido
+                                            <span class="badge ms-2" style="background:#2980b9;color:#fff;font-size:.65rem">Acción: redefinir abastecimiento</span>
+                                        </h6>
+                                        <p class="small text-muted mb-1">
+                                            Detecta cuando el consumo de una tienda viene <strong>creciendo semana a semana de forma persistente</strong>,
+                                            aunque no haya superado el umbral de sobreconsumo. Señal para revisar las cantidades base de abastecimiento.
+                                        </p>
+                                        <div class="p-2 rounded" style="background:#fff;border:1px solid #b3d4f0;font-size:.78rem">
+                                            <strong>Activa cuando ≥ 2 de 3 indicadores superan su umbral:</strong><br><br>
+                                            <strong>① Regresión lineal normalizada (β̂/μ):</strong><br>
+                                            &nbsp;Ajusta <code>y = α + β·t</code> sobre las semanas con dato. Umbral: <code>β/μ &gt; 6%/sem</code><br><br>
+                                            <strong>② Mann-Kendall τ:</strong><br>
+                                            &nbsp;<code>S = Σ<sub>i&lt;j</sub> sgn(y<sub>j</sub> − y<sub>i</sub>)</code> &nbsp;·&nbsp; <code>τ = S / (n(n−1)/2)</code><br>
+                                            &nbsp;Mide monotonía (τ=1 perfecto, τ=−1 decreciente). Umbral: <code>τ &gt; 0.45</code><br><br>
+                                            <strong>③ Run-ratio de incrementos:</strong><br>
+                                            &nbsp;Proporción de semanas donde <code>y[t] &gt; y[t−1]</code>. Umbral: <code>&gt; 65%</code><br><br>
+                                            <strong>Severidad:</strong><br>
+                                            &nbsp;· <span style="background:#e8daef;color:#7d3c98;border-radius:4px;padding:1px 6px">Crítico</span> 3/3 activos o β/μ &gt; 40%/sem<br>
+                                            &nbsp;· <span style="background:#d6eaf8;color:#1a5276;border-radius:4px;padding:1px 6px">Notable</span> 2/3 + β/μ &gt; 20%/sem<br>
+                                            &nbsp;· <span style="background:#eaf4fc;color:#2e86c1;border-radius:4px;padding:1px 6px">Moderado</span> 2/3 activos
+                                        </div>
+                                        <p class="small text-muted mt-2 mb-0">
+                                            <i class="fas fa-mouse-pointer me-1"></i>Al hacer clic en un insumo, el gráfico se abre filtrado a esa tienda en modo Línea x Tienda.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Nota recetas globales -->
+                        <div class="alert alert-info py-2 px-3 small mb-0">
+                            <strong><i class="fas fa-lightbulb me-1"></i>Nota — Recetas Globales:</strong>
+                            Los insumos marcados como <strong>Global</strong> (compuestos) se calculan como
                             <code>SubReceta.Cantidad × N_ventas</code> sin conversión de unidades.
-                            Su consumo refiere al número de veces que se usa esa receta compuesta.
+                            Su consumo refiere al número de veces que se usa esa receta compuesta, no a una unidad física.
                         </div>
+
                     </div>
                 </div>
             </div>

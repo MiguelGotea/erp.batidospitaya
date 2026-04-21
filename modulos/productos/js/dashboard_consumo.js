@@ -338,6 +338,10 @@ async function cargarFiltros() {
             $('#semanaActualRango').text('');
             $('#badgeSemanaActual').show();
 
+            // Restricción: no permitir semanas futuras
+            $semDesde.attr('max', sa.numero_semana);
+            $semHasta.attr('max', sa.numero_semana);
+
             // Pre-cargar rango por defecto: 4 semanas hasta la actual
             const semHasta = sa.numero_semana;
             const semDesde = Math.max(1, semHasta - 3);
@@ -369,6 +373,19 @@ async function cargarDatos() {
 
     const semD = Math.min(semDesdeNum, semHastaNum);
     const semH = Math.max(semDesdeNum, semHastaNum);
+
+    // Restricción: no analizar semanas futuras
+    const semActual = parseInt($('#semanaActualNum').text()) || 0;
+    if (semActual > 0 && semH > semActual) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Semana futura',
+            text: `La semana máxima disponible es la ${semActual} (semana en curso). No se pueden analizar semanas futuras.`,
+            confirmButtonColor: '#0E544C'
+        });
+        $semHasta.val(semActual);
+        return;
+    }
 
     // Obtener sucursales seleccionadas del SucPicker custom
     const sucursalesSelec = SucPicker.getSelected();
@@ -1446,10 +1463,13 @@ function calcularAlertasCrecimiento(data) {
                 item.desglose_semxsuc?.[n]?.[suc] || 0
             );
 
-            // Filtrar solo semanas con dato > 0
+            // Excluir semana en curso (siempre tiene dato parcial → distorsiona la pendiente)
+            const semActualCrec = parseInt($('#semanaActualNum').text()) || 0;
+
+            // Filtrar solo semanas con dato > 0 y que no sean la semana en curso
             const puntos = semanasNros
                 .map((n, i) => ({ n, v: serieCompleta[i] }))
-                .filter(d => d.v > 0);
+                .filter(d => d.v > 0 && (semActualCrec === 0 || d.n !== semActualCrec));
 
             if (puntos.length < CREC_MIN_SEMANAS) return;
 
@@ -1536,11 +1556,11 @@ function calcularAlertasCrecimiento(data) {
         });
     });
 
-    // Orden: crítico → notable → moderado, luego β_rel desc
-    const orden = { critico: 0, notable: 1, moderado: 2 };
+    // Orden: sucursal ASC → insumo ASC
     return alertas.sort((a, b) => {
-        const s = orden[a.severidad] - orden[b.severidad];
-        return s !== 0 ? s : b.beta_rel - a.beta_rel;
+        const locCmp = a.local.localeCompare(b.local, 'es');
+        if (locCmp !== 0) return locCmp;
+        return a.insumo.localeCompare(b.insumo, 'es');
     });
 }
 
@@ -1648,13 +1668,6 @@ function renderPanelCrecimiento(data) {
                 </thead>
                 <tbody>${filas}</tbody>
             </table>
-        </div>
-        <div class="dc-crec-footnote">
-            <i class="fas fa-info-circle me-1"></i>
-            Alerta cuando ≥2 de 3 indicadores superan su umbral:
-            <strong>Regresión</strong> β/μ &gt;${CREC_MIN_SLOPE_REL*100}%/sem &nbsp;·&nbsp;
-            <strong>Mann-Kendall</strong> τ&gt;${CREC_MIN_MK_TAU} &nbsp;·&nbsp;
-            <strong>Run-ratio</strong> &gt;${CREC_MIN_RUN_RATIO*100}%
         </div>
     `);
 }
