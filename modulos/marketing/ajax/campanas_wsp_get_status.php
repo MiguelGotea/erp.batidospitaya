@@ -18,38 +18,60 @@ if (!tienePermiso('campanas_wsp', 'vista', $cargoOperario)) {
     exit;
 }
 
-// URL del endpoint a través del proxy (api.batidospitaya.com ya no es accesible directamente desde el ERP)
-$apiUrl = 'https://proxy.batidospitaya.com/api/wsp/status.php?instancia=wsp-clientes';
+// Intentar con proxy primero, luego con api directa como fallback
+$urls = [
+    'proxy' => 'https://proxy.batidospitaya.com/api/wsp/status.php?instancia=wsp-clientes',
+    'api'   => 'https://api.batidospitaya.com/api/wsp/status.php?instancia=wsp-clientes',
+];
 
-try {
-    $ctx = stream_context_create([
-        'http' => [
-            'timeout' => 8,
-            'ignore_errors' => true,
-        ],
-        'ssl' => [
-            'verify_peer' => true,
-            'verify_peer_name' => true,
-        ]
-    ]);
+$ctx = stream_context_create([
+    'http' => [
+        'timeout'       => 8,
+        'ignore_errors' => true,
+    ],
+    'ssl' => [
+        'verify_peer'      => false,   // Desactivado para diagnosticar SSL
+        'verify_peer_name' => false,
+    ]
+]);
 
-    $respuesta = @file_get_contents($apiUrl, false, $ctx);
+$respuesta   = false;
+$urlUsada    = null;
+$erroresPHP  = [];
 
-    if ($respuesta === false) {
-        // API no accesible — reportar desconectado
-        echo json_encode(['estado' => 'desconectado', 'qr' => null, '_error' => 'API no accesible']);
-        exit;
+foreach ($urls as $origen => $url) {
+    error_clear_last();
+    $respuesta = @file_get_contents($url, false, $ctx);
+    if ($respuesta !== false) {
+        $urlUsada = $origen;
+        break;
     }
-
-    $data = json_decode($respuesta, true);
-
-    if (json_last_error() !== JSON_ERROR_NONE) {
-        echo json_encode(['estado' => 'desconectado', 'qr' => null]);
-        exit;
-    }
-
-    echo json_encode($data);
-
-} catch (Exception $e) {
-    echo json_encode(['estado' => 'desconectado', 'qr' => null]);
+    $erroresPHP[$origen] = error_get_last()['message'] ?? 'desconocido';
 }
+
+if ($respuesta === false) {
+    echo json_encode([
+        'estado'   => 'desconectado',
+        'qr'       => null,
+        '_error'   => 'Ninguna URL respondió',
+        '_detalles'=> $erroresPHP,
+    ]);
+    exit;
+}
+
+$data = json_decode($respuesta, true);
+
+if (json_last_error() !== JSON_ERROR_NONE) {
+    echo json_encode([
+        'estado'    => 'desconectado',
+        'qr'        => null,
+        '_error'    => 'JSON inválido',
+        '_url_usada'=> $urlUsada,
+        '_raw'      => substr($respuesta, 0, 200),
+    ]);
+    exit;
+}
+
+// Añadir qué URL funcionó (útil para diagnóstico desde DevTools)
+$data['_url_usada'] = $urlUsada;
+echo json_encode($data);
