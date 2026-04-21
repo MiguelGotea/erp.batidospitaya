@@ -609,15 +609,26 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                                         <p class="small text-muted mb-2">
                                             Detecta cuando el consumo de una tienda viene <strong>creciendo semana a semana de forma persistente</strong>,
                                             aunque no haya superado el umbral de sobreconsumo. Señal para revisar las cantidades base de abastecimiento.<br>
-                                            El análisis es por <strong>sucursal × insumo</strong>. La semana en curso se excluye automáticamente (dato incompleto).
+                                            El análisis es por <strong>sucursal × insumo</strong>.
                                         </p>
+
+                                        <!-- Semanas recomendadas -->
+                                        <div class="p-2 rounded mb-2" style="background:#fff8ec;border:1px solid #f0b429;font-size:.78rem">
+                                            <strong><i class="fas fa-calendar-alt me-1" style="color:#e67e22"></i>Semanas de estudio recomendadas:</strong><br><br>
+                                            &nbsp;· <strong>Mínimo absoluto:</strong> 3 semanas completas (muestra resultados, baja confianza)<br>
+                                            &nbsp;· <strong>Mínimo consistente: 6 semanas completas</strong> — Mann-Kendall S<sub>max</sub>=15, OLS con 3 grados de libertad<br><br>
+                                            <strong>¿Cómo contar las semanas completas?</strong><br>
+                                            &nbsp;· Si el filtro <strong>incluye la semana actual</strong> (en curso) → la semana actual se excluye automáticamente del cálculo (dato parcial). Selecciona <strong>7 semanas</strong> para obtener 6 completas.<br>
+                                            &nbsp;· Si el filtro <strong>termina antes de la semana actual</strong> (rango 100% histórico) → todas las semanas son completas. Basta con seleccionar <strong>6 semanas</strong>.<br><br>
+                                            El sistema muestra una advertencia naranja dentro del panel cuando las semanas analizadas son &lt; 6.
+                                        </div>
 
                                         <!-- Indicadores -->
                                         <div class="p-2 rounded mb-2" style="background:#fff;border:1px solid #b3d4f0;font-size:.78rem">
                                             <strong>Activa cuando ≥ 2 de 3 indicadores superan su umbral:</strong><br><br>
                                             <strong>① Regresión lineal normalizada (β̂/μ):</strong><br>
                                             &nbsp;Ajusta <code>y = α + β·t</code> sobre las semanas con dato.<br>
-                                            &nbsp;Umbral ajustable con el botón <strong>Umbral β/μ</strong> del panel.<br><br>
+                                            &nbsp;Umbral ajustable con el botón <strong>Umbral β/μ</strong> del panel (3% / 6% / 12%).<br><br>
                                             <strong>② Mann-Kendall τ:</strong><br>
                                             &nbsp;<code>S = Σ<sub>i&lt;j</sub> sgn(y<sub>j</sub> − y<sub>i</sub>)</code> &nbsp;·&nbsp; <code>τ = S / (n(n−1)/2)</code><br>
                                             &nbsp;Mide monotonía (τ=1 perfecto, τ=−1 decreciente). Umbral fijo: <code>τ &gt; 0.45</code><br><br>
@@ -635,7 +646,9 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                                             <strong>Ver</strong> — filtro de severidad sobre los detectados:<br>
                                             &nbsp;· <span style="background:#eaf4fc;color:#2e86c1;border-radius:4px;padding:1px 6px">Todos</span> Muestra todos<br>
                                             &nbsp;· <span style="background:#d6eaf8;color:#1a5276;border-radius:4px;padding:1px 6px">Not+Crít</span> Notable y Crítico<br>
-                                            &nbsp;· <span style="background:#e8daef;color:#7d3c98;border-radius:4px;padding:1px 6px">Críticos</span> Solo Críticos (default)
+                                            &nbsp;· <span style="background:#e8daef;color:#7d3c98;border-radius:4px;padding:1px 6px">Críticos</span> Solo Críticos (default)<br><br>
+                                            El <strong>badge</strong> del encabezado muestra el total detectado.<br>
+                                            El <strong>hint</strong> muestra: <em>"N sem analizadas · X detectado(s) [· mostrando Y]"</em>
                                         </div>
 
                                         <!-- Severidad -->
@@ -647,11 +660,11 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                                         </div>
                                         <p class="small text-muted mt-2 mb-0">
                                             <i class="fas fa-mouse-pointer me-1"></i>Al hacer clic en un insumo, el gráfico se abre filtrado a esa tienda.
-                                            El badge del panel muestra el total detectado; el hint indica cuántos se están mostrando con el filtro activo.
                                         </p>
                                     </div>
                                 </div>
                             </div>
+
 
                         </div>
 
