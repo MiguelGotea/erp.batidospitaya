@@ -71,16 +71,16 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                                     id="filtroSemanaHasta" min="1" max="9999" placeholder="Ej: 14">
                             </div>
 
-                            <!-- Sucursales — Custom Pill Dropdown -->
+                            <!-- Tiendas — Custom Pill Dropdown -->
                             <div class="col-12 col-md-4 col-lg-4">
                                 <label class="dc-label" for="dcSucTrigger">
-                                    <i class="fas fa-store me-1"></i>Sucursales
+                                    <i class="fas fa-store me-1"></i>Tiendas
                                 </label>
                                 <!-- Trigger visible -->
                                 <div class="dc-suc-trigger" id="dcSucTrigger" tabindex="0" role="button" aria-haspopup="listbox" aria-expanded="false">
                                     <div class="dc-suc-trigger-inner">
                                         <span class="dc-suc-placeholder" id="dcSucPlaceholder">
-                                            <i class="fas fa-store me-1" style="opacity:.45"></i>Todas las sucursales
+                                            <i class="fas fa-store me-1" style="opacity:.45"></i>Todas las tiendas
                                         </span>
                                         <div class="dc-suc-pills" id="dcSucPills" style="display:none"></div>
                                     </div>
@@ -96,7 +96,7 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                                 <div class="dc-suc-dropdown" id="dcSucDropdown" role="listbox" aria-multiselectable="true">
                                     <div class="dc-suc-search-wrap">
                                         <i class="fas fa-search dc-suc-search-icon"></i>
-                                        <input type="text" class="dc-suc-search" id="dcSucSearch" placeholder="Buscar sucursal…" autocomplete="off">
+                                        <input type="text" class="dc-suc-search" id="dcSucSearch" placeholder="Buscar tienda…" autocomplete="off">
                                     </div>
                                     <div class="dc-suc-actions">
                                         <button type="button" class="dc-suc-action-btn" id="dcSucSelAll"><i class="fas fa-check-double me-1"></i>Todas</button>
@@ -226,7 +226,7 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                                             <i class="fas fa-chart-line me-1"></i>Línea Total
                                         </button>
                                         <button class="btn btn-xs dc-chip" id="chartModoLineaSuc" data-modo="linea_suc">
-                                            <i class="fas fa-store me-1"></i>Línea x Suc.
+                                            <i class="fas fa-store me-1"></i>Línea x Tienda
                                         </button>
                                     </div>
                                 </div>
@@ -463,7 +463,7 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                                             directamente (ej: 10 a 14). El año se selecciona en el primer campo.<br><br>
                                             El badge <strong>"Semana actual"</strong> debajo de los filtros te indica en
                                             qué semana estás.<br><br>
-                                            <strong>Sucursales:</strong> Deja vacío para analizar todas, o selecciona
+                                            <strong>Tiendas:</strong> Deja vacío para analizar todas, o selecciona
                                             específicas.<br><br>
                                             <strong>Insumo:</strong> Opcional. Filtra el análisis a un insumo ERP
                                             específico.<br><br>

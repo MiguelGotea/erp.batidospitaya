@@ -63,7 +63,7 @@ const SucPicker = (() => {
     function syncHidden() {
         $hiddenSel.find('option').prop('selected', false);
         _seleccionados.forEach(v => {
-            $hiddenSel.find(`option[value="${v}"]`).prop('selected', true);
+            $hiddenSel.find(`option[value="${String(v)}"]`).prop('selected', true);
         });
     }
 
@@ -87,7 +87,7 @@ const SucPicker = (() => {
 
         $pills.empty();
         visible.forEach(v => {
-            const lbl = _opciones.find(o => o.value === v)?.label || v;
+            const lbl = _opciones.find(o => String(o.value) === String(v))?.label || v;
             const shortLbl = lbl.length > 14 ? lbl.substring(0, 12) + '…' : lbl;
             const $pill = $(`
                 <span class="dc-suc-pill" title="${escHtml(lbl)}">
@@ -117,7 +117,7 @@ const SucPicker = (() => {
             return;
         }
         filtradas.forEach(o => {
-            const sel = _seleccionados.has(o.value);
+            const sel = _seleccionados.has(String(o.value));  // normalizar comparación
             const $item = $(`
                 <div class="dc-suc-item ${sel ? 'selected' : ''}" data-v="${o.value}" role="option" aria-selected="${sel}">
                     <span class="dc-suc-checkbox">
@@ -131,10 +131,11 @@ const SucPicker = (() => {
 
     /* ── Toggle selección ── */
     function toggleItem(value) {
-        if (_seleccionados.has(value)) {
-            _seleccionados.delete(value);
+        const v = String(value);   // normalizar siempre a string
+        if (_seleccionados.has(v)) {
+            _seleccionados.delete(v);
         } else {
-            _seleccionados.add(value);
+            _seleccionados.add(v);
         }
         syncHidden();
         renderTrigger();
@@ -153,7 +154,7 @@ const SucPicker = (() => {
         // Pill remove (dentro del trigger)
         $pills.on('click', '.dc-suc-pill-remove', function (e) {
             e.stopPropagation();
-            const v = $(this).data('v');
+            const v = String($(this).data('v'));   // normalizar a string
             _seleccionados.delete(v);
             syncHidden();
             renderTrigger();
@@ -171,7 +172,7 @@ const SucPicker = (() => {
 
         // Botón "Todas"
         $('#dcSucSelAll').on('click', function () {
-            _seleccionados = new Set(_opciones.map(o => o.value));
+            _seleccionados = new Set(_opciones.map(o => String(o.value)));  // normalizar a string
             syncHidden();
             renderTrigger();
             renderList($search.val());
@@ -187,7 +188,7 @@ const SucPicker = (() => {
 
         // Click en item de lista
         $list.on('click', '.dc-suc-item', function () {
-            toggleItem($(this).data('v'));
+            toggleItem(String($(this).data('v')));   // normalizar a string
         });
 
         // Búsqueda
@@ -908,7 +909,7 @@ window.mostrarDesglose = function (idInsumo) {
     const sucursales = datosActuales.sucursales;
 
     let theadHtml = '<tr><th style="min-width:100px">Semana</th>';
-    sucursales.forEach(s => { theadHtml += `<th>${escHtml(s)}</th>`; });
+    sucursales.forEach(s => { theadHtml += `<th>${escHtml(datosActuales.sucursales_nombres?.[s] || s)}</th>`; });
     theadHtml += '<th>TOTAL</th></tr>';
 
     let tbodyHtml = '';
@@ -1233,7 +1234,7 @@ function renderPanelAlertas(data, kSigma) {
         $('.dc-alertas-header').css('background', 'linear-gradient(135deg,#1a7a41 0%,#27ae60 100%)');
         $('.dc-alertas-panel').css('border-left-color', '#27ae60');
         $('#alertasContenido').html(
-            `<div class="dc-alertas-vacio"><i class="fas fa-check-circle"></i>Todos los locales operan dentro del rango normal con umbral ${kSigma}σ</div>`
+            `<div class="dc-alertas-vacio"><i class="fas fa-check-circle"></i>Todas las tiendas operan dentro del rango normal con umbral ${kSigma}σ</div>`
         );
         return;
     }
@@ -1278,7 +1279,7 @@ function renderPanelAlertas(data, kSigma) {
             <thead>
                 <tr>
                     <th>Semana</th>
-                    <th>Local</th>
+                    <th>Tienda</th>
                     <th>Insumo</th>
                     <th class="text-end">Consumo Real</th>
                     <th class="text-end">Referencia (μ / σ)</th>
