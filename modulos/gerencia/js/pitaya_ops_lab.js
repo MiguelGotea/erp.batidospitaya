@@ -197,6 +197,8 @@ const OPS = {
             },
             options: {
                 plugins: { legend: { display: false } },
+                responsive: true,
+                maintainAspectRatio: false,
                 scales: {
                     y: { title: { display: true, text: 'Pedidos / hora (λ)' }, beginAtZero: true },
                     x: { title: { display: true, text: 'Hora del día' } }
@@ -252,7 +254,12 @@ const OPS = {
                     { label: 'Ingreso Productos (HoraIngresoProducto→HoraImpreso)', data: cts.map(c => c.tiempo_ingreso_prom_min ?? c.cycle_time_prom_min), backgroundColor: colors.map(c => c + '44'), borderColor: colors, borderWidth: 2, borderRadius: 5 },
                 ]
             },
-            options: { plugins: { legend: { position: 'bottom' } }, scales: { y: { beginAtZero: true, title: { display: true, text: 'Minutos' } } } }
+            options: { 
+                plugins: { legend: { position: 'bottom' } }, 
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: { y: { beginAtZero: true, title: { display: true, text: 'Minutos' } } } 
+            }
         });
 
         // Queue time doughnut
@@ -270,7 +277,12 @@ const OPS = {
                     borderRadius: 5,
                 }]
             },
-            options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, title: { display: true, text: 'Minutos en cola' } } } }
+            options: { 
+                plugins: { legend: { display: false } }, 
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: { y: { beginAtZero: true, title: { display: true, text: 'Minutos en cola' } } } 
+            }
         });
 
         // Tabla
@@ -311,7 +323,12 @@ const OPS = {
                     { label: 'Bowl', data: mix.map(h => h.Bowl), backgroundColor: 'rgba(163,113,247,0.75)', borderRadius: 3 },
                 ]
             },
-            options: { plugins: { legend: { position: 'bottom' } }, scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true, title: { display: true, text: 'Pedidos prom/día' } } } }
+            options: { 
+                plugins: { legend: { position: 'bottom' } }, 
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true, title: { display: true, text: 'Pedidos prom/día' } } } 
+            }
         });
 
         document.getElementById('tbodyMix').innerHTML = mix.map(h => `
@@ -588,7 +605,9 @@ const OPS = {
                 scales: {
                     y: { beginAtZero: true, title: { display: true, text: 'Operarios' },
                          ticks: { stepSize: 1 } }
-                }
+                },
+                responsive: true,
+                maintainAspectRatio: false
             }
         });
 
@@ -903,6 +922,8 @@ const OPS = {
             },
             options: {
                 plugins: { legend: { position: 'bottom' }, annotation: { annotations: { takt: { type: 'line', yMin: takt, yMax: takt, borderColor: 'var(--ops-red)', borderWidth: 2, borderDash: [6, 4], label: { content: 'Takt Time ' + takt.toFixed(1) + ' min', enabled: true, position: 'end' } } } } },
+                responsive: true,
+                maintainAspectRatio: false,
                 scales: { y: { beginAtZero: true, title: { display: true, text: 'Minutos' } } }
             }
         });
@@ -982,7 +1003,7 @@ const OPS = {
                     { label: 'LCL', data: vals.map(() => lcl), borderColor: 'var(--ops-red)', borderDash: [6, 4], borderWidth: 1.5, pointRadius: 0, fill: false },
                 ]
             },
-            options: { plugins: { legend: { position: 'bottom' } }, scales: { y: { beginAtZero: false, title: { display: true, text: 'Minutos' } } } }
+            options: { plugins: { legend: { position: 'bottom' } }, responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: false, title: { display: true, text: 'Minutos' } } } }
         });
         document.getElementById('controlChartAlerta').innerHTML = outPts > 0
             ? '<div class="ops-alert ops-alert-warn">' + outPts + ' dias con lead time fuera de los limites de control (UCL=' + ucl.toFixed(1) + ' min, LCL=' + lcl.toFixed(1) + ' min) — proceso inestable</div>'
