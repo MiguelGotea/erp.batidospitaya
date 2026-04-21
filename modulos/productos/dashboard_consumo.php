@@ -77,7 +77,8 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                                     <i class="fas fa-store me-1"></i>Tiendas
                                 </label>
                                 <!-- Trigger visible -->
-                                <div class="dc-suc-trigger" id="dcSucTrigger" tabindex="0" role="button" aria-haspopup="listbox" aria-expanded="false">
+                                <div class="dc-suc-trigger" id="dcSucTrigger" tabindex="0" role="button"
+                                    aria-haspopup="listbox" aria-expanded="false">
                                     <div class="dc-suc-trigger-inner">
                                         <span class="dc-suc-placeholder" id="dcSucPlaceholder">
                                             <i class="fas fa-store me-1" style="opacity:.45"></i>Todas las tiendas
@@ -85,22 +86,28 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                                         <div class="dc-suc-pills" id="dcSucPills" style="display:none"></div>
                                     </div>
                                     <div class="dc-suc-trigger-right">
-                                        <span class="dc-suc-count-badge" id="dcSucCountBadge" style="display:none"></span>
-                                        <button class="dc-suc-clear" id="dcSucClear" title="Quitar todas" style="display:none" type="button">
+                                        <span class="dc-suc-count-badge" id="dcSucCountBadge"
+                                            style="display:none"></span>
+                                        <button class="dc-suc-clear" id="dcSucClear" title="Quitar todas"
+                                            style="display:none" type="button">
                                             <i class="fas fa-times"></i>
                                         </button>
                                         <i class="fas fa-chevron-down dc-suc-chevron" id="dcSucChevron"></i>
                                     </div>
                                 </div>
                                 <!-- Dropdown panel -->
-                                <div class="dc-suc-dropdown" id="dcSucDropdown" role="listbox" aria-multiselectable="true">
+                                <div class="dc-suc-dropdown" id="dcSucDropdown" role="listbox"
+                                    aria-multiselectable="true">
                                     <div class="dc-suc-search-wrap">
                                         <i class="fas fa-search dc-suc-search-icon"></i>
-                                        <input type="text" class="dc-suc-search" id="dcSucSearch" placeholder="Buscar tienda…" autocomplete="off">
+                                        <input type="text" class="dc-suc-search" id="dcSucSearch"
+                                            placeholder="Buscar tienda…" autocomplete="off">
                                     </div>
                                     <div class="dc-suc-actions">
-                                        <button type="button" class="dc-suc-action-btn" id="dcSucSelAll"><i class="fas fa-check-double me-1"></i>Todas</button>
-                                        <button type="button" class="dc-suc-action-btn" id="dcSucNone"><i class="fas fa-times me-1"></i>Ninguna</button>
+                                        <button type="button" class="dc-suc-action-btn" id="dcSucSelAll"><i
+                                                class="fas fa-check-double me-1"></i>Todas</button>
+                                        <button type="button" class="dc-suc-action-btn" id="dcSucNone"><i
+                                                class="fas fa-times me-1"></i>Ninguna</button>
                                     </div>
                                     <div class="dc-suc-list" id="dcSucList"></div>
                                 </div>
@@ -111,7 +118,8 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
 
 
                             <!-- Semana Actual y Botones -->
-                            <div class="col-12 col-md-12 col-lg-4 d-flex gap-2 justify-content-end align-items-center flex-nowrap">
+                            <div
+                                class="col-12 col-md-12 col-lg-4 d-flex gap-2 justify-content-end align-items-center flex-nowrap">
                                 <div id="badgeSemanaActual" class="dc-badge-semana-actual" style="display:none">
                                     <i class="fas fa-calendar-check text-primary"></i>
                                     Sem. Actual: <strong id="semanaActualNum">—</strong>
@@ -201,6 +209,7 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                     </div>
                 </div>
 
+
                 <!-- ═══════════════════════════════════════════════ -->
                 <!-- PANEL DE ALERTAS DE SOBRECONSUMO               -->
                 <!-- ═══════════════════════════════════════════════ -->
@@ -289,10 +298,12 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                                         <i class="fas fa-chart-line me-2"></i>Tendencia
                                     </h6>
                                     <div class="d-flex gap-1 align-items-center flex-wrap">
-                                        <button class="btn btn-xs dc-chip active" id="chartModoBarras" data-modo="barras">
+                                        <button class="btn btn-xs dc-chip active" id="chartModoBarras"
+                                            data-modo="barras">
                                             <i class="fas fa-chart-bar me-1"></i>Barras
                                         </button>
-                                        <button class="btn btn-xs dc-chip" id="chartModoLineaTotal" data-modo="linea_total">
+                                        <button class="btn btn-xs dc-chip" id="chartModoLineaTotal"
+                                            data-modo="linea_total">
                                             <i class="fas fa-chart-line me-1"></i>Línea Total
                                         </button>
                                         <button class="btn btn-xs dc-chip" id="chartModoLineaSuc" data-modo="linea_suc">
@@ -506,9 +517,12 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                                             <i class="fas fa-filter me-2"></i>Cómo Usar los Filtros
                                         </h6>
                                         <p class="small text-muted mb-0">
-                                            <strong>Sem. Desde / Hasta:</strong> Ingresa el número de semana directamente (ej: 10 a 14).<br><br>
-                                            El badge <strong>"Semana actual"</strong> en los filtros te indica en qué semana estás.<br><br>
-                                            <strong>Tiendas:</strong> Deja vacío para analizar todas, o selecciona específicas con el selector de pills.<br><br>
+                                            <strong>Sem. Desde / Hasta:</strong> Ingresa el número de semana
+                                            directamente (ej: 10 a 14).<br><br>
+                                            El badge <strong>"Semana actual"</strong> en los filtros te indica en qué
+                                            semana estás.<br><br>
+                                            <strong>Tiendas:</strong> Deja vacío para analizar todas, o selecciona
+                                            específicas con el selector de pills.<br><br>
                                             Haz clic en <strong>Analizar</strong> para cargar los datos.
                                         </p>
                                     </div>
@@ -521,10 +535,15 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                                             <i class="fas fa-cogs me-2"></i>Lógica de Traducción Access→ERP
                                         </h6>
                                         <p class="small text-muted mb-0">
-                                            Las ventas se toman de <code>VentasGlobalesAccessCSV</code> (solo no anuladas).<br><br>
-                                            Por cada producto vendido se traduce cada ingrediente al insumo ERP con el algoritmo <strong>P1/P2/P3</strong>:<br>
-                                            <strong>P1</strong> vía <code>codporcion</code> directo · <strong>P2</strong> vía Cotización base · <strong>P3</strong> fallback.<br><br>
-                                            Consumo = <code>(Cantidad_receta × factor_conversión) / presentación × ventas</code>
+                                            Las ventas se toman de <code>VentasGlobalesAccessCSV</code> (solo no
+                                            anuladas).<br><br>
+                                            Por cada producto vendido se traduce cada ingrediente al insumo ERP con el
+                                            algoritmo <strong>P1/P2/P3</strong>:<br>
+                                            <strong>P1</strong> vía <code>codporcion</code> directo ·
+                                            <strong>P2</strong> vía Cotización base · <strong>P3</strong>
+                                            fallback.<br><br>
+                                            Consumo =
+                                            <code>(Cantidad_receta × factor_conversión) / presentación × ventas</code>
                                         </p>
                                     </div>
                                 </div>
@@ -542,7 +561,8 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                                         <p class="small text-muted mb-0">
                                             Muestra el consumo real por insumo ERP en el período seleccionado.<br><br>
                                             Haz clic en <strong>Ver</strong> para ver el detalle semana × local, o en
-                                            <strong><i class="fas fa-microscope"></i></strong> para auditar cada venta individual.
+                                            <strong><i class="fas fa-microscope"></i></strong> para auditar cada venta
+                                            individual.
                                         </p>
                                     </div>
                                 </div>
@@ -554,8 +574,10 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                                             <i class="fas fa-chart-line me-2"></i>Tab: Proyección y Planificación
                                         </h6>
                                         <p class="small text-muted mb-0">
-                                            Proyección de consumo para las próximas 3 semanas basada en regresión lineal (mínimos cuadrados) sobre las semanas completas.<br><br>
-                                            Incluye <strong>Stock Mínimo</strong> (1 semana) y <strong>Stock Máximo</strong> (2 semanas) recomendados.
+                                            Proyección de consumo para las próximas 3 semanas basada en regresión lineal
+                                            (mínimos cuadrados) sobre las semanas completas.<br><br>
+                                            Incluye <strong>Stock Mínimo</strong> (1 semana) y <strong>Stock
+                                                Máximo</strong> (2 semanas) recomendados.
                                         </p>
                                     </div>
                                 </div>
@@ -567,32 +589,46 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
 
                             <!-- Sobreconsumo -->
                             <div class="col-md-6">
-                                <div class="card h-100 border-0" style="background:#fff5f5;border-left:4px solid #e74c3c !important;">
+                                <div class="card h-100 border-0"
+                                    style="background:#fff5f5;border-left:4px solid #e74c3c !important;">
                                     <div class="card-body">
                                         <h6 class="fw-bold border-bottom pb-2" style="color:#c0392b">
-                                            <i class="fas fa-exclamation-triangle me-2"></i>Panel: Sobreconsumo Detectado
-                                            <span class="badge ms-2" style="background:#e74c3c;color:#fff;font-size:.65rem">Acción: reponer stock</span>
+                                            <i class="fas fa-exclamation-triangle me-2"></i>Panel: Sobreconsumo
+                                            Detectado
+                                            <span class="badge ms-2"
+                                                style="background:#e74c3c;color:#fff;font-size:.65rem">Acción: reponer
+                                                stock</span>
                                         </h6>
                                         <p class="small text-muted mb-1">
-                                            Detecta <strong>spikes puntuales</strong> en una tienda específica: semanas donde el consumo
+                                            Detecta <strong>spikes puntuales</strong> en una tienda específica: semanas
+                                            donde el consumo
                                             supera el umbral estadístico de esa tienda para ese insumo.
                                         </p>
-                                        <div class="p-2 rounded" style="background:#fff;border:1px solid #fcc;font-size:.78rem">
+                                        <div class="p-2 rounded"
+                                            style="background:#fff;border:1px solid #fcc;font-size:.78rem">
                                             <strong>Fórmula:</strong><br>
                                             <code>Umbral = μ_local + k·σ_local</code><br>
                                             <code>Z-score = (consumo − μ) / σ</code><br><br>
-                                            <strong>μ</strong> = promedio de semanas con valor · <strong>σ</strong> = desviación estándar poblacional<br><br>
+                                            <strong>μ</strong> = promedio de semanas con valor · <strong>σ</strong> =
+                                            desviación estándar poblacional<br><br>
                                             <strong>Umbral σ ajustable:</strong><br>
                                             &nbsp;· <strong>1σ</strong> — Más sensible (detecta desviaciones leves)<br>
                                             &nbsp;· <strong>1.5σ</strong> — Balance recomendado (default)<br>
                                             &nbsp;· <strong>2σ</strong> — Solo spikes severos<br><br>
                                             <strong>Severidad del Z-score:</strong><br>
-                                            &nbsp;· <span style="background:#fde8e8;color:#c0392b;border-radius:4px;padding:1px 6px">Crítico</span> Z ≥ 2.5 &nbsp;
-                                            <span style="background:#fdf0e0;color:#d35400;border-radius:4px;padding:1px 6px">Alto</span> Z ≥ 2 &nbsp;
-                                            <span style="background:#fefae0;color:#b7950b;border-radius:4px;padding:1px 6px">Moderado</span> Z &lt; 2
+                                            &nbsp;· <span
+                                                style="background:#fde8e8;color:#c0392b;border-radius:4px;padding:1px 6px">Crítico</span>
+                                            Z ≥ 2.5 &nbsp;
+                                            <span
+                                                style="background:#fdf0e0;color:#d35400;border-radius:4px;padding:1px 6px">Alto</span>
+                                            Z ≥ 2 &nbsp;
+                                            <span
+                                                style="background:#fefae0;color:#b7950b;border-radius:4px;padding:1px 6px">Moderado</span>
+                                            Z &lt; 2
                                         </div>
                                         <p class="small text-muted mt-2 mb-0">
-                                            <i class="fas fa-mouse-pointer me-1"></i>Al hacer clic en un insumo, el gráfico de tendencia se abre filtrado a esa tienda.
+                                            <i class="fas fa-mouse-pointer me-1"></i>Al hacer clic en un insumo, el
+                                            gráfico de tendencia se abre filtrado a esa tienda.
                                         </p>
                                     </div>
                                 </div>
@@ -600,66 +636,109 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
 
                             <!-- Crecimiento Sostenido -->
                             <div class="col-md-6">
-                                <div class="card h-100 border-0" style="background:#f0f6ff;border-left:4px solid #2980b9 !important;">
+                                <div class="card h-100 border-0"
+                                    style="background:#f0f6ff;border-left:4px solid #2980b9 !important;">
                                     <div class="card-body">
                                         <h6 class="fw-bold border-bottom pb-2" style="color:#1a5276">
                                             <i class="fas fa-chart-line me-2"></i>Panel: Crecimiento Sostenido
-                                            <span class="badge ms-2" style="background:#2980b9;color:#fff;font-size:.65rem">Acción: redefinir abastecimiento</span>
+                                            <span class="badge ms-2"
+                                                style="background:#2980b9;color:#fff;font-size:.65rem">Acción: redefinir
+                                                abastecimiento</span>
                                         </h6>
                                         <p class="small text-muted mb-2">
-                                            Detecta cuando el consumo de una tienda viene <strong>creciendo semana a semana de forma persistente</strong>,
-                                            aunque no haya superado el umbral de sobreconsumo. Señal para revisar las cantidades base de abastecimiento.<br>
+                                            Detecta cuando el consumo de una tienda viene <strong>creciendo semana a
+                                                semana de forma persistente</strong>,
+                                            aunque no haya superado el umbral de sobreconsumo. Señal para revisar las
+                                            cantidades base de abastecimiento.<br>
                                             El análisis es por <strong>sucursal × insumo</strong>.
                                         </p>
 
                                         <!-- Semanas recomendadas -->
-                                        <div class="p-2 rounded mb-2" style="background:#fff8ec;border:1px solid #f0b429;font-size:.78rem">
-                                            <strong><i class="fas fa-calendar-alt me-1" style="color:#e67e22"></i>Semanas de estudio recomendadas:</strong><br><br>
-                                            &nbsp;· <strong>Mínimo absoluto:</strong> 3 semanas completas (muestra resultados, baja confianza)<br>
-                                            &nbsp;· <strong>Mínimo consistente: 6 semanas completas</strong> — Mann-Kendall S<sub>max</sub>=15, OLS con 3 grados de libertad<br><br>
+                                        <div class="p-2 rounded mb-2"
+                                            style="background:#fff8ec;border:1px solid #f0b429;font-size:.78rem">
+                                            <strong><i class="fas fa-calendar-alt me-1"
+                                                    style="color:#e67e22"></i>Semanas de estudio
+                                                recomendadas:</strong><br><br>
+                                            &nbsp;· <strong>Mínimo absoluto:</strong> 3 semanas completas (muestra
+                                            resultados, baja confianza)<br>
+                                            &nbsp;· <strong>Mínimo consistente: 6 semanas completas</strong> —
+                                            Mann-Kendall S<sub>max</sub>=15, OLS con 3 grados de libertad<br><br>
                                             <strong>¿Cómo contar las semanas completas?</strong><br>
-                                            &nbsp;· Si el filtro <strong>incluye la semana actual</strong> (en curso) → la semana actual se excluye automáticamente del cálculo (dato parcial). Selecciona <strong>7 semanas</strong> para obtener 6 completas.<br>
-                                            &nbsp;· Si el filtro <strong>termina antes de la semana actual</strong> (rango 100% histórico) → todas las semanas son completas. Basta con seleccionar <strong>6 semanas</strong>.<br><br>
-                                            El sistema muestra una advertencia naranja dentro del panel cuando las semanas analizadas son &lt; 6.
+                                            &nbsp;· Si el filtro <strong>incluye la semana actual</strong> (en curso) →
+                                            la semana actual se excluye automáticamente del cálculo (dato parcial).
+                                            Selecciona <strong>7 semanas</strong> para obtener 6 completas.<br>
+                                            &nbsp;· Si el filtro <strong>termina antes de la semana actual</strong>
+                                            (rango 100% histórico) → todas las semanas son completas. Basta con
+                                            seleccionar <strong>6 semanas</strong>.<br><br>
+                                            El sistema muestra una advertencia naranja dentro del panel cuando las
+                                            semanas analizadas son &lt; 6.
                                         </div>
 
                                         <!-- Indicadores -->
-                                        <div class="p-2 rounded mb-2" style="background:#fff;border:1px solid #b3d4f0;font-size:.78rem">
-                                            <strong>Activa cuando ≥ 2 de 3 indicadores superan su umbral:</strong><br><br>
+                                        <div class="p-2 rounded mb-2"
+                                            style="background:#fff;border:1px solid #b3d4f0;font-size:.78rem">
+                                            <strong>Activa cuando ≥ 2 de 3 indicadores superan su
+                                                umbral:</strong><br><br>
                                             <strong>① Regresión lineal normalizada (β̂/μ):</strong><br>
                                             &nbsp;Ajusta <code>y = α + β·t</code> sobre las semanas con dato.<br>
-                                            &nbsp;Umbral ajustable con el botón <strong>Umbral β/μ</strong> del panel (3% / 6% / 12%).<br><br>
+                                            &nbsp;Umbral ajustable con el botón <strong>Umbral β/μ</strong> del panel
+                                            (3% / 6% / 12%).<br><br>
                                             <strong>② Mann-Kendall τ:</strong><br>
-                                            &nbsp;<code>S = Σ<sub>i&lt;j</sub> sgn(y<sub>j</sub> − y<sub>i</sub>)</code> &nbsp;·&nbsp; <code>τ = S / (n(n−1)/2)</code><br>
-                                            &nbsp;Mide monotonía (τ=1 perfecto, τ=−1 decreciente). Umbral fijo: <code>τ &gt; 0.45</code><br><br>
+                                            &nbsp;<code>S = Σ<sub>i&lt;j</sub> sgn(y<sub>j</sub> − y<sub>i</sub>)</code>
+                                            &nbsp;·&nbsp; <code>τ = S / (n(n−1)/2)</code><br>
+                                            &nbsp;Mide monotonía (τ=1 perfecto, τ=−1 decreciente). Umbral fijo:
+                                            <code>τ &gt; 0.45</code><br><br>
                                             <strong>③ Run-ratio de incrementos:</strong><br>
-                                            &nbsp;Proporción de semanas donde <code>y[t] &gt; y[t−1]</code>. Umbral fijo: <code>&gt; 65%</code>
+                                            &nbsp;Proporción de semanas donde <code>y[t] &gt; y[t−1]</code>. Umbral
+                                            fijo: <code>&gt; 65%</code>
                                         </div>
 
                                         <!-- Controles -->
-                                        <div class="p-2 rounded mb-2" style="background:#fff;border:1px solid #b3d4f0;font-size:.78rem">
+                                        <div class="p-2 rounded mb-2"
+                                            style="background:#fff;border:1px solid #b3d4f0;font-size:.78rem">
                                             <strong>Controles del panel:</strong><br><br>
                                             <strong>Umbral β/μ</strong> — sensibilidad de detección (Indicador ①):<br>
-                                            &nbsp;· <span style="background:#d6eaf8;color:#1a5276;border-radius:4px;padding:1px 6px">3%</span> Sensible — detecta pendientes leves<br>
-                                            &nbsp;· <span style="background:#d6eaf8;color:#1a5276;border-radius:4px;padding:1px 6px">6%</span> Balance recomendado (default)<br>
-                                            &nbsp;· <span style="background:#d6eaf8;color:#1a5276;border-radius:4px;padding:1px 6px">12%</span> Estricto — solo crecimiento claro<br><br>
+                                            &nbsp;· <span
+                                                style="background:#d6eaf8;color:#1a5276;border-radius:4px;padding:1px 6px">3%</span>
+                                            Sensible — detecta pendientes leves<br>
+                                            &nbsp;· <span
+                                                style="background:#d6eaf8;color:#1a5276;border-radius:4px;padding:1px 6px">6%</span>
+                                            Balance recomendado (default)<br>
+                                            &nbsp;· <span
+                                                style="background:#d6eaf8;color:#1a5276;border-radius:4px;padding:1px 6px">12%</span>
+                                            Estricto — solo crecimiento claro<br><br>
                                             <strong>Ver</strong> — filtro de severidad sobre los detectados:<br>
-                                            &nbsp;· <span style="background:#eaf4fc;color:#2e86c1;border-radius:4px;padding:1px 6px">Todos</span> Muestra todos<br>
-                                            &nbsp;· <span style="background:#d6eaf8;color:#1a5276;border-radius:4px;padding:1px 6px">Not+Crít</span> Notable y Crítico<br>
-                                            &nbsp;· <span style="background:#e8daef;color:#7d3c98;border-radius:4px;padding:1px 6px">Críticos</span> Solo Críticos (default)<br><br>
+                                            &nbsp;· <span
+                                                style="background:#eaf4fc;color:#2e86c1;border-radius:4px;padding:1px 6px">Todos</span>
+                                            Muestra todos<br>
+                                            &nbsp;· <span
+                                                style="background:#d6eaf8;color:#1a5276;border-radius:4px;padding:1px 6px">Not+Crít</span>
+                                            Notable y Crítico<br>
+                                            &nbsp;· <span
+                                                style="background:#e8daef;color:#7d3c98;border-radius:4px;padding:1px 6px">Críticos</span>
+                                            Solo Críticos (default)<br><br>
                                             El <strong>badge</strong> del encabezado muestra el total detectado.<br>
-                                            El <strong>hint</strong> muestra: <em>"N sem analizadas · X detectado(s) [· mostrando Y]"</em>
+                                            El <strong>hint</strong> muestra: <em>"N sem analizadas · X detectado(s) [·
+                                                mostrando Y]"</em>
                                         </div>
 
                                         <!-- Severidad -->
-                                        <div class="p-2 rounded" style="background:#fff;border:1px solid #b3d4f0;font-size:.78rem">
+                                        <div class="p-2 rounded"
+                                            style="background:#fff;border:1px solid #b3d4f0;font-size:.78rem">
                                             <strong>Severidad:</strong><br>
-                                            &nbsp;· <span style="background:#e8daef;color:#7d3c98;border-radius:4px;padding:1px 6px">Crítico</span> 3/3 activos <em>o</em> β/μ &gt; 40%/sem<br>
-                                            &nbsp;· <span style="background:#d6eaf8;color:#1a5276;border-radius:4px;padding:1px 6px">Notable</span> 2/3 activos <em>o</em> β/μ &gt; 20%/sem<br>
-                                            &nbsp;· <span style="background:#eaf4fc;color:#2e86c1;border-radius:4px;padding:1px 6px">Moderado</span> reservado para umbrales bajos
+                                            &nbsp;· <span
+                                                style="background:#e8daef;color:#7d3c98;border-radius:4px;padding:1px 6px">Crítico</span>
+                                            3/3 activos <em>o</em> β/μ &gt; 40%/sem<br>
+                                            &nbsp;· <span
+                                                style="background:#d6eaf8;color:#1a5276;border-radius:4px;padding:1px 6px">Notable</span>
+                                            2/3 activos <em>o</em> β/μ &gt; 20%/sem<br>
+                                            &nbsp;· <span
+                                                style="background:#eaf4fc;color:#2e86c1;border-radius:4px;padding:1px 6px">Moderado</span>
+                                            reservado para umbrales bajos
                                         </div>
                                         <p class="small text-muted mt-2 mb-0">
-                                            <i class="fas fa-mouse-pointer me-1"></i>Al hacer clic en un insumo, el gráfico se abre filtrado a esa tienda.
+                                            <i class="fas fa-mouse-pointer me-1"></i>Al hacer clic en un insumo, el
+                                            gráfico se abre filtrado a esa tienda.
                                         </p>
                                     </div>
                                 </div>
@@ -673,7 +752,8 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                             <strong><i class="fas fa-lightbulb me-1"></i>Nota — Recetas Globales:</strong>
                             Los insumos marcados como <strong>Global</strong> (compuestos) se calculan como
                             <code>SubReceta.Cantidad × N_ventas</code> sin conversión de unidades.
-                            Su consumo refiere al número de veces que se usa esa receta compuesta, no a una unidad física.
+                            Su consumo refiere al número de veces que se usa esa receta compuesta, no a una unidad
+                            física.
                         </div>
 
                     </div>
