@@ -258,10 +258,6 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                                         <button class="btn btn-xs dc-chip" id="chartModoLineaSuc" data-modo="linea_suc">
                                             <i class="fas fa-store me-1"></i>Línea x Tienda
                                         </button>
-                                        <button class="btn btn-xs dc-chip-reset" id="chartLegendReset" style="display:none"
-                                            title="Mostrar todas las series">
-                                            <i class="fas fa-eye me-1"></i>Mostrar todas
-                                        </button>
                                     </div>
                                 </div>
                                 <div id="chartPlaceholder" class="text-center py-5" style="color:#b0c8c5">
@@ -271,6 +267,11 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                                 </div>
                                 <div class="dc-chart-wrap d-none" id="chartWrap">
                                     <canvas id="chartTendencia"></canvas>
+                                    <!-- Botón reset posicionado en la zona de leyenda inferior del canvas -->
+                                    <button class="dc-legend-reset-btn" id="chartLegendReset" style="display:none"
+                                        title="Mostrar todas las series">
+                                        <i class="fas fa-eye me-1"></i>Mostrar todas
+                                    </button>
                                 </div>
                             </div>
                         </div>

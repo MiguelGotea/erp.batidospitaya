@@ -809,20 +809,8 @@ function renderGrafico(data) {
         },
     });
 
-    // Ocultar el botón reset (nuevo chart: todas las series visibles)
+    // Nuevo chart: todas las series visibles → ocultar botón reset
     $('#chartLegendReset').hide();
-
-    // Agregar o actualizar el hint de interactividad debajo del chart
-    const $chartParent = $('#chartWrap').parent();
-    $chartParent.find('.dc-chart-legend-hint').remove();
-    if (esLineaSuc || esBarraSuc) {
-        $chartParent.append(
-            '<p class="dc-chart-legend-hint">' +
-            '<i class="fas fa-mouse-pointer" style="margin-right:4px"></i>' +
-            'Haz clic en una tienda de la leyenda para ocultarla del gráfico' +
-            '</p>'
-        );
-    }
 }
 
 

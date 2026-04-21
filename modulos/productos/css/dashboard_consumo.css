@@ -1268,3 +1268,40 @@ body {
     color:       var(--text-secondary);
     font-size:   .8rem;
 }
+
+/* ══════════════════════════════════════════════
+   Chart wrap + Botón reset de leyenda (overlay)
+   ══════════════════════════════════════════════ */
+.dc-chart-wrap {
+    position: relative;  /* contexto para el botón reset absoluto */
+}
+
+/* Botón "Mostrar todas" que flota en la zona de la leyenda inferior */
+.dc-legend-reset-btn {
+    position:      absolute;
+    bottom:        6px;        /* dentro del área de leyenda inferior del canvas */
+    right:         10px;
+    display:       flex;
+    align-items:   center;
+    gap:           5px;
+    font-size:     .7rem;
+    font-weight:   700;
+    font-family:   var(--dc-font);
+    padding:       3px 12px;
+    border-radius: 50px;
+    border:        1.5px solid #e67e22;
+    background:    rgba(255,249,240,.95);
+    color:         #e67e22;
+    cursor:        pointer;
+    box-shadow:    0 2px 8px rgba(230,126,34,.18);
+    transition:    background .15s, color .15s, transform .12s, box-shadow .15s;
+    animation:     chipResetIn .22s ease;
+    z-index:       10;
+    white-space:   nowrap;
+}
+.dc-legend-reset-btn:hover {
+    background: #e67e22;
+    color:      #fff;
+    transform:  translateY(-1px);
+    box-shadow: 0 4px 12px rgba(230,126,34,.32);
+}
