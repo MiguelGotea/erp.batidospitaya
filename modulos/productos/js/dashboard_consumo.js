@@ -1394,18 +1394,30 @@ window.seleccionarInsumoDesdeAlerta = function (idInsumo, localName) {
     // 1) Seleccionar el insumo en el dropdown
     $('#chartInsumoSel').val(idInsumo).trigger('change');
 
-    // 2) Cambiar al modo Línea x Tienda
-    modoGrafico = 'linea_suc';
-    $('#chartModoBarras, #chartModoLineaTotal, #chartModoLineaSuc').removeClass('active');
-    $('#chartModoLineaSuc').addClass('active');
+    // 2) Determinar modo: Línea x Tienda solo si hay >1 sucursal con desglose.
+    //    Si se filtró una única sucursal, el botón está oculto → usar Línea Total.
+    const sucursalesActuales = datosActuales ? (datosActuales.sucursales || []) : [];
+    const hayMultiSuc = sucursalesActuales.length > 1;
+
+    if (hayMultiSuc) {
+        modoGrafico = 'linea_suc';
+        $('#chartModoBarras, #chartModoLineaTotal, #chartModoLineaSuc').removeClass('active');
+        $('#chartModoLineaSuc').addClass('active');
+    } else {
+        // Una sola sucursal → caer a Línea Total
+        modoGrafico = 'linea_total';
+        $('#chartModoBarras, #chartModoLineaTotal, #chartModoLineaSuc').removeClass('active');
+        $('#chartModoLineaTotal').addClass('active');
+    }
 
     // 3) Re-renderizar con el nuevo modo
     if (datosActuales) {
         renderGrafico(datosActuales);
     }
 
-    // 4) Si se pasó un nombre de tienda, ocultar todos los datasets menos el de esa tienda
-    if (localName && chartTendencia) {
+    // 4) Si se pasó un nombre de tienda Y estamos en modo multi-sucursal,
+    //    ocultar todos los datasets menos el de esa tienda.
+    if (localName && hayMultiSuc && chartTendencia) {
         // Esperar un tick para que el chart esté completamente renderizado
         setTimeout(() => {
             const chart = chartTendencia;
