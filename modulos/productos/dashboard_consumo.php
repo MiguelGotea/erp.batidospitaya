@@ -173,9 +173,24 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                             <span class="dc-alertas-hint" id="crecimientoHint"></span>
                         </div>
                         <div class="dc-alertas-header-right">
-                            <span class="dc-alertas-sigma-label" style="font-size:.7rem;opacity:.8">
-                                <i class="fas fa-info-circle me-1"></i>Redefinir abastecimiento
-                            </span>
+                            <span class="dc-alertas-sigma-label">Umbral β/μ:</span>
+                            <div class="dc-sigma-btns" id="crecUmbralBtns">
+                                <button class="dc-sigma-btn" data-slope="0.03"
+                                    title="Sensible: detecta pendientes leves (≥3%/sem)">3%</button>
+                                <button class="dc-sigma-btn active" data-slope="0.06"
+                                    title="Balance recomendado (≥6%/sem)">6%</button>
+                                <button class="dc-sigma-btn" data-slope="0.12"
+                                    title="Solo crecimiento claro (≥12%/sem)">12%</button>
+                            </div>
+                            <span class="dc-alertas-sigma-label ms-1">Ver:</span>
+                            <div class="dc-sigma-btns" id="crecSevBtns">
+                                <button class="dc-sigma-btn" data-sev="todos"
+                                    title="Mostrar todos los detectados">Todos</button>
+                                <button class="dc-sigma-btn" data-sev="notable"
+                                    title="Notable y Crítico">Not+Crít</button>
+                                <button class="dc-sigma-btn active" data-sev="critico"
+                                    title="Solo Críticos">Críticos</button>
+                            </div>
                             <button class="dc-alertas-toggle" id="crecimientoToggle" title="Expandir / Contraer">
                                 <i class="fas fa-chevron-down"></i>
                             </button>

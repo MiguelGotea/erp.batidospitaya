@@ -293,26 +293,45 @@ function bindEventos() {
 
 
 
-    // Panel alertas: toggle cuerpo (evitar propagar si click en sigma btns)
+    // Panel alertas sobreconsumo: toggle (evitar sigma btns)
     $(document).on('click', '#alertasHeader', function (e) {
         if ($(e.target).closest('.dc-sigma-btns, .dc-sigma-btn').length) return;
         $('#alertasBody').toggleClass('collapsed');
         $('#alertasToggle').toggleClass('rotated');
     });
 
-    // Botones sigma: recalcular alertas en tiempo real
-    $(document).on('click', '.dc-sigma-btn', function (e) {
+    // Botones sigma sobreconsumo: recalcular en tiempo real
+    $(document).on('click', '#alertasHeader .dc-sigma-btn', function (e) {
         e.stopPropagation();
         kSigmaActual = parseFloat($(this).data('k'));
-        $('.dc-sigma-btn').removeClass('active');
+        $(this).closest('.dc-sigma-btns').find('.dc-sigma-btn').removeClass('active');
         $(this).addClass('active');
         if (datosActuales) renderPanelAlertas(datosActuales, kSigmaActual);
     });
 
-    // Panel crecimiento: toggle cuerpo
-    $(document).on('click', '#crecimientoHeader', function () {
+    // Panel crecimiento: toggle (evitar botones de filtro)
+    $(document).on('click', '#crecimientoHeader', function (e) {
+        if ($(e.target).closest('.dc-sigma-btns, .dc-sigma-btn').length) return;
         $('#crecimientoBody').toggleClass('collapsed');
         $('#crecimientoToggle').toggleClass('rotated');
+    });
+
+    // Botones umbral crecimiento: redetectar con nuevo slope
+    $(document).on('click', '#crecUmbralBtns .dc-sigma-btn', function (e) {
+        e.stopPropagation();
+        kSlopeActual = parseFloat($(this).data('slope'));
+        $(this).closest('.dc-sigma-btns').find('.dc-sigma-btn').removeClass('active');
+        $(this).addClass('active');
+        if (datosActuales) renderPanelCrecimiento(datosActuales);
+    });
+
+    // Botones filtro severidad crecimiento: filtrar lista ya calculada
+    $(document).on('click', '#crecSevBtns .dc-sigma-btn', function (e) {
+        e.stopPropagation();
+        filtroSevCrec = $(this).data('sev');
+        $(this).closest('.dc-sigma-btns').find('.dc-sigma-btn').removeClass('active');
+        $(this).addClass('active');
+        if (datosActuales) renderPanelCrecimiento(datosActuales);
     });
 }
 
@@ -523,6 +542,8 @@ const SUCURSAL_COLORS = [
 ];
 
 let kSigmaActual  = 1.5;   // Factor σ activo para alertas de sobreconsumo
+let kSlopeActual  = 0.06;  // Umbral β/μ activo para alertas de crecimiento
+let filtroSevCrec = 'critico'; // Filtro de severidad activo: 'critico' | 'notable' | 'todos'
 
 /* ── Gráfico de Tendencia ─────────────────────────────────── */
 function renderGrafico(data) {
@@ -1448,10 +1469,12 @@ const CREC_MIN_SEMANAS    = 4;      // mínimo de semanas con dato para calcular
 
 /**
  * Calcula alertas de crecimiento sostenido por SUCURSAL × INSUMO.
- * Cada local se compara contra SÍ MISMO (idéntico al panel de sobreconsumo).
- * Devuelve array ordenado por severidad desc, luego β_rel desc.
+ * @param {object} data   - Datos del dashboard
+ * @param {number} kSlope - Umbral mínimo de β/μ (default: CREC_MIN_SLOPE_REL)
+ * Devuelve array ordenado por sucursal ASC → insumo ASC.
  */
-function calcularAlertasCrecimiento(data) {
+function calcularAlertasCrecimiento(data, kSlope) {
+    const minSlope    = (typeof kSlope === 'number') ? kSlope : CREC_MIN_SLOPE_REL;
     const alertas     = [];
     const nombres     = data.sucursales_nombres || {};
     const semanasNros = data.semanas.map(s => s.numero_semana);
@@ -1492,7 +1515,7 @@ function calcularAlertasCrecimiento(data) {
                 slope = (N * sumXY - sumX * sumY) / denom;
             }
             const beta_rel = slope / mu;
-            const ind1     = beta_rel > CREC_MIN_SLOPE_REL;
+            const ind1     = beta_rel > minSlope;   // usa el umbral dinámico
 
             // ── INDICADOR 2: Mann-Kendall τ ──────────────────────────
             let S = 0;
@@ -1523,7 +1546,7 @@ function calcularAlertasCrecimiento(data) {
             let severidad;
             if (score === 3 || beta_rel > 0.40) {
                 severidad = 'critico';
-            } else if (beta_rel > 0.20) {
+            } else if (beta_rel > 0.20 || score >= 2) {
                 severidad = 'notable';
             } else {
                 severidad = 'moderado';
@@ -1576,20 +1599,35 @@ function renderPanelCrecimiento(data) {
         return;
     }
 
-    const alertas = calcularAlertasCrecimiento(data);
+    const alertasTodas = calcularAlertasCrecimiento(data, kSlopeActual);
     $panel.show();
+
+    const totalDetectados = alertasTodas.length;
+
+    // Aplicar filtro de severidad
+    const alertas = alertasTodas.filter(a => {
+        if (filtroSevCrec === 'critico')  return a.severidad === 'critico';
+        if (filtroSevCrec === 'notable')  return a.severidad === 'critico' || a.severidad === 'notable';
+        return true; // 'todos'
+    });
 
     const total = alertas.length;
     const $badge = $('#crecimientoBadge');
     const $hint  = $('#crecimientoHint');
 
     if (total === 0) {
-        $badge.text('0').css({ background: '#27ae60', color: '#fff' });
-        $hint.text('consumo estable en el período');
+        const sinMsg = totalDetectados > 0
+            ? `${totalDetectados} detectado(s) · ninguno coincide con el filtro seleccionado`
+            : 'consumo estable en el período';
+        $badge.text(totalDetectados).css(totalDetectados > 0
+            ? { background: '#fff', color: '#1a5276' }
+            : { background: '#27ae60', color: '#fff' }
+        );
+        $hint.text(sinMsg);
         $('.dc-crec-header').css('background', 'linear-gradient(135deg,#1a5276 0%,#2980b9 100%)');
         $('.dc-crec-panel').css('border-left-color', '#2980b9');
         $('#crecimientoContenido').html(
-            `<div class="dc-alertas-vacio" style="color:#2980b9"><i class="fas fa-check-circle"></i>Ningún insumo muestra un patrón de crecimiento sostenido en el período analizado</div>`
+            `<div class="dc-alertas-vacio" style="color:#2980b9"><i class="fas fa-check-circle"></i>${escHtml(sinMsg)}</div>`
         );
         return;
     }
@@ -1605,8 +1643,9 @@ function renderPanelCrecimiento(data) {
 
     $('.dc-crec-header').css('background', headerGrad);
     $('.dc-crec-panel').css('border-left-color', borderCol);
-    $badge.text(total).css({ background: '#fff', color: '#1a5276' });
-    $hint.text(`crecimiento semanal relativo promedio: ${Math.round(alertas.reduce((a,b)=>a+b.beta_rel,0)/total*100)}%/sem`);
+    $badge.text(totalDetectados).css({ background: '#fff', color: '#1a5276' });
+    const mostrando = total < totalDetectados ? ` · mostrando ${total}` : '';
+    $hint.text(`${totalDetectados} detectado(s)${mostrando}`);
 
     let filas = '';
     alertas.forEach(a => {
