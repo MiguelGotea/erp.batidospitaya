@@ -54,7 +54,7 @@ $(document).ready(function () {
 
 // Formatear cantidad para mostrar decimales de forma limpia
 function formatCantidad(valor) {
-    if (valor === undefined || valor === null || valor === 0) return '-';
+    if (valor === undefined || valor === null) return '-';
     const num = parseFloat(valor);
     if (isNaN(num)) return '-';
     // Si es entero, mostrar sin decimales. Si tiene decimales, mostrar hasta 2.
@@ -309,23 +309,24 @@ function renderizarTablaProducto(producto) {
             const esHoy = semanaOffset === 0 && index === todayIdx;
             const esConfigurado = cantidad !== undefined;
             
-            // Solo mostrar alerta si es configurado, cantidad es 0 Y es hoy o un día pasado
+            // Solo mostrar alerta si es configurado Y NO se ingresó nada (null) Y es hoy o un día pasado
             const esPasadoOHoy = semanaOffset < 0 || (semanaOffset === 0 && index <= todayIdx);
-            const esFaltante = esConfigurado && cantidad === 0 && esPasadoOHoy;
+            const esFaltante = esConfigurado && (cantidad === null || cantidad === undefined) && esPasadoOHoy;
 
             if (cantidad > 0) {
                 totalesPorDia[index] += cantidad;
             }
 
 
-            let cellContent = formatCantidad(cantidad);
+            let cellContent = "";
             let cellClass = "";
 
             if (esFaltante) {
                 cellClass = "missing-order";
-                cellContent = `<i class="fas fa-exclamation-triangle missing-order-icon"></i> 0`;
-            } else if (cantidad > 0) {
+                cellContent = `<i class="fas fa-exclamation-triangle missing-order-icon"></i> -`;
+            } else if (cantidad !== null && cantidad !== undefined) {
                 cellClass = "has-value data-cell";
+                cellContent = formatCantidad(cantidad);
             } else {
                 cellClass = "no-value data-cell";
                 cellContent = "-";

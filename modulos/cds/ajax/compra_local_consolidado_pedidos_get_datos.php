@@ -37,10 +37,10 @@ try {
                 pp.Nombre as nombre_producto,
                 pp.SKU,
                 dates.idx as dia_idx,
-                SUM(IFNULL(clph.cantidad_total, 0)) as total_cantidad,
+                SUM(clph.cantidad_total) as total_cantidad,
                 COUNT(DISTINCT clcd.codigo_sucursal) as num_sucursales,
                 GROUP_CONCAT(
-                    CONCAT(s.codigo, ':', s.nombre, ':', IFNULL(clph.cantidad_total, 0)) SEPARATOR '|'
+                    CONCAT(s.codigo, ':', s.nombre, ':', IFNULL(clph.cantidad_total, 'null')) SEPARATOR '|'
                 ) as detalles_sucursales
             FROM (
                 SELECT 0 as idx, DATE_SUB(?, INTERVAL 1 DAY) as fecha_entrega 
@@ -84,6 +84,7 @@ try {
     // Procesar detalles de sucursales
     foreach ($consolidado as &$item) {
         $item['dia_entrega'] = intval($item['dia_idx']);
+        $item['total_cantidad'] = ($item['total_cantidad'] === null) ? null : floatval($item['total_cantidad']);
         unset($item['dia_idx']);
 
         $detalles = [];
@@ -94,7 +95,7 @@ try {
                 $detalles[] = [
                     'codigo_sucursal' => $codigo,
                     'nombre_sucursal' => $nombre,
-                    'cantidad' => floatval($cantidad)
+                    'cantidad' => ($cantidad === 'null') ? null : floatval($cantidad)
                 ];
             }
         }
