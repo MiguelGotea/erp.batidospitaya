@@ -308,6 +308,12 @@ function bindEventos() {
         $(this).addClass('active');
         if (datosActuales) renderPanelAlertas(datosActuales, kSigmaActual);
     });
+
+    // Panel crecimiento: toggle cuerpo
+    $(document).on('click', '#crecimientoHeader', function () {
+        $('#crecimientoBody').toggleClass('collapsed');
+        $('#crecimientoToggle').toggleClass('rotated');
+    });
 }
 
 /* ════════════════════════════════════════════════════════════
@@ -436,7 +442,8 @@ function mostrarEstado(estado) {
    RENDER COMPLETO DEL DASHBOARD
    ════════════════════════════════════════════════════════════ */
 function renderDashboard(data) {
-    renderPanelAlertas(data, kSigmaActual);  // alertas de sobreconsumo (primero)
+    renderPanelCrecimiento(data);            // alertas de crecimiento sostenido (primero)
+    renderPanelAlertas(data, kSigmaActual);  // alertas de sobreconsumo (segundo)
     renderKPIs(data, null);      // placeholder hasta que se elija insumo
     renderInsumoSel(data);       // poblar selector del panel de análisis
     renderTablaHistorial(data);
@@ -1386,6 +1393,257 @@ window.seleccionarInsumoDesdeAlerta = function (idInsumo, localName) {
     const el = document.getElementById('cardTendencia');
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
 };
+
+/* ════════════════════════════════════════════════════════════
+   ALERTAS DE CRECIMIENTO SOSTENIDO
+   ════════════════════════════════════════════════════════════
+
+   Lógica matemática profesional de 3 indicadores independientes.
+   Un insumo dispara la alerta cuando ≥ 2 de 3 indicadores
+   superan sus umbrales — esto separa el crecimiento estructural
+   de los spikes puntuales que ya captura el panel de sobreconsumo.
+
+   INDICADOR 1 — Pendiente de regresión lineal normalizada (β̂):
+     Ajustamos y = α + β·t sobre las semanas con valor > 0.
+     Normalizamos: β_rel = β / μ  (crecimiento relativo por semana).
+     Umbral: β_rel > MIN_SLOPE_REL  (ej. 6% crecimiento semanal).
+
+   INDICADOR 2 — Mann-Kendall Tau normalizado (τ):
+     S = Σ_{i<j} sgn(y_j − y_i)
+     τ = S / (n(n−1)/2)  ∈ [-1, +1]
+     Umbral: τ > MIN_MK_TAU  (ej. 0.45 = tendencia monótona fuerte).
+
+   INDICADOR 3 — Ratio de incrementos consecutivos (run ratio):
+     Conta transiciones y[t] > y[t−1] en las ÚLTIMAS semanas.
+     run_ratio = positivas / (n_sem − 1)
+     Umbral: run_ratio > MIN_RUN_RATIO  (ej. 0.65).
+
+   Severidad compuesta:
+     • Moderado  — 2 de 3 indicadores activos
+     • Notable   — 2 de 3 + β_rel > 20%
+     • Crítico   — 3 de 3 ó β_rel > 40%
+   ════════════════════════════════════════════════════════════ */
+
+const CREC_MIN_SLOPE_REL  = 0.06;   // β/μ mínimo: 6 % de crecimiento semanal relativo
+const CREC_MIN_MK_TAU     = 0.45;   // τ Mann-Kendall mínimo (0 = sin tendencia, 1 = perfectamente monótono)
+const CREC_MIN_RUN_RATIO  = 0.65;   // ratio de semanas consecutivas en alza
+const CREC_MIN_SEMANAS    = 4;      // mínimo de semanas con dato para calcular
+
+/**
+ * Calcula alertas de crecimiento sostenido para cada insumo (total, no por sucursal).
+ * Devuelve array ordenado por severidad desc, luego β_rel desc.
+ */
+function calcularAlertasCrecimiento(data) {
+    const alertas     = [];
+    const semanasNros = data.semanas.map(s => s.numero_semana);
+
+    data.consumo.forEach(item => {
+        // Usar la serie TOTAL del insumo (suma de todas las sucursales)
+        const serieCompleta = semanasNros.map(n => item.por_semana[n] || 0);
+
+        // Filtrar solo semanas con dato > 0
+        const idx_con_valor = semanasNros
+            .map((n, i) => ({ n, v: serieCompleta[i], i }))
+            .filter(d => d.v > 0);
+
+        if (idx_con_valor.length < CREC_MIN_SEMANAS) return;
+
+        const ys = idx_con_valor.map(d => d.v);
+        const xs = idx_con_valor.map(d => d.n); // usar número de semana como eje X
+        const N  = ys.length;
+
+        // ── μ global (sobre semanas con valor) ──────────────────────
+        const mu = ys.reduce((a, b) => a + b, 0) / N;
+        if (mu < 0.001) return;
+
+        // ── INDICADOR 1: Regresión lineal OLS ───────────────────────
+        const sumX  = xs.reduce((a, b) => a + b, 0);
+        const sumY  = ys.reduce((a, b) => a + b, 0);
+        const sumXY = xs.reduce((acc, x, i) => acc + x * ys[i], 0);
+        const sumX2 = xs.reduce((acc, x) => acc + x * x, 0);
+        const denom = N * sumX2 - sumX * sumX;
+        let slope = 0;
+        if (Math.abs(denom) > 0.001) {
+            slope = (N * sumXY - sumX * sumY) / denom;
+        }
+        const beta_rel = slope / mu;  // pendiente relativa al promedio
+        const ind1     = beta_rel > CREC_MIN_SLOPE_REL;
+
+        // ── INDICADOR 2: Mann-Kendall τ ─────────────────────────────
+        let S = 0;
+        for (let i = 0; i < N - 1; i++) {
+            for (let j = i + 1; j < N; j++) {
+                const diff = ys[j] - ys[i];
+                if (diff > 0)       S++;
+                else if (diff < 0)  S--;
+            }
+        }
+        const S_max = N * (N - 1) / 2;
+        const tau   = S_max > 0 ? S / S_max : 0;
+        const ind2  = tau > CREC_MIN_MK_TAU;
+
+        // ── INDICADOR 3: Ratio de incrementos consecutivos ──────────
+        // Evaluar sobre la serie ORDENADA temporalmente (ya lo está)
+        let positivos = 0;
+        for (let i = 1; i < N; i++) {
+            if (ys[i] > ys[i - 1]) positivos++;
+        }
+        const run_ratio = (N > 1) ? positivos / (N - 1) : 0;
+        const ind3      = run_ratio > CREC_MIN_RUN_RATIO;
+
+        // ── Decisión: ≥ 2 de 3 ─────────────────────────────────────
+        const score = (ind1 ? 1 : 0) + (ind2 ? 1 : 0) + (ind3 ? 1 : 0);
+        if (score < 2) return;
+
+        // ── Severidad ───────────────────────────────────────────────
+        let severidad;
+        if (score === 3 || beta_rel > 0.40) {
+            severidad = 'critico';
+        } else if (beta_rel > 0.20) {
+            severidad = 'notable';
+        } else {
+            severidad = 'moderado';
+        }
+
+        // Crecimiento acumulado estimado en el período analizado
+        const y_inicio = Math.max(0, slope * xs[0] + (sumY - slope * sumX) / N);
+        const y_fin    = Math.max(0, slope * xs[N - 1] + (sumY - slope * sumX) / N);
+        const pct_periodo = y_inicio > 0.001 ? Math.round((y_fin - y_inicio) / y_inicio * 100) : 0;
+
+        alertas.push({
+            insumo:      item.nombre,
+            unidad:      item.unidad,
+            idInsumo:    item.id,
+            mu:          round2(mu),
+            beta_rel:    beta_rel,
+            tau:         round2(tau),
+            run_ratio:   round2(run_ratio),
+            score,
+            ind1, ind2, ind3,
+            severidad,
+            pct_semanal: Math.round(beta_rel * 100),
+            pct_periodo,
+            semanas_ok:  N,
+        });
+    });
+
+    // Orden: crítico → notable → moderado, luego β_rel desc
+    const orden = { critico: 0, notable: 1, moderado: 2 };
+    return alertas.sort((a, b) => {
+        const s = orden[a.severidad] - orden[b.severidad];
+        return s !== 0 ? s : b.beta_rel - a.beta_rel;
+    });
+}
+
+/**
+ * Renderiza el panel colapsable de alertas de crecimiento sostenido.
+ */
+function renderPanelCrecimiento(data) {
+    const $panel = $('#panelCrecimiento');
+
+    if (!data || !data.consumo || data.consumo.length === 0 ||
+        !data.semanas || data.semanas.length < CREC_MIN_SEMANAS) {
+        $panel.hide();
+        return;
+    }
+
+    const alertas = calcularAlertasCrecimiento(data);
+    $panel.show();
+
+    const total = alertas.length;
+    const $badge = $('#crecimientoBadge');
+    const $hint  = $('#crecimientoHint');
+
+    if (total === 0) {
+        $badge.text('0').css({ background: '#27ae60', color: '#fff' });
+        $hint.text('consumo estable en el período');
+        $('.dc-crec-header').css('background', 'linear-gradient(135deg,#1a5276 0%,#2980b9 100%)');
+        $('.dc-crec-panel').css('border-left-color', '#2980b9');
+        $('#crecimientoContenido').html(
+            `<div class="dc-alertas-vacio" style="color:#2980b9"><i class="fas fa-check-circle"></i>Ningún insumo muestra un patrón de crecimiento sostenido en el período analizado</div>`
+        );
+        return;
+    }
+
+    // Colores según mayor severidad presente
+    const maxSev = alertas[0].severidad;
+    const headerGrad = maxSev === 'critico'
+        ? 'linear-gradient(135deg,#1a5276 0%,#8e44ad 100%)'
+        : maxSev === 'notable'
+            ? 'linear-gradient(135deg,#1a5276 0%,#2471a3 100%)'
+            : 'linear-gradient(135deg,#1f618d 0%,#2e86c1 100%)';
+    const borderCol = maxSev === 'critico' ? '#8e44ad' : '#2980b9';
+
+    $('.dc-crec-header').css('background', headerGrad);
+    $('.dc-crec-panel').css('border-left-color', borderCol);
+    $badge.text(total).css({ background: '#fff', color: '#1a5276' });
+    $hint.text(`crecimiento semanal relativo promedio: ${Math.round(alertas.reduce((a,b)=>a+b.beta_rel,0)/total*100)}%/sem`);
+
+    let filas = '';
+    alertas.forEach(a => {
+        const sevClass = a.severidad === 'critico'  ? 'crec-critico'
+                       : a.severidad === 'notable'  ? 'crec-notable'
+                       :                              'crec-moderado';
+        const sevLabel = a.severidad === 'critico'  ? '<i class="fas fa-fire"></i> Crítico'
+                       : a.severidad === 'notable'  ? '<i class="fas fa-arrow-up"></i> Notable'
+                       :                              '<i class="fas fa-chart-line"></i> Moderado';
+
+        // Indicadores activos como pills
+        const pill = (activo, label, title) => activo
+            ? `<span class="dc-crec-ind-pill active" title="${title}">${label}</span>`
+            : `<span class="dc-crec-ind-pill"       title="${title}">${label}</span>`;
+
+        const ind_html = [
+            pill(a.ind1, 'Regresión', `β/μ = ${(a.beta_rel*100).toFixed(1)}%/sem · umbral ${CREC_MIN_SLOPE_REL*100}%`),
+            pill(a.ind2, 'Mann-Kendall', `τ = ${a.tau} · umbral ${CREC_MIN_MK_TAU}`),
+            pill(a.ind3, 'Run-ratio', `${Math.round(a.run_ratio*100)}% incrementos · umbral ${CREC_MIN_RUN_RATIO*100}%`),
+        ].join(' ');
+
+        const insumoEsc = escHtml(a.insumo);
+        filas += `
+        <tr>
+            <td>
+                <span class="dc-crec-insumo-pill"
+                    onclick="seleccionarInsumoDesdeAlerta(${a.idInsumo})"
+                    title="Ver tendencia de ${insumoEsc}">
+                    <i class="fas fa-chart-line me-1" style="font-size:.62rem;opacity:.7"></i>${insumoEsc}
+                </span>
+            </td>
+            <td class="text-end" style="font-size:.75rem;color:#888">${a.semanas_ok} sem</td>
+            <td class="text-end fw-bold" style="color:#1a5276">
+                +${a.pct_semanal}%<span style="font-weight:400;font-size:.7rem;color:#888">/sem</span>
+            </td>
+            <td class="text-end" style="color:#5d6d7e;font-size:.75rem">${a.pct_periodo > 0 ? '+' : ''}${a.pct_periodo}% período</td>
+            <td>${ind_html}</td>
+            <td><span class="dc-crec-sev ${sevClass}">${sevLabel}</span></td>
+        </tr>`;
+    });
+
+    $('#crecimientoContenido').html(`
+        <div style="overflow-x:auto;">
+            <table class="dc-crec-tabla">
+                <thead>
+                    <tr>
+                        <th>Insumo</th>
+                        <th class="text-end">Semanas</th>
+                        <th class="text-end">Crecim. Semanal</th>
+                        <th class="text-end">Crecim. Período</th>
+                        <th>Indicadores</th>
+                        <th>Severidad</th>
+                    </tr>
+                </thead>
+                <tbody>${filas}</tbody>
+            </table>
+        </div>
+        <div class="dc-crec-footnote">
+            <i class="fas fa-info-circle me-1"></i>
+            Alerta cuando ≥2 de 3 indicadores superan su umbral:
+            <strong>Regresión</strong> β/μ &gt;${CREC_MIN_SLOPE_REL*100}%/sem &nbsp;·&nbsp;
+            <strong>Mann-Kendall</strong> τ&gt;${CREC_MIN_MK_TAU} &nbsp;·&nbsp;
+            <strong>Run-ratio</strong> &gt;${CREC_MIN_RUN_RATIO*100}%
+        </div>
+    `);
+}
 
 /* ════════════════════════════════════════════════════════════
    UTILIDADES

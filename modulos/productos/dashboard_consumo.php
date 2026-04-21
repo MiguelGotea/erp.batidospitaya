@@ -162,6 +162,31 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
             <div id="panelDatos" class="d-none">
 
                 <!-- ═══════════════════════════════════════════════ -->
+                <!-- PANEL DE ALERTAS DE CRECIMIENTO SOSTENIDO      -->
+                <!-- ═══════════════════════════════════════════════ -->
+                <div id="panelCrecimiento" class="dc-crec-panel mb-3" style="display:none">
+                    <div class="dc-crec-header" id="crecimientoHeader">
+                        <div class="dc-alertas-header-left">
+                            <span class="dc-crec-icon"><i class="fas fa-chart-line"></i></span>
+                            <span class="dc-alertas-titulo">Crecimiento Sostenido Detectado</span>
+                            <span class="dc-alertas-badge" id="crecimientoBadge">0</span>
+                            <span class="dc-alertas-hint" id="crecimientoHint"></span>
+                        </div>
+                        <div class="dc-alertas-header-right">
+                            <span class="dc-alertas-sigma-label" style="font-size:.7rem;opacity:.8">
+                                <i class="fas fa-info-circle me-1"></i>Redefinir abastecimiento
+                            </span>
+                            <button class="dc-alertas-toggle" id="crecimientoToggle" title="Expandir / Contraer">
+                                <i class="fas fa-chevron-down"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="dc-alertas-body" id="crecimientoBody">
+                        <div id="crecimientoContenido"></div>
+                    </div>
+                </div>
+
+                <!-- ═══════════════════════════════════════════════ -->
                 <!-- PANEL DE ALERTAS DE SOBRECONSUMO               -->
                 <!-- ═══════════════════════════════════════════════ -->
                 <div id="panelAlertas" class="dc-alertas-panel mb-3" style="display:none">

@@ -1305,3 +1305,133 @@ body {
     transform:  translateY(-1px);
     box-shadow: 0 4px 12px rgba(230,126,34,.32);
 }
+
+/* ══════════════════════════════════════════════
+   Panel de Alertas de CRECIMIENTO SOSTENIDO
+   Paleta azul-índigo — diferenciado del rojo
+   de sobreconsumo intencionalmente
+   ══════════════════════════════════════════════ */
+
+.dc-crec-panel {
+    border-radius: var(--neu-radius-sm);
+    overflow:      hidden;
+    background:    var(--neu-bg);
+    border-left:   4px solid #2980b9;
+    animation:     fadeInDown .3s ease;
+    box-shadow:
+        var(--neu-distance) var(--neu-distance) var(--neu-blur) var(--neu-shadow-dark),
+        calc(-1 * var(--neu-distance)) calc(-1 * var(--neu-distance)) var(--neu-blur) var(--neu-shadow-light);
+}
+
+.dc-crec-header {
+    display:         flex;
+    align-items:     center;
+    justify-content: space-between;
+    flex-wrap:       wrap;
+    gap:             10px;
+    padding:         11px 18px;
+    background:      linear-gradient(135deg, #1f618d 0%, #2e86c1 100%);
+    cursor:          pointer;
+    user-select:     none;
+    transition:      filter .15s;
+}
+.dc-crec-header:hover { filter: brightness(1.07); }
+
+.dc-crec-icon {
+    font-size: 1rem;
+    color:     #fff;
+    animation: pulse-crec 2.5s infinite;
+}
+@keyframes pulse-crec {
+    0%, 100% { opacity: 1;  transform: scale(1); }
+    50%       { opacity: .6; transform: scale(1.08); }
+}
+
+/* Tabla interna */
+.dc-crec-tabla {
+    width:           100%;
+    border-collapse: collapse;
+    font-size:       .78rem;
+}
+.dc-crec-tabla thead th {
+    background:     rgba(41,128,185,.08);
+    color:          #1a5276;
+    font-size:      .7rem;
+    font-weight:    700;
+    text-transform: uppercase;
+    letter-spacing: .4px;
+    padding:        7px 14px;
+    border-bottom:  2px solid rgba(41,128,185,.18);
+    white-space:    nowrap;
+}
+.dc-crec-tabla tbody td {
+    padding:        7px 14px;
+    border-bottom:  1px solid rgba(41,128,185,.07);
+    vertical-align: middle;
+    color:          var(--text-primary);
+}
+.dc-crec-tabla tbody tr:last-child td { border-bottom: none; }
+.dc-crec-tabla tbody tr:hover { background: rgba(41,128,185,.04); }
+
+/* Pill de insumo clickeable */
+.dc-crec-insumo-pill {
+    display:       inline-block;
+    background:    rgba(26,82,118,.1);
+    color:         #1a5276;
+    border-radius: 6px;
+    font-size:     .7rem;
+    font-weight:   700;
+    padding:       1px 7px;
+    max-width:     200px;
+    overflow:      hidden;
+    text-overflow: ellipsis;
+    white-space:   nowrap;
+    cursor:        pointer;
+    transition:    background .15s;
+    vertical-align: middle;
+}
+.dc-crec-insumo-pill:hover { background: rgba(26,82,118,.2); }
+
+/* Pills de indicadores (activo / inactivo) */
+.dc-crec-ind-pill {
+    display:       inline-block;
+    font-size:     .65rem;
+    font-weight:   700;
+    border-radius: 50px;
+    padding:       2px 8px;
+    margin-right:  3px;
+    border:        1.5px solid rgba(41,128,185,.25);
+    background:    rgba(41,128,185,.05);
+    color:         #7f8c8d;
+    cursor:        default;
+    white-space:   nowrap;
+    transition:    background .15s, color .15s;
+}
+.dc-crec-ind-pill.active {
+    background: rgba(41,128,185,.15);
+    color:      #1a5276;
+    border-color: rgba(41,128,185,.5);
+}
+
+/* Badges de severidad */
+.dc-crec-sev {
+    display:       inline-block;
+    font-size:     .7rem;
+    font-weight:   800;
+    border-radius: 6px;
+    padding:       2px 8px;
+    white-space:   nowrap;
+}
+.dc-crec-sev.crec-critico  { background: #e8daef; color: #7d3c98; }
+.dc-crec-sev.crec-notable  { background: #d6eaf8; color: #1a5276; }
+.dc-crec-sev.crec-moderado { background: #eaf4fc; color: #2e86c1; }
+
+/* Nota al pie de la tabla */
+.dc-crec-footnote {
+    padding:    8px 14px;
+    font-size:  .7rem;
+    color:      var(--text-secondary);
+    border-top: 1px solid rgba(41,128,185,.1);
+    background: rgba(41,128,185,.03);
+    font-style: italic;
+}
