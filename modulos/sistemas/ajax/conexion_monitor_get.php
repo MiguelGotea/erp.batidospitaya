@@ -41,6 +41,7 @@ try {
             AND p.pc_nombre       = latest.pc_nombre
             AND p.ping_at         = latest.ultimo_ping
         LEFT JOIN sucursales s ON s.codigo = p.sucursal_codigo
+        WHERE s.sucursal = 1
         ORDER BY s.nombre ASC, p.pc_nombre ASC
     ";
     $stmtEstados = $conn->prepare($sqlEstados);
@@ -65,7 +66,8 @@ try {
             ping_at,
             COALESCE(s.nombre, pl.sucursal_codigo) AS nombre_sucursal
         FROM sistemas_ping_log pl
-        LEFT JOIN sucursales s ON s.codigo = pl.sucursal_codigo
+        INNER JOIN sucursales s ON s.codigo = pl.sucursal_codigo
+        WHERE s.sucursal = 1
         ORDER BY ping_at DESC
         LIMIT 30
     ";

@@ -199,8 +199,8 @@ $cargoOperario = $usuario['CodNivelesCargos'];
         .alerta  .pc-badge { background: #fef3c7; color: #92400e; }
         .offline .pc-badge { background: #fee2e2; color: #991b1b; }
 
-        .pc-nombre    { font-size: .95rem; font-weight: 700; color: #1e293b; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .pc-sucursal  { font-size: .72rem; color: var(--accent2); font-weight: 600; margin-bottom: 8px; }
+        .pc-sucursal  { font-size: 1rem; color: var(--accent2); font-weight: 700; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .pc-nombre    { font-size: .75rem; font-weight: 500; color: #64748b; margin-bottom: 8px; }
         .pc-detail    { font-size: .7rem; color: #64748b; display: flex; align-items: center; gap: 5px; margin-bottom: 3px; }
         .pc-detail i  { width: 12px; text-align: center; color: #94a3b8; }
         .pc-time      { font-size: .68rem; font-weight: 600; margin-top: 8px; padding-top: 8px; border-top: 1px solid #f1f5f9; }
@@ -214,7 +214,16 @@ $cargoOperario = $usuario['CodNivelesCargos'];
             border-radius: 14px;
             padding: 18px;
             box-shadow: 0 2px 10px rgba(0,0,0,.07);
+            max-height: 500px;
+            overflow-y: auto;
+            overflow-x: hidden;
         }
+        /* Scrollbar styling for sidebar */
+        .sidebar-card::-webkit-scrollbar { width: 6px; }
+        .sidebar-card::-webkit-scrollbar-track { background: #f1f5f9; }
+        .sidebar-card::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .sidebar-card::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
         .activity-list { list-style: none; display: flex; flex-direction: column; gap: 0; }
         .activity-item {
             display: flex;
@@ -233,7 +242,7 @@ $cargoOperario = $usuario['CodNivelesCargos'];
         }
         .act-info { flex: 1; min-width: 0; }
         .act-pc   { font-size: .75rem; font-weight: 600; color: #1e293b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .act-suc  { font-size: .68rem; color: var(--accent2); }
+        .act-suc  { font-size: .68rem; color: var(--accent2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .act-time { font-size: .65rem; color: #94a3b8; margin-top: 1px; }
 
         /* ── Empty state ── */
@@ -489,8 +498,8 @@ function renderPCs() {
                 <div class="pc-icon"><i class="fas ${estadoIcon(pc.estado)}"></i></div>
                 <span class="pc-badge">${estadoLabel(pc.estado)}</span>
             </div>
-            <div class="pc-nombre" title="${pc.pc_nombre || '—'}">${pc.pc_nombre || '(Sin nombre)'}</div>
-            <div class="pc-sucursal"><i class="fas fa-store" style="margin-right:4px"></i>${pc.nombre_sucursal || pc.sucursal_codigo}</div>
+            <div class="pc-sucursal" title="${pc.nombre_sucursal || pc.sucursal_codigo}"><i class="fas fa-store" style="margin-right:4px"></i>${pc.nombre_sucursal || pc.sucursal_codigo}</div>
+            <div class="pc-nombre">${pc.pc_nombre || '(Sin nombre)'}</div>
             ${pc.pc_usuario ? `<div class="pc-detail"><i class="fas fa-user"></i>${pc.pc_usuario}</div>` : ''}
             ${pc.ip_local   ? `<div class="pc-detail"><i class="fas fa-network-wired"></i>${pc.ip_local}</div>` : ''}
             ${pc.ip_publica ? `<div class="pc-detail"><i class="fas fa-globe"></i>${pc.ip_publica}</div>` : ''}
