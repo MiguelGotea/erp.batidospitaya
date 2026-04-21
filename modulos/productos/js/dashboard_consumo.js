@@ -1467,11 +1467,10 @@ const CREC_MIN_SLOPE_REL  = 0.06;   // β/μ mínimo: 6 % de crecimiento semanal
 const CREC_MIN_MK_TAU     = 0.45;   // τ Mann-Kendall mínimo (0 = sin tendencia, 1 = perfectamente monótono)
 const CREC_MIN_RUN_RATIO  = 0.65;   // ratio de semanas consecutivas en alza
 const CREC_MIN_SEMANAS    = 3;      // mínimo absoluto de semanas con dato para calcular
-                                    // (la semana en curso siempre se excluye, así que
-                                    //  un rango de 4 sem → 3 semanas reales analizadas)
 const CREC_IDEAL_SEMANAS  = 6;      // mínimo para veredicto estadísticamente consistente
                                     // (Mann-Kendall S_max=15, OLS con 3 DoF)
-                                    // Requiere seleccionar al menos 7 semanas en el filtro
+                                    // Si el rango incluye la semana actual → seleccionar 7 sem
+                                    // Si el rango es 100% histórico → basta con 6 sem
 
 /**
  * Calcula alertas de crecimiento sostenido por SUCURSAL × INSUMO.
@@ -1492,13 +1491,17 @@ function calcularAlertasCrecimiento(data, kSlope) {
                 item.desglose_semxsuc?.[n]?.[suc] || 0
             );
 
-            // Excluir semana en curso (siempre tiene dato parcial → distorsiona la pendiente)
+            // Excluir semana en curso SOLO si el rango analizado termina en ella
+            // (dato parcial que distorsiona la pendiente).
+            // Si el rango es histórico (sem_hasta < semana actual), todas las semanas están completas.
             const semActualCrec = parseInt($('#semanaActualNum').text()) || 0;
+            const maxSemEnDatos = semanasNros.length > 0 ? Math.max(...semanasNros) : 0;
+            const excluirActual = semActualCrec > 0 && maxSemEnDatos === semActualCrec;
 
-            // Filtrar solo semanas con dato > 0 y que no sean la semana en curso
+            // Filtrar semanas con dato > 0 (y excluir la actual si aplica)
             const puntos = semanasNros
                 .map((n, i) => ({ n, v: serieCompleta[i] }))
-                .filter(d => d.v > 0 && (semActualCrec === 0 || d.n !== semActualCrec));
+                .filter(d => d.v > 0 && (!excluirActual || d.n !== semActualCrec));
 
             if (puntos.length < CREC_MIN_SEMANAS) return;
 
@@ -1605,9 +1608,16 @@ function renderPanelCrecimiento(data) {
         return;
     }
 
-    // Semanas reales analizadas (excluye la actual)
+    // Semanas reales analizadas:
+    // Si el rango termina en la semana actual → se excluye (dato parcial)
+    // Si el rango es histórico → todas las semanas del filtro están completas
     const semActualN    = parseInt($('#semanaActualNum').text()) || 0;
-    const semsAnalizadas = data.semanas.filter(s => s.numero_semana !== semActualN).length;
+    const maxSemData    = data.semanas.length > 0
+        ? Math.max(...data.semanas.map(s => s.numero_semana)) : 0;
+    const excluirActual  = semActualN > 0 && maxSemData === semActualN;
+    const semsAnalizadas = excluirActual
+        ? data.semanas.filter(s => s.numero_semana !== semActualN).length
+        : data.semanas.length;
     const bajoideal      = semsAnalizadas < CREC_IDEAL_SEMANAS;
 
     const alertasTodas = calcularAlertasCrecimiento(data, kSlopeActual);
