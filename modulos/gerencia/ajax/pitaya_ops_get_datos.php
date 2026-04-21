@@ -288,14 +288,12 @@ try {
                     WHEN g.Tipo = 'Bowl'                 THEN 'Bowl'
                     ELSE 'Otro'
                 END AS estacion,
-                COUNT(*)                                                                    AS registros,
-                -- Tiempo de caja: HoraCreado → HoraImpreso (facturación completa + impresión comanda)
-                AVG(TIMESTAMPDIFF(SECOND, v.HoraCreado, v.HoraImpreso))                    AS tiempo_caja_prom_seg,
-                MIN(TIMESTAMPDIFF(SECOND, v.HoraCreado, v.HoraImpreso))                    AS tiempo_caja_min_seg,
-                MAX(TIMESTAMPDIFF(SECOND, v.HoraCreado, v.HoraImpreso))                    AS tiempo_caja_max_seg,
-                STDDEV(TIMESTAMPDIFF(SECOND, v.HoraCreado, v.HoraImpreso))                 AS tiempo_caja_stddev_seg,
-                -- Tiempo de ingreso: HoraIngresoProducto → HoraImpreso (ingreso de items en caja)
-                AVG(TIMESTAMPDIFF(SECOND, v.HoraIngresoProducto, v.HoraImpreso))           AS tiempo_ingreso_prom_seg
+                COUNT(*)                                                           AS registros,
+                AVG(TIME_TO_SEC(TIMEDIFF(v.HoraImpreso, v.HoraCreado)))           AS t_caja_prom,
+                MIN(TIME_TO_SEC(TIMEDIFF(v.HoraImpreso, v.HoraCreado)))           AS t_caja_min,
+                MAX(TIME_TO_SEC(TIMEDIFF(v.HoraImpreso, v.HoraCreado)))           AS t_caja_max,
+                STDDEV(TIME_TO_SEC(TIMEDIFF(v.HoraImpreso, v.HoraCreado)))        AS t_caja_std,
+                AVG(TIME_TO_SEC(TIMEDIFF(v.HoraImpreso, v.HoraIngresoProducto)))  AS t_ingreso_prom
             FROM VentasGlobalesAccessCSV v
             INNER JOIN sucursales s ON s.codigo = v.local
             INNER JOIN DBBatidos b ON b.CodBatido = v.CodProducto
@@ -303,8 +301,6 @@ try {
             WHERE v.Anulado = 0
               AND v.HoraCreado IS NOT NULL
               AND v.HoraImpreso IS NOT NULL
-              AND TIMESTAMPDIFF(SECOND, v.HoraCreado, v.HoraImpreso) > 0
-              AND TIMESTAMPDIFF(SECOND, v.HoraCreado, v.HoraImpreso) < 7200 -- excluir outliers (>2h)
               AND v.Fecha BETWEEN :ini AND :fin
               AND s.sucursal = 1
               $filtroSuc
@@ -320,16 +316,29 @@ try {
         $rows = $st->fetchAll(PDO::FETCH_ASSOC);
 
         $cycleTimes = array_map(function ($r) {
+            $cajaSeg    = (float) $r['t_caja_prom'];
+            $ingresoSeg = (float) $r['t_ingreso_prom'];
+            $minSeg     = (float) $r['t_caja_min'];
+            $maxSeg     = (float) $r['t_caja_max'];
+            $stdSeg     = (float) $r['t_caja_std'];
+            if ($cajaSeg    < 0 || $cajaSeg    > 7200) $cajaSeg    = 0;
+            if ($ingresoSeg < 0 || $ingresoSeg > 7200) $ingresoSeg = 0;
+            $cajMin = round($cajaSeg    / 60, 2);
+            $ingMin = round($ingresoSeg / 60, 2);
             return [
-                'estacion' => $r['estacion'],
-                'registros' => (int) $r['registros'],
-                'lead_time_prom_min' => round((float) $r['lead_time_prom_seg'] / 60, 2),
-                'cycle_time_prom_min' => round((float) $r['cycle_time_prom_seg'] / 60, 2),
-                'lead_min_min' => round((float) $r['lead_min_seg'] / 60, 2),
-                'lead_max_min' => round((float) $r['lead_max_seg'] / 60, 2),
-                'lead_stddev_min' => round((float) $r['lead_stddev_seg'] / 60, 2),
-                // Tiempo en cola = Lead Time − Cycle Time (tiempo esperando en fila)
-                'queue_time_prom_min' => round(((float) $r['lead_time_prom_seg'] - (float) $r['cycle_time_prom_seg']) / 60, 2),
+                'estacion'                => $r['estacion'],
+                'registros'               => (int) $r['registros'],
+                'tiempo_caja_prom_min'    => $cajMin,
+                'tiempo_ingreso_prom_min' => $ingMin,
+                'tiempo_caja_min_min'     => round(max(0, $minSeg) / 60, 2),
+                'tiempo_caja_max_min'     => round(min(7200, $maxSeg) / 60, 2),
+                'tiempo_caja_std_min'     => round($stdSeg / 60, 2),
+                'queue_time_prom_min'     => round(max(0, $cajaSeg - $ingresoSeg) / 60, 2),
+                'lead_time_prom_min'      => $cajMin,
+                'cycle_time_prom_min'     => $ingMin,
+                'lead_min_min'            => round(max(0, $minSeg) / 60, 2),
+                'lead_max_min'            => round(min(7200, $maxSeg) / 60, 2),
+                'lead_stddev_min'         => round($stdSeg / 60, 2),
             ];
         }, $rows);
 
@@ -337,6 +346,7 @@ try {
         echo json_encode(['success' => true, 'cycle_times' => $cycleTimes]);
         exit;
     }
+
 
     // ════════════════════════════════════════════════════════════════════════
     // ACCIÓN: multi_estacion — análisis de pedidos que tocan varias estaciones
