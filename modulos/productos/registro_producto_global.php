@@ -115,59 +115,31 @@ if ($esNuevo && !$puedeCrear) {
                             <!-- ============================================ -->
                             <div class="tab-pane active" id="tab-datos-basicos">
                                 <div class="row g-3">
-                                    <div class="col-md-6">
+                                    <!-- Fila 1: Identificación -->
+                                    <div class="col-md-4">
                                         <label for="sku" class="form-label">SKU *</label>
                                         <input type="text" class="form-control" id="sku" name="sku" required>
                                     </div>
-                                    <div class="col-md-6">
+                                    <div class="col-md-8">
                                         <label for="nombre" class="form-label">Nombre *</label>
                                         <input type="text" class="form-control" id="nombre" name="nombre" required>
                                     </div>
 
-                                    <div class="col-md-6">
-                                        <label class="form-label d-block">Características</label>
-                                        <div class="form-check form-check-inline">
-                                            <input class="form-check-input" type="checkbox" id="esVendible"
-                                                name="es_vendible" value="SI">
-                                            <label class="form-check-label" for="esVendible">Vendible</label>
-                                        </div>
-                                        <div class="form-check form-check-inline">
-                                            <input class="form-check-input" type="checkbox" id="esComprable"
-                                                name="es_comprable" value="SI">
-                                            <label class="form-check-label" for="esComprable">Comprable</label>
-                                        </div>
-                                        <div class="form-check form-check-inline">
-                                            <input class="form-check-input" type="checkbox" id="esFabricable"
-                                                name="es_fabricable" value="SI">
-                                            <label class="form-check-label" for="esFabricable">Fabricable</label>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="toggle-container" style="margin-top: 2rem;">
-                                            <span class="toggle-label">¿Es comprable para facturas?</span>
-                                            <label class="switch">
-                                                <input type="checkbox" id="compraTienda" name="compra_tienda" value="1">
-                                                <span class="slider round">
-                                                    <i class="bi bi-check check-icon"></i>
-                                                    <i class="bi bi-x x-icon"></i>
-                                                </span>
-                                            </label>
-                                        </div>
-                                    </div>
+                                    <!-- Fila 2: Clasificación -->
                                     <div class="col-md-6">
                                         <label for="grupo" class="form-label">Grupo</label>
-                                        <select class="form-select" id="grupo" name="id_grupo"
-                                            onchange="cargarSubgrupos()">
+                                        <select class="form-select" id="grupo" name="id_grupo" onchange="cargarSubgrupos()">
                                             <option value="">Seleccione...</option>
                                         </select>
                                     </div>
                                     <div class="col-md-6">
                                         <label for="subgrupo" class="form-label">Subgrupo</label>
-                                        <select class="form-select" id="subgrupo"
-                                            name="id_subgrupo_presentacion_producto">
+                                        <select class="form-select" id="subgrupo" name="id_subgrupo_presentacion_producto">
                                             <option value="">Seleccione grupo primero...</option>
                                         </select>
                                     </div>
+
+                                    <!-- Fila 3: Logística y Comercial -->
                                     <div class="col-md-6">
                                         <label for="categoriaInsumo" class="form-label">Categoría Insumo (Mapeo)</label>
                                         <select class="form-select" id="categoriaInsumo" name="categoria_insumo" onchange="guardarCampoInline('categoria_insumo', this.value)">
@@ -180,6 +152,7 @@ if ($esNuevo && !$puedeCrear) {
                                             <option value="F">F - Secos y Preparación</option>
                                             <option value="G">G - Productos de Mostrador</option>
                                         </select>
+                                    </div>
                                     <div class="col-md-6">
                                         <label for="presentacion" class="form-label">Presentación Comercial</label>
                                         <input type="text" class="form-control" id="presentacion" name="presentacion" 
@@ -188,27 +161,58 @@ if ($esNuevo && !$puedeCrear) {
                                         <div class="form-text" style="font-size: 0.75rem;">Forma comercial en que se vende o adquiere el producto.</div>
                                     </div>
 
-                                    <!-- Nuevos Toggles Logísticos -->
-                                    <div class="col-md-6 d-flex flex-column gap-2 justify-content-end pb-1">
-                                        <div class="toggle-container mb-1">
-                                            <span class="toggle-label" style="font-size: 0.85rem;">Presentación Básica de Inventario</span>
-                                            <label class="switch">
-                                                <input type="checkbox" id="presentacionBasica" name="presentacion_basica_inventario" value="1">
-                                                <span class="slider round">
-                                                    <i class="bi bi-check check-icon"></i>
-                                                    <i class="bi bi-x x-icon"></i>
-                                                </span>
-                                            </label>
+                                    <!-- Fila 4: Características y Toggles -->
+                                    <div class="col-md-6">
+                                        <label class="form-label d-block">Características de Uso</label>
+                                        <div class="d-flex flex-wrap gap-3 p-2 border rounded bg-light" style="height: 100px; align-items: center;">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="esVendible" name="es_vendible" value="SI">
+                                                <label class="form-check-label" for="esVendible">Vendible</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="esComprable" name="es_comprable" value="SI">
+                                                <label class="form-check-label" for="esComprable">Comprable</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="esFabricable" name="es_fabricable" value="SI">
+                                                <label class="form-check-label" for="esFabricable">Fabricable</label>
+                                            </div>
                                         </div>
-                                        <div class="toggle-container">
-                                            <span class="toggle-label" style="font-size: 0.85rem;">¿Es Producto Despacho?</span>
-                                            <label class="switch">
-                                                <input type="checkbox" id="presentacionDespacho" name="presentacion_despacho" value="1">
-                                                <span class="slider round">
-                                                    <i class="bi bi-check check-icon"></i>
-                                                    <i class="bi bi-x x-icon"></i>
-                                                </span>
-                                            </label>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label class="form-label d-block">Configuraciones Logísticas</label>
+                                        <div class="d-flex flex-column gap-2 p-2 border rounded bg-light">
+                                            <div class="toggle-container">
+                                                <span class="toggle-label" style="font-size: 0.85rem;">¿Es comprable para facturas?</span>
+                                                <label class="switch">
+                                                    <input type="checkbox" id="compraTienda" name="compra_tienda" value="1">
+                                                    <span class="slider round">
+                                                        <i class="bi bi-check check-icon"></i>
+                                                        <i class="bi bi-x x-icon"></i>
+                                                    </span>
+                                                </label>
+                                            </div>
+                                            <div class="toggle-container">
+                                                <span class="toggle-label" style="font-size: 0.85rem;">Presentación Básica de Inventario</span>
+                                                <label class="switch">
+                                                    <input type="checkbox" id="presentacionBasica" name="presentacion_basica_inventario" value="1">
+                                                    <span class="slider round">
+                                                        <i class="bi bi-check check-icon"></i>
+                                                        <i class="bi bi-x x-icon"></i>
+                                                    </span>
+                                                </label>
+                                            </div>
+                                            <div class="toggle-container">
+                                                <span class="toggle-label" style="font-size: 0.85rem;">¿Es Producto Despacho?</span>
+                                                <label class="switch">
+                                                    <input type="checkbox" id="presentacionDespacho" name="presentacion_despacho" value="1">
+                                                    <span class="slider round">
+                                                        <i class="bi bi-check check-icon"></i>
+                                                        <i class="bi bi-x x-icon"></i>
+                                                    </span>
+                                                </label>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
