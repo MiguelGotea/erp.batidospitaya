@@ -61,6 +61,20 @@ try {
         exit();
     }
 
+    // Bloqueo de fechas pasadas en el backend
+    // Obtenemos la fecha del pedido
+    $stmtFecha = $pdo->prepare("
+        SELECT MAX(Fecha) FROM VentasGlobalesAccessCSV 
+        WHERE CodPedido = :cod
+    ");
+    $stmtFecha->execute([':cod' => $row['CodPedido']]);
+    $fechaPedido = $stmtFecha->fetchColumn();
+
+    if ($fechaPedido && strtotime($fechaPedido) < strtotime(date('Y-m-d'))) {
+        echo json_encode(['success' => false, 'error' => 'No se permite gestionar anulaciones de días pasados.']);
+        exit();
+    }
+
     // Determinar nuevo status
     // Para aprobar: Status=1 (Access ejecutará la anulación y luego EjecutadoEnTienda=1)
     // Para rechazar: Status=2 (rechazado, no se ejecuta)

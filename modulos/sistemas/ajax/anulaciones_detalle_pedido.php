@@ -29,12 +29,14 @@ try {
 
     // Buscar el nombre de la sucursal desde la tabla Sucursales para filtrar por Sucursal_Nombre
     if ($sucursal > 0) {
-        $stmtSuc = $pdo->prepare('SELECT nombre FROM Sucursales WHERE codigo = :suc LIMIT 1');
+        $stmtSuc = $pdo->prepare('SELECT nombre, codigo FROM Sucursales WHERE codigo = :suc LIMIT 1');
         $stmtSuc->execute([':suc' => $sucursal]);
         $sucRow = $stmtSuc->fetch(PDO::FETCH_ASSOC);
         if ($sucRow) {
-            $sqlWhere .= ' AND Sucursal_Nombre = :suc_nombre';
+            $sqlWhere .= ' AND (Sucursal_Nombre = :suc_nombre OR local = :suc_codigo OR local = :suc_codigo_s)';
             $params[':suc_nombre'] = $sucRow['nombre'];
+            $params[':suc_codigo'] = $sucRow['codigo'];
+            $params[':suc_codigo_s'] = 'S' . $sucRow['codigo'];
         }
     }
 

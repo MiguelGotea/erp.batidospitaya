@@ -87,10 +87,6 @@ $puedeAprobar = tienePermiso('aprobacion_pedidos_access_host', 'aprobar', $cargo
                     <table class="table table-hover cupones-table" id="tablaAnulaciones">
                         <thead>
                             <tr>
-                                <th data-column="CodAnulacionHost" data-type="number" style="width: 80px;">
-                                    #
-                                    <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
-                                </th>
                                 <th data-column="CodPedido" data-type="text">
                                     Pedido
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>

@@ -113,7 +113,7 @@ async function cargarDatos(page = paginaActual) {
     registrosPorPagina = parseInt(limit);
 
     const tableBody = $('#tableBody');
-    tableBody.html('<tr><td colspan="9" class="text-center py-4"><div class="spinner-border spinner-border-sm text-secondary"></div></td></tr>');
+    tableBody.html('<tr><td colspan="8" class="text-center py-4"><div class="spinner-border spinner-border-sm text-secondary"></div></td></tr>');
     $('#tableInfo').text('Cargando...');
 
     $.ajax({
@@ -135,11 +135,11 @@ async function cargarDatos(page = paginaActual) {
                 renderizarPaginacion(response.total);
                 actualizarIndicadoresFiltros();
             } else {
-                tableBody.html(`<tr><td colspan="9" class="text-center py-4 text-danger"><i class="bi bi-exclamation-triangle me-1"></i>${response.error}</td></tr>`);
+                tableBody.html(`<tr><td colspan="8" class="text-center py-4 text-danger"><i class="bi bi-exclamation-triangle me-1"></i>${response.error}</td></tr>`);
             }
         },
         error: function () {
-            tableBody.html(`<tr><td colspan="9" class="text-center py-4 text-danger"><i class="bi bi-exclamation-triangle me-1"></i>Error al cargar los datos</td></tr>`);
+            tableBody.html(`<tr><td colspan="8" class="text-center py-4 text-danger"><i class="bi bi-exclamation-triangle me-1"></i>Error al cargar los datos</td></tr>`);
         }
     });
 }
@@ -148,7 +148,7 @@ async function cargarDatos(page = paginaActual) {
 function renderTabla(registros) {
     const tbody = document.getElementById('tableBody');
     if (!registros.length) {
-        tbody.innerHTML = `<tr><td colspan="9" class="text-center py-5 text-muted">
+        tbody.innerHTML = `<tr><td colspan="8" class="text-center py-5 text-muted">
             <i class="bi bi-inbox fs-2 opacity-25 d-block mb-2"></i>
             No hay solicitudes con los filtros actuales.</td></tr>`;
         return;
@@ -163,30 +163,48 @@ function renderTabla(registros) {
             ? `<span class="text-success small"><i class="bi bi-check-circle-fill"></i> ${(r.HoraEjecutadaTienda || '').substring(0, 16)}</span>`
             : `<span class="text-muted small">Pendiente</span>`;
 
+        // Lógica de bloqueo por fecha pasada
+        const hoy = new Date();
+        hoy.setHours(0, 0, 0, 0);
+        let esPasado = false;
+        if (r.FechaPedido) {
+            const fechaPed = new Date(r.FechaPedido + 'T00:00:00');
+            if (fechaPed < hoy) esPasado = true;
+        }
+
+        const sucDesc = r.Sucursal_Nombre || `S${r.Sucursal}`;
+
         let acciones = `
             <button class="btn-accion btn-ver me-1" title="Ver detalle / decidir"
-                    onclick="abrirModalDecision(${r.CodAnulacionHost},${r.CodPedido},${r.CodPedidoCambio || 0},${r.Sucursal})">
+                    onclick="abrirModalDecision(${r.CodAnulacionHost},${r.CodPedido},${r.CodPedidoCambio || 0},${r.Sucursal},'${escHtml(sucDesc)}', ${esPasado})">
                 <i class="bi bi-eye"></i>
             </button>`;
 
         if (PUEDE_APROBAR && parseInt(r.Status) === 0) {
-            acciones += `
-            <button class="btn-accion btn-aprobar me-1" title="Aprobar"
-                    onclick="accionRapida(${r.CodAnulacionHost},'aprobar')">
-                <i class="bi bi-check-lg"></i>
-            </button>
-            <button class="btn-accion btn-rechazar" title="Rechazar"
-                    onclick="accionRapida(${r.CodAnulacionHost},'rechazar')">
-                <i class="bi bi-x-lg"></i>
-            </button>`;
+            if (esPasado) {
+                acciones += `
+                <button class="btn-accion btn-disabled me-1" title="Bloqueado: Fecha pasada" disabled style="opacity:0.4; cursor:not-allowed">
+                    <i class="bi bi-lock-fill"></i>
+                </button>`;
+            } else {
+                acciones += `
+                <button class="btn-accion btn-aprobar me-1" title="Aprobar"
+                        onclick="accionRapida(${r.CodAnulacionHost},'aprobar')">
+                    <i class="bi bi-check-lg"></i>
+                </button>
+                <button class="btn-accion btn-rechazar" title="Rechazar"
+                        onclick="accionRapida(${r.CodAnulacionHost},'rechazar')">
+                    <i class="bi bi-x-lg"></i>
+                </button>`;
+            }
         }
 
         return `<tr>
-            <td class="text-muted px-3" style="font-size:11px">#${r.CodAnulacionHost}</td>
             <td><strong style="color:#dc3545">${r.CodPedido}</strong>
                 ${r.CodPedidoCambio ? `<br><span class="text-primary small">↔ ${r.CodPedidoCambio}</span>` : ''}
+                ${r.FechaPedido ? `<br><span class="text-muted" style="font-size:10px"><i class="bi bi-calendar3"></i> ${r.FechaPedido}</span>` : ''}
             </td>
-            <td><span class="badge" style="background:#e8f5f3;color:#0E544C;font-size:11px">S${r.Sucursal}</span></td>
+            <td><span class="badge" style="background:#e8f5f3;color:#0E544C;font-size:11px">${sucDesc}</span></td>
             <td style="font-size:12px">${solicit}</td>
             <td>${badge}</td>
             <td title="${escHtml(r.Motivo || '')}" style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${motivo}</td>
@@ -538,12 +556,12 @@ function formatearFecha(fecha) {
 }
 
 // ── Modal Decisión (Ver / Aprobar / Rechazar) ────────────────
-async function abrirModalDecision(id, codPedido, codCambio, sucursal) {
-    pendingDecision = { id, codPedido, codCambio, sucursal };
+async function abrirModalDecision(id, codPedido, codCambio, sucursal, sucursalNombre, esPasado) {
+    pendingDecision = { id, codPedido, codCambio, sucursal, esPasado };
 
     document.getElementById('dec_codPedido').textContent = codPedido;
     document.getElementById('dec_codCambio').textContent = codCambio > 0 ? codCambio : '—';
-    document.getElementById('dec_sucursal').textContent  = 'S' + sucursal;
+    document.getElementById('dec_sucursal').textContent  = sucursalNombre || ('S' + sucursal);
     document.getElementById('dec_motivo').textContent    = '...';
 
     // Mostrar/ocultar tab cambio
@@ -561,6 +579,19 @@ async function abrirModalDecision(id, codPedido, codCambio, sucursal) {
 
     if (document.getElementById('dec_comentario')) {
         document.getElementById('dec_comentario').value = '';
+    }
+
+    // Bloquear botones si es pasado
+    const btnApr = document.getElementById('btnAprobar');
+    const btnRec = document.getElementById('btnRechazar');
+    if (btnApr) btnApr.disabled = !!esPasado;
+    if (btnRec) btnRec.disabled = !!esPasado;
+    if (esPasado) {
+        if (btnApr) btnApr.title = 'Bloqueado: Fecha pasada';
+        if (btnRec) btnRec.title = 'Bloqueado: Fecha pasada';
+    } else {
+        if (btnApr) btnApr.title = 'Aprobar';
+        if (btnRec) btnRec.title = 'Rechazar';
     }
 
     // Activar tab pedido
