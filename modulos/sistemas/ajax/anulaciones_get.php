@@ -51,7 +51,7 @@ try {
                 $where[] = "a.CodAnulacionHost = :id";
                 $params[':id'] = $valor;
             }
-        } elseif ($columna === 'Sucursal' || $columna === 'Status' || $columna === 'EjecutadoEnTienda') {
+        } elseif ($columna === 'Sucursal' || $columna === 'Status' || $columna === 'EjecutadoEnTienda' || $columna === 'Modalidad') {
             if (is_array($valor) && count($valor) > 0) {
                 $placeholders = [];
                 foreach ($valor as $idx => $v) {

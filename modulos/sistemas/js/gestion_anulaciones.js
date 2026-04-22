@@ -26,6 +26,7 @@ let scrollTopInicial = 0;
 document.addEventListener('DOMContentLoaded', () => {
     cargarStats();
     actualizarVisualToggle();
+    actualizarVisualToggleModalidad();
     cargarDatos(1);
     iniciarAutoRefresh();
 
@@ -114,7 +115,7 @@ async function cargarDatos(page = paginaActual) {
     registrosPorPagina = parseInt(limit);
 
     const tableBody = $('#tableBody');
-    tableBody.html('<tr><td colspan="9" class="text-center py-4"><div class="spinner-border spinner-border-sm text-secondary"></div></td></tr>');
+    tableBody.html('<tr><td colspan="10" class="text-center py-4"><div class="spinner-border spinner-border-sm text-secondary"></div></td></tr>');
     $('#tableInfo').text('Cargando...');
 
     $.ajax({
@@ -136,11 +137,11 @@ async function cargarDatos(page = paginaActual) {
                 renderizarPaginacion(response.total);
                 actualizarIndicadoresFiltros();
             } else {
-                tableBody.html(`<tr><td colspan="9" class="text-center py-4 text-danger"><i class="bi bi-exclamation-triangle me-1"></i>${response.error}</td></tr>`);
+                tableBody.html(`<tr><td colspan="10" class="text-center py-4 text-danger"><i class="bi bi-exclamation-triangle me-1"></i>${response.error}</td></tr>`);
             }
         },
         error: function () {
-            tableBody.html(`<tr><td colspan="9" class="text-center py-4 text-danger"><i class="bi bi-exclamation-triangle me-1"></i>Error al cargar los datos</td></tr>`);
+            tableBody.html(`<tr><td colspan="10" class="text-center py-4 text-danger"><i class="bi bi-exclamation-triangle me-1"></i>Error al cargar los datos</td></tr>`);
         }
     });
 }
@@ -149,7 +150,7 @@ async function cargarDatos(page = paginaActual) {
 function renderTabla(registros) {
     const tbody = document.getElementById('tableBody');
     if (!registros.length) {
-        tbody.innerHTML = `<tr><td colspan="9" class="text-center py-5 text-muted">
+        tbody.innerHTML = `<tr><td colspan="10" class="text-center py-5 text-muted">
             <i class="bi bi-inbox fs-2 opacity-25 d-block mb-2"></i>
             No hay solicitudes con los filtros actuales.</td></tr>`;
         return;
@@ -168,6 +169,10 @@ function renderTabla(registros) {
         const ejecut   = parseInt(r.EjecutadoEnTienda) === 1
             ? `<span class="text-success small"><i class="bi bi-check-circle-fill"></i> ${ejecutTime}</span>`
             : `<span class="text-muted small">Pendiente</span>`;
+
+        const modIcon = parseInt(r.Modalidad) === 2 
+            ? '<i class="bi bi-globe text-primary" title="Web / Online"></i>' 
+            : '<i class="bi bi-pc-display text-secondary" title="Local / Access"></i>';
 
         // Lógica de bloqueo por fecha pasada
         const hoy = new Date();
@@ -214,6 +219,7 @@ function renderTabla(registros) {
             </td>
             <td><span class="badge" style="background:#e8f5f3;color:#0E544C;font-size:11px">${sucDesc}</span></td>
             <td style="font-size:12px">${solicitClean}</td>
+            <td class="text-center">${modIcon}</td>
             <td>${badge}</td>
             <td title="${escHtml(r.Motivo || '')}" style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${motivo}</td>
             <td style="font-size:12px">${aprobPor}</td>
@@ -896,6 +902,7 @@ function limpiarFiltros() {
     ordenActivo = { columna: null, direccion: 'asc' };
     cerrarTodosFiltros();
     actualizarVisualToggle();
+    actualizarVisualToggleModalidad();
     paginaActual = 1;
     cargarDatos();
 }
@@ -950,5 +957,32 @@ function actualizarVisualToggle() {
     });
 
     const activeCircle = document.querySelector(`.estado-filter-circles .filter-circle[data-state="${currentKey}"]`);
+    if (activeCircle) activeCircle.classList.add('active');
+}
+
+// ── Filtro de círculos (Modalidad) ──────────────────────────
+function setModalidadFilter(mod) {
+    if (mod === 'all') {
+        delete filtrosActivos['Modalidad'];
+    } else {
+        filtrosActivos['Modalidad'] = [mod];
+    }
+
+    actualizarVisualToggleModalidad();
+    paginaActual = 1;
+    cargarDatos();
+}
+
+function actualizarVisualToggleModalidad() {
+    let currentKey = 'all';
+    if (filtrosActivos['Modalidad'] && filtrosActivos['Modalidad'].length > 0) {
+        currentKey = filtrosActivos['Modalidad'][0];
+    }
+
+    document.querySelectorAll('th[data-column="Modalidad"] .filter-circle').forEach(circle => {
+        circle.classList.remove('active');
+    });
+
+    const activeCircle = document.querySelector(`th[data-column="Modalidad"] .filter-circle[data-mod="${currentKey}"]`);
     if (activeCircle) activeCircle.classList.add('active');
 }

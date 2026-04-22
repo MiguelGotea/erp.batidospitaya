@@ -497,3 +497,14 @@
     background-color: #dc3545;
 }
 
+/* Modalidad Local (1) */
+.filter-circle[data-mod="1"].active {
+    background-color: #0d6efd;
+}
+
+/* Modalidad Web (2) */
+.filter-circle[data-mod="2"].active {
+    background-color: #6610f2;
+}
+
+

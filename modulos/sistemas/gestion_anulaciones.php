@@ -103,6 +103,19 @@ $puedeAprobar = tienePermiso('aprobacion_pedidos_access_host', 'aprobar', $cargo
                                     Solicitado
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
+                                <th data-column="Modalidad">
+                                    <div class="status-header-content">
+                                        <span class="status-label">Mod.</span>
+                                        <div class="estado-filter-circles">
+                                            <i class="bi bi-pc-display filter-circle" data-mod="1"
+                                                onclick="setModalidadFilter('1')" title="Local"></i>
+                                            <i class="bi bi-layers-fill filter-circle" data-mod="all"
+                                                onclick="setModalidadFilter('all')" title="Todos"></i>
+                                            <i class="bi bi-globe filter-circle" data-mod="2"
+                                                onclick="setModalidadFilter('2')" title="Web"></i>
+                                        </div>
+                                    </div>
+                                </th>
                                 <th data-column="Status">
                                     <div class="status-header-content">
                                         <span class="status-label">Status</span>
