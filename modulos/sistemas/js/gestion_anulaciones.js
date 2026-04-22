@@ -33,6 +33,21 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!$(e.target).closest('.filter-panel, .filter-icon').length) {
             cerrarTodosFiltros();
         }
+
+        // Cerrar FAB si se hace clic fuera
+        if (!$(e.target).closest('.fab-container').length) {
+            $('.fab-container').removeClass('active');
+            $('.btn-floating-pitaya').removeClass('active');
+        }
+    });
+
+    // Manejar clic en el botón flotante (para móvil y para asegurar acción)
+    $(document).on('click', '.btn-floating-pitaya', function (e) {
+        const container = $(this).closest('.fab-container');
+        if (container.length) {
+            container.toggleClass('active');
+            $(this).toggleClass('active');
+        }
     });
 
     // NO cerrar filtros al hacer scroll en la tabla

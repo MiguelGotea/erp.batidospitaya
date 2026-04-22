@@ -155,7 +155,7 @@ if (!tienePermiso('cupones', 'vista', $cargoOperario)) {
                     <div class="fab-icon-holder"><i class="fas fa-plus"></i></div>
                 </div>
             </div>
-            <div class="btn-floating-pitaya" title="Nuevo Cupón">
+            <div class="btn-floating-pitaya" title="Nuevo Cupón" onclick="abrirModalNuevoCupon()">
                 <i class="fas fa-plus"></i>
             </div>
         </div>
