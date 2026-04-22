@@ -18,10 +18,8 @@ try {
             ['valor' => 2, 'texto' => 'Rechazado']
         ];
     } elseif ($columna === 'Sucursal') {
-        $stmt = $conn->query("SELECT DISTINCT Sucursal FROM AnulacionPedidosHost ORDER BY Sucursal ASC");
-        while ($row = $stmt->fetch()) {
-            $opciones[] = ['valor' => $row['Sucursal'], 'texto' => 'Sucursal ' . $row['Sucursal']];
-        }
+        $stmt = $conn->query("SELECT codigo as valor, nombre as texto FROM sucursales WHERE activa = 1 ORDER BY nombre ASC");
+        $opciones = $stmt->fetchAll(PDO::FETCH_ASSOC);
     } elseif ($columna === 'EjecutadoEnTienda') {
         $opciones = [
             ['valor' => 0, 'texto' => 'Pendiente'],
