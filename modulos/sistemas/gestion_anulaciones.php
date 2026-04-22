@@ -33,6 +33,7 @@ $puedeAprobar = tienePermiso('aprobacion_pedidos_access_host', 'aprobar', $cargo
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="/assets/css/global_tools.css?v=<?php echo mt_rand(1, 10000); ?>">
     <link rel="stylesheet" href="/core/assets/css/modales_premium.css?v=<?php echo mt_rand(1, 10000); ?>">
+    <link rel="stylesheet" href="/core/assets/css/fab_button.css">
     <link rel="stylesheet" href="css/gestion_anulaciones.css?v=<?php echo mt_rand(1, 10000); ?>">
 </head>
 
@@ -81,104 +82,63 @@ $puedeAprobar = tienePermiso('aprobacion_pedidos_access_host', 'aprobar', $cargo
                     </div>
                 </div>
 
-                <!-- ── Filtros ──────────────────────────────── -->
-                <div class="card border-0 shadow-sm mb-3">
-                    <div class="card-body py-2 px-3">
-                        <div class="d-flex flex-wrap gap-2 align-items-end">
-                            <div>
-                                <label class="form-label mb-1 small fw-semibold">Status</label>
-                                <select class="form-select form-select-sm" id="filtStatus" onchange="cargarDatos(1)">
-                                    <option value="-1">Todos</option>
-                                    <option value="0" selected>Pendientes</option>
-                                    <option value="1">Aprobados</option>
-                                    <option value="2">Rechazados</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="form-label mb-1 small fw-semibold">Sucursal</label>
-                                <select class="form-select form-select-sm" id="filtSucursal" onchange="cargarDatos(1)">
-                                    <option value="0">Todas</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="form-label mb-1 small fw-semibold">Buscar</label>
-                                <input type="text" class="form-control form-control-sm" id="filtBuscar"
-                                    placeholder="Pedido o motivo..." style="width:200px"
-                                    onkeydown="if(event.key==='Enter') cargarDatos(1)">
-                            </div>
-                            <button class="btn btn-sm" style="background:#51B8AC;color:#fff" onclick="cargarDatos(1)">
-                                <i class="bi bi-search me-1"></i>Buscar
-                            </button>
-                            <button class="btn btn-sm btn-outline-secondary" onclick="limpiarFiltros()">
-                                <i class="bi bi-x-circle me-1"></i>Limpiar
-                            </button>
-                            <div class="ms-auto d-flex align-items-center gap-2">
-                                <span class="small text-muted" id="autoRefreshLabel">
-                                    <i class="bi bi-arrow-repeat"></i> Refresh en <span id="countdown">60</span>s
-                                </span>
-                                <button class="btn btn-sm btn-outline-secondary" onclick="cargarDatos()">
-                                    <i class="bi bi-arrow-clockwise"></i>
-                                </button>
-                                <?php if ($puedeAprobar): ?>
-                                    <button class="btn btn-sm btn-success" onclick="abrirModalNuevaAnulacion()">
-                                        <i class="bi bi-plus-circle me-1"></i>Nueva Anulación Web
-                                    </button>
-                                <?php endif; ?>
-                            </div>
-                        </div>
-                    </div>
+                <!-- ── Tabla ────────────────────────────────── -->
+                <div class="table-responsive">
+                    <table class="table table-hover cupones-table" id="tablaAnulaciones">
+                        <thead>
+                            <tr>
+                                <th data-column="CodAnulacionHost" data-type="number" style="width: 80px;">
+                                    #
+                                    <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                </th>
+                                <th data-column="CodPedido" data-type="text">
+                                    Pedido
+                                    <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                </th>
+                                <th data-column="Sucursal" data-type="list">
+                                    Suc.
+                                    <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                </th>
+                                <th data-column="HoraSolicitada" data-type="daterange">
+                                    Solicitado
+                                    <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                </th>
+                                <th data-column="Status" data-type="list">
+                                    Status
+                                    <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                </th>
+                                <th data-column="Motivo" data-type="text">
+                                    Motivo
+                                    <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                </th>
+                                <th data-column="AprobadoPor" data-type="text">
+                                    Aprobado por
+                                    <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                </th>
+                                <th data-column="EjecutadoEnTienda" data-type="list">
+                                    Tienda
+                                    <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                </th>
+                                <th style="width: 150px;" class="text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                            <!-- Datos cargados vía AJAX -->
+                        </tbody>
+                    </table>
                 </div>
 
-                <!-- ── Tabla ────────────────────────────────── -->
-                <div class="card border-0 shadow-sm">
-                    <div class="card-header bg-white d-flex justify-content-between align-items-center py-2 px-3"
-                        style="border-bottom: 2px solid #0E544C;">
-                        <span class="fw-bold" style="color:#0E544C;">
-                            <i class="bi bi-ban me-2"></i>Solicitudes de Anulación
-                        </span>
-                        <span class="small text-muted" id="tableInfo">Cargando...</span>
+                <div class="d-flex justify-content-between align-items-center mt-3">
+                    <div class="d-flex align-items-center gap-2">
+                        <label class="mb-0">Mostrar:</label>
+                        <select class="form-select form-select-sm" id="registrosPorPagina" style="width: auto;" onchange="cambiarRegistrosPorPagina()">
+                            <option value="25" selected>25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                        <span class="mb-0">registros</span>
                     </div>
-                    <div class="card-body p-0">
-                        <div class="table-responsive">
-                            <table class="table table-hover table-sm mb-0" id="tablaAnulaciones">
-                                <thead style="background:#0E544C; color:#fff;">
-                                    <tr>
-                                        <th class="px-3">#</th>
-                                        <th>Pedido</th>
-                                        <th>Suc.</th>
-                                        <th>Solicitado</th>
-                                        <th>Status</th>
-                                        <th>Motivo</th>
-                                        <th>Aprobado por</th>
-                                        <th>Tienda</th>
-                                        <th class="text-center">Acciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="tableBody">
-                                    <tr>
-                                        <td colspan="9" class="text-center py-4">
-                                            <div class="spinner-border spinner-border-sm text-secondary"></div>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                    <div class="card-footer bg-white border-0">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div class="d-flex align-items-center gap-2">
-                                <label class="small mb-0">Mostrar:</label>
-                                <select class="form-select form-select-sm" id="registrosPorPagina" style="width:auto"
-                                    onchange="cargarDatos(1)">
-                                    <option value="25" selected>25</option>
-                                    <option value="50">50</option>
-                                    <option value="100">100</option>
-                                </select>
-                                <span class="small">registros</span>
-                            </div>
-                            <div id="paginacion"></div>
-                        </div>
-                    </div>
+                    <div id="paginacion"></div>
                 </div>
 
             </div><!-- /container-fluid -->
@@ -439,6 +399,21 @@ $puedeAprobar = tienePermiso('aprobacion_pedidos_access_host', 'aprobar', $cargo
         const USUARIO_ACTUAL = '<?php echo htmlspecialchars($usuario['Nombre'] . ' ' . $usuario['Apellido']); ?>';
     </script>
     <script src="js/gestion_anulaciones.js?v=<?php echo mt_rand(1, 10000); ?>"></script>
+
+    <!-- Botón Flotante con opciones -->
+    <?php if ($puedeAprobar): ?>
+        <div class="fab-container">
+            <div class="fab-options">
+                <div class="fab-option" onclick="abrirModalNuevaAnulacion()">
+                    <span class="fab-label">Nueva Anulación</span>
+                    <div class="fab-icon-holder"><i class="fas fa-plus"></i></div>
+                </div>
+            </div>
+            <div class="btn-floating-pitaya" title="Nueva Anulación">
+                <i class="fas fa-plus"></i>
+            </div>
+        </div>
+    <?php endif; ?>
 </body>
 
 </html>

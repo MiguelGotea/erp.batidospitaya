@@ -11,24 +11,64 @@ const AJAX_APROBAR  = 'ajax/anulaciones_aprobar.php';
 const AJAX_DETALLE  = 'ajax/anulaciones_detalle_pedido.php';
 const AJAX_NUEVA    = 'ajax/anulaciones_nueva_web.php';
 
-let currentPage        = 1;
-let totalPages         = 1;
-let pendingDecision    = null;   // { id, codPedido, codCambio, sucursal }
-let countdownVal       = 60;
-let countdownTimer     = null;
-let sucursalesPopuladas = new Set();
+let paginaActual = 1;
+let registrosPorPagina = 25;
+let filtrosActivos = {};
+let ordenActivo = { columna: null, direccion: 'asc' };
+let panelFiltroAbierto = null;
+let totalRegistros = 0;
+let pendingDecision = null;
+let countdownVal = 60;
+let countdownTimer = null;
+let scrollTopInicial = 0;
 
 // ── Bootstrap ───────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
     cargarStats();
     cargarDatos(1);
     iniciarAutoRefresh();
-    poblarSucursalesFiltro();
 
-    document.getElementById('filtBuscar').addEventListener('keydown', e => {
-        if (e.key === 'Enter') cargarDatos(1);
+    // Cerrar filtros solo si se hace clic fuera del panel Y del icono
+    $(document).on('click', function (e) {
+        if (!$(e.target).closest('.filter-panel, .filter-icon').length) {
+            cerrarTodosFiltros();
+        }
     });
+
+    // NO cerrar filtros al hacer scroll en la tabla
+    $('.table-responsive').on('scroll', function (e) {
+        e.stopPropagation();
+    });
+
+    // NO cerrar filtros al hacer scroll en la página
+    $(window).on('scroll', function (e) {
+        if (panelFiltroAbierto && Math.abs($(window).scrollTop() - scrollTopInicial) > 50) {
+            cerrarTodosFiltros();
+        }
+    });
+
+    $(window).on('resize', function () {
+        if (panelFiltroAbierto) {
+            cerrarTodosFiltros();
+        }
+    });
+
+    poblarSucursalesNuevaAnulacion();
 });
+
+async function poblarSucursalesNuevaAnulacion() {
+    try {
+        const data = await $.post('ajax/anulaciones_get_opciones_filtro.php', { columna: 'Sucursal' });
+        if (data.success) {
+            const sel = $('#new_sucursal');
+            if (sel.length) {
+                data.opciones.forEach(opt => {
+                    sel.append(`<option value="${opt.valor}">${opt.texto}</option>`);
+                });
+            }
+        }
+    } catch (e) { console.error(e); }
+}
 
 // ── Stats ────────────────────────────────────────────────────
 async function cargarStats() {
@@ -51,35 +91,42 @@ async function cargarStats() {
     }
 }
 
-// ── Listado ──────────────────────────────────────────────────
-async function cargarDatos(page = currentPage) {
-    currentPage = page;
-    const status   = document.getElementById('filtStatus').value;
-    const sucursal = document.getElementById('filtSucursal').value;
-    const buscar   = encodeURIComponent(document.getElementById('filtBuscar').value.trim());
-    const limit    = document.getElementById('registrosPorPagina').value;
+// Cargar datos
+async function cargarDatos(page = paginaActual) {
+    paginaActual = page;
+    const limit = $('#registrosPorPagina').val();
+    registrosPorPagina = parseInt(limit);
 
-    const url = `${AJAX_GET}?status=${status}&sucursal=${sucursal}&buscar=${buscar}&page=${page}&limit=${limit}`;
+    const tableBody = $('#tableBody');
+    tableBody.html('<tr><td colspan="9" class="text-center py-4"><div class="spinner-border spinner-border-sm text-secondary"></div></td></tr>');
+    $('#tableInfo').text('Cargando...');
 
-    document.getElementById('tableBody').innerHTML =
-        '<tr><td colspan="9" class="text-center py-4"><div class="spinner-border spinner-border-sm text-secondary"></div></td></tr>';
-    document.getElementById('tableInfo').textContent = 'Cargando...';
-
-    try {
-        const data = await fetch(url).then(r => r.json());
-        if (!data.success) throw new Error(data.error);
-
-        totalPages = data.paginas || 1;
-        document.getElementById('tableInfo').textContent =
-            `${data.registros.length} de ${data.total} registros (pág. ${page}/${totalPages})`;
-
-        renderTabla(data.registros);
-        renderPaginacion(data.total, page, parseInt(limit));
-        poblarSucursalesTabla(data.registros);
-    } catch (e) {
-        document.getElementById('tableBody').innerHTML =
-            `<tr><td colspan="9" class="text-center py-4 text-danger"><i class="bi bi-exclamation-triangle me-1"></i>${e.message}</td></tr>`;
-    }
+    $.ajax({
+        url: AJAX_GET,
+        method: 'POST',
+        data: {
+            pagina: paginaActual,
+            registros_por_pagina: registrosPorPagina,
+            filtros: JSON.stringify(filtrosActivos),
+            orden: JSON.stringify(ordenActivo)
+        },
+        dataType: 'json',
+        success: function (response) {
+            if (response.success) {
+                totalRegistros = response.total;
+                const totalPages = response.paginas || 1;
+                $('#tableInfo').text(`${response.registros.length} de ${response.total} registros (pág. ${paginaActual}/${totalPages})`);
+                renderTabla(response.registros);
+                renderizarPaginacion(response.total);
+                actualizarIndicadoresFiltros();
+            } else {
+                tableBody.html(`<tr><td colspan="9" class="text-center py-4 text-danger"><i class="bi bi-exclamation-triangle me-1"></i>${response.error}</td></tr>`);
+            }
+        },
+        error: function () {
+            tableBody.html(`<tr><td colspan="9" class="text-center py-4 text-danger"><i class="bi bi-exclamation-triangle me-1"></i>Error al cargar los datos</td></tr>`);
+        }
+    });
 }
 
 // ── Render tabla ─────────────────────────────────────────────
@@ -146,55 +193,333 @@ function statusBadge(status, ejecutado) {
 }
 
 // ── Paginación ───────────────────────────────────────────────
-function renderPaginacion(total, page, limit) {
-    const pages = Math.ceil(total / limit);
-    const el    = document.getElementById('paginacion');
-    if (pages <= 1) { el.innerHTML = ''; return; }
+function renderizarPaginacion(total) {
+    const totalPaginas = Math.ceil(total / registrosPorPagina);
+    const paginacion = $('#paginacion');
+    paginacion.empty();
+    if (totalPaginas <= 1) return;
 
-    let html = '';
-    if (page > 1) html += `<button class="page-btn me-1" onclick="cargarDatos(${page-1})">‹</button>`;
-    const from = Math.max(1, page - 2);
-    const to   = Math.min(pages, page + 2);
-    for (let i = from; i <= to; i++) {
-        html += `<button class="page-btn me-1 ${i === page ? 'active' : ''}" onclick="cargarDatos(${i})">${i}</button>`;
+    paginacion.append(`
+        <button class="pagination-btn" onclick="cambiarPagina(${paginaActual - 1})" ${paginaActual === 1 ? 'disabled' : ''}>
+            <i class="bi bi-chevron-left"></i>
+        </button>
+    `);
+
+    let inicio = Math.max(1, paginaActual - 2);
+    let fin = Math.min(totalPaginas, paginaActual + 2);
+
+    if (inicio > 1) {
+        paginacion.append(`<button class="pagination-btn" onclick="cambiarPagina(1)">1</button>`);
+        if (inicio > 2) paginacion.append(`<span class="pagination-btn" disabled>...</span>`);
     }
-    if (page < pages) html += `<button class="page-btn" onclick="cargarDatos(${page+1})">›</button>`;
-    el.innerHTML = html;
+
+    for (let i = inicio; i <= fin; i++) {
+        const activeClass = i === paginaActual ? 'active' : '';
+        paginacion.append(`<button class="pagination-btn ${activeClass}" onclick="cambiarPagina(${i})">${i}</button>`);
+    }
+
+    if (fin < totalPaginas) {
+        if (fin < totalPaginas - 1) paginacion.append(`<span class="pagination-btn" disabled>...</span>`);
+        paginacion.append(`<button class="pagination-btn" onclick="cambiarPagina(${totalPaginas})">${totalPaginas}</button>`);
+    }
+
+    paginacion.append(`
+        <button class="pagination-btn" onclick="cambiarPagina(${paginaActual + 1})" ${paginaActual === totalPaginas ? 'disabled' : ''}>
+            <i class="bi bi-chevron-right"></i>
+        </button>
+    `);
 }
 
-// ── Sucursales ───────────────────────────────────────────────
-async function poblarSucursalesFiltro() {
-    try {
-        const data = await fetch(AJAX_GET + '?status=-1&limit=500').then(r => r.json());
-        poblarSucursalesTabla(data.registros || []);
-        if (typeof PUEDE_APROBAR !== 'undefined' && PUEDE_APROBAR) {
-            const sel = document.getElementById('new_sucursal');
-            if (sel) {
-                (data.registros || []).forEach(r => {
-                    if (!sucursalesPopuladas.has(r.Sucursal)) {
-                        sucursalesPopuladas.add(r.Sucursal);
-                        const opt = document.createElement('option');
-                        opt.value = r.Sucursal;
-                        opt.textContent = 'Sucursal ' + r.Sucursal;
-                        sel.appendChild(opt);
-                    }
+function cambiarPagina(pagina) {
+    if (pagina < 1 || pagina > Math.ceil(totalRegistros / registrosPorPagina)) return;
+    paginaActual = pagina;
+    cargarDatos();
+}
+
+function cambiarRegistrosPorPagina() {
+    registrosPorPagina = parseInt($('#registrosPorPagina').val());
+    paginaActual = 1;
+    cargarDatos();
+}
+
+// ── Toggle filtro ──────────────────────────────────────────
+function toggleFilter(icon) {
+    const th = $(icon).closest('th');
+    const columna = th.data('column');
+    const tipo = th.data('type');
+
+    if (panelFiltroAbierto === columna) {
+        cerrarTodosFiltros();
+        return;
+    }
+
+    cerrarTodosFiltros();
+    scrollTopInicial = $(window).scrollTop();
+    crearPanelFiltro(th, columna, tipo, icon);
+    panelFiltroAbierto = columna;
+    $(icon).addClass('active');
+    actualizarIndicadoresFiltros();
+}
+
+function crearPanelFiltro(th, columna, tipo, icon) {
+    const panel = $('<div class="filter-panel show"></div>');
+    if (tipo === 'daterange') panel.addClass('has-daterange');
+
+    panel.append(`
+        <div class="filter-section">
+            <span class="filter-section-title">Ordenar:</span>
+            <div class="filter-sort-buttons">
+                <button class="filter-sort-btn ${ordenActivo.columna === columna && ordenActivo.direccion === 'asc' ? 'active' : ''}" 
+                        onclick="aplicarOrden('${columna}', 'asc')">
+                    <i class="bi bi-sort-alpha-down"></i> A→Z
+                </button>
+                <button class="filter-sort-btn ${ordenActivo.columna === columna && ordenActivo.direccion === 'desc' ? 'active' : ''}" 
+                        onclick="aplicarOrden('${columna}', 'desc')">
+                    <i class="bi bi-sort-alpha-up"></i> Z→A
+                </button>
+            </div>
+        </div>
+        <div class="filter-actions">
+            <button class="filter-action-btn clear" onclick="limpiarFiltro('${columna}')">
+                <i class="bi bi-x-circle"></i> Limpiar
+            </button>
+        </div>
+    `);
+
+    $('body').append(panel);
+
+    if (tipo === 'text') {
+        const valorActual = filtrosActivos[columna] || '';
+        panel.append(`
+            <div class="filter-section" style="margin-top: 12px;">
+                <span class="filter-section-title">Buscar:</span>
+                <input type="text" class="filter-search" placeholder="Escribir..." 
+                       value="${valorActual}"
+                       oninput="filtrarBusqueda('${columna}', this.value)">
+            </div>
+        `);
+        posicionarPanelFiltro(panel, icon);
+    } else if (tipo === 'number') {
+        crearFiltroNumerico(panel, columna);
+        posicionarPanelFiltro(panel, icon);
+    } else if (tipo === 'list') {
+        cargarOpcionesFiltro(panel, columna, icon);
+    } else if (tipo === 'daterange') {
+        crearCalendarioDoble(panel, columna);
+        posicionarPanelFiltro(panel, icon);
+    }
+}
+
+function crearFiltroNumerico(panel, columna) {
+    const valorMin = filtrosActivos[columna]?.min || '';
+    const valorMax = filtrosActivos[columna]?.max || '';
+    panel.append(`
+        <div class="filter-section" style="margin-top: 12px;">
+            <span class="filter-section-title">Rango:</span>
+            <div class="numeric-inputs">
+                <input type="number" class="filter-search" placeholder="Mínimo" value="${valorMin}" onchange="filtrarNumerico('${columna}', 'min', this.value)">
+                <input type="number" class="filter-search" placeholder="Máximo" value="${valorMax}" onchange="filtrarNumerico('${columna}', 'max', this.value)">
+            </div>
+        </div>
+    `);
+}
+
+function filtrarNumerico(columna, tipo, valor) {
+    if (!filtrosActivos[columna]) filtrosActivos[columna] = {};
+    if (valor === '') {
+        delete filtrosActivos[columna][tipo];
+        if (Object.keys(filtrosActivos[columna]).length === 0) delete filtrosActivos[columna];
+    } else {
+        filtrosActivos[columna][tipo] = valor;
+    }
+    paginaActual = 1;
+    cargarDatos();
+}
+
+function crearCalendarioDoble(panel, columna) {
+    const hoy = new Date();
+    panel.append(`
+        <div class="filter-section" style="margin-top: 8px;">
+            <span class="filter-section-title">Seleccionar Rango:</span>
+            <div class="daterange-calendar-container">
+                <div class="daterange-month-selector">
+                    <select id="mesCalendario" onchange="actualizarCalendarioUnico('${columna}')"></select>
+                    <select id="añoCalendario" onchange="actualizarCalendarioUnico('${columna}')"></select>
+                </div>
+                <div class="daterange-calendar" id="calendarioUnico"></div>
+            </div>
+        </div>
+    `);
+
+    setTimeout(() => {
+        const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+        const selectMes = $('#mesCalendario');
+        const selectAño = $('#añoCalendario');
+        meses.forEach((mes, idx) => selectMes.append(`<option value="${idx}" ${idx === hoy.getMonth() ? 'selected' : ''}>${mes}</option>`));
+        for (let año = hoy.getFullYear() - 5; año <= hoy.getFullYear() + 1; año++) {
+            selectAño.append(`<option value="${año}" ${año === hoy.getFullYear() ? 'selected' : ''}>${año}</option>`);
+        }
+        actualizarCalendarioUnico(columna);
+    }, 50);
+}
+
+function actualizarCalendarioUnico(columna) {
+    const mes = parseInt($('#mesCalendario').val());
+    const año = parseInt($('#añoCalendario').val());
+    const primerDia = new Date(año, mes, 1).getDay();
+    const diasEnMes = new Date(año, mes + 1, 0).getDate();
+    const diasSemana = ['D', 'L', 'M', 'M', 'J', 'V', 'S'];
+    let html = '<div class="daterange-calendar-header">' + diasSemana.map(d => `<div class="daterange-calendar-day-name">${d}</div>`).join('') + '</div><div class="daterange-calendar-days">';
+    for (let i = 0; i < primerDia; i++) html += '<div class="daterange-calendar-day empty"></div>';
+    for (let dia = 1; dia <= diasEnMes; dia++) {
+        const fechaStr = `${año}-${String(mes + 1).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
+        const clases = obtenerClasesCalendario(fechaStr, columna);
+        html += `<div class="daterange-calendar-day ${clases}" onclick="event.stopPropagation(); seleccionarFechaUnico('${fechaStr}', '${columna}')">${dia}</div>`;
+    }
+    html += '</div>';
+    $('#calendarioUnico').html(html);
+}
+
+function obtenerClasesCalendario(fecha, columna) {
+    const fDesde = filtrosActivos[columna]?.desde;
+    const fHasta = filtrosActivos[columna]?.hasta;
+    let clases = [];
+    if (fDesde && fecha === fDesde) clases.push('selected');
+    if (fHasta && fecha === fHasta) clases.push('selected');
+    if (fDesde && fHasta && fecha > fDesde && fecha < fHasta) clases.push('in-range');
+    return clases.join(' ');
+}
+
+function seleccionarFechaUnico(fecha, columna) {
+    if (window.event) window.event.stopPropagation();
+    if (!filtrosActivos[columna]) filtrosActivos[columna] = { desde: null, hasta: null };
+    let fDesde = filtrosActivos[columna].desde;
+    let fHasta = filtrosActivos[columna].hasta;
+
+    if (!fDesde) {
+        filtrosActivos[columna].desde = fecha;
+    } else if (!fHasta) {
+        if (fecha < fDesde) {
+            filtrosActivos[columna].desde = fecha;
+            filtrosActivos[columna].hasta = fDesde;
+        } else {
+            filtrosActivos[columna].hasta = fecha;
+        }
+    } else {
+        if (fecha < fDesde) filtrosActivos[columna].desde = fecha;
+        else filtrosActivos[columna].hasta = fecha;
+    }
+    actualizarCalendarioUnico(columna);
+    if (filtrosActivos[columna].desde && filtrosActivos[columna].hasta) {
+        paginaActual = 1;
+        cargarDatos();
+    }
+}
+
+function cargarOpcionesFiltro(panel, columna, icon) {
+    $.ajax({
+        url: 'ajax/anulaciones_get_opciones_filtro.php',
+        method: 'POST',
+        data: { columna: columna },
+        dataType: 'json',
+        success: function (response) {
+            if (response.success) {
+                let html = '<div class="filter-section" style="margin-top: 12px;"><span class="filter-section-title">Filtrar por:</span>';
+                html += '<input type="text" class="filter-search" placeholder="Buscar..." onkeyup="buscarEnOpciones(this)">';
+                html += '<div class="filter-options">';
+                response.opciones.forEach(opcion => {
+                    const checked = filtrosActivos[columna] && filtrosActivos[columna].includes(opcion.valor) ? 'checked' : '';
+                    html += `<div class="filter-option"><input type="checkbox" value="${opcion.valor}" ${checked} onchange="toggleOpcionFiltro('${columna}', '${opcion.valor}', this.checked)"><span>${opcion.texto}</span></div>`;
                 });
+                html += '</div></div>';
+                panel.append(html);
+                posicionarPanelFiltro(panel, icon);
             }
         }
-    } catch (e) { /* silencioso */ }
+    });
 }
 
-function poblarSucursalesTabla(registros) {
-    const sel = document.getElementById('filtSucursal');
-    registros.forEach(r => {
-        if (!sucursalesPopuladas.has('f' + r.Sucursal)) {
-            sucursalesPopuladas.add('f' + r.Sucursal);
-            const opt = document.createElement('option');
-            opt.value = r.Sucursal;
-            opt.textContent = 'Sucursal ' + r.Sucursal;
-            sel.appendChild(opt);
+function posicionarPanelFiltro(panel, icon) {
+    const iconOffset = $(icon).offset();
+    const iconWidth = $(icon).outerWidth();
+    const iconHeight = $(icon).outerHeight();
+    const panelWidth = panel.outerWidth();
+    const panelHeight = panel.outerHeight();
+    const windowWidth = $(window).width();
+    const windowHeight = $(window).height();
+    const scrollTop = $(window).scrollTop();
+
+    let top = iconOffset.top + iconHeight + 5;
+    let left = iconOffset.left - panelWidth + iconWidth;
+
+    if (left + panelWidth > windowWidth) left = windowWidth - panelWidth - 10;
+    if (left < 10) left = 10;
+    if (top + panelHeight > windowHeight + scrollTop) top = Math.max(scrollTop + 10, windowHeight + scrollTop - panelHeight - 10);
+
+    panel.css({ top: top + 'px', left: left + 'px' });
+}
+
+function actualizarIndicadoresFiltros() {
+    $('.filter-icon').removeClass('has-filter');
+    Object.keys(filtrosActivos).forEach(columna => {
+        const valor = filtrosActivos[columna];
+        if ((Array.isArray(valor) && valor.length > 0) || (typeof valor === 'object' && Object.keys(valor).length > 0) || (typeof valor !== 'object' && valor !== '')) {
+            $(`th[data-column="${columna}"] .filter-icon`).addClass('has-filter');
         }
     });
+}
+
+function limpiarFiltro(columna) {
+    delete filtrosActivos[columna];
+    cerrarTodosFiltros();
+    paginaActual = 1;
+    cargarDatos();
+}
+
+function cerrarTodosFiltros() {
+    $('.filter-panel').remove();
+    $('.filter-icon').removeClass('active');
+    panelFiltroAbierto = null;
+}
+
+function aplicarOrden(columna, direccion) {
+    ordenActivo = { columna, direccion };
+    cerrarTodosFiltros();
+    paginaActual = 1;
+    cargarDatos();
+}
+
+function filtrarBusqueda(columna, valor) {
+    if (valor.trim() === '') delete filtrosActivos[columna];
+    else filtrosActivos[columna] = valor;
+    paginaActual = 1;
+    cargarDatos();
+}
+
+function toggleOpcionFiltro(columna, valor, checked) {
+    if (!filtrosActivos[columna]) filtrosActivos[columna] = [];
+    if (checked) {
+        if (!filtrosActivos[columna].includes(valor)) filtrosActivos[columna].push(valor);
+    } else {
+        filtrosActivos[columna] = filtrosActivos[columna].filter(v => v !== valor);
+        if (filtrosActivos[columna].length === 0) delete filtrosActivos[columna];
+    }
+    paginaActual = 1;
+    cargarDatos();
+}
+
+function buscarEnOpciones(input) {
+    const busqueda = input.value.toLowerCase();
+    $(input).siblings('.filter-options').find('.filter-option').each(function () {
+        $(this).toggle($(this).text().toLowerCase().includes(busqueda));
+    });
+}
+
+function formatearFecha(fecha) {
+    if (!fecha) return '-';
+    const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+    const d = new Date(fecha);
+    return `${String(d.getDate()).padStart(2, '0')}-${meses[d.getMonth()]}-${String(d.getFullYear()).slice(-2)}`;
 }
 
 // ── Modal Decisión (Ver / Aprobar / Rechazar) ────────────────
@@ -513,10 +838,11 @@ function iniciarAutoRefresh() {
 
 // ── Helpers ──────────────────────────────────────────────────
 function limpiarFiltros() {
-    document.getElementById('filtStatus').value   = '0';
-    document.getElementById('filtSucursal').value = '0';
-    document.getElementById('filtBuscar').value   = '';
-    cargarDatos(1);
+    filtrosActivos = {};
+    ordenActivo = { columna: null, direccion: 'asc' };
+    cerrarTodosFiltros();
+    paginaActual = 1;
+    cargarDatos();
 }
 
 function escHtml(str) {
