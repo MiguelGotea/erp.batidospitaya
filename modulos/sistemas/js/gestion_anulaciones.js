@@ -113,7 +113,7 @@ async function cargarDatos(page = paginaActual) {
     registrosPorPagina = parseInt(limit);
 
     const tableBody = $('#tableBody');
-    tableBody.html('<tr><td colspan="8" class="text-center py-4"><div class="spinner-border spinner-border-sm text-secondary"></div></td></tr>');
+    tableBody.html('<tr><td colspan="9" class="text-center py-4"><div class="spinner-border spinner-border-sm text-secondary"></div></td></tr>');
     $('#tableInfo').text('Cargando...');
 
     $.ajax({
@@ -135,11 +135,11 @@ async function cargarDatos(page = paginaActual) {
                 renderizarPaginacion(response.total);
                 actualizarIndicadoresFiltros();
             } else {
-                tableBody.html(`<tr><td colspan="8" class="text-center py-4 text-danger"><i class="bi bi-exclamation-triangle me-1"></i>${response.error}</td></tr>`);
+                tableBody.html(`<tr><td colspan="9" class="text-center py-4 text-danger"><i class="bi bi-exclamation-triangle me-1"></i>${response.error}</td></tr>`);
             }
         },
         error: function () {
-            tableBody.html(`<tr><td colspan="8" class="text-center py-4 text-danger"><i class="bi bi-exclamation-triangle me-1"></i>Error al cargar los datos</td></tr>`);
+            tableBody.html(`<tr><td colspan="9" class="text-center py-4 text-danger"><i class="bi bi-exclamation-triangle me-1"></i>Error al cargar los datos</td></tr>`);
         }
     });
 }
@@ -148,7 +148,7 @@ async function cargarDatos(page = paginaActual) {
 function renderTabla(registros) {
     const tbody = document.getElementById('tableBody');
     if (!registros.length) {
-        tbody.innerHTML = `<tr><td colspan="8" class="text-center py-5 text-muted">
+        tbody.innerHTML = `<tr><td colspan="9" class="text-center py-5 text-muted">
             <i class="bi bi-inbox fs-2 opacity-25 d-block mb-2"></i>
             No hay solicitudes con los filtros actuales.</td></tr>`;
         return;
@@ -202,7 +202,9 @@ function renderTabla(registros) {
         return `<tr>
             <td><strong style="color:#dc3545">${r.CodPedido}</strong>
                 ${r.CodPedidoCambio ? `<br><span class="text-primary small">↔ ${r.CodPedidoCambio}</span>` : ''}
-                ${r.FechaPedido ? `<br><span class="text-muted" style="font-size:10px"><i class="bi bi-calendar3"></i> ${r.FechaPedido}</span>` : ''}
+            </td>
+            <td style="font-size:12px; white-space:nowrap">
+                <i class="bi bi-calendar3 text-muted me-1"></i> ${r.FechaPedido || '—'}
             </td>
             <td><span class="badge" style="background:#e8f5f3;color:#0E544C;font-size:11px">${sucDesc}</span></td>
             <td style="font-size:12px">${solicit}</td>

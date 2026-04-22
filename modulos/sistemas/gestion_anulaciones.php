@@ -91,6 +91,10 @@ $puedeAprobar = tienePermiso('aprobacion_pedidos_access_host', 'aprobar', $cargo
                                     Pedido
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
+                                <th data-column="FechaPedido" data-type="date">
+                                    Fecha Pedido
+                                    <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                </th>
                                 <th data-column="Sucursal" data-type="list">
                                     Suc.
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
