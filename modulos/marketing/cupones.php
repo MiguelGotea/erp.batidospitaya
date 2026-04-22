@@ -26,6 +26,7 @@ if (!tienePermiso('cupones', 'vista', $cargoOperario)) {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="/assets/css/global_tools.css?v=<?php echo mt_rand(1, 10000); ?>">
+    <link rel="stylesheet" href="/core/assets/css/fab_button.css">
     <link rel="stylesheet" href="css/cupones.css?v=<?php echo mt_rand(1, 10000); ?>">
 </head>
 <body>
@@ -36,14 +37,7 @@ if (!tienePermiso('cupones', 'vista', $cargoOperario)) {
             <?php echo renderHeader($usuario, false, 'Gestión de Cupones'); ?>
             
             <div class="container-fluid p-3">
-                <!-- Botón para agregar nuevo cupón -->
-                <?php if (tienePermiso('cupones', 'nuevo_registro', $cargoOperario)): ?>
-                <div class="mb-3">
-                    <button class="btn btn-success" onclick="abrirModalNuevoCupon()">
-                        <i class="bi bi-plus-circle"></i> Nuevo Cupón
-                    </button>
-                </div>
-                <?php endif; ?>
+                <!-- Botón para agregar nuevo cupón - MOVIDO A FAB -->
 
                 <div class="table-responsive">
                     <table class="table table-hover cupones-table" id="tablaCupones">
@@ -151,5 +145,20 @@ if (!tienePermiso('cupones', 'vista', $cargoOperario)) {
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="js/cupones.js?v=<?php echo mt_rand(1, 10000); ?>"></script>
+
+    <!-- Botón Flotante con opciones -->
+    <?php if (tienePermiso('cupones', 'nuevo_registro', $cargoOperario)): ?>
+        <div class="fab-container">
+            <div class="fab-options">
+                <div class="fab-option" onclick="abrirModalNuevoCupon()">
+                    <span class="fab-label">Nuevo Cupón</span>
+                    <div class="fab-icon-holder"><i class="fas fa-plus"></i></div>
+                </div>
+            </div>
+            <div class="btn-floating-pitaya" title="Nuevo Cupón">
+                <i class="fas fa-plus"></i>
+            </div>
+        </div>
+    <?php endif; ?>
 </body>
 </html>
