@@ -103,9 +103,20 @@ $puedeAprobar = tienePermiso('aprobacion_pedidos_access_host', 'aprobar', $cargo
                                     Solicitado
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
-                                <th data-column="Status" data-type="list">
-                                    Status
-                                    <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                <th data-column="Status">
+                                    <div class="status-header-content">
+                                        <span class="status-label">Status</span>
+                                        <div class="estado-filter-circles">
+                                            <i class="bi bi-hourglass-split filter-circle" data-state="0"
+                                                onclick="setEstadoFilter('0')" title="Pendientes"></i>
+                                            <i class="bi bi-layers-fill filter-circle" data-state="all"
+                                                onclick="setEstadoFilter('all')" title="Todos"></i>
+                                            <i class="bi bi-check-circle-fill filter-circle" data-state="1"
+                                                onclick="setEstadoFilter('1')" title="Aprobadas"></i>
+                                            <i class="bi bi-x-circle-fill filter-circle" data-state="2"
+                                                onclick="setEstadoFilter('2')" title="Rechazadas"></i>
+                                        </div>
+                                    </div>
                                 </th>
                                 <th data-column="Motivo" data-type="text">
                                     Motivo

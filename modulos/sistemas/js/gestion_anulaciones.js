@@ -13,7 +13,7 @@ const AJAX_NUEVA    = 'ajax/anulaciones_nueva_web.php';
 
 let paginaActual = 1;
 let registrosPorPagina = 25;
-let filtrosActivos = {};
+let filtrosActivos = { 'Status': ['0'] };
 let ordenActivo = { columna: null, direccion: 'asc' };
 let panelFiltroAbierto = null;
 let totalRegistros = 0;
@@ -25,6 +25,7 @@ let scrollTopInicial = 0;
 // ── Bootstrap ───────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
     cargarStats();
+    actualizarVisualToggle();
     cargarDatos(1);
     iniciarAutoRefresh();
 
@@ -891,9 +892,10 @@ function iniciarAutoRefresh() {
 
 // ── Helpers ──────────────────────────────────────────────────
 function limpiarFiltros() {
-    filtrosActivos = {};
+    filtrosActivos = { 'Status': ['0'] };
     ordenActivo = { columna: null, direccion: 'asc' };
     cerrarTodosFiltros();
+    actualizarVisualToggle();
     paginaActual = 1;
     cargarDatos();
 }
@@ -922,4 +924,31 @@ function mostrarToast(msg, tipo = 'success') {
     document.head.appendChild(style);
 
     setTimeout(() => toast.remove(), 4000);
+}
+
+// ── Filtro de círculos (Status) ──────────────────────────────
+function setEstadoFilter(state) {
+    if (state === 'all') {
+        delete filtrosActivos['Status'];
+    } else {
+        filtrosActivos['Status'] = [state];
+    }
+
+    actualizarVisualToggle();
+    paginaActual = 1;
+    cargarDatos();
+}
+
+function actualizarVisualToggle() {
+    let currentKey = 'all';
+    if (filtrosActivos['Status'] && filtrosActivos['Status'].length > 0) {
+        currentKey = filtrosActivos['Status'][0];
+    }
+
+    document.querySelectorAll('.estado-filter-circles .filter-circle').forEach(circle => {
+        circle.classList.remove('active');
+    });
+
+    const activeCircle = document.querySelector(`.estado-filter-circles .filter-circle[data-state="${currentKey}"]`);
+    if (activeCircle) activeCircle.classList.add('active');
 }
