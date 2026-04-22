@@ -78,12 +78,7 @@ try {
     $whereSQL = $where ? 'WHERE ' . implode(' AND ', $where) : '';
 
     // Count total
-    $stmtCount = $pdo->prepare("
-        SELECT COUNT(*) 
-        FROM AnulacionPedidosHost a
-        LEFT JOIN Sucursales s ON CAST(a.Sucursal AS CHAR) = s.codigo
-        $whereSQL
-    ");
+    $stmtCount = $pdo->prepare("SELECT COUNT(*) FROM AnulacionPedidosHost a $whereSQL");
     $stmtCount->execute($params);
     $total = (int)$stmtCount->fetchColumn();
 
@@ -106,15 +101,9 @@ try {
                 a.AprobadoPor, a.FechaAprobacion,
                 a.EjecutadoEnTienda, a.HoraEjecutadaTienda,
                 a.FechaUltimoSync,
-                s.Nombre AS Sucursal_Nombre,
-                v.Fecha AS FechaPedido
+                (SELECT Nombre FROM Sucursales WHERE codigo = CAST(a.Sucursal AS CHAR) LIMIT 1) AS Sucursal_Nombre,
+                (SELECT MAX(Fecha) FROM VentasGlobalesAccessCSV WHERE CodPedido = a.CodPedido LIMIT 1) AS FechaPedido
          FROM AnulacionPedidosHost a
-         LEFT JOIN Sucursales s ON CAST(a.Sucursal AS CHAR) = s.codigo
-         LEFT JOIN (
-            SELECT CodPedido, Sucursal_Nombre, MAX(Fecha) as Fecha
-            FROM VentasGlobalesAccessCSV
-            GROUP BY CodPedido, Sucursal_Nombre
-         ) v ON a.CodPedido = v.CodPedido AND s.Nombre = v.Sucursal_Nombre
          $whereSQL
          $orderClause
          LIMIT :lim OFFSET :off"
