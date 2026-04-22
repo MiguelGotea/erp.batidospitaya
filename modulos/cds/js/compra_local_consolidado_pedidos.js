@@ -8,9 +8,12 @@ let currentDates = [];
 let productoActivo = null;
 let semanaOffset = 0; // 0 = semana actual, -1 = semana pasada, etc.
 
+let currentView = 'producto'; // 'producto' o 'semana'
+let diaActivo = null;
+
 // Días de la semana para el encabezado (Perspectiva de Pedido)
 const diasConfig = [
-    { num: 7, entrega: 1, nombre: 'Dom (Pasado)', info: 'Se Despacha Lunes', isPrev: true },
+    { num: 0, entrega: 1, nombre: 'Dom (Pasado)', info: 'Se Despacha Lunes', isPrev: true },
     { num: 1, entrega: 2, nombre: 'Lun', info: 'Se Despacha Martes' },
     { num: 2, entrega: 3, nombre: 'Mar', info: 'Se Despacha Miércoles' },
     { num: 3, entrega: 4, nombre: 'Mié', info: 'Se Despacha Jueves' },
@@ -44,7 +47,15 @@ function cambiarSemana(delta) {
     // No permitir avanzar más allá de la semana actual
     if (semanaOffset > 0) semanaOffset = 0;
     productoActivo = null; // Resetear tab activo al cambiar semana
+    diaActivo = null;
     cargarConsolidado();
+}
+
+// Cambiar vista
+function cambiarVista(vista) {
+    if (currentView === vista) return;
+    currentView = vista;
+    renderizarTabs();
 }
 
 // Inicializar
@@ -61,10 +72,11 @@ function formatCantidad(valor) {
     return Number.isInteger(num) ? num.toString() : parseFloat(num.toFixed(2)).toString();
 }
 
-// Determinar qué día es hoy (1-7)
+// Determinar qué día es hoy (0-7 según diasConfig)
 function getDiaHoy() {
     const hoy = new Date();
     const dia = hoy.getDay();
+    // En diasConfig: 0=Dom(Pasado), 1=Lun, ..., 6=Sab, 7=Dom
     return dia === 0 ? 7 : dia;
 }
 
@@ -93,20 +105,33 @@ function cargarConsolidado() {
     // Renderizar el encabezado de navegación de semana + loader
     $('#consolidado-container').html(`
         <div class="semana-nav">
-            <button class="btn-semana prev" onclick="cambiarSemana(-1)" title="Semana anterior">
-                <i class="bi bi-chevron-left"></i>
-            </button>
-            <div class="semana-info">
-                <span class="semana-label">Semana</span>
-                <span class="semana-rango">${rangoTexto}</span>
-                ${esSemanaActual ? '<span class="badge-actual">Actual</span>' : ''}
+            <div class="nav-left">
+                <button class="btn-semana prev" onclick="cambiarSemana(-1)" title="Semana anterior">
+                    <i class="bi bi-chevron-left"></i>
+                </button>
+                <div class="semana-info">
+                    <span class="semana-label">Semana</span>
+                    <span class="semana-rango">${rangoTexto}</span>
+                    ${esSemanaActual ? '<span class="badge-actual">Actual</span>' : ''}
+                </div>
+                <button class="btn-semana next ${esSemanaActual ? 'disabled' : ''}"
+                        onclick="${esSemanaActual ? 'void(0)' : 'cambiarSemana(1)'}"
+                        title="Semana siguiente"
+                        ${esSemanaActual ? 'disabled' : ''}>
+                    <i class="bi bi-chevron-right"></i>
+                </button>
             </div>
-            <button class="btn-semana next ${esSemanaActual ? 'disabled' : ''}"
-                    onclick="${esSemanaActual ? 'void(0)' : 'cambiarSemana(1)'}"
-                    title="Semana siguiente"
-                    ${esSemanaActual ? 'disabled' : ''}>
-                <i class="bi bi-chevron-right"></i>
-            </button>
+
+            <div class="nav-right">
+                <div class="view-selector">
+                    <button class="btn-view ${currentView === 'producto' ? 'active' : ''}" onclick="cambiarVista('producto')">
+                        <i class="fas fa-box"></i> Por Producto
+                    </button>
+                    <button class="btn-view ${currentView === 'semana' ? 'active' : ''}" onclick="cambiarVista('semana')">
+                        <i class="fas fa-calendar-week"></i> Por Semana
+                    </button>
+                </div>
+            </div>
         </div>
         <div class="loader-container">
             <div class="loader"></div>
@@ -125,7 +150,7 @@ function cargarConsolidado() {
             if (response.success) {
                 consolidado = response.consolidado;
                 procesarDatos();
-                renderizarTabs(rangoTexto, esSemanaActual);
+                renderizarTabs();
             } else {
                 mostrarError('Error al cargar datos: ' + response.message);
             }
@@ -166,39 +191,65 @@ function procesarDatos() {
 
     productos = Object.values(productosMap);
 
-    // Seleccionar primer producto por defecto
+    // Seleccionar primer producto por defecto si no hay uno activo
     if (productos.length > 0 && !productoActivo) {
         productoActivo = productos[0].id;
     }
+
+    // Seleccionar hoy como día activo por defecto en vista semana
+    if (!diaActivo) {
+        diaActivo = getDiaHoy();
+    }
 }
 
-// Renderizar tabs de productos
-function renderizarTabs(rangoTexto, esSemanaActual) {
+// Renderizar tabs (de productos o de días)
+function renderizarTabs() {
+    const lunesSemanaActual = getLunesSemanaActual();
+    const lunes = new Date(lunesSemanaActual);
+    lunes.setDate(lunesSemanaActual.getDate() + semanaOffset * 7);
+    const domingo = new Date(lunes);
+    domingo.setDate(lunes.getDate() + 6);
+    const rangoTexto = `${formatFechaCorta(lunes)} – ${formatFechaCorta(domingo)}`;
+    const esSemanaActual = semanaOffset === 0;
+
     const navHtml = `
         <div class="semana-nav">
-            <button class="btn-semana prev" onclick="cambiarSemana(-1)" title="Semana anterior">
-                <i class="bi bi-chevron-left"></i>
-            </button>
-            <div class="semana-info">
-                <span class="semana-label">Semana</span>
-                <span class="semana-rango">${rangoTexto}</span>
-                ${esSemanaActual ? '<span class="badge-actual">Actual</span>' : ''}
+            <div class="nav-left">
+                <button class="btn-semana prev" onclick="cambiarSemana(-1)" title="Semana anterior">
+                    <i class="bi bi-chevron-left"></i>
+                </button>
+                <div class="semana-info">
+                    <span class="semana-label">Semana</span>
+                    <span class="semana-rango">${rangoTexto}</span>
+                    ${esSemanaActual ? '<span class="badge-actual">Actual</span>' : ''}
+                </div>
+                <button class="btn-semana next ${esSemanaActual ? 'disabled' : ''}"
+                        onclick="${esSemanaActual ? 'void(0)' : 'cambiarSemana(1)'}"
+                        title="Semana siguiente"
+                        ${esSemanaActual ? 'disabled' : ''}>
+                    <i class="bi bi-chevron-right"></i>
+                </button>
             </div>
-            <button class="btn-semana next ${esSemanaActual ? 'disabled' : ''}"
-                    onclick="${esSemanaActual ? 'void(0)' : 'cambiarSemana(1)'}"
-                    title="Semana siguiente"
-                    ${esSemanaActual ? 'disabled' : ''}>
-                <i class="bi bi-chevron-right"></i>
-            </button>
+
+            <div class="nav-right">
+                <div class="view-selector">
+                    <button class="btn-view ${currentView === 'producto' ? 'active' : ''}" onclick="cambiarVista('producto')">
+                        <i class="fas fa-box"></i> Por Producto
+                    </button>
+                    <button class="btn-view ${currentView === 'semana' ? 'active' : ''}" onclick="cambiarVista('semana')">
+                        <i class="fas fa-calendar-week"></i> Por Semana
+                    </button>
+                </div>
+            </div>
         </div>
     `;
 
-    if (productos.length === 0) {
+    if (consolidado.length === 0) {
         $('#consolidado-container').html(`
             ${navHtml}
             <div class="no-data-message">
                 <i class="bi bi-inbox"></i>
-                <p>No hay productos con pedidos registrados</p>
+                <p>No hay datos registrados para esta semana</p>
             </div>
         `);
         return;
@@ -209,38 +260,78 @@ function renderizarTabs(rangoTexto, esSemanaActual) {
             <ul class="nav nav-tabs" role="tablist">
     `;
 
-    productos.forEach((producto, index) => {
-        const isActive = producto.id === productoActivo;
-        tabsHtml += `
-            <li class="nav-item" role="presentation">
-                <button class="nav-link ${isActive ? 'active' : ''}" 
-                        id="tab-${producto.id}" 
-                        data-bs-toggle="tab" 
-                        data-bs-target="#content-${producto.id}" 
-                        type="button" 
-                        role="tab"
-                        onclick="cambiarProducto(${producto.id})">
-                    ${producto.nombre}
-                </button>
-            </li>
-        `;
-    });
+    if (currentView === 'producto') {
+        productos.forEach((producto, index) => {
+            const isActive = producto.id === productoActivo;
+            tabsHtml += `
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link ${isActive ? 'active' : ''}" 
+                            id="tab-${producto.id}" 
+                            data-bs-toggle="tab" 
+                            data-bs-target="#content-${producto.id}" 
+                            type="button" 
+                            role="tab"
+                            onclick="cambiarProducto(${producto.id})">
+                        ${producto.nombre}
+                    </button>
+                </li>
+            `;
+        });
+    } else {
+        diasConfig.forEach((dia, index) => {
+            const isActive = dia.num === diaActivo;
+            const esHoy = esSemanaActual && dia.num === getDiaHoy();
+            tabsHtml += `
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link ${isActive ? 'active' : ''} d-flex flex-column align-items-center" 
+                            id="tab-dia-${dia.num}" 
+                            data-bs-toggle="tab" 
+                            data-bs-target="#content-dia-${dia.num}" 
+                            type="button" 
+                            role="tab"
+                            onclick="cambiarDia(${dia.num})"
+                            style="min-width: 120px;">
+                        <span class="day-tab-name">
+                            ${esHoy ? '<i class="fas fa-star text-warning me-1"></i>' : ''}
+                            ${dia.nombre}${esHoy ? ' (HOY)' : ''}
+                        </span>
+                        <span class="day-tab-info" style="font-size: 10px; font-weight: normal; opacity: 0.8; margin-top: 2px;">
+                            ${dia.info}
+                        </span>
+                    </button>
+                </li>
+            `;
+        });
+    }
 
     tabsHtml += `
             </ul>
             <div class="tab-content">
     `;
 
-    productos.forEach((producto, index) => {
-        const isActive = producto.id === productoActivo;
-        tabsHtml += `
-            <div class="tab-pane fade ${isActive ? 'show active' : ''}" 
-                 id="content-${producto.id}" 
-                 role="tabpanel">
-                ${renderizarTablaProducto(producto)}
-            </div>
-        `;
-    });
+    if (currentView === 'producto') {
+        productos.forEach((producto, index) => {
+            const isActive = producto.id === productoActivo;
+            tabsHtml += `
+                <div class="tab-pane fade ${isActive ? 'show active' : ''}" 
+                     id="content-${producto.id}" 
+                     role="tabpanel">
+                    ${renderizarTablaProducto(producto)}
+                </div>
+            `;
+        });
+    } else {
+        diasConfig.forEach((dia, index) => {
+            const isActive = dia.num === diaActivo;
+            tabsHtml += `
+                <div class="tab-pane fade ${isActive ? 'show active' : ''}" 
+                     id="content-dia-${dia.num}" 
+                     role="tabpanel">
+                    ${renderizarTablaSemana(dia.num)}
+                </div>
+            `;
+        });
+    }
 
     tabsHtml += `
             </div>
@@ -255,7 +346,12 @@ function cambiarProducto(productoId) {
     productoActivo = productoId;
 }
 
-// Renderizar tabla de un producto
+// Cambiar día activo
+function cambiarDia(diaNum) {
+    diaActivo = diaNum;
+}
+
+// Renderizar tabla de un producto (Vista Por Producto)
 function renderizarTablaProducto(producto) {
     const sucursalesProducto = Object.values(producto.sucursales);
 
@@ -268,7 +364,7 @@ function renderizarTablaProducto(producto) {
         `;
     }
 
-    // Determinar índice de hoy (1-7)
+    // Determinar índice de hoy
     const todayIdx = getDiaHoy();
     
     let html = `
@@ -278,19 +374,19 @@ function renderizarTablaProducto(producto) {
                     <tr>
                         <th>Sucursal</th>
                         ${diasConfig.map((dia, index) => {
-        const esHoy = semanaOffset === 0 && index === todayIdx;
-        return `
-                            <th class="${esHoy ? 'today-column' : ''} ${dia.isPrev ? 'prev-week-column' : ''}">
-                                <div class="day-header">
-                                    <span class="day-name">
-                                        ${esHoy ? '<i class="fas fa-star text-warning me-1"></i>' : ''}
-                                        ${dia.nombre}${esHoy ? ' (HOY)' : ''}
-                                    </span>
-                                    <span class="delivery-label">${dia.info}</span>
-                                </div>
-                            </th>
-                        `;
-    }).join('')}
+                            const esHoy = semanaOffset === 0 && dia.num === todayIdx;
+                            return `
+                                <th class="${esHoy ? 'today-column' : ''} ${dia.isPrev ? 'prev-week-column' : ''}">
+                                    <div class="day-header">
+                                        <span class="day-name">
+                                            ${esHoy ? '<i class="fas fa-star text-warning me-1"></i>' : ''}
+                                            ${dia.nombre}${esHoy ? ' (HOY)' : ''}
+                                        </span>
+                                        <span class="delivery-label">${dia.info}</span>
+                                    </div>
+                                </th>
+                            `;
+                        }).join('')}
                     </tr>
                 </thead>
                 <tbody>
@@ -298,6 +394,8 @@ function renderizarTablaProducto(producto) {
 
     const totalesPorDia = new Array(8).fill(0);
     
+    sucursalesProducto.sort((a, b) => a.nombre.localeCompare(b.nombre));
+
     sucursalesProducto.forEach(sucursal => {
         html += `
             <tr>
@@ -305,18 +403,16 @@ function renderizarTablaProducto(producto) {
         `;
 
         diasConfig.forEach((dia, index) => {
-            const cantidad = sucursal.pedidos[index]; // Ahora usamos el índice como llave
-            const esHoy = semanaOffset === 0 && index === todayIdx;
+            const cantidad = sucursal.pedidos[dia.num];
+            const esHoy = semanaOffset === 0 && dia.num === todayIdx;
             const esConfigurado = cantidad !== undefined;
             
-            // Solo mostrar alerta si es configurado Y NO se ingresó nada (null) Y es hoy o un día pasado
-            const esPasadoOHoy = semanaOffset < 0 || (semanaOffset === 0 && index <= todayIdx);
+            const esPasadoOHoy = semanaOffset < 0 || (semanaOffset === 0 && dia.num <= todayIdx);
             const esFaltante = esConfigurado && (cantidad === null || cantidad === undefined) && esPasadoOHoy;
 
             if (cantidad > 0) {
                 totalesPorDia[index] += cantidad;
             }
-
 
             let cellContent = "";
             let cellClass = "";
@@ -348,11 +444,147 @@ function renderizarTablaProducto(producto) {
     html += `
                 <tr class="totals-row">
                     <td><strong>TOTAL</strong></td>
-                    ${totalesPorDia.map((total, index) => `
-                        <td class="${semanaOffset === 0 && index === todayIdx ? 'today-column' : ''}">
+                    ${totalesPorDia.map((total, index) => {
+                        const esHoy = semanaOffset === 0 && diasConfig[index].num === todayIdx;
+                        return `
+                            <td class="${esHoy ? 'today-column' : ''}">
+                                <strong>${formatCantidad(total)}</strong>
+                            </td>
+                        `;
+                    }).join('')}
+                </tr>
+    `;
+
+    html += `
+                </tbody>
+            </table>
+        </div>
+    `;
+
+    return html;
+}
+
+// Renderizar tabla de un día (Vista Por Semana)
+function renderizarTablaSemana(diaNum) {
+    // Extraer todas las sucursales únicas que tienen pedidos este día
+    const sucursalesMap = {};
+    const productosDia = [];
+
+    consolidado.filter(item => item.dia_entrega === diaNum).forEach(item => {
+        const prod = {
+            id: item.id_producto_presentacion,
+            nombre: item.nombre_producto,
+            pedidos: {}
+        };
+
+        item.detalles.forEach(detalle => {
+            if (!sucursalesMap[detalle.codigo_sucursal]) {
+                sucursalesMap[detalle.codigo_sucursal] = {
+                    codigo: detalle.codigo_sucursal,
+                    nombre: detalle.nombre_sucursal
+                };
+            }
+            prod.pedidos[detalle.codigo_sucursal] = detalle.cantidad;
+        });
+
+        productosDia.push(prod);
+    });
+
+    const sucursales = Object.values(sucursalesMap).sort((a, b) => a.nombre.localeCompare(b.nombre));
+
+    if (productosDia.length === 0) {
+        return `
+            <div class="no-data-message">
+                <i class="bi bi-inbox"></i>
+                <p>No hay pedidos registrados para este día</p>
+            </div>
+        `;
+    }
+
+    const diaInfo = diasConfig.find(d => d.num === diaNum);
+    const esHoy = semanaOffset === 0 && diaNum === getDiaHoy();
+
+    let html = `
+        <div class="table-responsive mt-2">
+            <table class="table consolidado-table">
+                <thead>
+                    <tr>
+                        <th style="min-width: 250px;">Producto</th>
+                        ${sucursales.map(sucursal => `
+                            <th>
+                                <div class="day-header">
+                                    <span class="day-name">${sucursal.nombre}</span>
+                                    <span class="delivery-label">${sucursal.codigo}</span>
+                                </div>
+                            </th>
+                        `).join('')}
+                        <th class="total-cell">TOTAL</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+
+    const totalesPorSucursal = new Array(sucursales.length).fill(0);
+    let granTotal = 0;
+
+    productosDia.sort((a, b) => a.nombre.localeCompare(b.nombre));
+
+    productosDia.forEach(producto => {
+        let totalProducto = 0;
+        html += `
+            <tr>
+                <td class="producto-name">${producto.nombre}</td>
+        `;
+
+        sucursales.forEach((sucursal, sIdx) => {
+            const cantidad = producto.pedidos[sucursal.codigo];
+            const esConfigurado = cantidad !== undefined;
+            const esPasadoOHoy = semanaOffset < 0 || (semanaOffset === 0 && diaNum <= getDiaHoy());
+            const esFaltante = esConfigurado && (cantidad === null || cantidad === undefined) && esPasadoOHoy;
+
+            if (cantidad > 0) {
+                totalesPorSucursal[sIdx] += cantidad;
+                totalProducto += cantidad;
+            }
+
+            let cellContent = "";
+            let cellClass = "";
+
+            if (esFaltante) {
+                cellClass = "missing-order";
+                cellContent = `<i class="fas fa-exclamation-triangle missing-order-icon"></i> -`;
+            } else if (cantidad !== null && cantidad !== undefined) {
+                cellClass = "has-value data-cell";
+                cellContent = formatCantidad(cantidad);
+            } else {
+                cellClass = "no-value data-cell";
+                cellContent = "-";
+            }
+
+            html += `
+                <td class="${cellClass}">
+                    ${cellContent}
+                </td>
+            `;
+        });
+
+        granTotal += totalProducto;
+        html += `
+                <td class="total-cell"><strong>${formatCantidad(totalProducto)}</strong></td>
+            </tr>
+        `;
+    });
+
+    // Fila de totales
+    html += `
+                <tr class="totals-row">
+                    <td><strong>TOTAL</strong></td>
+                    ${totalesPorSucursal.map(total => `
+                        <td>
                             <strong>${formatCantidad(total)}</strong>
                         </td>
                     `).join('')}
+                    <td class="total-cell"><strong>${formatCantidad(granTotal)}</strong></td>
                 </tr>
     `;
 
