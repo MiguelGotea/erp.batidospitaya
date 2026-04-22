@@ -156,11 +156,16 @@ function renderTabla(registros) {
 
     tbody.innerHTML = registros.map(r => {
         const badge    = statusBadge(r.Status, r.EjecutadoEnTienda);
-        const solicit  = r.HoraSolicitada ? r.HoraSolicitada.substring(0, 16).replace('T', ' ') : '—';
+        // Mostrar solo la hora si la fecha es "irreal" o por preferencia del usuario
+        const solicit  = r.HoraSolicitada ? r.HoraSolicitada.split(' ')[1] || r.HoraSolicitada : '—';
+        // Limpiar segundos si existen (HH:mm:ss -> HH:mm)
+        const solicitClean = solicit.length > 5 ? solicit.substring(0, 5) : solicit;
+        
         const motivo   = r.Motivo ? escHtml(r.Motivo).substring(0, 50) : '<em class="text-muted">—</em>';
         const aprobPor = r.AprobadoPor || '—';
+        const ejecutTime = r.HoraEjecutadaTienda ? (r.HoraEjecutadaTienda.split(' ')[1] || r.HoraEjecutadaTienda).substring(0, 5) : '';
         const ejecut   = parseInt(r.EjecutadoEnTienda) === 1
-            ? `<span class="text-success small"><i class="bi bi-check-circle-fill"></i> ${(r.HoraEjecutadaTienda || '').substring(0, 16)}</span>`
+            ? `<span class="text-success small"><i class="bi bi-check-circle-fill"></i> ${ejecutTime}</span>`
             : `<span class="text-muted small">Pendiente</span>`;
 
         // Lógica de bloqueo por fecha pasada
@@ -207,7 +212,7 @@ function renderTabla(registros) {
                 <i class="bi bi-calendar3 text-muted me-1"></i> ${r.FechaPedido || '—'}
             </td>
             <td><span class="badge" style="background:#e8f5f3;color:#0E544C;font-size:11px">${sucDesc}</span></td>
-            <td style="font-size:12px">${solicit}</td>
+            <td style="font-size:12px">${solicitClean}</td>
             <td>${badge}</td>
             <td title="${escHtml(r.Motivo || '')}" style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${motivo}</td>
             <td style="font-size:12px">${aprobPor}</td>

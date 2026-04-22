@@ -83,7 +83,7 @@ try {
     $total = (int)$stmtCount->fetchColumn();
 
     // ORDER BY
-    $orderClause = 'ORDER BY a.Status ASC, a.HoraSolicitada DESC';
+    $orderClause = 'ORDER BY (SELECT MAX(Fecha) FROM VentasGlobalesAccessCSV WHERE CodPedido = a.CodPedido) DESC, a.HoraSolicitada DESC';
     if ($orden['columna']) {
         $columnas_validas = ['CodAnulacionHost', 'CodPedido', 'Sucursal', 'HoraSolicitada', 'Status', 'Motivo', 'AprobadoPor', 'EjecutadoEnTienda'];
         if (in_array($orden['columna'], $columnas_validas)) {

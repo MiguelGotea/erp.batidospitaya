@@ -43,17 +43,22 @@ global $conn;
 $pdo = $conn;
 
 try {
-    // Verificar que el pedido existe en VentasGlobalesAccessCSV
+    // Verificar que el pedido existe en VentasGlobalesAccessCSV y obtener su fecha
     $stmtVer = $pdo->prepare(
-        "SELECT COUNT(*) FROM VentasGlobalesAccessCSV
+        "SELECT Fecha FROM VentasGlobalesAccessCSV
          WHERE CodPedido = :cod
          LIMIT 1"
     );
     $stmtVer->execute([':cod' => $codPedido]);
-    if ((int)$stmtVer->fetchColumn() === 0) {
+    $fechaPedido = $stmtVer->fetchColumn();
+
+    if (!$fechaPedido) {
         echo json_encode(['success' => false, 'error' => "Pedido #$codPedido no encontrado en el historial de ventas."]);
         exit();
     }
+
+    // Combinar la fecha del pedido con la hora actual para HoraSolicitada
+    $horaSolicitada = $fechaPedido . ' ' . date('H:i:s');
 
     // Verificar que no exista ya una solicitud para este pedido + sucursal
     $stmtCheck = $pdo->prepare(
@@ -79,12 +84,13 @@ try {
           Motivo, CodMotivoAnulacion, Sucursal, FechaUltimoSync,
           EjecutadoEnTienda, ComentarioAprobacion, AprobadoPor, FechaAprobacion)
          VALUES
-         (:cod, NOW(), 1, 2, 0,
+         (:cod, :hora, 1, 2, 0,
           :motivo, NULL, :suc, NOW(),
           0, 'Anulación solicitada desde ERP Web', :aprobpor, NOW())"
     );
     $stmtIns->execute([
         ':cod'      => $codPedido,
+        ':hora'     => $horaSolicitada,
         ':motivo'   => $motivo,
         ':suc'      => $sucursal,
         ':aprobpor' => $aprobadoPor,
