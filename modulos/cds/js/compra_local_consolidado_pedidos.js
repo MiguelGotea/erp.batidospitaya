@@ -466,33 +466,36 @@ function renderizarTablaProducto(producto) {
 
 // Renderizar tabla de un día (Vista Por Semana)
 function renderizarTablaSemana(diaNum) {
-    // Extraer todas las sucursales únicas que tienen pedidos este día
+    // Extraer todas las sucursales y productos únicos que tienen pedidos este día
     const sucursalesMap = {};
-    const productosDia = [];
+    const productosMap = {};
 
     consolidado.filter(item => item.dia_entrega === diaNum).forEach(item => {
-        const prod = {
-            id: item.id_producto_presentacion,
-            nombre: item.nombre_producto,
-            pedidos: {}
-        };
+        if (!productosMap[item.id_producto_presentacion]) {
+            productosMap[item.id_producto_presentacion] = {
+                id: item.id_producto_presentacion,
+                nombre: item.nombre_producto,
+                sku: item.SKU
+            };
+        }
 
         item.detalles.forEach(detalle => {
             if (!sucursalesMap[detalle.codigo_sucursal]) {
                 sucursalesMap[detalle.codigo_sucursal] = {
                     codigo: detalle.codigo_sucursal,
-                    nombre: detalle.nombre_sucursal
+                    nombre: detalle.nombre_sucursal,
+                    pedidos: {}
                 };
             }
-            prod.pedidos[detalle.codigo_sucursal] = detalle.cantidad;
+            // Registrar el pedido de este producto para esta sucursal
+            sucursalesMap[detalle.codigo_sucursal].pedidos[item.id_producto_presentacion] = detalle.cantidad;
         });
-
-        productosDia.push(prod);
     });
 
     const sucursales = Object.values(sucursalesMap).sort((a, b) => a.nombre.localeCompare(b.nombre));
+    const productos = Object.values(productosMap).sort((a, b) => a.nombre.localeCompare(b.nombre));
 
-    if (productosDia.length === 0) {
+    if (sucursales.length === 0) {
         return `
             <div class="no-data-message">
                 <i class="bi bi-inbox"></i>
@@ -501,50 +504,41 @@ function renderizarTablaSemana(diaNum) {
         `;
     }
 
-    const diaInfo = diasConfig.find(d => d.num === diaNum);
-    const esHoy = semanaOffset === 0 && diaNum === getDiaHoy();
-
     let html = `
         <div class="table-responsive mt-2">
             <table class="table consolidado-table">
                 <thead>
                     <tr>
-                        <th style="min-width: 250px;">Producto</th>
-                        ${sucursales.map(sucursal => `
+                        <th style="min-width: 250px;">Sucursal</th>
+                        ${productos.map(prod => `
                             <th>
                                 <div class="day-header">
-                                    <span class="day-name">${sucursal.nombre}</span>
-                                    <span class="delivery-label">${sucursal.codigo}</span>
+                                    <span class="day-name">${prod.nombre}</span>
+                                    <span class="delivery-label">${prod.sku || ''}</span>
                                 </div>
                             </th>
                         `).join('')}
-                        <th class="total-cell">TOTAL</th>
                     </tr>
                 </thead>
                 <tbody>
     `;
 
-    const totalesPorSucursal = new Array(sucursales.length).fill(0);
-    let granTotal = 0;
+    const totalesPorProducto = new Array(productos.length).fill(0);
 
-    productosDia.sort((a, b) => a.nombre.localeCompare(b.nombre));
-
-    productosDia.forEach(producto => {
-        let totalProducto = 0;
+    sucursales.forEach(sucursal => {
         html += `
             <tr>
-                <td class="producto-name">${producto.nombre}</td>
+                <td class="sucursal-name">${sucursal.nombre}</td>
         `;
 
-        sucursales.forEach((sucursal, sIdx) => {
-            const cantidad = producto.pedidos[sucursal.codigo];
+        productos.forEach((prod, pIdx) => {
+            const cantidad = sucursal.pedidos[prod.id];
             const esConfigurado = cantidad !== undefined;
             const esPasadoOHoy = semanaOffset < 0 || (semanaOffset === 0 && diaNum <= getDiaHoy());
             const esFaltante = esConfigurado && (cantidad === null || cantidad === undefined) && esPasadoOHoy;
 
             if (cantidad > 0) {
-                totalesPorSucursal[sIdx] += cantidad;
-                totalProducto += cantidad;
+                totalesPorProducto[pIdx] += cantidad;
             }
 
             let cellContent = "";
@@ -568,9 +562,7 @@ function renderizarTablaSemana(diaNum) {
             `;
         });
 
-        granTotal += totalProducto;
         html += `
-                <td class="total-cell"><strong>${formatCantidad(totalProducto)}</strong></td>
             </tr>
         `;
     });
@@ -579,12 +571,11 @@ function renderizarTablaSemana(diaNum) {
     html += `
                 <tr class="totals-row">
                     <td><strong>TOTAL</strong></td>
-                    ${totalesPorSucursal.map(total => `
+                    ${totalesPorProducto.map(total => `
                         <td>
                             <strong>${formatCantidad(total)}</strong>
                         </td>
                     `).join('')}
-                    <td class="total-cell"><strong>${formatCantidad(granTotal)}</strong></td>
                 </tr>
     `;
 
