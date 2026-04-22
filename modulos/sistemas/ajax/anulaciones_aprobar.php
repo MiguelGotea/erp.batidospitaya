@@ -62,12 +62,16 @@ try {
     }
 
     // Bloqueo de fechas pasadas en el backend
-    // Obtenemos la fecha del pedido
+    // Obtenemos la fecha del pedido filtrando por CodPedido Y Sucursal
     $stmtFecha = $pdo->prepare("
         SELECT MAX(Fecha) FROM VentasGlobalesAccessCSV 
-        WHERE CodPedido = :cod
+        WHERE CodPedido = :cod AND (local = :suc OR local = :suc_s)
     ");
-    $stmtFecha->execute([':cod' => $row['CodPedido']]);
+    $stmtFecha->execute([
+        ':cod'   => $row['CodPedido'],
+        ':suc'   => $row['Sucursal'],
+        ':suc_s' => 'S' . $row['Sucursal']
+    ]);
     $fechaPedido = $stmtFecha->fetchColumn();
 
     if ($fechaPedido && strtotime($fechaPedido) < strtotime(date('Y-m-d'))) {

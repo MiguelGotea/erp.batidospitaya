@@ -44,17 +44,22 @@ $pdo = $conn;
 
 try {
     // Verificar que el pedido existe en VentasGlobalesAccessCSV y obtener su fecha
+    // Se filtra por CodPedido Y local para asegurar precisión
     $stmtVer = $pdo->prepare(
         "SELECT Fecha FROM VentasGlobalesAccessCSV
-         WHERE CodPedido = :cod
+         WHERE CodPedido = :cod AND (local = :suc OR local = :suc_s)
          LIMIT 1"
     );
-    $stmtVer->execute([':cod' => $codPedido]);
+    $stmtVer->execute([
+        ':cod'   => $codPedido,
+        ':suc'   => $sucursal,
+        ':suc_s' => 'S' . $sucursal
+    ]);
     $fechaPedido = $stmtVer->fetchColumn();
 
+    // El usuario solicita que se permita crear la anulación aunque no existan datos aún
     if (!$fechaPedido) {
-        echo json_encode(['success' => false, 'error' => "Pedido #$codPedido no encontrado en el historial de ventas."]);
-        exit();
+        $fechaPedido = date('Y-m-d');
     }
 
     // Combinar la fecha del pedido con la hora actual para HoraSolicitada

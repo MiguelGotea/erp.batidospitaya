@@ -83,7 +83,8 @@ try {
     $total = (int)$stmtCount->fetchColumn();
 
     // ORDER BY
-    $orderClause = 'ORDER BY (SELECT MAX(Fecha) FROM VentasGlobalesAccessCSV WHERE CodPedido = a.CodPedido) DESC, a.HoraSolicitada DESC';
+    // Si no hay FechaPedido (porque no se ha subido), usamos la HoraSolicitada para el orden
+    $orderClause = "ORDER BY COALESCE((SELECT MAX(Fecha) FROM VentasGlobalesAccessCSV WHERE CodPedido = a.CodPedido AND (local = CAST(a.Sucursal AS CHAR) OR local = CONCAT('S', CAST(a.Sucursal AS CHAR)))), DATE(a.HoraSolicitada)) DESC, a.HoraSolicitada DESC, a.CodPedido DESC";
     if ($orden['columna']) {
         $columnas_validas = ['CodAnulacionHost', 'CodPedido', 'Sucursal', 'HoraSolicitada', 'Status', 'Motivo', 'AprobadoPor', 'EjecutadoEnTienda'];
         if (in_array($orden['columna'], $columnas_validas)) {
@@ -102,7 +103,7 @@ try {
                 a.EjecutadoEnTienda, a.HoraEjecutadaTienda,
                 a.FechaUltimoSync,
                 (SELECT nombre FROM sucursales WHERE codigo = CAST(a.Sucursal AS CHAR) LIMIT 1) AS Sucursal_Nombre,
-                (SELECT MAX(Fecha) FROM VentasGlobalesAccessCSV WHERE CodPedido = a.CodPedido LIMIT 1) AS FechaPedido
+                (SELECT MAX(Fecha) FROM VentasGlobalesAccessCSV WHERE CodPedido = a.CodPedido AND (local = CAST(a.Sucursal AS CHAR) OR local = CONCAT('S', CAST(a.Sucursal AS CHAR))) LIMIT 1) AS FechaPedido
          FROM AnulacionPedidosHost a
          $whereSQL
          $orderClause
