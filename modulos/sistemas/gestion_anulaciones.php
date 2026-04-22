@@ -3,7 +3,7 @@
  * erp/modulos/sistemas/gestion_anulaciones.php
  * Herramienta web para gestionar solicitudes de anulación de pedidos.
  */
-require_once __DIR__ . '/../../../api.batidospitaya.com/core/database/conexion.php';
+require_once '../../core/database/conexion.php';
 ?>
 <!DOCTYPE html>
 <html lang="es">

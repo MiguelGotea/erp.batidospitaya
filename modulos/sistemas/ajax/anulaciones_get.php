@@ -11,7 +11,7 @@
  *   buscar   : texto de búsqueda en CodPedido o Motivo
  */
 
-require_once __DIR__ . '/../../../../api.batidospitaya.com/core/database/conexion.php';
+require_once '../../../core/database/conexion.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
