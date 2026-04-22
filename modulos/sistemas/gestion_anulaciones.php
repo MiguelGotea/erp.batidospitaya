@@ -109,8 +109,6 @@ $puedeAprobar = tienePermiso('aprobacion_pedidos_access_host', 'aprobar', $cargo
                                         <div class="estado-filter-circles">
                                             <i class="bi bi-hourglass-split filter-circle" data-state="0"
                                                 onclick="setEstadoFilter('0')" title="Pendientes"></i>
-                                            <i class="bi bi-layers-fill filter-circle" data-state="all"
-                                                onclick="setEstadoFilter('all')" title="Todos"></i>
                                             <i class="bi bi-check-circle-fill filter-circle" data-state="1"
                                                 onclick="setEstadoFilter('1')" title="Aprobadas"></i>
                                             <i class="bi bi-x-circle-fill filter-circle" data-state="2"
