@@ -13,7 +13,7 @@ const AJAX_NUEVA    = 'ajax/anulaciones_nueva_web.php';
 
 let paginaActual = 1;
 let registrosPorPagina = 25;
-let filtrosActivos = { 'Status': ['0'] };
+let filtrosActivos = { 'Status': ['0'], 'Modalidad': ['2'] };
 let ordenActivo = { columna: null, direccion: 'asc' };
 let panelFiltroAbierto = null;
 let totalRegistros = 0;
@@ -898,7 +898,7 @@ function iniciarAutoRefresh() {
 
 // ── Helpers ──────────────────────────────────────────────────
 function limpiarFiltros() {
-    filtrosActivos = { 'Status': ['0'] };
+    filtrosActivos = { 'Status': ['0'], 'Modalidad': ['2'] };
     ordenActivo = { columna: null, direccion: 'asc' };
     cerrarTodosFiltros();
     actualizarVisualToggle();
