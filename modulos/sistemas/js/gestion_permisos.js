@@ -7,14 +7,16 @@ let permisosModificados = {};
 let datosHerramientas = {
     herramientas: {},
     indicadores: {},
-    balances: {}
+    balances: {},
+    alertas: {}
 };
 
 // Mapeo de tipos plural a singular para la API
 const tipoApiMap = {
     'herramientas': 'herramienta',
     'indicadores': 'indicador',
-    'balances': 'balance'
+    'balances': 'balance',
+    'alertas': 'alerta'
 };
 
 /**
@@ -56,6 +58,7 @@ function getContainerId(tipo) {
         case 'herramientas': return '#treeHerramientas';
         case 'indicadores': return '#treeIndicadores';
         case 'balances': return '#treeBalances';
+        case 'alertas': return '#treeAlertas';
         default: return '#treeHerramientas';
     }
 }

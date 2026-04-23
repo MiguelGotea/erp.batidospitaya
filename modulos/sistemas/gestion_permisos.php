@@ -60,6 +60,9 @@ $puedeCrearAcciones = tienePermiso('gestion_permisos', 'crear_accion', $cargoOpe
                                 <button class="tab-btn-custom" id="tab-balances" onclick="cambiarTab('balances')">
                                     <i class="bi bi-calculator"></i><br>Balances
                                 </button>
+                                <button class="tab-btn-custom" id="tab-alertas" onclick="cambiarTab('alertas')">
+                                    <i class="bi bi-bell-fill"></i><br>Alertas
+                                </button>
                             </div>
                             
                             <div class="card-body p-0">
@@ -98,6 +101,19 @@ $puedeCrearAcciones = tienePermiso('gestion_permisos', 'crear_accion', $cargoOpe
                                         <div class="text-center p-4">
                                             <div class="spinner-border text-primary" role="status"></div>
                                             <p class="mt-2 text-muted">Cargando balances...</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Tab Alertas WSP -->
+                                <div class="tab-content-custom" id="content-alertas">
+                                    <div class="p-3 border-bottom">
+                                        <input type="text" class="form-control form-control-sm buscar-input" data-tipo="alertas" placeholder="Buscar alerta...">
+                                    </div>
+                                    <div class="tree-container" id="treeAlertas">
+                                        <div class="text-center p-4">
+                                            <div class="spinner-border text-primary" role="status"></div>
+                                            <p class="mt-2 text-muted">Cargando alertas...</p>
                                         </div>
                                     </div>
                                 </div>
