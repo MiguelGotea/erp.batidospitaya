@@ -27,6 +27,25 @@
     color: #6c757d;
 }
 
+/* ── Row Alert Highlighting ───────────────────────────── */
+.row-alert {
+    background-color: #fff3f3 !important; /* Soft red alert background */
+    border-left: 4px solid #dc3545 !important; /* Bold red accent on the left */
+    transition: all 0.3s ease;
+}
+
+.row-alert:hover {
+    background-color: #ffe5e5 !important;
+}
+
+.row-alert td {
+    font-weight: 500;
+}
+
+.row-alert td strong {
+    text-shadow: 0 0 10px rgba(220, 53, 69, 0.2);
+}
+
 /* ── Tabla ──────────────────────────────────────────────── */
 /* ── Tabla ──────────────────────────────────────────────── */
 .cupones-table {

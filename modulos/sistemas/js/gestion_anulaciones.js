@@ -24,7 +24,6 @@ let scrollTopInicial = 0;
 
 // ── Bootstrap ───────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
-    cargarStats();
     actualizarVisualToggle();
     actualizarVisualToggleModalidad();
     cargarDatos(1);
@@ -88,25 +87,7 @@ async function poblarSucursalesNuevaAnulacion() {
 }
 
 // ── Stats ────────────────────────────────────────────────────
-async function cargarStats() {
-    try {
-        const [rAll, rPend, rApro] = await Promise.all([
-            fetch(AJAX_GET + '?status=-1&limit=1').then(r => r.json()),
-            fetch(AJAX_GET + '?status=0&limit=1').then(r => r.json()),
-            fetch(AJAX_GET + '?status=1&limit=1').then(r => r.json()),
-        ]);
-        document.getElementById('statTotal').textContent      = rAll.total  ?? '—';
-        document.getElementById('statPendientes').textContent  = rPend.total ?? '—';
-        document.getElementById('statAprobadas').textContent   = rApro.total ?? '—';
 
-        // Ejecutadas: aprobadas con EjecutadoEnTienda=1
-        const rEje = await fetch(AJAX_GET + '?status=1&limit=500').then(r => r.json());
-        const eje = (rEje.registros || []).filter(r => parseInt(r.EjecutadoEnTienda) === 1).length;
-        document.getElementById('statEjecutadas').textContent = eje;
-    } catch (e) {
-        console.warn('Stats error', e);
-    }
-}
 
 // Cargar datos
 async function cargarDatos(page = paginaActual) {
@@ -156,6 +137,9 @@ function renderTabla(registros) {
         return;
     }
 
+    const now = new Date();
+    const fHoy = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+
     tbody.innerHTML = registros.map(r => {
         const badge    = statusBadge(r.Status, r.EjecutadoEnTienda);
         // Mostrar solo la hora si la fecha es "irreal" o por preferencia del usuario
@@ -173,6 +157,10 @@ function renderTabla(registros) {
         const modIcon = parseInt(r.Modalidad) === 2 
             ? '<i class="bi bi-globe text-primary" title="Web / Online"></i>' 
             : '<i class="bi bi-pc-display text-secondary" title="Local / Access"></i>';
+
+        // Lógica de alerta: Hoy + Web + Pendiente
+        const esAlerta = r.FechaPedido === fHoy && parseInt(r.Modalidad) === 2 && parseInt(r.Status) === 0;
+        const alertClass = esAlerta ? 'row-alert' : '';
 
         // Lógica de bloqueo por fecha pasada
         const hoy = new Date();
@@ -210,7 +198,7 @@ function renderTabla(registros) {
             }
         }
 
-        return `<tr>
+        return `<tr class="${alertClass}">
             <td><strong style="color:#dc3545">${r.CodPedido}</strong>
                 ${r.CodPedidoCambio ? `<br><span class="text-primary small">↔ ${r.CodPedidoCambio}</span>` : ''}
             </td>
@@ -751,7 +739,6 @@ async function ejecutarDecision(accion) {
             bootstrap.Modal.getInstance(document.getElementById('modalDecision')).hide();
             mostrarToast(data.message, 'success');
             cargarDatos(paginaActual);
-            cargarStats();
         } else {
             mostrarToast('Error: ' + data.error, 'danger');
         }
@@ -782,7 +769,6 @@ async function accionRapida(id, accion) {
         if (data.success) {
             mostrarToast(data.message, 'success');
             cargarDatos(paginaActual);
-            cargarStats();
         } else {
             mostrarToast('Error: ' + data.error, 'danger');
         }

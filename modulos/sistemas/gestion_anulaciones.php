@@ -47,40 +47,7 @@ $puedeAprobar = tienePermiso('aprobacion_pedidos_access_host', 'aprobar', $cargo
             <div class="container-fluid p-3">
 
                 <!-- ── Stats cards ─────────────────────────── -->
-                <div class="row g-3 mb-3" id="statsRow">
-                    <div class="col-6 col-md-3">
-                        <div class="card border-0 shadow-sm h-100 stat-card">
-                            <div class="card-body text-center py-3">
-                                <div class="stat-val text-secondary" id="statTotal">—</div>
-                                <div class="stat-lbl">Total</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-6 col-md-3">
-                        <div class="card border-0 shadow-sm h-100 stat-card">
-                            <div class="card-body text-center py-3">
-                                <div class="stat-val text-warning" id="statPendientes">—</div>
-                                <div class="stat-lbl">Pendientes</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-6 col-md-3">
-                        <div class="card border-0 shadow-sm h-100 stat-card">
-                            <div class="card-body text-center py-3">
-                                <div class="stat-val text-success" id="statAprobadas">—</div>
-                                <div class="stat-lbl">Aprobadas</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-6 col-md-3">
-                        <div class="card border-0 shadow-sm h-100 stat-card">
-                            <div class="card-body text-center py-3">
-                                <div class="stat-val text-primary" id="statEjecutadas">—</div>
-                                <div class="stat-lbl">Ejecutadas en Tienda</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+
 
                 <!-- ── Tabla ────────────────────────────────── -->
                 <div class="table-responsive">
