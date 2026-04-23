@@ -750,7 +750,7 @@ async function ejecutarDecision(accion) {
         if (data.success) {
             bootstrap.Modal.getInstance(document.getElementById('modalDecision')).hide();
             mostrarToast(data.message, 'success');
-            cargarDatos(currentPage);
+            cargarDatos(paginaActual);
             cargarStats();
         } else {
             mostrarToast('Error: ' + data.error, 'danger');
@@ -781,7 +781,7 @@ async function accionRapida(id, accion) {
 
         if (data.success) {
             mostrarToast(data.message, 'success');
-            cargarDatos(currentPage);
+            cargarDatos(paginaActual);
             cargarStats();
         } else {
             mostrarToast('Error: ' + data.error, 'danger');
@@ -889,7 +889,7 @@ function iniciarAutoRefresh() {
         const el = document.getElementById('countdown');
         if (el) el.textContent = countdownVal;
         if (countdownVal <= 0) {
-            cargarDatos(currentPage);
+            cargarDatos(paginaActual);
             cargarStats();
             countdownVal = 60;
         }
