@@ -27,7 +27,6 @@ document.addEventListener('DOMContentLoaded', () => {
     actualizarVisualToggle();
     actualizarVisualToggleModalidad();
     cargarDatos(1);
-    cargarStats();
     iniciarAutoRefresh();
 
     // Cerrar filtros solo si se hace clic fuera del panel Y del icono
@@ -87,26 +86,6 @@ async function poblarSucursalesNuevaAnulacion() {
     } catch (e) { console.error(e); }
 }
 
-// ── Stats ────────────────────────────────────────────────────
-async function cargarStats() {
-    try {
-        const data = await fetch('ajax/anulaciones_get_stats.php').then(r => r.json());
-        if (data.success) {
-            const s = data.stats;
-            const elPend = document.getElementById('stat-pendientes');
-            const elCrit = document.getElementById('stat-criticas');
-            const elApro = document.getElementById('stat-aprobadas');
-            const elEjec = document.getElementById('stat-ejecutadas');
-
-            if (elPend) elPend.textContent = s.pendientes;
-            if (elCrit) elCrit.textContent = s.criticas;
-            if (elApro) elApro.textContent = s.aprobadasHoy;
-            if (elEjec) elEjec.textContent = s.ejecutadasHoy;
-        }
-    } catch (e) {
-        console.error('Error al cargar stats:', e);
-    }
-}
 // Cargar datos
 async function cargarDatos(page = paginaActual) {
     paginaActual = page;
@@ -873,7 +852,6 @@ async function enviarAnulacionWeb() {
             bootstrap.Modal.getInstance(document.getElementById('modalNuevaAnulacion')).hide();
             mostrarToast(data.message, 'success');
             cargarDatos(1);
-            cargarStats();
         } else {
             mostrarToast('Error: ' + data.error, 'danger');
             document.getElementById('btnEnviarAnulacionWeb').disabled = false;
@@ -894,7 +872,6 @@ function iniciarAutoRefresh() {
         if (el) el.textContent = countdownVal;
         if (countdownVal <= 0) {
             cargarDatos(paginaActual);
-            cargarStats();
             countdownVal = 60;
         }
     }, 1000);
