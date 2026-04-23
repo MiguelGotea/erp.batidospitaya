@@ -47,8 +47,40 @@ $puedeAprobar = tienePermiso('aprobacion_pedidos_access_host', 'aprobar', $cargo
             <div class="container-fluid p-3">
 
                 <!-- ── Stats cards ─────────────────────────── -->
-
-
+                <div class="row g-3 mb-4">
+                    <div class="col-6 col-md-3">
+                        <div class="card stat-card border-0 shadow-sm" style="border-left: 4px solid #ffc107 !important;">
+                            <div class="card-body p-3">
+                                <div class="stat-lbl">Pendientes</div>
+                                <div class="stat-val text-warning" id="stat-pendientes">—</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="card stat-card border-0 shadow-sm" style="border-left: 4px solid #dc3545 !important;">
+                            <div class="card-body p-3">
+                                <div class="stat-lbl">Críticas (>1h)</div>
+                                <div class="stat-val text-danger" id="stat-criticas">—</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="card stat-card border-0 shadow-sm" style="border-left: 4px solid #28a745 !important;">
+                            <div class="card-body p-3">
+                                <div class="stat-lbl">Aprobadas Hoy</div>
+                                <div class="stat-val text-success" id="stat-aprobadas">—</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="card stat-card border-0 shadow-sm" style="border-left: 4px solid #0d6efd !important;">
+                            <div class="card-body p-3">
+                                <div class="stat-lbl">Ejecutadas Hoy</div>
+                                <div class="stat-val text-primary" id="stat-ejecutadas">—</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <!-- ── Tabla ────────────────────────────────── -->
                 <div class="table-responsive">
                     <table class="table table-hover cupones-table" id="tablaAnulaciones">
