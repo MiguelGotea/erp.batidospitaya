@@ -355,12 +355,12 @@ $cargoOperario = $usuario['CodNivelesCargos'];
                 <div class="kpi-card alerta">
                     <span class="kpi-label">Alerta</span>
                     <span class="kpi-num" id="kpi-alerta">—</span>
-                    <span class="kpi-sub">ping 5–10 min</span>
+                    <span class="kpi-sub">ping 5–30 min</span>
                 </div>
                 <div class="kpi-card offline">
                     <span class="kpi-label">Sin conexión</span>
                     <span class="kpi-num" id="kpi-offline">—</span>
-                    <span class="kpi-sub">ping &gt; 10 min</span>
+                    <span class="kpi-sub">ping &gt; 30 min</span>
                 </div>
             </div>
 

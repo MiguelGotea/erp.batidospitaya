@@ -27,7 +27,7 @@ try {
             TIMESTAMPDIFF(SECOND, p.ping_at, :ahora1)  AS segundos_sin_ping,
             CASE
                 WHEN TIMESTAMPDIFF(SECOND, p.ping_at, :ahora2) <= 300  THEN 'online'
-                WHEN TIMESTAMPDIFF(SECOND, p.ping_at, :ahora3) <= 600  THEN 'alerta'
+                WHEN TIMESTAMPDIFF(SECOND, p.ping_at, :ahora3) <= 1800  THEN 'alerta'
                 ELSE 'offline'
             END AS estado,
             COALESCE(s.nombre, p.sucursal_codigo) AS nombre_sucursal
