@@ -974,7 +974,7 @@ function renderTablaProyeccion(data) {
     const ultimaSemTbl    = semanasNrosTbl[semanasNrosTbl.length - 1];
 
     if (data.consumo.length === 0) {
-        html = `<tr><td colspan="10" class="text-center text-muted py-4">Sin datos de proyección.</td></tr>`;
+        html = `<tr><td colspan="9" class="text-center text-muted py-4">Sin datos de proyección.</td></tr>`;
     } else {
         data.consumo.forEach(item => {
             // Proyección 3 semanas con regresión lineal (misma lógica que gráfico/KPIs)
@@ -1027,7 +1027,6 @@ function renderTablaProyeccion(data) {
                     <div class="text-muted" style="font-size:.72rem">${escHtml(item.maestro)}</div>
                 </td>
                 <td><span class="badge bg-light text-dark border" style="font-size:.7rem">${escHtml(item.categoria_insumo || '—')}</span></td>
-                <td>${escHtml(item.unidad)}</td>
                 <td class="text-end">${formatNum(item.prom_semana)}</td>
                 <td class="text-end fw-bold" style="color:#0E544C">${Math.round(proy3Tbl).toLocaleString('es-NI')}</td>
                 <td class="text-end" style="color:#e67e22">${formatNum(item.stock_min)}</td>
