@@ -71,6 +71,7 @@ try {
         exit();
     }
 
+
     /* ── Datos de la presentación destino ────────────────── */
     $stmtPP = $conn->prepare("
         SELECT pp.id, pp.Nombre, pp.cantidad AS pp_cantidad,
@@ -113,8 +114,8 @@ try {
     /* ── PASO A: CodIngredientes vía Cotizaciones (path P2) ─ */
     $codIngs = [];
     if (!empty($codCots)) {
-        $phC2    = implode(',', array_fill(0, count($codCots), '?'));
-        $stmtCI  = $conn->prepare("
+        $phC2 = implode(',', array_fill(0, count($codCots), '?'));
+        $stmtCI = $conn->prepare("
             SELECT DISTINCT CodIngrediente
             FROM Cotizaciones
             WHERE CodCotizacion IN ($phC2)
@@ -134,14 +135,14 @@ try {
 
     if (!empty($codCots)) {
         $phCod = implode(',', array_fill(0, count($codCots), '?'));
-        $whereIngSR    = "sr.codporcion IN ($phCod)";
-        $ingParamsSR   = array_values($codCots);
+        $whereIngSR = "sr.codporcion IN ($phCod)";
+        $ingParamsSR = array_values($codCots);
     }
     if (!empty($codIngs)) {
         $phIng = implode(',', array_fill(0, count($codIngs), '?'));
-        $whereIngSR   .= ($whereIngSR ? ' OR ' : '') .
-                         "(sr.codporcion IS NULL AND sr.CodIngrediente IN ($phIng))";
-        $ingParamsSR   = array_merge($ingParamsSR, array_values($codIngs));
+        $whereIngSR .= ($whereIngSR ? ' OR ' : '') .
+            "(sr.codporcion IS NULL AND sr.CodIngrediente IN ($phIng))";
+        $ingParamsSR = array_merge($ingParamsSR, array_values($codIngs));
     }
 
     $codBatidos = [];
@@ -166,11 +167,11 @@ try {
        hacer full scan. Luego el JOIN con SubReceta aplica solo
        sobre los productos relevantes.
     ---------------------------------------------------------- */
-    $phBat    = implode(',', array_fill(0, count($codBatidos), '?'));
+    $phBat = implode(',', array_fill(0, count($codBatidos), '?'));
     $whereSuc = '';
     $sucParams = [];
     if (!empty($sucursalesPost)) {
-        $whereSuc  = ' AND v.local IN (' . implode(',', array_fill(0, count($sucursalesPost), '?')) . ')';
+        $whereSuc = ' AND v.local IN (' . implode(',', array_fill(0, count($sucursalesPost), '?')) . ')';
         $sucParams = array_values($sucursalesPost);
     }
 
@@ -218,9 +219,12 @@ try {
         $numDesde,
         $numHasta,
     ];
-    foreach ($codBatidos  as $b) $positional[] = $b;   // CodProducto IN
-    foreach ($sucParams   as $s) $positional[] = $s;   // sucursales IN
-    foreach ($ingParamsSR as $p) $positional[] = $p;   // WHERE ingrediente
+    foreach ($codBatidos as $b)
+        $positional[] = $b;   // CodProducto IN
+    foreach ($sucParams as $s)
+        $positional[] = $s;   // sucursales IN
+    foreach ($ingParamsSR as $p)
+        $positional[] = $p;   // WHERE ingrediente
 
     $stmtV = $conn->prepare($sql);
     $stmtV->execute($positional);
@@ -286,7 +290,9 @@ try {
     /* ── Cargar cotizaciones para detectar P2 vs P3 ─────── */
     // Indexar por CodIngrediente: p2 y p3
     $codIngList = [];
-    foreach ($ventas as $vv) { $codIngList[$vv['CodIngrediente']] = true; }
+    foreach ($ventas as $vv) {
+        $codIngList[$vv['CodIngrediente']] = true;
+    }
     $codIngArr = array_keys($codIngList);
     $cotP2P3Map = [];
     if (!empty($codIngArr)) {
@@ -302,12 +308,13 @@ try {
         $stmtCot2->execute(array_values($codIngArr));
         foreach ($stmtCot2->fetchAll(PDO::FETCH_ASSOC) as $ct) {
             $ci = $ct['CodIngrediente'];
-            if (!isset($cotP2P3Map[$ci])) $cotP2P3Map[$ci] = ['p2' => null, 'p3' => null];
+            if (!isset($cotP2P3Map[$ci]))
+                $cotP2P3Map[$ci] = ['p2' => null, 'p3' => null];
             if ($ct['Conversion'] == 1 && $ct['Prioridad'] == 1 && !$cotP2P3Map[$ci]['p2']) {
-                $cotP2P3Map[$ci]['p2'] = (string)$ct['CodCotizacion'];
+                $cotP2P3Map[$ci]['p2'] = (string) $ct['CodCotizacion'];
             }
             if (!$cotP2P3Map[$ci]['p3']) {
-                $cotP2P3Map[$ci]['p3'] = (string)$ct['CodCotizacion'];
+                $cotP2P3Map[$ci]['p3'] = (string) $ct['CodCotizacion'];
             }
         }
     }
@@ -391,24 +398,24 @@ try {
         }
 
         $filas[] = [
-            'fecha'              => $v['Fecha'],
-            'semana'             => (int)$v['semana'],
-            'sucursal'           => $v['sucursal'],
-            'nombre_batido'      => $v['nombre_batido'] ?? $v['CodProducto'],
+            'fecha' => $v['Fecha'],
+            'semana' => (int) $v['semana'],
+            'sucursal' => $v['sucursal'],
+            'nombre_batido' => $v['nombre_batido'] ?? $v['CodProducto'],
             'nombre_ingrediente' => $v['nombre_ingrediente'],
-            'unidad_access'      => $unidAcc,
-            'codporcion'         => $codporc,
-            'cant_receta'        => (float)$v['cant_receta'],
-            'ventas'             => round((float)$v['ventas_sum'], 2),
-            'cant_total'         => round($cantTotal, 4),
-            'factor'             => round($factor, 6),
-            'pp_cantidad'        => $ppCant,
-            'consumo_crudo'      => round($consumoCrudo, 4),
-            'consumo_final'      => $consumoFinal,
-            'es_p1'              => $esP1,
-            'tipo_mapeo'         => $tipoMapeo,
-            'nivel'              => $nivelUsado,
-            'genera_decimal'     => $esP1 && (abs($consumoCrudo - $consumoFinal) > 0.001),
+            'unidad_access' => $unidAcc,
+            'codporcion' => $codporc,
+            'cant_receta' => (float) $v['cant_receta'],
+            'ventas' => round((float) $v['ventas_sum'], 2),
+            'cant_total' => round($cantTotal, 4),
+            'factor' => round($factor, 6),
+            'pp_cantidad' => $ppCant,
+            'consumo_crudo' => round($consumoCrudo, 4),
+            'consumo_final' => $consumoFinal,
+            'es_p1' => $esP1,
+            'tipo_mapeo' => $tipoMapeo,
+            'nivel' => $nivelUsado,
+            'genera_decimal' => $esP1 && (abs($consumoCrudo - $consumoFinal) > 0.001),
         ];
     }
 
