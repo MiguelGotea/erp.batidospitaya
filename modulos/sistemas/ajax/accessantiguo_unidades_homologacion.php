@@ -154,7 +154,12 @@ function buscarPresentacionPorUnidades(PDO $conn, int $idMaestro, array $nombres
 {
     if (empty($nombres)) return null;
 
-    $columna = ($tipo === 'inventario') ? 'presentacion_basica_inventario' : 'presentacion_receta';
+    $columna = 'presentacion_receta';
+    if ($tipo === 'inventario') {
+        $columna = 'presentacion_basica_inventario';
+    } elseif ($tipo === 'despacho') {
+        $columna = 'presentacion_despacho';
+    }
 
     $placeholders = implode(',', array_fill(0, count($nombres), '?'));
     $stmt = $conn->prepare("
@@ -168,7 +173,8 @@ function buscarPresentacionPorUnidades(PDO $conn, int $idMaestro, array $nombres
             pm.id       AS id_maestro,
             pm.Nombre   AS productoMaestro,
             pp.presentacion_receta,
-            pp.presentacion_basica_inventario
+            pp.presentacion_basica_inventario,
+            pp.presentacion_despacho
         FROM producto_presentacion pp
         INNER JOIN producto_maestro pm ON pm.id = pp.id_producto_maestro
         LEFT  JOIN unidad_producto  u  ON u.id  = pp.id_unidad_producto

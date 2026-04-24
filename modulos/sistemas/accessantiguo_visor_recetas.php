@@ -360,7 +360,7 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                                     style="background:#1a237e;border-right:3px solid #5c7aff;letter-spacing:.05em;font-size:.7rem;padding:6px 10px">
                                     <i class="fas fa-receipt me-1"></i> Comanda Access
                                 </th>
-                                <th colspan="3" class="text-center"
+                                <th colspan="4" class="text-center"
                                     style="background:#4a148c;letter-spacing:.05em;font-size:.7rem;padding:6px 10px">
                                     <i class="fas fa-layer-group me-1"></i> Nuevo Sistema
                                 </th>
@@ -379,6 +379,7 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                                 <th>Insumo Receta</th>
                                 <th style="width:80px">Cantidad</th>
                                 <th>Presentación Uso</th>
+                                <th>Presentación Despacho</th>
                             </tr>
                         </thead>
                         <tbody id="tbodyReceta"></tbody>
@@ -786,6 +787,25 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                     celPresentacionUso = `<span class="traduccion-na text-danger"><i class="fas fa-times-circle me-1"></i>No resuelto</span>`;
                 }
 
+                // Presentación Despacho
+                const pd = ingr.presentacion_despacho;
+                let celPresentacionDespacho;
+                if (pd) {
+                    const activoTag = pd.activoNuevo === 'NO'
+                        ? `<span style="font-size:.65rem;background:#fdd;color:#c0392b;border-radius:3px;padding:1px 5px;margin-left:4px">INACTIVO</span>` : '';
+                    const npRecipeTag = escenario === 'receta_global' ? recetaTag : '';
+                    
+                    celPresentacionDespacho = `<div class="traduccion-ok" style="background:#fff8e1; border-color:#ffe082">
+                        <div class="d-flex align-items-center gap-1 mb-1">${activoTag}${npRecipeTag}</div>
+                        <div class="nom-nuevo" style="color:#e65100">${esc(pd.NombreNuevo)}</div>
+                        <div class="uni-nuevo mt-1">${esc(pd.unidadNueva || '')}${pd.cantidad ? ' &middot; ' + pd.cantidad : ''} ${esc(pd.productoMaestro || '')}</div>
+                    </div>`;
+                } else if (cot) {
+                    celPresentacionDespacho = `<span class="traduccion-na"><i class="fas fa-exclamation-triangle me-1 text-warning"></i>Sin despacho</span>`;
+                } else {
+                    celPresentacionDespacho = `<span class="traduccion-na text-danger"><i class="fas fa-times-circle me-1"></i>No resuelto</span>`;
+                }
+
 
                 return `<tr class="${filaClass}">
                     <!-- Estructura Access -->
@@ -806,6 +826,7 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                     <td>${celInsumoReceta}</td>
                     <td class="text-center fw-semibold">${celCantERP}</td>
                     <td>${celPresentacionUso}</td>
+                    <td>${celPresentacionDespacho}</td>
                 </tr>`;
             }).join('');
 

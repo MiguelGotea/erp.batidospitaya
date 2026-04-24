@@ -161,7 +161,8 @@ try {
                     pm.id                 AS id_maestro,
                     pm.Nombre             AS productoMaestro,
                     pp.presentacion_receta,
-                    pp.presentacion_basica_inventario
+                    pp.presentacion_basica_inventario,
+                    pp.presentacion_despacho
                 FROM diccionario_productos_legado d
                 INNER JOIN producto_presentacion pp ON pp.id = d.id_producto_presentacion
                 LEFT JOIN unidad_producto u          ON u.id = pp.id_unidad_producto
@@ -229,7 +230,8 @@ try {
                             pm.id       AS id_maestro,
                             pm.Nombre   AS productoMaestro,
                             pp.presentacion_receta,
-                            pp.presentacion_basica_inventario
+                            pp.presentacion_basica_inventario,
+                            pp.presentacion_despacho
                         FROM producto_presentacion pp
                         INNER JOIN producto_maestro pm ON pm.id = pp.id_producto_maestro
                         LEFT JOIN unidad_producto u    ON u.id  = pp.id_unidad_producto
@@ -266,7 +268,61 @@ try {
             $ingr['nuevo_producto']['variedades'] = $stmtVar->fetchAll(PDO::FETCH_ASSOC);
         }
 
-        // 4) Determinar escenario ERP e Insumo Receta (para las 3 columnas de Nuevo Sistema)
+        // 4) Obtener Presentación Despacho (misma lógica que Presentación Uso)
+        $ingr['presentacion_despacho'] = null;
+        $idMaestroResolucion = $ingr['nuevo_producto']['id_maestro'] ?? null;
+
+        if ($idMaestroResolucion) {
+            // Resolver unidad para búsqueda de despacho
+            $resolucionU = resolverUnidadERP($conn, $ingr['UnidadIngrediente']);
+            if ($resolucionU) {
+                $ingr['presentacion_despacho'] = buscarPresentacionPorUnidades(
+                    $conn,
+                    $idMaestroResolucion,
+                    $resolucionU['directos'],
+                    'despacho'
+                );
+
+                if (!$ingr['presentacion_despacho'] && !empty($resolucionU['convertibles'])) {
+                    $ingr['presentacion_despacho'] = buscarPresentacionPorUnidades(
+                        $conn,
+                        $idMaestroResolucion,
+                        $resolucionU['convertibles'],
+                        'despacho'
+                    );
+                }
+            }
+
+            // Fallback: cualquier presentación de despacho del maestro
+            if (!$ingr['presentacion_despacho']) {
+                $stmtAnyD = $conn->prepare("
+                    SELECT
+                        pp.id       AS id_presentacion,
+                        pp.SKU,
+                        pp.Nombre   AS NombreNuevo,
+                        pp.cantidad,
+                        pp.Activo   AS activoNuevo,
+                        u.nombre    AS unidadNueva,
+                        pm.id       AS id_maestro,
+                        pm.Nombre   AS productoMaestro,
+                        pp.presentacion_receta,
+                        pp.presentacion_basica_inventario,
+                        pp.presentacion_despacho
+                    FROM producto_presentacion pp
+                    INNER JOIN producto_maestro pm ON pm.id = pp.id_producto_maestro
+                    LEFT JOIN unidad_producto u    ON u.id  = pp.id_unidad_producto
+                    WHERE pp.id_producto_maestro = ?
+                      AND pp.Id_receta_producto IS NULL
+                      AND pp.Activo = 'SI'
+                      AND pp.presentacion_despacho = 1
+                    LIMIT 1
+                ");
+                $stmtAnyD->execute([$idMaestroResolucion]);
+                $ingr['presentacion_despacho'] = $stmtAnyD->fetch(PDO::FETCH_ASSOC) ?: null;
+            }
+        }
+
+        // 5) Determinar escenario ERP e Insumo Receta (para las 3 columnas de Nuevo Sistema)
         $ingr['insumo_receta'] = null;
         $ingr['escenario_erp'] = 'sin_mapeo';
 
