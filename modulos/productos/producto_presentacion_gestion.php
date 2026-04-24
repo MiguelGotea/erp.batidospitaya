@@ -124,25 +124,6 @@ $puedeDesactivar = tienePermiso('producto_presentacion', 'desactivar', $cargoOpe
                                         </div>
                                     </div>
                                 </th>
-                                <th rowspan="2" data-column="tiene_receta" data-type="tristate" class="tristate-header">
-                                    <div class="tristate-header-content">
-                                        <span>Receta</span>
-                                        <div class="tristate-toggle-group">
-                                            <button class="tristate-btn" data-state="SI" data-column="tiene_receta"
-                                                onclick="setTriStateFilter(this, 'tiene_receta', 'SI')">
-                                                <i class="bi bi-check-circle-fill"></i>
-                                            </button>
-                                            <button class="tristate-btn" data-state="null" data-column="tiene_receta"
-                                                onclick="setTriStateFilter(this, 'tiene_receta', null)">
-                                                <i class="bi bi-dash-circle-fill"></i>
-                                            </button>
-                                            <button class="tristate-btn" data-state="NO" data-column="tiene_receta"
-                                                onclick="setTriStateFilter(this, 'tiene_receta', 'NO')">
-                                                <i class="bi bi-x-circle-fill"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </th>
                                 <th rowspan="2" data-column="Activo" data-type="tristate" class="tristate-header">
                                     <div class="tristate-header-content">
                                         <span>Activo</span>
@@ -164,6 +145,25 @@ $puedeDesactivar = tienePermiso('producto_presentacion', 'desactivar', $cargoOpe
                                 </th>
                                 <th colspan="3" class="text-center" style="background-color: #f8f9fa; border-bottom: 2px solid #dee2e6;">Configuración Logística</th>
                                 <th rowspan="2" style="width: 180px;">P. Comercial</th>
+                                <th rowspan="2" data-column="tiene_receta" data-type="tristate" class="tristate-header">
+                                    <div class="tristate-header-content">
+                                        <span>Receta</span>
+                                        <div class="tristate-toggle-group">
+                                            <button class="tristate-btn" data-state="SI" data-column="tiene_receta"
+                                                onclick="setTriStateFilter(this, 'tiene_receta', 'SI')">
+                                                <i class="bi bi-check-circle-fill"></i>
+                                            </button>
+                                            <button class="tristate-btn" data-state="null" data-column="tiene_receta"
+                                                onclick="setTriStateFilter(this, 'tiene_receta', null)">
+                                                <i class="bi bi-dash-circle-fill"></i>
+                                            </button>
+                                            <button class="tristate-btn" data-state="NO" data-column="tiene_receta"
+                                                onclick="setTriStateFilter(this, 'tiene_receta', 'NO')">
+                                                <i class="bi bi-x-circle-fill"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </th>
                                 <th rowspan="2" style="width: 100px;">Acciones</th>
                             </tr>
                             <tr>

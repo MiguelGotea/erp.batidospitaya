@@ -139,13 +139,7 @@ function renderizarTabla(datos) {
             ? '<i class="bi bi-check-circle-fill status-icon si"></i>' 
             : '<i class="bi bi-x-circle-fill status-icon no"></i>';
         tr.append(`<td>${fabricacionIcono}</td>`);
-        
-        // Receta (icono)
-        const recetaIcono = row.tiene_receta === 'SI' 
-            ? '<i class="bi bi-check-circle-fill status-icon si"></i>' 
-            : '<i class="bi bi-x-circle-fill status-icon no"></i>';
-        tr.append(`<td>${recetaIcono}</td>`);
-        
+
         // Activo (toggle solo si tiene permiso)
         let activoHtml = '';
         if (PUEDE_DESACTIVAR) {
@@ -204,6 +198,12 @@ function renderizarTabla(datos) {
                    onchange="guardarCampoInline(${row.id}, 'presentacion', this.value)">
         `;
         tr.append(`<td>${presHtml}</td>`);
+
+        // Receta (icono) - Movido antes de acciones
+        const recetaIcono = row.tiene_receta === 'SI' 
+            ? '<i class="bi bi-check-circle-fill status-icon si"></i>' 
+            : '<i class="bi bi-x-circle-fill status-icon no"></i>';
+        tr.append(`<td>${recetaIcono}</td>`);
 
         // ========== FIN COLUMNAS DE AUDITORÍA ==========
 

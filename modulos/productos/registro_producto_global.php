@@ -115,32 +115,36 @@ if ($esNuevo && !$puedeCrear) {
                             <!-- ============================================ -->
                             <div class="tab-pane active" id="tab-datos-basicos">
                                 <div class="row g-3">
-                                    <!-- Fila 1: Identificación -->
-                                    <div class="col-md-4">
+                                    <!-- Fila 1: Identificación y Comercial -->
+                                    <div class="col-md-3">
                                         <label for="sku" class="form-label">SKU *</label>
                                         <input type="text" class="form-control" id="sku" name="sku" required>
                                     </div>
-                                    <div class="col-md-8">
+                                    <div class="col-md-6">
                                         <label for="nombre" class="form-label">Nombre *</label>
                                         <input type="text" class="form-control" id="nombre" name="nombre" required>
                                     </div>
+                                    <div class="col-md-3">
+                                        <label for="presentacion" class="form-label">Presentación Comercial</label>
+                                        <input type="text" class="form-control" id="presentacion" name="presentacion" 
+                                            placeholder="Ej: Paquete x 12" 
+                                            onchange="guardarCampoInline('presentacion', this.value)">
+                                    </div>
 
-                                    <!-- Fila 2: Clasificación -->
-                                    <div class="col-md-6">
+                                    <!-- Fila 2: Clasificación y Logística -->
+                                    <div class="col-md-4">
                                         <label for="grupo" class="form-label">Grupo</label>
                                         <select class="form-select" id="grupo" name="id_grupo" onchange="cargarSubgrupos()">
                                             <option value="">Seleccione...</option>
                                         </select>
                                     </div>
-                                    <div class="col-md-6">
+                                    <div class="col-md-4">
                                         <label for="subgrupo" class="form-label">Subgrupo</label>
                                         <select class="form-select" id="subgrupo" name="id_subgrupo_presentacion_producto">
                                             <option value="">Seleccione grupo primero...</option>
                                         </select>
                                     </div>
-
-                                    <!-- Fila 3: Logística y Comercial -->
-                                    <div class="col-md-6">
+                                    <div class="col-md-4">
                                         <label for="categoriaInsumo" class="form-label">Categoría Insumo (Mapeo)</label>
                                         <select class="form-select" id="categoriaInsumo" name="categoria_insumo" onchange="guardarCampoInline('categoria_insumo', this.value)">
                                             <option value="">Seleccione...</option>
@@ -152,13 +156,6 @@ if ($esNuevo && !$puedeCrear) {
                                             <option value="F">F - Secos y Preparación</option>
                                             <option value="G">G - Productos de Mostrador</option>
                                         </select>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label for="presentacion" class="form-label">Presentación Comercial</label>
-                                        <input type="text" class="form-control" id="presentacion" name="presentacion" 
-                                            placeholder="Ej: Paquete x 12, Caja x 24" 
-                                            onchange="guardarCampoInline('presentacion', this.value)">
-                                        <div class="form-text" style="font-size: 0.75rem;">Forma comercial en que se vende o adquiere el producto.</div>
                                     </div>
 
                                     <!-- Fila 4: Características y Toggles -->
