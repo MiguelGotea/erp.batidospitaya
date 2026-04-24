@@ -104,22 +104,6 @@ try {
     $stmtCods->execute([$idPP]);
     $codCots = array_column($stmtCods->fetchAll(PDO::FETCH_ASSOC), 'CodCotizacion');
 
-    // Fallback: si la presentación basica no tiene entrada propia en el diccionario
-    // (el mapeo está en otra presentación del mismo maestro, p.ej. la de receta),
-    // buscar todos los CodCotizacion de cualquier presentación activa del maestro.
-    if (empty($codCots) && $idMaestro > 0) {
-        $stmtCodsM = $conn->prepare("
-            SELECT d.CodCotizacion
-            FROM diccionario_productos_legado d
-            INNER JOIN producto_presentacion pp ON pp.id = d.id_producto_presentacion
-            WHERE pp.id_producto_maestro = ?
-              AND pp.Activo = 'SI'
-              AND pp.Id_receta_producto IS NULL
-        ");
-        $stmtCodsM->execute([$idMaestro]);
-        $codCots = array_column($stmtCodsM->fetchAll(PDO::FETCH_ASSOC), 'CodCotizacion');
-    }
-
     if (empty($codCots)) {
         echo json_encode(['ok' => false, 'msg' => 'Esta presentación no tiene CodCotizacion mapeado en el diccionario.']);
         exit();

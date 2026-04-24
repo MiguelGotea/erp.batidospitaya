@@ -191,7 +191,6 @@ try {
                 pp.Id_receta_producto,
                 pp.id_producto_maestro AS id_maestro,
                 pp.Nombre           AS nombre_presentacion,
-                pp.presentacion_basica_inventario,
                 u.id                AS id_unidad_erp,
                 u.nombre            AS unidad_erp,
                 u.abreviado         AS unidad_erp_abrev,
@@ -203,6 +202,7 @@ try {
             LEFT  JOIN producto_maestro pm       ON pm.id = pp.id_producto_maestro
             WHERE d.CodCotizacion IN ($phCot)
               AND pp.Activo = 'SI'
+              AND pp.presentacion_basica_inventario = 1
         ");
         $stmtDic->execute(array_values($codCotBuscar));
         foreach ($stmtDic->fetchAll(PDO::FETCH_ASSOC) as $row) {
@@ -253,18 +253,14 @@ try {
     }
 
     // 3g. Pre-cargar presentaciones por maestro (Nivel AUTO)
-    // Solo presentaciones de inventario (basica) — son la unidad de medida del consumo.
-    // basicaPorMaestro[id_maestro] permite hacer swap cuando el diccionario apunta
-    // a una presentación de receta/despacho en lugar de la de inventario.
+    // Todas las presentaciones simples (no globales) de los maestros relevantes
     $idMaestrosDict = array_unique(array_filter(array_column($diccionarioMap, 'id_maestro')));
-    $presentPorMaestro = []; // [id_maestro][id_unidad] => pp_data (solo basicas)
-    $basicaPorMaestro  = []; // [id_maestro]            => primera basica del maestro
+    $presentPorMaestro = []; // [id_maestro][id_unidad] => {id_presentacion, pp_cantidad, unidad}
     if (!empty($idMaestrosDict)) {
         $phMa = implode(',', array_fill(0, count($idMaestrosDict), '?'));
         $stmtPP = $conn->prepare("
             SELECT pp.id, pp.id_producto_maestro, pp.cantidad AS pp_cantidad,
-                   pp.id_unidad_producto, pp.Nombre AS nombre_presentacion,
-                   u.nombre AS unidad_nombre
+                   pp.id_unidad_producto, u.nombre AS unidad_nombre
             FROM producto_presentacion pp
             LEFT JOIN unidad_producto u ON u.id = pp.id_unidad_producto
             WHERE pp.id_producto_maestro IN ($phMa)
@@ -274,12 +270,7 @@ try {
         ");
         $stmtPP->execute(array_values($idMaestrosDict));
         foreach ($stmtPP->fetchAll(PDO::FETCH_ASSOC) as $pp) {
-            $mid = (int)$pp['id_producto_maestro'];
-            $uid = (int)$pp['id_unidad_producto'];
-            $presentPorMaestro[$mid][$uid] = $pp;
-            if (!isset($basicaPorMaestro[$mid])) {
-                $basicaPorMaestro[$mid] = $pp;  // primera basica = la referencia
-            }
+            $presentPorMaestro[(int)$pp['id_producto_maestro']][(int)$pp['id_unidad_producto']] = $pp;
         }
     }
 
@@ -380,22 +371,7 @@ try {
         $idMaestro = (int)$mapeo['id_maestro'];
         $idUnidERP = (int)$mapeo['id_unidad_erp'];
 
-        // ── Swap a presentación de consumo (basica_inventario) ───────────────
-        // Si el diccionario apunta a una presentación de receta/despacho (no basica),
-        // se redirige al id_pp de la presentación de inventario del mismo maestro.
-        // La conversión de unidades (Access → unidad basica) se resuelve a continuación.
-        if (!$esGlobal && empty($mapeo['presentacion_basica_inventario'])) {
-            if (isset($basicaPorMaestro[$idMaestro])) {
-                $bpp       = $basicaPorMaestro[$idMaestro];
-                $idPP      = (int)$bpp['id'];
-                $ppCant    = max((float)$bpp['pp_cantidad'], 0.001);
-                $idUnidERP = (int)$bpp['id_unidad_producto'];
-                $mapeo['nombre_presentacion'] = $bpp['nombre_presentacion'];
-            }
-            // Sin basica conocida: se usa la presentación del diccionario tal cual
-        }
-
-        // Filtro opcional por insumo (aplica sobre el idPP ya swapeado)
+        // Filtro opcional por insumo
         if ($idInsumo > 0 && $idPP !== $idInsumo) continue;
 
         if ($esGlobal) {
