@@ -33,7 +33,7 @@ try {
     }
 
     // Traer todos los productos activos con su grupo en un solo query
-    // Solo grupos con control = 'VERDADERO'
+    // Solo grupos con MenuVendible = 'VERDADERO'
     $stmt = $conn->prepare("
         SELECT
             g.CodGrupo,
@@ -47,7 +47,7 @@ try {
         FROM DBBatidos b
         INNER JOIN GrupoProductosVenta g ON g.CodGrupo = b.CodGrupo
         WHERE b.Vigencia = 1
-          AND g.control = 'VERDADERO'
+          AND g.MenuVendible = 'VERDADERO'
         ORDER BY g.prioridad ASC, g.NombreGrupo ASC, b.Nombre ASC, b.Medida ASC
     ");
     $stmt->execute();
