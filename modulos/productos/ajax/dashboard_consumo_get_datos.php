@@ -196,7 +196,8 @@ try {
                 u.nombre            AS unidad_erp,
                 u.abreviado         AS unidad_erp_abrev,
                 u.nombres_opcionales,
-                pm.Nombre           AS nombre_maestro
+                pm.Nombre           AS nombre_maestro,
+                pp.categoria_insumo
             FROM diccionario_productos_legado d
             INNER JOIN producto_presentacion pp ON pp.id = d.id_producto_presentacion
             LEFT  JOIN unidad_producto u         ON u.id  = pp.id_unidad_producto
@@ -442,6 +443,7 @@ try {
                 'nombre' => $mapeo['nombre_presentacion'],
                 'maestro' => $mapeo['nombre_maestro'],
                 'unidad' => $unidadPorId[$idUnidERP]['nombre'] ?? $mapeo['unidad_erp'] ?? '',
+                'categoria_insumo' => $mapeo['categoria_insumo'],
                 'es_global' => $esGlobal,
             ];
             $esP1Map[$idPP] = $esP1;  // inicializar con el primer mapeo
@@ -540,6 +542,7 @@ try {
             'nombre' => $meta['nombre'],
             'maestro' => $meta['maestro'],
             'unidad' => $meta['unidad'],
+            'categoria_insumo' => $meta['categoria_insumo'],
             'es_global' => (bool) $meta['es_global'],
             'es_p1' => $itemEsP1,
             'total' => $totalGeneral,

@@ -912,7 +912,7 @@ function renderTablaHistorial(data) {
     const total = data.consumo.length;
 
     if (total === 0) {
-        html = `<tr><td colspan="8" class="text-center text-muted py-4">Sin datos de consumo en el período.</td></tr>`;
+        html = `<tr><td colspan="9" class="text-center text-muted py-4">Sin datos de consumo en el período.</td></tr>`;
     } else {
         data.consumo.forEach(item => {
             const tipoBadge = item.es_global
@@ -933,6 +933,7 @@ function renderTablaHistorial(data) {
                     </div>
                     <div class="text-muted" style="font-size:.72rem">${escHtml(item.maestro)}</div>
                 </td>
+                <td><span class="badge bg-light text-dark border" style="font-size:.7rem">${escHtml(item.categoria_insumo || '—')}</span></td>
                 <td>${escHtml(item.unidad)}</td>
                 <td class="text-end fw-bold" style="color:#0E544C">${formatNum(item.total)}</td>
                 <td class="text-end">${formatNum(item.prom_semana)}</td>
@@ -974,7 +975,7 @@ function renderTablaProyeccion(data) {
     const ultimaSemTbl    = semanasNrosTbl[semanasNrosTbl.length - 1];
 
     if (data.consumo.length === 0) {
-        html = `<tr><td colspan="9" class="text-center text-muted py-4">Sin datos de proyección.</td></tr>`;
+        html = `<tr><td colspan="10" class="text-center text-muted py-4">Sin datos de proyección.</td></tr>`;
     } else {
         data.consumo.forEach(item => {
             // Proyección 3 semanas con regresión lineal (misma lógica que gráfico/KPIs)
@@ -1026,6 +1027,7 @@ function renderTablaProyeccion(data) {
                     <div class="fw-bold" style="font-size:.82rem">${escHtml(item.nombre)}</div>
                     <div class="text-muted" style="font-size:.72rem">${escHtml(item.maestro)}</div>
                 </td>
+                <td><span class="badge bg-light text-dark border" style="font-size:.7rem">${escHtml(item.categoria_insumo || '—')}</span></td>
                 <td>${escHtml(item.unidad)}</td>
                 <td class="text-end">${formatNum(item.prom_semana)}</td>
                 <td class="text-end fw-bold" style="color:#0E544C">${Math.round(proy3Tbl).toLocaleString('es-NI')}</td>
@@ -1108,6 +1110,7 @@ window.mostrarDesglose = function (idInsumo) {
     const contenido = `
         <div class="mb-2">
             <strong>${escHtml(item.nombre)}</strong>
+            <span class="badge bg-light text-dark border ms-2" style="font-size:.7rem">${escHtml(item.categoria_insumo || '—')}</span>
             <span class="text-muted ms-2" style="font-size:.8rem">· ${escHtml(item.unidad)} · ${escHtml(item.maestro)}</span>
         </div>
         <div class="table-responsive">
@@ -1246,8 +1249,9 @@ window.mostrarAuditoria = function (idInsumo) {
             <span style="color:#555">Fallback — 4 decimales</span>
         </div>`;
 
-        const infoHtml = `<div class="mb-2 d-flex gap-3" style="font-size:.8rem">
+        const infoHtml = `<div class="mb-2 d-flex gap-3 flex-wrap" style="font-size:.8rem">
             <span><strong>Presentación:</strong> ${escHtml(pp.nombre)}</span>
+            <span><strong>Categoría:</strong> <span class="badge bg-light text-dark border" style="font-size:.7rem">${escHtml(pp.categoria_insumo || '—')}</span></span>
             <span><strong>Unidad ERP:</strong> ${escHtml(pp.unidad)}</span>
             <span><strong>pp_cantidad:</strong> ${pp.pp_cant}</span>
             <span><strong>Filas:</strong> ${resp.total_filas}</span>

@@ -77,7 +77,8 @@ try {
                pp.Id_receta_producto,
                pp.id_producto_maestro,
                pp.id_unidad_producto,
-               u.nombre AS unidad_erp
+               u.nombre AS unidad_erp,
+               pp.categoria_insumo
         FROM producto_presentacion pp
         LEFT JOIN unidad_producto u ON u.id = pp.id_unidad_producto
         WHERE pp.id = ?
@@ -417,6 +418,7 @@ try {
             'id' => $idPP,
             'nombre' => $ppDat['Nombre'],
             'unidad' => $ppDat['unidad_erp'],
+            'categoria_insumo' => $ppDat['categoria_insumo'],
             'pp_cant' => $ppCantBase,
             'es_global' => $esGlobal,
         ],

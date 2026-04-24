@@ -368,6 +368,7 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                                         <thead>
                                             <tr>
                                                 <th>Insumo ERP</th>
+                                                <th>Categoría</th>
                                                 <th>Unidad</th>
                                                 <th class="text-end">Consumo Total</th>
                                                 <th class="text-end">Prom/Semana</th>
@@ -379,7 +380,7 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                                         </thead>
                                         <tbody id="tbodyHistorial">
                                             <tr>
-                                                <td colspan="8" class="text-center text-muted py-4">
+                                                <td colspan="9" class="text-center text-muted py-4">
                                                     Aplica los filtros para ver el historial.
                                                 </td>
                                             </tr>
@@ -406,6 +407,7 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                                         <thead>
                                             <tr>
                                                 <th>Insumo ERP</th>
+                                                <th>Categoría</th>
                                                 <th>Unidad</th>
                                                 <th class="text-end">Prom/Semana</th>
                                                 <th class="text-end">Proyec. 3 Sem.</th>
@@ -418,7 +420,7 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                                         </thead>
                                         <tbody id="tbodyProyeccion">
                                             <tr>
-                                                <td colspan="9" class="text-center text-muted py-4">
+                                                <td colspan="10" class="text-center text-muted py-4">
                                                     Aplica los filtros para ver la proyección.
                                                 </td>
                                             </tr>

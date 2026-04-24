@@ -76,10 +76,10 @@ function xlsSheetName(string $s): string {
 $sheets = [];
 
 /* ── Hoja TOTAL ─────────────────────────────────────────── */
-$header = array_merge(['Producto'], array_map(fn($n) => "Semana $n", $semanaNros));
+$header = array_merge(['Producto', 'Categoría'], array_map(fn($n) => "Semana $n", $semanaNros));
 $rows   = [$header];
 foreach ($consumo as $item) {
-    $row = [$item['nombre']];
+    $row = [$item['nombre'], $item['categoria_insumo'] ?? ''];
     foreach ($semanaNros as $semNum) {
         $row[] = isset($item['por_semana'][$semNum]) ? (float)$item['por_semana'][$semNum] : 0;
     }
@@ -93,7 +93,7 @@ foreach ($sucursales as $codSuc) {
     $rows      = [$header]; // mismo encabezado
 
     foreach ($consumo as $item) {
-        $row = [$item['nombre']];
+        $row = [$item['nombre'], $item['categoria_insumo'] ?? ''];
         foreach ($semanaNros as $semNum) {
             $val = (float)($item['desglose_semxsuc'][$semNum][$codSuc] ?? 0);
             $row[] = $val;
@@ -122,9 +122,10 @@ function buildSheetXml(array $sheetRows): string {
     // Auto-width hint: set column A a bit wider
     $totalCols = !empty($sheetRows[0]) ? count($sheetRows[0]) : 1;
     $xml .= '<cols>';
-    $xml .= '<col min="1" max="1" width="42" customWidth="1"/>'; // columna Producto
-    if ($totalCols > 1) {
-        $xml .= '<col min="2" max="' . $totalCols . '" width="14" customWidth="1"/>';
+    $xml .= '<col min="1" max="1" width="42" customWidth="1"/>'; // Producto
+    $xml .= '<col min="2" max="2" width="20" customWidth="1"/>'; // Categoría
+    if ($totalCols > 2) {
+        $xml .= '<col min="3" max="' . $totalCols . '" width="14" customWidth="1"/>';
     }
     $xml .= '</cols>';
 
@@ -138,14 +139,14 @@ function buildSheetXml(array $sheetRows): string {
         foreach ($row as $cIdx => $cell) {
             $colNum  = $cIdx + 1;
             $cellRef = xlsCol($colNum) . $rowNum;
-            $isFirstCol = ($colNum === 1);
+            $isTextCol = ($colNum <= 2);
 
             if ($isHeader) {
                 // Header: siempre texto + estilo bold
                 $esc  = xlsEsc((string)$cell);
                 $xml .= "<c r=\"{$cellRef}\" t=\"inlineStr\" s=\"1\"><is><t>{$esc}</t></is></c>";
-            } elseif ($isFirstCol) {
-                // Columna Producto: texto alineado izquierda
+            } elseif ($isTextCol) {
+                // Columnas de texto (Producto, Categoría): texto alineado izquierda
                 $esc  = xlsEsc((string)$cell);
                 $xml .= "<c r=\"{$cellRef}\" t=\"inlineStr\" s=\"2\"><is><t>{$esc}</t></is></c>";
             } else {
