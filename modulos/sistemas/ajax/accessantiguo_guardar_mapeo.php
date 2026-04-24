@@ -56,11 +56,11 @@ try {
         exit;
     }
 
-    // Verificar que el producto_presentacion existe
-    $chk = $conn->prepare("SELECT id FROM producto_presentacion WHERE id = :id AND Activo = 'SI'");
+    // Verificar que el producto_presentacion existe y cumple con la condición de inventario
+    $chk = $conn->prepare("SELECT id FROM producto_presentacion WHERE id = :id AND Activo = 'SI' AND presentacion_basica_inventario = 1");
     $chk->execute([':id' => $idProductoPresentacion]);
     if (!$chk->fetch()) {
-        echo json_encode(['success' => false, 'message' => 'El producto nuevo no existe o está inactivo']);
+        echo json_encode(['success' => false, 'message' => 'El producto nuevo no existe, está inactivo o no es una presentación básica de inventario']);
         exit;
     }
 

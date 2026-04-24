@@ -160,12 +160,14 @@ try {
                     u.Nombre              AS unidadNueva,
                     pm.id                 AS id_maestro,
                     pm.Nombre             AS productoMaestro,
-                    pp.presentacion_receta
+                    pp.presentacion_receta,
+                    pp.presentacion_basica_inventario
                 FROM diccionario_productos_legado d
                 INNER JOIN producto_presentacion pp ON pp.id = d.id_producto_presentacion
                 LEFT JOIN unidad_producto u          ON u.id = pp.id_unidad_producto
                 LEFT JOIN producto_maestro pm        ON pm.id = pp.id_producto_maestro
                 WHERE d.CodCotizacion = :cot
+                  AND pp.presentacion_basica_inventario = 1
                 LIMIT 1
             ");
             $stmtDic->execute([':cot' => $codCotizacion]);
@@ -206,11 +208,11 @@ try {
 
                 if ($resUnidad) {
                     // Buscar presentación con unidad directa del ingrediente
-                    $resAuto = buscarPresentacionPorUnidades($conn, $idMaestro, $resUnidad['directos']);
+                    $resAuto = buscarPresentacionPorUnidades($conn, $idMaestro, $resUnidad['directos'], 'inventario');
 
                     // Si no hay directa, buscar con unidades convertibles
                     if (!$resAuto && !empty($resUnidad['convertibles'])) {
-                        $resAuto = buscarPresentacionPorUnidades($conn, $idMaestro, $resUnidad['convertibles']);
+                        $resAuto = buscarPresentacionPorUnidades($conn, $idMaestro, $resUnidad['convertibles'], 'inventario');
                     }
                 }
 
@@ -226,13 +228,15 @@ try {
                             u.nombre    AS unidadNueva,
                             pm.id       AS id_maestro,
                             pm.Nombre   AS productoMaestro,
-                            pp.presentacion_receta
+                            pp.presentacion_receta,
+                            pp.presentacion_basica_inventario
                         FROM producto_presentacion pp
                         INNER JOIN producto_maestro pm ON pm.id = pp.id_producto_maestro
                         LEFT JOIN unidad_producto u    ON u.id  = pp.id_unidad_producto
                         WHERE pp.id_producto_maestro = ?
                           AND pp.Id_receta_producto IS NULL
                           AND pp.Activo = 'SI'
+                          AND pp.presentacion_basica_inventario = 1
                         LIMIT 1
                     ");
                     $stmtAny->execute([$idMaestro]);
@@ -336,12 +340,13 @@ try {
                                 $irRow = buscarPresentacionPorUnidades(
                                     $conn,
                                     $idMaestroERP,
-                                    $resolucion['multi_directos'] ?? $resolucion['directos']
+                                    $resolucion['multi_directos'] ?? $resolucion['directos'],
+                                    'receta'
                                 );
 
                                 // Nivel 2: buscar con unidades convertibles (ej: Onzas Peso)
                                 if (!$irRow && !empty($resolucion['convertibles'])) {
-                                    $irRow = buscarPresentacionPorUnidades($conn, $idMaestroERP, $resolucion['convertibles']);
+                                    $irRow = buscarPresentacionPorUnidades($conn, $idMaestroERP, $resolucion['convertibles'], 'receta');
                                     if ($irRow) {
                                         foreach ($resolucion['conversiones'] as $conv) {
                                             if ($conv['nombre'] === $irRow['unidadNueva']) {
@@ -356,7 +361,7 @@ try {
                             // Nivel 3: si resolverUnidadERP falló o no encontró, usar la unidad
                             // ya conocida de nuevo_producto (Onzas Peso, Litros, etc.)
                             if (!$irRow && $unidadResERP !== '') {
-                                $irRow = buscarPresentacionPorUnidades($conn, $idMaestroERP, [$unidadResERP]);
+                                $irRow = buscarPresentacionPorUnidades($conn, $idMaestroERP, [$unidadResERP], 'receta');
                                 if ($irRow) {
                                     // Buscar factor de conversión entre la unidad del ingrediente y la encontrada
                                     // usando ? posicionales (evita HY093 con named params repetidos)

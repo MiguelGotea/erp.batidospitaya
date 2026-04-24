@@ -150,9 +150,11 @@ function resolverUnidadERP(PDO $conn, string $unidadAntigua): ?array
  * @param array  $nombres   unidad_producto.nombre a buscar (IN)
  * @return array|null
  */
-function buscarPresentacionPorUnidades(PDO $conn, int $idMaestro, array $nombres): ?array
+function buscarPresentacionPorUnidades(PDO $conn, int $idMaestro, array $nombres, string $tipo = 'receta'): ?array
 {
     if (empty($nombres)) return null;
+
+    $columna = ($tipo === 'inventario') ? 'presentacion_basica_inventario' : 'presentacion_receta';
 
     $placeholders = implode(',', array_fill(0, count($nombres), '?'));
     $stmt = $conn->prepare("
@@ -165,7 +167,8 @@ function buscarPresentacionPorUnidades(PDO $conn, int $idMaestro, array $nombres
             u.nombre    AS unidadNueva,
             pm.id       AS id_maestro,
             pm.Nombre   AS productoMaestro,
-            pp.presentacion_receta
+            pp.presentacion_receta,
+            pp.presentacion_basica_inventario
         FROM producto_presentacion pp
         INNER JOIN producto_maestro pm ON pm.id = pp.id_producto_maestro
         LEFT  JOIN unidad_producto  u  ON u.id  = pp.id_unidad_producto
@@ -173,7 +176,7 @@ function buscarPresentacionPorUnidades(PDO $conn, int $idMaestro, array $nombres
           AND u.nombre IN ($placeholders)
           AND pp.Id_receta_producto IS NULL
           AND pp.Activo = 'SI'
-          AND pp.presentacion_receta = 1
+          AND pp.$columna = 1
         ORDER BY
             CASE WHEN pp.cantidad = 1 THEN 0 ELSE 1 END ASC,
             pp.cantidad ASC
