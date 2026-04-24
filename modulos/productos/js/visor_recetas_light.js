@@ -321,9 +321,12 @@ function renderTabla(ingredientes) {
             }
         }
 
+        const ordenHtml = esArtilugio ? `<span class="orden-num ingr-inactivo">${orden}</span>` : `<span class="orden-num">${orden}</span>`;
+        const tipoHtml = esArtilugio ? `<span class="badge-tipo ${tipoCls} ingr-inactivo">${esc(tipo)}</span>` : tipoBadge;
+
         return `<tr class="${filaClass}">
-            <td class="text-center"><span class="orden-num">${orden}</span></td>
-            <td class="text-center">${tipoBadge}</td>
+            <td class="text-center">${ordenHtml}</td>
+            <td class="text-center">${tipoHtml}</td>
             <td class="td-sep-left">${celInsumo}</td>
             <td class="text-center fw-bold" style="font-size:.9rem">${celCantidad}</td>
         </tr>`;

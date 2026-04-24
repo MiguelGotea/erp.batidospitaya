@@ -675,6 +675,7 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                     : (esArtilugio ? `<span class="sin-cot text-muted">Excluido por Artilugio</span>` : `<span class="sin-cot">Sin cotización</span>`);
 
                 // ── Comanda Access: Nombre ───────────────────────────────────────────
+                const comandaClass = esArtilugio ? 'ingr-inactivo' : '';
                 let comandaNombre;
                 if (metodoCot === 'directa') {
                     // Prioridad 1: Nombre (Marca, Linea, Capacidad)
@@ -826,8 +827,8 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                     <!-- Comanda Access -->
                     <td class="text-center text-muted">${ingr.ordenreceta ?? idx + 1}</td>
                     <td class="text-center"><span class="badge bg-secondary">${esc(tipo)}</span></td>
-                    <td style="font-size:.8rem">${esc(comandaNombre)}</td>
-                    <td class="text-center fw-semibold" style="border-right:3px solid #5c7aff;font-size:.8rem">${comandaCantidad}</td>
+                    <td style="font-size:.8rem" class="${comandaClass}">${esc(comandaNombre)}</td>
+                    <td class="text-center fw-semibold ${comandaClass}" style="border-right:3px solid #5c7aff;font-size:.8rem">${comandaCantidad}</td>
                     <!-- Nuevo Sistema -->
                     <td>${celInsumoReceta}</td>
                     <td class="text-center fw-semibold">${celCantERP}</td>
