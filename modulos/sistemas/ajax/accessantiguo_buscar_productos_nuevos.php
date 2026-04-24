@@ -53,6 +53,7 @@ try {
     $stmt->execute([':q' => $like, ':q2' => $like, ':q3' => $like]);
     $resultados = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+
     // Fetch varieties for each result
     foreach ($resultados as &$res) {
         $stmtVar = $conn->prepare("
