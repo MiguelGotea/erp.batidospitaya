@@ -165,6 +165,7 @@ try {
                 LEFT JOIN unidad_producto u          ON u.id = pp.id_unidad_producto
                 LEFT JOIN producto_maestro pm        ON pm.id = pp.id_producto_maestro
                 WHERE d.CodCotizacion = :cot
+                  AND pp.presentacion_receta = 1
                 LIMIT 1
             ");
             $stmtDic->execute([':cot' => $codCotizacion]);
@@ -231,6 +232,7 @@ try {
                         WHERE pp.id_producto_maestro = ?
                           AND pp.Id_receta_producto IS NULL
                           AND pp.Activo = 'SI'
+                          AND pp.presentacion_receta = 1
                         LIMIT 1
                     ");
                     $stmtAny->execute([$idMaestro]);

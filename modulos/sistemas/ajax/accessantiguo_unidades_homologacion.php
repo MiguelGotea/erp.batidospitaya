@@ -172,6 +172,7 @@ function buscarPresentacionPorUnidades(PDO $conn, int $idMaestro, array $nombres
           AND u.nombre IN ($placeholders)
           AND pp.Id_receta_producto IS NULL
           AND pp.Activo = 'SI'
+          AND pp.presentacion_receta = 1
         ORDER BY
             CASE WHEN pp.cantidad = 1 THEN 0 ELSE 1 END ASC,
             pp.cantidad ASC
