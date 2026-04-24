@@ -15,6 +15,7 @@ if (!tienePermiso('recetario_access_traducido', 'vista', $cargoOperario)) {
     header('Location: /login.php');
     exit();
 }
+
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -150,9 +151,12 @@ if (!tienePermiso('recetario_access_traducido', 'vista', $cargoOperario)) {
                             </div>
                         </div>
                         <div class="col-12">
-                            <div class="alert py-2 px-3 small mb-2" style="background:#fff3e0; color:#856404; border:1px solid #ffeeba">
-                                <strong><i class="fas fa-exclamation-triangle me-1"></i> Componentes de Artilugio:</strong>
-                                Ingredientes registrados en <code>MezclaPorcionesAccess</code> aparecen tachados. NO se mapean individualmente porque su consumo se descuenta en la mezcla principal.
+                            <div class="alert py-2 px-3 small mb-2"
+                                style="background:#fff3e0; color:#856404; border:1px solid #ffeeba">
+                                <strong><i class="fas fa-exclamation-triangle me-1"></i> Componentes de
+                                    Artilugio:</strong>
+                                Ingredientes registrados en <code>MezclaPorcionesAccess</code> aparecen tachados. NO se
+                                mapean individualmente porque su consumo se descuenta en la mezcla principal.
                             </div>
                         </div>
                         <div class="col-12">
