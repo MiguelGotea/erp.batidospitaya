@@ -17,7 +17,7 @@ header('Content-Type: application/json; charset=utf-8');
 set_time_limit(0);    // Sin límite: dejamos que MySQL haga el trabajo pesado
 ini_set('memory_limit', '256M');
 
-$usuario       = obtenerUsuarioActual();
+$usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
 
 if (!tienePermiso('dashboard_consumo_insumos', 'vista', $cargoOperario)) {
@@ -27,10 +27,10 @@ if (!tienePermiso('dashboard_consumo_insumos', 'vista', $cargoOperario)) {
 }
 
 /* ── Parámetros ────────────────────────────────────────────── */
-$numDesde       = isset($_POST['semana_desde_num']) ? (int)$_POST['semana_desde_num'] : 0;
-$numHasta       = isset($_POST['semana_hasta_num']) ? (int)$_POST['semana_hasta_num'] : 0;
-$sucursalesPost = isset($_POST['sucursales'])       ? (array)$_POST['sucursales']     : [];
-$idInsumo       = isset($_POST['id_insumo'])        ? (int)$_POST['id_insumo']        : 0;
+$numDesde = isset($_POST['semana_desde_num']) ? (int) $_POST['semana_desde_num'] : 0;
+$numHasta = isset($_POST['semana_hasta_num']) ? (int) $_POST['semana_hasta_num'] : 0;
+$sucursalesPost = isset($_POST['sucursales']) ? (array) $_POST['sucursales'] : [];
+$idInsumo = isset($_POST['id_insumo']) ? (int) $_POST['id_insumo'] : 0;
 
 if (!$numDesde || !$numHasta) {
     echo json_encode(['ok' => false, 'msg' => 'Ingresa los números de semana de inicio y fin.']);
@@ -64,9 +64,9 @@ try {
     ");
     $stmtSems->execute([':d' => $numDesde, ':h' => $numHasta]);
     $semanasRango = $stmtSems->fetchAll(PDO::FETCH_ASSOC);
-    $semanasMap   = [];
+    $semanasMap = [];
     foreach ($semanasRango as $s) {
-        $semanasMap[(int)$s['numero_semana']] = $s;
+        $semanasMap[(int) $s['numero_semana']] = $s;
     }
 
     /* ══════════════════════════════════════════════════════════
@@ -78,14 +78,14 @@ try {
     $paramsSql = [
         ':fecha_desde' => $rango['fecha_desde'],
         ':fecha_hasta' => $rango['fecha_hasta'],
-        ':sem_desde'   => $numDesde,
-        ':sem_hasta'   => $numHasta,
+        ':sem_desde' => $numDesde,
+        ':sem_hasta' => $numHasta,
     ];
     if (!empty($sucursalesPost)) {
         $phSuc = [];
         foreach ($sucursalesPost as $i => $s) {
             $k = ':suc' . $i;
-            $phSuc[]      = $k;
+            $phSuc[] = $k;
             $paramsSql[$k] = $s;
         }
         $whereSuc = ' AND v.local IN (' . implode(',', $phSuc) . ')';
@@ -119,12 +119,12 @@ try {
 
     if (empty($filas)) {
         echo json_encode([
-            'ok'        => true,
-            'msg'       => 'Sin ventas válidas en el período.',
-            'consumo'   => [],
+            'ok' => true,
+            'msg' => 'Sin ventas válidas en el período.',
+            'consumo' => [],
             'sin_mapeo' => [],
-            'semanas'   => array_values($semanasRango),
-            'sucursales'=> [],
+            'semanas' => array_values($semanasRango),
+            'sucursales' => [],
         ]);
         exit();
     }
@@ -135,7 +135,7 @@ try {
 
     // 3a. Ingredientes únicos
     $codsIng = array_unique(array_column($filas, 'cod_ingrediente'));
-    $phIng   = implode(',', array_fill(0, count($codsIng), '?'));
+    $phIng = implode(',', array_fill(0, count($codsIng), '?'));
 
     // 3b. Unidades de ingredientes (DBIngredientes)
     $stmtUnd = $conn->prepare("
@@ -163,7 +163,8 @@ try {
     $cotMap = [];
     foreach ($stmtCot->fetchAll(PDO::FETCH_ASSOC) as $c) {
         $ci = $c['CodIngrediente'];
-        if (!isset($cotMap[$ci])) $cotMap[$ci] = ['p2' => null, 'p3' => null];
+        if (!isset($cotMap[$ci]))
+            $cotMap[$ci] = ['p2' => null, 'p3' => null];
         if ($c['Conversion'] == 1 && $c['Prioridad'] == 1 && !$cotMap[$ci]['p2']) {
             $cotMap[$ci]['p2'] = $c['CodCotizacion'];
         }
@@ -206,7 +207,7 @@ try {
         ");
         $stmtDic->execute(array_values($codCotBuscar));
         foreach ($stmtDic->fetchAll(PDO::FETCH_ASSOC) as $row) {
-            $diccionarioMap[(string)$row['CodCotizacion']] = $row;
+            $diccionarioMap[(string) $row['CodCotizacion']] = $row;
         }
     }
 
@@ -218,22 +219,24 @@ try {
     // Crear índice: nombre/abreviado/alias → id
     $unidadPorNombre = [];
     foreach ($todasUnidades as $u) {
-        $uid  = (int)$u['id'];
+        $uid = (int) $u['id'];
         $unom = strtolower(trim($u['nombre']));
         $uabr = strtolower(trim($u['abreviado'] ?? ''));
         $unidadPorNombre[$unom] = $uid;
-        if ($uabr) $unidadPorNombre[$uabr] = $uid;
+        if ($uabr)
+            $unidadPorNombre[$uabr] = $uid;
         if (!empty($u['nombres_opcionales'])) {
             foreach (preg_split('/[,;|]+/', $u['nombres_opcionales']) as $alias) {
                 $ak = strtolower(trim($alias));
-                if ($ak) $unidadPorNombre[$ak] = $uid;
+                if ($ak)
+                    $unidadPorNombre[$ak] = $uid;
             }
         }
     }
     // Índice por id para lookup rápido
     $unidadPorId = [];
     foreach ($todasUnidades as $u) {
-        $unidadPorId[(int)$u['id']] = $u;
+        $unidadPorId[(int) $u['id']] = $u;
     }
 
     // 3f. Pre-cargar TODAS las conversiones (tabla pequeña)
@@ -245,12 +248,13 @@ try {
     // Índice: [inicio][final] => factor, [final][inicio] => 1/factor
     $convIndex = [];
     foreach ($stmtConv->fetchAll(PDO::FETCH_ASSOC) as $c) {
-        $ini = (int)$c['id_unidad_producto_inicio'];
-        $fin = (int)$c['id_unidad_producto_final'];
-        $fac = (float)$c['cantidad'];
+        $ini = (int) $c['id_unidad_producto_inicio'];
+        $fin = (int) $c['id_unidad_producto_final'];
+        $fac = (float) $c['cantidad'];
         $convIndex[$ini][$fin] = $fac;
         $convIndex[$fin][$ini] = ($fac != 0) ? 1 / $fac : 0;
     }
+
 
     // 3g. Pre-cargar presentaciones por maestro (Nivel AUTO)
     // Todas las presentaciones simples (no globales) de los maestros relevantes
@@ -270,7 +274,7 @@ try {
         ");
         $stmtPP->execute(array_values($idMaestrosDict));
         foreach ($stmtPP->fetchAll(PDO::FETCH_ASSOC) as $pp) {
-            $presentPorMaestro[(int)$pp['id_producto_maestro']][(int)$pp['id_unidad_producto']] = $pp;
+            $presentPorMaestro[(int) $pp['id_producto_maestro']][(int) $pp['id_unidad_producto']] = $pp;
         }
     }
 
@@ -278,28 +282,32 @@ try {
        PASO 4: Función de resolución de unidades (PHP puro)
        Solo usa los arrays pre-cargados — sin queries
        ══════════════════════════════════════════════════════════ */
-    function resolverUnidadId($nombreAccess, &$unidadPorNombre) {
+    function resolverUnidadId($nombreAccess, &$unidadPorNombre)
+    {
         $k = strtolower(trim($nombreAccess));
         return $unidadPorNombre[$k] ?? null;
     }
 
-    function resolverFactorConversion($idOrigen, $idDestino, &$convIndex) {
-        if ($idOrigen === $idDestino) return 1.0;
+    function resolverFactorConversion($idOrigen, $idDestino, &$convIndex)
+    {
+        if ($idOrigen === $idDestino)
+            return 1.0;
         return $convIndex[$idOrigen][$idDestino] ?? null;
     }
 
-    function buscarPresentacionEnMaestro($idMaestro, $idUnidad, &$presentPorMaestro) {
+    function buscarPresentacionEnMaestro($idMaestro, $idUnidad, &$presentPorMaestro)
+    {
         return $presentPorMaestro[$idMaestro][$idUnidad] ?? null;
     }
 
     /* ══════════════════════════════════════════════════════════
        PASO 5: Loop de resolución — PHP puro (sin DB)
        ══════════════════════════════════════════════════════════ */
-    $consumoAgg    = [];   // [id_pp][sucursal][semana] => float
-    $metaPP        = [];   // [id_pp] => {nombre, maestro, unidad, es_global}
-    $esP1Map       = [];   // [id_pp] => bool  (true si TODOS sus mapeos vinieron de P1)
-    $sinMapeo      = [];
-    $sinMapeoSet   = [];
+    $consumoAgg = [];   // [id_pp][sucursal][semana] => float
+    $metaPP = [];   // [id_pp] => {nombre, maestro, unidad, es_global}
+    $esP1Map = [];   // [id_pp] => bool  (true si TODOS sus mapeos vinieron de P1)
+    $sinMapeo = [];
+    $sinMapeoSet = [];
     $sucursalesSet = [];
 
     // Pre-cargar nombres de sucursales (codigo => nombre)
@@ -313,32 +321,34 @@ try {
     }
 
     foreach ($filas as $fila) {
-        $codIng    = $fila['cod_ingrediente'];
+        $codIng = $fila['cod_ingrediente'];
         $codporcion = $fila['codporcion'];
-        $sucursal  = $fila['sucursal'];
-        $semana    = (int)$fila['semana'];
-        $cantTotal = (float)$fila['cant_total'];
+        $sucursal = $fila['sucursal'];
+        $semana = (int) $fila['semana'];
+        $cantTotal = (float) $fila['cant_total'];
 
         $sucursalesSet[$sucursal] = true;
 
         // ── Resolver mapeo (P1 / P2 / P3) ──
-        $mapeo  = null;
-        $esP1   = false;   // P1 = porción mapeada → redondear al 0.5 más cercano
+        $mapeo = null;
+        $esP1 = false;   // P1 = porción mapeada → redondear al 0.5 más cercano
 
         // P1: codporcion directo
-        if (!empty($codporcion) && isset($diccionarioMap[(string)$codporcion])) {
-            $mapeo = $diccionarioMap[(string)$codporcion];
-            $esP1  = true;
+        if (!empty($codporcion) && isset($diccionarioMap[(string) $codporcion])) {
+            $mapeo = $diccionarioMap[(string) $codporcion];
+            $esP1 = true;
         }
         // P2: cotización base
         if (!$mapeo && isset($cotMap[$codIng]['p2'])) {
-            $ck = (string)$cotMap[$codIng]['p2'];
-            if (isset($diccionarioMap[$ck])) $mapeo = $diccionarioMap[$ck];
+            $ck = (string) $cotMap[$codIng]['p2'];
+            if (isset($diccionarioMap[$ck]))
+                $mapeo = $diccionarioMap[$ck];
         }
         // P3: fallback
         if (!$mapeo && isset($cotMap[$codIng]['p3'])) {
-            $ck = (string)$cotMap[$codIng]['p3'];
-            if (isset($diccionarioMap[$ck])) $mapeo = $diccionarioMap[$ck];
+            $ck = (string) $cotMap[$codIng]['p3'];
+            if (isset($diccionarioMap[$ck]))
+                $mapeo = $diccionarioMap[$ck];
         }
 
         // Sin mapeo
@@ -346,10 +356,10 @@ try {
             if (!isset($sinMapeoSet[$codIng])) {
                 $sinMapeoSet[$codIng] = true;
                 $sinMapeo[] = [
-                    'cod_ingrediente'  => $codIng,
-                    'nombre'           => $dbIngredientes[$codIng]['Nombre'] ?? 'Desconocido',
-                    'unidad_access'    => $dbIngredientes[$codIng]['Unidad'] ?? '',
-                    'num_productos'    => 1,
+                    'cod_ingrediente' => $codIng,
+                    'nombre' => $dbIngredientes[$codIng]['Nombre'] ?? 'Desconocido',
+                    'unidad_access' => $dbIngredientes[$codIng]['Unidad'] ?? '',
+                    'num_productos' => 1,
                     'ventas_afectadas' => round($cantTotal, 2),
                 ];
             } else {
@@ -365,14 +375,15 @@ try {
         }
 
         // ── ¿Receta global? ─────────────────────────────────
-        $esGlobal  = !empty($mapeo['Id_receta_producto']);
-        $idPP      = (int)$mapeo['id_presentacion'];
-        $ppCant    = max((float)$mapeo['pp_cantidad'], 0.001);
-        $idMaestro = (int)$mapeo['id_maestro'];
-        $idUnidERP = (int)$mapeo['id_unidad_erp'];
+        $esGlobal = !empty($mapeo['Id_receta_producto']);
+        $idPP = (int) $mapeo['id_presentacion'];
+        $ppCant = max((float) $mapeo['pp_cantidad'], 0.001);
+        $idMaestro = (int) $mapeo['id_maestro'];
+        $idUnidERP = (int) $mapeo['id_unidad_erp'];
 
         // Filtro opcional por insumo
-        if ($idInsumo > 0 && $idPP !== $idInsumo) continue;
+        if ($idInsumo > 0 && $idPP !== $idInsumo)
+            continue;
 
         if ($esGlobal) {
             // Fórmula global: consumo = cant_total (ya es sum(ventas * cantidad_receta))
@@ -392,9 +403,9 @@ try {
                     // Nivel 2: buscar presentación del maestro con unidad de access
                     $ppAlt = buscarPresentacionEnMaestro($idMaestro, $idUnidAccess, $presentPorMaestro);
                     if ($ppAlt) {
-                        $idPP   = (int)$ppAlt['id'];
-                        $ppCant = max((float)$ppAlt['pp_cantidad'], 0.001);
-                        $idUnidERP = (int)$ppAlt['id_unidad_producto'];
+                        $idPP = (int) $ppAlt['id'];
+                        $ppCant = max((float) $ppAlt['pp_cantidad'], 0.001);
+                        $idUnidERP = (int) $ppAlt['id_unidad_producto'];
                         $factor = 1.0;
                     } else {
                         // Nivel 3: buscar via conversiones disponibles para el maestro
@@ -402,8 +413,8 @@ try {
                             foreach ($convIndex[$idUnidAccess] as $idDestino => $factorConv) {
                                 $ppConv = buscarPresentacionEnMaestro($idMaestro, $idDestino, $presentPorMaestro);
                                 if ($ppConv) {
-                                    $idPP   = (int)$ppConv['id'];
-                                    $ppCant = max((float)$ppConv['pp_cantidad'], 0.001);
+                                    $idPP = (int) $ppConv['id'];
+                                    $ppCant = max((float) $ppConv['pp_cantidad'], 0.001);
                                     $idUnidERP = $idDestino;
                                     $factor = $factorConv;
                                     break;
@@ -427,21 +438,25 @@ try {
         // ── Guardar metadata ──────────────────────────────────
         if (!isset($metaPP[$idPP])) {
             $metaPP[$idPP] = [
-                'id'       => $idPP,
-                'nombre'   => $mapeo['nombre_presentacion'],
-                'maestro'  => $mapeo['nombre_maestro'],
-                'unidad'   => $unidadPorId[$idUnidERP]['nombre'] ?? $mapeo['unidad_erp'] ?? '',
-                'es_global'=> $esGlobal,
+                'id' => $idPP,
+                'nombre' => $mapeo['nombre_presentacion'],
+                'maestro' => $mapeo['nombre_maestro'],
+                'unidad' => $unidadPorId[$idUnidERP]['nombre'] ?? $mapeo['unidad_erp'] ?? '',
+                'es_global' => $esGlobal,
             ];
             $esP1Map[$idPP] = $esP1;  // inicializar con el primer mapeo
         } else {
             // Si alguna fila del mismo idPP NO es P1, el item deja de ser puro P1
-            if (!$esP1) $esP1Map[$idPP] = false;
+            if (!$esP1)
+                $esP1Map[$idPP] = false;
         }
 
-        if (!isset($consumoAgg[$idPP]))             $consumoAgg[$idPP] = [];
-        if (!isset($consumoAgg[$idPP][$sucursal]))  $consumoAgg[$idPP][$sucursal] = [];
-        if (!isset($consumoAgg[$idPP][$sucursal][$semana])) $consumoAgg[$idPP][$sucursal][$semana] = 0;
+        if (!isset($consumoAgg[$idPP]))
+            $consumoAgg[$idPP] = [];
+        if (!isset($consumoAgg[$idPP][$sucursal]))
+            $consumoAgg[$idPP][$sucursal] = [];
+        if (!isset($consumoAgg[$idPP][$sucursal][$semana]))
+            $consumoAgg[$idPP][$sucursal][$semana] = 0;
         $consumoAgg[$idPP][$sucursal][$semana] += $consumido;
     }
 
@@ -449,25 +464,25 @@ try {
        PASO 6: Calcular estadísticas y construir respuesta
        ══════════════════════════════════════════════════════════ */
     $sucursalesPresentes = array_keys($sucursalesSet);
-    $semanasNros         = array_keys($semanasMap);
+    $semanasNros = array_keys($semanasMap);
 
     $listaConsumo = [];
     foreach ($consumoAgg as $idPP => $porSuc) {
-        $meta  = $metaPP[$idPP];
+        $meta = $metaPP[$idPP];
         $itemEsP1 = !empty($esP1Map[$idPP]);   // ¿todas las filas de este idPP son P1?
 
         // Función local de redondeo: P1 → 0.5, resto → 4 decimales
         $rnd = fn($v) => $itemEsP1 ? (round($v * 2) / 2) : round($v, 4);
 
-        $totalGeneral  = 0;
-        $consPorSem    = [];
-        $porSucRes     = [];
+        $totalGeneral = 0;
+        $consPorSem = [];
+        $porSucRes = [];
 
         foreach ($porSuc as $suc => $porSem) {
             $totSuc = 0;
             foreach ($porSem as $sem => $c) {
                 $totalGeneral += $c;
-                $totSuc       += $c;
+                $totSuc += $c;
                 $consPorSem[$sem] = ($consPorSem[$sem] ?? 0) + $c;
             }
             $porSucRes[$suc] = $rnd($totSuc);
@@ -478,26 +493,37 @@ try {
             $consPorSem[$s] = $rnd($c);
         }
 
-        $semanaPico = null; $semanaLow = null;
-        $maxC = -1; $minC = PHP_INT_MAX;
+        $semanaPico = null;
+        $semanaLow = null;
+        $maxC = -1;
+        $minC = PHP_INT_MAX;
         foreach ($consPorSem as $s => $c) {
-            if ($c > $maxC) { $maxC = $c; $semanaPico = $s; }
-            if ($c < $minC) { $minC = $c; $semanaLow  = $s; }
+            if ($c > $maxC) {
+                $maxC = $c;
+                $semanaPico = $s;
+            }
+            if ($c < $minC) {
+                $minC = $c;
+                $semanaLow = $s;
+            }
         }
 
         $totalGeneral = $rnd($totalGeneral);
-        $n          = count($consPorSem);
+        $n = count($consPorSem);
         $promSemana = $n > 0 ? $totalGeneral / $n : 0;
 
         // Tendencia
         $tendencia = 'flat';
         if ($n >= 2) {
-            $ks  = array_keys($consPorSem); sort($ks);
-            $mid = (int)($n / 2);
-            $p1  = array_sum(array_intersect_key($consPorSem, array_flip(array_slice($ks, 0, $mid)))) / max($mid, 1);
-            $p2  = array_sum(array_intersect_key($consPorSem, array_flip(array_slice($ks, $mid))))   / max($n - $mid, 1);
-            if ($p2 > $p1 * 1.05) $tendencia = 'up';
-            elseif ($p2 < $p1 * 0.95) $tendencia = 'down';
+            $ks = array_keys($consPorSem);
+            sort($ks);
+            $mid = (int) ($n / 2);
+            $p1 = array_sum(array_intersect_key($consPorSem, array_flip(array_slice($ks, 0, $mid)))) / max($mid, 1);
+            $p2 = array_sum(array_intersect_key($consPorSem, array_flip(array_slice($ks, $mid)))) / max($n - $mid, 1);
+            if ($p2 > $p1 * 1.05)
+                $tendencia = 'up';
+            elseif ($p2 < $p1 * 0.95)
+                $tendencia = 'down';
         }
 
         // Desglose semana × sucursal (redondeado al 0.5 si es P1)
@@ -505,28 +531,28 @@ try {
         foreach ($semanasNros as $sem) {
             $desgloseSemsuc[$sem] = [];
             foreach ($sucursalesPresentes as $suc) {
-                $desgloseSemsuc[$sem][$suc] = $rnd((float)($consumoAgg[$idPP][$suc][$sem] ?? 0));
+                $desgloseSemsuc[$sem][$suc] = $rnd((float) ($consumoAgg[$idPP][$suc][$sem] ?? 0));
             }
         }
 
         $listaConsumo[] = [
-            'id'               => $idPP,
-            'nombre'           => $meta['nombre'],
-            'maestro'          => $meta['maestro'],
-            'unidad'           => $meta['unidad'],
-            'es_global'        => (bool)$meta['es_global'],
-            'es_p1'            => $itemEsP1,
-            'total'            => $totalGeneral,
-            'prom_semana'      => round($promSemana, $itemEsP1 ? 1 : 4),
-            'proyeccion_4sem'  => round($promSemana * 4, $itemEsP1 ? 1 : 4),
-            'stock_min'        => round($promSemana, $itemEsP1 ? 1 : 4),
-            'stock_max'        => round($promSemana * 2, $itemEsP1 ? 1 : 4),
-            'semana_pico_num'  => $semanaPico,
-            'semana_low_num'   => $semanaLow,
-            'max_consumo_sem'  => $rnd($maxC),
-            'tendencia'        => $tendencia,
-            'por_semana'       => $consPorSem,
-            'por_sucursal'     => $porSucRes,
+            'id' => $idPP,
+            'nombre' => $meta['nombre'],
+            'maestro' => $meta['maestro'],
+            'unidad' => $meta['unidad'],
+            'es_global' => (bool) $meta['es_global'],
+            'es_p1' => $itemEsP1,
+            'total' => $totalGeneral,
+            'prom_semana' => round($promSemana, $itemEsP1 ? 1 : 4),
+            'proyeccion_4sem' => round($promSemana * 4, $itemEsP1 ? 1 : 4),
+            'stock_min' => round($promSemana, $itemEsP1 ? 1 : 4),
+            'stock_max' => round($promSemana * 2, $itemEsP1 ? 1 : 4),
+            'semana_pico_num' => $semanaPico,
+            'semana_low_num' => $semanaLow,
+            'max_consumo_sem' => $rnd($maxC),
+            'tendencia' => $tendencia,
+            'por_semana' => $consPorSem,
+            'por_sucursal' => $porSucRes,
             'desglose_semxsuc' => $desgloseSemsuc,
         ];
     }
@@ -535,8 +561,8 @@ try {
 
     // Estadísticas globales
     $totalGeneral = array_sum(array_column($listaConsumo, 'total'));
-    $proyTotal    = array_sum(array_column($listaConsumo, 'proyeccion_4sem'));
-    $sumasPorSem  = [];
+    $proyTotal = array_sum(array_column($listaConsumo, 'proyeccion_4sem'));
+    $sumasPorSem = [];
     foreach ($listaConsumo as $it) {
         foreach ($it['por_semana'] as $s => $c) {
             $sumasPorSem[$s] = ($sumasPorSem[$s] ?? 0) + $c;
@@ -551,17 +577,17 @@ try {
     }
 
     echo json_encode([
-        'ok'                 => true,
-        'consumo'            => $listaConsumo,
-        'sin_mapeo'          => $sinMapeo,
-        'semanas'            => array_values($semanasRango),
-        'sucursales'         => $sucursalesPresentes,
+        'ok' => true,
+        'consumo' => $listaConsumo,
+        'sin_mapeo' => $sinMapeo,
+        'semanas' => array_values($semanasRango),
+        'sucursales' => $sucursalesPresentes,
         'sucursales_nombres' => $sucursalesNombresMap,
-        'total_general'      => round($totalGeneral, 4),
-        'proyeccion_total'   => round($proyTotal, 4),
+        'total_general' => round($totalGeneral, 4),
+        'proyeccion_total' => round($proyTotal, 4),
         'semana_pico_global' => $picoGlobal,
-        'num_sin_mapeo'      => count($sinMapeo),
-        'num_insumos'        => count($listaConsumo),
+        'num_sin_mapeo' => count($sinMapeo),
+        'num_insumos' => count($listaConsumo),
     ]);
 
 } catch (Exception $e) {
