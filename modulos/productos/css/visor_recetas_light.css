@@ -494,3 +494,9 @@ body {
     align-items: center;
     justify-content: center;
 }
+
+/* ── Ingrediente tachado (Inactivo / Artilugio) ────────────── */
+.ingr-inactivo {
+    text-decoration: line-through;
+    color: #aaa !important;
+}

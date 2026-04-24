@@ -30,6 +30,17 @@
 | `receta_producto_global` | `id` | Recetas compuestas (cuando `pp.Id_receta_producto IS NOT NULL`) |
 | `componentes_receta_producto` | `id_receta`, `id_presentacion`, `cantidad` | Componentes de una receta compuesta |
 
+### 1.3 Tipos de Presentación (Banderas ERP)
+
+| Tipo | Flag en BD | Propósito | Uso Principal |
+|---|---|---|---|
+| **Presentación de Receta** | `presentacion_receta = 1` | Unidad optimizada para costeo y cálculo de recetas. | Columna **Insumo Receta** |
+| **Presentación de Consumo** | `presentacion_basica_inventario = 1` | Unidad estándar de inventario (unidad de balance). | Columna **Presentación Uso** |
+| **Presentación de Despacho** | `presentacion_despacho = 1` | Unidad de embalaje para logística y traslados. | Columna **Presentación Despacho** |
+
+> [!IMPORTANT]
+> **Regla de Balance:** Para todo tipo de balance, auditoría de inventario o reporte de consumo real, se utilizará la **Presentación de Consumo** (`presentacion_basica_inventario = 1`) para el cálculo del consumo acumulado. Esto garantiza que el consumo reportado sea semánticamente equivalente a las existencias en el almacén.
+
 ---
 
 ## 2. Algoritmo de traducción SubReceta → ERP

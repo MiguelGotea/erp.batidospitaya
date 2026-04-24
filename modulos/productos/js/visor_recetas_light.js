@@ -265,10 +265,13 @@ function renderTabla(ingredientes) {
         const ir = ingr.insumo_receta;
         const np = ingr.nuevo_producto;
         const escenario = ingr.escenario_erp;
+        const esArtilugio = parseInt(ingr.es_artilugio) === 1;
         const recetaTag = `<span class="tag-receta">📋 Receta</span>`;
 
         let celInsumo;
-        if (escenario === 'receta_global' && ir) {
+        if (esArtilugio) {
+            celInsumo = `<span class="cel-na ingr-inactivo">Excluido por Artilugio</span>`;
+        } else if (escenario === 'receta_global' && ir) {
             celInsumo = `<div class="cel-insumo">
                 <div class="nom-erp">${esc(ir.NombreNuevo)}${recetaTag}</div>
                 <div class="uni-erp">Unidades · 1</div>
@@ -290,7 +293,9 @@ function renderTabla(ingredientes) {
 
         // ── Cantidad ERP ───────────────────────────────────────────
         let celCantidad = '—';
-        if (escenario === 'receta_global') {
+        if (esArtilugio) {
+            celCantidad = '<span class="ingr-inactivo">—</span>';
+        } else if (escenario === 'receta_global') {
             const srCant = parseFloat(ingr.Cantidad);
             celCantidad = isNaN(srCant) ? '—'
                 : (srCant % 1 === 0 ? srCant.toString() : srCant.toFixed(4).replace(/\.?0+$/, ''));

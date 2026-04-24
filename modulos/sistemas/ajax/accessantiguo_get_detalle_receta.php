@@ -72,9 +72,11 @@ try {
             i.Tipo                  AS TipoIngrediente,
             i.Vigente               AS VigenteIngrediente,
             i.presentacionpreparacion,
-            i.conversionpreparacion
+            i.conversionpreparacion,
+            CASE WHEN mpa.CodCotizacionPorcion IS NOT NULL THEN 1 ELSE 0 END AS es_artilugio
         FROM SubReceta sr
         LEFT JOIN DBIngredientes i ON i.CodIngrediente = sr.CodIngrediente
+        LEFT JOIN (SELECT DISTINCT CodCotizacionPorcion FROM MezclaPorcionesAccess) mpa ON mpa.CodCotizacionPorcion = sr.codporcion
         WHERE sr.CodBatido = :cb
         ORDER BY sr.Tipo ASC, sr.ordenreceta ASC, sr.CodSubReceta ASC
     ");
@@ -85,6 +87,18 @@ try {
     foreach ($ingredientes as &$ingr) {
         $codIngrediente = $ingr['CodIngrediente'];
         $codporcion = $ingr['codporcion'];
+
+        // Si es un componente de artilugio, no se mapea
+        if ((int)$ingr['es_artilugio'] === 1) {
+            $ingr['cotizacion'] = null;
+            $ingr['metodo_cotizacion'] = 'artilugio';
+            $ingr['nuevo_producto'] = null;
+            $ingr['metodo_resolucion'] = 'ninguno';
+            $ingr['presentacion_despacho'] = null;
+            $ingr['insumo_receta'] = null;
+            $ingr['escenario_erp'] = 'sin_mapeo';
+            continue;
+        }
 
         $cotizacion = null;
         $ingr['metodo_cotizacion'] = null;

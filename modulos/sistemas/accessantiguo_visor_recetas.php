@@ -643,8 +643,14 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
 
                 // Ingrediente: nombre + unidad
                 const vigente = parseInt(ingr.VigenteIngrediente) !== 0;
-                const nomClass = vigente ? '' : 'ingr-inactivo';
-                const nomBadge = vigente ? '' : `<span style="font-size:.65rem;background:#fdd;color:#c0392b;border-radius:3px;padding:1px 5px;margin-left:4px">INACTIVO</span>`;
+                const esArtilugio = parseInt(ingr.es_artilugio) === 1;
+                const nomClass = (vigente && !esArtilugio) ? '' : 'ingr-inactivo';
+                
+                let nomBadge = vigente ? '' : `<span style="font-size:.65rem;background:#fdd;color:#c0392b;border-radius:3px;padding:1px 5px;margin-left:4px">INACTIVO</span>`;
+                if (esArtilugio) {
+                    nomBadge += `<span style="font-size:.65rem;background:#eee;color:#777;border-radius:3px;padding:1px 5px;margin-left:4px" title="Componente de Artilugio — No se mapea">ARTILUGIO</span>`;
+                }
+
                 const insumoChip = ingr.InsumoClave ? `<span class="chip-clave ms-1">Clave</span>` : '';
                 const unidad = ingr.UnidadIngrediente ? `<small class="text-muted"> ${esc(ingr.UnidadIngrediente)}</small>` : '';
 
@@ -666,7 +672,7 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                     : '';
                 const cotHTML = cot
                     ? `<div style="font-size:.75rem;color:#333">${infoTexto || '<span style="color:#bbb;font-style:italic">Sin detalle</span>'}</div>${cotBadge}`
-                    : `<span class="sin-cot">Sin cotización</span>`;
+                    : (esArtilugio ? `<span class="sin-cot text-muted">Excluido por Artilugio</span>` : `<span class="sin-cot">Sin cotización</span>`);
 
                 // ── Comanda Access: Nombre ───────────────────────────────────────────
                 let comandaNombre;
