@@ -369,7 +369,6 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                                             <tr>
                                                 <th>Insumo ERP</th>
                                                 <th>Categoría</th>
-                                                <th>Unidad</th>
                                                 <th class="text-end">Consumo Total</th>
                                                 <th class="text-end">Prom/Semana</th>
                                                 <th class="text-end">Semana Pico</th>
@@ -380,7 +379,7 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                                         </thead>
                                         <tbody id="tbodyHistorial">
                                             <tr>
-                                                <td colspan="9" class="text-center text-muted py-4">
+                                                <td colspan="8" class="text-center text-muted py-4">
                                                     Aplica los filtros para ver el historial.
                                                 </td>
                                             </tr>

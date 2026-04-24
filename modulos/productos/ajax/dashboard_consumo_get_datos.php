@@ -560,7 +560,14 @@ try {
         ];
     }
 
-    usort($listaConsumo, fn($a, $b) => $b['total'] <=> $a['total']);
+    // Ordenar por categoría (ASC) y luego por nombre (ASC)
+    usort($listaConsumo, function($a, $b) {
+        $catA = (string)($a['categoria_insumo'] ?? '');
+        $catB = (string)($b['categoria_insumo'] ?? '');
+        $cmp = strcasecmp($catA, $catB);
+        if ($cmp !== 0) return $cmp;
+        return strcasecmp((string)$a['nombre'], (string)$b['nombre']);
+    });
 
     // Estadísticas globales
     $totalGeneral = array_sum(array_column($listaConsumo, 'total'));

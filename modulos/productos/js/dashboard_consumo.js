@@ -912,7 +912,7 @@ function renderTablaHistorial(data) {
     const total = data.consumo.length;
 
     if (total === 0) {
-        html = `<tr><td colspan="9" class="text-center text-muted py-4">Sin datos de consumo en el período.</td></tr>`;
+        html = `<tr><td colspan="8" class="text-center text-muted py-4">Sin datos de consumo en el período.</td></tr>`;
     } else {
         data.consumo.forEach(item => {
             const tipoBadge = item.es_global
@@ -934,7 +934,6 @@ function renderTablaHistorial(data) {
                     <div class="text-muted" style="font-size:.72rem">${escHtml(item.maestro)}</div>
                 </td>
                 <td><span class="badge bg-light text-dark border" style="font-size:.7rem">${escHtml(item.categoria_insumo || '—')}</span></td>
-                <td>${escHtml(item.unidad)}</td>
                 <td class="text-end fw-bold" style="color:#0E544C">${formatNum(item.total)}</td>
                 <td class="text-end">${formatNum(item.prom_semana)}</td>
                 <td class="text-end">
