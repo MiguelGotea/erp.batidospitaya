@@ -1067,10 +1067,11 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                         <strong><i class="fas fa-layer-group me-1" style="color:#7b1fa2"></i> Nuevo Sistema (ERP)</strong>
                         <p class="mb-2 mt-1" style="font-size:.82rem">
                             El segmento <em>Nuevo Sistema</em> traduce cada ingrediente del catálogo antiguo (Access) al
-                            catálogo del nuevo ERP Pitaya. Se compone de <strong>3 columnas</strong>:
+                            catálogo del nuevo ERP Pitaya. Se compone de <strong>4 columnas</strong>:
                             <span class="badge" style="background:#9c27b0;color:#fff">Insumo Receta</span>
                             <span class="badge" style="background:#7b1fa2;color:#fff">Cantidad</span>
                             <span class="badge" style="background:#6a1b9a;color:#fff">Presentación Uso</span>
+                            <span class="badge" style="background:#e65100;color:#fff">Presentación Despacho</span>
                         </p>
 
                         <!-- ── 3.1 Ruta de resolución de cotización ──────────── -->
@@ -1134,16 +1135,15 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                             </h6>
                             <p style="font-size:.79rem;margin-bottom:4px">
                                 Muestra el producto del nuevo ERP que actualmente se usa como cotización para
-                                ese ingrediente. Es el resultado directo del mapeo P1/P2/P3 en el diccionario,
-                                <strong>sin importar si la unidad coincide con la de la receta</strong>.
+                                ese ingrediente. Es el resultado directo del mapeo P1/P2/P3 en el diccionario.
                             </p>
                             <ul style="font-size:.79rem;margin-bottom:0">
+                                <li><strong>Condición obligatoria</strong>: El producto debe tener marcada la casilla <code>presentacion_basica_inventario = 1</code> en el ERP. Si no la tiene, se muestra como "Sin mapeo".</li>
                                 <li><strong>Nombre</strong>: <code>producto_presentacion.Nombre</code> del ERP.</li>
-                                <li><strong>Unidad · Cantidad</strong>: unidad de medida y cantidad por presentación (ej: <em>Litros · 1.00</em>). Para recetas compuestas muestra <em>Unidades · 1</em>.</li>
-                                <li><strong>Variedades</strong>: si el producto tiene variedades (sabores, tamaños), se muestran en un select desplegable con la variedad principal preseleccionada.</li>
-                                <li><strong>Badge INACTIVO</strong>: el producto está marcado como <code>Activo = 'NO'</code> en el ERP.</li>
+                                <li><strong>Unidad · Cantidad</strong>: unidad de medida y cantidad por presentación (ej: <em>Litros · 1.00</em>).</li>
+                                <li><strong>Variedades</strong>: permite elegir sabores o tamaños si el producto los tiene registrados.</li>
                                 <li><strong>Badge AUTO</strong>: fue resuelto automáticamente por Maestro + Unidad (no por diccionario directo).</li>
-                                <li><strong>Badge 📋 Receta</strong>: el mapeo apunta a un <strong>producto compuesto</strong> (<code>producto_presentacion.Id_receta_producto IS NOT NULL</code>). Sus componentes se definen en <code>receta_producto_global</code> / <code>componentes_receta_producto</code>. Cantidad = Access qty / 1 = misma cantidad.</li>
+                                <li><strong>Badge 📋 Receta</strong>: el mapeo apunta a un <strong>producto compuesto</strong>.</li>
                             </ul>
                         </div>
 
@@ -1156,7 +1156,10 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                             </h6>
                             <p style="font-size:.79rem;margin-bottom:6px">
                                 Es la presentación del ERP <strong>cuya unidad coincide (o se convierte) con la unidad del ingrediente en Access</strong>.
-                                Se calcula independientemente de Presentación Uso y puede ser la misma u otra presentación del mismo producto maestro.
+                                Se calcula independientemente de Presentación Uso.
+                            </p>
+                            <p style="font-size:.79rem;margin-bottom:6px">
+                                <strong>Condición obligatoria</strong>: El producto debe tener marcada la casilla <code>presentacion_receta = 1</code> en el ERP.
                             </p>
 
                             <p style="font-size:.79rem;font-weight:600;margin-bottom:4px">Algoritmo de resolución en 3 niveles:</p>
@@ -1251,7 +1254,24 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
 
                         <hr class="my-2">
 
-                        <!-- ── 3.4 Columna: Cantidad ─────────────────────────── -->
+                        <!-- ── 3.4 Columna: Presentación Despacho ────────────── -->
+                        <div class="mb-3">
+                            <h6 style="font-size:.82rem;color:#e65100;font-weight:700">
+                                <i class="fas fa-truck-ramp-box me-1"></i> Columna: Presentación Despacho
+                            </h6>
+                            <p style="font-size:.79rem;margin-bottom:4px">
+                                Muestra la presentación del nuevo ERP configurada para el despacho de este ingrediente.
+                            </p>
+                            <ul style="font-size:.79rem;margin-bottom:0">
+                                <li><strong>Lógica</strong>: Se basa en el mismo producto maestro resuelto para "Presentación Uso", pero busca la presentación que tenga activa la bandera de despacho.</li>
+                                <li><strong>Condición obligatoria</strong>: El producto debe tener marcada la casilla <code>presentacion_despacho = 1</code> en el ERP.</li>
+                                <li><strong>Visualización</strong>: Se identifica con un fondo crema/amarillo para distinguirla de la presentación de uso diario.</li>
+                            </ul>
+                        </div>
+
+                        <hr class="my-2">
+
+                        <!-- ── 3.5 Columna: Cantidad ─────────────────────────── -->
                         <div class="mb-1">
                             <h6 style="font-size:.82rem;color:#6a1b9a;font-weight:700">
                                 <i class="fas fa-calculator me-1"></i> Columna: Cantidad
