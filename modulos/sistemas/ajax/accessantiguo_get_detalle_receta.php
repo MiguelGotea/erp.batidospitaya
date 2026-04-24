@@ -159,13 +159,13 @@ try {
                     pp.Id_receta_producto  AS id_receta_producto,
                     u.Nombre              AS unidadNueva,
                     pm.id                 AS id_maestro,
-                    pm.Nombre             AS productoMaestro
+                    pm.Nombre             AS productoMaestro,
+                    pp.presentacion_receta
                 FROM diccionario_productos_legado d
                 INNER JOIN producto_presentacion pp ON pp.id = d.id_producto_presentacion
                 LEFT JOIN unidad_producto u          ON u.id = pp.id_unidad_producto
                 LEFT JOIN producto_maestro pm        ON pm.id = pp.id_producto_maestro
                 WHERE d.CodCotizacion = :cot
-                  AND pp.presentacion_receta = 1
                 LIMIT 1
             ");
             $stmtDic->execute([':cot' => $codCotizacion]);
@@ -225,14 +225,14 @@ try {
                             pp.Activo   AS activoNuevo,
                             u.nombre    AS unidadNueva,
                             pm.id       AS id_maestro,
-                            pm.Nombre   AS productoMaestro
+                            pm.Nombre   AS productoMaestro,
+                            pp.presentacion_receta
                         FROM producto_presentacion pp
                         INNER JOIN producto_maestro pm ON pm.id = pp.id_producto_maestro
                         LEFT JOIN unidad_producto u    ON u.id  = pp.id_unidad_producto
                         WHERE pp.id_producto_maestro = ?
                           AND pp.Id_receta_producto IS NULL
                           AND pp.Activo = 'SI'
-                          AND pp.presentacion_receta = 1
                         LIMIT 1
                     ");
                     $stmtAny->execute([$idMaestro]);
@@ -285,7 +285,9 @@ try {
                 // Aunque la porción ya está resuelta, la unidad del ingrediente en Access
                 // puede diferir de la del ERP (ej: gr en Access vs Onzas Peso en ERP).
                 // Se resuelve el factor de conversión para que la cantidad sea correcta.
-                if (($ingr['metodo_cotizacion'] ?? '') === 'directa') {
+                $npEsReceta = isset($ingr['nuevo_producto']['presentacion_receta']) && (int)$ingr['nuevo_producto']['presentacion_receta'] === 1;
+
+                if (($ingr['metodo_cotizacion'] ?? '') === 'directa' && $npEsReceta) {
                     $ingr['escenario_erp'] = 'directo';
                     $ingr['insumo_receta'] = $ingr['nuevo_producto'];
 
@@ -315,9 +317,10 @@ try {
 
                     // 2) ¿La presentación ERP ya resuelta está en el mismo grupo de unidad?
                     $esDirecto = $resolucion && in_array($unidadResERP, $resolucion['directos']);
+                    $npEsReceta = isset($ingr['nuevo_producto']['presentacion_receta']) && (int)$ingr['nuevo_producto']['presentacion_receta'] === 1;
 
-                    if ($esDirecto) {
-                        // Misma unidad → Insumo Receta = Presentación Uso
+                    if ($esDirecto && $npEsReceta) {
+                        // Misma unidad y es la de receta → Insumo Receta = Presentación Uso
                         $ingr['escenario_erp'] = 'directo';
                         $ingr['insumo_receta'] = $ingr['nuevo_producto'];
                     } else {

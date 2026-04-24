@@ -164,7 +164,8 @@ function buscarPresentacionPorUnidades(PDO $conn, int $idMaestro, array $nombres
             pp.Activo   AS activoNuevo,
             u.nombre    AS unidadNueva,
             pm.id       AS id_maestro,
-            pm.Nombre   AS productoMaestro
+            pm.Nombre   AS productoMaestro,
+            pp.presentacion_receta
         FROM producto_presentacion pp
         INNER JOIN producto_maestro pm ON pm.id = pp.id_producto_maestro
         LEFT  JOIN unidad_producto  u  ON u.id  = pp.id_unidad_producto
