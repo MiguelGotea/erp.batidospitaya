@@ -150,6 +150,12 @@ if (!tienePermiso('recetario_access_traducido', 'vista', $cargoOperario)) {
                             </div>
                         </div>
                         <div class="col-12">
+                            <div class="alert py-2 px-3 small mb-2" style="background:#fff3e0; color:#856404; border:1px solid #ffeeba">
+                                <strong><i class="fas fa-exclamation-triangle me-1"></i> Componentes de Artilugio:</strong>
+                                Ingredientes registrados en <code>MezclaPorcionesAccess</code> aparecen tachados. NO se mapean individualmente porque su consumo se descuenta en la mezcla principal.
+                            </div>
+                        </div>
+                        <div class="col-12">
                             <div class="alert alert-info py-2 px-3 small mb-0">
                                 <strong><i class="fas fa-motorcycle me-1"></i> Badge PedidosYa:</strong>
                                 Se muestra en versiones cuyo código termina en <code>d</code> (ej:

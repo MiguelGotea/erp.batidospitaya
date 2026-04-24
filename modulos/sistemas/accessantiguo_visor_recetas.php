@@ -1326,6 +1326,21 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
 
                     <hr>
 
+                    <!-- ── SECCIÓN 3.6 Casos Especiales: Artilugios ─────────────── -->
+                    <div class="p-2 mb-3 rounded" style="background:#fff3e0;border-left:4px solid #ff9800">
+                        <strong><i class="fas fa-exclamation-triangle me-1 text-warning"></i> Casos Especiales: Componentes de Artilugio</strong>
+                        <p class="mb-1 mt-1" style="font-size:.82rem">
+                            Existen ingredientes que en Access se registran como parte de una mezcla o "artilugio" (registrados en <code>MezclaPorcionesAccess</code>).
+                        </p>
+                        <ul style="font-size:.79rem;margin-bottom:0">
+                            <li><strong>Identificación</strong>: Se muestran tachados y con el badge <span style="font-size:.65rem;background:#eee;color:#777;border-radius:3px;padding:1px 5px">ARTILUGIO</span>.</li>
+                            <li><strong>Regla de Mapeo</strong>: Estos componentes NO se mapean al ERP individualmente, ya que su consumo se descuenta a través del producto maestro de la mezcla principal.</li>
+                            <li><strong>Visualización</strong>: Toda la fila (Comanda Access y Nuevo Sistema) aparece tachada para indicar su exclusión del proceso de homologación.</li>
+                        </ul>
+                    </div>
+
+                    <hr>
+
                     <!-- ── SECCIÓN 4: Resumen estadístico ────────────────────────── -->
                     <h6 class="fw-bold text-success mb-2"><i class="fas fa-chart-bar me-1"></i> Barra de Resumen</h6>
                     <p>Encima de la tabla se muestra un resumen con los conteos de:</p>
