@@ -55,19 +55,19 @@ $puedeDesactivar = tienePermiso('producto_presentacion', 'desactivar', $cargoOpe
                     <table class="table table-hover productos-table" id="tablaProductos">
                         <thead>
                             <tr>
-                                <th data-column="SKU" data-type="text">
+                                <th rowspan="2" data-column="SKU" data-type="text">
                                     SKU
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
-                                <th data-column="Nombre" data-type="text">
+                                <th rowspan="2" data-column="Nombre" data-type="text">
                                     Nombre
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
-                                <th data-column="unidad_nombre" data-type="list">
+                                <th rowspan="2" data-column="unidad_nombre" data-type="list">
                                     Unidad
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
-                                <th data-column="es_vendible" data-type="tristate" class="tristate-header">
+                                <th rowspan="2" data-column="es_vendible" data-type="tristate" class="tristate-header">
                                     <div class="tristate-header-content">
                                         <span>Venta</span>
                                         <div class="tristate-toggle-group">
@@ -86,7 +86,7 @@ $puedeDesactivar = tienePermiso('producto_presentacion', 'desactivar', $cargoOpe
                                         </div>
                                     </div>
                                 </th>
-                                <th data-column="es_comprable" data-type="tristate" class="tristate-header">
+                                <th rowspan="2" data-column="es_comprable" data-type="tristate" class="tristate-header">
                                     <div class="tristate-header-content">
                                         <span>Compra</span>
                                         <div class="tristate-toggle-group">
@@ -105,7 +105,7 @@ $puedeDesactivar = tienePermiso('producto_presentacion', 'desactivar', $cargoOpe
                                         </div>
                                     </div>
                                 </th>
-                                <th data-column="es_fabricable" data-type="tristate" class="tristate-header">
+                                <th rowspan="2" data-column="es_fabricable" data-type="tristate" class="tristate-header">
                                     <div class="tristate-header-content">
                                         <span>Fabricación</span>
                                         <div class="tristate-toggle-group">
@@ -124,7 +124,7 @@ $puedeDesactivar = tienePermiso('producto_presentacion', 'desactivar', $cargoOpe
                                         </div>
                                     </div>
                                 </th>
-                                <th data-column="tiene_receta" data-type="tristate" class="tristate-header">
+                                <th rowspan="2" data-column="tiene_receta" data-type="tristate" class="tristate-header">
                                     <div class="tristate-header-content">
                                         <span>Receta</span>
                                         <div class="tristate-toggle-group">
@@ -143,7 +143,7 @@ $puedeDesactivar = tienePermiso('producto_presentacion', 'desactivar', $cargoOpe
                                         </div>
                                     </div>
                                 </th>
-                                <th data-column="Activo" data-type="tristate" class="tristate-header">
+                                <th rowspan="2" data-column="Activo" data-type="tristate" class="tristate-header">
                                     <div class="tristate-header-content">
                                         <span>Activo</span>
                                         <div class="tristate-toggle-group">
@@ -162,12 +162,14 @@ $puedeDesactivar = tienePermiso('producto_presentacion', 'desactivar', $cargoOpe
                                         </div>
                                     </div>
                                 </th>
-                                <!-- COLUMNAS DE AUDITORÍA (TEMPORALES) -->
-                                <th style="width: 120px;">¿Despacho?</th>
-                                <th style="width: 120px;">P. Básica</th>
-                                <th style="width: 180px;">P. Comercial</th>
-                                <!-- FIN COLUMNAS DE AUDITORÍA -->
-                                <th style="width: 100px;">Acciones</th>
+                                <th colspan="3" class="text-center" style="background-color: #f8f9fa; border-bottom: 2px solid #dee2e6;">Configuración Logística</th>
+                                <th rowspan="2" style="width: 180px;">P. Comercial</th>
+                                <th rowspan="2" style="width: 100px;">Acciones</th>
+                            </tr>
+                            <tr>
+                                <th style="width: 100px; background-color: #f8f9fa;">¿Despacho?</th>
+                                <th style="width: 100px; background-color: #f8f9fa;">P. Básica</th>
+                                <th style="width: 100px; background-color: #f8f9fa;">P. Receta</th>
                             </tr>
                         </thead>
                         <tbody id="tablaProductosBody">

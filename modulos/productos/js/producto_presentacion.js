@@ -104,7 +104,7 @@ function renderizarTabla(datos) {
     tbody.empty();
     
     if (datos.length === 0) {
-        tbody.append('<tr><td colspan="9" class="text-center py-4">No se encontraron registros</td></tr>');
+        tbody.append('<tr><td colspan="13" class="text-center py-4">No se encontraron registros</td></tr>');
         return;
     }
     
@@ -185,6 +185,16 @@ function renderizarTabla(datos) {
             </label>
         `;
         tr.append(`<td>${basicaHtml}</td>`);
+
+        // Presentación Receta (Toggle)
+        const checkReceta = parseInt(row.presentacion_receta) === 1 ? 'checked' : '';
+        const recetaPresHtml = `
+            <label class="switch-mini">
+                <input type="checkbox" ${checkReceta} onchange="guardarCampoInline(${row.id}, 'presentacion_receta', this.checked ? 1 : 0)">
+                <span class="slider-mini round"></span>
+            </label>
+        `;
+        tr.append(`<td>${recetaPresHtml}</td>`);
 
         // Presentación Comercial (Input text)
         const presHtml = `

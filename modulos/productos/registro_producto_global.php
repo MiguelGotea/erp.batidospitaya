@@ -164,25 +164,37 @@ if ($esNuevo && !$puedeCrear) {
                                     <!-- Fila 4: Características y Toggles -->
                                     <div class="col-md-6">
                                         <label class="form-label d-block">Características de Uso</label>
-                                        <div class="d-flex flex-wrap gap-3 p-2 border rounded bg-light" style="height: 100px; align-items: center;">
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" id="esVendible" name="es_vendible" value="SI">
-                                                <label class="form-check-label" for="esVendible">Vendible</label>
-                                            </div>
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" id="esComprable" name="es_comprable" value="SI">
-                                                <label class="form-check-label" for="esComprable">Comprable</label>
-                                            </div>
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" id="esFabricable" name="es_fabricable" value="SI">
-                                                <label class="form-check-label" for="esFabricable">Fabricable</label>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="col-md-6">
-                                        <label class="form-label d-block">Configuraciones Logísticas</label>
                                         <div class="d-flex flex-column gap-2 p-2 border rounded bg-light">
+                                            <div class="toggle-container">
+                                                <span class="toggle-label" style="font-size: 0.85rem;">Vendible</span>
+                                                <label class="switch">
+                                                    <input type="checkbox" id="esVendible" name="es_vendible" value="SI">
+                                                    <span class="slider round">
+                                                        <i class="bi bi-check check-icon"></i>
+                                                        <i class="bi bi-x x-icon"></i>
+                                                    </span>
+                                                </label>
+                                            </div>
+                                            <div class="toggle-container">
+                                                <span class="toggle-label" style="font-size: 0.85rem;">Comprable</span>
+                                                <label class="switch">
+                                                    <input type="checkbox" id="esComprable" name="es_comprable" value="SI">
+                                                    <span class="slider round">
+                                                        <i class="bi bi-check check-icon"></i>
+                                                        <i class="bi bi-x x-icon"></i>
+                                                    </span>
+                                                </label>
+                                            </div>
+                                            <div class="toggle-container">
+                                                <span class="toggle-label" style="font-size: 0.85rem;">Fabricable</span>
+                                                <label class="switch">
+                                                    <input type="checkbox" id="esFabricable" name="es_fabricable" value="SI">
+                                                    <span class="slider round">
+                                                        <i class="bi bi-check check-icon"></i>
+                                                        <i class="bi bi-x x-icon"></i>
+                                                    </span>
+                                                </label>
+                                            </div>
                                             <div class="toggle-container">
                                                 <span class="toggle-label" style="font-size: 0.85rem;">¿Es comprable para facturas?</span>
                                                 <label class="switch">
@@ -193,6 +205,12 @@ if ($esNuevo && !$puedeCrear) {
                                                     </span>
                                                 </label>
                                             </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label class="form-label d-block">Configuraciones Logísticas</label>
+                                        <div class="d-flex flex-column gap-2 p-2 border rounded bg-light">
                                             <div class="toggle-container">
                                                 <span class="toggle-label" style="font-size: 0.85rem;">Presentación Básica de Inventario</span>
                                                 <label class="switch">
@@ -207,6 +225,16 @@ if ($esNuevo && !$puedeCrear) {
                                                 <span class="toggle-label" style="font-size: 0.85rem;">¿Es Producto Despacho?</span>
                                                 <label class="switch">
                                                     <input type="checkbox" id="presentacionDespacho" name="presentacion_despacho" value="1">
+                                                    <span class="slider round">
+                                                        <i class="bi bi-check check-icon"></i>
+                                                        <i class="bi bi-x x-icon"></i>
+                                                    </span>
+                                                </label>
+                                            </div>
+                                            <div class="toggle-container">
+                                                <span class="toggle-label" style="font-size: 0.85rem;">Presentación Receta</span>
+                                                <label class="switch">
+                                                    <input type="checkbox" id="presentacionReceta" name="presentacion_receta" value="1">
                                                     <span class="slider round">
                                                         <i class="bi bi-check check-icon"></i>
                                                         <i class="bi bi-x x-icon"></i>

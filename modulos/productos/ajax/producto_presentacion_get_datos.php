@@ -124,6 +124,7 @@ try {
                 END as tiene_receta,
                 pp.presentacion_despacho,
                 pp.presentacion_basica_inventario,
+                pp.presentacion_receta,
                 pp.presentacion
             FROM producto_presentacion pp
             LEFT JOIN unidad_producto u ON pp.id_unidad_producto = u.id

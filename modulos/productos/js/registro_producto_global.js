@@ -208,6 +208,7 @@ async function cargarDatosProducto(cacheBuster = '') {
             $('#compraTienda').prop('checked', parseInt(p.compra_tienda) === 1);
             $('#presentacionBasica').prop('checked', parseInt(p.presentacion_basica_inventario) === 1);
             $('#presentacionDespacho').prop('checked', parseInt(p.presentacion_despacho) === 1);
+            $('#presentacionReceta').prop('checked', parseInt(p.presentacion_receta) === 1);
             $('#categoriaInsumo').val(p.categoria_insumo || '');
             $('#presentacion').val(p.presentacion || '');
 
@@ -336,6 +337,7 @@ async function guardarProducto() {
     formData.set('compra_tienda', $('#compraTienda').is(':checked') ? 1 : 0);
     formData.set('presentacion_basica_inventario', $('#presentacionBasica').is(':checked') ? 1 : 0);
     formData.set('presentacion_despacho', $('#presentacionDespacho').is(':checked') ? 1 : 0);
+    formData.set('presentacion_receta', $('#presentacionReceta').is(':checked') ? 1 : 0);
     formData.set('tiene_receta', $('#tieneReceta').is(':checked') ? 1 : 0);
 
     // Agregar datos de los arreglos locales (JSON)
