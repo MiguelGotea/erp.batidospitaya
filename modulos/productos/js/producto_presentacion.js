@@ -117,8 +117,8 @@ function renderizarTabla(datos) {
         // Nombre
         tr.append(`<td style="text-align: left;">${row.Nombre || '-'}</td>`);
         
-        // Unidad
-        tr.append(`<td>${row.unidad_nombre || '-'}</td>`);
+        // Presentación (reemplaza a Unidad)
+        tr.append(`<td>${row.presentacion || '-'}</td>`);
         
         // ========== ÍCONOS EN LUGAR DE BADGES - NUEVO ==========
         
@@ -140,24 +140,6 @@ function renderizarTabla(datos) {
             : '<i class="bi bi-x-circle-fill status-icon no"></i>';
         tr.append(`<td>${fabricacionIcono}</td>`);
 
-        // Activo (toggle solo si tiene permiso)
-        let activoHtml = '';
-        if (PUEDE_DESACTIVAR) {
-            const checked = row.Activo === 'SI' ? 'checked' : '';
-            activoHtml = `
-                <label class="toggle-activo">
-                    <input type="checkbox" ${checked} onchange="toggleActivo(${row.id}, this.checked)">
-                    <span class="toggle-slider"></span>
-                </label>
-            `;
-        } else {
-            const activoIcono = row.Activo === 'SI' 
-                ? '<i class="bi bi-check-circle-fill status-icon si"></i>' 
-                : '<i class="bi bi-x-circle-fill status-icon no"></i>';
-            activoHtml = activoIcono;
-        }
-        tr.append(`<td>${activoHtml}</td>`);
-        
         // ========== COLUMNAS DE AUDITORÍA (TEMPORALES) ==========
         
         // ¿Es Producto Despacho? (Toggle)
@@ -204,6 +186,24 @@ function renderizarTabla(datos) {
             ? '<i class="bi bi-check-circle-fill status-icon si"></i>' 
             : '<i class="bi bi-x-circle-fill status-icon no"></i>';
         tr.append(`<td>${recetaIcono}</td>`);
+
+        // Activo (toggle solo si tiene permiso) - Movido antes de acciones
+        let activoHtml = '';
+        if (PUEDE_DESACTIVAR) {
+            const checked = row.Activo === 'SI' ? 'checked' : '';
+            activoHtml = `
+                <label class="toggle-activo">
+                    <input type="checkbox" ${checked} onchange="toggleActivo(${row.id}, this.checked)">
+                    <span class="toggle-slider"></span>
+                </label>
+            `;
+        } else {
+            const activoIcono = row.Activo === 'SI' 
+                ? '<i class="bi bi-check-circle-fill status-icon si"></i>' 
+                : '<i class="bi bi-x-circle-fill status-icon no"></i>';
+            activoHtml = activoIcono;
+        }
+        tr.append(`<td>${activoHtml}</td>`);
 
         // ========== FIN COLUMNAS DE AUDITORÍA ==========
 

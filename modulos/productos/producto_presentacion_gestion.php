@@ -63,8 +63,8 @@ $puedeDesactivar = tienePermiso('producto_presentacion', 'desactivar', $cargoOpe
                                     Nombre
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
-                                <th rowspan="2" data-column="unidad_nombre" data-type="list">
-                                    Unidad
+                                <th rowspan="2" data-column="presentacion" data-type="text">
+                                    Presentación
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
                                 <th rowspan="2" data-column="es_vendible" data-type="tristate" class="tristate-header">
@@ -124,25 +124,6 @@ $puedeDesactivar = tienePermiso('producto_presentacion', 'desactivar', $cargoOpe
                                         </div>
                                     </div>
                                 </th>
-                                <th rowspan="2" data-column="Activo" data-type="tristate" class="tristate-header">
-                                    <div class="tristate-header-content">
-                                        <span>Activo</span>
-                                        <div class="tristate-toggle-group">
-                                            <button class="tristate-btn" data-state="SI" data-column="Activo"
-                                                onclick="setTriStateFilter(this, 'Activo', 'SI')">
-                                                <i class="bi bi-check-circle-fill"></i>
-                                            </button>
-                                            <button class="tristate-btn" data-state="null" data-column="Activo"
-                                                onclick="setTriStateFilter(this, 'Activo', null)">
-                                                <i class="bi bi-dash-circle-fill"></i>
-                                            </button>
-                                            <button class="tristate-btn" data-state="NO" data-column="Activo"
-                                                onclick="setTriStateFilter(this, 'Activo', 'NO')">
-                                                <i class="bi bi-x-circle-fill"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </th>
                                 <th colspan="3" class="text-center" style="background-color: #f8f9fa; border-bottom: 2px solid #dee2e6;">Configuración Logística</th>
                                 <th rowspan="2" style="width: 180px;">P. Comercial</th>
                                 <th rowspan="2" data-column="tiene_receta" data-type="tristate" class="tristate-header">
@@ -159,6 +140,25 @@ $puedeDesactivar = tienePermiso('producto_presentacion', 'desactivar', $cargoOpe
                                             </button>
                                             <button class="tristate-btn" data-state="NO" data-column="tiene_receta"
                                                 onclick="setTriStateFilter(this, 'tiene_receta', 'NO')">
+                                                <i class="bi bi-x-circle-fill"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </th>
+                                <th rowspan="2" data-column="Activo" data-type="tristate" class="tristate-header">
+                                    <div class="tristate-header-content">
+                                        <span>Activo</span>
+                                        <div class="tristate-toggle-group">
+                                            <button class="tristate-btn" data-state="SI" data-column="Activo"
+                                                onclick="setTriStateFilter(this, 'Activo', 'SI')">
+                                                <i class="bi bi-check-circle-fill"></i>
+                                            </button>
+                                            <button class="tristate-btn" data-state="null" data-column="Activo"
+                                                onclick="setTriStateFilter(this, 'Activo', null)">
+                                                <i class="bi bi-dash-circle-fill"></i>
+                                            </button>
+                                            <button class="tristate-btn" data-state="NO" data-column="Activo"
+                                                onclick="setTriStateFilter(this, 'Activo', 'NO')">
                                                 <i class="bi bi-x-circle-fill"></i>
                                             </button>
                                         </div>
