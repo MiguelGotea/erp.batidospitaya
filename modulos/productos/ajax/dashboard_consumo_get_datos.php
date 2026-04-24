@@ -104,6 +104,11 @@ try {
           AND v.Fecha BETWEEN :fecha_desde AND :fecha_hasta
           AND v.Semana BETWEEN :sem_desde AND :sem_hasta
           AND v.CodProducto IS NOT NULL
+          AND (sr.codporcion IS NULL OR sr.codporcion NOT IN (
+              SELECT CodCotizacionPorcion
+              FROM MezclaPorcionesAccess
+              WHERE CodCotizacionPorcion IS NOT NULL
+          ))
           $whereSuc
         GROUP BY v.local, v.Semana, sr.CodIngrediente, sr.codporcion
         ORDER BY v.Semana ASC
@@ -197,6 +202,7 @@ try {
             LEFT  JOIN producto_maestro pm       ON pm.id = pp.id_producto_maestro
             WHERE d.CodCotizacion IN ($phCot)
               AND pp.Activo = 'SI'
+              AND pp.presentacion_basica_inventario = 1
         ");
         $stmtDic->execute(array_values($codCotBuscar));
         foreach ($stmtDic->fetchAll(PDO::FETCH_ASSOC) as $row) {
@@ -260,6 +266,7 @@ try {
             WHERE pp.id_producto_maestro IN ($phMa)
               AND pp.Id_receta_producto IS NULL
               AND pp.Activo = 'SI'
+              AND pp.presentacion_basica_inventario = 1
         ");
         $stmtPP->execute(array_values($idMaestrosDict));
         foreach ($stmtPP->fetchAll(PDO::FETCH_ASSOC) as $pp) {

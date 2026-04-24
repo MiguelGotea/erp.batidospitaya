@@ -197,6 +197,11 @@ try {
           AND v.Fecha   BETWEEN ? AND ?
           AND v.Semana  BETWEEN ? AND ?
           AND v.CodProducto IN ($phBat)
+          AND (sr.codporcion IS NULL OR sr.codporcion NOT IN (
+              SELECT CodCotizacionPorcion
+              FROM MezclaPorcionesAccess
+              WHERE CodCotizacionPorcion IS NOT NULL
+          ))
           {$whereSuc}
           AND ($whereIngJoin)
         GROUP BY v.Fecha, v.Semana, v.local, v.DBBatidos_Nombre,
@@ -266,6 +271,7 @@ try {
             WHERE pp.id_producto_maestro = ?
               AND pp.Id_receta_producto IS NULL
               AND pp.Activo = 'SI'
+              AND pp.presentacion_basica_inventario = 1
         ");
         $stmtPM->execute([$idMaestro]);
         foreach ($stmtPM->fetchAll(PDO::FETCH_ASSOC) as $pp) {
