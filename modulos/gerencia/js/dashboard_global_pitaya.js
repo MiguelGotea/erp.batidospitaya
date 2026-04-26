@@ -1126,15 +1126,18 @@ function renderDrilldownMes(data) {
         order: 0,
     };
 
-    // Datasets: una barra por tienda
+    // Datasets: una línea por tienda
     const dsTiendas = tiendas.map((tienda, i) => ({
-        type: 'bar',
+        type: 'line',
         label: tienda,
         data: (data.series[tienda] || []).map(v => convertir(v)),
-        backgroundColor: DA_DRILL_PALETTE[i % DA_DRILL_PALETTE.length] + '66',
         borderColor:     DA_DRILL_PALETTE[i % DA_DRILL_PALETTE.length],
-        borderWidth: 1,
-        borderRadius: 3,
+        backgroundColor: DA_DRILL_PALETTE[i % DA_DRILL_PALETTE.length] + '18',
+        borderWidth: 2,
+        pointRadius: 3,
+        pointHoverRadius: 5,
+        tension: 0.35,
+        fill: false,
         yAxisID: 'y',
         hidden: false,
         order: i + 1,
@@ -1160,7 +1163,6 @@ function renderDrilldownMes(data) {
             },
             scales: {
                 x: {
-                    stacked: false,
                     ticks: { color: DA_COLORS.muted, maxRotation: 0 },
                     grid:  { color: DA_COLORS.grid },
                     title: { display: true, text: `Días — ${data.mes_label}`, color: DA_COLORS.muted, font: { size: 10 } }
