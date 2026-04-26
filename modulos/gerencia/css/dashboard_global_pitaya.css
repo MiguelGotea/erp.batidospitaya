@@ -661,3 +661,166 @@ body { background: var(--neu-bg); }
     .da-kpi-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 14px; }
     .da-wrapper { padding: 14px 12px 40px; }
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   DRILL-DOWN — Tendencia de Ventas
+   Clases propias: da-tv-* y da-drill-*
+   No modifica ninguna regla existente
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Wrapper que alterna entre barras y drill */
+.da-tv-wrapper { position: relative; overflow: hidden; }
+
+/* Transición de la vista barras */
+#daTvBarView {
+    transition: opacity 0.32s ease, transform 0.32s ease;
+    will-change: opacity, transform;
+}
+
+/* Vista drill oculta por defecto */
+.da-tv-drill-hidden { display: none; opacity: 0; }
+
+/* Cuando el wrapper tiene .is-drilldown */
+.da-tv-wrapper.is-drilldown #daTvBarView { display: none !important; }
+.da-tv-wrapper.is-drilldown #daTvDrillView { display: block; }
+
+/* Animación del drill view */
+#daTvDrillView {
+    transition: opacity 0.32s ease, transform 0.32s ease;
+    will-change: opacity, transform;
+}
+
+/* ── Header del drill-down ─────────────────────── */
+.da-drill-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(0,0,0,0.06);
+}
+.da-drill-titles { display: flex; flex-direction: column; gap: 2px; }
+
+/* ── Botón Volver ──────────────────────────────── */
+.da-drill-back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 6px 16px;
+    border-radius: 50px;
+    border: 1.5px solid var(--pitaya-teal);
+    background: var(--neu-bg);
+    color: var(--pitaya-teal-d);
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.22s ease;
+    font-family: 'Inter', sans-serif;
+    box-shadow: var(--neu-sm);
+    flex-shrink: 0;
+    letter-spacing: 0.2px;
+}
+.da-drill-back-btn:hover {
+    background: var(--pitaya-teal);
+    color: #fff;
+    box-shadow: var(--neu-md);
+    transform: translateX(-3px);
+}
+.da-drill-back-btn:active {
+    box-shadow: var(--neu-in-sm);
+    transform: scale(0.97);
+}
+.da-drill-back-btn i { font-size: 0.78rem; }
+
+/* ── Títulos drill ─────────────────────────────── */
+.da-drill-title {
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    line-height: 1.1;
+}
+.da-drill-subtitle {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    letter-spacing: 0.3px;
+}
+
+/* ── Canvas wrap ───────────────────────────────── */
+.da-drill-canvas-wrap { position: relative; }
+.da-drill-canvas-wrap canvas { max-height: 260px !important; }
+
+/* ── Leyenda interactiva ───────────────────────── */
+.da-drill-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(0,0,0,0.05);
+}
+.da-drill-legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 13px;
+    border-radius: 50px;
+    font-size: 0.74rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1.5px solid transparent;
+    background: var(--neu-bg);
+    box-shadow: 3px 3px 7px var(--neu-shadow-dark), -3px -3px 7px var(--neu-shadow-light);
+    transition: opacity 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+    user-select: none;
+    font-family: 'Inter', sans-serif;
+}
+.da-drill-legend-item .da-drill-swatch {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+}
+.da-drill-legend-item.dl-active {
+    box-shadow: inset 3px 3px 6px var(--neu-shadow-dark), inset -3px -3px 6px var(--neu-shadow-light);
+}
+.da-drill-legend-item.dl-inactive { opacity: 0.38; }
+.da-drill-legend-item:hover {
+    opacity: 1 !important;
+    transform: translateY(-1px);
+    box-shadow: var(--neu-sm);
+}
+.da-drill-legend-item.dl-total { border-style: dashed; }
+
+/* ── Loader interno ────────────────────────────── */
+.da-drill-loader {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 50px 20px;
+    color: var(--text-muted);
+    font-size: 0.84rem;
+}
+.da-drill-loader.da-drill-visible { display: flex; }
+.da-drill-spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid rgba(81,184,172,0.18);
+    border-top-color: var(--pitaya-teal);
+    border-radius: 50%;
+    animation: daDrillSpin 0.75s linear infinite;
+}
+@keyframes daDrillSpin { to { transform: rotate(360deg); } }
+
+/* Cursor pointer sobre canvas de barras */
+#daTvBarView canvas { cursor: pointer; }
+
+/* ── Responsive drill ──────────────────────────── */
+@media (max-width: 600px) {
+    .da-drill-header { gap: 10px; }
+    .da-drill-title  { font-size: 0.88rem; }
+    .da-drill-legend-item { font-size: 0.68rem; padding: 3px 10px; }
+}

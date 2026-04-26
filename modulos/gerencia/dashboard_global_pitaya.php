@@ -202,8 +202,43 @@ $hoy = date('Y-m-d');
                                 <button class="da-tab active" data-tab="mensual">Mensual</button>
                             </div>
                         </div>
-                        <div class="da-card-body">
-                            <canvas id="chartTendenciaVentas" height="220"></canvas>
+                        <div class="da-card-body da-tv-wrapper">
+
+                            <!-- VISTA 1: Gráfica de barras original (sin tocar) -->
+                            <div id="daTvBarView">
+                                <canvas id="chartTendenciaVentas" height="220"></canvas>
+                            </div>
+
+                            <!-- VISTA 2: Drill-down por mes (oculta por defecto) -->
+                            <div id="daTvDrillView" class="da-tv-drill-hidden">
+
+                                <!-- Header: botón volver + título -->
+                                <div class="da-drill-header">
+                                    <button id="daDrillBack" class="da-drill-back-btn" type="button">
+                                        <i class="fas fa-arrow-left"></i> Volver a tendencia
+                                    </button>
+                                    <div class="da-drill-titles">
+                                        <span id="daDrillTitle" class="da-drill-title"></span>
+                                        <span id="daDrillSubtitle" class="da-drill-subtitle">Ventas diarias por sucursal</span>
+                                    </div>
+                                </div>
+
+                                <!-- Loader interno -->
+                                <div id="daDrillLoader" class="da-drill-loader">
+                                    <div class="da-drill-spinner"></div>
+                                    <span>Cargando datos del mes…</span>
+                                </div>
+
+                                <!-- Canvas drill-down -->
+                                <div class="da-drill-canvas-wrap">
+                                    <canvas id="chartDrilldownVentas" height="220"></canvas>
+                                </div>
+
+                                <!-- Leyenda interactiva -->
+                                <div id="daDrillLegend" class="da-drill-legend"></div>
+
+                            </div>
+
                         </div>
                     </div>
 

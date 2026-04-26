@@ -54,6 +54,12 @@ let chartPart = null;
 let chartNuevos = null;
 let chartMix = null;
 
+// ── Drill-down Tendencia de Ventas ──────────────────────────
+let chartDrilldown        = null;
+let drilldownData         = null;   // última respuesta del endpoint drill
+let drilldownActiveSeries = {};     // { 'Tienda A': true, 'Total': false }
+let isDrilldownOpen       = false;
+
 // ── Helper: formato moneda ───────────────────────────
 function fmtC(n) {
     if (n === null || n === undefined) return '—';
@@ -352,6 +358,30 @@ function renderTendenciaMensual(meses, proyeccion, mesEstimado) {
             }
         }
     });
+
+    // ── Click en barra → abrir drill-down ──────────────────────────
+    // Solo barras reales (dataset 0, ventasPad[idx] !== null).
+    // No dispara en líneas de proyección ni en el área vacía del canvas.
+    ctx.onclick = function (evt) {
+        if (isDrilldownOpen) return;
+        const puntos = chartTendencia.getElementsAtEventForMode(
+            evt, 'nearest', { intersect: true }, false
+        );
+        if (!puntos.length) return;
+        const el = puntos[0];
+        if (el.datasetIndex !== 0) return;          // solo barras (dataset 0)
+        const idx = el.index;
+        if (ventasPad[idx] === null || ventasPad[idx] === undefined) return; // no proyección
+        let mesReal = null;
+        if (idx < histCompletos.length) {
+            mesReal = histCompletos[idx].mes;       // mes histórico completo
+        } else if (mesEstimado && idx === histCompletos.length) {
+            mesReal = mesEstimado.mes;              // mes actual estimado
+        }
+        if (!mesReal) return;
+        const labelMes = allLabels[idx].replace(' *', '');
+        abrirDrilldownMes(mesReal, labelMes);
+    };
 }
 
 
@@ -981,4 +1011,260 @@ document.addEventListener('DOMContentLoaded', function () {
     Chart.defaults.color = '#7a8a84';
     Chart.defaults.font.family = 'Inter';
     cargarDashboard();
+
+    // Botón volver del drill-down
+    document.getElementById('daDrillBack')?.addEventListener('click', cerrarDrilldown);
 });
+
+// ═══════════════════════════════════════════════════════════════
+//  DRILL-DOWN — Tendencia de Ventas · Funciones nuevas
+//  No modifican ni referencian nada de las funciones existentes
+//  salvo las helpers globales: convertir(), fmtMoney(), fmtAxisMoney(), DA_COLORS
+// ═══════════════════════════════════════════════════════════════
+
+/** Pequeña utilidad: esperar ms milisegundos */
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+/** Paleta de 16 colores para las sucursales del drill-down */
+const DA_DRILL_PALETTE = [
+    '#51B8AC','#3aaa82','#e07b39','#7c6bc9',
+    '#c9a227','#20b2aa','#6495ed','#d9534f',
+    '#f0883e','#bc8cff','#58a6ff','#79c0ff',
+    '#56d364','#e3b341','#ff7b72','#ffa657'
+];
+
+/**
+ * Abre el drill-down para el mes indicado.
+ * @param {string} mes       - 'YYYY-MM'
+ * @param {string} labelMes  - Etiqueta legible, ej. "Mar '26"
+ */
+async function abrirDrilldownMes(mes, labelMes) {
+    isDrilldownOpen = true;
+    const wrapper  = document.querySelector('.da-tv-wrapper');
+    const barView  = document.getElementById('daTvBarView');
+    const drillView= document.getElementById('daTvDrillView');
+    const loader   = document.getElementById('daDrillLoader');
+
+    // 1. Animar salida de la vista de barras
+    barView.style.opacity   = '0';
+    barView.style.transform = 'scale(0.96)';
+    await sleep(300);
+
+    // 2. Activar clase para que CSS muestre el drill view
+    wrapper.classList.add('is-drilldown');
+    drillView.style.opacity   = '0';
+    drillView.style.transform = 'scale(0.96)';
+
+    // 3. Poner título y mostrar loader
+    document.getElementById('daDrillTitle').textContent     = labelMes;
+    document.getElementById('daDrillSubtitle').textContent  = 'Ventas diarias por sucursal';
+    document.getElementById('daDrillLegend').innerHTML      = '';
+    loader.classList.add('da-drill-visible');
+
+    // 4. Animar entrada del drill view
+    requestAnimationFrame(() => {
+        drillView.style.transition = 'opacity 0.32s ease, transform 0.32s ease';
+        drillView.style.opacity    = '1';
+        drillView.style.transform  = 'scale(1)';
+    });
+
+    // 5. Pedir datos al servidor
+    try {
+        const fd = new FormData();
+        fd.append('mes', mes);
+        const res  = await fetch('ajax/dashboard_global_pitaya_drilldown.php', {
+            method: 'POST', body: fd
+        });
+        const data = await res.json();
+        if (!data.success) throw new Error(data.message || 'Error desconocido');
+        drilldownData = data;
+        renderDrilldownMes(data);
+    } catch (err) {
+        console.error('[Drill-down]', err);
+        loader.innerHTML = `<i class="fas fa-exclamation-triangle" style="color:#d9534f;font-size:1.4rem"></i><span>Error al cargar datos del mes</span>`;
+        return;
+    } finally {
+        loader.classList.remove('da-drill-visible');
+    }
+}
+
+/**
+ * Renderiza la gráfica de barras apiladas + línea Total para el mes seleccionado.
+ * @param {object} data - respuesta del endpoint drilldown
+ */
+function renderDrilldownMes(data) {
+    const ctx = document.getElementById('chartDrilldownVentas');
+    if (!ctx) return;
+    if (chartDrilldown) chartDrilldown.destroy();
+
+    if (!data.dias || !data.dias.length) {
+        ctx.parentElement.innerHTML = '<p style="text-align:center;padding:40px;color:#a8b4ae">Sin datos para este mes.</p>';
+        return;
+    }
+
+    const dias    = data.dias.map(d => parseInt(d.split('-')[2], 10)); // solo el número
+    const tiendas = data.tiendas;
+
+    // Estado inicial: todas las sucursales ON, Total OFF
+    drilldownActiveSeries = {};
+    tiendas.forEach(t => { drilldownActiveSeries[t] = true; });
+    drilldownActiveSeries['Total'] = false;
+
+    // Dataset: línea Total (oculta por defecto)
+    const dsTotal = {
+        type: 'line',
+        label: 'Total',
+        data: (data.series['Total'] || []).map(v => convertir(v)),
+        borderColor: DA_COLORS.yellow,
+        backgroundColor: 'rgba(201,162,39,0.07)',
+        borderWidth: 2.5,
+        pointRadius: 2,
+        tension: 0.35,
+        fill: false,
+        yAxisID: 'y',
+        hidden: true,
+        order: 0,
+    };
+
+    // Datasets: una barra por tienda
+    const dsTiendas = tiendas.map((tienda, i) => ({
+        type: 'bar',
+        label: tienda,
+        data: (data.series[tienda] || []).map(v => convertir(v)),
+        backgroundColor: DA_DRILL_PALETTE[i % DA_DRILL_PALETTE.length] + '66',
+        borderColor:     DA_DRILL_PALETTE[i % DA_DRILL_PALETTE.length],
+        borderWidth: 1,
+        borderRadius: 3,
+        yAxisID: 'y',
+        hidden: false,
+        order: i + 1,
+    }));
+
+    chartDrilldown = new Chart(ctx, {
+        data: { labels: dias, datasets: [dsTotal, ...dsTiendas] },
+        options: {
+            responsive: true,
+            animation: { duration: 480, easing: 'easeOutQuart' },
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        title: items => `Día ${items[0].label} · ${data.mes_label}`,
+                        label: c => {
+                            if (c.raw === null || c.raw === undefined || c.raw === 0) return null;
+                            return ` ${c.dataset.label}: ${fmtMoney(c.raw, true)}`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    stacked: false,
+                    ticks: { color: DA_COLORS.muted, maxRotation: 0 },
+                    grid:  { color: DA_COLORS.grid },
+                    title: { display: true, text: `Días — ${data.mes_label}`, color: DA_COLORS.muted, font: { size: 10 } }
+                },
+                y: {
+                    ticks: { color: DA_COLORS.muted, callback: v => fmtAxisMoney(v, true) },
+                    grid:  { color: DA_COLORS.grid },
+                    title: { display: true, text: 'Ventas', color: DA_COLORS.muted, font: { size: 10 } }
+                }
+            }
+        }
+    });
+
+    renderDrillLegend(tiendas);
+}
+
+/**
+ * Construye la leyenda interactiva debajo del drill-down.
+ * @param {string[]} tiendas - lista de nombres de sucursales (sin 'Total')
+ */
+function renderDrillLegend(tiendas) {
+    const cont = document.getElementById('daDrillLegend');
+    if (!cont) return;
+
+    // Sucursales + Total al final
+    const items = [
+        ...tiendas.map((t, i) => ({ label: t, color: DA_DRILL_PALETTE[i % DA_DRILL_PALETTE.length], isTotal: false })),
+        { label: 'Total', color: DA_COLORS.yellow, isTotal: true }
+    ];
+
+    cont.innerHTML = items.map(item => {
+        const active = drilldownActiveSeries[item.label];
+        const cls    = `da-drill-legend-item ${active ? 'dl-active' : 'dl-inactive'}${item.isTotal ? ' dl-total' : ''}`;
+        const border = active ? `border-color:${item.color}` : '';
+        return `<div class="${cls}" data-series="${item.label}"
+                     style="color:${item.color};${border}">
+                    <span class="da-drill-swatch" style="background:${item.color}"></span>
+                    ${item.label}
+                </div>`;
+    }).join('');
+
+    cont.querySelectorAll('.da-drill-legend-item').forEach(el => {
+        el.addEventListener('click', function () {
+            const label    = this.dataset.series;
+            const isNowOn  = !drilldownActiveSeries[label];
+            drilldownActiveSeries[label] = isNowOn;
+
+            // Visual del chip
+            this.classList.toggle('dl-active',   isNowOn);
+            this.classList.toggle('dl-inactive', !isNowOn);
+            this.style.borderColor = isNowOn ? this.style.color : 'transparent';
+
+            // Toggle en Chart.js
+            if (chartDrilldown) {
+                const dsIdx = chartDrilldown.data.datasets.findIndex(d => d.label === label);
+                if (dsIdx !== -1) {
+                    chartDrilldown.data.datasets[dsIdx].hidden = !isNowOn;
+                    chartDrilldown.update('active');
+                }
+            }
+        });
+    });
+}
+
+/** Cierra el drill-down y vuelve a la gráfica de barras original. */
+async function cerrarDrilldown() {
+    if (!isDrilldownOpen) return;
+    const wrapper  = document.querySelector('.da-tv-wrapper');
+    const drillView= document.getElementById('daTvDrillView');
+    const barView  = document.getElementById('daTvBarView');
+
+    // Animar salida del drill
+    drillView.style.opacity   = '0';
+    drillView.style.transform = 'scale(0.96)';
+    await sleep(280);
+
+    // Ocultar drill, mostrar barras
+    wrapper.classList.remove('is-drilldown');
+    drillView.style.opacity   = '';
+    drillView.style.transform = '';
+    barView.style.opacity     = '0';
+    barView.style.transform   = 'scale(0.96)';
+
+    requestAnimationFrame(() => {
+        barView.style.transition = 'opacity 0.32s ease, transform 0.32s ease';
+        barView.style.opacity    = '1';
+        barView.style.transform  = 'scale(1)';
+    });
+
+    // Limpiar estado
+    if (chartDrilldown) { chartDrilldown.destroy(); chartDrilldown = null; }
+    drilldownData         = null;
+    drilldownActiveSeries = {};
+    isDrilldownOpen       = false;
+}
+
+// ── Re-render drill-down al cambiar moneda ─────────────────────
+// Se usa addEventListener adicional; no modifica el handler existente.
+document.querySelectorAll('.da-cur-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        if (isDrilldownOpen && drilldownData) renderDrilldownMes(drilldownData);
+    });
+});
+document.getElementById('inputTipoCambio')?.addEventListener('change', () => {
+    if (isDrilldownOpen && drilldownData) renderDrilldownMes(drilldownData);
+});
+
