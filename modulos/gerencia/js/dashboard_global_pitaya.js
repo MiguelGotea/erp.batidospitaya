@@ -235,7 +235,7 @@ function renderTendenciaMensual(meses, proyeccion, mesEstimado) {
     const barColors = [
         ...ventasHist.map((_, i) => i === nH - 1 ? 'rgba(81,184,172,0.75)' : 'rgba(81,184,172,0.38)'),
         ...ventasEst.map(() => 'rgba(81,184,172,0.22)'),
-        ...Array(labelsProy.length).fill(null)
+        ...Array(labelsProy.length).fill('rgba(0,0,0,0)')
     ];
 
     // Dataset 2: VPT histórico (eje derecho)
