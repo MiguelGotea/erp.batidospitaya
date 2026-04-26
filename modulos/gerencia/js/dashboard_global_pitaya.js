@@ -55,10 +55,10 @@ let chartNuevos = null;
 let chartMix = null;
 
 // ── Drill-down Tendencia de Ventas ──────────────────────────
-let chartDrilldown        = null;
-let drilldownData         = null;   // última respuesta del endpoint drill
+let chartDrilldown = null;
+let drilldownData = null;   // última respuesta del endpoint drill
 let drilldownActiveSeries = {};     // { 'Tienda A': true, 'Total': false }
-let isDrilldownOpen       = false;
+let isDrilldownOpen = false;
 
 // ── Helper: formato moneda ───────────────────────────
 function fmtC(n) {
@@ -261,7 +261,7 @@ function renderTendenciaMensual(meses, proyeccion, mesEstimado) {
         ...vals
     ];
     const proyHist = buildProy(proySlice.map(p => convertir(p.ventas_hist)));
-    const proyRec  = buildProy(proySlice.map(p => convertir(p.ventas_rec)));
+    const proyRec = buildProy(proySlice.map(p => convertir(p.ventas_rec)));
     const proyMeta = buildProy(proySlice.map(p => convertir(p.ventas_meta)));
 
     chartTendencia = new Chart(ctx, {
@@ -820,19 +820,19 @@ function renderExpansion(exp) {
         const anioActual = new Date().getFullYear();
         const histAnios = exp.ventas_por_anio.filter(v => parseInt(v.anio) < anioActual);
         const labelsHist = histAnios.map(v => v.anio);
-        
+
         const labelEst = exp.anio_actual_estimado ? [exp.anio_actual_estimado.anio + ' *'] : [];
         const labelsProy = (exp.proyeccion_anual || []).map(v => v.anio);
-        
+
         const allLabels = [...labelsHist, ...labelEst, ...labelsProy];
-        
+
         // Data Histórica
         const dataHist = histAnios.map(v => convertir(parseFloat(v.ventas)));
         // Data Estimada (Año actual)
         const dataEst = exp.anio_actual_estimado ? [convertir(exp.anio_actual_estimado.ventas)] : [];
-        
+
         const nTotalHist = labelsHist.length + labelEst.length;
-        
+
         // Series para Barras (Histórico + Estimado)
         const barsData = [...dataHist, ...dataEst, ...Array(labelsProy.length).fill(null)];
         const barColors = [
@@ -843,7 +843,7 @@ function renderExpansion(exp) {
 
         // Anclaje: el último punto real/estimado conecta con la proyección
         const anchor = dataEst.length ? dataEst[0] : (dataHist.length ? dataHist[dataHist.length - 1] : 0);
-        
+
         const buildProy = (vals) => [
             ...Array(nTotalHist - 1).fill(null),
             anchor,
@@ -899,8 +899,8 @@ function renderExpansion(exp) {
                 },
                 scales: {
                     x: { ticks: { color: DA_COLORS.muted }, grid: { color: DA_COLORS.grid } },
-                    y: { 
-                        ticks: { color: DA_COLORS.muted, callback: v => fmtAxisMoney(v, true) }, 
+                    y: {
+                        ticks: { color: DA_COLORS.muted, callback: v => fmtAxisMoney(v, true) },
                         grid: { color: DA_COLORS.grid },
                         title: { display: true, text: 'Ventas anuales', color: DA_COLORS.muted, font: { size: 10 } }
                     }
@@ -1016,6 +1016,7 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('daDrillBack')?.addEventListener('click', cerrarDrilldown);
 });
 
+
 // ═══════════════════════════════════════════════════════════════
 //  DRILL-DOWN — Tendencia de Ventas · Funciones nuevas
 //  No modifican ni referencian nada de las funciones existentes
@@ -1027,10 +1028,10 @@ function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
 /** Paleta de 16 colores para las sucursales del drill-down */
 const DA_DRILL_PALETTE = [
-    '#51B8AC','#3aaa82','#e07b39','#7c6bc9',
-    '#c9a227','#20b2aa','#6495ed','#d9534f',
-    '#f0883e','#bc8cff','#58a6ff','#79c0ff',
-    '#56d364','#e3b341','#ff7b72','#ffa657'
+    '#51B8AC', '#3aaa82', '#e07b39', '#7c6bc9',
+    '#c9a227', '#20b2aa', '#6495ed', '#d9534f',
+    '#f0883e', '#bc8cff', '#58a6ff', '#79c0ff',
+    '#56d364', '#e3b341', '#ff7b72', '#ffa657'
 ];
 
 /**
@@ -1040,39 +1041,39 @@ const DA_DRILL_PALETTE = [
  */
 async function abrirDrilldownMes(mes, labelMes) {
     isDrilldownOpen = true;
-    const wrapper  = document.querySelector('.da-tv-wrapper');
-    const barView  = document.getElementById('daTvBarView');
-    const drillView= document.getElementById('daTvDrillView');
-    const loader   = document.getElementById('daDrillLoader');
+    const wrapper = document.querySelector('.da-tv-wrapper');
+    const barView = document.getElementById('daTvBarView');
+    const drillView = document.getElementById('daTvDrillView');
+    const loader = document.getElementById('daDrillLoader');
 
     // 1. Animar salida de la vista de barras
-    barView.style.opacity   = '0';
+    barView.style.opacity = '0';
     barView.style.transform = 'scale(0.96)';
     await sleep(300);
 
     // 2. Activar clase para que CSS muestre el drill view
     wrapper.classList.add('is-drilldown');
-    drillView.style.opacity   = '0';
+    drillView.style.opacity = '0';
     drillView.style.transform = 'scale(0.96)';
 
     // 3. Poner título y mostrar loader
-    document.getElementById('daDrillTitle').textContent     = labelMes;
-    document.getElementById('daDrillSubtitle').textContent  = 'Ventas diarias por sucursal';
-    document.getElementById('daDrillLegend').innerHTML      = '';
+    document.getElementById('daDrillTitle').textContent = labelMes;
+    document.getElementById('daDrillSubtitle').textContent = 'Ventas diarias por sucursal';
+    document.getElementById('daDrillLegend').innerHTML = '';
     loader.classList.add('da-drill-visible');
 
     // 4. Animar entrada del drill view
     requestAnimationFrame(() => {
         drillView.style.transition = 'opacity 0.32s ease, transform 0.32s ease';
-        drillView.style.opacity    = '1';
-        drillView.style.transform  = 'scale(1)';
+        drillView.style.opacity = '1';
+        drillView.style.transform = 'scale(1)';
     });
 
     // 5. Pedir datos al servidor
     try {
         const fd = new FormData();
         fd.append('mes', mes);
-        const res  = await fetch('ajax/dashboard_global_pitaya_drilldown.php', {
+        const res = await fetch('ajax/dashboard_global_pitaya_drilldown.php', {
             method: 'POST', body: fd
         });
         const data = await res.json();
@@ -1102,7 +1103,7 @@ function renderDrilldownMes(data) {
         return;
     }
 
-    const dias    = data.dias.map(d => parseInt(d.split('-')[2], 10)); // solo el número
+    const dias = data.dias.map(d => parseInt(d.split('-')[2], 10)); // solo el número
     const tiendas = data.tiendas;
 
     // Estado inicial: todas las sucursales ON, Total OFF
@@ -1131,7 +1132,7 @@ function renderDrilldownMes(data) {
         type: 'line',
         label: tienda,
         data: (data.series[tienda] || []).map(v => convertir(v)),
-        borderColor:     DA_DRILL_PALETTE[i % DA_DRILL_PALETTE.length],
+        borderColor: DA_DRILL_PALETTE[i % DA_DRILL_PALETTE.length],
         backgroundColor: DA_DRILL_PALETTE[i % DA_DRILL_PALETTE.length] + '18',
         borderWidth: 2,
         pointRadius: 3,
@@ -1164,12 +1165,12 @@ function renderDrilldownMes(data) {
             scales: {
                 x: {
                     ticks: { color: DA_COLORS.muted, maxRotation: 0 },
-                    grid:  { color: DA_COLORS.grid },
+                    grid: { color: DA_COLORS.grid },
                     title: { display: true, text: `Días — ${data.mes_label}`, color: DA_COLORS.muted, font: { size: 10 } }
                 },
                 y: {
                     ticks: { color: DA_COLORS.muted, callback: v => fmtAxisMoney(v, true) },
-                    grid:  { color: DA_COLORS.grid },
+                    grid: { color: DA_COLORS.grid },
                     title: { display: true, text: 'Ventas', color: DA_COLORS.muted, font: { size: 10 } }
                 }
             }
@@ -1195,7 +1196,7 @@ function renderDrillLegend(tiendas) {
 
     cont.innerHTML = items.map(item => {
         const active = drilldownActiveSeries[item.label];
-        const cls    = `da-drill-legend-item ${active ? 'dl-active' : 'dl-inactive'}${item.isTotal ? ' dl-total' : ''}`;
+        const cls = `da-drill-legend-item ${active ? 'dl-active' : 'dl-inactive'}${item.isTotal ? ' dl-total' : ''}`;
         const border = active ? `border-color:${item.color}` : '';
         return `<div class="${cls}" data-series="${item.label}"
                      style="color:${item.color};${border}">
@@ -1206,12 +1207,12 @@ function renderDrillLegend(tiendas) {
 
     cont.querySelectorAll('.da-drill-legend-item').forEach(el => {
         el.addEventListener('click', function () {
-            const label    = this.dataset.series;
-            const isNowOn  = !drilldownActiveSeries[label];
+            const label = this.dataset.series;
+            const isNowOn = !drilldownActiveSeries[label];
             drilldownActiveSeries[label] = isNowOn;
 
             // Visual del chip
-            this.classList.toggle('dl-active',   isNowOn);
+            this.classList.toggle('dl-active', isNowOn);
             this.classList.toggle('dl-inactive', !isNowOn);
             this.style.borderColor = isNowOn ? this.style.color : 'transparent';
 
@@ -1230,33 +1231,33 @@ function renderDrillLegend(tiendas) {
 /** Cierra el drill-down y vuelve a la gráfica de barras original. */
 async function cerrarDrilldown() {
     if (!isDrilldownOpen) return;
-    const wrapper  = document.querySelector('.da-tv-wrapper');
-    const drillView= document.getElementById('daTvDrillView');
-    const barView  = document.getElementById('daTvBarView');
+    const wrapper = document.querySelector('.da-tv-wrapper');
+    const drillView = document.getElementById('daTvDrillView');
+    const barView = document.getElementById('daTvBarView');
 
     // Animar salida del drill
-    drillView.style.opacity   = '0';
+    drillView.style.opacity = '0';
     drillView.style.transform = 'scale(0.96)';
     await sleep(280);
 
     // Ocultar drill, mostrar barras
     wrapper.classList.remove('is-drilldown');
-    drillView.style.opacity   = '';
+    drillView.style.opacity = '';
     drillView.style.transform = '';
-    barView.style.opacity     = '0';
-    barView.style.transform   = 'scale(0.96)';
+    barView.style.opacity = '0';
+    barView.style.transform = 'scale(0.96)';
 
     requestAnimationFrame(() => {
         barView.style.transition = 'opacity 0.32s ease, transform 0.32s ease';
-        barView.style.opacity    = '1';
-        barView.style.transform  = 'scale(1)';
+        barView.style.opacity = '1';
+        barView.style.transform = 'scale(1)';
     });
 
     // Limpiar estado
     if (chartDrilldown) { chartDrilldown.destroy(); chartDrilldown = null; }
-    drilldownData         = null;
+    drilldownData = null;
     drilldownActiveSeries = {};
-    isDrilldownOpen       = false;
+    isDrilldownOpen = false;
 }
 
 // ── Re-render drill-down al cambiar moneda ─────────────────────
