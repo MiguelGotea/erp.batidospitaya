@@ -1106,10 +1106,10 @@ function renderDrilldownMes(data) {
     const dias = data.dias.map(d => parseInt(d.split('-')[2], 10)); // solo el número
     const tiendas = data.tiendas;
 
-    // Estado inicial: todas las sucursales ON, Total OFF
+    // Estado inicial: todas las sucursales OFF, Total ON
     drilldownActiveSeries = {};
-    tiendas.forEach(t => { drilldownActiveSeries[t] = true; });
-    drilldownActiveSeries['Total'] = false;
+    tiendas.forEach(t => { drilldownActiveSeries[t] = false; });
+    drilldownActiveSeries['Total'] = true;
 
     // Dataset: línea Total (oculta por defecto)
     const dsTotal = {
@@ -1123,7 +1123,7 @@ function renderDrilldownMes(data) {
         tension: 0.35,
         fill: false,
         yAxisID: 'y',
-        hidden: true,
+        hidden: false,
         order: 0,
     };
 
@@ -1140,7 +1140,7 @@ function renderDrilldownMes(data) {
         tension: 0.35,
         fill: false,
         yAxisID: 'y',
-        hidden: false,
+        hidden: true,
         order: i + 1,
     }));
 
