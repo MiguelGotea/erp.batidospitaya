@@ -529,14 +529,6 @@ function renderKPIs(productos, sucursales) {
     const pctTotal = totalTeorico ? (varTotal/totalTeorico*100) : null;
     row.innerHTML = `
         <div class="bi-kpi-card">
-            <div class="bi-kpi-icon" style="background:#0E544C"><i class="fas fa-boxes"></i></div>
-            <div><div class="bi-kpi-label">Consumo Real Total</div><div class="bi-kpi-val">${fmt(totalReal)}</div></div>
-        </div>
-        <div class="bi-kpi-card">
-            <div class="bi-kpi-icon" style="background:#2980b9"><i class="fas fa-chart-bar"></i></div>
-            <div><div class="bi-kpi-label">Consumo Teórico Total</div><div class="bi-kpi-val">${fmt(totalTeorico)}</div></div>
-        </div>
-        <div class="bi-kpi-card">
             <div class="bi-kpi-icon" style="background:${Math.abs(pctTotal||0)<=5?'#27ae60':Math.abs(pctTotal||0)<=15?'#e67e22':'#e74c3c'}"><i class="fas fa-balance-scale"></i></div>
             <div><div class="bi-kpi-label">Varianza Global</div><div class="bi-kpi-val ${varClass(pctTotal)}">${fmtPct(pctTotal)}</div></div>
         </div>
