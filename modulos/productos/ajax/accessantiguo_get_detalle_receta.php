@@ -288,7 +288,7 @@ try {
         $idMaestroResolucion = $ingr['nuevo_producto']['id_maestro'] ?? null;
 
         if ($idMaestroResolucion) {
-            // Resolver unidad para búsqueda de despacho
+            // Nivel 1: unidad directa + despacho=1 (mismo maestro)
             $resolucionU = resolverUnidadERP($conn, $ingr['UnidadIngrediente']);
             if ($resolucionU) {
                 $ingr['presentacion_despacho'] = buscarPresentacionPorUnidades(
@@ -298,6 +298,7 @@ try {
                     'despacho'
                 );
 
+                // Nivel 2: unidad convertible + despacho=1 (mismo maestro)
                 if (!$ingr['presentacion_despacho'] && !empty($resolucionU['convertibles'])) {
                     $ingr['presentacion_despacho'] = buscarPresentacionPorUnidades(
                         $conn,
@@ -308,7 +309,7 @@ try {
                 }
             }
 
-            // Fallback: cualquier presentación de despacho del maestro.
+            // Fallback 1: cualquier presentación de despacho del mismo maestro (sin restricción de unidad).
             // NOTA: No se filtra Id_receta_producto IS NULL porque presentaciones
             // compuestas (paquetes, cajas de cajas) pueden ser válidas para despacho.
             if (!$ingr['presentacion_despacho']) {
@@ -336,49 +337,49 @@ try {
                 $stmtAnyD->execute([$idMaestroResolucion]);
                 $ingr['presentacion_despacho'] = $stmtAnyD->fetch(PDO::FETCH_ASSOC) ?: null;
             }
+        }
 
-            // Fallback 2: buscar producto despacho que sea receta de 1 solo componente
-            // y ese componente sea la Presentación Uso resuelta (nuevo_producto).
-            // Cubre el caso donde el paquete de despacho tiene distinto id_producto_maestro
-            // pero envuelve exactamente al producto de uso (ej: Ristra 25u contiene Vaso 16oz Unid).
-            if (!$ingr['presentacion_despacho']) {
-                $idPresentacionUso = $ingr['nuevo_producto']['id_presentacion'] ?? null;
-                if ($idPresentacionUso) {
-                    $stmtPkg = $conn->prepare("
-                        SELECT
-                            pp.id       AS id_presentacion,
-                            pp.SKU,
-                            pp.Nombre   AS NombreNuevo,
-                            pp.cantidad,
-                            pp.Activo   AS activoNuevo,
-                            u.nombre    AS unidadNueva,
-                            pm.id       AS id_maestro,
-                            pm.Nombre   AS productoMaestro,
-                            pp.presentacion_receta,
-                            pp.presentacion_basica_inventario,
-                            pp.presentacion_despacho
-                        FROM producto_presentacion pp
-                        LEFT JOIN producto_maestro pm ON pm.id = pp.id_producto_maestro
-                        LEFT JOIN unidad_producto u   ON u.id  = pp.id_unidad_producto
-                        WHERE pp.Id_receta_producto IS NOT NULL
-                          AND pp.Activo = 'SI'
-                          AND pp.presentacion_despacho = 1
-                          AND (
-                              SELECT COUNT(DISTINCT crp.id_presentacion_producto)
-                              FROM componentes_receta_producto crp
-                              WHERE crp.id_receta_producto_global = pp.Id_receta_producto
-                          ) = 1
-                          AND EXISTS (
-                              SELECT 1
-                              FROM componentes_receta_producto crp2
-                              WHERE crp2.id_receta_producto_global = pp.Id_receta_producto
-                                AND crp2.id_presentacion_producto = ?
-                          )
-                        LIMIT 1
-                    ");
-                    $stmtPkg->execute([$idPresentacionUso]);
-                    $ingr['presentacion_despacho'] = $stmtPkg->fetch(PDO::FETCH_ASSOC) ?: null;
-                }
+        // Fallback 2: receta de 1 componente = Presentación Uso.
+        // Se ejecuta SIEMPRE (fuera del bloque if maestro) porque no depende del maestro:
+        // cubre el caso donde el paquete tiene maestro diferente O el producto de uso
+        // es en sí una receta sin maestro (ej: Mix de Waffle, Paquete Mix Waffle de 10u).
+        if (!$ingr['presentacion_despacho']) {
+            $idPresentacionUso = $ingr['nuevo_producto']['id_presentacion'] ?? null;
+            if ($idPresentacionUso) {
+                $stmtPkg = $conn->prepare("
+                    SELECT
+                        pp.id       AS id_presentacion,
+                        pp.SKU,
+                        pp.Nombre   AS NombreNuevo,
+                        pp.cantidad,
+                        pp.Activo   AS activoNuevo,
+                        u.nombre    AS unidadNueva,
+                        pm.id       AS id_maestro,
+                        pm.Nombre   AS productoMaestro,
+                        pp.presentacion_receta,
+                        pp.presentacion_basica_inventario,
+                        pp.presentacion_despacho
+                    FROM producto_presentacion pp
+                    LEFT JOIN producto_maestro pm ON pm.id = pp.id_producto_maestro
+                    LEFT JOIN unidad_producto u   ON u.id  = pp.id_unidad_producto
+                    WHERE pp.Id_receta_producto IS NOT NULL
+                      AND pp.Activo = 'SI'
+                      AND pp.presentacion_despacho = 1
+                      AND (
+                          SELECT COUNT(DISTINCT crp.id_presentacion_producto)
+                          FROM componentes_receta_producto crp
+                          WHERE crp.id_receta_producto_global = pp.Id_receta_producto
+                      ) = 1
+                      AND EXISTS (
+                          SELECT 1
+                          FROM componentes_receta_producto crp2
+                          WHERE crp2.id_receta_producto_global = pp.Id_receta_producto
+                            AND crp2.id_presentacion_producto = ?
+                      )
+                    LIMIT 1
+                ");
+                $stmtPkg->execute([$idPresentacionUso]);
+                $ingr['presentacion_despacho'] = $stmtPkg->fetch(PDO::FETCH_ASSOC) ?: null;
             }
         }
 
