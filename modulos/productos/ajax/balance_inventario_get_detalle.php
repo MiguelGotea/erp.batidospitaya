@@ -283,7 +283,13 @@ try {
         $addReg('despacho', $r, $codMap[(int)$r['CodCotizacion']]);
     }
 
-    // ── Consumo Teórico (Réplica exacta de lógica P1/P2/P3) ─────────
+    // 6. Compras
+    $stmt6 = $conn->prepare("SELECT k.Fecha, k.Sucursal, k.CodCotizacion AS CodCotizacion, k.Cantidad, ss.numero_semana AS semana FROM msaccess_masivo_Compras k INNER JOIN SemanasSistema ss ON k.Fecha BETWEEN ss.fecha_inicio AND ss.fecha_fin WHERE ss.numero_semana BETWEEN ? AND ? AND k.CodCotizacion IN ($phCods) AND k.Sucursal IN ($phSucs)");
+    $stmt6->execute(array_merge([$semDesde, $semHasta], $allCods, $sucFiltro));
+    foreach ($stmt6->fetchAll(PDO::FETCH_ASSOC) as $r) {
+        $r['Destino'] = ''; // no aplica
+        $addReg('compras', $r, $codMap[(int)$r['CodCotizacion']]);
+    }
     $consTeoDiario = [];
 
     // 1. Identificar ingredientes relevantes para filtrar las consultas
@@ -399,12 +405,12 @@ try {
         }
     }
 
-    $totales = ['inv_inicial' => 0, 'ajuste' => 0, 'despacho' => 0, 'merma' => 0, 'inv_final' => 0];
+    $totales = ['inv_inicial' => 0, 'ajuste' => 0, 'despacho' => 0, 'compras' => 0, 'merma' => 0, 'inv_final' => 0];
     foreach ($registros as $reg)
         if (isset($totales[$reg['tipo']]))
             $totales[$reg['tipo']] += $reg['qty_base'];
 
-    $consumoReal = round($totales['inv_inicial'] + $totales['ajuste'] + $totales['despacho'] - $totales['merma'] - $totales['inv_final'], 4);
+    $consumoReal = round($totales['inv_inicial'] + $totales['ajuste'] + $totales['despacho'] + $totales['compras'] - $totales['merma'] - $totales['inv_final'], 4);
 
     echo json_encode([
         'ok' => true,

@@ -123,6 +123,7 @@ if (!tienePermiso('balance_inventario_access_host', 'vista', $cargoOperario)) {
                                     <th class="th-group td-num" style="width:95px">Inv. Inicial</th>
                                     <th class="th-group td-num" style="width:85px">+ Ajuste</th>
                                     <th class="th-group td-num" style="width:85px">+ Despacho</th>
+                                    <th class="th-group td-num" style="width:85px;background:#1a5c50;color:#fff">+ Compras</th>
                                     <th class="th-group td-num" style="width:85px">− Merma</th>
                                     <th class="th-group td-num" style="width:95px">− Inv. Final</th>
                                     <th class="th-group td-num" style="width:100px;background:#0b4a42;color:#fff">= C. Real</th>
@@ -140,7 +141,7 @@ if (!tienePermiso('balance_inventario_access_host', 'vista', $cargoOperario)) {
                         <span class="bi-legend-item"><span class="bi-legend-dot" style="background:#27ae60"></span>Varianza ≤ 5%</span>
                         <span class="bi-legend-item"><span class="bi-legend-dot" style="background:#e67e22"></span>5% &lt; Varianza ≤ 15%</span>
                         <span class="bi-legend-item"><span class="bi-legend-dot" style="background:#e74c3c"></span>Varianza &gt; 15%</span>
-                        <span class="ms-auto text-muted">Consumo Real = Inv.Inicial + Ajuste + Despacho − Merma − Inv.Final</span>
+                        <span class="ms-auto text-muted">Consumo Real = Inv.Inicial + Ajuste + Despacho + Compras − Merma − Inv.Final</span>
                     </div>
                 </div>
             </div>
@@ -171,7 +172,7 @@ if (!tienePermiso('balance_inventario_access_host', 'vista', $cargoOperario)) {
                                             El <strong>Consumo Real</strong> se calcula a partir del kardex sincronizado desde Access:
                                         </p>
                                         <div class="bg-white rounded p-2 mb-2" style="font-family:monospace;font-size:.8rem;border-left:3px solid #0E544C">
-                                            C.Real = Inv.Inicial + Ajuste + Despacho − Merma − Inv.Final
+                                            C.Real = Inv.Inicial + Ajuste + Despacho + Compras − Merma − Inv.Final
                                         </div>
                                         <p class="small text-muted mb-0">
                                             La <strong>Varianza</strong> = C.Real − C.Teórico.<br>
@@ -191,6 +192,7 @@ if (!tienePermiso('balance_inventario_access_host', 'vista', $cargoOperario)) {
                                             <li><strong>Inv. Inicial</strong> — <code>msaccess_masivo_InventarioCotizacion</code> de la semana anterior al rango.</li>
                                             <li><strong>Ajuste</strong> — <code>msaccess_masivo_AjustesInventario</code> en el período.</li>
                                             <li><strong>Despacho</strong> — <code>msaccess_masivo_SubPreIngresosPitaya</code> (PreIngresoPitaya.Destino = "Pitaya N").</li>
+                                            <li><strong>Compras</strong> — <code>msaccess_masivo_Compras</code> (ingresos de almacén en el período).</li>
                                             <li><strong>Merma</strong> — <code>msaccess_masivo_MermaCotizacion</code> en el período.</li>
                                             <li><strong>Inv. Final</strong> — <code>msaccess_masivo_InventarioCotizacion</code> de la última semana del rango.</li>
                                         </ul>
@@ -510,7 +512,7 @@ function setActiveSuc(cod) {
 
 function getValores(prod, suc) {
     if (suc === '__all__') return prod.totales;
-    return prod.por_sucursal?.[suc] ?? {inv_inicial:0,ajuste:0,despacho:0,merma:0,inv_final:0,consumo_real:0,consumo_teorico:0,varianza:0,pct_varianza:null};
+    return prod.por_sucursal?.[suc] ?? {inv_inicial:0,ajuste:0,despacho:0,compras:0,merma:0,inv_final:0,consumo_real:0,consumo_teorico:0,varianza:0,pct_varianza:null};
 }
 
 function renderKPIs(productos, sucursales) {
@@ -567,7 +569,7 @@ function renderTabla(productos) {
         return nomA.localeCompare(nomB);
     });
     if (!filtrados.length) {
-        tbody.innerHTML = `<tr><td colspan="12" class="text-center text-muted py-4">Sin productos con ese filtro.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="13" class="text-center text-muted py-4">Sin productos con ese filtro.</td></tr>`;
         return;
     }
 
@@ -590,6 +592,7 @@ function renderTabla(productos) {
             <td class="td-num">${fmt(v.inv_inicial)}</td>
             <td class="td-num" style="color:${v.ajuste>=0?'#27ae60':'#e74c3c'}">${fmt(v.ajuste)}</td>
             <td class="td-num" style="color:#2980b9">${fmt(v.despacho)}</td>
+            <td class="td-num" style="color:#17a589;font-weight:600">${fmt(v.compras)}</td>
             <td class="td-num" style="color:#e74c3c">${fmt(v.merma)}</td>
             <td class="td-num">${fmt(v.inv_final)}</td>
             <td class="td-num" style="font-weight:700">${fmt(v.consumo_real)}</td>

@@ -86,6 +86,7 @@ $sucsRaw  = isset($_GET['sucs'])      ? trim($_GET['sucs'])      : '';
         .bd-sec-inv_inicial  { color: #2980b9; }
         .bd-sec-ajuste       { color: #27ae60; }
         .bd-sec-despacho     { color: #51B8AC; }
+        .bd-sec-compras      { color: #17a589; }
         .bd-sec-merma        { color: #e74c3c; }
         .bd-sec-inv_final    { color: #9b59b6; }
 
@@ -190,10 +191,11 @@ const TIPOS = {
     inv_inicial : { label:'Inventario Inicial',       icon:'fas fa-box-open',        cls:'inv_inicial'  },
     ajuste      : { label:'Ajustes de Inventario',    icon:'fas fa-sliders-h',       cls:'ajuste'       },
     despacho    : { label:'Despacho (PreIngreso)',     icon:'fas fa-truck',           cls:'despacho'     },
+    compras     : { label:'Compras (Ingresos)',        icon:'fas fa-shopping-cart',   cls:'compras'      },
     merma       : { label:'Merma',                    icon:'fas fa-trash-alt',       cls:'merma'        },
     inv_final   : { label:'Inventario Final',         icon:'fas fa-archive',         cls:'inv_final'    },
 };
-const ORD_TIPO = ['inv_inicial','ajuste','despacho','merma','inv_final'];
+const ORD_TIPO = ['inv_inicial','ajuste','despacho','compras','merma','inv_final'];
 
 const fmt  = (v, d=4) => v===null||v===undefined ? '—' : parseFloat(v).toLocaleString('es',{minimumFractionDigits:d,maximumFractionDigits:d});
 const fmt2 = v => fmt(v, 2);
@@ -375,6 +377,10 @@ function renderDetalle(res) {
         <div class="bd-resumen-item" style="background:#fff;">
             <div class="bd-resumen-label">+ DESPACHO</div>
             <div class="bd-resumen-val" style="color:#27ae60">${fmt(t.despacho,2)}</div>
+        </div>
+        <div class="bd-resumen-item" style="background:#fff;">
+            <div class="bd-resumen-label">+ COMPRAS</div>
+            <div class="bd-resumen-val" style="color:#17a589">${fmt(t.compras,2)}</div>
         </div>
         <div class="bd-resumen-item" style="background:#fff;">
             <div class="bd-resumen-label">- MERMA</div>

@@ -191,7 +191,7 @@ try {
     foreach ($idsBase as $pid) {
         $bal[$pid] = [];
         foreach ($sucFiltro as $suc) {
-            $bal[$pid][$suc] = ['inv_inicial' => 0, 'ajuste' => 0, 'despacho' => 0, 'merma' => 0, 'inv_final' => 0];
+            $bal[$pid][$suc] = ['inv_inicial' => 0, 'ajuste' => 0, 'despacho' => 0, 'compras' => 0, 'merma' => 0, 'inv_final' => 0];
         }
     }
 
@@ -276,6 +276,21 @@ try {
         'msaccess_masivo_AjustesInventario',
         'CodAjustesInventario',
         'ajuste',
+        $semDesde,
+        $semHasta,
+        $sucFiltro,
+        $diccionario,
+        $cascadeMap,
+        $altMap,
+        $bal
+    );
+
+    // ── COMPRAS ───────────────────────────────────────────────────────
+    aplicarKardexSimple(
+        $conn,
+        'msaccess_masivo_Compras',
+        'CodIngresoAlmacen',
+        'compras',
         $semDesde,
         $semHasta,
         $sucFiltro,
@@ -577,10 +592,10 @@ try {
     foreach ($idsBase as $pid) {
         $meta = $productosMeta[$pid];
         $porSuc = [];
-        $totales = ['inv_inicial' => 0, 'ajuste' => 0, 'despacho' => 0, 'merma' => 0, 'inv_final' => 0, 'consumo_real' => 0, 'consumo_teorico' => 0, 'varianza' => 0];
+        $totales = ['inv_inicial' => 0, 'ajuste' => 0, 'despacho' => 0, 'compras' => 0, 'merma' => 0, 'inv_final' => 0, 'consumo_real' => 0, 'consumo_teorico' => 0, 'varianza' => 0];
         foreach ($sucFiltro as $suc) {
-            $b = $bal[$pid][$suc] ?? ['inv_inicial' => 0, 'ajuste' => 0, 'despacho' => 0, 'merma' => 0, 'inv_final' => 0];
-            $cr = round($b['inv_inicial'] + $b['ajuste'] + $b['despacho'] - $b['merma'] - $b['inv_final'], 4);
+            $b = $bal[$pid][$suc] ?? ['inv_inicial' => 0, 'ajuste' => 0, 'despacho' => 0, 'compras' => 0, 'merma' => 0, 'inv_final' => 0];
+            $cr = round($b['inv_inicial'] + $b['ajuste'] + $b['despacho'] + $b['compras'] - $b['merma'] - $b['inv_final'], 4);
             $ct = round($consumoTeorico[$pid][$suc] ?? 0, 4);
             $var = round($cr - $ct, 4);
             $pct = ($ct != 0) ? round($var / $ct * 100, 2) : null;
@@ -588,6 +603,7 @@ try {
                 'inv_inicial' => round($b['inv_inicial'], 4),
                 'ajuste' => round($b['ajuste'], 4),
                 'despacho' => round($b['despacho'], 4),
+                'compras' => round($b['compras'], 4),
                 'merma' => round($b['merma'], 4),
                 'inv_final' => round($b['inv_final'], 4),
                 'consumo_real' => $cr,
@@ -598,6 +614,7 @@ try {
             $totales['inv_inicial'] += $b['inv_inicial'];
             $totales['ajuste'] += $b['ajuste'];
             $totales['despacho'] += $b['despacho'];
+            $totales['compras'] += $b['compras'];
             $totales['merma'] += $b['merma'];
             $totales['inv_final'] += $b['inv_final'];
             $totales['consumo_real'] += $cr;
