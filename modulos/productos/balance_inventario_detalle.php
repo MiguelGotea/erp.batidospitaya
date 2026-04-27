@@ -350,39 +350,41 @@ function renderDetalle(res) {
     document.getElementById('bdMetaRow').innerHTML = `
         <span class="bd-pill-meta"><i class="fas fa-hashtag me-1"></i>Semana ${res.sem_desde === res.sem_hasta ? res.sem_desde : res.sem_desde+' – '+res.sem_hasta}</span>
         <span class="bd-pill-meta"><i class="fas fa-ruler me-1"></i>${esc(prod.unidad||'')}</span>
-        <span class="bd-pill-meta"><i class="fas fa-layer-group me-1"></i>${esc(prod.maestro||'')}</span>
-        <span class="bd-pill-meta"><i class="fas fa-code me-1"></i>${res.num_cods_mapeados} Mapeos</span>
-        <span class="bd-pill-meta" title="Referencia Inicial"><i class="fas fa-history me-1"></i>S${res.semana_ant}</span>
-    `;
     const hc = document.getElementById('bdHeaderCard');
-    hc.style.display = 'flex';
     hc.classList.remove('d-none');
+    // Actualizar encabezado
+    document.getElementById('bdNombre').textContent = res.producto.Nombre;
+    document.getElementById('bdSemana').textContent = 'Semana ' + res.sem_desde + (res.sem_desde != res.sem_hasta ? ' - ' + res.sem_hasta : '');
+    document.getElementById('bdUnidad').textContent = res.producto.unidad;
+    document.getElementById('bdCategoria').textContent = res.producto.maestro || 'Sin Maestro';
+    document.getElementById('bdMapeos').textContent = (res.num_mapeos || 0) + ' Mapeos';
+    document.getElementById('bdSemAnt').textContent = 'S' + res.semana_ant;
 
     // Chart
     renderChart(res);
 
-    // Resumen
-    const cr = res.consumo_real;
-    const t  = totales;
-    document.getElementById('bdResumen').innerHTML = `
-        <div class="bd-resumen-item">
-            <div class="bd-resumen-label">Inv. Inicial</div>
+    // Resumen de Totales
+    const t = res.totales_tipo;
+    const bdResumen = document.getElementById('bdResumen');
+    bdResumen.innerHTML = `
+        <div class="bd-resumen-item" style="background:#fff;">
+            <div class="bd-resumen-label">INV. INICIAL</div>
             <div class="bd-resumen-val" style="color:#2980b9">${fmt(t.inv_inicial,2)}</div>
         </div>
-        <div class="bd-resumen-item">
-            <div class="bd-resumen-label">+ Ajuste</div>
-            <div class="bd-resumen-val" style="color:${t.ajuste>=0?'#27ae60':'#e74c3c'}">${fmt(t.ajuste,2)}</div>
+        <div class="bd-resumen-item" style="background:#fff;">
+            <div class="bd-resumen-label">+ AJUSTE</div>
+            <div class="bd-resumen-val" style="color:#27ae60">${fmt(t.ajuste,2)}</div>
         </div>
-        <div class="bd-resumen-item">
-            <div class="bd-resumen-label">+ Despacho</div>
-            <div class="bd-resumen-val" style="color:#51B8AC">${fmt(t.despacho,2)}</div>
+        <div class="bd-resumen-item" style="background:#fff;">
+            <div class="bd-resumen-label">+ DESPACHO</div>
+            <div class="bd-resumen-val" style="color:#27ae60">${fmt(t.despacho,2)}</div>
         </div>
-        <div class="bd-resumen-item">
-            <div class="bd-resumen-label">− Merma</div>
+        <div class="bd-resumen-item" style="background:#fff;">
+            <div class="bd-resumen-label">- MERMA</div>
             <div class="bd-resumen-val" style="color:#e74c3c">${fmt(t.merma,2)}</div>
         </div>
-        <div class="bd-resumen-item">
-            <div class="bd-resumen-label">− Inv. Final</div>
+        <div class="bd-resumen-item" style="background:#fff;">
+            <div class="bd-resumen-label">- INV. FINAL</div>
             <div class="bd-resumen-val" style="color:#9b59b6">${fmt(t.inv_final,2)}</div>
         </div>
         <div class="bd-resumen-item" style="box-shadow:inset 3px 3px 6px var(--bd-shadow-dark), inset -3px -3px 6px var(--bd-shadow-light); background:#f0f9f8;">
@@ -393,9 +395,8 @@ function renderDetalle(res) {
             <div class="bd-resumen-label">Consumo Real (Kardex)</div>
             <div class="bd-resumen-val" style="color:#0E544C">${fmt(res.consumo_real,2)}</div>
         </div>
-
     `;
-    document.getElementById('bdResumen').classList.remove('d-none');
+    bdResumen.classList.remove('d-none');
 
     // Agrupar por tipo
     const porTipo = {};
