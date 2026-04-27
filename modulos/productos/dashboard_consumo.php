@@ -555,11 +555,12 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                                             Consumo = <code>(Cantidad_receta × factor_conversión) / pp_cantidad × ventas</code>
                                         </p>
                                         <div class="mt-2 p-2 rounded" style="background:#e8eaf6;border-left:3px solid #283593;font-size:.76rem">
-                                            <strong style="color:#283593"><i class="fas fa-info-circle me-1"></i>Nota técnica — JOINs:</strong>
-                                            Las búsquedas de presentación usan <code>LEFT JOIN producto_maestro</code>
-                                            (no INNER JOIN) para no excluir productos sin maestro asignado.
-                                            Esto garantiza que paquetes de despacho y compuestos sin FK de maestro
-                                            también sean encontrados correctamente.
+                                            <strong style="color:#283593"><i class="fas fa-info-circle me-1"></i>Nota técnica — Cascada de Despacho:</strong>
+                                            Las búsquedas de Presentación Despacho usan <code>LEFT JOIN producto_maestro</code>
+                                            y el <strong>Fallback 2</strong> (receta de 1 componente = Presentación Uso)
+                                            se ejecuta <strong>siempre</strong>, incluso cuando
+                                            <code>id_producto_maestro = NULL</code> en el producto de uso
+                                            (ej: <em>Mix de Waffle</em> es una receta sin maestro → su paquete de 10u se detecta correctamente).
                                         </div>
                                     </div>
                                 </div>

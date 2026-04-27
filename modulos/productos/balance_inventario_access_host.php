@@ -254,10 +254,14 @@ if (!tienePermiso('balance_inventario_access_host', 'vista', $cargoOperario)) {
                                             Redondeo: P1 → múltiplo de 0.5 | P2/P3 → 4 decimales.
                                         </p>
                                         <div class="p-2 rounded" style="background:#e8eaf6;border-left:3px solid #283593;font-size:.78rem">
-                                            <strong style="color:#283593"><i class="fas fa-info-circle me-1"></i>Nota técnica — LEFT JOIN:</strong>
-                                            Todos los queries de búsqueda de presentaciones usan <code>LEFT JOIN producto_maestro</code>
-                                            (no INNER JOIN). Esto garantiza que paquetes de despacho y productos compuestos
-                                            con <code>id_producto_maestro = NULL</code> no sean excluidos silenciosamente de los resultados.
+                                            <strong style="color:#283593"><i class="fas fa-info-circle me-1"></i>Nota técnica — Cascada de Despacho:</strong>
+                                            Las búsquedas usan <code>LEFT JOIN producto_maestro</code> (no INNER JOIN).
+                                            El <strong>Fallback 2</strong> (receta de 1 componente = Presentación Uso)
+                                            se ejecuta <strong>siempre</strong>, incluso cuando
+                                            <code>id_producto_maestro = NULL</code> en el producto de uso.
+                                            Esto cubre dos casos: (a) paquetes con maestro diferente al uso
+                                            (ej: <em>Ristra Vaso</em>), y (b) productos de uso que son recetas sin maestro
+                                            (ej: <em>Mix de Waffle → Paquete Mix Waffle 10u</em>).
                                         </div>
                                     </div>
                                 </div>

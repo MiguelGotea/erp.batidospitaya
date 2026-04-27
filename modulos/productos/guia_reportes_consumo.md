@@ -529,7 +529,13 @@ en lugar de la unidad de inventario. Se ejecuta **después** de resolver la Pres
 | **Paso A** — mapeo directo `basica=1` | **Nivel 1** — misma unidad + `despacho=1` | Misma unidad Access directa en el mismo maestro |
 | **Paso A** (unidades convertibles) | **Nivel 2** — unidad convertible + `despacho=1` | Unidades homologadas del mismo grupo de medida |
 | **Paso B** — cualquier `basica=1` del maestro | **Fallback 1** — cualquier `despacho=1` del maestro | Sin restricción de unidad, mismo `id_producto_maestro` |
-| **Paso C** — rastreo vía CodIngrediente | **Fallback 2** — receta de 1 componente = Presentación Uso | Cubre paquetes con maestro diferente cuya receta envuelve exactamente la Presentación Uso |
+| **Paso C** — rastreo vía CodIngrediente | **Fallback 2** — receta de 1 componente = Presentación Uso | Independiente del maestro. Cubre paquetes con maestro diferente **y también** productos de uso que son recetas sin maestro |
+
+> [!IMPORTANT]
+> **El Fallback 2 se ejecuta siempre**, incluso cuando `id_producto_maestro = NULL` en la Presentación Uso.
+> Esto cubre el caso de ingredientes que son recetas compuestas de producción sin maestro asignado
+> (ej: Mix de Waffle = receta de Masa Waffle gr + Cocoa + Avena) cuyo paquete de despacho
+> (Paquete Mix Waffle 10u) los contiene como único componente.
 
 #### Queries en cascada
 
@@ -589,17 +595,35 @@ LIMIT 1;
 
 #### Cuándo se activa el Fallback 2
 
+**Caso 1 — Paquete con maestro diferente al producto de uso:**
 ```
 nuevo_producto (Presentación Uso, id=35, maestro=21 "Vaso Plástico 16oz")
     │
     └─→ Niveles 1 y 2 fallan (sin conversiones para "Unidades")
     └─→ Fallback 1 falla (Ristra tiene maestro diferente o NULL)
-    └─→ Fallback 2:
+    └─→ Fallback 2 (corre fuera del bloque if-maestro):
             pp.Id_receta_producto IS NOT NULL    (Ristra es una receta)
             COUNT(componentes) = 1              (solo un ingrediente: Vaso 16oz Unid)
             componente.id_presentacion = 35     (= id de la Presentación Uso)
             → Encuentra: PQ-VASO16OZ-01 "Ristra 25u" ✅
 ```
+
+**Caso 2 — Presentación Uso es en sí una receta sin maestro:**
+```
+nuevo_producto (Presentación Uso, id=139, maestro=NULL "Mix de Waffle")
+    │                   ← Es una receta de producción sin id_producto_maestro
+    └─→ if ($idMaestroResolucion) → FALSE → Niveles 1, 2 y Fallback 1 no se ejecutan
+    └─→ Fallback 2 (corre SIEMPRE, fuera del bloque if-maestro):
+            pp.Id_receta_producto IS NOT NULL    (Paquete Mix Waffle es una receta)
+            COUNT(componentes) = 1              (solo un ingrediente: Mix de Waffle)
+            componente.id_presentacion = 139    (= id de la Presentación Uso)
+            → Encuentra: id=140 "Paquete Mix Waffle 10u" ✅
+```
+
+> [!NOTE]
+> **Regla de implementación:** El Fallback 2 debe vivir **fuera** del `if ($idMaestroResolucion)`,
+> después del cierre del bloque de maestro. Solo requiere que `nuevo_producto['id_presentacion']`
+> esté definido. Ver `accessantiguo_get_detalle_receta.php` líneas ~335–385.
 
 ---
 
@@ -652,4 +676,4 @@ HistorialBatidos (CodBatido, Fecha, Cantidad vendida)
 
 ---
 
-*Generado: 2026-04-12 | Actualizado: 2026-04-27 — Sección 4.4: Resolución de Presentación Despacho en 4 niveles (Nivel 1 = unidad directa, Nivel 2 = unidad convertible, Fallback 1 = maestro sin restricción de unidad, Fallback 2 = receta de 1 componente = Presentación Uso). Todos los queries de despacho usan LEFT JOIN producto_maestro para no excluir paquetes sin maestro asignado. Equivalencia documentada con Paso A/B/C de basica_inventario. | Referencia: `accessantiguo_get_detalle_receta.php` + `accessantiguo_unidades_homologacion.php` + `dashboard_consumo_get_datos.php` + `balance_inventario_get_datos.php`*
+*Generado: 2026-04-12 | Actualizado: 2026-04-27 — Sección 4.4: Resolución de Presentación Despacho en 4 niveles. Fallback 2 ahora se ejecuta **siempre** (fuera del bloque `if id_producto_maestro`), cubriendo dos casos: (a) paquete de despacho con maestro diferente al producto de uso, y (b) producto de uso que es una receta de producción sin maestro asignado (ej: Mix de Waffle id=139 → Paquete Mix Waffle 10u id=140). Condición del Fallback 2: `pp.Id_receta_producto IS NOT NULL` + `COUNT(componentes)=1` + `componente.id_presentacion = id_presentacion_uso`. Todos los queries de despacho usan `LEFT JOIN producto_maestro` para no excluir paquetes sin maestro. | Referencia: `accessantiguo_get_detalle_receta.php` + `accessantiguo_unidades_homologacion.php` + `dashboard_consumo_get_datos.php` + `balance_inventario_get_datos.php`*

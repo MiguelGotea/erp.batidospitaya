@@ -1297,11 +1297,13 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                                 </div>
                                 <div class="col-md-6">
                                     <div class="p-2 rounded h-100" style="background:#e8eaf6;border-left:3px solid #283593;font-size:.77rem">
-                                        <strong style="color:#283593">Fallback 2 — Receta de 1 componente = Presentación Uso</strong><br>
-                                        Cubre el caso donde el paquete de despacho pertenece a un maestro diferente
-                                        pero su receta contiene exactamente 1 componente: la Presentación Uso resuelta.<br>
+                                        <strong style="color:#283593">Fallback 2 — Receta de 1 componente = Presentación Uso</strong>
+                                        <span class="badge ms-1" style="background:#283593;color:#fff;font-size:.6rem">Siempre activo</span><br>
+                                        Corre <strong>independientemente del maestro</strong>. Cubre dos casos:<br>
+                                        <strong>① Paquete con maestro diferente:</strong><br>
                                         <em>Ej: Vaso Ristra 25u (otro maestro) cuya receta es 1 componente = Vaso 16oz Unid.</em><br>
-                                        <em>Ej: Bolsa de Pajilla 100u cuya receta es 1 componente = Pajilla Unid.</em><br>
+                                        <strong>② Producto de uso sin maestro (es una receta):</strong><br>
+                                        <em>Ej: Mix de Waffle (receta sin maestro) → Paquete Mix Waffle 10u cuya receta es 1 componente = Mix de Waffle.</em><br>
                                         <strong>Condición:</strong> <code>Id_receta_producto IS NOT NULL</code> +
                                         <code>COUNT(componentes) = 1</code> + componente = <code>id_presentacion</code> del uso.
                                     </div>
