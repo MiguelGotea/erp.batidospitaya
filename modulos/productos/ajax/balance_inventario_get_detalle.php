@@ -151,12 +151,44 @@ try {
     }
 
     // Mapa unificado: CodCotizacion → {factor, nombre_orig, tipo}
+    // Incluir TODOS los CodCotizaciones que pertenezcan al mismo maestro (Lógica AUTO)
     $codMap = [];
-    foreach ($codsDirectos as $cod) {
-        $codMap[$cod] = ['factor' => 1.0, 'nombre_orig' => null, 'tipo' => 'base'];
+    $idMaestro = (int)$prodMeta['id_producto_maestro'];
+    $baseUnid  = (int)$prodMeta['id_unidad_producto'];
+    $baseCant  = max((float)$prodMeta['pp_cant'], 0.001);
+
+    if ($idMaestro > 0) {
+        $rAllMaestro = $conn->prepare("
+            SELECT d.CodCotizacion, pp.id AS pp_id, pp.cantidad AS pp_cant,
+                   pp.id_unidad_producto AS pp_unid, pp.Nombre AS nombre_pp,
+                   pp.presentacion_basica_inventario, pp.presentacion_receta
+            FROM diccionario_productos_legado d
+            INNER JOIN producto_presentacion pp ON pp.id = d.id_producto_presentacion
+            WHERE pp.id_producto_maestro = :maestro AND pp.Activo = 'SI'
+        ");
+        $rAllMaestro->execute([':maestro' => $idMaestro]);
+        foreach ($rAllMaestro->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $altUnid = (int)$row['pp_unid'];
+            $altCant = max((float)$row['pp_cant'], 0.001);
+            $factor = null;
+            if ($altUnid === $baseUnid) {
+                $factor = $altCant / $baseCant;
+            } elseif (isset($convIndex[$altUnid][$baseUnid])) {
+                $factor = ($altCant * $convIndex[$altUnid][$baseUnid]) / $baseCant;
+            }
+            if ($factor !== null) {
+                $type = 'alternativa';
+                if ($row['presentacion_basica_inventario']) $type = 'base';
+                if ($row['presentacion_receta']) $type = 'cascada';
+
+                $codMap[(int)$row['CodCotizacion']] = [
+                    'factor'      => (float)$factor,
+                    'nombre_orig' => $row['nombre_pp'],
+                    'tipo'        => $type,
+                ];
+            }
+        }
     }
-    foreach ($codsCascada as $cod => $info) $codMap[$cod] = $info;
-    foreach ($codsAlt    as $cod => $info) $codMap[$cod] = $info;
 
     // ── Preparar para Consumo Teórico (P1/P2/P3) ──────────────────────
     $rIngs = $conn->prepare("SELECT DISTINCT CodIngrediente FROM Cotizaciones WHERE CodCotizacion IN (".implode(',', array_fill(0, count(array_keys($codMap)), '?')).")");
@@ -164,8 +196,8 @@ try {
     $ingsRel = $rIngs->fetchAll(PDO::FETCH_COLUMN);
 
     // Mapeo inverso para resolución rápida: CodCotizacion -> {factor}
-    // (Solo para los que mapean a este idPP)
     $resMap = $codMap;
+
 
 
     if (empty($codMap)) {

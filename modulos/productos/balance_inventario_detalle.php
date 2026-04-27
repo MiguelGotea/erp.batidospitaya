@@ -386,9 +386,14 @@ function renderDetalle(res) {
             <div class="bd-resumen-val" style="color:#9b59b6">${fmt(t.inv_final,2)}</div>
         </div>
         <div class="bd-resumen-item" style="box-shadow:inset 3px 3px 6px var(--bd-shadow-dark), inset -3px -3px 6px var(--bd-shadow-light); background:#f0f9f8;">
-            <div class="bd-resumen-label">Consumo Real</div>
-            <div class="bd-resumen-val" style="color:#0E544C">${fmt(cr,2)}</div>
+            <div class="bd-resumen-label">Consumo Teórico (Ventas)</div>
+            <div class="bd-resumen-val" style="color:#2980b9">${fmt(res.consumo_teorico,2)}</div>
         </div>
+        <div class="bd-resumen-item" style="box-shadow:inset 3px 3px 6px var(--bd-shadow-dark), inset -3px -3px 6px var(--bd-shadow-light); background:#fdf7f7;">
+            <div class="bd-resumen-label">Consumo Real (Kardex)</div>
+            <div class="bd-resumen-val" style="color:#0E544C">${fmt(res.consumo_real,2)}</div>
+        </div>
+
     `;
     document.getElementById('bdResumen').classList.remove('d-none');
 
