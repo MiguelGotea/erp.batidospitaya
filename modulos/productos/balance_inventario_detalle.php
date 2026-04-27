@@ -31,75 +31,104 @@ $sucsRaw  = isset($_GET['sucs'])      ? trim($_GET['sucs'])      : '';
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/assets/css/global_tools.css?v=<?php echo mt_rand(1,9999); ?>">
     <link rel="stylesheet" href="css/balance_inventario.css?v=<?php echo mt_rand(1,9999); ?>">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        /* ── Detalle extras ─────────────────────────────────────── */
-        .bd-back-btn {
-            display:inline-flex; align-items:center; gap:.45rem;
-            background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.13);
-            color:#ccc; border-radius:8px; padding:.35rem .9rem; font-size:.82rem;
-            text-decoration:none; transition:.2s;
+        /* ── Detalle Neumorphism Overrides ───────────────────────── */
+        :root {
+            --bd-bg: var(--neu-bg, #f6f6f6);
+            --bd-shadow-dark: var(--neu-shadow-dark, #d6d6d6);
+            --bd-shadow-light: var(--neu-shadow-light, #ffffff);
+            --bd-accent: #51B8AC;
         }
-        .bd-back-btn:hover { background:rgba(255,255,255,.14); color:#fff; }
+
+        body { background-color: var(--bd-bg); color: #455a64; }
 
         .bd-header-card {
-            background:linear-gradient(135deg,#0E544C 0%,#0b3d38 100%);
-            border-radius:14px; padding:1.4rem 1.6rem 1.2rem;
-            margin-bottom:1.4rem; display:flex; flex-wrap:wrap;
-            align-items:center; gap:1rem; justify-content:space-between;
+            background: var(--bd-bg);
+            border-radius: 20px; padding: 1.5rem;
+            margin-bottom: 1.5rem; display: flex; flex-wrap: wrap;
+            align-items: center; gap: 1rem; justify-content: space-between;
+            box-shadow: 8px 8px 16px var(--bd-shadow-dark), -8px -8px 16px var(--bd-shadow-light);
         }
-        .bd-header-card h2 { font-size:1.15rem; font-weight:700; color:#fff; margin:0; }
-        .bd-header-card .bd-meta { display:flex; flex-wrap:wrap; gap:.5rem; margin-top:.4rem; }
-        .bd-pill-meta { background:rgba(255,255,255,.12); border-radius:20px;
-            padding:.2rem .75rem; font-size:.75rem; color:#c5f0ea; }
-
-        .bd-section { margin-bottom:1.5rem; }
-        .bd-section-title {
-            display:flex; align-items:center; gap:.6rem;
-            font-size:.88rem; font-weight:700; letter-spacing:.04em;
-            text-transform:uppercase; margin-bottom:.65rem;
-            padding:.5rem .85rem; border-radius:8px;
+        .bd-header-card h2 { font-size: 1.3rem; font-weight: 800; color: #0E544C; margin: 0; }
+        .bd-header-card .bd-meta { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .6rem; }
+        .bd-pill-meta { 
+            background: var(--bd-bg); border-radius: 20px;
+            padding: .3rem .8rem; font-size: .75rem; color: #51B8AC; font-weight: 600;
+            box-shadow: inset 2px 2px 5px var(--bd-shadow-dark), inset -3px -3px 6px var(--bd-shadow-light);
         }
-        .bd-sec-inv_inicial  { background:rgba(52,152,219,.15); color:#5dade2; border-left:3px solid #2980b9; }
-        .bd-sec-ajuste       { background:rgba(39,174,96,.15);  color:#58d68d; border-left:3px solid #27ae60; }
-        .bd-sec-despacho     { background:rgba(41,128,185,.12); color:#85c1e9; border-left:3px solid #1a6fa0; }
-        .bd-sec-merma        { background:rgba(231,76,60,.15);  color:#f1948a; border-left:3px solid #e74c3c; }
-        .bd-sec-inv_final    { background:rgba(155,89,182,.15); color:#c39bd3; border-left:3px solid #9b59b6; }
-
-        .bd-tbl { width:100%; font-size:.78rem; border-collapse:separate; border-spacing:0; }
-        .bd-tbl thead th {
-            background:#0b3d38; color:#a8e6df; padding:.45rem .7rem;
-            font-weight:600; text-transform:uppercase; letter-spacing:.03em;
-            position:sticky; top:0; z-index:1; font-size:.7rem;
-        }
-        .bd-tbl tbody tr { border-bottom:1px solid rgba(255,255,255,.04); }
-        .bd-tbl tbody tr:hover { background:rgba(255,255,255,.04); }
-        .bd-tbl td { padding:.38rem .7rem; color:#d0d0d0; vertical-align:middle; }
-        .bd-tbl .td-num { text-align:right; font-variant-numeric:tabular-nums; }
-        .bd-tbl .td-center { text-align:center; }
-
-        .bd-conv-badge {
-            display:inline-block; padding:.1rem .5rem; border-radius:20px;
-            font-size:.68rem; font-weight:600; letter-spacing:.03em;
-        }
-        .bd-conv-base       { background:rgba(39,174,96,.2);  color:#2ecc71; }
-        .bd-conv-cascada    { background:rgba(52,152,219,.2); color:#5dade2; }
-        .bd-conv-alternativa{ background:rgba(230,126,34,.2); color:#e67e22; }
-
-        .bd-totales-row td { background:rgba(255,255,255,.07); font-weight:700; color:#fff; }
-        .bd-empty { text-align:center; padding:1.5rem; color:#777; font-size:.83rem; }
 
         .bd-resumen-card {
-            display:flex; flex-wrap:wrap; gap:.75rem;
-            background:#121f1e; border:1px solid rgba(255,255,255,.09);
-            border-radius:12px; padding:1rem 1.2rem; margin-bottom:1.4rem;
+            background: var(--bd-bg); border-radius: 20px;
+            padding: 1.5rem; margin-bottom: 1.5rem;
+            display: flex; flex-wrap: wrap; gap: 1rem;
+            box-shadow: 10px 10px 20px var(--bd-shadow-dark), -10px -10px 20px var(--bd-shadow-light);
         }
-        .bd-resumen-item { flex:1; min-width:130px; }
-        .bd-resumen-label { font-size:.7rem; color:#999; text-transform:uppercase; letter-spacing:.05em; margin-bottom:.15rem; }
-        .bd-resumen-val { font-size:1.05rem; font-weight:700; color:#fff; }
+        .bd-resumen-item { flex: 1; min-width: 140px; padding: 10px; border-radius: 12px; }
+        .bd-resumen-label { font-size: .68rem; color: #888; text-transform: uppercase; letter-spacing: .05em; margin-bottom: .3rem; font-weight: 700; }
+        .bd-resumen-val { font-size: 1.2rem; font-weight: 800; color: #455a64; }
 
-        .bd-sec-wrap { background:#131f1e; border:1px solid rgba(255,255,255,.07); border-radius:12px; overflow:hidden; }
-        .bd-tbl-wrap { max-height:350px; overflow-y:auto; }
+        .bd-chart-card {
+            background: var(--bd-bg); border-radius: 20px;
+            padding: 1.5rem; margin-bottom: 1.5rem;
+            box-shadow: 10px 10px 20px var(--bd-shadow-dark), -10px -10px 20px var(--bd-shadow-light);
+        }
+
+        .bd-section { margin-bottom: 2rem; }
+        .bd-section-title {
+            display: flex; align-items: center; gap: .7rem;
+            font-size: .9rem; font-weight: 800; letter-spacing: .05em;
+            text-transform: uppercase; margin-bottom: 1rem;
+            padding: .8rem 1.2rem; border-radius: 14px;
+            background: var(--bd-bg);
+            box-shadow: 5px 5px 10px var(--bd-shadow-dark), -5px -5px 10px var(--bd-shadow-light);
+        }
+        .bd-sec-inv_inicial  { color: #2980b9; }
+        .bd-sec-ajuste       { color: #27ae60; }
+        .bd-sec-despacho     { color: #51B8AC; }
+        .bd-sec-merma        { color: #e74c3c; }
+        .bd-sec-inv_final    { color: #9b59b6; }
+
+        .bd-sec-wrap { 
+            background: var(--bd-bg); border-radius: 20px; overflow: hidden; 
+            box-shadow: inset 6px 6px 12px var(--bd-shadow-dark), inset -6px -6px 12px var(--bd-shadow-light);
+            padding: 10px;
+        }
+        .bd-tbl-wrap { max-height: 400px; overflow-y: auto; border-radius: 12px; }
+        
+        .bd-tbl { width: 100%; font-size: .8rem; border-collapse: separate; border-spacing: 0; }
+        .bd-tbl thead th {
+            background: #f0f2f5; color: #666; padding: .8rem .7rem;
+            font-weight: 800; text-transform: uppercase; letter-spacing: .04em;
+            position: sticky; top: 0; z-index: 1; font-size: .7rem;
+            border-bottom: 2px solid var(--bd-shadow-dark);
+        }
+        .bd-tbl td { padding: .6rem .7rem; color: #455a64; border-bottom: 1px solid rgba(0,0,0,0.03); vertical-align: middle; }
+        .bd-tbl tbody tr:hover td { background: rgba(81, 184, 172, 0.05); }
+        .bd-tbl .td-num { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+        .bd-tbl .td-center { text-align: center; }
+
+        .bd-conv-badge {
+            display: inline-block; padding: .2rem .6rem; border-radius: 20px;
+            font-size: .65rem; font-weight: 700; letter-spacing: .03em;
+            box-shadow: 2px 2px 4px var(--bd-shadow-dark), -2px -2px 4px var(--bd-shadow-light);
+        }
+        .bd-conv-base       { background: #e8f5e9; color: #2e7d32; }
+        .bd-conv-cascada    { background: #e3f2fd; color: #1565c0; }
+        .bd-conv-alternativa{ background: #fff3e0; color: #ef6c00; }
+
+        .bd-totales-row td { background: #f8f9fa; font-weight: 800; color: #0E544C; border-top: 2px solid var(--bd-shadow-dark); }
+        .bd-empty { text-align: center; padding: 2.5rem; color: #999; font-size: .85rem; font-style: italic; }
+
+        .bi-search {
+            background: var(--bd-bg); border: none; border-radius: 14px;
+            padding: .8rem 1.2rem; font-size: .9rem; color: #455a64;
+            box-shadow: inset 4px 4px 8px var(--bd-shadow-dark), inset -4px -4px 8px var(--bd-shadow-light);
+            transition: all .2s;
+        }
+        .bi-search:focus { outline: none; box-shadow: inset 5px 5px 10px var(--bd-shadow-dark), inset -5px -5px 10px var(--bd-shadow-light), 0 0 0 2px var(--bd-accent); }
     </style>
+
 </head>
 <body>
 <?php echo renderMenuLateral($cargoOperario); ?>
@@ -109,31 +138,39 @@ $sucsRaw  = isset($_GET['sucs'])      ? trim($_GET['sucs'])      : '';
 
         <div class="bi-wrapper">
 
-            <!-- Back + header info -->
-            <div class="d-flex align-items-center gap-3 mb-3 flex-wrap">
-                <a href="balance_inventario_access_host.php" class="bd-back-btn">
-                    <i class="fas fa-arrow-left"></i>Volver al Balance
-                </a>
-                <div id="bdHeaderCard" class="bd-header-card flex-grow-1" style="display:none!important">
-                    <div>
-                        <div style="font-size:.72rem;color:#a8e6df;text-transform:uppercase;letter-spacing:.08em;margin-bottom:.2rem">Detalle de producto</div>
-                        <h2 id="bdNombreProd">—</h2>
-                        <div class="bd-meta" id="bdMetaRow"></div>
-                    </div>
+            <!-- header info -->
+            <div id="bdHeaderCard" class="bd-header-card" style="display:none">
+                <div>
+                    <div style="font-size:.75rem;color:#51B8AC;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.3rem;font-weight:700">Detalle Analítico de Producto</div>
+                    <h2 id="bdNombreProd">—</h2>
+                    <div class="bd-meta" id="bdMetaRow"></div>
                 </div>
             </div>
 
             <!-- Loader -->
-            <div id="bdLoader" class="bi-loader-wrap">
-                <div class="spinner-border text-success" role="status"></div>
-                <div>Cargando registros…<br><small class="text-muted">Consultando todas las tablas kardex</small></div>
+            <div id="bdLoader" class="bi-loader-wrap text-center">
+                <div class="spinner-border text-success mb-3" role="status"></div>
+                <div class="fw-bold">Consultando registros históricos…</div>
+                <div class="small text-muted">Buscando en todas las tablas del Kardex sincronizado</div>
             </div>
 
-            <!-- Resumen -->
+            <!-- Resumen Neumorphic -->
             <div id="bdResumen" class="bd-resumen-card d-none"></div>
+
+            <!-- Gráfico de Existencia -->
+            <div id="bdChartWrap" class="bd-chart-card d-none">
+                <div class="bd-section-title" style="box-shadow:none; padding:0; margin-bottom:1.5rem;">
+                    <i class="fas fa-chart-line" style="color:#51B8AC"></i>
+                    Movimiento de Existencia (Kardex)
+                </div>
+                <div style="height:320px; position:relative;">
+                    <canvas id="existenciaChart"></canvas>
+                </div>
+            </div>
 
             <!-- Secciones -->
             <div id="bdSecciones"></div>
+
 
         </div>
     </div>
@@ -186,6 +223,87 @@ function cargar() {
         });
 }
 
+function renderChart(res) {
+    const regs = res.registros || [];
+    const t = res.totales_tipo;
+    const invIni = t.inv_inicial || 0;
+    const invFin = t.inv_final || 0;
+
+    // Procesar movimientos por fecha
+    const porFecha = {};
+    regs.forEach(r => {
+        if (r.tipo === 'inv_inicial' || r.tipo === 'inv_final') return;
+        if (!porFecha[r.fecha]) porFecha[r.fecha] = 0;
+        let val = r.qty_base;
+        if (r.tipo === 'merma') val = -val;
+        porFecha[r.fecha] += val;
+    });
+
+    const dates = Object.keys(porFecha).sort();
+    const labels = ['Inicio (S'+res.semana_ant+')', ...dates, 'Final (S'+res.sem_hasta+')'];
+    const dataPoints = [invIni];
+    
+    let currentBalance = invIni;
+    dates.forEach(d => {
+        currentBalance += porFecha[d];
+        dataPoints.push(currentBalance);
+    });
+    
+    // El punto final es el inventario físico contado
+    dataPoints.push(invFin);
+
+    const ctx = document.getElementById('existenciaChart').getContext('2d');
+    if (window.myChart) window.myChart.destroy();
+
+    window.myChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Stock en Kardex',
+                data: dataPoints,
+                borderColor: '#51B8AC',
+                backgroundColor: 'rgba(81, 184, 172, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.3,
+                pointRadius: 4,
+                pointBackgroundColor: '#fff',
+                pointBorderColor: '#51B8AC',
+                pointBorderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false,
+                    callbacks: {
+                        label: function(context) {
+                            return ' Stock: ' + fmt(context.raw, 2);
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { color: 'rgba(0,0,0,0.05)' },
+                    ticks: { font: { size: 10 } }
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: { font: { size: 10 } }
+                }
+            }
+        }
+    });
+    document.getElementById('bdChartWrap').classList.remove('d-none');
+}
+
 function renderDetalle(res) {
     const prod    = res.producto;
     const regs    = res.registros || [];
@@ -197,12 +315,15 @@ function renderDetalle(res) {
         <span class="bd-pill-meta"><i class="fas fa-hashtag me-1"></i>Semana ${res.sem_desde === res.sem_hasta ? res.sem_desde : res.sem_desde+' – '+res.sem_hasta}</span>
         <span class="bd-pill-meta"><i class="fas fa-ruler me-1"></i>${esc(prod.unidad||'')}</span>
         <span class="bd-pill-meta"><i class="fas fa-layer-group me-1"></i>${esc(prod.maestro||'')}</span>
-        <span class="bd-pill-meta"><i class="fas fa-code me-1"></i>${res.num_cods_mapeados} CodCotizacion mapeados</span>
-        <span class="bd-pill-meta"><i class="fas fa-history me-1"></i>Inv. Inicial: Sem. ${res.semana_ant}</span>
+        <span class="bd-pill-meta"><i class="fas fa-code me-1"></i>${res.num_cods_mapeados} Mapeos</span>
+        <span class="bd-pill-meta" title="Referencia Inicial"><i class="fas fa-history me-1"></i>S${res.semana_ant}</span>
     `;
     const hc = document.getElementById('bdHeaderCard');
     hc.style.display = 'flex';
     hc.classList.remove('d-none');
+
+    // Chart
+    renderChart(res);
 
     // Resumen
     const cr = res.consumo_real;
@@ -210,31 +331,27 @@ function renderDetalle(res) {
     document.getElementById('bdResumen').innerHTML = `
         <div class="bd-resumen-item">
             <div class="bd-resumen-label">Inv. Inicial</div>
-            <div class="bd-resumen-val" style="color:#5dade2">${fmt(t.inv_inicial)}</div>
+            <div class="bd-resumen-val" style="color:#2980b9">${fmt(t.inv_inicial,2)}</div>
         </div>
         <div class="bd-resumen-item">
             <div class="bd-resumen-label">+ Ajuste</div>
-            <div class="bd-resumen-val" style="color:${t.ajuste>=0?'#2ecc71':'#e74c3c'}">${fmt(t.ajuste)}</div>
+            <div class="bd-resumen-val" style="color:${t.ajuste>=0?'#27ae60':'#e74c3c'}">${fmt(t.ajuste,2)}</div>
         </div>
         <div class="bd-resumen-item">
             <div class="bd-resumen-label">+ Despacho</div>
-            <div class="bd-resumen-val" style="color:#85c1e9">${fmt(t.despacho)}</div>
+            <div class="bd-resumen-val" style="color:#51B8AC">${fmt(t.despacho,2)}</div>
         </div>
         <div class="bd-resumen-item">
             <div class="bd-resumen-label">− Merma</div>
-            <div class="bd-resumen-val" style="color:#f1948a">${fmt(t.merma)}</div>
+            <div class="bd-resumen-val" style="color:#e74c3c">${fmt(t.merma,2)}</div>
         </div>
         <div class="bd-resumen-item">
             <div class="bd-resumen-label">− Inv. Final</div>
-            <div class="bd-resumen-val" style="color:#c39bd3">${fmt(t.inv_final)}</div>
+            <div class="bd-resumen-val" style="color:#9b59b6">${fmt(t.inv_final,2)}</div>
         </div>
-        <div class="bd-resumen-item" style="border-left:2px solid rgba(255,255,255,.15);padding-left:.9rem">
-            <div class="bd-resumen-label">= Consumo Real</div>
-            <div class="bd-resumen-val" style="color:#0ff;font-size:1.2rem">${fmt(cr)}</div>
-        </div>
-        <div class="bd-resumen-item">
-            <div class="bd-resumen-label">Registros</div>
-            <div class="bd-resumen-val">${regs.length}</div>
+        <div class="bd-resumen-item" style="box-shadow:inset 3px 3px 6px var(--bd-shadow-dark), inset -3px -3px 6px var(--bd-shadow-light); background:#f0f9f8;">
+            <div class="bd-resumen-label">Consumo Real</div>
+            <div class="bd-resumen-val" style="color:#0E544C">${fmt(cr,2)}</div>
         </div>
     `;
     document.getElementById('bdResumen').classList.remove('d-none');
@@ -251,8 +368,8 @@ function renderDetalle(res) {
 
     // Buscar campo de búsqueda global
     const searchWrap = document.createElement('div');
-    searchWrap.className = 'mb-3';
-    searchWrap.innerHTML = `<input type="text" class="bi-search w-100" id="bdBusqueda" placeholder="Buscar en todos los registros (sucursal, fecha, CodCotizacion…)">`;
+    searchWrap.className = 'mb-4';
+    searchWrap.innerHTML = `<input type="text" class="bi-search w-100" id="bdBusqueda" placeholder="Filtrar registros (sucursal, fecha, CodCotizacion, producto…)">`;
     cont.appendChild(searchWrap);
 
     ORD_TIPO.forEach(tipo => {
@@ -267,31 +384,31 @@ function renderDetalle(res) {
             <div class="bd-section-title bd-sec-${def.cls}">
                 <i class="${def.icon}"></i>
                 ${def.label}
-                <span style="margin-left:auto;font-size:.82rem;opacity:.8">${rows.length} registros · Total: ${fmt(total)}</span>
+                <span style="margin-left:auto; font-size:.75rem; opacity:.7; font-weight:600">${rows.length} regs · Total: ${fmt(total, 2)}</span>
             </div>
             <div class="bd-sec-wrap">
                 <div class="bd-tbl-wrap">
                     <table class="bd-tbl" id="tbl_${tipo}">
                         <thead>
                             <tr>
-                                <th>Sem.</th>
-                                <th>Fecha</th>
+                                <th style="width:50px">Sem.</th>
+                                <th style="width:90px">Fecha</th>
                                 <th>Sucursal</th>
                                 ${tipo==='despacho' ? '<th>Destino</th>' : ''}
-                                <th>CodCotiz.</th>
+                                <th style="width:80px">Cod.</th>
                                 <th>Producto Original</th>
-                                <th>Conversión</th>
-                                <th class="td-num">Factor</th>
-                                <th class="td-num">Qty Original</th>
-                                <th class="td-num">Qty Base</th>
+                                <th style="width:90px">Conv.</th>
+                                <th class="td-num" style="width:80px">Factor</th>
+                                <th class="td-num" style="width:90px">Qty Orig</th>
+                                <th class="td-num" style="width:100px">Qty Base</th>
                             </tr>
                         </thead>
                         <tbody id="tbody_${tipo}"></tbody>
                         <tfoot>
                             <tr class="bd-totales-row">
-                                <td colspan="${tipo==='despacho'?6:5}" style="text-align:right;font-size:.78rem">TOTAL</td>
+                                <td colspan="${tipo==='despacho'?7:6}" style="text-align:right;font-size:.7rem;letter-spacing:.05em">TOTAL ${def.label.toUpperCase()}</td>
                                 <td></td><td></td>
-                                <td class="td-num">${fmt(total)}</td>
+                                <td class="td-num">${fmt(total, 2)}</td>
                             </tr>
                         </tfoot>
                     </table>
@@ -301,7 +418,7 @@ function renderDetalle(res) {
 
         const tbody = document.getElementById('tbody_'+tipo);
         if (!rows.length) {
-            tbody.innerHTML = `<tr><td colspan="10" class="bd-empty"><i class="fas fa-inbox me-1"></i>Sin registros</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="11" class="bd-empty">Sin registros de ${def.label.toLowerCase()}</td></tr>`;
             return;
         }
         rows.forEach(r => {
@@ -311,14 +428,14 @@ function renderDetalle(res) {
             tr.innerHTML = `
                 <td class="td-center">${r.semana}</td>
                 <td>${esc(r.fecha)}</td>
-                <td>${esc(r.suc_nombre)}</td>
-                ${tipo==='despacho' ? `<td style="font-size:.7rem;color:#aaa">${esc(r.destino_texto||'')}</td>` : ''}
-                <td class="td-center" style="font-family:monospace;color:#aaa">${r.cod_cotizacion}</td>
-                <td>${r.nombre_original ? esc(r.nombre_original) : '<span style="opacity:.35;font-style:italic">—</span>'}</td>
+                <td style="font-weight:600">${esc(r.suc_nombre)}</td>
+                ${tipo==='despacho' ? `<td style="font-size:.68rem;color:#888">${esc(r.destino_texto||'')}</td>` : ''}
+                <td class="td-center" style="font-family:monospace;color:#888">${r.cod_cotizacion}</td>
+                <td style="font-size:.75rem">${r.nombre_original ? esc(r.nombre_original) : '<span style="opacity:.35;font-style:italic">—</span>'}</td>
                 <td class="td-center">${convBadge}</td>
-                <td class="td-num" style="color:#aaa;font-size:.74rem">×${r.factor}</td>
-                <td class="td-num">${fmt2(r.qty_original)}</td>
-                <td class="td-num" style="font-weight:700">${fmt(r.qty_base)}</td>
+                <td class="td-num" style="color:#999;font-size:.7rem">×${r.factor}</td>
+                <td class="td-num" style="color:#777">${fmt(r.qty_original, 2)}</td>
+                <td class="td-num" style="color:#0E544C">${fmt(r.qty_base, 2)}</td>
             `;
             tbody.appendChild(tr);
         });
@@ -332,6 +449,7 @@ function renderDetalle(res) {
         });
     });
 }
+
 
 // ── Inicio ────────────────────────────────────────────────────
 if (!ID_PP || !SEM_DESDE || !SEM_HASTA) {
