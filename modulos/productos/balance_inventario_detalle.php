@@ -228,7 +228,7 @@ function renderChart(res) {
     const t = res.totales_tipo;
     const invIni = t.inv_inicial || 0;
     const invFin = t.inv_final || 0;
-    const consRealTotal = res.consumo_real || 0;
+    const consTeoDiario = res.consumo_teorico_diario || {};
 
     // Generar lista de todos los días en el rango
     const start = new Date(res.fecha_inicio + 'T12:00:00');
@@ -239,9 +239,6 @@ function renderChart(res) {
         allDays.push(curr.toISOString().split('T')[0]);
         curr.setDate(curr.getDate() + 1);
     }
-
-    // Consumo diario lineal para la proyección
-    const consDiario = allDays.length > 0 ? (consRealTotal / allDays.length) : 0;
 
     // Movimientos por fecha (ajustes, despachos, mermas)
     const movsPorFecha = {};
@@ -254,28 +251,25 @@ function renderChart(res) {
     });
 
     const labels = ['Inicial (S'+res.semana_ant+')'];
-    const stockRealData = [invIni];
-    const stockTeoricoSinVentas = [invIni];
+    const stockTeoData = [invIni];
     
-    let balReal = invIni;
-    let balTeo  = invIni;
+    let balTeo = invIni;
 
     allDays.forEach(day => {
         const mov = movsPorFecha[day] || 0;
-        balReal = balReal + mov - consDiario;
-        balTeo  = balTeo + mov;
+        const cTeo = consTeoDiario[day] || 0;
+        balTeo = balTeo + mov - cTeo;
         
         const dObj = new Date(day + 'T12:00:00');
         const dLabel = dObj.toLocaleDateString('es-ES', {weekday:'short', day:'numeric', month:'short'});
         
         labels.push(dLabel);
-        stockRealData.push(balReal);
-        stockTeoricoSinVentas.push(balTeo);
+        stockTeoData.push(balTeo);
     });
 
     // Puntos finales para destacar
-    const ptFinalTeo = new Array(labels.length).fill(null);
-    ptFinalTeo[labels.length - 1] = balTeo;
+    const realFinalPoint = new Array(labels.length).fill(null);
+    realFinalPoint[labels.length - 1] = invFin;
 
     const ctx = document.getElementById('existenciaChart').getContext('2d');
     if (window.myChart) window.myChart.destroy();
@@ -286,41 +280,22 @@ function renderChart(res) {
             labels: labels,
             datasets: [
                 {
-                    label: 'Existencia Real Estimada (con consumo)',
-                    data: stockRealData,
+                    label: 'Stock Teórico (Ventas + Kardex)',
+                    data: stockTeoData,
                     borderColor: '#51B8AC',
                     backgroundColor: 'rgba(81, 184, 172, 0.1)',
                     borderWidth: 3,
                     fill: true,
                     tension: 0.3,
-                    pointRadius: 2,
+                    pointRadius: 3,
                     pointBackgroundColor: '#fff',
                 },
                 {
-                    label: 'Disponibilidad Teórica (sin consumo)',
-                    data: stockTeoricoSinVentas,
-                    borderColor: '#90a4ae',
-                    borderDash: [5, 5],
-                    borderWidth: 1.5,
-                    fill: false,
-                    tension: 0.1,
-                    pointRadius: 0,
-                },
-                {
-                    label: 'Inv. Teórico Final',
-                    data: ptFinalTeo,
-                    borderColor: '#2980b9',
-                    backgroundColor: '#2980b9',
-                    pointRadius: 6,
-                    pointStyle: 'circle',
-                    showLine: false,
-                },
-                {
-                    label: 'Inv. Registrado (Físico)',
-                    data: new Array(labels.length - 1).concat([invFin]),
+                    label: 'Inventario Físico Real (Conteo)',
+                    data: realFinalPoint,
                     borderColor: '#e74c3c',
                     backgroundColor: '#e74c3c',
-                    pointRadius: 6,
+                    pointRadius: 8,
                     pointStyle: 'rectRot',
                     showLine: false,
                 }
@@ -333,7 +308,7 @@ function renderChart(res) {
                 legend: { 
                     display: true,
                     position: 'top',
-                    labels: { boxWidth: 10, font: { size: 9 }, padding: 10 }
+                    labels: { boxWidth: 10, font: { size: 9, weight: 'bold' }, padding: 15 }
                 },
                 tooltip: {
                     mode: 'index',

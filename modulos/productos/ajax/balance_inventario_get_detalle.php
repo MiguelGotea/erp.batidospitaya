@@ -158,6 +158,16 @@ try {
     foreach ($codsCascada as $cod => $info) $codMap[$cod] = $info;
     foreach ($codsAlt    as $cod => $info) $codMap[$cod] = $info;
 
+    // ── Preparar para Consumo Teórico (P1/P2/P3) ──────────────────────
+    $rIngs = $conn->prepare("SELECT DISTINCT CodIngrediente FROM Cotizaciones WHERE CodCotizacion IN (".implode(',', array_fill(0, count(array_keys($codMap)), '?')).")");
+    $rIngs->execute(array_keys($codMap));
+    $ingsRel = $rIngs->fetchAll(PDO::FETCH_COLUMN);
+
+    // Mapeo inverso para resolución rápida: CodCotizacion -> {factor}
+    // (Solo para los que mapean a este idPP)
+    $resMap = $codMap;
+
+
     if (empty($codMap)) {
         echo json_encode(['ok' => true, 'registros' => [], 'producto' => $prodMeta]);
         exit();
@@ -303,15 +313,79 @@ try {
         ];
     }
 
+    // ── Consumo Teórico Diario ───────────────────────────────────────
+    $consTeoricoDiario = []; // [fecha] => qty
+    if (!empty($ingsRel)) {
+        // P2/P3 para estos ingredientes
+        $phI = implode(',', array_fill(0, count($ingsRel), '?'));
+        $stmtCot = $conn->prepare("
+            SELECT CodIngrediente, CodCotizacion, Conversion, Prioridad
+            FROM Cotizaciones
+            WHERE CodIngrediente IN ({$phI})
+              AND (Subproducto IS NULL OR Subproducto!=1)
+              AND (Marca IS NULL OR Marca!='Almacen Global')
+            ORDER BY CodIngrediente, Conversion DESC, Prioridad ASC
+        ");
+        $stmtCot->execute($ingsRel);
+        $cotP2P3 = [];
+        foreach ($stmtCot->fetchAll(PDO::FETCH_ASSOC) as $c) {
+            $ci = $c['CodIngrediente'];
+            if (!isset($cotP2P3[$ci])) $cotP2P3[$ci] = ['p2'=>null, 'p3'=>null];
+            if ($c['Conversion']==1 && $c['Prioridad']==1 && !$cotP2P3[$ci]['p2']) $cotP2P3[$ci]['p2'] = (int)$c['CodCotizacion'];
+            if (!$cotP2P3[$ci]['p3']) $cotP2P3[$ci]['p3'] = (int)$c['CodCotizacion'];
+        }
+
+        // Consultar ventas
+        $phS = implode(',', array_fill(0, count($sucFiltro), '?'));
+        $sqlV = "
+            SELECT v.Fecha, sr.CodIngrediente, sr.codporcion, SUM(v.Cantidad * sr.Cantidad) AS cant_total
+            FROM VentasGlobalesAccessCSV v
+            INNER JOIN SubReceta sr ON sr.CodBatido = v.CodProducto
+            WHERE v.Anulado=0
+              AND v.Fecha BETWEEN ? AND ?
+              AND v.local IN ({$phS})
+              AND sr.CodIngrediente IN ({$phI})
+            GROUP BY v.Fecha, sr.CodIngrediente, sr.codporcion
+        ";
+        $stmtV = $conn->prepare($sqlV);
+        $stmtV->execute(array_merge([$fechaInicioRange, $fechaFinRange], $sucFiltro, $ingsRel));
+        
+        foreach ($stmtV->fetchAll(PDO::FETCH_ASSOC) as $fila) {
+            $ci = $fila['CodIngrediente'];
+            $cp = $fila['codporcion'] ? (int)$fila['codporcion'] : null;
+            $qtyVenta = (float)$fila['cant_total'];
+            $targetCod = null;
+            $isP1 = false;
+
+            if ($cp && isset($resMap[$cp])) {
+                $targetCod = $cp; $isP1 = true;
+            } elseif (isset($cotP2P3[$ci]['p2']) && isset($resMap[$cotP2P3[$ci]['p2']])) {
+                $targetCod = $cotP2P3[$ci]['p2'];
+            } elseif (isset($cotP2P3[$ci]['p3']) && isset($resMap[$cotP2P3[$ci]['p3']])) {
+                $targetCod = $cotP2P3[$ci]['p3'];
+            }
+
+            if ($targetCod) {
+                $qtyBase = $qtyVenta * $resMap[$targetCod]['factor'];
+                if ($isP1) $qtyBase = round($qtyBase * 2) / 2;
+                $f = $fila['Fecha'];
+                if (!isset($consTeoricoDiario[$f])) $consTeoricoDiario[$f] = 0;
+                $consTeoricoDiario[$f] += $qtyBase;
+            }
+        }
+    }
+
     // ── Totales por tipo ──────────────────────────────────────────────
     $totalesTipo = ['inv_inicial' => 0, 'ajuste' => 0, 'despacho' => 0, 'merma' => 0, 'inv_final' => 0];
     foreach ($registros as $reg) {
         if (isset($totalesTipo[$reg['tipo']])) $totalesTipo[$reg['tipo']] += $reg['qty_base'];
     }
+    $consumoTeoricoTotal = array_sum($consTeoricoDiario);
     $consumoReal = round(
         $totalesTipo['inv_inicial'] + $totalesTipo['ajuste'] + $totalesTipo['despacho']
         - $totalesTipo['merma'] - $totalesTipo['inv_final'], 4
     );
+
 
     echo json_encode([
         'ok'          => true,
@@ -325,7 +399,10 @@ try {
 
         'totales_tipo'=> array_map(fn($v) => round($v, 4), $totalesTipo),
         'consumo_real'=> $consumoReal,
+        'consumo_teorico' => round($consumoTeoricoTotal, 4),
+        'consumo_teorico_diario' => $consTeoricoDiario,
         'num_cods_mapeados' => count($codMap),
+
     ], JSON_UNESCAPED_UNICODE);
 
 } catch (Exception $e) {
