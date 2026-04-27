@@ -184,6 +184,19 @@ try {
     $diccionarioMap = []; // [CodCotizacion] => {id, cantidad, Id_receta_producto, unidad_erp, id_maestro, id_unidad_erp, ...}
     if (!empty($codCotBuscar)) {
         $phCot = implode(',', array_fill(0, count($codCotBuscar), '?'));
+
+        /*
+         * Estrategia de resolución del diccionario (replica el comportamiento "AUTO" del visor):
+         *
+         * 1. Primero intentamos el mapeo directo con presentacion_basica_inventario = 1
+         *    (caso normal: el CodCotizacion ya apunta a la presentación de uso).
+         *
+         * 2. Si el CodCotizacion del diccionario apunta a una presentación que NO es básica
+         *    (ej: el pote de despacho 1.36kg), obtenemos el id_producto_maestro de esa
+         *    presentación y desde ahí buscamos la presentación básica del mismo maestro —
+         *    exactamente el rastreo "AUTO" que hace el visor de recetas.
+         */
+        // Paso A: mapeo directo (presentacion_basica_inventario = 1)
         $stmtDic = $conn->prepare("
             SELECT
                 d.CodCotizacion,
@@ -209,6 +222,52 @@ try {
         $stmtDic->execute(array_values($codCotBuscar));
         foreach ($stmtDic->fetchAll(PDO::FETCH_ASSOC) as $row) {
             $diccionarioMap[(string) $row['CodCotizacion']] = $row;
+        }
+
+        // Paso B: rastreo AUTO por maestro — para los CodCotizacion que el paso A no resolvió
+        // (su presentación mapeada es de despacho/otra pero no es basica_inventario)
+        $codNoResueltos = array_values(array_filter($codCotBuscar, function($c) use (&$diccionarioMap) {
+            return !isset($diccionarioMap[(string)$c]);
+        }));
+        if (!empty($codNoResueltos)) {
+            $phNR = implode(',', array_fill(0, count($codNoResueltos), '?'));
+            /*
+             * Obtenemos el maestro de la presentación mapeada (aunque sea despacho)
+             * y buscamos la presentación básica de ese mismo maestro.
+             * Se excluyen recetas globales (Id_receta_producto IS NULL).
+             */
+            $stmtAuto = $conn->prepare("
+                SELECT
+                    d.CodCotizacion,
+                    pp_base.id               AS id_presentacion,
+                    pp_base.cantidad         AS pp_cantidad,
+                    pp_base.Id_receta_producto,
+                    pp_base.id_producto_maestro AS id_maestro,
+                    pp_base.Nombre           AS nombre_presentacion,
+                    u_base.id                AS id_unidad_erp,
+                    u_base.nombre            AS unidad_erp,
+                    u_base.abreviado         AS unidad_erp_abrev,
+                    u_base.nombres_opcionales,
+                    pm.Nombre                AS nombre_maestro,
+                    pp_base.categoria_insumo
+                FROM diccionario_productos_legado d
+                INNER JOIN producto_presentacion pp_orig ON pp_orig.id = d.id_producto_presentacion
+                INNER JOIN producto_presentacion pp_base
+                        ON pp_base.id_producto_maestro = pp_orig.id_producto_maestro
+                       AND pp_base.presentacion_basica_inventario = 1
+                       AND pp_base.Activo = 'SI'
+                       AND pp_base.Id_receta_producto IS NULL
+                LEFT  JOIN unidad_producto u_base ON u_base.id = pp_base.id_unidad_producto
+                LEFT  JOIN producto_maestro pm    ON pm.id = pp_base.id_producto_maestro
+                WHERE d.CodCotizacion IN ($phNR)
+                  AND pp_orig.Activo = 'SI'
+                  AND pp_orig.id_producto_maestro IS NOT NULL
+                GROUP BY d.CodCotizacion
+            ");
+            $stmtAuto->execute(array_values($codNoResueltos));
+            foreach ($stmtAuto->fetchAll(PDO::FETCH_ASSOC) as $row) {
+                $diccionarioMap[(string) $row['CodCotizacion']] = $row;
+            }
         }
     }
 
