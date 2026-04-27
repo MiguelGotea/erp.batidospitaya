@@ -261,7 +261,7 @@ try {
 
     // ── Despacho ──────────────────────────────────────────────────────
     $stmtD = $conn->prepare("
-        SELECT sub.Fecha AS Fecha, pre.Destino, sub.CodCotizacion, sub.Cantidad,
+        SELECT pre.Fecha AS Fecha, pre.Destino, sub.CodCotizacion, sub.Cantidad,
                ss.numero_semana
         FROM msaccess_masivo_SubPreIngresosPitaya sub
         INNER JOIN msaccess_masivo_PreIngresoPitaya pre ON pre.CodPreIngresoPitaya = sub.CodPreIngresoPitaya
