@@ -262,6 +262,7 @@ WHERE c.id_unidad_producto_inicio = ?
 -- Ejemplo: Gramos (id=1) → [{ nombre: 'Onzas Peso', factor: 0.035 }]
 ```
 
+
 ---
 
 ### Paso 4: Buscar presentación del maestro (`buscarPresentacionPorUnidades`)
