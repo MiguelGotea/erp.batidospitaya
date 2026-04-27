@@ -286,9 +286,25 @@ try {
         $ingr['presentacion_despacho'] = null;
         $idMaestroResolucion = $ingr['nuevo_producto']['id_maestro'] ?? null;
 
+        // ── DEBUG TEMPORAL ─────────────────────────────────────────────────────
+        $ingr['_debug_despacho'] = [
+            'id_maestro_usado'  => $idMaestroResolucion,
+            'unidad_access'     => $ingr['UnidadIngrediente'],
+            'nuevo_producto_id' => $ingr['nuevo_producto']['id_presentacion'] ?? null,
+            'nivel_alcanzado'   => 'sin_maestro',
+            'candidatos_fallback' => [],
+        ];
+        // ───────────────────────────────────────────────────────────────────────
+
         if ($idMaestroResolucion) {
+            $ingr['_debug_despacho']['nivel_alcanzado'] = 'con_maestro';
+
             // Resolver unidad para búsqueda de despacho
             $resolucionU = resolverUnidadERP($conn, $ingr['UnidadIngrediente']);
+            $ingr['_debug_despacho']['unidad_erp_resuelta'] = $resolucionU ? $resolucionU['nombre'] : null;
+            $ingr['_debug_despacho']['directos']            = $resolucionU['directos'] ?? [];
+            $ingr['_debug_despacho']['convertibles']        = $resolucionU['convertibles'] ?? [];
+
             if ($resolucionU) {
                 $ingr['presentacion_despacho'] = buscarPresentacionPorUnidades(
                     $conn,
@@ -296,6 +312,7 @@ try {
                     $resolucionU['directos'],
                     'despacho'
                 );
+                $ingr['_debug_despacho']['nivel_alcanzado'] = $ingr['presentacion_despacho'] ? 'nivel1_ok' : 'nivel1_fail';
 
                 if (!$ingr['presentacion_despacho'] && !empty($resolucionU['convertibles'])) {
                     $ingr['presentacion_despacho'] = buscarPresentacionPorUnidades(
@@ -304,6 +321,7 @@ try {
                         $resolucionU['convertibles'],
                         'despacho'
                     );
+                    $ingr['_debug_despacho']['nivel_alcanzado'] = $ingr['presentacion_despacho'] ? 'nivel2_ok' : 'nivel2_fail';
                 }
             }
 
@@ -311,6 +329,18 @@ try {
             // NOTA: No se filtra Id_receta_producto IS NULL porque presentaciones
             // compuestas (paquetes, cajas de cajas) pueden ser válidas para despacho.
             if (!$ingr['presentacion_despacho']) {
+                // DEBUG: ver todos los candidatos con despacho=1 para este maestro
+                $stmtDbg = $conn->prepare("
+                    SELECT pp.id, pp.SKU, pp.Nombre, pp.Activo,
+                           pp.presentacion_despacho, pp.id_producto_maestro,
+                           pp.Id_receta_producto
+                    FROM producto_presentacion pp
+                    WHERE pp.id_producto_maestro = ?
+                      AND pp.presentacion_despacho = 1
+                ");
+                $stmtDbg->execute([$idMaestroResolucion]);
+                $ingr['_debug_despacho']['candidatos_fallback'] = $stmtDbg->fetchAll(PDO::FETCH_ASSOC);
+
                 $stmtAnyD = $conn->prepare("
                     SELECT
                         pp.id       AS id_presentacion,
@@ -334,6 +364,7 @@ try {
                 ");
                 $stmtAnyD->execute([$idMaestroResolucion]);
                 $ingr['presentacion_despacho'] = $stmtAnyD->fetch(PDO::FETCH_ASSOC) ?: null;
+                $ingr['_debug_despacho']['nivel_alcanzado'] = $ingr['presentacion_despacho'] ? 'fallback_ok' : 'fallback_fail';
             }
         }
 
