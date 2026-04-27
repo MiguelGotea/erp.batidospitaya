@@ -89,7 +89,7 @@ try {
         $codporcion = $ingr['codporcion'];
 
         // Si es un componente de artilugio, no se mapea
-        if ((int)$ingr['es_artilugio'] === 1) {
+        if ((int) $ingr['es_artilugio'] === 1) {
             $ingr['cotizacion'] = null;
             $ingr['metodo_cotizacion'] = 'artilugio';
             $ingr['nuevo_producto'] = null;
@@ -288,10 +288,10 @@ try {
 
         // ── DEBUG TEMPORAL ─────────────────────────────────────────────────────
         $ingr['_debug_despacho'] = [
-            'id_maestro_usado'  => $idMaestroResolucion,
-            'unidad_access'     => $ingr['UnidadIngrediente'],
+            'id_maestro_usado' => $idMaestroResolucion,
+            'unidad_access' => $ingr['UnidadIngrediente'],
             'nuevo_producto_id' => $ingr['nuevo_producto']['id_presentacion'] ?? null,
-            'nivel_alcanzado'   => 'sin_maestro',
+            'nivel_alcanzado' => 'sin_maestro',
             'candidatos_fallback' => [],
         ];
         // ───────────────────────────────────────────────────────────────────────
@@ -302,8 +302,8 @@ try {
             // Resolver unidad para búsqueda de despacho
             $resolucionU = resolverUnidadERP($conn, $ingr['UnidadIngrediente']);
             $ingr['_debug_despacho']['unidad_erp_resuelta'] = $resolucionU ? $resolucionU['nombre'] : null;
-            $ingr['_debug_despacho']['directos']            = $resolucionU['directos'] ?? [];
-            $ingr['_debug_despacho']['convertibles']        = $resolucionU['convertibles'] ?? [];
+            $ingr['_debug_despacho']['directos'] = $resolucionU['directos'] ?? [];
+            $ingr['_debug_despacho']['convertibles'] = $resolucionU['convertibles'] ?? [];
 
             if ($resolucionU) {
                 $ingr['presentacion_despacho'] = buscarPresentacionPorUnidades(
@@ -391,7 +391,7 @@ try {
                 // Aunque la porción ya está resuelta, la unidad del ingrediente en Access
                 // puede diferir de la del ERP (ej: gr en Access vs Onzas Peso en ERP).
                 // Se resuelve el factor de conversión para que la cantidad sea correcta.
-                $npEsReceta = isset($ingr['nuevo_producto']['presentacion_receta']) && (int)$ingr['nuevo_producto']['presentacion_receta'] === 1;
+                $npEsReceta = isset($ingr['nuevo_producto']['presentacion_receta']) && (int) $ingr['nuevo_producto']['presentacion_receta'] === 1;
 
                 if (($ingr['metodo_cotizacion'] ?? '') === 'directa' && $npEsReceta) {
                     $ingr['escenario_erp'] = 'directo';
@@ -423,7 +423,7 @@ try {
 
                     // 2) ¿La presentación ERP ya resuelta está en el mismo grupo de unidad?
                     $esDirecto = $resolucion && in_array($unidadResERP, $resolucion['directos']);
-                    $npEsReceta = isset($ingr['nuevo_producto']['presentacion_receta']) && (int)$ingr['nuevo_producto']['presentacion_receta'] === 1;
+                    $npEsReceta = isset($ingr['nuevo_producto']['presentacion_receta']) && (int) $ingr['nuevo_producto']['presentacion_receta'] === 1;
 
                     if ($esDirecto && $npEsReceta) {
                         // Misma unidad y es la de receta → Insumo Receta = Presentación Uso
