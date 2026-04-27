@@ -31,6 +31,7 @@ $semDesde = min($semDesde, $semHasta);
 $semHasta = max($semDesde, $semHasta);
 
 try {
+    ini_set('memory_limit', '512M');
     // ── Fechas del rango ─────────────────────────────────────────────
     $rDates = $conn->prepare("SELECT MIN(fecha_inicio) AS inicio, MAX(fecha_fin) AS fin FROM SemanasSistema WHERE numero_semana BETWEEN :d AND :h");
     $rDates->execute([':d' => $semDesde, ':h' => $semHasta]);
@@ -244,106 +245,123 @@ try {
         if (!preg_match('/[Pp]itaya\s+(\d+)/', $r['Destino'], $m)) continue;
         $suc = (int)$m[1];
         if (!in_array($suc, $sucFiltro)) continue;
+        $r['Sucursal'] = $suc; // Requerido para addReg
         $addReg('despacho', $r, $codMap[(int)$r['CodCotizacion']]);
     }
 
     // ── Consumo Teórico (Réplica exacta de lógica P1/P2/P3) ─────────
     $consTeoDiario = [];
 
-    // Pre-cargar cotizaciones para P2/P3 de todos los ingredientes posibles
-    $stmtCot = $conn->prepare("
-        SELECT CodIngrediente, CodCotizacion, Conversion, Prioridad 
-        FROM Cotizaciones 
-        WHERE (Subproducto IS NULL OR Subproducto!=1) AND (Marca IS NULL OR Marca!='Almacen Global')
-        ORDER BY CodIngrediente, Conversion DESC, Prioridad ASC
-    ");
-    $stmtCot->execute();
-    $cotP2P3 = [];
-    foreach ($stmtCot->fetchAll(PDO::FETCH_ASSOC) as $c) {
-        $ci = $c['CodIngrediente'];
-        if (!isset($cotP2P3[$ci])) $cotP2P3[$ci] = ['p2' => null, 'p3' => null];
-        if ($c['Conversion'] == 1 && $c['Prioridad'] == 1 && !$cotP2P3[$ci]['p2']) $cotP2P3[$ci]['p2'] = (int)$c['CodCotizacion'];
-        if (!$cotP2P3[$ci]['p3']) $cotP2P3[$ci]['p3'] = (int)$c['CodCotizacion'];
-    }
+    // 1. Identificar ingredientes relevantes para filtrar las consultas
+    $rI1 = $conn->prepare("SELECT DISTINCT CodIngrediente FROM Cotizaciones WHERE CodCotizacion IN ($phCods)");
+    $rI1->execute($allCods);
+    $ingsRel = $rI1->fetchAll(PDO::FETCH_COLUMN);
 
-    // Pre-cargar ingredientes para unidades
-    $stmtIng = $conn->prepare("SELECT CodIngrediente, Unidad FROM DBIngredientes");
-    $stmtIng->execute();
-    $dbIng = [];
-    foreach ($stmtIng->fetchAll(PDO::FETCH_ASSOC) as $row) $dbIng[$row['CodIngrediente']] = $row;
-
-    // Unidades para conversión de nombres (Access -> ERP)
-    $stmtU = $conn->prepare("SELECT id, nombre, abreviado, nombres_opcionales FROM unidad_producto");
-    $stmtU->execute();
-    $uPorNom = [];
-    foreach ($stmtU->fetchAll(PDO::FETCH_ASSOC) as $u) {
-        $uid = (int)$u['id'];
-        $uPorNom[strtolower(trim($u['nombre']))] = $uid;
-        if ($u['abreviado']) $uPorNom[strtolower(trim($u['abreviado']))] = $uid;
-        if (!empty($u['nombres_opcionales'])) {
-            foreach (preg_split('/[,;|]+/', $u['nombres_opcionales']) as $al) {
-                $ak = strtolower(trim($al));
-                if ($ak) $uPorNom[$ak] = $uid;
+    if (!empty($ingsRel) || !empty($allCods)) {
+        // 2. Pre-cargar cotizaciones para P2/P3 SOLO de ingredientes relevantes
+        $cotP2P3 = [];
+        if (!empty($ingsRel)) {
+            $phI = implode(',', array_fill(0, count($ingsRel), '?'));
+            $stmtCot = $conn->prepare("
+                SELECT CodIngrediente, CodCotizacion, Conversion, Prioridad 
+                FROM Cotizaciones 
+                WHERE CodIngrediente IN ($phI)
+                  AND (Subproducto IS NULL OR Subproducto!=1) AND (Marca IS NULL OR Marca!='Almacen Global')
+                ORDER BY CodIngrediente, Conversion DESC, Prioridad ASC
+            ");
+            $stmtCot->execute($ingsRel);
+            foreach ($stmtCot->fetchAll(PDO::FETCH_ASSOC) as $c) {
+                $ci = $c['CodIngrediente'];
+                if (!isset($cotP2P3[$ci])) $cotP2P3[$ci] = ['p2' => null, 'p3' => null];
+                if ($c['Conversion'] == 1 && $c['Prioridad'] == 1 && !$cotP2P3[$ci]['p2']) $cotP2P3[$ci]['p2'] = (int)$c['CodCotizacion'];
+                if (!$cotP2P3[$ci]['p3']) $cotP2P3[$ci]['p3'] = (int)$c['CodCotizacion'];
             }
-        }
-    }
 
-    // Ventas Globales
-    $sqlV = "
-        SELECT v.Fecha, sr.CodIngrediente, sr.codporcion, SUM(v.Cantidad * sr.Cantidad) AS total
-        FROM VentasGlobalesAccessCSV v
-        INNER JOIN SubReceta sr ON sr.CodBatido = v.CodProducto
-        WHERE v.Anulado=0 AND v.Fecha BETWEEN ? AND ? AND v.Semana BETWEEN ? AND ? AND v.local IN ($phSucs)
-          AND v.CodProducto IS NOT NULL
-          AND (sr.codporcion IS NULL OR sr.codporcion NOT IN (SELECT CodCotizacionPorcion FROM MezclaPorcionesAccess WHERE CodCotizacionPorcion IS NOT NULL))
-        GROUP BY v.Fecha, sr.CodIngrediente, sr.codporcion
-    ";
-    $stmtV = $conn->prepare($sqlV);
-    $stmtV->execute(array_merge([$fechaInicioRange, $fechaFinRange, $semDesde, $semHasta], $sucFiltro));
-
-    foreach ($stmtV->fetchAll(PDO::FETCH_ASSOC) as $f) {
-        $mapeo = null;
-        $esP1 = false;
-        $cp = $f['codporcion'] ? (int)$f['codporcion'] : null;
-        $ci = $f['CodIngrediente'];
-
-        // Resolución P1/P2/P3
-        if ($cp && isset($codMap[$cp])) {
-            $mapeo = $codMap[$cp];
-            $esP1 = true;
-        } elseif ($ci && isset($cotP2P3[$ci])) {
-            $p2 = $cotP2P3[$ci]['p2'];
-            $p3 = $cotP2P3[$ci]['p3'];
-            if ($p2 && isset($codMap[$p2])) $mapeo = $codMap[$p2];
-            elseif ($p3 && isset($codMap[$p3])) $mapeo = $codMap[$p3];
+            // 3. Pre-cargar ingredientes para unidades
+            $stmtIng = $conn->prepare("SELECT CodIngrediente, Unidad FROM DBIngredientes WHERE CodIngrediente IN ($phI)");
+            $stmtIng->execute($ingsRel);
+            $dbIng = [];
+            foreach ($stmtIng->fetchAll(PDO::FETCH_ASSOC) as $row) $dbIng[$row['CodIngrediente']] = $row;
         }
 
-        if ($mapeo) {
-            $cantTotal = (float)$f['total'];
-            $val = 0;
-            
-            if ($mapeo['tipo'] === 'cascada') {
-                // Producto global (receta-paquete)
-                $val = $cantTotal;
-            } else {
-                // Insumo base o alternativo
-                $unAcc = $dbIng[$ci]['Unidad'] ?? '';
-                $idUnAcc = isset($uPorNom[strtolower(trim($unAcc))]) ? $uPorNom[strtolower(trim($unAcc))] : null;
-                $factor = 1.0;
-
-                if ($idUnAcc && $idUnAcc !== $mapeo['id_unid']) {
-                    if (isset($convIndex[$idUnAcc][$mapeo['id_unid']])) {
-                        $factor = $convIndex[$idUnAcc][$mapeo['id_unid']];
-                    }
+        // 4. Unidades para conversión (estático pequeño)
+        $stmtU = $conn->prepare("SELECT id, nombre, abreviado, nombres_opcionales FROM unidad_producto");
+        $stmtU->execute();
+        $uPorNom = [];
+        foreach ($stmtU->fetchAll(PDO::FETCH_ASSOC) as $u) {
+            $uid = (int)$u['id'];
+            $uPorNom[strtolower(trim($u['nombre']))] = $uid;
+            if ($u['abreviado']) $uPorNom[strtolower(trim($u['abreviado']))] = $uid;
+            if (!empty($u['nombres_opcionales'])) {
+                foreach (preg_split('/[,;|]+/', $u['nombres_opcionales']) as $al) {
+                    $ak = strtolower(trim($al));
+                    if ($ak) $uPorNom[$ak] = $uid;
                 }
-                
-                $val = ($cantTotal * $factor) / $mapeo['pp_cant'];
-                if ($esP1) $val = round($val * 2) / 2;
+            }
+        }
+
+        // 5. Ventas Globales con FILTRO de relevancia
+        $whereEx = "1=0";
+        $pValSales = array_merge([$fechaInicioRange, $fechaFinRange, $semDesde, $semHasta], $sucFiltro);
+        if (!empty($ingsRel)) {
+            $whereEx .= " OR sr.CodIngrediente IN (" . implode(',', array_fill(0, count($ingsRel), '?')) . ")";
+            $pValSales = array_merge($pValSales, $ingsRel);
+        }
+        if (!empty($allCods)) {
+            $whereEx .= " OR sr.codporcion IN ($phCods)";
+            $pValSales = array_merge($pValSales, $allCods);
+        }
+
+        $sqlV = "
+            SELECT v.Fecha, sr.CodIngrediente, sr.codporcion, SUM(v.Cantidad * sr.Cantidad) AS total
+            FROM VentasGlobalesAccessCSV v
+            INNER JOIN SubReceta sr ON sr.CodBatido = v.CodProducto
+            WHERE v.Anulado=0 AND v.Fecha BETWEEN ? AND ? AND v.Semana BETWEEN ? AND ? AND v.local IN ($phSucs)
+              AND v.CodProducto IS NOT NULL AND ($whereEx)
+              AND (sr.codporcion IS NULL OR sr.codporcion NOT IN (SELECT CodCotizacionPorcion FROM MezclaPorcionesAccess WHERE CodCotizacionPorcion IS NOT NULL))
+            GROUP BY v.Fecha, sr.CodIngrediente, sr.codporcion
+        ";
+        $stmtV = $conn->prepare($sqlV);
+        $stmtV->execute($pValSales);
+
+        foreach ($stmtV->fetchAll(PDO::FETCH_ASSOC) as $f) {
+            $mapeo = null;
+            $esP1 = false;
+            $cp = $f['codporcion'] ? (int)$f['codporcion'] : null;
+            $ci = $f['CodIngrediente'];
+
+            if ($cp && isset($codMap[$cp])) {
+                $mapeo = $codMap[$cp];
+                $esP1 = true;
+            } elseif ($ci && isset($cotP2P3[$ci])) {
+                $p2 = $cotP2P3[$ci]['p2'];
+                $p3 = $cotP2P3[$ci]['p3'];
+                if ($p2 && isset($codMap[$p2])) $mapeo = $codMap[$p2];
+                elseif ($p3 && isset($codMap[$p3])) $mapeo = $codMap[$p3];
             }
 
-            $fec = $f['Fecha'];
-            if (!isset($consTeoDiario[$fec])) $consTeoDiario[$fec] = 0;
-            $consTeoDiario[$fec] += $val;
+            if ($mapeo) {
+                $cantTotal = (float)$f['total'];
+                $val = 0;
+                if ($mapeo['tipo'] === 'cascada') {
+                    $val = $cantTotal;
+                } else {
+                    $unAcc = $dbIng[$ci]['Unidad'] ?? '';
+                    $idUnAcc = isset($uPorNom[strtolower(trim($unAcc))]) ? $uPorNom[strtolower(trim($unAcc))] : null;
+                    $factor = 1.0;
+                    if ($idUnAcc && $idUnAcc !== $mapeo['id_unid']) {
+                        if (isset($convIndex[$idUnAcc][$mapeo['id_unid']])) {
+                            $factor = $convIndex[$idUnAcc][$mapeo['id_unid']];
+                        }
+                    }
+                    $val = ($cantTotal * $factor) / $mapeo['pp_cant'];
+                    if ($esP1) $val = round($val * 2) / 2;
+                }
+
+                $fec = $f['Fecha'];
+                if (!isset($consTeoDiario[$fec])) $consTeoDiario[$fec] = 0;
+                $consTeoDiario[$fec] += $val;
+            }
         }
     }
 
