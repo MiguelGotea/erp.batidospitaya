@@ -28,7 +28,7 @@
 | `unidad_producto` | `id`, `nombre`, `abreviado`, `nombres_opcionales` | Catálogo de unidades ERP con aliases |
 | `conversion_unidad_producto` | `id_unidad_producto_inicio`, `id_unidad_producto_final`, `cantidad` | Factor de conversión entre unidades |
 | `receta_producto_global` | `id` | Recetas compuestas (cuando `pp.Id_receta_producto IS NOT NULL`) |
-| `componentes_receta_producto` | `id_receta`, `id_presentacion`, `cantidad` | Componentes de una receta compuesta |
+| `componentes_receta_producto` | `id_receta_producto_global`, `id_presentacion_producto`, `cantidad`, `orden` | Componentes de una receta compuesta. FK: `id_receta_producto_global` → `receta_producto_global.id`, `id_presentacion_producto` → `producto_presentacion.id` |
 
 ### 1.3 Tipos de Presentación (Banderas ERP)
 
@@ -381,16 +381,16 @@ Para desglosar los componentes de la receta global:
 
 ```sql
 SELECT
-    crc.id_presentacion   AS id_componente,
-    pp_comp.Nombre        AS componente,
-    crc.cantidad          AS cantidad_componente,
-    u.nombre              AS unidad_componente,
+    crc.id_presentacion_producto   AS id_componente,
+    pp_comp.Nombre                 AS componente,
+    crc.cantidad                   AS cantidad_componente,
+    u.nombre                       AS unidad_componente,
     -- consumo per batido = crc.cantidad × (sr.Cantidad en Access)
     (crc.cantidad * :consumo_receta_global) AS consumo_total_componente
 
 FROM componentes_receta_producto crc
-INNER JOIN receta_producto_global rpg ON rpg.id = crc.id_receta
-INNER JOIN producto_presentacion pp_comp ON pp_comp.id = crc.id_presentacion
+INNER JOIN receta_producto_global rpg ON rpg.id = crc.id_receta_producto_global
+INNER JOIN producto_presentacion pp_comp ON pp_comp.id = crc.id_presentacion_producto
 LEFT  JOIN unidad_producto u ON u.id = pp_comp.id_unidad_producto
 WHERE rpg.id = :id_receta_global;
 ```
