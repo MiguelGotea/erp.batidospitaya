@@ -100,6 +100,7 @@ try {
             continue;
         }
 
+
         $cotizacion = null;
         $ingr['metodo_cotizacion'] = null;
 
