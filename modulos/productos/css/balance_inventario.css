@@ -248,6 +248,25 @@ body { background: var(--bi-bg); }
 }
 .bi-expand-btn:hover { background: #e0f5f2; border-color: var(--bi-primary2); color: var(--bi-primary2); }
 .bi-expand-btn.open { background: var(--bi-primary); color: #fff; border-color: var(--bi-primary); }
+
+/* Botón detalle (enlace) */
+.bi-detail-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px; height: 22px;
+    border: 1px solid #b5d5f5;
+    border-radius: 4px;
+    background: none;
+    color: var(--bi-blue);
+    font-size: .72rem;
+    text-decoration: none;
+    transition: all .15s;
+    margin-left: 3px;
+    vertical-align: middle;
+}
+.bi-detail-btn:hover { background: #dbeafe; border-color: var(--bi-blue); color: #1a5fa8; }
+
 .bi-sub-row { display: none; }
 .bi-sub-row.open { display: table-row; }
 .bi-sub-table { width: 100%; border-collapse: collapse; font-size: .77rem; margin: 0; }

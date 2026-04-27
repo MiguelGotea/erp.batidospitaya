@@ -129,7 +129,7 @@ if (!tienePermiso('balance_inventario_access_host', 'vista', $cargoOperario)) {
                                     <th class="th-group td-num" style="width:100px;background:#0b4a42">C. Teórico</th>
                                     <th class="th-group td-num" style="width:90px;background:#0b4a42">Varianza</th>
                                     <th class="th-group td-center" style="width:70px;background:#0b4a42">% Var</th>
-                                    <th class="th-group td-center" style="width:44px">Det.</th>
+                                    <th class="th-group td-center" style="width:80px">Det.</th>
                                 </tr>
                             </thead>
                             <tbody id="tbodyBalance"></tbody>
@@ -433,10 +433,15 @@ function renderTabla(productos) {
             <td class="td-num">${fmt(v.consumo_teorico)}</td>
             <td class="td-num ${vc}">${fmt(v.varianza)}</td>
             <td class="td-center ${vcc} ${vc}">${fmtPct(pct)}</td>
-            <td class="td-center">
-                <button class="bi-expand-btn" id="btn_${rowId}" title="Ver por sucursal">
+            <td class="td-center" style="white-space:nowrap">
+                <button class="bi-expand-btn" id="btn_${rowId}" title="Ver desglose por sucursal">
                     <i class="fas fa-chevron-down"></i>
                 </button>
+                <a class="bi-detail-btn" id="lnk_${rowId}"
+                   href="balance_inventario_detalle.php?id=${p.id}&sem_desde=${datosGlobales.semanas[0]?.numero_semana||0}&sem_hasta=${datosGlobales.semanas[datosGlobales.semanas.length-1]?.numero_semana||0}&sucs=${Object.keys(sucSeleccionadas).join(',')}"
+                   title="Ver detalle de registros" target="_blank">
+                    <i class="fas fa-list-ul"></i>
+                </a>
             </td>
         `;
         tbody.appendChild(tr);
