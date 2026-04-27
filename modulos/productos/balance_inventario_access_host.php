@@ -123,7 +123,7 @@ if (!tienePermiso('balance_inventario_access_host', 'vista', $cargoOperario)) {
                                     <th class="th-group td-num" style="width:95px">Inv. Inicial</th>
                                     <th class="th-group td-num" style="width:85px">+ Ajuste</th>
                                     <th class="th-group td-num" style="width:85px">+ Despacho</th>
-                                    <th class="th-group td-num" style="width:85px;background:#1a5c50;color:#fff">+ Compras</th>
+                                    <th class="th-group td-num" style="width:85px">+ Compras</th>
                                     <th class="th-group td-num" style="width:85px">− Merma</th>
                                     <th class="th-group td-num" style="width:95px">− Inv. Final</th>
                                     <th class="th-group td-num" style="width:100px;background:#0b4a42;color:#fff">= C. Real</th>
