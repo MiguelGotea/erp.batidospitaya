@@ -77,9 +77,6 @@ if (!tienePermiso('balance_inventario_access_host', 'vista', $cargoOperario)) {
                         <button class="bi-btn-primary" id="btnAnalizar">
                             <i class="fas fa-balance-scale me-1"></i>Calcular Balance
                         </button>
-                        <button class="btn btn-sm btn-outline-secondary" id="btnAyuda" title="¿Cómo funciona?" data-bs-toggle="modal" data-bs-target="#modalAyudaBalance">
-                            <i class="fas fa-question-circle"></i>
-                        </button>
                     </div>
                 </div>
             </div>
@@ -122,7 +119,6 @@ if (!tienePermiso('balance_inventario_access_host', 'vista', $cargoOperario)) {
                             <thead>
                                 <tr>
                                     <th rowspan="2" style="min-width:220px">Producto ERP</th>
-                                    <th rowspan="2" class="td-center" style="width:70px">Unidad</th>
                                     <th class="th-group td-num" style="width:95px">Inv. Inicial</th>
                                     <th class="th-group td-num" style="width:85px">+ Ajuste</th>
                                     <th class="th-group td-num" style="width:85px">+ Despacho</th>
@@ -151,11 +147,11 @@ if (!tienePermiso('balance_inventario_access_host', 'vista', $cargoOperario)) {
         </div><!-- /bi-wrapper -->
 
         <!-- ── MODAL AYUDA ──────────────────────────────────────────── -->
-        <div class="modal fade" id="modalAyudaBalance" tabindex="-1" aria-labelledby="modalAyudaBalanceLbl" aria-hidden="true">
+        <div class="modal fade" id="pageHelpModal" tabindex="-1" aria-labelledby="pageHelpModalLbl" aria-hidden="true">
             <div class="modal-dialog modal-xl modal-dialog-scrollable">
                 <div class="modal-content">
                     <div class="modal-header" style="background:#0E544C;color:#fff">
-                        <h5 class="modal-title" id="modalAyudaBalanceLbl">
+                        <h5 class="modal-title" id="pageHelpModalLbl">
                             <i class="fas fa-question-circle me-2"></i>¿Cómo funciona el Balance Semanal de Existencias?
                         </h5>
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
@@ -562,7 +558,7 @@ function renderTabla(productos) {
         !q || p.nombre.toLowerCase().includes(q) || (p.maestro||'').toLowerCase().includes(q)
     );
     if (!filtrados.length) {
-        tbody.innerHTML = `<tr><td colspan="12" class="text-center text-muted py-4">Sin productos con ese filtro.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="11" class="text-center text-muted py-4">Sin productos con ese filtro.</td></tr>`;
         return;
     }
 
@@ -578,10 +574,8 @@ function renderTabla(productos) {
         tr.innerHTML = `
             <td>
                 <div style="font-weight:600;font-size:.82rem">${esc(p.nombre)}</div>
-                <small class="text-muted">${esc(p.maestro||'')}</small>
                 ${p.categoria?`<span class="bi-badge-cat ms-1">${esc(p.categoria)}</span>`:''}
             </td>
-            <td class="td-center text-muted" style="font-size:.75rem">${esc(p.unidad||'')}</td>
             <td class="td-num">${fmt(v.inv_inicial)}</td>
             <td class="td-num" style="color:${v.ajuste>=0?'#27ae60':'#e74c3c'}">${fmt(v.ajuste)}</td>
             <td class="td-num" style="color:#2980b9">${fmt(v.despacho)}</td>
@@ -609,7 +603,7 @@ function renderTabla(productos) {
         trSub.className = 'bi-sub-row';
         trSub.id = rowId;
         const sucursales = datosGlobales.sucursales || [];
-        let subHtml = `<td colspan="12"><div class="bi-sub-cell-wrap"><table class="bi-sub-table">
+        let subHtml = `<td colspan="11"><div class="bi-sub-cell-wrap"><table class="bi-sub-table">
             <tr class="bi-sub-header">
                 <td>Sucursal</td><td class="td-num">Inv.Ini</td><td class="td-num">Ajuste</td>
                 <td class="td-num">Despacho</td><td class="td-num">Merma</td><td class="td-num">Inv.Fin</td>
