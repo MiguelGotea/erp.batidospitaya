@@ -161,6 +161,11 @@ function buscarPresentacionPorUnidades(PDO $conn, int $idMaestro, array $nombres
         $columna = 'presentacion_despacho';
     }
 
+    // Para despacho se permiten presentaciones que son recetas (Id_receta_producto != NULL),
+    // ya que un paquete/caja compuesta puede ser la unidad de despacho.
+    // Para receta e inventario se excluyen.
+    $filtroReceta = ($tipo === 'despacho') ? '' : 'AND pp.Id_receta_producto IS NULL';
+
     $placeholders = implode(',', array_fill(0, count($nombres), '?'));
     $stmt = $conn->prepare("
         SELECT
@@ -180,7 +185,7 @@ function buscarPresentacionPorUnidades(PDO $conn, int $idMaestro, array $nombres
         LEFT  JOIN unidad_producto  u  ON u.id  = pp.id_unidad_producto
         WHERE pp.id_producto_maestro = ?
           AND u.nombre IN ($placeholders)
-          AND pp.Id_receta_producto IS NULL
+          $filtroReceta
           AND pp.Activo = 'SI'
           AND pp.$columna = 1
         ORDER BY

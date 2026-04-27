@@ -308,6 +308,8 @@ try {
             }
 
             // Fallback: cualquier presentación de despacho del maestro
+            // NOTA: No se filtra Id_receta_producto IS NULL porque presentaciones
+            // compuestas (paquetes, cajas de cajas) pueden ser válidas para despacho.
             if (!$ingr['presentacion_despacho']) {
                 $stmtAnyD = $conn->prepare("
                     SELECT
@@ -326,7 +328,6 @@ try {
                     INNER JOIN producto_maestro pm ON pm.id = pp.id_producto_maestro
                     LEFT JOIN unidad_producto u    ON u.id  = pp.id_unidad_producto
                     WHERE pp.id_producto_maestro = ?
-                      AND pp.Id_receta_producto IS NULL
                       AND pp.Activo = 'SI'
                       AND pp.presentacion_despacho = 1
                     LIMIT 1
