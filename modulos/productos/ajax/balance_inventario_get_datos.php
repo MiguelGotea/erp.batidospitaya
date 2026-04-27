@@ -50,7 +50,9 @@ try {
     // ── TODOS LOS PRODUCTOS BASE (presentacion_basica_inventario=1) ──
     $r4 = $conn->prepare("
         SELECT pp.id,pp.Nombre,pp.presentacion_receta,pp.Id_receta_producto,
-               pp.categoria_insumo,pm.Nombre AS maestro,u.nombre AS unidad,u.id AS id_unidad
+               pp.categoria_insumo,pp.cantidad AS pp_cant,
+               pp.id_producto_maestro AS id_maestro,
+               pm.Nombre AS maestro,u.nombre AS unidad,u.id AS id_unidad
         FROM producto_presentacion pp
         LEFT JOIN producto_maestro pm ON pm.id=pp.id_producto_maestro
         LEFT JOIN unidad_producto u   ON u.id=pp.id_unidad_producto
@@ -62,6 +64,12 @@ try {
     $productosMeta  = [];
     foreach ($todosProductos as $p) $productosMeta[(int)$p['id']] = $p;
     $idsBase = array_keys($productosMeta);
+    // Índice: maestro → producto base (para resolución de presentación alternativa)
+    $maestroToBase = [];
+    foreach ($productosMeta as $pid => $pm) {
+        $mid = (int)$pm['id_maestro'];
+        if ($mid > 0) $maestroToBase[$mid] = ['base_pp_id'=>$pid, 'base_unid'=>(int)$pm['id_unidad'], 'base_cant'=>max((float)$pm['pp_cant'],0.001)];
+    }
 
     // ── MAPA DE CASCADA (paquete → base) ─────────────────────────────
     // Producto receta con exactamente 1 componente base → es paquete
@@ -81,31 +89,81 @@ try {
         $cascadeMap[(int)$row['pkg_id']] = ['base_id'=>(int)$row['base_id'], 'factor'=>(float)$row['factor']];
     }
 
-    // ── DICCIONARIO: CodCotizacion → pp ──────────────────────────────
-    // Incluye productos base Y paquetes (para resolución de cascada)
+    // ── CONVERSIONES DE UNIDAD (cargado temprano para altMap) ────────
+    $stmtConvEarly = $conn->prepare("SELECT id_unidad_producto_inicio AS i, id_unidad_producto_final AS f, cantidad AS fac FROM conversion_unidad_producto");
+    $stmtConvEarly->execute();
+    $convIndex = [];
+    foreach ($stmtConvEarly->fetchAll(PDO::FETCH_ASSOC) as $c) {
+        $convIndex[(int)$c['i']][(int)$c['f']] = (float)$c['fac'];
+        $convIndex[(int)$c['f']][(int)$c['i']] = $c['fac'] != 0 ? 1/(float)$c['fac'] : 0;
+    }
+
+    // ── DICCIONARIO: CodCotizacion → pp (todos los productos activos) ─
+    // Incluye: base, receta-paquete, Y presentaciones alternativas (misma unidad diferente)
     $r6 = $conn->prepare("
         SELECT d.CodCotizacion, pp.id AS pp_id,
-               pp.presentacion_basica_inventario, pp.presentacion_receta
+               pp.presentacion_basica_inventario, pp.presentacion_receta,
+               pp.id_unidad_producto AS pp_unid, pp.cantidad AS pp_cant,
+               pp.id_producto_maestro AS id_maestro
         FROM diccionario_productos_legado d
         INNER JOIN producto_presentacion pp ON pp.id = d.id_producto_presentacion
         WHERE pp.Activo='SI'
-          AND (pp.presentacion_basica_inventario=1 OR pp.presentacion_receta=1)
     ");
     $r6->execute();
-    $diccionario = []; // CodCotizacion => pp_id
+    $diccionario = []; // CodCotizacion => ['pp_id','pp_unid','pp_cant','id_maestro','es_base','es_receta']
     foreach ($r6->fetchAll(PDO::FETCH_ASSOC) as $row) {
-        $diccionario[(int)$row['CodCotizacion']] = (int)$row['pp_id'];
+        $diccionario[(int)$row['CodCotizacion']] = [
+            'pp_id'     => (int)$row['pp_id'],
+            'pp_unid'   => (int)$row['pp_unid'],
+            'pp_cant'   => max((float)$row['pp_cant'], 0.001),
+            'id_maestro'=> (int)$row['id_maestro'],
+            'es_base'   => (bool)$row['presentacion_basica_inventario'],
+            'es_receta' => (bool)$row['presentacion_receta'],
+        ];
+    }
+
+    // ── MAPA DE PRESENTACIONES ALTERNATIVAS (misma unidad, conversión) ─
+    // Producto NO base, NO receta, mismo maestro que un producto base → convertir vía convIndex
+    $altMap = []; // alt_pp_id => ['base_id'=>int, 'factor'=>float]
+    foreach ($diccionario as $dic) {
+        $pp_id = $dic['pp_id'];
+        if ($dic['es_base'] || $dic['es_receta']) continue;   // ya manejados
+        if (isset($cascadeMap[$pp_id]))           continue;   // ya en cascada
+        if (isset($altMap[$pp_id]))               continue;   // ya procesado
+        $mid = $dic['id_maestro'];
+        if (!$mid || !isset($maestroToBase[$mid])) continue;  // maestro sin base
+        $base    = $maestroToBase[$mid];
+        $altUnid = $dic['pp_unid'];
+        $basUnid = $base['base_unid'];
+        if ($altUnid === $basUnid) {
+            // Misma unidad, solo ajuste de cantidad
+            $factor = $dic['pp_cant'] / $base['base_cant'];
+        } elseif (isset($convIndex[$altUnid][$basUnid])) {
+            $factor = ($dic['pp_cant'] * $convIndex[$altUnid][$basUnid]) / $base['base_cant'];
+        } else {
+            continue; // Sin conversión conocida
+        }
+        $altMap[$pp_id] = ['base_id' => $base['base_pp_id'], 'factor' => $factor];
     }
 
     // ── FUNCIÓN: resolver CodCotizacion a base_id + cantidad ─────────
     // Retorna [base_id, cantidad_convertida] o null si no hay mapeo
-    function resolverCodCot(int $cod, float $qty, array &$diccionario, array &$cascadeMap): ?array {
+    // Orden de resolución:
+    //   1. cascadeMap  → producto receta con 1 componente base (Ej: caja de 12)
+    //   2. altMap      → presentación alternativa del mismo maestro (Ej: galón → litro)
+    //   3. es_base     → producto base directo
+    function resolverCodCot(int $cod, float $qty, array &$diccionario, array &$cascadeMap, array &$altMap): ?array {
         if (!isset($diccionario[$cod])) return null;
-        $pp_id = $diccionario[$cod];
+        $dic   = $diccionario[$cod];
+        $pp_id = $dic['pp_id'];
         if (isset($cascadeMap[$pp_id])) {
             return [$cascadeMap[$pp_id]['base_id'], $qty * $cascadeMap[$pp_id]['factor']];
         }
-        return [$pp_id, $qty];
+        if (isset($altMap[$pp_id])) {
+            return [$altMap[$pp_id]['base_id'], $qty * $altMap[$pp_id]['factor']];
+        }
+        if ($dic['es_base']) return [$pp_id, $qty];
+        return null; // producto sin resolución (otro tipo no contemplado)
     }
 
     // ── AGREGADO BALANCE ─────────────────────────────────────────────
@@ -122,7 +180,7 @@ try {
     // Helper: aplicar kardex simple (inventario, ajuste, merma)
     function aplicarKardexSimple(PDO &$conn, string $tabla, string $pk, string $tipo,
         int $semDesde, int $semHasta, array $sucFiltro, array &$diccionario,
-        array &$cascadeMap, array &$bal): void
+        array &$cascadeMap, array &$altMap, array &$bal): void
     {
         $phSuc = implode(',', array_fill(0, count($sucFiltro), '?'));
         $stmt = $conn->prepare("
@@ -136,7 +194,7 @@ try {
         $params = array_merge([$semDesde, $semHasta], $sucFiltro);
         $stmt->execute($params);
         foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
-            $res = resolverCodCot((int)$row['CodCotizacion'], (float)$row['total'], $diccionario, $cascadeMap);
+            $res = resolverCodCot((int)$row['CodCotizacion'], (float)$row['total'], $diccionario, $cascadeMap, $altMap);
             if (!$res) continue;
             [$bid, $qty] = $res;
             $suc = (int)$row['Sucursal'];
@@ -146,7 +204,7 @@ try {
 
     // Helper: inventario (semana fija = snapshot)
     function aplicarInventario(PDO &$conn, int $numSem, string $tipo,
-        array $sucFiltro, array &$diccionario, array &$cascadeMap, array &$bal): void
+        array $sucFiltro, array &$diccionario, array &$cascadeMap, array &$altMap, array &$bal): void
     {
         $phSuc = implode(',', array_fill(0, count($sucFiltro), '?'));
         $stmt = $conn->prepare("
@@ -160,7 +218,7 @@ try {
         $params = array_merge([$numSem], $sucFiltro);
         $stmt->execute($params);
         foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
-            $res = resolverCodCot((int)$row['CodCotizacion'], (float)$row['total'], $diccionario, $cascadeMap);
+            $res = resolverCodCot((int)$row['CodCotizacion'], (float)$row['total'], $diccionario, $cascadeMap, $altMap);
             if (!$res) continue;
             [$bid, $qty] = $res;
             $suc = (int)$row['Sucursal'];
@@ -169,18 +227,18 @@ try {
     }
 
     // ── INVENTARIO INICIAL (semana anterior) ─────────────────────────
-    aplicarInventario($conn, $numSemAnt, 'inv_inicial', $sucFiltro, $diccionario, $cascadeMap, $bal);
+    aplicarInventario($conn, $numSemAnt, 'inv_inicial', $sucFiltro, $diccionario, $cascadeMap, $altMap, $bal);
 
     // ── INVENTARIO FINAL (última semana del rango) ───────────────────
-    aplicarInventario($conn, $semHasta, 'inv_final', $sucFiltro, $diccionario, $cascadeMap, $bal);
+    aplicarInventario($conn, $semHasta, 'inv_final', $sucFiltro, $diccionario, $cascadeMap, $altMap, $bal);
 
     // ── AJUSTES ──────────────────────────────────────────────────────
     aplicarKardexSimple($conn,'msaccess_masivo_AjustesInventario','CodAjustesInventario',
-        'ajuste', $semDesde, $semHasta, $sucFiltro, $diccionario, $cascadeMap, $bal);
+        'ajuste', $semDesde, $semHasta, $sucFiltro, $diccionario, $cascadeMap, $altMap, $bal);
 
     // ── MERMA ─────────────────────────────────────────────────────────
     aplicarKardexSimple($conn,'msaccess_masivo_MermaCotizacion','CodMermaUnidad',
-        'merma', $semDesde, $semHasta, $sucFiltro, $diccionario, $cascadeMap, $bal);
+        'merma', $semDesde, $semHasta, $sucFiltro, $diccionario, $cascadeMap, $altMap, $bal);
 
     // ── DESPACHO (PreIngreso × SubPreIngreso, filtro por Destino) ─────
     $stmtDesp = $conn->prepare("
@@ -198,7 +256,7 @@ try {
         if (!preg_match('/[Pp]itaya\s+(\d+)/', $row['Destino'], $m)) continue;
         $suc = (int)$m[1];
         if (!in_array($suc, $sucFiltro)) continue;
-        $res = resolverCodCot((int)$row['CodCotizacion'], (float)$row['total'], $diccionario, $cascadeMap);
+        $res = resolverCodCot((int)$row['CodCotizacion'], (float)$row['total'], $diccionario, $cascadeMap, $altMap);
         if (!$res) continue;
         [$bid, $qty] = $res;
         if (isset($bal[$bid][$suc])) $bal[$bid][$suc]['despacho'] += $qty;
@@ -281,13 +339,8 @@ try {
             if ($u['abreviado']) $uPorNom[strtolower(trim($u['abreviado']))]=$uid;
             if (!empty($u['nombres_opcionales'])) foreach (preg_split('/[,;|]+/',$u['nombres_opcionales']) as $al) { $ak=strtolower(trim($al)); if($ak) $uPorNom[$ak]=$uid; }
         }
-        $stmtC=$conn->prepare("SELECT id_unidad_producto_inicio AS i,id_unidad_producto_final AS f,cantidad AS fac FROM conversion_unidad_producto");
-        $stmtC->execute();
-        $convIdx=[];
-        foreach ($stmtC->fetchAll(PDO::FETCH_ASSOC) as $c) {
-            $convIdx[(int)$c['i']][(int)$c['f']]=(float)$c['fac'];
-            $convIdx[(int)$c['f']][(int)$c['i']]=$c['fac']!=0?1/$c['fac']:0;
-        }
+        // Reutilizar $convIndex ya cargado al inicio (no recargar)
+        $convIdx = &$convIndex;
         // Presentaciones por maestro
         $idsMaestros=array_unique(array_filter(array_column($diccionarioConsumo,'id_mae')));
         $ppPorMaestro=[];
