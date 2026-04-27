@@ -429,8 +429,8 @@ try {
             array_column($cotMap, 'p2'),
             array_column($cotMap, 'p3')
         )));
-        $codsNoResueltos = array_values(array_filter($todosCodsVenta, function($c) use (&$diccionarioConsumo) {
-            return $c !== null && $c !== '' && !isset($diccionarioConsumo[(int)$c]);
+        $codsNoResueltos = array_values(array_filter($todosCodsVenta, function ($c) use (&$diccionarioConsumo) {
+            return $c !== null && $c !== '' && !isset($diccionarioConsumo[(int) $c]);
         }));
         if (!empty($codsNoResueltos)) {
             $phNR2 = implode(',', array_fill(0, count($codsNoResueltos), '?'));
@@ -463,8 +463,8 @@ try {
         // Cubre productos donde pp_orig.id_producto_maestro es NULL (ej: Mani 1lb).
         // Traza: CodCotizacion -> CodIngrediente -> todas sus cotizaciones -> diccionario
         //        -> cualquier presentacion con maestro -> presentacion basica del mismo maestro.
-        $codsSinResolverC = array_values(array_filter($todosCodsVenta, function($c) use (&$diccionarioConsumo) {
-            return $c !== null && $c !== '' && !isset($diccionarioConsumo[(int)$c]);
+        $codsSinResolverC = array_values(array_filter($todosCodsVenta, function ($c) use (&$diccionarioConsumo) {
+            return $c !== null && $c !== '' && !isset($diccionarioConsumo[(int) $c]);
         }));
         if (!empty($codsSinResolverC)) {
             $phC2 = implode(',', array_fill(0, count($codsSinResolverC), '?'));
