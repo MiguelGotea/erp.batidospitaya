@@ -557,7 +557,15 @@ function renderTabla(productos) {
 
     const filtrados = productos.filter(p =>
         !q || p.nombre.toLowerCase().includes(q) || (p.maestro||'').toLowerCase().includes(q) || (p.categoria||'').toLowerCase().includes(q)
-    );
+    ).sort((a, b) => {
+        const catA = (a.categoria || '').toLowerCase();
+        const catB = (b.categoria || '').toLowerCase();
+        if (catA < catB) return -1;
+        if (catA > catB) return 1;
+        const nomA = (a.nombre || '').toLowerCase();
+        const nomB = (b.nombre || '').toLowerCase();
+        return nomA.localeCompare(nomB);
+    });
     if (!filtrados.length) {
         tbody.innerHTML = `<tr><td colspan="12" class="text-center text-muted py-4">Sin productos con ese filtro.</td></tr>`;
         return;
