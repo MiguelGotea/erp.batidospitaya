@@ -86,23 +86,44 @@ try {
         $convIndex[(int) $c['f']][(int) $c['i']] = $c['fac'] != 0 ? 1 / (float) $c['fac'] : 0;
     }
 
-    // ── Mapeo Completo (Lógica 3 Etapas: Directo, Maestro, Ingrediente) ──
-    $codMap = []; // CodCotizacion => {factor, nombre, tipo}
+    // ── Mapeo Completo (Lógica Robusta: Directo, Maestro, Ingrediente) ──
+    $codMap = []; // CodCotizacion => {factor, nombre, tipo, ...}
 
-    // 1. Cargar todas las presentaciones activas para el "mapeo reverso"
-    $rDic = $conn->prepare("
-        SELECT d.CodCotizacion, pp.id AS pp_id, pp.Nombre,
-               pp.presentacion_basica_inventario, pp.presentacion_receta,
-               pp.id_unidad_producto AS pp_unid, pp.cantidad AS pp_cant,
-               pp.id_producto_maestro AS id_maestro
-        FROM diccionario_productos_legado d
+    // 1. Identificar ingredientes asociados al producto base (idPP)
+    // Buscamos cualquier cotización que mapee directamente o vía maestro a nuestro idPP
+    $stmtRel = $conn->prepare("
+        SELECT DISTINCT c.CodIngrediente
+        FROM Cotizaciones c
+        INNER JOIN diccionario_productos_legado d ON d.CodCotizacion = c.CodCotizacion
         INNER JOIN producto_presentacion pp ON pp.id = d.id_producto_presentacion
-        WHERE pp.Activo='SI'
+        WHERE pp.id = :id 
+           OR (pp.id_producto_maestro = :mid AND pp.Activo='SI' AND :mid2 > 0)
     ");
-    $rDic->execute();
-    $allDic = $rDic->fetchAll(PDO::FETCH_ASSOC);
+    $stmtRel->execute([':id' => $idPP, ':mid' => $idMaestro, ':mid2' => $idMaestro]);
+    $ingsBase = $stmtRel->fetchAll(PDO::FETCH_COLUMN);
 
-    // 2. Cascade Map (Paquetes)
+    // También incluimos ingredientes vía Step C (Ingrediente -> otro producto con mismo maestro)
+    if ($idMaestro > 0) {
+        $stmtStepC_Ings = $conn->prepare("
+            SELECT DISTINCT c_src.CodIngrediente
+            FROM Cotizaciones c_src
+            INNER JOIN Cotizaciones c_all ON c_all.CodIngrediente = c_src.CodIngrediente
+            INNER JOIN diccionario_productos_legado d2 ON d2.CodCotizacion = c_all.CodCotizacion
+            INNER JOIN producto_presentacion pp_any ON pp_any.id = d2.id_producto_presentacion
+            WHERE pp_any.id_producto_maestro = :mid AND pp_any.Activo='SI'
+        ");
+        $stmtStepC_Ings->execute([':mid' => $idMaestro]);
+        $ingsBase = array_unique(array_merge($ingsBase, $stmtStepC_Ings->fetchAll(PDO::FETCH_COLUMN)));
+    }
+
+    if (empty($ingsBase)) {
+        // Fallback: si no hay mapeos aún, al menos el ingrediente directo del idPP si existe en diccionario
+        $stmtF = $conn->prepare("SELECT DISTINCT CodIngrediente FROM Cotizaciones c INNER JOIN diccionario_productos_legado d ON d.CodCotizacion = c.CodCotizacion WHERE d.id_producto_presentacion = ?");
+        $stmtF->execute([$idPP]);
+        $ingsBase = $stmtF->fetchAll(PDO::FETCH_COLUMN);
+    }
+
+    // Cascade Map (Paquetes)
     $rCas = $conn->prepare("
         SELECT pp_pkg.id AS pkg_id, crp.id_presentacion_producto AS base_id, crp.cantidad AS factor
         FROM producto_presentacion pp_pkg
@@ -118,71 +139,84 @@ try {
         $cascadeMap[(int)$row['pkg_id']] = ['base_id' => (int)$row['base_id'], 'factor' => (float)$row['factor']];
     }
 
-    // 3. Step C Mapping (Ingredient Fallback)
-    $stmtStepC = $conn->prepare("
-        SELECT c_src.CodCotizacion
-        FROM Cotizaciones c_src
-        INNER JOIN Cotizaciones c_all ON c_all.CodIngrediente = c_src.CodIngrediente
-        INNER JOIN diccionario_productos_legado d2 ON d2.CodCotizacion = c_all.CodCotizacion
-        INNER JOIN producto_presentacion pp_any ON pp_any.id = d2.id_producto_presentacion
-                                               AND pp_any.Activo = 'SI'
-                                               AND pp_any.id_producto_maestro IS NOT NULL
-        INNER JOIN producto_presentacion pp_base
-                ON pp_base.id_producto_maestro = pp_any.id_producto_maestro
-               AND pp_base.presentacion_basica_inventario = 1
-               AND pp_base.Activo = 'SI'
-        WHERE pp_base.id = :targetID
-        GROUP BY c_src.CodCotizacion
-    ");
-    $stmtStepC->execute([':targetID' => $idPP]);
-    $stepCCods = $stmtStepC->fetchAll(PDO::FETCH_COLUMN);
+    if (!empty($ingsBase)) {
+        $phI = implode(',', array_fill(0, count($ingsBase), '?'));
+        
+        // 2. Cargar TODAS las cotizaciones de estos ingredientes
+        $stmtAllCots = $conn->prepare("SELECT CodCotizacion, CodIngrediente, Conversion, Prioridad FROM Cotizaciones WHERE CodIngrediente IN ($phI)");
+        $stmtAllCots->execute($ingsBase);
+        $allCots = $stmtAllCots->fetchAll(PDO::FETCH_ASSOC);
 
-    // 4. Construir el codMap final para este producto específico
-    foreach ($allDic as $row) {
-        $cid = (int)$row['CodCotizacion'];
-        $ppid = (int)$row['pp_id'];
-        $mid = (int)$row['id_maestro'];
-        $u = (int)$row['pp_unid'];
-        $c = max((float)$row['pp_cant'], 0.001);
-        $fac = null;
-        $type = 'alternativa';
+        // 3. Cargar el diccionario para estas cotizaciones
+        $phC_list = array_column($allCots, 'CodCotizacion');
+        if (!empty($phC_list)) {
+            $phC = implode(',', array_fill(0, count($phC_list), '?'));
+            $stmtDic = $conn->prepare("
+                SELECT d.CodCotizacion, pp.id AS pp_id, pp.Nombre, pp.id_unidad_producto, pp.cantidad, pp.id_producto_maestro,
+                       pp.presentacion_basica_inventario, pp.presentacion_receta
+                FROM diccionario_productos_legado d
+                INNER JOIN producto_presentacion pp ON pp.id = d.id_producto_presentacion
+                WHERE d.CodCotizacion IN ($phC) AND pp.Activo='SI'
+            ");
+            $stmtDic->execute($phC_list);
+            $dicMap = [];
+            foreach ($stmtDic->fetchAll(PDO::FETCH_ASSOC) as $r) $dicMap[(int)$r['CodCotizacion']] = $r;
 
-        // A. Mapeo Directo
-        if ($ppid === $idPP) {
-            $fac = 1.0;
-            $type = 'base';
-        }
-        // B. Mapeo Cascada
-        elseif (isset($cascadeMap[$ppid]) && $cascadeMap[$ppid]['base_id'] === $idPP) {
-            $fac = $cascadeMap[$ppid]['factor'];
-            $type = 'cascada';
-        }
-        // C. Mapeo Maestro
-        elseif ($mid > 0 && $mid === $idMaestro) {
-            if ($u === $baseUnid) {
-                $fac = $c / $baseCant;
-            } elseif (isset($convIndex[$u][$baseUnid])) {
-                $fac = ($c * $convIndex[$u][$baseUnid]) / $baseCant;
+            // 4. Resolver cada cotización hacia nuestro idPP
+            foreach ($allCots as $cot) {
+                $cid = (int)$cot['CodCotizacion'];
+                $mapeoRow = null;
+                $type = 'alternativa';
+                $fac = null;
+
+                // A. Mapeo Directo (si está en diccionario)
+                if (isset($dicMap[$cid])) {
+                    $row = $dicMap[$cid];
+                    if ((int)$row['pp_id'] === $idPP) {
+                        $fac = 1.0;
+                        $type = 'base';
+                    } 
+                    // B. Maestro
+                    elseif ($idMaestro > 0 && (int)$row['id_producto_maestro'] === $idMaestro) {
+                        $u = (int)$row['id_unidad_producto'];
+                        $c = max((float)$row['cantidad'], 0.001);
+                        if ($u === $baseUnid) $fac = $c / $baseCant;
+                        elseif (isset($convIndex[$u][$baseUnid])) $fac = ($c * $convIndex[$u][$baseUnid]) / $baseCant;
+                        if ($row['presentacion_basica_inventario']) $type = 'base';
+                    }
+                    // C. Cascada
+                    elseif (isset($cascadeMap[(int)$row['pp_id']]) && $cascadeMap[(int)$row['pp_id']]['base_id'] === $idPP) {
+                        $fac = $cascadeMap[(int)$row['pp_id']]['factor'];
+                        $type = 'cascada';
+                    }
+                    $mapeoRow = $row;
+                }
+
+                // D. Step C Fallback (si no se resolvió arriba, pero pertenece a un ingrediente base)
+                if ($fac === null && in_array($cot['CodIngrediente'], $ingsBase)) {
+                    // Si no tenemos mapeo ERP, asumimos factor 1.0 (unidad base del ingrediente)
+                    $fac = 1.0; 
+                    $type = 'auto_ingrediente';
+                }
+
+                if ($fac !== null) {
+                    $codMap[$cid] = [
+                        'factor'  => $fac,
+                        'nombre'  => $mapeoRow['Nombre'] ?? ('Cod: '.$cid),
+                        'tipo'    => $type,
+                        'pp_id'   => $mapeoRow['pp_id'] ?? $idPP,
+                        'id_unid' => $mapeoRow['id_unidad_producto'] ?? $baseUnid,
+                        'pp_cant' => $mapeoRow['cantidad'] ?? $baseCant,
+                        'id_mae'  => $mapeoRow['id_producto_maestro'] ?? $idMaestro
+                    ];
+                }
             }
-            if ($row['presentacion_basica_inventario']) $type = 'base';
-        }
-        // D. Mapeo Step C
-        elseif (in_array($cid, $stepCCods)) {
-            if ($u === $baseUnid) {
-                $fac = $c / $baseCant;
-            } elseif (isset($convIndex[$u][$baseUnid])) {
-                $fac = ($c * $convIndex[$u][$baseUnid]) / $baseCant;
-            }
-        }
-
-        if ($fac !== null) {
-            $codMap[$cid] = ['factor' => $fac, 'nombre' => $row['Nombre'], 'tipo' => $type, 'pp_id' => $ppid, 'id_unid' => $u, 'pp_cant' => $c, 'id_mae' => $mid];
         }
     }
 
     $allCods = array_keys($codMap);
     if (empty($allCods)) {
-        echo json_encode(['ok' => true, 'registros' => [], 'producto' => $prodMeta]);
+        echo json_encode(['ok' => true, 'registros' => [], 'producto' => $prodMeta, 'msg' => 'No hay códigos mapeados']);
         exit();
     }
 
