@@ -1,0 +1,332 @@
+/* ============================================================
+   Balance de Inventario — CSS
+   modulos/productos/css/balance_inventario.css
+   ============================================================ */
+
+/* ── Variables ─────────────────────────────────────────────── */
+:root {
+    --bi-primary:   #0E544C;
+    --bi-primary2:  #13736A;
+    --bi-accent:    #1ABC9C;
+    --bi-bg:        #f0f2f5;
+    --bi-card:      #ffffff;
+    --bi-border:    #e2e8f0;
+    --bi-text:      #1a202c;
+    --bi-muted:     #718096;
+    --bi-green:     #27ae60;
+    --bi-red:       #e74c3c;
+    --bi-orange:    #e67e22;
+    --bi-blue:      #2980b9;
+    --bi-shadow:    0 2px 8px rgba(0,0,0,.08);
+}
+
+/* ── Layout ─────────────────────────────────────────────────── */
+body { background: var(--bi-bg); }
+
+.bi-wrapper { padding: 12px 16px; }
+
+/* ── Filtros card ───────────────────────────────────────────── */
+.bi-filtros-card {
+    background: var(--bi-card);
+    border-radius: 12px;
+    padding: 14px 18px;
+    box-shadow: var(--bi-shadow);
+    margin-bottom: 14px;
+}
+.bi-label {
+    font-size: .75rem;
+    font-weight: 600;
+    color: var(--bi-muted);
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    margin-bottom: 4px;
+    display: block;
+}
+.bi-input-sem {
+    font-size: .85rem;
+    border-radius: 8px;
+    border: 1px solid var(--bi-border);
+    padding: 6px 10px;
+    transition: border-color .2s;
+}
+.bi-input-sem:focus { border-color: var(--bi-primary2); box-shadow: 0 0 0 3px rgba(19,115,106,.12); }
+
+/* ── Sucursal pill selector (same pattern as dashboard_consumo) ─ */
+.bi-suc-trigger {
+    border: 1px solid var(--bi-border);
+    border-radius: 8px;
+    padding: 5px 10px;
+    background: #fff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 36px;
+    font-size: .85rem;
+    transition: border-color .2s;
+    user-select: none;
+    position: relative;
+}
+.bi-suc-trigger:focus { outline: none; border-color: var(--bi-primary2); box-shadow: 0 0 0 3px rgba(19,115,106,.12); }
+.bi-suc-dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    z-index: 200;
+    background: #fff;
+    border: 1px solid var(--bi-border);
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0,0,0,.12);
+    display: none;
+    max-height: 280px;
+    overflow-y: auto;
+}
+.bi-suc-dropdown.open { display: block; }
+.bi-suc-search { border: none; border-bottom: 1px solid var(--bi-border); padding: 8px 12px; width: 100%; font-size: .83rem; }
+.bi-suc-search:focus { outline: none; }
+.bi-suc-actions { display: flex; gap: 6px; padding: 6px 10px; border-bottom: 1px solid var(--bi-border); }
+.bi-suc-action-btn { font-size: .75rem; background: none; border: 1px solid var(--bi-border); border-radius: 5px; padding: 2px 8px; cursor: pointer; }
+.bi-suc-action-btn:hover { background: #f8fafc; }
+.bi-suc-item { padding: 8px 12px; display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: .83rem; }
+.bi-suc-item:hover { background: #f0fafa; }
+.bi-suc-item input[type=checkbox] { accent-color: var(--bi-primary2); }
+.bi-suc-pills { display: flex; flex-wrap: wrap; gap: 4px; }
+.bi-pill {
+    background: #e0f5f2;
+    color: var(--bi-primary);
+    border-radius: 20px;
+    padding: 2px 8px;
+    font-size: .72rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+.bi-pill-x { cursor: pointer; opacity: .6; font-size: .8rem; }
+.bi-pill-x:hover { opacity: 1; }
+
+/* ── Botones acción ─────────────────────────────────────────── */
+.bi-btn-primary {
+    background: linear-gradient(135deg, var(--bi-primary), var(--bi-primary2));
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 7px 18px;
+    font-size: .83rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity .2s, transform .1s;
+}
+.bi-btn-primary:hover { opacity: .9; transform: translateY(-1px); }
+.bi-btn-primary:active { transform: translateY(0); }
+
+/* ── Badge semana actual ────────────────────────────────────── */
+.bi-badge-sem {
+    background: #e8f5e9;
+    color: #2e7d32;
+    border-radius: 8px;
+    padding: 5px 12px;
+    font-size: .8rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+/* ── KPI cards ──────────────────────────────────────────────── */
+.bi-kpi-row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+}
+.bi-kpi-card {
+    background: var(--bi-card);
+    border-radius: 12px;
+    padding: 14px 18px;
+    box-shadow: var(--bi-shadow);
+    flex: 1;
+    min-width: 160px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.bi-kpi-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; color: #fff; }
+.bi-kpi-label { font-size: .72rem; color: var(--bi-muted); text-transform: uppercase; letter-spacing: .04em; }
+.bi-kpi-val { font-size: 1.4rem; font-weight: 700; color: var(--bi-text); line-height: 1.1; }
+
+/* ── Tabla wrapper ──────────────────────────────────────────── */
+.bi-table-card {
+    background: var(--bi-card);
+    border-radius: 12px;
+    box-shadow: var(--bi-shadow);
+    overflow: hidden;
+}
+.bi-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--bi-border);
+    gap: 10px;
+    flex-wrap: wrap;
+}
+.bi-toolbar-title { font-size: .9rem; font-weight: 700; color: var(--bi-primary); }
+.bi-search { font-size: .82rem; border: 1px solid var(--bi-border); border-radius: 7px; padding: 5px 10px; width: 200px; }
+.bi-search:focus { outline: none; border-color: var(--bi-primary2); }
+
+/* ── Table ──────────────────────────────────────────────────── */
+.bi-table-responsive { overflow-x: auto; }
+.bi-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .8rem;
+    min-width: 1100px;
+}
+.bi-table thead th {
+    background: var(--bi-primary);
+    color: #fff;
+    font-size: .72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    padding: 9px 10px;
+    white-space: nowrap;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    border-right: 1px solid rgba(255,255,255,.1);
+}
+.bi-table thead th.th-group {
+    background: #0b3d38;
+    text-align: center;
+    font-size: .68rem;
+    color: #aee6de;
+}
+.bi-table thead th:first-child { position: sticky; left: 0; z-index: 20; }
+.bi-table tbody td {
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--bi-border);
+    border-right: 1px solid #f4f7fb;
+    vertical-align: middle;
+    white-space: nowrap;
+}
+.bi-table tbody tr:hover td { background: #f0faf8; }
+.bi-table tbody td:first-child {
+    position: sticky;
+    left: 0;
+    background: #fff;
+    z-index: 5;
+    font-weight: 600;
+    box-shadow: 2px 0 4px rgba(0,0,0,.05);
+}
+.bi-table tbody tr:hover td:first-child { background: #f0faf8; }
+.bi-table .td-num { text-align: right; font-variant-numeric: tabular-nums; }
+.bi-table .td-center { text-align: center; }
+
+/* ── Varianza coloring ──────────────────────────────────────── */
+.var-ok    { color: var(--bi-green); font-weight: 700; }
+.var-warn  { color: var(--bi-orange); font-weight: 700; }
+.var-bad   { color: var(--bi-red); font-weight: 700; }
+.var-neutral { color: var(--bi-muted); }
+.var-cell-ok   { background: #f0fdf4 !important; }
+.var-cell-warn { background: #fffbeb !important; }
+.var-cell-bad  { background: #fef2f2 !important; }
+
+/* ── Expand row ─────────────────────────────────────────────── */
+.bi-expand-btn {
+    background: none;
+    border: 1px solid var(--bi-border);
+    border-radius: 4px;
+    width: 22px; height: 22px;
+    cursor: pointer;
+    font-size: .75rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all .15s;
+    color: var(--bi-muted);
+}
+.bi-expand-btn:hover { background: #e0f5f2; border-color: var(--bi-primary2); color: var(--bi-primary2); }
+.bi-expand-btn.open { background: var(--bi-primary); color: #fff; border-color: var(--bi-primary); }
+.bi-sub-row { display: none; }
+.bi-sub-row.open { display: table-row; }
+.bi-sub-table { width: 100%; border-collapse: collapse; font-size: .77rem; margin: 0; }
+.bi-sub-table td { padding: 5px 10px; border-bottom: 1px solid #f0f4f8; }
+.bi-sub-table tr:last-child td { border-bottom: none; }
+.bi-sub-header { font-weight: 700; color: var(--bi-muted); font-size: .68rem; text-transform: uppercase; }
+.bi-sub-cell-wrap { padding: 8px 12px; background: #f8fbfa; }
+
+/* ── Badge producto paquete ─────────────────────────────────── */
+.bi-badge-pkg {
+    font-size: .65rem;
+    background: #e8f4fd;
+    color: #1a6fad;
+    border-radius: 4px;
+    padding: 1px 5px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+.bi-badge-cat {
+    font-size: .65rem;
+    background: #f3e8ff;
+    color: #6b21a8;
+    border-radius: 4px;
+    padding: 1px 5px;
+    white-space: nowrap;
+}
+
+/* ── Empty / Loader ─────────────────────────────────────────── */
+.bi-empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--bi-muted);
+}
+.bi-empty-icon { font-size: 3rem; margin-bottom: 12px; opacity: .4; }
+.bi-loader-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    gap: 14px;
+    color: var(--bi-muted);
+}
+
+/* ── Legend ─────────────────────────────────────────────────── */
+.bi-legend {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    padding: 8px 14px;
+    border-top: 1px solid var(--bi-border);
+    font-size: .72rem;
+    color: var(--bi-muted);
+}
+.bi-legend-item { display: flex; align-items: center; gap: 5px; }
+.bi-legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+/* ── Sucursal tabs ──────────────────────────────────────────── */
+.bi-suc-tabs {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+    padding: 8px 14px;
+    border-bottom: 1px solid var(--bi-border);
+    background: #f8fafc;
+}
+.bi-suc-tab {
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-size: .78rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid var(--bi-border);
+    background: #fff;
+    color: var(--bi-muted);
+    transition: all .15s;
+}
+.bi-suc-tab.active {
+    background: var(--bi-primary);
+    color: #fff;
+    border-color: var(--bi-primary);
+}
+.bi-suc-tab:hover:not(.active) { background: #f0faf8; border-color: var(--bi-primary2); color: var(--bi-primary2); }

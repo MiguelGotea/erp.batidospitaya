@@ -1,0 +1,495 @@
+<?php
+/* ============================================================
+   BALANCE SEMANAL DE EXISTENCIAS
+   modulos/productos/balance_inventario_access_host.php
+   ============================================================ */
+require_once '../../core/auth/auth.php';
+require_once '../../core/layout/menu_lateral.php';
+require_once '../../core/layout/header_universal.php';
+require_once '../../core/permissions/permissions.php';
+
+$usuario       = obtenerUsuarioActual();
+$cargoOperario = $usuario['CodNivelesCargos'];
+
+if (!tienePermiso('balance_inventario_access_host', 'vista', $cargoOperario)) {
+    header('Location: /login.php'); exit();
+}
+?>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Balance de Inventario · Pitaya ERP</title>
+    <meta name="description" content="Balance semanal de existencias: inventario, ajustes, despacho, merma vs consumo teórico por sucursal.">
+    <link rel="icon" href="../../assets/img/icon12.png" type="image/png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/assets/css/global_tools.css?v=<?php echo mt_rand(1,9999); ?>">
+    <link rel="stylesheet" href="css/balance_inventario.css?v=<?php echo mt_rand(1,9999); ?>">
+</head>
+<body>
+<?php echo renderMenuLateral($cargoOperario); ?>
+<div class="main-container">
+    <div class="sub-container">
+        <?php echo renderHeader($usuario, false, 'Balance Semanal de Existencias'); ?>
+
+        <div class="bi-wrapper">
+
+            <!-- ── FILTROS ─────────────────────────────────────────── -->
+            <div class="bi-filtros-card">
+                <div class="row g-2 align-items-end">
+
+                    <div class="col-6 col-md-2">
+                        <label class="bi-label" for="filtroSemDesde"><i class="fas fa-hashtag me-1"></i>Semana Desde</label>
+                        <input type="number" class="form-control form-control-sm bi-input-sem" id="filtroSemDesde" min="1" placeholder="Ej: 14">
+                    </div>
+
+                    <div class="col-6 col-md-2">
+                        <label class="bi-label" for="filtroSemHasta"><i class="fas fa-hashtag me-1"></i>Semana Hasta</label>
+                        <input type="number" class="form-control form-control-sm bi-input-sem" id="filtroSemHasta" min="1" placeholder="Ej: 16">
+                    </div>
+
+                    <div class="col-12 col-md-4" style="position:relative">
+                        <label class="bi-label"><i class="fas fa-store me-1"></i>Sucursales</label>
+                        <div class="bi-suc-trigger" id="biSucTrigger" tabindex="0">
+                            <div id="biSucInner">
+                                <span id="biSucPlaceholder" style="color:#aaa"><i class="fas fa-store me-1" style="opacity:.4"></i>Todas las sucursales</span>
+                                <div id="biSucPills" class="bi-suc-pills" style="display:none"></div>
+                            </div>
+                            <i class="fas fa-chevron-down ms-2" id="biSucChevron" style="color:#aaa;font-size:.75rem"></i>
+                        </div>
+                        <div class="bi-suc-dropdown" id="biSucDropdown">
+                            <input type="text" class="bi-suc-search" id="biSucSearch" placeholder="Buscar sucursal…">
+                            <div class="bi-suc-actions">
+                                <button class="bi-suc-action-btn" id="biSucAll"><i class="fas fa-check-double me-1"></i>Todas</button>
+                                <button class="bi-suc-action-btn" id="biSucNone"><i class="fas fa-times me-1"></i>Ninguna</button>
+                            </div>
+                            <div id="biSucList"></div>
+                        </div>
+                        <select id="filtroSucursales" multiple style="display:none"></select>
+                    </div>
+
+                    <div class="col-12 col-md-4 d-flex align-items-center gap-2 justify-content-end flex-wrap">
+                        <div id="biBadgeSem" class="bi-badge-sem d-none">
+                            <i class="fas fa-calendar-check me-1"></i>Sem. Actual: <strong id="biSemActualNum">—</strong>
+                        </div>
+                        <button class="bi-btn-primary" id="btnAnalizar">
+                            <i class="fas fa-balance-scale me-1"></i>Calcular Balance
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── ESTADO VACÍO ────────────────────────────────────── -->
+            <div id="panelInicial" class="text-center py-5 text-muted">
+                <div class="bi-empty-icon"><i class="fas fa-balance-scale"></i></div>
+                <h5 class="mt-2">Configura los filtros</h5>
+                <p class="small">Selecciona el rango de semanas y haz clic en <strong>Calcular Balance</strong>.</p>
+            </div>
+
+            <!-- ── LOADER ──────────────────────────────────────────── -->
+            <div id="panelLoader" class="bi-loader-wrap d-none">
+                <div class="spinner-border text-success" role="status"></div>
+                <div>Calculando balance…<br><small class="text-muted">Cruzando kardex con ventas…</small></div>
+            </div>
+
+            <!-- ── PANEL DATOS ─────────────────────────────────────── -->
+            <div id="panelDatos" class="d-none">
+
+                <!-- KPIs -->
+                <div class="bi-kpi-row" id="kpiRow"></div>
+
+                <!-- Tabla -->
+                <div class="bi-table-card">
+                    <div class="bi-toolbar">
+                        <div>
+                            <span class="bi-toolbar-title"><i class="fas fa-table me-1"></i>Balance por Producto</span>
+                            <span class="text-muted ms-2 small" id="lblResultados"></span>
+                        </div>
+                        <div class="d-flex gap-2 align-items-center flex-wrap">
+                            <!-- Selector de sucursal activa -->
+                            <div class="bi-suc-tabs" id="tabsSucursal" style="padding:0;border:none;background:none"></div>
+                            <input type="text" class="bi-search" id="buscarProducto" placeholder="Buscar producto…">
+                        </div>
+                    </div>
+
+                    <div class="bi-table-responsive">
+                        <table class="bi-table" id="tablaBalance">
+                            <thead>
+                                <tr>
+                                    <th rowspan="2" style="min-width:220px">Producto ERP</th>
+                                    <th rowspan="2" class="td-center" style="width:70px">Unidad</th>
+                                    <th class="th-group td-num" style="width:95px">Inv. Inicial</th>
+                                    <th class="th-group td-num" style="width:85px">+ Ajuste</th>
+                                    <th class="th-group td-num" style="width:85px">+ Despacho</th>
+                                    <th class="th-group td-num" style="width:85px">− Merma</th>
+                                    <th class="th-group td-num" style="width:95px">− Inv. Final</th>
+                                    <th class="th-group td-num" style="width:100px;background:#0b4a42">= C. Real</th>
+                                    <th class="th-group td-num" style="width:100px;background:#0b4a42">C. Teórico</th>
+                                    <th class="th-group td-num" style="width:90px;background:#0b4a42">Varianza</th>
+                                    <th class="th-group td-center" style="width:70px;background:#0b4a42">% Var</th>
+                                    <th class="th-group td-center" style="width:44px">Det.</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbodyBalance"></tbody>
+                        </table>
+                    </div>
+
+                    <div class="bi-legend">
+                        <span class="bi-legend-item"><span class="bi-legend-dot" style="background:#27ae60"></span>Varianza ≤ 5%</span>
+                        <span class="bi-legend-item"><span class="bi-legend-dot" style="background:#e67e22"></span>5% &lt; Varianza ≤ 15%</span>
+                        <span class="bi-legend-item"><span class="bi-legend-dot" style="background:#e74c3c"></span>Varianza &gt; 15%</span>
+                        <span class="ms-auto text-muted">Consumo Real = Inv.Inicial + Ajuste + Despacho − Merma − Inv.Final</span>
+                    </div>
+                </div>
+            </div>
+
+        </div><!-- /bi-wrapper -->
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+<script>
+/* ============================================================
+   BALANCE INVENTARIO — JS
+   ============================================================ */
+const AJAX = 'ajax/';
+let datosGlobales = null;
+let sucActiva = null;
+let todasSucursales = [];
+
+// ── Formateo ──────────────────────────────────────────────────
+const fmt = (v, dec=2) => v===null||v===undefined ? '—' : parseFloat(v).toLocaleString('es',{minimumFractionDigits:dec,maximumFractionDigits:dec});
+const fmtPct = v => v===null||v===undefined ? '—' : (v>0?'+':'')+parseFloat(v).toFixed(1)+'%';
+
+function varClass(pct) {
+    if (pct===null||pct===undefined) return 'var-neutral';
+    const a = Math.abs(pct);
+    if (a<=5)  return 'var-ok';
+    if (a<=15) return 'var-warn';
+    return 'var-bad';
+}
+function varCellClass(pct) {
+    if (pct===null) return '';
+    const a = Math.abs(pct);
+    if (a<=5)  return 'var-cell-ok';
+    if (a<=15) return 'var-cell-warn';
+    return 'var-cell-bad';
+}
+
+// ── Sucursal selector ─────────────────────────────────────────
+let sucSeleccionadas = {};
+
+function buildSucList(data) {
+    const list = document.getElementById('biSucList');
+    list.innerHTML = '';
+    data.forEach(s => {
+        const div = document.createElement('div');
+        div.className = 'bi-suc-item';
+        div.innerHTML = `<input type="checkbox" value="${s.codigo}" id="bsuc${s.codigo}">
+            <label for="bsuc${s.codigo}" style="cursor:pointer;flex:1">${s.nombre}</label>`;
+        div.querySelector('input').addEventListener('change', e => {
+            if (e.target.checked) sucSeleccionadas[s.codigo] = s.nombre;
+            else delete sucSeleccionadas[s.codigo];
+            updateSucPills();
+        });
+        list.appendChild(div);
+    });
+}
+
+function updateSucPills() {
+    const pills  = document.getElementById('biSucPills');
+    const ph     = document.getElementById('biSucPlaceholder');
+    const codes  = Object.keys(sucSeleccionadas);
+    if (codes.length === 0) { pills.style.display='none'; ph.style.display=''; return; }
+    pills.style.display='flex'; ph.style.display='none';
+    pills.innerHTML = codes.map(c =>
+        `<span class="bi-pill">${sucSeleccionadas[c]} <span class="bi-pill-x" data-cod="${c}">×</span></span>`
+    ).join('');
+    pills.querySelectorAll('.bi-pill-x').forEach(x => {
+        x.addEventListener('click', e => {
+            e.stopPropagation();
+            const cod = x.dataset.cod;
+            delete sucSeleccionadas[cod];
+            const cb = document.querySelector(`#bsuc${cod}`);
+            if (cb) cb.checked = false;
+            updateSucPills();
+        });
+    });
+}
+
+// Toggle dropdown
+document.getElementById('biSucTrigger').addEventListener('click', () => {
+    const dd = document.getElementById('biSucDropdown');
+    dd.classList.toggle('open');
+    document.getElementById('biSucChevron').className = dd.classList.contains('open')
+        ? 'fas fa-chevron-up ms-2' : 'fas fa-chevron-down ms-2';
+});
+document.addEventListener('click', e => {
+    if (!e.target.closest('#biSucTrigger') && !e.target.closest('#biSucDropdown')) {
+        document.getElementById('biSucDropdown').classList.remove('open');
+        document.getElementById('biSucChevron').className='fas fa-chevron-down ms-2';
+    }
+});
+document.getElementById('biSucSearch').addEventListener('input', e => {
+    const q = e.target.value.toLowerCase();
+    document.querySelectorAll('#biSucList .bi-suc-item').forEach(item => {
+        const lbl = item.querySelector('label').textContent.toLowerCase();
+        item.style.display = lbl.includes(q) ? '' : 'none';
+    });
+});
+document.getElementById('biSucAll').addEventListener('click', () => {
+    document.querySelectorAll('#biSucList input[type=checkbox]').forEach(cb => {
+        cb.checked = true;
+        sucSeleccionadas[cb.value] = cb.closest('.bi-suc-item').querySelector('label').textContent;
+    });
+    updateSucPills();
+});
+document.getElementById('biSucNone').addEventListener('click', () => {
+    document.querySelectorAll('#biSucList input[type=checkbox]').forEach(cb => cb.checked=false);
+    sucSeleccionadas = {};
+    updateSucPills();
+});
+
+// ── Cargar filtros al inicio ──────────────────────────────────
+fetch(AJAX+'balance_inventario_get_filtros.php')
+    .then(r=>r.json()).then(res=>{
+        if (!res.ok) return;
+        todasSucursales = res.sucursales||[];
+        buildSucList(todasSucursales);
+        if (res.semana_actual) {
+            const sem = res.semana_actual.numero_semana;
+            document.getElementById('biSemActualNum').textContent = sem;
+            document.getElementById('biBadgeSem').classList.remove('d-none');
+            document.getElementById('filtroSemDesde').value = sem;
+            document.getElementById('filtroSemHasta').value = sem;
+        }
+    });
+
+// ── Analizar ──────────────────────────────────────────────────
+document.getElementById('btnAnalizar').addEventListener('click', cargarBalance);
+[document.getElementById('filtroSemDesde'), document.getElementById('filtroSemHasta')].forEach(el => {
+    el.addEventListener('keydown', e => { if (e.key==='Enter') cargarBalance(); });
+});
+
+function cargarBalance() {
+    const semD = parseInt(document.getElementById('filtroSemDesde').value)||0;
+    const semH = parseInt(document.getElementById('filtroSemHasta').value)||0;
+    if (!semD || !semH) {
+        Swal.fire({icon:'warning',title:'Filtros incompletos',text:'Ingresa los números de semana.',confirmButtonColor:'#0E544C'});
+        return;
+    }
+    document.getElementById('panelInicial').classList.add('d-none');
+    document.getElementById('panelDatos').classList.add('d-none');
+    document.getElementById('panelLoader').classList.remove('d-none');
+
+    const fd = new FormData();
+    fd.append('semana_desde', Math.min(semD,semH));
+    fd.append('semana_hasta', Math.max(semD,semH));
+    Object.keys(sucSeleccionadas).forEach(c => fd.append('sucursales[]', c));
+
+    fetch(AJAX+'balance_inventario_get_datos.php', {method:'POST', body:fd})
+        .then(r=>r.json()).then(res=>{
+            document.getElementById('panelLoader').classList.add('d-none');
+            if (!res.ok) {
+                Swal.fire({icon:'error',title:'Error',text:res.msg,confirmButtonColor:'#0E544C'});
+                document.getElementById('panelInicial').classList.remove('d-none');
+                return;
+            }
+            datosGlobales = res;
+            renderDatos(res);
+        })
+        .catch(()=>{
+            document.getElementById('panelLoader').classList.add('d-none');
+            document.getElementById('panelInicial').classList.remove('d-none');
+            Swal.fire({icon:'error',title:'Error de red',text:'No se pudo conectar con el servidor.',confirmButtonColor:'#0E544C'});
+        });
+}
+
+// ── Render datos ──────────────────────────────────────────────
+function renderDatos(res) {
+    const productos  = res.productos || [];
+    const sucursales = res.sucursales || [];
+
+    // Tabs de sucursal
+    const tabsEl = document.getElementById('tabsSucursal');
+    tabsEl.innerHTML = '';
+    if (sucursales.length > 1) {
+        const btnAll = document.createElement('button');
+        btnAll.className = 'bi-suc-tab active';
+        btnAll.dataset.cod = '__all__';
+        btnAll.textContent = 'Todas';
+        btnAll.addEventListener('click', ()=>setActiveSuc('__all__'));
+        tabsEl.appendChild(btnAll);
+    }
+    sucursales.forEach(s => {
+        const btn = document.createElement('button');
+        btn.className = 'bi-suc-tab';
+        btn.dataset.cod = s.codigo;
+        btn.textContent = s.nombre;
+        btn.addEventListener('click', ()=>setActiveSuc(s.codigo));
+        tabsEl.appendChild(btn);
+    });
+    sucActiva = sucursales.length===1 ? sucursales[0].codigo : '__all__';
+
+    // KPIs globales
+    renderKPIs(productos, sucursales);
+
+    // Tabla
+    document.getElementById('lblResultados').textContent = `${productos.length} productos`;
+    renderTabla(productos);
+
+    document.getElementById('panelDatos').classList.remove('d-none');
+}
+
+function setActiveSuc(cod) {
+    sucActiva = cod;
+    document.querySelectorAll('#tabsSucursal .bi-suc-tab').forEach(b => {
+        b.classList.toggle('active', b.dataset.cod === cod);
+    });
+    renderTabla(datosGlobales.productos);
+}
+
+function getValores(prod, suc) {
+    if (suc === '__all__') return prod.totales;
+    return prod.por_sucursal?.[suc] ?? {inv_inicial:0,ajuste:0,despacho:0,merma:0,inv_final:0,consumo_real:0,consumo_teorico:0,varianza:0,pct_varianza:null};
+}
+
+function renderKPIs(productos, sucursales) {
+    const row = document.getElementById('kpiRow');
+    let totalReal=0, totalTeorico=0, countOk=0, countBad=0;
+    productos.forEach(p => {
+        const v = p.totales;
+        totalReal += v.consumo_real||0;
+        totalTeorico += v.consumo_teorico||0;
+        const pct = Math.abs(v.pct_varianza||0);
+        if (pct<=5) countOk++; else if (pct>15) countBad++;
+    });
+    const varTotal = totalReal - totalTeorico;
+    const pctTotal = totalTeorico ? (varTotal/totalTeorico*100) : null;
+    row.innerHTML = `
+        <div class="bi-kpi-card">
+            <div class="bi-kpi-icon" style="background:#0E544C"><i class="fas fa-boxes"></i></div>
+            <div><div class="bi-kpi-label">Consumo Real Total</div><div class="bi-kpi-val">${fmt(totalReal)}</div></div>
+        </div>
+        <div class="bi-kpi-card">
+            <div class="bi-kpi-icon" style="background:#2980b9"><i class="fas fa-chart-bar"></i></div>
+            <div><div class="bi-kpi-label">Consumo Teórico Total</div><div class="bi-kpi-val">${fmt(totalTeorico)}</div></div>
+        </div>
+        <div class="bi-kpi-card">
+            <div class="bi-kpi-icon" style="background:${Math.abs(pctTotal||0)<=5?'#27ae60':Math.abs(pctTotal||0)<=15?'#e67e22':'#e74c3c'}"><i class="fas fa-balance-scale"></i></div>
+            <div><div class="bi-kpi-label">Varianza Global</div><div class="bi-kpi-val ${varClass(pctTotal)}">${fmtPct(pctTotal)}</div></div>
+        </div>
+        <div class="bi-kpi-card">
+            <div class="bi-kpi-icon" style="background:#27ae60"><i class="fas fa-check-circle"></i></div>
+            <div><div class="bi-kpi-label">Productos OK (≤5%)</div><div class="bi-kpi-val">${countOk}</div></div>
+        </div>
+        <div class="bi-kpi-card">
+            <div class="bi-kpi-icon" style="background:#e74c3c"><i class="fas fa-exclamation-triangle"></i></div>
+            <div><div class="bi-kpi-label">Productos Alertas (&gt;15%)</div><div class="bi-kpi-val" style="color:#e74c3c">${countBad}</div></div>
+        </div>
+    `;
+}
+
+function renderTabla(productos) {
+    const q = (document.getElementById('buscarProducto').value||'').toLowerCase();
+    const suc = sucActiva;
+    const tbody = document.getElementById('tbodyBalance');
+    tbody.innerHTML = '';
+
+    const filtrados = productos.filter(p =>
+        !q || p.nombre.toLowerCase().includes(q) || (p.maestro||'').toLowerCase().includes(q)
+    );
+    if (!filtrados.length) {
+        tbody.innerHTML = `<tr><td colspan="12" class="text-center text-muted py-4">Sin productos con ese filtro.</td></tr>`;
+        return;
+    }
+
+    filtrados.forEach((p, i) => {
+        const v = getValores(p, suc);
+        const pct = v.pct_varianza;
+        const vc  = varClass(pct);
+        const vcc = varCellClass(pct);
+        const rowId = 'brow_'+i;
+
+        // Main row
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>
+                <div style="font-weight:600;font-size:.82rem">${esc(p.nombre)}</div>
+                <small class="text-muted">${esc(p.maestro||'')}</small>
+                ${p.categoria?`<span class="bi-badge-cat ms-1">${esc(p.categoria)}</span>`:''}
+            </td>
+            <td class="td-center text-muted" style="font-size:.75rem">${esc(p.unidad||'')}</td>
+            <td class="td-num">${fmt(v.inv_inicial)}</td>
+            <td class="td-num" style="color:${v.ajuste>=0?'#27ae60':'#e74c3c'}">${fmt(v.ajuste)}</td>
+            <td class="td-num" style="color:#2980b9">${fmt(v.despacho)}</td>
+            <td class="td-num" style="color:#e74c3c">${fmt(v.merma)}</td>
+            <td class="td-num">${fmt(v.inv_final)}</td>
+            <td class="td-num" style="font-weight:700">${fmt(v.consumo_real)}</td>
+            <td class="td-num">${fmt(v.consumo_teorico)}</td>
+            <td class="td-num ${vc}">${fmt(v.varianza)}</td>
+            <td class="td-center ${vcc} ${vc}">${fmtPct(pct)}</td>
+            <td class="td-center">
+                <button class="bi-expand-btn" id="btn_${rowId}" title="Ver por sucursal">
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+
+        // Sub row (desglose por sucursal)
+        const trSub = document.createElement('tr');
+        trSub.className = 'bi-sub-row';
+        trSub.id = rowId;
+        const sucursales = datosGlobales.sucursales || [];
+        let subHtml = `<td colspan="12"><div class="bi-sub-cell-wrap"><table class="bi-sub-table">
+            <tr class="bi-sub-header">
+                <td>Sucursal</td><td class="td-num">Inv.Ini</td><td class="td-num">Ajuste</td>
+                <td class="td-num">Despacho</td><td class="td-num">Merma</td><td class="td-num">Inv.Fin</td>
+                <td class="td-num">C.Real</td><td class="td-num">C.Teórico</td><td class="td-num">Varianza</td><td class="td-center">%</td>
+            </tr>`;
+        sucursales.forEach(s => {
+            const sv = getValores(p, s.codigo);
+            const spct = sv.pct_varianza;
+            subHtml += `<tr>
+                <td style="font-weight:600">${esc(s.nombre)}</td>
+                <td class="td-num">${fmt(sv.inv_inicial)}</td>
+                <td class="td-num">${fmt(sv.ajuste)}</td>
+                <td class="td-num">${fmt(sv.despacho)}</td>
+                <td class="td-num">${fmt(sv.merma)}</td>
+                <td class="td-num">${fmt(sv.inv_final)}</td>
+                <td class="td-num" style="font-weight:700">${fmt(sv.consumo_real)}</td>
+                <td class="td-num">${fmt(sv.consumo_teorico)}</td>
+                <td class="td-num ${varClass(spct)}">${fmt(sv.varianza)}</td>
+                <td class="td-center ${varClass(spct)}">${fmtPct(spct)}</td>
+            </tr>`;
+        });
+        subHtml += `</table></div></td>`;
+        trSub.innerHTML = subHtml;
+        tbody.appendChild(trSub);
+
+        // Toggle expand
+        document.getElementById('btn_'+rowId).addEventListener('click', function() {
+            const sub = document.getElementById(rowId);
+            const open = sub.classList.toggle('open');
+            this.classList.toggle('open', open);
+            this.innerHTML = open ? '<i class="fas fa-chevron-up"></i>' : '<i class="fas fa-chevron-down"></i>';
+        });
+    });
+}
+
+function esc(s) {
+    return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// Búsqueda en tiempo real
+document.getElementById('buscarProducto').addEventListener('input', () => {
+    if (datosGlobales) renderTabla(datosGlobales.productos);
+});
+</script>
+</body>
+</html>
