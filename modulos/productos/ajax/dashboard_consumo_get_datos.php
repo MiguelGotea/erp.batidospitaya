@@ -224,18 +224,13 @@ try {
             $diccionarioMap[(string) $row['CodCotizacion']] = $row;
         }
 
-        // Paso B: rastreo AUTO por maestro — para los CodCotizacion que el paso A no resolvió
-        // (su presentación mapeada es de despacho/otra pero no es basica_inventario)
+        // Paso B: rastreo directo por maestro de la presentación mapeada
+        // Funciona cuando pp_orig tiene id_producto_maestro asignado.
         $codNoResueltos = array_values(array_filter($codCotBuscar, function($c) use (&$diccionarioMap) {
             return !isset($diccionarioMap[(string)$c]);
         }));
         if (!empty($codNoResueltos)) {
             $phNR = implode(',', array_fill(0, count($codNoResueltos), '?'));
-            /*
-             * Obtenemos el maestro de la presentación mapeada (aunque sea despacho)
-             * y buscamos la presentación básica de ese mismo maestro.
-             * Se excluyen recetas globales (Id_receta_producto IS NULL).
-             */
             $stmtAuto = $conn->prepare("
                 SELECT
                     d.CodCotizacion,
@@ -266,6 +261,51 @@ try {
             ");
             $stmtAuto->execute(array_values($codNoResueltos));
             foreach ($stmtAuto->fetchAll(PDO::FETCH_ASSOC) as $row) {
+                $diccionarioMap[(string) $row['CodCotizacion']] = $row;
+            }
+        }
+
+        // Paso C: fallback vía CodIngrediente (replica exacta del AUTO del visor).
+        // Cubre el caso donde pp_orig.id_producto_maestro es NULL (ej: Maní 1lb sin maestro FK).
+        // Traza: CodCotizacion → Cotizaciones.CodIngrediente → todas las cotizaciones del mismo
+        // ingrediente → diccionario → cualquier presentación → id_producto_maestro → basica.
+        $codAunSinResolver = array_values(array_filter($codCotBuscar, function($c) use (&$diccionarioMap) {
+            return !isset($diccionarioMap[(string)$c]);
+        }));
+        if (!empty($codAunSinResolver)) {
+            $phC = implode(',', array_fill(0, count($codAunSinResolver), '?'));
+            $stmtC = $conn->prepare("
+                SELECT
+                    c_src.CodCotizacion      AS CodCotizacion,
+                    pp_base.id               AS id_presentacion,
+                    pp_base.cantidad         AS pp_cantidad,
+                    pp_base.Id_receta_producto,
+                    pp_base.id_producto_maestro AS id_maestro,
+                    pp_base.Nombre           AS nombre_presentacion,
+                    u_base.id                AS id_unidad_erp,
+                    u_base.nombre            AS unidad_erp,
+                    u_base.abreviado         AS unidad_erp_abrev,
+                    u_base.nombres_opcionales,
+                    pm.Nombre                AS nombre_maestro,
+                    pp_base.categoria_insumo
+                FROM Cotizaciones c_src
+                INNER JOIN Cotizaciones c_all  ON c_all.CodIngrediente = c_src.CodIngrediente
+                INNER JOIN diccionario_productos_legado d2 ON d2.CodCotizacion = c_all.CodCotizacion
+                INNER JOIN producto_presentacion pp_any    ON pp_any.id = d2.id_producto_presentacion
+                                                          AND pp_any.Activo = 'SI'
+                                                          AND pp_any.id_producto_maestro IS NOT NULL
+                INNER JOIN producto_presentacion pp_base
+                        ON pp_base.id_producto_maestro = pp_any.id_producto_maestro
+                       AND pp_base.presentacion_basica_inventario = 1
+                       AND pp_base.Activo = 'SI'
+                       AND pp_base.Id_receta_producto IS NULL
+                LEFT  JOIN unidad_producto u_base ON u_base.id = pp_base.id_unidad_producto
+                LEFT  JOIN producto_maestro pm    ON pm.id = pp_base.id_producto_maestro
+                WHERE c_src.CodCotizacion IN ($phC)
+                GROUP BY c_src.CodCotizacion
+            ");
+            $stmtC->execute(array_values($codAunSinResolver));
+            foreach ($stmtC->fetchAll(PDO::FETCH_ASSOC) as $row) {
                 $diccionarioMap[(string) $row['CodCotizacion']] = $row;
             }
         }

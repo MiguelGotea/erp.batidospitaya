@@ -443,6 +443,42 @@ try {
             foreach ($stmtAuto2->fetchAll(PDO::FETCH_ASSOC) as $row)
                 $diccionarioConsumo[(int) $row['CodCotizacion']] = $row;
         }
+
+        // Paso C: fallback via CodIngrediente en Cotizaciones.
+        // Cubre productos donde pp_orig.id_producto_maestro es NULL (ej: Mani 1lb).
+        // Traza: CodCotizacion -> CodIngrediente -> todas sus cotizaciones -> diccionario
+        //        -> cualquier presentacion con maestro -> presentacion basica del mismo maestro.
+        $codsSinResolverC = array_values(array_filter($todosCodsVenta, function($c) use (&$diccionarioConsumo) {
+            return $c !== null && $c !== '' && !isset($diccionarioConsumo[(int)$c]);
+        }));
+        if (!empty($codsSinResolverC)) {
+            $phC2 = implode(',', array_fill(0, count($codsSinResolverC), '?'));
+            $stmtC2 = $conn->prepare("
+                SELECT
+                    c_src.CodCotizacion      AS CodCotizacion,
+                    pp_base.id               AS pp_id,
+                    pp_base.cantidad         AS pp_cant,
+                    pp_base.id_unidad_producto AS id_unid,
+                    pp_base.Id_receta_producto,
+                    pp_base.id_producto_maestro AS id_mae
+                FROM Cotizaciones c_src
+                INNER JOIN Cotizaciones c_all ON c_all.CodIngrediente = c_src.CodIngrediente
+                INNER JOIN diccionario_productos_legado d2 ON d2.CodCotizacion = c_all.CodCotizacion
+                INNER JOIN producto_presentacion pp_any ON pp_any.id = d2.id_producto_presentacion
+                                                       AND pp_any.Activo = 'SI'
+                                                       AND pp_any.id_producto_maestro IS NOT NULL
+                INNER JOIN producto_presentacion pp_base
+                        ON pp_base.id_producto_maestro = pp_any.id_producto_maestro
+                       AND pp_base.presentacion_basica_inventario = 1
+                       AND pp_base.Activo = 'SI'
+                       AND pp_base.Id_receta_producto IS NULL
+                WHERE c_src.CodCotizacion IN ($phC2)
+                GROUP BY c_src.CodCotizacion
+            ");
+            $stmtC2->execute(array_values($codsSinResolverC));
+            foreach ($stmtC2->fetchAll(PDO::FETCH_ASSOC) as $row)
+                $diccionarioConsumo[(int) $row['CodCotizacion']] = $row;
+        }
         // Unidades + conversiones
         $stmtU = $conn->prepare("SELECT id,nombre,abreviado,nombres_opcionales FROM unidad_producto");
         $stmtU->execute();
