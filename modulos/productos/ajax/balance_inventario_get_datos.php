@@ -66,14 +66,14 @@ try {
     // ── MAPA DE CASCADA (paquete → base) ─────────────────────────────
     // Producto receta con exactamente 1 componente base → es paquete
     $r5 = $conn->prepare("
-        SELECT pp_pkg.id AS pkg_id, crp.id_presentacion AS base_id, crp.cantidad AS factor
+        SELECT pp_pkg.id AS pkg_id, crp.id_presentacion_producto AS base_id, crp.cantidad AS factor
         FROM producto_presentacion pp_pkg
-        INNER JOIN componentes_receta_producto crp ON crp.id_receta = pp_pkg.Id_receta_producto
-        INNER JOIN producto_presentacion pp_base    ON pp_base.id = crp.id_presentacion
+        INNER JOIN componentes_receta_producto crp ON crp.id_receta_producto_global = pp_pkg.Id_receta_producto
+        INNER JOIN producto_presentacion pp_base    ON pp_base.id = crp.id_presentacion_producto
             AND pp_base.presentacion_basica_inventario = 1
         WHERE pp_pkg.presentacion_receta = 1
           AND pp_pkg.Activo = 'SI'
-          AND (SELECT COUNT(DISTINCT id_presentacion) FROM componentes_receta_producto WHERE id_receta = pp_pkg.Id_receta_producto) = 1
+          AND (SELECT COUNT(DISTINCT id_presentacion_producto) FROM componentes_receta_producto WHERE id_receta_producto_global = pp_pkg.Id_receta_producto) = 1
     ");
     $r5->execute();
     $cascadeMap = []; // pkg_id => {base_id, factor}
