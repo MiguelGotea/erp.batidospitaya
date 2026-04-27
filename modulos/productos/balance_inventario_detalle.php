@@ -228,6 +228,7 @@ function renderChart(res) {
     const t = res.totales_tipo;
     const invIni = t.inv_inicial || 0;
     const invFin = t.inv_final || 0;
+    const consRealTotal = res.consumo_real || 0;
 
     // Generar lista de todos los días en el rango
     const start = new Date(res.fecha_inicio + 'T12:00:00');
@@ -238,6 +239,9 @@ function renderChart(res) {
         allDays.push(curr.toISOString().split('T')[0]);
         curr.setDate(curr.getDate() + 1);
     }
+
+    // Consumo diario lineal para la proyección
+    const consDiario = allDays.length > 0 ? (consRealTotal / allDays.length) : 0;
 
     // Movimientos por fecha (ajustes, despachos, mermas)
     const movsPorFecha = {};
@@ -250,23 +254,28 @@ function renderChart(res) {
     });
 
     const labels = ['Inicial (S'+res.semana_ant+')'];
-    const theoreticalData = [invIni];
+    const stockRealData = [invIni];
+    const stockTeoricoSinVentas = [invIni];
     
-    let balance = invIni;
+    let balReal = invIni;
+    let balTeo  = invIni;
+
     allDays.forEach(day => {
         const mov = movsPorFecha[day] || 0;
-        balance = balance + mov;
+        balReal = balReal + mov - consDiario;
+        balTeo  = balTeo + mov;
         
         const dObj = new Date(day + 'T12:00:00');
         const dLabel = dObj.toLocaleDateString('es-ES', {weekday:'short', day:'numeric', month:'short'});
         
         labels.push(dLabel);
-        theoreticalData.push(balance);
+        stockRealData.push(balReal);
+        stockTeoricoSinVentas.push(balTeo);
     });
 
-    // Dataset para el Inventario Final Real (un punto al final)
-    const realData = new Array(labels.length).fill(null);
-    realData[labels.length - 1] = invFin;
+    // Puntos finales para destacar
+    const ptFinalTeo = new Array(labels.length).fill(null);
+    ptFinalTeo[labels.length - 1] = balTeo;
 
     const ctx = document.getElementById('existenciaChart').getContext('2d');
     if (window.myChart) window.myChart.destroy();
@@ -277,21 +286,38 @@ function renderChart(res) {
             labels: labels,
             datasets: [
                 {
-                    label: 'Stock Teórico (Kardex)',
-                    data: theoreticalData,
+                    label: 'Existencia Real Estimada (con consumo)',
+                    data: stockRealData,
                     borderColor: '#51B8AC',
                     backgroundColor: 'rgba(81, 184, 172, 0.1)',
                     borderWidth: 3,
                     fill: true,
-                    tension: 0.2,
+                    tension: 0.3,
                     pointRadius: 2,
-                    pointHoverRadius: 5,
                     pointBackgroundColor: '#fff',
-                    pointBorderColor: '#51B8AC',
                 },
                 {
-                    label: 'Inventario Físico Final',
-                    data: realData,
+                    label: 'Disponibilidad Teórica (sin consumo)',
+                    data: stockTeoricoSinVentas,
+                    borderColor: '#90a4ae',
+                    borderDash: [5, 5],
+                    borderWidth: 1.5,
+                    fill: false,
+                    tension: 0.1,
+                    pointRadius: 0,
+                },
+                {
+                    label: 'Inv. Teórico Final',
+                    data: ptFinalTeo,
+                    borderColor: '#2980b9',
+                    backgroundColor: '#2980b9',
+                    pointRadius: 6,
+                    pointStyle: 'circle',
+                    showLine: false,
+                },
+                {
+                    label: 'Inv. Registrado (Físico)',
+                    data: new Array(labels.length - 1).concat([invFin]),
                     borderColor: '#e74c3c',
                     backgroundColor: '#e74c3c',
                     pointRadius: 6,
@@ -307,13 +333,14 @@ function renderChart(res) {
                 legend: { 
                     display: true,
                     position: 'top',
-                    labels: { boxWidth: 12, font: { size: 10 } }
+                    labels: { boxWidth: 10, font: { size: 9 }, padding: 10 }
                 },
                 tooltip: {
                     mode: 'index',
                     intersect: false,
                     callbacks: {
                         label: function(context) {
+                            if (context.raw === null) return null;
                             let label = context.dataset.label || '';
                             if (label) label += ': ';
                             label += fmt(context.raw, 2);
