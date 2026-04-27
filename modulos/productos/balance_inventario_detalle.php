@@ -350,15 +350,12 @@ function renderDetalle(res) {
     document.getElementById('bdMetaRow').innerHTML = `
         <span class="bd-pill-meta"><i class="fas fa-hashtag me-1"></i>Semana ${res.sem_desde === res.sem_hasta ? res.sem_desde : res.sem_desde+' – '+res.sem_hasta}</span>
         <span class="bd-pill-meta"><i class="fas fa-ruler me-1"></i>${esc(prod.unidad||'')}</span>
+        <span class="bd-pill-meta"><i class="fas fa-layer-group me-1"></i>${esc(res.producto.maestro || 'Sin Maestro')}</span>
+        <span class="bd-pill-meta"><i class="fas fa-code me-1"></i>${res.num_mapeos || 0} Mapeos</span>
+        <span class="bd-pill-meta" title="Referencia Inicial"><i class="fas fa-history me-1"></i>S${res.semana_ant}</span>
+    `;
     const hc = document.getElementById('bdHeaderCard');
     hc.classList.remove('d-none');
-    // Actualizar encabezado
-    document.getElementById('bdNombre').textContent = res.producto.Nombre;
-    document.getElementById('bdSemana').textContent = 'Semana ' + res.sem_desde + (res.sem_desde != res.sem_hasta ? ' - ' + res.sem_hasta : '');
-    document.getElementById('bdUnidad').textContent = res.producto.unidad;
-    document.getElementById('bdCategoria').textContent = res.producto.maestro || 'Sin Maestro';
-    document.getElementById('bdMapeos').textContent = (res.num_mapeos || 0) + ' Mapeos';
-    document.getElementById('bdSemAnt').textContent = 'S' + res.semana_ant;
 
     // Chart
     renderChart(res);
