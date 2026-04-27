@@ -326,7 +326,7 @@ try {
                         pp.presentacion_basica_inventario,
                         pp.presentacion_despacho
                     FROM producto_presentacion pp
-                    INNER JOIN producto_maestro pm ON pm.id = pp.id_producto_maestro
+                    LEFT JOIN producto_maestro pm ON pm.id = pp.id_producto_maestro
                     LEFT JOIN unidad_producto u    ON u.id  = pp.id_unidad_producto
                     WHERE pp.id_producto_maestro = ?
                       AND pp.Activo = 'SI'
@@ -358,8 +358,8 @@ try {
                             pp.presentacion_basica_inventario,
                             pp.presentacion_despacho
                         FROM producto_presentacion pp
-                        INNER JOIN producto_maestro pm ON pm.id = pp.id_producto_maestro
-                        LEFT  JOIN unidad_producto u   ON u.id  = pp.id_unidad_producto
+                        LEFT JOIN producto_maestro pm ON pm.id = pp.id_producto_maestro
+                        LEFT JOIN unidad_producto u   ON u.id  = pp.id_unidad_producto
                         WHERE pp.Id_receta_producto IS NOT NULL
                           AND pp.Activo = 'SI'
                           AND pp.presentacion_despacho = 1
