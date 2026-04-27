@@ -308,11 +308,10 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                         <label><i class="fas fa-filter me-1"></i> Estado</label>
                         <div class="d-flex gap-2 align-items-center">
                             <div class="btn-group btn-group-sm flex-grow-1" role="group" id="toggleEstado">
-                                <input type="radio" class="btn-check" name="estadoBatido" id="estadoTodos" value="todos"
-                                    checked>
+                                <input type="radio" class="btn-check" name="estadoBatido" id="estadoTodos" value="todos">
                                 <label class="btn btn-outline-secondary" for="estadoTodos">Todos</label>
                                 <input type="radio" class="btn-check" name="estadoBatido" id="estadoActivos"
-                                    value="activos">
+                                    value="activos" checked>
                                 <label class="btn btn-outline-success" for="estadoActivos">Activos</label>
                                 <input type="radio" class="btn-check" name="estadoBatido" id="estadoInactivos"
                                     value="inactivos">
@@ -410,7 +409,7 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
 
         // ── Estado global ─────────────────────────────────────────────────────
         let allBatidos = [];   // todos los productos del grupo actual
-        let estadoFiltro = 'todos'; // 'todos' | 'activos' | 'inactivos'
+        let estadoFiltro = 'activos'; // 'todos' | 'activos' | 'inactivos'
 
         // ── Cargar grupos ─────────────────────────────────────────────────────
         function cargarGrupos() {
