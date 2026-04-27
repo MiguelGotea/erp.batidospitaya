@@ -389,7 +389,8 @@ try {
         $dbIng = [];
         foreach ($stmtIng->fetchAll(PDO::FETCH_ASSOC) as $row)
             $dbIng[$row['CodIngrediente']] = $row;
-        // Pre-cargar diccionario para consumo (solo base)
+        // Pre-cargar diccionario para consumo
+        // Paso A: mapeo directo (presentacion_basica_inventario = 1)
         $diccionarioConsumo = [];
         $r7 = $conn->prepare("
             SELECT d.CodCotizacion,pp.id AS pp_id,pp.cantidad AS pp_cant,
@@ -402,6 +403,46 @@ try {
         $r7->execute();
         foreach ($r7->fetchAll(PDO::FETCH_ASSOC) as $row)
             $diccionarioConsumo[(int) $row['CodCotizacion']] = $row;
+
+        // Paso B: rastreo AUTO por maestro — replica el comportamiento "AUTO" del visor de recetas.
+        // Para los CodCotizacion de P1/P2/P3 que NO quedaron en el Paso A
+        // (su presentación mapeada en el diccionario es de despacho u otro tipo sin basica_inventario),
+        // obtenemos el id_producto_maestro de esa presentación y buscamos la presentación básica
+        // del mismo maestro (ej: el pote 1.36kg → maestro Chocolate → oz con basica_inventario=1).
+        $todosCodsVenta = array_unique(array_filter(array_merge(
+            array_column($filasVenta, 'codporcion'),
+            array_column($cotMap, 'p2'),
+            array_column($cotMap, 'p3')
+        )));
+        $codsNoResueltos = array_values(array_filter($todosCodsVenta, function($c) use (&$diccionarioConsumo) {
+            return $c !== null && $c !== '' && !isset($diccionarioConsumo[(int)$c]);
+        }));
+        if (!empty($codsNoResueltos)) {
+            $phNR2 = implode(',', array_fill(0, count($codsNoResueltos), '?'));
+            $stmtAuto2 = $conn->prepare("
+                SELECT
+                    d.CodCotizacion,
+                    pp_base.id               AS pp_id,
+                    pp_base.cantidad         AS pp_cant,
+                    pp_base.id_unidad_producto AS id_unid,
+                    pp_base.Id_receta_producto,
+                    pp_base.id_producto_maestro AS id_mae
+                FROM diccionario_productos_legado d
+                INNER JOIN producto_presentacion pp_orig ON pp_orig.id = d.id_producto_presentacion
+                INNER JOIN producto_presentacion pp_base
+                        ON pp_base.id_producto_maestro = pp_orig.id_producto_maestro
+                       AND pp_base.presentacion_basica_inventario = 1
+                       AND pp_base.Activo = 'SI'
+                       AND pp_base.Id_receta_producto IS NULL
+                WHERE d.CodCotizacion IN ($phNR2)
+                  AND pp_orig.Activo = 'SI'
+                  AND pp_orig.id_producto_maestro IS NOT NULL
+                GROUP BY d.CodCotizacion
+            ");
+            $stmtAuto2->execute(array_values($codsNoResueltos));
+            foreach ($stmtAuto2->fetchAll(PDO::FETCH_ASSOC) as $row)
+                $diccionarioConsumo[(int) $row['CodCotizacion']] = $row;
+        }
         // Unidades + conversiones
         $stmtU = $conn->prepare("SELECT id,nombre,abreviado,nombres_opcionales FROM unidad_producto");
         $stmtU->execute();
