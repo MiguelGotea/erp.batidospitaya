@@ -151,12 +151,19 @@ try {
     }
 
     // Mapa unificado: CodCotizacion → {factor, nombre_orig, tipo}
-    // Incluir TODOS los CodCotizaciones que pertenezcan al mismo maestro (Lógica AUTO)
     $codMap = [];
     $idMaestro = (int)$prodMeta['id_producto_maestro'];
     $baseUnid  = (int)$prodMeta['id_unidad_producto'];
     $baseCant  = max((float)$prodMeta['pp_cant'], 0.001);
 
+    // Paso 1: Incluir los mapeos directos del producto base (idPP)
+    $rDirect = $conn->prepare("SELECT CodCotizacion FROM diccionario_productos_legado WHERE id_producto_presentacion = :id");
+    $rDirect->execute([':id' => $idPP]);
+    foreach ($rDirect->fetchAll(PDO::FETCH_COLUMN) as $cod) {
+        $codMap[(int)$cod] = ['factor' => 1.0, 'nombre_orig' => $prodMeta['Nombre'], 'tipo' => 'base'];
+    }
+
+    // Paso 2: Lógica AUTO (por Maestro)
     if ($idMaestro > 0) {
         $rAllMaestro = $conn->prepare("
             SELECT d.CodCotizacion, pp.id AS pp_id, pp.cantidad AS pp_cant,
@@ -189,6 +196,7 @@ try {
             }
         }
     }
+
 
     // ── Preparar para Consumo Teórico (P1/P2/P3) ──────────────────────
     $rIngs = $conn->prepare("SELECT DISTINCT CodIngrediente FROM Cotizaciones WHERE CodCotizacion IN (".implode(',', array_fill(0, count(array_keys($codMap)), '?')).")");
@@ -375,12 +383,18 @@ try {
             INNER JOIN SubReceta sr ON sr.CodBatido = v.CodProducto
             WHERE v.Anulado=0
               AND v.Fecha BETWEEN ? AND ?
+              AND v.Semana BETWEEN ? AND ?
               AND v.local IN ({$phS})
               AND sr.CodIngrediente IN ({$phI})
+              AND v.CodProducto IS NOT NULL
+              AND (sr.codporcion IS NULL OR sr.codporcion NOT IN (
+                  SELECT CodCotizacionPorcion FROM MezclaPorcionesAccess WHERE CodCotizacionPorcion IS NOT NULL
+              ))
             GROUP BY v.Fecha, sr.CodIngrediente, sr.codporcion
         ";
         $stmtV = $conn->prepare($sqlV);
-        $stmtV->execute(array_merge([$fechaInicioRange, $fechaFinRange], $sucFiltro, $ingsRel));
+        $stmtV->execute(array_merge([$fechaInicioRange, $fechaFinRange, $semDesde, $semHasta], $sucFiltro, $ingsRel));
+
         
         foreach ($stmtV->fetchAll(PDO::FETCH_ASSOC) as $fila) {
             $ci = $fila['CodIngrediente'];
