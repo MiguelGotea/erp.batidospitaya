@@ -1263,16 +1263,57 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                         <!-- ── 3.4 Columna: Presentación Despacho ────────────── -->
                         <div class="mb-3">
                             <h6 style="font-size:.82rem;color:#e65100;font-weight:700">
-                                <i class="fas fa-truck-ramp-box me-1"></i> Columna: Presentación Despacho
+                                <i class="fas fa-truck me-1"></i> Columna: Presentación Despacho
                             </h6>
-                            <p style="font-size:.79rem;margin-bottom:4px">
-                                Muestra la presentación del nuevo ERP configurada para el despacho de este ingrediente.
+                            <p style="font-size:.79rem;margin-bottom:6px">
+                                Presenta la unidad de embalaje para logística y traslados
+                                (<code>presentacion_despacho = 1</code>). Se resuelve en <strong>4 niveles en cascada</strong>
+                                a partir del maestro de la Presentación Uso resuelta:
                             </p>
-                            <ul style="font-size:.79rem;margin-bottom:0">
-                                <li><strong>Lógica</strong>: Se basa en el mismo producto maestro resuelto para "Presentación Uso", pero busca la presentación que tenga activa la bandera de despacho.</li>
-                                <li><strong>Condición obligatoria</strong>: El producto debe tener marcada la casilla <code>presentacion_despacho = 1</code> en el ERP.</li>
-                                <li><strong>Visualización</strong>: Se identifica con un fondo crema/amarillo para distinguirla de la presentación de uso diario.</li>
-                            </ul>
+                            <div class="row g-1 mb-2">
+                                <div class="col-md-6">
+                                    <div class="p-2 rounded h-100" style="background:#fff8f2;border-left:3px solid #e65100;font-size:.77rem">
+                                        <strong style="color:#e65100">Nivel 1 — Unidad directa</strong><br>
+                                        Busca en el mismo maestro una presentación con <code>despacho=1</code>
+                                        cuya unidad ERP coincide directamente con la unidad Access del ingrediente.<br>
+                                        <em>Ej: ingrediente en "Unid" → busca despacho con unidad "Unidades".</em>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="p-2 rounded h-100" style="background:#fff8f2;border-left:3px solid #bf360c;font-size:.77rem">
+                                        <strong style="color:#bf360c">Nivel 2 — Unidad convertible</strong><br>
+                                        Si el Nivel 1 falla, repite la búsqueda usando las unidades homologadas del
+                                        mismo grupo de medida (según <code>conversion_unidad_producto</code>).<br>
+                                        <em>Ej: ingrediente en "oz" → busca despacho en "Libras".</em>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="p-2 rounded h-100" style="background:#fce4ec;border-left:3px solid #c62828;font-size:.77rem">
+                                        <strong style="color:#c62828">Fallback 1 — Cualquier despacho del mismo maestro</strong><br>
+                                        Si los niveles 1 y 2 fallan, acepta cualquier presentación del mismo
+                                        <code>id_producto_maestro</code> con <code>despacho=1</code>, sin restricción de unidad.<br>
+                                        <em>Ej: Banano → Cajilla 100u (distinta unidad pero mismo maestro).</em>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="p-2 rounded h-100" style="background:#e8eaf6;border-left:3px solid #283593;font-size:.77rem">
+                                        <strong style="color:#283593">Fallback 2 — Receta de 1 componente = Presentación Uso</strong><br>
+                                        Cubre el caso donde el paquete de despacho pertenece a un maestro diferente
+                                        pero su receta contiene exactamente 1 componente: la Presentación Uso resuelta.<br>
+                                        <em>Ej: Vaso Ristra 25u (otro maestro) cuya receta es 1 componente = Vaso 16oz Unid.</em><br>
+                                        <em>Ej: Bolsa de Pajilla 100u cuya receta es 1 componente = Pajilla Unid.</em><br>
+                                        <strong>Condición:</strong> <code>Id_receta_producto IS NOT NULL</code> +
+                                        <code>COUNT(componentes) = 1</code> + componente = <code>id_presentacion</code> del uso.
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="p-2 rounded" style="background:#fff3e0;border-left:3px solid #ff9800;font-size:.77rem">
+                                <i class="fas fa-exclamation-triangle me-1 text-warning"></i>
+                                <strong>Si muestra "Sin despacho":</strong> ninguno de los 4 niveles encontró una presentación válida.
+                                Verifica que exista un producto con <code>presentacion_despacho = 1</code> correctamente configurado
+                                en el ERP para ese ingrediente, o que su receta de paquete tenga exactamente 1 componente
+                                apuntando a la Presentación Uso.
+                            </div>
                         </div>
 
                         <hr class="my-2">

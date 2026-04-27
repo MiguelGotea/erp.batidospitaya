@@ -517,7 +517,92 @@ ORDER BY batidos_afectados DESC;
 
 ---
 
-## 5. Resumen del flujo completo para reportes
+### 4.4 Resolución de Presentación Despacho (`presentacion_despacho = 1`)
+
+Analogía directa de los Pasos A/B/C pero orientada a encontrar la **unidad de embalaje/logística**
+en lugar de la unidad de inventario. Se ejecuta **después** de resolver la Presentación Uso.
+
+#### Equivalencia de pasos
+
+| Paso basica (Pasos A/B/C) | Equivalente despacho | Descripción |
+|---|---|---|
+| **Paso A** — mapeo directo `basica=1` | **Nivel 1** — misma unidad + `despacho=1` | Misma unidad Access directa en el mismo maestro |
+| **Paso A** (unidades convertibles) | **Nivel 2** — unidad convertible + `despacho=1` | Unidades homologadas del mismo grupo de medida |
+| **Paso B** — cualquier `basica=1` del maestro | **Fallback 1** — cualquier `despacho=1` del maestro | Sin restricción de unidad, mismo `id_producto_maestro` |
+| **Paso C** — rastreo vía CodIngrediente | **Fallback 2** — receta de 1 componente = Presentación Uso | Cubre paquetes con maestro diferente cuya receta envuelve exactamente la Presentación Uso |
+
+#### Queries en cascada
+
+```sql
+-- ── NIVEL 1: mismo maestro + unidad directa + despacho=1 ────────────────
+SELECT pp.id, pp.SKU, pp.Nombre, pp.cantidad, u.nombre AS unidad
+FROM producto_presentacion pp
+LEFT JOIN producto_maestro pm ON pm.id = pp.id_producto_maestro  -- LEFT, no INNER
+LEFT JOIN unidad_producto   u  ON u.id  = pp.id_unidad_producto
+WHERE pp.id_producto_maestro = :id_maestro_resolucion   -- maestro de la Presentación Uso
+  AND u.nombre IN (:unidades_directas_access)            -- unidades directas de la unidad Access
+  AND pp.presentacion_despacho = 1
+  AND pp.Activo = 'SI'
+LIMIT 1;
+
+-- ── NIVEL 2: mismo maestro + unidad convertible + despacho=1 ────────────
+-- (igual pero con unidades de conversion_unidad_producto)
+
+-- ── FALLBACK 1: mismo maestro + cualquier unidad + despacho=1 ───────────
+SELECT pp.id, pp.SKU, pp.Nombre, pp.cantidad, u.nombre AS unidad
+FROM producto_presentacion pp
+LEFT JOIN producto_maestro pm ON pm.id = pp.id_producto_maestro
+LEFT JOIN unidad_producto   u  ON u.id  = pp.id_unidad_producto
+WHERE pp.id_producto_maestro = :id_maestro_resolucion
+  AND pp.presentacion_despacho = 1
+  AND pp.Activo = 'SI'
+LIMIT 1;
+
+-- ── FALLBACK 2: receta de 1 componente = Presentación Uso ───────────────
+-- Cubre paquetes con maestro DIFERENTE al de la Presentación Uso
+SELECT pp.id, pp.SKU, pp.Nombre, pp.cantidad, u.nombre AS unidad
+FROM producto_presentacion pp
+LEFT JOIN producto_maestro pm ON pm.id = pp.id_producto_maestro   -- LEFT: puede ser NULL
+LEFT JOIN unidad_producto   u  ON u.id  = pp.id_unidad_producto
+WHERE pp.Id_receta_producto IS NOT NULL
+  AND pp.Activo = 'SI'
+  AND pp.presentacion_despacho = 1
+  AND (
+      SELECT COUNT(DISTINCT crp.id_presentacion_producto)
+      FROM componentes_receta_producto crp
+      WHERE crp.id_receta_producto_global = pp.Id_receta_producto
+  ) = 1
+  AND EXISTS (
+      SELECT 1
+      FROM componentes_receta_producto crp2
+      WHERE crp2.id_receta_producto_global = pp.Id_receta_producto
+        AND crp2.id_presentacion_producto = :id_presentacion_uso  -- id de la Presentación Uso
+  )
+LIMIT 1;
+```
+
+> [!IMPORTANT]
+> **LEFT JOIN en lugar de INNER JOIN:** Todos los queries de resolución de despacho usan
+> `LEFT JOIN producto_maestro`. Los productos compuestos de embalaje (ristras, bolsas, cajillas)
+> pueden tener `id_producto_maestro = NULL` porque son presentaciones de producción,
+> no presentaciones simples de un ingrediente. Un `INNER JOIN` los excluiría silenciosamente.
+
+#### Cuándo se activa el Fallback 2
+
+```
+nuevo_producto (Presentación Uso, id=35, maestro=21 "Vaso Plástico 16oz")
+    │
+    └─→ Niveles 1 y 2 fallan (sin conversiones para "Unidades")
+    └─→ Fallback 1 falla (Ristra tiene maestro diferente o NULL)
+    └─→ Fallback 2:
+            pp.Id_receta_producto IS NOT NULL    (Ristra es una receta)
+            COUNT(componentes) = 1              (solo un ingrediente: Vaso 16oz Unid)
+            componente.id_presentacion = 35     (= id de la Presentación Uso)
+            → Encuentra: PQ-VASO16OZ-01 "Ristra 25u" ✅
+```
+
+---
+
 
 ```
 HistorialBatidos (CodBatido, Fecha, Cantidad vendida)
@@ -567,4 +652,4 @@ HistorialBatidos (CodBatido, Fecha, Cantidad vendida)
 
 ---
 
-*Generado: 2026-04-12 | Actualizado: 2026-04-27 — Resolución de diccionario en 3 etapas (Paso A/B/C): Paso A = mapeo directo basica, Paso B = rastreo por maestro FK de la presentación mapeada, Paso C = rastreo vía CodIngrediente en Cotizaciones (replica AUTO del visor, cubre productos donde la presentación mapeada carece de FK de maestro — ej: Maní Horneado 1lb) | Referencia: `dashboard_consumo_get_datos.php` + `balance_inventario_get_datos.php` + `dashboard_consumo_auditoria.php`*
+*Generado: 2026-04-12 | Actualizado: 2026-04-27 — Sección 4.4: Resolución de Presentación Despacho en 4 niveles (Nivel 1 = unidad directa, Nivel 2 = unidad convertible, Fallback 1 = maestro sin restricción de unidad, Fallback 2 = receta de 1 componente = Presentación Uso). Todos los queries de despacho usan LEFT JOIN producto_maestro para no excluir paquetes sin maestro asignado. Equivalencia documentada con Paso A/B/C de basica_inventario. | Referencia: `accessantiguo_get_detalle_receta.php` + `accessantiguo_unidades_homologacion.php` + `dashboard_consumo_get_datos.php` + `balance_inventario_get_datos.php`*

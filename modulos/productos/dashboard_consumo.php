@@ -554,6 +554,13 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                                         <p class="small text-muted mb-0">
                                             Consumo = <code>(Cantidad_receta × factor_conversión) / pp_cantidad × ventas</code>
                                         </p>
+                                        <div class="mt-2 p-2 rounded" style="background:#e8eaf6;border-left:3px solid #283593;font-size:.76rem">
+                                            <strong style="color:#283593"><i class="fas fa-info-circle me-1"></i>Nota técnica — JOINs:</strong>
+                                            Las búsquedas de presentación usan <code>LEFT JOIN producto_maestro</code>
+                                            (no INNER JOIN) para no excluir productos sin maestro asignado.
+                                            Esto garantiza que paquetes de despacho y compuestos sin FK de maestro
+                                            también sean encontrados correctamente.
+                                        </div>
                                     </div>
                                 </div>
                             </div>

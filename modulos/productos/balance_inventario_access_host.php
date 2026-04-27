@@ -249,10 +249,16 @@ if (!tienePermiso('balance_inventario_access_host', 'vista', $cargoOperario)) {
                                                 </div>
                                             </div>
                                         </div>
-                                        <p class="small text-muted mt-2 mb-0">
+                                        <p class="small text-muted mt-2 mb-1">
                                             Consumo = <code>(Cantidad_receta × factor_conversión) / pp_cantidad × ventas</code>.
                                             Redondeo: P1 → múltiplo de 0.5 | P2/P3 → 4 decimales.
                                         </p>
+                                        <div class="p-2 rounded" style="background:#e8eaf6;border-left:3px solid #283593;font-size:.78rem">
+                                            <strong style="color:#283593"><i class="fas fa-info-circle me-1"></i>Nota técnica — LEFT JOIN:</strong>
+                                            Todos los queries de búsqueda de presentaciones usan <code>LEFT JOIN producto_maestro</code>
+                                            (no INNER JOIN). Esto garantiza que paquetes de despacho y productos compuestos
+                                            con <code>id_producto_maestro = NULL</code> no sean excluidos silenciosamente de los resultados.
+                                        </div>
                                     </div>
                                 </div>
                             </div>
