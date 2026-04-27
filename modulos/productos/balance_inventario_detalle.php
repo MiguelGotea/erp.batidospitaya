@@ -228,7 +228,6 @@ function renderChart(res) {
     const t = res.totales_tipo;
     const invIni = t.inv_inicial || 0;
     const invFin = t.inv_final || 0;
-    const consTotal = res.consumo_real || 0;
 
     // Generar lista de todos los días en el rango
     const start = new Date(res.fecha_inicio + 'T12:00:00');
@@ -239,9 +238,6 @@ function renderChart(res) {
         allDays.push(curr.toISOString().split('T')[0]);
         curr.setDate(curr.getDate() + 1);
     }
-
-    // Consumo diario teórico (lineal)
-    const consDiario = allDays.length > 0 ? (consTotal / allDays.length) : 0;
 
     // Movimientos por fecha (ajustes, despachos, mermas)
     const movsPorFecha = {};
@@ -254,20 +250,23 @@ function renderChart(res) {
     });
 
     const labels = ['Inicial (S'+res.semana_ant+')'];
-    const dataPoints = [invIni];
+    const theoreticalData = [invIni];
     
     let balance = invIni;
     allDays.forEach(day => {
         const mov = movsPorFecha[day] || 0;
-        balance = balance + mov - consDiario;
+        balance = balance + mov;
         
-        // Formatear label día
         const dObj = new Date(day + 'T12:00:00');
         const dLabel = dObj.toLocaleDateString('es-ES', {weekday:'short', day:'numeric', month:'short'});
         
         labels.push(dLabel);
-        dataPoints.push(balance);
+        theoreticalData.push(balance);
     });
+
+    // Dataset para el Inventario Final Real (un punto al final)
+    const realData = new Array(labels.length).fill(null);
+    realData[labels.length - 1] = invFin;
 
     const ctx = document.getElementById('existenciaChart').getContext('2d');
     if (window.myChart) window.myChart.destroy();
@@ -276,35 +275,48 @@ function renderChart(res) {
         type: 'line',
         data: {
             labels: labels,
-            datasets: [{
-                label: 'Stock Estimado',
-                data: dataPoints,
-                borderColor: '#51B8AC',
-                backgroundColor: 'rgba(81, 184, 172, 0.1)',
-                borderWidth: 3,
-                fill: true,
-                tension: 0.3,
-                pointRadius: 3,
-                pointHoverRadius: 6,
-                pointBackgroundColor: '#fff',
-                pointBorderColor: '#51B8AC',
-                pointBorderWidth: 2
-            }]
+            datasets: [
+                {
+                    label: 'Stock Teórico (Kardex)',
+                    data: theoreticalData,
+                    borderColor: '#51B8AC',
+                    backgroundColor: 'rgba(81, 184, 172, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.2,
+                    pointRadius: 2,
+                    pointHoverRadius: 5,
+                    pointBackgroundColor: '#fff',
+                    pointBorderColor: '#51B8AC',
+                },
+                {
+                    label: 'Inventario Físico Final',
+                    data: realData,
+                    borderColor: '#e74c3c',
+                    backgroundColor: '#e74c3c',
+                    pointRadius: 6,
+                    pointStyle: 'rectRot',
+                    showLine: false,
+                }
+            ]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: { display: false },
+                legend: { 
+                    display: true,
+                    position: 'top',
+                    labels: { boxWidth: 12, font: { size: 10 } }
+                },
                 tooltip: {
                     mode: 'index',
                     intersect: false,
                     callbacks: {
                         label: function(context) {
-                            let label = ' Existencia: ' + fmt(context.raw, 2);
-                            if (context.dataIndex > 0) {
-                                label += ' (Teórico)';
-                            }
+                            let label = context.dataset.label || '';
+                            if (label) label += ': ';
+                            label += fmt(context.raw, 2);
                             return label;
                         }
                     }
