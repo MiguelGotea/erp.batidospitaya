@@ -120,22 +120,92 @@ LIMIT 1;
 
 ---
 
-### Paso 2: Rastreo automático por Maestro + Unidad (AUTO)
+### Paso 2: Resolución del Diccionario (3 etapas — sistema en cascada)
 
-Si no hay mapeo en `diccionario_productos_legado` para la cotización resuelta:
+Esta es la etapa más crítica. Para cada `CodCotizacion` candidato (obtenido vía P1/P2/P3)
+se busca la **Presentación de Consumo** (`presentacion_basica_inventario = 1`) en cascada:
+
+#### Paso A — Mapeo directo (caso normal)
+
+La cotización en el diccionario ya apunta directamente a la presentación de inventario:
 
 ```sql
--- Encontrar id_producto_maestro via cualquier cotización mapeada del mismo ingrediente
-SELECT pp.id_producto_maestro
-FROM Cotizaciones c
-INNER JOIN diccionario_productos_legado d ON d.CodCotizacion = c.CodCotizacion
-INNER JOIN producto_presentacion pp       ON pp.id = d.id_producto_presentacion
-WHERE c.CodIngrediente       = :cod_ingrediente
-  AND pp.Id_receta_producto IS NULL
-LIMIT 1;
+SELECT d.CodCotizacion, pp.id AS id_presentacion, pp.cantidad, pp.id_unidad_producto,
+       pp.id_producto_maestro, pp.Nombre, u.nombre AS unidad_erp, pm.Nombre AS nombre_maestro
+FROM diccionario_productos_legado d
+INNER JOIN producto_presentacion pp ON pp.id = d.id_producto_presentacion
+LEFT  JOIN unidad_producto u         ON u.id  = pp.id_unidad_producto
+LEFT  JOIN producto_maestro pm       ON pm.id = pp.id_producto_maestro
+WHERE d.CodCotizacion IN (:lista_cods)
+  AND pp.Activo = 'SI'
+  AND pp.presentacion_basica_inventario = 1;
 ```
 
-Con `id_maestro` obtenido, continuar con Paso 3 y buscar presentación por unidad.
+> **Ejemplo:** Chocolate Líquido oz → su cotización apunta directamente a la pp oz (basica=1). ✅
+
+#### Paso B — Rastreo por maestro vía presentación mapeada
+
+Para `CodCotizacion` no resueltos en Paso A: la cotización en el diccionario apunta a una
+presentación **no basica** (ej: presentación de despacho). Se traza al maestro de esa
+presentación y se busca la presentación básica del mismo maestro:
+
+```sql
+SELECT d.CodCotizacion, pp_base.id AS id_presentacion, pp_base.cantidad, ...
+FROM diccionario_productos_legado d
+INNER JOIN producto_presentacion pp_orig ON pp_orig.id = d.id_producto_presentacion
+INNER JOIN producto_presentacion pp_base
+        ON pp_base.id_producto_maestro = pp_orig.id_producto_maestro
+       AND pp_base.presentacion_basica_inventario = 1
+       AND pp_base.Activo = 'SI'
+       AND pp_base.Id_receta_producto IS NULL
+WHERE d.CodCotizacion IN (:cods_no_resueltos)
+  AND pp_orig.Activo = 'SI'
+  AND pp_orig.id_producto_maestro IS NOT NULL  -- requiere FK de maestro asignado
+GROUP BY d.CodCotizacion;
+```
+
+> **Ejemplo:** Chocolate Líquido — diccionario apunta al pote 1.36kg (despacho, basica=0).
+> El Paso B obtiene el maestro del pote → encuentra la presentación oz (basica=1). ✅
+
+> **Limitación:** Si `pp_orig.id_producto_maestro IS NULL` (la presentación mapeada no tiene
+> FK de maestro configurado), el Paso B no retorna filas → pasa al Paso C.
+
+#### Paso C — Rastreo vía CodIngrediente en Cotizaciones (fallback completo)
+
+Replica exacta del comportamiento **"AUTO"** del Visor de Recetas. Para `CodCotizacion`
+aún sin resolver después del Paso B:
+
+```sql
+SELECT c_src.CodCotizacion, pp_base.id AS id_presentacion, pp_base.cantidad, ...
+FROM Cotizaciones c_src
+-- Trazar: CodCotizacion → CodIngrediente → todas sus cotizaciones
+INNER JOIN Cotizaciones c_all ON c_all.CodIngrediente = c_src.CodIngrediente
+-- Buscar cualquier cotización del mismo ingrediente que tenga diccionario con maestro
+INNER JOIN diccionario_productos_legado d2 ON d2.CodCotizacion = c_all.CodCotizacion
+INNER JOIN producto_presentacion pp_any    ON pp_any.id = d2.id_producto_presentacion
+                                          AND pp_any.Activo = 'SI'
+                                          AND pp_any.id_producto_maestro IS NOT NULL
+-- Con ese maestro, buscar la presentación basica
+INNER JOIN producto_presentacion pp_base
+        ON pp_base.id_producto_maestro = pp_any.id_producto_maestro
+       AND pp_base.presentacion_basica_inventario = 1
+       AND pp_base.Activo = 'SI'
+       AND pp_base.Id_receta_producto IS NULL
+WHERE c_src.CodCotizacion IN (:cods_aun_sin_resolver)
+GROUP BY c_src.CodCotizacion;
+```
+
+> **Ejemplo:** Maní Horneado — diccionario apunta a 1lb (despacho), y la presentación 1lb
+> tiene `id_producto_maestro = NULL` (Paso B falla). El Paso C busca el CodIngrediente del
+> maní → encuentra otras cotizaciones del mismo ingrediente → alguna lleva al maestro "Maní
+> Horneado" → desde ahí encuentra la presentación oz (basica=1). ✅
+
+> [!IMPORTANT]
+> **Regla de oro:** Solo la presentación con `presentacion_basica_inventario = 1` es válida
+> para consumo e inventario. Los tres pasos (A, B, C) garantizan encontrarla aunque el mapeo
+> en el diccionario apunte a una presentación de despacho u otra sin el flag basica.
+
+Con el `id_presentacion` obtenido de cualquiera de los tres pasos, continuar con Paso 3.
 
 ---
 
@@ -453,13 +523,17 @@ HistorialBatidos (CodBatido, Fecha, Cantidad vendida)
     │
     ├─→ SubReceta (CodBatido, CodIngrediente, Cantidad, codporcion)
     │       │
-    │       ├─→ [P1] codporcion → diccionario_productos_legado → producto_presentacion
-    │       │
-    │       ├─→ [P2] Cotizaciones (Conversion=1, Prioridad=1)
-    │       │           → diccionario_productos_legado → producto_presentacion
-    │       │
-    │       └─→ [P3] Cotizaciones (cualquiera)
-    │                   → diccionario_productos_legado → producto_presentacion
+    │       ├─→ [P1] codporcion → RESOLUCIÓN DICCIONARIO (3 etapas)
+    │       ├─→ [P2] Cotizaciones (Conversion=1, Prioridad=1) → RESOLUCIÓN DICCIONARIO
+    │       └─→ [P3] Cotizaciones (cualquiera) → RESOLUCIÓN DICCIONARIO
+    │
+    ├─→ RESOLUCIÓN DICCIONARIO (en cascada hasta encontrar basica_inventario=1):
+    │       ├─ [Paso A] CodCotizacion → diccionario → pp (basica=1)          ← caso normal
+    │       ├─ [Paso B] CodCotizacion → diccionario → pp_orig.maestro → pp_base (basica=1)
+    │       │           └─ Requiere: pp_orig.id_producto_maestro IS NOT NULL
+    │       └─ [Paso C] CodCotizacion → Cotizaciones.CodIngrediente
+    │                   → todas cotizaciones del ingrediente → diccionario
+    │                   → cualquier pp con maestro → pp_base (basica=1)      ← AUTO completo
     │
     ├─→ PRE-CHECK: pp.Id_receta_producto IS NOT NULL?
     │       ├─ SÍ → Receta Global: consumo = SubReceta.Cantidad × N_ventas
@@ -492,4 +566,4 @@ HistorialBatidos (CodBatido, Fecha, Cantidad vendida)
 
 ---
 
-*Generado: 2026-04-12 | Actualizado: 2026-04-13 — Redondeo P2/P3 a 4 decimales, campo `tipo_mapeo` en auditoría | Referencia: `dashboard_consumo_get_datos.php` + `dashboard_consumo_auditoria.php`*
+*Generado: 2026-04-12 | Actualizado: 2026-04-27 — Resolución de diccionario en 3 etapas (Paso A/B/C): Paso A = mapeo directo basica, Paso B = rastreo por maestro FK de la presentación mapeada, Paso C = rastreo vía CodIngrediente en Cotizaciones (replica AUTO del visor, cubre productos donde la presentación mapeada carece de FK de maestro — ej: Maní Horneado 1lb) | Referencia: `dashboard_consumo_get_datos.php` + `balance_inventario_get_datos.php` + `dashboard_consumo_auditoria.php`*

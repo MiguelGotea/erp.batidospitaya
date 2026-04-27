@@ -77,6 +77,9 @@ if (!tienePermiso('balance_inventario_access_host', 'vista', $cargoOperario)) {
                         <button class="bi-btn-primary" id="btnAnalizar">
                             <i class="fas fa-balance-scale me-1"></i>Calcular Balance
                         </button>
+                        <button class="btn btn-sm btn-outline-secondary" id="btnAyuda" title="¿Cómo funciona?" data-bs-toggle="modal" data-bs-target="#modalAyudaBalance">
+                            <i class="fas fa-question-circle"></i>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -146,6 +149,161 @@ if (!tienePermiso('balance_inventario_access_host', 'vista', $cargoOperario)) {
             </div>
 
         </div><!-- /bi-wrapper -->
+
+        <!-- ── MODAL AYUDA ──────────────────────────────────────────── -->
+        <div class="modal fade" id="modalAyudaBalance" tabindex="-1" aria-labelledby="modalAyudaBalanceLbl" aria-hidden="true">
+            <div class="modal-dialog modal-xl modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header" style="background:#0E544C;color:#fff">
+                        <h5 class="modal-title" id="modalAyudaBalanceLbl">
+                            <i class="fas fa-question-circle me-2"></i>¿Cómo funciona el Balance Semanal de Existencias?
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+
+                        <!-- ROW 1: Fórmula + Fuentes de datos -->
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <div class="card h-100 border-0 bg-light">
+                                    <div class="card-body">
+                                        <h6 class="fw-bold border-bottom pb-2" style="color:#0E544C">
+                                            <i class="fas fa-calculator me-2"></i>Fórmula del Balance
+                                        </h6>
+                                        <p class="small text-muted mb-1">
+                                            El <strong>Consumo Real</strong> se calcula a partir del kardex sincronizado desde Access:
+                                        </p>
+                                        <div class="bg-white rounded p-2 mb-2" style="font-family:monospace;font-size:.8rem;border-left:3px solid #0E544C">
+                                            C.Real = Inv.Inicial + Ajuste + Despacho − Merma − Inv.Final
+                                        </div>
+                                        <p class="small text-muted mb-0">
+                                            La <strong>Varianza</strong> = C.Real − C.Teórico.<br>
+                                            Varianza positiva = se consumió más de lo esperado.<br>
+                                            Varianza negativa = se consumió menos de lo esperado.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card h-100 border-0 bg-light">
+                                    <div class="card-body">
+                                        <h6 class="fw-bold border-bottom pb-2" style="color:#0E544C">
+                                            <i class="fas fa-database me-2"></i>Fuentes de Datos (Kardex Access)
+                                        </h6>
+                                        <ul class="small text-muted mb-0 ps-3">
+                                            <li><strong>Inv. Inicial</strong> — <code>msaccess_masivo_InventarioCotizacion</code> de la semana anterior al rango.</li>
+                                            <li><strong>Ajuste</strong> — <code>msaccess_masivo_AjustesInventario</code> en el período.</li>
+                                            <li><strong>Despacho</strong> — <code>msaccess_masivo_SubPreIngresosPitaya</code> (PreIngresoPitaya.Destino = "Pitaya N").</li>
+                                            <li><strong>Merma</strong> — <code>msaccess_masivo_MermaCotizacion</code> en el período.</li>
+                                            <li><strong>Inv. Final</strong> — <code>msaccess_masivo_InventarioCotizacion</code> de la última semana del rango.</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ROW 2: Consumo Teórico -->
+                        <div class="row g-3 mb-3">
+                            <div class="col-12">
+                                <div class="card border-0 bg-light">
+                                    <div class="card-body">
+                                        <h6 class="fw-bold border-bottom pb-2" style="color:#0E544C">
+                                            <i class="fas fa-cogs me-2"></i>Consumo Teórico — Traducción Access→ERP (3 etapas)
+                                        </h6>
+                                        <p class="small text-muted mb-1">
+                                            El consumo teórico se calcula cruzando <code>VentasGlobalesAccessCSV × SubReceta</code> y
+                                            traduciendo cada ingrediente a su <strong>Presentación de Consumo</strong>
+                                            (<code>presentacion_basica_inventario = 1</code>). La cotización se resuelve vía
+                                            <strong>P1</strong> (codporcion directo) · <strong>P2</strong> (cotización base Conversion=1, Prioridad=1) ·
+                                            <strong>P3</strong> (fallback). Luego se localiza la presentación básica en <strong>3 etapas en cascada</strong>:
+                                        </p>
+                                        <div class="row g-2">
+                                            <div class="col-md-4">
+                                                <div class="bg-white rounded p-2 h-100" style="border-left:3px solid #27ae60">
+                                                    <div class="fw-bold small mb-1" style="color:#27ae60">Paso A — Mapeo directo</div>
+                                                    <p class="small text-muted mb-0">
+                                                        La cotización en el diccionario ya apunta a una presentación con
+                                                        <code>basica_inventario = 1</code>. Caso más común.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="bg-white rounded p-2 h-100" style="border-left:3px solid #2980b9">
+                                                    <div class="fw-bold small mb-1" style="color:#2980b9">Paso B — Rastreo por maestro</div>
+                                                    <p class="small text-muted mb-0">
+                                                        La presentación mapeada es de despacho/otra (basica=0). Se obtiene su
+                                                        <code>id_producto_maestro</code> y se busca la presentación básica del mismo maestro.<br>
+                                                        <em>Ej: Chocolate pote 1.36kg → maestro → oz ✅</em>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="bg-white rounded p-2 h-100" style="border-left:3px solid #e67e22">
+                                                    <div class="fw-bold small mb-1" style="color:#e67e22">Paso C — Rastreo vía CodIngrediente</div>
+                                                    <p class="small text-muted mb-0">
+                                                        Réplica exacta del <strong>AUTO</strong> del Visor de Recetas. Para productos donde
+                                                        la presentación mapeada no tiene FK de maestro.<br>
+                                                        Traza: <em>CodCotizacion → CodIngrediente → todas sus cotizaciones → cualquier
+                                                        presentación con maestro → presentación básica</em>.<br>
+                                                        <em>Ej: Maní Horneado 1lb (sin maestro FK) → oz ✅</em>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <p class="small text-muted mt-2 mb-0">
+                                            Consumo = <code>(Cantidad_receta × factor_conversión) / pp_cantidad × ventas</code>.
+                                            Redondeo: P1 → múltiplo de 0.5 | P2/P3 → 4 decimales.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ROW 3: Varianza + Tips -->
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="card h-100 border-0 bg-light">
+                                    <div class="card-body">
+                                        <h6 class="fw-bold border-bottom pb-2" style="color:#0E544C">
+                                            <i class="fas fa-traffic-light me-2"></i>Semáforo de Varianza
+                                        </h6>
+                                        <ul class="small text-muted mb-0 ps-3">
+                                            <li><span style="color:#27ae60">●</span> <strong>Verde (≤ 5%)</strong> — Consumo alineado. Sin acción requerida.</li>
+                                            <li><span style="color:#e67e22">●</span> <strong>Naranja (5%–15%)</strong> — Desviación moderada. Revisar mermas o registros.</li>
+                                            <li><span style="color:#e74c3c">●</span> <strong>Rojo (&gt;15%)</strong> — Desviación alta. Investigar diferencias de inventario o errores de mapeo.</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card h-100 border-0 bg-light">
+                                    <div class="card-body">
+                                        <h6 class="fw-bold border-bottom pb-2" style="color:#0E544C">
+                                            <i class="fas fa-lightbulb me-2"></i>Tips de uso
+                                        </h6>
+                                        <ul class="small text-muted mb-0 ps-3">
+                                            <li>Usa un rango de <strong>1 semana</strong> para diagnóstico preciso.</li>
+                                            <li>Si un producto muestra C.Teórico = 0, verifica que tenga su presentación básica mapeada en el Diccionario de Productos.</li>
+                                            <li>Si el C.Real = 0, verifica que Access haya sincronizado los datos de inventario y kardex para el período.</li>
+                                            <li>Usa el botón <i class="fas fa-list-ul"></i> para ver el detalle de registros del kardex.</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div><!-- /modal-body -->
+                    <div class="modal-footer">
+                        <small class="text-muted me-auto">
+                            <i class="fas fa-book me-1"></i>Referencia técnica completa:
+                            <code>modulos/productos/guia_reportes_consumo.md</code>
+                        </small>
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cerrar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- /MODAL AYUDA -->
     </div>
 </div>
 

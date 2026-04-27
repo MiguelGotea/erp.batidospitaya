@@ -534,16 +534,25 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                                         <h6 class="fw-bold border-bottom pb-2" style="color:#0E544C">
                                             <i class="fas fa-cogs me-2"></i>Lógica de Traducción Access→ERP
                                         </h6>
+                                        <p class="small text-muted mb-1">
+                                            Las ventas se toman de <code>VentasGlobalesAccessCSV</code> (solo no anuladas).<br>
+                                            Por cada ingrediente se resuelve la cotización vía <strong>P1 / P2 / P3</strong>
+                                            y luego se localiza la <strong>Presentación de Consumo</strong>
+                                            (<code>presentacion_basica_inventario = 1</code>) en <strong>3 etapas en cascada</strong>:
+                                        </p>
+                                        <ul class="small text-muted mb-1 ps-3">
+                                            <li><strong>Paso A</strong> — Mapeo directo: la cotización en el diccionario ya apunta
+                                                a una presentación con <code>basica_inventario = 1</code>.</li>
+                                            <li><strong>Paso B</strong> — Rastreo por maestro: si la presentación mapeada es de
+                                                despacho/otra, se obtiene su <code>id_producto_maestro</code> y se busca la
+                                                presentación básica del mismo maestro.</li>
+                                            <li><strong>Paso C</strong> — Rastreo vía <code>CodIngrediente</code> (replica el
+                                                AUTO del Visor de Recetas): para productos donde la presentación mapeada no tiene
+                                                FK de maestro. Traza <em>CodCotizacion → CodIngrediente → todas sus cotizaciones
+                                                → cualquier presentación con maestro → presentación básica</em>.</li>
+                                        </ul>
                                         <p class="small text-muted mb-0">
-                                            Las ventas se toman de <code>VentasGlobalesAccessCSV</code> (solo no
-                                            anuladas).<br><br>
-                                            Por cada producto vendido se traduce cada ingrediente al insumo ERP con el
-                                            algoritmo <strong>P1/P2/P3</strong>:<br>
-                                            <strong>P1</strong> vía <code>codporcion</code> directo ·
-                                            <strong>P2</strong> vía Cotización base · <strong>P3</strong>
-                                            fallback.<br><br>
-                                            Consumo =
-                                            <code>(Cantidad_receta × factor_conversión) / presentación × ventas</code>
+                                            Consumo = <code>(Cantidad_receta × factor_conversión) / pp_cantidad × ventas</code>
                                         </p>
                                     </div>
                                 </div>
