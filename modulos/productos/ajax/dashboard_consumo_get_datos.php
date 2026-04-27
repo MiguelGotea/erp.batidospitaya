@@ -226,8 +226,8 @@ try {
 
         // Paso B: rastreo directo por maestro de la presentación mapeada
         // Funciona cuando pp_orig tiene id_producto_maestro asignado.
-        $codNoResueltos = array_values(array_filter($codCotBuscar, function($c) use (&$diccionarioMap) {
-            return !isset($diccionarioMap[(string)$c]);
+        $codNoResueltos = array_values(array_filter($codCotBuscar, function ($c) use (&$diccionarioMap) {
+            return !isset($diccionarioMap[(string) $c]);
         }));
         if (!empty($codNoResueltos)) {
             $phNR = implode(',', array_fill(0, count($codNoResueltos), '?'));
@@ -269,8 +269,8 @@ try {
         // Cubre el caso donde pp_orig.id_producto_maestro es NULL (ej: Maní 1lb sin maestro FK).
         // Traza: CodCotizacion → Cotizaciones.CodIngrediente → todas las cotizaciones del mismo
         // ingrediente → diccionario → cualquier presentación → id_producto_maestro → basica.
-        $codAunSinResolver = array_values(array_filter($codCotBuscar, function($c) use (&$diccionarioMap) {
-            return !isset($diccionarioMap[(string)$c]);
+        $codAunSinResolver = array_values(array_filter($codCotBuscar, function ($c) use (&$diccionarioMap) {
+            return !isset($diccionarioMap[(string) $c]);
         }));
         if (!empty($codAunSinResolver)) {
             $phC = implode(',', array_fill(0, count($codAunSinResolver), '?'));
@@ -315,6 +315,7 @@ try {
     $stmtAllU = $conn->prepare("SELECT id, nombre, abreviado, nombres_opcionales FROM unidad_producto");
     $stmtAllU->execute();
     $todasUnidades = $stmtAllU->fetchAll(PDO::FETCH_ASSOC);
+
 
     // Crear índice: nombre/abreviado/alias → id
     $unidadPorNombre = [];
@@ -660,12 +661,13 @@ try {
     }
 
     // Ordenar por categoría (ASC) y luego por nombre (ASC)
-    usort($listaConsumo, function($a, $b) {
-        $catA = (string)($a['categoria_insumo'] ?? '');
-        $catB = (string)($b['categoria_insumo'] ?? '');
+    usort($listaConsumo, function ($a, $b) {
+        $catA = (string) ($a['categoria_insumo'] ?? '');
+        $catB = (string) ($b['categoria_insumo'] ?? '');
         $cmp = strcasecmp($catA, $catB);
-        if ($cmp !== 0) return $cmp;
-        return strcasecmp((string)$a['nombre'], (string)$b['nombre']);
+        if ($cmp !== 0)
+            return $cmp;
+        return strcasecmp((string) $a['nombre'], (string) $b['nombre']);
     });
 
     // Estadísticas globales
