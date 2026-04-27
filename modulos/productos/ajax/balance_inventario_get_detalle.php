@@ -33,6 +33,17 @@ $semDesde = min($semDesde, $semHasta);
 $semHasta = max($semDesde, $semHasta);
 
 try {
+    // ── Fechas del rango ─────────────────────────────────────────────
+    $rDates = $conn->prepare("
+        SELECT MIN(fecha_inicio) AS inicio, MAX(fecha_fin) AS fin 
+        FROM SemanasSistema 
+        WHERE numero_semana BETWEEN :d AND :h
+    ");
+    $rDates->execute([':d' => $semDesde, ':h' => $semHasta]);
+    $rangeDates = $rDates->fetch(PDO::FETCH_ASSOC);
+    $fechaInicioRange = $rangeDates['inicio'];
+    $fechaFinRange    = $rangeDates['fin'];
+
     // ── Semana anterior ──────────────────────────────────────────────
     $r = $conn->prepare("SELECT numero_semana FROM SemanasSistema WHERE numero_semana < :d ORDER BY numero_semana DESC LIMIT 1");
     $r->execute([':d' => $semDesde]);
@@ -40,6 +51,7 @@ try {
     if (!$semAnt) { echo json_encode(['ok' => false, 'msg' => 'Sin semana anterior']); exit(); }
 
     // ── Sucursales disponibles ────────────────────────────────────────
+
     $r2 = $conn->prepare("SELECT codigo, nombre FROM sucursales WHERE activa=1 AND sucursal=1");
     $r2->execute();
     $allSucs = [];
@@ -307,7 +319,10 @@ try {
         'semana_ant'  => (int)$semAnt,
         'sem_desde'   => $semDesde,
         'sem_hasta'   => $semHasta,
+        'fecha_inicio'=> $fechaInicioRange,
+        'fecha_fin'   => $fechaFinRange,
         'registros'   => $registros,
+
         'totales_tipo'=> array_map(fn($v) => round($v, 4), $totalesTipo),
         'consumo_real'=> $consumoReal,
         'num_cods_mapeados' => count($codMap),

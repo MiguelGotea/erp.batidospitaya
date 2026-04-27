@@ -228,29 +228,46 @@ function renderChart(res) {
     const t = res.totales_tipo;
     const invIni = t.inv_inicial || 0;
     const invFin = t.inv_final || 0;
+    const consTotal = res.consumo_real || 0;
 
-    // Procesar movimientos por fecha
-    const porFecha = {};
+    // Generar lista de todos los días en el rango
+    const start = new Date(res.fecha_inicio + 'T12:00:00');
+    const end   = new Date(res.fecha_fin + 'T12:00:00');
+    const allDays = [];
+    let curr = new Date(start);
+    while (curr <= end) {
+        allDays.push(curr.toISOString().split('T')[0]);
+        curr.setDate(curr.getDate() + 1);
+    }
+
+    // Consumo diario teórico (lineal)
+    const consDiario = allDays.length > 0 ? (consTotal / allDays.length) : 0;
+
+    // Movimientos por fecha (ajustes, despachos, mermas)
+    const movsPorFecha = {};
     regs.forEach(r => {
         if (r.tipo === 'inv_inicial' || r.tipo === 'inv_final') return;
-        if (!porFecha[r.fecha]) porFecha[r.fecha] = 0;
+        if (!movsPorFecha[r.fecha]) movsPorFecha[r.fecha] = 0;
         let val = r.qty_base;
         if (r.tipo === 'merma') val = -val;
-        porFecha[r.fecha] += val;
+        movsPorFecha[r.fecha] += val;
     });
 
-    const dates = Object.keys(porFecha).sort();
-    const labels = ['Inicio (S'+res.semana_ant+')', ...dates, 'Final (S'+res.sem_hasta+')'];
+    const labels = ['Inicial (S'+res.semana_ant+')'];
     const dataPoints = [invIni];
     
-    let currentBalance = invIni;
-    dates.forEach(d => {
-        currentBalance += porFecha[d];
-        dataPoints.push(currentBalance);
+    let balance = invIni;
+    allDays.forEach(day => {
+        const mov = movsPorFecha[day] || 0;
+        balance = balance + mov - consDiario;
+        
+        // Formatear label día
+        const dObj = new Date(day + 'T12:00:00');
+        const dLabel = dObj.toLocaleDateString('es-ES', {weekday:'short', day:'numeric', month:'short'});
+        
+        labels.push(dLabel);
+        dataPoints.push(balance);
     });
-    
-    // El punto final es el inventario físico contado
-    dataPoints.push(invFin);
 
     const ctx = document.getElementById('existenciaChart').getContext('2d');
     if (window.myChart) window.myChart.destroy();
@@ -260,14 +277,15 @@ function renderChart(res) {
         data: {
             labels: labels,
             datasets: [{
-                label: 'Stock en Kardex',
+                label: 'Stock Estimado',
                 data: dataPoints,
                 borderColor: '#51B8AC',
                 backgroundColor: 'rgba(81, 184, 172, 0.1)',
                 borderWidth: 3,
                 fill: true,
                 tension: 0.3,
-                pointRadius: 4,
+                pointRadius: 3,
+                pointHoverRadius: 6,
                 pointBackgroundColor: '#fff',
                 pointBorderColor: '#51B8AC',
                 pointBorderWidth: 2
@@ -283,20 +301,24 @@ function renderChart(res) {
                     intersect: false,
                     callbacks: {
                         label: function(context) {
-                            return ' Stock: ' + fmt(context.raw, 2);
+                            let label = ' Existencia: ' + fmt(context.raw, 2);
+                            if (context.dataIndex > 0) {
+                                label += ' (Teórico)';
+                            }
+                            return label;
                         }
                     }
                 }
             },
             scales: {
                 y: {
-                    beginAtZero: true,
+                    beginAtZero: false,
                     grid: { color: 'rgba(0,0,0,0.05)' },
                     ticks: { font: { size: 10 } }
                 },
                 x: {
                     grid: { display: false },
-                    ticks: { font: { size: 10 } }
+                    ticks: { font: { size: 9 }, maxRotation: 45, minRotation: 45 }
                 }
             }
         }
