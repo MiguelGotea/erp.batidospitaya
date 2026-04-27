@@ -589,9 +589,6 @@ function renderTabla(productos) {
             <td class="td-num ${vc}">${fmt(v.varianza)}</td>
             <td class="td-center ${vcc} ${vc}">${fmtPct(pct)}</td>
             <td class="td-center" style="white-space:nowrap">
-                <button class="bi-expand-btn" id="btn_${rowId}" title="Ver desglose por sucursal">
-                    <i class="fas fa-chevron-down"></i>
-                </button>
                 <a class="bi-detail-btn" id="lnk_${rowId}"
                    href="balance_inventario_detalle.php?id=${p.id}&sem_desde=${datosGlobales.semanas[0]?.numero_semana||0}&sem_hasta=${datosGlobales.semanas[datosGlobales.semanas.length-1]?.numero_semana||0}&sucs=${Object.keys(sucSeleccionadas).join(',')}"
                    title="Ver detalle de registros" target="_blank">
@@ -600,45 +597,6 @@ function renderTabla(productos) {
             </td>
         `;
         tbody.appendChild(tr);
-
-        // Sub row (desglose por sucursal)
-        const trSub = document.createElement('tr');
-        trSub.className = 'bi-sub-row';
-        trSub.id = rowId;
-        const sucursales = datosGlobales.sucursales || [];
-        let subHtml = `<td colspan="12"><div class="bi-sub-cell-wrap"><table class="bi-sub-table">
-            <tr class="bi-sub-header">
-                <td>Sucursal</td><td class="td-num">Inv.Ini</td><td class="td-num">Ajuste</td>
-                <td class="td-num">Despacho</td><td class="td-num">Merma</td><td class="td-num">Inv.Fin</td>
-                <td class="td-num">C.Real</td><td class="td-num">C.Teórico</td><td class="td-num">Varianza</td><td class="td-center">%</td>
-            </tr>`;
-        sucursales.forEach(s => {
-            const sv = getValores(p, s.codigo);
-            const spct = sv.pct_varianza;
-            subHtml += `<tr>
-                <td style="font-weight:600">${esc(s.nombre)}</td>
-                <td class="td-num">${fmt(sv.inv_inicial)}</td>
-                <td class="td-num">${fmt(sv.ajuste)}</td>
-                <td class="td-num">${fmt(sv.despacho)}</td>
-                <td class="td-num">${fmt(sv.merma)}</td>
-                <td class="td-num">${fmt(sv.inv_final)}</td>
-                <td class="td-num" style="font-weight:700">${fmt(sv.consumo_real)}</td>
-                <td class="td-num">${fmt(sv.consumo_teorico)}</td>
-                <td class="td-num ${varClass(spct)}">${fmt(sv.varianza)}</td>
-                <td class="td-center ${varClass(spct)}">${fmtPct(spct)}</td>
-            </tr>`;
-        });
-        subHtml += `</table></div></td>`;
-        trSub.innerHTML = subHtml;
-        tbody.appendChild(trSub);
-
-        // Toggle expand
-        document.getElementById('btn_'+rowId).addEventListener('click', function() {
-            const sub = document.getElementById(rowId);
-            const open = sub.classList.toggle('open');
-            this.classList.toggle('open', open);
-            this.innerHTML = open ? '<i class="fas fa-chevron-up"></i>' : '<i class="fas fa-chevron-down"></i>';
-        });
     });
 }
 

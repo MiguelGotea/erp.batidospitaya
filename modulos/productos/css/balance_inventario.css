@@ -347,8 +347,8 @@ body {
 .var-cell-warn { background: rgba(230, 126, 34, 0.06) !important; }
 .var-cell-bad  { background: rgba(231, 76, 60, 0.06) !important; }
 
-/* ── Expand / Detail buttons ─────────────────────────────────── */
-.bi-expand-btn, .bi-detail-btn {
+/* ── Detail buttons ─────────────────────────────────────────── */
+.bi-detail-btn {
     background: var(--neu-bg);
     border: none;
     border-radius: 8px;
@@ -363,34 +363,16 @@ body {
     font-size: .8rem;
     text-decoration: none;
 }
-.bi-expand-btn:hover, .bi-detail-btn:hover { 
+.bi-detail-btn:hover { 
     color: var(--bi-accent);
     box-shadow: 4px 4px 8px var(--neu-shadow-dark), -4px -4px 8px var(--neu-shadow-light);
 }
-.bi-expand-btn:active, .bi-detail-btn:active {
+.bi-detail-btn:active {
     box-shadow: inset 2px 2px 4px var(--neu-shadow-dark), inset -2px -2px 4px var(--neu-shadow-light);
     transform: scale(0.95);
 }
-.bi-expand-btn.open {
-    background: var(--bi-accent);
-    color: #fff;
-    box-shadow: inset 2px 2px 4px rgba(0,0,0,0.1);
-}
 
-.bi-sub-row { display: none; }
-.bi-sub-row.open { display: table-row; }
-.bi-sub-cell-wrap { padding: 16px; background: rgba(0,0,0,0.01); }
-.bi-sub-table { 
-    width: 100%; 
-    border-collapse: collapse; 
-    font-size: .78rem; 
-    background: var(--neu-bg);
-    border-radius: 12px;
-    box-shadow: inset 2px 2px 5px var(--neu-shadow-dark), inset -2px -2px 5px var(--neu-shadow-light);
-    overflow: hidden;
-}
-.bi-sub-table td { padding: 8px 12px; border-bottom: 1px solid rgba(0,0,0,0.02); }
-.bi-sub-header { font-weight: 800; color: var(--bi-muted); font-size: .7rem; text-transform: uppercase; background: #f0f3f6; }
+
 
 /* ── Badge ─────────────────────────────────────────────────── */
 .bi-badge-cat {
