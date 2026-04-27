@@ -118,16 +118,17 @@ if (!tienePermiso('balance_inventario_access_host', 'vista', $cargoOperario)) {
                         <table class="bi-table" id="tablaBalance">
                             <thead>
                                 <tr>
+                                    <th rowspan="2" style="width:120px">Categoría</th>
                                     <th rowspan="2" style="min-width:220px">Producto ERP</th>
                                     <th class="th-group td-num" style="width:95px">Inv. Inicial</th>
                                     <th class="th-group td-num" style="width:85px">+ Ajuste</th>
                                     <th class="th-group td-num" style="width:85px">+ Despacho</th>
                                     <th class="th-group td-num" style="width:85px">− Merma</th>
                                     <th class="th-group td-num" style="width:95px">− Inv. Final</th>
-                                    <th class="th-group td-num" style="width:100px;background:#0b4a42">= C. Real</th>
-                                    <th class="th-group td-num" style="width:100px;background:#0b4a42">C. Teórico</th>
-                                    <th class="th-group td-num" style="width:90px;background:#0b4a42">Varianza</th>
-                                    <th class="th-group td-center" style="width:70px;background:#0b4a42">% Var</th>
+                                    <th class="th-group td-num" style="width:100px;background:#0b4a42;color:#fff">= C. Real</th>
+                                    <th class="th-group td-num" style="width:100px;background:#0b4a42;color:#fff">C. Teórico</th>
+                                    <th class="th-group td-num" style="width:90px;background:#0b4a42;color:#fff">Varianza</th>
+                                    <th class="th-group td-center" style="width:70px;background:#0b4a42;color:#fff">% Var</th>
                                     <th class="th-group td-center" style="width:80px">Det.</th>
                                 </tr>
                             </thead>
@@ -555,10 +556,10 @@ function renderTabla(productos) {
     tbody.innerHTML = '';
 
     const filtrados = productos.filter(p =>
-        !q || p.nombre.toLowerCase().includes(q) || (p.maestro||'').toLowerCase().includes(q)
+        !q || p.nombre.toLowerCase().includes(q) || (p.maestro||'').toLowerCase().includes(q) || (p.categoria||'').toLowerCase().includes(q)
     );
     if (!filtrados.length) {
-        tbody.innerHTML = `<tr><td colspan="11" class="text-center text-muted py-4">Sin productos con ese filtro.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="12" class="text-center text-muted py-4">Sin productos con ese filtro.</td></tr>`;
         return;
     }
 
@@ -573,8 +574,10 @@ function renderTabla(productos) {
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td>
+                ${p.categoria?`<span class="bi-badge-cat">${esc(p.categoria)}</span>`:''}
+            </td>
+            <td>
                 <div style="font-weight:600;font-size:.82rem">${esc(p.nombre)}</div>
-                ${p.categoria?`<span class="bi-badge-cat ms-1">${esc(p.categoria)}</span>`:''}
             </td>
             <td class="td-num">${fmt(v.inv_inicial)}</td>
             <td class="td-num" style="color:${v.ajuste>=0?'#27ae60':'#e74c3c'}">${fmt(v.ajuste)}</td>
@@ -603,7 +606,7 @@ function renderTabla(productos) {
         trSub.className = 'bi-sub-row';
         trSub.id = rowId;
         const sucursales = datosGlobales.sucursales || [];
-        let subHtml = `<td colspan="11"><div class="bi-sub-cell-wrap"><table class="bi-sub-table">
+        let subHtml = `<td colspan="12"><div class="bi-sub-cell-wrap"><table class="bi-sub-table">
             <tr class="bi-sub-header">
                 <td>Sucursal</td><td class="td-num">Inv.Ini</td><td class="td-num">Ajuste</td>
                 <td class="td-num">Despacho</td><td class="td-num">Merma</td><td class="td-num">Inv.Fin</td>
