@@ -558,9 +558,6 @@ function formatearFecha(fecha) {
 async function abrirModalDecision(id, codPedido, codCambio, sucursal, sucursalNombre, esPasado, motivo) {
     pendingDecision = { id, codPedido, codCambio, sucursal, esPasado };
 
-    document.getElementById('dec_codPedido').textContent = codPedido;
-    document.getElementById('dec_codCambio').textContent = codCambio > 0 ? codCambio : '—';
-    document.getElementById('dec_sucursal').textContent  = sucursalNombre || ('S' + sucursal);
     document.getElementById('dec_motivo').textContent    = motivo || '—';
 
     // Mostrar/ocultar columnas de cambio
@@ -643,7 +640,7 @@ async function cargarDetallePedido(codPedido, sucursal, containerId) {
                 </div>
             </div>
             <div class="detalle-resumen">
-                ${chip('Cliente', info.CodCliente || '—')}
+                ${chip('Cliente', (info.Cliente_Nombre ? info.Cliente_Nombre + ' ' + (info.Cliente_Apellido || '') : info.CodCliente) || '—')}
                 ${chip('Delivery', info.Delivery_Nombre || '—')}
                 ${chip('Monto Factura', info.MontoFactura ? 'C$ ' + parseFloat(info.MontoFactura).toFixed(2) : '—')}
                 ${anulado ? chip('Motivo Anulación', info.MotivoAnulado || '—') : ''}
@@ -788,7 +785,7 @@ async function buscarPedidoWeb() {
                 <div style="font-size:12px;opacity:.85">${info.Fecha || ''} ${info.Hora || ''} · ${info.Modalidad || ''} · ${info.aPOS || ''}</div>
             </div>
             <div class="detalle-resumen">
-                ${chip('Cliente', info.CodCliente || '—')}
+                ${chip('Cliente', (info.Cliente_Nombre ? info.Cliente_Nombre + ' ' + (info.Cliente_Apellido || '') : info.CodCliente) || '—')}
                 ${chip('Monto', info.MontoFactura ? 'C$ ' + parseFloat(info.MontoFactura).toFixed(2) : '—')}
             </div>
             <table class="table table-detalle table-bordered mb-0">

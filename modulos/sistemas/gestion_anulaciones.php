@@ -142,27 +142,6 @@ $puedeAprobar = tienePermiso('aprobacion_pedidos_access_host', 'aprobar', $cargo
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <!-- Info básica -->
-                    <div class="row g-3 mb-3">
-                        <div class="col-md-4">
-                            <div class="card border-0 bg-light text-center p-2">
-                                <div class="small text-muted">Pedido Principal</div>
-                                <div class="fw-bold fs-4 text-danger" id="dec_codPedido">—</div>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="card border-0 bg-light text-center p-2">
-                                <div class="small text-muted">Pedido Cambio</div>
-                                <div class="fw-bold fs-4 text-primary" id="dec_codCambio">—</div>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="card border-0 bg-light text-center p-2">
-                                <div class="small text-muted">Sucursal</div>
-                                <div class="fw-bold fs-4" style="color:#0E544C" id="dec_sucursal">—</div>
-                            </div>
-                        </div>
-                    </div>
 
                     <!-- Motivo -->
                     <div class="alert alert-warning py-2 mb-3">

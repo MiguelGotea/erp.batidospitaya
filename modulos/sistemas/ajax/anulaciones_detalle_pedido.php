@@ -41,15 +41,17 @@ try {
     }
 
     $stmt = $pdo->prepare(
-        "SELECT CodPedido, DBBatidos_Nombre, NombreGrupo, Medida, Cantidad,
-                Precio, Precio_Unitario_Sin_Descuento, CodigoPromocion,
-                Anulado, MotivoAnulado, Fecha, Hora, HoraCreado,
-                aPOS, Caja, Modalidad, Tipo, Delivery_Nombre,
-                Motorizado, CodCliente, MontoFactura, Propina,
-                Sucursal_Nombre, local, Observaciones
-         FROM VentasGlobalesAccessCSV
+        "SELECT v.CodPedido, v.DBBatidos_Nombre, v.NombreGrupo, v.Medida, v.Cantidad,
+                v.Precio, v.Precio_Unitario_Sin_Descuento, v.CodigoPromocion,
+                v.Anulado, v.MotivoAnulado, v.Fecha, v.Hora, v.HoraCreado,
+                v.aPOS, v.Caja, v.Modalidad, v.Tipo, v.Delivery_Nombre,
+                v.Motorizado, v.CodCliente, v.MontoFactura, v.Propina,
+                v.Sucursal_Nombre, v.local, v.Observaciones,
+                c.nombre AS Cliente_Nombre, c.apellido AS Cliente_Apellido
+         FROM VentasGlobalesAccessCSV v
+         LEFT JOIN clientesclub c ON v.CodCliente = c.membresia
          $sqlWhere
-         ORDER BY DBBatidos_Nombre ASC"
+         ORDER BY v.DBBatidos_Nombre ASC"
     );
     $stmt->execute($params);
     $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -72,6 +74,8 @@ try {
         'Delivery_Nombre' => $items[0]['Delivery_Nombre'],
         'Motorizado'    => $items[0]['Motorizado'],
         'CodCliente'    => $items[0]['CodCliente'],
+        'Cliente_Nombre' => $items[0]['Cliente_Nombre'],
+        'Cliente_Apellido' => $items[0]['Cliente_Apellido'],
         'MontoFactura'  => $items[0]['MontoFactura'],
         'Propina'       => $items[0]['Propina'],
         'Sucursal_Nombre' => $items[0]['Sucursal_Nombre'],
