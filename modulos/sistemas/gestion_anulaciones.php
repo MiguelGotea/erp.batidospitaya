@@ -103,6 +103,9 @@ $puedeAprobar = tienePermiso('aprobacion_pedidos_access_host', 'aprobar', $cargo
                                     Tienda
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
+                                <th class="text-center" style="width:90px;" title="Veredicto de la IA">
+                                    <i class="bi bi-robot me-1"></i>IA
+                                </th>
                                 <th style="width: 150px;" class="text-center">Acciones</th>
                             </tr>
                         </thead>

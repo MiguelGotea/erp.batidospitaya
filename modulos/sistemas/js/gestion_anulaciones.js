@@ -180,18 +180,33 @@ function renderTabla(registros) {
                 <i class="bi bi-eye"></i>
             </button>`;
 
-        // Badge IA
-        let iaBadge = '';
-        if (r.ia_decision === 'aprobar') {
-            iaBadge = '<br><span style="font-size:9px;background:#dcfce7;color:#16a34a;border-radius:4px;padding:1px 5px;font-weight:700;">✓IA</span>';
-        } else if (r.ia_decision === 'rechazar') {
-            iaBadge = '<br><span style="font-size:9px;background:#fee2e2;color:#dc2626;border-radius:4px;padding:1px 5px;font-weight:700;">✗IA</span>';
-        } else if (r.ia_decision === 'revisar') {
-            iaBadge = '<br><span style="font-size:9px;background:#fef9c3;color:#b45309;border-radius:4px;padding:1px 5px;font-weight:700;">⚠IA</span>';
+        // Celda IA — veredicto con tooltip del comentario
+        let iaCelda = '<td class="text-center">—</td>';
+        if (r.ia_decision) {
+            let iaComentario = '';
+            try {
+                const iaObj = r.ia_resultado ? JSON.parse(r.ia_resultado) : null;
+                iaComentario = iaObj ? (iaObj.comentario || '') : '';
+            } catch(e) {}
+
+            const iaCfg = {
+                'aprobar' : { bg: '#dcfce7', color: '#16a34a', icon: 'bi-check-circle-fill', label: 'Aprobar'  },
+                'rechazar': { bg: '#fee2e2', color: '#dc2626', icon: 'bi-x-circle-fill',     label: 'Rechazar' },
+                'revisar' : { bg: '#fef9c3', color: '#b45309', icon: 'bi-exclamation-triangle-fill', label: 'Revisar' }
+            };
+            const cfg = iaCfg[r.ia_decision] || { bg: '#f1f5f9', color: '#64748b', icon: 'bi-robot', label: r.ia_decision };
+
+            iaCelda = `<td class="text-center">
+                <span style="display:inline-flex;align-items:center;gap:4px;background:${cfg.bg};color:${cfg.color};
+                             border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;cursor:default;"
+                      title="${escHtml(iaComentario)}" data-bs-toggle="tooltip" data-bs-placement="left">
+                    <i class="bi ${cfg.icon}"></i> ${cfg.label}
+                </span>
+            </td>`;
         }
 
         return `<tr class="${alertClass}">
-            <td><strong style="color:#dc3545">${r.CodPedido}</strong>${iaBadge}
+            <td><strong style="color:#dc3545">${r.CodPedido}</strong>
                 ${r.CodPedidoCambio ? `<br><span class="text-primary small">↔ ${r.CodPedidoCambio}</span>` : ''}
             </td>
             <td style="font-size:12px; white-space:nowrap">
@@ -204,6 +219,7 @@ function renderTabla(registros) {
             <td title="${escHtml(r.Motivo || '')}" style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${motivo}</td>
             <td style="font-size:12px">${aprobPor}</td>
             <td>${ejecut}</td>
+            ${iaCelda}
             <td class="text-center">${acciones}</td>
         </tr>`;
     }).join('');
