@@ -170,6 +170,7 @@ function renderTabla(registros) {
 
         const sucDesc = r.Sucursal_Nombre || `S${r.Sucursal}`;
 
+        let acciones = `
             <button class="btn-accion btn-ver me-1" title="Ver detalle / decidir"
                     onclick="abrirModalDecision(${r.CodAnulacionHost},${r.CodPedido},${r.CodPedidoCambio || 0},${r.Sucursal},'${escHtml(sucDesc)}', ${esPasado}, '${escHtml(r.Motivo || '')}')">
                 <i class="bi bi-eye"></i>
