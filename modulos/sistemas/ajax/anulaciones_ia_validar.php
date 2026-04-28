@@ -76,13 +76,45 @@ try {
         throw new Exception('La IA no retornó una decisión válida.');
     }
 
+    $decision   = strtolower($resultado['decision']);
+    $confianza  = $resultado['confianza']  ?? 'media';
+    $comentario = $resultado['comentario'] ?? '';
+    $puntos     = $resultado['puntos']     ?? [];
+    $proveedor  = $aiService->getProveedor();
+
+    // ── Guardar veredicto en la fila de AnulacionPedidosHost ─
+    $iaResultadoJson = json_encode([
+        'decision'   => $decision,
+        'confianza'  => $confianza,
+        'comentario' => $comentario,
+        'puntos'     => $puntos,
+        'proveedor'  => $proveedor,
+        'fecha'      => date('Y-m-d H:i:s'),
+    ], JSON_UNESCAPED_UNICODE);
+
+    try {
+        $conn->prepare(
+            "UPDATE AnulacionPedidosHost
+             SET ia_decision  = :dec,
+                 ia_resultado = :res
+             WHERE CodAnulacionHost = :id"
+        )->execute([
+            ':dec' => $decision,
+            ':res' => $iaResultadoJson,
+            ':id'  => $codAnulacion,
+        ]);
+    } catch (Exception $eDb) {
+        // No fatal — el veredicto igual se retorna al frontend
+        error_log('anulaciones_ia_validar: no pudo guardar ia_resultado: ' . $eDb->getMessage());
+    }
+
     echo json_encode([
         'success'    => true,
-        'decision'   => strtolower($resultado['decision']),      // 'aprobar' | 'rechazar' | 'revisar'
-        'confianza'  => $resultado['confianza']   ?? 'media',    // 'alta' | 'media' | 'baja'
-        'comentario' => $resultado['comentario']  ?? '',
-        'puntos'     => $resultado['puntos']      ?? [],
-        'proveedor'  => $aiService->getProveedor()
+        'decision'   => $decision,
+        'confianza'  => $confianza,
+        'comentario' => $comentario,
+        'puntos'     => $puntos,
+        'proveedor'  => $proveedor,
     ]);
 
 } catch (Exception $e) {

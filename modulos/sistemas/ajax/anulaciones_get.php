@@ -102,6 +102,7 @@ try {
                 a.AprobadoPor, a.FechaAprobacion,
                 a.EjecutadoEnTienda, a.HoraEjecutadaTienda,
                 a.FechaUltimoSync,
+                a.ia_decision, a.ia_resultado,
                 (SELECT nombre FROM sucursales WHERE codigo = CAST(a.Sucursal AS CHAR) LIMIT 1) AS Sucursal_Nombre,
                 (SELECT MAX(Fecha) FROM VentasGlobalesAccessCSV WHERE CodPedido = a.CodPedido AND (local = CAST(a.Sucursal AS CHAR) OR local = CONCAT('S', CAST(a.Sucursal AS CHAR))) LIMIT 1) AS FechaPedido
          FROM AnulacionPedidosHost a

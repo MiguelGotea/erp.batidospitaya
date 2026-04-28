@@ -180,8 +180,18 @@ function renderTabla(registros) {
                 <i class="bi bi-eye"></i>
             </button>`;
 
+        // Badge IA
+        let iaBadge = '';
+        if (r.ia_decision === 'aprobar') {
+            iaBadge = '<br><span style="font-size:9px;background:#dcfce7;color:#16a34a;border-radius:4px;padding:1px 5px;font-weight:700;">✓IA</span>';
+        } else if (r.ia_decision === 'rechazar') {
+            iaBadge = '<br><span style="font-size:9px;background:#fee2e2;color:#dc2626;border-radius:4px;padding:1px 5px;font-weight:700;">✗IA</span>';
+        } else if (r.ia_decision === 'revisar') {
+            iaBadge = '<br><span style="font-size:9px;background:#fef9c3;color:#b45309;border-radius:4px;padding:1px 5px;font-weight:700;">⚠IA</span>';
+        }
+
         return `<tr class="${alertClass}">
-            <td><strong style="color:#dc3545">${r.CodPedido}</strong>
+            <td><strong style="color:#dc3545">${r.CodPedido}</strong>${iaBadge}
                 ${r.CodPedidoCambio ? `<br><span class="text-primary small">↔ ${r.CodPedidoCambio}</span>` : ''}
             </td>
             <td style="font-size:12px; white-space:nowrap">
@@ -790,6 +800,18 @@ async function consultarIA() {
         card.style.borderLeftStyle = 'solid';
 
         panelIA.style.display = '';
+
+        // ── Auto-aprobación si IA recomienda aprobar ──────────────
+        if (data.decision === 'aprobar') {
+            // Mostrar panel 1.8s para que el usuario vea el resultado antes de ejecutar
+            btnIA.innerHTML = '<i class="bi bi-check2-circle me-1"></i> Aprobando...';
+            setTimeout(async () => {
+                await ejecutarDecision('aprobar');
+            }, 1800);
+        } else {
+            // No auto-rechaza — solo deja el comentario para revisión manual
+            btnIA.disabled = false;
+        }
 
     } catch (e) {
         loaderIA.style.display = 'none';
