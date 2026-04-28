@@ -35,65 +35,130 @@ $sucsRaw  = isset($_GET['sucs'])      ? trim($_GET['sucs'])      : '';
     <style>
         /* ── Detalle Neumorphism Overrides ───────────────────────── */
         :root {
-            --bd-bg: var(--neu-bg, #f6f6f6);
-            --bd-shadow-dark: var(--neu-shadow-dark, #d6d6d6);
-            --bd-shadow-light: var(--neu-shadow-light, #ffffff);
-            --bd-accent: #51B8AC;
+            --neu-bg: #f6f6f6;
+            --neu-shadow-dark: #d6d6d6;
+            --neu-shadow-light: #ffffff;
+            --neu-accent: #51B8AC;
+            --neu-text-primary: #455a64;
+            --neu-text-secondary: #757575;
+            --neu-radius: 20px;
+            --neu-blur: 14px;
+            --neu-distance: 8px;
+
+            /* Specific component colors */
+            --bd-pos: #51B8AC;
+            --bd-neg: #e76f51;
+            --bd-neutral: #457b9d;
+            --bd-final: #6d597a;
         }
 
-        body { background-color: var(--bd-bg); color: #455a64; }
+        body { 
+            background-color: var(--neu-bg); 
+            color: var(--neu-text-primary);
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
 
         .bd-header-card {
-            background: var(--bd-bg);
-            border-radius: 20px; padding: 1.5rem;
-            margin-bottom: 1.5rem; display: flex; flex-wrap: wrap;
-            align-items: center; gap: 1rem; justify-content: space-between;
-            box-shadow: 8px 8px 16px var(--bd-shadow-dark), -8px -8px 16px var(--bd-shadow-light);
+            background: var(--neu-bg);
+            border-radius: var(--neu-radius); 
+            padding: 1.5rem;
+            margin-bottom: 1.5rem; 
+            display: flex; 
+            flex-wrap: wrap;
+            align-items: center; 
+            gap: 1rem; 
+            justify-content: space-between;
+            box-shadow: var(--neu-distance) var(--neu-distance) var(--neu-blur) var(--neu-shadow-dark), 
+                        calc(-1 * var(--neu-distance)) calc(-1 * var(--neu-distance)) var(--neu-blur) var(--neu-shadow-light);
         }
-        .bd-header-card h2 { font-size: 1.3rem; font-weight: 800; color: #0E544C; margin: 0; }
-        .bd-header-card .bd-meta { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .6rem; }
+        .bd-header-card h2 { font-size: 1.4rem; font-weight: 800; color: #0E544C; margin: 0; }
+        .bd-header-card .bd-meta { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .8rem; }
+        
         .bd-pill-meta { 
-            background: var(--bd-bg); border-radius: 20px;
-            padding: .3rem .8rem; font-size: .75rem; color: #51B8AC; font-weight: 600;
-            box-shadow: inset 2px 2px 5px var(--bd-shadow-dark), inset -3px -3px 6px var(--bd-shadow-light);
+            background: var(--neu-bg); 
+            border-radius: 30px;
+            padding: .4rem 1rem; 
+            font-size: .75rem; 
+            color: var(--neu-accent); 
+            font-weight: 600;
+            box-shadow: inset 2px 2px 5px var(--neu-shadow-dark), 
+                        inset -2px -2px 5px var(--neu-shadow-light);
         }
 
         .bd-resumen-card {
-            background: var(--bd-bg); border-radius: 20px;
-            padding: 1.5rem; margin-bottom: 1.5rem;
-            display: flex; flex-wrap: wrap; gap: 1rem;
-            box-shadow: 10px 10px 20px var(--bd-shadow-dark), -10px -10px 20px var(--bd-shadow-light);
+            background: var(--neu-bg); 
+            border-radius: var(--neu-radius);
+            padding: 1.5rem; 
+            margin-bottom: 1.5rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 1.2rem;
+            box-shadow: var(--neu-distance) var(--neu-distance) var(--neu-blur) var(--neu-shadow-dark), 
+                        calc(-1 * var(--neu-distance)) calc(-1 * var(--neu-distance)) var(--neu-blur) var(--neu-shadow-light);
         }
-        .bd-resumen-item { flex: 1; min-width: 140px; padding: 10px; border-radius: 12px; }
-        .bd-resumen-label { font-size: .68rem; color: #888; text-transform: uppercase; letter-spacing: .05em; margin-bottom: .3rem; font-weight: 700; }
-        .bd-resumen-val { font-size: 1.2rem; font-weight: 800; color: #455a64; }
+        .bd-resumen-item { 
+            background: var(--neu-bg);
+            padding: 15px; 
+            border-radius: 16px;
+            box-shadow: inset 4px 4px 8px var(--neu-shadow-dark), 
+                        inset -4px -4px 8px var(--neu-shadow-light);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .bd-resumen-label { 
+            font-size: .65rem; 
+            color: var(--neu-text-secondary); 
+            text-transform: uppercase; 
+            letter-spacing: .1em; 
+            margin-bottom: .4rem; 
+            font-weight: 700; 
+        }
+        .bd-resumen-val { 
+            font-size: 1.3rem; 
+            font-weight: 800; 
+            color: var(--neu-text-primary); 
+        }
 
         .bd-chart-card {
-            background: var(--bd-bg); border-radius: 20px;
-            padding: 1.5rem; margin-bottom: 1.5rem;
-            box-shadow: 10px 10px 20px var(--bd-shadow-dark), -10px -10px 20px var(--bd-shadow-light);
+            background: var(--neu-bg); 
+            border-radius: var(--neu-radius);
+            padding: 1.8rem; 
+            margin-bottom: 1.5rem;
+            box-shadow: var(--neu-distance) var(--neu-distance) var(--neu-blur) var(--neu-shadow-dark), 
+                        calc(-1 * var(--neu-distance)) calc(-1 * var(--neu-distance)) var(--neu-blur) var(--neu-shadow-light);
         }
 
         .bd-section { margin-bottom: 2rem; }
         .bd-section-title {
-            display: flex; align-items: center; gap: .7rem;
-            font-size: .9rem; font-weight: 800; letter-spacing: .05em;
-            text-transform: uppercase; margin-bottom: 1rem;
-            padding: .8rem 1.2rem; border-radius: 14px;
-            background: var(--bd-bg);
-            box-shadow: 5px 5px 10px var(--bd-shadow-dark), -5px -5px 10px var(--bd-shadow-light);
+            display: flex; 
+            align-items: center; 
+            gap: .7rem;
+            font-size: .9rem; 
+            font-weight: 800; 
+            letter-spacing: .05em;
+            text-transform: uppercase; 
+            margin-bottom: 1.2rem;
+            padding: .9rem 1.4rem; 
+            border-radius: 16px;
+            background: var(--neu-bg);
+            box-shadow: 6px 6px 12px var(--neu-shadow-dark), 
+                        -6px -6px 12px var(--neu-shadow-light);
         }
-        .bd-sec-inv_inicial  { color: #2980b9; }
-        .bd-sec-ajuste       { color: #27ae60; }
-        .bd-sec-despacho     { color: #51B8AC; }
-        .bd-sec-compras      { color: #17a589; }
-        .bd-sec-merma        { color: #e74c3c; }
-        .bd-sec-inv_final    { color: #9b59b6; }
+        .bd-sec-inv_inicial  { color: var(--bd-neutral); }
+        .bd-sec-ajuste       { color: var(--bd-pos); }
+        .bd-sec-despacho     { color: var(--neu-accent); }
+        .bd-sec-compras      { color: var(--bd-pos); }
+        .bd-sec-merma        { color: var(--bd-neg); }
+        .bd-sec-inv_final    { color: var(--bd-final); }
 
         .bd-sec-wrap { 
-            background: var(--bd-bg); border-radius: 20px; overflow: hidden; 
-            box-shadow: inset 6px 6px 12px var(--bd-shadow-dark), inset -6px -6px 12px var(--bd-shadow-light);
-            padding: 10px;
+            background: var(--neu-bg); 
+            border-radius: var(--neu-radius); 
+            overflow: hidden; 
+            box-shadow: inset 6px 6px 12px var(--neu-shadow-dark), 
+                        inset -6px -6px 12px var(--neu-shadow-light);
+            padding: 12px;
         }
         .bd-tbl-wrap { max-height: 400px; overflow-y: auto; border-radius: 12px; }
         
@@ -102,9 +167,9 @@ $sucsRaw  = isset($_GET['sucs'])      ? trim($_GET['sucs'])      : '';
             background: #f0f2f5; color: #666; padding: .8rem .7rem;
             font-weight: 800; text-transform: uppercase; letter-spacing: .04em;
             position: sticky; top: 0; z-index: 1; font-size: .7rem;
-            border-bottom: 2px solid var(--bd-shadow-dark);
+            border-bottom: 2px solid var(--neu-shadow-dark);
         }
-        .bd-tbl td { padding: .6rem .7rem; color: #455a64; border-bottom: 1px solid rgba(0,0,0,0.03); vertical-align: middle; }
+        .bd-tbl td { padding: .6rem .7rem; color: var(--neu-text-primary); border-bottom: 1px solid rgba(0,0,0,0.03); vertical-align: middle; }
         .bd-tbl tbody tr:hover td { background: rgba(81, 184, 172, 0.05); }
         .bd-tbl .td-num { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
         .bd-tbl .td-center { text-align: center; }
@@ -112,22 +177,37 @@ $sucsRaw  = isset($_GET['sucs'])      ? trim($_GET['sucs'])      : '';
         .bd-conv-badge {
             display: inline-block; padding: .2rem .6rem; border-radius: 20px;
             font-size: .65rem; font-weight: 700; letter-spacing: .03em;
-            box-shadow: 2px 2px 4px var(--bd-shadow-dark), -2px -2px 4px var(--bd-shadow-light);
+            box-shadow: 2px 2px 4px var(--neu-shadow-dark), -2px -2px 4px var(--neu-shadow-light);
         }
         .bd-conv-base       { background: #e8f5e9; color: #2e7d32; }
         .bd-conv-cascada    { background: #e3f2fd; color: #1565c0; }
         .bd-conv-alternativa{ background: #fff3e0; color: #ef6c00; }
 
-        .bd-totales-row td { background: #f8f9fa; font-weight: 800; color: #0E544C; border-top: 2px solid var(--bd-shadow-dark); }
+        .bd-totales-row td { 
+            background: #f8f9fa; 
+            font-weight: 800; 
+            color: #0E544C; 
+            border-top: 2px solid var(--neu-shadow-dark); 
+        }
         .bd-empty { text-align: center; padding: 2.5rem; color: #999; font-size: .85rem; font-style: italic; }
 
         .bi-search {
-            background: var(--bd-bg); border: none; border-radius: 14px;
-            padding: .8rem 1.2rem; font-size: .9rem; color: #455a64;
-            box-shadow: inset 4px 4px 8px var(--bd-shadow-dark), inset -4px -4px 8px var(--bd-shadow-light);
-            transition: all .2s;
+            background: var(--neu-bg); 
+            border: none; 
+            border-radius: 14px;
+            padding: .8rem 1.2rem; 
+            font-size: .9rem; 
+            color: var(--neu-text-primary);
+            box-shadow: inset 4px 4px 8px var(--neu-shadow-dark), 
+                        inset -4px -4px 8px var(--neu-shadow-light);
+            transition: all .2s ease;
         }
-        .bi-search:focus { outline: none; box-shadow: inset 5px 5px 10px var(--bd-shadow-dark), inset -5px -5px 10px var(--bd-shadow-light), 0 0 0 2px var(--bd-accent); }
+        .bi-search:focus { 
+            outline: none; 
+            box-shadow: inset 5px 5px 10px var(--neu-shadow-dark), 
+                        inset -5px -5px 10px var(--neu-shadow-light);
+            border-left: 4px solid var(--neu-accent);
+        }
 
         /* ── Consumo Teórico (Auditoría por Facturación) ─────── */
         .bd-sec-consumo_teo { color: #e65100; }
@@ -140,17 +220,22 @@ $sucsRaw  = isset($_GET['sucs'])      ? trim($_GET['sucs'])      : '';
         .bd-audit-p3 { background:#ffe0b2; color:#bf360c; }
         .bd-cteo-info {
             display:flex; flex-wrap:wrap; gap:.6rem 1.5rem;
-            font-size:.8rem; padding:.8rem 1rem;
-            background:rgba(230,81,0,.05); border-radius:10px;
-            margin-bottom:.8rem; border-left:3px solid #e65100;
+            font-size:.8rem; padding:1.2rem;
+            background:var(--neu-bg); border-radius:14px;
+            margin-bottom:1.2rem;
+            box-shadow: inset 4px 4px 8px var(--neu-shadow-dark), 
+                        inset -4px -4px 8px var(--neu-shadow-light);
+            border-left: 5px solid #e65100;
         }
-        .bd-cteo-legend { display:flex; flex-wrap:wrap; gap:.4rem 1rem; font-size:.74rem; margin-bottom:.8rem; align-items:center; }
+        .bd-cteo-legend { display:flex; flex-wrap:wrap; gap:.8rem 1.5rem; font-size:.74rem; margin-bottom:1.2rem; align-items:center; }
         .bd-cteo-alerta {
-            padding:.5rem .8rem; border-radius:8px; font-size:.78rem;
-            margin-bottom:.8rem;
+            padding:1rem 1.2rem; border-radius:12px; font-size:.8rem;
+            margin-bottom:1.2rem;
+            box-shadow: 4px 4px 10px var(--neu-shadow-dark), 
+                        -4px -4px 10px var(--neu-shadow-light);
         }
-        .bd-cteo-alerta.warn { background:#fff8e1; border-left:3px solid #f9a825; color:#795548; }
-        .bd-cteo-alerta.ok   { background:#e8f5e9; border-left:3px solid #43a047; color:#2e7d32; }
+        .bd-cteo-alerta.warn { background:#fffcf0; border-left:4px solid #f9a825; color:#795548; }
+        .bd-cteo-alerta.ok   { background:#f6fbf6; border-left:4px solid #43a047; color:#2e7d32; }
     </style>
 
 </head>
@@ -407,38 +492,39 @@ function renderDetalle(res) {
     const t = res.totales_tipo;
     const bdResumen = document.getElementById('bdResumen');
     bdResumen.innerHTML = `
-        <div class="bd-resumen-item" style="background:#fff;">
+        <div class="bd-resumen-item">
             <div class="bd-resumen-label">INV. INICIAL</div>
-            <div class="bd-resumen-val" style="color:#2980b9">${fmt(t.inv_inicial,2)}</div>
+            <div class="bd-resumen-val" style="color:var(--bd-neutral)">${fmt(t.inv_inicial,2)}</div>
         </div>
-        <div class="bd-resumen-item" style="background:#fff;">
+        <div class="bd-resumen-item">
             <div class="bd-resumen-label">+ AJUSTE</div>
-            <div class="bd-resumen-val" style="color:#27ae60">${fmt(t.ajuste,2)}</div>
+            <div class="bd-resumen-val" style="color:var(--bd-pos)">${fmt(t.ajuste,2)}</div>
         </div>
-        <div class="bd-resumen-item" style="background:#fff;">
+        <div class="bd-resumen-item">
             <div class="bd-resumen-label">+ DESPACHO</div>
-            <div class="bd-resumen-val" style="color:#27ae60">${fmt(t.despacho,2)}</div>
+            <div class="bd-resumen-val" style="color:var(--neu-accent)">${fmt(t.despacho,2)}</div>
         </div>
-        <div class="bd-resumen-item" style="background:#fff;">
+        <div class="bd-resumen-item">
             <div class="bd-resumen-label">+ COMPRAS</div>
-            <div class="bd-resumen-val" style="color:#17a589">${fmt(t.compras,2)}</div>
+            <div class="bd-resumen-val" style="color:var(--bd-pos)">${fmt(t.compras,2)}</div>
         </div>
-        <div class="bd-resumen-item" style="background:#fff;">
+        <div class="bd-resumen-item">
             <div class="bd-resumen-label">- MERMA</div>
-            <div class="bd-resumen-val" style="color:#e74c3c">${fmt(t.merma,2)}</div>
+            <div class="bd-resumen-val" style="color:var(--bd-neg)">${fmt(t.merma,2)}</div>
         </div>
-        <div class="bd-resumen-item" style="background:#fff;">
+        <div class="bd-resumen-item">
             <div class="bd-resumen-label">- INV. FINAL</div>
-            <div class="bd-resumen-val" style="color:#9b59b6">${fmt(t.inv_final,2)}</div>
+            <div class="bd-resumen-val" style="color:var(--bd-final)">${fmt(t.inv_final,2)}</div>
         </div>
-        <div class="bd-resumen-item" style="box-shadow:inset 3px 3px 6px var(--bd-shadow-dark), inset -3px -3px 6px var(--bd-shadow-light); background:#f0f9f8;">
+        <div class="bd-resumen-item" style="background:rgba(81,184,172,0.03)">
             <div class="bd-resumen-label">Consumo Teórico (Ventas)</div>
-            <div class="bd-resumen-val" style="color:#2980b9">${fmt(res.consumo_teorico,2)}</div>
+            <div class="bd-resumen-val" style="color:var(--bd-neutral)">${fmt(res.consumo_teorico,2)}</div>
         </div>
-        <div class="bd-resumen-item" style="box-shadow:inset 3px 3px 6px var(--bd-shadow-dark), inset -3px -3px 6px var(--bd-shadow-light); background:#fdf7f7;">
+        <div class="bd-resumen-item" style="background:rgba(14,84,76,0.03)">
             <div class="bd-resumen-label">Consumo Real (Kardex)</div>
             <div class="bd-resumen-val" style="color:#0E544C">${fmt(res.consumo_real,2)}</div>
         </div>
+    `;
     `;
     bdResumen.classList.remove('d-none');
 
