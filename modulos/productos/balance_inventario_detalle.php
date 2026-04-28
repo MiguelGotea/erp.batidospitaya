@@ -128,6 +128,29 @@ $sucsRaw  = isset($_GET['sucs'])      ? trim($_GET['sucs'])      : '';
             transition: all .2s;
         }
         .bi-search:focus { outline: none; box-shadow: inset 5px 5px 10px var(--bd-shadow-dark), inset -5px -5px 10px var(--bd-shadow-light), 0 0 0 2px var(--bd-accent); }
+
+        /* ── Consumo Teórico (Auditoría por Facturación) ─────── */
+        .bd-sec-consumo_teo { color: #e65100; }
+        .bd-audit-badge {
+            display:inline-block; font-size:.63rem; border-radius:3px;
+            padding:1px 5px; font-weight:700; line-height:1.4;
+        }
+        .bd-audit-p1 { background:#c8e6c9; color:#1b5e20; }
+        .bd-audit-p2 { background:#bbdefb; color:#0d47a1; }
+        .bd-audit-p3 { background:#ffe0b2; color:#bf360c; }
+        .bd-cteo-info {
+            display:flex; flex-wrap:wrap; gap:.6rem 1.5rem;
+            font-size:.8rem; padding:.8rem 1rem;
+            background:rgba(230,81,0,.05); border-radius:10px;
+            margin-bottom:.8rem; border-left:3px solid #e65100;
+        }
+        .bd-cteo-legend { display:flex; flex-wrap:wrap; gap:.4rem 1rem; font-size:.74rem; margin-bottom:.8rem; align-items:center; }
+        .bd-cteo-alerta {
+            padding:.5rem .8rem; border-radius:8px; font-size:.78rem;
+            margin-bottom:.8rem;
+        }
+        .bd-cteo-alerta.warn { background:#fff8e1; border-left:3px solid #f9a825; color:#795548; }
+        .bd-cteo-alerta.ok   { background:#e8f5e9; border-left:3px solid #43a047; color:#2e7d32; }
     </style>
 
 </head>
@@ -171,6 +194,23 @@ $sucsRaw  = isset($_GET['sucs'])      ? trim($_GET['sucs'])      : '';
 
             <!-- Secciones -->
             <div id="bdSecciones"></div>
+
+            <!-- ── Consumo Teórico (Auditoría Venta × Venta) ─── -->
+            <div id="bdConsumoTeoWrap" class="bd-section" style="display:none">
+                <div class="bd-section-title bd-sec-consumo_teo">
+                    <i class="fas fa-microscope"></i>
+                    Consumo Teórico por Facturación
+                    <span style="margin-left:.5rem;font-size:.72rem;opacity:.6;font-weight:400;font-style:italic">Auditoría Venta × Venta</span>
+                    <span id="bdCteoSubtitle" style="margin-left:auto;font-size:.72rem;opacity:.7;font-weight:600">Cargando…</span>
+                </div>
+                <div class="bd-sec-wrap">
+                    <div id="bdCteoLoader" class="text-center py-4">
+                        <div class="spinner-border" role="status" style="width:1.4rem;height:1.4rem;color:#e65100"></div>
+                        <div class="small text-muted mt-2">Calculando consumo por facturación…</div>
+                    </div>
+                    <div id="bdCteoContent" style="display:none"></div>
+                </div>
+            </div>
 
 
         </div>
@@ -218,6 +258,7 @@ function cargar() {
                 return;
             }
             renderDetalle(res);
+            cargarConsumoTeorico();
         })
         .catch(()=>{
             document.getElementById('bdLoader').classList.add('d-none');
@@ -495,6 +536,162 @@ function renderDetalle(res) {
     });
 }
 
+
+// ── Consumo Teórico — carga y render ────────────────────────────────────────
+function cargarConsumoTeorico() {
+    const wrap = document.getElementById('bdConsumoTeoWrap');
+    wrap.style.display = '';
+
+    const fd = new FormData();
+    fd.append('id_presentacion',  ID_PP);
+    fd.append('semana_desde_num', SEM_DESDE);
+    fd.append('semana_hasta_num', SEM_HASTA);
+    if (SUCS_RAW) {
+        SUCS_RAW.split(',').forEach(s => { if (s.trim()) fd.append('sucursales[]', s.trim()); });
+    }
+    fetch(AJAX + 'balance_inventario_auditoria_consumo.php', {method:'POST', body:fd})
+        .then(r => r.json())
+        .then(res => renderConsumoTeorico(res))
+        .catch(() => renderConsumoTeorico({ok:false, msg:'Error de conexión al calcular consumo teórico.'}));
+}
+
+function renderConsumoTeorico(res) {
+    document.getElementById('bdCteoLoader').style.display = 'none';
+    const content  = document.getElementById('bdCteoContent');
+    const subtitle = document.getElementById('bdCteoSubtitle');
+    content.style.display = '';
+
+    if (!res.ok) {
+        subtitle.textContent = 'Sin datos';
+        content.innerHTML = `<div class="bd-empty"><i class="fas fa-info-circle me-1"></i>${esc(res.msg || 'Sin datos.')}</div>`;
+        return;
+    }
+
+    const pp    = res.presentacion;
+    const filas = res.filas || [];
+    const nDec  = filas.filter(f => f.genera_decimal).length;
+
+    subtitle.textContent = `${res.total_filas} registros · Total: ${fmt2(res.total_consumo)} ${pp.unidad}`;
+
+    // ── Info strip
+    const infoHtml = `
+        <div class="bd-cteo-info">
+            <span><strong>Presentación:</strong> ${esc(pp.nombre)}</span>
+            <span><strong>Categoría:</strong> <span class="bd-pill-meta" style="font-size:.68rem">${esc(pp.categoria_insumo || '—')}</span></span>
+            <span><strong>Unidad ERP:</strong> ${esc(pp.unidad)}</span>
+            <span><strong>pp_cantidad:</strong> ${pp.pp_cant}</span>
+            <span><strong>Registros:</strong> ${res.total_filas}</span>
+            <span><strong>Total:</strong> <span style="color:#e65100;font-weight:800">${fmt2(res.total_consumo)}</span></span>
+        </div>`;
+
+    // ── Leyenda
+    const leyendaHtml = `
+        <div class="bd-cteo-legend">
+            <span class="bd-audit-badge bd-audit-p1">P1</span><span style="color:#555">Porción directa — redondea al 0.5</span>
+            <span class="bd-audit-badge bd-audit-p2">P2</span><span style="color:#555">Cotización base — 4 dec</span>
+            <span class="bd-audit-badge bd-audit-p3">P3</span><span style="color:#555">Fallback — 4 dec</span>
+            ${ nDec > 0
+                ? `<span class="ms-2" style="background:#fff8e1;border-radius:3px;padding:2px 6px;font-size:.7rem"><i class="fas fa-exclamation-triangle text-warning me-1"></i>${nDec} fila(s) redondeadas</span>`
+                : '' }
+        </div>`;
+
+    // ── Alerta P1
+    const alertaHtml = nDec > 0
+        ? `<div class="bd-cteo-alerta warn"><i class="fas fa-exclamation-triangle me-1"></i><strong>${nDec} fila(s) P1</strong> tuvieron consumo crudo redondeado al 0.5 más cercano.</div>`
+        : `<div class="bd-cteo-alerta ok"><i class="fas fa-check-circle me-1"></i>Todos los cálculos P1 caen exactamente en múltiplos de 0.5.</div>`;
+
+    // ── Thead
+    const thead = `<tr>
+        <th style="width:42px">Sem</th>
+        <th style="width:82px">Fecha</th>
+        <th>Sucursal</th>
+        <th>Batido</th>
+        <th>Ingrediente</th>
+        <th style="width:52px">Und.</th>
+        <th class="td-num" style="width:54px">Ventas</th>
+        <th class="td-num" style="width:62px">Cant.Rec.</th>
+        <th class="td-num" style="width:62px">Raw</th>
+        <th class="td-num" style="width:58px">Factor</th>
+        <th class="td-num" style="width:58px">pp_cant</th>
+        <th class="td-num" style="width:62px">Crudo</th>
+        <th class="td-num" style="width:72px">Final</th>
+        <th style="width:42px">Tipo</th>
+        <th style="width:90px">Nivel</th>
+    </tr>`;
+
+    // ── Tbody
+    let tbody = '';
+    let sumCrudo = 0, sumFinal = 0;
+    filas.forEach(f => {
+        sumCrudo += f.consumo_crudo;
+        sumFinal += f.consumo_final;
+
+        const tipoMapeo = f.tipo_mapeo || (f.es_p1 ? 'P1' : 'P2');
+        const tipoCls   = tipoMapeo === 'P1' ? 'bd-audit-p1' : tipoMapeo === 'P2' ? 'bd-audit-p2' : 'bd-audit-p3';
+        const tipoHtml  = `<span class="bd-audit-badge ${tipoCls}">${tipoMapeo}</span>`;
+
+        const rowBg = f.genera_decimal
+            ? 'background:#fff8e1'
+            : tipoMapeo === 'P1' ? 'background:#f1f8e9'
+            : tipoMapeo === 'P2' ? 'background:#f3f8ff'
+            : 'background:#fff8f2';
+
+        const diffBadge = f.genera_decimal
+            ? `<span style="font-size:.6rem;background:#ffe082;border-radius:2px;padding:1px 3px" title="Crudo:${f.consumo_crudo}">Δ${(Math.round(parseFloat(f.consumo_crudo)*2)/2).toFixed(1)}</span>`
+            : '';
+
+        const srch = esc([f.fecha, f.sucursal, f.nombre_batido, f.nombre_ingrediente, f.nivel, f.semana].join(' ').toLowerCase());
+
+        tbody += `<tr style="font-size:.72rem;${rowBg}" data-search="${srch}">
+            <td class="td-center">${f.semana}</td>
+            <td style="white-space:nowrap">${esc(f.fecha)}</td>
+            <td style="font-weight:600;font-size:.7rem">${esc(f.sucursal)}</td>
+            <td style="max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(f.nombre_batido)}">${esc(f.nombre_batido)}</td>
+            <td style="max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(f.nombre_ingrediente)}">${esc(f.nombre_ingrediente)}</td>
+            <td style="font-size:.68rem;color:#888">${esc(f.unidad_access)}</td>
+            <td class="td-num">${f.ventas}</td>
+            <td class="td-num">${f.cant_receta}</td>
+            <td class="td-num">${f.cant_total}</td>
+            <td class="td-num" style="color:#1565c0">${f.factor}</td>
+            <td class="td-num">${f.pp_cantidad}</td>
+            <td class="td-num" style="color:#555">${f.consumo_crudo}</td>
+            <td class="td-num" style="color:#0E544C;font-weight:700">${f.consumo_final} ${diffBadge}</td>
+            <td>${tipoHtml}</td>
+            <td style="font-size:.62rem;color:#999">${esc(f.nivel)}</td>
+        </tr>`;
+    });
+
+    // Fila totales
+    tbody += `<tr class="bd-totales-row">
+        <td colspan="11" style="text-align:right;font-size:.7rem;letter-spacing:.05em">TOTAL CONSUMO TEÓRICO</td>
+        <td class="td-num">${fmt(sumCrudo, 2)}</td>
+        <td class="td-num" style="color:#e65100">${fmt(sumFinal, 2)}</td>
+        <td colspan="2"></td>
+    </tr>`;
+
+    content.innerHTML = `
+        ${infoHtml}
+        ${leyendaHtml}
+        ${alertaHtml}
+        <div class="mb-3">
+            <input type="text" class="bi-search w-100" id="bdCteoBusqueda"
+                   placeholder="Filtrar por fecha, batido, ingrediente, sucursal, nivel…">
+        </div>
+        <div class="bd-tbl-wrap" style="max-height:520px">
+            <table class="bd-tbl">
+                <thead>${thead}</thead>
+                <tbody id="bdCteoTbody">${tbody}</tbody>
+            </table>
+        </div>`;
+
+    // Búsqueda
+    document.getElementById('bdCteoBusqueda').addEventListener('input', function () {
+        const q = this.value.toLowerCase();
+        document.querySelectorAll('#bdCteoTbody tr[data-search]').forEach(tr => {
+            tr.style.display = (!q || tr.dataset.search.includes(q)) ? '' : 'none';
+        });
+    });
+}
 
 // ── Inicio ────────────────────────────────────────────────────
 if (!ID_PP || !SEM_DESDE || !SEM_HASTA) {
