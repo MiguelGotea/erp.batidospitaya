@@ -115,7 +115,8 @@ $puedeAprobar = tienePermiso('aprobacion_pedidos_access_host', 'aprobar', $cargo
                 <div class="d-flex justify-content-between align-items-center mt-3">
                     <div class="d-flex align-items-center gap-2">
                         <label class="mb-0">Mostrar:</label>
-                        <select class="form-select form-select-sm" id="registrosPorPagina" style="width: auto;" onchange="cambiarRegistrosPorPagina()">
+                        <select class="form-select form-select-sm" id="registrosPorPagina" style="width: auto;"
+                            onchange="cambiarRegistrosPorPagina()">
                             <option value="25" selected>25</option>
                             <option value="50">50</option>
                             <option value="100">100</option>
@@ -137,7 +138,8 @@ $puedeAprobar = tienePermiso('aprobacion_pedidos_access_host', 'aprobar', $cargo
             <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
                 <div class="modal-header border-0 py-3 px-4" style="background: #0E544C; color: #fff;">
                     <div class="d-flex align-items-center">
-                        <div class="bg-white bg-opacity-25 rounded-circle p-2 me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                        <div class="bg-white bg-opacity-25 rounded-circle p-2 me-3 d-flex align-items-center justify-content-center"
+                            style="width: 40px; height: 40px;">
                             <i class="bi bi-shield-check fs-4"></i>
                         </div>
                         <div>
@@ -156,7 +158,8 @@ $puedeAprobar = tienePermiso('aprobacion_pedidos_access_host', 'aprobar', $cargo
                                 <i class="bi bi-chat-left-dots fs-4"></i>
                             </div>
                             <div class="flex-grow-1">
-                                <label class="text-uppercase fw-bold text-muted small mb-1" style="letter-spacing: 1px;">Motivo Declarado</label>
+                                <label class="text-uppercase fw-bold text-muted small mb-1"
+                                    style="letter-spacing: 1px;">Motivo Declarado</label>
                                 <div class="fs-5 fw-semibold text-dark" id="dec_motivo">—</div>
                             </div>
                         </div>
@@ -186,7 +189,8 @@ $puedeAprobar = tienePermiso('aprobacion_pedidos_access_host', 'aprobar', $cargo
                         <div class="col-lg-6" id="colCambio" style="display:none">
                             <div class="card h-100 border-0 shadow-sm overflow-hidden" style="border-radius: 12px;">
                                 <div class="card-header border-0 bg-white pt-3 pb-0 px-3">
-                                    <h6 class="text-primary text-uppercase fw-bold small mb-0 d-flex align-items-center">
+                                    <h6
+                                        class="text-primary text-uppercase fw-bold small mb-0 d-flex align-items-center">
                                         <span class="p-1 rounded bg-primary bg-opacity-10 me-2">
                                             <i class="bi bi-arrow-left-right"></i>
                                         </span>
@@ -203,24 +207,29 @@ $puedeAprobar = tienePermiso('aprobacion_pedidos_access_host', 'aprobar', $cargo
                             </div>
                         </div>
                         <div class="col-lg-6" id="colNoCambio">
-                            <div class="h-100 d-flex flex-column align-items-center justify-content-center text-muted border border-2 rounded shadow-sm bg-white p-5" style="border-style: dashed !important; border-radius: 12px !important; min-height: 300px;">
+                            <div class="h-100 d-flex flex-column align-items-center justify-content-center text-muted border border-2 rounded shadow-sm bg-white p-5"
+                                style="border-style: dashed !important; border-radius: 12px !important; min-height: 300px;">
                                 <i class="bi bi-info-circle fs-1 opacity-25 mb-3"></i>
                                 <h6 class="fw-bold mb-1">Sin Pedido de Cambio</h6>
-                                <p class="small text-center px-4 mb-0">Esta solicitud no incluye un pedido de reemplazo. Solo se procesará la anulación.</p>
+                                <p class="small text-center px-4 mb-0">Esta solicitud no incluye un pedido de reemplazo.
+                                    Solo se procesará la anulación.</p>
                             </div>
                         </div>
                     </div>
 
+
                     <!-- Panel resultado IA -->
                     <div id="panelResultadoIA" class="mt-4" style="display:none;">
-                        <div class="card border-0 shadow-sm" id="cardResultadoIA" style="border-radius: 12px; border-left: 4px solid #6c757d !important;">
+                        <div class="card border-0 shadow-sm" id="cardResultadoIA"
+                            style="border-radius: 12px; border-left: 4px solid #6c757d !important;">
                             <div class="card-body p-3">
                                 <div class="d-flex align-items-center mb-2">
                                     <div class="rounded-3 p-2 me-2" style="background:#f0f9ff; color:#0369a1;">
                                         <i class="bi bi-robot fs-5"></i>
                                     </div>
                                     <div class="flex-grow-1">
-                                        <div class="fw-bold small text-uppercase text-muted" style="letter-spacing:1px;">Análisis de IA</div>
+                                        <div class="fw-bold small text-uppercase text-muted"
+                                            style="letter-spacing:1px;">Análisis de IA</div>
                                         <div id="ia_proveedor" class="small text-muted"></div>
                                     </div>
                                     <span id="ia_badge_decision" class="badge fs-6 px-3 py-2"></span>
@@ -248,7 +257,8 @@ $puedeAprobar = tienePermiso('aprobacion_pedidos_access_host', 'aprobar', $cargo
                                         <i class="bi bi-pencil-square me-1"></i> Comentario de decisión (Opcional)
                                     </label>
                                     <textarea class="form-control border-light-subtle bg-light" id="dec_comentario" rows="3"
-                                        placeholder="Escribe el motivo de tu decisión..." style="border-radius: 8px; resize: none;"></textarea>
+                                        placeholder="Escribe el motivo de tu decisión..."
+                                        style="border-radius: 8px; resize: none;"></textarea>
                                 </div>
                             </div>
                         </div>
@@ -267,11 +277,14 @@ $puedeAprobar = tienePermiso('aprobacion_pedidos_access_host', 'aprobar', $cargo
                                 <i class="bi bi-robot me-2"></i> Consultar IA
                             </button>
                             <div class="vr mx-1" style="height:32px;"></div>
-                            <button class="btn px-4 py-2 fw-bold d-flex align-items-center" style="background:#fff1f2; color:#be123c; border: 1px solid #fda4af; border-radius: 10px;" id="btnRechazar"
-                                onclick="ejecutarDecision('rechazar')">
+                            <button class="btn px-4 py-2 fw-bold d-flex align-items-center"
+                                style="background:#fff1f2; color:#be123c; border: 1px solid #fda4af; border-radius: 10px;"
+                                id="btnRechazar" onclick="ejecutarDecision('rechazar')">
                                 <i class="bi bi-x-circle me-2"></i> Rechazar Solicitud
                             </button>
-                            <button class="btn px-4 py-2 fw-bold d-flex align-items-center shadow-sm" style="background:#0E544C; color:#fff; border-radius: 10px;" id="btnAprobar" onclick="ejecutarDecision('aprobar')">
+                            <button class="btn px-4 py-2 fw-bold d-flex align-items-center shadow-sm"
+                                style="background:#0E544C; color:#fff; border-radius: 10px;" id="btnAprobar"
+                                onclick="ejecutarDecision('aprobar')">
                                 <i class="bi bi-check2-circle me-2"></i> Aprobar Solicitud
                             </button>
                         <?php endif; ?>
@@ -436,17 +449,19 @@ $puedeAprobar = tienePermiso('aprobacion_pedidos_access_host', 'aprobar', $cargo
         }
 
         /* Premium Modal Overrides */
-        .modal-xl { max-width: 1140px; }
-        
+        .modal-xl {
+            max-width: 1140px;
+        }
+
         .det-chip-premium {
             background: #ffffff;
             border: 1px solid #edf2f7;
             border-radius: 10px;
             padding: 10px 14px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
             transition: all 0.2s;
         }
-        
+
         .det-chip-premium:hover {
             border-color: #cbd5e0;
             background: #f8fafc;
@@ -457,7 +472,7 @@ $puedeAprobar = tienePermiso('aprobacion_pedidos_access_host', 'aprobar', $cargo
             border-spacing: 0;
             width: 100%;
         }
-        
+
         .table-premium thead th {
             background: #f8fafc;
             color: #4a5568;
@@ -468,7 +483,7 @@ $puedeAprobar = tienePermiso('aprobacion_pedidos_access_host', 'aprobar', $cargo
             padding: 12px;
             border-bottom: 2px solid #edf2f7;
         }
-        
+
         .table-premium tbody td {
             padding: 12px;
             border-bottom: 1px solid #edf2f7;
@@ -493,7 +508,7 @@ $puedeAprobar = tienePermiso('aprobacion_pedidos_access_host', 'aprobar', $cargo
 
         .btn-modern:hover {
             transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
 
         .truncate-1 {
