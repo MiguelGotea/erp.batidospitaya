@@ -5,7 +5,7 @@
 
 /* ── Constantes AJAX ────────────────────────────────────────── */
 const AJAX_PRODUCTOS = 'ajax/visor_recetas_light_get_productos.php';
-const AJAX_RECETA = '../sistemas/ajax/accessantiguo_get_detalle_receta.php';
+const AJAX_RECETA = 'ajax/accessantiguo_get_detalle_receta.php';
 
 /* ── Paleta de colores para grupos ──────────────────────────── */
 const GRUPO_COLORES = [
