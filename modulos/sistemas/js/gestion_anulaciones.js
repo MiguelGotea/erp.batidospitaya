@@ -132,7 +132,7 @@ async function cargarDatos(page = paginaActual) {
 function renderTabla(registros) {
     const tbody = document.getElementById('tableBody');
     if (!registros.length) {
-        tbody.innerHTML = `<tr><td colspan="10" class="text-center py-5 text-muted">
+        tbody.innerHTML = `<tr><td colspan="11" class="text-center py-5 text-muted">
             <i class="bi bi-inbox fs-2 opacity-25 d-block mb-2"></i>
             No hay solicitudes con los filtros actuales.</td></tr>`;
         return;
@@ -181,7 +181,7 @@ function renderTabla(registros) {
             </button>`;
 
         // Celda IA — veredicto con tooltip del comentario
-        let iaCelda = '<td class="text-center">—</td>';
+        let iaCelda = '<td class="text-center" style="color:#cbd5e1;">—</td>';
         if (r.ia_decision) {
             let iaComentario = '';
             try {
@@ -198,9 +198,9 @@ function renderTabla(registros) {
 
             iaCelda = `<td class="text-center">
                 <span style="display:inline-flex;align-items:center;gap:4px;background:${cfg.bg};color:${cfg.color};
-                             border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;cursor:default;"
-                      title="${escHtml(iaComentario)}" data-bs-toggle="tooltip" data-bs-placement="left">
-                    <i class="bi ${cfg.icon}"></i> ${cfg.label}
+                             border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;cursor:default;white-space:nowrap;"
+                      title="${escHtml(iaComentario)}">
+                    <i class="bi ${cfg.icon}"></i>${cfg.label}
                 </span>
             </td>`;
         }
