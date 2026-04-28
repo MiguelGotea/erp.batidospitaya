@@ -176,25 +176,6 @@ function renderTabla(registros) {
                 <i class="bi bi-eye"></i>
             </button>`;
 
-        if (PUEDE_APROBAR && parseInt(r.Status) === 0) {
-            if (esPasado) {
-                acciones += `
-                <button class="btn-accion btn-disabled me-1" title="Bloqueado: Fecha pasada" disabled style="opacity:0.4; cursor:not-allowed">
-                    <i class="bi bi-lock-fill"></i>
-                </button>`;
-            } else {
-                acciones += `
-                <button class="btn-accion btn-aprobar me-1" title="Aprobar"
-                        onclick="accionRapida(${r.CodAnulacionHost},'aprobar')">
-                    <i class="bi bi-check-lg"></i>
-                </button>
-                <button class="btn-accion btn-rechazar" title="Rechazar"
-                        onclick="accionRapida(${r.CodAnulacionHost},'rechazar')">
-                    <i class="bi bi-x-lg"></i>
-                </button>`;
-            }
-        }
-
         return `<tr class="${alertClass}">
             <td><strong style="color:#dc3545">${r.CodPedido}</strong>
                 ${r.CodPedidoCambio ? `<br><span class="text-primary small">↔ ${r.CodPedidoCambio}</span>` : ''}
@@ -627,56 +608,64 @@ async function cargarDetallePedido(codPedido, sucursal, containerId) {
         const anulado = parseInt(info.Anulado) === -1 || parseInt(info.Anulado) === 1;
 
         contenido.innerHTML = `
-            <div class="detalle-header">
+            <div class="detalle-header-premium shadow-sm">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <div class="cod">#${codPedido} ${anulado ? '<span class="badge bg-danger ms-2" style="font-size:12px">ANULADO</span>' : ''}</div>
-                        <div style="font-size:12px;opacity:.85">${info.Fecha || ''} ${info.Hora || ''} · ${info.Sucursal_Nombre || 'S' + sucursal}</div>
+                        <div class="fw-bold fs-4 text-dark mb-0">#${codPedido}</div>
+                        <div class="small text-muted">
+                            <i class="bi bi-calendar-event me-1"></i>${info.Fecha || ''} ${info.Hora || ''} 
+                            <span class="mx-2">•</span> 
+                            <i class="bi bi-geo-alt me-1"></i>${info.Sucursal_Nombre || 'S' + sucursal}
+                        </div>
                     </div>
                     <div class="text-end">
-                        <div style="font-size:12px;opacity:.85">${info.Modalidad || ''} · ${info.aPOS || ''}</div>
-                        <div style="font-size:11px;opacity:.7">${info.Caja || ''}</div>
+                        ${anulado ? '<span class="badge bg-danger rounded-pill px-3 py-2 mb-2" style="font-size:11px"><i class="bi bi-x-circle me-1"></i>ANULADO EN TIENDA</span>' : '<span class="badge bg-success rounded-pill px-3 py-2 mb-2" style="font-size:11px"><i class="bi bi-check2-circle me-1"></i>ACTIVO</span>'}
+                        <div class="small fw-semibold text-dark">${info.Modalidad || ''} · ${info.aPOS || ''}</div>
                     </div>
                 </div>
             </div>
-            <div class="detalle-resumen">
-                ${chip('Cliente', (info.Cliente_Nombre ? info.Cliente_Nombre + ' ' + (info.Cliente_Apellido || '') : info.CodCliente) || '—')}
-                ${chip('Delivery', info.Delivery_Nombre || '—')}
-                ${chip('Monto Factura', info.MontoFactura ? 'C$ ' + parseFloat(info.MontoFactura).toFixed(2) : '—')}
-                ${anulado ? chip('Motivo Anulación', info.MotivoAnulado || '—') : ''}
+            <div class="row g-3 mb-4">
+                <div class="col-6">
+                    ${chip('Cliente', (info.Cliente_Nombre ? info.Cliente_Nombre + ' ' + (info.Cliente_Apellido || '') : info.CodCliente) || '—')}
+                </div>
+                <div class="col-6">
+                    ${chip('Delivery', info.Delivery_Nombre || 'Sin Delivery')}
+                </div>
+                <div class="col-6">
+                    ${chip('Monto Factura', info.MontoFactura ? 'C$ ' + parseFloat(info.MontoFactura).toFixed(2) : '—')}
+                </div>
+                ${anulado ? `<div class="col-6">${chip('Motivo Anulación', info.MotivoAnulado || '—')}</div>` : ''}
             </div>
-            <table class="table table-detalle table-bordered mb-0">
-                <thead>
-                    <tr>
-                        <th>Producto</th>
-                        <th>Medida</th>
-                        <th class="text-center">Cant.</th>
-                        <th class="text-end">P. Unit.</th>
-                        <th class="text-end">Subtotal</th>
-                        <th>Promo</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${data.items.map(it => {
-                        const sub = (parseFloat(it.Cantidad || 0) * parseFloat(it.Precio_Unitario_Sin_Descuento || it.Precio || 0)).toFixed(2);
-                        return `<tr class="${parseInt(it.Anulado) === -1 ? 'fila-anulada' : ''}">
-                            <td>${escHtml(it.DBBatidos_Nombre || it.NombreGrupo || '—')}</td>
-                            <td>${escHtml(it.Medida || '—')}</td>
-                            <td class="text-center">${it.Cantidad}</td>
-                            <td class="text-end">C$ ${parseFloat(it.Precio_Unitario_Sin_Descuento || it.Precio || 0).toFixed(2)}</td>
-                            <td class="text-end">C$ ${sub}</td>
-                            <td class="text-center">${it.CodigoPromocion ? `<span class="badge bg-warning text-dark" style="font-size:10px">${it.CodigoPromocion}</span>` : '—'}</td>
-                        </tr>`;
-                    }).join('')}
-                </tbody>
-                <tfoot>
-                    <tr>
-                        <td colspan="4" class="text-end fw-bold">Total Factura:</td>
-                        <td class="text-end fw-bold text-success">C$ ${parseFloat(info.MontoFactura || 0).toFixed(2)}</td>
-                        <td></td>
-                    </tr>
-                </tfoot>
-            </table>
+            
+            <div class="rounded-3 border overflow-hidden shadow-sm bg-white">
+                <table class="table table-premium mb-0">
+                    <thead>
+                        <tr>
+                            <th>Producto</th>
+                            <th>Medida</th>
+                            <th class="text-center">Cant.</th>
+                            <th class="text-end">Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${data.items.map(it => {
+                            const sub = (parseFloat(it.Cantidad || 0) * parseFloat(it.Precio_Unitario_Sin_Descuento || it.Precio || 0)).toFixed(2);
+                            return `<tr class="${parseInt(it.Anulado) === -1 ? 'fila-anulada' : ''}">
+                                <td class="fw-medium">${escHtml(it.DBBatidos_Nombre || it.NombreGrupo || '—')}</td>
+                                <td><span class="badge bg-light text-dark border">${escHtml(it.Medida || '—')}</span></td>
+                                <td class="text-center fw-bold">${it.Cantidad}</td>
+                                <td class="text-end fw-bold text-dark">C$ ${sub}</td>
+                            </tr>`;
+                        }).join('')}
+                    </tbody>
+                    <tfoot class="bg-light">
+                        <tr>
+                            <td colspan="3" class="text-end fw-bold text-muted text-uppercase small">Total Factura:</td>
+                            <td class="text-end fw-bold text-success fs-6">C$ ${parseFloat(info.MontoFactura || 0).toFixed(2)}</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
         `;
     } catch (e) {
         contenido.innerHTML =
@@ -685,7 +674,12 @@ async function cargarDetallePedido(codPedido, sucursal, containerId) {
 }
 
 function chip(lbl, val) {
-    return `<div class="det-chip"><span class="lbl">${lbl}</span><span class="val">${escHtml(String(val))}</span></div>`;
+    return `
+        <div class="det-chip-premium">
+            <div class="small text-muted text-uppercase fw-bold mb-1" style="font-size: 10px; letter-spacing: 0.5px;">${lbl}</div>
+            <div class="fw-semibold text-dark truncate-1" title="${escHtml(String(val))}">${escHtml(String(val))}</div>
+        </div>
+    `;
 }
 
 // ── Ejecutar decisión ────────────────────────────────────────

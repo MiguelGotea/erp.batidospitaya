@@ -133,76 +133,114 @@ $puedeAprobar = tienePermiso('aprobacion_pedidos_access_host', 'aprobar', $cargo
      MODAL DE DECISIÓN (Aprobar / Rechazar)
 ════════════════════════════════════════════════════════ -->
     <div class="modal fade" id="modalDecision" data-bs-backdrop="static" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header" style="background:#0E544C; color:#fff;">
-                    <h5 class="modal-title" id="modalDecisionTitle">
-                        <i class="bi bi-clipboard-check me-2"></i>Revisar Solicitud
-                    </h5>
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
+                <div class="modal-header border-0 py-3 px-4" style="background: #0E544C; color: #fff;">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-white bg-opacity-25 rounded-circle p-2 me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                            <i class="bi bi-shield-check fs-4"></i>
+                        </div>
+                        <div>
+                            <h5 class="modal-title fw-bold mb-0" id="modalDecisionTitle">Revisar Solicitud</h5>
+                            <p class="small mb-0 opacity-75">Valida los datos antes de proceder</p>
+                        </div>
+                    </div>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body">
+                <div class="modal-body p-4 bg-light">
 
-                    <!-- Motivo -->
-                    <div class="alert alert-warning py-2 mb-3">
-                        <i class="bi bi-exclamation-triangle me-1"></i>
-                        <strong>Motivo declarado:</strong> <span id="dec_motivo">—</span>
+                    <!-- Motivo Declarado Card -->
+                    <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
+                        <div class="card-body p-3 d-flex align-items-center">
+                            <div class="rounded-3 p-3 me-3" style="background: #fff3cd; color: #856404;">
+                                <i class="bi bi-chat-left-dots fs-4"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <label class="text-uppercase fw-bold text-muted small mb-1" style="letter-spacing: 1px;">Motivo Declarado</label>
+                                <div class="fs-5 fw-semibold text-dark" id="dec_motivo">—</div>
+                            </div>
+                        </div>
                     </div>
 
-                    <!-- Comparativa de Pedidos (Lado a Lado) -->
-                    <div class="row g-3">
-                        <div class="col-md-6 border-end">
-                            <h6 class="text-danger border-bottom pb-2 fw-bold small">
-                                <i class="bi bi-receipt me-1"></i>PEDIDO A ANULAR
-                            </h6>
-                            <div id="detallePedidoPrincipal">
-                                <div class="text-center py-4 text-muted">
-                                    <div class="spinner-border spinner-border-sm"></div> Cargando...
+                    <!-- Comparativa de Pedidos (Cards) -->
+                    <div class="row g-4">
+                        <div class="col-lg-6">
+                            <div class="card h-100 border-0 shadow-sm overflow-hidden" style="border-radius: 12px;">
+                                <div class="card-header border-0 bg-white pt-3 pb-0 px-3">
+                                    <h6 class="text-danger text-uppercase fw-bold small mb-0 d-flex align-items-center">
+                                        <span class="p-1 rounded bg-danger bg-opacity-10 me-2">
+                                            <i class="bi bi-trash3"></i>
+                                        </span>
+                                        PEDIDO A ANULAR
+                                    </h6>
+                                </div>
+                                <div class="card-body p-3">
+                                    <div id="detallePedidoPrincipal">
+                                        <div class="text-center py-5">
+                                            <div class="spinner-border text-danger opacity-25"></div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-6" id="colCambio" style="display:none">
-                            <h6 class="text-primary border-bottom pb-2 fw-bold small">
-                                <i class="bi bi-arrow-left-right me-1"></i>PEDIDO DE CAMBIO
-                            </h6>
-                            <div id="detallePedidoCambio">
-                                <div class="text-center py-4 text-muted">
-                                    <div class="spinner-border spinner-border-sm"></div> Cargando...
+                        <div class="col-lg-6" id="colCambio" style="display:none">
+                            <div class="card h-100 border-0 shadow-sm overflow-hidden" style="border-radius: 12px;">
+                                <div class="card-header border-0 bg-white pt-3 pb-0 px-3">
+                                    <h6 class="text-primary text-uppercase fw-bold small mb-0 d-flex align-items-center">
+                                        <span class="p-1 rounded bg-primary bg-opacity-10 me-2">
+                                            <i class="bi bi-arrow-left-right"></i>
+                                        </span>
+                                        PEDIDO DE CAMBIO
+                                    </h6>
+                                </div>
+                                <div class="card-body p-3">
+                                    <div id="detallePedidoCambio">
+                                        <div class="text-center py-5">
+                                            <div class="spinner-border text-primary opacity-25"></div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-6" id="colNoCambio">
-                            <div class="h-100 d-flex align-items-center justify-content-center text-muted border rounded bg-light" style="min-height: 200px; border-style: dashed !important;">
-                                <div class="text-center p-4">
-                                    <i class="bi bi-info-circle fs-2 opacity-25 d-block mb-2"></i>
-                                    <div class="small">No se registró pedido de cambio para esta solicitud.</div>
-                                </div>
+                        <div class="col-lg-6" id="colNoCambio">
+                            <div class="h-100 d-flex flex-column align-items-center justify-content-center text-muted border border-2 rounded shadow-sm bg-white p-5" style="border-style: dashed !important; border-radius: 12px !important; min-height: 300px;">
+                                <i class="bi bi-info-circle fs-1 opacity-25 mb-3"></i>
+                                <h6 class="fw-bold mb-1">Sin Pedido de Cambio</h6>
+                                <p class="small text-center px-4 mb-0">Esta solicitud no incluye un pedido de reemplazo. Solo se procesará la anulación.</p>
                             </div>
                         </div>
                     </div>
 
                     <!-- Comentario para decisión -->
                     <?php if ($puedeAprobar): ?>
-                        <hr>
-                        <div class="mb-2">
-                            <label class="form-label small fw-semibold">Comentario de decisión <span
-                                    class="text-muted">(opcional)</span></label>
-                            <textarea class="form-control form-control-sm" id="dec_comentario" rows="2"
-                                placeholder="Motivo de aprobación o rechazo..."></textarea>
+                        <div class="mt-4">
+                            <div class="card border-0 shadow-sm" style="border-radius: 12px;">
+                                <div class="card-body p-3">
+                                    <label class="form-label small fw-bold text-muted text-uppercase mb-2">
+                                        <i class="bi bi-pencil-square me-1"></i> Comentario de decisión (Opcional)
+                                    </label>
+                                    <textarea class="form-control border-light-subtle bg-light" id="dec_comentario" rows="3"
+                                        placeholder="Escribe el motivo de tu decisión..." style="border-radius: 8px; resize: none;"></textarea>
+                                </div>
+                            </div>
                         </div>
                     <?php endif; ?>
                 </div>
-                <div class="modal-footer border-0">
-                    <button class="btn-modern btn-modern-secondary" data-bs-dismiss="modal">Cerrar</button>
-                    <?php if ($puedeAprobar): ?>
-                        <button class="btn-modern" style="background:#dc3545;color:#fff" id="btnRechazar"
-                            onclick="ejecutarDecision('rechazar')">
-                            <i class="bi bi-x-circle me-1"></i>Rechazar
-                        </button>
-                        <button class="btn-modern btn-modern-primary" id="btnAprobar" onclick="ejecutarDecision('aprobar')">
-                            <i class="bi bi-check-circle me-1"></i>Aprobar
-                        </button>
-                    <?php endif; ?>
+                <div class="modal-footer border-0 p-4 bg-white d-flex justify-content-between align-items-center">
+                    <button class="btn btn-link text-muted text-decoration-none fw-bold" data-bs-dismiss="modal">
+                        Cancelar y Volver
+                    </button>
+                    <div class="d-flex gap-2">
+                        <?php if ($puedeAprobar): ?>
+                            <button class="btn px-4 py-2 fw-bold d-flex align-items-center" style="background:#fff1f2; color:#be123c; border: 1px solid #fda4af; border-radius: 10px;" id="btnRechazar"
+                                onclick="ejecutarDecision('rechazar')">
+                                <i class="bi bi-x-circle me-2"></i> Rechazar Solicitud
+                            </button>
+                            <button class="btn px-4 py-2 fw-bold d-flex align-items-center shadow-sm" style="background:#0E544C; color:#fff; border-radius: 10px;" id="btnAprobar" onclick="ejecutarDecision('aprobar')">
+                                <i class="bi bi-check2-circle me-2"></i> Aprobar Solicitud
+                            </button>
+                        <?php endif; ?>
+                    </div>
                 </div>
             </div>
         </div>
@@ -360,6 +398,75 @@ $puedeAprobar = tienePermiso('aprobacion_pedidos_access_host', 'aprobar', $cargo
 
         .modal-backdrop {
             z-index: 1050 !important;
+        }
+
+        /* Premium Modal Overrides */
+        .modal-xl { max-width: 1140px; }
+        
+        .det-chip-premium {
+            background: #ffffff;
+            border: 1px solid #edf2f7;
+            border-radius: 10px;
+            padding: 10px 14px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            transition: all 0.2s;
+        }
+        
+        .det-chip-premium:hover {
+            border-color: #cbd5e0;
+            background: #f8fafc;
+        }
+
+        .table-premium {
+            border-collapse: separate;
+            border-spacing: 0;
+            width: 100%;
+        }
+        
+        .table-premium thead th {
+            background: #f8fafc;
+            color: #4a5568;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 12px;
+            border-bottom: 2px solid #edf2f7;
+        }
+        
+        .table-premium tbody td {
+            padding: 12px;
+            border-bottom: 1px solid #edf2f7;
+            vertical-align: middle;
+            font-size: 13px;
+        }
+
+        .detalle-header-premium {
+            background: #f1f5f9;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .btn-modern {
+            border-radius: 10px;
+            padding: 10px 20px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .btn-modern:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .truncate-1 {
+            display: -webkit-box;
+            -webkit-line-clamp: 1;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
     </style>
 
