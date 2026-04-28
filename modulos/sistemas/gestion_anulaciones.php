@@ -170,28 +170,36 @@ $puedeAprobar = tienePermiso('aprobacion_pedidos_access_host', 'aprobar', $cargo
                         <strong>Motivo declarado:</strong> <span id="dec_motivo">—</span>
                     </div>
 
-                    <!-- Pestañas Pedido / Cambio -->
-                    <ul class="nav nav-tabs mb-3" id="tabsDetalle">
-                        <li class="nav-item">
-                            <a class="nav-link active" id="tab-pedido-link" href="#"
-                                onclick="verDetallePedido('pedido'); return false;">
-                                <i class="bi bi-receipt me-1"></i>Detalle Pedido a Anular
-                            </a>
-                        </li>
-                        <li class="nav-item" id="tabCambioItem" style="display:none">
-                            <a class="nav-link" id="tab-cambio-link" href="#"
-                                onclick="verDetallePedido('cambio'); return false;">
-                                <i class="bi bi-arrow-left-right me-1"></i>Pedido de Cambio
-                            </a>
-                        </li>
-                    </ul>
-
-                    <!-- Detalle factura -->
-                    <div id="detalleFactura">
-                        <div class="text-center py-4 text-muted" id="detallePlaceholder">
-                            <div class="spinner-border spinner-border-sm"></div> Cargando detalle...
+                    <!-- Comparativa de Pedidos (Lado a Lado) -->
+                    <div class="row g-3">
+                        <div class="col-md-6 border-end">
+                            <h6 class="text-danger border-bottom pb-2 fw-bold small">
+                                <i class="bi bi-receipt me-1"></i>PEDIDO A ANULAR
+                            </h6>
+                            <div id="detallePedidoPrincipal">
+                                <div class="text-center py-4 text-muted">
+                                    <div class="spinner-border spinner-border-sm"></div> Cargando...
+                                </div>
+                            </div>
                         </div>
-                        <div id="detalleContenido" style="display:none"></div>
+                        <div class="col-md-6" id="colCambio" style="display:none">
+                            <h6 class="text-primary border-bottom pb-2 fw-bold small">
+                                <i class="bi bi-arrow-left-right me-1"></i>PEDIDO DE CAMBIO
+                            </h6>
+                            <div id="detallePedidoCambio">
+                                <div class="text-center py-4 text-muted">
+                                    <div class="spinner-border spinner-border-sm"></div> Cargando...
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6" id="colNoCambio">
+                            <div class="h-100 d-flex align-items-center justify-content-center text-muted border rounded bg-light" style="min-height: 200px; border-style: dashed !important;">
+                                <div class="text-center p-4">
+                                    <i class="bi bi-info-circle fs-2 opacity-25 d-block mb-2"></i>
+                                    <div class="small">No se registró pedido de cambio para esta solicitud.</div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Comentario para decisión -->

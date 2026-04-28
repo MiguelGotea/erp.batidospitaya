@@ -170,9 +170,8 @@ function renderTabla(registros) {
 
         const sucDesc = r.Sucursal_Nombre || `S${r.Sucursal}`;
 
-        let acciones = `
             <button class="btn-accion btn-ver me-1" title="Ver detalle / decidir"
-                    onclick="abrirModalDecision(${r.CodAnulacionHost},${r.CodPedido},${r.CodPedidoCambio || 0},${r.Sucursal},'${escHtml(sucDesc)}', ${esPasado})">
+                    onclick="abrirModalDecision(${r.CodAnulacionHost},${r.CodPedido},${r.CodPedidoCambio || 0},${r.Sucursal},'${escHtml(sucDesc)}', ${esPasado}, '${escHtml(r.Motivo || '')}')">
                 <i class="bi bi-eye"></i>
             </button>`;
 
@@ -555,26 +554,24 @@ function formatearFecha(fecha) {
 }
 
 // ── Modal Decisión (Ver / Aprobar / Rechazar) ────────────────
-async function abrirModalDecision(id, codPedido, codCambio, sucursal, sucursalNombre, esPasado) {
+async function abrirModalDecision(id, codPedido, codCambio, sucursal, sucursalNombre, esPasado, motivo) {
     pendingDecision = { id, codPedido, codCambio, sucursal, esPasado };
 
     document.getElementById('dec_codPedido').textContent = codPedido;
     document.getElementById('dec_codCambio').textContent = codCambio > 0 ? codCambio : '—';
     document.getElementById('dec_sucursal').textContent  = sucursalNombre || ('S' + sucursal);
-    document.getElementById('dec_motivo').textContent    = '...';
+    document.getElementById('dec_motivo').textContent    = motivo || '—';
 
-    // Mostrar/ocultar tab cambio
-    document.getElementById('tabCambioItem').style.display = codCambio > 0 ? '' : 'none';
-
-    // Cargar motivo desde la fila (ya tenemos el dato en la tabla)
-    const filas = document.querySelectorAll('#tableBody tr');
-    filas.forEach(tr => {
-        const tdPedido = tr.querySelector('td:nth-child(2) strong');
-        if (tdPedido && tdPedido.textContent == codPedido) {
-            const motivoEl = tr.querySelector('td:nth-child(6)');
-            if (motivoEl) document.getElementById('dec_motivo').textContent = motivoEl.title || motivoEl.textContent;
-        }
-    });
+    // Mostrar/ocultar columnas de cambio
+    const colCambio = document.getElementById('colCambio');
+    const colNoCambio = document.getElementById('colNoCambio');
+    if (codCambio > 0) {
+        colCambio.style.display = 'block';
+        colNoCambio.style.display = 'none';
+    } else {
+        colCambio.style.display = 'none';
+        colNoCambio.style.display = 'block';
+    }
 
     if (document.getElementById('dec_comentario')) {
         document.getElementById('dec_comentario').value = '';
@@ -593,44 +590,32 @@ async function abrirModalDecision(id, codPedido, codCambio, sucursal, sucursalNo
         if (btnRec) btnRec.title = 'Rechazar';
     }
 
-    // Activar tab pedido
-    setActiveTab('pedido');
-    mostrarDetallePlaceholder();
+    mostrarDetallePlaceholder('detallePedidoPrincipal');
+    if (codCambio > 0) mostrarDetallePlaceholder('detallePedidoCambio');
 
     const modal = new bootstrap.Modal(document.getElementById('modalDecision'));
     modal.show();
 
-    // Cargar detalle del pedido principal
-    await cargarDetallePedido(codPedido, sucursal, 'pedido');
+    // Cargar detalles de forma asíncrona
+    cargarDetallePedido(codPedido, sucursal, 'detallePedidoPrincipal');
+    if (codCambio > 0) {
+        cargarDetallePedido(codCambio, sucursal, 'detallePedidoCambio');
+    }
 }
 
-function setActiveTab(tipo) {
-    document.getElementById('tab-pedido-link').classList.toggle('active', tipo === 'pedido');
-    const cambioLink = document.getElementById('tab-cambio-link');
-    if (cambioLink) cambioLink.classList.toggle('active', tipo === 'cambio');
+function mostrarDetallePlaceholder(containerId) {
+    document.getElementById(containerId).innerHTML = `
+        <div class="text-center py-4 text-muted">
+            <div class="spinner-border spinner-border-sm"></div> Cargando...
+        </div>`;
 }
 
-function mostrarDetallePlaceholder() {
-    document.getElementById('detallePlaceholder').style.display = '';
-    document.getElementById('detalleContenido').style.display   = 'none';
-}
-
-async function verDetallePedido(tipo) {
-    setActiveTab(tipo);
-    const cod = tipo === 'pedido' ? pendingDecision.codPedido : pendingDecision.codCambio;
-    if (!cod || cod === 0) return;
-    mostrarDetallePlaceholder();
-    await cargarDetallePedido(cod, pendingDecision.sucursal, tipo);
-}
-
-async function cargarDetallePedido(codPedido, sucursal, tipo) {
+async function cargarDetallePedido(codPedido, sucursal, containerId) {
     try {
         const data = await fetch(`${AJAX_DETALLE}?cod_pedido=${codPedido}&sucursal=${sucursal}`)
             .then(r => r.json());
 
-        document.getElementById('detallePlaceholder').style.display = 'none';
-        const contenido = document.getElementById('detalleContenido');
-        contenido.style.display = '';
+        const contenido = document.getElementById(containerId);
 
         if (!data.success || !data.items || data.items.length === 0) {
             contenido.innerHTML = `<div class="alert alert-warning py-2 small">
@@ -658,11 +643,8 @@ async function cargarDetallePedido(codPedido, sucursal, tipo) {
             </div>
             <div class="detalle-resumen">
                 ${chip('Cliente', info.CodCliente || '—')}
-                ${chip('Tipo', info.Tipo || '—')}
-                ${chip('Motorizado', info.Motorizado || '—')}
                 ${chip('Delivery', info.Delivery_Nombre || '—')}
                 ${chip('Monto Factura', info.MontoFactura ? 'C$ ' + parseFloat(info.MontoFactura).toFixed(2) : '—')}
-                ${chip('Propina', info.Propina ? 'C$ ' + parseFloat(info.Propina).toFixed(2) : '—')}
                 ${anulado ? chip('Motivo Anulación', info.MotivoAnulado || '—') : ''}
             </div>
             <table class="table table-detalle table-bordered mb-0">
@@ -699,9 +681,7 @@ async function cargarDetallePedido(codPedido, sucursal, tipo) {
             </table>
         `;
     } catch (e) {
-        document.getElementById('detallePlaceholder').style.display = 'none';
-        document.getElementById('detalleContenido').style.display = '';
-        document.getElementById('detalleContenido').innerHTML =
+        contenido.innerHTML =
             `<div class="alert alert-danger py-2 small">Error al cargar detalle: ${e.message}</div>`;
     }
 }
@@ -807,7 +787,6 @@ async function buscarPedidoWeb() {
                 <div style="font-size:12px;opacity:.85">${info.Fecha || ''} ${info.Hora || ''} · ${info.Modalidad || ''} · ${info.aPOS || ''}</div>
             </div>
             <div class="detalle-resumen">
-                ${chip('Tipo', info.Tipo || '—')}
                 ${chip('Cliente', info.CodCliente || '—')}
                 ${chip('Monto', info.MontoFactura ? 'C$ ' + parseFloat(info.MontoFactura).toFixed(2) : '—')}
             </div>
@@ -890,7 +869,7 @@ function limpiarFiltros() {
 
 function escHtml(str) {
     return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
 function mostrarToast(msg, tipo = 'success') {
