@@ -22,6 +22,10 @@ let countdownVal = 60;
 let countdownTimer = null;
 let scrollTopInicial = 0;
 
+// Cache de datos de pedidos cargados en el modal (para enviarlos a la IA)
+let _iaPedidoPrincipal = null;
+let _iaPedidoCambio    = null;
+
 // ── Bootstrap ───────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
     actualizarVisualToggle();
@@ -569,6 +573,15 @@ async function abrirModalDecision(id, codPedido, codCambio, sucursal, sucursalNo
         if (btnRec) btnRec.title = 'Rechazar';
     }
 
+    // Reset panel IA al abrir modal
+    _iaPedidoPrincipal = null;
+    _iaPedidoCambio    = null;
+    document.getElementById('panelResultadoIA').style.display = 'none';
+    document.getElementById('loaderIA').style.display         = 'none';
+    if (document.getElementById('btnConsultarIA')) {
+        document.getElementById('btnConsultarIA').disabled = false;
+    }
+
     mostrarDetallePlaceholder('detallePedidoPrincipal');
     if (codCambio > 0) mostrarDetallePlaceholder('detallePedidoCambio');
 
@@ -602,6 +615,13 @@ async function cargarDetallePedido(codPedido, sucursal, containerId) {
                 No se encontraron líneas para el pedido <strong>${codPedido}</strong> en la sucursal <strong>S${sucursal}</strong>.
             </div>`;
             return;
+        }
+
+        // ── Guardar datos para IA ─────────────────────────────────
+        if (containerId === 'detallePedidoPrincipal') {
+            _iaPedidoPrincipal = { resumen: data.resumen, items: data.items };
+        } else if (containerId === 'detallePedidoCambio') {
+            _iaPedidoCambio = { resumen: data.resumen, items: data.items };
         }
 
         const info = data.resumen;
@@ -680,6 +700,102 @@ function chip(lbl, val) {
             <div class="fw-semibold text-dark truncate-1" title="${escHtml(String(val))}">${escHtml(String(val))}</div>
         </div>
     `;
+}
+
+// ── Consultar IA ─────────────────────────────────────────────
+async function consultarIA() {
+    if (!pendingDecision) return;
+
+    // Esperar a que carguen los detalles si aún no están
+    if (!_iaPedidoPrincipal) {
+        mostrarToast('Espera a que carguen los detalles del pedido primero.', 'warning');
+        return;
+    }
+
+    const btnIA     = document.getElementById('btnConsultarIA');
+    const loaderIA  = document.getElementById('loaderIA');
+    const panelIA   = document.getElementById('panelResultadoIA');
+
+    btnIA.disabled            = true;
+    loaderIA.style.display    = '';
+    panelIA.style.display     = 'none';
+
+    try {
+        const payload = {
+            cod_anulacion_host: pendingDecision.id,
+            motivo: document.getElementById('dec_motivo')?.textContent?.trim() || '',
+            pedido_principal: _iaPedidoPrincipal,
+            pedido_cambio:    _iaPedidoCambio || null
+        };
+
+        const resp = await fetch('ajax/anulaciones_ia_validar.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        const data = await resp.json();
+
+        loaderIA.style.display = 'none';
+
+        if (!data.success) {
+            mostrarToast('Error IA: ' + data.error, 'danger');
+            btnIA.disabled = false;
+            return;
+        }
+
+        // ── Renderizar panel IA ───────────────────────────────────
+        const decisionCfg = {
+            'aprobar' : { color: '#16a34a', bg: '#f0fdf4', label: '✓ Recomienda APROBAR',  cardBorder: '#16a34a' },
+            'rechazar': { color: '#dc2626', bg: '#fff1f2', label: '✗ Recomienda RECHAZAR', cardBorder: '#dc2626' },
+            'revisar' : { color: '#d97706', bg: '#fffbeb', label: '⚠ Requiere Revisión',   cardBorder: '#d97706' }
+        };
+        const cfg = decisionCfg[data.decision] || decisionCfg['revisar'];
+
+        const confianzaMap = { alta: 'text-success', media: 'text-warning', baja: 'text-danger' };
+        const confLabel    = { alta: 'Confianza alta', media: 'Confianza media', baja: 'Confianza baja' };
+
+        // Badge
+        const badge = document.getElementById('ia_badge_decision');
+        badge.textContent = cfg.label;
+        badge.style.cssText = `background:${cfg.bg}; color:${cfg.color}; border:1px solid ${cfg.color}40; font-size:13px !important;`;
+
+        // Proveedor
+        document.getElementById('ia_proveedor').textContent =
+            `Motor: ${(data.proveedor || '').toUpperCase()}` +
+            (data.confianza ? ` · ${confLabel[data.confianza] || data.confianza}` : '');
+
+        // Comentario
+        document.getElementById('ia_comentario').textContent = data.comentario || '';
+
+        // Si hay comentario IA, precargarlo en el textarea de decisión
+        if (data.comentario && document.getElementById('dec_comentario')) {
+            document.getElementById('dec_comentario').value = data.comentario;
+        }
+
+        // Puntos
+        const ul = document.getElementById('ia_puntos');
+        ul.innerHTML = '';
+        if (Array.isArray(data.puntos) && data.puntos.length) {
+            data.puntos.forEach(p => {
+                const li = document.createElement('li');
+                li.textContent = p;
+                ul.appendChild(li);
+            });
+        }
+
+        // Estilo tarjeta según decisión
+        const card = document.getElementById('cardResultadoIA');
+        card.style.borderLeftColor = cfg.color;
+        card.style.borderLeftWidth = '4px';
+        card.style.borderLeftStyle = 'solid';
+
+        panelIA.style.display = '';
+
+    } catch (e) {
+        loaderIA.style.display = 'none';
+        mostrarToast('Error al conectar con el servicio de IA: ' + e.message, 'danger');
+        btnIA.disabled = false;
+    }
 }
 
 // ── Ejecutar decisión ────────────────────────────────────────

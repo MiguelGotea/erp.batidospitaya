@@ -211,6 +211,34 @@ $puedeAprobar = tienePermiso('aprobacion_pedidos_access_host', 'aprobar', $cargo
                         </div>
                     </div>
 
+                    <!-- Panel resultado IA -->
+                    <div id="panelResultadoIA" class="mt-4" style="display:none;">
+                        <div class="card border-0 shadow-sm" id="cardResultadoIA" style="border-radius: 12px; border-left: 4px solid #6c757d !important;">
+                            <div class="card-body p-3">
+                                <div class="d-flex align-items-center mb-2">
+                                    <div class="rounded-3 p-2 me-2" style="background:#f0f9ff; color:#0369a1;">
+                                        <i class="bi bi-robot fs-5"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="fw-bold small text-uppercase text-muted" style="letter-spacing:1px;">Análisis de IA</div>
+                                        <div id="ia_proveedor" class="small text-muted"></div>
+                                    </div>
+                                    <span id="ia_badge_decision" class="badge fs-6 px-3 py-2"></span>
+                                </div>
+                                <div class="border-top pt-2 mt-1">
+                                    <p id="ia_comentario" class="mb-2 fw-medium" style="font-size:14px;"></p>
+                                    <ul id="ia_puntos" class="small text-muted mb-0 ps-3"></ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Loader IA -->
+                    <div id="loaderIA" class="mt-3 text-center" style="display:none;">
+                        <div class="spinner-border spinner-border-sm text-primary me-2"></div>
+                        <span class="text-muted small">La IA está analizando la solicitud...</span>
+                    </div>
+
                     <!-- Comentario para decisión -->
                     <?php if ($puedeAprobar): ?>
                         <div class="mt-4">
@@ -230,8 +258,15 @@ $puedeAprobar = tienePermiso('aprobacion_pedidos_access_host', 'aprobar', $cargo
                     <button class="btn btn-link text-muted text-decoration-none fw-bold" data-bs-dismiss="modal">
                         Cancelar y Volver
                     </button>
-                    <div class="d-flex gap-2">
+                    <div class="d-flex gap-2 align-items-center flex-wrap">
                         <?php if ($puedeAprobar): ?>
+                            <!-- Botón IA -->
+                            <button class="btn px-4 py-2 fw-bold d-flex align-items-center" id="btnConsultarIA"
+                                style="background: linear-gradient(135deg,#0ea5e9,#6366f1); color:#fff; border-radius: 10px; border:none; box-shadow:0 2px 8px rgba(99,102,241,.3);"
+                                onclick="consultarIA()" title="Solicitar análisis automático a la IA">
+                                <i class="bi bi-robot me-2"></i> Consultar IA
+                            </button>
+                            <div class="vr mx-1" style="height:32px;"></div>
                             <button class="btn px-4 py-2 fw-bold d-flex align-items-center" style="background:#fff1f2; color:#be123c; border: 1px solid #fda4af; border-radius: 10px;" id="btnRechazar"
                                 onclick="ejecutarDecision('rechazar')">
                                 <i class="bi bi-x-circle me-2"></i> Rechazar Solicitud
