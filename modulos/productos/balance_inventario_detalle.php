@@ -525,7 +525,6 @@ function renderDetalle(res) {
             <div class="bd-resumen-val" style="color:#0E544C">${fmt(res.consumo_real,2)}</div>
         </div>
     `;
-    `;
     bdResumen.classList.remove('d-none');
 
     // Agrupar por tipo
