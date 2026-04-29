@@ -1,0 +1,620 @@
+/* css/desempeno_sucursales_v2.css */
+
+/* ── Layout ──────────────────────────────────────────────────────────────── */
+.buttons-container {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+    flex-grow: 1;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.btn-agregar {
+    background-color: transparent;
+    color: #51B8AC;
+    border: 1px solid #51B8AC;
+    text-decoration: none;
+    padding: 6px 10px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s;
+    white-space: nowrap;
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.btn-agregar.activo {
+    background-color: #51B8AC;
+    color: white;
+    font-weight: normal;
+}
+
+.btn-agregar:hover {
+    background-color: #0E544C;
+    color: white;
+    border-color: #0E544C;
+}
+
+.contenedor-principal {
+    width: 100%;
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 0 5px;
+}
+
+/* ── Tabla ───────────────────────────────────────────────────────────────── */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: white;
+    margin-bottom: 25px;
+}
+
+th,
+td {
+    padding: 7px;
+    border: 1px solid #ddd;
+}
+
+th {
+    background-color: #0E544C !important;
+    color: white !important;
+    font-size: 14px !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.03em !important;
+}
+
+th.header-operativo {
+    background-color: #51B8AC !important;
+}
+
+th.header-resultado {
+    background-color: #0E3B35 !important;
+}
+
+th.header-total-final {
+    background-color: #082925 !important;
+    font-weight: 800;
+}
+
+.total-destacado {
+    font-weight: 800;
+    color: #0E544C;
+    font-size: 1.05rem;
+}
+
+/* ── Círculos de color ───────────────────────────────────────────────────── */
+.color-circle {
+    display: inline-block;
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    margin-right: 8px;
+}
+
+.rojo    { background-color: #FF6F61; }
+.amarillo{ background-color: #FFD166; }
+.verde   { background-color: #06D6A0; }
+
+/* ── Filtros ─────────────────────────────────────────────────────────────── */
+.filtros-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 30px;
+    padding: 20px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+    border: 1px solid #f0f0f0;
+}
+
+.filtro {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.filtro label {
+    font-weight: 600;
+    color: #0E544C;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.filtro select {
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+    background-color: #f9f9f9;
+    color: #333;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.filtro select:focus {
+    outline: none;
+    border-color: #51B8AC;
+    box-shadow: 0 0 0 3px rgba(81, 184, 172, 0.15);
+}
+
+.filtro button {
+    padding: 8px 25px;
+    border-radius: 8px;
+    background-color: #51B8AC;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.filtro button:hover {
+    background-color: #0E544C;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(14, 84, 76, 0.2);
+}
+
+/* ── Clases de tabla especiales ──────────────────────────────────────────── */
+.total-row {
+    background-color: #f0f0f0;
+}
+
+tbody tr:hover {
+    background-color: #edf7f6 !important;
+    transition: background-color 0.2s ease;
+}
+
+/* Asegura que el hover se vea incluso en celdas con fondo propio */
+tbody tr:hover td {
+    background-color: rgba(81, 184, 172, 0.08) !important;
+}
+
+td.reclamos-clickable:hover {
+    background-color: #e0f2f1 !important;
+    color: #0E544C !important;
+    box-shadow: inset 0 0 0 1px #51B8AC;
+}
+
+/* Fuerza el tamaño de los detalles para que no sean afectados por resets globales */
+table td div span.cantidad-auditorias,
+table td span.cantidad-auditorias,
+.cantidad-auditorias {
+    font-size: 9px !important;
+    color: #a0a0a0 !important;
+    font-weight: 400 !important;
+    margin-left: 2px !important;
+    display: inline-block !important;
+    vertical-align: baseline !important;
+}
+
+/* Texto descriptivo de las metas por mes en el encabezado de la tabla de indicadores */
+table th span.meta-encabezado,
+.meta-encabezado {
+    font-size: 9.5px !important;
+    font-weight: 600 !important;
+    text-transform: none !important;
+    color: #fff !important;
+    opacity: 0.9 !important;
+    display: block !important;
+    margin-top: 2px !important;
+    line-height: 1.1 !important;
+}
+
+.general-cell {
+    background-color: #f0f0f0;
+    color: black;
+}
+
+.group-header {
+    background-color: #3a9a8d;
+}
+
+.contenedor-valor {
+    display: grid;
+    grid-template-columns: 20px 1fr;
+    align-items: center;
+    width: 105px;
+    margin: 0 auto;
+    text-align: left;
+}
+
+.ventas-cell {
+    background-color: #e8f5e9;
+}
+
+/* ── Spinner de carga ────────────────────────────────────────────────────── */
+#dsv2-loading {
+    text-align: center;
+    padding: 20px;
+    color: #0E544C;
+    font-size: 14px;
+}
+
+/* ── Responsive ──────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+    * { font-size: 10px; }
+
+    .header-container {
+        flex-direction: row;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .buttons-container {
+        position: static;
+        transform: none;
+        order: 3;
+        width: 100%;
+        justify-content: center;
+        margin-top: 10px;
+    }
+
+    .logo-container { order: 1; margin-right: 0; }
+    .user-info      { order: 2; margin-left: auto; }
+
+    .btn-agregar { padding: 6px 10px; font-size: 13px; }
+
+    .color-circle {
+        width: 10px;
+        height: 10px;
+        margin: 0 auto 3px auto;
+    }
+
+    .contenedor-valor {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .valor-con-circulo {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+}
+
+@media (max-width: 480px) {
+    * { font-size: 8px; }
+
+    .btn-agregar {
+        flex-grow: 1;
+        justify-content: center;
+        white-space: normal;
+        text-align: center;
+        padding: 8px 5px;
+    }
+
+    .user-info {
+        flex-direction: column;
+        align-items: flex-end;
+    }
+
+    .btn-agregar i { margin-right: 4px; }
+}
+
+/* ── Modal Guía Premium ────────────────────────────────────────────────── */
+
+#pageHelpModal .modal-content {
+    border: none;
+    border-radius: 16px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch !important; /* Fix for global * { align-items: center } */
+    text-align: left !important;
+}
+
+#pageHelpModal .modal-header {
+    padding: 25px 30px;
+    background-color: #0E544C;
+    width: 100%; /* Force full width */
+    border-radius: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: white !important;
+}
+
+#pageHelpModal .modal-title {
+    color: white !important;
+    font-weight: 700;
+    margin: 0;
+}
+
+#pageHelpModal .modal-header i {
+    color: white !important;
+}
+
+#pageHelpModal .btn-close {
+    filter: brightness(0) invert(1); /* Ensure close button is white */
+}
+
+#pageHelpModal .modal-body {
+    background-color: #f8fbfa;
+    padding: 35px;
+    text-align: left !important;
+}
+
+#pageHelpModal .modal-body * {
+    text-align: left !important;
+}
+
+/* Contenedor de pasos conectados */
+.guide-flow {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    position: relative;
+}
+
+/* Flechas de conexión animadas */
+.flow-arrow {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 50px;
+    color: #51B8AC;
+    font-size: 1.8rem;
+    position: relative;
+    z-index: 1;
+}
+
+.flow-arrow i {
+    animation: bounceDown 2s infinite;
+}
+
+@keyframes bounceDown {
+    0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
+    40% {transform: translateY(10px);}
+    60% {transform: translateY(5px);}
+}
+
+.flow-arrow::after {
+    content: "";
+    position: absolute;
+    width: 2px;
+    height: 100%;
+    background-color: #51B8AC;
+    z-index: -1;
+}
+
+/* Tarjetas de métricas */
+.guide-card {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    border: 1px solid #eef2f1;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.03);
+    margin-bottom: 0;
+    transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+    position: relative;
+}
+
+.guide-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 30px rgba(14, 84, 76, 0.1);
+    border-color: #51B8AC;
+}
+
+.guide-card-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 15px;
+    color: #0E544C;
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
+.guide-card-header i {
+    width: 44px;
+    height: 44px;
+    background-color: #eef7f6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    color: #51B8AC;
+    font-size: 1.25rem;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+}
+
+.guide-card-body {
+    color: #555;
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+.meta-pill {
+    display: inline-block;
+    background-color: #0E544C;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 25px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    margin-top: 10px;
+    letter-spacing: 0.02em;
+}
+
+.formula-box {
+    background-color: #f4f8f7;
+    border-left: 4px solid #51B8AC;
+    padding: 12px 15px;
+    border-radius: 0 8px 8px 0;
+    font-family: "Fira Code", monospace;
+    font-size: 0.88rem;
+    margin-top: 12px;
+    color: #2c3e50;
+}
+
+/* Grupo de Grid para Métricas */
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 25px;
+    margin: 25px 0;
+    align-items: stretch; /* todos los items se estiran al máximo de la fila */
+}
+
+/* Igualar altura de todas las tarjetas del grid */
+.metrics-grid .guide-card {
+    display: flex;
+    flex-direction: column;
+}
+
+.metrics-grid .guide-card-body {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+/* Contenido principal ocupa el espacio disponible */
+.metrics-grid .card-content {
+    flex: 1;
+}
+
+/* Meta-pill anclado al fondo con separador visual */
+.metrics-grid .meta-pill {
+    display: block;
+    margin-top: 14px;
+    padding: 8px 16px;
+    background-color: #eaf5f4;
+    color: #0E544C;
+    border-radius: 8px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-align: center;
+    letter-spacing: 0.04em;
+    border-top: 2px solid #c8e8e5;
+    padding-top: 10px;
+    box-shadow: 0 -2px 0 0 #c8e8e5;
+}
+
+/* Destacado Final - Propina Interna */
+.result-card-gold {
+    background-color: #0E544C;
+    color: white;
+    border: none;
+    padding: 30px;
+}
+
+.result-card-gold .guide-card-header {
+    color: #ffffff;
+    font-size: 1.3rem;
+}
+
+.result-card-gold .guide-card-header i {
+    background: rgba(255, 255, 255, 0.15);
+    color: #51B8AC;
+    box-shadow: none;
+}
+
+.result-card-gold .guide-card-body {
+    color: rgba(255, 255, 255, 0.95);
+    font-size: 1rem;
+}
+
+.result-card-gold .formula-box {
+    background: rgba(255, 255, 255, 0.08);
+    border-left-color: #51B8AC;
+    color: white;
+}
+
+/* ── Looker Studio Section ─────────────────────────────────────────────── */
+.looker-section-container {
+    position: relative; /* Para posicionar el botón de recarga */
+    margin-top: 20px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border: 1px solid #eef2f1;
+    overflow: hidden;
+    margin-bottom: 50px;
+    animation: fadeInLooker 0.8s ease-out;
+}
+
+.btn-reload-looker {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    z-index: 15;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background-color: rgba(81, 184, 172, 0.85);
+    color: white;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    font-size: 14px;
+}
+
+.btn-reload-looker:hover {
+    background-color: #0E544C;
+    transform: rotate(180deg) scale(1.1);
+    box-shadow: 0 6px 15px rgba(14, 84, 76, 0.3);
+}
+
+.btn-reload-looker:active {
+    transform: rotate(180deg) scale(0.95);
+}
+
+@keyframes fadeInLooker {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.iframe-wrapper {
+    width: 100%;
+    /*height: 90vh;*/
+    height: 1200px; /* Aumentado de 90vh a 1200px para dar más "largo" */
+    position: relative;
+    background-color: #f8fbfa;
+}
+
+.iframe-wrapper iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    display: block;
+}
+
+.looker-placeholder {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    color: #666;
+    width: 100%;
+}
+
+.looker-placeholder .spinner-border {
+    width: 3rem;
+    height: 3rem;
+    margin-bottom: 15px;
+    color: #51B8AC !important;
+}
+
+.looker-placeholder p {
+    font-weight: 600;
+    font-size: 1rem;
+    margin: 0;
+}
+
+

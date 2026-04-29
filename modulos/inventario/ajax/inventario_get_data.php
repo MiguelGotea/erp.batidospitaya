@@ -1,0 +1,350 @@
+<?php
+/* ============================================================
+   AJAX: Obtener datos para Inventario Semanal
+   Ruta: modulos/inventario/ajax/inventario_get_data.php
+
+   El cálculo de consumo es IDÉNTICO a pedido_sugerido_calcular.php:
+   - Mismo pipeline de ventas × SubReceta
+   - Mismo fallback codporcion → Cotizaciones p2 → Cotizaciones p3
+   - Misma conversión de unidades
+   - Misma fórmula stockMin/Max y factor congelados
+   ============================================================ */
+require_once '../../../core/auth/auth.php';
+require_once '../../../core/database/conexion.php';
+require_once '../../../core/permissions/permissions.php';
+
+header('Content-Type: application/json; charset=utf-8');
+set_time_limit(0);
+
+$usuario = obtenerUsuarioActual();
+$cargo   = $usuario['CodNivelesCargos'];
+
+if (!tienePermiso('inventario_semanal', 'vista', $cargo)) {
+    echo json_encode(['ok' => false, 'msg' => 'Sin permisos.']);
+    exit();
+}
+
+$codSucursal  = $_GET['cod_sucursal'] ?? '';
+$numSemanaInv = isset($_GET['semana_inv'])   ? (int)$_GET['semana_inv']   : 0;
+$numDesde     = isset($_GET['semana_desde']) ? (int)$_GET['semana_desde'] : 0;
+$numHasta     = isset($_GET['semana_hasta']) ? (int)$_GET['semana_hasta'] : 0;
+
+if (empty($codSucursal) || !$numSemanaInv) {
+    echo json_encode(['ok' => false, 'msg' => 'Sucursal y semana de inventario requeridas.']);
+    exit();
+}
+
+/* ── Helpers idénticos a pedido_sugerido_calcular.php ────── */
+function desviacionEstandarMuestra(array $vals): float {
+    $n = count($vals);
+    if ($n <= 1) return 0.0;
+    $media = array_sum($vals) / $n;
+    return sqrt(array_sum(array_map(fn($v) => ($v - $media) ** 2, $vals)) / ($n - 1));
+}
+function resolverUnidadId_PS(string $nombre, array &$unidadPorNombre): ?int {
+    return $unidadPorNombre[strtolower(trim($nombre))] ?? null;
+}
+function resolverFactorConversion_PS(int $idOrigen, int $idDestino, array &$convIndex): ?float {
+    if ($idOrigen === $idDestino) return 1.0;
+    return $convIndex[$idOrigen][$idDestino] ?? null;
+}
+function buscarPresentacionEnMaestro_PS(int $idMaestro, int $idUnidad, array &$presentPorMaestro): ?array {
+    return $presentPorMaestro[$idMaestro][$idUnidad] ?? null;
+}
+
+try {
+    /* ── 1. Semana de inventario ──────────────────────────── */
+    $stmtS = $conn->prepare("SELECT fecha_inicio, fecha_fin FROM SemanasSistema WHERE numero_semana = ?");
+    $stmtS->execute([$numSemanaInv]);
+    $semInv = $stmtS->fetch();
+    if (!$semInv) throw new Exception("Semana de inventario no válida.");
+
+    /* ── 2. Configuración de porcentajes de la sucursal ───── */
+    $stmtConf = $conn->prepare("SELECT porcentaje_congelados, porcentaje_frescos FROM inventario_configuracion_sucursal WHERE cod_sucursal = ?");
+    $stmtConf->execute([$codSucursal]);
+    $configPct = $stmtConf->fetch(PDO::FETCH_ASSOC) ?: ['porcentaje_congelados' => 0, 'porcentaje_frescos' => 0];
+
+    /* ── 3. Logística sucursal ────────────────────────────── */
+    $stmtLogSuc = $conn->prepare("SELECT dias_stock_minimo, capacidad_congelados FROM configuracion_logistica_sucursal WHERE cod_sucursal = ?");
+    $stmtLogSuc->execute([$codSucursal]);
+    $logSuc = $stmtLogSuc->fetch(PDO::FETCH_ASSOC) ?: ['dias_stock_minimo' => 0, 'capacidad_congelados' => null];
+    $dSM  = (float)$logSuc['dias_stock_minimo'];
+    $capC = $logSuc['capacidad_congelados'] !== null ? (float)$logSuc['capacidad_congelados'] : null;
+
+    /* ── 4. Logística por categoría ───────────────────────── */
+    $stmtLogCat = $conn->prepare("SELECT codigo_insumo, dias_ciclo, dias_desfase, ajuste_demanda FROM configuracion_logistica_producto WHERE cod_sucursal = ?");
+    $stmtLogCat->execute([$codSucursal]);
+    $logCats = [];
+    foreach ($stmtLogCat->fetchAll(PDO::FETCH_ASSOC) as $row) {
+        $logCats[$row['codigo_insumo']] = $row;
+    }
+
+    /* ── 5. Inventario guardado de la semana seleccionada ─── */
+    $stmtInv = $conn->prepare("
+        SELECT id_producto_presentacion, cantidad_unidades, cantidad_presentacion
+        FROM inventario_semanal
+        WHERE cod_sucursal = ? AND fecha_inventario BETWEEN ? AND ?
+    ");
+    $stmtInv->execute([$codSucursal, $semInv['fecha_inicio'], $semInv['fecha_fin']]);
+    $inventarioSemana = [];
+    foreach ($stmtInv->fetchAll(PDO::FETCH_ASSOC) as $row) {
+        $inventarioSemana[$row['id_producto_presentacion']] = $row;
+    }
+
+    /* ── 6. Consumo histórico (IDÉNTICO a pedido_sugerido_calcular.php) */
+    $conAgg  = [];   // [id_pp][semana] = consumo acumulado
+    $metaPP  = [];   // [id_pp] = ['cat' => ..., 'n' => ...]
+    $nSemanas = 1;
+
+    if ($numDesde > 0 && $numHasta > 0) {
+        $numDesde = min($numDesde, $numHasta);
+        $numHasta = max($numDesde, $numHasta);
+        $nSemanas = $numHasta - $numDesde + 1;
+
+        $stmtR = $conn->prepare("SELECT MIN(fecha_inicio) as f1, MAX(fecha_fin) as f2 FROM SemanasSistema WHERE numero_semana BETWEEN ? AND ?");
+        $stmtR->execute([$numDesde, $numHasta]);
+        $r = $stmtR->fetch();
+
+        if ($r && $r['f1']) {
+            // Ventas × SubReceta (igual que en el script de referencia)
+            $stmtV = $conn->prepare("
+                SELECT v.Semana as sem, sr.CodIngrediente as cod_ing, sr.codporcion,
+                       SUM(v.Cantidad * sr.Cantidad) as cant
+                FROM VentasGlobalesAccessCSV v
+                INNER JOIN SubReceta sr ON sr.CodBatido = v.CodProducto
+                WHERE v.Anulado = 0 AND v.local = ? AND v.Semana BETWEEN ? AND ?
+                  AND v.Fecha BETWEEN ? AND ?
+                GROUP BY v.Semana, sr.CodIngrediente, sr.codporcion
+            ");
+            $stmtV->execute([$codSucursal, $numDesde, $numHasta, $r['f1'], $r['f2']]);
+            $filas = $stmtV->fetchAll(PDO::FETCH_ASSOC);
+
+            if (!empty($filas)) {
+                // Pre-cargar mapeos (Bulk) — idéntico al script de referencia
+                $codsIng = array_unique(array_column($filas, 'cod_ing'));
+                $ph = implode(',', array_fill(0, count($codsIng), '?'));
+
+                $dbIng = [];
+                $stmtI = $conn->prepare("SELECT CodIngrediente, Nombre, Unidad FROM DBIngredientes WHERE CodIngrediente IN ($ph)");
+                $stmtI->execute(array_values($codsIng));
+                foreach ($stmtI->fetchAll() as $row) $dbIng[$row['CodIngrediente']] = $row;
+
+                // Cotizaciones: fallback p2 (Conversion=1, Prioridad=1) y p3 (cualquiera)
+                $cotMap = [];
+                $stmtC = $conn->prepare("SELECT CodIngrediente, CodCotizacion, Conversion, Prioridad FROM Cotizaciones WHERE CodIngrediente IN ($ph) AND (Subproducto IS NULL OR Subproducto!=1) AND (Marca IS NULL OR Marca!='Almacen Global') ORDER BY Conversion DESC, Prioridad ASC");
+                $stmtC->execute(array_values($codsIng));
+                foreach ($stmtC->fetchAll() as $c) {
+                    $ci = $c['CodIngrediente'];
+                    if (!isset($cotMap[$ci])) $cotMap[$ci] = ['p2' => null, 'p3' => null];
+                    if ($c['Conversion'] == 1 && $c['Prioridad'] == 1 && !$cotMap[$ci]['p2']) $cotMap[$ci]['p2'] = $c['CodCotizacion'];
+                    if (!$cotMap[$ci]['p3']) $cotMap[$ci]['p3'] = $c['CodCotizacion'];
+                }
+
+                // Diccionario de productos legado
+                $codCotBuscar = array_unique(array_filter(array_merge(
+                    array_column($filas, 'codporcion'),
+                    array_column($cotMap, 'p2'),
+                    array_column($cotMap, 'p3')
+                )));
+                $diccionarioMap = [];
+                if (!empty($codCotBuscar)) {
+                    $phC = implode(',', array_fill(0, count($codCotBuscar), '?'));
+                    $stmtD = $conn->prepare("
+                        SELECT d.CodCotizacion, pp.id, pp.cantidad as pp_cant, pp.Id_receta_producto,
+                               pp.id_producto_maestro as id_m, pp.Nombre as n, pp.categoria_insumo as cat,
+                               u.id as uid, u.abreviado as uab
+                        FROM diccionario_productos_legado d
+                        INNER JOIN producto_presentacion pp ON pp.id = d.id_producto_presentacion
+                        LEFT JOIN unidad_producto u ON u.id = pp.id_unidad_producto
+                        WHERE d.CodCotizacion IN ($phC) AND pp.Activo = 'SI'
+                    ");
+                    $stmtD->execute(array_values($codCotBuscar));
+                    foreach ($stmtD->fetchAll() as $row) $diccionarioMap[(string)$row['CodCotizacion']] = $row;
+                }
+
+                // Unidades y conversiones
+                $unidadPorNombre = []; $unidadPorId = [];
+                foreach ($conn->query("SELECT id, nombre, abreviado, nombres_opcionales FROM unidad_producto")->fetchAll() as $u) {
+                    $uid = (int)$u['id']; $unidadPorId[$uid] = $u;
+                    $unidadPorNombre[strtolower(trim($u['nombre']))] = $uid;
+                    if ($u['abreviado']) $unidadPorNombre[strtolower(trim($u['abreviado']))] = $uid;
+                    if ($u['nombres_opcionales']) foreach (preg_split('/[,;|]+/', $u['nombres_opcionales']) as $a) if ($ak = strtolower(trim($a))) $unidadPorNombre[$ak] = $uid;
+                }
+
+                $convIndex = [];
+                foreach ($conn->query("SELECT id_unidad_producto_inicio as i, id_unidad_producto_final as f, cantidad as c FROM conversion_unidad_producto")->fetchAll() as $c) {
+                    $convIndex[(int)$c['i']][(int)$c['f']] = (float)$c['c'];
+                    $convIndex[(int)$c['f']][(int)$c['i']] = $c['c'] != 0 ? 1 / $c['c'] : 0;
+                }
+
+                $presentPorMaestro = [];
+                $idMs = array_unique(array_filter(array_column($diccionarioMap, 'id_m')));
+                if (!empty($idMs)) {
+                    $phM = implode(',', array_fill(0, count($idMs), '?'));
+                    $stmtPP = $conn->prepare("SELECT id, id_producto_maestro, cantidad, id_unidad_producto FROM producto_presentacion WHERE id_producto_maestro IN ($phM) AND Id_receta_producto IS NULL AND Activo='SI'");
+                    $stmtPP->execute(array_values($idMs));
+                    foreach ($stmtPP->fetchAll() as $pp) {
+                        $presentPorMaestro[(int)$pp['id_producto_maestro']][(int)$pp['id_unidad_producto']] = $pp;
+                    }
+                }
+
+                // Proceso de consumo con fallback triple (idéntico al script de referencia)
+                foreach ($filas as $f) {
+                    $ci = $f['cod_ing']; $cp = $f['codporcion']; $sem = (int)$f['sem']; $cant = (float)$f['cant'];
+                    $m = null; $esP1 = false;
+
+                    // Nivel 1: codporcion directo
+                    if (!empty($cp) && isset($diccionarioMap[(string)$cp])) { $m = $diccionarioMap[(string)$cp]; $esP1 = true; }
+                    // Nivel 2: Cotizaciones p2
+                    if (!$m && isset($cotMap[$ci]['p2']) && isset($diccionarioMap[(string)$cotMap[$ci]['p2']])) $m = $diccionarioMap[(string)$cotMap[$ci]['p2']];
+                    // Nivel 3: Cotizaciones p3
+                    if (!$m && isset($cotMap[$ci]['p3']) && isset($diccionarioMap[(string)$cotMap[$ci]['p3']])) $m = $diccionarioMap[(string)$cotMap[$ci]['p3']];
+                    if (!$m) continue;
+
+                    $idPP = (int)$m['id'];
+                    $ppC  = max((float)$m['pp_cant'], 0.001);
+                    $uidERP = (int)$m['uid'];
+
+                    if ($m['Id_receta_producto']) {
+                        $cons = $cant;
+                    } else {
+                        $uAcc   = $dbIng[$ci]['Unidad'] ?? '';
+                        $uidAcc = resolverUnidadId_PS($uAcc, $unidadPorNombre);
+                        $fac    = 1.0;
+                        if ($uidAcc && $uidAcc !== $uidERP) {
+                            $fDir = resolverFactorConversion_PS($uidAcc, $uidERP, $convIndex);
+                            if ($fDir) {
+                                $fac = $fDir;
+                            } else {
+                                $alt = buscarPresentacionEnMaestro_PS((int)$m['id_m'], $uidAcc, $presentPorMaestro);
+                                if ($alt) { $idPP = (int)$alt['id']; $ppC = max((float)$alt['cantidad'], 0.001); $uidERP = (int)$alt['id_unidad_producto']; $fac = 1.0; }
+                            }
+                        }
+                        $cons = ($cant * $fac) / $ppC;
+                        if ($esP1) $cons = round($cons * 2) / 2;
+                    }
+
+                    if (!isset($metaPP[$idPP])) $metaPP[$idPP] = ['cat' => $m['cat'], 'n' => $m['n']];
+                    $conAgg[$idPP][$sem] = ($conAgg[$idPP][$sem] ?? 0) + $cons;
+                }
+            }
+        }
+    }
+
+    /* ── 7. Stats de consumo por id_pp ───────────────────── */
+    $consumoStats = [];
+    foreach ($conAgg as $idPP => $semanas) {
+        $vals = [];
+        for ($s = $numDesde; $s <= $numHasta; $s++) $vals[] = (float)($semanas[$s] ?? 0);
+        $prom = array_sum($vals) / $nSemanas;
+        $desv = desviacionEstandarMuestra($vals);
+        $consumoStats[$idPP] = ['promedio' => $prom, 'desviacion' => $desv, 'cons_semanal' => $prom + $desv];
+    }
+
+    /* ── 8. Productos para inventario (Sincronizado con Balance de Existencias) */
+    $stmtP = $conn->prepare("
+        SELECT pp.id, pp.Nombre, pp.presentacion, pp.categoria_insumo,
+               pp.presentacion_basica_inventario, pp.presentacion_despacho,
+               u.abreviado as unidad, pp.cantidad as cant_pres
+        FROM producto_presentacion pp
+        LEFT JOIN unidad_producto u ON u.id = pp.id_unidad_producto
+        WHERE pp.presentacion_basica_inventario = 1 
+          AND pp.Activo = 'SI'
+        ORDER BY pp.categoria_insumo ASC, pp.Nombre ASC
+    ");
+    $stmtP->execute();
+    $productos = $stmtP->fetchAll(PDO::FETCH_ASSOC);
+
+    /* ── 9. Calcular stocks — fórmula idéntica al script de referencia */
+    //  cons_diario  = (cons_semanal × (1 + ajuste)) / 7
+    //  stock_min    = cons_diario × dias_stock_minimo
+    //  stock_max    = cons_diario × (dias_ciclo + dias_desfase + dias_stock_minimo)
+    //  [Cat B]  stock_max_final = stock_max × factorC
+    //  pedido       = stock_max_final − inventario_actual  (≥ 0)
+    $sumSMaxB = 0.0;
+    foreach ($productos as &$p) {
+        $idPP = $p['id'];
+        $cat  = $p['categoria_insumo'];
+        $lc   = $logCats[$cat] ?? null;
+        $adj  = $lc ? (float)$lc['ajuste_demanda'] : 0;
+        $dC   = $lc ? (float)$lc['dias_ciclo']     : 0;
+        $dD   = $lc ? (float)$lc['dias_desfase']   : 0;
+
+        $cs    = $consumoStats[$idPP] ?? null;
+        $semC  = $cs ? (float)$cs['cons_semanal'] : 0.0;
+        $prom  = $cs ? (float)$cs['promedio']     : 0.0;
+        $desv  = $cs ? (float)$cs['desviacion']   : 0.0;
+
+        $diaC = ($semC * (1 + $adj)) / 7;
+        $sMin = $diaC * $dSM;
+        $sMax = $diaC * ($dC + $dD + $dSM);
+
+        $invRow  = $inventarioSemana[$idPP] ?? null;
+
+        $p['_cons_semanal']   = round($semC, 4);
+        $p['_promedio']       = round($prom, 4);
+        $p['_desviacion']     = round($desv, 4);
+        $p['_cons_diario']    = round($diaC, 6);
+        $p['_stock_min']      = round($sMin, 4);
+        $p['_stock_max']      = round($sMax, 4);
+        $p['_tiene_config']   = $lc !== null;
+        $p['_inv_pres']       = $invRow ? (float)$invRow['cantidad_presentacion'] : null;
+        $p['_inv_unidades']   = $invRow ? (float)$invRow['cantidad_unidades']     : null;
+
+        if ($cat === 'B') $sumSMaxB += $sMax;
+    }
+    unset($p);
+
+    // Factor de congelados (idéntico al script de referencia)
+    $factorC = ($capC !== null && $sumSMaxB > 0) ? min(1.0, $capC / $sumSMaxB) : null;
+
+    // Pedido final + desglose P1/P2
+    $pctCong  = (float)$configPct['porcentaje_congelados'];
+    $pctFresc = (float)$configPct['porcentaje_frescos'];
+
+    foreach ($productos as &$p) {
+        $cat  = $p['categoria_insumo'];
+        $sMax = $p['_stock_max'];
+
+        if ($cat === 'B' && $factorC !== null) {
+            $sMaxFinal  = round($sMax * $factorC, 4);
+            $esAjustado = true;
+        } else {
+            $sMaxFinal  = $p['_tiene_config'] ? round($sMax, 4) : null;
+            $esAjustado = false;
+        }
+
+        $invPres = $p['_inv_pres'];
+        $pedido  = ($sMaxFinal !== null && $invPres !== null) ? max(0.0, $sMaxFinal - $invPres) : null;
+
+        $p1 = $p2 = 0.0;
+        if ($pedido !== null) {
+            if (in_array($cat, ['B', 'D', 'F'])) { $p1 = $pedido * $pctCong;  $p2 = $pedido - $p1; }
+            elseif (in_array($cat, ['A', 'C']))   { $p1 = $pedido * $pctFresc; $p2 = $pedido - $p1; }
+            else                                   { $p1 = $pedido; }
+        }
+
+        $p['stock_max_final'] = $sMaxFinal;
+        $p['es_ajustado']     = $esAjustado;
+        $p['pedido_sugerido'] = $pedido !== null ? round($pedido, 4) : null;
+        $p['p1']              = round($p1, 4);
+        $p['p2']              = round($p2, 4);
+
+        unset($p['_stock_max'], $p['_tiene_config']);
+    }
+    unset($p);
+
+    echo json_encode([
+        'ok'               => true,
+        'rango_fechas_inv' => $semInv,
+        'n_semanas'        => $nSemanas,
+        'factor_c'         => $factorC,
+        'capacidad_c'      => $capC,
+        'sum_smax_b'       => round($sumSMaxB, 4),
+        'porcentajes'      => $configPct,
+        'productos'        => $productos,
+    ]);
+
+} catch (Exception $e) {
+    echo json_encode(['ok' => false, 'msg' => 'Error: ' . $e->getMessage()]);
+}

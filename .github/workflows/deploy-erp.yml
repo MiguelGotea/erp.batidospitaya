@@ -1,4 +1,4 @@
-name: 🚀 Deploy ERP - 19 Módulos
+name: 🚀 Deploy ERP - Todos los Módulos
 
 on:
   push:
@@ -16,64 +16,46 @@ jobs:
       uses: webfactory/ssh-agent@v0.8.0
       with:
         ssh-private-key: ${{ secrets.HOSTINGER_SSH_KEY }}
-        
-    - name: 📤 Sincronizar Módulos ERP
+
+    - name: 📤 Sincronizar Módulos ERP (Todos)
       run: |
-        # Definir lista de módulos
-        MODULES=(
-          "atencioncliente"
-          "auxiliaradministrativo"
-          "cds"
-          "desarrollo"
-          "diseno"
-          "experienciadigital"
-          "gerencia"
-          "compras"
-          "infraestructura"
-          "legal"
-          "mantenimiento"
-          "marketing"
-          "produccion"
-          "rh"
-          "sistemas"
-          "sucursales"
-          "tecnicodesarrollohumano"
-          "ventas"
-          "productos"
-        )
-        
-        for MODULE in "${MODULES[@]}"; do
-          if [ -d "./modulos/$MODULE" ]; then
-            echo "🔄 Sincronizando modulos/$MODULE/"
-            
-            ssh -o StrictHostKeyChecking=no -p 65002 ${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_HOST }} \
-              "mkdir -p ${{ secrets.HOSTINGER_PATH }}/modulos/$MODULE && \
-               mkdir -p ${{ secrets.HOSTINGER_PATH }}/modulos/$MODULE/uploads"
-            
-            rsync -avz --delete \
-              --exclude='uploads/' \
-              --exclude='.gitignore' \
-              --exclude='.agent/' \
-              --exclude='.scripts/' \
-              -e "ssh -o StrictHostKeyChecking=no -p 65002" \
-              ./modulos/$MODULE/ \
-              ${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_HOST }}:${{ secrets.HOSTINGER_PATH }}/modulos/$MODULE/
-          fi
-        done
-        
-    - name: 📤 Sincronizar Core y Docs raíz (v13)
+        echo "🔄 Sincronizando modulos/ completo..."
+        rsync -avz --delete \
+          --exclude='uploads/' \
+          --exclude='.gitignore' \
+          --exclude='.agent/' \
+          --exclude='.scripts/' \
+          --exclude='supervision/auditorias_original/fotos/' \
+          --exclude='supervision/auditorias_original/fotoslimpieza/' \
+          --exclude='supervision/auditorias_original/fotospersonal/' \
+          --exclude='supervision/auditorias_original/fotosservicio/' \
+          --exclude='supervision/auditorias_original/auditinternas/fotos_auditorias_caja_chica/' \
+          --exclude='supervision/auditorias_original/auditinternas/fotos_auditorias_caja_facturacion/' \
+          --exclude='supervision/auditorias_original/auditinternas/fotos_auditorias_inventario/' \
+          -e "ssh -o StrictHostKeyChecking=no -p 65002" \
+          ./modulos/ \
+          ${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_HOST }}:${{ secrets.HOSTINGER_PATH }}/modulos/
+        # NOTA: Los --exclude de fotos son críticos porque rsync usa --delete.
+        # Sin ellos, rsync borraría esas carpetas del host al no encontrarlas
+        # en el repo de Git (están excluidas por .gitignore).
+        # Eliminar cada línea cuando la carpeta se migre a uploads/ correcta.
+
+    - name: 📤 Sincronizar Core raíz
       run: |
-        echo "🔄 Sincronizando core/ y docs/ raíz..."
+        echo "🔄 Sincronizando core/..."
         rsync -avz --delete \
           -e "ssh -o StrictHostKeyChecking=no -p 65002" \
           ./core/ \
           ${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_HOST }}:${{ secrets.HOSTINGER_PATH }}/core/
-        
+
+    - name: 📤 Sincronizar Docs raíz
+      run: |
+        echo "🔄 Sincronizando docs/..."
         rsync -avz --delete \
           -e "ssh -o StrictHostKeyChecking=no -p 65002" \
           ./docs/ \
           ${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_HOST }}:${{ secrets.HOSTINGER_PATH }}/docs/
-          
+
     - name: 📤 Sincronizar README raíz
       run: |
         echo "🔄 Sincronizando README.md..."
@@ -81,44 +63,18 @@ jobs:
           -e "ssh -o StrictHostKeyChecking=no -p 65002" \
           ./README.md \
           ${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_HOST }}:${{ secrets.HOSTINGER_PATH }}/
-          
+
     - name: 🔧 Configurar permisos
       run: |
-        MODULES=(
-          "atencioncliente"
-          "auxiliaradministrativo"
-          "cds"
-          "desarrollo"
-          "diseno"
-          "experienciadigital"
-          "gerencia"
-          "compras"
-          "infraestructura"
-          "legal"
-          "mantenimiento"
-          "marketing"
-          "produccion"
-          "rh"
-          "sistemas"
-          "sucursales"
-          "tecnicodesarrollohumano"
-          "ventas"
-          "productos"
-        )
-        
-        for MODULE in "${MODULES[@]}"; do
-          if [ -d "./modulos/$MODULE" ]; then
-            echo "🔧 Configurando permisos para modulos/$MODULE/"
-            ssh -o StrictHostKeyChecking=no -p 65002 ${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_HOST }} \
-              "chmod -R 755 ${{ secrets.HOSTINGER_PATH }}/modulos/$MODULE/ && \
-               find ${{ secrets.HOSTINGER_PATH }}/modulos/$MODULE/ -type f -exec chmod 644 {} \; && \
-               chmod -R 755 ${{ secrets.HOSTINGER_PATH }}/modulos/$MODULE/uploads/ && \
-               chmod -R 777 ${{ secrets.HOSTINGER_PATH }}/modulos/$MODULE/uploads/ || true"
-          fi
-        done
-        
+        echo "🔧 Configurando permisos en modulos/..."
+        ssh -o StrictHostKeyChecking=no -p 65002 \
+          ${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_HOST }} \
+          "find ${{ secrets.HOSTINGER_PATH }}/modulos/ -type d -exec chmod 755 {} \; && \
+           find ${{ secrets.HOSTINGER_PATH }}/modulos/ -type f -exec chmod 644 {} \; && \
+           find ${{ secrets.HOSTINGER_PATH }}/modulos/ -type d -name 'uploads' -exec chmod 777 {} \;"
+
     - name: ✅ Verificar deploy
       run: |
-        echo "✅ Deploy completado para los 19 módulos + Core raíz"
+        echo "✅ Deploy completado — todos los módulos + Core + Docs"
         echo "🌐 Sitio: https://erp.batidospitaya.com"
         echo "🖥️ Servidor: ${{ secrets.HOSTINGER_HOST }}:65002"

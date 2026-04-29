@@ -1,0 +1,85 @@
+* {
+    font-size: clamp(11px, 2vw, 16px) !important;
+    font-family: 'Calibri', sans-serif;
+    text-align: center;
+    align-items: center;
+}
+
+/* Estilos generales para el formulario */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    color: #333;
+    margin: 0;
+    padding: 20px;
+}
+
+h1, h2, h3 {
+    color: #2e3b4e;
+}
+
+form {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+label {
+    font-weight: bold;
+    margin-right: 10px;
+    cursor: pointer; /* Asegura que el texto es clickeable */
+}
+
+/* Estilos para las opciones de radio */
+.radio-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.radio-option {
+    display: flex; /* Muestra el radio button y el texto alineados */
+    align-items: center; /* Centra el radio button y el texto */
+    gap: 10px; /* Espacio entre radio button y texto */
+    cursor: pointer;
+    background-color: #51B8AC; /* Color de fondo fijo para todas las opciones */
+    padding: 10px;
+    border-radius: 8px;
+    border: 2px solid #ddd;
+    width: fit-content;
+    transition: background-color 0.3s ease;
+}
+
+/* Ocultar el radio button real */
+input[type="radio"] {
+    display: none; /* Oculta el radio button real */
+}
+
+/* Cambiar el fondo cuando el mouse pasa sobre la opción */
+.radio-option:hover {
+    background-color: #4fa596; /* Un tono más oscuro cuando el mouse pasa por encima */
+}
+
+/* Estilo del botón de enviar */
+button {
+    padding: 10px 20px;
+    background-color: #0E544C;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: #45a049;
+}
+
+a {
+    display: inline-block;
+    margin-left: 10px;
+    text-decoration: none;
+    color: #f44336;
+}

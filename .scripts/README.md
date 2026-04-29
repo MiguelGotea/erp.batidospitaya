@@ -1,59 +1,56 @@
-# 📦 Scripts de Deploy - ERP Batidos Pitaya
+# 📦 Scripts de Deploy — ERP Batidos Pitaya
 
-Esta carpeta contiene los scripts para realizar despliegues rápidos de los módulos del ERP.
+Esta carpeta contiene los scripts para realizar despliegues del ERP.
 
-## 🚀 Uso desde la Terminal
+---
 
-### Desde la raíz del proyecto:
+## 🚀 Uso
+
+### Subir todos los cambios (push global):
 ```powershell
-# Subir cambios de un módulo específico
-.\.scripts\gitpush-mantenimiento.ps1
-.\.scripts\gitpush-sistemas.ps1
-.\.scripts\gitpush-gerencia.ps1
-# ... etc
+# Desde la raíz del proyecto
+.\.scripts\gitpush.ps1
 ```
-
 
 ### Desde cualquier ubicación:
 ```powershell
 cd "c:\Users\migue\Desktop\Sistema\Pitaya Web\VisualCode\erp.batidospitaya.com"
-.\.scripts\gitpush-[nombre-modulo].ps1
+.\.scripts\gitpush.ps1
 ```
 
-## 📋 Scripts Disponibles
+---
 
-- `gitpush-atencioncliente.ps1`
-- `gitpush-auxiliaradministrativo.ps1`
-- `gitpush-cds.ps1`
-- `gitpush-compras.ps1`
-- `gitpush-desarrollo.ps1`
-- `gitpush-diseno.ps1`
-- `gitpush-experienciadigital.ps1`
-- `gitpush-gerencia.ps1`
-- `gitpush-infraestructura.ps1`
-- `gitpush-legal.ps1`
-- `gitpush-mantenimiento.ps1`
-- `gitpush-marketing.ps1`
-- `gitpush-produccion.ps1`
-- `gitpush-rh.ps1`
-- `gitpush-sistemas.ps1`
-- `gitpush-sucursales.ps1`
-- `gitpush-tecnicodesarrollohumano.ps1`
-- `gitpush-ventas.ps1`
-- `gitpush.ps1` (sube todos los cambios)
+## 🏗️ Lógica del Sistema
+
+El sistema sube **todo el contenido de `modulos/`** automáticamente.  
+No es necesario listar módulos individuales; cualquier carpeta nueva que se agregue dentro de `modulos/` será incluida en el siguiente push.
+
+### ✅ Qué se sube
+- Todo lo que está dentro de `modulos/`
+- `core/`, `docs/`, `README.md` de la raíz
+
+### ❌ Qué se excluye siempre (Git + Deploy)
+- Cualquier carpeta llamada `uploads/` en **cualquier nivel** dentro de `modulos/`
+
+### ⚠️ Excepciones temporales (carpetas de fotos sin nombre `uploads/`)
+Estas carpetas contienen archivos subidos por usuarios pero no se llaman `uploads/`.  
+Se excluyen explícitamente hasta que sean migradas a su carpeta `uploads/` correcta:
+
+| Carpeta | Migrar a |
+|---|---|
+| `supervision/auditorias_original/auditinternas/fotos_auditorias_caja_chica/` | `uploads/` dentro del módulo |
+| `supervision/auditorias_original/auditinternas/fotos_auditorias_caja_facturacion/` | `uploads/` dentro del módulo |
+| `supervision/auditorias_original/auditinternas/fotos_auditorias_inventario/` | `uploads/` dentro del módulo |
+| `supervision/auditorias_original/fotos/` | `uploads/` dentro del módulo |
+| `supervision/auditorias_original/fotoslimpieza/` | `uploads/` dentro del módulo |
+| `supervision/auditorias_original/fotospersonal/` | `uploads/` dentro del módulo |
+| `supervision/auditorias_original/fotosservicio/` | `uploads/` dentro del módulo |
+
+> Al migrar cada carpeta, elimina su línea correspondiente en `.gitignore` y su comentario en `deploy-erp.yml`.
 
 ---
 
-## 🏗️ Lógica del Deploy
-
-El sistema de deploy está configurado para:
-- ✅ Sincronizar los 17 módulos individuales.
-- ❌ Excluir la carpeta `uploads/` de cada módulo para preservar archivos subidos.
-- 🔧 Configurar permisos automáticos en el servidor (755 carpetas, 644 archivos).
-
----
-
-## 🔄 Sincronización Manual (Reset)
+## 🔄 Sincronización Manual (Reset forzado)
 
 Si necesitas forzar que el servidor se iguale a GitHub:
 
@@ -78,5 +75,4 @@ Ver documentación completa:
 
 ---
 
-**Última actualización:** 2026-02-17
-
+**Última actualización:** 2026-04-29

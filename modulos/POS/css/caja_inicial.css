@@ -1,0 +1,331 @@
+/* ============================================================
+   caja_inicial.css — Módulo Caja Inicial POS
+   ============================================================ */
+
+/* ---- Layout principal: dos paneles lado a lado ---- */
+.caja-inicial-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.4rem;
+    align-items: start;
+}
+
+@media (max-width: 900px) {
+    .caja-inicial-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ---- Cabecera con fecha y tipo de cambio ---- */
+.ci-header-card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    box-shadow: 0 1px 6px rgba(0,0,0,.07);
+    padding: 1.1rem 1.4rem;
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    margin-bottom: 1.4rem;
+    flex-wrap: wrap;
+}
+
+.ci-header-field {
+    display: flex;
+    flex-direction: column;
+    gap: .25rem;
+}
+
+.ci-header-field label {
+    font-size: .75rem;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+}
+
+.ci-header-field .form-control {
+    border-radius: 8px;
+    border: 1.5px solid #cbd5e1;
+    font-size: .92rem;
+    padding: .38rem .75rem;
+    min-width: 150px;
+    transition: border-color .2s, box-shadow .2s;
+}
+
+.ci-header-field .form-control:focus {
+    border-color: #51B8AC;
+    box-shadow: 0 0 0 3px rgba(81,184,172,.15);
+    outline: none;
+}
+
+.ci-tc-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    background: #E6F4F1;
+    border: 1.5px solid #B2DFDB;
+    color: #0E544C;
+    border-radius: 8px;
+    padding: .4rem .9rem;
+    font-size: .9rem;
+    font-weight: 700;
+}
+
+/* ---- Card por moneda ---- */
+.ci-card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    box-shadow: 0 1px 5px rgba(0,0,0,.07);
+    overflow: hidden;
+    transition: box-shadow .2s;
+}
+
+.ci-card:hover {
+    box-shadow: 0 4px 18px rgba(0,0,0,.10);
+}
+
+/* Header verde oscuro para córdobas */
+.ci-card-header {
+    background: #0E544C;
+    color: #fff;
+    padding: .9rem 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: .55rem;
+    font-weight: 700;
+    font-size: 1rem;
+    letter-spacing: .02em;
+}
+
+/* Header azul marino para dólares */
+.ci-card-header.usd {
+    background: #1e3a5f;
+}
+
+.ci-card-header i {
+    font-size: 1.15rem;
+    opacity: .9;
+}
+
+/* ---- Tabla de denominaciones ---- */
+.ci-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .88rem;
+}
+
+.ci-table thead th {
+    background: #f8fafc;
+    border-bottom: 2px solid #e2e8f0;
+    padding: .6rem .9rem;
+    font-weight: 700;
+    color: #374151;
+    text-transform: uppercase;
+    font-size: .75rem;
+    letter-spacing: .05em;
+    white-space: nowrap;
+}
+
+.ci-table thead th.text-end  { text-align: right;  }
+.ci-table thead th.text-center { text-align: center; }
+
+.ci-table tbody tr {
+    border-bottom: 1px solid #f1f5f9;
+    transition: background .15s;
+}
+
+.ci-table tbody tr:hover {
+    background: #f8fafc;
+}
+
+.ci-table tbody td {
+    padding: .48rem .9rem;
+    vertical-align: middle;
+    color: #374151;
+}
+
+.ci-table tbody td.text-end   { text-align: right;  }
+.ci-table tbody td.text-center { text-align: center; }
+
+/* ---- Denominación label ---- */
+.denom-label {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    font-weight: 700;
+    color: #1e293b;
+    font-size: .9rem;
+}
+
+.denom-label .denom-tag {
+    background: #E6F4F1;
+    border: 1px solid #B2DFDB;
+    color: #0E544C;
+    border-radius: 5px;
+    padding: .1rem .45rem;
+    font-size: .78rem;
+    font-weight: 800;
+}
+
+.denom-label.usd .denom-tag {
+    background: #EFF6FF;
+    border-color: #BFDBFE;
+    color: #1e3a5f;
+}
+
+/* ---- Input cantidad ---- */
+.ci-input-qty {
+    border: 1.5px solid #e2e8f0;
+    border-radius: 7px;
+    padding: .32rem .55rem;
+    font-size: .88rem;
+    width: 90px;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+    transition: border-color .2s, box-shadow .2s;
+    background: #fafafa;
+}
+
+.ci-input-qty:focus {
+    border-color: #51B8AC;
+    box-shadow: 0 0 0 2px rgba(81,184,172,.18);
+    outline: none;
+    background: #fff;
+}
+
+/* ---- Total por fila ---- */
+.ci-row-total {
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+/* ---- Filas de subtotal al pie de tabla ---- */
+.ci-subtotal-row td {
+    background: #f1f5f9;
+    font-weight: 700;
+    font-size: .9rem;
+    padding: .62rem .9rem;
+    border-top: 2px solid #e2e8f0;
+}
+
+.ci-subtotal-row .subtotal-label {
+    color: #475569;
+    text-transform: uppercase;
+    font-size: .78rem;
+    letter-spacing: .04em;
+}
+
+.ci-subtotal-row .subtotal-value {
+    color: #0E544C;
+    font-size: 1.05rem;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.ci-subtotal-row .subtotal-value.usd-val {
+    color: #1e3a5f;
+}
+
+.ci-subtotal-row .subtotal-value.cordobizado-val {
+    color: #0E544C;
+    font-size: .92rem;
+}
+
+/* ---- Barra de Total Efectivo Global ---- */
+.ci-total-global-bar {
+    background: linear-gradient(135deg, #0E544C 0%, #1d7a6f 100%);
+    color: #fff;
+    border-radius: 12px;
+    padding: 1.1rem 1.6rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 1.4rem;
+    box-shadow: 0 4px 18px rgba(14,84,76,.25);
+    flex-wrap: wrap;
+    gap: .75rem;
+}
+
+.ci-total-global-bar .global-label {
+    font-size: .95rem;
+    font-weight: 600;
+    opacity: .88;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+}
+
+.ci-total-global-bar .global-label i {
+    font-size: 1.2rem;
+}
+
+.ci-total-global-bar .global-amount {
+    font-size: 2rem;
+    font-weight: 900;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -.01em;
+}
+
+/* ---- Botones accion ---- */
+.ci-btn-guardar {
+    background: #51B8AC;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: .55rem 1.6rem;
+    font-weight: 700;
+    font-size: .92rem;
+    display: inline-flex;
+    align-items: center;
+    gap: .45rem;
+    transition: opacity .2s, transform .12s;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.ci-btn-guardar:hover:not(:disabled) {
+    opacity: .88;
+    transform: translateY(-1px);
+    color: #fff;
+}
+
+.ci-btn-guardar:disabled {
+    opacity: .5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.ci-btn-limpiar {
+    background: #f1f5f9;
+    color: #475569;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 8px;
+    padding: .55rem 1.2rem;
+    font-weight: 600;
+    font-size: .9rem;
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    cursor: pointer;
+    transition: background .15s, border-color .15s;
+}
+
+.ci-btn-limpiar:hover {
+    background: #e2e8f0;
+    border-color: #94a3b8;
+    color: #1e293b;
+}
+
+/* ---- Animación de guardado ---- */
+@keyframes pulse-save {
+    0%   { box-shadow: 0 0 0 0 rgba(81,184,172,.5); }
+    70%  { box-shadow: 0 0 0 10px rgba(81,184,172,0); }
+    100% { box-shadow: 0 0 0 0 rgba(81,184,172,0); }
+}
+
+.ci-btn-guardar.saving {
+    animation: pulse-save 1s infinite;
+}

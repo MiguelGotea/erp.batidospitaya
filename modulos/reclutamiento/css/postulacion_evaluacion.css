@@ -1,0 +1,58 @@
+/* postulacion_evaluacion.css */
+
+:root {
+    --color-principal: #51B8AC;
+    --color-header: #0E544C;
+    --color-header-tabla: #0E544C;
+    --btn-nuevo: #218838;
+    --btn-nuevo-hover: #1d6f42;
+}
+
+.star-rating {
+    display: flex;
+    gap: 5px;
+    font-size: 24px;
+}
+
+.star {
+    cursor: pointer;
+    color: #ddd;
+    transition: color 0.2s;
+}
+
+.star.active {
+    color: #ffc107;
+}
+
+.star:hover,
+.star:hover~.star {
+    /* reverse logic needed for CSS hover usually but here we use JS */
+}
+
+.upload-area {
+    border: 2px dashed #51B8AC;
+    border-radius: 12px;
+    padding: 40px;
+    text-align: center;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.upload-area:hover,
+.upload-area.dragover {
+    background-color: rgba(81, 184, 172, 0.1);
+}
+
+.question-row {
+    padding: 15px;
+    border-bottom: 1px solid #eee;
+}
+
+.question-row:last-child {
+    border-bottom: none;
+}
+
+#puntajeDisplay {
+    font-size: 48px;
+    font-weight: 800;
+}

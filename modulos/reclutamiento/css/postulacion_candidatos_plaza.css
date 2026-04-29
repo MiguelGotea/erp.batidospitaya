@@ -1,0 +1,558 @@
+/* postulacion_candidatos_plaza.css */
+
+:root {
+    --color-principal: #51B8AC;
+    --color-header: #0E544C;
+    --color-header-tabla: #0E544C;
+    --btn-nuevo: #218838;
+    --btn-nuevo-hover: #1d6f42;
+}
+
+/* =============================================
+   SECTION CARDS
+   ============================================= */
+
+.seccion-candidatos {
+    background: #fff;
+    border-radius: 12px;
+    border: 1px solid #e8ecef;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+}
+
+.seccion-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 22px;
+    border-bottom: 1px solid #f0f2f5;
+    background: #fff;
+}
+
+.seccion-header-titulo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #1a1a2e;
+    margin: 0;
+}
+
+.seccion-header-titulo .borde-color {
+    width: 4px;
+    height: 22px;
+    border-radius: 3px;
+    flex-shrink: 0;
+}
+
+.borde-verde { background-color: #1db876; }
+.borde-azul  { background-color: #3b82f6; }
+.borde-gris  { background-color: #9ca3af; }
+
+/* Badges de conteo */
+.badge-conteo {
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 20px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.badge-finalistas  { background-color: #d1fae5; color: #065f46; }
+.badge-en-proceso  { background-color: #dbeafe; color: #1e40af; }
+.badge-pendientes  { background-color: #f3f4f6; color: #6b7280; border: 1px solid #e5e7eb; }
+
+/* =============================================
+   TABLAS
+   ============================================= */
+
+.tabla-candidatos {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0;
+}
+
+.tabla-candidatos thead th {
+    background: #fff;
+    color: #9ca3af;
+    font-weight: 700;
+    font-size: 0.7rem;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    padding: 10px 14px;
+    border-bottom: 1px solid #f0f2f5;
+    text-align: left;
+    white-space: nowrap;
+}
+
+.tabla-candidatos thead th.text-center { text-align: center; }
+
+.tabla-candidatos tbody tr {
+    border-bottom: 1px solid #f7f8fa;
+    transition: background 0.15s;
+}
+
+.tabla-candidatos tbody tr:last-child {
+    border-bottom: none;
+}
+
+.tabla-candidatos tbody tr:hover {
+    background: #fafbfc;
+}
+
+.tabla-candidatos tbody td {
+    padding: 14px 14px;
+    vertical-align: middle;
+    font-size: 0.875rem;
+    color: #374151;
+    text-align: left;
+}
+
+.tabla-candidatos tbody td.text-center { text-align: center; }
+
+/* =============================================
+   CELDA DE CANDIDATO
+   ============================================= */
+
+.candidato-nombre {
+    font-weight: 700;
+    color: #111827;
+    font-size: 0.9rem;
+    line-height: 1.3;
+}
+
+.candidato-email {
+    font-size: 0.775rem;
+    color: #9ca3af;
+    margin-top: 1px;
+}
+
+/* =============================================
+   SCORES (FILTRO RRHH / JEFE)
+   ============================================= */
+
+.score-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.score-numero {
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.score-aprobado  { color: #059669; }
+.score-rechazado { color: #dc2626; }
+.score-pendiente { color: #9ca3af; }
+
+.score-badge {
+    font-size: 0.62rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 10px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.score-badge-aprobado  { background-color: #d1fae5; color: #065f46; }
+.score-badge-rechazado { background-color: #fee2e2; color: #991b1b; }
+.score-badge-pendiente { background-color: #f3f4f6; color: #6b7280; }
+
+/* Dash para sin evaluación */
+.sin-eval {
+    color: #cbd5e1;
+    font-size: 1.1rem;
+    font-weight: 300;
+}
+
+/* =============================================
+   BARRA DE PROGRESO DOCUS
+   ============================================= */
+
+.docus-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+    min-width: 120px;
+}
+
+.docus-barra-wrap {
+    width: 100%;
+    height: 8px;
+    background: #e9ecef;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.docus-barra {
+    height: 100%;
+    border-radius: 10px;
+    transition: width 0.4s ease;
+}
+
+.docus-barra.alta    { background: #10b981; }
+.docus-barra.media   { background: #f59e0b; }
+.docus-barra.baja    { background: #ef4444; }
+
+.docus-pct {
+    font-size: 0.75rem;
+    color: #6b7280;
+    font-weight: 600;
+}
+
+/* =============================================
+   BOTÓN CREAR CREDENCIALES
+   ============================================= */
+
+.btn-credenciales-activo {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #10b981;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 7px 14px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.btn-credenciales-activo:hover {
+    background: #059669;
+    color: #fff;
+}
+
+.btn-credenciales-deshabilitado {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #f3f4f6;
+    color: #9ca3af;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 7px 14px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: not-allowed;
+    white-space: nowrap;
+}
+
+/* =============================================
+   ESTADO ACTUAL (Grupo 2 - En Embudo)
+   ============================================= */
+
+.estado-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.estado-entrevista-rh     { background-color: #dbeafe; color: #1e40af; }
+.estado-entrevista-jefe   { background-color: #e0f2fe; color: #075985; }
+.estado-pendiente-aprob   { background-color: #fef3c7; color: #92400e; }
+.estado-descartado        { background-color: #fee2e2; color: #991b1b; }
+.estado-aprobado-jefe     { background-color: #d1fae5; color: #065f46; }
+
+/* =============================================
+   CV / PDF BUTTON
+   ============================================= */
+
+.btn-cv-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 6px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 1.3rem;
+    color: #ef4444;
+    transition: color 0.2s;
+    text-decoration: none;
+}
+
+.btn-cv-icon:hover { color: #b91c1c; }
+
+/* =============================================
+   ANÁLISIS IA (Grupo 3)
+   ============================================= */
+
+.btn-ia-validar {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: #10b981;
+    color: #fff;
+    border: none;
+    border-radius: 20px;
+    padding: 5px 14px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+    white-space: nowrap;
+}
+
+.btn-ia-validar:hover { background: #059669; }
+
+.badge-ia-insuficiente {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: #fee2e2;
+    color: #991b1b;
+    border-radius: 20px;
+    padding: 5px 14px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.badge-ia-alto {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: #d1fae5;
+    color: #065f46;
+    border-radius: 20px;
+    padding: 5px 14px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    white-space: nowrap;
+    border: 1px solid #34d399;
+}
+
+.badge-ia-medio {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: #fef3c7;
+    color: #92400e;
+    border-radius: 20px;
+    padding: 5px 14px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    white-space: nowrap;
+    border: 1px solid #fbbf24;
+}
+
+.badge-ia-premium {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+    color: #fff;
+    border-radius: 20px;
+    padding: 5px 14px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    white-space: nowrap;
+    box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3);
+}
+
+/* =============================================
+   STATUS BADGES (Grupo 3)
+   ============================================= */
+
+.status-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+}
+
+.status-solicitado  { background-color: #e0f2fe; color: #0369a1; }
+.status-aprobado    { background-color: #d1fae5; color: #065f46; }
+.status-rechazado   { background-color: #fee2e2; color: #991b1b; }
+.status-seleccionado{ background-color: #d1fae5; color: #065f46; }
+.status-denegado    { background-color: #fef3c7; color: #92400e; }
+.status-contratado  { background-color: #ede9fe; color: #5b21b6; }
+
+/* =============================================
+   BOTÓN VER PERFIL (texto simple)
+   ============================================= */
+
+.btn-ver-perfil {
+    background: transparent;
+    border: none;
+    color: #374151;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: color 0.15s, background 0.15s;
+    white-space: nowrap;
+}
+
+.btn-ver-perfil:hover {
+    color: #111827;
+    background: #f3f4f6;
+}
+
+/* =============================================
+   ACCIONES (íconos pequeños)
+   ============================================= */
+
+.btn-accion-icono {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    border: 1px solid #e5e7eb;
+    background: #fff;
+    color: #6b7280;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-decoration: none;
+}
+
+.btn-accion-icono:hover {
+    background: #f3f4f6;
+    color: #374151;
+    border-color: #d1d5db;
+}
+
+/* =============================================
+   BARRA DE PAGINACIÓN INFERIOR
+   ============================================= */
+
+.paginacion-barra {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 22px;
+    background: #fff;
+    border-top: 1px solid #f0f2f5;
+    border-radius: 0 0 12px 12px;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.paginacion-selector {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.82rem;
+    color: #6b7280;
+}
+
+.select-registros {
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 4px 10px;
+    font-size: 0.82rem;
+    color: #374151;
+    background: #fff;
+    cursor: pointer;
+    outline: none;
+}
+
+.select-registros:focus {
+    border-color: var(--color-principal);
+}
+
+.paginacion-controles {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.paginacion-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    border: 1px solid #e5e7eb;
+    background: #fff;
+    color: #6b7280;
+    font-size: 0.82rem;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.paginacion-btn:hover:not(:disabled) {
+    background: #f3f4f6;
+    color: #374151;
+}
+
+.paginacion-btn:disabled {
+    opacity: 0.4;
+    cursor: default;
+}
+
+.paginacion-btn.activo {
+    background: var(--color-header);
+    color: #fff;
+    border-color: var(--color-header);
+    font-weight: 700;
+}
+
+/* Estado vacío */
+.estado-vacio {
+    text-align: center;
+    padding: 30px 0;
+    color: #9ca3af;
+    font-size: 0.875rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .seccion-header { padding: 12px 14px; }
+    .tabla-candidatos thead th,
+    .tabla-candidatos tbody td { padding: 10px 10px; font-size: 0.8rem; }
+    .paginacion-barra { padding: 12px 14px; }
+}
+
+/* Interactividad en Badges de IA */
+.badge-ia-premium, .badge-ia-alto, .badge-ia-medio, .badge-ia-insuficiente {
+    cursor: pointer !important;
+    transition: all 0.2s ease-in-out;
+}
+
+.badge-ia-premium:hover, .badge-ia-alto:hover, .badge-ia-medio:hover, .badge-ia-insuficiente:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.1);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+/* Mejoras para el modal de IA */
+.swal2-html-container::-webkit-scrollbar {
+    width: 6px;
+}
+.swal2-html-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+.swal2-html-container::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+}
+.swal2-html-container::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}

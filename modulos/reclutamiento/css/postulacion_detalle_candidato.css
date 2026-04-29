@@ -1,0 +1,159 @@
+/* postulacion_detalle_candidato.css */
+
+:root {
+    --color-principal: #51B8AC;
+    --color-header: #0E544C;
+    --color-header-tabla: #0E544C;
+    --btn-nuevo: #218838;
+    --btn-nuevo-hover: #1d6f42;
+}
+
+.card-header.bg-primary {
+    background: var(--color-header) !important;
+}
+
+.card-header.bg-success {
+    background: #28a745 !important;
+}
+
+.section-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--color-header);
+    margin-bottom: 15px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--color-principal);
+}
+
+.info-row {
+    margin-bottom: 15px;
+}
+
+.info-label {
+    font-size: 12px;
+    color: #6c757d;
+    font-weight: 600;
+    text-transform: uppercase;
+    margin-bottom: 5px;
+}
+
+.info-value {
+    font-size: 15px;
+    color: #212529;
+    font-weight: 500;
+}
+
+.match-score {
+    text-align: center;
+    padding: 15px;
+    background: #e8f5f3;
+    border-radius: 10px;
+    border: 2px solid var(--color-principal);
+}
+
+.match-percentage {
+    font-size: 36px;
+    font-weight: 700;
+    color: var(--color-header);
+    line-height: 1;
+}
+
+.match-label {
+    font-size: 12px;
+    color: #6c757d;
+    font-weight: 600;
+    text-transform: uppercase;
+    margin-top: 5px;
+}
+
+.rating-stars {
+    font-size: 20px;
+    color: #ffc107;
+    margin-top: 8px;
+}
+
+.btn-outline-danger {
+    border-color: #dc3545;
+    color: #dc3545;
+}
+
+.btn-outline-danger:hover {
+    background-color: #dc3545;
+    color: white;
+}
+
+.btn-success {
+    background-color: var(--btn-nuevo);
+    border-color: var(--btn-nuevo);
+}
+
+.btn-success:hover {
+    background-color: var(--btn-nuevo-hover);
+    border-color: var(--btn-nuevo-hover);
+}
+
+.table-light {
+    background-color: #f8f9fa;
+}
+
+.table th {
+    font-weight: 600;
+    font-size: 13px;
+    color: #495057;
+}
+
+.table td {
+    font-size: 14px;
+}
+
+.progress {
+    background-color: #e9ecef;
+}
+
+.progress-bar {
+    transition: width 0.6s ease;
+}
+
+/* Alert personalizado */
+.alert-light {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    color: #495057;
+}
+
+.alert-info {
+    background-color: #d1ecf1;
+    border-color: #bee5eb;
+    color: #0c5460;
+}
+
+/* Form styling */
+.form-label {
+    font-weight: 600;
+    font-size: 14px;
+    color: #495057;
+    margin-bottom: 5px;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--color-principal);
+    box-shadow: 0 0 0 0.2rem rgba(81, 184, 172, 0.25);
+}
+
+/* Responsive */
+@media (max-width: 991px) {
+    .match-score {
+        margin-bottom: 20px;
+    }
+}
+
+@media (max-width: 768px) {
+    .match-percentage {
+        font-size: 28px;
+    }
+
+    .info-value {
+        font-size: 14px;
+    }
+}

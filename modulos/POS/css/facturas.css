@@ -1,0 +1,909 @@
+/* ============================================================
+   facturas.css — Módulo Registro de Facturas POS
+   ============================================================ */
+
+/* ---- Layout Split ---- */
+.facturas-layout {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 1.25rem;
+    align-items: start;
+}
+
+@media (max-width: 1100px) {
+    .facturas-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ---- Card base ---- */
+.card-factura {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.06);
+    overflow: hidden;
+}
+
+.card-factura .card-header-factura {
+    background: #0E544C;
+    color: #fff;
+    padding: .85rem 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: .55rem;
+    font-weight: 600;
+    font-size: .95rem;
+    letter-spacing: .02em;
+}
+
+.card-factura .card-header-factura i {
+    font-size: 1.1rem;
+    opacity: .85;
+}
+
+.card-factura .card-body-factura {
+    padding: 1.1rem 1.2rem;
+}
+
+/* ---- Formulario cabecera ---- */
+.form-cabecera .row {
+    margin-bottom: 0;
+}
+
+.form-cabecera .form-label {
+    font-size: .82rem;
+    font-weight: 600;
+    color: #475569;
+    margin-bottom: .3rem;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+}
+
+.form-cabecera .form-control,
+.form-cabecera .form-select {
+    border-radius: 7px;
+    border: 1.5px solid #cbd5e1;
+    font-size: .92rem;
+    padding: .4rem .75rem;
+    transition: border-color .2s, box-shadow .2s;
+}
+
+.form-cabecera .form-control:focus,
+.form-cabecera .form-select:focus {
+    border-color: #51B8AC;
+    box-shadow: 0 0 0 3px rgba(81, 184, 172, 0.15);
+    outline: none;
+}
+
+.numero-factura-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    background: #E6F4F1;
+    border: 1.5px solid #B2DFDB;
+    color: #0E544C;
+    border-radius: 7px;
+    padding: .35rem .8rem;
+    font-size: .9rem;
+    font-weight: 700;
+}
+
+/* ---- Tabla de productos en factura ---- */
+.tabla-detalle-factura {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .875rem;
+}
+
+.tabla-detalle-factura thead th {
+    background: #f8fafc;
+    border-bottom: 2px solid #e2e8f0;
+    padding: .6rem .75rem;
+    font-weight: 700;
+    color: #374151;
+    text-transform: uppercase;
+    font-size: .75rem;
+    letter-spacing: .05em;
+    white-space: nowrap;
+}
+
+.tabla-detalle-factura tbody tr {
+    border-bottom: 1px solid #f1f5f9;
+    transition: background .15s;
+}
+
+.tabla-detalle-factura tbody tr:hover {
+    background: #f8fafc;
+}
+
+.tabla-detalle-factura tbody td {
+    padding: .5rem .75rem;
+    vertical-align: middle;
+    color: #374151;
+}
+
+.tabla-detalle-factura .input-tabla {
+    border: 1.5px solid #e2e8f0;
+    border-radius: 6px;
+    padding: .3rem .55rem;
+    font-size: .875rem;
+    width: 100%;
+    transition: border-color .2s;
+    text-align: right;
+}
+
+.tabla-detalle-factura .input-tabla:focus {
+    border-color: #51B8AC;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(81, 184, 172, 0.15);
+}
+
+.tabla-detalle-factura .costo-unitario-cell {
+    color: #64748b;
+    font-size: .82rem;
+    text-align: right;
+    padding-right: .9rem;
+}
+
+.empty-detalle {
+    text-align: center;
+    color: #94a3b8;
+    padding: 2rem;
+    font-style: italic;
+    font-size: .9rem;
+}
+
+/* ---- Total Factura ---- */
+.total-factura-bar {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 1rem;
+    padding: .75rem 1rem;
+    background: #f8fafc;
+    border-top: 2px solid #e2e8f0;
+    border-radius: 0 0 10px 10px;
+    margin-top: .25rem;
+}
+
+.total-factura-label {
+    font-size: .9rem;
+    font-weight: 600;
+    color: #475569;
+}
+
+.total-factura-monto {
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: #0E544C;
+    font-variant-numeric: tabular-nums;
+}
+
+/* ---- Botones de acción ---- */
+.btn-guardar-factura {
+    background: #51B8AC;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: .5rem 1.5rem;
+    font-weight: 600;
+    font-size: .9rem;
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    transition: opacity .2s, transform .1s;
+    cursor: pointer;
+}
+
+.btn-guardar-factura:hover {
+    opacity: .9;
+    transform: translateY(-1px);
+    color: #fff;
+}
+
+.btn-guardar-factura:disabled {
+    opacity: .55;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.btn-cancelar-factura {
+    background: #f1f5f9;
+    color: #475569;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 8px;
+    padding: .5rem 1.2rem;
+    font-weight: 600;
+    font-size: .9rem;
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    text-decoration: none;
+    transition: background .15s, border-color .15s;
+}
+
+.btn-cancelar-factura:hover {
+    background: #e2e8f0;
+    color: #1e293b;
+    border-color: #94a3b8;
+}
+
+/* ---- Panel lateral: Productos elegibles ---- */
+.panel-productos-elegibles {
+    position: sticky;
+    top: 1rem;
+}
+
+.buscador-productos {
+    position: relative;
+    margin-bottom: .75rem;
+}
+
+.buscador-productos input {
+    width: 100%;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 8px;
+    padding: .45rem .75rem .45rem 2.2rem;
+    font-size: .875rem;
+    transition: border-color .2s, box-shadow .2s;
+}
+
+.buscador-productos input:focus {
+    border-color: #51B8AC;
+    box-shadow: 0 0 0 3px rgba(81, 184, 172, 0.15);
+    outline: none;
+}
+
+.buscador-productos .icon-search {
+    position: absolute;
+    left: .65rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8;
+    font-size: .9rem;
+    pointer-events: none;
+}
+
+.lista-productos-scroll {
+    max-height: calc(100vh - 280px);
+    overflow-y: auto;
+    padding-right: 2px;
+}
+
+.lista-productos-scroll::-webkit-scrollbar {
+    width: 5px;
+}
+.lista-productos-scroll::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+}
+
+.producto-card-elegible {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .5rem;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: .55rem .75rem;
+    margin-bottom: .45rem;
+    transition: border-color .15s, box-shadow .15s;
+    cursor: default;
+}
+
+.producto-card-elegible:hover {
+    border-color: #51B8AC;
+    box-shadow: 0 1px 5px rgba(81, 184, 172, 0.15);
+}
+
+.producto-card-elegible .prod-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    flex: 1;
+}
+
+.producto-card-elegible .prod-nombre {
+    font-size: .85rem;
+    font-weight: 700;
+    color: #1e293b;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.producto-card-elegible .prod-presentacion {
+    font-size: .76rem;
+    color: #64748b;
+    margin-top: 1px;
+}
+
+.btn-agregar-prod {
+    background: #51B8AC;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: .3rem .7rem;
+    font-size: .78rem;
+    font-weight: 700;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: .25rem;
+    cursor: pointer;
+    transition: background .15s, transform .1s;
+    flex-shrink: 0;
+}
+
+.btn-agregar-prod:hover {
+    background: #0E544C;
+    transform: scale(1.04);
+}
+
+.no-productos-msg {
+    text-align: center;
+    color: #94a3b8;
+    font-size: .875rem;
+    padding: 1.5rem 0;
+}
+
+/* ---- Historial de Facturas ---- */
+.facturas-table {
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.facturas-table thead {
+    background-color: #0E544C !important;
+    color: white !important;
+}
+
+.facturas-table thead th {
+    font-weight: 600;
+    padding: 14px 12px;
+    border: none;
+    border-right: 1px solid rgba(255, 255, 255, 0.2);
+    position: relative;
+    white-space: nowrap;
+    font-size: 14px;
+    background-color: #0E544C !important;
+    color: white !important;
+    text-transform: none;
+    letter-spacing: normal;
+}
+
+.facturas-table thead th:last-child {
+    border-right: none;
+}
+
+.facturas-table tbody tr {
+    border-bottom: 1px solid #e9ecef;
+    transition: background-color 0.2s;
+}
+
+.facturas-table tbody tr:hover {
+    background-color: rgba(81, 184, 172, 0.1) !important;
+}
+
+.facturas-table tbody td {
+    padding: 12px;
+    vertical-align: middle;
+    font-size: 14px;
+    border-right: 1px solid #e9ecef;
+}
+
+.facturas-table tbody td:last-child {
+    border-right: none;
+}
+
+.filter-icon {
+    cursor: pointer;
+    margin-left: 6px;
+    opacity: 0.6;
+    transition: all 0.2s;
+    font-size: 13px;
+    position: relative;
+    display: inline-block;
+}
+
+.filter-icon:hover {
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+.filter-icon.active {
+    opacity: 1;
+    color: #51B8AC;
+}
+
+.filter-icon.has-filter::after {
+    content: '';
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    width: 10px;
+    height: 10px;
+    background-color: #dc3545;
+    border-radius: 50%;
+    border: 2px solid #0E544C;
+}
+
+.filter-panel {
+    position: fixed;
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    padding: 16px;
+    z-index: 1050;
+    min-width: 300px;
+    max-width: 350px;
+    display: none;
+}
+
+.filter-panel.show {
+    display: block;
+}
+
+.filter-panel.has-daterange {
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.filter-section {
+    margin-bottom: 12px;
+}
+
+.filter-section-title {
+    display: block;
+    font-weight: 600;
+    font-size: 13px;
+    color: #0E544C;
+    margin-bottom: 8px;
+}
+
+.filter-search {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+.filter-search:focus {
+    outline: none;
+    border-color: #51B8AC;
+}
+
+.filter-options {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    padding: 4px;
+    margin-top: 8px;
+}
+
+.filter-option {
+    padding: 8px 10px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.filter-option:hover {
+    background-color: #f8f9fa;
+}
+
+.filter-sort-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+}
+
+.filter-sort-btn {
+    padding: 8px 12px;
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    text-align: center;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.filter-sort-btn:hover {
+    background-color: #f8f9fa;
+    border-color: #51B8AC;
+}
+
+.filter-sort-btn.active {
+    background-color: #51B8AC;
+    color: white;
+    border-color: #51B8AC;
+}
+
+.filter-actions {
+    display: flex;
+    gap: 8px;
+    padding-top: 12px;
+    margin-top: 12px;
+    border-top: 1px solid #e9ecef;
+}
+
+.filter-action-btn {
+    flex: 1;
+    padding: 8px 12px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.filter-action-btn.clear {
+    background-color: #dc3545;
+    color: white;
+}
+
+.filter-action-btn.clear:hover {
+    background-color: #c82333;
+}
+
+.daterange-calendar-container {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    width: 100%;
+}
+
+.daterange-month-selector {
+    display: flex;
+    gap: 4px;
+}
+
+.daterange-month-selector select {
+    flex: 1;
+    padding: 3px 4px;
+    border: 1px solid #dee2e6;
+    border-radius: 3px;
+    font-size: 11px;
+    background-color: white;
+}
+
+.daterange-calendar {
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    padding: 4px;
+    background-color: #fafafa;
+}
+
+.daterange-calendar-header,
+.daterange-calendar-days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+}
+
+.daterange-calendar-day-name {
+    text-align: center;
+    font-size: 9px;
+    font-weight: 600;
+    color: #6c757d;
+    padding: 1px 0;
+}
+
+.daterange-calendar-day {
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    border-radius: 3px;
+    cursor: pointer;
+    background-color: white;
+    padding: 14px;
+}
+
+.daterange-calendar-day:hover {
+    background-color: #e9ecef;
+}
+
+.daterange-calendar-day.empty {
+    cursor: default;
+    background-color: transparent;
+}
+
+.daterange-calendar-day.selected {
+    background-color: #51B8AC;
+    color: white;
+    font-weight: 600;
+}
+
+.daterange-calendar-day.in-range {
+    background-color: rgba(81, 184, 172, 0.2);
+}
+
+.badge-activa {
+    background: #dcfce7;
+    color: #166534;
+    border: 1px solid #bbf7d0;
+    border-radius: 20px;
+    padding: .15rem .7rem;
+    font-size: .75rem;
+    font-weight: 700;
+}
+
+.badge-anulada {
+    background: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+    border-radius: 20px;
+    padding: .15rem .7rem;
+    font-size: .75rem;
+    font-weight: 700;
+}
+
+.btn-ver-detalle {
+    background-color: #51B8AC;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 12px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.btn-ver-detalle:hover {
+    background-color: #0E544C;
+    color: white;
+}
+
+/* ---- Modal detalle factura ---- */
+.modal-detalle-header {
+    background: #0E544C;
+    color: #fff;
+    border-radius: 10px 10px 0 0;
+    padding: 1rem 1.25rem;
+}
+
+.modal-detalle-header .modal-title {
+    font-weight: 700;
+    font-size: 1rem;
+}
+
+.tabla-modal-detalle th {
+    background: #f8fafc;
+    font-size: .77rem;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: #374151;
+    padding: .5rem .7rem;
+}
+
+.tabla-modal-detalle td {
+    padding: .5rem .7rem;
+    font-size: .875rem;
+    vertical-align: middle;
+    color: #374151;
+}
+
+.texto-total-modal {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: #0E544C;
+}
+
+/* ---- Paginación ---- */
+.paginacion-container {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: .35rem;
+    flex-wrap: wrap;
+}
+
+.paginacion-container .page-btn {
+    border: 1.5px solid #e2e8f0;
+    background: #fff;
+    border-radius: 6px;
+    padding: .3rem .65rem;
+    font-size: .82rem;
+    font-weight: 600;
+    cursor: pointer;
+    color: #374151;
+    transition: background .15s, border-color .15s, color .15s;
+}
+
+.pagination-btn {
+    border: 1.5px solid #e2e8f0;
+    background: #fff;
+    border-radius: 6px;
+    padding: .3rem .65rem;
+    font-size: .82rem;
+    font-weight: 600;
+    cursor: pointer;
+    color: #374151;
+    transition: background .15s, border-color .15s, color .15s;
+    min-width: 34px;
+}
+
+.pagination-btn:hover:not(:disabled) {
+    background: #E6F4F1;
+    border-color: #51B8AC;
+    color: #0E544C;
+}
+
+.pagination-btn.active {
+    background: #51B8AC;
+    border-color: #51B8AC;
+    color: #fff;
+}
+
+.pagination-btn:disabled {
+    opacity: .4;
+    cursor: not-allowed;
+}
+
+.paginacion-container .page-btn:hover:not(:disabled) {
+    background: #E6F4F1;
+    border-color: #51B8AC;
+    color: #0E544C;
+}
+
+.paginacion-container .page-btn.active {
+    background: #51B8AC;
+    border-color: #51B8AC;
+    color: #fff;
+}
+
+.paginacion-container .page-btn:disabled {
+    opacity: .4;
+    cursor: not-allowed;
+}
+
+/* ---- Eliminar fila ---- */
+.btn-eliminar-fila {
+    background: none;
+    border: none;
+    color: #ef4444;
+    cursor: pointer;
+    font-size: 1rem;
+    padding: .2rem .4rem;
+    border-radius: 5px;
+    transition: background .15s;
+}
+
+.btn-eliminar-fila:hover {
+    background: #fee2e2;
+}
+
+/* ---- Controles de Cantidad ---- */
+.qty-control {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.15rem;
+    background: #f1f5f9;
+    border-radius: 6px;
+    padding: 2px;
+    border: 1.5px solid #e2e8f0;
+}
+
+.qty-btn {
+    width: 26px;
+    height: 26px;
+    border-radius: 4px;
+    border: none;
+    background: #fff;
+    color: #475569;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s, transform 0.1s;
+}
+
+.qty-btn:hover {
+    background: #51B8AC;
+    color: #fff;
+}
+
+.qty-btn:active {
+    transform: scale(0.92);
+}
+
+.qty-input {
+    width: 50px !important;
+    border: none !important;
+    background: transparent !important;
+    text-align: center !important;
+    font-weight: 700 !important;
+    padding: 0 !important;
+    font-size: 0.9rem !important;
+}
+
+/* Chrome, Safari, Edge, Opera */
+.qty-input::-webkit-outer-spin-button,
+.qty-input::-webkit-inner-spin-button {
+  appearance: none;
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+.qty-input[type=number] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+/* ---- Autocomplete Proveedor ---- */
+.autocomplete-wrapper {
+    position: relative;
+}
+
+.autocomplete-list {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: #fff;
+    border: 1.5px solid #51B8AC;
+    border-radius: 0 0 8px 8px;
+    box-shadow: 0 4px 12px rgba(81, 184, 172, 0.15);
+    max-height: 250px;
+    overflow-y: auto;
+    z-index: 1000;
+    display: none;
+}
+
+.autocomplete-item {
+    padding: 0.65rem 0.85rem;
+    cursor: pointer;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 0.9rem;
+    transition: background 0.15s;
+    display: flex;
+    flex-direction: column;
+}
+
+.autocomplete-item:last-child {
+    border-bottom: none;
+}
+
+.autocomplete-item:hover,
+.autocomplete-item.active {
+    background: #E6F4F1;
+}
+
+.autocomplete-item .prov-name {
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.autocomplete-item .prov-ruc {
+    font-size: 0.78rem;
+    color: #64748b;
+}
+

@@ -1,0 +1,426 @@
+/* postulacion_requisicion.css */
+
+:root {
+    --color-principal: #51B8AC;
+    --color-header: #0E544C;
+    --color-header-tabla: #0E544C;
+    --btn-nuevo: #218838;
+    --btn-nuevo-hover: #1d6f42;
+}
+
+.table thead th {
+    background-color: var(--color-header-tabla);
+    color: white;
+    font-weight: 600;
+    font-size: 13px;
+    padding: 7px 6px;
+    text-align: center;
+}
+
+.table tbody td {
+    vertical-align: middle;
+    padding: 6px 6px;
+}
+
+/* Badges personalizados */
+.badge-temporal {
+    background-color: #ffc107;
+    color: #000;
+}
+
+.badge-permanente {
+    background-color: #17a2b8;
+    color: #fff;
+}
+
+.badge-solicitado {
+    background-color: #6c757d;
+}
+
+.badge-aprobado {
+    background-color: #28a745;
+}
+
+.badge-rechazado {
+    background-color: #dc3545;
+}
+
+/* Niveles de urgencia */
+.urgencia-1 {
+    color: #6c757d;
+}
+
+.urgencia-2 {
+    color: #ffc107;
+}
+
+.urgencia-3 {
+    color: #fd7e14;
+}
+
+.urgencia-4 {
+    color: #dc3545;
+}
+
+.urgencia-badge-1 {
+    background-color: #e9ecef;
+    color: #6c757d;
+}
+
+.urgencia-badge-2 {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.urgencia-badge-3 {
+    background-color: #ffe0cc;
+    color: #974400;
+}
+
+.urgencia-badge-4 {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+/* Botones de acción */
+.btn-action {
+    padding: 4px 8px;
+    font-size: 13px;
+}
+
+/* Modal */
+.modal-header.bg-primary {
+    background: var(--color-header);
+}
+
+/* Autocomplete list */
+.autocomplete-list {
+    position: absolute;
+    background: white;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    max-height: 200px;
+    overflow-y: auto;
+    width: calc(100% - 24px);
+    z-index: 1000;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    display: none;
+}
+
+.autocomplete-list.active {
+    display: block;
+}
+
+.autocomplete-item {
+    padding: 8px 12px;
+    cursor: pointer;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.autocomplete-item:hover {
+    background-color: var(--color-principal);
+    color: white;
+}
+
+.autocomplete-item:last-child {
+    border-bottom: none;
+}
+
+/* Drop zone para archivos */
+.drop-zone {
+    border: 2px dashed #ced4da;
+    border-radius: 8px;
+    padding: 30px;
+    text-align: center;
+    transition: all 0.3s;
+    cursor: pointer;
+}
+
+.drop-zone:hover {
+    border-color: var(--color-principal);
+    background-color: #f8f9fa;
+}
+
+.drop-zone.drag-over {
+    border-color: var(--color-principal);
+    background-color: #e8f5f3;
+}
+
+.archivo-nombre {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 12px;
+    background-color: #e8f5f3;
+    border-radius: 4px;
+    color: var(--color-header);
+    font-size: 14px;
+}
+
+.archivo-nombre i {
+    margin-right: 8px;
+    color: var(--color-principal);
+}
+
+.archivo-nombre .btn-remove {
+    margin-left: 10px;
+    color: #dc3545;
+    cursor: pointer;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .table thead th {
+        font-size: 12px;
+        padding: 8px 4px;
+    }
+
+    .autocomplete-list {
+        width: calc(100% - 30px);
+    }
+}
+
+/* Iconos de filtro */
+.filter-icon {
+    cursor: pointer;
+    margin-left: 6px;
+    opacity: 0.6;
+    transition: all 0.2s;
+    font-size: 13px;
+    position: relative;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.filter-icon:hover {
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+.filter-icon.active {
+    opacity: 1;
+    color: #51B8AC;
+}
+
+/* Indicador de filtro activo */
+.filter-icon.has-filter::after {
+    content: '';
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    width: 10px;
+    height: 10px;
+    background-color: #dc3545;
+    border-radius: 50%;
+    border: 2px solid #0E544C;
+}
+
+/* Panel de filtro */
+.filter-panel {
+    position: fixed;
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    padding: 16px;
+    z-index: 1050;
+    min-width: 300px;
+    max-width: 350px;
+    display: none;
+}
+
+.filter-panel.show {
+    display: block;
+}
+
+.filter-panel.has-daterange {
+    min-width: 320px;
+}
+
+.filter-section {
+    margin-bottom: 16px;
+}
+
+.filter-section:last-of-type {
+    margin-bottom: 12px;
+}
+
+.filter-section-title {
+    display: block;
+    font-weight: 600;
+    font-size: 13px;
+    color: #0E544C;
+    margin-bottom: 8px;
+}
+
+/* Búsqueda */
+.filter-search {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    font-size: 14px;
+    transition: border-color 0.2s;
+}
+
+.filter-search:focus {
+    outline: none;
+    border-color: #51B8AC;
+}
+
+/* Opciones de lista */
+.filter-options {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    padding: 4px;
+    margin-top: 8px;
+}
+
+.filter-option {
+    padding: 8px 10px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+}
+
+.filter-option:hover {
+    background-color: #f8f9fa;
+}
+
+.filter-option input[type="checkbox"] {
+    cursor: pointer;
+}
+
+/* Botones de orden */
+.filter-sort-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+}
+
+.filter-sort-btn {
+    padding: 8px 12px;
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    text-align: center;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.filter-sort-btn:hover {
+    background-color: #f8f9fa;
+    border-color: #51B8AC;
+}
+
+.filter-sort-btn.active {
+    background-color: #51B8AC !important;
+    color: white !important;
+    border-color: #51B8AC !important;
+}
+
+/* Botones de acción */
+.filter-actions {
+    display: flex;
+    gap: 8px;
+    padding-top: 12px;
+    margin-top: 12px;
+    border-top: 1px solid #e9ecef;
+}
+
+.filter-action-btn {
+    flex: 1;
+    padding: 8px 12px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.filter-action-btn.clear {
+    background-color: #dc3545;
+    color: white;
+}
+
+.filter-action-btn.clear:hover {
+    background-color: #c82333;
+}
+
+/* Date range specific */
+.daterange-calendar-container {
+    padding: 5px;
+}
+
+.daterange-month-selector {
+    display: flex;
+    gap: 5px;
+    margin-bottom: 10px;
+}
+
+.daterange-month-selector select {
+    flex: 1;
+    padding: 4px;
+    font-size: 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.daterange-calendar-header {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    text-align: center;
+    font-weight: bold;
+    font-size: 11px;
+    color: #666;
+    margin-bottom: 5px;
+}
+
+.daterange-calendar-days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+}
+
+.daterange-calendar-day {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background 0.2s;
+}
+
+.daterange-calendar-day:hover:not(.empty) {
+    background: #e8f5f3;
+}
+
+.daterange-calendar-day.selected {
+    background: var(--color-principal) !important;
+    color: white !important;
+}
+
+.daterange-calendar-day.in-range {
+    background: #e8f5f3;
+}
+
+.daterange-calendar-day.empty {
+    cursor: default;
+}

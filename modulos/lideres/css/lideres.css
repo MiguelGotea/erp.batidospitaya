@@ -1,0 +1,521 @@
+/* Botones */
+.btn-ver-detalles {
+    background: rgba(255, 255, 255, 0.2);
+    border: 2px solid white;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: bold;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn-ver-detalles:hover {
+    background: white;
+    color: #333;
+    text-decoration: none;
+}
+
+/* Estilos para el modal de tardanzas */
+.modal-pendientes {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(5px);
+}
+
+.modal-content-pendientes {
+    background-color: white;
+    margin: 5% auto;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 800px;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-50px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.modal-header-pendientes {
+    background: #0E544C;
+    color: white;
+    padding: 20px;
+    border-radius: 12px 12px 0 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header-pendientes h3 {
+    margin: 0;
+    font-size: 1.4rem !important;
+}
+
+.close-modal {
+    font-size: 2rem;
+    cursor: pointer;
+    transition: color 0.3s ease;
+    line-height: 1;
+}
+
+.close-modal:hover {
+    color: #ffeb3b;
+}
+
+.modal-body-pendientes {
+    padding: 20px;
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+/* Estilos para la tabla en el modal */
+.modal-body-pendientes table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.modal-body-pendientes th {
+    background: #0E544C;
+    color: white;
+    padding: 12px;
+    text-align: left;
+    font-weight: bold;
+}
+
+.modal-body-pendientes td {
+    padding: 10px;
+    border-bottom: 1px solid #dee2e6;
+}
+
+/* Responsive para el modal */
+@media (max-width: 768px) {
+    .modal-content-pendientes {
+        margin: 10% auto;
+        width: 95%;
+    }
+
+    .modal-body-pendientes {
+        padding: 15px;
+    }
+
+    .modal-body-pendientes table {
+        font-size: 0.8rem;
+    }
+
+    .modal-body-pendientes th,
+    .modal-body-pendientes td {
+        padding: 8px 5px;
+    }
+}
+
+/* Estilos específicos para el botón dentro del modal */
+.modal-body-pendientes .btn-ver-detalles {
+    background: White;
+    border: 2px solid #51B8AC;
+    color: #51B8AC !important;
+    padding: 8px 16px;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: bold;
+    text-decoration: none;
+    display: inline-block;
+    white-space: nowrap;
+}
+
+.modal-body-pendientes .btn-ver-detalles:hover {
+    background: #51B8AC;
+    color: white !important;
+    text-decoration: none;
+}
+
+/* Mejorar la grid de sucursales en el modal */
+.modal-body-pendientes .sucursales-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 10px;
+    margin: 15px 0;
+}
+
+.modal-body-pendientes .sucursal-card {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    border-left: 4px solid #dc3545;
+    transition: transform 0.2s ease;
+}
+
+.modal-body-pendientes .sucursal-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.sucursal-clickeable {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    border-left: 4px solid #dc3545;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.sucursal-clickeable:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    background: #e9ecef;
+}
+
+.sucursal-clickeable:active {
+    transform: translateY(0);
+}
+
+.sucursal-indicador {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    color: #dc3545;
+    font-size: 0.8rem;
+}
+
+/* Estilos para la tarjeta de cumpleaños */
+.cumpleanos-container {
+    max-width: 1200px;
+    margin: 0 auto 30px auto;
+}
+
+.cumpleanos-card {
+    background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 50%, #FF6B6B 100%);
+    border-radius: 20px;
+    padding: 30px;
+    color: white;
+    box-shadow: 0 10px 30px rgba(255, 107, 107, 0.3);
+    position: relative;
+    overflow: hidden;
+    border: 3px solid rgba(255, 255, 255, 0.2);
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.02);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+.cumpleanos-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    transform: rotate(45deg);
+    animation: shine 3s infinite;
+}
+
+@keyframes shine {
+    0% {
+        transform: translateX(-100%) translateY(-100%) rotate(45deg);
+    }
+
+    100% {
+        transform: translateX(100%) translateY(100%) rotate(45deg);
+    }
+}
+
+.cumpleanos-content {
+    display: flex;
+    align-items: center;
+    gap: 25px;
+    position: relative;
+    z-index: 2;
+}
+
+.cumpleanos-icon {
+    font-size: 4rem !important;
+    animation: bounce 2s infinite;
+    min-width: 80px;
+    text-align: center;
+}
+
+@keyframes bounce {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+.cumpleanos-text {
+    flex: 1;
+}
+
+.cumpleanos-title {
+    font-size: 2rem !important;
+    margin-bottom: 15px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.cumpleanos-message {
+    font-size: 1.1rem !important;
+    margin-bottom: 15px;
+    line-height: 1.6;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.cumpleanos-details {
+    font-size: 1rem !important;
+    opacity: 0.9;
+    line-height: 1.5;
+}
+
+.cumpleanos-confetti {
+    position: absolute;
+    top: 20px;
+    right: 30px;
+    font-size: 3rem !important;
+    animation: spin 4s linear infinite;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* Efectos de confeti adicionales */
+.cumpleanos-card::after {
+    content: '🎉🎊🥳';
+    position: absolute;
+    bottom: 10px;
+    right: 20px;
+    font-size: 1.5rem;
+    opacity: 0.7;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .cumpleanos-content {
+        flex-direction: column;
+        text-align: center;
+        gap: 15px;
+    }
+
+    .cumpleanos-title {
+        font-size: 1.5rem !important;
+    }
+
+    .cumpleanos-message {
+        font-size: 1rem !important;
+    }
+
+    .cumpleanos-icon {
+        font-size: 3rem !important;
+    }
+
+    .cumpleanos-confetti {
+        position: relative;
+        top: auto;
+        right: auto;
+        margin-top: 10px;
+    }
+}
+
+/* Sección de Balances */
+.balances-container {
+    margin: 0 auto 30px auto;
+    width: 100%;
+}
+
+.balance-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.balance-card-header {
+    background: linear-gradient(135deg, #0E544C 0%, #51B8AC 100%);
+    color: white;
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.balance-card-header h3 {
+    margin: 0;
+    font-size: 1.3rem !important;
+}
+
+.meta-display {
+    font-size: 1.1rem !important;
+    font-weight: bold;
+}
+
+.balance-card-body {
+    padding: 20px;
+}
+
+.ventas-scroll-container {
+    position: relative;
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+}
+
+.scroll-btn {
+    background: #51B8AC;
+    border: none;
+    color: white;
+    width: 40px;
+    height: auto;
+    border-radius: 4px;
+    cursor: pointer;
+    opacity: 0;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.3s;
+    z-index: 10;
+    flex-shrink: 0;
+    display: flex;
+}
+
+.ventas-scroll-container:hover .scroll-btn.visible {
+    opacity: 1;
+}
+
+.scroll-btn:hover {
+    background: #0E544C;
+}
+
+.ventas-table-wrapper {
+    overflow-x: auto;
+    flex: 1;
+    scrollbar-width: thin;
+    scrollbar-color: #51B8AC #f1f1f1;
+}
+
+.ventas-table-wrapper::-webkit-scrollbar {
+    height: 8px;
+}
+
+.ventas-table-wrapper::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.ventas-table-wrapper::-webkit-scrollbar-thumb {
+    background: #51B8AC;
+    border-radius: 4px;
+}
+
+.ventas-table-wrapper::-webkit-scrollbar-thumb:hover {
+    background: #0E544C;
+}
+
+.ventas-meta-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 600px;
+}
+
+.ventas-meta-table th,
+.ventas-meta-table td {
+    padding: 12px;
+    text-align: center;
+    border: 1px solid #dee2e6;
+    white-space: nowrap;
+}
+
+.ventas-meta-table thead th {
+    background: #0E544C;
+    color: white;
+    font-weight: 600;
+}
+
+.ventas-meta-table tbody tr:nth-child(1) {
+    background: #f8f9fa;
+}
+
+.ventas-meta-table tbody tr:nth-child(2) {
+    background: #ffffff;
+}
+
+.semaforo {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 5px;
+    vertical-align: middle;
+}
+
+.semaforo.verde {
+    background-color: #28a745;
+}
+
+.semaforo.amarillo {
+    background-color: #ffc107;
+}
+
+.semaforo.rojo {
+    background-color: #dc3545;
+}
+
+/* Responsive para balances */
+@media (max-width: 768px) {
+    .balance-card-header {
+        flex-direction: column;
+        gap: 10px;
+        text-align: center;
+    }
+
+    .ventas-meta-table th,
+    .ventas-meta-table td {
+        padding: 8px;
+        font-size: 0.85rem !important;
+    }
+
+    .scroll-btn {
+        width: 35px;
+        height: 35px;
+    }
+}

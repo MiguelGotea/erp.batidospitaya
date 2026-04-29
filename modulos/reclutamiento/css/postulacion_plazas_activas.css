@@ -1,0 +1,127 @@
+/* postulacion_plazas_activas.css */
+
+:root {
+    --color-principal: #51B8AC;
+    --color-header: #0E544C;
+    --color-header-tabla: #0E544C;
+    --btn-nuevo: #218838;
+    --btn-nuevo-hover: #1d6f42;
+}
+
+.card-header.bg-primary {
+    background: var(--color-header) !important;
+}
+
+.table thead th {
+    background-color: var(--color-header-tabla);
+    color: white;
+    font-weight: 600;
+    font-size: 13px;
+    padding: 7px 6px;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.table tbody td {
+    vertical-align: middle;
+    padding: 7px 6px;
+    text-align: center;
+}
+
+.table tbody td:first-child,
+.table tbody td:nth-child(2) {
+    text-align: left;
+}
+
+/* Badges de urgencia */
+.urgencia-badge-1 {
+    background-color: #6c757d;
+    color: white;
+}
+
+.urgencia-badge-2 {
+    background-color: #ffc107;
+    color: #000;
+}
+
+.urgencia-badge-3 {
+    background-color: #fd7e14;
+    color: white;
+}
+
+.urgencia-badge-4 {
+    background-color: #dc3545;
+    color: white;
+}
+
+.badge-plazas {
+    background-color: var(--color-principal);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.badge-cvs {
+    background-color: #17a2b8;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.btn-action {
+    padding: 6px 12px;
+    font-size: 13px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .table thead th {
+        font-size: 12px;
+        padding: 8px 4px;
+    }
+}
+
+/* Indicadores */
+.indicator-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border-radius: 12px;
+}
+
+.indicator-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+}
+
+.indicator-card h3 {
+    letter-spacing: -1px;
+}
+
+.indicator-icon {
+    background: rgba(255, 255, 255, 0.2);
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+}
+
+.bg-primary {
+    background: linear-gradient(135deg, #0e544c 0%, #1a7a6f 100%) !important;
+}
+
+.bg-info {
+    background: linear-gradient(135deg, #0288d1 0%, #26c6da 100%) !important;
+}
+
+.bg-success {
+    background: linear-gradient(135deg, #2e7d32 0%, #66bb6a 100%) !important;
+}
+
+.bg-warning {
+    background: linear-gradient(135deg, #fbc02d 0%, #ffeb3b 100%) !important;
+}

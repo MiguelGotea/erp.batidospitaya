@@ -1,4 +1,4 @@
-# Excluir TODO en la raíz EXCEPTO lo permitido
+# ── Raíz: excluir todo excepto lo permitido ────────────────────────────────
 /*
 !/.gitignore
 !/modulos/
@@ -8,48 +8,22 @@
 !/core/
 !/docs/
 !/.agent/
-# Las 3 carpetas compartidas (core, docs, .agent) son trackeadas en GitHub
+# Las carpetas core, docs y .agent son trackeadas en GitHub
 # pero excluidas del host vía --exclude en deploy-erp.yml
 
-# Excluir todo en modulos EXCEPTO los modulos permitidos (19 en total)
-/modulos/*
-!/modulos/atencioncliente/
-!/modulos/auxiliaradministrativo/
-!/modulos/cds/
-!/modulos/desarrollo/
-!/modulos/diseno/
-!/modulos/experienciadigital/
-!/modulos/gerencia/
-!/modulos/infraestructura/
-!/modulos/legal/
-!/modulos/mantenimiento/
-!/modulos/marketing/
-!/modulos/compras/
-!/modulos/produccion/
-!/modulos/rh/
-!/modulos/sistemas/
-!/modulos/sucursales/
-!/modulos/tecnicodesarrollohumano/
-!/modulos/ventas/
-!/modulos/productos/
+# ── Excluir TODAS las carpetas uploads/ en cualquier nivel ─────────────────
+**/uploads/
 
-# Excluir todo dentro de uploads (pero mantener las carpetas)
-/modulos/atencioncliente/uploads/*
-/modulos/auxiliaradministrativo/uploads/*
-/modulos/cds/uploads/*
-/modulos/desarrollo/uploads/*
-/modulos/diseno/uploads/*
-/modulos/experienciadigital/uploads/*
-/modulos/gerencia/uploads/*
-/modulos/compras/uploads/*
-/modulos/infraestructura/uploads/*
-/modulos/legal/uploads/*
-/modulos/mantenimiento/uploads/*
-/modulos/marketing/uploads/*
-/modulos/produccion/uploads/*
-/modulos/rh/uploads/*
-/modulos/sistemas/uploads/*
-/modulos/sucursales/uploads/*
-/modulos/tecnicodesarrollohumano/uploads/*
-/modulos/ventas/uploads/*
-/modulos/productos/uploads/*
+# ══════════════════════════════════════════════════════════════════════════════
+# EXCEPCIONES TEMPORALES — Carpetas de fotos que NO se llaman uploads/
+# Estas carpetas almacenan archivos subidos por usuarios pero tienen nombres
+# distintos a "uploads". Eliminar cada línea cuando se migre a uploads/ correcta.
+# ══════════════════════════════════════════════════════════════════════════════
+/modulos/supervision/auditorias_original/auditinternas/fotos_auditorias_caja_chica/
+/modulos/supervision/auditorias_original/auditinternas/fotos_auditorias_caja_facturacion/
+/modulos/supervision/auditorias_original/auditinternas/fotos_auditorias_inventario/
+/modulos/supervision/auditorias_original/fotos/
+/modulos/supervision/auditorias_original/fotoslimpieza/
+/modulos/supervision/auditorias_original/fotospersonal/
+/modulos/supervision/auditorias_original/fotosservicio/
+# ══════════════════════════════════════════════════════════════════════════════

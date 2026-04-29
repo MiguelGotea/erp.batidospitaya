@@ -1,0 +1,197 @@
+/* postulacion_panel_control.css */
+
+:root {
+    --color-principal: #51B8AC;
+    --color-principal-hover: #3da095;
+    --color-header-tabla: #0E544C;
+    --btn-nuevo: #218838;
+    --btn-nuevo-hover: #1d6f42;
+    --btn-principal: #51B8AC;
+}
+
+.card {
+    border-radius: 8px;
+    border: none;
+}
+
+.card-header {
+    border-radius: 8px 8px 0 0 !important;
+    background: var(--color-header-tabla);
+}
+
+.nav-tabs {
+    border-bottom: 2px solid var(--color-principal);
+}
+
+.nav-tabs .nav-link {
+    color: #495057;
+    border: none;
+    border-bottom: 3px solid transparent;
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.nav-tabs .nav-link:hover {
+    color: var(--color-principal);
+    border-bottom-color: var(--color-principal-hover);
+}
+
+.nav-tabs .nav-link.active {
+    color: var(--color-principal);
+    background-color: transparent;
+    border-bottom-color: var(--color-principal);
+}
+
+.table-header {
+    background-color: var(--color-header-tabla);
+    color: white;
+}
+
+.table-header th {
+    font-weight: 600;
+    font-size: 13px;
+    padding: 8px 6px;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.table-bordered td {
+    padding: 6px 6px;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.table-bordered td:first-child {
+    text-align: left;
+    font-weight: 500;
+}
+
+/* Fila de encabezado global (Vendedores / Líderes) */
+.global-header-vendedores {
+    background-color: var(--color-principal);
+    color: white;
+}
+
+.global-header-lideres {
+    background-color: var(--color-header-tabla);
+    color: white;
+}
+
+/* Toggle Switch Custom */
+.form-check-input {
+    width: 3em;
+    height: 1.5em;
+    cursor: pointer;
+}
+
+.form-check-input:checked {
+    background-color: var(--color-principal);
+    border-color: var(--color-principal);
+}
+
+.form-check-input:focus {
+    box-shadow: 0 0 0 0.25rem rgba(81, 184, 172, 0.25);
+}
+
+/* Input numérico */
+input[type="number"] {
+    text-align: center;
+    font-weight: 600;
+    max-width: 100px;
+}
+
+input[type="number"]:focus {
+    border-color: var(--color-principal);
+    box-shadow: 0 0 0 0.2rem rgba(81, 184, 172, 0.25);
+}
+
+/* Readonly inputs */
+input[readonly] {
+    background-color: #e9ecef;
+    cursor: not-allowed;
+}
+
+/* Badge personalizado para total */
+.badge-total {
+    background-color: var(--color-principal);
+    color: white;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+/* Botón guardar */
+.btn-success {
+    background-color: var(--btn-nuevo);
+    border-color: var(--btn-nuevo);
+}
+
+.btn-success:hover {
+    background-color: var(--btn-nuevo-hover);
+    border-color: var(--btn-nuevo-hover);
+}
+
+/* Iconos de ayuda */
+[data-bs-toggle="tooltip"] {
+    cursor: help;
+    color: var(--color-principal);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .table-header th {
+        font-size: 11px;
+        padding: 6px 4px;
+    }
+
+    .nav-tabs .nav-link {
+        font-size: 13px;
+        padding: 8px 12px;
+    }
+
+    input[type="number"] {
+        max-width: 70px;
+        font-size: 14px;
+    }
+}
+
+/* Loader para guardar */
+.btn-loading {
+    position: relative;
+    pointer-events: none;
+}
+
+.btn-loading::after {
+    content: "";
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    top: 50%;
+    left: 50%;
+    margin-left: -8px;
+    margin-top: -8px;
+    border: 2px solid #ffffff;
+    border-radius: 50%;
+    border-top-color: transparent;
+    animation: spinner 0.6s linear infinite;
+}
+
+@keyframes spinner {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Alert de plazas pendientes */
+.alert-plaza {
+    background-color: #fff3cd;
+    border-left: 4px solid #ffc107;
+    padding: 8px 12px;
+    margin-bottom: 12px;
+    border-radius: 4px;
+}
+
+.alert-plaza strong {
+    color: #856404;
+}
