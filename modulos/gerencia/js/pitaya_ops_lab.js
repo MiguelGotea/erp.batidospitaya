@@ -1411,8 +1411,7 @@ const OPS = {
         },
 
         _updateDOMStats() {
-            const g = id => { const el=document.getElementById(id); if(el) el.textContent=arguments[1]; };
-            const $ = (id, v) => { const el=document.getElementById(id); if(el) el.textContent=v; };
+            const $ = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
             $('dkTotal', this.stats.arrived);
             $('dkCajaQ', this.cajaQueue.length);
             $('dkBatQ',  this.stationQueue.Batido.length);
