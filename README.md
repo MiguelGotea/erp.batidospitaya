@@ -2,6 +2,7 @@
 
 Repositorio central del sistema ERP para Batidos Pitaya.
 
+
 ## 📦 Estructura del Proyecto
 
 - `modulos/`: Contiene los 17 módulos del sistema.
