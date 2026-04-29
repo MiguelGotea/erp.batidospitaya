@@ -313,6 +313,102 @@ $finDefault = date('Y-m-t', strtotime('-1 month'));
             <div class="ops-loader-ring"></div><span>Ejecutando simulación…</span>
           </div>
 
+          <!-- ══ ANIMACIÓN VISUAL DES ══════════════════════════════════ -->
+          <div class="ops-card" id="desAnimCard" style="display:none">
+            <div class="ops-card-header">
+              <h3><i class="fas fa-film"></i> Animación Visual — Sistema de Colas en Tiempo Real</h3>
+              <span class="ops-badge" id="desAnimBadge">Calibrado con datos reales</span>
+            </div>
+            <div class="ops-card-body p-0">
+
+              <!-- Barra de controles -->
+              <div class="des-ctrl-bar">
+                <button class="ops-btn ops-btn-primary des-btn-play" id="desAnimPlay">
+                  <i class="fas fa-play"></i> Iniciar
+                </button>
+                <button class="ops-btn ops-btn-ghost" id="desAnimPause" disabled>
+                  <i class="fas fa-pause"></i> Pausar
+                </button>
+                <button class="ops-btn ops-btn-ghost" id="desAnimReset">
+                  <i class="fas fa-redo"></i> Reiniciar
+                </button>
+                <div class="des-ctrl-field">
+                  <label>Velocidad</label>
+                  <select id="desAnimSpeed" class="ops-select">
+                    <option value="20">×0.5</option>
+                    <option value="40" selected>×1</option>
+                    <option value="80">×2</option>
+                    <option value="200">×5</option>
+                    <option value="600">×15</option>
+                    <option value="1800">×45</option>
+                  </select>
+                </div>
+                <div class="des-ctrl-field">
+                  <label>Hora foco</label>
+                  <select id="desAnimHoraFoco" class="ops-select">
+                    <option value="all">Todo el turno</option>
+                  </select>
+                </div>
+                <div class="des-sim-clock">
+                  <i class="fas fa-clock"></i>
+                  <span id="desAnimClock">—</span>
+                </div>
+              </div>
+
+              <!-- KPIs en vivo -->
+              <div class="des-live-stats" id="desLiveStats">
+                <div class="des-live-kpi">
+                  <div class="des-live-val" id="dkTotal">0</div>
+                  <div class="des-live-lbl">Llegados</div>
+                </div>
+                <div class="des-live-kpi des-live-caja">
+                  <div class="des-live-val" id="dkCajaQ">0</div>
+                  <div class="des-live-lbl">Cola Caja</div>
+                </div>
+                <div class="des-live-kpi des-live-blue">
+                  <div class="des-live-val" id="dkBatQ">0</div>
+                  <div class="des-live-lbl"><i class="fas fa-blender"></i> Bat. en cola</div>
+                </div>
+                <div class="des-live-kpi des-live-gold">
+                  <div class="des-live-val" id="dkWafQ">0</div>
+                  <div class="des-live-lbl"><i class="fas fa-bread-slice"></i> Waf. en cola</div>
+                </div>
+                <div class="des-live-kpi des-live-purple">
+                  <div class="des-live-val" id="dkBowQ">0</div>
+                  <div class="des-live-lbl"><i class="fas fa-bowl-food"></i> Bowl en cola</div>
+                </div>
+                <div class="des-live-kpi des-live-green">
+                  <div class="des-live-val" id="dkDone">0</div>
+                  <div class="des-live-lbl">Completados</div>
+                </div>
+              </div>
+
+              <!-- Canvas principal -->
+              <div class="des-canvas-wrap">
+                <canvas id="desAnimCanvas"></canvas>
+                <div class="des-canvas-hint" id="desCanvasHint">
+                  <i class="fas fa-play-circle"></i>
+                  Presiona <strong>Iniciar</strong> para ver la simulación animada
+                </div>
+              </div>
+
+              <!-- Leyenda -->
+              <div class="des-legend">
+                <div class="des-leg-item"><span class="des-leg-dot" style="background:#64b5f6"></span> Batido</div>
+                <div class="des-leg-item"><span class="des-leg-dot" style="background:#ffb74d"></span> Waffle</div>
+                <div class="des-leg-item"><span class="des-leg-dot" style="background:#a567d1"></span> Bowl</div>
+                <div class="des-leg-item"><span class="des-leg-dot" style="background:#78909c;opacity:.4;border:2px dashed #78909c"></span> En cola</div>
+                <div class="des-leg-item"><i class="fas fa-circle" style="color:#51B8AC;font-size:.55rem;margin-right:4px"></i> En servicio (anillo giratorio)</div>
+                <div class="des-leg-sep"></div>
+                <div class="des-leg-item" style="font-size:.74rem;color:#78909c;font-style:italic">
+                  <i class="fas fa-database" style="font-size:.6rem"></i>
+                  Tasa λ y mix calibrados con datos reales de BD
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- /desAnimCard -->
+
           <div class="ops-section-title"><i class="fas fa-dice-d20"></i> Simulador de Eventos Discretos (DES)</div>
 
           <!-- Controles del simulador -->

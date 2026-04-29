@@ -1074,3 +1074,183 @@
     color: var(--ops-text-muted);
     line-height: 1.4;
 }
+
+/* ═══════════════════════════════════════════════════════════
+   DES VISUAL ANIMATION
+   ════════════════════════════════════════════════════════ */
+
+/* ── Control bar ───────────────────────────────────────────── */
+.des-ctrl-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding: 16px 24px;
+    background: var(--neu-bg);
+    border-bottom: 1px solid rgba(0,0,0,.04);
+}
+
+.des-ctrl-field {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.des-ctrl-field label {
+    font-size: .68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: var(--ops-text-muted);
+}
+
+.des-ctrl-field .ops-select {
+    padding: 6px 12px;
+    font-size: .82rem;
+}
+
+.des-btn-play {
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--ops-teal), var(--ops-accent2));
+    color: white !important;
+    box-shadow: 4px 4px 10px rgba(81,184,172,.3), -2px -2px 6px #fff;
+}
+.des-btn-play:hover {
+    transform: translateY(-2px);
+    box-shadow: 6px 6px 16px rgba(81,184,172,.4), -2px -2px 8px #fff;
+}
+
+.des-sim-clock {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--ops-teal);
+    background: var(--neu-bg);
+    box-shadow: var(--neu-inset-shadow);
+    padding: 8px 18px;
+    border-radius: var(--neu-radius-sm);
+    min-width: 110px;
+    justify-content: center;
+    font-variant-numeric: tabular-nums;
+}
+
+/* ── Live stats ─────────────────────────────────────────────── */
+.des-live-stats {
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid rgba(0,0,0,.04);
+    overflow-x: auto;
+}
+
+.des-live-kpi {
+    flex: 1;
+    min-width: 80px;
+    padding: 14px 12px;
+    text-align: center;
+    border-right: 1px solid rgba(0,0,0,.04);
+    transition: background .2s;
+}
+.des-live-kpi:last-child { border-right: none; }
+.des-live-kpi:hover { background: rgba(0,0,0,.015); }
+
+.des-live-val {
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: var(--ops-text);
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    transition: color .3s;
+}
+.des-live-lbl {
+    font-size: .68rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: var(--ops-text-muted);
+    margin-top: 4px;
+}
+.des-live-lbl i { margin-right: 3px; }
+
+.des-live-caja .des-live-val  { color: #e67e22; }
+.des-live-blue .des-live-val  { color: var(--ops-blue); }
+.des-live-gold .des-live-val  { color: var(--ops-gold); }
+.des-live-purple .des-live-val{ color: var(--ops-purple); }
+.des-live-green .des-live-val { color: var(--ops-green); }
+
+/* ── Canvas wrap ────────────────────────────────────────────── */
+.des-canvas-wrap {
+    position: relative;
+    width: 100%;
+    background: #f0f4f4;
+    border-bottom: 1px solid rgba(0,0,0,.04);
+}
+
+#desAnimCanvas {
+    display: block;
+    width: 100%;
+    height: 400px;
+}
+
+.des-canvas-hint {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    color: #b0bec5;
+    font-size: 1rem;
+    font-weight: 600;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+.des-canvas-hint i { font-size: 2rem; opacity: .4; }
+.des-canvas-hint.hidden { display: none; }
+
+/* ── Legend ─────────────────────────────────────────────────── */
+.des-legend {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    padding: 12px 24px;
+    font-size: .78rem;
+    color: var(--ops-text-muted);
+}
+
+.des-leg-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.des-leg-dot {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    box-shadow: 0 1px 3px rgba(0,0,0,.2);
+}
+
+.des-leg-sep {
+    flex: 1;
+    height: 1px;
+    background: rgba(0,0,0,.06);
+}
+
+/* ── Pulse animation for entities in service ─────────────────── */
+@keyframes desPulse {
+    0%   { transform: scale(1); }
+    50%  { transform: scale(1.15); }
+    100% { transform: scale(1); }
+}
+@keyframes desSpin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
