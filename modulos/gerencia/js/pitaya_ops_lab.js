@@ -725,13 +725,23 @@ const OPS = {
     _gsp() { const g = id => document.getElementById(id); return { turno: g('simTurno').value, tipoDia: g('simTipoDia').value, personas: +g('simPersonas').value, Batido: { lic: +g('sBatLic').value, ser: +g('sBatSer').value, lim: +g('sBatLim').value, maq: +g('sBatMaq').value, batch: +g('sBatBatch').value }, Waffle: { mez: +g('sWafMez').value, coc: +g('sWafCoc').value, emp: +g('sWafEmp').value, lim: +g('sWafLim').value, maq: +g('sWafMaq').value }, Bowl: { lic: +g('sBowLic').value, ser: +g('sBowSer').value, lim: +g('sBowLim').value, maq: +g('sBowMaq').value, batch: +g('sBowBatch').value } }; },
     async ejecutarSimulacion(cmp) {
         document.getElementById('simLoader').style.display = 'flex'; this.hide('simResultados');
-        const p = this._gsp(), d = await this.post({ accion: 'lambda_simulador', tipo_dia: p.tipoDia });
+        const p = this._gsp();
+        const [d, dCycle] = await Promise.all([
+            this.post({ accion: 'lambda_simulador', tipo_dia: p.tipoDia }),
+            this.post({ accion: 'cycle_times' }),
+        ]);
         document.getElementById('simLoader').style.display = 'none';
         if (!d.success) { this.toast('Error: ' + d.message, 'error'); return; }
         const res = this._runDES(p, d.llegadas_por_hora, d.mix_por_hora);
         if (cmp && this._simBase) this._renderComparativa(this._simBase, res);
         else { this._simBase = res; document.getElementById('simComparativaWrap').style.display = 'none'; }
         this._renderSimResultados(res); this.show('simResultados');
+        // Calibrate & launch visual animation
+        const cts = dCycle.success ? dCycle.cycle_times : [];
+        const avgCaja = cts.length
+            ? cts.reduce((a, c) => a + (+c.tiempo_caja_prom_min || 1.5), 0) / cts.length
+            : 1.5;
+        this._launchAnim(d.llegadas_por_hora, d.mix_por_hora, p, avgCaja);
     },
     _expR(lam) { return lam > 0 ? -Math.log(1 - Math.random()) / lam : 60; },
 
@@ -1010,6 +1020,437 @@ const OPS = {
             : '<div class="ops-alert ops-alert-ok">Proceso bajo control estadistico — todos los puntos dentro de UCL/LCL</div>';
     },
 
-};
+    // ── DES VISUAL ANIMATION ENGINE ──────────────────────────
+    DES_Anim: {
+        running: false, rafId: null, lastTs: null,
+        simTime: 0, simEnd: 0, speedMinPerSec: 40,
+        cajaServiceMean: 1.5,
+        lambdaByHora: {}, mixByHora: {}, simParams: null,
+        cajaFreeAt: 0,
+        stationFreeAt: { Batido: [], Waffle: [], Bowl: [] },
+        cajaQueue: [], stationQueue: { Batido: [], Waffle: [], Bowl: [] },
+        nextArrival: 0,
+        entities: [], nextId: 1, animTick: 0,
+        stats: { arrived: 0, done: 0 },
+        canvas: null, ctx: null, W: 0, H: 0, layout: null,
+
+        init(lambdas, mixArr, simParams, hI, hF, cajaServiceMean) {
+            this.canvas = document.getElementById('desAnimCanvas');
+            if (!this.canvas) return;
+            this.ctx = this.canvas.getContext('2d');
+            this.simParams = simParams;
+            this.cajaServiceMean = cajaServiceMean || 1.5;
+            this.lambdaByHora = {};
+            lambdas.forEach(l => { this.lambdaByHora[+l.hora] = +l.lambda; });
+            this.mixByHora = {};
+            mixArr.forEach(m => { this.mixByHora[+m.hora] = m; });
+            const hS = hI * 60;
+            this.simTime = hS; this.simEnd = hF * 60; this.nextArrival = hS;
+            this.cajaFreeAt = hS;
+            const p = simParams;
+            this.stationFreeAt = {
+                Batido: Array.from({length: p.Batido.maq}, () => hS),
+                Waffle: Array.from({length: p.Waffle.maq}, () => hS),
+                Bowl:   Array.from({length: p.Bowl.maq},   () => hS),
+            };
+            this.cajaQueue = [];
+            this.stationQueue = { Batido: [], Waffle: [], Bowl: [] };
+            this.entities = []; this.nextId = 1; this.animTick = 0;
+            this.stats = { arrived: 0, done: 0 };
+            // Hora foco selector
+            const sel = document.getElementById('desAnimHoraFoco');
+            if (sel) {
+                sel.innerHTML = '<option value="all">Todo el turno</option>';
+                for (let h = hI; h < hF; h++) {
+                    const o = document.createElement('option');
+                    o.value = h;
+                    o.textContent = `${h}:00 (λ=${(this.lambdaByHora[h]||0).toFixed(1)}/h)`;
+                    sel.appendChild(o);
+                }
+                sel.onchange = () => {
+                    if (sel.value === 'all') return;
+                    const h = +sel.value;
+                    this.pause();
+                    this.simTime = h * 60; this.simEnd = (h + 1) * 60; this.nextArrival = h * 60;
+                    this.cajaFreeAt = h * 60;
+                    this.stationFreeAt = {
+                        Batido: Array.from({length: p.Batido.maq}, () => h*60),
+                        Waffle: Array.from({length: p.Waffle.maq}, () => h*60),
+                        Bowl:   Array.from({length: p.Bowl.maq},   () => h*60),
+                    };
+                    this.cajaQueue = []; this.stationQueue = { Batido:[], Waffle:[], Bowl:[] };
+                    this.entities = []; this.nextId = 1; this.stats = { arrived:0, done:0 };
+                    this._updateDOMStats(); this._updateClock(); this.draw();
+                    document.getElementById('desAnimPlay').disabled = false;
+                    document.getElementById('desAnimPause').disabled = true;
+                };
+            }
+            this._resize();
+            document.getElementById('desAnimCard').style.display = '';
+            const totalLam = Object.values(this.lambdaByHora).reduce((a,b)=>a+b,0);
+            const badge = document.getElementById('desAnimBadge');
+            if (badge) badge.textContent = `λ calibrado: ~${totalLam.toFixed(0)} pedidos/día`;
+            this._updateDOMStats(); this._updateClock(); this.draw();
+        },
+
+        _resize() {
+            const wrap = this.canvas ? this.canvas.parentElement : null;
+            if (!wrap) return;
+            this.W = Math.max(wrap.clientWidth || 0, 600);
+            this.H = 400;
+            this.canvas.width = this.W; this.canvas.height = this.H;
+            this._buildLayout();
+        },
+
+        _buildLayout() {
+            const W = this.W, H = this.H;
+            this.layout = {
+                entry:   { x: 32, y: H / 2 },
+                cajaQ:   { x1: 64, x2: W * 0.24, y: H / 2 },
+                caja:    { x: W * 0.285, y: H / 2, r: 22 },
+                branch:  { x: W * 0.36, y: H / 2 },
+                stations: {
+                    Batido: { qx1:W*.42, qx2:W*.70, sx:W*.80, y:H*.18, r:24, color:'#64b5f6', dark:'#3a9bd4', lbl:'🥤 Batidos' },
+                    Waffle: { qx1:W*.42, qx2:W*.70, sx:W*.80, y:H*.50, r:24, color:'#ffb74d', dark:'#d4962a', lbl:'🧇 Waffles' },
+                    Bowl:   { qx1:W*.42, qx2:W*.70, sx:W*.80, y:H*.82, r:24, color:'#a567d1', dark:'#7c3fb0', lbl:'🥣 Bowl'    },
+                },
+                exit: { x: W + 40 },
+            };
+        },
+
+        start() {
+            if (this.running) return;
+            const hint = document.getElementById('desCanvasHint');
+            if (hint) hint.classList.add('hidden');
+            this.running = true; this.lastTs = null;
+            this.speedMinPerSec = +document.getElementById('desAnimSpeed').value;
+            document.getElementById('desAnimPlay').disabled = true;
+            document.getElementById('desAnimPause').disabled = false;
+            this.rafId = requestAnimationFrame(ts => this._loop(ts));
+        },
+
+        pause() {
+            this.running = false;
+            if (this.rafId) { cancelAnimationFrame(this.rafId); this.rafId = null; }
+            document.getElementById('desAnimPlay').disabled = false;
+            document.getElementById('desAnimPause').disabled = true;
+        },
+
+        reset() {
+            this.pause();
+            if (!this.simParams) return;
+            const RNG = { manana:[6,14], tarde:[14,22], completo:[6,22] };
+            const [hI, hF] = RNG[this.simParams.turno] || [6, 22];
+            const lArr = Object.entries(this.lambdaByHora).map(([h,l]) => ({ hora:+h, lambda:+l }));
+            const mArr = Object.entries(this.mixByHora).map(([h,m]) => ({ hora:+h, ...m }));
+            this.init(lArr, mArr, this.simParams, hI, hF, this.cajaServiceMean);
+            const hint = document.getElementById('desCanvasHint');
+            if (hint) hint.classList.remove('hidden');
+        },
+
+        _loop(ts) {
+            if (!this.running) return;
+            if (!this.lastTs) this.lastTs = ts;
+            const realDt = Math.min(ts - this.lastTs, 100);
+            this.lastTs = ts;
+            this.speedMinPerSec = +document.getElementById('desAnimSpeed').value;
+            const simDt = (realDt / 1000) * this.speedMinPerSec;
+            this.simTime += simDt;
+            this.animTick++;
+            if (this.simTime >= this.simEnd) {
+                this.simTime = this.simEnd;
+                this._step(simDt); this._moveEntities(simDt); this.draw();
+                this._updateDOMStats(); this._updateClock();
+                this.pause();
+                OPS.toast('✓ Hora simulada completada', 'success');
+                return;
+            }
+            this._step(simDt);
+            this._moveEntities(simDt);
+            this.draw();
+            if (this.animTick % 4 === 0) { this._updateDOMStats(); this._updateClock(); }
+            this.rafId = requestAnimationFrame(ts2 => this._loop(ts2));
+        },
+
+        _getLambda(t) { return this.lambdaByHora[Math.floor(t / 60)] || 0; },
+        _getMix(t) { return this.mixByHora[Math.floor(t / 60)] || { pct_Batido:50, pct_Waffle:30, pct_Bowl:20 }; },
+        _pickStation(t) {
+            const m = this._getMix(t), r = Math.random() * 100;
+            return r < +m.pct_Batido ? 'Batido' : r < +m.pct_Batido + +m.pct_Waffle ? 'Waffle' : 'Bowl';
+        },
+        _expRng(lam) {
+            const lm = (lam > 0 ? lam : 0.5) / 60;
+            return -Math.log(Math.max(1e-9, 1 - Math.random())) / lm;
+        },
+
+        _step(dt) {
+            // Arrivals
+            while (this.nextArrival <= this.simTime) {
+                this._spawn(this.nextArrival);
+                this.nextArrival += this._expRng(this._getLambda(this.nextArrival));
+            }
+            // Caja service
+            if (this.cajaQueue.length && this.cajaFreeAt <= this.simTime) {
+                const e = this.cajaQueue.shift();
+                const svc = this.cajaServiceMean * (0.7 + 0.6 * Math.random());
+                this.cajaFreeAt = this.simTime + svc;
+                e.state = 'CAJA_SVC'; e.svcStart = this.simTime; e.svcDur = svc;
+                const lay = this.layout;
+                e.tx = lay.caja.x; e.ty = lay.caja.y;
+            }
+            // Finish caja
+            this.entities.forEach(e => {
+                if (e.state !== 'CAJA_SVC') return;
+                e.prog = Math.min(1, (this.simTime - e.svcStart) / e.svcDur);
+                if (e.prog >= 1) {
+                    e.state = 'ROUTING';
+                    const st = this.layout.stations[e.station];
+                    e.tx = st.qx1; e.ty = st.y;
+                    this.stationQueue[e.station].push(e);
+                }
+            });
+            // Station service
+            const p = this.simParams;
+            const svcTime = { Batido: p.Batido.lic+p.Batido.ser, Waffle: p.Waffle.mez+p.Waffle.coc+p.Waffle.emp, Bowl: p.Bowl.lic+p.Bowl.ser };
+            const limTime = { Batido: p.Batido.lim, Waffle: p.Waffle.lim, Bowl: p.Bowl.lim };
+            ['Batido','Waffle','Bowl'].forEach(est => {
+                const q = this.stationQueue[est];
+                if (!q.length) return;
+                const servers = this.stationFreeAt[est];
+                const fi = servers.findIndex(t => t <= this.simTime);
+                if (fi < 0) return;
+                const e = q.shift();
+                const svc = svcTime[est] * (0.8 + 0.4 * Math.random());
+                servers[fi] = this.simTime + svc + limTime[est];
+                const st = this.layout.stations[est];
+                e.state = 'STATION_SVC'; e.svcStart = this.simTime; e.svcDur = svc; e.prog = 0;
+                e.tx = st.sx; e.ty = st.y;
+            });
+            // Finish station
+            this.entities.forEach(e => {
+                if (e.state !== 'STATION_SVC') return;
+                e.prog = Math.min(1, (this.simTime - e.svcStart) / e.svcDur);
+                if (e.prog >= 1) {
+                    e.state = 'DONE'; e.tx = this.layout.exit.x; this.stats.done++;
+                }
+            });
+        },
+
+        _spawn(t) {
+            const station = this._pickStation(t);
+            const cols = { Batido:'#64b5f6', Waffle:'#ffb74d', Bowl:'#a567d1' };
+            const lay = this.layout;
+            const e = {
+                id: this.nextId++, station, color: cols[station],
+                state: 'CAJA_QUEUE',
+                x: lay.entry.x, y: lay.cajaQ.y + (Math.random()-0.5)*50,
+                tx: lay.cajaQ.x1, ty: lay.cajaQ.y,
+                prog: 0, alpha: 1.0, r: 9,
+                svcStart: 0, svcDur: 1,
+            };
+            this.entities.push(e);
+            this.cajaQueue.push(e);
+            this.stats.arrived++;
+        },
+
+        _moveEntities(dt) {
+            const pxPerMin = 180;
+            const lay = this.layout;
+            // Caja queue positions
+            this.cajaQueue.forEach((e, i) => {
+                e.tx = lay.cajaQ.x2 - (i % 10) * 22;
+                e.ty = lay.cajaQ.y + (Math.floor(i / 10) - 0.5) * 24;
+            });
+            // Station queue positions
+            ['Batido','Waffle','Bowl'].forEach(est => {
+                const st = lay.stations[est];
+                this.stationQueue[est].forEach((e, i) => {
+                    e.tx = st.qx2 - (i % 8) * 22;
+                    e.ty = st.y + (Math.floor(i / 8) - 0.5) * 22;
+                });
+            });
+            // Interpolate positions
+            const step = pxPerMin * dt;
+            this.entities.forEach(e => {
+                const dx = e.tx - e.x, dy = e.ty - e.y;
+                const dist = Math.sqrt(dx*dx + dy*dy);
+                if (dist > 1) {
+                    const mv = Math.min(step, dist);
+                    e.x += (dx/dist)*mv; e.y += (dy/dist)*mv;
+                } else { e.x = e.tx; e.y = e.ty; }
+                if (e.state === 'DONE') e.alpha = Math.max(0, e.alpha - 0.02);
+            });
+            this.entities = this.entities.filter(e => e.alpha > 0.01);
+        },
+
+        draw() {
+            const { ctx, W, H, layout: lay } = this;
+            if (!ctx || !lay) return;
+            ctx.clearRect(0, 0, W, H);
+            ctx.fillStyle = '#f0f4f4';
+            ctx.fillRect(0, 0, W, H);
+            this._drawInfra();
+            this.entities.forEach(e => this._drawEntity(e));
+            this._drawLabels();
+        },
+
+        _drawInfra() {
+            const { ctx, W, H, layout: lay } = this;
+            const t = this.animTick;
+            // Lane: entry → caja
+            ctx.strokeStyle = 'rgba(81,184,172,.12)';
+            ctx.lineWidth = 38; ctx.lineCap = 'round';
+            ctx.beginPath(); ctx.moveTo(lay.entry.x, lay.caja.y);
+            ctx.lineTo(lay.caja.x + 28, lay.caja.y); ctx.stroke();
+            // Branch lanes
+            ['Batido','Waffle','Bowl'].forEach(est => {
+                const st = lay.stations[est];
+                ctx.strokeStyle = st.color + '18';
+                ctx.lineWidth = 30;
+                ctx.beginPath(); ctx.moveTo(lay.branch.x, lay.caja.y);
+                ctx.quadraticCurveTo(lay.branch.x + 40, (lay.caja.y + st.y)/2, st.qx1, st.y);
+                ctx.lineTo(st.sx + 28, st.y); ctx.stroke();
+            });
+            // Caja server
+            const cajaBusy = this.cajaFreeAt > this.simTime;
+            ctx.save(); ctx.translate(lay.caja.x, lay.caja.y);
+            ctx.beginPath(); ctx.arc(0, 0, lay.caja.r + 7, 0, Math.PI*2);
+            ctx.fillStyle = '#e8f5f3'; ctx.fill();
+            ctx.strokeStyle = cajaBusy ? '#51B8AC' : '#cfd8dc';
+            ctx.lineWidth = 2.5; ctx.stroke();
+            ctx.beginPath(); ctx.arc(0, 0, lay.caja.r, 0, Math.PI*2);
+            ctx.fillStyle = cajaBusy ? '#51B8AC' : '#eceff1'; ctx.fill();
+            ctx.fillStyle = cajaBusy ? '#fff' : '#90a4ae';
+            ctx.font = 'bold 8px Inter,sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillText('CAJA', 0, -4); ctx.font = '10px serif'; ctx.fillText('💳', 0, 6);
+            ctx.restore();
+            // Queue zone caja
+            if (this.cajaQueue.length) {
+                ctx.save(); ctx.strokeStyle = '#51B8AC50'; ctx.setLineDash([4,4]); ctx.lineWidth = 1;
+                ctx.strokeRect(lay.cajaQ.x1-8, lay.cajaQ.y-24, lay.cajaQ.x2-lay.cajaQ.x1+16, 48);
+                ctx.setLineDash([]); ctx.restore();
+            }
+            // Station servers
+            ['Batido','Waffle','Bowl'].forEach(est => {
+                const st = lay.stations[est];
+                const busy = this.stationFreeAt[est].some(ft => ft > this.simTime);
+                ctx.save(); ctx.translate(st.sx, st.y);
+                if (busy) {
+                    ctx.save(); ctx.rotate((t * 0.05) % (Math.PI*2));
+                    ctx.beginPath(); ctx.arc(0, 0, st.r+9, 0, Math.PI*1.7);
+                    ctx.strokeStyle = st.color+'99'; ctx.lineWidth = 3; ctx.lineCap='round'; ctx.stroke();
+                    ctx.restore();
+                }
+                ctx.beginPath(); ctx.arc(0, 0, st.r+4, 0, Math.PI*2);
+                ctx.fillStyle = st.color+'22'; ctx.fill();
+                ctx.beginPath(); ctx.arc(0, 0, st.r, 0, Math.PI*2);
+                if (busy) { ctx.shadowColor = st.color; ctx.shadowBlur = 10; }
+                ctx.fillStyle = busy ? st.color : '#f6f6f6'; ctx.fill(); ctx.shadowBlur = 0;
+                ctx.strokeStyle = st.color; ctx.lineWidth = 2; ctx.stroke();
+                ctx.fillStyle = busy ? '#fff' : st.dark;
+                ctx.font = 'bold 7px Inter,sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+                ctx.fillText(est.toUpperCase(), 0, -5); ctx.font='11px serif';
+                ctx.fillText(est==='Batido'?'🥤':est==='Waffle'?'🧇':'🥣', 0, 6); ctx.restore();
+                // Queue dashed box
+                const qLen = this.stationQueue[est].length;
+                if (qLen > 0) {
+                    ctx.save(); ctx.strokeStyle = st.color+'60'; ctx.setLineDash([3,3]); ctx.lineWidth=1;
+                    ctx.strokeRect(st.qx1-6, st.y-22, st.qx2-st.qx1+12, 44);
+                    ctx.setLineDash([]); ctx.fillStyle=st.color;
+                    ctx.font='bold 8px Inter'; ctx.textAlign='center';
+                    ctx.fillText(`Cola: ${qLen}`, (st.qx1+st.qx2)/2, st.y-29); ctx.restore();
+                }
+            });
+            // Entry arrow + lambda
+            const lam = this._getLambda(this.simTime);
+            ctx.save(); ctx.fillStyle='#78909c'; ctx.font='8px Inter,sans-serif'; ctx.textAlign='center';
+            ctx.fillText(`λ=${lam.toFixed(1)}/h`, lay.entry.x+2, lay.entry.y-28);
+            ctx.fillStyle='#51B8AC'; ctx.font='13px serif';
+            ctx.fillText('⬇', lay.entry.x, lay.entry.y-16); ctx.restore();
+        },
+
+        _drawEntity(e) {
+            const { ctx } = this;
+            if (e.alpha <= 0) return;
+            ctx.save(); ctx.globalAlpha = e.alpha; ctx.translate(e.x, e.y);
+            const inSvc = e.state==='CAJA_SVC' || e.state==='STATION_SVC';
+            // Progress arc
+            if (inSvc && e.svcDur > 0) {
+                ctx.beginPath(); ctx.arc(0, 0, e.r+5, -Math.PI/2, -Math.PI/2 + e.prog*Math.PI*2);
+                ctx.strokeStyle = e.color; ctx.lineWidth=3; ctx.lineCap='round'; ctx.stroke();
+            }
+            // Waiting dashes
+            if (!inSvc && e.state!=='DONE') {
+                ctx.beginPath(); ctx.arc(0, 0, e.r+3, 0, Math.PI*2);
+                ctx.setLineDash([3,3]); ctx.strokeStyle=e.color+'80'; ctx.lineWidth=1.5; ctx.stroke();
+                ctx.setLineDash([]);
+            }
+            // Body
+            ctx.beginPath(); ctx.arc(0, 0, e.r, 0, Math.PI*2);
+            if (inSvc) { ctx.shadowColor=e.color; ctx.shadowBlur=8; }
+            ctx.fillStyle = inSvc ? e.color : e.color+'cc'; ctx.fill(); ctx.shadowBlur=0;
+            // ID label
+            ctx.fillStyle='#fff'; ctx.font=`bold 8px Inter,sans-serif`;
+            ctx.textAlign='center'; ctx.textBaseline='middle';
+            ctx.fillText(e.id < 1000 ? e.id : '…', 0, 0);
+            ctx.restore();
+        },
+
+        _drawLabels() {
+            const { ctx, H, layout: lay } = this;
+            ctx.fillStyle='#90a4ae'; ctx.font='8px Inter,sans-serif'; ctx.textAlign='center';
+            ctx.fillText('Entrada', lay.entry.x, H-6);
+            ctx.fillText('Cola Caja', (lay.cajaQ.x1+lay.cajaQ.x2)/2, H-6);
+            ['Batido','Waffle','Bowl'].forEach(est => {
+                const st = lay.stations[est];
+                ctx.fillStyle = st.color; ctx.font='bold 9px Inter'; ctx.textAlign='left';
+                ctx.fillText(st.lbl, st.sx + st.r + 8, st.y);
+                ctx.fillStyle='#90a4ae'; ctx.font='8px Inter';
+                ctx.fillText(`${this.stationFreeAt[est].length} máq.`, st.sx + st.r + 8, st.y + 12);
+            });
+        },
+
+        _updateDOMStats() {
+            const g = id => { const el=document.getElementById(id); if(el) el.textContent=arguments[1]; };
+            const $ = (id, v) => { const el=document.getElementById(id); if(el) el.textContent=v; };
+            $('dkTotal', this.stats.arrived);
+            $('dkCajaQ', this.cajaQueue.length);
+            $('dkBatQ',  this.stationQueue.Batido.length);
+            $('dkWafQ',  this.stationQueue.Waffle.length);
+            $('dkBowQ',  this.stationQueue.Bowl.length);
+            $('dkDone',  this.stats.done);
+        },
+
+        _updateClock() {
+            const h = Math.floor(this.simTime/60), m = Math.floor(this.simTime%60);
+            const el = document.getElementById('desAnimClock');
+            if (el) el.textContent = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+        },
+    }, // /DES_Anim
+
+    // ── Hook: launch animation after DES run ──────────────────
+    _animBound: false,
+    _launchAnim(lambdas, mix, simParams, cajaServiceMean) {
+        const RNG = { manana:[6,14], tarde:[14,22], completo:[6,22] };
+        const [hI, hF] = RNG[simParams.turno] || [6, 22];
+        this.DES_Anim.init.call(this.DES_Anim, lambdas, mix, simParams, hI, hF, cajaServiceMean);
+        if (!this._animBound) {
+            this._animBound = true;
+            document.getElementById('desAnimPlay').addEventListener('click',
+                () => this.DES_Anim.start.call(this.DES_Anim));
+            document.getElementById('desAnimPause').addEventListener('click',
+                () => this.DES_Anim.pause.call(this.DES_Anim));
+            document.getElementById('desAnimReset').addEventListener('click',
+                () => this.DES_Anim.reset.call(this.DES_Anim));
+            window.addEventListener('resize', () => {
+                if (!this.DES_Anim.canvas) return;
+                this.DES_Anim._resize.call(this.DES_Anim);
+                this.DES_Anim.draw.call(this.DES_Anim);
+            });
+        }
+    },
+
+}; // /OPS
 
 document.addEventListener('DOMContentLoaded', () => OPS.init());
+
