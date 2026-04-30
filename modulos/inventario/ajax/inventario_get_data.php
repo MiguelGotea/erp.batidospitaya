@@ -35,20 +35,24 @@ if (empty($codSucursal) || !$numSemanaInv) {
 }
 
 /* ── Helpers idénticos a pedido_sugerido_calcular.php ────── */
-function desviacionEstandarMuestra(array $vals): float {
+function desviacionEstandarMuestra(array $vals): float
+{
     $n = count($vals);
     if ($n <= 1) return 0.0;
     $media = array_sum($vals) / $n;
     return sqrt(array_sum(array_map(fn($v) => ($v - $media) ** 2, $vals)) / ($n - 1));
 }
-function resolverUnidadId_PS(string $nombre, array &$unidadPorNombre): ?int {
+function resolverUnidadId_PS(string $nombre, array &$unidadPorNombre): ?int
+{
     return $unidadPorNombre[strtolower(trim($nombre))] ?? null;
 }
-function resolverFactorConversion_PS(int $idOrigen, int $idDestino, array &$convIndex): ?float {
+function resolverFactorConversion_PS(int $idOrigen, int $idDestino, array &$convIndex): ?float
+{
     if ($idOrigen === $idDestino) return 1.0;
     return $convIndex[$idOrigen][$idDestino] ?? null;
 }
-function buscarPresentacionEnMaestro_PS(int $idMaestro, int $idUnidad, array &$presentPorMaestro): ?array {
+function buscarPresentacionEnMaestro_PS(int $idMaestro, int $idUnidad, array &$presentPorMaestro): ?array
+{
     return $presentPorMaestro[$idMaestro][$idUnidad] ?? null;
 }
 
@@ -163,9 +167,11 @@ try {
                 }
 
                 // Unidades y conversiones
-                $unidadPorNombre = []; $unidadPorId = [];
+                $unidadPorNombre = [];
+                $unidadPorId = [];
                 foreach ($conn->query("SELECT id, nombre, abreviado, nombres_opcionales FROM unidad_producto")->fetchAll() as $u) {
-                    $uid = (int)$u['id']; $unidadPorId[$uid] = $u;
+                    $uid = (int)$u['id'];
+                    $unidadPorId[$uid] = $u;
                     $unidadPorNombre[strtolower(trim($u['nombre']))] = $uid;
                     if ($u['abreviado']) $unidadPorNombre[strtolower(trim($u['abreviado']))] = $uid;
                     if ($u['nombres_opcionales']) foreach (preg_split('/[,;|]+/', $u['nombres_opcionales']) as $a) if ($ak = strtolower(trim($a))) $unidadPorNombre[$ak] = $uid;
@@ -190,11 +196,18 @@ try {
 
                 // Proceso de consumo con fallback triple (idéntico al script de referencia)
                 foreach ($filas as $f) {
-                    $ci = $f['cod_ing']; $cp = $f['codporcion']; $sem = (int)$f['sem']; $cant = (float)$f['cant'];
-                    $m = null; $esP1 = false;
+                    $ci = $f['cod_ing'];
+                    $cp = $f['codporcion'];
+                    $sem = (int)$f['sem'];
+                    $cant = (float)$f['cant'];
+                    $m = null;
+                    $esP1 = false;
 
                     // Nivel 1: codporcion directo
-                    if (!empty($cp) && isset($diccionarioMap[(string)$cp])) { $m = $diccionarioMap[(string)$cp]; $esP1 = true; }
+                    if (!empty($cp) && isset($diccionarioMap[(string)$cp])) {
+                        $m = $diccionarioMap[(string)$cp];
+                        $esP1 = true;
+                    }
                     // Nivel 2: Cotizaciones p2
                     if (!$m && isset($cotMap[$ci]['p2']) && isset($diccionarioMap[(string)$cotMap[$ci]['p2']])) $m = $diccionarioMap[(string)$cotMap[$ci]['p2']];
                     // Nivel 3: Cotizaciones p3
@@ -217,7 +230,12 @@ try {
                                 $fac = $fDir;
                             } else {
                                 $alt = buscarPresentacionEnMaestro_PS((int)$m['id_m'], $uidAcc, $presentPorMaestro);
-                                if ($alt) { $idPP = (int)$alt['id']; $ppC = max((float)$alt['cantidad'], 0.001); $uidERP = (int)$alt['id_unidad_producto']; $fac = 1.0; }
+                                if ($alt) {
+                                    $idPP = (int)$alt['id'];
+                                    $ppC = max((float)$alt['cantidad'], 0.001);
+                                    $uidERP = (int)$alt['id_unidad_producto'];
+                                    $fac = 1.0;
+                                }
                             }
                         }
                         $cons = ($cant * $fac) / $ppC;
@@ -307,9 +325,9 @@ try {
         $p['despacho_nombre']  = $p['d_nom_a']  ?? $p['d_nom_b']  ?? null;
         $p['despacho_unidad']  = $p['d_uni_a']  ?? $p['d_uni_b']  ?? null;
         $p['despacho_cant']    = $p['d_cant_a'] ?? $p['d_cant_b'] ?? null;
-        
+
         $despFactor = null;
-        
+
         // Si se resolvió por Maestro (Caso A)
         if (!empty($p['d_id_a']) && (float)$p['d_cant_a'] > 0 && (float)$p['cant_pres'] > 0) {
             $uidUso  = (int)$p['uid_uso'];
@@ -322,7 +340,7 @@ try {
                     $despFactor = (float)$p['d_cant_a'] / ((float)$p['cant_pres'] * $facConv);
                 }
             }
-        } 
+        }
         // Si falló A pero hay Receta (Caso B)
         elseif (!empty($p['d_id_b']) && (float)$p['d_receta_cant_b'] > 0) {
             // En recetas de despacho, el factor es simplemente la cantidad del componente
@@ -334,8 +352,18 @@ try {
 
         // Limpiar campos temporales del query
         unset(
-            $p['uid_uso'], $p['d_id_a'], $p['d_nom_a'], $p['d_cant_a'], $p['d_uid_a'], $p['d_uni_a'],
-            $p['d_id_b'], $p['d_nom_b'], $p['d_cant_b'], $p['d_uid_b'], $p['d_uni_b'], $p['d_receta_cant_b']
+            $p['uid_uso'],
+            $p['d_id_a'],
+            $p['d_nom_a'],
+            $p['d_cant_a'],
+            $p['d_uid_a'],
+            $p['d_uni_a'],
+            $p['d_id_b'],
+            $p['d_nom_b'],
+            $p['d_cant_b'],
+            $p['d_uid_b'],
+            $p['d_uni_b'],
+            $p['d_receta_cant_b']
         );
     }
     unset($p);
@@ -367,7 +395,7 @@ try {
         // Convertir stocks a Unidades de Despacho (si existe el factor)
         $df = (float)($p['despacho_factor'] ?? 1);
         if ($df <= 0) $df = 1;
-        
+
         $sMinDesp = $sMin / $df;
         $sMaxDesp = $sMax / $df;
 
@@ -411,9 +439,15 @@ try {
 
         $p1 = $p2 = 0.0;
         if ($pedido !== null) {
-            if (in_array($cat, ['B', 'D', 'F'])) { $p1 = $pedido * $pctCong;  $p2 = $pedido - $p1; }
-            elseif (in_array($cat, ['A', 'C']))   { $p1 = $pedido * $pctFresc; $p2 = $pedido - $p1; }
-            else                                   { $p1 = $pedido; }
+            if (in_array($cat, ['B', 'D', 'F'])) {
+                $p1 = $pedido * $pctCong;
+                $p2 = $pedido - $p1;
+            } elseif (in_array($cat, ['A', 'C'])) {
+                $p1 = $pedido * $pctFresc;
+                $p2 = $pedido - $p1;
+            } else {
+                $p1 = $pedido;
+            }
         }
 
         $p['stock_max_final'] = $sMaxFinal;
@@ -436,7 +470,6 @@ try {
         'porcentajes'      => $configPct,
         'productos'        => $productos,
     ]);
-
 } catch (Exception $e) {
     echo json_encode(['ok' => false, 'msg' => 'Error: ' . $e->getMessage()]);
 }
