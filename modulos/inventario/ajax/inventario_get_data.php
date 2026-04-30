@@ -396,8 +396,9 @@ try {
         $df = (float)($p['despacho_factor'] ?? 1);
         if ($df <= 0) $df = 1;
 
-        $sMinDesp = $sMin / $df;
-        $sMaxDesp = $sMax / $df;
+        $diaC = ($semC * (1 + $adj)) / 7;
+        $sMin = $diaC * $dSM;
+        $sMax = $diaC * ($dC + $dD + $dSM);
 
         $invRow  = $inventarioSemana[$idPP] ?? null;
 
@@ -405,8 +406,8 @@ try {
         $p['_promedio']       = round($prom, 4);
         $p['_desviacion']     = round($desv, 4);
         $p['_cons_diario']    = round($diaC, 6);
-        $p['_stock_min']      = round($sMinDesp, 4);
-        $p['_stock_max']      = round($sMaxDesp, 4);
+        $p['_stock_min']      = round($sMin, 4);
+        $p['_stock_max']      = round($sMax, 4);
         $p['_tiene_config']   = $lc !== null;
         $p['_inv_pres']       = $invRow ? (float)$invRow['cantidad_presentacion'] : null;
         $p['_inv_unidades']   = $invRow ? (float)$invRow['cantidad_unidades']     : null;
@@ -425,6 +426,8 @@ try {
     foreach ($productos as &$p) {
         $cat  = $p['categoria_insumo'];
         $sMax = $p['_stock_max'];
+        $df   = (float)($p['despacho_factor'] ?? 1);
+        if ($df <= 0) $df = 1;
 
         if ($cat === 'B' && $factorC !== null) {
             $sMaxFinal  = round($sMax * $factorC, 4);
@@ -434,20 +437,23 @@ try {
             $esAjustado = false;
         }
 
+        // Inventario actual (A) ya viene en unidades de despacho desde la BD
         $invPres = $p['_inv_pres'];
-        
-        $df = (float)($p['despacho_factor'] ?? 1);
-        if ($df <= 0) $df = 1;
+        $pedido  = null;
 
-        $pedido = null;
         if ($sMaxFinal !== null && $invPres !== null) {
-            // El Stock Máximo Final viene de _stock_max (que ya está en despacho) o de sMax * factorC
-            // Para ser consistentes, si sMaxFinal viene del ajuste de congelados, también hay que dividirlo
-            if ($p['es_ajustado']) {
-                $sMaxFinal = $sMaxFinal / $df;
-            }
-            $pedido = max(0.0, $sMaxFinal - $invPres);
+            // Convertimos sMaxFinal a despacho para restar con (A)
+            $sMaxFinalDesp = $sMaxFinal / $df;
+            $pedido = max(0.0, $sMaxFinalDesp - $invPres);
+            
+            // Para la visualización del Stock Máximo (B) también mostramos el valor en despacho
+            $p['stock_max_final'] = round($sMaxFinal / $df, 4);
+        } else {
+            $p['stock_max_final'] = null;
         }
+
+        // Convertimos Stock Mínimo a despacho para visualización
+        $p['stock_minimo_despacho'] = round($p['_stock_min'] / $df, 4);
 
         $p1 = $p2 = 0.0;
         if ($pedido !== null) {
@@ -462,13 +468,15 @@ try {
             }
         }
 
-        $p['stock_max_final'] = $sMaxFinal;
         $p['es_ajustado']     = $esAjustado;
         $p['pedido_sugerido'] = $pedido !== null ? round($pedido, 4) : null;
         $p['p1']              = round($p1, 4);
         $p['p2']              = round($p2, 4);
 
-        unset($p['_stock_max'], $p['_tiene_config']);
+        // Renombrar _stock_min para el frontend (JS usa p._stock_min)
+        $p['_stock_min'] = $p['stock_minimo_despacho'];
+
+        unset($p['_stock_max'], $p['_tiene_config'], $p['stock_minimo_despacho']);
     }
     unset($p);
 
