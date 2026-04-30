@@ -2,7 +2,6 @@
    JS: Inventario Semanal — solo renderizado, los cálculos
        son 100% del backend (inventario_get_data.php)
    ============================================================ */
-
 let semanaActual = 0;
 
 $(document).ready(function () {
@@ -34,7 +33,7 @@ function cargarSucursales() {
 /* ── obtener y calcular ───────────────────────────────────── */
 function cargarDatosInventario() {
     const sucursal = $('#filtroSucursal').val();
-    const semInv   = parseInt($('#filtroSemanaInv').val());
+    const semInv = parseInt($('#filtroSemanaInv').val());
 
     // El rango ahora es automático: 5 semanas hacia atrás desde la semana de inventario
     const semDesde = semInv - 5;
@@ -100,10 +99,10 @@ function renderizarTabla(res, semInv) {
 
     res.productos.forEach(p => {
         const idPP = p.id;
-        const cat  = p.categoria_insumo ?? '—';
+        const cat = p.categoria_insumo ?? '—';
 
         // Inventario actual guardado en BD (viene del backend)
-        const invPres = p._inv_pres   !== null && p._inv_pres   !== undefined ? p._inv_pres   : '';
+        const invPres = p._inv_pres !== null && p._inv_pres !== undefined ? p._inv_pres : '';
         const invUnid = p._inv_unidades !== null && p._inv_unidades !== undefined ? p._inv_unidades : '';
 
         // Stock máximo final (ajustado para B si aplica)
@@ -122,10 +121,28 @@ function renderizarTabla(res, semInv) {
         const readonlyAttr = esSoloLectura ? 'readonly' : '';
         const disabledAttr = esSoloLectura ? 'disabled' : ''; // Para mejor feedback visual
 
+        const despFactor = p.despacho_factor ? parseFloat(p.despacho_factor) : 0;
+        const invPresNum = invPres !== '' ? parseFloat(invPres) : null;
+
+        // Chip informativo: Presentación Despacho
+        let despChipHtml = '';
+        if (p.despacho_nombre) {
+            const despDetalle = [p.despacho_nombre, p.despacho_unidad ? p.despacho_unidad : null, p.despacho_cant ? p.despacho_cant : null]
+                .filter(Boolean).join(' · ');
+            despChipHtml = `<div class="info-pres-despacho"><i class="bi bi-truck me-1"></i>${despDetalle}</div>`;
+        }
+
+        // Valor inicial en Presentación Despacho
+        const calcDespacho = (despFactor > 0 && invPresNum !== null)
+            ? `<span class="despacho-val">${fmt(invPresNum / despFactor)}</span>${p.despacho_unidad ? `<div class="despacho-unit-label">${p.despacho_unidad}</div>` : ''}`
+            : `<span class="despacho-val">—</span>`;
+
         tbody.append(`
             <tr data-id="${idPP}" data-cat="${cat}"
                 data-smax="${p.stock_max_final ?? ''}"
-                data-cant-pres="${p.cant_pres ?? 1}">
+                data-cant-pres="${p.cant_pres ?? 1}"
+                data-despacho-factor="${despFactor}"
+                data-despacho-unidad="${p.despacho_unidad ?? ''}">
                 <td class="text-start small">
                     <div class="fw-bold text-pitaya">${p.Nombre}</div>
                     <div class="text-muted small">
@@ -134,7 +151,11 @@ function renderizarTabla(res, semInv) {
                     </div>
                 </td>
                 <td><input type="number" class="form-control form-control-sm input-inv-unidades" value="${invUnid}" ${readonlyAttr} step="0.01"></td>
-                <td><input type="number" class="form-control form-control-sm input-inv-pres" value="${invPres}" ${readonlyAttr} step="0.01"></td>
+                <td>
+                    <input type="number" class="form-control form-control-sm input-inv-pres" value="${invPres}" ${readonlyAttr} step="0.01">
+                    ${despChipHtml}
+                </td>
+                <td class="col-inv-despacho">${calcDespacho}</td>
                 <td class="bg-light">${fmt(p._stock_min)}</td>
                 <td class="bg-light">${sMaxHtml}</td>
                 <td class="col-sug">${pedidoHtml}</td>
@@ -153,9 +174,9 @@ function renderizarTabla(res, semInv) {
 
 /* ── recalcular una fila al cambiar inventario ────────────── */
 function recalcularFila(tr, target, porcentajes) {
-    const sMax     = parseFloat(tr.data('smax'))     || 0;
+    const sMax = parseFloat(tr.data('smax')) || 0;
     const cantPPFactor = parseFloat(tr.data('cant-pres')) || 1;
-    const cat      = tr.data('cat');
+    const cat = tr.data('cat');
 
     let invPres = parseFloat(tr.find('.input-inv-pres').val()) || 0;
 
@@ -165,8 +186,8 @@ function recalcularFila(tr, target, porcentajes) {
     const pedido = Math.max(0, sMax - invPres);
 
     // Desglose P1 / P2
-    const pctCong  = parseFloat(porcentajes.porcentaje_congelados) || 0;
-    const pctFresc = parseFloat(porcentajes.porcentaje_frescos)    || 0;
+    const pctCong = parseFloat(porcentajes.porcentaje_congelados) || 0;
+    const pctFresc = parseFloat(porcentajes.porcentaje_frescos) || 0;
     let p1 = 0, p2 = 0;
     if (['B', 'D', 'F'].includes(cat)) {
         p1 = pedido * pctCong; p2 = pedido - p1;
@@ -183,20 +204,30 @@ function recalcularFila(tr, target, porcentajes) {
     tr.find('.col-sug').html(pedidoHtml);
     tr.find('.bg-highlight-p1').text(fmt(p1));
     tr.find('.bg-highlight-p2').text(fmt(p2));
+
+    // Recalcular columna ≡ En Pres. Despacho
+    const despFactor = parseFloat(tr.data('despacho-factor')) || 0;
+    const despUnidad = tr.data('despacho-unidad') || '';
+    if (despFactor > 0) {
+        const valDesp = invPres / despFactor;
+        tr.find('.despacho-val').text(fmt(valDesp));
+    } else {
+        tr.find('.despacho-val').text('—');
+    }
 }
 
 /* ── guardar inventario ───────────────────────────────────── */
 function guardarInventario() {
     const sucursal = $('#filtroSucursal').val();
-    const semInv   = $('#filtroSemanaInv').val();
-    const items    = [];
+    const semInv = $('#filtroSemanaInv').val();
+    const items = [];
 
     $('#tbodyInventario tr').each(function () {
         const tr = $(this);
         items.push({
             id_producto_presentacion: tr.data('id'),
-            cantidad_unidades:        parseFloat(tr.find('.input-inv-unidades').val()) || 0,
-            cantidad_presentacion:    parseFloat(tr.find('.input-inv-pres').val())     || 0
+            cantidad_unidades: parseFloat(tr.find('.input-inv-unidades').val()) || 0,
+            cantidad_presentacion: parseFloat(tr.find('.input-inv-pres').val()) || 0
         });
     });
 
@@ -216,7 +247,7 @@ function guardarInventario() {
             data: JSON.stringify({ cod_sucursal: sucursal, semana_inv: semInv, items }),
             success: function (res) {
                 if (res.ok) Swal.fire('Guardado', res.msg, 'success');
-                else        Swal.fire('Error', res.msg, 'error');
+                else Swal.fire('Error', res.msg, 'error');
             }
         });
     });

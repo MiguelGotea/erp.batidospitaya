@@ -241,19 +241,66 @@ try {
         $consumoStats[$idPP] = ['promedio' => $prom, 'desviacion' => $desv, 'cons_semanal' => $prom + $desv];
     }
 
-    /* ── 8. Productos para inventario (Sincronizado con Balance de Existencias) */
+    /* ── 7.5 Índice de conversiones (garantizado para factor despacho) */
+    if (!isset($convIndex)) {
+        $convIndex = [];
+        foreach ($conn->query("SELECT id_unidad_producto_inicio as i, id_unidad_producto_final as f, cantidad as c FROM conversion_unidad_producto")->fetchAll() as $c) {
+            $convIndex[(int)$c['i']][(int)$c['f']] = (float)$c['c'];
+            $convIndex[(int)$c['f']][(int)$c['i']] = $c['c'] != 0 ? 1 / $c['c'] : 0;
+        }
+    }
+
+    /* ── 8. Productos para inventario (con Presentación Despacho del mismo maestro) */
     $stmtP = $conn->prepare("
         SELECT pp.id, pp.Nombre, pp.presentacion, pp.categoria_insumo,
                pp.presentacion_basica_inventario, pp.presentacion_despacho,
-               u.abreviado as unidad, pp.cantidad as cant_pres
+               u.abreviado as unidad, pp.cantidad as cant_pres,
+               pp.id_unidad_producto as uid_uso,
+               ppd.id          as despacho_id,
+               ppd.Nombre      as despacho_nombre,
+               ppd.cantidad    as despacho_cant,
+               ppd.id_unidad_producto as despacho_uid,
+               ud.abreviado    as despacho_unidad
         FROM producto_presentacion pp
         LEFT JOIN unidad_producto u ON u.id = pp.id_unidad_producto
-        WHERE pp.presentacion_basica_inventario = 1 
+        LEFT JOIN producto_presentacion ppd
+               ON ppd.id = (
+                   SELECT ppd2.id FROM producto_presentacion ppd2
+                   WHERE ppd2.id_producto_maestro = pp.id_producto_maestro
+                     AND ppd2.presentacion_despacho = 1
+                     AND ppd2.Activo = 'SI'
+                   ORDER BY ppd2.id ASC LIMIT 1
+               )
+        LEFT JOIN unidad_producto ud ON ud.id = ppd.id_unidad_producto
+        WHERE pp.presentacion_basica_inventario = 1
           AND pp.Activo = 'SI'
         ORDER BY pp.categoria_insumo ASC, pp.Nombre ASC
     ");
     $stmtP->execute();
     $productos = $stmtP->fetchAll(PDO::FETCH_ASSOC);
+
+    /* ── 8.5 Calcular factor despacho por producto ────────── */
+    foreach ($productos as &$p) {
+        $despFactor = null;
+        if (!empty($p['despacho_id']) && (float)$p['despacho_cant'] > 0 && (float)$p['cant_pres'] > 0) {
+            $uidUso  = (int)$p['uid_uso'];
+            $uidDesp = (int)$p['despacho_uid'];
+            if ($uidUso === $uidDesp) {
+                // Misma unidad: factor = despacho_cant / cant_pres
+                $despFactor = (float)$p['despacho_cant'] / (float)$p['cant_pres'];
+            } else {
+                // Unidades distintas: buscar conversión
+                $facConv = resolverFactorConversion_PS($uidUso, $uidDesp, $convIndex);
+                if ($facConv !== null && $facConv != 0) {
+                    $despFactor = (float)$p['despacho_cant'] / ((float)$p['cant_pres'] * $facConv);
+                }
+            }
+        }
+        $p['despacho_factor'] = $despFactor !== null ? round($despFactor, 6) : null;
+        // Limpiar campos internos de unidad
+        unset($p['uid_uso'], $p['despacho_uid']);
+    }
+    unset($p);
 
     /* ── 9. Calcular stocks — fórmula idéntica al script de referencia */
     //  cons_diario  = (cons_semanal × (1 + ajuste)) / 7
