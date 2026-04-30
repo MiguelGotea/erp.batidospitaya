@@ -250,28 +250,50 @@ try {
         }
     }
 
-    /* ── 8. Productos para inventario (con Presentación Despacho del mismo maestro) */
+    /* ── 8. Productos para inventario (con lógica de despacho mejorada) ──── */
     $stmtP = $conn->prepare("
         SELECT pp.id, pp.Nombre, pp.presentacion, pp.categoria_insumo,
                pp.presentacion_basica_inventario, pp.presentacion_despacho,
                u.abreviado as unidad, pp.cantidad as cant_pres,
                pp.id_unidad_producto as uid_uso,
-               ppd.id          as despacho_id,
-               ppd.Nombre      as despacho_nombre,
-               ppd.cantidad    as despacho_cant,
-               ppd.id_unidad_producto as despacho_uid,
-               ud.abreviado    as despacho_unidad
+               -- Caso A: Despacho por Maestro
+               ppd_a.id          as d_id_a,
+               ppd_a.Nombre      as d_nom_a,
+               ppd_a.cantidad    as d_cant_a,
+               ppd_a.id_unidad_producto as d_uid_a,
+               ud_a.abreviado    as d_uni_a,
+               -- Caso B: Despacho por Receta (Fallback)
+               ppd_b.id          as d_id_b,
+               ppd_b.Nombre      as d_nom_b,
+               ppd_b.cantidad    as d_cant_b,
+               ppd_b.id_unidad_producto as d_uid_b,
+               ud_b.abreviado    as d_uni_b,
+               crp_b.cantidad    as d_receta_cant_b
         FROM producto_presentacion pp
         LEFT JOIN unidad_producto u ON u.id = pp.id_unidad_producto
-        LEFT JOIN producto_presentacion ppd
-               ON ppd.id = (
-                   SELECT ppd2.id FROM producto_presentacion ppd2
-                   WHERE ppd2.id_producto_maestro = pp.id_producto_maestro
-                     AND ppd2.presentacion_despacho = 1
-                     AND ppd2.Activo = 'SI'
-                   ORDER BY ppd2.id ASC LIMIT 1
+        -- JOIN A: Por Maestro (Mismo producto_maestro con flag despacho=1)
+        LEFT JOIN producto_presentacion ppd_a
+               ON ppd_a.id = (
+                   SELECT ppd_sub_a.id FROM producto_presentacion ppd_sub_a
+                   WHERE ppd_sub_a.id_producto_maestro = pp.id_producto_maestro
+                     AND ppd_sub_a.presentacion_despacho = 1
+                     AND ppd_sub_a.Activo = 'SI'
+                     AND pp.id_producto_maestro IS NOT NULL
+                   ORDER BY ppd_sub_a.id ASC LIMIT 1
                )
-        LEFT JOIN unidad_producto ud ON ud.id = ppd.id_unidad_producto
+        LEFT JOIN unidad_producto ud_a ON ud_a.id = ppd_a.id_unidad_producto
+        -- JOIN B: Por Receta (Fallback 2: Despacho que contiene a pp como ingrediente)
+        LEFT JOIN producto_presentacion ppd_b
+               ON ppd_b.id = (
+                   SELECT ppd_sub_b.id FROM producto_presentacion ppd_sub_b
+                   INNER JOIN componentes_receta_producto crp_sub_b ON crp_sub_b.id_receta_producto_global = ppd_sub_b.Id_receta_producto
+                   WHERE ppd_sub_b.presentacion_despacho = 1
+                     AND ppd_sub_b.Activo = 'SI'
+                     AND crp_sub_b.id_presentacion_producto = pp.id
+                   ORDER BY ppd_sub_b.id ASC LIMIT 1
+               )
+        LEFT JOIN componentes_receta_producto crp_b ON crp_b.id_receta_producto_global = ppd_b.Id_receta_producto AND crp_b.id_presentacion_producto = pp.id
+        LEFT JOIN unidad_producto ud_b ON ud_b.id = ppd_b.id_unidad_producto
         WHERE pp.presentacion_basica_inventario = 1
           AND pp.Activo = 'SI'
         ORDER BY pp.categoria_insumo ASC, pp.Nombre ASC
@@ -281,24 +303,40 @@ try {
 
     /* ── 8.5 Calcular factor despacho por producto ────────── */
     foreach ($productos as &$p) {
+        $p['despacho_id']      = $p['d_id_a']   ?? $p['d_id_b']   ?? null;
+        $p['despacho_nombre']  = $p['d_nom_a']  ?? $p['d_nom_b']  ?? null;
+        $p['despacho_unidad']  = $p['d_uni_a']  ?? $p['d_uni_b']  ?? null;
+        $p['despacho_cant']    = $p['d_cant_a'] ?? $p['d_cant_b'] ?? null;
+        
         $despFactor = null;
-        if (!empty($p['despacho_id']) && (float)$p['despacho_cant'] > 0 && (float)$p['cant_pres'] > 0) {
+        
+        // Si se resolvió por Maestro (Caso A)
+        if (!empty($p['d_id_a']) && (float)$p['d_cant_a'] > 0 && (float)$p['cant_pres'] > 0) {
             $uidUso  = (int)$p['uid_uso'];
-            $uidDesp = (int)$p['despacho_uid'];
+            $uidDesp = (int)$p['d_uid_a'];
             if ($uidUso === $uidDesp) {
-                // Misma unidad: factor = despacho_cant / cant_pres
-                $despFactor = (float)$p['despacho_cant'] / (float)$p['cant_pres'];
+                $despFactor = (float)$p['d_cant_a'] / (float)$p['cant_pres'];
             } else {
-                // Unidades distintas: buscar conversión
                 $facConv = resolverFactorConversion_PS($uidUso, $uidDesp, $convIndex);
                 if ($facConv !== null && $facConv != 0) {
-                    $despFactor = (float)$p['despacho_cant'] / ((float)$p['cant_pres'] * $facConv);
+                    $despFactor = (float)$p['d_cant_a'] / ((float)$p['cant_pres'] * $facConv);
                 }
             }
+        } 
+        // Si falló A pero hay Receta (Caso B)
+        elseif (!empty($p['d_id_b']) && (float)$p['d_receta_cant_b'] > 0) {
+            // En recetas de despacho, el factor es simplemente la cantidad del componente
+            // Ej: "Caja x 12" contiene 12 unidades de "Botella". Factor = 12.
+            $despFactor = (float)$p['d_receta_cant_b'];
         }
+
         $p['despacho_factor'] = $despFactor !== null ? round($despFactor, 6) : null;
-        // Limpiar campos internos de unidad
-        unset($p['uid_uso'], $p['despacho_uid']);
+
+        // Limpiar campos temporales del query
+        unset(
+            $p['uid_uso'], $p['d_id_a'], $p['d_nom_a'], $p['d_cant_a'], $p['d_uid_a'], $p['d_uni_a'],
+            $p['d_id_b'], $p['d_nom_b'], $p['d_cant_b'], $p['d_uid_b'], $p['d_uni_b'], $p['d_receta_cant_b']
+        );
     }
     unset($p);
 
