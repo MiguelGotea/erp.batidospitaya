@@ -2,7 +2,6 @@
    JS: Inventario Semanal — solo renderizado, los cálculos
        son 100% del backend (inventario_get_data.php)
    ============================================================ */
-
 let semanaActual = 0;
 
 $(document).ready(function () {
@@ -34,7 +33,7 @@ function cargarSucursales() {
 /* ── obtener y calcular ───────────────────────────────────── */
 function cargarDatosInventario() {
     const sucursal = $('#filtroSucursal').val();
-    const semInv   = parseInt($('#filtroSemanaInv').val());
+    const semInv = parseInt($('#filtroSemanaInv').val());
 
     // El rango ahora es automático: 5 semanas hacia atrás desde la semana de inventario
     const semDesde = semInv - 5;
@@ -100,10 +99,10 @@ function renderizarTabla(res, semInv) {
 
     res.productos.forEach(p => {
         const idPP = p.id;
-        const cat  = p.categoria_insumo ?? '—';
+        const cat = p.categoria_insumo ?? '—';
 
         // Inventario actual guardado en BD (viene del backend)
-        const invPres = p._inv_pres   !== null && p._inv_pres   !== undefined ? p._inv_pres   : '';
+        const invPres = p._inv_pres !== null && p._inv_pres !== undefined ? p._inv_pres : '';
         const invUnid = p._inv_unidades !== null && p._inv_unidades !== undefined ? p._inv_unidades : '';
 
         // Stock máximo final (ajustado para B si aplica)
@@ -122,8 +121,8 @@ function renderizarTabla(res, semInv) {
         const readonlyAttr = esSoloLectura ? 'readonly' : '';
         const disabledAttr = esSoloLectura ? 'disabled' : ''; // Para mejor feedback visual
 
-        const despFactor  = p.despacho_factor ? parseFloat(p.despacho_factor) : 0;
-        const invPresNum  = invPres !== '' ? parseFloat(invPres) : null;
+        const despFactor = p.despacho_factor ? parseFloat(p.despacho_factor) : 0;
+        const invPresNum = invPres !== '' ? parseFloat(invPres) : null;
 
         // Chip informativo: Presentación Despacho
         let despChipHtml = '';
@@ -175,9 +174,9 @@ function renderizarTabla(res, semInv) {
 
 /* ── recalcular una fila al cambiar inventario ────────────── */
 function recalcularFila(tr, target, porcentajes) {
-    const sMax     = parseFloat(tr.data('smax'))     || 0;
+    const sMax = parseFloat(tr.data('smax')) || 0;
     const cantPPFactor = parseFloat(tr.data('cant-pres')) || 1;
-    const cat      = tr.data('cat');
+    const cat = tr.data('cat');
 
     let invPres = parseFloat(tr.find('.input-inv-pres').val()) || 0;
 
@@ -187,8 +186,8 @@ function recalcularFila(tr, target, porcentajes) {
     const pedido = Math.max(0, sMax - invPres);
 
     // Desglose P1 / P2
-    const pctCong  = parseFloat(porcentajes.porcentaje_congelados) || 0;
-    const pctFresc = parseFloat(porcentajes.porcentaje_frescos)    || 0;
+    const pctCong = parseFloat(porcentajes.porcentaje_congelados) || 0;
+    const pctFresc = parseFloat(porcentajes.porcentaje_frescos) || 0;
     let p1 = 0, p2 = 0;
     if (['B', 'D', 'F'].includes(cat)) {
         p1 = pedido * pctCong; p2 = pedido - p1;
@@ -220,15 +219,15 @@ function recalcularFila(tr, target, porcentajes) {
 /* ── guardar inventario ───────────────────────────────────── */
 function guardarInventario() {
     const sucursal = $('#filtroSucursal').val();
-    const semInv   = $('#filtroSemanaInv').val();
-    const items    = [];
+    const semInv = $('#filtroSemanaInv').val();
+    const items = [];
 
     $('#tbodyInventario tr').each(function () {
         const tr = $(this);
         items.push({
             id_producto_presentacion: tr.data('id'),
-            cantidad_unidades:        parseFloat(tr.find('.input-inv-unidades').val()) || 0,
-            cantidad_presentacion:    parseFloat(tr.find('.input-inv-pres').val())     || 0
+            cantidad_unidades: parseFloat(tr.find('.input-inv-unidades').val()) || 0,
+            cantidad_presentacion: parseFloat(tr.find('.input-inv-pres').val()) || 0
         });
     });
 
@@ -248,7 +247,7 @@ function guardarInventario() {
             data: JSON.stringify({ cod_sucursal: sucursal, semana_inv: semInv, items }),
             success: function (res) {
                 if (res.ok) Swal.fire('Guardado', res.msg, 'success');
-                else        Swal.fire('Error', res.msg, 'error');
+                else Swal.fire('Error', res.msg, 'error');
             }
         });
     });
