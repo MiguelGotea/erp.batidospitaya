@@ -132,15 +132,20 @@ function renderizarTabla(res, semInv) {
             despChipHtml = `<div class="info-pres-despacho"><i class="bi bi-truck me-1"></i>${despDetalle}</div>`;
         }
 
-        // Valor inicial en Presentación Despacho
-        const calcDespacho = (despFactor > 0 && invPresNum !== null)
-            ? `<span class="despacho-val">${fmt(invPresNum / despFactor)}</span>${p.despacho_unidad ? `<div class="despacho-unit-label">${p.despacho_unidad}</div>` : ''}`
-            : `<span class="despacho-val">—</span>`;
+        // Valor inicial en Unidades de Control (Fórmula: Unidades + Presentación * Cant_Pres)
+        const invUnidNum = invUnid !== '' ? parseFloat(invUnid) : 0;
+        const cantPresFactor = p.cant_pres ? parseFloat(p.cant_pres) : 1;
+        const totalControl = invUnidNum + (invPresNum !== null ? invPresNum * cantPresFactor : 0);
+
+        const calcControl = `
+            <span class="despacho-val">${fmt(totalControl)}</span>
+            <div class="despacho-unit-label">${p.unidad ?? ''}</div>
+        `;
 
         tbody.append(`
             <tr data-id="${idPP}" data-cat="${cat}"
                 data-smax="${p.stock_max_final ?? ''}"
-                data-cant-pres="${p.cant_pres ?? 1}"
+                data-cant-pres="${cantPresFactor}"
                 data-despacho-factor="${despFactor}"
                 data-despacho-unidad="${p.despacho_unidad ?? ''}">
                 <td class="text-start small">
@@ -155,7 +160,7 @@ function renderizarTabla(res, semInv) {
                     <input type="number" class="form-control form-control-sm input-inv-pres" value="${invPres}" ${readonlyAttr} step="0.01">
                     ${despChipHtml}
                 </td>
-                <td class="col-inv-despacho">${calcDespacho}</td>
+                <td class="col-inv-despacho">${calcControl}</td>
                 <td class="bg-light">${fmt(p._stock_min)}</td>
                 <td class="bg-light">${sMaxHtml}</td>
                 <td class="col-sug">${pedidoHtml}</td>
@@ -205,15 +210,12 @@ function recalcularFila(tr, target, porcentajes) {
     tr.find('.bg-highlight-p1').text(fmt(p1));
     tr.find('.bg-highlight-p2').text(fmt(p2));
 
-    // Recalcular columna ≡ En Pres. Despacho
-    const despFactor = parseFloat(tr.data('despacho-factor')) || 0;
-    const despUnidad = tr.data('despacho-unidad') || '';
-    if (despFactor > 0) {
-        const valDesp = invPres / despFactor;
-        tr.find('.despacho-val').text(fmt(valDesp));
-    } else {
-        tr.find('.despacho-val').text('—');
-    }
+    // Recalcular columna En presentación Unidades de Control
+    // Fórmula: En Unidades (base) + (Presentación * Factor de Presentación)
+    const invUnid = parseFloat(tr.find('.input-inv-unidades').val()) || 0;
+    const totalControl = invUnid + (invPres * cantPPFactor);
+    
+    tr.find('.despacho-val').text(fmt(totalControl));
 }
 
 /* ── guardar inventario ───────────────────────────────────── */
