@@ -466,10 +466,7 @@ try {
         $p['p1']              = round($p1, 4);
         $p['p2']              = round($p2, 4);
 
-        // Renombrar _stock_min para el frontend (JS usa p._stock_min)
-        $p['_stock_min'] = $p['stock_minimo_despacho'];
-
-        unset($p['_stock_max'], $p['_tiene_config'], $p['stock_minimo_despacho']);
+        unset($p['_stock_max_u'], $p['_stock_min_u'], $p['_tiene_config']);
     }
     unset($p);
 
