@@ -364,14 +364,21 @@ try {
         $sMin = $diaC * $dSM;
         $sMax = $diaC * ($dC + $dD + $dSM);
 
+        // Convertir stocks a Unidades de Despacho (si existe el factor)
+        $df = (float)($p['despacho_factor'] ?? 1);
+        if ($df <= 0) $df = 1;
+        
+        $sMinDesp = $sMin / $df;
+        $sMaxDesp = $sMax / $df;
+
         $invRow  = $inventarioSemana[$idPP] ?? null;
 
         $p['_cons_semanal']   = round($semC, 4);
         $p['_promedio']       = round($prom, 4);
         $p['_desviacion']     = round($desv, 4);
         $p['_cons_diario']    = round($diaC, 6);
-        $p['_stock_min']      = round($sMin, 4);
-        $p['_stock_max']      = round($sMax, 4);
+        $p['_stock_min']      = round($sMinDesp, 4);
+        $p['_stock_max']      = round($sMaxDesp, 4);
         $p['_tiene_config']   = $lc !== null;
         $p['_inv_pres']       = $invRow ? (float)$invRow['cantidad_presentacion'] : null;
         $p['_inv_unidades']   = $invRow ? (float)$invRow['cantidad_unidades']     : null;
