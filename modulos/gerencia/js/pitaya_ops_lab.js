@@ -1083,10 +1083,9 @@ const OPS = {
                     this._updateDOMStats(); this._updateClock(); this.draw();
                     document.getElementById('desAnimPlay').disabled = false;
                     document.getElementById('desAnimPause').disabled = true;
-                };
-            }
+                };      // end sel.onchange
+            }           // end if(sel)
             this._resize();
-            document.getElementById('desAnimCard').style.display = '';
             const totalLam = Object.values(this.lambdaByHora).reduce((a,b)=>a+b,0);
             const badge = document.getElementById('desAnimBadge');
             if (badge) badge.textContent = `λ calibrado: ~${totalLam.toFixed(0)} pedidos/día`;
@@ -1096,9 +1095,20 @@ const OPS = {
         _resize() {
             const wrap = this.canvas ? this.canvas.parentElement : null;
             if (!wrap) return;
-            this.W = Math.max(wrap.clientWidth || 0, 600);
-            this.H = 400;
-            this.canvas.width = this.W; this.canvas.height = this.H;
+            const dpr = window.devicePixelRatio || 1;
+            const cssW = Math.max(wrap.clientWidth || 0, 600);
+            const cssH = 400;
+            // Set pixel buffer = CSS size × DPR (sharp on HiDPI/Retina)
+            this.canvas.width  = cssW * dpr;
+            this.canvas.height = cssH * dpr;
+            // Keep CSS size unchanged
+            this.canvas.style.width  = cssW + 'px';
+            this.canvas.style.height = cssH + 'px';
+            // Scale context so all draw calls use CSS pixel coordinates
+            this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            // Layout uses CSS pixels
+            this.W = cssW;
+            this.H = cssH;
             this._buildLayout();
         },
 
