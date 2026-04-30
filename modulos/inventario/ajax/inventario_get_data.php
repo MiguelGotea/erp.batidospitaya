@@ -435,7 +435,19 @@ try {
         }
 
         $invPres = $p['_inv_pres'];
-        $pedido  = ($sMaxFinal !== null && $invPres !== null) ? max(0.0, $sMaxFinal - $invPres) : null;
+        
+        $df = (float)($p['despacho_factor'] ?? 1);
+        if ($df <= 0) $df = 1;
+
+        $pedido = null;
+        if ($sMaxFinal !== null && $invPres !== null) {
+            // El Stock Máximo Final viene de _stock_max (que ya está en despacho) o de sMax * factorC
+            // Para ser consistentes, si sMaxFinal viene del ajuste de congelados, también hay que dividirlo
+            if ($p['es_ajustado']) {
+                $sMaxFinal = $sMaxFinal / $df;
+            }
+            $pedido = max(0.0, $sMaxFinal - $invPres);
+        }
 
         $p1 = $p2 = 0.0;
         if ($pedido !== null) {
