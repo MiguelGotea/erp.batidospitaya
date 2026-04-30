@@ -369,16 +369,12 @@ try {
     unset($p);
 
     /* ── 9. Calcular stocks — fórmula idéntica al script de referencia */
-    //  cons_diario  = (cons_semanal × (1 + ajuste)) / 7
-    //  stock_min    = cons_diario × dias_stock_minimo
-    //  stock_max    = cons_diario × (dias_ciclo + dias_desfase + dias_stock_minimo)
-    //  [Cat B]  stock_max_final = stock_max × factorC
-    //  pedido       = stock_max_final − inventario_actual  (≥ 0)
     $sumSMaxB = 0.0;
     foreach ($productos as &$p) {
         $idPP = $p['id'];
         $cat  = $p['categoria_insumo'];
         $lc   = $logCats[$cat] ?? null;
+        
         $adj  = $lc ? (float)$lc['ajuste_demanda'] : 0;
         $dC   = $lc ? (float)$lc['dias_ciclo']     : 0;
         $dD   = $lc ? (float)$lc['dias_desfase']   : 0;
@@ -392,23 +388,15 @@ try {
         $sMin = $diaC * $dSM;
         $sMax = $diaC * ($dC + $dD + $dSM);
 
-        // Convertir stocks a Unidades de Despacho (si existe el factor)
-        $df = (float)($p['despacho_factor'] ?? 1);
-        if ($df <= 0) $df = 1;
-
-        $diaC = ($semC * (1 + $adj)) / 7;
-        $sMin = $diaC * $dSM;
-        $sMax = $diaC * ($dC + $dD + $dSM);
-
         $invRow  = $inventarioSemana[$idPP] ?? null;
 
         $p['_cons_semanal']   = round($semC, 4);
         $p['_promedio']       = round($prom, 4);
         $p['_desviacion']     = round($desv, 4);
         $p['_cons_diario']    = round($diaC, 6);
-        $p['_stock_min']      = round($sMin, 4);
-        $p['_stock_max']      = round($sMax, 4);
-        $p['_tiene_config']   = $lc !== null;
+        $p['_stock_min_u']    = round($sMin, 4);   // En unidades de uso
+        $p['_stock_max_u']    = round($sMax, 4);   // En unidades de uso
+        $p['_tiene_config']   = ($lc !== null);
         $p['_inv_pres']       = $invRow ? (float)$invRow['cantidad_presentacion'] : null;
         $p['_inv_unidades']   = $invRow ? (float)$invRow['cantidad_unidades']     : null;
 
@@ -416,24 +404,23 @@ try {
     }
     unset($p);
 
-    // Factor de congelados (idéntico al script de referencia)
+    // Factor de congelados
     $factorC = ($capC !== null && $sumSMaxB > 0) ? min(1.0, $capC / $sumSMaxB) : null;
 
-    // Pedido final + desglose P1/P2
     $pctCong  = (float)$configPct['porcentaje_congelados'];
     $pctFresc = (float)$configPct['porcentaje_frescos'];
 
     foreach ($productos as &$p) {
         $cat  = $p['categoria_insumo'];
-        $sMax = $p['_stock_max'];
+        $sMaxU = $p['_stock_max_u'];
         $df   = (float)($p['despacho_factor'] ?? 1);
         if ($df <= 0) $df = 1;
 
         if ($cat === 'B' && $factorC !== null) {
-            $sMaxFinal  = round($sMax * $factorC, 4);
+            $sMaxFinalU = round($sMaxU * $factorC, 4);
             $esAjustado = true;
         } else {
-            $sMaxFinal  = $p['_tiene_config'] ? round($sMax, 4) : null;
+            $sMaxFinalU = $p['_tiene_config'] ? $sMaxU : null;
             $esAjustado = false;
         }
 
@@ -441,19 +428,25 @@ try {
         $invPres = $p['_inv_pres'];
         $pedido  = null;
 
-        if ($sMaxFinal !== null && $invPres !== null) {
-            // Convertimos sMaxFinal a despacho para restar con (A)
-            $sMaxFinalDesp = $sMaxFinal / $df;
-            $pedido = max(0.0, $sMaxFinalDesp - $invPres);
+        // Stock Máximo Final (B) - Debe mostrarse siempre que haya configuración
+        if ($sMaxFinalU !== null) {
+            $sMaxFinalDesp = round($sMaxFinalU / $df, 4);
+            $p['stock_max_final'] = $sMaxFinalDesp;
             
-            // Para la visualización del Stock Máximo (B) también mostramos el valor en despacho
-            $p['stock_max_final'] = round($sMaxFinal / $df, 4);
+            // El pedido solo se calcula si tenemos inventario (A)
+            if ($invPres !== null) {
+                $pedido = max(0.0, $sMaxFinalDesp - $invPres);
+            }
         } else {
             $p['stock_max_final'] = null;
         }
 
-        // Convertimos Stock Mínimo a despacho para visualización
-        $p['stock_minimo_despacho'] = round($p['_stock_min'] / $df, 4);
+        // Stock Mínimo (Uso -> Despacho) - Debe mostrarse siempre que haya configuración
+        if ($p['_tiene_config']) {
+            $p['_stock_min'] = round($p['_stock_min_u'] / $df, 4);
+        } else {
+            $p['_stock_min'] = null;
+        }
 
         $p1 = $p2 = 0.0;
         if ($pedido !== null) {
