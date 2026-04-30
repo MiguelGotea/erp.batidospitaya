@@ -197,7 +197,7 @@ try {
                                         <tr>
                                             <th class="col-producto">Producto</th>
                                             <th class="text-center">Cat.</th>
-                                            <th>Unidad</th>
+                                            <th>Presentación</th>
                                             <th class="text-end" title="Promedio de consumo semanal">Prom./Sem.</th>
                                             <th class="text-end" title="Desviación estándar de muestra">Desv. Std</th>
                                             <th class="text-end" title="Consumo semanal = promedio + desv. estándar">Cons. Semanal</th>
