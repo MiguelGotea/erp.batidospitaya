@@ -144,7 +144,7 @@ function renderizarTabla(res, semInv) {
         tbody.append(`
             <tr data-id="${idPP}" data-cat="${cat}"
                 data-smax="${p.stock_max_final ?? ''}"
-                data-cant-pres="${cantPresFactor}"
+                data-cant-pres="${p.cant_pres || 1}"
                 data-despacho-factor="${despFactor}"
                 data-despacho-unidad="${p.despacho_unidad ?? ''}">
                 <td class="text-start small">
