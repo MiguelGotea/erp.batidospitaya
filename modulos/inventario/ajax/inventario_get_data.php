@@ -400,7 +400,9 @@ try {
         $p['_inv_pres']       = $invRow ? (float)$invRow['cantidad_presentacion'] : null;
         $p['_inv_unidades']   = $invRow ? (float)$invRow['cantidad_unidades']     : null;
 
-        if ($cat === 'B') $sumSMaxB += $sMax;
+        // Para el cálculo del factorC (congelados), solo sumamos productos que tengan consumo (cons_semanal > 0)
+        // Esto replica exactamente el universo de productos de pedido_sugerido_calcular.php
+        if ($cat === 'B' && $semC > 0) $sumSMaxB += $sMax;
     }
     unset($p);
 
