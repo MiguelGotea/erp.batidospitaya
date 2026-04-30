@@ -119,6 +119,7 @@ try {
                    pp.id_producto_maestro AS id_m,
                    pp.Nombre              AS n,
                    pp.categoria_insumo    AS cat,
+                   pp.presentacion        AS presentacion,
                    u.id                   AS uid,
                    u.abreviado            AS uab,
                    pm.Nombre              AS mn
@@ -150,6 +151,7 @@ try {
                        pp_base.id_producto_maestro AS id_m,
                        pp_base.Nombre              AS n,
                        pp_base.categoria_insumo    AS cat,
+                       pp_base.presentacion        AS presentacion,
                        u_base.id                   AS uid,
                        u_base.abreviado            AS uab,
                        pm.Nombre                   AS mn
@@ -188,6 +190,7 @@ try {
                        pp_base.id_producto_maestro AS id_m,
                        pp_base.Nombre              AS n,
                        pp_base.categoria_insumo    AS cat,
+                       pp_base.presentacion        AS presentacion,
                        u_base.id                   AS uid,
                        u_base.abreviado            AS uab,
                        pm.Nombre                   AS mn
@@ -263,7 +266,7 @@ try {
             $cons = ($cant * $fac) / $ppC;
             if ($esP1) $cons = round($cons * 2) / 2;
         }
-        if (!isset($metaPP[$idPP])) $metaPP[$idPP] = ['n'=>$m['n'], 'u'=>$unidadPorId[$uidERP]['abreviado']??$m['uab'], 'cat'=>$m['cat']];
+        if (!isset($metaPP[$idPP])) $metaPP[$idPP] = ['n'=>$m['n'], 'u'=>$m['presentacion'] ?? ($unidadPorId[$uidERP]['abreviado'] ?? $m['uab']), 'cat'=>$m['cat']];
         $conAgg[$idPP][$sem] = ($conAgg[$idPP][$sem] ?? 0) + $cons;
     }
 
