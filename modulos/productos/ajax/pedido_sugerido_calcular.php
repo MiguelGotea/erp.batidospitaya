@@ -236,7 +236,7 @@ try {
     $idMs = array_unique(array_filter(array_column($diccionarioMap, 'id_m')));
     if (!empty($idMs)) {
         $phM = implode(',', array_fill(0, count($idMs), '?'));
-        $stmtPP = $conn->prepare("SELECT id, id_producto_maestro, cantidad, id_unidad_producto FROM producto_presentacion WHERE id_producto_maestro IN ($phM) AND Id_receta_producto IS NULL AND Activo='SI' AND presentacion_basica_inventario = 1");
+        $stmtPP = $conn->prepare("SELECT id, id_producto_maestro, cantidad, id_unidad_producto, presentacion FROM producto_presentacion WHERE id_producto_maestro IN ($phM) AND Id_receta_producto IS NULL AND Activo='SI' AND presentacion_basica_inventario = 1");
         $stmtPP->execute(array_values($idMs));
         foreach ($stmtPP->fetchAll() as $pp) {
              $presentPorMaestro[(int)$pp['id_producto_maestro']][(int)$pp['id_unidad_producto']] = $pp;
@@ -254,19 +254,27 @@ try {
         if (!$m) continue;
 
         $idPP = (int)$m['id']; $ppC = max((float)$m['pp_cant'], 0.001); $uidERP = (int)$m['uid'];
+        $presentacionFinal = $m['presentacion'] ?? null; // valor por defecto del mapeo principal
         if ($m['Id_receta_producto']) { $cons = $cant; } else {
             $uAcc = $dbIng[$ci]['Unidad'] ?? ''; $uidAcc = resolverUnidadId_PS($uAcc, $unidadPorNombre); $fac = 1.0;
             if ($uidAcc && $uidAcc !== $uidERP) {
                 $fDir = resolverFactorConversion_PS($uidAcc, $uidERP, $convIndex);
                 if ($fDir) $fac=$fDir; else {
                     $alt = buscarPresentacionEnMaestro_PS((int)$m['id_m'], $uidAcc, $presentPorMaestro);
-                    if ($alt) { $idPP=(int)$alt['id']; $ppC=max((float)$alt['cantidad'],0.001); $uidERP=(int)$alt['id_unidad_producto']; $fac=1.0; }
+                    if ($alt) {
+                        $idPP = (int)$alt['id'];
+                        $ppC  = max((float)$alt['cantidad'], 0.001);
+                        $uidERP = (int)$alt['id_unidad_producto'];
+                        $fac  = 1.0;
+                        // Usar la presentacion de la presentacion alternativa si la tiene
+                        $presentacionFinal = $alt['presentacion'] ?? $presentacionFinal;
+                    }
                 }
             }
             $cons = ($cant * $fac) / $ppC;
             if ($esP1) $cons = round($cons * 2) / 2;
         }
-        if (!isset($metaPP[$idPP])) $metaPP[$idPP] = ['n'=>$m['n'], 'u'=>$m['presentacion'] ?? ($unidadPorId[$uidERP]['abreviado'] ?? $m['uab']), 'cat'=>$m['cat']];
+        if (!isset($metaPP[$idPP])) $metaPP[$idPP] = ['n'=>$m['n'], 'u'=>$presentacionFinal ?? ($unidadPorId[$uidERP]['abreviado'] ?? $m['uab']), 'cat'=>$m['cat']];
         $conAgg[$idPP][$sem] = ($conAgg[$idPP][$sem] ?? 0) + $cons;
     }
 
