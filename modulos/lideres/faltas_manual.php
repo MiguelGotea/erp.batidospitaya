@@ -257,6 +257,11 @@ if (isset($_GET['exportar_contabilidad'])) {
     exit;
 }
 
+// Establecer rango del mes actual por defecto
+$hoy = new DateTime();
+$primerDiaMes = $hoy->format('Y-m-01');
+$ultimoDiaMes = $hoy->format('Y-m-t');
+
 // Verificar si se solicitó exportación de Faltas Auto + 7mo
 if (isset($_GET['exportar_faltas_auto_septimo'])) {
     $sucursalSeleccionada = $_GET['sucursal'] ?? null;
@@ -269,7 +274,7 @@ if (isset($_GET['exportar_faltas_auto_septimo'])) {
 // Verificar si se solicitó exportación de Permisos
 if (isset($_GET['exportar_permisos'])) {
     $sucursalSeleccionada = $_GET['sucursal'] ?? null;
-    $fechaDesde = $_GET['desde'] ?? date('Y-m-d', strrotime('-1 month'));
+    $fechaDesde = $_GET['desde'] ?? date('Y-m-d', strtotime('-1 month'));
     $fechaHasta = $_GET['hasta'] ?? date('Y-m-d');
     
     exportarPermisos($sucursalSeleccionada, $fechaDesde, $fechaHasta);
@@ -675,7 +680,8 @@ function exportarPermisos($codSucursal, $fechaDesde, $fechaHasta) {
         echo '<td>' . 1 . '</td>';
         echo '<td>' . ($permiso['porcentaje_pago'] ?? 0) . '%</td>'; // PORCENTAJE DESDE BD
         echo '<td>' . str_replace('_', ' ', $permiso['tipo_falta']) . '</td>';
-        echo '<td>' . (!empty($permiso['observaciones_rrhh']) ? htmlspecialchars($permiso['observaciones_rrhh']) : 'Sin comentarios por rrhh') . '</td>';
+        $obsDisplay = !empty($permiso['observaciones_rrhh']) ? $permiso['observaciones_rrhh'] : $permiso['observaciones'];
+        echo '<td>' . ($obsDisplay ? htmlspecialchars($obsDisplay) : 'Sin comentarios') . '</td>';
         echo '<td>' . $fechaRegistro . '</td>'; // NUEVA COLUMNA
         echo '</tr>';
     }
@@ -759,7 +765,8 @@ function exportarVacaciones($codSucursal, $fechaDesde, $fechaHasta) {
         echo '<td>' . $vacacion['fecha_falta'] . '</td>';
         echo '<td>' . $vacacion['fecha_falta'] . '</td>'; // Misma fecha para inicio y fin (día individual)
         echo '<td>1</td>';
-        echo '<td>' . (!empty($vacacion['observaciones_rrhh']) ? htmlspecialchars($vacacion['observaciones_rrhh']) : 'Sin comentarios por rrhh') . '</td>';
+        $obsDisplay = !empty($vacacion['observaciones_rrhh']) ? $vacacion['observaciones_rrhh'] : $vacacion['observaciones'];
+        echo '<td>' . ($obsDisplay ? htmlspecialchars($obsDisplay) : 'Sin comentarios') . '</td>';
         echo '<td>Descansadas</td>';
         echo '<td>' . $fechaRegistro . '</td>'; // NUEVA COLUMNA
         echo '</tr>';
@@ -952,11 +959,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['registrar_falta'])) {
 
 // Obtener datos para los filtros
 $sucursalSeleccionada = $_GET['sucursal'] ?? ($sucursales[0]['codigo'] ?? null);
-
-// Establecer rango del mes actual por defecto
-$hoy = new DateTime();
-$primerDiaMes = $hoy->format('Y-m-01');
-$ultimoDiaMes = $hoy->format('Y-m-t');
 
 // Si es líder y tiene múltiples sucursales, seleccionar la primera por defecto
 if (!$esRH && count($sucursales) > 0 && !isset($_GET['sucursal'])) {
