@@ -41,6 +41,7 @@ $semanaSiguiente = obtenerSemanaPorNumero($semanaActual['numero_semana'] + 1);
 // Obtener datos para la vista
 $semanaSeleccionada = $_GET['semana'] ?? $semanaActual['numero_semana'];
 $sucursalSeleccionada = $_GET['sucursal'] ?? ($sucursales[0]['codigo'] ?? null);
+$semana = obtenerSemanaPorNumero($semanaSeleccionada);
 
 // Determinar si estamos en el período de edición (sábado 00:00 a domingo 12:00 hora), cambiar a true para editar full
 $periodoEdicion = true;
@@ -165,12 +166,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // Obtener operarios y horarios si hay sucursal y semana seleccionada
 $operarios = [];
-$semana = null;
 $horariosLider = [];
 $horariosOperaciones = []; // Añade esta línea
 
 if ($sucursalSeleccionada && $semanaSeleccionada) {
-    $semana = obtenerSemanaPorNumero($semanaSeleccionada);
     if ($semana) {
         // Obtener operarios de la sucursal
         $operarios = obtenerOperariosSucursalConHorario($sucursalSeleccionada, $semana['id']);
@@ -185,12 +184,12 @@ if ($sucursalSeleccionada && $semanaSeleccionada) {
                 JOIN NivelesCargos nc ON anc.CodNivelesCargos = nc.CodNivelesCargos
                 WHERE anc.CodOperario IN ($placeholders)
                 AND (anc.es_activo = 1 OR anc.es_activo IS NULL)
-                AND (anc.Fin IS NULL OR anc.Fin >= CURDATE())
-                AND anc.Fecha <= CURDATE()
+                AND (anc.Fin IS NULL OR anc.Fin >= ?)
+                AND anc.Fecha <= ?
                 ORDER BY anc.Fecha DESC
             ");
 
-            $stmt->execute($codigosOperarios);
+            $stmt->execute(array_merge($codigosOperarios, [$semana['fecha_fin'], $semana['fecha_fin']]));
             $categoriasOperarios = $stmt->fetchAll(PDO::FETCH_GROUP | PDO::FETCH_ASSOC);
 
             // Asignar categorías a los operarios (tomará la más reciente por ORDER BY Fecha DESC)
@@ -1900,7 +1899,7 @@ function obtenerCategoriasDesdeBD()
                         SELECT o.CodOperario, o.Nombre, o.Apellido, o.Apellido2 
                         FROM Operarios o
                         WHERE o.Operativo = 1
-                        AND (o.Fin IS NULL OR o.Fin >= CURDATE())
+                        AND (o.Fin IS NULL OR o.Fin >= ?)
                         AND o.CodOperario NOT IN (
                             SELECT anc.CodOperario 
                             FROM AsignacionNivelesCargos anc 
@@ -1908,7 +1907,7 @@ function obtenerCategoriasDesdeBD()
                         )
                         ORDER BY o.Nombre, o.Apellido, o.Apellido2
                     ");
-                        $stmt->execute();
+                        $stmt->execute([$semana['fecha_fin']]);
                         $todosOperarios = $stmt->fetchAll();
 
                         foreach ($todosOperarios as $op):
@@ -2044,13 +2043,19 @@ function obtenerCategoriasDesdeBD()
                                         $dias = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'];
 
                                         foreach ($dias as $dia):
-                                            // Usar el horario de operaciones si existe, sino usar el del líder
-                                            $estado = $horarioOperaciones ? $horarioOperaciones["{$dia}_estado"] : $horarioLider["{$dia}_estado"];
-                                            $comentario = $horarioOperaciones ? $horarioOperaciones["{$dia}_comentario"] : $horarioLider["{$dia}_comentario"];
-                                            $entrada = $horarioOperaciones ? $horarioOperaciones["{$dia}_entrada"] : $horarioLider["{$dia}_entrada"];
-                                            $salida = $horarioOperaciones ? $horarioOperaciones["{$dia}_salida"] : $horarioLider["{$dia}_salida"];
-                                            $horasDia = $horarioOperaciones ? $horarioOperaciones["{$dia}_horas"] : $horarioLider["{$dia}_horas"];
+                                            // Usar el horario de operaciones si existe, sino usar el del líder, sino valores por defecto
+                                            $estado = $horarioOperaciones ? $horarioOperaciones["{$dia}_estado"] : ($horarioLider["{$dia}_estado"] ?? 'Activo');
+                                            $comentario = $horarioOperaciones ? $horarioOperaciones["{$dia}_comentario"] : ($horarioLider["{$dia}_comentario"] ?? '');
+                                            $entrada = $horarioOperaciones ? $horarioOperaciones["{$dia}_entrada"] : ($horarioLider["{$dia}_entrada"] ?? '08:00');
+                                            $salida = $horarioOperaciones ? $horarioOperaciones["{$dia}_salida"] : ($horarioLider["{$dia}_salida"] ?? '17:00');
+                                            $horasDia = $horarioOperaciones ? $horarioOperaciones["{$dia}_horas"] : ($horarioLider["{$dia}_horas"] ?? 0);
                                             $sucursalExterna = $horarioOperaciones ? $horarioOperaciones["{$dia}_sucursal_externa"] : ($horarioLider["{$dia}_sucursal_externa"] ?? null);
+                                            
+                                            // Asegurar valores mínimos si vienen vacíos
+                                            if (!$estado) $estado = 'Activo';
+                                            if (!$entrada) $entrada = '08:00';
+                                            if (!$salida) $salida = '17:00';
+                                            
                                             $totalHoras += $horasDia;
 
                                             // Valores originales del líder (para mostrar como referencia)
@@ -3044,8 +3049,10 @@ function obtenerCategoriasDesdeBD()
                 wrapper.classList.add('disabled-premium');
                 document.getElementById('ts-h-entrada-' + prefix).value = '08';
                 document.getElementById('ts-m-entrada-' + prefix).textContent = '00';
-                document.getElementById('ts-h-salida-' + prefix).value = '17';
+                document.getElementById('ts-ap-entrada-' + prefix).textContent = 'AM';
+                document.getElementById('ts-h-salida-' + prefix).value = '05';
                 document.getElementById('ts-m-salida-' + prefix).textContent = '00';
+                document.getElementById('ts-ap-salida-' + prefix).textContent = 'PM';
             }
 
             horasDisplay.textContent = '0.00';
@@ -4464,12 +4471,14 @@ function obtenerCategoriasDesdeBD()
             hiddenEntrada.value = "08:00";
             document.getElementById(`ts-h-entrada-${prefix}`).value = "08";
             document.getElementById(`ts-m-entrada-${prefix}`).textContent = "00";
+            document.getElementById(`ts-ap-entrada-${prefix}`).textContent = "AM";
         }
 
         if (!hiddenSalida.value || hiddenSalida.value === "") {
             hiddenSalida.value = "17:00";
-            document.getElementById(`ts-h-salida-${prefix}`).value = "17";
+            document.getElementById(`ts-h-salida-${prefix}`).value = "05";
             document.getElementById(`ts-m-salida-${prefix}`).textContent = "00";
+            document.getElementById(`ts-ap-salida-${prefix}`).textContent = "PM";
         }
 
         let [hE, mE] = hiddenEntrada.value.split(':').map(Number);
@@ -4490,9 +4499,14 @@ function obtenerCategoriasDesdeBD()
         let newHS = Math.floor(totalMinSalida / 60);
         let newMS = totalMinSalida % 60;
 
+        // Convertir a 12h para la UI
+        let h12 = newHS % 12 || 12;
+        let ampm = newHS < 12 ? 'AM' : 'PM';
+
         // Actualizar UI
-        document.getElementById(`ts-h-salida-${prefix}`).value = newHS.toString().padStart(2, '0');
+        document.getElementById(`ts-h-salida-${prefix}`).value = h12.toString().padStart(2, '0');
         document.getElementById(`ts-m-salida-${prefix}`).textContent = newMS.toString().padStart(2, '0');
+        document.getElementById(`ts-ap-salida-${prefix}`).textContent = ampm;
 
         actualizarHiddenInput(prefix, 'salida');
     }

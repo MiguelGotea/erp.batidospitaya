@@ -378,8 +378,8 @@ function procesarRegistroVacacionesRango()
             $stmt = $conn->prepare("
                 INSERT INTO faltas_manual (
                     cod_operario, fecha_falta, cod_sucursal, 
-                    tipo_falta, observaciones, foto_path, registrado_por, cod_contrato, porcentaje_pago
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    tipo_falta, observaciones, observaciones_rrhh, foto_path, registrado_por, cod_contrato, porcentaje_pago
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ");
 
             if (
@@ -389,6 +389,7 @@ function procesarRegistroVacacionesRango()
                     $codSucursal,
                     $tipoFalta,
                     $observaciones,
+                    ($esRH ? $observaciones : null), // Si es RH, guardamos lo mismo en observaciones_rrhh
                     $rutaRelativa, // Usamos la ruta relativa para la BD
                     $_SESSION['usuario_id'],
                     $codContrato,
@@ -468,7 +469,8 @@ if (isset($_GET['exportar_excel'])) {
         echo '<td>' . htmlspecialchars($nombreCompleto) . '</td>';
         echo '<td>' . htmlspecialchars($vacacion['sucursal_nombre']) . '</td>';
         echo '<td>' . formatoFechaCorta($vacacion['fecha_falta']) . '</td>';
-        echo '<td>' . ($vacacion['observaciones'] ? htmlspecialchars($vacacion['observaciones']) : '-') . '</td>';
+        $obsDisplay = !empty($vacacion['observaciones_rrhh']) ? $vacacion['observaciones_rrhh'] : $vacacion['observaciones'];
+        echo '<td>' . ($obsDisplay ? htmlspecialchars($obsDisplay) : '-') . '</td>';
         echo '<td>' . htmlspecialchars($vacacion['registrador_nombre'] . ' ' . $vacacion['registrador_apellido']) . '</td>';
         echo '<td>' . formatoFechaCorta($vacacion['fecha_registro']) . '</td>';
         echo '</tr>';

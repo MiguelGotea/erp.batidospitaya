@@ -18,5 +18,5 @@ if ($LASTEXITCODE -ne 0) {
     git commit -m "$msg (Conflict Resolved)" 2>$null
 }
 
-git push origin main
+git push origin HEAD
 Write-Host "✅ ¡Subida completada con éxito!" -ForegroundColor Green

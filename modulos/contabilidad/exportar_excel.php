@@ -7,6 +7,7 @@ require_once '../../includes/auth.php';
 require_once '../../includes/funciones.php';
 
 // Verificar conexión
+
 if (!$conn) {
     die("Error de conexión a la base de datos");
 }
@@ -285,7 +286,8 @@ function exportarPermisos($codSucursal, $fechaDesde, $fechaHasta) {
         echo '<td>' . 1 . '</td>';
         echo '<td>' . ($permiso['porcentaje_pago'] ?? 0) . '%</td>';
         echo '<td>' . str_replace('_', ' ', $permiso['tipo_falta']) . '</td>';
-        echo '<td>' . (!empty($permiso['observaciones_rrhh']) ? htmlspecialchars($permiso['observaciones_rrhh']) : 'Sin comentarios por rrhh') . '</td>';
+        $obsDisplay = !empty($permiso['observaciones_rrhh']) ? $permiso['observaciones_rrhh'] : $permiso['observaciones'];
+        echo '<td>' . ($obsDisplay ? htmlspecialchars($obsDisplay) : 'Sin comentarios') . '</td>';
         echo '<td>' . $fechaRegistro . '</td>';
         echo '</tr>';
     }
@@ -367,7 +369,8 @@ function exportarVacaciones($codSucursal, $fechaDesde, $fechaHasta) {
         echo '<td>' . $vacacion['fecha_falta'] . '</td>';
         echo '<td>' . $vacacion['fecha_falta'] . '</td>';
         echo '<td>1</td>';
-        echo '<td>' . (!empty($vacacion['observaciones_rrhh']) ? htmlspecialchars($vacacion['observaciones_rrhh']) : 'Sin comentarios por rrhh') . '</td>';
+        $obsDisplay = !empty($vacacion['observaciones_rrhh']) ? $vacacion['observaciones_rrhh'] : $vacacion['observaciones'];
+        echo '<td>' . ($obsDisplay ? htmlspecialchars($obsDisplay) : 'Sin comentarios') . '</td>';
         echo '<td>Descansadas</td>';
         echo '<td>' . $fechaRegistro . '</td>';
         echo '</tr>';
