@@ -291,14 +291,18 @@ try {
                             Cuando un insumo se incorpora a mitad del periodo o es reemplazado, las semanas sin consumo <b>no reflejan demanda real cero</b> — son ceros estructurales. Incluirlas en el promedio subestimaría el pedido.
                         </p>
                         <p class="text-secondary small mb-2">
-                            El sistema detecta automáticamente la <b>primera y última semana con consumo real</b> y calcula el promedio solo dentro de ese rango:
+                            El sistema detecta la <b>primera y última semana con consumo significativo</b> y promedia solo dentro de ese rango. Para evitar que residuos de redondeo o artefactos de conversión expandan la ventana erróneamente, se aplica un <b>umbral relativo</b>:
                         </p>
+                        <div class="p-2 rounded-2 small font-monospace mb-2" style="background:#fff3e0;color:#7a4400;">
+                            umbral = max(0.01, media_no_cero × 10%)<br>
+                            <span class="text-muted">Semanas con valor &lt; umbral en los extremos → tratadas como cero estructural</span>
+                        </div>
                         <div class="p-2 rounded-2 small font-monospace" style="background:#fff3e0;color:#7a4400;">
                             Prom./Sem. = Σ consumo / N<sub>activa</sub><br>
-                            <span class="text-muted">donde N<sub>activa</sub> = sem. último consumo − sem. primer consumo + 1</span>
+                            <span class="text-muted">donde N<sub>activa</sub> = sem. último consumo significativo − sem. primer consumo significativo + 1</span>
                         </div>
                         <div class="mt-2 d-flex gap-3 flex-wrap small text-muted">
-                            <span><i class="bi bi-x-circle text-danger me-1"></i><b>Ceros al inicio/fin</b> → excluidos (cambio de insumo)</span>
+                            <span><i class="bi bi-x-circle text-danger me-1"></i><b>Ceros / ínfimos al inicio/fin</b> → excluidos (cambio de insumo o artefacto)</span>
                             <span><i class="bi bi-check-circle text-success me-1"></i><b>Ceros intermedios</b> → incluidos (semana sin uso real)</span>
                         </div>
                     </div>

@@ -291,17 +291,26 @@ try {
     foreach ($conAgg as $idP => $sems) {
         $vals = []; for($s=$numDesde;$s<=$numHasta;$s++) $vals[] = (float)($sems[$s]??0);
 
-        // ── Ventana Activa: elimina ceros estructurales de inicio/fin ──────────
-        // Los ceros leading/trailing se deben a cambios de insumo o migración,
-        // no a demanda real cero. Los ceros interiores sí cuentan (semana sin uso).
+        // ── Ventana Activa con umbral relativo ───────────────────────────────
+        // Paso 1: media de semanas con consumo estrictamente > 0
+        $nonZeroVals = array_filter($vals, fn($v) => $v > 0);
+        if (empty($nonZeroVals)) continue; // Sin consumo real → descartar producto
+        $meanNonZero = array_sum($nonZeroVals) / count($nonZeroVals);
+
+        // Umbral: 10% de la media real (mín. 0.01 para productos de muy bajo volumen).
+        // Valores por debajo del umbral en los extremos se tratan como ceros estructurales
+        // (artefactos de redondeo, conversión, cambio de insumo).
+        $umbral = max(0.01, $meanNonZero * 0.10);
+
+        // Paso 2: detectar ventana activa con umbral relativo
         $firstIdx = null; $lastIdx = null;
         foreach ($vals as $i => $v) {
-            if ($v > 0) {
+            if ($v >= $umbral) {
                 if ($firstIdx === null) $firstIdx = $i;
                 $lastIdx = $i;
             }
         }
-        if ($firstIdx === null) continue; // Sin consumo real en todo el rango → descartar
+        if ($firstIdx === null) continue; // Todo por debajo del umbral → descartar
 
         $nActiva    = $lastIdx - $firstIdx + 1;
         $valsActivo = array_slice($vals, $firstIdx, $nActiva);
