@@ -290,7 +290,24 @@ try {
     $res = []; $sumB = 0;
     foreach ($conAgg as $idP => $sems) {
         $vals = []; for($s=$numDesde;$s<=$numHasta;$s++) $vals[] = (float)($sems[$s]??0);
-        $prom = array_sum($vals) / $nSemanas; $desv = desviacionEstandarMuestra($vals); $semC = $prom + $desv;
+
+        // ── Ventana Activa: elimina ceros estructurales de inicio/fin ──────────
+        // Los ceros leading/trailing se deben a cambios de insumo o migración,
+        // no a demanda real cero. Los ceros interiores sí cuentan (semana sin uso).
+        $firstIdx = null; $lastIdx = null;
+        foreach ($vals as $i => $v) {
+            if ($v > 0) {
+                if ($firstIdx === null) $firstIdx = $i;
+                $lastIdx = $i;
+            }
+        }
+        if ($firstIdx === null) continue; // Sin consumo real en todo el rango → descartar
+
+        $nActiva    = $lastIdx - $firstIdx + 1;
+        $valsActivo = array_slice($vals, $firstIdx, $nActiva);
+        $prom = array_sum($valsActivo) / $nActiva;
+        $desv = desviacionEstandarMuestra($valsActivo);
+        $semC = $prom + $desv;
         $m = $metaPP[$idP]; $cat = $m['cat']; $cP = $cat ? ($cPs[$cat] ?? null) : null;
         $adj = $cP ? (float)$cP['ajuste_demanda'] : 0; $dC = $cP ? (float)$cP['dias_ciclo'] : 0; $dD = $cP ? (float)$cP['dias_desfase'] : 0;
         $diaC = ($semC * (1+$adj)) / 7; $sMin = $diaC * $dSM; $sMax = $diaC * ($dC + $dD + $dSM);

@@ -264,7 +264,8 @@ try {
                             <div class="p-3 bg-light rounded-3 h-100 border">
                                 <h6 class="fw-bold small mb-2"><i class="bi bi-calculator me-1"></i> Demanda Base</h6>
                                 <ul class="small text-muted mb-0">
-                                    <li><b>Consumo Semanal:</b> Promedio + Desv. Estándar (Colchón de seguridad).</li>
+                                    <li><b>Prom. Consumo:</b> Promedio sobre la <b>Ventana Activa</b> (ver abajo).</li>
+                                    <li><b>Cons. Semanal:</b> Promedio + Desv. Estándar (Colchón de seguridad).</li>
                                     <li><b>Ajuste demanda:</b> Afecta directamente al consumo proyectado (+/- %).</li>
                                     <li><b>Consumo Diario:</b> (Semanal × Ajuste) ÷ 7 días.</li>
                                 </ul>
@@ -278,6 +279,27 @@ try {
                                     <li><b>Stock Máx:</b> Capacidad teórica ideal (Consumo Diario × Ciclo + Desfase + Stock Mín).</li>
                                 </ul>
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- Ventana Activa -->
+                    <div class="mb-4 p-3 rounded-3 border" style="background:#fff8f0;border-color:#f0ad4e !important;">
+                        <h6 class="fw-bold small d-flex align-items-center gap-2 mb-2" style="color:#c87800;">
+                            <i class="bi bi-window-sidebar"></i> Ventana Activa — Promedio Inteligente
+                        </h6>
+                        <p class="text-secondary small mb-2">
+                            Cuando un insumo se incorpora a mitad del periodo o es reemplazado, las semanas sin consumo <b>no reflejan demanda real cero</b> — son ceros estructurales. Incluirlas en el promedio subestimaría el pedido.
+                        </p>
+                        <p class="text-secondary small mb-2">
+                            El sistema detecta automáticamente la <b>primera y última semana con consumo real</b> y calcula el promedio solo dentro de ese rango:
+                        </p>
+                        <div class="p-2 rounded-2 small font-monospace" style="background:#fff3e0;color:#7a4400;">
+                            Prom./Sem. = Σ consumo / N<sub>activa</sub><br>
+                            <span class="text-muted">donde N<sub>activa</sub> = sem. último consumo − sem. primer consumo + 1</span>
+                        </div>
+                        <div class="mt-2 d-flex gap-3 flex-wrap small text-muted">
+                            <span><i class="bi bi-x-circle text-danger me-1"></i><b>Ceros al inicio/fin</b> → excluidos (cambio de insumo)</span>
+                            <span><i class="bi bi-check-circle text-success me-1"></i><b>Ceros intermedios</b> → incluidos (semana sin uso real)</span>
                         </div>
                     </div>
 
@@ -301,7 +323,7 @@ try {
                             <div class="col-md-6">
                                 <h7 class="fw-bold text-primary small d-block mb-2">Columnas Principales</h7>
                                 <ul class="list-unstyled small text-muted">
-                                    <li class="mb-1"><b>Prom. Consumo:</b> El promedio de lo consumido por semana en las fechas filtradas.</li>
+                                    <li class="mb-1"><b>Prom. Consumo:</b> Promedio semanal sobre la Ventana Activa (excluye ceros estructurales de inicio/fin).</li>
                                     <li class="mb-1"><b>Desv. Estándar:</b> Qué tanto varía el consumo semana a semana (mide la incertidumbre).</li>
                                     <li class="mb-1"><b>Cons. Semanal:</b> La demanda base "segura" (Promedio + Desviación).</li>
                                     <li class="mb-1"><b>Cap. Base (Final):</b> El Stock Máximo ya ajustado a lo que cabe físicamente en tienda.</li>
