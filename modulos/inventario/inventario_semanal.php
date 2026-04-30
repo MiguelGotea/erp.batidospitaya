@@ -94,7 +94,7 @@ $version = mt_rand(1, 10000);
                                 <tr>
                                     <th>En Unidades</th>
                                     <th>(A) En Presentación Envío</th>
-                                    <th>≡ En Pres. Despacho</th>
+                                    <th class="th-despacho-col">≡ En Pres. Despacho</th>
                                     <th>Stock Mínimo</th>
                                     <th>Stock Máximo (B)</th>
                                     <th>PEDIDO 1</th>
