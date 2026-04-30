@@ -14,6 +14,10 @@
 # ── Excluir TODAS las carpetas uploads/ en cualquier nivel ─────────────────
 **/uploads/
 
+# ── Excluir archivos .sql en cualquier nivel (datos sensibles / dumps de BD) ─
+**/*.sql
+.agent/**/*.sql
+
 # ══════════════════════════════════════════════════════════════════════════════
 # EXCEPCIONES TEMPORALES — Carpetas de fotos que NO se llaman uploads/
 # Estas carpetas almacenan archivos subidos por usuarios pero tienen nombres
