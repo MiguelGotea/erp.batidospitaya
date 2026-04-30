@@ -58,6 +58,7 @@ $semanaSiguiente = obtenerSemanaPorNumero($semanaActual['numero_semana'] + 1);
 // Obtener datos para la vista
 $semanaSeleccionada = $_GET['semana'] ?? $semanaActual['numero_semana'];
 $sucursalSeleccionada = $_GET['sucursal'] ?? ($sucursalesLider[0]['codigo'] ?? null);
+$semana = obtenerSemanaPorNumero($semanaSeleccionada);
 
 // Determinar si estamos en el período de edición (lunes 00:00 a viernes 23:59 hora de Nicaragua)
 $periodoEdicion = false;
@@ -151,9 +152,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // Obtener operarios y horarios si hay sucursal y semana seleccionada
 $operarios = [];
-$semana = null;
 if ($sucursalSeleccionada && $semanaSeleccionada) {
-    $semana = obtenerSemanaPorNumero($semanaSeleccionada);
     if ($semana) {
         // 1. Obtener operarios que YA TIENEN horario guardado para esta semana/sucursal
         $operariosConHorario = obtenerOperariosSucursalConHorario($sucursalSeleccionada, $semana['id']);
@@ -3174,8 +3173,10 @@ function obtenerCategoriaPorDefecto()
                     wrapper.classList.add('disabled-premium');
                     document.getElementById('ts-h-entrada-' + prefix).value = '08';
                     document.getElementById('ts-m-entrada-' + prefix).textContent = '00';
-                    document.getElementById('ts-h-salida-' + prefix).value = '17';
+                    document.getElementById('ts-ap-entrada-' + prefix).textContent = 'AM';
+                    document.getElementById('ts-h-salida-' + prefix).value = '05';
                     document.getElementById('ts-m-salida-' + prefix).textContent = '00';
+                    document.getElementById('ts-ap-salida-' + prefix).textContent = 'PM';
                 }
 
                 horasDisplay.textContent = '0.00';
@@ -4213,6 +4214,10 @@ function obtenerCategoriaPorDefecto()
             const modal = document.getElementById('modalColaboradores');
             const modalContent = document.querySelector('.modal-content');
 
+            // Limpiar listas y mostrar estado de carga
+            document.getElementById('listaAsignados').innerHTML = '<div class="mensaje-vacio"><i class="fas fa-spinner fa-spin"></i> Cargando colaboradores...</div>';
+            document.getElementById('listaSeleccionados').innerHTML = '<div class="mensaje-vacio"><i class="fas fa-spinner fa-spin"></i> Cargando seleccionados...</div>';
+
             modal.style.display = 'block';
 
             // Pequeño delay para que se aplique la animación
@@ -4220,8 +4225,16 @@ function obtenerCategoriaPorDefecto()
                 modalContent.classList.add('show');
             }, 10);
 
-            cargarColaboradoresAsignados();
-            cargarColaboradoresSeleccionados();
+            // Cargar ambos datos en paralelo y esperar a que terminen
+            Promise.all([
+                cargarColaboradoresAsignados(),
+                cargarColaboradoresSeleccionados()
+            ]).then(() => {
+                console.log('Datos del modal cargados correctamente');
+            }).catch(error => {
+                console.error('Error al cargar datos del modal:', error);
+                mostrarNotificacion('Error al cargar datos. Intente de nuevo.', 'error');
+            });
         }
 
         // Cerrar modal automáticamente (sin botón cancelar)
@@ -4249,9 +4262,13 @@ function obtenerCategoriaPorDefecto()
         function cargarColaboradoresAsignados() {
             const sucursal = document.getElementById('sucursal').value;
             const semana = document.getElementById('semana').value;
+            const t = new Date().getTime();
 
-            fetch(`obtener_asignados_sucursal.php?sucursal=${sucursal}&semana=${semana}`)
-                .then(response => response.json())
+            return fetch(`obtener_asignados_sucursal.php?sucursal=${sucursal}&semana=${semana}&t=${t}`)
+                .then(response => {
+                    if (!response.ok) throw new Error('Error al cargar asignados');
+                    return response.json();
+                })
                 .then(data => {
                     colaboradoresAsignados = data;
                     actualizarListaAsignados();
@@ -4266,15 +4283,22 @@ function obtenerCategoriaPorDefecto()
         function cargarColaboradoresSeleccionados() {
             const sucursal = document.getElementById('sucursal').value;
             const semana = document.getElementById('semana').value;
+            const t = new Date().getTime();
 
-            fetch(`obtener_seleccionados_actual.php?sucursal=${sucursal}&semana=${semana}`)
-                .then(response => response.json())
+            return fetch(`obtener_seleccionados_actual.php?sucursal=${sucursal}&semana=${semana}&t=${t}`)
+                .then(response => {
+                    if (!response.ok) throw new Error('Error al cargar seleccionados');
+                    return response.json();
+                })
                 .then(data => {
                     colaboradoresSeleccionados = data;
                     actualizarListaSeleccionados();
+                    // Refrescar asignados para filtrar los que ahora son seleccionados
+                    actualizarListaAsignados();
                 })
                 .catch(error => {
                     console.error('Error:', error);
+                    mostrarNotificacion('Error al cargar seleccionados', 'error');
                 });
         }
 
@@ -4627,27 +4651,39 @@ function obtenerCategoriaPorDefecto()
                         <input type="hidden" name="horarios[${operarioId}][${dia}_salida]" value="17:00" class="salida_${dia}_${operarioId}">
 
                         <div class="time-selectors-row">
-                            <div class="ts-premium-container">
+                            <div class="ts-premium-container" title="Hora de Entrada">
                                 <div class="ts-unit">
                                     <i class="fas fa-chevron-up ts-arrow" onclick="ajustarHoraPremium('${dia}_${operarioId}', 'entrada', 1)"></i>
-                                    <input type="text" class="ts-input" id="ts-h-entrada-${dia}_${operarioId}" maxlength="2" value="08" onchange="validarHoraManual(this, '${dia}_${operarioId}', 'entrada')">
+                                    <input type="text" class="ts-input" id="ts-h-entrada-${dia}_${operarioId}" maxlength="2" value="08" 
+                                        onfocus="this.select()" 
+                                        oninput="validarHoraManual(this, '${dia}_${operarioId}', 'entrada')"
+                                        onblur="formatearHoraBlur(this)">
                                     <i class="fas fa-chevron-down ts-arrow" onclick="ajustarHoraPremium('${dia}_${operarioId}', 'entrada', -1)"></i>
                                 </div>
                                 <span class="ts-sep">:</span>
                                 <div class="ts-unit">
                                     <span class="ts-min-toggle" id="ts-m-entrada-${dia}_${operarioId}" onclick="toggleMinutosPremium('${dia}_${operarioId}', 'entrada')">00</span>
                                 </div>
+                                <div class="ts-unit">
+                                    <span class="ts-ampm-toggle" id="ts-ap-entrada-${dia}_${operarioId}" onclick="toggleAMPM('${dia}_${operarioId}', 'entrada')">AM</span>
+                                </div>
                             </div>
 
-                            <div class="ts-premium-container">
+                            <div class="ts-premium-container" title="Hora de Salida">
                                 <div class="ts-unit">
                                     <i class="fas fa-chevron-up ts-arrow" onclick="ajustarHoraPremium('${dia}_${operarioId}', 'salida', 1)"></i>
-                                    <input type="text" class="ts-input" id="ts-h-salida-${dia}_${operarioId}" maxlength="2" value="17" onchange="validarHoraManual(this, '${dia}_${operarioId}', 'salida')">
+                                    <input type="text" class="ts-input" id="ts-h-salida-${dia}_${operarioId}" maxlength="2" value="05" 
+                                        onfocus="this.select()" 
+                                        oninput="validarHoraManual(this, '${dia}_${operarioId}', 'salida')"
+                                        onblur="formatearHoraBlur(this)">
                                     <i class="fas fa-chevron-down ts-arrow" onclick="ajustarHoraPremium('${dia}_${operarioId}', 'salida', -1)"></i>
                                 </div>
                                 <span class="ts-sep">:</span>
                                 <div class="ts-unit">
                                     <span class="ts-min-toggle" id="ts-m-salida-${dia}_${operarioId}" onclick="toggleMinutosPremium('${dia}_${operarioId}', 'salida')">00</span>
+                                </div>
+                                <div class="ts-unit">
+                                    <span class="ts-ampm-toggle" id="ts-ap-salida-${dia}_${operarioId}" onclick="toggleAMPM('${dia}_${operarioId}', 'salida')">PM</span>
                                 </div>
                             </div>
                         </div>
@@ -4824,12 +4860,14 @@ function obtenerCategoriaPorDefecto()
                 hiddenEntrada.value = "08:00";
                 document.getElementById(`ts-h-entrada-${prefix}`).value = "08";
                 document.getElementById(`ts-m-entrada-${prefix}`).textContent = "00";
+                document.getElementById(`ts-ap-entrada-${prefix}`).textContent = "AM";
             }
 
             if (!hiddenSalida.value || hiddenSalida.value === "") {
                 hiddenSalida.value = "17:00";
-                document.getElementById(`ts-h-salida-${prefix}`).value = "17";
+                document.getElementById(`ts-h-salida-${prefix}`).value = "05";
                 document.getElementById(`ts-m-salida-${prefix}`).textContent = "00";
+                document.getElementById(`ts-ap-salida-${prefix}`).textContent = "PM";
             }
 
             let [hE, mE] = hiddenEntrada.value.split(':').map(Number);
@@ -4850,9 +4888,14 @@ function obtenerCategoriaPorDefecto()
             let newHS = Math.floor(totalMinSalida / 60);
             let newMS = totalMinSalida % 60;
 
+            // Convertir a 12h para la UI
+            let h12 = newHS % 12 || 12;
+            let ampm = newHS < 12 ? 'AM' : 'PM';
+
             // Actualizar UI
-            document.getElementById(`ts-h-salida-${prefix}`).value = newHS.toString().padStart(2, '0');
+            document.getElementById(`ts-h-salida-${prefix}`).value = h12.toString().padStart(2, '0');
             document.getElementById(`ts-m-salida-${prefix}`).textContent = newMS.toString().padStart(2, '0');
+            document.getElementById(`ts-ap-salida-${prefix}`).textContent = ampm;
 
             actualizarHiddenInput(prefix, 'salida');
         }
