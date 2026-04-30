@@ -132,10 +132,9 @@ function renderizarTabla(res, semInv) {
             despChipHtml = `<div class="info-pres-despacho"><i class="bi bi-truck me-1"></i>${despDetalle}</div>`;
         }
 
-        // Valor inicial en Unidades de Control (Fórmula: Unidades + Presentación * Cant_Pres)
+        // Valor inicial en Unidades de Control (Fórmula: Unidades + Presentación * Despacho_Factor)
         const invUnidNum = invUnid !== '' ? parseFloat(invUnid) : 0;
-        const cantPresFactor = p.cant_pres ? parseFloat(p.cant_pres) : 1;
-        const totalControl = invUnidNum + (invPresNum !== null ? invPresNum * cantPresFactor : 0);
+        const totalControl = invUnidNum + (invPresNum !== null ? invPresNum * despFactor : 0);
 
         const calcControl = `
             <span class="despacho-val">${fmt(totalControl)}</span>
@@ -211,9 +210,13 @@ function recalcularFila(tr, target, porcentajes) {
     tr.find('.bg-highlight-p2').text(fmt(p2));
 
     // Recalcular columna En presentación Unidades de Control
-    // Fórmula: En Unidades (base) + (Presentación * Factor de Presentación)
+    // Fórmula: En Unidades sueltas + (Presentación * Factor de Despacho)
     const invUnid = parseFloat(tr.find('.input-inv-unidades').val()) || 0;
-    const totalControl = invUnid + (invPres * cantPPFactor);
+    const despFactor = parseFloat(tr.data('despacho-factor')) || 0;
+    
+    // Si no hay factor de despacho, el factor es 1 (misma unidad)
+    const factorEfectivo = despFactor > 0 ? despFactor : 1;
+    const totalControl = invUnid + (invPres * factorEfectivo);
     
     tr.find('.despacho-val').text(fmt(totalControl));
 }
