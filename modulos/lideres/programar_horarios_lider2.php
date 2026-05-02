@@ -101,7 +101,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $sucursalSeleccionada = $_POST['sucursal'];
 
         // Verificar si el operario ya está en la lista
-        $operarios = obtenerOperariosSucursal($sucursalSeleccionada, $semana['fecha_inicio'], $semana['fecha_fin']);
+        $operarios = obtenerOperariosSucursal($sucursalSeleccionada, $GLOBALS['semana']['fecha_inicio'], $GLOBALS['semana']['fecha_fin']);
         $existe = false;
         foreach ($operarios as $op) {
             if ($op['CodOperario'] == $codOperario) {
@@ -222,13 +222,14 @@ if ($sucursalSeleccionada && $semanaSeleccionada) {
                 FROM AsignacionNivelesCargos anc
                 JOIN NivelesCargos nc ON anc.CodNivelesCargos = nc.CodNivelesCargos
                 WHERE anc.CodOperario IN ($placeholders)
-                AND (anc.es_activo = 1 OR anc.es_activo IS NULL)
-                AND (anc.Fin IS NULL OR anc.Fin >= CURDATE())
-                AND anc.Fecha <= CURDATE()
+                AND (anc.Fin IS NULL OR anc.Fin >= ?)
+                AND anc.Fecha <= ?
                 ORDER BY anc.Fecha DESC
             ");
 
-            $stmt->execute($codigosOperarios);
+            // Pasamos los IDs de los operarios seguidos de las fechas de la semana
+            $params = array_merge($codigosOperarios, [$semana['fecha_inicio'], $semana['fecha_fin']]);
+            $stmt->execute($params);
             $categoriasOperarios = $stmt->fetchAll(PDO::FETCH_GROUP | PDO::FETCH_ASSOC);
 
             // Asignar categorías a los operarios
@@ -382,13 +383,12 @@ function obtenerOperarioPorCodigo($codOperario)
             FROM AsignacionNivelesCargos anc
             JOIN NivelesCargos nc ON anc.CodNivelesCargos = nc.CodNivelesCargos
             WHERE anc.CodOperario = ?
-            AND (anc.es_activo = 1 OR anc.es_activo IS NULL)
-            AND (anc.Fin IS NULL OR anc.Fin >= CURDATE())
-            AND anc.Fecha <= CURDATE()
+            AND (anc.Fin IS NULL OR anc.Fin >= ?)
+            AND anc.Fecha <= ?
             ORDER BY anc.Fecha DESC
             LIMIT 1
         ");
-        $stmtCategoria->execute([$codOperario]);
+        $stmtCategoria->execute([$codOperario, $GLOBALS['semana']['fecha_inicio'], $GLOBALS['semana']['fecha_fin']]);
         $categoria = $stmtCategoria->fetch();
 
         // Asignar categoría (si no tiene, usar por defecto)
@@ -3224,10 +3224,24 @@ function obtenerCategoriaPorDefecto()
 
             // Validar que la hora de salida sea posterior a la de entrada
             if (horaSalida <= horaEntrada) {
+                // Prevenir bucles de alertas si el evento se dispara múltiples veces
+                if (window.isValidatingTime) return;
+                window.isValidatingTime = true;
+
                 alert('La hora de salida debe ser posterior a la de entrada');
+                
+                // Limpiar salida para forzar corrección
                 salida.value = '';
+                
+                // Actualizar displays
                 horasDisplay.textContent = '0.00';
+                const compactDisplay = document.getElementById('hours_compact_' + prefix);
+                if (compactDisplay) compactDisplay.textContent = '0.00';
+                
                 calcularTotalHoras(prefix.split('_')[1]);
+                
+                // Resetear flag con un pequeño delay
+                setTimeout(() => { window.isValidatingTime = false; }, 300);
                 return;
             }
 
@@ -4225,12 +4239,14 @@ function obtenerCategoriaPorDefecto()
                 modalContent.classList.add('show');
             }, 10);
 
-            // Cargar ambos datos en paralelo y esperar a que terminen
+            // Cargar ambos datos en paralelo y esperar a que terminen antes de renderizar
             Promise.all([
                 cargarColaboradoresAsignados(),
                 cargarColaboradoresSeleccionados()
             ]).then(() => {
-                console.log('Datos del modal cargados correctamente');
+                console.log('Datos del modal cargados correctamente, renderizando...');
+                actualizarListaAsignados();
+                actualizarListaSeleccionados();
             }).catch(error => {
                 console.error('Error al cargar datos del modal:', error);
                 mostrarNotificacion('Error al cargar datos. Intente de nuevo.', 'error');
@@ -4271,7 +4287,6 @@ function obtenerCategoriaPorDefecto()
                 })
                 .then(data => {
                     colaboradoresAsignados = data;
-                    actualizarListaAsignados();
                 })
                 .catch(error => {
                     console.error('Error:', error);
@@ -4292,9 +4307,6 @@ function obtenerCategoriaPorDefecto()
                 })
                 .then(data => {
                     colaboradoresSeleccionados = data;
-                    actualizarListaSeleccionados();
-                    // Refrescar asignados para filtrar los que ahora son seleccionados
-                    actualizarListaAsignados();
                 })
                 .catch(error => {
                     console.error('Error:', error);
@@ -4589,6 +4601,15 @@ function obtenerCategoriaPorDefecto()
 
             // Re-inicializar event listeners para los nuevos inputs
             inicializarEventListenersFila(nuevaFila);
+
+            // ✅ INICIALIZAR CÁLCULOS Y AM/PM PARA CADA DÍA
+            ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'].forEach(dia => {
+                const prefix = dia + '_' + colaborador.id;
+                // Forzar actualización de inputs ocultos basándose en los valores por defecto (08:00 AM - 05:00 PM)
+                actualizarHiddenInput(prefix, 'entrada');
+                actualizarHiddenInput(prefix, 'salida');
+                calcularHoras(prefix);
+            });
 
             // Actualizar gráficos
             setTimeout(actualizarGraficoHoras, 100);

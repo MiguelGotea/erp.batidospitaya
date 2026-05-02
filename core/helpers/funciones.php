@@ -360,7 +360,8 @@ function obtenerOperariosSucursal($codSucursal, $fechaInicio, $fechaFin)
             GROUP BY cod_operario
         ) c ON o.CodOperario = c.cod_operario
         WHERE anc.Sucursal = ?
-        -- Solo validamos fechas en AsignacionNivelesCargos
+        -- Validamos que la asignación esté activa durante el rango de la semana
+        AND anc.Fecha <= ? 
         AND (anc.Fin IS NULL OR anc.Fin >= ?)
         AND o.CodOperario NOT IN (
             SELECT DISTINCT anc2.CodOperario 
@@ -368,16 +369,16 @@ function obtenerOperariosSucursal($codSucursal, $fechaInicio, $fechaFin)
             WHERE anc2.CodNivelesCargos = 27
             AND (anc2.Fin IS NULL OR anc2.Fin >= ?)
         )
-        -- FILTRO NUEVO: Solo operarios activos según fecha de liquidación
+        -- FILTRO: Solo operarios activos según fecha de liquidación relativa a la semana
         AND (
             c.fecha_liquidacion IS NULL 
             OR c.fecha_liquidacion = '0000-00-00'
-            OR c.fecha_liquidacion > CURDATE()
+            OR c.fecha_liquidacion >= ?
         )
         GROUP BY o.CodOperario, o.Nombre, o.Apellido
         ORDER BY o.Nombre, o.Apellido
     ");
-    $stmt->execute([$codSucursal, $fechaFin, $fechaFin]);
+    $stmt->execute([$codSucursal, $fechaFin, $fechaInicio, $fechaFin, $fechaInicio]);
     return $stmt->fetchAll();
 }
 
@@ -399,6 +400,7 @@ function obtenerOperariosSucursalConHorario($codSucursal, $idSemana)
             hs.cod_contrato
         FROM Operarios o
         INNER JOIN HorariosSemanales hs ON o.CodOperario = hs.cod_operario
+        INNER JOIN SemanasSistema ss ON hs.id_semana_sistema = ss.id
         INNER JOIN AsignacionNivelesCargos anc ON o.CodOperario = anc.CodOperario
         LEFT JOIN (
             SELECT c1.cod_operario, c1.fecha_liquidacion
@@ -411,18 +413,20 @@ function obtenerOperariosSucursalConHorario($codSucursal, $idSemana)
         ) c ON o.CodOperario = c.cod_operario
         WHERE hs.cod_sucursal = ?
         AND hs.id_semana_sistema = ?
-        AND (anc.Fin IS NULL OR anc.Fin >= CURDATE())
+        -- Validar asignación activa durante la semana seleccionada
+        AND anc.Fecha <= ss.fecha_fin
+        AND (anc.Fin IS NULL OR anc.Fin >= ss.fecha_inicio)
         AND o.CodOperario NOT IN (
             SELECT DISTINCT anc2.CodOperario 
             FROM AsignacionNivelesCargos anc2
             WHERE anc2.CodNivelesCargos = 27
-            AND (anc2.Fin IS NULL OR anc2.Fin >= CURDATE())
+            AND (anc2.Fin IS NULL OR anc2.Fin >= ss.fecha_inicio)
         )
-        -- FILTRO NUEVO: Solo operarios activos según fecha de liquidación
+        -- FILTRO: Solo operarios activos según fecha de liquidación relativa a la semana
         AND (
             c.fecha_liquidacion IS NULL 
             OR c.fecha_liquidacion = '0000-00-00'
-            OR c.fecha_liquidacion > CURDATE()
+            OR c.fecha_liquidacion >= ss.fecha_inicio
         )
         GROUP BY o.CodOperario
         ORDER BY o.Nombre, o.Apellido
@@ -2438,12 +2442,13 @@ function obtenerTodosOperariosConHorario($codSucursal, $idSemana)
                     SELECT 1 FROM AsignacionNivelesCargos anc 
                     WHERE anc.CodOperario = o.CodOperario 
                     AND anc.Sucursal = ?
-                    AND (anc.Fin IS NULL OR anc.Fin >= CURDATE())
+                    AND (anc.Fin IS NULL OR anc.Fin >= ss.fecha_inicio)
                 ) THEN 1
                 ELSE 0
             END as esta_asignado
         FROM Operarios o
         INNER JOIN HorariosSemanales hs ON o.CodOperario = hs.cod_operario
+        INNER JOIN SemanasSistema ss ON hs.id_semana_sistema = ss.id
         LEFT JOIN (
             SELECT cod_operario, MAX(fecha_liquidacion) as fecha_liquidacion
             FROM Contratos
@@ -2451,15 +2456,15 @@ function obtenerTodosOperariosConHorario($codSucursal, $idSemana)
         ) c ON o.CodOperario = c.cod_operario
         WHERE hs.cod_sucursal = ?
         AND hs.id_semana_sistema = ?
-        -- FILTRO NUEVO: Solo operarios activos según fecha de liquidación
+        -- FILTRO: Solo operarios activos según fecha de liquidación relativa a la semana
         AND (
             c.fecha_liquidacion IS NULL 
             OR c.fecha_liquidacion = '0000-00-00'
-            OR c.fecha_liquidacion > CURDATE()
+            OR c.fecha_liquidacion >= ss.fecha_inicio
         )
         ORDER BY o.Nombre, o.Apellido
     ");
-    $stmt->execute([$codSucursal, $codSucursal, $idSemana]);
+    $stmt->execute([$codSucursal, $idSemana]);
     return $stmt->fetchAll();
 }
 

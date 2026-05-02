@@ -142,7 +142,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $sucursalSeleccionada = $_POST['sucursal'];
 
         // Verificar si el operario ya está en la lista
-        $operarios = obtenerOperariosSucursalConHorario($sucursalSeleccionada, $semana['id']);
+        $operarios = obtenerOperariosSucursalConHorario($sucursalSeleccionada, $GLOBALS['semana']['id']);
         $existe = false;
         foreach ($operarios as $op) {
             if ($op['CodOperario'] == $codOperario) {
@@ -183,13 +183,12 @@ if ($sucursalSeleccionada && $semanaSeleccionada) {
                 FROM AsignacionNivelesCargos anc
                 JOIN NivelesCargos nc ON anc.CodNivelesCargos = nc.CodNivelesCargos
                 WHERE anc.CodOperario IN ($placeholders)
-                AND (anc.es_activo = 1 OR anc.es_activo IS NULL)
                 AND (anc.Fin IS NULL OR anc.Fin >= ?)
                 AND anc.Fecha <= ?
                 ORDER BY anc.Fecha DESC
             ");
 
-            $stmt->execute(array_merge($codigosOperarios, [$semana['fecha_fin'], $semana['fecha_fin']]));
+            $stmt->execute(array_merge($codigosOperarios, [$semana['fecha_inicio'], $semana['fecha_fin']]));
             $categoriasOperarios = $stmt->fetchAll(PDO::FETCH_GROUP | PDO::FETCH_ASSOC);
 
             // Asignar categorías a los operarios (tomará la más reciente por ORDER BY Fecha DESC)
@@ -294,11 +293,12 @@ function obtenerOperarioPorCodigo($codOperario)
         FROM Operarios o
         WHERE o.CodOperario = ? 
         AND o.Operativo = 1
-        AND (o.Fin IS NULL OR o.Fin >= CURDATE())
+        AND (o.Fin IS NULL OR o.Fin >= ?)
         AND o.CodOperario NOT IN (566, 567, 568, 569, 570, 571, 572, 573, 574, 575, 576, 590)
     ");
 
-    $stmt->execute([$codOperario]);
+    // Usamos la fecha de inicio de la semana seleccionada para validar la vigencia del operario
+    $stmt->execute([$codOperario, $GLOBALS['semana']['fecha_inicio']]);
     return $stmt->fetch();
 }
 
@@ -2044,12 +2044,47 @@ function obtenerCategoriasDesdeBD()
 
                                         foreach ($dias as $dia):
                                             // Usar el horario de operaciones si existe, sino usar el del líder, sino valores por defecto
-                                            $estado = $horarioOperaciones ? $horarioOperaciones["{$dia}_estado"] : ($horarioLider["{$dia}_estado"] ?? 'Activo');
-                                            $comentario = $horarioOperaciones ? $horarioOperaciones["{$dia}_comentario"] : ($horarioLider["{$dia}_comentario"] ?? '');
-                                            $entrada = $horarioOperaciones ? $horarioOperaciones["{$dia}_entrada"] : ($horarioLider["{$dia}_entrada"] ?? '08:00');
-                                            $salida = $horarioOperaciones ? $horarioOperaciones["{$dia}_salida"] : ($horarioLider["{$dia}_salida"] ?? '17:00');
-                                            $horasDia = $horarioOperaciones ? $horarioOperaciones["{$dia}_horas"] : ($horarioLider["{$dia}_horas"] ?? 0);
-                                            $sucursalExterna = $horarioOperaciones ? $horarioOperaciones["{$dia}_sucursal_externa"] : ($horarioLider["{$dia}_sucursal_externa"] ?? null);
+                                            $estado = 'Activo';
+                                            if ($horarioOperaciones && isset($horarioOperaciones["{$dia}_estado"])) {
+                                                $estado = $horarioOperaciones["{$dia}_estado"];
+                                            } elseif ($horarioLider && isset($horarioLider["{$dia}_estado"])) {
+                                                $estado = $horarioLider["{$dia}_estado"];
+                                            }
+
+                                            $comentario = '';
+                                            if ($horarioOperaciones && isset($horarioOperaciones["{$dia}_comentario"])) {
+                                                $comentario = $horarioOperaciones["{$dia}_comentario"];
+                                            } elseif ($horarioLider && isset($horarioLider["{$dia}_comentario"])) {
+                                                $comentario = $horarioLider["{$dia}_comentario"];
+                                            }
+
+                                            $entrada = '08:00';
+                                            if ($horarioOperaciones && isset($horarioOperaciones["{$dia}_entrada"])) {
+                                                $entrada = $horarioOperaciones["{$dia}_entrada"];
+                                            } elseif ($horarioLider && isset($horarioLider["{$dia}_entrada"])) {
+                                                $entrada = $horarioLider["{$dia}_entrada"];
+                                            }
+
+                                            $salida = '17:00';
+                                            if ($horarioOperaciones && isset($horarioOperaciones["{$dia}_salida"])) {
+                                                $salida = $horarioOperaciones["{$dia}_salida"];
+                                            } elseif ($horarioLider && isset($horarioLider["{$dia}_salida"])) {
+                                                $salida = $horarioLider["{$dia}_salida"];
+                                            }
+
+                                            $horasDia = 0;
+                                            if ($horarioOperaciones && isset($horarioOperaciones["{$dia}_horas"])) {
+                                                $horasDia = $horarioOperaciones["{$dia}_horas"];
+                                            } elseif ($horarioLider && isset($horarioLider["{$dia}_horas"])) {
+                                                $horasDia = $horarioLider["{$dia}_horas"];
+                                            }
+
+                                            $sucursalExterna = null;
+                                            if ($horarioOperaciones && isset($horarioOperaciones["{$dia}_sucursal_externa"])) {
+                                                $sucursalExterna = $horarioOperaciones["{$dia}_sucursal_externa"];
+                                            } elseif ($horarioLider && isset($horarioLider["{$dia}_sucursal_externa"])) {
+                                                $sucursalExterna = $horarioLider["{$dia}_sucursal_externa"];
+                                            }
                                             
                                             // Asegurar valores mínimos si vienen vacíos
                                             if (!$estado) $estado = 'Activo';
@@ -3100,10 +3135,24 @@ function obtenerCategoriasDesdeBD()
 
         // Validar que la hora de salida sea posterior a la de entrada
         if (horaSalida <= horaEntrada) {
+            // Prevenir bucles de alertas si el evento se dispara múltiples veces
+            if (window.isValidatingTime) return;
+            window.isValidatingTime = true;
+
             alert('La hora de salida debe ser posterior a la de entrada');
+            
+            // Limpiar salida para forzar corrección
             salida.value = '';
+            
+            // Actualizar displays
             horasDisplay.textContent = '0.00';
+            const compactDisplay = document.getElementById('hours_compact_' + prefix);
+            if (compactDisplay) compactDisplay.textContent = '0.00';
+            
             calcularTotalHoras(prefix.split('_')[1]);
+            
+            // Resetear flag con un pequeño delay
+            setTimeout(() => { window.isValidatingTime = false; }, 300);
             return;
         }
 
