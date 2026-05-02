@@ -409,7 +409,6 @@ function obtenerCategoriasOperarios($codigosOperarios)
         FROM AsignacionNivelesCargos anc
         JOIN NivelesCargos nc ON anc.CodNivelesCargos = nc.CodNivelesCargos
         WHERE anc.CodOperario IN ($placeholders)
-        AND (anc.es_activo = 1 OR anc.es_activo IS NULL)
         AND (anc.Fin IS NULL OR anc.Fin >= CURDATE())
         AND anc.Fecha <= CURDATE()
         ORDER BY anc.Fecha DESC
