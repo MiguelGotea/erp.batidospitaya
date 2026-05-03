@@ -16,6 +16,10 @@ if (!tienePermiso('historial_pedidos_globales', 'vista', $cargoOperario)) {
 
 // Verificar si tiene permiso para ver montos
 $puedeVerMontos = tienePermiso('historial_pedidos_globales', 'detalle_montos', $cargoOperario);
+
+// Verificar permisos de Bot Atención al Cliente
+$puedeAnalizarBot  = tienePermiso('historial_pedidos_globales', 'analizar_atencion_cliente_bot', $cargoOperario);
+$puedeActivarWorker = tienePermiso('historial_pedidos_globales', 'activar_bot_atencion_cliente', $cargoOperario);
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -52,6 +56,24 @@ $puedeVerMontos = tienePermiso('historial_pedidos_globales', 'detalle_montos', $
                                 <span class="total-label">Total Productos:</span>
                                 <span class="total-value" id="totalProductos">0</span>
                             </div>
+
+                            <?php if ($puedeActivarWorker): ?>
+                            <!-- Worker Bot Atención al Cliente -->
+                            <div class="ms-auto d-flex align-items-center gap-3">
+                                <div class="worker-status-wrap" id="workerStatusWrap">
+                                    <span class="worker-dot" id="workerDot"></span>
+                                    <span class="worker-status-label" id="workerStatusLabel">Cargando...</span>
+                                </div>
+                                <button class="btn-worker" id="btnWorker" onclick="toggleWorker()" disabled>
+                                    <span class="btn-worker-icon" id="btnWorkerIcon"><i class="bi bi-robot"></i></span>
+                                    <span id="btnWorkerText">Bot Atención</span>
+                                </button>
+                                <div class="worker-cola-stats" id="workerColaStats" style="display:none">
+                                    <span id="statPendientes">0</span> pendientes ·
+                                    <span id="statCompletados">0</span> analizados
+                                </div>
+                            </div>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </div>
@@ -107,6 +129,9 @@ $puedeVerMontos = tienePermiso('historial_pedidos_globales', 'detalle_montos', $
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
                                 <?php endif; ?>
+                                <?php if ($puedeAnalizarBot): ?>
+                                <th class="col-atencion-ia">Atención IA</th>
+                                <?php endif; ?>
                                 <th data-column="Modalidad" data-type="list">
                                     Modalidad 
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
@@ -140,8 +165,10 @@ $puedeVerMontos = tienePermiso('historial_pedidos_globales', 'detalle_montos', $
     </div>
 
     <script>
-        // Pasar permiso de montos a JavaScript
-        const puedeVerMontos = <?php echo $puedeVerMontos ? 'true' : 'false'; ?>;
+        // Pasar permisos a JavaScript
+        const puedeVerMontos      = <?php echo $puedeVerMontos      ? 'true' : 'false'; ?>;
+        const puedeAnalizarBot    = <?php echo $puedeAnalizarBot    ? 'true' : 'false'; ?>;
+        const puedeActivarWorker  = <?php echo $puedeActivarWorker  ? 'true' : 'false'; ?>;
     </script>
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
