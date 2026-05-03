@@ -129,8 +129,6 @@ $puedeActivarWorker = tienePermiso('historial_pedidos_globales', 'activar_bot_at
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
                                 <?php endif; ?>
-                                <?php if ($puedeAnalizarBot): ?>
-                                <th class="col-atencion-ia">Atención IA</th>
                                 <?php endif; ?>
                                 <th data-column="Modalidad" data-type="list">
                                     Modalidad 
@@ -140,6 +138,9 @@ $puedeActivarWorker = tienePermiso('historial_pedidos_globales', 'activar_bot_at
                                     Anulado 
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
+                                <?php if ($puedeAnalizarBot): ?>
+                                <th class="col-atencion-ia">Atención IA</th>
+                                <?php endif; ?>
                             </tr>
                         </thead>
                         <tbody id="tablaVentasBody">

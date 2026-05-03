@@ -66,6 +66,10 @@ function cargarDatos() {
                 renderizarPaginacion(response.total_registros);
                 actualizarIndicadoresFiltros();
                 actualizarTotales(response.totales);
+                // Cargar estados IA existentes para los pedidos visibles
+                if (puedeAnalizarBot) {
+                    cargarEstadosIaBatch(response.datos);
+                }
             } else {
                 alert('Error: ' + response.message);
                 mostrarMensajeVacio('No se encontraron datos');
@@ -91,6 +95,55 @@ function actualizarTotales(totales) {
         }
         $('#totalProductos').text('0');
     }
+}
+
+/**
+ * Carga los estados IA de todos los pedidos visibles en una sola consulta.
+ * Actualiza el cache y los badges en la tabla sin requerir acción del usuario.
+ */
+function cargarEstadosIaBatch(datos) {
+    if (!datos || datos.length === 0) return;
+
+    // Construir lista única de pedidos visibles con su local
+    const pedidos = [];
+    const vistas  = new Set();
+    datos.forEach(row => {
+        const local = row.local || '';
+        const clave = `${row.CodPedido}_${local}`;
+        if (!vistas.has(clave) && row.CodPedido && local) {
+            vistas.add(clave);
+            pedidos.push({ cod_pedido: parseInt(row.CodPedido), local: local });
+        }
+    });
+
+    if (pedidos.length === 0) return;
+
+    $.ajax({
+        url: 'ajax/hikvision_estados_batch.php',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ pedidos }),
+        dataType: 'json',
+        success: function (resp) {
+            if (!resp.success || !resp.estados) return;
+
+            // Actualizar cache y badges de cada pedido que tenga estado
+            Object.entries(resp.estados).forEach(([clave, info]) => {
+                iaEstadoCache[clave] = info;
+
+                const [codPedido, local] = clave.split('_');
+                const $td = $(`.td-atencion-ia[data-pedido="${codPedido}"][data-local="${local}"]`);
+                if ($td.length) {
+                    $td.html(renderBadgeIa(info, codPedido, local));
+                }
+
+                // Si está pendiente/procesando, iniciar polling
+                if (info.estado === 'pendiente' || info.estado === 'procesando') {
+                    iniciarPollingFila(codPedido, local);
+                }
+            });
+        }
+    });
 }
 
 // Renderizar tabla
