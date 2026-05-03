@@ -136,6 +136,7 @@ $puedeActivarWorker = tienePermiso('historial_pedidos_globales', 'activar_bot_at
                                     Modalidad
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
+
                                 <th data-column="Anulado" data-type="list">
                                     Anulado
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
