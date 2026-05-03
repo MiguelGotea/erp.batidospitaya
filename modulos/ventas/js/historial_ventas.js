@@ -90,7 +90,7 @@ function renderizarTabla(datos) {
     tbody.empty();
 
     if (datos.length === 0) {
-        const colspan = puedeVerMontos ? 14 : 13;
+        const colspan = (puedeVerMontos ? 15 : 14) + (puedeAnalizarBot ? 1 : 0);
         mostrarMensajeVacio('No se encontraron registros', colspan);
         return;
     }
@@ -134,6 +134,9 @@ function renderizarTabla(datos) {
             : '<span class="badge-activo">NO</span>';
         tr.append(`<td>${badgeAnulado}</td>`);
 
+        // Columna Atención IA (al final)
+        renderCeldaIa(tr, row);
+
         tbody.append(tr);
     });
 }
@@ -142,7 +145,7 @@ function renderizarTabla(datos) {
 function mostrarMensajeVacio(mensaje, colspan = null) {
     const tbody = $('#tablaVentasBody');
     if (!colspan) {
-        colspan = puedeVerMontos ? 14 : 13;
+        colspan = (puedeVerMontos ? 15 : 14) + (puedeAnalizarBot ? 1 : 0);
     }
     tbody.html(`
         <tr>
@@ -596,3 +599,249 @@ function formatearHora(hora) {
     if (!hora) return '-';
     return hora.substring(0, 5);
 }
+
+// ═══════════════════════════════════════════════════════
+//  Columna Atención IA — renderizado en tabla
+// ═══════════════════════════════════════════════════════
+
+// Cache de estados IA por pedido (cod_pedido_local → estado)
+const iaEstadoCache = {};
+
+// Agrega la celda de Atención IA a una fila
+function renderCeldaIa(tr, row) {
+    if (!puedeAnalizarBot) return;
+
+    const clave = `${row.CodPedido}_${row.local || row.CodLocal || ''}`;
+    const local  = row.local || row.CodLocal || '';
+    const td = $('<td class="td-atencion-ia">');
+
+    const cached = iaEstadoCache[clave];
+
+    if (!cached) {
+        // Sin info aún: mostrar botón analizar
+        td.html(renderBtnAnalizar(row.CodPedido, local, row.Anulado));
+    } else {
+        td.html(renderBadgeIa(cached, row.CodPedido, local));
+    }
+
+    tr.append(td);
+}
+
+function renderBtnAnalizar(codPedido, local, anulado) {
+    if (parseInt(anulado) !== 0) {
+        return '<span class="text-muted" style="font-size:11px;">—</span>';
+    }
+    return `<button class="btn-analizar-ia"
+                id="btn-ia-${codPedido}-${local}"
+                onclick="analizarPedido(${codPedido}, '${local}', this)">
+                <i class="bi bi-camera-video"></i> Analizar
+            </button>`;
+}
+
+function renderBadgeIa(info, codPedido, local) {
+    const estado = info.estado;
+    const url    = `atencion_cliente_detalle.php?cod_pedido=${codPedido}&local=${local}`;
+
+    if (estado === 'pendiente') {
+        return `<span class="badge-ia badge-ia-pendiente">⏳ En cola</span>`;
+    }
+    if (estado === 'procesando') {
+        return `<span class="badge-ia badge-ia-procesando">⚙️ Analizando</span>`;
+    }
+    if (estado === 'completado' && info.promedio !== null) {
+        const prom = parseFloat(info.promedio).toFixed(1);
+        return `<a href="${url}" target="_blank" class="badge-ia badge-ia-completado">
+                    ✅ <span class="badge-ia-score">${prom}</span>/10
+                </a>`;
+    }
+    if (estado === 'completado') {
+        return `<a href="${url}" target="_blank" class="badge-ia badge-ia-completado">✅ Ver</a>`;
+    }
+    if (estado === 'fallido') {
+        return `<span class="badge-ia badge-ia-fallido" title="Error en análisis">❌ Error</span>`;
+    }
+    return `<button class="btn-analizar-ia"
+                onclick="analizarPedido(${codPedido}, '${local}', this)">
+                <i class="bi bi-camera-video"></i> Analizar
+            </button>`;
+}
+
+// Encolar un pedido individual
+function analizarPedido(codPedido, local, btn) {
+    if (!codPedido || !local) return;
+
+    const $btn = $(btn);
+    $btn.prop('disabled', true).html('<i class="bi bi-hourglass-split"></i> Enviando...');
+
+    $.ajax({
+        url: 'ajax/hikvision_encolar_pedido.php',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ cod_pedido: codPedido, local: local }),
+        dataType: 'json',
+        success: function (resp) {
+            if (resp.success) {
+                const clave = `${codPedido}_${local}`;
+                iaEstadoCache[clave] = { estado: 'pendiente', promedio: null };
+
+                // Actualizar la celda directamente
+                $btn.closest('td').html(renderBadgeIa({ estado: 'pendiente', promedio: null }, codPedido, local));
+
+                // Iniciar polling para esta fila
+                iniciarPollingFila(codPedido, local);
+
+                if (!resp.encolado) {
+                    // Ya estaba en cola
+                    iniciarPollingFila(codPedido, local);
+                }
+            } else {
+                $btn.prop('disabled', false).html('<i class="bi bi-camera-video"></i> Analizar');
+                alert('Error: ' + (resp.message || 'No se pudo encolar el pedido'));
+            }
+        },
+        error: function () {
+            $btn.prop('disabled', false).html('<i class="bi bi-camera-video"></i> Analizar');
+            alert('Error de conexión al encolar el pedido');
+        }
+    });
+}
+
+// Polling individual para una fila
+const _pollingTimers = {};
+
+function iniciarPollingFila(codPedido, local) {
+    const clave = `${codPedido}_${local}`;
+    if (_pollingTimers[clave]) return; // ya está corriendo
+
+    function poll() {
+        $.ajax({
+            url: `ajax/hikvision_estado_pedido.php?cod_pedido=${codPedido}&local=${encodeURIComponent(local)}`,
+            method: 'GET',
+            dataType: 'json',
+            success: function (resp) {
+                if (!resp.success) return;
+
+                const estado = resp.estado;
+                const promedio = resp.analisis ? resp.analisis.promedio : null;
+
+                iaEstadoCache[clave] = { estado, promedio };
+
+                // Actualizar celda en la tabla
+                const $td = $(`#btn-ia-${codPedido}-${local}`).closest('td');
+                if (!$td.length) {
+                    // Buscar por contenido de la fila
+                }
+                // Actualizar todas las celdas de esta fila en el DOM
+                $(`.td-atencion-ia[data-pedido="${codPedido}"][data-local="${local}"]`)
+                    .html(renderBadgeIa({ estado, promedio }, codPedido, local));
+
+                if (estado === 'completado' || estado === 'fallido' || estado === 'sin_cola') {
+                    clearInterval(_pollingTimers[clave]);
+                    delete _pollingTimers[clave];
+                }
+            }
+        });
+    }
+
+    _pollingTimers[clave] = setInterval(poll, 8000);
+    poll(); // primera vez inmediata
+}
+
+// ═══════════════════════════════════════════════════════
+//  Worker Bot — Estado y toggle
+// ═══════════════════════════════════════════════════════
+
+let _workerActivo    = false;
+let _workerPolling   = null;
+
+function cargarEstadoWorker() {
+    if (!puedeActivarWorker) return;
+
+    $.ajax({
+        url: 'ajax/hikvision_worker_control.php',
+        method: 'GET',
+        dataType: 'json',
+        success: function (resp) {
+            if (!resp.success) return;
+            actualizarUIWorker(resp);
+            $('#btnWorker').prop('disabled', false);
+        },
+        error: function () {
+            $('#workerStatusLabel').text('Sin conexión');
+        }
+    });
+}
+
+function actualizarUIWorker(resp) {
+    _workerActivo = resp.worker_habilitado;
+
+    const $dot    = $('#workerDot');
+    const $label  = $('#workerStatusLabel');
+    const $btn    = $('#btnWorker');
+    const $text   = $('#btnWorkerText');
+    const $stats  = $('#workerColaStats');
+    const cola    = resp.cola_hoy || {};
+
+    if (_workerActivo) {
+        $dot.addClass('activo').removeClass('detenido');
+        $label.text(resp.worker_procesando ? 'Procesando...' : 'Worker activo');
+        $btn.addClass('activo');
+        $text.text('Detener Bot');
+    } else {
+        $dot.removeClass('activo').addClass('detenido');
+        $label.text('Worker detenido');
+        $btn.removeClass('activo');
+        $text.text('Activar Bot');
+    }
+
+    if (cola.total > 0) {
+        $stats.show();
+        $('#statPendientes').text(cola.pendientes || 0);
+        $('#statCompletados').text(cola.completados || 0);
+    } else {
+        $stats.hide();
+    }
+}
+
+function toggleWorker() {
+    if (!puedeActivarWorker) return;
+
+    const action = _workerActivo ? 'stop' : 'start';
+    const $btn   = $('#btnWorker');
+
+    $btn.prop('disabled', true);
+    $('#btnWorkerText').text(action === 'start' ? 'Activando...' : 'Deteniendo...');
+
+    $.ajax({
+        url: 'ajax/hikvision_worker_control.php',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ action }),
+        dataType: 'json',
+        success: function (resp) {
+            if (resp.success) {
+                actualizarUIWorker(resp);
+                if (action === 'start' && resp.encolados_hoy > 0) {
+                    // Recargar la tabla para mostrar badges de pendiente
+                    cargarDatos();
+                }
+            } else {
+                alert('Error: ' + (resp.message || 'No se pudo cambiar el estado del worker'));
+            }
+            $btn.prop('disabled', false);
+        },
+        error: function () {
+            alert('Error de conexión al cambiar el estado del worker');
+            $btn.prop('disabled', false);
+            $('#btnWorkerText').text(_workerActivo ? 'Detener Bot' : 'Activar Bot');
+        }
+    });
+}
+
+// Iniciar polling del worker cada 15s
+$(document).ready(function () {
+    if (puedeActivarWorker) {
+        cargarEstadoWorker();
+        setInterval(cargarEstadoWorker, 15000);
+    }
+});

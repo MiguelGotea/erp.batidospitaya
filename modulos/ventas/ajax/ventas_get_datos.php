@@ -134,6 +134,7 @@ try {
     $sql = "SELECT SQL_CALC_FOUND_ROWS
                 v.Sucursal_Nombre,
                 v.CodPedido,
+                v.local,
                 v.Fecha,
                 v.Hora,
                 v.CodCliente,

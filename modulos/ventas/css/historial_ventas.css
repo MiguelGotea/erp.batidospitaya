@@ -467,3 +467,78 @@ body {
         padding: 10px 8px;
     }
 }
+
+/* ═══════════════════════════════════════════════════
+   Bot Atención al Cliente — Worker Controls
+═══════════════════════════════════════════════════ */
+.worker-status-wrap {
+    display: flex; align-items: center; gap: 7px;
+    font-size: 13px; font-weight: 500; color: #495057;
+}
+.worker-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: #adb5bd; display: inline-block;
+    flex-shrink: 0; transition: background 0.4s;
+}
+.worker-dot.activo {
+    background: #28a745;
+    box-shadow: 0 0 0 0 rgba(40,167,69,0.5);
+    animation: pulse-green 1.8s infinite;
+}
+@keyframes pulse-green {
+    0%   { box-shadow: 0 0 0 0   rgba(40,167,69,0.55); }
+    70%  { box-shadow: 0 0 0 8px rgba(40,167,69,0);    }
+    100% { box-shadow: 0 0 0 0   rgba(40,167,69,0);    }
+}
+.btn-worker {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 8px 18px; border-radius: 8px; border: none;
+    font-size: 13px; font-weight: 600; cursor: pointer;
+    transition: all 0.25s; background: #0E544C; color: white;
+    white-space: nowrap; box-shadow: 0 2px 8px rgba(14,84,76,0.3);
+}
+.btn-worker:hover:not(:disabled) {
+    background: #1a7a6e; transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(14,84,76,0.35);
+}
+.btn-worker:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+.btn-worker.activo   { background: #dc3545; box-shadow: 0 2px 8px rgba(220,53,69,0.3); }
+.btn-worker.activo:hover:not(:disabled) { background: #c82333; }
+.worker-cola-stats { font-size: 12px; color: #6c757d; white-space: nowrap; }
+
+/* ═══════════════════════════════════════════════════
+   Columna Atención IA
+═══════════════════════════════════════════════════ */
+.col-atencion-ia  { white-space: nowrap; text-align: center; min-width: 130px; }
+.td-atencion-ia   { text-align: center; vertical-align: middle; }
+.btn-analizar-ia {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 4px 10px; font-size: 11px; font-weight: 600;
+    border: none; border-radius: 6px; cursor: pointer;
+    background: #0E544C; color: white; transition: all 0.2s; white-space: nowrap;
+}
+.btn-analizar-ia:hover        { background: #1a7a6e; transform: translateY(-1px); }
+.btn-analizar-ia:disabled     { opacity: 0.5; cursor: not-allowed; transform: none; }
+.badge-ia {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 10px; border-radius: 12px;
+    font-size: 11px; font-weight: 600; white-space: nowrap;
+}
+.badge-ia-pendiente  { background: rgba(255,193,7,0.15);  color: #856404; border: 1px solid rgba(255,193,7,0.4); }
+.badge-ia-procesando {
+    background: rgba(13,110,253,0.1); color: #0a58ca;
+    border: 1px solid rgba(13,110,253,0.3);
+    animation: ia-blink 1.5s ease infinite;
+}
+@keyframes ia-blink { 0%,100%{opacity:1} 50%{opacity:0.6} }
+.badge-ia-completado {
+    background: rgba(25,135,84,0.12); color: #146c43;
+    border: 1px solid rgba(25,135,84,0.3);
+    cursor: pointer; text-decoration: none;
+}
+.badge-ia-completado:hover { background: rgba(25,135,84,0.22); color: #0f5132; }
+.badge-ia-fallido { background: rgba(220,53,69,0.1); color: #842029; border: 1px solid rgba(220,53,69,0.3); }
+.badge-ia-score {
+    font-size: 12px; font-weight: 800;
+    background: rgba(255,255,255,0.5); border-radius: 4px; padding: 0 4px;
+}
