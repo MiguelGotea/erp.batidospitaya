@@ -45,7 +45,7 @@ try {
             exit;
         }
 
-        // 1. Cambiar el flag del worker en BD
+        // Llamar a worker_status.php — maneja flag + encolar día en un solo request
         $ch = curl_init('https://api.batidospitaya.com/api/hikvision/worker_status.php');
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
@@ -58,7 +58,7 @@ try {
                 'Content-Type: application/json',
                 'X-WSP-Token: a8f5e2d9c4b7a1e6f3d8c5b2a9e6d3f0c7a4b1e8d5c2a9f6e3d0c7b4a1e8f5d2',
             ],
-            CURLOPT_TIMEOUT        => 15,
+            CURLOPT_TIMEOUT        => 30, // más largo porque incluye encolado
             CURLOPT_SSL_VERIFYPEER => true,
         ]);
         $resp     = curl_exec($ch);
@@ -71,38 +71,18 @@ try {
             exit;
         }
 
-        $apiResp = json_decode($resp, true);
-
-        // 2. Si se activa, encolar el día completo de todas las sucursales
-        $encolados = 0;
-        if ($action === 'start') {
-            $ch2 = curl_init('https://api.batidospitaya.com/api/hikvision/encolar_dia_completo.php');
-            curl_setopt_array($ch2, [
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_POST           => true,
-                CURLOPT_POSTFIELDS     => json_encode(['fecha' => date('Y-m-d')]),
-                CURLOPT_HTTPHEADER => [
-                    'Content-Type: application/json',
-                    'X-WSP-Token: a8f5e2d9c4b7a1e6f3d8c5b2a9e6d3f0c7a4b1e8d5c2a9f6e3d0c7b4a1e8f5d2',
-                ],
-                CURLOPT_TIMEOUT        => 30,
-                CURLOPT_SSL_VERIFYPEER => true,
-            ]);
-            $resp2 = curl_exec($ch2);
-            curl_close($ch2);
-
-            $cola = json_decode($resp2, true);
-            $encolados = $cola['encolados'] ?? 0;
-        }
+        $apiResp   = json_decode($resp, true);
+        $encolados = $apiResp['encolados_hoy'] ?? 0;
 
         echo json_encode([
             'success'           => true,
             'action'            => $action,
             'worker_habilitado' => $apiResp['worker_habilitado'] ?? ($action === 'start'),
             'encolados_hoy'     => $encolados,
-            'mensaje'           => $action === 'start'
-                ? "Worker activado. $encolados pedidos encolados para análisis hoy."
-                : 'Worker detenido. No procesará nuevos pedidos.',
+            'mensaje'           => $apiResp['mensaje']
+                ?? ($action === 'start'
+                    ? "Worker activado. $encolados pedido(s) de hoy encolados."
+                    : 'Worker detenido. No procesará nuevos pedidos.'),
         ]);
         exit;
     }
