@@ -7,6 +7,9 @@ let panelFiltroAbierto = null;
 let totalRegistros = 0;
 let scrollTopInicial = 0;
 
+// Polling timers IA (declarado aquí para que cargarDatos pueda limpiarlos)
+const _pollingTimers = {};
+
 // Inicializar
 $(document).ready(function () {
     cargarDatos();
@@ -40,6 +43,12 @@ $(document).ready(function () {
 
 // Cargar datos
 function cargarDatos() {
+    // Limpiar todos los polling de IA activos antes de recargar la tabla
+    Object.keys(_pollingTimers).forEach(clave => {
+        clearInterval(_pollingTimers[clave]);
+        delete _pollingTimers[clave];
+    });
+
     $.ajax({
         url: 'ajax/ventas_get_datos.php',
         method: 'POST',
@@ -611,17 +620,25 @@ const iaEstadoCache = {};
 function renderCeldaIa(tr, row) {
     if (!puedeAnalizarBot) return;
 
-    const clave = `${row.CodPedido}_${row.local || row.CodLocal || ''}`;
     const local  = row.local || row.CodLocal || '';
-    const td = $('<td class="td-atencion-ia">');
+    const clave  = `${row.CodPedido}_${local}`;
+
+    // data-pedido y data-local permiten que el polling encuentre y actualice la celda
+    const td = $('<td class="td-atencion-ia">').attr({
+        'data-pedido': row.CodPedido,
+        'data-local' : local
+    });
 
     const cached = iaEstadoCache[clave];
 
     if (!cached) {
-        // Sin info aún: mostrar botón analizar
         td.html(renderBtnAnalizar(row.CodPedido, local, row.Anulado));
     } else {
         td.html(renderBadgeIa(cached, row.CodPedido, local));
+        // Si estaba pendiente/procesando, reanudar polling
+        if (cached.estado === 'pendiente' || cached.estado === 'procesando') {
+            iniciarPollingFila(row.CodPedido, local);
+        }
     }
 
     tr.append(td);
@@ -684,16 +701,13 @@ function analizarPedido(codPedido, local, btn) {
                 const clave = `${codPedido}_${local}`;
                 iaEstadoCache[clave] = { estado: 'pendiente', promedio: null };
 
-                // Actualizar la celda directamente
-                $btn.closest('td').html(renderBadgeIa({ estado: 'pendiente', promedio: null }, codPedido, local));
+                // Actualizar la celda y agregar atributos data para el polling
+                const $td = $btn.closest('td');
+                $td.attr({ 'data-pedido': codPedido, 'data-local': local });
+                $td.html(renderBadgeIa({ estado: 'pendiente', promedio: null }, codPedido, local));
 
-                // Iniciar polling para esta fila
+                // Iniciar polling (no duplicar si ya estaba corriendo)
                 iniciarPollingFila(codPedido, local);
-
-                if (!resp.encolado) {
-                    // Ya estaba en cola
-                    iniciarPollingFila(codPedido, local);
-                }
             } else {
                 $btn.prop('disabled', false).html('<i class="bi bi-camera-video"></i> Analizar');
                 alert('Error: ' + (resp.message || 'No se pudo encolar el pedido'));
@@ -705,9 +719,6 @@ function analizarPedido(codPedido, local, btn) {
         }
     });
 }
-
-// Polling individual para una fila
-const _pollingTimers = {};
 
 function iniciarPollingFila(codPedido, local) {
     const clave = `${codPedido}_${local}`;
@@ -726,15 +737,11 @@ function iniciarPollingFila(codPedido, local) {
 
                 iaEstadoCache[clave] = { estado, promedio };
 
-                // Actualizar celda en la tabla
-                const $td = $(`#btn-ia-${codPedido}-${local}`).closest('td');
-                if (!$td.length) {
-                    // Buscar por contenido de la fila
-                }
-                // Actualizar todas las celdas de esta fila en el DOM
+                // Actualizar celda en el DOM usando data attributes
                 $(`.td-atencion-ia[data-pedido="${codPedido}"][data-local="${local}"]`)
                     .html(renderBadgeIa({ estado, promedio }, codPedido, local));
 
+                // Detener polling si ya terminó
                 if (estado === 'completado' || estado === 'fallido' || estado === 'sin_cola') {
                     clearInterval(_pollingTimers[clave]);
                     delete _pollingTimers[clave];
