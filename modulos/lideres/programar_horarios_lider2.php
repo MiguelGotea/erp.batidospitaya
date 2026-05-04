@@ -27,10 +27,11 @@ if (!verificarAccesoCargo([5, 43, 16]) && !(isset($_SESSION['usuario_rol']) && $
     exit();
 }
 
-// Obtenemos el cargo principal usando la función de funciones.php
+// Obtenemos el cargo principal del usuario para determinar permisos
 $cargoUsuario = obtenerCargoPrincipalUsuario($_SESSION['usuario_id']);
 //******************************Estándar para header, termina******************************
 
+// Configuración de zona horaria local
 date_default_timezone_set('America/Managua'); // Zona horaria de Nicaragua (UTC-6)
 
 // Obtener sucursales asignadas al líder
@@ -60,8 +61,11 @@ $semanaSeleccionada = $_GET['semana'] ?? $semanaActual['numero_semana'];
 $sucursalSeleccionada = $_GET['sucursal'] ?? ($sucursalesLider[0]['codigo'] ?? null);
 $semana = obtenerSemanaPorNumero($semanaSeleccionada);
 
-// Determinar si estamos en el período de edición (lunes 00:00 a viernes 23:59 hora de Nicaragua)
+// Lógica para determinar el período de edición permitido
+// El período de edición estándar es de lunes 00:00 a viernes 23:59 hora Nicaragua
 $periodoEdicion = false;
+$lunesSemanaActual = null;
+$viernesSemanaActual = null;
 if ($semanaSiguiente) {
     $lunesSemanaActual = new DateTime($semanaActual['fecha_inicio'], new DateTimeZone('America/Managua'));
     $viernesSemanaActual = clone $lunesSemanaActual;
@@ -268,6 +272,10 @@ if ($periodoEdicion && $semanaSeleccionada == $semanaPermitida) {
 // Determinar si se puede editar
 //$puedeEditar = ($periodoEdicion && $semanaSeleccionada == $semanaPermitida);
 
+/**
+ * @param int|string $idCategoria
+ * @return string
+ */
 function obtenerColorCategoria($idCategoria)
 {
     $colores = [
@@ -284,6 +292,10 @@ function obtenerColorCategoria($idCategoria)
 }
 
 // Función auxiliar para obtener el nombre de la clase CSS
+/**
+ * @param string $nombreCategoria
+ * @return string
+ */
 function obtenerClaseCategoria($nombreCategoria)
 {
     // Si no se proporciona nombre de categoría, usar "Sin categoría"
@@ -304,6 +316,10 @@ function obtenerClaseCategoria($nombreCategoria)
     return $clases[$nombreCategoria] ?? 'tr-categoria-sin-categoria';
 }
 
+/**
+ * @param int|string $idCategoria
+ * @return string
+ */
 function obtenerColorBordeCategoria($idCategoria)
 {
     $coloresBorde = [
@@ -319,6 +335,10 @@ function obtenerColorBordeCategoria($idCategoria)
     return $coloresBorde[$idCategoria] ?? '#BDBDBD';
 }
 
+/**
+ * @param int|string $idCategoria
+ * @return string
+ */
 function obtenerNombreCategoria($idCategoria)
 {
     global $conn;
@@ -357,6 +377,10 @@ function obtenerCategoriasDesdeBD()
 }
 
 // Funciones auxiliares
+/**
+ * @param int|string $codOperario
+ * @return array|false
+ */
 function obtenerOperarioPorCodigo($codOperario)
 {
     global $conn;
@@ -407,6 +431,10 @@ function obtenerOperarioPorCodigo($codOperario)
     return $operario;
 }
 
+/**
+ * @param array $sucursalesPermitidas
+ * @return void
+ */
 function procesarHorarios($sucursalesPermitidas)
 {
     global $conn;
@@ -466,7 +494,7 @@ function procesarHorarios($sucursalesPermitidas)
     }
     // ========== FIN ELIMINACIÓN ==========
 
-    // Procesar cada operario
+    // Recorrer los horarios enviados desde el formulario para cada colaborador
     foreach ($_POST['horarios'] as $codOperario => $horario) {
         // Inicializar el array de horario si no está completo
         $dias = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'];
@@ -559,6 +587,11 @@ function procesarHorarios($sucursalesPermitidas)
     exit();
 }
 
+/**
+ * @param int $idHorario
+ * @param array $horario
+ * @return bool
+ */
 function actualizarHorario($idHorario, $horario)
 {
     global $conn;
@@ -609,9 +642,16 @@ function actualizarHorario($idHorario, $horario)
         $idHorario
     );
 
-    $stmt->execute($params);
+    return $stmt->execute($params);
 }
 
+/**
+ * @param int $numeroSemana
+ * @param string $codOperario
+ * @param string $codSucursal
+ * @param array $horario
+ * @return bool
+ */
 function crearHorario($numeroSemana, $codOperario, $codSucursal, $horario)
 {
     global $conn;
@@ -671,6 +711,11 @@ function crearHorario($numeroSemana, $codOperario, $codSucursal, $horario)
 
 /**
  * Obtiene los operarios que ya tienen horario guardado para una semana/sucursal
+ */
+/**
+ * @param string $codSucursal
+ * @param int $idSemana
+ * @return array
  */
 function obtenerOperariosConHorarioGuardado($codSucursal, $idSemana)
 {
@@ -2334,6 +2379,7 @@ function obtenerCategoriaPorDefecto()
             padding: 0;
             margin: 0;
             -moz-appearance: textfield;
+            appearance: textfield;
         }
 
         .ts-input::-webkit-outer-spin-button,
