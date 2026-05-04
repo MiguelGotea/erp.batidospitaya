@@ -303,10 +303,10 @@ try {
         $total_tam_global += $cant_total_tam;
 
         // Mostrador
-        $mostrador = $mostrador_data[$cod][0] ?? ['cant_mostrador' => 0];
-        $total_cant_row = $total_cant_data[$cod][0] ?? ['total_cantidad' => 0];
-        $cant_mostr = (float) ($mostrador['cant_mostrador'] ?? 0);
-        $total_cant_suc = (float) ($total_cant_row['total_cantidad'] ?? 0);
+        $mostrador = $mostrador_data[$cod][0] ?? ['monto_mostrador' => 0];
+        $total_cant_row = $total_cant_data[$cod][0] ?? ['total_monto' => 0];
+        $cant_mostr = (float) ($mostrador['monto_mostrador'] ?? 0);
+        $total_cant_suc = (float) ($total_cant_row['total_monto'] ?? 0);
         $total_cant_global += $total_cant_suc;
 
         // Reseñas Google
