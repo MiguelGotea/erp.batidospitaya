@@ -80,16 +80,7 @@ body {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    transition: all 0.3s ease;
-}
-
-.col-titulo:hover {
-    white-space: normal;
-    max-width: 300px;
-    background-color: #fff;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    position: relative;
-    z-index: 10;
+    cursor: default;
 }
 
 .col-descripcion {
@@ -99,16 +90,7 @@ body {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    transition: all 0.3s ease;
-}
-
-.col-descripcion:hover {
-    white-space: normal;
-    max-width: 400px;
-    background-color: #fff;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    position: relative;
-    z-index: 10;
+    cursor: default;
 }
 
 .col-sucursal {
@@ -122,16 +104,7 @@ body {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    transition: all 0.3s ease;
-}
-
-.col-resolucion:hover {
-    white-space: normal;
-    max-width: 400px;
-    background-color: #fff;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    position: relative;
-    z-index: 10;
+    cursor: default;
 }
 
 .resolucion-editable {
