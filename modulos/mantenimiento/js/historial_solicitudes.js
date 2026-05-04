@@ -237,8 +237,8 @@ function renderizarTabla(datos) {
         // Foto
         const tieneFotos = parseInt(row.total_fotos) > 0;
         const btnFoto = tieneFotos
-            ? `<button class="btn-foto" onclick="mostrarFotos(${row.id})"><i class="bi bi-camera"></i> Ver (${row.total_fotos})</button>`
-            : `<button class="btn-foto" disabled><i class="bi bi-camera"></i> Sin fotos</button>`;
+            ? `<button class="btn-foto-icon" onclick="mostrarFotos(${row.id})" title="Ver ${row.total_fotos} fotos"><i class="bi bi-camera-fill"></i><span class="foto-count-badge">${row.total_fotos}</span></button>`
+            : `<button class="btn-foto-icon disabled" title="Sin fotos"><i class="bi bi-camera"></i></button>`;
         tr.append(`<td>${btnFoto}</td>`);
 
         // IA

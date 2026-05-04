@@ -566,26 +566,52 @@ body {
     border-radius: 50%;
 }
 
-/* Botón de foto */
-.btn-foto {
+/* Botón de foto compacto */
+.btn-foto-icon {
     background-color: #51B8AC;
     color: white;
     border: none;
-    padding: 0.35rem 0.75rem;
-    border-radius: 4px;
-    font-size: 0.8rem;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     cursor: pointer;
     transition: all 0.2s;
-    white-space: nowrap;
+    position: relative;
+    font-size: 1.1rem;
+    box-shadow: 0 2px 4px rgba(14, 84, 76, 0.15);
 }
 
-.btn-foto:hover {
+.btn-foto-icon:hover {
     background-color: #0E544C;
+    transform: scale(1.1);
 }
 
-.btn-foto:disabled {
-    background-color: #ccc;
+.btn-foto-icon.disabled {
+    background-color: #e9ecef;
+    color: #adb5bd;
     cursor: not-allowed;
+    box-shadow: none;
+}
+
+.foto-count-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background-color: #dc3545;
+    color: white;
+    font-size: 0.65rem;
+    font-weight: 700;
+    min-width: 15px;
+    height: 15px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 3px;
+    border: 1px solid white;
 }
 
 /* Paginación */

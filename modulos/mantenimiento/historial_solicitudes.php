@@ -191,7 +191,7 @@ function getTextoUrgencia($nivel)
                                     Agendado
                                     <i class="fas fa-filter filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
-                                <th style="width: 80px;">Foto</th>
+                                <th style="width: 50px;">Foto</th>
                                 <th style="width: 70px;">IA</th>
                             </tr>
                         </thead>
