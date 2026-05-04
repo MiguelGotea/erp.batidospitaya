@@ -54,14 +54,14 @@ $puedeActivarWorker = tienePermiso('historial_pedidos_globales', 'activar_bot_at
                                     <span class="total-value" id="totalMonto">0.0</span>
                                 </div>
                             <?php endif; ?>
-                            <div class="total-item">
+                            <div class="total-item" id="totalProductosItem">
                                 <span class="total-label">Total Productos:</span>
                                 <span class="total-value" id="totalProductos">0</span>
                             </div>
 
-                            <?php if ($puedeActivarWorker): ?>
-                                <!-- Worker Bot Atención al Cliente -->
-                                <div class="ms-auto d-flex align-items-center gap-3">
+                            <!-- Controles derecha: Worker (si aplica) + Switch de Vista -->
+                            <div class="ms-auto d-flex align-items-center gap-3">
+                                <?php if ($puedeActivarWorker): ?>
                                     <div class="worker-status-wrap" id="workerStatusWrap">
                                         <span class="worker-dot" id="workerDot"></span>
                                         <span class="worker-status-label" id="workerStatusLabel">Cargando...</span>
@@ -74,8 +74,17 @@ $puedeActivarWorker = tienePermiso('historial_pedidos_globales', 'activar_bot_at
                                         <span id="statPendientes">0</span> pendientes ·
                                         <span id="statCompletados">0</span> analizados
                                     </div>
+                                <?php endif; ?>
+                                <!-- Switch de Vista -->
+                                <div class="vista-switch" id="vistaSwitchWrap">
+                                    <button class="vista-pill active" id="btnVistaPedido" onclick="cambiarVista('por_pedido')">
+                                        <i class="bi bi-receipt"></i> Por Pedido
+                                    </button>
+                                    <button class="vista-pill" id="btnVistaProducto" onclick="cambiarVista('por_producto')">
+                                        <i class="bi bi-bag"></i> Por Producto
+                                    </button>
                                 </div>
-                            <?php endif; ?>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -144,6 +153,7 @@ $puedeActivarWorker = tienePermiso('historial_pedidos_globales', 'activar_bot_at
                                 <?php if ($puedeAnalizarBot): ?>
                                     <th class="col-atencion-ia">Atención IA</th>
                                 <?php endif; ?>
+                                <th class="col-acciones-pedido" id="thAccionesPedido" style="display:none">Acciones</th>
                             </tr>
                         </thead>
                         <tbody id="tablaVentasBody">
@@ -171,9 +181,11 @@ $puedeActivarWorker = tienePermiso('historial_pedidos_globales', 'activar_bot_at
 
     <script>
         // Pasar permisos a JavaScript
-        const puedeVerMontos = <?php echo $puedeVerMontos ? 'true' : 'false'; ?>;
-        const puedeAnalizarBot = <?php echo $puedeAnalizarBot ? 'true' : 'false'; ?>;
+        const puedeVerMontos    = <?php echo $puedeVerMontos    ? 'true' : 'false'; ?>;
+        const puedeAnalizarBot  = <?php echo $puedeAnalizarBot  ? 'true' : 'false'; ?>;
         const puedeActivarWorker = <?php echo $puedeActivarWorker ? 'true' : 'false'; ?>;
+        // Vista que se carga por defecto al entrar
+        const vistaInicial = 'por_pedido';
     </script>
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

@@ -6,12 +6,14 @@ let ordenActivo = { columna: null, direccion: 'asc' };
 let panelFiltroAbierto = null;
 let totalRegistros = 0;
 let scrollTopInicial = 0;
+let modoVista = 'por_pedido'; // Vista activa: 'por_pedido' | 'por_producto'
 
 // Polling timers IA (declarado aquí para que cargarDatos pueda limpiarlos)
 const _pollingTimers = {};
 
 // Inicializar
 $(document).ready(function () {
+    _configurarColumnasPorVista('por_pedido');
     cargarDatos();
 
     // Cerrar filtros solo si se hace clic fuera del panel Y del icono
@@ -41,6 +43,54 @@ $(document).ready(function () {
     });
 });
 
+// ═══════════════════════════════════════════════════════
+//  Cambio de Vista (Por Pedido / Por Producto)
+// ═══════════════════════════════════════════════════════
+
+/**
+ * Aplica visibilidad de columnas y estado de pills para el modo dado.
+ * No recarga datos — solo actualiza el DOM.
+ */
+function _configurarColumnasPorVista(modo) {
+    $('#btnVistaPedido').toggleClass('active', modo === 'por_pedido');
+    $('#btnVistaProducto').toggleClass('active', modo === 'por_producto');
+
+    if (modo === 'por_pedido') {
+        $('th[data-column="DBBatidos_Nombre"]').hide();
+        $('th[data-column="Medida"]').hide();
+        $('th[data-column="Cantidad"]').hide();
+        if (puedeAnalizarBot) $('.col-atencion-ia').show();
+        $('#thAccionesPedido').show();
+        $('#totalProductosItem').hide();
+    } else {
+        $('th[data-column="DBBatidos_Nombre"]').show();
+        $('th[data-column="Medida"]').show();
+        $('th[data-column="Cantidad"]').show();
+        $('.col-atencion-ia').hide();
+        $('#thAccionesPedido').hide();
+        $('#totalProductosItem').show();
+    }
+}
+
+/**
+ * Cambia la vista activa, limpia filtros que no aplican y recarga.
+ */
+function cambiarVista(modo) {
+    if (modo === modoVista) return;
+
+    // Limpiar filtros que solo existen en por_producto
+    if (modo === 'por_pedido') {
+        delete filtrosActivos['DBBatidos_Nombre'];
+        delete filtrosActivos['Medida'];
+        delete filtrosActivos['Cantidad'];
+    }
+
+    modoVista = modo;
+    paginaActual = 1;
+    _configurarColumnasPorVista(modo);
+    cargarDatos();
+}
+
 // Cargar datos
 function cargarDatos() {
     // Limpiar todos los polling de IA activos antes de recargar la tabla
@@ -56,7 +106,8 @@ function cargarDatos() {
             pagina: paginaActual,
             registros_por_pagina: registrosPorPagina,
             filtros: JSON.stringify(filtrosActivos),
-            orden: JSON.stringify(ordenActivo)
+            orden: JSON.stringify(ordenActivo),
+            modo: modoVista
         },
         dataType: 'json',
         success: function (response) {
@@ -88,7 +139,10 @@ function actualizarTotales(totales) {
         if (puedeVerMontos) {
             $('#totalMonto').text(parseFloat(totales.monto || 0).toFixed(1));
         }
-        $('#totalProductos').text(parseInt(totales.productos || 0));
+        // productos es null en modo por_pedido (columna oculta)
+        if (totales.productos !== null && totales.productos !== undefined) {
+            $('#totalProductos').text(parseInt(totales.productos || 0));
+        }
     } else {
         if (puedeVerMontos) {
             $('#totalMonto').text('0.0');
@@ -146,45 +200,44 @@ function cargarEstadosIaBatch(datos) {
     });
 }
 
-// Renderizar tabla
+// Renderizar tabla — dispatcher según el modo activo
 function renderizarTabla(datos) {
+    if (modoVista === 'por_pedido') {
+        renderizarTablaPorPedido(datos);
+    } else {
+        renderizarTablaPorProducto(datos);
+    }
+}
+
+// Renderizar tabla en modo Por Producto (vista original, sin columna IA)
+function renderizarTablaPorProducto(datos) {
     const tbody = $('#tablaVentasBody');
     tbody.empty();
 
     if (datos.length === 0) {
-        const colspan = (puedeVerMontos ? 15 : 14) + (puedeAnalizarBot ? 1 : 0);
-        mostrarMensajeVacio('No se encontraron registros', colspan);
+        mostrarMensajeVacio('No se encontraron registros');
         return;
     }
 
     datos.forEach(row => {
         const esAnulado = parseInt(row.Anulado) !== 0;
         const tr = $('<tr>');
-
-        if (esAnulado) {
-            tr.addClass('fila-anulada');
-        }
+        if (esAnulado) tr.addClass('fila-anulada');
 
         tr.append(`<td>${row.Sucursal_Nombre || '-'}</td>`);
         tr.append(`<td>${row.CodPedido || '-'}</td>`);
         tr.append(`<td>${formatearFecha(row.Fecha)}</td>`);
         tr.append(`<td>${formatearHora(row.Hora)}</td>`);
 
-        // Membresía (CodCliente)
         const membresia = row.CodCliente && parseInt(row.CodCliente) !== 0 ? row.CodCliente : '-';
         tr.append(`<td>${membresia}</td>`);
-
-        // Nombre Cliente
-        const nombreCliente = row.NombreCliente || '-';
-        tr.append(`<td>${nombreCliente}</td>`);
-
+        tr.append(`<td>${row.NombreCliente || '-'}</td>`);
         tr.append(`<td>${row.DBBatidos_Nombre || '-'}</td>`);
         tr.append(`<td>${row.Medida || '-'}</td>`);
         tr.append(`<td>${row.Cantidad || 0}</td>`);
         tr.append(`<td>${row.Puntos || 0}</td>`);
         tr.append(`<td>${row.Caja || '-'}</td>`);
 
-        // Solo mostrar columna de Monto si tiene permiso
         if (puedeVerMontos) {
             tr.append(`<td>${parseFloat(row.Precio || 0).toFixed(1)}</td>`);
         }
@@ -196,8 +249,54 @@ function renderizarTabla(datos) {
             : '<span class="badge-activo">NO</span>';
         tr.append(`<td>${badgeAnulado}</td>`);
 
-        // Columna Atención IA (al final)
+        // En Por Producto NO se muestra columna IA
+        tbody.append(tr);
+    });
+}
+
+// Renderizar tabla en modo Por Pedido (agrupado, con IA y botón Detalle)
+function renderizarTablaPorPedido(datos) {
+    const tbody = $('#tablaVentasBody');
+    tbody.empty();
+
+    if (datos.length === 0) {
+        mostrarMensajeVacio('No se encontraron pedidos');
+        return;
+    }
+
+    datos.forEach(row => {
+        const esAnulado = parseInt(row.Anulado) !== 0;
+        const tr = $('<tr>');
+        if (esAnulado) tr.addClass('fila-anulada');
+
+        tr.append(`<td>${row.Sucursal_Nombre || '-'}</td>`);
+        tr.append(`<td>${row.CodPedido || '-'}</td>`);
+        tr.append(`<td>${formatearFecha(row.Fecha)}</td>`);
+        tr.append(`<td>${formatearHora(row.Hora)}</td>`);
+
+        const membresia = row.CodCliente && parseInt(row.CodCliente) !== 0 ? row.CodCliente : '-';
+        tr.append(`<td>${membresia}</td>`);
+        tr.append(`<td>${row.NombreCliente || '-'}</td>`);
+        tr.append(`<td>${row.Puntos || 0}</td>`);
+        tr.append(`<td>${row.Caja || '-'}</td>`);
+
+        if (puedeVerMontos) {
+            tr.append(`<td>${parseFloat(row.Precio || 0).toFixed(1)}</td>`);
+        }
+
+        tr.append(`<td>${row.Modalidad || '-'}</td>`);
+
+        const badgeAnulado = esAnulado
+            ? '<span class="badge-anulado">SÍ</span>'
+            : '<span class="badge-activo">NO</span>';
+        tr.append(`<td>${badgeAnulado}</td>`);
+
+        // Columna Atención IA (solo si tiene permiso)
         renderCeldaIa(tr, row);
+
+        // Columna Acciones: botón Ver Detalle
+        const urlDetalle = `detalle_vista_pedido_global.php?cod_pedido=${row.CodPedido}&local=${encodeURIComponent(row.local)}`;
+        tr.append(`<td class="text-center"><a href="${urlDetalle}" target="_blank" class="btn-ver-detalle"><i class="bi bi-eye"></i> Detalle</a></td>`);
 
         tbody.append(tr);
     });
@@ -207,7 +306,15 @@ function renderizarTabla(datos) {
 function mostrarMensajeVacio(mensaje, colspan = null) {
     const tbody = $('#tablaVentasBody');
     if (!colspan) {
-        colspan = (puedeVerMontos ? 15 : 14) + (puedeAnalizarBot ? 1 : 0);
+        if (modoVista === 'por_pedido') {
+            // Sucursal, Pedido, Fecha, Hora, Membresía, Cliente, Puntos, Cajero = 8
+            // + Monto (cond), Modalidad, Anulado = 3, + IA (cond), + Acciones = 1
+            colspan = 12 + (puedeVerMontos ? 1 : 0) + (puedeAnalizarBot ? 1 : 0);
+        } else {
+            // Sucursal, Pedido, Fecha, Hora, Membresía, Cliente, Producto, Medida,
+            // Cantidad, Puntos, Cajero = 11 + Monto (cond), Modalidad, Anulado = 3
+            colspan = 14 + (puedeVerMontos ? 1 : 0);
+        }
     }
     tbody.html(`
         <tr>
@@ -710,7 +817,7 @@ function renderBtnAnalizar(codPedido, local, anulado) {
 
 function renderBadgeIa(info, codPedido, local) {
     const estado = info.estado;
-    const url    = `atencion_cliente_detalle.php?cod_pedido=${codPedido}&local=${local}`;
+    const url    = `detalle_vista_pedido_global.php?cod_pedido=${codPedido}&local=${local}`;
 
     if (estado === 'pendiente') {
         return `<span class="badge-ia badge-ia-pendiente">⏳ En cola</span>`;
