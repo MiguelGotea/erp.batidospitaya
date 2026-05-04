@@ -1035,3 +1035,78 @@ body {
         justify-content: center;
     }
 }
+
+/* ========== BOTÓN IA POR FILA ========== */
+
+.btn-ia {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    background: linear-gradient(135deg, #0E544C 0%, #51B8AC 100%);
+    color: white;
+    border: none;
+    padding: 0.3rem 0.6rem;
+    border-radius: 5px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    white-space: nowrap;
+    letter-spacing: 0.3px;
+    box-shadow: 0 2px 6px rgba(14, 84, 76, 0.25);
+    min-width: 48px;
+    height: 28px;
+}
+
+.btn-ia:hover:not(:disabled) {
+    background: linear-gradient(135deg, #083d37 0%, #0E544C 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(14, 84, 76, 0.4);
+}
+
+.btn-ia:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: 0 1px 4px rgba(14, 84, 76, 0.3);
+}
+
+.btn-ia:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+    box-shadow: none;
+    opacity: 0.6;
+}
+
+/* Estado cargando */
+.btn-ia.loading {
+    background: linear-gradient(135deg, #17a2b8 0%, #0E544C 100%);
+    cursor: wait;
+    pointer-events: none;
+}
+
+/* Spinner inline dentro del botón */
+.btn-ia-spinner {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(255, 255, 255, 0.35);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: ia-spin 0.7s linear infinite;
+    flex-shrink: 0;
+}
+
+@keyframes ia-spin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
+
+/* Ícono del robot */
+.btn-ia i {
+    font-size: 0.85rem;
+    transition: transform 0.3s;
+}
+
+.btn-ia:hover:not(:disabled) i {
+    transform: scale(1.15);
+}

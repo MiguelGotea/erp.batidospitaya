@@ -239,6 +239,17 @@ function renderizarTabla(datos) {
             : `<button class="btn-foto" disabled><i class="bi bi-camera"></i> Sin fotos</button>`;
         tr.append(`<td>${btnFoto}</td>`);
 
+        // IA
+        const esAnalizable = (
+            tienepermiso('consulta_ia') &&
+            ['solicitado', 'agendado'].includes(row.status) &&
+            row.tipo_formulario === 'mantenimiento_general'
+        );
+        const btnIA = esAnalizable
+            ? `<button class="btn-ia" id="btn-ia-${row.id}" onclick="analizarConIA(${row.id})"><i class="bi bi-robot"></i> IA</button>`
+            : `<button class="btn-ia" disabled title="No disponible para este estado o tipo"><i class="bi bi-robot"></i></button>`;
+        tr.append(`<td>${btnIA}</td>`);
+
         tbody.append(tr);
     });
 }
@@ -1347,3 +1358,97 @@ function descargarInformeGlobal() {
     }, 4000);
 }
 
+// ========== ANÁLISIS IA POR TICKET ==========
+
+/**
+ * Llama al endpoint de IA para analizar el ticket y actualizar urgencia, tiempo y resolución.
+ * El botón se deshabilita durante el proceso y se restaura al terminar.
+ */
+async function analizarConIA(ticketId) {
+    const btn = document.getElementById(`btn-ia-${ticketId}`);
+    if (!btn) return;
+
+    // Estado de carga
+    btn.disabled = true;
+    btn.innerHTML = '<span class="btn-ia-spinner"></span>';
+    btn.classList.add('loading');
+
+    try {
+        const response = await fetch('ajax/historial_consulta_ia.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ticket_id: ticketId })
+        });
+
+        if (!response.ok) {
+            throw new Error('Error de red al conectar con el servidor.');
+        }
+
+        const data = await response.json();
+
+        if (!data.success) {
+            mostrarToastIA(false, data.message || 'Error desconocido al analizar el ticket.');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-robot"></i> IA';
+            btn.classList.remove('loading');
+            return;
+        }
+
+        // Éxito: recargar datos y mostrar toast
+        const proveedorNombre = (data.proveedor || 'IA').toUpperCase();
+        mostrarToastIA(true, `✓ Analizado · ${proveedorNombre}`);
+        cargarDatos();
+
+    } catch (error) {
+        console.error('analizarConIA error:', error);
+        mostrarToastIA(false, 'Error de conexión. Intenta nuevamente.');
+        const btnActual = document.getElementById(`btn-ia-${ticketId}`);
+        if (btnActual) {
+            btnActual.disabled = false;
+            btnActual.innerHTML = '<i class="bi bi-robot"></i> IA';
+            btnActual.classList.remove('loading');
+        }
+    }
+}
+
+/**
+ * Muestra un toast flotante de éxito o error en la esquina inferior derecha.
+ * Se destruye automáticamente después de 4 segundos.
+ */
+function mostrarToastIA(exito, mensaje) {
+    const toastAnterior = document.getElementById('toast-ia-pitaya');
+    if (toastAnterior) toastAnterior.remove();
+
+    const color   = exito ? '#0E544C' : '#dc3545';
+    const iconoBI = exito ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill';
+
+    const toast = document.createElement('div');
+    toast.id = 'toast-ia-pitaya';
+    toast.innerHTML = `<i class="bi ${iconoBI}" style="font-size:1.1rem;"></i><span>${mensaje}</span>`;
+    Object.assign(toast.style, {
+        position:     'fixed',
+        bottom:       '30px',
+        right:        '30px',
+        zIndex:       '99999',
+        background:   color,
+        color:        'white',
+        padding:      '12px 20px',
+        borderRadius: '8px',
+        boxShadow:    '0 4px 16px rgba(0,0,0,0.25)',
+        display:      'flex',
+        alignItems:   'center',
+        gap:          '10px',
+        fontSize:     '0.9rem',
+        fontWeight:   '600',
+        maxWidth:     '320px',
+        fontFamily:   'inherit'
+    });
+
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transition = 'opacity 0.4s ease';
+        setTimeout(() => toast.remove(), 400);
+    }, 4000);
+}
