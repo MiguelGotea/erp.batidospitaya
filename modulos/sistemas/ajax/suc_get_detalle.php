@@ -28,14 +28,17 @@ try {
     // Sucursal principal
     $sqlSuc = "
         SELECT
-            id, codigo, nombre, ip_direccion, telefono, whatsapp,
-            Fecha_Apertura, Fecha_Cierre, departamento, cod_departamento,
-            email, activa, sucursal, viatico_nocturno,
-            Latitude, Longitude, cod_googlebusiness,
-            VMTAP, cookie_token, pos_cookie_token,
-            fecha_hora_regsys
-        FROM sucursales
-        WHERE id = :id
+            s.id, s.codigo, s.nombre, s.ip_direccion, s.telefono, s.whatsapp,
+            s.Fecha_Apertura, s.Fecha_Cierre, 
+            COALESCE(dep.nombre, s.departamento) AS departamento, 
+            s.cod_departamento,
+            s.email, s.activa, s.sucursal, s.viatico_nocturno,
+            s.Latitude, s.Longitude, s.cod_googlebusiness,
+            s.VMTAP, s.cookie_token, s.pos_cookie_token,
+            s.fecha_hora_regsys
+        FROM sucursales s
+        LEFT JOIN departamentos dep ON s.cod_departamento = dep.codigo
+        WHERE s.id = :id
         LIMIT 1
     ";
     $stmtSuc = $conn->prepare($sqlSuc);

@@ -29,7 +29,7 @@ try {
             s.whatsapp,
             s.Fecha_Apertura,
             s.Fecha_Cierre,
-            s.departamento,
+            COALESCE(dep.nombre, s.departamento) AS departamento,
             s.cod_departamento,
             s.email,
             s.activa,
@@ -48,6 +48,7 @@ try {
             d.tunel_activo AS dvr_tunel_activo
         FROM sucursales s
         LEFT JOIN DVR_Sucursales d ON s.codigo = d.cod_sucursal
+        LEFT JOIN departamentos dep ON s.cod_departamento = dep.codigo
         ORDER BY s.activa DESC, s.nombre ASC
     ";
 

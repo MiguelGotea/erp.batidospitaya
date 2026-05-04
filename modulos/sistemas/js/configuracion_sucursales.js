@@ -3,6 +3,7 @@
 // ── State ────────────────────────────────────────────────────
 const S = {
     sucursales: [],
+    departamentos: [],
     filtro: 'all',
     busqueda: '',
     openDrawerId: null,
@@ -14,14 +15,6 @@ const S = {
 };
 
 const BASE = 'ajax/';
-const DPTOS = [
-    {cod:1,nombre:'Boaco'},{cod:2,nombre:'Carazo'},{cod:3,nombre:'Chinandega'},
-    {cod:4,nombre:'Chontales'},{cod:5,nombre:'Estelí'},{cod:6,nombre:'Granada'},
-    {cod:7,nombre:'Jinotega'},{cod:8,nombre:'León'},{cod:9,nombre:'Madriz'},
-    {cod:10,nombre:'Managua'},{cod:11,nombre:'Masaya'},{cod:12,nombre:'Matagalpa'},
-    {cod:13,nombre:'Nueva Segovia'},{cod:14,nombre:'Río San Juan'},
-    {cod:15,nombre:'Rivas'},{cod:16,nombre:'RAAN'},{cod:17,nombre:'RAAS'}
-];
 
 // ── Toast ────────────────────────────────────────────────────
 function toast(msg, tipo='ok', dur=2500) {
@@ -174,8 +167,8 @@ function renderTabs(id, res) {
 // ── Tab: General ─────────────────────────────────────────────
 function renderTabGeneral(id, s) {
     const ro = !PUEDE_EDITAR ? 'readonly' : '';
-    const deptoOpts = DPTOS.map(d=>
-        `<option value="${d.cod}" ${d.cod==s.cod_departamento?'selected':''}>${d.nombre}</option>`
+    const deptoOpts = S.departamentos.map(d=>
+        `<option value="${d.codigo}" ${d.codigo==s.cod_departamento?'selected':''}>${d.nombre}</option>`
     ).join('');
 
     document.getElementById('dtab-general').innerHTML = `
@@ -677,8 +670,20 @@ function cargarLista() {
         }).catch(() => { toast('Error de conexión','err'); grid.innerHTML = ''; });
 }
 
+// ── Carga de departamentos ───────────────────────────────────
+function cargarDepartamentos() {
+    return fetch(`${BASE}suc_get_departamentos.php`)
+        .then(r => r.json())
+        .then(res => {
+            if (res.success) {
+                S.departamentos = res.data;
+            }
+        }).catch(err => console.error('Error cargando departamentos:', err));
+}
+
 // ── Filtros y búsqueda ────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    await cargarDepartamentos();
     cargarLista();
 
     document.getElementById('suc-search').addEventListener('input', function() {
