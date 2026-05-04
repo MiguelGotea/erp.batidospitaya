@@ -617,3 +617,45 @@ body {
     text-align: center;
     min-width: 100px;
 }
+
+/* ═══════════════════════════════════════════════════
+   Skeleton Loader — shimmer al cargar tabla
+═══════════════════════════════════════════════════ */
+@keyframes skeleton-shimmer {
+    0%   { background-position: -600px 0; }
+    100% { background-position:  600px 0; }
+}
+
+.skeleton-cell {
+    height: 14px;
+    border-radius: 4px;
+    background: linear-gradient(
+        90deg,
+        #e8f4f3 25%,
+        #c8e8e5 50%,
+        #e8f4f3 75%
+    );
+    background-size: 600px 100%;
+    animation: skeleton-shimmer 1.4s ease infinite;
+    display: inline-block;
+    width: 100%;
+}
+
+/* anchos variables para que no se vean todas iguales */
+.skeleton-cell.w-40  { width: 40%;  }
+.skeleton-cell.w-50  { width: 50%;  }
+.skeleton-cell.w-60  { width: 60%;  }
+.skeleton-cell.w-70  { width: 70%;  }
+.skeleton-cell.w-80  { width: 80%;  }
+.skeleton-cell.w-90  { width: 90%;  }
+.skeleton-cell.w-100 { width: 100%; }
+
+tr.skeleton-row td {
+    padding: 13px 12px;
+    border-right: 1px solid #e9ecef;
+    vertical-align: middle;
+}
+
+tr.skeleton-row:nth-child(odd) {
+    background: #fafafa;
+}

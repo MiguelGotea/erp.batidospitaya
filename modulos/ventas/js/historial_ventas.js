@@ -97,6 +97,9 @@ function cargarDatos() {
         delete _pollingTimers[clave];
     });
 
+    // Mostrar skeleton mientras llega la respuesta
+    mostrarSkeleton();
+
     $.ajax({
         url: 'ajax/ventas_get_datos.php',
         method: 'POST',
@@ -139,6 +142,50 @@ function actualizarTotales(totales) {
         $('#totalProductosItem').show();
     } else {
         $('#totalProductosItem').hide();
+    }
+}
+
+// ─── Skeleton Loader ──────────────────────────────────
+/**
+ * Genera filas de skeleton shimmer que imitan la tabla real.
+ * Se llama antes de cada AJAX para que el usuario vea feedback
+ * inmediato mientras llegan los datos.
+ */
+function mostrarSkeleton() {
+    const tbody = $('#tablaVentasBody');
+    tbody.empty();
+
+    // Columnas según el modo y permisos activos
+    let cols;
+    if (modoVista === 'por_pedido') {
+        // Sucursal, Pedido, Fecha, Hora, Membresía, Cliente,
+        // Puntos, Cajero, [Monto], Modalidad, Anulado, [IA], Acciones
+        cols = ['w-70','w-50','w-60','w-40','w-50','w-80',
+                'w-40','w-60'];
+        if (puedeVerMontos)  cols.push('w-50');
+        cols.push('w-70','w-50');
+        if (puedeAnalizarBot) cols.push('w-60');
+        cols.push('w-50');
+    } else {
+        // Sucursal, Pedido, Fecha, Hora, Membresía, Cliente,
+        // Producto, Medida, Cantidad, Puntos, Cajero, [Monto], Modalidad, Anulado
+        cols = ['w-70','w-50','w-60','w-40','w-50','w-80',
+                'w-90','w-50','w-40','w-40','w-60'];
+        if (puedeVerMontos) cols.push('w-50');
+        cols.push('w-70','w-50');
+    }
+
+    const widths = ['w-40','w-50','w-60','w-70','w-80','w-90','w-100'];
+    const numRows = registrosPorPagina > 15 ? 15 : registrosPorPagina;
+
+    for (let r = 0; r < numRows; r++) {
+        const tr = $('<tr class="skeleton-row">');
+        cols.forEach((baseW, i) => {
+            // Variar ligeramente el ancho para aspecto más natural
+            const w = widths[(widths.indexOf(baseW) + r + i) % widths.length];
+            tr.append(`<td><span class="skeleton-cell ${w}"></span></td>`);
+        });
+        tbody.append(tr);
     }
 }
 
