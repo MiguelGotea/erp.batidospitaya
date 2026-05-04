@@ -3,7 +3,7 @@
  * hikvision_estado_pedido.php
  * Consulta el estado de análisis de un pedido específico.
  * Devuelve estado de cola + resultado si está completado.
- * Llamado por polling JS cada ~5s.
+ * Llamado por polling JS cada ~8s.
  * GET ?cod_pedido=X&local=Y
  */
 require_once '../../../core/auth/auth.php';
@@ -30,27 +30,29 @@ if (!$cod_pedido || !$local) {
 }
 
 try {
-    // Buscar la cola más reciente para este pedido
+    // Buscar la cola más reciente para este pedido (Protocolo 5 grupos)
     $stmt = $conn->prepare("
         SELECT
-            c.id           AS id_cola,
+            c.id               AS id_cola,
             c.estado,
             c.tipo,
             c.intentos,
             c.error_mensaje,
             c.created_at,
             c.updated_at,
-            a.id           AS id_analisis,
-            a.cal_amabilidad,
-            a.cal_saludo,
-            a.cal_despedida,
-            a.cal_membresia,
-            a.promedio,
+            a.id               AS id_analisis,
+            a.grupo_bienvenida,
+            a.grupo_asesoria,
+            a.grupo_membresia,
+            a.grupo_cobro,
+            a.grupo_entrega,
+            a.cal_promedio     AS promedio,
+            a.membresia_contexto,
             a.resumen,
             a.tiene_audio,
             a.duracion_segundos,
             a.modelo_ia,
-            a.created_at   AS analizado_en
+            a.created_at       AS analizado_en
         FROM hikvision_cola_analisis c
         LEFT JOIN hikvision_analisis_ia_atencion a ON a.id_cola = c.id
         WHERE c.cod_pedido   = :cp
@@ -62,7 +64,6 @@ try {
     $row = $stmt->fetch();
 
     if (!$row) {
-        // No está en cola ni analizado
         echo json_encode([
             'success' => true,
             'estado'  => 'sin_cola',
@@ -87,17 +88,19 @@ try {
 
     if ($row['estado'] === 'completado' && $row['id_analisis']) {
         $resultado['analisis'] = [
-            'id'                => (int)$row['id_analisis'],
-            'cal_amabilidad'    => $row['cal_amabilidad'] !== null ? (int)$row['cal_amabilidad'] : null,
-            'cal_saludo'        => $row['cal_saludo']     !== null ? (int)$row['cal_saludo']     : null,
-            'cal_despedida'     => $row['cal_despedida']  !== null ? (int)$row['cal_despedida']  : null,
-            'cal_membresia'     => $row['cal_membresia']  !== null ? (int)$row['cal_membresia']  : null,
-            'promedio'          => $row['promedio']        !== null ? (float)$row['promedio']     : null,
-            'resumen'           => $row['resumen'],
-            'tiene_audio'       => (bool)$row['tiene_audio'],
-            'duracion_segundos' => $row['duracion_segundos'] !== null ? (int)$row['duracion_segundos'] : null,
-            'modelo_ia'         => $row['modelo_ia'],
-            'analizado_en'      => $row['analizado_en'],
+            'id'                  => (int)$row['id_analisis'],
+            'grupo_bienvenida'    => $row['grupo_bienvenida']  !== null ? (int)$row['grupo_bienvenida']  : null,
+            'grupo_asesoria'      => $row['grupo_asesoria']    !== null ? (int)$row['grupo_asesoria']    : null,
+            'grupo_membresia'     => $row['grupo_membresia']   !== null ? (int)$row['grupo_membresia']   : null,
+            'grupo_cobro'         => $row['grupo_cobro']       !== null ? (int)$row['grupo_cobro']       : null,
+            'grupo_entrega'       => $row['grupo_entrega']     !== null ? (int)$row['grupo_entrega']     : null,
+            'promedio'            => $row['promedio']          !== null ? (float)$row['promedio']        : null,
+            'membresia_contexto'  => $row['membresia_contexto'] ?? 'sin_membresia',
+            'resumen'             => $row['resumen'],
+            'tiene_audio'         => (bool)$row['tiene_audio'],
+            'duracion_segundos'   => $row['duracion_segundos'] !== null ? (int)$row['duracion_segundos'] : null,
+            'modelo_ia'           => $row['modelo_ia'],
+            'analizado_en'        => $row['analizado_en'],
         ];
     }
 

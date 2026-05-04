@@ -61,12 +61,15 @@ try {
             c.cod_pedido,
             c.local_codigo,
             c.estado,
-            c.id          AS id_cola,
-            a.promedio,
-            a.cal_amabilidad,
-            a.cal_saludo,
-            a.cal_despedida,
-            a.cal_membresia
+            c.id               AS id_cola,
+            a.cal_promedio     AS promedio,
+            a.grupo_bienvenida,
+            a.grupo_asesoria,
+            a.grupo_membresia,
+            a.grupo_cobro,
+            a.grupo_entrega,
+            a.membresia_contexto,
+            a.resumen
         FROM hikvision_cola_analisis c
         LEFT JOIN hikvision_analisis_ia_atencion a ON a.id_cola = c.id
         WHERE ($whereOr)
@@ -86,10 +89,18 @@ try {
     foreach ($rows as $row) {
         $clave = $row['cod_pedido'] . '_' . $row['local_codigo'];
         $estados[$clave] = [
-            'estado'   => $row['estado'],
-            'promedio' => $row['promedio'] !== null ? (float)$row['promedio'] : null,
+            'estado'              => $row['estado'],
+            'promedio'            => $row['promedio'] !== null ? (float)$row['promedio'] : null,
+            'grupo_bienvenida'    => $row['grupo_bienvenida'] !== null ? (int)$row['grupo_bienvenida'] : null,
+            'grupo_asesoria'      => $row['grupo_asesoria']   !== null ? (int)$row['grupo_asesoria']   : null,
+            'grupo_membresia'     => $row['grupo_membresia']  !== null ? (int)$row['grupo_membresia']  : null,
+            'grupo_cobro'         => $row['grupo_cobro']      !== null ? (int)$row['grupo_cobro']      : null,
+            'grupo_entrega'       => $row['grupo_entrega']    !== null ? (int)$row['grupo_entrega']    : null,
+            'membresia_contexto'  => $row['membresia_contexto'] ?? 'sin_membresia',
+            'resumen'             => $row['resumen'],
         ];
     }
+
 
     echo json_encode([
         'success' => true,
