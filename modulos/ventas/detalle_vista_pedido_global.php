@@ -48,7 +48,14 @@ try {
             SUM(v.Precio)           AS TotalMonto,
             SUM(v.Puntos)           AS TotalPuntos,
             MAX(v.Modalidad)        AS Modalidad,
-            MAX(v.Anulado)          AS Anulado
+            MAX(v.Anulado)          AS Anulado,
+            MAX(v.MotivoAnulado)    AS MotivoAnulado,
+            MAX(v.Delivery_Nombre)  AS Delivery_Nombre,
+            MAX(v.Impresiones)      AS Impresiones,
+            MAX(v.HoraCreado)       AS HoraCreado,
+            MAX(v.HoraIngresoProducto) AS HoraIngresoProducto,
+            MAX(v.HoraImpreso)      AS HoraImpreso,
+            MAX(v.Propina)          AS Propina
         FROM VentasGlobalesAccessCSV v
         LEFT JOIN clientesclub c ON v.CodCliente = c.membresia
         WHERE v.CodPedido = :cp AND v.local = :lc
@@ -94,7 +101,7 @@ if ($pedidoGlobal) {
 
         /* ── Wrapper principal ─────────────────────────── */
         .detalle-wrapper {
-            max-width: 900px;
+            max-width: 95%;
             margin: 32px auto;
             padding: 0 16px 60px;
         }
@@ -364,15 +371,7 @@ if ($pedidoGlobal) {
             <div class="container-fluid p-3">
                 <div class="detalle-wrapper">
 
-                    <!-- Breadcrumb -->
-                    <div class="mb-3 d-flex align-items-center gap-3">
-                        <a href="historial_ventas.php" class="btn-volver">
-                            <i class="bi bi-arrow-left"></i> Volver al Historial
-                        </a>
-                        <span class="text-muted" style="font-size:13px;">
-                            Pedido #<?php echo $cod_pedido; ?> &middot; Local <?php echo htmlspecialchars($local); ?>
-                        </span>
-                    </div>
+
 
 <?php if (!$pedidoGlobal): ?>
                     <!-- Pedido no encontrado -->
@@ -444,10 +443,41 @@ if ($pedidoGlobal) {
                                 <span>
                                     <?php if (intval($pedidoGlobal['Anulado']) !== 0): ?>
                                         <span class="badge-anulado-si">SÍ</span>
+                                        <br><small class="text-muted"><?php echo htmlspecialchars($pedidoGlobal['MotivoAnulado'] ?? ''); ?></small>
                                     <?php else: ?>
                                         <span class="badge-anulado-no">NO</span>
                                     <?php endif; ?>
                                 </span>
+                            </div>
+
+                            <div class="info-item-pedido">
+                                <label><i class="bi bi-truck"></i> Delivery</label>
+                                <span><?php echo htmlspecialchars($pedidoGlobal['Delivery_Nombre'] ?? '—'); ?></span>
+                            </div>
+
+                            <div class="info-item-pedido">
+                                <label><i class="bi bi-printer"></i> Impresiones</label>
+                                <span><?php echo htmlspecialchars($pedidoGlobal['Impresiones'] ?? '0'); ?></span>
+                            </div>
+
+                            <div class="info-item-pedido">
+                                <label><i class="bi bi-clock-history"></i> Hora Creado</label>
+                                <span><?php echo $pedidoGlobal['HoraCreado'] ? substr($pedidoGlobal['HoraCreado'], 0, 5) : '—'; ?></span>
+                            </div>
+
+                            <div class="info-item-pedido">
+                                <label><i class="bi bi-box-arrow-in-right"></i> Ingreso Producto</label>
+                                <span><?php echo $pedidoGlobal['HoraIngresoProducto'] ? substr($pedidoGlobal['HoraIngresoProducto'], 0, 5) : '—'; ?></span>
+                            </div>
+
+                            <div class="info-item-pedido">
+                                <label><i class="bi bi-receipt"></i> Hora Impreso</label>
+                                <span><?php echo $pedidoGlobal['HoraImpreso'] ? substr($pedidoGlobal['HoraImpreso'], 0, 5) : '—'; ?></span>
+                            </div>
+
+                            <div class="info-item-pedido">
+                                <label><i class="bi bi-cash-coin"></i> Propina</label>
+                                <span>C$ <?php echo number_format(floatval($pedidoGlobal['Propina'] ?? 0), 2); ?></span>
                             </div>
 
                             <?php if ($puedeVerMontos): ?>
@@ -500,13 +530,23 @@ $cabecerasPrior = [
 $todasColumnas  = $lineas ? array_keys($lineas[0]) : [];
 $colsSecundarias = array_diff($todasColumnas, $colsPrioritarias);
 
+// Columnas a eliminar del detalle de líneas
+$colsAEliminar = [
+    'Anulado', 'MotivoAnulado', 'Fecha', 'Hora', 'CodPedido', 'CodCliente', 
+    'Delivery_Nombre', 'APOS', 'Local', 'Caja', 'Modalidad', 'Motorizado', 
+    'Impresiones', 'HoraCreado', 'HoraIngresoProducto', 'HoraImpreso', 'Propina', 
+    'Semana', 'MontoFactura', 'Sucursal_Nombre', 'PedidoDeCentral', 'CodMotorizado'
+];
+
 // Orden final de columnas
 $colsOrdenadas = [];
 foreach ($colsPrioritarias as $c) {
     if (in_array($c, $todasColumnas)) $colsOrdenadas[] = $c;
 }
 foreach ($colsSecundarias as $c) {
-    $colsOrdenadas[] = $c;
+    if (!in_array($c, $colsAEliminar)) {
+        $colsOrdenadas[] = $c;
+    }
 }
 ?>
                     <!-- ══════════════════════════════════════════════ -->
