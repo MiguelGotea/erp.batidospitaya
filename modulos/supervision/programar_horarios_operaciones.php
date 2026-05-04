@@ -454,6 +454,12 @@ function confirmarHorariosOperaciones()
             $horarioCompleto["{$dia}_entrada"] = $horario["{$dia}_entrada"] ?? null;
             $horarioCompleto["{$dia}_salida"] = $horario["{$dia}_salida"] ?? null;
 
+            // Forzar NULL para entrada/salida si el estado no es Activo o Otra.Tienda
+            if ($estadoDia !== 'Activo' && $estadoDia !== 'Otra.Tienda') {
+                $horarioCompleto["{$dia}_entrada"] = null;
+                $horarioCompleto["{$dia}_salida"] = null;
+            }
+
             // NUEVO: Guardar sucursal externa solo si el estado es Otra.Tienda
             if ($estadoDia === 'Otra.Tienda') {
                 $horarioCompleto["{$dia}_sucursal_externa"] = $horario["{$dia}_sucursal_externa"] ?? null;
