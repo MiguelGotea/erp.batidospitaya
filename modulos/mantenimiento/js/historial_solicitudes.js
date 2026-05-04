@@ -248,8 +248,8 @@ function renderizarTabla(datos) {
             row.tipo_formulario === 'mantenimiento_general'
         );
         const btnIA = esAnalizable
-            ? `<button class="btn-ia" id="btn-ia-${row.id}" onclick="analizarConIA(${row.id})"><i class="bi bi-robot"></i> IA</button>`
-            : `<button class="btn-ia" disabled title="No disponible para este estado o tipo"><i class="bi bi-robot"></i></button>`;
+            ? `<button class="btn-ia-icon" id="btn-ia-${row.id}" onclick="analizarConIA(${row.id})" title="Analizar con IA"><i class="bi bi-robot"></i></button>`
+            : `<button class="btn-ia-icon disabled" disabled title="No disponible para este estado o tipo"><i class="bi bi-robot"></i></button>`;
         tr.append(`<td>${btnIA}</td>`);
 
         tbody.append(tr);

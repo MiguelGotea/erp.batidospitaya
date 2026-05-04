@@ -192,7 +192,7 @@ function getTextoUrgencia($nivel)
                                     <i class="fas fa-filter filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
                                 <th style="width: 50px;">Foto</th>
-                                <th style="width: 70px;">IA</th>
+                                <th style="width: 50px;">IA</th>
                             </tr>
                         </thead>
                         <tbody id="tablaSolicitudesBody">
