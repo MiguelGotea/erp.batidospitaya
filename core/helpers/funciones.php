@@ -50,10 +50,29 @@ function formatoMesAnio($fecha)
     if (empty($fecha))
         return '';
 
-    setlocale(LC_TIME, 'es_ES.UTF-8', 'es_ES', 'es');
     $fechaObj = new DateTime($fecha);
 
-    return ucfirst(strftime('%B %Y', $fechaObj->getTimestamp()));
+    // Usar IntlDateFormatter si está disponible (extensión intl)
+    if (class_exists('IntlDateFormatter')) {
+        $formatter = new IntlDateFormatter(
+            'es_ES',
+            IntlDateFormatter::NONE,
+            IntlDateFormatter::NONE,
+            null,
+            null,
+            'MMMM yyyy'
+        );
+        return ucfirst($formatter->format($fechaObj));
+    }
+
+    // Fallback: array de meses en español (no requiere extensiones del servidor)
+    $meses = [
+        1 => 'Enero', 2 => 'Febrero', 3 => 'Marzo', 4 => 'Abril',
+        5 => 'Mayo', 6 => 'Junio', 7 => 'Julio', 8 => 'Agosto',
+        9 => 'Septiembre', 10 => 'Octubre', 11 => 'Noviembre', 12 => 'Diciembre'
+    ];
+    $mes = $meses[(int) $fechaObj->format('m')];
+    return $mes . ' ' . $fechaObj->format('Y');
 }
 
 /**
