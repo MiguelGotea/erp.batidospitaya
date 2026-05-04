@@ -596,7 +596,9 @@ if ($puedeAnalizarBot) {
                 a.duracion_segundos,
                 a.modelo_ia,
                 a.version_protocolo,
+                a.membresia_contexto,
                 a.created_at   AS analizado_en,
+                c.membresia_contexto AS membresia_contexto_cola,
                 s.nombre       AS sucursal_nombre
             FROM hikvision_cola_analisis c
             LEFT JOIN hikvision_analisis_ia_atencion a ON a.id_cola = c.id
@@ -617,6 +619,8 @@ if ($puedeAnalizarBot) {
         $estadoIa    = $datosIa['estado'];
         $promedioIa  = isset($datosIa['cal_promedio']) && $datosIa['cal_promedio'] !== null ? (float)$datosIa['cal_promedio'] : null;
         $detalleJson = !empty($datosIa['detalle_json']) ? json_decode($datosIa['detalle_json'], true) : null;
+        // membresia_contexto: prefiere el de la tabla de resultados (más confiable), fallback al de la cola
+        $membresiaContexto = $datosIa['membresia_contexto'] ?? $datosIa['membresia_contexto_cola'] ?? 'sin_membresia';
         $qualityClass = 'quality-media';
         $qualityLabel = 'Media';
         if ($promedioIa !== null) {
@@ -686,12 +690,22 @@ if ($puedeAnalizarBot) {
                             foreach ($grupos as $g):
                                 $val = isset($datosIa[$g['key']]) && $datosIa[$g['key']] !== null ? (int)$datosIa[$g['key']] : null;
                                 $pct = $val !== null ? ($val / 10 * 100) : 0;
+                                $isMem = $g['key'] === 'grupo_membresia';
                             ?>
                             <div class="score-card <?php echo $g['class']; ?>">
                                 <div class="score-icon"><?php echo $g['icon']; ?></div>
                                 <div class="score-label"><?php echo $g['label']; ?></div>
                                 <div class="score-sublabel"><?php echo $g['pasos']; ?></div>
-                                <?php if ($val !== null): ?>
+                                <?php if ($isMem && $membresiaContexto === 'vendida'): ?>
+                                    <div class="score-value">10</div>
+                                    <div class="score-max">/ 10</div>
+                                    <div class="score-bar"><div class="score-bar-fill" style="width:100%"></div></div>
+                                    <div class="mt-2"><span style="font-size:10px;background:#d1fae5;color:#065f46;padding:2px 8px;border-radius:10px;font-weight:700;">✅ Vendió membresía</span></div>
+                                <?php elseif ($isMem && $membresiaContexto === 'ya_tenia'): ?>
+                                    <div class="score-na">—</div>
+                                    <div class="score-max">No aplica</div>
+                                    <div class="mt-2"><span style="font-size:10px;background:#e0e7ff;color:#3730a3;padding:2px 8px;border-radius:10px;font-weight:700;">ℹ️ Cliente ya tenía</span></div>
+                                <?php elseif ($val !== null): ?>
                                     <div class="score-value"><?php echo $val; ?></div>
                                     <div class="score-max">/ 10</div>
                                     <div class="score-bar"><div class="score-bar-fill" style="width:<?php echo $pct; ?>%"></div></div>
@@ -763,43 +777,83 @@ if ($puedeAnalizarBot) {
                             </div>
                         </div>
 
-                        <?php if (!empty($detalleJson) && isset($detalleJson['pasos']) && is_array($detalleJson['pasos'])): ?>
+                        <?php if (!empty($detalleJson) && isset($detalleJson['grupos']) && is_array($detalleJson['grupos'])): ?>
                         <!-- Desglose por paso -->
                         <div class="info-tecnica mt-0">
                             <h6><i class="bi bi-list-check"></i> Desglose por paso del protocolo</h6>
-                            <div class="table-responsive">
+                            <?php
+                            $grupoLabels = [
+                                'bienvenida' => ['label'=>'Grupo 1 — Bienvenida','icon'=>'🤝','color'=>'#0E544C'],
+                                'asesoria'   => ['label'=>'Grupo 2 — Asesoría y Venta *','icon'=>'💬','color'=>'#1d4ed8'],
+                                'membresia'  => ['label'=>'Grupo 3 — Membresía Club Pitaya','icon'=>'⭐','color'=>'#6d28d9'],
+                                'cobro'      => ['label'=>'Grupo 4 — Proceso de Cobro','icon'=>'💳','color'=>'#b45309'],
+                                'entrega'    => ['label'=>'Grupo 5 — Entrega y Despedida','icon'=>'🎁','color'=>'#be185d'],
+                            ];
+                            $pasoLabels = [
+                                'paso_1_saludo_inmediato'  => 'Saludo inmediato',
+                                'paso_1_sonrisa_contacto'  => 'Sonrisa y contacto visual',
+                                'paso_1_energia_positiva'  => 'Energía positiva y cercanía',
+                                'paso_2_escucha_activa'    => 'Escucha activa',
+                                'paso_2_recomendo'         => 'Recomendó productos/promo',
+                                'paso_3_personalizo'       => 'Personalizó (endulzante/toppings)',
+                                'paso_4_acompanante'       => 'Sugirió acompañante',
+                                'paso_5_pregunto_membresia'=> 'Preguntó membresía',
+                                'paso_5_explico_beneficios'=> 'Explicó beneficios',
+                                'paso_6_pidio_nombre'      => 'Solicitó nombre del cliente',
+                                'paso_6_indico_monto'      => 'Indicó monto y métodos de pago',
+                                'paso_7_repitio_orden'     => 'Repitió la orden',
+                                'paso_8_pregunto_propina'  => 'Preguntó por propina',
+                                'paso_8b_entrego_factura'  => 'Entregó factura',
+                                'paso_9_llamo_por_nombre'  => 'Llamó por nombre al entregar',
+                                'paso_9_menciono_producto' => 'Mencionó productos entregados',
+                                'paso_9_sonrisa_entrega'   => 'Sonrisa en la entrega',
+                                'paso_10_despedida_cordial'=> 'Despedida cordial',
+                            ];
+                            foreach ($detalleJson['grupos'] as $grupoKey => $grupoData):
+                                $gl = $grupoLabels[$grupoKey] ?? ['label'=>ucfirst($grupoKey),'icon'=>'📌','color'=>'#555'];
+                                $calGrupo = isset($grupoData['cal_grupo']) && $grupoData['cal_grupo'] !== null ? (int)$grupoData['cal_grupo'] : null;
+                                $pasos = $grupoData['pasos'] ?? [];
+                            ?>
+                            <div class="mb-3">
+                                <div class="d-flex align-items-center gap-2 px-2 py-2 mb-1" style="background:#f8fffe;border-radius:8px;border-left:3px solid <?php echo $gl['color']; ?>;">
+                                    <span><?php echo $gl['icon']; ?></span>
+                                    <strong style="color:<?php echo $gl['color']; ?>;font-size:13px;"><?php echo $gl['label']; ?></strong>
+                                    <?php if ($calGrupo !== null): ?>
+                                        <?php $gc = $calGrupo >= 8 ? '#059669' : ($calGrupo >= 5 ? '#d97706' : '#dc3545'); ?>
+                                        <span class="ms-auto" style="font-size:18px;font-weight:800;color:<?php echo $gc; ?>"><?php echo $calGrupo; ?><span style="font-size:11px;color:#adb5bd">/10</span></span>
+                                    <?php else: ?>
+                                        <span class="ms-auto" style="font-size:12px;color:#adb5bd">N/A</span>
+                                    <?php endif; ?>
+                                </div>
+                                <?php if (!empty($pasos)): ?>
+                                <div class="table-responsive">
                                 <table class="table table-sm tabla-lineas mb-0">
-                                    <thead>
-                                        <tr>
-                                            <th style="width:40px">#</th>
-                                            <th>Paso</th>
-                                            <th style="width:80px;text-align:center">Nota</th>
-                                            <th>Observación</th>
-                                        </tr>
-                                    </thead>
                                     <tbody>
-                                    <?php foreach ($detalleJson['pasos'] as $paso): ?>
-                                        <?php
-                                            $nota = isset($paso['puntuacion']) ? (int)$paso['puntuacion'] : null;
-                                            $notaColor = $nota === null ? '#adb5bd' : ($nota >= 8 ? '#059669' : ($nota >= 5 ? '#d97706' : '#dc3545'));
-                                        ?>
-                                        <tr>
-                                            <td><strong><?php echo htmlspecialchars($paso['paso'] ?? '—'); ?></strong></td>
-                                            <td><?php echo htmlspecialchars($paso['nombre'] ?? '—'); ?></td>
-                                            <td style="text-align:center">
-                                                <?php if ($nota !== null): ?>
-                                                    <span style="font-weight:800;font-size:16px;color:<?php echo $notaColor; ?>"><?php echo $nota; ?></span>
-                                                    <span style="color:#adb5bd;font-size:11px">/10</span>
-                                                <?php else: ?>
-                                                    <span style="color:#adb5bd">N/A</span>
-                                                <?php endif; ?>
-                                            </td>
-                                            <td style="font-size:12px;color:#555"><?php echo htmlspecialchars($paso['observacion'] ?? '—'); ?></td>
-                                        </tr>
+                                    <?php foreach ($pasos as $pasoKey => $pasoData):
+                                        $cal = isset($pasoData['cal']) && $pasoData['cal'] !== null ? (int)$pasoData['cal'] : null;
+                                        $obs = $pasoData['obs'] ?? '—';
+                                        $nc  = $cal === null ? '#adb5bd' : ($cal >= 8 ? '#059669' : ($cal >= 5 ? '#d97706' : '#dc3545'));
+                                        $nombre = $pasoLabels[$pasoKey] ?? str_replace('_', ' ', $pasoKey);
+                                    ?>
+                                    <tr>
+                                        <td style="font-size:12px;color:#555;width:170px;"><?php echo htmlspecialchars($nombre); ?></td>
+                                        <td style="width:70px;text-align:center;">
+                                            <?php if ($cal !== null): ?>
+                                                <span style="font-weight:800;font-size:15px;color:<?php echo $nc; ?>"><?php echo $cal; ?></span>
+                                                <span style="color:#adb5bd;font-size:10px">/10</span>
+                                            <?php else: ?>
+                                                <span style="color:#adb5bd;font-size:12px">N/A</span>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td style="font-size:12px;color:#555;"><?php echo htmlspecialchars($obs); ?></td>
+                                    </tr>
                                     <?php endforeach; ?>
                                     </tbody>
                                 </table>
+                                </div>
+                                <?php endif; ?>
                             </div>
+                            <?php endforeach; ?>
                         </div>
                         <?php endif; ?>
 
