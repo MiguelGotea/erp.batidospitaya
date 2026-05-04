@@ -42,7 +42,7 @@ $textosEstado = [
 $textosTipo = [
     'mantenimiento'         => 'Mantenimiento',
     'mantenimiento_general' => 'Mantenimiento',
-    'cambio_equipos'        => 'Cambio Equipo',
+    'cambio_equipos'        => 'Equipos',
 ];
 
 // ── Construir WHERE (idéntico a historial_get_solicitudes.php) ────────────────

@@ -112,7 +112,8 @@ const textosEstado = {
 
 const textosTipo = {
     'mantenimiento': 'Mantenimiento',
-    'cambio_equipos': 'Cambio Equipo'
+    'mantenimiento_general': 'Mantenimiento',
+    'cambio_equipos': 'Equipos'
 };
 
 // Inicializar al cargar la página
