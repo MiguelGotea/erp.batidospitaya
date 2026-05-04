@@ -256,6 +256,24 @@ if ($pedidoGlobal) {
         .promedio-card .score-value  { color: #059669; }
         .promedio-card .score-bar-fill { background: linear-gradient(90deg,#10b981,#059669); }
 
+        /* ── Grupos protocolo Pitaya ────────────────────── */
+        .score-card.g-bienvenida::before { background: linear-gradient(90deg,#51B8AC,#0E544C); }
+        .score-card.g-asesoria::before   { background: linear-gradient(90deg,#3b82f6,#1d4ed8); }
+        .score-card.g-membresia::before  { background: linear-gradient(90deg,#8b5cf6,#6d28d9); }
+        .score-card.g-cobro::before      { background: linear-gradient(90deg,#f59e0b,#b45309); }
+        .score-card.g-entrega::before    { background: linear-gradient(90deg,#ec4899,#be185d); }
+        .g-bienvenida .score-value    { color: #0E544C; }
+        .g-bienvenida .score-bar-fill { background: linear-gradient(90deg,#51B8AC,#0E544C); }
+        .g-asesoria   .score-value    { color: #1d4ed8; }
+        .g-asesoria   .score-bar-fill { background: linear-gradient(90deg,#3b82f6,#1d4ed8); }
+        .g-membresia  .score-value    { color: #6d28d9; }
+        .g-membresia  .score-bar-fill { background: linear-gradient(90deg,#8b5cf6,#6d28d9); }
+        .g-cobro      .score-value    { color: #b45309; }
+        .g-cobro      .score-bar-fill { background: linear-gradient(90deg,#f59e0b,#b45309); }
+        .g-entrega    .score-value    { color: #be185d; }
+        .g-entrega    .score-bar-fill { background: linear-gradient(90deg,#ec4899,#be185d); }
+        .score-sublabel { font-size:10px; color:#adb5bd; font-weight:600; letter-spacing:.5px; text-transform:uppercase; margin-bottom:6px; }
+
         /* ── Veredicto IA ──────────────────────────────── */
         .veredicto-card {
             background: white; border-radius: 14px; padding: 28px;
@@ -565,16 +583,19 @@ if ($puedeAnalizarBot) {
                 c.error_mensaje,
                 c.created_at   AS encolado_en,
                 c.updated_at   AS actualizado_en,
-                a.id           AS id_analisis,
-                a.cal_amabilidad,
-                a.cal_saludo,
-                a.cal_despedida,
-                a.cal_membresia,
-                a.promedio,
+                a.id              AS id_analisis,
+                a.grupo_bienvenida,
+                a.grupo_asesoria,
+                a.grupo_membresia,
+                a.grupo_cobro,
+                a.grupo_entrega,
+                a.cal_promedio,
+                a.detalle_json,
                 a.resumen,
                 a.tiene_audio,
                 a.duracion_segundos,
                 a.modelo_ia,
+                a.version_protocolo,
                 a.created_at   AS analizado_en,
                 s.nombre       AS sucursal_nombre
             FROM hikvision_cola_analisis c
@@ -594,7 +615,8 @@ if ($puedeAnalizarBot) {
     // Procesar variables de la sección IA
     if ($datosIa) {
         $estadoIa    = $datosIa['estado'];
-        $promedioIa  = $datosIa['promedio'] !== null ? (float)$datosIa['promedio'] : null;
+        $promedioIa  = isset($datosIa['cal_promedio']) && $datosIa['cal_promedio'] !== null ? (float)$datosIa['cal_promedio'] : null;
+        $detalleJson = !empty($datosIa['detalle_json']) ? json_decode($datosIa['detalle_json'], true) : null;
         $qualityClass = 'quality-media';
         $qualityLabel = 'Media';
         if ($promedioIa !== null) {
@@ -609,7 +631,12 @@ if ($puedeAnalizarBot) {
                     <!--  SECCIÓN 3 — Análisis IA                      -->
                     <!-- ══════════════════════════════════════════════ -->
                     <div class="seccion-card">
-                        <div class="seccion-titulo">🤖 Análisis IA de Atención al Cliente</div>
+                        <div class="seccion-titulo">
+                            🤖 Análisis IA de Atención al Cliente
+                            <button class="btn btn-sm ms-auto d-flex align-items-center gap-1 fw-semibold" style="background:#e8f5e9;color:#0E544C;border:1px solid #51B8AC;border-radius:8px;padding:5px 12px;font-size:12px;" data-bs-toggle="modal" data-bs-target="#modalProtocolo" title="Ver Protocolo Oficial de Atención">
+                                <i class="bi bi-clipboard-check"></i> Protocolo Oficial
+                            </button>
+                        </div>
 
 <?php if (!$datosIa): ?>
                         <!-- Sin registro en cola -->
@@ -646,50 +673,45 @@ if ($puedeAnalizarBot) {
 <?php elseif ($estadoIa === 'completado' && $datosIa['id_analisis']): ?>
                         <!-- ✅ Resultado completo -->
 
-                        <!-- Scores grid -->
+                        <!-- Scores grid: 5 grupos del protocolo -->
                         <div class="scores-grid">
                             <?php
-                            $metricas = [
-                                ['key' => 'cal_amabilidad', 'class' => 'amabilidad',  'label' => 'Amabilidad',  'icon' => '😊'],
-                                ['key' => 'cal_saludo',     'class' => 'saludo',      'label' => 'Saludo',      'icon' => '👋'],
-                                ['key' => 'cal_despedida',  'class' => 'despedida',   'label' => 'Despedida',   'icon' => '🙏'],
-                                ['key' => 'cal_membresia',  'class' => 'membresia',   'label' => 'Membresía',   'icon' => '⭐'],
+                            $grupos = [
+                                ['key'=>'grupo_bienvenida','class'=>'g-bienvenida','label'=>'Bienvenida','icon'=>'🤝','pasos'=>'Paso 1'],
+                                ['key'=>'grupo_asesoria',  'class'=>'g-asesoria',  'label'=>'Asesoría',  'icon'=>'💬','pasos'=>'Pasos 2–4'],
+                                ['key'=>'grupo_membresia', 'class'=>'g-membresia', 'label'=>'Membresía', 'icon'=>'⭐','pasos'=>'Paso 5'],
+                                ['key'=>'grupo_cobro',     'class'=>'g-cobro',     'label'=>'Cobro',     'icon'=>'💳','pasos'=>'Pasos 6–8'],
+                                ['key'=>'grupo_entrega',   'class'=>'g-entrega',   'label'=>'Entrega',   'icon'=>'🎁','pasos'=>'Pasos 9–10'],
                             ];
-                            foreach ($metricas as $m):
-                                $val = $datosIa[$m['key']] !== null ? (int)$datosIa[$m['key']] : null;
+                            foreach ($grupos as $g):
+                                $val = isset($datosIa[$g['key']]) && $datosIa[$g['key']] !== null ? (int)$datosIa[$g['key']] : null;
                                 $pct = $val !== null ? ($val / 10 * 100) : 0;
                             ?>
-                            <div class="score-card <?php echo $m['class']; ?>">
-                                <div class="score-icon"><?php echo $m['icon']; ?></div>
-                                <div class="score-label"><?php echo $m['label']; ?></div>
+                            <div class="score-card <?php echo $g['class']; ?>">
+                                <div class="score-icon"><?php echo $g['icon']; ?></div>
+                                <div class="score-label"><?php echo $g['label']; ?></div>
+                                <div class="score-sublabel"><?php echo $g['pasos']; ?></div>
                                 <?php if ($val !== null): ?>
                                     <div class="score-value"><?php echo $val; ?></div>
                                     <div class="score-max">/ 10</div>
-                                    <div class="score-bar">
-                                        <div class="score-bar-fill" style="width:<?php echo $pct; ?>%"></div>
-                                    </div>
+                                    <div class="score-bar"><div class="score-bar-fill" style="width:<?php echo $pct; ?>%"></div></div>
                                 <?php else: ?>
                                     <div class="score-na">N/A</div>
-                                    <div class="score-max">No aplica</div>
+                                    <div class="score-max">No evaluado</div>
                                 <?php endif; ?>
                             </div>
                             <?php endforeach; ?>
 
-                            <!-- Promedio -->
+                            <!-- Promedio general -->
                             <div class="score-card promedio-card">
                                 <div class="score-icon">📊</div>
                                 <div class="score-label">Promedio</div>
+                                <div class="score-sublabel">General</div>
                                 <?php if ($promedioIa !== null): ?>
                                     <div class="score-value"><?php echo number_format($promedioIa, 1); ?></div>
                                     <div class="score-max">/ 10</div>
-                                    <div class="score-bar">
-                                        <div class="score-bar-fill" style="width:<?php echo ($promedioIa / 10 * 100); ?>%"></div>
-                                    </div>
-                                    <div class="mt-2">
-                                        <span class="quality-indicator <?php echo $qualityClass; ?>">
-                                            Calidad <?php echo $qualityLabel; ?>
-                                        </span>
-                                    </div>
+                                    <div class="score-bar"><div class="score-bar-fill" style="width:<?php echo ($promedioIa/10*100); ?>%"></div></div>
+                                    <div class="mt-2"><span class="quality-indicator <?php echo $qualityClass; ?>">Calidad <?php echo $qualityLabel; ?></span></div>
                                 <?php else: ?>
                                     <div class="score-na">N/A</div>
                                 <?php endif; ?>
@@ -731,11 +753,55 @@ if ($puedeAnalizarBot) {
                                     <span><?php echo $datosIa['analizado_en'] ? date('d/m/Y H:i', strtotime($datosIa['analizado_en'])) : '—'; ?></span>
                                 </div>
                                 <div class="info-item">
+                                    <label>Versión protocolo</label>
+                                    <span><?php echo htmlspecialchars($datosIa['version_protocolo'] ?? '1.0'); ?></span>
+                                </div>
+                                <div class="info-item">
                                     <label>ID Cola</label>
                                     <span>#<?php echo $datosIa['id_cola']; ?></span>
                                 </div>
                             </div>
                         </div>
+
+                        <?php if (!empty($detalleJson) && isset($detalleJson['pasos']) && is_array($detalleJson['pasos'])): ?>
+                        <!-- Desglose por paso -->
+                        <div class="info-tecnica mt-0">
+                            <h6><i class="bi bi-list-check"></i> Desglose por paso del protocolo</h6>
+                            <div class="table-responsive">
+                                <table class="table table-sm tabla-lineas mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th style="width:40px">#</th>
+                                            <th>Paso</th>
+                                            <th style="width:80px;text-align:center">Nota</th>
+                                            <th>Observación</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                    <?php foreach ($detalleJson['pasos'] as $paso): ?>
+                                        <?php
+                                            $nota = isset($paso['puntuacion']) ? (int)$paso['puntuacion'] : null;
+                                            $notaColor = $nota === null ? '#adb5bd' : ($nota >= 8 ? '#059669' : ($nota >= 5 ? '#d97706' : '#dc3545'));
+                                        ?>
+                                        <tr>
+                                            <td><strong><?php echo htmlspecialchars($paso['paso'] ?? '—'); ?></strong></td>
+                                            <td><?php echo htmlspecialchars($paso['nombre'] ?? '—'); ?></td>
+                                            <td style="text-align:center">
+                                                <?php if ($nota !== null): ?>
+                                                    <span style="font-weight:800;font-size:16px;color:<?php echo $notaColor; ?>"><?php echo $nota; ?></span>
+                                                    <span style="color:#adb5bd;font-size:11px">/10</span>
+                                                <?php else: ?>
+                                                    <span style="color:#adb5bd">N/A</span>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td style="font-size:12px;color:#555"><?php echo htmlspecialchars($paso['observacion'] ?? '—'); ?></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <?php endif; ?>
 
 <?php else: ?>
                         <div class="estado-placeholder">
@@ -755,6 +821,108 @@ if ($puedeAnalizarBot) {
             </div>
         </div>
     </div>
+
+    <!-- ══════════════════════════════════════════════════════ -->
+    <!-- Modal: Protocolo Oficial de Atención al Cliente Pitaya -->
+    <!-- ══════════════════════════════════════════════════════ -->
+    <div class="modal fade" id="modalProtocolo" tabindex="-1" aria-labelledby="modalProtocoloLabel" aria-hidden="true">
+      <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content" style="border-radius:16px;overflow:hidden;">
+          <div class="modal-header" style="background:linear-gradient(135deg,#0E544C,#1a7a6e);color:white;border:none;padding:20px 28px;">
+            <div>
+              <h5 class="modal-title fw-bold mb-1" id="modalProtocoloLabel"><i class="bi bi-clipboard-check me-2"></i>Protocolo Oficial de Atención al Cliente</h5>
+              <p class="mb-0" style="font-size:12px;opacity:.8;">Pitaya · 10 pasos · Los pasos marcados con * se pueden acortar si hay fila larga</p>
+            </div>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+          </div>
+          <div class="modal-body p-0">
+            <table class="table table-hover mb-0" style="font-size:13px;">
+              <thead style="position:sticky;top:0;z-index:1;">
+                <tr style="background:#0E544C;color:white;">
+                  <th style="width:200px;padding:12px 16px;">Etapa del servicio</th>
+                  <th style="padding:12px 16px;">Criterios de evaluación</th>
+                </tr>
+              </thead>
+              <tbody>
+                <?php
+                $protocolo = [
+                  ['paso'=>'1. Saluda con una Sonrisa','color'=>'#0E544C','icon'=>'🤝','criterios'=>[
+                    'El colaborador debe saludar de forma inmediata a la entrada del cliente en la tienda.',
+                    'Con una sonrisa genuina y contacto visual, transmitiendo energía positiva y cercanía.',
+                    'El saludo debe hacer sentir al cliente bienvenido desde el primer momento.',
+                  ]],
+                  ['paso'=>'2. Escucha y recomienda *','color'=>'#1d4ed8','icon'=>'💬','criterios'=>[
+                    'Escuchar activamente al cliente, identificar sus gustos o necesidades y recomendar productos de forma natural.',
+                    'Es el momento ideal para recomendar la promoción o combo de temporada.',
+                  ]],
+                  ['paso'=>'3. Especifica detalles','color'=>'#0369a1','icon'=>'📝','criterios'=>[
+                    'Ofrecer opciones de personalización permitidas: tipo de endulzante (sirope de azúcar morena, miel de abeja, Stevia, Splenda o sin endulzante). En caso de wafle, indicar con qué topping va acompañado.',
+                  ]],
+                  ['paso'=>'4. Ofrece un acompañante','color'=>'#b45309','icon'=>'🍪','criterios'=>[
+                    'Sugerir de forma amable un acompañante para complementar la experiencia, como galletas de avena o frutos secos marca Pitaya, o una promoción vigente.',
+                    'Sin presionar al cliente.',
+                  ]],
+                  ['paso'=>'5. Solicita su código y nombre *','color'=>'#6d28d9','icon'=>'⭐','criterios'=>[
+                    'Preguntar si el cliente cuenta con membresía del Club Pitaya.',
+                    'Si no tiene, explicar brevemente los beneficios y ofrecer la membresía como opción.',
+                  ]],
+                  ['paso'=>'6. Pide y cobra','color'=>'#b45309','icon'=>'💳','criterios'=>[
+                    'Solicitar el nombre del cliente para la orden.',
+                    'Proceder con el cobro indicando el monto total y el método de pago disponible (efectivo, tarjeta, transferencia, canje de puntos).',
+                  ]],
+                  ['paso'=>'7. Repite su Orden','color'=>'#065f46','icon'=>'🔁','criterios'=>[
+                    'Confirmar y repetir exactamente lo que el cliente ordenó. Garantiza que el cliente esté claro y sin dudas de lo que pidió.',
+                  ]],
+                  ['paso'=>'8. Pregunta por la propina','color'=>'#be185d','icon'=>'🙏','criterios'=>[
+                    'Es obligatorio siempre preguntar al cliente si desea agregar propina. Además es una manera de medir si se está dando un buen servicio.',
+                  ]],
+                  ['paso'=>'8. Cancelación de Orden','color'=>'#b45309','icon'=>'🧾','criterios'=>[
+                    'Confirma monto a pagar y da a conocer los métodos de pago disponibles para que el cliente elija.',
+                    'Confirmar que la factura y la comanda hayan sido generadas correctamente.',
+                    'Siempre entregar la factura al cliente.',
+                    'Siempre entregar la comanda de preparación a las estaciones correspondientes.',
+                  ]],
+                  ['paso'=>'9. Entrega y Repite','color'=>'#0E544C','icon'=>'🎁','criterios'=>[
+                    'Entregar el producto llamando al cliente por su nombre, con una sonrisa, mencionando los productos que se entregan.',
+                    'Cuidar la presentación del producto.',
+                    'Siempre con una sonrisa.',
+                  ]],
+                  ['paso'=>'10. Despide','color'=>'#065f46','icon'=>'👋','criterios'=>[
+                    'Agradecer la visita de forma cordial e invitar al cliente a regresar, reforzando una experiencia positiva y memorable.',
+                  ]],
+                ];
+                foreach ($protocolo as $i => $p):
+                  $bg = $i % 2 === 0 ? '#ffffff' : '#f8fffe';
+                ?>
+                <tr style="background:<?php echo $bg; ?>;">
+                  <td style="padding:14px 16px;vertical-align:top;">
+                    <span style="display:inline-flex;align-items:center;gap:6px;font-weight:700;color:<?php echo $p['color']; ?>;">
+                      <?php echo $p['icon']; ?> <?php echo htmlspecialchars($p['paso']); ?>
+                    </span>
+                  </td>
+                  <td style="padding:14px 16px;vertical-align:top;">
+                    <ol style="margin:0;padding-left:18px;">
+                      <?php foreach ($p['criterios'] as $c): ?>
+                      <li style="margin-bottom:4px;line-height:1.5;"><?php echo htmlspecialchars($c); ?></li>
+                      <?php endforeach; ?>
+                    </ol>
+                  </td>
+                </tr>
+                <?php endforeach; ?>
+              </tbody>
+            </table>
+          </div>
+          <div class="modal-footer" style="background:#f8fffe;border-top:1px solid #e0f0ee;padding:12px 20px;">
+            <p class="text-muted mb-0" style="font-size:11px;flex:1;">
+              <i class="bi bi-info-circle me-1"></i>
+              <strong>*Importante:</strong> Los pasos marcados con * se pueden acortar o saltar solo si hay fila muy larga. Luego, vuelve y completa lo pendiente.
+            </p>
+            <button type="button" class="btn btn-sm" style="background:#0E544C;color:white;border-radius:8px;" data-bs-dismiss="modal">Cerrar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- /Modal Protocolo -->
 
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
