@@ -209,11 +209,11 @@ try {
 
     // Mostrador por sucursal
     // CodGrupo IN (5,7), excluye PedidosYa
-    // Pct = SUM(Cantidad grupo 5|7 sin PedidosYa) / SUM(Cantidad total del mes)
+    // Pct = SUM(Precio grupo 5|7 sin PedidosYa) / SUM(Precio total sin PedidosYa)
     // Meta: 8% → si raw_pct >= 8% = 100%, si no → proporcional
     $stmt = $conn->prepare("
         SELECT s.codigo AS cod_sucursal,
-               SUM(v.Cantidad) AS cant_mostrador
+               SUM(v.Precio) AS monto_mostrador
         FROM VentasGlobalesAccessCSV v
         JOIN DBBatidos b           ON v.CodProducto = b.CodBatido
         JOIN GrupoProductosVenta g ON b.CodGrupo    = g.CodGrupo
@@ -229,10 +229,10 @@ try {
     $stmt->execute([':mes' => $mes, ':anio' => $anio]);
     $mostrador_data = $stmt->fetchAll(PDO::FETCH_GROUP | PDO::FETCH_ASSOC);
 
-    // Total Cantidad del mes por sucursal (denominador de Mostrador)
+    // Total Monto del mes por sucursal, sin PedidosYa (denominador de Mostrador)
     $stmt = $conn->prepare("
         SELECT s.codigo AS cod_sucursal,
-               SUM(v.Cantidad) AS total_cantidad
+               SUM(v.Precio) AS total_monto
         FROM VentasGlobalesAccessCSV v
         JOIN sucursales s ON v.local = s.codigo
         WHERE MONTH(v.Fecha)     = :mes
