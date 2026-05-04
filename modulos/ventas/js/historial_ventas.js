@@ -61,14 +61,12 @@ function _configurarColumnasPorVista(modo) {
         $('th[data-column="Cantidad"]').hide();
         if (puedeAnalizarBot) $('.col-atencion-ia').show();
         $('#thAccionesPedido').show();
-        $('#totalProductosItem').hide();
     } else {
         $('th[data-column="DBBatidos_Nombre"]').show();
         $('th[data-column="Medida"]').show();
         $('th[data-column="Cantidad"]').show();
         $('.col-atencion-ia').hide();
         $('#thAccionesPedido').hide();
-        $('#totalProductosItem').show();
     }
 }
 
@@ -135,10 +133,12 @@ function cargarDatos() {
 
 // Actualizar totales
 function actualizarTotales(totales) {
-    if (totales && totales.productos !== null && totales.productos !== undefined) {
-        $('#totalProductos').text(parseInt(totales.productos || 0));
+    const val = totales ? totales.productos : null;
+    if (val !== null && val !== undefined) {
+        $('#totalProductos').text(parseInt(val || 0));
+        $('#totalProductosItem').show();
     } else {
-        $('#totalProductos').text('0');
+        $('#totalProductosItem').hide();
     }
 }
 

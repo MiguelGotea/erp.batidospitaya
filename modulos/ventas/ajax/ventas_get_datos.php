@@ -212,9 +212,13 @@ try {
     $stmtCount = $conn->query("SELECT FOUND_ROWS() as total");
     $totalRegistros = (int)$stmtCount->fetch(PDO::FETCH_ASSOC)['total'];
     
-    // Calcular total de productos (solo en modo por_producto)
+    // Calcular total de productos SOLO si hay un filtro de producto específico activo
     $totalesProd = null;
-    if ($modo === 'por_producto') {
+    $hayFiltroProdUnico = $modo === 'por_producto'
+        && isset($filtros['DBBatidos_Nombre'])
+        && trim($filtros['DBBatidos_Nombre']) !== '';
+
+    if ($hayFiltroProdUnico) {
         $sqlTotales = "SELECT SUM(v.Cantidad) AS total_productos
                     FROM VentasGlobalesAccessCSV v
                     LEFT JOIN DBBatidos b ON v.CodProducto = b.CodBatido
@@ -234,7 +238,7 @@ try {
         'modo'    => $modo,
         'total_registros' => $totalRegistros,
         'totales' => [
-            'productos' => $modo === 'por_producto' ? ($totalesProd['total_productos'] ?? 0) : null
+            'productos' => $hayFiltroProdUnico ? ($totalesProd['total_productos'] ?? 0) : null
         ]
     ], JSON_UNESCAPED_UNICODE);
     
