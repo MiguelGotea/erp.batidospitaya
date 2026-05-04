@@ -19,7 +19,7 @@ if (!verificarAccesoCargo([16, 21, 36, 11]) && !(isset($_SESSION['usuario_rol'])
     exit();
 }
 
-// Obtenemos el cargo principal usando la función de funciones.php
+// Obtenemos el cargo principal del usuario para determinar permisos
 $cargoUsuario = obtenerCargoPrincipalUsuario($_SESSION['usuario_id']);
 //******************************Estándar para header, termina******************************
 
@@ -43,8 +43,11 @@ $semanaSeleccionada = $_GET['semana'] ?? $semanaActual['numero_semana'];
 $sucursalSeleccionada = $_GET['sucursal'] ?? ($sucursales[0]['codigo'] ?? null);
 $semana = obtenerSemanaPorNumero($semanaSeleccionada);
 
-// Determinar si estamos en el período de edición (sábado 00:00 a domingo 12:00 hora), cambiar a true para editar full
+// Lógica para determinar el período de edición para el departamento de operaciones
+// Período estándar: Sábado 00:00 a Domingo 12:00
 $periodoEdicion = true;
+$sabadoSemanaActual = null;
+$domingoSemanaActual = null;
 if ($semanaSiguiente) {
     $domingoSemanaActual = new DateTime($semanaActual['fecha_fin'], new DateTimeZone('America/Managua')); // Domingo de la semana actual
     $sabadoSemanaActual = clone $domingoSemanaActual;
@@ -284,6 +287,10 @@ $estados = [
 ];
 
 // Función para obtener un operario por su código
+/**
+ * @param string $codOperario
+ * @return array|false
+ */
 function obtenerOperarioPorCodigo($codOperario)
 {
     global $conn;
@@ -312,6 +319,11 @@ function obtenerOperarioPorCodigo($codOperario)
 //  return $stmt->fetchAll();
 //}
 
+/**
+ * @param int $idSemana
+ * @param string $codSucursal
+ * @return array
+ */
 function obtenerHorariosLiderPorSemanaYSucursal($idSemana, $codSucursal)
 {
     global $conn;
@@ -341,6 +353,12 @@ function obtenerHorariosLiderPorSemanaYSucursal($idSemana, $codSucursal)
 /**
  * Obtiene el horario de operaciones de un operario para una semana y sucursal específica
  * ACTUALIZADA: Incluye cod_contrato
+ */
+/**
+ * @param string $codOperario
+ * @param int $idSemana
+ * @param string $codSucursal
+ * @return array|false
  */
 function obtenerHorarioOperaciones($codOperario, $idSemana, $codSucursal)
 {
@@ -504,6 +522,11 @@ function confirmarHorariosOperaciones()
     exit();
 }
 
+/**
+ * @param int $idHorario
+ * @param array $horario
+ * @return bool
+ */
 function actualizarHorarioOperaciones($idHorario, $horario)
 {
     global $conn;
@@ -560,9 +583,13 @@ function actualizarHorarioOperaciones($idHorario, $horario)
         $idHorario
     );
 
-    $stmt->execute($params);
+    return $stmt->execute($params);
 }
 
+/**
+ * @param int|string $idCategoria
+ * @return string
+ */
 function obtenerColorCategoria($idCategoria)
 {
     $colores = [
@@ -578,6 +605,10 @@ function obtenerColorCategoria($idCategoria)
     return $colores[$idCategoria] ?? '#FFFFFF';
 }
 
+/**
+ * @param string $nombreCategoria
+ * @return string
+ */
 function obtenerClaseCategoria($nombreCategoria)
 {
     $clases = [
@@ -593,6 +624,13 @@ function obtenerClaseCategoria($nombreCategoria)
     return $clases[$nombreCategoria] ?? 'tr-categoria-sin-categoria';
 }
 
+/**
+ * @param int $idSemana
+ * @param string $codOperario
+ * @param string $codSucursal
+ * @param array $horario
+ * @return bool
+ */
 function crearHorarioOperaciones($idSemana, $codOperario, $codSucursal, $horario)
 {
     global $conn;
@@ -650,7 +688,7 @@ function crearHorarioOperaciones($idSemana, $codOperario, $codSucursal, $horario
         $fechaConfirmacion
     );
 
-    $stmt->execute($params);
+    return $stmt->execute($params);
 }
 
 $cambiosDetectados = [];
@@ -663,6 +701,11 @@ if ($sucursalSeleccionada && $semanaSeleccionada && $semana && !empty($horariosL
 }
 
 // Función para detectar cambios entre horarios del líder y operaciones
+/**
+ * @param array $horariosLider
+ * @param array $horariosOperaciones
+ * @return array
+ */
 function detectarCambiosHorarios($horariosLider, $horariosOperaciones)
 {
     $cambios = [];
@@ -741,6 +784,10 @@ echo 'Horario autorizado: ' . ($horarioAutorizado ? 'SI' : 'NO');
 echo '</pre>';
 */
 
+/**
+ * @param int|string $idCategoria
+ * @return string
+ */
 function obtenerNombreCategoria($idCategoria)
 {
     global $conn;
@@ -2820,6 +2867,7 @@ function obtenerCategoriasDesdeBD()
                                 padding: 0;
                                 margin: 0;
                                 -moz-appearance: textfield;
+                                appearance: textfield;
                             }
 
                             .ts-input::-webkit-outer-spin-button,
