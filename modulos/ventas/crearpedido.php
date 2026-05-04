@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 require_once '../../includes/auth.php';
 require_once '../../includes/conexion.php';
 require_once '../../includes/funciones.php';
@@ -97,7 +97,7 @@ if ($edicion) {
     <link rel="icon" type="image/png" href="../../assets/img/icon12.png">
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
 </head>
-<link rel="stylesheet" href="stylescrearp.css">
+<link rel="stylesheet" href="css/stylescrearp.css">
 <body>
     <div class="container">
         <header class="header-ventas">
