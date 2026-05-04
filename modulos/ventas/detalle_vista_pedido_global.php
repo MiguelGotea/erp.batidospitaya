@@ -261,7 +261,6 @@ if ($pedidoGlobal) {
         .score-card.g-asesoria::before   { background: linear-gradient(90deg,#3b82f6,#1d4ed8); }
         .score-card.g-membresia::before  { background: linear-gradient(90deg,#8b5cf6,#6d28d9); }
         .score-card.g-cobro::before      { background: linear-gradient(90deg,#f59e0b,#b45309); }
-        .score-card.g-entrega::before    { background: linear-gradient(90deg,#ec4899,#be185d); }
         .g-bienvenida .score-value    { color: #0E544C; }
         .g-bienvenida .score-bar-fill { background: linear-gradient(90deg,#51B8AC,#0E544C); }
         .g-asesoria   .score-value    { color: #1d4ed8; }
@@ -270,8 +269,6 @@ if ($pedidoGlobal) {
         .g-membresia  .score-bar-fill { background: linear-gradient(90deg,#8b5cf6,#6d28d9); }
         .g-cobro      .score-value    { color: #b45309; }
         .g-cobro      .score-bar-fill { background: linear-gradient(90deg,#f59e0b,#b45309); }
-        .g-entrega    .score-value    { color: #be185d; }
-        .g-entrega    .score-bar-fill { background: linear-gradient(90deg,#ec4899,#be185d); }
         .score-sublabel { font-size:10px; color:#adb5bd; font-weight:600; letter-spacing:.5px; text-transform:uppercase; margin-bottom:6px; }
 
         /* ── Veredicto IA ──────────────────────────────── */
@@ -588,7 +585,6 @@ if ($puedeAnalizarBot) {
                 a.grupo_asesoria,
                 a.grupo_membresia,
                 a.grupo_cobro,
-                a.grupo_entrega,
                 a.cal_promedio,
                 a.detalle_json,
                 a.resumen,
@@ -685,7 +681,6 @@ if ($puedeAnalizarBot) {
                                 ['key'=>'grupo_asesoria',  'class'=>'g-asesoria',  'label'=>'Asesoría',  'icon'=>'💬','pasos'=>'Pasos 2–4'],
                                 ['key'=>'grupo_membresia', 'class'=>'g-membresia', 'label'=>'Membresía', 'icon'=>'⭐','pasos'=>'Paso 5'],
                                 ['key'=>'grupo_cobro',     'class'=>'g-cobro',     'label'=>'Cobro',     'icon'=>'💳','pasos'=>'Pasos 6–8'],
-                                ['key'=>'grupo_entrega',   'class'=>'g-entrega',   'label'=>'Entrega',   'icon'=>'🎁','pasos'=>'Pasos 9–10'],
                             ];
                             foreach ($grupos as $g):
                                 $val = isset($datosIa[$g['key']]) && $datosIa[$g['key']] !== null ? (int)$datosIa[$g['key']] : null;
@@ -787,7 +782,6 @@ if ($puedeAnalizarBot) {
                                 'asesoria'   => ['label'=>'Grupo 2 — Asesoría y Venta *','icon'=>'💬','color'=>'#1d4ed8'],
                                 'membresia'  => ['label'=>'Grupo 3 — Membresía Club Pitaya','icon'=>'⭐','color'=>'#6d28d9'],
                                 'cobro'      => ['label'=>'Grupo 4 — Proceso de Cobro','icon'=>'💳','color'=>'#b45309'],
-                                'entrega'    => ['label'=>'Grupo 5 — Entrega y Despedida','icon'=>'🎁','color'=>'#be185d'],
                             ];
                             $pasoLabels = [
                                 'paso_1_saludo_inmediato'  => 'Saludo inmediato',
@@ -804,10 +798,6 @@ if ($puedeAnalizarBot) {
                                 'paso_7_repitio_orden'     => 'Repitió la orden',
                                 'paso_8_pregunto_propina'  => 'Preguntó por propina',
                                 'paso_8b_entrego_factura'  => 'Entregó factura',
-                                'paso_9_llamo_por_nombre'  => 'Llamó por nombre al entregar',
-                                'paso_9_menciono_producto' => 'Mencionó productos entregados',
-                                'paso_9_sonrisa_entrega'   => 'Sonrisa en la entrega',
-                                'paso_10_despedida_cordial'=> 'Despedida cordial',
                             ];
                             foreach ($detalleJson['grupos'] as $grupoKey => $grupoData):
                                 $gl = $grupoLabels[$grupoKey] ?? ['label'=>ucfirst($grupoKey),'icon'=>'📌','color'=>'#555'];
@@ -885,7 +875,7 @@ if ($puedeAnalizarBot) {
           <div class="modal-header" style="background:linear-gradient(135deg,#0E544C,#1a7a6e);color:white;border:none;padding:20px 28px;">
             <div>
               <h5 class="modal-title fw-bold mb-1" id="modalProtocoloLabel"><i class="bi bi-clipboard-check me-2"></i>Protocolo Oficial de Atención al Cliente</h5>
-              <p class="mb-0" style="font-size:12px;opacity:.8;">Pitaya · 10 pasos · Los pasos marcados con * se pueden acortar si hay fila larga</p>
+              <p class="mb-0" style="font-size:12px;opacity:.8;">Pitaya · 10 pasos · La IA evalúa los Grupos 1 al 4 (pasos 9 y 10 fuera de cámara)</p>
             </div>
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
           </div>
