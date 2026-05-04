@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * hikvision_estados_batch.php
  * Carga los estados IA de múltiples pedidos en una sola consulta.
@@ -67,7 +67,6 @@ try {
             a.grupo_asesoria,
             a.grupo_membresia,
             a.grupo_cobro,
-            a.grupo_entrega,
             a.membresia_contexto,
             a.resumen
         FROM hikvision_cola_analisis c
@@ -95,7 +94,6 @@ try {
             'grupo_asesoria'      => $row['grupo_asesoria']   !== null ? (int)$row['grupo_asesoria']   : null,
             'grupo_membresia'     => $row['grupo_membresia']  !== null ? (int)$row['grupo_membresia']  : null,
             'grupo_cobro'         => $row['grupo_cobro']      !== null ? (int)$row['grupo_cobro']      : null,
-            'grupo_entrega'       => $row['grupo_entrega']    !== null ? (int)$row['grupo_entrega']    : null,
             'membresia_contexto'  => $row['membresia_contexto'] ?? 'sin_membresia',
             'resumen'             => $row['resumen'],
         ];
@@ -110,3 +108,4 @@ try {
 } catch (Exception $e) {
     echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
 }
+

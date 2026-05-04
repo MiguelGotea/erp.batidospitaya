@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * hikvision_estado_pedido.php
  * Consulta el estado de análisis de un pedido específico.
@@ -45,7 +45,6 @@ try {
             a.grupo_asesoria,
             a.grupo_membresia,
             a.grupo_cobro,
-            a.grupo_entrega,
             a.cal_promedio     AS promedio,
             a.membresia_contexto,
             a.resumen,
@@ -93,7 +92,6 @@ try {
             'grupo_asesoria'      => $row['grupo_asesoria']    !== null ? (int)$row['grupo_asesoria']    : null,
             'grupo_membresia'     => $row['grupo_membresia']   !== null ? (int)$row['grupo_membresia']   : null,
             'grupo_cobro'         => $row['grupo_cobro']       !== null ? (int)$row['grupo_cobro']       : null,
-            'grupo_entrega'       => $row['grupo_entrega']     !== null ? (int)$row['grupo_entrega']     : null,
             'promedio'            => $row['promedio']          !== null ? (float)$row['promedio']        : null,
             'membresia_contexto'  => $row['membresia_contexto'] ?? 'sin_membresia',
             'resumen'             => $row['resumen'],
@@ -109,3 +107,4 @@ try {
 } catch (Exception $e) {
     echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
 }
+
