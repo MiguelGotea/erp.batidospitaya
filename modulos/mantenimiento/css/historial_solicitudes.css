@@ -74,9 +74,22 @@ body {
 
 /* Columnas específicas */
 .col-titulo {
-    max-width: 200px;
+    max-width: 180px;
     font-weight: 600;
     color: #0E544C;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: all 0.3s ease;
+}
+
+.col-titulo:hover {
+    white-space: normal;
+    max-width: 300px;
+    background-color: #fff;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    position: relative;
+    z-index: 10;
 }
 
 .col-descripcion {

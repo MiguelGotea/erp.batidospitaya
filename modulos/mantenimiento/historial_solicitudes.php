@@ -180,7 +180,7 @@ function getTextoUrgencia($nivel)
                                     <i class="fas fa-filter filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
                                 <th data-column="tiempo_estimado" data-type="text" style="width: 100px;">
-                                    Tiempo (H)
+                                    Tiempo
                                     <i class="fas fa-filter filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
                                 <th data-column="status" data-type="list">

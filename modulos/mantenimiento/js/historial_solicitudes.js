@@ -205,7 +205,7 @@ function renderizarTabla(datos) {
         tr.append(`<td>${formatearFecha(row.created_at)}</td>`);
 
         // Título
-        tr.append(`<td class="col-titulo">${renderizarTituloEditable(row.id, row.titulo)}</td>`);
+        tr.append(`<td class="col-titulo" title="${row.titulo}">${renderizarTituloEditable(row.id, row.titulo)}</td>`);
 
         // Descripción
         tr.append(`<td class="col-descripcion" title="${row.descripcion}">${row.descripcion}</td>`);
@@ -334,7 +334,7 @@ function cambiarUrgencia(ticketId, nivelActual) {
 // Renderizar tiempo estimado con edición verdaderamente inline
 function renderizarTiempoEstimado(ticketId, tiempoActual) {
     const tiempo = tiempoActual || 0;
-    const texto = tiempo > 0 ? `${tiempo} H` : '-';
+    const texto = tiempo > 0 ? `${tiempo}` : '-';
     const permiteEditar = tienepermiso('cambiar_urgencia');
 
     if (!permiteEditar) {
@@ -374,7 +374,7 @@ function habilitarEdicionInline(container, ticketId, tiempoActual) {
         }
 
         if (nuevoTiempo === '' || parseInt(nuevoTiempo) === tiempoActual) {
-            $(container).html(`<span class="tiempo-texto">${tiempoActual > 0 ? tiempoActual + ' H' : '-'}</span>`);
+            $(container).html(`<span class="tiempo-texto">${tiempoActual > 0 ? tiempoActual : '-'}</span>`);
         } else {
             actualizarTiempoEstimado(ticketId, parseInt(nuevoTiempo));
         }
@@ -384,7 +384,7 @@ function habilitarEdicionInline(container, ticketId, tiempoActual) {
         if (e.key === 'Enter') {
             $(this).blur();
         } else if (e.key === 'Escape') {
-            $(container).html(`<span class="tiempo-texto">${tiempoActual > 0 ? tiempoActual + ' H' : '-'}</span>`);
+            $(container).html(`<span class="tiempo-texto">${tiempoActual > 0 ? tiempoActual : '-'}</span>`);
         }
     });
 }
