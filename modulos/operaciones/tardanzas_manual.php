@@ -13,6 +13,10 @@ if (!$conn) {
     die("Error de conexión a la base de datos");
 }
 
+// Inicialización de variables para control de sucursales
+$todasSucursales = [];
+$sucursales = [];
+
 verificarAutenticacion();
 
 $usuario = obtenerUsuarioActual();
@@ -183,7 +187,12 @@ if (isset($_GET['exportar_contabilidad'])) {
     exit;
 }
 
-// Añadir esta nueva función
+/**
+ * @param string|int|null $codSucursal
+ * @param string $fechaDesde
+ * @param string $fechaHasta
+ * @return array
+ */
 function obtenerConteoTardanzasPorOperario($codSucursal, $fechaDesde, $fechaHasta) {
     global $conn;
     
@@ -302,6 +311,9 @@ if (isset($_GET['action']) && $_GET['action'] == 'obtener_operarios' && isset($_
 /**
  * Obtiene operarios de una sucursal para registrar tardanzas manuales
  * NUEVA FUNCIÓN: Considera fecha específica y fecha de liquidación
+ * @param string|int $codSucursal
+ * @param string $fechaReferencia
+ * @return array
  */
 function obtenerOperariosSucursalParaTardanzasPorFecha($codSucursal, $fechaReferencia) {
     global $conn;
@@ -372,6 +384,10 @@ function obtenerOperariosSucursalParaTardanzasPorFecha($codSucursal, $fechaRefer
 /**
  * Obtiene operarios de una sucursal en un rango de fechas
  * MODIFICADA: Filtra por fecha de liquidación
+ * @param string|int $codSucursal
+ * @param string $fechaDesde
+ * @param string $fechaHasta
+ * @return array
  */
 function obtenerOperariosSucursalEnRango($codSucursal, $fechaDesde, $fechaHasta) {
     global $conn;
@@ -383,9 +399,13 @@ function obtenerOperariosSucursalEnRango($codSucursal, $fechaDesde, $fechaHasta)
         JOIN AsignacionNivelesCargos anc ON o.CodOperario = anc.CodOperario
         JOIN sucursales s ON anc.Sucursal = s.codigo
         LEFT JOIN (
-            SELECT cod_operario, MAX(fecha_liquidacion) as fecha_liquidacion
-            FROM Contratos
-            GROUP BY cod_operario
+            SELECT c1.cod_operario, c1.fecha_liquidacion
+            FROM Contratos c1
+            INNER JOIN (
+                SELECT cod_operario, MAX(CodContrato) as max_contrato
+                FROM Contratos 
+                GROUP BY cod_operario
+            ) c2 ON c1.cod_operario = c2.cod_operario AND c1.CodContrato = c2.max_contrato
         ) c ON o.CodOperario = c.cod_operario
         WHERE anc.Sucursal = ?
         AND (anc.Fin IS NULL OR anc.Fin >= ?)
@@ -972,7 +992,15 @@ function verificarTardanza($codOperario, $codSucursal, $fecha, $horaMarcada) {
     $minutos = ($diferencia->h * 60 + $diferencia->i) * ($horaMarcada > $horaProgramada ? 1 : -1);
     
     // Solo tardanzas de más de 1 minuto DESPUÉS de la hora programada
-    return $minutos > 1;
+    if ($minutos > 1) {
+        return [
+            'minutos' => $minutos,
+            'hora_entrada_programada' => $horarioProgramado['hora_entrada'],
+            'hora_entrada_marcada' => $horaMarcada->format('H:i:s')
+        ];
+    }
+    
+    return false;
 }
 
 // Función para obtener el total de tardanzas manuales registradas
