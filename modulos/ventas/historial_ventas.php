@@ -49,7 +49,7 @@ $puedeActivarWorker = tienePermiso('historial_pedidos_globales', 'activar_bot_at
                     <div class="col-md-12">
                         <div class="card-totales">
 
-                            <div class="total-item" id="totalProductosItem">
+                            <div class="total-item" id="totalProductosItem" style="display:none">
                                 <span class="total-label">Total Productos:</span>
                                 <span class="total-value" id="totalProductos">0</span>
                             </div>
