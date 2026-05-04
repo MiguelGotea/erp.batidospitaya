@@ -10,22 +10,24 @@
  */
 
 ini_set('display_errors', 0);
-error_reporting(E_ALL);
+error_reporting(0);
+ob_start();
 
 @session_start();
 require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/../../../core/database/conexion.php';
 require_once __DIR__ . '/../../../core/auth/auth.php';
 require_once __DIR__ . '/../../../core/ai/AIService.php';
 require_once __DIR__ . '/../../../core/permissions/permissions.php';
 
-header('Content-Type: application/json');
+
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
 function responder(bool $ok, string $msg = '', array $extra = []): void
 {
-    echo json_encode(array_merge(['success' => $ok, 'message' => $msg], $extra));
+    ob_clean(); // descartar cualquier output espurio previo
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode(array_merge(['success' => $ok, 'message' => $msg], $extra), JSON_UNESCAPED_UNICODE);
     exit();
 }
 
