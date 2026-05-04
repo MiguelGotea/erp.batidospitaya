@@ -237,6 +237,10 @@ function buildFila(p, cat) {
     const pedidoHtml = buildPedidoHtml(p.stock_max_final, inventarioVal !== '' ? Number(inventarioVal) : null);
 
     // Indicadores detallados (para verificación)
+    const despInfo = p.despacho_nombre
+        ? `<span class="ps-ind-item" title="Presentación de despacho"><b>Desp:</b> ${escHtml(p.despacho_nombre)}${p.despacho_unidad ? ' (' + escHtml(p.despacho_unidad) + ')' : ''} &times;${Number(p.despacho_factor).toLocaleString('es-NI',{minimumFractionDigits:2,maximumFractionDigits:4})}</span>`
+        : '';
+
     const detalleHtml = `
         <tr class="ps-fila-indicadores cat-${cat !== '_sin_cat' ? cat : 'X'}" data-parent="${p.id_pp}">
             <td colspan="12">
@@ -247,6 +251,7 @@ function buildFila(p, cat) {
                         <span class="ps-ind-item" title="Días Desfase"><b>Desf:</b> ${p.dias_desfase}d</span>
                         <span class="ps-ind-item" title="Días Stock Mínimo"><b>S.Mín:</b> ${p.dias_stock_min}d</span>
                         <span class="ps-ind-item" title="Consumo Diario Final"><b>C.Diario:</b> ${fmt(p.cons_diario, 4)}</span>
+                        ${despInfo}
                     </div>
                 </div>
             </td>

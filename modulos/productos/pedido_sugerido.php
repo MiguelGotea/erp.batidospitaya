@@ -202,9 +202,9 @@ try {
                                             <th class="text-end" title="Desviación estándar de muestra">Desv. Std</th>
                                             <th class="text-end" title="Consumo semanal = promedio + desv. estándar">Cons. Semanal</th>
                                             <th class="text-end" title="Consumo diario = (cons_semanal × (1 + ajuste)) / 7">Cons. Diario</th>
-                                            <th class="text-end" title="Stock mínimo = cons_diario × dias_stock_minimo">Stock Mín</th>
-                                            <th class="text-end" title="Stock máximo = cons_diario × (dias_ciclo + dias_desfase + dias_stock_min)">Stock Máx</th>
-                                            <th class="text-end" title="Stock máximo final (ajustado para congelados)">Stock Máx Final</th>
+                                            <th class="text-end" title="Stock mínimo en unidades de despacho = (cons_diario × dias_stock_minimo) ÷ factor_despacho">Stock Mín</th>
+                                            <th class="text-end" title="Stock máximo en unidades de despacho = (cons_diario × (ciclo + desfase + stock_min)) ÷ factor_despacho">Stock Máx</th>
+                                            <th class="text-end" title="Stock máximo final en unidades de despacho (ajustado para congelados si aplica)">Stock Máx Final</th>
                                             <th class="text-center col-inventario" title="Inventario actual en tienda">Inventario Actual</th>
                                             <th class="text-center col-pedido" title="Pedido sugerido = Stock Máx Final − Inventario Actual">Pedido Sugerido</th>
                                         </tr>
@@ -275,8 +275,8 @@ try {
                             <div class="p-3 bg-light rounded-3 h-100 border">
                                 <h6 class="fw-bold small mb-2"><i class="bi bi-box-seam me-1"></i> Niveles de Stock</h6>
                                 <ul class="small text-muted mb-0">
-                                    <li><b>Stock Mín:</b> Nivel crítico (Consumo Diario × Días Stock Mínimo).</li>
-                                    <li><b>Stock Máx:</b> Capacidad teórica ideal (Consumo Diario × Ciclo + Desfase + Stock Mín).</li>
+                                    <li><b>Stock Mín:</b> Nivel crítico en <b>unidades de despacho</b> = (Consumo Diario × Días Stock Mínimo) ÷ Factor Despacho.</li>
+                                    <li><b>Stock Máx:</b> Capacidad teórica en <b>unidades de despacho</b> = (Consumo Diario × (Ciclo + Desfase + Stock Mín)) ÷ Factor Despacho.</li>
                                 </ul>
                             </div>
                         </div>

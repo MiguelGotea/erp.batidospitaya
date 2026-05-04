@@ -338,11 +338,99 @@ try {
         ];
     }
 
+    // ── Despacho factor por id_pp ─────────────────────────────
+    // Idéntico a inventario_get_data.php (sección 8.5):
+    // Caso A: presentación de despacho del mismo producto_maestro.
+    // Caso B: receta de despacho que contiene la presentación básica.
+    $idsPP    = array_keys($res);
+    $despFMap = []; // id_pp => ['factor'=>float, 'nombre'=>string, 'unidad'=>string]
+    if (!empty($idsPP)) {
+        $phPP = implode(',', array_fill(0, count($idsPP), '?'));
+
+        // Caso A: por maestro
+        $stmtDA = $conn->prepare("
+            SELECT pp.id                  AS id_pp,
+                   ppd.cantidad           AS d_cant,
+                   ppd.id_unidad_producto AS d_uid,
+                   pp.cantidad            AS pp_cant,
+                   pp.id_unidad_producto  AS pp_uid,
+                   ppd.Nombre             AS d_nombre,
+                   ud.abreviado           AS d_unidad
+            FROM producto_presentacion pp
+            INNER JOIN producto_presentacion ppd
+                   ON ppd.id_producto_maestro = pp.id_producto_maestro
+                  AND ppd.presentacion_despacho = 1
+                  AND ppd.Activo = 'SI'
+                  AND pp.id_producto_maestro IS NOT NULL
+            LEFT  JOIN unidad_producto ud ON ud.id = ppd.id_unidad_producto
+            WHERE pp.id IN ($phPP) AND pp.Activo = 'SI'
+            GROUP BY pp.id
+            ORDER BY ppd.id ASC
+        ");
+        $stmtDA->execute(array_values($idsPP));
+        foreach ($stmtDA->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $uidPP = (int)$row['pp_uid']; $uidD = (int)$row['d_uid']; $df = null;
+            if ($uidPP === $uidD) {
+                $df = (float)$row['d_cant'] / max((float)$row['pp_cant'], 0.001);
+            } else {
+                $facConv = resolverFactorConversion_PS($uidPP, $uidD, $convIndex);
+                if ($facConv !== null && $facConv != 0)
+                    $df = (float)$row['d_cant'] / (max((float)$row['pp_cant'], 0.001) * $facConv);
+            }
+            if ($df !== null)
+                $despFMap[(int)$row['id_pp']] = ['factor'=>round($df,6), 'nombre'=>$row['d_nombre'], 'unidad'=>$row['d_unidad']];
+        }
+
+        // Caso B: por receta (fallback para los que no resolvieron con A)
+        $sinDF = array_values(array_filter($idsPP, fn($id) => !isset($despFMap[$id])));
+        if (!empty($sinDF)) {
+            $phSin = implode(',', array_fill(0, count($sinDF), '?'));
+            $stmtDB = $conn->prepare("
+                SELECT crp.id_presentacion_producto AS id_pp,
+                       crp.cantidad                 AS d_receta_cant,
+                       ppd.Nombre                   AS d_nombre,
+                       ud.abreviado                 AS d_unidad
+                FROM producto_presentacion ppd
+                INNER JOIN componentes_receta_producto crp
+                       ON crp.id_receta_producto_global = ppd.Id_receta_producto
+                LEFT  JOIN unidad_producto ud ON ud.id = ppd.id_unidad_producto
+                WHERE ppd.presentacion_despacho = 1 AND ppd.Activo = 'SI'
+                  AND crp.id_presentacion_producto IN ($phSin)
+                GROUP BY crp.id_presentacion_producto
+                ORDER BY ppd.id ASC
+            ");
+            $stmtDB->execute(array_values($sinDF));
+            foreach ($stmtDB->fetchAll(PDO::FETCH_ASSOC) as $row)
+                $despFMap[(int)$row['id_pp']] = ['factor'=>(float)$row['d_receta_cant'], 'nombre'=>$row['d_nombre'], 'unidad'=>$row['d_unidad']];
+        }
+    }
+
     $facC = ($capC!==null && $sumB>0) ? min(1.0, $capC/$sumB) : null;
     foreach ($res as &$p) {
-        if ($p['categoria_insumo']==='B' && $facC!==null) { $p['stock_max_final']=round($p['stock_maximo']*$facC,4); $p['es_ajustado']=true; }
-        else { $p['stock_max_final'] = $p['_tc'] ? round($p['stock_maximo'],4) : null; }
-        if ($p['stock_max_final']!==null && $p['inventario_actual']!==null) $p['pedido_sugerido']=round($p['stock_max_final']-$p['inventario_actual'],4);
+        $idP    = $p['id_pp'];
+        $dfInfo = $despFMap[$idP] ?? null;
+        $df     = ($dfInfo && $dfInfo['factor'] > 0) ? $dfInfo['factor'] : 1.0;
+
+        $p['despacho_factor'] = $dfInfo ? $dfInfo['factor'] : null;
+        $p['despacho_nombre'] = $dfInfo ? $dfInfo['nombre'] : null;
+        $p['despacho_unidad'] = $dfInfo ? $dfInfo['unidad'] : null;
+
+        // Stock máximo final en unidades de USO (con factor congelados si aplica)
+        $sMaxUso = $p['stock_maximo']; // aún en unidades de uso
+        if ($p['categoria_insumo']==='B' && $facC!==null) { $sMaxFinalUso = round($sMaxUso * $facC, 4); $p['es_ajustado'] = true; }
+        else { $sMaxFinalUso = $p['_tc'] ? round($sMaxUso, 4) : null; }
+
+        // Convertir a unidades de despacho para mostrar (÷ despacho_factor)
+        $p['stock_minimo']    = $p['_tc'] ? round($p['stock_minimo'] / $df, 4) : null;
+        $p['stock_maximo']    = $p['_tc'] ? round($sMaxUso           / $df, 4) : null;
+        $p['stock_max_final'] = $sMaxFinalUso !== null ? round($sMaxFinalUso / $df, 4) : null;
+
+        // Pedido sugerido e inventario actual también en despacho
+        if ($p['stock_max_final'] !== null && $p['inventario_actual'] !== null) {
+            $invDesp = round($p['inventario_actual'] / $df, 4);
+            $p['inventario_actual']  = $invDesp;
+            $p['pedido_sugerido']    = round(max(0, $p['stock_max_final'] - $invDesp), 4);
+        }
         unset($p['_tc']);
     }
 

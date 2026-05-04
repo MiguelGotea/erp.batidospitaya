@@ -249,13 +249,38 @@ try {
         }
     }
 
-    /* ── 7. Stats de consumo por id_pp ───────────────────── */
+    /* ── 7. Stats de consumo por id_pp — Ventana Activa ─────
+       Idéntico a pedido_sugerido_calcular.php:
+       Excluye ceros estructurales del inicio/fin con umbral relativo 10%.
+       Solo promedia sobre las semanas dentro de la ventana activa.
+    ─────────────────────────────────────────────────────── */
     $consumoStats = [];
     foreach ($conAgg as $idPP => $semanas) {
         $vals = [];
         for ($s = $numDesde; $s <= $numHasta; $s++) $vals[] = (float)($semanas[$s] ?? 0);
-        $prom = array_sum($vals) / $nSemanas;
-        $desv = desviacionEstandarMuestra($vals);
+
+        // Paso 1: media de semanas con consumo > 0 (para calcular umbral)
+        $nonZeroVals = array_filter($vals, fn($v) => $v > 0);
+        if (empty($nonZeroVals)) continue; // Sin consumo real → descartar
+        $meanNonZero = array_sum($nonZeroVals) / count($nonZeroVals);
+
+        // Umbral: 10% de la media real (mín. 0.01)
+        $umbral = max(0.01, $meanNonZero * 0.10);
+
+        // Paso 2: detectar ventana activa
+        $firstIdx = null; $lastIdx = null;
+        foreach ($vals as $i => $v) {
+            if ($v >= $umbral) {
+                if ($firstIdx === null) $firstIdx = $i;
+                $lastIdx = $i;
+            }
+        }
+        if ($firstIdx === null) continue; // Todo por debajo del umbral → descartar
+
+        $nActiva    = $lastIdx - $firstIdx + 1;
+        $valsActivo = array_slice($vals, $firstIdx, $nActiva);
+        $prom = array_sum($valsActivo) / $nActiva;
+        $desv = desviacionEstandarMuestra($valsActivo);
         $consumoStats[$idPP] = ['promedio' => $prom, 'desviacion' => $desv, 'cons_semanal' => $prom + $desv];
     }
 
