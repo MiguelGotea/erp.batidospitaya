@@ -52,6 +52,31 @@ try {
     ]);
     $pcs = $stmtEstados->fetchAll(PDO::FETCH_ASSOC);
 
+    // ── Sincronizar ip_direccion en sucursales ──────────────────────────────
+    // Actualiza sucursales.ip_direccion con la ip_publica más reciente del ping,
+    // SOLO cuando el valor realmente cambió (no en cada ping, sino en cada poll).
+    $sqlSyncIp = "
+        UPDATE sucursales s
+        INNER JOIN (
+            SELECT p.sucursal_codigo, p.ip_publica
+            FROM sistemas_ping_log p
+            INNER JOIN (
+                SELECT sucursal_codigo, MAX(ping_at) AS ultimo_ping
+                FROM sistemas_ping_log
+                GROUP BY sucursal_codigo
+            ) latest
+                ON  p.sucursal_codigo = latest.sucursal_codigo
+                AND p.ping_at         = latest.ultimo_ping
+            WHERE p.ip_publica IS NOT NULL AND p.ip_publica != ''
+        ) ip_actual ON s.codigo = ip_actual.sucursal_codigo
+        SET s.ip_direccion = ip_actual.ip_publica
+        WHERE (s.ip_direccion IS NULL OR s.ip_direccion != ip_actual.ip_publica)
+    ";
+    $stmtSync = $conn->exec($sqlSyncIp);
+    $ips_actualizadas = (int) $stmtSync; // filas realmente modificadas
+    // ───────────────────────────────────────────────────────────────────────
+
+
     // Resumen por estado
     $resumen = ['online' => 0, 'alerta' => 0, 'offline' => 0, 'total' => count($pcs)];
     foreach ($pcs as $pc) {
@@ -75,12 +100,13 @@ try {
     $actividad = $stmtReciente->fetchAll(PDO::FETCH_ASSOC);
 
     echo json_encode([
-        'success'        => true,
-        'pcs'            => $pcs,
-        'resumen'        => $resumen,
-        'actividad'      => $actividad,
-        'server_time'    => date('Y-m-d H:i:s'),
-        'timestamp'      => time()
+        'success' => true,
+        'pcs' => $pcs,
+        'resumen' => $resumen,
+        'actividad' => $actividad,
+        'ips_actualizadas' => $ips_actualizadas,
+        'server_time' => date('Y-m-d H:i:s'),
+        'timestamp' => time()
     ]);
 
 } catch (Exception $e) {

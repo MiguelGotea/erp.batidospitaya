@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once '../../core/auth/auth.php';
 require_once '../../core/layout/menu_lateral.php';
 require_once '../../core/layout/header_universal.php';
@@ -154,6 +154,7 @@ try {
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
             overflow: hidden;
         }
+
 
         table {
             width: 100%;
@@ -434,7 +435,7 @@ try {
 
                 if (confirm('¿Marcar este pedido como completado?')) {
                     $.ajax({
-                        url: 'procesar_estado.php',
+                        url: 'ajax/procesar_estado.php',
                         method: 'POST',
                         data: {
                             id: pedidoId,
@@ -463,7 +464,7 @@ try {
 
                 if (confirm('¿Marcar este pedido como entregado e imprimir?')) {
                     $.ajax({
-                        url: 'imprimir_pedido.php',
+                        url: 'ajax/imprimir_pedido.php',
                         method: 'POST',
                         data: {
                             id: pedidoId,
@@ -492,7 +493,7 @@ try {
 
                 if (confirm('¿Cancelar este pedido? Esta acción no se puede deshacer.')) {
                     $.ajax({
-                        url: 'procesar_estado.php',
+                        url: 'ajax/procesar_estado.php',
                         method: 'POST',
                         data: {
                             id: pedidoId,
@@ -544,7 +545,7 @@ try {
                 const ultimoId = <?= !empty($pedidos) ? $pedidos[0]['id'] : 0 ?>;
 
                 $.ajax({
-                    url: 'check_new_orders.php',
+                    url: 'ajax/check_new_orders.php',
                     method: 'POST',
                     data: {
                         ultimo_id: ultimoId,

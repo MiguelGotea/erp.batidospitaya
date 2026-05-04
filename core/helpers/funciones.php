@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Formatea una fecha al formato ej: 31-abr-25
  */
@@ -14,8 +15,7 @@ function formatoFecha($fecha)
         $fechaObj = new DateTime($fecha);
         $mes = $meses[(int)$fechaObj->format('m') - 1];
         return $fechaObj->format('d') . '-' . $mes . '-' . $fechaObj->format('y');
-    }
-    catch (Exception $e) {
+    } catch (Exception $e) {
         // Si hay error al parsear la fecha, devolver string vacío
         return '';
     }
@@ -230,8 +230,7 @@ function obtenerNombreUsuario()
 
     if (isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin') {
         return $usuario['nombre'];
-    }
-    else {
+    } else {
         return $usuario['Nombre'] . ' ' . $usuario['Apellido'];
     }
 }
@@ -269,7 +268,7 @@ function verificarAccesoSucursalCargo($cargosRequeridos, $sucursalesRequeridas)
 
     // Combinamos los parámetros
     $params = array_merge(
-    [$_SESSION['usuario_id']],
+        [$_SESSION['usuario_id']],
         $cargosRequeridos,
         $sucursalesRequeridas
     );
@@ -522,8 +521,7 @@ function formatoFechaCorta($fecha)
         $fechaObj = new DateTime($fecha);
         $mes = $meses[(int)$fechaObj->format('m') - 1];
         return $fechaObj->format('d') . '-' . $mes . '-' . $fechaObj->format('y');
-    }
-    catch (Exception $e) {
+    } catch (Exception $e) {
         // Si hay error al parsear la fecha, devolver string vacío
         error_log("Error formateando fecha: " . $e->getMessage() . " - Fecha: " . $fecha);
         return '';
@@ -746,8 +744,7 @@ function verificarDispositivoAutorizado($codSucursal)
             'status' => false,
             'msg' => 'Este dispositivo no está autorizado para realizar marcaciones en esta sucursal o la sesión de autorización expiró.'
         ];
-    }
-    catch (Exception $e) {
+    } catch (Exception $e) {
         error_log("Error en validación de dispositivo: " . $e->getMessage());
         return ['status' => false, 'msg' => 'Error de sistema al validar dispositivo.'];
     }
@@ -1143,8 +1140,7 @@ function determinarQuincenaPorDiaMes($fecha)
     try {
         $dia = (int)date('d', strtotime($fecha));
         return ($dia <= 15) ? 'primera' : 'segunda';
-    }
-    catch (Exception $e) {
+    } catch (Exception $e) {
         error_log("Error al determinar quincena: " . $e->getMessage());
         return 'primera';
     }
@@ -1173,9 +1169,7 @@ function determinarQuincenaPorDiaMesEnRango($fecha, $fechaDesde, $fechaHasta)
         // Si está dentro del rango, determinar quincena por día del mes
         $dia = (int)date('d', strtotime($fecha));
         return ($dia <= 15) ? 'primera' : 'segunda';
-
-    }
-    catch (Exception $e) {
+    } catch (Exception $e) {
         error_log("Error al determinar quincena: " . $e->getMessage());
         return 'fuera_rango';
     }
@@ -1312,17 +1306,14 @@ function obtenerTiposDocumentosPorPestaña($pestaña)
 
             if ($tipo['es_obligatorio'] == 1) {
                 $resultado['obligatorios'][$tipo['nombre_clave']] = $tipo['nombre_descriptivo'];
-            }
-            else {
+            } else {
                 $resultado['opcionales'][$tipo['nombre_clave']] = $tipo['nombre_descriptivo'];
             }
         }
 
 
         return $resultado;
-
-    }
-    catch (Exception $e) {
+    } catch (Exception $e) {
         error_log("Error en obtenerTiposDocumentosPorPestaña: " . $e->getMessage());
         return ['obligatorios' => [], 'opcionales' => []];
     }
@@ -1383,11 +1374,9 @@ function verificarEstadoDocumentosObligatorios($codOperario, $pestaña)
 
     if ($subidos == 0) {
         return 'pendiente';
-    }
-    elseif ($subidos == $totalObligatorios) {
+    } elseif ($subidos == $totalObligatorios) {
         return 'completo';
-    }
-    else {
+    } else {
         return 'parcial';
     }
 }
@@ -1447,7 +1436,7 @@ function calcularTiempoTrabajado($fechaInicioContrato, $fechaFinContrato = null,
             if ($fechaFinContratoObj < $hoy) {
                 $fechaFin = $fechaFinContratoObj; // Usar fecha fin si ya pasó
             }
-        // Si la fecha fin es futura, se mantiene $fechaFin = $hoy (calcula hasta hoy)
+            // Si la fecha fin es futura, se mantiene $fechaFin = $hoy (calcula hasta hoy)
         }
         // Para contratos indefinidos activos sin fecha fin, se mantiene $fechaFin = $hoy
 
@@ -1479,9 +1468,7 @@ function calcularTiempoTrabajado($fechaInicioContrato, $fechaFinContrato = null,
         }
 
         return empty($resultado) ? 'Menos de 1 día' : implode(', ', $resultado);
-
-    }
-    catch (Exception $e) {
+    } catch (Exception $e) {
         error_log("Error calculando tiempo trabajado: " . $e->getMessage());
         return 'Error en cálculo';
     }
@@ -1581,47 +1568,36 @@ function calcularTiempoRestanteContrato($fechaFinContrato, $estaActivo = true, $
             // Menos de 1 semana - ALERTA ROJA
             if ($diasTotales == 0) {
                 return '<span class="status-inactivo">Vence hoy</span>';
-            }
-            elseif ($diasTotales == 1) {
+            } elseif ($diasTotales == 1) {
                 return '<span class="status-inactivo">1 día</span>';
-            }
-            else {
+            } else {
                 return '<span class="status-inactivo">' . $diasTotales . ' días</span>';
             }
-        }
-        elseif ($diasTotales <= 30) {
+        } elseif ($diasTotales <= 30) {
             // Menos de 1 mes - ALERTA AMARILLA
             if ($meses == 0) {
                 return '<span class="status-alerta">' . $diasTotales . ' días</span>';
-            }
-            else {
+            } else {
                 return '<span class="status-alerta">' . $meses . ' mes' . ($meses > 1 ? 'es' : '') . '</span>';
             }
-        }
-        elseif ($años == 0) {
+        } elseif ($años == 0) {
             // Menos de 1 año - INFORMACIÓN
             if ($meses == 0) {
                 return '<span class="status-info">' . $dias . ' días</span>';
-            }
-            elseif ($dias == 0) {
+            } elseif ($dias == 0) {
                 return '<span class="status-info">' . $meses . ' mes' . ($meses > 1 ? 'es' : '') . '</span>';
-            }
-            else {
+            } else {
                 return '<span class="status-info">' . $meses . ' mes' . ($meses > 1 ? 'es' : '') . ', ' . $dias . ' día' . ($dias > 1 ? 's' : '') . '</span>';
             }
-        }
-        else {
+        } else {
             // Más de 1 año - ÉXITO
             if ($meses == 0) {
                 return '<span class="status-success">' . $años . ' año' . ($años > 1 ? 's' : '') . '</span>';
-            }
-            else {
+            } else {
                 return '<span class="status-success">' . $años . ' año' . ($años > 1 ? 's' : '') . ', ' . $meses . ' mes' . ($meses > 1 ? 'es' : '') . '</span>';
             }
         }
-
-    }
-    catch (Exception $e) {
+    } catch (Exception $e) {
         error_log("Error calculando tiempo restante: " . $e->getMessage());
         return '<span class="status-inactivo">Error</span>';
     }
@@ -1868,8 +1844,7 @@ function calcularPeriodoRevisionFaltas()
         $mesAnterior = new DateTime('first day of last month');
         $desde = $mesAnterior->format('Y-m-01');
         $hasta = $mesAnterior->format('Y-m-t');
-    }
-    else {
+    } else {
         // Mes actual
         $desde = $hoy->format('Y-m-01');
         $hasta = $hoy->format('Y-m-t');
@@ -1893,8 +1868,7 @@ function calcularDiasRestantesRevisionFaltas()
     if ($dia <= 2) {
         // Si estamos en días 1-2, la fecha límite es el día 2
         return 2 - $dia;
-    }
-    else {
+    } else {
         // Si estamos después del día 2, la fecha límite es el día 2 del próximo mes
         $proximoMes = new DateTime('first day of next month');
         $proximoMes->modify('+1 day'); // Día 2 del próximo mes
@@ -1910,14 +1884,11 @@ function determinarColorIndicadorFaltas($diasRestantes)
 {
     if ($diasRestantes < 0) {
         return 'rojo'; // Vencido
-    }
-    elseif ($diasRestantes <= 1) {
+    } elseif ($diasRestantes <= 1) {
         return 'rojo'; // 1 día o menos
-    }
-    elseif ($diasRestantes <= 2) {
+    } elseif ($diasRestantes <= 2) {
         return 'amarillo'; // 2 días
-    }
-    else {
+    } else {
         return 'verde'; // 3+ días
     }
 }
@@ -1976,7 +1947,8 @@ function obtenerSucursalesPermitidasMantenimiento($codOperario)
 
     // Si es admin o tiene permiso de ver todas las sucursales
     if ((isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin') ||
-    ($cargo && tienePermiso('historial_solicitudes_mantenimiento', 'vista_todas_sucursales', $cargo))) {
+        ($cargo && tienePermiso('historial_solicitudes_mantenimiento', 'vista_todas_sucursales', $cargo))
+    ) {
         $stmt = $conn->prepare("SELECT codigo, nombre FROM sucursales WHERE activa = 1 ORDER BY nombre");
         $stmt->execute();
         return $stmt->fetchAll();
@@ -2321,8 +2293,7 @@ function obtenerEstadoAuditoriasSucursal($codSucursal, $numeroSemana)
         if (in_array($auditoria['tipo'], ['limpieza', 'personal', 'servicio'])) {
             // Auditorías de desempeño (sin ajuste de hora)
             $estaCompleta = verificarAuditoriaDesempenio($auditoria['tabla'], $codSucursal, $semana);
-        }
-        else {
+        } else {
             // Auditorías de efectivo (con ajuste de -6 horas)
             $columnaSucursal = ($auditoria['tipo'] == 'inventario') ? 'sucursal_id' : 'sucursal_id';
             $estaCompleta = verificarAuditoriaEfectivo($auditoria['tabla'], $columnaSucursal, $codSucursal, $semana);
@@ -2417,8 +2388,7 @@ function obtenerTodosDocumentosFaltantes($codOperario)
     try {
         $stmt = $conn->query("SELECT DISTINCT pestaña FROM contratos_tiposDocumentos WHERE activo = 1");
         $pestañas = $stmt->fetchAll(PDO::FETCH_COLUMN);
-    }
-    catch (Exception $e) {
+    } catch (Exception $e) {
         error_log("Error al obtener pestañas en obtenerTodosDocumentosFaltantes: " . $e->getMessage());
         $pestañas = ['datos-personales', 'inss', 'contrato', 'contactos-emergencia', 'salario', 'movimientos', 'categoria', 'adendums'];
     }
@@ -2514,8 +2484,7 @@ function obtenerCantidadAnunciosNoLeidos($userId)
         $result = $stmt->fetch();
 
         return $result['no_leidos'] ?? 0;
-    }
-    catch (PDOException $e) {
+    } catch (PDOException $e) {
         error_log("Error obteniendo anuncios no leídos: " . $e->getMessage());
         return 0;
     }
@@ -2534,8 +2503,7 @@ function marcarAnuncioComoLeido($announcementId, $userId)
             VALUES (?, ?)
         ");
         return $stmt->execute([$announcementId, $userId]);
-    }
-    catch (PDOException $e) {
+    } catch (PDOException $e) {
         error_log("Error marcando anuncio como leído: " . $e->getMessage());
         return false;
     }
@@ -2568,8 +2536,7 @@ function marcarTodosAnunciosComoLeidos($userId)
         }
 
         return $marcados;
-    }
-    catch (PDOException $e) {
+    } catch (PDOException $e) {
         error_log("Error marcando todos los anuncios como leídos: " . $e->getMessage());
         return 0;
     }
@@ -2629,8 +2596,7 @@ function obtenerRangoQuincenaActual()
         // Primera quincena (1-15)
         $inicio = new DateTime("$anio-$mes-01");
         $fin = new DateTime("$anio-$mes-15");
-    }
-    else {
+    } else {
         // Segunda quincena (16-fin de mes)
         $inicio = new DateTime("$anio-$mes-16");
         $fin = new DateTime("$anio-$mes-01");
@@ -3071,9 +3037,7 @@ function verificarCumpleanosUsuario($codOperario = null)
         }
 
         return null;
-
-    }
-    catch (Exception $e) {
+    } catch (Exception $e) {
         error_log("Error verificando cumpleaños: " . $e->getMessage());
         return null;
     }
@@ -3453,9 +3417,9 @@ function operarioEstaActivoPorLiquidacion($codOperario, $fechaReferencia = null)
 
     // Si no tiene fecha de liquidación, está activo
     if (
-    empty($contrato['fecha_liquidacion']) ||
-    $contrato['fecha_liquidacion'] == '0000-00-00' ||
-    $contrato['fecha_liquidacion'] === null
+        empty($contrato['fecha_liquidacion']) ||
+        $contrato['fecha_liquidacion'] == '0000-00-00' ||
+        $contrato['fecha_liquidacion'] === null
     ) {
         return true;
     }
@@ -3478,10 +3442,10 @@ function fechaPosteriorLiquidacion($codOperario, $fecha)
     $contrato = obtenerUltimoContratoOperario($codOperario);
 
     if (
-    !$contrato ||
-    empty($contrato['fecha_liquidacion']) ||
-    $contrato['fecha_liquidacion'] == '0000-00-00' ||
-    $contrato['fecha_liquidacion'] === null
+        !$contrato ||
+        empty($contrato['fecha_liquidacion']) ||
+        $contrato['fecha_liquidacion'] == '0000-00-00' ||
+        $contrato['fecha_liquidacion'] === null
     ) {
         return false; // No tiene fecha de liquidación, no hay restricción
     }
@@ -3582,9 +3546,9 @@ function obtenerMensajeEstadoContrato($codOperario)
     }
 
     if (
-    empty($contrato['fecha_liquidacion']) ||
-    $contrato['fecha_liquidacion'] == '0000-00-00' ||
-    $contrato['fecha_liquidacion'] === null
+        empty($contrato['fecha_liquidacion']) ||
+        $contrato['fecha_liquidacion'] == '0000-00-00' ||
+        $contrato['fecha_liquidacion'] === null
     ) {
         return [
             'tipo' => 'activo',
@@ -3602,8 +3566,7 @@ function obtenerMensajeEstadoContrato($codOperario)
             'mensaje' => 'Colaborador liquidado el ' . $fechaLiquidacion->format('d-m-Y'),
             'clase' => 'alert-danger'
         ];
-    }
-    else {
+    } else {
         return [
             'tipo' => 'liquidacion_futura',
             'mensaje' => 'Colaborador con liquidación programada para ' . $fechaLiquidacion->format('d-m-Y'),
@@ -3613,7 +3576,7 @@ function obtenerMensajeEstadoContrato($codOperario)
 }
 
 /**
- * Verifica si el usuario que tiene asignado actulemnte un cargo , agarra el orimero que encuentra asi que aplica a administrativos mas que operarios
+ * Verifica si el usuario que tiene asignado actulemnte un cargo , agarra el orimero que encuentra asi que aplica a administrativos mas que operarios o colaboradores
  */
 function obtenerOperariosPorCargoVigente($codNivelCargo)
 {

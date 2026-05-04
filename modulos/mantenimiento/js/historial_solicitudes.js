@@ -112,7 +112,8 @@ const textosEstado = {
 
 const textosTipo = {
     'mantenimiento': 'Mantenimiento',
-    'cambio_equipos': 'Cambio Equipo'
+    'mantenimiento_general': 'Mantenimiento',
+    'cambio_equipos': 'Equipos'
 };
 
 // Inicializar al cargar la página
@@ -205,13 +206,14 @@ function renderizarTabla(datos) {
         tr.append(`<td>${formatearFecha(row.created_at)}</td>`);
 
         // Título
-        tr.append(`<td class="col-titulo">${renderizarTituloEditable(row.id, row.titulo)}</td>`);
+        tr.append(`<td class="col-titulo" title="${row.titulo}">${renderizarTituloEditable(row.id, row.titulo)}</td>`);
 
         // Descripción
-        tr.append(`<td class="col-descripcion">${row.descripcion}</td>`);
+        tr.append(`<td class="col-descripcion" title="${row.descripcion}">${row.descripcion}</td>`);
 
         // Resolución
-        tr.append(`<td class="col-resolucion">${renderizarResolucionEditable(row.id, row.resolucion)}</td>`);
+        const resText = row.resolucion || 'Sin resolución aún...';
+        tr.append(`<td class="col-resolucion" title="${resText}">${renderizarResolucionEditable(row.id, row.resolucion)}</td>`);
 
         // Sucursal
         tr.append(`<td class="col-sucursal">${row.nombre_sucursal}</td>`);
@@ -235,9 +237,20 @@ function renderizarTabla(datos) {
         // Foto
         const tieneFotos = parseInt(row.total_fotos) > 0;
         const btnFoto = tieneFotos
-            ? `<button class="btn-foto" onclick="mostrarFotos(${row.id})"><i class="bi bi-camera"></i> Ver (${row.total_fotos})</button>`
-            : `<button class="btn-foto" disabled><i class="bi bi-camera"></i> Sin fotos</button>`;
+            ? `<button class="btn-foto-icon" onclick="mostrarFotos(${row.id})" title="Ver ${row.total_fotos} fotos"><i class="bi bi-camera-fill"></i><span class="foto-count-badge">${row.total_fotos}</span></button>`
+            : `<button class="btn-foto-icon disabled" title="Sin fotos"><i class="bi bi-camera"></i></button>`;
         tr.append(`<td>${btnFoto}</td>`);
+
+        // IA
+        const esAnalizable = (
+            tienepermiso('consulta_ia') &&
+            ['solicitado', 'agendado'].includes(row.status) &&
+            row.tipo_formulario === 'mantenimiento_general'
+        );
+        const btnIA = esAnalizable
+            ? `<button class="btn-ia-icon" id="btn-ia-${row.id}" onclick="analizarConIA(${row.id})" title="Analizar con IA"><i class="bi bi-robot"></i></button>`
+            : `<button class="btn-ia-icon disabled" disabled title="No disponible para este estado o tipo"><i class="bi bi-robot"></i></button>`;
+        tr.append(`<td>${btnIA}</td>`);
 
         tbody.append(tr);
     });
@@ -322,7 +335,7 @@ function cambiarUrgencia(ticketId, nivelActual) {
 // Renderizar tiempo estimado con edición verdaderamente inline
 function renderizarTiempoEstimado(ticketId, tiempoActual) {
     const tiempo = tiempoActual || 0;
-    const texto = tiempo > 0 ? `${tiempo} H` : '-';
+    const texto = tiempo > 0 ? `${tiempo}` : '-';
     const permiteEditar = tienepermiso('cambiar_urgencia');
 
     if (!permiteEditar) {
@@ -362,7 +375,7 @@ function habilitarEdicionInline(container, ticketId, tiempoActual) {
         }
 
         if (nuevoTiempo === '' || parseInt(nuevoTiempo) === tiempoActual) {
-            $(container).html(`<span class="tiempo-texto">${tiempoActual > 0 ? tiempoActual + ' H' : '-'}</span>`);
+            $(container).html(`<span class="tiempo-texto">${tiempoActual > 0 ? tiempoActual : '-'}</span>`);
         } else {
             actualizarTiempoEstimado(ticketId, parseInt(nuevoTiempo));
         }
@@ -372,7 +385,7 @@ function habilitarEdicionInline(container, ticketId, tiempoActual) {
         if (e.key === 'Enter') {
             $(this).blur();
         } else if (e.key === 'Escape') {
-            $(container).html(`<span class="tiempo-texto">${tiempoActual > 0 ? tiempoActual + ' H' : '-'}</span>`);
+            $(container).html(`<span class="tiempo-texto">${tiempoActual > 0 ? tiempoActual : '-'}</span>`);
         }
     });
 }
@@ -745,7 +758,7 @@ function formatearFecha(fecha) {
 // Renderizar fecha agendado con estilos según estado
 function renderizarFechaAgendado(fechaInicio, status) {
     if (!fechaInicio) {
-        return '<span class="fecha-sin-programar">Sin programar</span>';
+        return '<span class="fecha-sin-programar">Pendiente</span>';
     }
 
     // Si está finalizado, mostrar con menos realce
@@ -1347,3 +1360,97 @@ function descargarInformeGlobal() {
     }, 4000);
 }
 
+// ========== ANÁLISIS IA POR TICKET ==========
+
+/**
+ * Llama al endpoint de IA para analizar el ticket y actualizar urgencia, tiempo y resolución.
+ * El botón se deshabilita durante el proceso y se restaura al terminar.
+ */
+async function analizarConIA(ticketId) {
+    const btn = document.getElementById(`btn-ia-${ticketId}`);
+    if (!btn) return;
+
+    // Estado de carga
+    btn.disabled = true;
+    btn.innerHTML = '<span class="btn-ia-spinner"></span>';
+    btn.classList.add('loading');
+
+    try {
+        const response = await fetch('ajax/historial_consulta_ia.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ticket_id: ticketId })
+        });
+
+        if (!response.ok) {
+            throw new Error('Error de red al conectar con el servidor.');
+        }
+
+        const data = await response.json();
+
+        if (!data.success) {
+            mostrarToastIA(false, data.message || 'Error desconocido al analizar el ticket.');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-robot"></i> IA';
+            btn.classList.remove('loading');
+            return;
+        }
+
+        // Éxito: recargar datos y mostrar toast
+        const proveedorNombre = (data.proveedor || 'IA').toUpperCase();
+        mostrarToastIA(true, `✓ Analizado · ${proveedorNombre}`);
+        cargarDatos();
+
+    } catch (error) {
+        console.error('analizarConIA error:', error);
+        mostrarToastIA(false, 'Error de conexión. Intenta nuevamente.');
+        const btnActual = document.getElementById(`btn-ia-${ticketId}`);
+        if (btnActual) {
+            btnActual.disabled = false;
+            btnActual.innerHTML = '<i class="bi bi-robot"></i> IA';
+            btnActual.classList.remove('loading');
+        }
+    }
+}
+
+/**
+ * Muestra un toast flotante de éxito o error en la esquina inferior derecha.
+ * Se destruye automáticamente después de 4 segundos.
+ */
+function mostrarToastIA(exito, mensaje) {
+    const toastAnterior = document.getElementById('toast-ia-pitaya');
+    if (toastAnterior) toastAnterior.remove();
+
+    const color   = exito ? '#0E544C' : '#dc3545';
+    const iconoBI = exito ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill';
+
+    const toast = document.createElement('div');
+    toast.id = 'toast-ia-pitaya';
+    toast.innerHTML = `<i class="bi ${iconoBI}" style="font-size:1.1rem;"></i><span>${mensaje}</span>`;
+    Object.assign(toast.style, {
+        position:     'fixed',
+        bottom:       '30px',
+        right:        '30px',
+        zIndex:       '99999',
+        background:   color,
+        color:        'white',
+        padding:      '12px 20px',
+        borderRadius: '8px',
+        boxShadow:    '0 4px 16px rgba(0,0,0,0.25)',
+        display:      'flex',
+        alignItems:   'center',
+        gap:          '10px',
+        fontSize:     '0.9rem',
+        fontWeight:   '600',
+        maxWidth:     '320px',
+        fontFamily:   'inherit'
+    });
+
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transition = 'opacity 0.4s ease';
+        setTimeout(() => toast.remove(), 400);
+    }, 4000);
+}

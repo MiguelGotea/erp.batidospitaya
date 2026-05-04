@@ -6,9 +6,14 @@ let ordenActivo = { columna: null, direccion: 'asc' };
 let panelFiltroAbierto = null;
 let totalRegistros = 0;
 let scrollTopInicial = 0;
+let modoVista = 'por_pedido'; // Vista activa: 'por_pedido' | 'por_producto'
+
+// Polling timers IA (declarado aquí para que cargarDatos pueda limpiarlos)
+const _pollingTimers = {};
 
 // Inicializar
 $(document).ready(function () {
+    _configurarColumnasPorVista('por_pedido');
     cargarDatos();
 
     // Cerrar filtros solo si se hace clic fuera del panel Y del icono
@@ -38,8 +43,63 @@ $(document).ready(function () {
     });
 });
 
+// ═══════════════════════════════════════════════════════
+//  Cambio de Vista (Por Pedido / Por Producto)
+// ═══════════════════════════════════════════════════════
+
+/**
+ * Aplica visibilidad de columnas y estado de pills para el modo dado.
+ * No recarga datos — solo actualiza el DOM.
+ */
+function _configurarColumnasPorVista(modo) {
+    $('#btnVistaPedido').toggleClass('active', modo === 'por_pedido');
+    $('#btnVistaProducto').toggleClass('active', modo === 'por_producto');
+
+    if (modo === 'por_pedido') {
+        $('th[data-column="DBBatidos_Nombre"]').hide();
+        $('th[data-column="Medida"]').hide();
+        $('th[data-column="Cantidad"]').hide();
+        if (puedeAnalizarBot) $('.col-atencion-ia').show();
+        $('#thAccionesPedido').show();
+    } else {
+        $('th[data-column="DBBatidos_Nombre"]').show();
+        $('th[data-column="Medida"]').show();
+        $('th[data-column="Cantidad"]').show();
+        $('.col-atencion-ia').hide();
+        $('#thAccionesPedido').hide();
+    }
+}
+
+/**
+ * Cambia la vista activa, limpia filtros que no aplican y recarga.
+ */
+function cambiarVista(modo) {
+    if (modo === modoVista) return;
+
+    // Limpiar filtros que solo existen en por_producto
+    if (modo === 'por_pedido') {
+        delete filtrosActivos['DBBatidos_Nombre'];
+        delete filtrosActivos['Medida'];
+        delete filtrosActivos['Cantidad'];
+    }
+
+    modoVista = modo;
+    paginaActual = 1;
+    _configurarColumnasPorVista(modo);
+    cargarDatos();
+}
+
 // Cargar datos
 function cargarDatos() {
+    // Limpiar todos los polling de IA activos antes de recargar la tabla
+    Object.keys(_pollingTimers).forEach(clave => {
+        clearInterval(_pollingTimers[clave]);
+        delete _pollingTimers[clave];
+    });
+
+    // Mostrar skeleton mientras llega la respuesta
+    mostrarSkeleton();
+
     $.ajax({
         url: 'ajax/ventas_get_datos.php',
         method: 'POST',
@@ -47,7 +107,8 @@ function cargarDatos() {
             pagina: paginaActual,
             registros_por_pagina: registrosPorPagina,
             filtros: JSON.stringify(filtrosActivos),
-            orden: JSON.stringify(ordenActivo)
+            orden: JSON.stringify(ordenActivo),
+            modo: modoVista
         },
         dataType: 'json',
         success: function (response) {
@@ -57,6 +118,10 @@ function cargarDatos() {
                 renderizarPaginacion(response.total_registros);
                 actualizarIndicadoresFiltros();
                 actualizarTotales(response.totales);
+                // Cargar estados IA existentes para los pedidos visibles
+                if (puedeAnalizarBot) {
+                    cargarEstadosIaBatch(response.datos);
+                }
             } else {
                 alert('Error: ' + response.message);
                 mostrarMensajeVacio('No se encontraron datos');
@@ -71,58 +136,146 @@ function cargarDatos() {
 
 // Actualizar totales
 function actualizarTotales(totales) {
-    if (totales) {
-        if (puedeVerMontos) {
-            $('#totalMonto').text(parseFloat(totales.monto || 0).toFixed(1));
-        }
-        $('#totalProductos').text(parseInt(totales.productos || 0));
+    const val = totales ? totales.productos : null;
+    if (val !== null && val !== undefined) {
+        $('#totalProductos').text(parseInt(val || 0));
+        $('#totalProductosItem').show();
     } else {
-        if (puedeVerMontos) {
-            $('#totalMonto').text('0.0');
-        }
-        $('#totalProductos').text('0');
+        $('#totalProductosItem').hide();
     }
 }
 
-// Renderizar tabla
+// ─── Skeleton Loader ──────────────────────────────────
+/**
+ * Genera filas de skeleton shimmer que imitan la tabla real.
+ * Se llama antes de cada AJAX para que el usuario vea feedback
+ * inmediato mientras llegan los datos.
+ */
+function mostrarSkeleton() {
+    const tbody = $('#tablaVentasBody');
+    tbody.empty();
+
+    // Columnas según el modo y permisos activos
+    let cols;
+    if (modoVista === 'por_pedido') {
+        // Sucursal, Pedido, Fecha, Hora, Membresía, Cliente,
+        // Puntos, Cajero, [Monto], Modalidad, Anulado, [IA], Acciones
+        cols = ['w-70','w-50','w-60','w-40','w-50','w-80',
+                'w-40','w-60'];
+        if (puedeVerMontos)  cols.push('w-50');
+        cols.push('w-70','w-50');
+        if (puedeAnalizarBot) cols.push('w-60');
+        cols.push('w-50');
+    } else {
+        // Sucursal, Pedido, Fecha, Hora, Membresía, Cliente,
+        // Producto, Medida, Cantidad, Puntos, Cajero, [Monto], Modalidad, Anulado
+        cols = ['w-70','w-50','w-60','w-40','w-50','w-80',
+                'w-90','w-50','w-40','w-40','w-60'];
+        if (puedeVerMontos) cols.push('w-50');
+        cols.push('w-70','w-50');
+    }
+
+    const widths = ['w-40','w-50','w-60','w-70','w-80','w-90','w-100'];
+    const numRows = registrosPorPagina > 15 ? 15 : registrosPorPagina;
+
+    for (let r = 0; r < numRows; r++) {
+        const tr = $('<tr class="skeleton-row">');
+        cols.forEach((baseW, i) => {
+            // Variar ligeramente el ancho para aspecto más natural
+            const w = widths[(widths.indexOf(baseW) + r + i) % widths.length];
+            tr.append(`<td><span class="skeleton-cell ${w}"></span></td>`);
+        });
+        tbody.append(tr);
+    }
+}
+
+/**
+ * Carga los estados IA de todos los pedidos visibles en una sola consulta.
+ * Actualiza el cache y los badges en la tabla sin requerir acción del usuario.
+ */
+function cargarEstadosIaBatch(datos) {
+    if (!datos || datos.length === 0) return;
+
+    // Construir lista única de pedidos visibles con su local
+    const pedidos = [];
+    const vistas  = new Set();
+    datos.forEach(row => {
+        const local = row.local || '';
+        const clave = `${row.CodPedido}_${local}`;
+        if (!vistas.has(clave) && row.CodPedido && local) {
+            vistas.add(clave);
+            pedidos.push({ cod_pedido: parseInt(row.CodPedido), local: local });
+        }
+    });
+
+    if (pedidos.length === 0) return;
+
+    $.ajax({
+        url: 'ajax/hikvision_estados_batch.php',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ pedidos }),
+        dataType: 'json',
+        success: function (resp) {
+            if (!resp.success || !resp.estados) return;
+
+            // Actualizar cache y badges de cada pedido que tenga estado
+            Object.entries(resp.estados).forEach(([clave, info]) => {
+                iaEstadoCache[clave] = info;
+
+                const [codPedido, local] = clave.split('_');
+                const $td = $(`.td-atencion-ia[data-pedido="${codPedido}"][data-local="${local}"]`);
+                if ($td.length) {
+                    $td.html(renderBadgeIa(info, codPedido, local));
+                }
+
+                // Si está pendiente/procesando, iniciar polling
+                if (info.estado === 'pendiente' || info.estado === 'procesando') {
+                    iniciarPollingFila(codPedido, local);
+                }
+            });
+        }
+    });
+}
+
+// Renderizar tabla — dispatcher según el modo activo
 function renderizarTabla(datos) {
+    if (modoVista === 'por_pedido') {
+        renderizarTablaPorPedido(datos);
+    } else {
+        renderizarTablaPorProducto(datos);
+    }
+}
+
+// Renderizar tabla en modo Por Producto (vista original, sin columna IA)
+function renderizarTablaPorProducto(datos) {
     const tbody = $('#tablaVentasBody');
     tbody.empty();
 
     if (datos.length === 0) {
-        const colspan = puedeVerMontos ? 14 : 13;
-        mostrarMensajeVacio('No se encontraron registros', colspan);
+        mostrarMensajeVacio('No se encontraron registros');
         return;
     }
 
     datos.forEach(row => {
         const esAnulado = parseInt(row.Anulado) !== 0;
         const tr = $('<tr>');
-
-        if (esAnulado) {
-            tr.addClass('fila-anulada');
-        }
+        if (esAnulado) tr.addClass('fila-anulada');
 
         tr.append(`<td>${row.Sucursal_Nombre || '-'}</td>`);
         tr.append(`<td>${row.CodPedido || '-'}</td>`);
         tr.append(`<td>${formatearFecha(row.Fecha)}</td>`);
         tr.append(`<td>${formatearHora(row.Hora)}</td>`);
 
-        // Membresía (CodCliente)
         const membresia = row.CodCliente && parseInt(row.CodCliente) !== 0 ? row.CodCliente : '-';
         tr.append(`<td>${membresia}</td>`);
-
-        // Nombre Cliente
-        const nombreCliente = row.NombreCliente || '-';
-        tr.append(`<td>${nombreCliente}</td>`);
-
+        tr.append(`<td>${row.NombreCliente || '-'}</td>`);
         tr.append(`<td>${row.DBBatidos_Nombre || '-'}</td>`);
         tr.append(`<td>${row.Medida || '-'}</td>`);
         tr.append(`<td>${row.Cantidad || 0}</td>`);
         tr.append(`<td>${row.Puntos || 0}</td>`);
         tr.append(`<td>${row.Caja || '-'}</td>`);
 
-        // Solo mostrar columna de Monto si tiene permiso
         if (puedeVerMontos) {
             tr.append(`<td>${parseFloat(row.Precio || 0).toFixed(1)}</td>`);
         }
@@ -134,6 +287,55 @@ function renderizarTabla(datos) {
             : '<span class="badge-activo">NO</span>';
         tr.append(`<td>${badgeAnulado}</td>`);
 
+        // En Por Producto NO se muestra columna IA
+        tbody.append(tr);
+    });
+}
+
+// Renderizar tabla en modo Por Pedido (agrupado, con IA y botón Detalle)
+function renderizarTablaPorPedido(datos) {
+    const tbody = $('#tablaVentasBody');
+    tbody.empty();
+
+    if (datos.length === 0) {
+        mostrarMensajeVacio('No se encontraron pedidos');
+        return;
+    }
+
+    datos.forEach(row => {
+        const esAnulado = parseInt(row.Anulado) !== 0;
+        const tr = $('<tr>');
+        if (esAnulado) tr.addClass('fila-anulada');
+
+        tr.append(`<td>${row.Sucursal_Nombre || '-'}</td>`);
+        tr.append(`<td>${row.CodPedido || '-'}</td>`);
+        tr.append(`<td>${formatearFecha(row.Fecha)}</td>`);
+        tr.append(`<td>${formatearHora(row.Hora)}</td>`);
+
+        const membresia = row.CodCliente && parseInt(row.CodCliente) !== 0 ? row.CodCliente : '-';
+        tr.append(`<td>${membresia}</td>`);
+        tr.append(`<td>${row.NombreCliente || '-'}</td>`);
+        tr.append(`<td>${row.Puntos || 0}</td>`);
+        tr.append(`<td>${row.Caja || '-'}</td>`);
+
+        if (puedeVerMontos) {
+            tr.append(`<td>${parseFloat(row.Precio || 0).toFixed(1)}</td>`);
+        }
+
+        tr.append(`<td>${row.Modalidad || '-'}</td>`);
+
+        const badgeAnulado = esAnulado
+            ? '<span class="badge-anulado">SÍ</span>'
+            : '<span class="badge-activo">NO</span>';
+        tr.append(`<td>${badgeAnulado}</td>`);
+
+        // Columna Atención IA (solo si tiene permiso)
+        renderCeldaIa(tr, row);
+
+        // Columna Acciones: botón Ver Detalle
+        const urlDetalle = `detalle_vista_pedido_global.php?cod_pedido=${row.CodPedido}&local=${encodeURIComponent(row.local)}`;
+        tr.append(`<td class="text-center"><a href="${urlDetalle}" target="_blank" class="btn-ver-detalle"><i class="bi bi-eye"></i> Detalle</a></td>`);
+
         tbody.append(tr);
     });
 }
@@ -142,7 +344,15 @@ function renderizarTabla(datos) {
 function mostrarMensajeVacio(mensaje, colspan = null) {
     const tbody = $('#tablaVentasBody');
     if (!colspan) {
-        colspan = puedeVerMontos ? 14 : 13;
+        if (modoVista === 'por_pedido') {
+            // Sucursal, Pedido, Fecha, Hora, Membresía, Cliente, Puntos, Cajero = 8
+            // + Monto (cond), Modalidad, Anulado = 3, + IA (cond), + Acciones = 1
+            colspan = 12 + (puedeVerMontos ? 1 : 0) + (puedeAnalizarBot ? 1 : 0);
+        } else {
+            // Sucursal, Pedido, Fecha, Hora, Membresía, Cliente, Producto, Medida,
+            // Cantidad, Puntos, Cajero = 11 + Monto (cond), Modalidad, Anulado = 3
+            colspan = 14 + (puedeVerMontos ? 1 : 0);
+        }
     }
     tbody.html(`
         <tr>
@@ -153,7 +363,7 @@ function mostrarMensajeVacio(mensaje, colspan = null) {
         </tr>
     `);
     $('#paginacion').empty();
-    actualizarTotales({ monto: 0, productos: 0 });
+    actualizarTotales({ productos: 0 });
 }
 
 // Toggle filtro
@@ -373,6 +583,26 @@ function seleccionarFecha(tipo, fecha, columna) {
 
 // Cargar opciones de filtro
 function cargarOpcionesFiltro(panel, columna, icon) {
+    // --- Skeleton inmediato para que el panel aparezca al instante ---
+    const skeletonWidths = ['w-70','w-50','w-90','w-60','w-80','w-50','w-70','w-40'];
+    let skHtml = '<div class="filter-section filter-section-opciones" style="margin-top:12px;">';
+    skHtml += '<span class="filter-section-title">Filtrar por:</span>';
+    skHtml += '<input type="text" class="filter-search" placeholder="Buscar..." disabled>';
+    skHtml += '<div class="filter-options">';
+    for (let i = 0; i < 6; i++) {
+        const w = skeletonWidths[i % skeletonWidths.length];
+        skHtml += `<div class="filter-option filter-option-skeleton">
+            <span class="skeleton-cell-sm"></span>
+            <span class="skeleton-cell ${w}"></span>
+        </div>`;
+    }
+    skHtml += '</div></div>';
+    panel.append(skHtml);
+
+    // Posicionar con el skeleton ya visible
+    posicionarPanelFiltro(panel, icon);
+
+    // --- Cargar opciones reales y reemplazar skeleton ---
     $.ajax({
         url: 'ajax/ventas_get_opciones_filtro.php',
         method: 'POST',
@@ -380,7 +610,7 @@ function cargarOpcionesFiltro(panel, columna, icon) {
         dataType: 'json',
         success: function (response) {
             if (response.success) {
-                let html = '<div class="filter-section" style="margin-top: 12px;">';
+                let html = '<div class="filter-section filter-section-opciones" style="margin-top: 12px;">';
                 html += '<span class="filter-section-title">Filtrar por:</span>';
                 html += '<input type="text" class="filter-search" placeholder="Buscar..." onkeyup="buscarEnOpciones(this)">';
                 html += '<div class="filter-options">';
@@ -397,14 +627,17 @@ function cargarOpcionesFiltro(panel, columna, icon) {
                 });
 
                 html += '</div></div>';
-                panel.append(html);
 
-                // Posicionar después de agregar el contenido
+                // Reemplazar solo la sección de skeleton
+                panel.find('.filter-section-opciones').replaceWith(html);
+
+                // Reposicionar ahora que el contenido real tiene altura correcta
                 posicionarPanelFiltro(panel, icon);
             }
         }
     });
 }
+
 
 // Posicionar panel
 function posicionarPanelFiltro(panel, icon) {
@@ -596,3 +829,247 @@ function formatearHora(hora) {
     if (!hora) return '-';
     return hora.substring(0, 5);
 }
+
+// ═══════════════════════════════════════════════════════
+//  Columna Atención IA — renderizado en tabla
+// ═══════════════════════════════════════════════════════
+
+// Cache de estados IA por pedido (cod_pedido_local → estado)
+const iaEstadoCache = {};
+
+// Agrega la celda de Atención IA a una fila
+function renderCeldaIa(tr, row) {
+    if (!puedeAnalizarBot) return;
+
+    const local  = row.local || row.CodLocal || '';
+    const clave  = `${row.CodPedido}_${local}`;
+
+    // data-pedido y data-local permiten que el polling encuentre y actualice la celda
+    const td = $('<td class="td-atencion-ia">').attr({
+        'data-pedido': row.CodPedido,
+        'data-local' : local
+    });
+
+    const cached = iaEstadoCache[clave];
+
+    if (!cached) {
+        td.html(renderBtnAnalizar(row.CodPedido, local, row.Anulado));
+    } else {
+        td.html(renderBadgeIa(cached, row.CodPedido, local));
+        // Si estaba pendiente/procesando, reanudar polling
+        if (cached.estado === 'pendiente' || cached.estado === 'procesando') {
+            iniciarPollingFila(row.CodPedido, local);
+        }
+    }
+
+    tr.append(td);
+}
+
+function renderBtnAnalizar(codPedido, local, anulado) {
+    if (parseInt(anulado) !== 0) {
+        return '<span class="text-muted" style="font-size:11px;">—</span>';
+    }
+    return `<button class="btn-analizar-ia"
+                id="btn-ia-${codPedido}-${local}"
+                onclick="analizarPedido(${codPedido}, '${local}', this)">
+                <i class="bi bi-camera-video"></i> Analizar
+            </button>`;
+}
+
+function renderBadgeIa(info, codPedido, local) {
+    const estado = info.estado;
+    const url    = `detalle_vista_pedido_global.php?cod_pedido=${codPedido}&local=${local}`;
+
+    if (estado === 'pendiente') {
+        return `<span class="badge-ia badge-ia-pendiente">⏳ En cola</span>`;
+    }
+    if (estado === 'procesando') {
+        return `<span class="badge-ia badge-ia-procesando">⚙️ Analizando</span>`;
+    }
+    if (estado === 'completado' && info.promedio !== null) {
+        const prom = parseFloat(info.promedio).toFixed(1);
+        return `<a href="${url}" target="_blank" class="badge-ia badge-ia-completado">
+                    ✅ <span class="badge-ia-score">${prom}</span>/10
+                </a>`;
+    }
+    if (estado === 'completado') {
+        return `<a href="${url}" target="_blank" class="badge-ia badge-ia-completado">✅ Ver</a>`;
+    }
+    if (estado === 'fallido') {
+        return `<span class="badge-ia badge-ia-fallido" title="Error en análisis">❌ Error</span>`;
+    }
+    return `<button class="btn-analizar-ia"
+                onclick="analizarPedido(${codPedido}, '${local}', this)">
+                <i class="bi bi-camera-video"></i> Analizar
+            </button>`;
+}
+
+// Encolar un pedido individual
+function analizarPedido(codPedido, local, btn) {
+    if (!codPedido || !local) return;
+
+    const $btn = $(btn);
+    $btn.prop('disabled', true).html('<i class="bi bi-hourglass-split"></i> Enviando...');
+
+    $.ajax({
+        url: 'ajax/hikvision_encolar_pedido.php',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ cod_pedido: codPedido, local: local }),
+        dataType: 'json',
+        success: function (resp) {
+            if (resp.success) {
+                const clave = `${codPedido}_${local}`;
+                iaEstadoCache[clave] = { estado: 'pendiente', promedio: null };
+
+                // Actualizar la celda y agregar atributos data para el polling
+                const $td = $btn.closest('td');
+                $td.attr({ 'data-pedido': codPedido, 'data-local': local });
+                $td.html(renderBadgeIa({ estado: 'pendiente', promedio: null }, codPedido, local));
+
+                // Iniciar polling (no duplicar si ya estaba corriendo)
+                iniciarPollingFila(codPedido, local);
+            } else {
+                $btn.prop('disabled', false).html('<i class="bi bi-camera-video"></i> Analizar');
+                alert('Error: ' + (resp.message || 'No se pudo encolar el pedido'));
+            }
+        },
+        error: function () {
+            $btn.prop('disabled', false).html('<i class="bi bi-camera-video"></i> Analizar');
+            alert('Error de conexión al encolar el pedido');
+        }
+    });
+}
+
+function iniciarPollingFila(codPedido, local) {
+    const clave = `${codPedido}_${local}`;
+    if (_pollingTimers[clave]) return; // ya está corriendo
+
+    function poll() {
+        $.ajax({
+            url: `ajax/hikvision_estado_pedido.php?cod_pedido=${codPedido}&local=${encodeURIComponent(local)}`,
+            method: 'GET',
+            dataType: 'json',
+            success: function (resp) {
+                if (!resp.success) return;
+
+                const estado = resp.estado;
+                const promedio = resp.analisis ? resp.analisis.promedio : null;
+
+                iaEstadoCache[clave] = { estado, promedio };
+
+                // Actualizar celda en el DOM usando data attributes
+                $(`.td-atencion-ia[data-pedido="${codPedido}"][data-local="${local}"]`)
+                    .html(renderBadgeIa({ estado, promedio }, codPedido, local));
+
+                // Detener polling si ya terminó
+                if (estado === 'completado' || estado === 'fallido' || estado === 'sin_cola') {
+                    clearInterval(_pollingTimers[clave]);
+                    delete _pollingTimers[clave];
+                }
+            }
+        });
+    }
+
+    _pollingTimers[clave] = setInterval(poll, 8000);
+    poll(); // primera vez inmediata
+}
+
+// ═══════════════════════════════════════════════════════
+//  Worker Bot — Estado y toggle
+// ═══════════════════════════════════════════════════════
+
+let _workerActivo    = false;
+let _workerPolling   = null;
+
+function cargarEstadoWorker() {
+    if (!puedeActivarWorker) return;
+
+    $.ajax({
+        url: 'ajax/hikvision_worker_control.php',
+        method: 'GET',
+        dataType: 'json',
+        success: function (resp) {
+            if (!resp.success) return;
+            actualizarUIWorker(resp);
+            $('#btnWorker').prop('disabled', false);
+        },
+        error: function () {
+            $('#workerStatusLabel').text('Sin conexión');
+        }
+    });
+}
+
+function actualizarUIWorker(resp) {
+    _workerActivo = resp.worker_habilitado;
+
+    const $dot    = $('#workerDot');
+    const $label  = $('#workerStatusLabel');
+    const $btn    = $('#btnWorker');
+    const $text   = $('#btnWorkerText');
+    const $stats  = $('#workerColaStats');
+    const cola    = resp.cola_hoy || {};
+
+    if (_workerActivo) {
+        $dot.addClass('activo').removeClass('detenido');
+        $label.text(resp.worker_procesando ? 'Procesando...' : 'Worker activo');
+        $btn.addClass('activo');
+        $text.text('Detener Bot');
+    } else {
+        $dot.removeClass('activo').addClass('detenido');
+        $label.text('Worker detenido');
+        $btn.removeClass('activo');
+        $text.text('Activar Bot');
+    }
+
+    if (cola.total > 0) {
+        $stats.show();
+        $('#statPendientes').text(cola.pendientes || 0);
+        $('#statCompletados').text(cola.completados || 0);
+    } else {
+        $stats.hide();
+    }
+}
+
+function toggleWorker() {
+    if (!puedeActivarWorker) return;
+
+    const action = _workerActivo ? 'stop' : 'start';
+    const $btn   = $('#btnWorker');
+
+    $btn.prop('disabled', true);
+    $('#btnWorkerText').text(action === 'start' ? 'Activando...' : 'Deteniendo...');
+
+    $.ajax({
+        url: 'ajax/hikvision_worker_control.php',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ action }),
+        dataType: 'json',
+        success: function (resp) {
+            if (resp.success) {
+                actualizarUIWorker(resp);
+                if (action === 'start' && resp.encolados_hoy > 0) {
+                    // Recargar la tabla para mostrar badges de pendiente
+                    cargarDatos();
+                }
+            } else {
+                alert('Error: ' + (resp.message || 'No se pudo cambiar el estado del worker'));
+            }
+            $btn.prop('disabled', false);
+        },
+        error: function () {
+            alert('Error de conexión al cambiar el estado del worker');
+            $btn.prop('disabled', false);
+            $('#btnWorkerText').text(_workerActivo ? 'Detener Bot' : 'Activar Bot');
+        }
+    });
+}
+
+// Iniciar polling del worker cada 15s
+$(document).ready(function () {
+    if (puedeActivarWorker) {
+        cargarEstadoWorker();
+        setInterval(cargarEstadoWorker, 15000);
+    }
+});

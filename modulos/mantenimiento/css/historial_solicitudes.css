@@ -74,16 +74,23 @@ body {
 
 /* Columnas específicas */
 .col-titulo {
-    max-width: 200px;
+    max-width: 180px;
     font-weight: 600;
     color: #0E544C;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: default;
 }
 
 .col-descripcion {
-    max-width: 300px;
+    max-width: 180px;
     font-size: 0.85rem;
     color: #666;
-    white-space: normal;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: default;
 }
 
 .col-sucursal {
@@ -91,9 +98,13 @@ body {
 }
 
 .col-resolucion {
-    max-width: 250px;
+    max-width: 180px;
     font-size: 0.85rem;
     color: #444;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: default;
 }
 
 .resolucion-editable {
@@ -555,26 +566,52 @@ body {
     border-radius: 50%;
 }
 
-/* Botón de foto */
-.btn-foto {
+/* Botón de foto compacto */
+.btn-foto-icon {
     background-color: #51B8AC;
     color: white;
     border: none;
-    padding: 0.35rem 0.75rem;
-    border-radius: 4px;
-    font-size: 0.8rem;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     cursor: pointer;
     transition: all 0.2s;
-    white-space: nowrap;
+    position: relative;
+    font-size: 1.1rem;
+    box-shadow: 0 2px 4px rgba(14, 84, 76, 0.15);
 }
 
-.btn-foto:hover {
+.btn-foto-icon:hover {
     background-color: #0E544C;
+    transform: scale(1.1);
 }
 
-.btn-foto:disabled {
-    background-color: #ccc;
+.btn-foto-icon.disabled {
+    background-color: #e9ecef;
+    color: #adb5bd;
     cursor: not-allowed;
+    box-shadow: none;
+}
+
+.foto-count-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background-color: #dc3545;
+    color: white;
+    font-size: 0.65rem;
+    font-weight: 700;
+    min-width: 15px;
+    height: 15px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 3px;
+    border: 1px solid white;
 }
 
 /* Paginación */
@@ -1035,3 +1072,48 @@ body {
         justify-content: center;
     }
 }
+
+/* ========== BOTÓN IA POR FILA ========== */
+
+/* Botón IA compacto */
+.btn-ia-icon {
+    background-color: #51B8AC;
+    color: white;
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    font-size: 1.1rem;
+    box-shadow: 0 2px 4px rgba(14, 84, 76, 0.15);
+}
+
+.btn-ia-icon:hover:not(:disabled) {
+    background-color: #0E544C;
+    transform: scale(1.1);
+}
+
+.btn-ia-icon.disabled, .btn-ia-icon:disabled {
+    background-color: #e9ecef;
+    color: #adb5bd;
+    cursor: not-allowed;
+    box-shadow: none;
+    opacity: 0.6;
+}
+
+/* Estado cargando */
+.btn-ia-icon.loading {
+    background-color: #0E544C;
+    cursor: wait;
+    pointer-events: none;
+}
+
+.btn-ia-icon i {
+    font-size: 1.1rem;
+    transition: transform 0.3s;
+}

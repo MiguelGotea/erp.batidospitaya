@@ -1,7 +1,7 @@
-<?php
-require_once '../../includes/auth.php';
-require_once '../../includes/conexion.php';
-require_once '../../includes/funciones.php';
+﻿<?php
+require_once '../../../includes/auth.php';
+require_once '../../../includes/conexion.php';
+require_once '../../../includes/funciones.php';
 
 header('Content-Type: application/json');
 

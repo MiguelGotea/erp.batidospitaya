@@ -42,7 +42,7 @@ $textosEstado = [
 $textosTipo = [
     'mantenimiento'         => 'Mantenimiento',
     'mantenimiento_general' => 'Mantenimiento',
-    'cambio_equipos'        => 'Cambio Equipo',
+    'cambio_equipos'        => 'Equipos',
 ];
 
 // ── Construir WHERE (idéntico a historial_get_solicitudes.php) ────────────────
@@ -198,7 +198,7 @@ try {
                 <th>Resolución</th>
                 <th>Sucursal</th>
                 <th>Urgencia</th>
-                <th>Tiempo (H)</th>
+                <th>Tiempo</th>
                 <th>Estado</th>
             </tr>
         </thead>
@@ -211,11 +211,11 @@ try {
 
             // Formatear valores
             $solicitado = $row['created_at'] ? date('d/m/Y', strtotime($row['created_at'])) : '-';
-            $agendado   = $row['fecha_inicio'] ? date('d/m/Y', strtotime($row['fecha_inicio'])) : 'Sin programar';
+            $agendado   = $row['fecha_inicio'] ? date('d/m/Y', strtotime($row['fecha_inicio'])) : 'Pendiente';
             $urgencia   = $textosUrgencia[(int)($row['nivel_urgencia'] ?? 0)] ?? 'No Clasificado';
             $estado     = $textosEstado[$row['status']] ?? ucfirst($row['status'] ?? '-');
             $tipo       = $textosTipo[$row['tipo_formulario']] ?? ucfirst(str_replace('_', ' ', $row['tipo_formulario'] ?? '-'));
-            $tiempo     = ($row['tiempo_estimado'] ?? 0) > 0 ? $row['tiempo_estimado'] . ' H' : '-';
+            $tiempo     = ($row['tiempo_estimado'] ?? 0) > 0 ? $row['tiempo_estimado'] : '-';
             $sucursal   = htmlspecialchars($row['nombre_sucursal'] ?? '-');
             $titulo     = htmlspecialchars($row['titulo'] ?? '-');
             $descripcion = htmlspecialchars($row['descripcion'] ?? '-');

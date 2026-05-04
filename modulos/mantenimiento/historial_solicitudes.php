@@ -180,7 +180,7 @@ function getTextoUrgencia($nivel)
                                     <i class="fas fa-filter filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
                                 <th data-column="tiempo_estimado" data-type="text" style="width: 100px;">
-                                    Tiempo (H)
+                                    Tiempo
                                     <i class="fas fa-filter filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
                                 <th data-column="status" data-type="list">
@@ -191,7 +191,8 @@ function getTextoUrgencia($nivel)
                                     Agendado
                                     <i class="fas fa-filter filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
-                                <th style="width: 80px;">Foto</th>
+                                <th style="width: 50px;">Foto</th>
+                                <th style="width: 50px;">IA</th>
                             </tr>
                         </thead>
                         <tbody id="tablaSolicitudesBody">
@@ -273,7 +274,8 @@ function getTextoUrgencia($nivel)
         const permisos = {
             'cambiar_urgencia': <?php echo tienePermiso('historial_solicitudes_mantenimiento', 'cambiar_urgencia', $cargoOperario) ? 'true' : 'false'; ?>,
             'super_edicion': <?php echo tienePermiso('historial_solicitudes_mantenimiento', 'super_edicion', $cargoOperario) ? 'true' : 'false'; ?>,
-            'editar_resolucion': <?php echo tienePermiso('historial_solicitudes_mantenimiento', 'editar_resolucion', $cargoOperario) ? 'true' : 'false'; ?>
+            'editar_resolucion': <?php echo tienePermiso('historial_solicitudes_mantenimiento', 'editar_resolucion', $cargoOperario) ? 'true' : 'false'; ?>,
+            'consulta_ia': <?php echo tienePermiso('historial_solicitudes_mantenimiento', 'consulta_ia', $cargoOperario) ? 'true' : 'false'; ?>
         };
 
         function tienepermiso(accion) {

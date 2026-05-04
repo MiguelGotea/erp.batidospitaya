@@ -9,7 +9,8 @@ try {
     $registros_por_pagina = isset($_POST['registros_por_pagina']) ? (int)$_POST['registros_por_pagina'] : 25;
     $filtros = isset($_POST['filtros']) ? json_decode($_POST['filtros'], true) : [];
     $orden = isset($_POST['orden']) ? json_decode($_POST['orden'], true) : ['columna' => null, 'direccion' => 'asc'];
-    
+    $modo = isset($_POST['modo']) && $_POST['modo'] === 'por_pedido' ? 'por_pedido' : 'por_producto';
+
     if ($pagina < 1) $pagina = 1;
     if ($registros_por_pagina < 1) $registros_por_pagina = 25;
     if ($registros_por_pagina > 100) $registros_por_pagina = 100;
@@ -34,13 +35,17 @@ try {
         $where[] = "CONCAT(c.nombre, ' ', c.apellido) LIKE :NombreCliente";
         $params[":NombreCliente"] = '%' . $filtros['NombreCliente'] . '%';
     }
-    if (isset($filtros['DBBatidos_Nombre']) && $filtros['DBBatidos_Nombre'] !== '') {
-        $where[] = "v.DBBatidos_Nombre LIKE :DBBatidos_Nombre";
-        $params[":DBBatidos_Nombre"] = '%' . $filtros['DBBatidos_Nombre'] . '%';
-    }
-    if (isset($filtros['Cantidad']) && $filtros['Cantidad'] !== '') {
-        $where[] = "v.Cantidad LIKE :Cantidad";
-        $params[":Cantidad"] = '%' . $filtros['Cantidad'] . '%';
+    // Filtros solo válidos en modo por_producto
+    if ($modo === 'por_producto') {
+        if (isset($filtros['DBBatidos_Nombre']) && $filtros['DBBatidos_Nombre'] !== '') {
+            $where[] = "v.DBBatidos_Nombre LIKE :DBBatidos_Nombre";
+            $params[":DBBatidos_Nombre"] = '%' . $filtros['DBBatidos_Nombre'] . '%';
+        }
+        if (isset($filtros['Cantidad']) && $filtros['Cantidad'] !== '') {
+            $where[] = "v.Cantidad LIKE :Cantidad";
+            $params[":Cantidad"] = '%' . $filtros['Cantidad'] . '%';
+        }
+        // Filtro Medida (lista) — también solo en por_producto, manejado abajo
     }
     if (isset($filtros['Puntos']) && $filtros['Puntos'] !== '') {
         $where[] = "v.Puntos LIKE :Puntos";
@@ -66,7 +71,8 @@ try {
         $where[] = "v.Sucursal_Nombre IN (" . implode(',', $placeholders) . ")";
     }
     
-    if (isset($filtros['Medida']) && is_array($filtros['Medida']) && count($filtros['Medida']) > 0) {
+    // Filtro Medida solo en modo por_producto
+    if ($modo === 'por_producto' && isset($filtros['Medida']) && is_array($filtros['Medida']) && count($filtros['Medida']) > 0) {
         $placeholders = [];
         foreach ($filtros['Medida'] as $idx => $valor) {
             $key = ":medida_$idx";
@@ -112,11 +118,19 @@ try {
     
     $orderClause = '';
     if ($orden['columna']) {
-        $columnas_validas = [
-            'Sucursal_Nombre', 'CodPedido', 'Fecha', 'Hora', 
-            'CodCliente', 'DBBatidos_Nombre', 'Medida', 'Cantidad', 'Puntos', 
-            'Caja', 'Precio', 'Modalidad', 'Anulado'
-        ];
+        // Whitelist varía según el modo
+        if ($modo === 'por_pedido') {
+            $columnas_validas = [
+                'Sucursal_Nombre', 'CodPedido', 'Fecha', 'Hora',
+                'CodCliente', 'Puntos', 'Caja', 'Precio', 'Modalidad', 'Anulado'
+            ];
+        } else {
+            $columnas_validas = [
+                'Sucursal_Nombre', 'CodPedido', 'Fecha', 'Hora',
+                'CodCliente', 'DBBatidos_Nombre', 'Medida', 'Cantidad', 'Puntos',
+                'Caja', 'Precio', 'Modalidad', 'Anulado'
+            ];
+        }
         if (in_array($orden['columna'], $columnas_validas)) {
             $direccion = strtoupper($orden['direccion']) === 'DESC' ? 'DESC' : 'ASC';
             if ($orden['columna'] === 'NombreCliente') {
@@ -126,35 +140,63 @@ try {
             }
         }
     }
-    
+
     if (empty($orderClause)) {
         $orderClause = "ORDER BY v.Fecha DESC, v.Hora DESC";
     }
     
-    $sql = "SELECT SQL_CALC_FOUND_ROWS
-                v.Sucursal_Nombre,
-                v.CodPedido,
-                v.Fecha,
-                v.Hora,
-                v.CodCliente,
-                CASE 
-                    WHEN v.CodCliente > 0 THEN CONCAT(c.nombre, ' ', c.apellido)
-                    ELSE ''
-                END as NombreCliente,
-                v.DBBatidos_Nombre,
-                v.Medida,
-                v.Cantidad,
-                v.Puntos,
-                v.Caja,
-                v.Precio,
-                v.Modalidad,
-                v.Anulado
-            FROM VentasGlobalesAccessCSV v
-            LEFT JOIN DBBatidos b ON v.CodProducto = b.CodBatido
-            LEFT JOIN clientesclub c ON v.CodCliente = c.membresia
-            $whereClause
-            $orderClause
-            LIMIT :offset, :limit";
+    if ($modo === 'por_pedido') {
+        $sql = "SELECT SQL_CALC_FOUND_ROWS
+                    MAX(v.Sucursal_Nombre)  AS Sucursal_Nombre,
+                    v.CodPedido,
+                    v.local,
+                    MAX(v.Fecha)            AS Fecha,
+                    MIN(v.Hora)             AS Hora,
+                    MAX(v.CodCliente)       AS CodCliente,
+                    CASE
+                        WHEN MAX(v.CodCliente) > 0
+                        THEN CONCAT(MAX(c.nombre), ' ', MAX(c.apellido))
+                        ELSE ''
+                    END                     AS NombreCliente,
+                    SUM(v.Puntos)           AS Puntos,
+                    MAX(v.Caja)             AS Caja,
+                    MAX(v.MontoFactura)     AS Precio,
+                    MAX(v.Modalidad)        AS Modalidad,
+                    MAX(v.Anulado)          AS Anulado
+                FROM VentasGlobalesAccessCSV v
+                LEFT JOIN DBBatidos b ON v.CodProducto = b.CodBatido
+                LEFT JOIN clientesclub c ON v.CodCliente = c.membresia
+                $whereClause
+                GROUP BY v.CodPedido, v.local
+                $orderClause
+                LIMIT :offset, :limit";
+    } else {
+        $sql = "SELECT SQL_CALC_FOUND_ROWS
+                    v.Sucursal_Nombre,
+                    v.CodPedido,
+                    v.local,
+                    v.Fecha,
+                    v.Hora,
+                    v.CodCliente,
+                    CASE
+                        WHEN v.CodCliente > 0 THEN CONCAT(c.nombre, ' ', c.apellido)
+                        ELSE ''
+                    END as NombreCliente,
+                    v.DBBatidos_Nombre,
+                    v.Medida,
+                    v.Cantidad,
+                    v.Puntos,
+                    v.Caja,
+                    v.Precio,
+                    v.Modalidad,
+                    v.Anulado
+                FROM VentasGlobalesAccessCSV v
+                LEFT JOIN DBBatidos b ON v.CodProducto = b.CodBatido
+                LEFT JOIN clientesclub c ON v.CodCliente = c.membresia
+                $whereClause
+                $orderClause
+                LIMIT :offset, :limit";
+    }
     
     $stmt = $conn->prepare($sql);
     
@@ -170,29 +212,33 @@ try {
     $stmtCount = $conn->query("SELECT FOUND_ROWS() as total");
     $totalRegistros = (int)$stmtCount->fetch(PDO::FETCH_ASSOC)['total'];
     
-    // Calcular totales (considerando TODOS los registros filtrados, no solo la página actual)
-    $sqlTotales = "SELECT 
-                    SUM(v.Precio) as total_monto,
-                    SUM(v.Cantidad) as total_productos
-                FROM VentasGlobalesAccessCSV v
-                LEFT JOIN DBBatidos b ON v.CodProducto = b.CodBatido
-                LEFT JOIN clientesclub c ON v.CodCliente = c.membresia
-                $whereClause";
-    
-    $stmtTotales = $conn->prepare($sqlTotales);
-    foreach ($params as $key => $value) {
-        $stmtTotales->bindValue($key, $value);
+    // Calcular total de productos SOLO si hay un filtro de producto específico activo
+    $totalesProd = null;
+    $hayFiltroProdUnico = $modo === 'por_producto'
+        && isset($filtros['DBBatidos_Nombre'])
+        && trim($filtros['DBBatidos_Nombre']) !== '';
+
+    if ($hayFiltroProdUnico) {
+        $sqlTotales = "SELECT SUM(v.Cantidad) AS total_productos
+                    FROM VentasGlobalesAccessCSV v
+                    LEFT JOIN DBBatidos b ON v.CodProducto = b.CodBatido
+                    LEFT JOIN clientesclub c ON v.CodCliente = c.membresia
+                    $whereClause";
+        $stmtTotales = $conn->prepare($sqlTotales);
+        foreach ($params as $key => $value) {
+            $stmtTotales->bindValue($key, $value);
+        }
+        $stmtTotales->execute();
+        $totalesProd = $stmtTotales->fetch(PDO::FETCH_ASSOC);
     }
-    $stmtTotales->execute();
-    $totales = $stmtTotales->fetch(PDO::FETCH_ASSOC);
-    
+
     echo json_encode([
         'success' => true,
-        'datos' => $datos,
+        'datos'   => $datos,
+        'modo'    => $modo,
         'total_registros' => $totalRegistros,
         'totales' => [
-            'monto' => $totales['total_monto'] ?? 0,
-            'productos' => $totales['total_productos'] ?? 0
+            'productos' => $hayFiltroProdUnico ? ($totalesProd['total_productos'] ?? 0) : null
         ]
     ], JSON_UNESCAPED_UNICODE);
     

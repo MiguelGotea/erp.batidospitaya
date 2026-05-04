@@ -16,9 +16,14 @@ if (!tienePermiso('historial_pedidos_globales', 'vista', $cargoOperario)) {
 
 // Verificar si tiene permiso para ver montos
 $puedeVerMontos = tienePermiso('historial_pedidos_globales', 'detalle_montos', $cargoOperario);
+
+// Verificar permisos de Bot Atención al Cliente
+$puedeAnalizarBot = tienePermiso('historial_pedidos_globales', 'analizar_atencion_cliente_bot', $cargoOperario);
+$puedeActivarWorker = tienePermiso('historial_pedidos_globales', 'activar_bot_atencion_cliente', $cargoOperario);
 ?>
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -30,91 +35,120 @@ $puedeVerMontos = tienePermiso('historial_pedidos_globales', 'detalle_montos', $
     <link rel="stylesheet" href="/core/assets/css/global_tools.css?v=<?php echo mt_rand(1, 10000); ?>">
     <link rel="stylesheet" href="css/historial_ventas.css?v=<?php echo mt_rand(1, 10000); ?>">
 </head>
+
 <body>
     <?php echo renderMenuLateral($cargoOperario); ?>
-    
+
     <div class="main-container">
         <div class="sub-container">
             <?php echo renderHeader($usuario, false, 'Historial de Ventas'); ?>
-            
+
             <div class="container-fluid p-3">
                 <!-- Resumen de totales -->
                 <div class="row mb-3">
                     <div class="col-md-12">
                         <div class="card-totales">
-                            <?php if ($puedeVerMontos): ?>
-                            <div class="total-item">
-                                <span class="total-label">Total Monto:</span>
-                                <span class="total-value" id="totalMonto">0.0</span>
-                            </div>
-                            <?php endif; ?>
-                            <div class="total-item">
+
+                            <div class="total-item" id="totalProductosItem" style="display:none">
                                 <span class="total-label">Total Productos:</span>
                                 <span class="total-value" id="totalProductos">0</span>
+                            </div>
+
+                            <!-- Controles derecha: Worker (si aplica) + Switch de Vista -->
+                            <div class="ms-auto d-flex align-items-center gap-3">
+                                <?php if ($puedeActivarWorker): ?>
+                                    <div class="worker-status-wrap" id="workerStatusWrap">
+                                        <span class="worker-dot" id="workerDot"></span>
+                                        <span class="worker-status-label" id="workerStatusLabel">Cargando...</span>
+                                    </div>
+                                    <button class="btn-worker" id="btnWorker" onclick="toggleWorker()" disabled>
+                                        <span class="btn-worker-icon" id="btnWorkerIcon"><i class="bi bi-robot"></i></span>
+                                        <span id="btnWorkerText">Bot Atención</span>
+                                    </button>
+                                    <div class="worker-cola-stats" id="workerColaStats" style="display:none">
+                                        <span id="statPendientes">0</span> pendientes ·
+                                        <span id="statCompletados">0</span> analizados
+                                    </div>
+                                <?php endif; ?>
+                                <!-- Switch de Vista -->
+                                <div class="vista-switch" id="vistaSwitchWrap">
+                                    <button class="vista-pill active" id="btnVistaPedido" onclick="cambiarVista('por_pedido')">
+                                        <i class="bi bi-receipt"></i> Por Pedido
+                                    </button>
+                                    <button class="vista-pill" id="btnVistaProducto" onclick="cambiarVista('por_producto')">
+                                        <i class="bi bi-bag"></i> Por Producto
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="table-responsive">
                     <table class="table table-hover historial-table" id="tablaVentas">
                         <thead>
                             <tr>
                                 <th data-column="Sucursal_Nombre" data-type="list">
-                                    Sucursal 
+                                    Sucursal
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
                                 <th data-column="CodPedido" data-type="text">
-                                    Pedido 
+                                    Pedido
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
                                 <th data-column="Fecha" data-type="daterange">
-                                    Fecha 
+                                    Fecha
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
                                 <th>Hora</th>
                                 <th data-column="CodCliente" data-type="text">
-                                    Membresía 
+                                    Membresía
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
                                 <th data-column="NombreCliente" data-type="text">
-                                    Cliente 
+                                    Cliente
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
                                 <th data-column="DBBatidos_Nombre" data-type="text">
-                                    Producto 
+                                    Producto
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
                                 <th data-column="Medida" data-type="list">
-                                    Medida 
+                                    Medida
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
                                 <th data-column="Cantidad" data-type="text">
-                                    Cantidad 
+                                    Cantidad
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
                                 <th data-column="Puntos" data-type="text">
-                                    Puntos 
+                                    Puntos
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
                                 <th data-column="Caja" data-type="text">
-                                    Cajero 
+                                    Cajero
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
                                 <?php if ($puedeVerMontos): ?>
-                                <th data-column="Precio" data-type="text">
-                                    Monto 
-                                    <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
-                                </th>
+                                    <th data-column="Precio" data-type="text">
+                                        Monto
+                                        <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                    </th>
                                 <?php endif; ?>
+
                                 <th data-column="Modalidad" data-type="list">
-                                    Modalidad 
+                                    Modalidad
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
+
                                 <th data-column="Anulado" data-type="list">
-                                    Anulado 
+                                    Anulado
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
+                                <?php if ($puedeAnalizarBot): ?>
+                                    <th class="col-atencion-ia">Atención IA</th>
+                                <?php endif; ?>
+                                <th class="col-acciones-pedido" id="thAccionesPedido" style="display:none">Acciones</th>
                             </tr>
                         </thead>
                         <tbody id="tablaVentasBody">
@@ -122,11 +156,12 @@ $puedeVerMontos = tienePermiso('historial_pedidos_globales', 'detalle_montos', $
                         </tbody>
                     </table>
                 </div>
-                
+
                 <div class="d-flex justify-content-between align-items-center mt-3">
                     <div class="d-flex align-items-center gap-2">
                         <label class="mb-0">Mostrar:</label>
-                        <select class="form-select form-select-sm" id="registrosPorPagina" style="width: auto;" onchange="cambiarRegistrosPorPagina()">
+                        <select class="form-select form-select-sm" id="registrosPorPagina" style="width: auto;"
+                            onchange="cambiarRegistrosPorPagina()">
                             <option value="25" selected>25</option>
                             <option value="50">50</option>
                             <option value="100">100</option>
@@ -140,11 +175,16 @@ $puedeVerMontos = tienePermiso('historial_pedidos_globales', 'detalle_montos', $
     </div>
 
     <script>
-        // Pasar permiso de montos a JavaScript
-        const puedeVerMontos = <?php echo $puedeVerMontos ? 'true' : 'false'; ?>;
+        // Pasar permisos a JavaScript
+        const puedeVerMontos    = <?php echo $puedeVerMontos    ? 'true' : 'false'; ?>;
+        const puedeAnalizarBot  = <?php echo $puedeAnalizarBot  ? 'true' : 'false'; ?>;
+        const puedeActivarWorker = <?php echo $puedeActivarWorker ? 'true' : 'false'; ?>;
+        // Vista que se carga por defecto al entrar
+        const vistaInicial = 'por_pedido';
     </script>
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="js/historial_ventas.js?v=<?php echo mt_rand(1, 10000); ?>"></script>
 </body>
+
 </html>

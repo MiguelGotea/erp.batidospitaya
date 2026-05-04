@@ -97,7 +97,7 @@ if ($edicion) {
     <link rel="icon" type="image/png" href="../../assets/img/icon12.png">
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
 </head>
-<link rel="stylesheet" href="stylescrearp.css">
+<link rel="stylesheet" href="css/stylescrearp.css">
 <body>
     <div class="container">
         <header class="header-ventas">
@@ -119,7 +119,7 @@ if ($edicion) {
             </div>
         </header>
 
-        <form id="form-pedido" action="procesar_pedido.php" method="post">
+        <form id="form-pedido" action="ajax/procesar_pedido.php" method="post">
             <input type="hidden" name="pedido_id" value="<?= $edicion ? $pedido['id'] : '' ?>">
             
             <div class="secciones-superiores">
@@ -588,7 +588,7 @@ if ($edicion) {
 function buscarPromociones(productoId) {
     return new Promise((resolve, reject) => {
         $.ajax({
-            url: 'buscar_promociones.php',
+            url: 'ajax/buscar_promociones.php',
             method: 'POST',
             data: { producto_id: productoId },
             dataType: 'json',
@@ -657,7 +657,7 @@ function buscarPromociones(productoId) {
                 cargoField.after('<div id="loading-cargo" style="color: #666; font-size: 0.8em;">Cargando tarifas...</div>');
                 
                 $.ajax({
-                    url: 'buscar_cargos_delivery.php',
+                    url: 'ajax/buscar_cargos_delivery.php',
                     method: 'POST',
                     data: { empresa_id: empresaId, distancia: distancia },
                     dataType: 'json',
@@ -851,13 +851,13 @@ function buscarPromociones(productoId) {
                 // Obtener información del producto y endulzantes disponibles
                 $.when(
                     $.ajax({
-                        url: 'buscar_producto.php',
+                        url: 'ajax/buscar_producto.php',
                         method: 'POST',
                         data: { id: productoId },
                         dataType: 'json'
                     }),
                     $.ajax({
-                        url: 'buscar_endulzantes.php',
+                        url: 'ajax/buscar_endulzantes.php',
                         method: 'POST',
                         data: { producto_id: productoId },
                         dataType: 'json'
@@ -1021,7 +1021,7 @@ function buscarPromociones(productoId) {
                 
                 // Primero obtener el precio base según el tamaño seleccionado
                 $.ajax({
-                    url: 'buscar_producto.php',
+                    url: 'ajax/buscar_producto.php',
                     method: 'POST',
                     data: { id: productoId },
                     dataType: 'json',
@@ -1055,7 +1055,7 @@ function buscarPromociones(productoId) {
                             
                             // Si hay promoción, aplicar descuento
                             $.ajax({
-                                url: 'aplicar_promocion.php',
+                                url: 'ajax/aplicar_promocion.php',
                                 method: 'POST',
                                 data: {
                                     promocion_id: promocionId,
@@ -1107,7 +1107,7 @@ function buscarPromociones(productoId) {
                 let tamano = $(this).val();
                 
                 $.ajax({
-                    url: 'buscar_producto.php',
+                    url: 'ajax/buscar_producto.php',
                     method: 'POST',
                     data: { id: $(this).closest('tr').data('producto') },
                     dataType: 'json',
@@ -1260,7 +1260,7 @@ function buscarPromociones(productoId) {
                 $(this).after('<div id="buscando-cliente" style="color: #666; font-size: 0.8em;">Buscando cliente...</div>');
                 
                 $.ajax({
-                    url: 'buscar_cliente.php',
+                    url: 'ajax/buscar_cliente.php',
                     method: 'POST',
                     data: { telefono: telefono },
                     dataType: 'json',
@@ -1593,7 +1593,7 @@ function buscarPromociones(productoId) {
                 formData.append('estado', 'enviado_cliente');
                 
                 $.ajax({
-                    url: 'procesar_pedido.php',
+                    url: 'ajax/procesar_pedido.php',
                     method: 'POST',
                     data: formData,
                     processData: false,
@@ -1641,7 +1641,7 @@ function buscarPromociones(productoId) {
                 }
                 
                 $.ajax({
-                    url: 'buscar_empresas_delivery.php',
+                    url: 'ajax/buscar_empresas_delivery.php',
                     method: 'POST',
                     data: { sucursal_id: sucursalId },
                     dataType: 'json',
