@@ -208,10 +208,11 @@ function renderizarTabla(datos) {
         tr.append(`<td class="col-titulo">${renderizarTituloEditable(row.id, row.titulo)}</td>`);
 
         // Descripción
-        tr.append(`<td class="col-descripcion">${row.descripcion}</td>`);
+        tr.append(`<td class="col-descripcion" title="${row.descripcion}">${row.descripcion}</td>`);
 
         // Resolución
-        tr.append(`<td class="col-resolucion">${renderizarResolucionEditable(row.id, row.resolucion)}</td>`);
+        const resText = row.resolucion || 'Sin resolución aún...';
+        tr.append(`<td class="col-resolucion" title="${resText}">${renderizarResolucionEditable(row.id, row.resolucion)}</td>`);
 
         // Sucursal
         tr.append(`<td class="col-sucursal">${row.nombre_sucursal}</td>`);
@@ -756,7 +757,7 @@ function formatearFecha(fecha) {
 // Renderizar fecha agendado con estilos según estado
 function renderizarFechaAgendado(fechaInicio, status) {
     if (!fechaInicio) {
-        return '<span class="fecha-sin-programar">Sin programar</span>';
+        return '<span class="fecha-sin-programar">Pendiente</span>';
     }
 
     // Si está finalizado, mostrar con menos realce

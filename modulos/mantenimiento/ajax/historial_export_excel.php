@@ -211,7 +211,7 @@ try {
 
             // Formatear valores
             $solicitado = $row['created_at'] ? date('d/m/Y', strtotime($row['created_at'])) : '-';
-            $agendado   = $row['fecha_inicio'] ? date('d/m/Y', strtotime($row['fecha_inicio'])) : 'Sin programar';
+            $agendado   = $row['fecha_inicio'] ? date('d/m/Y', strtotime($row['fecha_inicio'])) : 'Pendiente';
             $urgencia   = $textosUrgencia[(int)($row['nivel_urgencia'] ?? 0)] ?? 'No Clasificado';
             $estado     = $textosEstado[$row['status']] ?? ucfirst($row['status'] ?? '-');
             $tipo       = $textosTipo[$row['tipo_formulario']] ?? ucfirst(str_replace('_', ' ', $row['tipo_formulario'] ?? '-'));
