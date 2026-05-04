@@ -135,18 +135,9 @@ function cargarDatos() {
 
 // Actualizar totales
 function actualizarTotales(totales) {
-    if (totales) {
-        if (puedeVerMontos) {
-            $('#totalMonto').text(parseFloat(totales.monto || 0).toFixed(1));
-        }
-        // productos es null en modo por_pedido (columna oculta)
-        if (totales.productos !== null && totales.productos !== undefined) {
-            $('#totalProductos').text(parseInt(totales.productos || 0));
-        }
+    if (totales && totales.productos !== null && totales.productos !== undefined) {
+        $('#totalProductos').text(parseInt(totales.productos || 0));
     } else {
-        if (puedeVerMontos) {
-            $('#totalMonto').text('0.0');
-        }
         $('#totalProductos').text('0');
     }
 }
@@ -325,7 +316,7 @@ function mostrarMensajeVacio(mensaje, colspan = null) {
         </tr>
     `);
     $('#paginacion').empty();
-    actualizarTotales({ monto: 0, productos: 0 });
+    actualizarTotales({ productos: 0 });
 }
 
 // Toggle filtro

@@ -160,7 +160,7 @@ try {
                     END                     AS NombreCliente,
                     SUM(v.Puntos)           AS Puntos,
                     MAX(v.Caja)             AS Caja,
-                    SUM(v.Precio)           AS Precio,
+                    MAX(v.MontoFactura)     AS Precio,
                     MAX(v.Modalidad)        AS Modalidad,
                     MAX(v.Anulado)          AS Anulado
                 FROM VentasGlobalesAccessCSV v
@@ -212,35 +212,21 @@ try {
     $stmtCount = $conn->query("SELECT FOUND_ROWS() as total");
     $totalRegistros = (int)$stmtCount->fetch(PDO::FETCH_ASSOC)['total'];
     
-    // Calcular totales (considerando TODOS los registros filtrados, no solo la página actual)
-    if ($modo === 'por_pedido') {
-        // En por_pedido: SUM de Precio agrupado por pedido → total real de facturas únicas
-        $sqlTotales = "SELECT
-                        SUM(sub.total_pedido) AS total_monto
-                    FROM (
-                        SELECT SUM(v.Precio) AS total_pedido
-                        FROM VentasGlobalesAccessCSV v
-                        LEFT JOIN DBBatidos b ON v.CodProducto = b.CodBatido
-                        LEFT JOIN clientesclub c ON v.CodCliente = c.membresia
-                        $whereClause
-                        GROUP BY v.CodPedido, v.local
-                    ) sub";
-    } else {
-        $sqlTotales = "SELECT
-                        SUM(v.Precio)    AS total_monto,
-                        SUM(v.Cantidad)  AS total_productos
+    // Calcular total de productos (solo en modo por_producto)
+    $totalesProd = null;
+    if ($modo === 'por_producto') {
+        $sqlTotales = "SELECT SUM(v.Cantidad) AS total_productos
                     FROM VentasGlobalesAccessCSV v
                     LEFT JOIN DBBatidos b ON v.CodProducto = b.CodBatido
                     LEFT JOIN clientesclub c ON v.CodCliente = c.membresia
                     $whereClause";
+        $stmtTotales = $conn->prepare($sqlTotales);
+        foreach ($params as $key => $value) {
+            $stmtTotales->bindValue($key, $value);
+        }
+        $stmtTotales->execute();
+        $totalesProd = $stmtTotales->fetch(PDO::FETCH_ASSOC);
     }
-
-    $stmtTotales = $conn->prepare($sqlTotales);
-    foreach ($params as $key => $value) {
-        $stmtTotales->bindValue($key, $value);
-    }
-    $stmtTotales->execute();
-    $totales = $stmtTotales->fetch(PDO::FETCH_ASSOC);
 
     echo json_encode([
         'success' => true,
@@ -248,8 +234,7 @@ try {
         'modo'    => $modo,
         'total_registros' => $totalRegistros,
         'totales' => [
-            'monto'     => $totales['total_monto'] ?? 0,
-            'productos' => $modo === 'por_pedido' ? null : ($totales['total_productos'] ?? 0)
+            'productos' => $modo === 'por_producto' ? ($totalesProd['total_productos'] ?? 0) : null
         ]
     ], JSON_UNESCAPED_UNICODE);
     

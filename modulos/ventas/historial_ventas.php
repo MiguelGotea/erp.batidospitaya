@@ -48,12 +48,7 @@ $puedeActivarWorker = tienePermiso('historial_pedidos_globales', 'activar_bot_at
                 <div class="row mb-3">
                     <div class="col-md-12">
                         <div class="card-totales">
-                            <?php if ($puedeVerMontos): ?>
-                                <div class="total-item">
-                                    <span class="total-label">Total Monto:</span>
-                                    <span class="total-value" id="totalMonto">0.0</span>
-                                </div>
-                            <?php endif; ?>
+
                             <div class="total-item" id="totalProductosItem">
                                 <span class="total-label">Total Productos:</span>
                                 <span class="total-value" id="totalProductos">0</span>
