@@ -481,6 +481,12 @@ function procesarHorarios($sucursalesPermitidas)
             $horarioCompleto["{$dia}_entrada"] = $horario["{$dia}_entrada"] ?? null;
             $horarioCompleto["{$dia}_salida"] = $horario["{$dia}_salida"] ?? null;
 
+            // Forzar NULL para entrada/salida si el estado no es Activo o Otra.Tienda
+            if ($estadoDia !== 'Activo' && $estadoDia !== 'Otra.Tienda') {
+                $horarioCompleto["{$dia}_entrada"] = null;
+                $horarioCompleto["{$dia}_salida"] = null;
+            }
+
             // 1. Validar Feriado (Comentario obligatorio)
             if ($estadoDia === 'Feriado' && empty($horarioCompleto["{$dia}_comentario"])) {
                 $_SESSION['error'] = "El comentario es obligatorio para el estado Feriado el día $dia";
