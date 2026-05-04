@@ -47,18 +47,17 @@ try {
         exit;
     }
 
-    // Datos DVR (puede no existir)
     $sqlDvr = "
         SELECT
             cod_sucursal, nombre_sucursal, modelo, marca, serial,
             clave_dispositivo, portal_ip_local, portal_usuario, portal_clave,
             url_imagen, capacidad, canal_caja, puerto_rtsp_vps, tunel_activo
         FROM DVR_Sucursales
-        WHERE cod_sucursal = :id
+        WHERE cod_sucursal = :codigo
         LIMIT 1
     ";
     $stmtDvr = $conn->prepare($sqlDvr);
-    $stmtDvr->execute([':id' => $id]);
+    $stmtDvr->execute([':codigo' => $sucursal['codigo']]);
     $dvr = $stmtDvr->fetch(PDO::FETCH_ASSOC);
 
     // Castear tipos sucursal

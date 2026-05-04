@@ -29,8 +29,8 @@ try {
         exit;
     }
 
-    // Verificar que la sucursal existe y obtener su nombre
-    $stmtSuc = $conn->prepare("SELECT id, nombre FROM sucursales WHERE id = :id LIMIT 1");
+    // Verificar que la sucursal existe y obtener su nombre y código
+    $stmtSuc = $conn->prepare("SELECT id, codigo, nombre FROM sucursales WHERE id = :id LIMIT 1");
     $stmtSuc->execute([':id' => $codSucursal]);
     $sucursal = $stmtSuc->fetch(PDO::FETCH_ASSOC);
 
@@ -39,22 +39,24 @@ try {
         exit;
     }
 
-    // Verificar que NO existe ya un registro DVR para esta sucursal
-    $stmtCheck = $conn->prepare("SELECT cod_sucursal FROM DVR_Sucursales WHERE cod_sucursal = :id LIMIT 1");
-    $stmtCheck->execute([':id' => $codSucursal]);
+    $codigoReal = $sucursal['codigo'];
+
+    // Verificar que NO existe ya un registro DVR para esta sucursal (usando el código)
+    $stmtCheck = $conn->prepare("SELECT cod_sucursal FROM DVR_Sucursales WHERE cod_sucursal = :codigo LIMIT 1");
+    $stmtCheck->execute([':codigo' => $codigoReal]);
     if ($stmtCheck->fetch()) {
         echo json_encode(['success' => false, 'message' => 'Ya existe una configuración DVR para esta sucursal']);
         exit;
     }
 
-    // Insertar registro vacío (solo cod y nombre)
+    // Insertar registro vacío (usando el código en cod_sucursal)
     $sqlInsert = "
         INSERT INTO DVR_Sucursales (cod_sucursal, nombre_sucursal, canal_caja, tunel_activo)
         VALUES (:cod, :nombre, 0, 0)
     ";
     $stmtInsert = $conn->prepare($sqlInsert);
     $stmtInsert->execute([
-        ':cod'    => $codSucursal,
+        ':cod'    => $codigoReal,
         ':nombre' => $sucursal['nombre']
     ]);
 

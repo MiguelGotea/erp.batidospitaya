@@ -47,7 +47,7 @@ try {
             d.marca        AS dvr_marca,
             d.tunel_activo AS dvr_tunel_activo
         FROM sucursales s
-        LEFT JOIN DVR_Sucursales d ON s.id = d.cod_sucursal
+        LEFT JOIN DVR_Sucursales d ON s.codigo = d.cod_sucursal
         ORDER BY s.activa DESC, s.nombre ASC
     ";
 

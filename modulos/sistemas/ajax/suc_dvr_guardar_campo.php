@@ -74,18 +74,28 @@ try {
             break;
     }
 
+    // Obtener el código de la sucursal
+    $stmtSuc = $conn->prepare("SELECT codigo FROM sucursales WHERE id = :id LIMIT 1");
+    $stmtSuc->execute([':id' => $codSucursal]);
+    $sucursal = $stmtSuc->fetch(PDO::FETCH_ASSOC);
+    if (!$sucursal) {
+        echo json_encode(['success' => false, 'message' => 'Sucursal no encontrada']);
+        exit;
+    }
+    $codigoReal = $sucursal['codigo'];
+
     // Verificar que existe el registro DVR
-    $stmtCheck = $conn->prepare("SELECT cod_sucursal FROM DVR_Sucursales WHERE cod_sucursal = :id LIMIT 1");
-    $stmtCheck->execute([':id' => $codSucursal]);
+    $stmtCheck = $conn->prepare("SELECT cod_sucursal FROM DVR_Sucursales WHERE cod_sucursal = :codigo LIMIT 1");
+    $stmtCheck->execute([':codigo' => $codigoReal]);
     if (!$stmtCheck->fetch()) {
         echo json_encode(['success' => false, 'message' => 'No existe configuración DVR para esta sucursal']);
         exit;
     }
 
     // UPDATE seguro (campo whitelisted)
-    $sql = "UPDATE DVR_Sucursales SET `$campo` = :valor WHERE cod_sucursal = :id";
+    $sql = "UPDATE DVR_Sucursales SET `$campo` = :valor WHERE cod_sucursal = :codigo";
     $stmt = $conn->prepare($sql);
-    $stmt->execute([':valor' => $valor, ':id' => $codSucursal]);
+    $stmt->execute([':valor' => $valor, ':codigo' => $codigoReal]);
 
     echo json_encode([
         'success' => true,
