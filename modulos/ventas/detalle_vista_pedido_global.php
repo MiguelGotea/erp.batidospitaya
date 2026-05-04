@@ -101,8 +101,9 @@ if ($pedidoGlobal) {
 
         /* ── Wrapper principal ─────────────────────────── */
         .detalle-wrapper {
-            max-width: 95%;
-            margin: 32px auto;
+            width: 100%;
+            max-width: 100%;
+            margin: 0 auto;
             padding: 0 16px 60px;
         }
 
@@ -530,13 +531,14 @@ $cabecerasPrior = [
 $todasColumnas  = $lineas ? array_keys($lineas[0]) : [];
 $colsSecundarias = array_diff($todasColumnas, $colsPrioritarias);
 
-// Columnas a eliminar del detalle de líneas
+// Columnas a eliminar del detalle de líneas (comparación insensible a mayúsculas)
 $colsAEliminar = [
     'Anulado', 'MotivoAnulado', 'Fecha', 'Hora', 'CodPedido', 'CodCliente', 
     'Delivery_Nombre', 'APOS', 'Local', 'Caja', 'Modalidad', 'Motorizado', 
     'Impresiones', 'HoraCreado', 'HoraIngresoProducto', 'HoraImpreso', 'Propina', 
     'Semana', 'MontoFactura', 'Sucursal_Nombre', 'PedidoDeCentral', 'CodMotorizado'
 ];
+$colsAEliminarUpper = array_map('strtoupper', $colsAEliminar);
 
 // Orden final de columnas
 $colsOrdenadas = [];
@@ -544,7 +546,7 @@ foreach ($colsPrioritarias as $c) {
     if (in_array($c, $todasColumnas)) $colsOrdenadas[] = $c;
 }
 foreach ($colsSecundarias as $c) {
-    if (!in_array($c, $colsAEliminar)) {
+    if (!in_array(strtoupper($c), $colsAEliminarUpper)) {
         $colsOrdenadas[] = $c;
     }
 }
@@ -801,10 +803,7 @@ if ($puedeAnalizarBot) {
                                     <label>Analizado el</label>
                                     <span><?php echo $datosIa['analizado_en'] ? date('d/m/Y H:i', strtotime($datosIa['analizado_en'])) : '—'; ?></span>
                                 </div>
-                                <div class="info-item">
-                                    <label>Versión protocolo</label>
-                                    <span><?php echo htmlspecialchars($datosIa['version_protocolo'] ?? '1.0'); ?></span>
-                                </div>
+
                                 <div class="info-item">
                                     <label>ID Cola</label>
                                     <span>#<?php echo $datosIa['id_cola']; ?></span>
