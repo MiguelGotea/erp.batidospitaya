@@ -73,8 +73,9 @@ try {
         WHERE (s.ip_direccion IS NULL OR s.ip_direccion != ip_actual.ip_publica)
     ";
     $stmtSync = $conn->exec($sqlSyncIp);
-    $ips_actualizadas = (int)$stmtSync; // filas realmente modificadas
+    $ips_actualizadas = (int) $stmtSync; // filas realmente modificadas
     // ───────────────────────────────────────────────────────────────────────
+
 
     // Resumen por estado
     $resumen = ['online' => 0, 'alerta' => 0, 'offline' => 0, 'total' => count($pcs)];
@@ -99,13 +100,13 @@ try {
     $actividad = $stmtReciente->fetchAll(PDO::FETCH_ASSOC);
 
     echo json_encode([
-        'success'           => true,
-        'pcs'               => $pcs,
-        'resumen'           => $resumen,
-        'actividad'         => $actividad,
-        'ips_actualizadas'  => $ips_actualizadas,
-        'server_time'       => date('Y-m-d H:i:s'),
-        'timestamp'         => time()
+        'success' => true,
+        'pcs' => $pcs,
+        'resumen' => $resumen,
+        'actividad' => $actividad,
+        'ips_actualizadas' => $ips_actualizadas,
+        'server_time' => date('Y-m-d H:i:s'),
+        'timestamp' => time()
     ]);
 
 } catch (Exception $e) {
