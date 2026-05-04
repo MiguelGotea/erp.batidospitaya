@@ -84,7 +84,7 @@ body {
 }
 
 .col-descripcion {
-    max-width: 250px;
+    max-width: 180px;
     font-size: 0.85rem;
     color: #666;
     white-space: nowrap;
@@ -98,7 +98,7 @@ body {
 }
 
 .col-resolucion {
-    max-width: 250px;
+    max-width: 180px;
     font-size: 0.85rem;
     color: #444;
     white-space: nowrap;
