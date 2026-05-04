@@ -22,18 +22,39 @@ class Ticket
         // Generar código único para el ticket
         $codigo = $this->generateTicketCode();
 
-        $sql = "INSERT INTO mtto_tickets (codigo, titulo, descripcion, tipo_formulario, cod_operario, cod_sucursal, area_equipo) 
-                VALUES (:codigo, :titulo, :descripcion, :tipo_formulario, :cod_operario, :cod_sucursal, :area_equipo)";
+        // Campos opcionales de análisis IA
+        $tieneIA = !empty($data['nivel_urgencia']) || !empty($data['resolucion']);
 
-        $params = [
-            ':codigo' => $codigo,
-            ':titulo' => $data['titulo'],
-            ':descripcion' => $data['descripcion'],
-            ':tipo_formulario' => $data['tipo_formulario'],
-            ':cod_operario' => $data['cod_operario'],
-            ':cod_sucursal' => $data['cod_sucursal'],
-            ':area_equipo' => $data['area_equipo']
-        ];
+        if ($tieneIA) {
+            $sql = "INSERT INTO mtto_tickets (codigo, titulo, descripcion, tipo_formulario, cod_operario, cod_sucursal, area_equipo, nivel_urgencia, tiempo_estimado, resolucion) 
+                    VALUES (:codigo, :titulo, :descripcion, :tipo_formulario, :cod_operario, :cod_sucursal, :area_equipo, :nivel_urgencia, :tiempo_estimado, :resolucion)";
+
+            $params = [
+                ':codigo'          => $codigo,
+                ':titulo'          => $data['titulo'],
+                ':descripcion'     => $data['descripcion'],
+                ':tipo_formulario' => $data['tipo_formulario'],
+                ':cod_operario'    => $data['cod_operario'],
+                ':cod_sucursal'    => $data['cod_sucursal'],
+                ':area_equipo'     => $data['area_equipo'],
+                ':nivel_urgencia'  => (int)($data['nivel_urgencia']  ?? 0),
+                ':tiempo_estimado' => (int)($data['tiempo_estimado'] ?? 0),
+                ':resolucion'      => $data['resolucion'] ?? ''
+            ];
+        } else {
+            $sql = "INSERT INTO mtto_tickets (codigo, titulo, descripcion, tipo_formulario, cod_operario, cod_sucursal, area_equipo) 
+                    VALUES (:codigo, :titulo, :descripcion, :tipo_formulario, :cod_operario, :cod_sucursal, :area_equipo)";
+
+            $params = [
+                ':codigo'          => $codigo,
+                ':titulo'          => $data['titulo'],
+                ':descripcion'     => $data['descripcion'],
+                ':tipo_formulario' => $data['tipo_formulario'],
+                ':cod_operario'    => $data['cod_operario'],
+                ':cod_sucursal'    => $data['cod_sucursal'],
+                ':area_equipo'     => $data['area_equipo']
+            ];
+        }
 
         $this->db->query($sql, $params);
         return $this->db->lastInsertId();

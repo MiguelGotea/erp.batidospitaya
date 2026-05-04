@@ -90,28 +90,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        $data = [
-            'titulo' => $_POST['titulo'],
-            'descripcion' => $_POST['descripcion'],
+        $ticketData = [
+            'titulo'          => $_POST['titulo'],
+            'descripcion'     => $_POST['descripcion'],
             'tipo_formulario' => 'mantenimiento_general',
-            'cod_operario' => $cod_operario,
-            'cod_sucursal' => $cod_sucursal,
-            'area_equipo' => $_POST['area']
+            'cod_operario'    => $cod_operario,
+            'cod_sucursal'    => $cod_sucursal,
+            'area_equipo'     => $_POST['area']
         ];
 
-        $ticket_id = $ticket->create($data);
+        // Campos IA opcionales
+        if (!empty($_POST['ia_nivel_urgencia'])) {
+            $ticketData['nivel_urgencia']  = (int)$_POST['ia_nivel_urgencia'];
+            $ticketData['tiempo_estimado'] = (int)($_POST['ia_tiempo_estimado'] ?? 0);
+            $ticketData['resolucion']      = trim($_POST['ia_resolucion'] ?? '');
+        }
+
+        $ticket_id = $ticket->create($ticketData);
 
         // Guardar las fotos asociadas al ticket
         if (!empty($fotos)) {
             $ticket->addFotos($ticket_id, $fotos);
         }
 
+        // Respuesta JSON para AJAX
+        if (!empty($_POST['_ajax'])) {
+            $codigo = 'TKT' . date('Ym') . str_pad($ticket_id, 4, '0', STR_PAD_LEFT);
+            ob_clean();
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['success' => true, 'ticket_id' => $ticket_id, 'codigo' => $codigo]);
+            exit();
+        }
+
+        // Fallback tradicional
         echo "<script>
             alert('Ticket creado exitosamente. Código: TKT" . date('Ym') . str_pad($ticket_id, 4, '0', STR_PAD_LEFT) . "');
             window.close();
         </script>";
 
     } catch (Exception $e) {
+        if (!empty($_POST['_ajax'])) {
+            ob_clean();
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+            exit();
+        }
         $error = "Error al crear el ticket: " . $e->getMessage();
     }
 }
@@ -302,9 +325,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                             </div>
                                         </div>
 
+                                        <!-- Campos ocultos para datos de IA -->
+                                        <input type="hidden" name="_ajax" value="1">
+                                        <input type="hidden" id="ia_nivel_urgencia"  name="ia_nivel_urgencia">
+                                        <input type="hidden" id="ia_tiempo_estimado" name="ia_tiempo_estimado">
+                                        <input type="hidden" id="ia_resolucion"      name="ia_resolucion">
+
                                         <div class="mt-4 pt-3 border-top">
                                             <div class="d-grid gap-2">
-                                                <button type="submit" class="btn btn-primary-pitaya">
+                                                <button type="button" id="btnEnviarSolicitud" class="btn btn-primary-pitaya" onclick="iniciarEnvio()">
                                                     <i class="fas fa-paper-plane me-2"></i>Enviar Solicitud
                                                 </button>
                                                 <button type="button" class="btn btn-secondary-pitaya btn-sm" onclick="goToDashboard()">
@@ -322,11 +351,135 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </div>
 
+    <!-- Modal resultado ticket -->
+    <div class="modal fade" id="modalTicketCreado" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border:none; border-radius:16px; overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+                <div id="modalTicketHeader" style="background:linear-gradient(135deg,#0E544C,#1a8a7e); padding:1.5rem 1.75rem; color:white;">
+                    <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:0.5rem;">
+                        <div style="width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:1.3rem;">✓</div>
+                        <div>
+                            <div style="font-size:0.8rem;opacity:0.8;letter-spacing:0.05em;">TICKET CREADO</div>
+                            <div id="modalCodigoTicket" style="font-size:1.3rem;font-weight:700;">TKT...</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-body" style="padding:1.5rem 1.75rem; background:#f8fafb;">
+                    <div id="modalIAResultado"></div>
+                </div>
+                <div class="modal-footer" style="border:none; padding:1rem 1.75rem; background:#f8fafb;">
+                    <button type="button" class="btn btn-primary-pitaya w-100" onclick="cerrarYVolver()">
+                        <i class="fas fa-check me-2"></i>Entendido
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         let stream = null;
-        let fotosSeleccionadas = []; // Array para almacenar fotos (files o base64)
+        let fotosSeleccionadas = [];
         const MAX_FOTOS = 5;
+        const coloresUrgencia = { 1:'#28a745', 2:'#ffc107', 3:'#fd7e14', 4:'#dc3545' };
+        const textosUrgencia  = { 1:'No Urgente', 2:'Medio', 3:'Urgente', 4:'Crítico' };
+
+        // ── Flujo principal de envío ──────────────────────────────────────────
+        async function iniciarEnvio() {
+            const titulo      = document.getElementById('titulo').value.trim();
+            const descripcion = document.getElementById('descripcion').value.trim();
+            const area        = document.getElementById('area').value.trim();
+
+            if (titulo.length < 5) { alert('El título debe tener al menos 5 caracteres'); return; }
+            if (descripcion.length < 10) { alert('La descripción debe tener al menos 10 caracteres'); return; }
+
+            const btn = document.getElementById('btnEnviarSolicitud');
+            btn.disabled = true;
+
+            // ── Paso 1: Análisis IA ───────────────────────────────────────────
+            btn.innerHTML = '<i class="fas fa-robot me-2"></i>Analizando con IA...';
+
+            let iaData = null;
+            try {
+                const iaResp = await fetch('ajax/formulario_consulta_ia.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ titulo, descripcion, area_equipo: area })
+                });
+                if (iaResp.ok) {
+                    const iaJson = await iaResp.json();
+                    if (iaJson.success) iaData = iaJson;
+                }
+            } catch(e) { /* continuar sin IA */ }
+
+            // Rellenar campos ocultos con datos IA
+            if (iaData) {
+                document.getElementById('ia_nivel_urgencia').value  = iaData.nivel_urgencia;
+                document.getElementById('ia_tiempo_estimado').value = iaData.tiempo_estimado;
+                document.getElementById('ia_resolucion').value      = iaData.resolucion;
+            }
+
+            // ── Paso 2: Enviar formulario via AJAX ────────────────────────────
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Guardando...';
+
+            try {
+                const form = document.getElementById('maintenanceForm');
+                updateHiddenInputs(); // sincronizar fotos
+                const fd = new FormData(form);
+
+                const saveResp = await fetch(window.location.href, {
+                    method: 'POST',
+                    body: fd
+                });
+                const saveJson = await saveResp.json();
+
+                if (!saveJson.success) {
+                    alert('Error al guardar el ticket: ' + (saveJson.message || 'Error desconocido'));
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-paper-plane me-2"></i>Enviar Solicitud';
+                    return;
+                }
+
+                // ── Paso 3: Mostrar modal de resultado ────────────────────────
+                mostrarModalResultado(saveJson.codigo, iaData);
+
+            } catch(err) {
+                alert('Error de conexión. Verifica tu red e intenta nuevamente.');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-paper-plane me-2"></i>Enviar Solicitud';
+            }
+        }
+
+        function mostrarModalResultado(codigo, ia) {
+            document.getElementById('modalCodigoTicket').textContent = codigo;
+
+            let html = '';
+            if (ia) {
+                const color  = coloresUrgencia[ia.nivel_urgencia] || '#6c757d';
+                const texto  = textosUrgencia[ia.nivel_urgencia]  || 'N/A';
+                const tiempo = ia.tiempo_estimado > 0 ? ia.tiempo_estimado + 'H' : 'Tercerizado';
+                html = `
+                <div style="margin-bottom:1rem;">
+                    <div style="font-size:0.75rem;font-weight:600;color:#666;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.5rem;">Análisis IA <span style="background:#e8f5e9;color:#2e7d32;padding:2px 8px;border-radius:20px;font-size:0.7rem;">✓ ${(ia.proveedor||'IA').toUpperCase()}</span></div>
+                    <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.75rem;">
+                        <span style="background:${color};color:white;padding:4px 12px;border-radius:20px;font-size:0.8rem;font-weight:600;">${texto}</span>
+                        <span style="background:#e3f2fd;color:#1565c0;padding:4px 12px;border-radius:20px;font-size:0.8rem;font-weight:600;"><i class="fas fa-clock me-1"></i>${tiempo}</span>
+                    </div>
+                    <div style="background:white;border:1px solid #e0e0e0;border-radius:10px;padding:0.85rem 1rem;font-size:0.85rem;color:#444;line-height:1.5;">${ia.resolucion.replace(/·/g,'<br>·')}</div>
+                </div>`;
+            } else {
+                html = '<p class="text-muted small mb-0"><i class="fas fa-info-circle me-1"></i>Ticket guardado correctamente. El análisis IA podrá aplicarse desde el historial.</p>';
+            }
+
+            document.getElementById('modalIAResultado').innerHTML = html;
+            const modal = new bootstrap.Modal(document.getElementById('modalTicketCreado'));
+            modal.show();
+        }
+
+        function cerrarYVolver() {
+            bootstrap.Modal.getInstance(document.getElementById('modalTicketCreado')).hide();
+            window.close();
+        }
 
         // Manejar carga de archivos
         document.getElementById('btnFile').addEventListener('click', function () {
@@ -493,31 +646,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             document.getElementById('cameraPreview').style.display = 'none';
         }
 
-        document.getElementById('removePhoto').addEventListener('click', function () {
-            document.getElementById('photoPreview').style.display = 'none';
-            document.getElementById('foto').value = '';
-            document.getElementById('foto_camera').value = '';
-            stopCamera();
-        });
-
-        // Validación del formulario
-        document.getElementById('maintenanceForm').addEventListener('submit', function (e) {
-            const titulo = document.getElementById('titulo').value.trim();
-            const descripcion = document.getElementById('descripcion').value.trim();
-
-            if (titulo.length < 5) {
-                e.preventDefault();
-                alert('El título debe tener al menos 5 caracteres');
-                return;
-            }
-
-            if (descripcion.length < 10) {
-                e.preventDefault();
-                alert('La descripción debe tener al menos 10 caracteres');
-                return;
-            }
-        });
-
 
         // Manejar cambio de sucursal
         document.getElementById('selectSucursal')?.addEventListener('change', function () {
@@ -534,60 +662,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             const url = `formulario_equipos.php?cod_operario=<?= $cod_operario ?>&cod_sucursal=<?= $cod_sucursal ?>`;
             window.location.href = url;
         }
-
-        // Prevenir envío múltiple del formulario
-        document.addEventListener('DOMContentLoaded', function () {
-            const form = document.getElementById('maintenanceForm'); // Para mantenimiento
-
-            if (form) {
-                let isSubmitting = false;
-
-                form.addEventListener('submit', function (e) {
-                    if (isSubmitting) {
-                        e.preventDefault();
-                        return false;
-                    }
-
-                    const submitBtn = form.querySelector('button[type="submit"]');
-                    const originalText = submitBtn.innerHTML;
-
-                    // Deshabilitar botón y mostrar estado de carga
-                    submitBtn.disabled = true;
-                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Guardando...';
-                    isSubmitting = true;
-
-                    // Re-habilitar después de 5 segundos por si hay error (seguridad)
-                    setTimeout(() => {
-                        if (isSubmitting) {
-                            submitBtn.disabled = false;
-                            submitBtn.innerHTML = originalText;
-                            isSubmitting = false;
-                            alert('El proceso está tomando más tiempo de lo esperado. Por favor verifica tu conexión.');
-                        }
-                    }, 10000);
-                });
-
-                // También prevenir envío con Enter
-                form.addEventListener('keydown', function (e) {
-                    if (e.key === 'Enter') {
-                        e.preventDefault();
-                        return false;
-                    }
-                });
-
-                // Prevenir Enter en campos específicos
-                const textInputs = form.querySelectorAll('input[type="text"], textarea, select');
-                textInputs.forEach(input => {
-                    input.addEventListener('keydown', function (e) {
-                        if (e.key === 'Enter') {
-                            e.preventDefault();
-                            return false;
-                        }
-                    });
-                });
-            }
-        });
     </script>
+
 </body>
 
 </html>
