@@ -5,7 +5,7 @@ const S = {
     sucursales: [],
     filtro: 'all',
     busqueda: '',
-    expandedId: null,
+    openDrawerId: null,
     mapaGeneral: null,
     mapaMini: null,
     makerGeneral: {},
@@ -66,14 +66,13 @@ function renderGrid() {
     const grid = document.getElementById('suc-grid');
     const lista = getListaFiltrada();
     if (!lista.length) {
-        grid.innerHTML = `<div class="empty-state"><i class="bi bi-building-x"></i><p>No se encontraron sucursales</p></div>`;
+        grid.innerHTML = `<div class="empty-state"><i class="bi bi-shop-window"></i><p>No se encontraron tiendas</p></div>`;
         return;
     }
     grid.innerHTML = lista.map(s => cardHTML(s)).join('');
     lista.forEach(s => {
-        const h = document.querySelector(`.suc-card[data-id="${s.id}"] .suc-card-head`);
-        if (h) h.addEventListener('click', () => toggleCard(s.id));
-        if (s.id === S.expandedId) expandCard(s.id, false);
+        const h = document.getElementById(`card-${s.id}`);
+        if (h) h.addEventListener('click', () => openDrawer(s.id));
     });
 }
 
@@ -96,41 +95,60 @@ function cardHTML(s) {
                 <div class="suc-depto"><i class="bi bi-geo-alt"></i>${s.departamento||'—'}</div>
                 <div class="suc-badges">${actBadge}${dvrBadge}${vmtap}${tunel}</div>
             </div>
-            <i class="bi bi-chevron-down suc-chevron"></i>
-        </div>
-        <div class="suc-panel" id="panel-${s.id}">
-            <div class="suc-tabs" id="tabs-${s.id}">
-                <button class="suc-tab-btn active" data-tab="general" onclick="switchTab(${s.id},'general',this)"><i class="bi bi-building"></i>General</button>
-                <button class="suc-tab-btn" data-tab="estado" onclick="switchTab(${s.id},'estado',this)"><i class="bi bi-toggles"></i>Estado</button>
-                <button class="suc-tab-btn" data-tab="dvr" onclick="switchTab(${s.id},'dvr',this)"><i class="bi bi-camera-video"></i>DVR</button>
-                <button class="suc-tab-btn" data-tab="mapa" onclick="switchTab(${s.id},'mapa',this)"><i class="bi bi-map"></i>Mapa</button>
-            </div>
-            <div id="tab-general-${s.id}" class="suc-tab-content active"><div class="text-center p-3"><div class="spinner-border spinner-border-sm text-secondary"></div></div></div>
-            <div id="tab-estado-${s.id}"  class="suc-tab-content"></div>
-            <div id="tab-dvr-${s.id}"     class="suc-tab-content"></div>
-            <div id="tab-mapa-${s.id}"    class="suc-tab-content"></div>
+            <i class="bi bi-chevron-right suc-chevron"></i>
         </div>
     </div>`;
 }
 
-// ── Expand / Collapse ────────────────────────────────────────
-function toggleCard(id) {
-    if (S.expandedId === id) { collapseCard(id); return; }
-    if (S.expandedId) collapseCard(S.expandedId);
-    expandCard(id, true);
+// ── Drawer Management ────────────────────────────────────────
+function openDrawer(id) {
+    const s = S.sucursales.find(x => x.id == id);
+    if (!s) return;
+
+    S.openDrawerId = id;
+    document.getElementById('drawer-title').textContent = s.nombre;
+    document.getElementById('drawer-subtitle').textContent = `Código: ${s.codigo}`;
+    
+    const overlay = document.getElementById('drawer-overlay');
+    const drawer = document.getElementById('suc-drawer');
+    overlay.classList.add('active');
+    drawer.classList.add('active');
+    document.body.style.overflow = 'hidden'; // Prevent scroll
+
+    // Reset tabs
+    document.querySelectorAll('.suc-tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector('.suc-tab-btn[data-tab="general"]').classList.add('active');
+    document.querySelectorAll('.suc-tab-content').forEach(c => {
+        c.classList.remove('active');
+        c.innerHTML = `<div class="text-center p-5"><div class="spinner-border text-secondary"></div><p class="mt-2 text-muted">Cargando datos...</p></div>`;
+    });
+    document.getElementById('dtab-general').classList.add('active');
+
+    cargarDetalle(id);
 }
-function collapseCard(id) {
-    const card = document.getElementById(`card-${id}`);
-    if (!card) return;
-    card.classList.remove('expanded');
-    S.expandedId = null;
+
+function closeDrawer() {
+    S.openDrawerId = null;
+    document.getElementById('drawer-overlay').classList.remove('active');
+    document.getElementById('suc-drawer').classList.remove('active');
+    document.body.style.overflow = '';
 }
-function expandCard(id, loadData) {
-    const card = document.getElementById(`card-${id}`);
-    if (!card) return;
-    card.classList.add('expanded');
-    S.expandedId = id;
-    if (loadData) cargarDetalle(id);
+
+function switchDrawerTab(tab, btnEl) {
+    const drawer = document.getElementById('suc-drawer');
+    drawer.querySelectorAll('.suc-tab-btn').forEach(b => b.classList.remove('active'));
+    drawer.querySelectorAll('.suc-tab-content').forEach(c => c.classList.remove('active'));
+    
+    btnEl.classList.add('active');
+    const tc = document.getElementById(`dtab-${tab}`);
+    if (tc) tc.classList.add('active');
+
+    if (tab === 'mapa' && !S.mapaMiniInit?.[S.openDrawerId]) {
+        const suc = S.detalleCache[S.openDrawerId]?.sucursal || S.sucursales.find(s=>s.id==S.openDrawerId) || {};
+        setTimeout(() => initMapaMini(S.openDrawerId, suc), 100);
+        S.mapaMiniInit = S.mapaMiniInit || {};
+        S.mapaMiniInit[S.openDrawerId] = true;
+    }
 }
 
 // ── Cargar detalle ───────────────────────────────────────────
@@ -160,14 +178,14 @@ function renderTabGeneral(id, s) {
         `<option value="${d.cod}" ${d.cod==s.cod_departamento?'selected':''}>${d.nombre}</option>`
     ).join('');
 
-    document.getElementById(`tab-general-${id}`).innerHTML = `
+    document.getElementById('dtab-general').innerHTML = `
     <div class="field-group">
         <div class="field-item">
             <label class="field-label"><i class="bi bi-hash"></i>Código</label>
             <div class="field-input-wrap"><input class="field-input" value="${esc(s.codigo)}" readonly title="El código no es editable"></div>
         </div>
         <div class="field-item">
-            <label class="field-label"><i class="bi bi-building"></i>Nombre</label>
+            <label class="field-label"><i class="bi bi-shop"></i>Nombre</label>
             <div class="field-input-wrap">
                 <input class="field-input autosave-suc" data-id="${id}" data-campo="nombre" value="${esc(s.nombre)}" ${ro}>
                 <span class="save-indicator"><i class="bi bi-check-circle-fill"></i></span>
@@ -236,13 +254,13 @@ function renderTabEstado(id, s) {
     const gbizLink = s.cod_googlebusiness
         ? `<a class="gbiz-link" href="https://maps.google.com/?cid=${encodeURIComponent(s.cod_googlebusiness)}" target="_blank"><i class="bi bi-google"></i>Ver en Google Maps</a>` : '';
 
-    document.getElementById(`tab-estado-${id}`).innerHTML = `
+    document.getElementById('dtab-estado').innerHTML = `
     <div class="toggle-row">
-        <div class="toggle-label-text"><i class="bi bi-power"></i>Sucursal Activa<span class="toggle-saving" id="tsav-activa-${id}">guardando…</span></div>
+        <div class="toggle-label-text"><i class="bi bi-power"></i>Tienda Activa<span class="toggle-saving" id="tsav-activa-${id}">guardando…</span></div>
         <label class="toggle-switch"><input type="checkbox" class="toggle-suc" data-id="${id}" data-campo="activa" ${s.activa==1?'checked':''} ${dis}><span class="toggle-slider"></span></label>
     </div>
     <div class="toggle-row">
-        <div class="toggle-label-text"><i class="bi bi-shop"></i>¿Es Sucursal?<span class="toggle-saving" id="tsav-sucursal-${id}">guardando…</span></div>
+        <div class="toggle-label-text"><i class="bi bi-shop"></i>¿Es Tienda?<span class="toggle-saving" id="tsav-sucursal-${id}">guardando…</span></div>
         <label class="toggle-switch"><input type="checkbox" class="toggle-suc" data-id="${id}" data-campo="sucursal" ${s.sucursal==1?'checked':''} ${dis}><span class="toggle-slider"></span></label>
     </div>
     <div class="toggle-row">
@@ -287,11 +305,11 @@ function renderTabEstado(id, s) {
 
 // ── Tab: DVR ─────────────────────────────────────────────────
 function renderTabDVR(id, suc, dvr, tiene_dvr) {
-    const el = document.getElementById(`tab-dvr-${id}`);
+    const el = document.getElementById('dtab-dvr');
     if (!tiene_dvr) {
         el.innerHTML = `<div class="dvr-empty">
             <i class="bi bi-camera-video-off"></i>
-            <p>Esta sucursal no tiene configuración DVR</p>
+            <p>Esta tienda no tiene configuración DVR</p>
             ${PUEDE_EDITAR ? `<button class="btn-crear-dvr" id="btn-dvr-${id}" onclick="crearDVR(${id})"><i class="bi bi-plus-circle"></i>Agregar configuración DVR</button>` : ''}
         </div>`;
         return;
@@ -369,8 +387,8 @@ function renderTabDVR(id, suc, dvr, tiene_dvr) {
 // ── Tab: Mapa ────────────────────────────────────────────────
 function renderTabMapa(id, s) {
     const ro = !PUEDE_EDITAR ? 'readonly' : '';
-    document.getElementById(`tab-mapa-${id}`).innerHTML = `
-    <div class="mapa-mini-wrap"><div id="mapa-mini-${id}" style="height:220px"></div></div>
+    document.getElementById('dtab-mapa').innerHTML = `
+    <div class="mapa-mini-wrap"><div id="mapa-mini-${id}" style="height:280px"></div></div>
     <div class="coords-inputs">
         <div class="field-item">
             <label class="field-label"><i class="bi bi-arrow-up-down"></i>Latitud</label>
@@ -395,7 +413,7 @@ function renderTabMapa(id, s) {
 const _timers = {};
 function bindAutoSave(id, tipo) {
     const cls = tipo === 'suc' ? '.autosave-suc' : '.autosave-dvr';
-    const panel = document.getElementById(`panel-${id}`);
+    const panel = document.getElementById('suc-drawer');
     if (!panel) return;
     panel.querySelectorAll(cls).forEach(el => {
         if (el._bound) return;
@@ -468,7 +486,7 @@ function actualizarCardBadges(id, campo, valor) {
 // ── Auto-save: toggles ────────────────────────────────────────
 function bindToggles(id, tipo) {
     const cls = tipo === 'suc' ? '.toggle-suc' : '.toggle-dvr';
-    const panel = document.getElementById(`panel-${id}`);
+    const panel = document.getElementById('suc-drawer');
     if (!panel) return;
     panel.querySelectorAll(cls).forEach(el => {
         if (el._togbound) return;
@@ -539,21 +557,7 @@ function crearDVR(id) {
 }
 
 // ── Tabs switch ───────────────────────────────────────────────
-function switchTab(id, tab, btnEl) {
-    const panel = document.getElementById(`panel-${id}`);
-    panel.querySelectorAll('.suc-tab-btn').forEach(b => b.classList.remove('active'));
-    panel.querySelectorAll('.suc-tab-content').forEach(c => c.classList.remove('active'));
-    btnEl.classList.add('active');
-    const tc = document.getElementById(`tab-${tab}-${id}`);
-    if (tc) tc.classList.add('active');
-    // Init mini-map when switching to mapa tab if not yet initialized
-    if (tab === 'mapa' && !S.mapaMiniInit?.[id]) {
-        const suc = S.detalleCache[id]?.sucursal || S.sucursales.find(s=>s.id==id) || {};
-        setTimeout(() => initMapaMini(id, suc), 100);
-        S.mapaMiniInit = S.mapaMiniInit || {};
-        S.mapaMiniInit[id] = true;
-    }
-}
+
 
 // ── Mapa General (Leaflet) ────────────────────────────────────
 function initMapaGeneral(lista) {
@@ -577,7 +581,7 @@ function initMapaGeneral(lista) {
         const m = L.marker([s.Latitude, s.Longitude], { icon: iconV(s.activa==1) })
             .addTo(S.mapaGeneral)
             .bindPopup(`<b>${s.nombre}</b><br><small>${s.codigo} · ${s.departamento||''}</small><br>
-                <button onclick="scrollToCard(${s.id})" style="margin-top:5px;padding:3px 8px;background:#0E544C;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:.7rem">Ver detalle</button>`);
+                <button onclick="openDrawer(${s.id})" style="margin-top:5px;padding:3px 8px;background:#0E544C;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:.7rem">Ver detalle</button>`);
         S.makerGeneral[s.id] = m;
         bounds.push([s.Latitude, s.Longitude]);
     });
@@ -589,7 +593,7 @@ function scrollToCard(id) {
     const card = document.getElementById(`card-${id}`);
     if (!card) return;
     card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    if (S.expandedId !== id) toggleCard(id);
+    openDrawer(id);
     S.mapaGeneral?.closePopup();
 }
 
@@ -605,7 +609,7 @@ function initMapaMini(id, s) {
     mini.setView([lat, lng], zoom);
 
     const marker = L.marker([lat, lng], { draggable: PUEDE_EDITAR }).addTo(mini);
-    marker.bindPopup(s.nombre || 'Sucursal').openPopup();
+    marker.bindPopup(s.nombre || 'Tienda').openPopup();
 
     if (PUEDE_EDITAR) {
         marker.on('dragend', e => {

@@ -22,7 +22,7 @@ $puedeEditar = tienePermiso('configuracion_sucursales', 'edicion', $cargoOperari
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Configuración de Sucursales — Batidos Pitaya</title>
+    <title>Configuración de Tiendas — Batidos Pitaya</title>
     <link rel="icon" href="../../core/assets/img/icon12.png" type="image/png">
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -47,8 +47,8 @@ $puedeEditar = tienePermiso('configuracion_sucursales', 'edicion', $cargoOperari
                 <!-- Header de página -->
                 <div class="suc-header">
                     <h1>
-                        <i class="bi bi-building-gear"></i>
-                        Configuración de Sucursales
+                        <i class="bi bi-shop"></i>
+                        Configuración de Tiendas
                     </h1>
                     <?php if (!$puedeEditar): ?>
                     <span style="font-size:.75rem;background:#fef3c7;color:#92400e;padding:4px 12px;border-radius:99px;font-weight:600;border:1px solid #f59e0b;">
@@ -62,7 +62,7 @@ $puedeEditar = tienePermiso('configuracion_sucursales', 'edicion', $cargoOperari
                     <div class="kpi-box total">
                         <span class="kpi-lbl">Total</span>
                         <span class="kpi-num" id="kpi-total">—</span>
-                        <span class="kpi-sub">sucursales</span>
+                        <span class="kpi-sub">tiendas</span>
                     </div>
                     <div class="kpi-box activa">
                         <span class="kpi-lbl">Activas</span>
@@ -84,7 +84,7 @@ $puedeEditar = tienePermiso('configuracion_sucursales', 'edicion', $cargoOperari
                 <!-- Mapa General -->
                 <div class="mapa-general-wrap">
                     <div class="mapa-general-header">
-                        <span><i class="bi bi-map"></i> Ubicación de sucursales</span>
+                        <span><i class="bi bi-map"></i> Ubicación de tiendas</span>
                         <button class="toggle-mapa-btn" onclick="toggleMapaGeneral()">Ocultar mapa</button>
                     </div>
                     <div id="mapa-general"></div>
@@ -103,7 +103,7 @@ $puedeEditar = tienePermiso('configuracion_sucursales', 'edicion', $cargoOperari
                     <button class="fil-btn f-ndvr" data-filtro="ndvr">⚠️ Sin DVR</button>
                 </div>
 
-                <!-- Grid de sucursales -->
+                <!-- Grid de tiendas -->
                 <div id="suc-grid">
                     <?php for ($i = 0; $i < 6; $i++): ?>
                     <div class="skeleton-card"></div>
@@ -111,6 +111,40 @@ $puedeEditar = tienePermiso('configuracion_sucursales', 'edicion', $cargoOperari
                 </div>
 
             </div><!-- /suc-wrap -->
+        </div>
+    </div>
+
+    <!-- Panel Lateral (Drawer) -->
+    <div class="suc-drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
+    <div class="suc-drawer" id="suc-drawer">
+        <div class="drawer-header">
+            <div class="drawer-title-wrap">
+                <h2 class="drawer-title" id="drawer-title">Detalle de Tienda</h2>
+                <span class="drawer-subtitle" id="drawer-subtitle">Código: —</span>
+            </div>
+            <button class="drawer-close" onclick="closeDrawer()" title="Cerrar">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+        <div class="drawer-body">
+            <div class="suc-tabs" id="drawer-tabs">
+                <button class="suc-tab-btn active" data-tab="general" onclick="switchDrawerTab('general', this)">
+                    <i class="bi bi-building"></i>General
+                </button>
+                <button class="suc-tab-btn" data-tab="estado" onclick="switchDrawerTab('estado', this)">
+                    <i class="bi bi-toggles"></i>Estado
+                </button>
+                <button class="suc-tab-btn" data-tab="dvr" onclick="switchDrawerTab('dvr', this)">
+                    <i class="bi bi-camera-video"></i>DVR
+                </button>
+                <button class="suc-tab-btn" data-tab="mapa" onclick="switchDrawerTab('mapa', this)">
+                    <i class="bi bi-map"></i>Mapa
+                </button>
+            </div>
+            <div id="dtab-general" class="suc-tab-content active"></div>
+            <div id="dtab-estado"  class="suc-tab-content"></div>
+            <div id="dtab-dvr"     class="suc-tab-content"></div>
+            <div id="dtab-mapa"    class="suc-tab-content"></div>
         </div>
     </div>
 

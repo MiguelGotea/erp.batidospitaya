@@ -261,24 +261,101 @@ body { background: var(--bg); color: var(--text); font-family: 'Inter', 'Calibri
     flex-shrink: 0;
     margin-top: 2px;
 }
-.suc-card.expanded .suc-chevron { transform: rotate(180deg); }
-
-/* ── Panel expandible ───────────────────────────────────────── */
-.suc-panel {
-    display: none;
-    border-top: 1px solid var(--border);
+/* ── Drawer (Panel Lateral) ──────────────────────────────────── */
+.suc-drawer-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.4);
+    backdrop-filter: blur(4px);
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all .3s ease;
 }
-.suc-card.expanded .suc-panel { display: block; }
+.suc-drawer-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
 
-/* Tabs dentro del panel */
+.suc-drawer {
+    position: fixed;
+    top: 0;
+    right: -450px;
+    width: 450px;
+    height: 100%;
+    background: var(--surface);
+    z-index: 1001;
+    box-shadow: -5px 0 30px rgba(0,0,0,0.15);
+    transition: right .3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+}
+@media (max-width: 500px) {
+    .suc-drawer { width: 100%; right: -100%; }
+}
+.suc-drawer.active {
+    right: 0;
+}
+
+.drawer-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--surface);
+}
+.drawer-title-wrap {
+    display: flex;
+    flex-direction: column;
+}
+.drawer-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--pitaya);
+    margin: 0;
+}
+.drawer-subtitle {
+    font-size: .75rem;
+    color: var(--muted);
+    font-weight: 600;
+}
+.drawer-close {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: none;
+    background: var(--bg);
+    color: var(--text-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all .2s;
+}
+.drawer-close:hover {
+    background: #fee2e2;
+    color: var(--red);
+}
+
+.drawer-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0;
+}
+
+/* ── Tabs en Drawer ─────────────────────────────────────────── */
 .suc-tabs {
     display: flex;
     border-bottom: 1px solid var(--border);
     background: #f8fafc;
+    position: sticky;
+    top: 0;
+    z-index: 10;
 }
 .suc-tab-btn {
     flex: 1;
-    padding: 9px 6px;
+    padding: 12px 6px;
     font-size: .72rem;
     font-weight: 600;
     text-align: center;
@@ -300,7 +377,7 @@ body { background: var(--bg); color: var(--text); font-family: 'Inter', 'Calibri
     background: var(--surface);
 }
 
-.suc-tab-content { display: none; padding: 16px; }
+.suc-tab-content { display: none; padding: 24px; }
 .suc-tab-content.active { display: block; }
 
 /* ── Formulario de campos ───────────────────────────────────── */
