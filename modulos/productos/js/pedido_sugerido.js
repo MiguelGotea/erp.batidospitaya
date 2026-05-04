@@ -258,6 +258,11 @@ function buildFila(p, cat) {
         </tr>
     `;
 
+    // Label de unidad de despacho (aparece encima del número en columnas de stock/pedido)
+    const despTag = p.despacho_nombre
+        ? `<div class="desp-unit-label" title="${escHtml(p.despacho_nombre)}">${escHtml(p.despacho_nombre)}</div>`
+        : '';
+
     return `
         <tr class="ps-fila-producto cat-${cat !== '_sin_cat' ? cat : 'X'}" data-id="${p.id_pp}">
             <td class="col-producto"><span class="fw-500">${escHtml(p.nombre)}</span></td>
@@ -267,11 +272,11 @@ function buildFila(p, cat) {
             <td class="text-end">${fmt2(p.desv_estandar)}</td>
             <td class="text-end fw-bold">${fmt2(p.cons_semanal)}</td>
             <td class="text-end">${fmt(p.cons_diario)}</td>
-            <td class="text-end">${fmt2(p.stock_minimo)}</td>
-            <td class="text-end">${fmt2(p.stock_maximo)}</td>
-            <td class="text-end">${stockMaxFinalHtml}</td>
-            <td class="text-center col-inventario">${inputHtml}</td>
-            <td class="text-center col-pedido" id="pedido-${p.id_pp}">${pedidoHtml}</td>
+            <td class="text-end">${despTag}${fmt2(p.stock_minimo)}</td>
+            <td class="text-end">${despTag}${fmt2(p.stock_maximo)}</td>
+            <td class="text-end">${despTag}${stockMaxFinalHtml}</td>
+            <td class="text-center col-inventario">${despTag}${inputHtml}</td>
+            <td class="text-center col-pedido" id="pedido-${p.id_pp}">${despTag}${pedidoHtml}</td>
         </tr>
         ${detalleHtml}
     `;
