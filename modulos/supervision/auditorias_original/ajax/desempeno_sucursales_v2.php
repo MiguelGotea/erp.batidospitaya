@@ -226,6 +226,7 @@ try {
           AND YEAR(v.Fecha)      = :anio
           AND DATE(v.Fecha)      < CURDATE()
           AND (v.Anulado IS NULL OR v.Anulado = 0)
+          AND (v.Delivery_Nombre <> 'PedidosYa' OR v.Delivery_Nombre IS NULL)
         GROUP BY s.codigo
     ");
     $stmt->execute([':mes' => $mes, ':anio' => $anio]);
