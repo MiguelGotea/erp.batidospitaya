@@ -583,6 +583,26 @@ function seleccionarFecha(tipo, fecha, columna) {
 
 // Cargar opciones de filtro
 function cargarOpcionesFiltro(panel, columna, icon) {
+    // --- Skeleton inmediato para que el panel aparezca al instante ---
+    const skeletonWidths = ['w-70','w-50','w-90','w-60','w-80','w-50','w-70','w-40'];
+    let skHtml = '<div class="filter-section filter-section-opciones" style="margin-top:12px;">';
+    skHtml += '<span class="filter-section-title">Filtrar por:</span>';
+    skHtml += '<input type="text" class="filter-search" placeholder="Buscar..." disabled>';
+    skHtml += '<div class="filter-options">';
+    for (let i = 0; i < 6; i++) {
+        const w = skeletonWidths[i % skeletonWidths.length];
+        skHtml += `<div class="filter-option filter-option-skeleton">
+            <span class="skeleton-cell-sm"></span>
+            <span class="skeleton-cell ${w}"></span>
+        </div>`;
+    }
+    skHtml += '</div></div>';
+    panel.append(skHtml);
+
+    // Posicionar con el skeleton ya visible
+    posicionarPanelFiltro(panel, icon);
+
+    // --- Cargar opciones reales y reemplazar skeleton ---
     $.ajax({
         url: 'ajax/ventas_get_opciones_filtro.php',
         method: 'POST',
@@ -590,7 +610,7 @@ function cargarOpcionesFiltro(panel, columna, icon) {
         dataType: 'json',
         success: function (response) {
             if (response.success) {
-                let html = '<div class="filter-section" style="margin-top: 12px;">';
+                let html = '<div class="filter-section filter-section-opciones" style="margin-top: 12px;">';
                 html += '<span class="filter-section-title">Filtrar por:</span>';
                 html += '<input type="text" class="filter-search" placeholder="Buscar..." onkeyup="buscarEnOpciones(this)">';
                 html += '<div class="filter-options">';
@@ -607,14 +627,17 @@ function cargarOpcionesFiltro(panel, columna, icon) {
                 });
 
                 html += '</div></div>';
-                panel.append(html);
 
-                // Posicionar después de agregar el contenido
+                // Reemplazar solo la sección de skeleton
+                panel.find('.filter-section-opciones').replaceWith(html);
+
+                // Reposicionar ahora que el contenido real tiene altura correcta
                 posicionarPanelFiltro(panel, icon);
             }
         }
     });
 }
+
 
 // Posicionar panel
 function posicionarPanelFiltro(panel, icon) {

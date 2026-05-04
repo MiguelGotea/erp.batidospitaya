@@ -659,3 +659,32 @@ tr.skeleton-row td {
 tr.skeleton-row:nth-child(odd) {
     background: #fafafa;
 }
+
+/* Skeleton para el panel de filtros tipo lista */
+.skeleton-cell-sm {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+    flex-shrink: 0;
+    background: linear-gradient(
+        90deg,
+        #e8f4f3 25%,
+        #c8e8e5 50%,
+        #e8f4f3 75%
+    );
+    background-size: 300px 100%;
+    animation: skeleton-shimmer 1.4s ease infinite;
+}
+
+.filter-option-skeleton {
+    pointer-events: none;
+    opacity: 0.85;
+    align-items: center;
+    gap: 8px;
+}
+
+.filter-option-skeleton .skeleton-cell {
+    height: 12px;
+    flex: 1;
+}
