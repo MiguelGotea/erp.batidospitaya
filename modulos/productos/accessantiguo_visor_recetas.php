@@ -1194,17 +1194,20 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td><strong>Nivel 2</strong><br><small>convertibles</small></td>
+                                        <td><strong>Nivel 2</strong><br><small>convertibles (transitivo)</small></td>
                                         <td>
                                             Si Nivel 1 no encontró presentación, busca unidades <em>relacionadas por conversión</em>
-                                            en <code>conversion_unidad_producto</code>.
-                                            Si encuentra, guarda el <code>factor_conversion</code> para el cálculo de cantidad.
+                                            usando el grafo de <code>conversion_unidad_producto</code> con cierre transitivo
+                                            <strong>Floyd-Warshall</strong>.
+                                            Esto permite cadenas multi-salto: <code>oz → gr → kg</code> sin necesidad de una
+                                            fila directa <em>oz→kg</em> en la BD. Si encuentra, guarda el <code>factor_conversion</code>
+                                            acumulado para el cálculo de cantidad.
                                         </td>
                                         <td>
-                                            <code>"gr"</code> → Gramos. Sin presentación en Gramos.<br>
-                                            Conversión Gramos ↔ Onzas Peso (factor 0.035).<br>
-                                            Busca en Onzas Peso → <em>Mani Horneado oz</em> ✓<br>
-                                            <code>factor_conversion = 0.035</code>
+                                            <code>"oz"</code> → Onzas Peso → (via Gramos) → Kilogramos<br>
+                                            Sin presentación directa en oz, ni en gr, <em>pero sí en kg</em>.<br>
+                                            Factor = 1/28.35 × 1/1000 = 0.0000352<br>
+                                            Busca en Kilogramos → <em>Miel kg</em> ✓
                                         </td>
                                     </tr>
                                     <tr>
@@ -1225,10 +1228,19 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                             <div class="p-2 rounded mb-2" style="background:#fff3e0;font-size:.77rem;border-left:3px solid #ff9800">
                                 <i class="fas fa-wrench me-1 text-warning"></i>
                                 <strong>Para mejorar la resolución:</strong> registra conversiones entre unidades en
-                                <em>Historial de Conversiones</em> (módulo Productos). A más conversiones registradas,
-                                más preciso es el Nivel 2. Si una unidad Access no se reconoce, verifica que exista
+                                <em>Historial de Conversiones</em> (módulo Productos). El sistema aplica <strong>Floyd-Warshall</strong>
+                                automáticamente, por lo que no necesitas tener todas las combinaciones directas — basta con los
+                                eslabones intermedios (ej: oz→gr y gr→kg). Si una unidad Access no se reconoce, verifica que exista
                                 en <code>unidad_producto</code> con el <strong>abreviado</strong> o en
                                 <strong>nombres_opcionales</strong> correcto.
+                            </div>
+                            <div class="p-2 rounded mb-2" style="background:#fefce8;font-size:.77rem;border-left:3px solid #ca8a04">
+                                <i class="fas fa-exclamation-triangle me-1" style="color:#ca8a04"></i>
+                                <strong>Insumos con rendimiento variable (ej: Naranja):</strong> cuando un ingrediente se procesa
+                                en tienda y su rendimiento varía (2–3 oz por unidad), el estándar de la industria es fijar un
+                                <strong>yield factor conservador</strong> (ej: 1 naranja = 2.0 oz). La variabilidad queda
+                                absorbida por la desviación estándar del consumo histórico en el Pedido Sugerido.
+                                Agrega la conversión en <code>conversion_unidad_producto</code> con el factor conservador elegido.
                             </div>
 
                             <p style="font-size:.79rem;margin-bottom:4px"><strong>Estados posibles del Insumo Receta:</strong></p>
@@ -1325,10 +1337,11 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                                 </div>
                                 <div class="col-md-6">
                                     <div class="p-2 rounded h-100" style="background:#fff8f2;border-left:3px solid #bf360c;font-size:.77rem">
-                                        <strong style="color:#bf360c">Nivel 2 — Unidad convertible</strong><br>
-                                        Si el Nivel 1 falla, repite la búsqueda usando las unidades homologadas del
-                                        mismo grupo de medida (según <code>conversion_unidad_producto</code>).<br>
-                                        <em>Ej: ingrediente en "oz" &rarr; busca despacho en "Libras".</em>
+                                        <strong style="color:#bf360c">Nivel 2 — Unidad convertible (transitivo)</strong><br>
+                                        Si el Nivel 1 falla, repite la búsqueda con las unidades del grafo de conversiones
+                                        expandido por <strong>Floyd-Warshall</strong>. Resuelve cadenas multi-salto
+                                        <code>oz → gr → kg</code> sin necesidad de filas directas en la BD.<br>
+                                        <em>Ej: ingrediente en "oz" &rarr; busca despacho en "Libras" o "Kilogramos" (vía Gramos).</em>
                                     </div>
                                 </div>
                                 <div class="col-md-6">

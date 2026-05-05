@@ -12,7 +12,52 @@
  *      luego token exacto en nombres_opcionales (vía FIND_IN_SET).
  *   2. Si no encuentra presentación directa, expande a unidades relacionadas
  *      por conversion_unidad_producto y devuelve el factor de conversión.
+ *   3. Cierre transitivo (Floyd-Warshall): resuelve cadenas de conversión
+ *      multi-salto en memoria (oz → gr → kg) sin necesidad de filas directas.
  */
+
+/**
+ * Construye el índice de conversiones completo desde la BD y aplica
+ * el cierre transitivo Floyd-Warshall para resolver cadenas multi-salto.
+ * Resultado: [id_inicio][id_final] => factor_multiplicativo
+ *
+ * @param PDO $conn
+ * @return array
+ */
+function buildConvIndexTransitivo(PDO $conn): array
+{
+    $index = [];
+    $rows  = $conn->query(
+        "SELECT id_unidad_producto_inicio AS i,
+                id_unidad_producto_final   AS f,
+                cantidad                   AS c
+         FROM conversion_unidad_producto"
+    )->fetchAll(PDO::FETCH_ASSOC);
+
+    foreach ($rows as $r) {
+        $i = (int)$r['i']; $f = (int)$r['f']; $c = (float)$r['c'];
+        $index[$i][$f] = $c;
+        if ($c != 0) $index[$f][$i] = 1 / $c;
+    }
+
+    // Floyd-Warshall: propagar rutas transitivas (oz→gr→kg, etc.)
+    $units = array_unique(array_merge(
+        array_keys($index),
+        array_merge(...array_map('array_keys', array_values($index)))
+    ));
+    foreach ($units as $k) {
+        foreach ($units as $i) {
+            if (!isset($index[$i][$k])) continue;
+            foreach ($units as $j) {
+                if (!isset($index[$k][$j])) continue;
+                if (!isset($index[$i][$j])) {          // solo nuevas rutas
+                    $index[$i][$j] = $index[$i][$k] * $index[$k][$j];
+                }
+            }
+        }
+    }
+    return $index;
+}
 
 /**
  * Resuelve la unidad del sistema Access al registro de unidad_producto
@@ -98,6 +143,31 @@ function resolverUnidadERP(PDO $conn, string $unidadAntigua): ?array
                     'factor' => (float)$row['factor_a_relacionado'],
                 ];
             }
+        }
+
+        // ── Expansión transitiva (Floyd-Warshall) ───────────────────────────────
+        // Resuelve cadenas multi-salto: oz → gr → kg sin necesidad de fila directa.
+        // Solo agrega unidades que no aparecen ya en los convertibles directos.
+        try {
+            $convIdx = buildConvIndexTransitivo($conn);
+            if (isset($convIdx[$unidadId])) {
+                // Obtener los nombres de todas las unidades para hacer lookup
+                $stmtAllU = $conn->query("SELECT id, nombre FROM unidad_producto");
+                $allUnidades = [];
+                foreach ($stmtAllU->fetchAll(PDO::FETCH_ASSOC) as $u2) {
+                    $allUnidades[(int)$u2['id']] = $u2['nombre'];
+                }
+                foreach ($convIdx[$unidadId] as $idDest => $factor) {
+                    $nomDest = $allUnidades[$idDest] ?? null;
+                    if ($nomDest && !in_array($nomDest, $convertibles)) {
+                        $convertibles[] = $nomDest;
+                        $conversiones[] = ['nombre' => $nomDest, 'factor' => (float)$factor];
+                    }
+                }
+            }
+        } catch (\Exception $eT) {
+            // Falla silenciosa: si Floyd-Warshall falla, se usa solo la expansión de 1 salto
+            error_log('[resolverUnidadERP] Floyd-Warshall error: ' . $eT->getMessage());
         }
 
         $directos = [$nombrePrincipal];

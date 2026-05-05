@@ -348,6 +348,57 @@ try {
                         </div>
                     </div>
 
+                    <!-- Presentación de Despacho y Conversiones -->
+                    <div class="mb-4 p-3 rounded-3 border" style="background:#f0fdf4;border-color:#86efac !important;">
+                        <h6 class="fw-bold small d-flex align-items-center gap-2 mb-3" style="color:#15803d;">
+                            <i class="bi bi-truck"></i> Presentación de Despacho y Rastreo de Conversiones
+                        </h6>
+
+                        <p class="text-secondary small mb-2">
+                            Los stocks y el pedido sugerido se expresan en <b>unidades de despacho</b> (ej: Cajilla, Bolsa, Kg) para que coincidan con lo que realmente se ordena al proveedor.
+                            El sistema resuelve la presentación de despacho de cada producto en <b>dos pasos</b>:
+                        </p>
+
+                        <div class="row g-2 mb-3">
+                            <div class="col-md-6">
+                                <div class="p-2 rounded-2 border h-100" style="background:#dcfce7;">
+                                    <div class="fw-bold small mb-1" style="color:#166534;"><i class="bi bi-1-circle-fill me-1"></i>Paso B — Receta-Paquete <span class="badge bg-success ms-1" style="font-size:9px;">Prioridad</span></div>
+                                    <p class="small text-muted mb-0">Busca una presentación con <code>presentacion_despacho=1</code> cuya receta tenga <b>exactamente 1 componente</b>: la presentación básica del mismo insumo. El factor es la cantidad de ese componente en la receta (ej: Cajilla 100u → receta: 100 × Banano unid → factor = 100).</p>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="p-2 rounded-2 border h-100" style="background:#f0fdf4;">
+                                    <div class="fw-bold small mb-1" style="color:#166534;"><i class="bi bi-2-circle-fill me-1"></i>Paso A — Por Producto Maestro <span class="badge bg-secondary ms-1" style="font-size:9px;">Fallback</span></div>
+                                    <p class="small text-muted mb-0">Si no hay receta-paquete, busca otra presentación del mismo <code>producto_maestro</code> con <code>presentacion_despacho=1</code>. El factor se calcula: <code>cantidad_despacho / (cantidad_básica × factor_conversión_unidades)</code>.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="p-2 rounded-2 mb-3 border" style="background:#fff7ed;border-color:#fdba74 !important;">
+                            <div class="fw-bold small mb-1" style="color:#9a3412;"><i class="bi bi-bezier2 me-1"></i>Conversiones Transitivas (oz → gr → kg)</div>
+                            <p class="small text-muted mb-1">El sistema resuelve cadenas de conversión multi-salto usando el algoritmo <b>Floyd-Warshall</b>. No es necesario tener una fila directa <em>oz → kg</em> en la tabla de conversiones — basta con tener <em>oz → gr</em> y <em>gr → kg</em> y el sistema construye el camino automáticamente en memoria.</p>
+                            <div class="font-monospace" style="font-size:11px;color:#9a3412;">oz → gr → kg &nbsp;=&nbsp; (1/28.35) × (1/1000) &nbsp;=&nbsp; factor resultante</div>
+                        </div>
+
+                        <div class="p-2 rounded-2 border" style="background:#fefce8;border-color:#fde68a !important;">
+                            <div class="fw-bold small mb-1" style="color:#854d0e;"><i class="bi bi-exclamation-triangle-fill me-1"></i>Insumos con Rendimiento Variable (ej: Naranja)</div>
+                            <p class="small text-muted mb-0">
+                                Cuando un insumo se procesa en tienda y su rendimiento varía (ej: naranja = 2–3 oz por unidad), el estándar de la industria es fijar un <b>yield factor constante</b> basado en el rendimiento <b>más frecuente y conservador</b> (ej: 1 naranja = 2.0 oz).
+                                La variabilidad restante queda absorbida por la <b>desviación estándar</b> del consumo histórico, que ya amplía el stock máximo automáticamente.
+                                <br><span class="text-muted" style="font-size:10px;">→ Agrega la conversión en la tabla <code>conversion_unidad_producto</code> con el factor conservador elegido.</span>
+                            </p>
+                        </div>
+
+                        <div class="mt-3 p-2 rounded-2 border border-danger border-opacity-25" style="background:#fff5f5;">
+                            <div class="fw-bold small mb-1 text-danger"><i class="bi bi-x-octagon me-1"></i>Si la columna "Presentación" muestra "—" para un producto</div>
+                            <ol class="small text-muted mb-0">
+                                <li>Verifica que exista una presentación con <code>presentacion_despacho=1</code> para ese producto maestro.</li>
+                                <li>Si la unidad de despacho es diferente a la unidad básica, agrega la conversión directa <b>o</b> la cadena transitiva en <code>conversion_unidad_producto</code>.</li>
+                                <li>Alternativa: configura una receta-paquete (Paso B) con la presentación de despacho — esto no requiere conversión de unidades.</li>
+                            </ol>
+                        </div>
+                    </div>
+
                     <!-- Leyenda de Estados -->
                     <div class="mb-2">
                         <h6 class="fw-bold text-dark small border-bottom pb-2">Indicadores de Pedido</h6>
