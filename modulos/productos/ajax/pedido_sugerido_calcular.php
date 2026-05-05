@@ -338,79 +338,92 @@ try {
         ];
     }
 
-    // ── Despacho factor por id_pp ─────────────────────────────
-    // Idéntico a inventario_get_data.php (sección 8.5):
-    // Caso A: presentación de despacho del mismo producto_maestro.
-    // Caso B: receta de despacho que contiene la presentación básica.
+    // ── Resolución de despacho (idéntica a inventario_get_data.php sección 8.5)
+    // Una sola query con LEFT JOINs correlacionados: B (receta-paquete 1 componente) tiene prioridad sobre A (por maestro).
     $idsPP    = array_keys($res);
-    $despFMap = []; // id_pp => ['factor'=>float, 'nombre'=>string, 'unidad'=>string]
+    $despFMap = [];
     if (!empty($idsPP)) {
         $phPP = implode(',', array_fill(0, count($idsPP), '?'));
-
-        // ── Paso B primero: receta-paquete (presentación de despacho cuyo único componente es la presentación básica)
-        // Si existe un paquete configurado explícitamente, ese debe tener prioridad sobre cualquier
-        // presentación de despacho genérica por maestro.
-        $stmtDB = $conn->prepare("
-            SELECT crp.id_presentacion_producto AS id_pp,
-                   crp.cantidad                 AS d_receta_cant,
-                   ppd.Nombre                   AS d_nombre,
-                   ud.abreviado                 AS d_unidad
-            FROM producto_presentacion ppd
-            INNER JOIN componentes_receta_producto crp
-                   ON crp.id_receta_producto_global = ppd.Id_receta_producto
-            LEFT  JOIN unidad_producto ud ON ud.id = ppd.id_unidad_producto
-            WHERE ppd.presentacion_despacho = 1 AND ppd.Activo = 'SI'
-              AND crp.id_presentacion_producto IN ($phPP)
-              AND (
-                  SELECT COUNT(DISTINCT crp2.id_presentacion_producto)
-                  FROM componentes_receta_producto crp2
-                  WHERE crp2.id_receta_producto_global = ppd.Id_receta_producto
-              ) = 1
-            GROUP BY crp.id_presentacion_producto
-            ORDER BY ppd.id ASC
+        $stmtDesp = $conn->prepare("
+            SELECT pp.id                        AS id_pp,
+                   pp.cantidad                  AS pp_cant,
+                   pp.id_unidad_producto        AS pp_uid,
+                   -- Caso A: despacho por maestro
+                   ppd_a.id                     AS d_id_a,
+                   ppd_a.Nombre                 AS d_nom_a,
+                   ppd_a.cantidad               AS d_cant_a,
+                   ppd_a.id_unidad_producto     AS d_uid_a,
+                   ud_a.abreviado               AS d_uni_a,
+                   -- Caso B: receta-paquete de 1 componente
+                   ppd_b.id                     AS d_id_b,
+                   ppd_b.Nombre                 AS d_nom_b,
+                   ud_b.abreviado               AS d_uni_b,
+                   crp_b.cantidad               AS d_receta_cant_b
+            FROM producto_presentacion pp
+            -- JOIN A: cualquier despacho=1 del mismo maestro
+            LEFT JOIN producto_presentacion ppd_a
+                   ON ppd_a.id = (
+                       SELECT s.id FROM producto_presentacion s
+                       WHERE s.id_producto_maestro = pp.id_producto_maestro
+                         AND s.presentacion_despacho = 1
+                         AND s.Activo = 'SI'
+                         AND pp.id_producto_maestro IS NOT NULL
+                       ORDER BY s.id ASC LIMIT 1
+                   )
+            LEFT JOIN unidad_producto ud_a ON ud_a.id = ppd_a.id_unidad_producto
+            -- JOIN B: receta-paquete cuyo ÚNICO componente es pp
+            LEFT JOIN producto_presentacion ppd_b
+                   ON ppd_b.id = (
+                       SELECT s.id FROM producto_presentacion s
+                       INNER JOIN componentes_receta_producto c
+                              ON c.id_receta_producto_global = s.Id_receta_producto
+                       WHERE s.presentacion_despacho = 1
+                         AND s.Activo = 'SI'
+                         AND c.id_presentacion_producto = pp.id
+                         AND (
+                             SELECT COUNT(DISTINCT c2.id_presentacion_producto)
+                             FROM componentes_receta_producto c2
+                             WHERE c2.id_receta_producto_global = s.Id_receta_producto
+                         ) = 1
+                       ORDER BY s.id ASC LIMIT 1
+                   )
+            LEFT JOIN componentes_receta_producto crp_b
+                   ON crp_b.id_receta_producto_global = ppd_b.Id_receta_producto
+                  AND crp_b.id_presentacion_producto = pp.id
+            LEFT JOIN unidad_producto ud_b ON ud_b.id = ppd_b.id_unidad_producto
+            WHERE pp.id IN ($phPP) AND pp.Activo = 'SI'
         ");
-        $stmtDB->execute(array_values($idsPP));
-        foreach ($stmtDB->fetchAll(PDO::FETCH_ASSOC) as $row)
-            $despFMap[(int)$row['id_pp']] = ['factor' => (float)$row['d_receta_cant'], 'nombre' => $row['d_nombre'], 'unidad' => $row['d_unidad']];
-
-        // ── Paso A: por maestro (fallback para los que no resolvieron con B)
-        $sinDF = array_values(array_filter($idsPP, fn($id) => !isset($despFMap[$id])));
-        if (!empty($sinDF)) {
-            $phSin = implode(',', array_fill(0, count($sinDF), '?'));
-            $stmtDA = $conn->prepare("
-                SELECT pp.id                  AS id_pp,
-                       ppd.cantidad           AS d_cant,
-                       ppd.id_unidad_producto AS d_uid,
-                       pp.cantidad            AS pp_cant,
-                       pp.id_unidad_producto  AS pp_uid,
-                       ppd.Nombre             AS d_nombre,
-                       ud.abreviado           AS d_unidad
-                FROM producto_presentacion pp
-                INNER JOIN producto_presentacion ppd
-                       ON ppd.id_producto_maestro = pp.id_producto_maestro
-                      AND ppd.presentacion_despacho = 1
-                      AND ppd.Activo = 'SI'
-                      AND pp.id_producto_maestro IS NOT NULL
-                LEFT  JOIN unidad_producto ud ON ud.id = ppd.id_unidad_producto
-                WHERE pp.id IN ($phSin) AND pp.Activo = 'SI'
-                GROUP BY pp.id
-                ORDER BY ppd.id ASC
-            ");
-            $stmtDA->execute(array_values($sinDF));
-            foreach ($stmtDA->fetchAll(PDO::FETCH_ASSOC) as $row) {
-                $uidPP = (int)$row['pp_uid']; $uidD = (int)$row['d_uid']; $df = null;
+        $stmtDesp->execute(array_values($idsPP));
+        foreach ($stmtDesp->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $idPP = (int)$row['id_pp'];
+            // B (receta-paquete) tiene prioridad sobre A (por maestro)
+            if (!empty($row['d_id_b']) && (float)$row['d_receta_cant_b'] > 0) {
+                $despFMap[$idPP] = [
+                    'factor' => (float)$row['d_receta_cant_b'],
+                    'nombre' => $row['d_nom_b'],
+                    'unidad' => $row['d_uni_b'],
+                ];
+            } elseif (!empty($row['d_id_a']) && (float)$row['d_cant_a'] > 0 && (float)$row['pp_cant'] > 0) {
+                $uidPP = (int)$row['pp_uid'];
+                $uidD  = (int)$row['d_uid_a'];
+                $df    = null;
                 if ($uidPP === $uidD) {
-                    $df = (float)$row['d_cant'] / max((float)$row['pp_cant'], 0.001);
+                    $df = (float)$row['d_cant_a'] / max((float)$row['pp_cant'], 0.001);
                 } else {
                     $facConv = resolverFactorConversion_PS($uidPP, $uidD, $convIndex);
                     if ($facConv !== null && $facConv != 0)
-                        $df = (float)$row['d_cant'] / (max((float)$row['pp_cant'], 0.001) * $facConv);
+                        $df = (float)$row['d_cant_a'] / (max((float)$row['pp_cant'], 0.001) * $facConv);
                 }
                 if ($df !== null)
-                    $despFMap[(int)$row['id_pp']] = ['factor' => round($df, 6), 'nombre' => $row['d_nombre'], 'unidad' => $row['d_unidad']];
+                    $despFMap[$idPP] = [
+                        'factor' => round($df, 6),
+                        'nombre' => $row['d_nom_a'],
+                        'unidad' => $row['d_uni_a'],
+                    ];
             }
         }
     }
+
 
     $facC = ($capC!==null && $sumB>0) ? min(1.0, $capC/$sumB) : null;
     foreach ($res as &$p) {
