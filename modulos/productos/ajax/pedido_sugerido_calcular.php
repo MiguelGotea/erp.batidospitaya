@@ -338,10 +338,10 @@ try {
                 $cons = round($cons * 2) / 2;
         }
         if (!isset($metaPP[$idPP]))
-            // 'u' siempre usa la abreviatura de unidad del ERP.
-            // El campo $m['presentacion'] contiene el tipo interno ('despacho','basica','control')
-            // y NO debe usarse como etiqueta visible de unidad.
-            $metaPP[$idPP] = ['n' => $m['n'], 'u' => $unidadPorId[$uidERP]['abreviado'] ?? $m['uab'], 'cat' => $m['cat']];
+            // 'u' = campo presentacion de producto_presentacion (ej: 'rama', 'unid', 'oz', 'bolsa').
+            // Tras los redireccionamientos, $m['presentacion'] ya apunta a la presentación básica.
+            // Fallback a abreviado de unidad solo cuando presentacion es null.
+            $metaPP[$idPP] = ['n' => $m['n'], 'u' => $m['presentacion'] ?? ($unidadPorId[$uidERP]['abreviado'] ?? $m['uab']), 'cat' => $m['cat']];
         $conAgg[$idPP][$sem] = ($conAgg[$idPP][$sem] ?? 0) + $cons;
     }
 
