@@ -286,74 +286,25 @@ try {
         // 4) Obtener Presentación Despacho
         $ingr['presentacion_despacho'] = null;
         $idMaestroResolucion = $ingr['nuevo_producto']['id_maestro'] ?? null;
-
-        // Para porciones (codporcion > 0), saltarse Nivel 1/2 y Fallback 1 (búsqueda genérica
-        // por unidad) porque podrían devolver una presentación de inventario físico (ej: Bandeja).
-        // Las porciones deben resolverse exclusivamente vía Fallback 2 (receta-paquete cuyo
-        // único componente sea la Presentación Uso).
         $esPorcion = ($ingr['codporcion'] !== null && (int) $ingr['codporcion'] > 0);
 
-        if ($idMaestroResolucion && !$esPorcion) {
-            // Nivel 1: unidad directa + despacho=1 (mismo maestro)
-            $resolucionU = resolverUnidadERP($conn, $ingr['UnidadIngrediente']);
-            if ($resolucionU) {
-                $ingr['presentacion_despacho'] = buscarPresentacionPorUnidades(
-                    $conn,
-                    $idMaestroResolucion,
-                    $resolucionU['directos'],
-                    'despacho'
-                );
+        // ── Lógica por tipo de ingrediente ────────────────────────────────────────
+        //
+        // PORCIÓN (codporcion > 0):
+        //   1º  Fallback 2: buscar receta-paquete cuyo único componente sea la Presentación Uso.
+        //       → Ej: Fresa Congelada 2oz → Fresa paquete 10 unid  ✓
+        //   2º  Si no existe paquete (ej: Banano congelado que se convierte en tienda),
+        //       caer al flujo normal por unidades (Nivel 1 → Nivel 2 → Fallback 1).
+        //
+        // NO PORCIÓN:
+        //   1º  Flujo normal por unidades (Nivel 1 → Nivel 2 → Fallback 1).
+        //   2º  Si no encuentra, intentar Fallback 2 (receta-paquete).
 
-                // Nivel 2: unidad convertible + despacho=1 (mismo maestro)
-                if (!$ingr['presentacion_despacho'] && !empty($resolucionU['convertibles'])) {
-                    $ingr['presentacion_despacho'] = buscarPresentacionPorUnidades(
-                        $conn,
-                        $idMaestroResolucion,
-                        $resolucionU['convertibles'],
-                        'despacho'
-                    );
-                }
-            }
-
-            // Fallback 1: cualquier presentación de despacho del mismo maestro (sin restricción de unidad).
-            // NOTA: No se filtra Id_receta_producto IS NULL porque presentaciones
-            // compuestas (paquetes, cajas de cajas) pueden ser válidas para despacho.
-            if (!$ingr['presentacion_despacho']) {
-                $stmtAnyD = $conn->prepare("
-                    SELECT
-                        pp.id       AS id_presentacion,
-                        pp.SKU,
-                        pp.Nombre   AS NombreNuevo,
-                        pp.cantidad,
-                        pp.Activo   AS activoNuevo,
-                        u.nombre    AS unidadNueva,
-                        pm.id       AS id_maestro,
-                        pm.Nombre   AS productoMaestro,
-                        pp.presentacion_receta,
-                        pp.presentacion_basica_inventario,
-                        pp.presentacion_despacho
-                    FROM producto_presentacion pp
-                    LEFT JOIN producto_maestro pm ON pm.id = pp.id_producto_maestro
-                    LEFT JOIN unidad_producto u    ON u.id  = pp.id_unidad_producto
-                    WHERE pp.id_producto_maestro = ?
-                      AND pp.Activo = 'SI'
-                      AND pp.presentacion_despacho = 1
-                    LIMIT 1
-                ");
-                $stmtAnyD->execute([$idMaestroResolucion]);
-                $ingr['presentacion_despacho'] = $stmtAnyD->fetch(PDO::FETCH_ASSOC) ?: null;
-            }
-        }
-
-
-        // Fallback 2: receta de 1 componente = Presentación Uso.
-        // Se ejecuta SIEMPRE (fuera del bloque if maestro) porque no depende del maestro:
-        // cubre el caso donde el paquete tiene maestro diferente O el producto de uso
-        // es en sí una receta sin maestro (ej: Mix de Waffle, Paquete Mix Waffle de 10u).
-        if (!$ingr['presentacion_despacho']) {
+        // --- Paso A: para porciones, intentar primero la receta-paquete ---
+        if ($esPorcion) {
             $idPresentacionUso = $ingr['nuevo_producto']['id_presentacion'] ?? null;
             if ($idPresentacionUso) {
-                $stmtPkg = $conn->prepare("
+                $stmtPkgA = $conn->prepare("
                     SELECT
                         pp.id       AS id_presentacion,
                         pp.SKU,
@@ -385,8 +336,101 @@ try {
                       )
                     LIMIT 1
                 ");
-                $stmtPkg->execute([$idPresentacionUso]);
-                $ingr['presentacion_despacho'] = $stmtPkg->fetch(PDO::FETCH_ASSOC) ?: null;
+                $stmtPkgA->execute([$idPresentacionUso]);
+                $ingr['presentacion_despacho'] = $stmtPkgA->fetch(PDO::FETCH_ASSOC) ?: null;
+            }
+        }
+
+        // --- Paso B: flujo normal por unidades ---
+        // Se ejecuta si: (a) no es porción, O (b) es porción pero no encontró receta-paquete.
+        if (!$ingr['presentacion_despacho'] && $idMaestroResolucion) {
+            // Nivel 1: unidad directa + despacho=1 (mismo maestro)
+            $resolucionU = resolverUnidadERP($conn, $ingr['UnidadIngrediente']);
+            if ($resolucionU) {
+                $ingr['presentacion_despacho'] = buscarPresentacionPorUnidades(
+                    $conn,
+                    $idMaestroResolucion,
+                    $resolucionU['directos'],
+                    'despacho'
+                );
+
+                // Nivel 2: unidad convertible + despacho=1 (mismo maestro)
+                if (!$ingr['presentacion_despacho'] && !empty($resolucionU['convertibles'])) {
+                    $ingr['presentacion_despacho'] = buscarPresentacionPorUnidades(
+                        $conn,
+                        $idMaestroResolucion,
+                        $resolucionU['convertibles'],
+                        'despacho'
+                    );
+                }
+            }
+
+            // Fallback 1: cualquier presentación de despacho del mismo maestro (sin restricción de unidad).
+            if (!$ingr['presentacion_despacho']) {
+                $stmtAnyD = $conn->prepare("
+                    SELECT
+                        pp.id       AS id_presentacion,
+                        pp.SKU,
+                        pp.Nombre   AS NombreNuevo,
+                        pp.cantidad,
+                        pp.Activo   AS activoNuevo,
+                        u.nombre    AS unidadNueva,
+                        pm.id       AS id_maestro,
+                        pm.Nombre   AS productoMaestro,
+                        pp.presentacion_receta,
+                        pp.presentacion_basica_inventario,
+                        pp.presentacion_despacho
+                    FROM producto_presentacion pp
+                    LEFT JOIN producto_maestro pm ON pm.id = pp.id_producto_maestro
+                    LEFT JOIN unidad_producto u    ON u.id  = pp.id_unidad_producto
+                    WHERE pp.id_producto_maestro = ?
+                      AND pp.Activo = 'SI'
+                      AND pp.presentacion_despacho = 1
+                    LIMIT 1
+                ");
+                $stmtAnyD->execute([$idMaestroResolucion]);
+                $ingr['presentacion_despacho'] = $stmtAnyD->fetch(PDO::FETCH_ASSOC) ?: null;
+            }
+        }
+
+        // --- Paso C: Fallback 2 para NO porciones (ya se ejecutó en Paso A para porciones) ---
+        if (!$ingr['presentacion_despacho'] && !$esPorcion) {
+            $idPresentacionUso = $ingr['nuevo_producto']['id_presentacion'] ?? null;
+            if ($idPresentacionUso) {
+                $stmtPkgB = $conn->prepare("
+                    SELECT
+                        pp.id       AS id_presentacion,
+                        pp.SKU,
+                        pp.Nombre   AS NombreNuevo,
+                        pp.cantidad,
+                        pp.Activo   AS activoNuevo,
+                        u.nombre    AS unidadNueva,
+                        pm.id       AS id_maestro,
+                        pm.Nombre   AS productoMaestro,
+                        pp.presentacion_receta,
+                        pp.presentacion_basica_inventario,
+                        pp.presentacion_despacho
+                    FROM producto_presentacion pp
+                    LEFT JOIN producto_maestro pm ON pm.id = pp.id_producto_maestro
+                    LEFT JOIN unidad_producto u   ON u.id  = pp.id_unidad_producto
+                    WHERE pp.Id_receta_producto IS NOT NULL
+                      AND pp.Activo = 'SI'
+                      AND pp.presentacion_despacho = 1
+                      AND (
+                          SELECT COUNT(DISTINCT crp.id_presentacion_producto)
+                          FROM componentes_receta_producto crp
+                          WHERE crp.id_receta_producto_global = pp.Id_receta_producto
+                      ) = 1
+                      AND EXISTS (
+                          SELECT 1
+                          FROM componentes_receta_producto crp2
+                          WHERE crp2.id_receta_producto_global = pp.Id_receta_producto
+                            AND crp2.id_presentacion_producto = ?
+                      )
+                    LIMIT 1
+                ");
+                $stmtPkgB->execute([$idPresentacionUso]);
+                $ingr['presentacion_despacho'] = $stmtPkgB->fetch(PDO::FETCH_ASSOC) ?: null;
             }
         }
 
