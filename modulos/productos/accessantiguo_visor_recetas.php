@@ -1267,16 +1267,60 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                             </h6>
                             <p style="font-size:.79rem;margin-bottom:6px">
                                 Presenta la unidad de embalaje para logística y traslados
-                                (<code>presentacion_despacho = 1</code>). Se resuelve en <strong>4 niveles en cascada</strong>
-                                a partir del maestro de la Presentación Uso resuelta:
+                                (<code>presentacion_despacho = 1</code>). La búsqueda usa una
+                                <strong>lógica bifurcada según si el ingrediente es una porción</strong>
+                                para evitar que presentaciones de inventario físico (ej: bandejas en gramos)
+                                sean asignadas incorrectamente como despacho de una porción empacada:
                             </p>
+
+
+                            <!-- Tabla comparativa por tipo de ingrediente -->
+                            <div class="p-2 rounded mb-2" style="background:#e3f2fd;border-left:3px solid #1565c0;font-size:.77rem">
+                                <i class="fas fa-code-branch me-1" style="color:#1565c0"></i>
+                                <strong style="color:#1565c0">Orden de resolución según tipo de ingrediente</strong>
+                                <table class="table table-sm table-bordered mt-2 mb-0" style="font-size:.76rem;background:#fff">
+                                    <thead style="background:#bbdefb">
+                                        <tr>
+                                            <th style="width:120px">Tipo</th>
+                                            <th>Orden de pasos</th>
+                                            <th>Ejemplo</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><span style="background:#e3f2fd;color:#1565c0;border-radius:3px;padding:1px 5px;font-size:.72rem">porción</span><br><small>(<code>codporcion &gt; 0</code>)</small></td>
+                                            <td>
+                                                <strong>① Paso A</strong> — Busca primero la <em>receta-paquete</em>: presentación con
+                                                <code>Id_receta_producto IS NOT NULL</code>, <code>despacho=1</code>, con exactamente
+                                                1 componente = Presentación Uso.<br>
+                                                <strong>② Paso B</strong> — Si no existe paquete: Nivel 1 &rarr; Nivel 2 &rarr; Fallback 1 (flujo normal por unidad).
+                                            </td>
+                                            <td>
+                                                <strong>Con paquete:</strong><br>Fresa Congelada 2oz &rarr; <em>Fresa paquete 10 unid</em> ✓<br><br>
+                                                <strong>Sin paquete:</strong><br>Banano congelado &rarr; sin receta-paquete &rarr; busca por unidad &rarr; <em>Banano congelado unid</em>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td><em style="color:#555">no porción</em></td>
+                                            <td>
+                                                <strong>① Paso B</strong> — Flujo normal: Nivel 1 &rarr; Nivel 2 &rarr; Fallback 1.<br>
+                                                <strong>② Paso C</strong> — Si aún no encontró: Fallback 2 (receta-paquete como último recurso).
+                                            </td>
+                                            <td>
+                                                Naranja oz &rarr; busca despacho por unidad &rarr; <em>Naranja Dulce Cajilla 100u</em> ✓
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
                             <div class="row g-1 mb-2">
                                 <div class="col-md-6">
                                     <div class="p-2 rounded h-100" style="background:#fff8f2;border-left:3px solid #e65100;font-size:.77rem">
                                         <strong style="color:#e65100">Nivel 1 — Unidad directa</strong><br>
                                         Busca en el mismo maestro una presentación con <code>despacho=1</code>
                                         cuya unidad ERP coincide directamente con la unidad Access del ingrediente.<br>
-                                        <em>Ej: ingrediente en "Unid" → busca despacho con unidad "Unidades".</em>
+                                        <em>Ej: ingrediente en "Unid" &rarr; busca despacho con unidad "Unidades".</em>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
@@ -1284,7 +1328,7 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                                         <strong style="color:#bf360c">Nivel 2 — Unidad convertible</strong><br>
                                         Si el Nivel 1 falla, repite la búsqueda usando las unidades homologadas del
                                         mismo grupo de medida (según <code>conversion_unidad_producto</code>).<br>
-                                        <em>Ej: ingrediente en "oz" → busca despacho en "Libras".</em>
+                                        <em>Ej: ingrediente en "oz" &rarr; busca despacho en "Libras".</em>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
@@ -1292,31 +1336,29 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                                         <strong style="color:#c62828">Fallback 1 — Cualquier despacho del mismo maestro</strong><br>
                                         Si los niveles 1 y 2 fallan, acepta cualquier presentación del mismo
                                         <code>id_producto_maestro</code> con <code>despacho=1</code>, sin restricción de unidad.<br>
-                                        <em>Ej: Banano → Cajilla 100u (distinta unidad pero mismo maestro).</em>
+                                        <em>Ej: Banano congelado (sin paquete) &rarr; Banano congelado unid.</em>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="p-2 rounded h-100" style="background:#e8eaf6;border-left:3px solid #283593;font-size:.77rem">
-                                        <strong style="color:#283593">Fallback 2 — Receta de 1 componente = Presentación Uso</strong>
-                                        <span class="badge ms-1" style="background:#283593;color:#fff;font-size:.6rem">Siempre activo</span><br>
-                                        Corre <strong>independientemente del maestro</strong>. Cubre dos casos:<br>
-                                        <strong>① Paquete con maestro diferente:</strong><br>
-                                        <em>Ej: Vaso Ristra 25u (otro maestro) cuya receta es 1 componente = Vaso 16oz Unid.</em><br>
-                                        <strong>② Producto de uso sin maestro (es una receta):</strong><br>
-                                        <em>Ej: Mix de Waffle (receta sin maestro) → Paquete Mix Waffle 10u cuya receta es 1 componente = Mix de Waffle.</em><br>
-                                        <strong>Condición:</strong> <code>Id_receta_producto IS NOT NULL</code> +
-                                        <code>COUNT(componentes) = 1</code> + componente = <code>id_presentacion</code> del uso.
+                                        <strong style="color:#283593">Fallback 2 — Receta-paquete (componente = Presentación Uso)</strong><br>
+                                        <span class="badge" style="background:#1565c0;color:#fff;font-size:.6rem">1º para porciones</span>
+                                        <span class="badge ms-1" style="background:#283593;color:#fff;font-size:.6rem">último recurso para otros</span><br>
+                                        Busca una presentación con <code>Id_receta_producto IS NOT NULL</code>,
+                                        <code>despacho=1</code>, con exactamente 1 componente = Presentación Uso.<br>
+                                        <em>Ej: Fresa Congelada 2oz &rarr; Fresa paquete 10 unid.</em>
                                     </div>
                                 </div>
                             </div>
                             <div class="p-2 rounded" style="background:#fff3e0;border-left:3px solid #ff9800;font-size:.77rem">
                                 <i class="fas fa-exclamation-triangle me-1 text-warning"></i>
-                                <strong>Si muestra "Sin despacho":</strong> ninguno de los 4 niveles encontró una presentación válida.
+                                <strong>Si muestra "Sin despacho":</strong> ninguno de los pasos encontró una presentación válida.
                                 Verifica que exista un producto con <code>presentacion_despacho = 1</code> correctamente configurado
                                 en el ERP para ese ingrediente, o que su receta de paquete tenga exactamente 1 componente
                                 apuntando a la Presentación Uso.
                             </div>
                         </div>
+
 
                         <hr class="my-2">
 
