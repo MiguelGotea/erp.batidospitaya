@@ -10,6 +10,7 @@ if (!tienePermiso('campanas_wsp', 'vista', $cargoOperario)) {
     exit();
 }
 
+
 $puedeCrear = tienePermiso('campanas_wsp', 'nueva_campana', $cargoOperario);
 $puedeEliminar = tienePermiso('campanas_wsp', 'eliminar_campana', $cargoOperario);
 $puedeResetSesion = tienePermiso('campanas_wsp', 'resetear_sesion', $cargoOperario);
@@ -315,7 +316,9 @@ require_once '../../core/layout/header_universal.php';
                                     <div class="alert alert-warning py-2 small">
                                         <i class="bi bi-exclamation-triangle me-1"></i>
                                         <strong>Anti-ban:</strong> Delays de 45–90s entre mensajes.
-                                        <br><strong>Distribución:</strong> Los mensajes se envían en horarios <strong>aleatorios</strong> entre las 8:00 AM y 9:00 PM del día programado, nunca todos a la vez.
+                                        <br><strong>Distribución:</strong> Los mensajes se envían en horarios
+                                        <strong>aleatorios</strong> entre las 8:00 AM y 9:00 PM del día programado,
+                                        nunca todos a la vez.
                                     </div>
                                 </div>
                             </div>
@@ -395,8 +398,10 @@ require_once '../../core/layout/header_universal.php';
                                         <i class="bi bi-shield-exclamation me-2"></i> Anti-Ban
                                     </h6>
                                     <p class="small text-muted mb-0">
-                                        Cada mensaje se programa a una hora <strong>aleatoria diferente</strong> dentro del día (8:00 AM–9:00 PM),
-                                        nunca en ráfaga. Para campañas masivas (&gt;100 destinatarios) se crean sub-grupos
+                                        Cada mensaje se programa a una hora <strong>aleatoria diferente</strong> dentro
+                                        del día (8:00 AM–9:00 PM),
+                                        nunca en ráfaga. Para campañas masivas (&gt;100 destinatarios) se crean
+                                        sub-grupos
                                         con días de separación para máxima protección contra baneos.
                                     </p>
                                 </div>
@@ -431,7 +436,8 @@ require_once '../../core/layout/header_universal.php';
                     </div>
                     <div class="alert alert-info py-2 px-3 small">
                         <strong><i class="fas fa-info-circle me-1"></i> Distribución aleatoria:</strong>
-                        Cada mensaje se envía en un horario <strong>aleatorio diferente</strong> dentro del día programado
+                        Cada mensaje se envía en un horario <strong>aleatorio diferente</strong> dentro del día
+                        programado
                         (entre 8:00 AM y 9:00 PM), evitando rafágas que activan el sistema anti-spam de WhatsApp.
                     </div>
                 </div>
