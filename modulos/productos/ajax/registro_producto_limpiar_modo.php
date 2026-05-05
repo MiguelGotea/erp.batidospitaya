@@ -36,15 +36,13 @@ try {
     if ($modo === 'a_receta') {
         // -------------------------------------------------------
         // PRODUCTO → RECETA
-        // Limpiar campos de "producto presentación":
-        //   - cantidad       → NULL
-        //   - id_producto_maestro → NULL
-        //   - id_unidad_producto  → 9  (valor por defecto cuando es receta)
+        // Los campos de "producto presentación" no aplican cuando el modo es receta.
+        // Se ponen en NULL explícito: la semántica correcta es "no tiene unidad/maestro/cantidad".
         // -------------------------------------------------------
         $sql = "UPDATE producto_presentacion SET
                     cantidad             = NULL,
                     id_producto_maestro  = NULL,
-                    id_unidad_producto   = 9,
+                    id_unidad_producto   = NULL,
                     fecha_modificacion   = NOW()
                 WHERE id = :id";
         $stmt = $conn->prepare($sql);
@@ -56,6 +54,7 @@ try {
             'message' => 'Campos de producto presentación limpiados para modo receta',
             'modo'    => $modo
         ]);
+
 
     } else {
         // -------------------------------------------------------

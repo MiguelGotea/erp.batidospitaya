@@ -118,9 +118,9 @@ try {
         $stmt->execute([
             ':sku'               => $sku,
             ':nombre'            => $nombre,
-            // Si tiene receta: maestro y cantidad siempre NULL, unidad forzada a 9
+            // Si tiene receta: maestro, unidad y cantidad quedan NULL (no aplica para recetas)
             ':id_producto_maestro' => $tieneReceta ? null : (($idProductoMaestro > 0) ? $idProductoMaestro : null),
-            ':id_unidad_producto'  => $tieneReceta ? 9    : (($idUnidad > 0) ? $idUnidad : null),
+            ':id_unidad_producto'  => $tieneReceta ? null : (($idUnidad > 0) ? $idUnidad : null),
             ':es_vendible'       => $esVendible,
             ':es_comprable'      => $esComprable,
             ':es_fabricable'     => $esFabricable,

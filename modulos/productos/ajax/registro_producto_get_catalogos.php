@@ -46,6 +46,11 @@ try {
     $sqlTipos = "SELECT id, nombre, descripcion FROM tipo_receta_producto ORDER BY nombre";
     $stmtTipos = $conn->query($sqlTipos);
     $tiposReceta = $stmtTipos->fetchAll();
+
+    // Unidad por defecto para recetas (nombre = 'Unidades')
+    $sqlUnidadDefault = "SELECT id FROM unidad_producto WHERE LOWER(nombre) = 'unidades' LIMIT 1";
+    $stmtUnidadDefault = $conn->query($sqlUnidadDefault);
+    $idUnidadDefaultReceta = $stmtUnidadDefault->fetchColumn() ?: 9; // fallback al id 9
     
     // Productos Presentación (para componentes)
     $sqlProductos = "SELECT pp.id, pp.Nombre, pp.SKU, up.nombre as unidad
@@ -56,12 +61,13 @@ try {
     $productosPresent = $stmtProductos->fetchAll();
     
     echo json_encode([
-        'success' => true,
-        'productos_maestros' => $productosMaestros,
-        'unidades' => $unidades,
-        'grupos' => $grupos,
-        'tipos_receta' => $tiposReceta,
-        'productos_presentacion' => $productosPresent
+        'success'                  => true,
+        'productos_maestros'       => $productosMaestros,
+        'unidades'                 => $unidades,
+        'id_unidad_default_receta' => (int)$idUnidadDefaultReceta,
+        'grupos'                   => $grupos,
+        'tipos_receta'             => $tiposReceta,
+        'productos_presentacion'   => $productosPresent
     ]);
     
 } catch (Exception $e) {

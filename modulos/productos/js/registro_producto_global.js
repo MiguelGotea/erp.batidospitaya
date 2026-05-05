@@ -286,10 +286,10 @@ async function toggleReceta() {
         $('#contenedorCamposMaestros').hide();
         $('#productoMaestro, #unidad, #cantidad').removeAttr('required');
 
-        // Limpiar valores visuales
+        // Limpiar valores visuales (campo no aplica en modo receta)
         $('#productoMaestro').val('');
-        $('#cantidad').val('0.00');
-        $('#unidad').val('9'); // Unidad por defecto para recetas
+        $('#cantidad').val('');
+        $('#unidad').val(''); // NULL en BD → sin selección en UI
 
         // Si es producto existente, limpiar en BD
         if (idProductoActual > 0) {
