@@ -347,61 +347,63 @@ try {
     if (!empty($idsPP)) {
         $phPP = implode(',', array_fill(0, count($idsPP), '?'));
 
-        // Caso A: por maestro
-        $stmtDA = $conn->prepare("
-            SELECT pp.id                  AS id_pp,
-                   ppd.cantidad           AS d_cant,
-                   ppd.id_unidad_producto AS d_uid,
-                   pp.cantidad            AS pp_cant,
-                   pp.id_unidad_producto  AS pp_uid,
-                   ppd.Nombre             AS d_nombre,
-                   ud.abreviado           AS d_unidad
-            FROM producto_presentacion pp
-            INNER JOIN producto_presentacion ppd
-                   ON ppd.id_producto_maestro = pp.id_producto_maestro
-                  AND ppd.presentacion_despacho = 1
-                  AND ppd.Activo = 'SI'
-                  AND pp.id_producto_maestro IS NOT NULL
+        // ── Paso B primero: receta-paquete (presentación de despacho cuyo único componente es la presentación básica)
+        // Si existe un paquete configurado explícitamente, ese debe tener prioridad sobre cualquier
+        // presentación de despacho genérica por maestro.
+        $stmtDB = $conn->prepare("
+            SELECT crp.id_presentacion_producto AS id_pp,
+                   crp.cantidad                 AS d_receta_cant,
+                   ppd.Nombre                   AS d_nombre,
+                   ud.abreviado                 AS d_unidad
+            FROM producto_presentacion ppd
+            INNER JOIN componentes_receta_producto crp
+                   ON crp.id_receta_producto_global = ppd.Id_receta_producto
             LEFT  JOIN unidad_producto ud ON ud.id = ppd.id_unidad_producto
-            WHERE pp.id IN ($phPP) AND pp.Activo = 'SI'
-            GROUP BY pp.id
+            WHERE ppd.presentacion_despacho = 1 AND ppd.Activo = 'SI'
+              AND crp.id_presentacion_producto IN ($phPP)
+            GROUP BY crp.id_presentacion_producto
             ORDER BY ppd.id ASC
         ");
-        $stmtDA->execute(array_values($idsPP));
-        foreach ($stmtDA->fetchAll(PDO::FETCH_ASSOC) as $row) {
-            $uidPP = (int)$row['pp_uid']; $uidD = (int)$row['d_uid']; $df = null;
-            if ($uidPP === $uidD) {
-                $df = (float)$row['d_cant'] / max((float)$row['pp_cant'], 0.001);
-            } else {
-                $facConv = resolverFactorConversion_PS($uidPP, $uidD, $convIndex);
-                if ($facConv !== null && $facConv != 0)
-                    $df = (float)$row['d_cant'] / (max((float)$row['pp_cant'], 0.001) * $facConv);
-            }
-            if ($df !== null)
-                $despFMap[(int)$row['id_pp']] = ['factor'=>round($df,6), 'nombre'=>$row['d_nombre'], 'unidad'=>$row['d_unidad']];
-        }
+        $stmtDB->execute(array_values($idsPP));
+        foreach ($stmtDB->fetchAll(PDO::FETCH_ASSOC) as $row)
+            $despFMap[(int)$row['id_pp']] = ['factor' => (float)$row['d_receta_cant'], 'nombre' => $row['d_nombre'], 'unidad' => $row['d_unidad']];
 
-        // Caso B: por receta (fallback para los que no resolvieron con A)
+        // ── Paso A: por maestro (fallback para los que no resolvieron con B)
         $sinDF = array_values(array_filter($idsPP, fn($id) => !isset($despFMap[$id])));
         if (!empty($sinDF)) {
             $phSin = implode(',', array_fill(0, count($sinDF), '?'));
-            $stmtDB = $conn->prepare("
-                SELECT crp.id_presentacion_producto AS id_pp,
-                       crp.cantidad                 AS d_receta_cant,
-                       ppd.Nombre                   AS d_nombre,
-                       ud.abreviado                 AS d_unidad
-                FROM producto_presentacion ppd
-                INNER JOIN componentes_receta_producto crp
-                       ON crp.id_receta_producto_global = ppd.Id_receta_producto
+            $stmtDA = $conn->prepare("
+                SELECT pp.id                  AS id_pp,
+                       ppd.cantidad           AS d_cant,
+                       ppd.id_unidad_producto AS d_uid,
+                       pp.cantidad            AS pp_cant,
+                       pp.id_unidad_producto  AS pp_uid,
+                       ppd.Nombre             AS d_nombre,
+                       ud.abreviado           AS d_unidad
+                FROM producto_presentacion pp
+                INNER JOIN producto_presentacion ppd
+                       ON ppd.id_producto_maestro = pp.id_producto_maestro
+                      AND ppd.presentacion_despacho = 1
+                      AND ppd.Activo = 'SI'
+                      AND pp.id_producto_maestro IS NOT NULL
                 LEFT  JOIN unidad_producto ud ON ud.id = ppd.id_unidad_producto
-                WHERE ppd.presentacion_despacho = 1 AND ppd.Activo = 'SI'
-                  AND crp.id_presentacion_producto IN ($phSin)
-                GROUP BY crp.id_presentacion_producto
+                WHERE pp.id IN ($phSin) AND pp.Activo = 'SI'
+                GROUP BY pp.id
                 ORDER BY ppd.id ASC
             ");
-            $stmtDB->execute(array_values($sinDF));
-            foreach ($stmtDB->fetchAll(PDO::FETCH_ASSOC) as $row)
-                $despFMap[(int)$row['id_pp']] = ['factor'=>(float)$row['d_receta_cant'], 'nombre'=>$row['d_nombre'], 'unidad'=>$row['d_unidad']];
+            $stmtDA->execute(array_values($sinDF));
+            foreach ($stmtDA->fetchAll(PDO::FETCH_ASSOC) as $row) {
+                $uidPP = (int)$row['pp_uid']; $uidD = (int)$row['d_uid']; $df = null;
+                if ($uidPP === $uidD) {
+                    $df = (float)$row['d_cant'] / max((float)$row['pp_cant'], 0.001);
+                } else {
+                    $facConv = resolverFactorConversion_PS($uidPP, $uidD, $convIndex);
+                    if ($facConv !== null && $facConv != 0)
+                        $df = (float)$row['d_cant'] / (max((float)$row['pp_cant'], 0.001) * $facConv);
+                }
+                if ($df !== null)
+                    $despFMap[(int)$row['id_pp']] = ['factor' => round($df, 6), 'nombre' => $row['d_nombre'], 'unidad' => $row['d_unidad']];
+            }
         }
     }
 

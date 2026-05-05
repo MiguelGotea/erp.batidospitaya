@@ -346,15 +346,22 @@ try {
 
     /* ── 8.5 Calcular factor despacho por producto ────────── */
     foreach ($productos as &$p) {
-        $p['despacho_id']      = $p['d_id_a']   ?? $p['d_id_b']   ?? null;
-        $p['despacho_nombre']  = $p['d_nom_a']  ?? $p['d_nom_b']  ?? null;
-        $p['despacho_unidad']  = $p['d_uni_a']  ?? $p['d_uni_b']  ?? null;
-        $p['despacho_cant']    = $p['d_cant_a'] ?? $p['d_cant_b'] ?? null;
+        // ── Prioridad: Caso B (receta-paquete) sobre Caso A (maestro).
+        // Si existe un paquete configurado explícitamente para esta presentación,
+        // ese debe tener prioridad sobre la presentación de despacho genérica por maestro.
+        $p['despacho_id']     = $p['d_id_b']   ?? $p['d_id_a']   ?? null;
+        $p['despacho_nombre'] = $p['d_nom_b']  ?? $p['d_nom_a']  ?? null;
+        $p['despacho_unidad'] = $p['d_uni_b']  ?? $p['d_uni_a']  ?? null;
+        $p['despacho_cant']   = $p['d_cant_b'] ?? $p['d_cant_a'] ?? null;
 
         $despFactor = null;
 
-        // Si se resolvió por Maestro (Caso A)
-        if (!empty($p['d_id_a']) && (float)$p['d_cant_a'] > 0 && (float)$p['cant_pres'] > 0) {
+        // Si se resolvió por Receta (Caso B) — usar cantidad del componente en la receta
+        if (!empty($p['d_id_b']) && (float)$p['d_receta_cant_b'] > 0) {
+            $despFactor = (float)$p['d_receta_cant_b'];
+        }
+        // Si falló B pero hay Maestro (Caso A)
+        elseif (!empty($p['d_id_a']) && (float)$p['d_cant_a'] > 0 && (float)$p['cant_pres'] > 0) {
             $uidUso  = (int)$p['uid_uso'];
             $uidDesp = (int)$p['d_uid_a'];
             if ($uidUso === $uidDesp) {
@@ -365,12 +372,6 @@ try {
                     $despFactor = (float)$p['d_cant_a'] / ((float)$p['cant_pres'] * $facConv);
                 }
             }
-        }
-        // Si falló A pero hay Receta (Caso B)
-        elseif (!empty($p['d_id_b']) && (float)$p['d_receta_cant_b'] > 0) {
-            // En recetas de despacho, el factor es simplemente la cantidad del componente
-            // Ej: "Caja x 12" contiene 12 unidades de "Botella". Factor = 12.
-            $despFactor = (float)$p['d_receta_cant_b'];
         }
 
         $p['despacho_factor'] = $despFactor !== null ? round($despFactor, 6) : null;
