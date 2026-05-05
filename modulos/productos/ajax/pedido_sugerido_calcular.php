@@ -361,6 +361,11 @@ try {
             LEFT  JOIN unidad_producto ud ON ud.id = ppd.id_unidad_producto
             WHERE ppd.presentacion_despacho = 1 AND ppd.Activo = 'SI'
               AND crp.id_presentacion_producto IN ($phPP)
+              AND (
+                  SELECT COUNT(DISTINCT crp2.id_presentacion_producto)
+                  FROM componentes_receta_producto crp2
+                  WHERE crp2.id_receta_producto_global = ppd.Id_receta_producto
+              ) = 1
             GROUP BY crp.id_presentacion_producto
             ORDER BY ppd.id ASC
         ");

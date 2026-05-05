@@ -333,6 +333,11 @@ try {
                    WHERE ppd_sub_b.presentacion_despacho = 1
                      AND ppd_sub_b.Activo = 'SI'
                      AND crp_sub_b.id_presentacion_producto = pp.id
+                     AND (
+                         SELECT COUNT(DISTINCT crp_cnt.id_presentacion_producto)
+                         FROM componentes_receta_producto crp_cnt
+                         WHERE crp_cnt.id_receta_producto_global = ppd_sub_b.Id_receta_producto
+                     ) = 1
                    ORDER BY ppd_sub_b.id ASC LIMIT 1
                )
         LEFT JOIN componentes_receta_producto crp_b ON crp_b.id_receta_producto_global = ppd_b.Id_receta_producto AND crp_b.id_presentacion_producto = pp.id
