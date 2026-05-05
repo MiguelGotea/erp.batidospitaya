@@ -312,7 +312,10 @@ try {
             // Fallback 1: cualquier presentación de despacho del mismo maestro (sin restricción de unidad).
             // NOTA: No se filtra Id_receta_producto IS NULL porque presentaciones
             // compuestas (paquetes, cajas de cajas) pueden ser válidas para despacho.
-            if (!$ingr['presentacion_despacho']) {
+            // EXCEPCIÓN: si el ingrediente es una porción (codporcion > 0), saltarse este
+            // fallback genérico y pasar al Fallback 2 que resuelve la receta-paquete correcta.
+            $esPorcion = ($ingr['codporcion'] !== null && (int)$ingr['codporcion'] > 0);
+            if (!$ingr['presentacion_despacho'] && !$esPorcion) {
                 $stmtAnyD = $conn->prepare("
                     SELECT
                         pp.id       AS id_presentacion,

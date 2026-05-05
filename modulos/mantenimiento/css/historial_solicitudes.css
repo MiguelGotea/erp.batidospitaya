@@ -284,7 +284,7 @@ body {
 
 /* Panel de filtro estilo Excel - CORREGIDO */
 .filter-panel {
-    position: fixed;
+    position: absolute;
     background: white;
     border: 1px solid #ccc;
     border-radius: 4px;
