@@ -60,6 +60,36 @@ function resolverFactorConversion_PS(int $idOrigen, int $idDestino, array &$conv
     return $convIndex[$idOrigen][$idDestino] ?? null;
 }
 
+/**
+ * Cierre transitivo de conversiones (Floyd-Warshall).
+ * Permite resolver cadenas como oz → gr → kg sin necesidad de
+ * tener una fila directa oz→kg en conversion_unidad_producto.
+ * Llama DESPUÉS de poblar $convIndex con las filas de la BD.
+ */
+function cerrarConversionesTransitivas(array &$convIndex): void
+{
+    $units = array_unique(
+        array_merge(
+            array_keys($convIndex),
+            array_merge(...array_map('array_keys', array_values($convIndex)))
+        )
+    );
+    // Floyd-Warshall: para cada «nodo puente» k, propagar i→k→j
+    foreach ($units as $k) {
+        foreach ($units as $i) {
+            if (!isset($convIndex[$i][$k])) continue;
+            foreach ($units as $j) {
+                if (!isset($convIndex[$k][$j])) continue;
+                $nuevo = $convIndex[$i][$k] * $convIndex[$k][$j];
+                // Solo agregar si la ruta transitiva es nueva (no sobreescribir directas)
+                if (!isset($convIndex[$i][$j])) {
+                    $convIndex[$i][$j] = $nuevo;
+                }
+            }
+        }
+    }
+}
+
 function buscarPresentacionEnMaestro_PS(int $idMaestro, int $idUnidad, array &$presentPorMaestro): ?array
 {
     return $presentPorMaestro[$idMaestro][$idUnidad] ?? null;
@@ -251,6 +281,7 @@ try {
         $convIndex[(int) $c['i']][(int) $c['f']] = (float) $c['c'];
         $convIndex[(int) $c['f']][(int) $c['i']] = $c['c'] != 0 ? 1 / $c['c'] : 0;
     }
+    cerrarConversionesTransitivas($convIndex); // oz→gr→kg, etc.
 
     $presentPorMaestro = [];
     $idMs = array_unique(array_filter(array_column($diccionarioMap, 'id_m')));
