@@ -1,9 +1,9 @@
 /**
  * JavaScript para la herramienta de Reseñas de Google
  * Batidos Pitaya ERP
+ *
+ * Sync via GMB Worker (Node.js en VPS) — reemplaza el Google Apps Script anterior.
  */
-
-const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwMM2g7hdJSAkTDbteBUHC65EW0kJA8ZA_N5aOU8BcmKpaVM0uql0IStPOhLXFM3ERHPg/exec';
 
 let paginaActual = 1;
 let registrosPorPagina = 25;
@@ -15,6 +15,7 @@ let scrollTopInicial = 0;
 
 $(document).ready(function () {
     cargarResenas();
+    loadGmbStatus(); // Panel de control del bot GMB
 
     // Cerrar filtros solo si se hace clic fuera del panel Y del icono
     $(document).on('click', function (e) {
@@ -112,51 +113,149 @@ function generarEstrellas(rating) {
     return html;
 }
 
+// ── GMB Bot Control ───────────────────────────────────────────────────────────
+
+let gmbStatusInterval = null;
+
 /**
- * Inicia el proceso de actualización llamando al Google Script
+ * Carga el estado del último sync al cargar la página.
+ * Solo se llama si el panel #gmbBotPanel existe (usuario con permiso).
  */
-async function actualizarResenas() {
-    const result = await Swal.fire({
-        title: '¿Actualizar Reseñas?',
-        text: "Este proceso descargará las últimas reseñas desde Google Business. Puede tardar unos momentos.",
+async function loadGmbStatus() {
+    if (!document.getElementById('gmbBotPanel')) return;
+
+    try {
+        const res  = await $.ajax({ url: 'ajax/gmb_sync_status.php', type: 'GET', dataType: 'json' });
+        renderGmbStatus(res);
+    } catch (e) {
+        $('#gmbLastSyncInfo').text('No se pudo conectar con el worker.');
+    }
+}
+
+/**
+ * Renderiza el estado del bot en el panel superior.
+ */
+function renderGmbStatus(data) {
+    const infoEl  = $('#gmbLastSyncInfo');
+    const btnLog  = $('#btnVerLog');
+    const btnSync = $('#btnSyncNow');
+
+    if (data.running) {
+        infoEl.html('<span class="badge bg-warning text-dark me-1"><i class="fas fa-circle-notch fa-spin"></i> Sync en curso...</span>' +
+                    'Iniciado: ' + formatSyncTime(data.startedAt));
+        btnSync.prop('disabled', true).html('<i class="fas fa-circle-notch fa-spin me-1"></i> Sincronizando...');
+        // Polling automático mientras corre
+        if (!gmbStatusInterval) {
+            gmbStatusInterval = setInterval(loadGmbStatus, 4000);
+        }
+        return;
+    }
+
+    // Sync no está corriendo
+    clearInterval(gmbStatusInterval);
+    gmbStatusInterval = null;
+    btnSync.prop('disabled', false).html('<i class="fas fa-sync-alt me-1"></i> Sincronizar Ahora');
+
+    const last = data.lastSync;
+    if (!last) {
+        infoEl.text('Sin sincronizaciones registradas.');
+        return;
+    }
+
+    const result = last.result;
+    if (result && result.success && result.totals) {
+        const t = result.totals;
+        infoEl.html(
+            `Último sync: <strong>${formatSyncTime(last.finishedAt)}</strong> — ` +
+            `<span class="text-success">+${t.inserted} nuevas</span>, ` +
+            `<span class="text-primary">~${t.updated} actualizadas</span>, ` +
+            `<span class="text-danger">-${t.deleted} eliminadas</span>` +
+            (t.errors > 0 ? ` <span class="text-warning">(${t.errors} errores)</span>` : '')
+        );
+        btnLog.show();
+    } else if (result && !result.success) {
+        infoEl.html(`<span class="text-danger"><i class="fas fa-exclamation-triangle me-1"></i>Error en último sync: ${result.error || 'desconocido'}</span>`);
+        btnLog.show();
+    } else {
+        infoEl.text('Sin datos del último sync.');
+    }
+}
+
+function formatSyncTime(isoStr) {
+    if (!isoStr) return '-';
+    try {
+        return new Date(isoStr).toLocaleString('es-NI', { dateStyle: 'short', timeStyle: 'short' });
+    } catch { return isoStr; }
+}
+
+/**
+ * Dispara el sync manual.
+ */
+async function sincronizarAhora() {
+    const confirm = await Swal.fire({
+        title: '¿Sincronizar Reseñas?',
+        text: 'Se descargarán todas las reseñas desde Google Business Profile. Puede tardar varios minutos.',
         icon: 'question',
         showCancelButton: true,
         confirmButtonColor: '#51B8AC',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Sí, actualizar',
-        cancelButtonText: 'Cancelar'
+        cancelButtonColor:  '#6c757d',
+        confirmButtonText:  'Sí, sincronizar',
+        cancelButtonText:   'Cancelar'
     });
 
-    if (result.isConfirmed) {
-        Swal.fire({
-            title: 'Actualizando...',
-            text: 'Estamos conectando con Google Business, por favor espera.',
-            allowOutsideClick: false,
-            didOpen: () => {
-                Swal.showLoading();
-            }
-        });
+    if (!confirm.isConfirmed) return;
 
-        try {
-            await fetch(GOOGLE_SCRIPT_URL, { mode: 'no-cors' });
+    $('#btnSyncNow').prop('disabled', true).html('<i class="fas fa-circle-notch fa-spin me-1"></i> Iniciando...');
 
-            setTimeout(() => {
-                Swal.fire({
-                    title: 'Proceso Iniciado',
-                    text: 'Se ha enviado la señal de actualización. Los datos aparecerán en unos instantes.',
-                    icon: 'success',
-                    confirmButtonColor: '#51B8AC'
-                }).then(() => {
-                    cargarResenas();
-                });
-            }, 3000);
+    try {
+        const res = await $.ajax({ url: 'ajax/gmb_sync_trigger.php', type: 'POST', dataType: 'json' });
 
-        } catch (error) {
-            console.error('Error al actualizar:', error);
-            Swal.fire('Error', 'No se pudo iniciar el script de actualización.', 'error');
+        if (res.success) {
+            Swal.fire({
+                title: 'Sync Iniciado',
+                text: 'El bot está sincronizando las reseñas. El panel se actualizará automáticamente.',
+                icon: 'success',
+                confirmButtonColor: '#51B8AC',
+                timer: 3000,
+                timerProgressBar: true
+            });
+            // Comenzar polling
+            gmbStatusInterval = setInterval(loadGmbStatus, 4000);
+            loadGmbStatus();
+        } else if (res.running) {
+            Swal.fire('En curso', 'El sync ya está en ejecución. Espera a que termine.', 'info');
+            loadGmbStatus();
+        } else {
+            Swal.fire('Error', res.message || 'No se pudo iniciar el sync.', 'error');
+            $('#btnSyncNow').prop('disabled', false).html('<i class="fas fa-sync-alt me-1"></i> Sincronizar Ahora');
         }
+    } catch (e) {
+        Swal.fire('Error', 'No se pudo conectar con el servidor.', 'error');
+        $('#btnSyncNow').prop('disabled', false).html('<i class="fas fa-sync-alt me-1"></i> Sincronizar Ahora');
     }
 }
+
+/**
+ * Muestra el log del último sync en un modal.
+ */
+async function verLogSync() {
+    const modal = new bootstrap.Modal(document.getElementById('logSyncModal'));
+    $('#logSyncContent').text('Cargando...');
+    modal.show();
+
+    try {
+        const res = await $.ajax({ url: 'ajax/gmb_sync_status.php', type: 'GET', dataType: 'json' });
+        const log = res.lastSync?.result?.log;
+        if (Array.isArray(log) && log.length) {
+            $('#logSyncContent').text(log.join('\n'));
+        } else {
+            $('#logSyncContent').text('Sin log disponible.');
+        }
+    } catch (e) {
+        $('#logSyncContent').text('Error al cargar el log.');
+    }
+}
+
 
 // --- LÓGICA DE FILTROS ---
 

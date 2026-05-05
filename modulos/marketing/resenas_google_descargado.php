@@ -18,7 +18,8 @@ if (!tienePermiso('resenas_google_descargado', 'vista', $cargoOperario)) {
     exit();
 }
 
-$puedeActualizar = tienePermiso('resenas_google_descargado', 'actualizacion', $cargoOperario);
+$puedeActualizar  = tienePermiso('resenas_google_descargado', 'actualizacion', $cargoOperario);
+$puedeManejarBot  = tienePermiso('configuracion_bot_resenasgoogle', 'vista', $cargoOperario);
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -51,14 +52,53 @@ $puedeActualizar = tienePermiso('resenas_google_descargado', 'actualizacion', $c
             <?php echo renderHeader($usuario, false, 'Reseñas de Google - Historial'); ?>
 
             <div class="container-fluid p-4">
-                <div class="row mb-4">
-                    <div class="col-12 text-end">
-                        <?php if ($puedeActualizar): ?>
-                            <button class="btn btn-primary px-4 py-2" id="btnActualizar" onclick="actualizarResenas()">
-                                <i class="fas fa-sync-alt me-2"></i> Actualizar Datos
-                            </button>
-                        <?php endif; ?>
+
+                <?php if ($puedeManejarBot): ?>
+                <!-- ── Panel de Control del Bot GMB ─────────────────────────── -->
+                <div class="card border-0 shadow-sm mb-4" id="gmbBotPanel">
+                    <div class="card-body py-3 px-4">
+                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="gmb-bot-icon">
+                                    <i class="fab fa-google" style="font-size:1.4rem; color:#4285F4;"></i>
+                                </div>
+                                <div>
+                                    <div class="fw-semibold mb-0" style="font-size:.95rem;">Bot de Sincronización Google Reviews</div>
+                                    <div class="text-muted" style="font-size:.80rem;" id="gmbLastSyncInfo">
+                                        <span class="spinner-border spinner-border-sm me-1" role="status"></span>Cargando estado...
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-sm btn-outline-secondary" id="btnVerLog" onclick="verLogSync()" style="display:none;">
+                                    <i class="fas fa-list-alt me-1"></i> Ver Log
+                                </button>
+                                <button class="btn btn-sm btn-pitaya" id="btnSyncNow" onclick="sincronizarAhora()">
+                                    <i class="fas fa-sync-alt me-1"></i> Sincronizar Ahora
+                                </button>
+                            </div>
+                        </div>
                     </div>
+                </div>
+
+                <!-- Modal Log Sync -->
+                <div class="modal fade" id="logSyncModal" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                        <div class="modal-content border-0 shadow">
+                            <div class="modal-header" style="background:#1a1a2e; color:#fff;">
+                                <h6 class="modal-title mb-0"><i class="fas fa-terminal me-2"></i>Log del último Sync</h6>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body p-0">
+                                <pre id="logSyncContent" style="background:#1a1a2e; color:#a8ff78; font-size:.78rem; margin:0; padding:1rem; min-height:200px; max-height:500px; overflow-y:auto;">Cargando...</pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <?php endif; ?>
+
+                <div class="row mb-3">
+                    <div class="col-12"></div>
                 </div>
 
                 <div class="card border-0 shadow-sm resenas-container">
@@ -171,12 +211,12 @@ $puedeActualizar = tienePermiso('resenas_google_descargado', 'actualizacion', $c
                             <div class="card h-100 border-0 bg-light">
                                 <div class="card-body">
                                     <h6 class="text-success border-bottom pb-2 fw-bold">
-                                        <i class="fas fa-sync me-2"></i> Actualización
+                                        <i class="fas fa-sync me-2"></i> Sincronización Automática
                                     </h6>
                                     <p class="small text-muted mb-0">
-                                        El botón <strong>"Actualizar Datos"</strong> activa un script en la nube que
-                                        sincroniza
-                                        las nuevas reseñas directamente a esta tabla.
+                                        El bot sincroniza automáticamente las reseñas cada día a las 2am.
+                                        También puedes usar <strong>"Sincronizar Ahora"</strong> para
+                                        forzar una sincronización inmediata.
                                     </p>
                                 </div>
                             </div>
@@ -199,9 +239,27 @@ $puedeActualizar = tienePermiso('resenas_google_descargado', 'actualizacion', $c
         #pageHelpModal {
             z-index: 1060 !important;
         }
-
         .modal-backdrop {
             z-index: 1050 !important;
+        }
+        .btn-pitaya {
+            background: linear-gradient(135deg, #51B8AC, #0E544C);
+            color: #fff;
+            border: none;
+            transition: opacity .2s;
+        }
+        .btn-pitaya:hover {
+            opacity: .85;
+            color: #fff;
+        }
+        #gmbBotPanel {
+            border-left: 4px solid #4285F4 !important;
+        }
+        .gmb-bot-icon {
+            width: 38px; height: 38px;
+            background: #f0f4ff;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
         }
     </style>
 
