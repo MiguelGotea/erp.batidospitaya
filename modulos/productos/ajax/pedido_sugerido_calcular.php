@@ -422,8 +422,105 @@ try {
                     ];
             }
         }
-    }
 
+        // ── Paso C: para los que aún no tienen despacho, buscar via productos hermanos del mismo maestro.
+        // El diccionario puede haber mapeado el ingrediente a un producto diferente al que tiene
+        // la relación de despacho en la BD (ej: "Miel kg" en vez de "Miel oz"). Este paso amplía
+        // la búsqueda a TODOS los productos básicos del mismo maestro y sus relaciones de despacho.
+        $sinDespacho = array_values(array_filter($idsPP, fn($id) => !isset($despFMap[$id])));
+        if (!empty($sinDespacho)) {
+            $phSD = implode(',', array_fill(0, count($sinDespacho), '?'));
+            $stmtC = $conn->prepare("
+                SELECT orig.id                          AS id_pp_orig,
+                       sib.id                           AS id_pp_sib,
+                       sib.cantidad                     AS sib_cant,
+                       sib.id_unidad_producto           AS sib_uid,
+                       -- Despacho por maestro (desde el hermano)
+                       ppd_a.id                         AS d_id_a,
+                       ppd_a.Nombre                     AS d_nom_a,
+                       ppd_a.cantidad                   AS d_cant_a,
+                       ppd_a.id_unidad_producto         AS d_uid_a,
+                       ud_a.abreviado                   AS d_uni_a,
+                       -- Despacho por receta (desde el hermano)
+                       ppd_b.id                         AS d_id_b,
+                       ppd_b.Nombre                     AS d_nom_b,
+                       ud_b.abreviado                   AS d_uni_b,
+                       crp_b.cantidad                   AS d_receta_cant_b
+                FROM producto_presentacion orig
+                -- Hermanos: misma maestro, también básicos, distintos a orig
+                INNER JOIN producto_presentacion sib
+                       ON sib.id_producto_maestro = orig.id_producto_maestro
+                      AND sib.presentacion_basica_inventario = 1
+                      AND sib.Activo = 'SI'
+                      AND orig.id_producto_maestro IS NOT NULL
+                -- JOIN A desde el hermano
+                LEFT JOIN producto_presentacion ppd_a
+                       ON ppd_a.id = (
+                           SELECT s.id FROM producto_presentacion s
+                           WHERE s.id_producto_maestro = sib.id_producto_maestro
+                             AND s.presentacion_despacho = 1
+                             AND s.Activo = 'SI'
+                           ORDER BY s.id ASC LIMIT 1
+                       )
+                LEFT JOIN unidad_producto ud_a ON ud_a.id = ppd_a.id_unidad_producto
+                -- JOIN B desde el hermano (receta-paquete)
+                LEFT JOIN producto_presentacion ppd_b
+                       ON ppd_b.id = (
+                           SELECT s.id FROM producto_presentacion s
+                           INNER JOIN componentes_receta_producto c
+                                  ON c.id_receta_producto_global = s.Id_receta_producto
+                           WHERE s.presentacion_despacho = 1
+                             AND s.Activo = 'SI'
+                             AND c.id_presentacion_producto = sib.id
+                             AND (
+                                 SELECT COUNT(DISTINCT c2.id_presentacion_producto)
+                                 FROM componentes_receta_producto c2
+                                 WHERE c2.id_receta_producto_global = s.Id_receta_producto
+                             ) = 1
+                           ORDER BY s.id ASC LIMIT 1
+                       )
+                LEFT JOIN componentes_receta_producto crp_b
+                       ON crp_b.id_receta_producto_global = ppd_b.Id_receta_producto
+                      AND crp_b.id_presentacion_producto = sib.id
+                LEFT JOIN unidad_producto ud_b ON ud_b.id = ppd_b.id_unidad_producto
+                WHERE orig.id IN ($phSD)
+                  AND orig.Activo = 'SI'
+                  AND (ppd_a.id IS NOT NULL OR ppd_b.id IS NOT NULL)
+                ORDER BY (ppd_b.id IS NOT NULL) DESC, ppd_a.id ASC
+            ");
+            $stmtC->execute(array_values($sinDespacho));
+            $resolvedC = []; // solo tomar el primer resultado por id_pp_orig
+            foreach ($stmtC->fetchAll(PDO::FETCH_ASSOC) as $row) {
+                $idOrig = (int)$row['id_pp_orig'];
+                if (isset($resolvedC[$idOrig])) continue; // ya resuelto
+                $resolvedC[$idOrig] = true;
+                if (!empty($row['d_id_b']) && (float)$row['d_receta_cant_b'] > 0) {
+                    $despFMap[$idOrig] = [
+                        'factor' => (float)$row['d_receta_cant_b'],
+                        'nombre' => $row['d_nom_b'],
+                        'unidad' => $row['d_uni_b'],
+                    ];
+                } elseif (!empty($row['d_id_a']) && (float)$row['d_cant_a'] > 0 && (float)$row['sib_cant'] > 0) {
+                    $uidSib = (int)$row['sib_uid'];
+                    $uidD   = (int)$row['d_uid_a'];
+                    $df     = null;
+                    if ($uidSib === $uidD) {
+                        $df = (float)$row['d_cant_a'] / max((float)$row['sib_cant'], 0.001);
+                    } else {
+                        $facConv = resolverFactorConversion_PS($uidSib, $uidD, $convIndex);
+                        if ($facConv !== null && $facConv != 0)
+                            $df = (float)$row['d_cant_a'] / (max((float)$row['sib_cant'], 0.001) * $facConv);
+                    }
+                    if ($df !== null)
+                        $despFMap[$idOrig] = [
+                            'factor' => round($df, 6),
+                            'nombre' => $row['d_nom_a'],
+                            'unidad' => $row['d_uni_a'],
+                        ];
+                }
+            }
+        }
+    }
 
     $facC = ($capC!==null && $sumB>0) ? min(1.0, $capC/$sumB) : null;
     foreach ($res as &$p) {
