@@ -314,7 +314,7 @@ try {
             // compuestas (paquetes, cajas de cajas) pueden ser válidas para despacho.
             // EXCEPCIÓN: si el ingrediente es una porción (codporcion > 0), saltarse este
             // fallback genérico y pasar al Fallback 2 que resuelve la receta-paquete correcta.
-            $esPorcion = ($ingr['codporcion'] !== null && (int)$ingr['codporcion'] > 0);
+            $esPorcion = ($ingr['codporcion'] !== null && (int) $ingr['codporcion'] > 0);
             if (!$ingr['presentacion_despacho'] && !$esPorcion) {
                 $stmtAnyD = $conn->prepare("
                     SELECT
@@ -341,6 +341,7 @@ try {
                 $ingr['presentacion_despacho'] = $stmtAnyD->fetch(PDO::FETCH_ASSOC) ?: null;
             }
         }
+
 
         // Fallback 2: receta de 1 componente = Presentación Uso.
         // Se ejecuta SIEMPRE (fuera del bloque if maestro) porque no depende del maestro:
