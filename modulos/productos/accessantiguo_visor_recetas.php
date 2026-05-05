@@ -1297,7 +1297,7 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                                             </td>
                                             <td>
                                                 <strong>Con paquete:</strong><br>Fresa Congelada 2oz &rarr; <em>Fresa paquete 10 unid</em> ✓<br><br>
-                                                <strong>Sin paquete:</strong><br>Banano congelado &rarr; sin receta-paquete &rarr; busca por unidad &rarr; <em>Banano congelado unid</em>
+                                                <strong>Sin paquete:</strong><br>Banano congelado &rarr; sin receta-paquete &rarr; Fallback 1 (mismo maestro) &rarr; <em>Banano Cajilla 100u</em> ✓
                                             </td>
                                         </tr>
                                         <tr>
@@ -1336,17 +1336,20 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                                         <strong style="color:#c62828">Fallback 1 — Cualquier despacho del mismo maestro</strong><br>
                                         Si los niveles 1 y 2 fallan, acepta cualquier presentación del mismo
                                         <code>id_producto_maestro</code> con <code>despacho=1</code>, sin restricción de unidad.<br>
-                                        <em>Ej: Banano congelado (sin paquete) &rarr; Banano congelado unid.</em>
+                                        <em>Ej: Banano congelado (porción sin paquete) &rarr; <strong>Banano Cajilla 100u</strong> ✓</em><br>
+                                        <small style="color:#888">La cajilla comparte maestro con "Banano congelado unid" y tiene <code>despacho=1</code>.</small>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="p-2 rounded h-100" style="background:#e8eaf6;border-left:3px solid #283593;font-size:.77rem">
-                                        <strong style="color:#283593">Fallback 2 — Receta-paquete (componente = Presentación Uso)</strong><br>
+                                        <strong style="color:#283593">Fallback 2 — Receta-paquete de 1 solo componente</strong><br>
                                         <span class="badge" style="background:#1565c0;color:#fff;font-size:.6rem">1º para porciones</span>
                                         <span class="badge ms-1" style="background:#283593;color:#fff;font-size:.6rem">último recurso para otros</span><br>
                                         Busca una presentación con <code>Id_receta_producto IS NOT NULL</code>,
-                                        <code>despacho=1</code>, con exactamente 1 componente = Presentación Uso.<br>
-                                        <em>Ej: Fresa Congelada 2oz &rarr; Fresa paquete 10 unid.</em>
+                                        <code>despacho=1</code>, cuya receta tenga <strong>exactamente 1 componente</strong> = Presentación Uso.<br>
+                                        <small style="color:#c62828">⚠ La restricción <code>COUNT(componentes) = 1</code> es crítica: evita que recetas complejas (con múltiples ingredientes) sean identificadas erróneamente como paquetes de despacho.</small><br>
+                                        <em>Ej: Fresa Congelada 2oz &rarr; Fresa paquete 10 unid ✓</em><br>
+                                        <em>Banano congelado &rarr; ningún paquete exclusivo &rarr; no aplica (cae a Fallback 1).</em>
                                     </div>
                                 </div>
                             </div>
