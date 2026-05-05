@@ -298,6 +298,7 @@ try {
                 $m = array_merge($m, [
                     'id'                          => $ppBasica['id'],
                     'pp_cant'                     => $ppBasica['cantidad'],
+                    'n'                           => $ppBasica['Nombre'] ?? $m['n'],
                     'uid'                         => $uidBasica,
                     'uab'                         => $unidadPorId[$uidBasica]['abreviado'] ?? $m['uab'],
                     'presentacion'                => $ppBasica['presentacion'] ?? $m['presentacion'],
@@ -337,7 +338,10 @@ try {
                 $cons = round($cons * 2) / 2;
         }
         if (!isset($metaPP[$idPP]))
-            $metaPP[$idPP] = ['n' => $m['n'], 'u' => $presentacionFinal ?? ($unidadPorId[$uidERP]['abreviado'] ?? $m['uab']), 'cat' => $m['cat']];
+            // 'u' siempre usa la abreviatura de unidad del ERP.
+            // El campo $m['presentacion'] contiene el tipo interno ('despacho','basica','control')
+            // y NO debe usarse como etiqueta visible de unidad.
+            $metaPP[$idPP] = ['n' => $m['n'], 'u' => $unidadPorId[$uidERP]['abreviado'] ?? $m['uab'], 'cat' => $m['cat']];
         $conAgg[$idPP][$sem] = ($conAgg[$idPP][$sem] ?? 0) + $cons;
     }
 
