@@ -275,25 +275,122 @@ async function cargarDatosProducto(cacheBuster = '') {
 // TOGGLE RECETA
 // ============================================
 
-function toggleReceta() {
+async function toggleReceta() {
     const tieneReceta = $('#tieneReceta').is(':checked');
+
+    // ── ACTIVAR RECETA (Producto presentación → Receta) ──────────────────
     if (tieneReceta) {
+        // Limpiar UI
         $('#datosReceta').slideDown();
         $('#tipoReceta').attr('required', true);
-
-        // Ocultar campos maestros y quitar obligatoriedad
         $('#contenedorCamposMaestros').hide();
         $('#productoMaestro, #unidad, #cantidad').removeAttr('required');
 
-        // Asignar ID 9 (Unidades) automáticamente
-        $('#unidad').val('9');
+        // Limpiar valores visuales
+        $('#productoMaestro').val('');
+        $('#cantidad').val('0.00');
+        $('#unidad').val('9'); // Unidad por defecto para recetas
+
+        // Si es producto existente, limpiar en BD
+        if (idProductoActual > 0) {
+            try {
+                const res = await fetch('ajax/registro_producto_limpiar_modo.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: idProductoActual, modo: 'a_receta' })
+                });
+                const data = await res.json();
+                if (!data.success) {
+                    console.warn('Limpieza a_receta:', data.message);
+                }
+            } catch (err) {
+                console.error('Error limpiando modo receta:', err);
+            }
+        }
+
+    // ── DESACTIVAR RECETA (Receta → Producto presentación) ───────────────
     } else {
+        // Si hay un producto existente CON receta, pedir confirmación
+        const tieneRecetaCargada = componentesReceta.length > 0 ||
+                                   $('#nombreReceta').val().trim() !== '';
+
+        if (idProductoActual > 0 && tieneRecetaCargada) {
+            // Revertir el toggle mientras esperamos la confirmación
+            $('#tieneReceta').prop('checked', true);
+
+            const result = await Swal.fire({
+                title: '¿Eliminar la receta?',
+                html: 'Se eliminarán <strong>todos los componentes</strong> de la receta vinculada a este producto.<br><br>Esta acción no se puede deshacer.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                confirmButtonText: '<i class="bi bi-trash"></i> Sí, eliminar receta',
+                cancelButtonText: 'Cancelar'
+            });
+
+            if (!result.isConfirmed) {
+                // Usuario canceló → dejar toggle en ON y no hacer nada
+                return;
+            }
+
+            // Confirmo → desactivar toggle definitivamente
+            $('#tieneReceta').prop('checked', false);
+
+            // Limpiar en BD
+            try {
+                const res = await fetch('ajax/registro_producto_limpiar_modo.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: idProductoActual, modo: 'a_producto' })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    const Toast = Swal.mixin({
+                        toast: true, position: 'top-end',
+                        showConfirmButton: false, timer: 2500, timerProgressBar: true
+                    });
+                    Toast.fire({
+                        icon: 'success',
+                        title: `Receta eliminada (${data.componentes_eliminados} componente(s) borrado(s))`
+                    });
+                } else {
+                    Swal.fire('Error', data.message, 'error');
+                    // Revertir si falló el servidor
+                    $('#tieneReceta').prop('checked', true);
+                    return;
+                }
+            } catch (err) {
+                console.error('Error limpiando modo producto:', err);
+                Swal.fire('Error', 'No se pudo limpiar la receta en el servidor', 'error');
+                $('#tieneReceta').prop('checked', true);
+                return;
+            }
+        } else if (idProductoActual > 0) {
+            // Producto existente SIN receta cargada → limpiar igual por seguridad
+            try {
+                await fetch('ajax/registro_producto_limpiar_modo.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: idProductoActual, modo: 'a_producto' })
+                });
+            } catch (err) {
+                console.error('Error limpiando modo producto (sin receta):', err);
+            }
+        }
+
+        // Limpiar UI de receta
         $('#datosReceta').slideUp();
         $('#tipoReceta').removeAttr('required');
-
-        // Mostrar campos maestros y reponer obligatoriedad
         $('#contenedorCamposMaestros').show();
         $('#productoMaestro, #unidad, #cantidad').attr('required', true);
+
+        // Limpiar arreglo de componentes y UI de receta
+        componentesReceta = [];
+        renderizarComponentes();
+        actualizarBadges();
+        $('#nombreReceta').val('');
+        $('#tipoReceta').val('');
+        $('#descripcionReceta').val('');
     }
 }
 

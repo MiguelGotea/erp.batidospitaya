@@ -116,24 +116,25 @@ try {
 
         $stmt = $conn->prepare($sql);
         $stmt->execute([
-            ':sku' => $sku,
-            ':nombre' => $nombre,
-            ':id_producto_maestro' => ($idProductoMaestro > 0) ? $idProductoMaestro : null,
-            ':id_unidad_producto' => ($idUnidad > 0) ? $idUnidad : null,
-            ':es_vendible' => $esVendible,
-            ':es_comprable' => $esComprable,
-            ':es_fabricable' => $esFabricable,
-            ':id_subgrupo' => $idSubgrupo,
-            ':activo' => $activo,
-            ':cantidad' => ($tieneReceta && $cantidad == 0) ? null : $cantidad,
-            ':compra_tienda' => $compraTienda,
-            ':categoria_insumo' => $categoriaInsumo,
-            ':pres_basica' => $presBasica,
-            ':pres_despacho' => $presDespacho,
-            ':pres_receta' => $presReceta,
-            ':presentacion' => $presentacion,
-            ':usuario_mod' => $usuarioId,
-            ':id' => $id
+            ':sku'               => $sku,
+            ':nombre'            => $nombre,
+            // Si tiene receta: maestro y cantidad siempre NULL, unidad forzada a 9
+            ':id_producto_maestro' => $tieneReceta ? null : (($idProductoMaestro > 0) ? $idProductoMaestro : null),
+            ':id_unidad_producto'  => $tieneReceta ? 9    : (($idUnidad > 0) ? $idUnidad : null),
+            ':es_vendible'       => $esVendible,
+            ':es_comprable'      => $esComprable,
+            ':es_fabricable'     => $esFabricable,
+            ':id_subgrupo'       => $idSubgrupo,
+            ':activo'            => $activo,
+            ':cantidad'          => $tieneReceta ? null : $cantidad,
+            ':compra_tienda'     => $compraTienda,
+            ':categoria_insumo'  => $categoriaInsumo,
+            ':pres_basica'       => $presBasica,
+            ':pres_despacho'     => $presDespacho,
+            ':pres_receta'       => $presReceta,
+            ':presentacion'      => $presentacion,
+            ':usuario_mod'       => $usuarioId,
+            ':id'                => $id
         ]);
 
         $idProducto = $id;
@@ -242,10 +243,26 @@ try {
         ]);
 
     } else {
-        // Si NO tiene receta, asegurarse de limpiar el campo en el producto
+        // Sin receta: limpiar Id_receta_producto en el producto
         $sqlUpdateProductoReceta = "UPDATE producto_presentacion SET Id_receta_producto = NULL WHERE id = :id";
         $stmtUpdateProductoReceta = $conn->prepare($sqlUpdateProductoReceta);
         $stmtUpdateProductoReceta->execute([':id' => $idProducto]);
+
+        // Red de seguridad: eliminar cualquier componente huérfano vinculado
+        // a recetas que tengan este producto como presentación (por si el endpoint
+        // de limpieza no se ejecutó antes de guardar)
+        $sqlBuscarRecetaHuerfana = "SELECT id FROM receta_producto_global WHERE id_presentacion_producto = :id_p";
+        $stmtBuscarRecetaHuerfana = $conn->prepare($sqlBuscarRecetaHuerfana);
+        $stmtBuscarRecetaHuerfana->execute([':id_p' => $idProducto]);
+        $idsRecetasHuerfanas = $stmtBuscarRecetaHuerfana->fetchAll(PDO::FETCH_COLUMN);
+
+        if (!empty($idsRecetasHuerfanas)) {
+            $placeholders = implode(',', array_fill(0, count($idsRecetasHuerfanas), '?'));
+            $stmtDelCompHuerfanos = $conn->prepare(
+                "DELETE FROM componentes_receta_producto WHERE id_receta_producto_global IN ($placeholders)"
+            );
+            $stmtDelCompHuerfanos->execute($idsRecetasHuerfanas);
+        }
     }
 
     // GESTIONAR COMPONENTES (Si hay receta identificada o creada)
