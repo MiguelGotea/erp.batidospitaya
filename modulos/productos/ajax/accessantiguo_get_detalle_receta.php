@@ -283,11 +283,17 @@ try {
             $ingr['nuevo_producto']['variedades'] = $stmtVar->fetchAll(PDO::FETCH_ASSOC);
         }
 
-        // 4) Obtener Presentación Despacho (misma lógica que Presentación Uso)
+        // 4) Obtener Presentación Despacho
         $ingr['presentacion_despacho'] = null;
         $idMaestroResolucion = $ingr['nuevo_producto']['id_maestro'] ?? null;
 
-        if ($idMaestroResolucion) {
+        // Para porciones (codporcion > 0), saltarse Nivel 1/2 y Fallback 1 (búsqueda genérica
+        // por unidad) porque podrían devolver una presentación de inventario físico (ej: Bandeja).
+        // Las porciones deben resolverse exclusivamente vía Fallback 2 (receta-paquete cuyo
+        // único componente sea la Presentación Uso).
+        $esPorcion = ($ingr['codporcion'] !== null && (int) $ingr['codporcion'] > 0);
+
+        if ($idMaestroResolucion && !$esPorcion) {
             // Nivel 1: unidad directa + despacho=1 (mismo maestro)
             $resolucionU = resolverUnidadERP($conn, $ingr['UnidadIngrediente']);
             if ($resolucionU) {
@@ -312,10 +318,7 @@ try {
             // Fallback 1: cualquier presentación de despacho del mismo maestro (sin restricción de unidad).
             // NOTA: No se filtra Id_receta_producto IS NULL porque presentaciones
             // compuestas (paquetes, cajas de cajas) pueden ser válidas para despacho.
-            // EXCEPCIÓN: si el ingrediente es una porción (codporcion > 0), saltarse este
-            // fallback genérico y pasar al Fallback 2 que resuelve la receta-paquete correcta.
-            $esPorcion = ($ingr['codporcion'] !== null && (int) $ingr['codporcion'] > 0);
-            if (!$ingr['presentacion_despacho'] && !$esPorcion) {
+            if (!$ingr['presentacion_despacho']) {
                 $stmtAnyD = $conn->prepare("
                     SELECT
                         pp.id       AS id_presentacion,
