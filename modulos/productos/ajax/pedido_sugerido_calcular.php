@@ -256,7 +256,7 @@ try {
     $idMs = array_unique(array_filter(array_column($diccionarioMap, 'id_m')));
     if (!empty($idMs)) {
         $phM = implode(',', array_fill(0, count($idMs), '?'));
-        $stmtPP = $conn->prepare("SELECT id, id_producto_maestro, cantidad, id_unidad_producto, presentacion FROM producto_presentacion WHERE id_producto_maestro IN ($phM) AND Id_receta_producto IS NULL AND Activo='SI' AND presentacion_basica_inventario = 1");
+        $stmtPP = $conn->prepare("SELECT id, Nombre, id_producto_maestro, cantidad, id_unidad_producto, presentacion FROM producto_presentacion WHERE id_producto_maestro IN ($phM) AND Id_receta_producto IS NULL AND Activo='SI' AND presentacion_basica_inventario = 1");
         $stmtPP->execute(array_values($idMs));
         foreach ($stmtPP->fetchAll() as $pp) {
             $presentPorMaestro[(int) $pp['id_producto_maestro']][(int) $pp['id_unidad_producto']] = $pp;
