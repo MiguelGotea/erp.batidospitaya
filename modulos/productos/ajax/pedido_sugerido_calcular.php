@@ -339,9 +339,9 @@ try {
         }
         if (!isset($metaPP[$idPP]))
             // 'u' = campo presentacion de producto_presentacion (ej: 'rama', 'unid', 'oz', 'bolsa').
-            // Tras los redireccionamientos, $m['presentacion'] ya apunta a la presentación básica.
-            // Fallback a abreviado de unidad solo cuando presentacion es null.
-            $metaPP[$idPP] = ['n' => $m['n'], 'u' => $m['presentacion'] ?? ($unidadPorId[$uidERP]['abreviado'] ?? $m['uab']), 'cat' => $m['cat']];
+            // Si presentacion es NULL en la BD, se deja null → el JS muestra '—'.
+            // No se usa fallback a la abreviatura de unidad para evitar mostrar datos no configurados.
+            $metaPP[$idPP] = ['n' => $m['n'], 'u' => ($m['presentacion'] ?: null), 'cat' => $m['cat']];
         $conAgg[$idPP][$sem] = ($conAgg[$idPP][$sem] ?? 0) + $cons;
     }
 
