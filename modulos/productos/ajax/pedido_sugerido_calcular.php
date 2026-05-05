@@ -120,26 +120,28 @@ try {
     if (!empty($codCotBuscar)) {
         $phC = implode(',', array_fill(0, count($codCotBuscar), '?'));
 
-        // Paso A: resolución directa — presentacion_basica_inventario = 1
+        // Paso A: resolución directa — sin filtro por presentacion_basica_inventario
+        // (igual que inventario_get_data.php). Cuando la presentación resuelta no sea
+        // la básica, se corrige más adelante en el loop de consumo via maestro.
         $stmtD = $conn->prepare("
             SELECT d.CodCotizacion,
-                   pp.id                  AS id,
-                   pp.cantidad            AS pp_cant,
+                   pp.id                          AS id,
+                   pp.cantidad                    AS pp_cant,
                    pp.Id_receta_producto,
-                   pp.id_producto_maestro AS id_m,
-                   pp.Nombre              AS n,
-                   pp.categoria_insumo    AS cat,
-                   pp.presentacion        AS presentacion,
-                   u.id                   AS uid,
-                   u.abreviado            AS uab,
-                   pm.Nombre              AS mn
+                   pp.id_producto_maestro         AS id_m,
+                   pp.Nombre                      AS n,
+                   pp.categoria_insumo            AS cat,
+                   pp.presentacion                AS presentacion,
+                   pp.presentacion_basica_inventario,
+                   u.id                           AS uid,
+                   u.abreviado                    AS uab,
+                   pm.Nombre                      AS mn
             FROM diccionario_productos_legado d
             INNER JOIN producto_presentacion pp ON pp.id = d.id_producto_presentacion
             LEFT  JOIN unidad_producto u        ON u.id  = pp.id_unidad_producto
             LEFT  JOIN producto_maestro pm      ON pm.id = pp.id_producto_maestro
             WHERE d.CodCotizacion IN ($phC)
               AND pp.Activo = 'SI'
-              AND pp.presentacion_basica_inventario = 1
         ");
         $stmtD->execute(array_values($codCotBuscar));
         foreach ($stmtD->fetchAll() as $row)
@@ -281,6 +283,28 @@ try {
             $m = $diccionarioMap[(string) $cotMap[$ci]['p3']];
         if (!$m)
             continue;
+
+        // Si la presentación resuelta no es la básica de inventario (flag = 0)
+        // y tiene producto_maestro asignado, redirigir al id_pp de la presentación
+        // básica del mismo maestro. Mismo comportamiento que inventario_get_data.php.
+        if (empty($m['Id_receta_producto'])
+            && ($m['presentacion_basica_inventario'] ?? 1) != 1
+            && !empty($m['id_m'])
+        ) {
+            $basicasMaestro = $presentPorMaestro[(int) $m['id_m']] ?? [];
+            if (!empty($basicasMaestro)) {
+                $ppBasica = reset($basicasMaestro);
+                $uidBasica = (int) $ppBasica['id_unidad_producto'];
+                $m = array_merge($m, [
+                    'id'                          => $ppBasica['id'],
+                    'pp_cant'                     => $ppBasica['cantidad'],
+                    'uid'                         => $uidBasica,
+                    'uab'                         => $unidadPorId[$uidBasica]['abreviado'] ?? $m['uab'],
+                    'presentacion'                => $ppBasica['presentacion'] ?? $m['presentacion'],
+                    'presentacion_basica_inventario' => 1,
+                ]);
+            }
+        }
 
         $idPP = (int) $m['id'];
         $ppC = max((float) $m['pp_cant'], 0.001);
