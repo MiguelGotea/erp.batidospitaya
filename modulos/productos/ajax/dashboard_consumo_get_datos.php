@@ -402,6 +402,7 @@ try {
         return $presentPorMaestro[$idMaestro][$idUnidad] ?? null;
     }
 
+
     function calcularDesviacionEstandar(array $valores): float
     {
         $n = count($valores);
@@ -590,7 +591,8 @@ try {
 
     $sucIdsPresentes = [];
     foreach ($sucursalesPresentes as $nombre) {
-        if (isset($idsSucursales[$nombre])) $sucIdsPresentes[] = $idsSucursales[$nombre];
+        if (isset($idsSucursales[$nombre]))
+            $sucIdsPresentes[] = $idsSucursales[$nombre];
     }
 
     $configSucursales = []; // [cod_sucursal] => dias_stock_minimo
