@@ -1,6 +1,5 @@
 <?php
-require_once '../../includes/auth.php';
-require_once '../../includes/funciones.php';
+require_once '../../core/auth/auth.php';
 
 // Verificar que solo Operaciones pueda acceder
 if (!verificarAccesoCargo([11, 13, 28, 39, 30, 37, 49])) {
