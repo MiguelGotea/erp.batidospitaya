@@ -1134,7 +1134,7 @@ function obtenerTodosCargos()
 {
     global $conn;
 
-    $stmt = $conn->prepare("SELECT * FROM NivelesCargos ORDER BY Nombre");
+    $stmt = $conn->prepare("SELECT * FROM NivelesCargos WHERE CodNivelesCargos != 2 ORDER BY Nombre");
     $stmt->execute();
     return $stmt->fetchAll();
 }
