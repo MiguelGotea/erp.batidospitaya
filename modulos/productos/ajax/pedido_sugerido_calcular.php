@@ -542,6 +542,43 @@ try {
                     $despFMap[(int) $row['id_pp']] = ['factor' => round($df, 6), 'nombre' => $row['d_nombre'], 'unidad' => $row['d_unidad']];
             }
         }
+
+        // ── Paso C: receta-paquete de despacho cuyo componente pertenece al mismo maestro
+        //    (cubre cajillas registradas como receta con un componente diferente a la
+        //     presentación básica pero del mismo maestro — ej: Naranja Cajilla 100u cuya
+        //     receta contiene "Naranja Unidad" en vez de la presentación de oz).
+        $sinDFC = array_values(array_filter($idsPP, fn($id) => !isset($despFMap[$id])));
+        if (!empty($sinDFC)) {
+            $phSinC = implode(',', array_fill(0, count($sinDFC), '?'));
+            $stmtDC = $conn->prepare("
+                SELECT pp.id                  AS id_pp,
+                       ppd.Nombre             AS d_nombre,
+                       ud.abreviado           AS d_unidad,
+                       crp.cantidad           AS d_receta_cant
+                FROM producto_presentacion pp
+                INNER JOIN producto_presentacion ppd
+                       ON ppd.Id_receta_producto IS NOT NULL
+                      AND ppd.presentacion_despacho = 1
+                      AND ppd.Activo = 'SI'
+                INNER JOIN componentes_receta_producto crp
+                       ON crp.id_receta_producto_global = ppd.Id_receta_producto
+                INNER JOIN producto_presentacion pp_comp
+                       ON pp_comp.id = crp.id_presentacion_producto
+                      AND pp_comp.id_producto_maestro = pp.id_producto_maestro
+                      AND pp.id_producto_maestro IS NOT NULL
+                LEFT  JOIN unidad_producto ud ON ud.id = ppd.id_unidad_producto
+                WHERE pp.id IN ($phSinC)
+                  AND pp.Activo = 'SI'
+                GROUP BY pp.id
+                ORDER BY ppd.id ASC
+            ");
+            $stmtDC->execute(array_values($sinDFC));
+            foreach ($stmtDC->fetchAll(PDO::FETCH_ASSOC) as $row) {
+                $cant = (float) $row['d_receta_cant'];
+                if ($cant > 0)
+                    $despFMap[(int) $row['id_pp']] = ['factor' => round($cant, 6), 'nombre' => $row['d_nombre'], 'unidad' => $row['d_unidad']];
+            }
+        }
     }
 
     $facC = ($capC !== null && $sumB > 0) ? min(1.0, $capC / $sumB) : null;

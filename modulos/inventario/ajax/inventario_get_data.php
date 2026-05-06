@@ -333,13 +333,18 @@ try {
                ppd_a.cantidad    as d_cant_a,
                ppd_a.id_unidad_producto as d_uid_a,
                ud_a.abreviado    as d_uni_a,
-               -- Caso B: Despacho por Receta (Fallback)
+               -- Caso B: Despacho por Receta (componente = esta presentación exacta)
                ppd_b.id          as d_id_b,
                ppd_b.Nombre      as d_nom_b,
                ppd_b.cantidad    as d_cant_b,
                ppd_b.id_unidad_producto as d_uid_b,
                ud_b.abreviado    as d_uni_b,
-               crp_b.cantidad    as d_receta_cant_b
+               crp_b.cantidad    as d_receta_cant_b,
+               -- Caso C: Despacho por Receta (componente = cualquier presentación del mismo maestro)
+               ppd_c.id          as d_id_c,
+               ppd_c.Nombre      as d_nom_c,
+               ud_c.abreviado    as d_uni_c,
+               crp_c.cantidad    as d_receta_cant_c
         FROM producto_presentacion pp
         LEFT JOIN unidad_producto u ON u.id = pp.id_unidad_producto
         -- JOIN A: Por Maestro (Mismo producto_maestro con flag despacho=1)
@@ -353,7 +358,7 @@ try {
                    ORDER BY ppd_sub_a.id ASC LIMIT 1
                )
         LEFT JOIN unidad_producto ud_a ON ud_a.id = ppd_a.id_unidad_producto
-        -- JOIN B: Por Receta (Fallback 2: Despacho que contiene a pp como ingrediente)
+        -- JOIN B: Receta-paquete cuyo único componente es esta presentación exacta
         LEFT JOIN producto_presentacion ppd_b
                ON ppd_b.id = (
                    SELECT ppd_sub_b.id FROM producto_presentacion ppd_sub_b
@@ -370,6 +375,29 @@ try {
                )
         LEFT JOIN componentes_receta_producto crp_b ON crp_b.id_receta_producto_global = ppd_b.Id_receta_producto AND crp_b.id_presentacion_producto = pp.id
         LEFT JOIN unidad_producto ud_b ON ud_b.id = ppd_b.id_unidad_producto
+        -- JOIN C: Receta-paquete cuyo componente es cualquier presentación del mismo maestro
+        --         (cubre el caso: Naranja oz → Cajilla cuya receta tiene componente Naranja Unidad)
+        LEFT JOIN producto_presentacion ppd_c
+               ON ppd_c.id = (
+                   SELECT ppd_sub_c.id FROM producto_presentacion ppd_sub_c
+                   INNER JOIN componentes_receta_producto crp_sub_c ON crp_sub_c.id_receta_producto_global = ppd_sub_c.Id_receta_producto
+                   INNER JOIN producto_presentacion pp_comp_c ON pp_comp_c.id = crp_sub_c.id_presentacion_producto
+                   WHERE ppd_sub_c.presentacion_despacho = 1
+                     AND ppd_sub_c.Activo = 'SI'
+                     AND ppd_sub_c.Id_receta_producto IS NOT NULL
+                     AND pp_comp_c.id_producto_maestro = pp.id_producto_maestro
+                     AND pp.id_producto_maestro IS NOT NULL
+                   ORDER BY ppd_sub_c.id ASC LIMIT 1
+               )
+        LEFT JOIN componentes_receta_producto crp_c ON crp_c.id_receta_producto_global = ppd_c.Id_receta_producto
+                   AND crp_c.id_presentacion_producto = (
+                       SELECT pp_comp2.id FROM producto_presentacion pp_comp2
+                       INNER JOIN componentes_receta_producto crp2 ON crp2.id_presentacion_producto = pp_comp2.id
+                       WHERE crp2.id_receta_producto_global = ppd_c.Id_receta_producto
+                         AND pp_comp2.id_producto_maestro = pp.id_producto_maestro
+                       LIMIT 1
+                   )
+        LEFT JOIN unidad_producto ud_c ON ud_c.id = ppd_c.id_unidad_producto
         WHERE pp.presentacion_basica_inventario = 1
           AND pp.Activo = 'SI'
         ORDER BY pp.categoria_insumo ASC, pp.Nombre ASC
@@ -379,21 +407,26 @@ try {
 
     /* ── 8.5 Calcular factor despacho por producto ────────── */
     foreach ($productos as &$p) {
-        // ── Prioridad: Caso B (receta-paquete) sobre Caso A (maestro).
-        // Si existe un paquete configurado explícitamente para esta presentación,
-        // ese debe tener prioridad sobre la presentación de despacho genérica por maestro.
-        $p['despacho_id']     = $p['d_id_b']   ?? $p['d_id_a']   ?? null;
-        $p['despacho_nombre'] = $p['d_nom_b']  ?? $p['d_nom_a']  ?? null;
-        $p['despacho_unidad'] = $p['d_uni_b']  ?? $p['d_uni_a']  ?? null;
-        $p['despacho_cant']   = $p['d_cant_b'] ?? $p['d_cant_a'] ?? null;
+        // ── Prioridad: Caso B (receta componente exacto) > Caso C (receta mismo maestro) > Caso A (maestro).
+        // B y C tienen precedencia sobre A porque representan configuraciones explícitas de empaque.
+        $usarC = !empty($p['d_id_c']) && empty($p['d_id_b']);
+
+        $p['despacho_id']     = $p['d_id_b']   ?? ($usarC ? $p['d_id_c']   : null) ?? $p['d_id_a']   ?? null;
+        $p['despacho_nombre'] = $p['d_nom_b']  ?? ($usarC ? $p['d_nom_c']  : null) ?? $p['d_nom_a']  ?? null;
+        $p['despacho_unidad'] = $p['d_uni_b']  ?? ($usarC ? $p['d_uni_c']  : null) ?? $p['d_uni_a']  ?? null;
+        $p['despacho_cant']   = $p['d_cant_b'] ?? null;
 
         $despFactor = null;
 
-        // Si se resolvió por Receta (Caso B) — usar cantidad del componente en la receta
+        // Caso B: componente exacto — usar cantidad del componente en la receta
         if (!empty($p['d_id_b']) && (float)$p['d_receta_cant_b'] > 0) {
             $despFactor = (float)$p['d_receta_cant_b'];
         }
-        // Si falló B pero hay Maestro (Caso A)
+        // Caso C: componente mismo maestro — usar cantidad del componente en la receta
+        elseif ($usarC && (float)$p['d_receta_cant_c'] > 0) {
+            $despFactor = (float)$p['d_receta_cant_c'];
+        }
+        // Caso A: por maestro — calcular factor con conversión de unidades si es necesario
         elseif (!empty($p['d_id_a']) && (float)$p['d_cant_a'] > 0 && (float)$p['cant_pres'] > 0) {
             $uidUso  = (int)$p['uid_uso'];
             $uidDesp = (int)$p['d_uid_a'];
@@ -422,7 +455,11 @@ try {
             $p['d_cant_b'],
             $p['d_uid_b'],
             $p['d_uni_b'],
-            $p['d_receta_cant_b']
+            $p['d_receta_cant_b'],
+            $p['d_id_c'],
+            $p['d_nom_c'],
+            $p['d_uni_c'],
+            $p['d_receta_cant_c']
         );
     }
     unset($p);

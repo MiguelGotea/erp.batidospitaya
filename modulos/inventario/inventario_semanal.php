@@ -155,18 +155,24 @@ $version = mt_rand(1, 10000);
                             <i class="bi bi-truck"></i> Presentación de Despacho y Rastreo de Conversiones
                         </h6>
                         <p class="text-secondary small mb-2">
-                            Stocks y pedido se expresan en <b>unidades de despacho</b> (Cajilla, Bolsa, Kg…). El sistema las resuelve en dos pasos:
+                            Stocks y pedido se expresan en <b>unidades de despacho</b> (Cajilla, Bolsa, Kg…). El sistema las resuelve en <b>tres pasos</b> en orden de prioridad:
                         </p>
                         <div class="row g-2 mb-3">
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <div class="p-2 rounded-2 border h-100" style="background:#dcfce7;">
-                                    <div class="fw-bold small mb-1" style="color:#166534;"><i class="bi bi-1-circle-fill me-1"></i>Paso B — Receta-Paquete <span class="badge bg-success ms-1" style="font-size:9px;">Prioridad</span></div>
+                                    <div class="fw-bold small mb-1" style="color:#166534;"><i class="bi bi-1-circle-fill me-1"></i>Paso B — Receta-Paquete Exacta <span class="badge bg-success ms-1" style="font-size:9px;">Prioridad</span></div>
                                     <p class="small text-muted mb-0">Presentación con <code>presentacion_despacho=1</code> y receta con <b>exactamente 1 componente</b> = la unidad básica. El factor es la cantidad en esa receta (ej: 100 × Banano unid → factor 100). No requiere conversión de unidades.</p>
                                 </div>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-4">
+                                <div class="p-2 rounded-2 border h-100" style="background:#fefce8;">
+                                    <div class="fw-bold small mb-1" style="color:#854d0e;"><i class="bi bi-2-circle-fill me-1"></i>Paso C — Receta-Paquete por Maestro <span class="badge bg-warning text-dark ms-1" style="font-size:9px;">Nuevo</span></div>
+                                    <p class="small text-muted mb-0">Si la receta de despacho tiene como componente <b>otra presentación del mismo maestro</b> (no la básica exacta), igual se detecta. Ej: <b>Naranja Cajilla 100u</b> → receta contiene "Naranja Unidad" (mismo maestro, distinta presentación que "Naranja oz").</p>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
                                 <div class="p-2 rounded-2 border h-100" style="background:#f0fdf4;">
-                                    <div class="fw-bold small mb-1" style="color:#166534;"><i class="bi bi-2-circle-fill me-1"></i>Paso A — Por Producto Maestro <span class="badge bg-secondary ms-1" style="font-size:9px;">Fallback</span></div>
+                                    <div class="fw-bold small mb-1" style="color:#166534;"><i class="bi bi-3-circle-fill me-1"></i>Paso A — Por Producto Maestro <span class="badge bg-secondary ms-1" style="font-size:9px;">Fallback</span></div>
                                     <p class="small text-muted mb-0">Si no hay receta-paquete, busca otra presentación del mismo <code>producto_maestro</code> con <code>presentacion_despacho=1</code>. Factor = <code>cantidad_despacho / (cantidad_básica × conversión_unidades)</code>.</p>
                                 </div>
                             </div>
@@ -183,6 +189,7 @@ $version = mt_rand(1, 10000);
                             <div class="fw-bold small mb-1 text-danger"><i class="bi bi-x-octagon me-1"></i>Si la presentación de despacho no aparece para un producto</div>
                             <ol class="small text-muted mb-0">
                                 <li>Verificar que exista una presentación con <code>presentacion_despacho=1</code> bajo el mismo producto maestro.</li>
+                                <li>Si la cajilla/paquete es una receta, verificar que algún componente pertenezca al mismo <code>id_producto_maestro</code> (el Paso C lo detecta automáticamente).</li>
                                 <li>Si las unidades son distintas (ej: Unidad ≠ Cajilla), agregar la conversión directa o transitiva en <code>conversion_unidad_producto</code>.</li>
                                 <li>Alternativa sin conversiones: configurar una receta-paquete (Paso B).</li>
                             </ol>
