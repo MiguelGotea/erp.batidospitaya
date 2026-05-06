@@ -165,7 +165,7 @@ function renderizarTabla(res, semInv) {
                     <input type="number" class="form-control form-control-sm input-inv-pres" value="${invPres}" ${readonlyAttr} step="0.01">
                 </td>
                 <td class="small text-muted">
-                    ${p.despacho_nombre ? `<i class="bi bi-truck me-1"></i>${p.despacho_nombre}` : ''}
+                    ${p.despacho_nombre ? p.despacho_nombre : ''}
                 </td>
                 <td class="col-inv-despacho">${calcControl}</td>
                 <td class="bg-light">${fmt(p._stock_min)}</td>
