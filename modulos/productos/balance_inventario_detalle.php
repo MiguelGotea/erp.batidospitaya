@@ -299,24 +299,7 @@ try {
             font-style: italic;
         }
 
-        .bi-search {
-            background: var(--neu-bg);
-            border: none;
-            border-radius: 14px;
-            padding: .8rem 1.2rem;
-            font-size: .9rem;
-            color: var(--neu-text-primary);
-            box-shadow: inset 4px 4px 8px var(--neu-shadow-dark),
-                inset -4px -4px 8px var(--neu-shadow-light);
-            transition: all .2s ease;
-        }
 
-        .bi-search:focus {
-            outline: none;
-            box-shadow: inset 5px 5px 10px var(--neu-shadow-dark),
-                inset -5px -5px 10px var(--neu-shadow-light);
-            border-left: 4px solid var(--neu-accent);
-        }
 
         /* ── Consumo Teórico (Auditoría por Facturación) ─────── */
         .bd-sec-consumo_teo {
@@ -821,11 +804,7 @@ try {
             const cont = document.getElementById('bdSecciones');
             cont.innerHTML = '';
 
-            // Buscar campo de búsqueda global
-            const searchWrap = document.createElement('div');
-            searchWrap.className = 'mb-4';
-            searchWrap.innerHTML = `<input type="text" class="bi-search w-100" id="bdBusqueda" placeholder="Filtrar registros (sucursal, fecha, CodCotizacion, producto…)">`;
-            cont.appendChild(searchWrap);
+
 
             ORD_TIPO.forEach(tipo => {
                 const rows = porTipo[tipo] || [];
@@ -879,7 +858,7 @@ try {
                 rows.forEach(r => {
                     const convBadge = `<span class="bd-conv-badge bd-conv-${esc(r.tipo_conversion)}">${esc(r.tipo_conversion)}</span>`;
                     const tr = document.createElement('tr');
-                    tr.dataset.search = [r.semana, r.fecha, r.suc_nombre, r.cod_cotizacion, r.nombre_original || '', r.tipo_conversion].join(' ').toLowerCase();
+
                     tr.innerHTML = `
                 <td class="td-center">${r.semana}</td>
                 <td>${esc(r.fecha)}</td>
@@ -896,13 +875,7 @@ try {
                 });
             });
 
-            // Búsqueda global
-            document.getElementById('bdBusqueda').addEventListener('input', function () {
-                const q = this.value.toLowerCase();
-                document.querySelectorAll('#bdSecciones tbody tr[data-search]').forEach(tr => {
-                    tr.style.display = (!q || tr.dataset.search.includes(q)) ? '' : 'none';
-                });
-            });
+
         }
 
 
@@ -1009,10 +982,8 @@ try {
                     ? `<span style="font-size:.6rem;background:#ffe082;border-radius:2px;padding:1px 3px" title="Crudo:${f.consumo_crudo}">Δ${(Math.round(parseFloat(f.consumo_crudo) * 2) / 2).toFixed(1)}</span>`
                     : '';
 
-                const srch = esc([f.fecha, f.sucursal, f.nombre_batido, f.nombre_ingrediente, f.nivel, f.semana].join(' ').toLowerCase());
-
-                tbody += `<tr style="font-size:.72rem;${rowBg}" data-search="${srch}">
-            <td class="td-center">${f.semana}</td>
+                tbody += `<tr style="font-size:.72rem;${rowBg}">
+                    <td class="td-center">${f.semana}</td>
             <td style="white-space:nowrap">${esc(f.fecha)}</td>
             <td style="font-weight:600;font-size:.7rem">${esc(f.sucursal)}</td>
             <td style="max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(f.nombre_batido)}">${esc(f.nombre_batido)}</td>
@@ -1042,10 +1013,7 @@ try {
         ${infoHtml}
         ${leyendaHtml}
         ${alertaHtml}
-        <div class="mb-3">
-            <input type="text" class="bi-search w-100" id="bdCteoBusqueda"
-                   placeholder="Filtrar por fecha, batido, ingrediente, sucursal, nivel…">
-        </div>
+
         <div class="bd-tbl-wrap" style="max-height:520px">
             <table class="bd-tbl">
                 <thead>${thead}</thead>
@@ -1053,13 +1021,7 @@ try {
             </table>
         </div>`;
 
-            // Búsqueda
-            document.getElementById('bdCteoBusqueda').addEventListener('input', function () {
-                const q = this.value.toLowerCase();
-                document.querySelectorAll('#bdCteoTbody tr[data-search]').forEach(tr => {
-                    tr.style.display = (!q || tr.dataset.search.includes(q)) ? '' : 'none';
-                });
-            });
+
         }
 
         // ── Inicio ────────────────────────────────────────────────────
