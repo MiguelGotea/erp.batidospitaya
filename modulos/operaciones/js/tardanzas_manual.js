@@ -199,3 +199,60 @@ document.getElementById('nueva_foto').addEventListener('change', function (e) {
         preview.style.display = 'none';
     }
 });
+
+// =============================================
+// MODAL EDITAR TARDANZA
+// =============================================
+
+function mostrarModalEditarTardanza(id, codOperario, nombre, sucursal, fecha, tipoJustificacion, estado, observaciones, fotoPath) {
+    document.getElementById('editar_id').value = id;
+    document.getElementById('editar_cod_operario').value = codOperario;
+    document.getElementById('editar_nombre').textContent = nombre;
+    document.getElementById('editar_sucursal').textContent = sucursal;
+    document.getElementById('editar_fecha').textContent = formatearFechaLocal(fecha);
+    document.getElementById('editar_tipo_justificacion').textContent = tipoJustificacion.replace('_', ' ');
+    document.getElementById('editar_estado').value = estado;
+    document.getElementById('editar_observaciones').value = observaciones || '';
+    const fotoPreview = document.getElementById('editar_foto_preview');
+    const fotoLink = document.getElementById('editar_foto_link');
+    const fotoContainer = document.getElementById('foto-container');
+    if (fotoPath) {
+        const fotoUrl = `uploads/tardanzas/`;
+        fotoPreview.src = fotoUrl;
+        fotoPreview.style.display = 'block';
+        fotoLink.href = fotoUrl;
+        fotoLink.style.display = 'inline-block';
+        fotoContainer.style.display = 'block';
+    } else {
+        fotoPreview.style.display = 'none';
+        fotoLink.style.display = 'none';
+        fotoContainer.style.display = 'none';
+    }
+    Promise.all([
+        fetch(`obtener_horario_programado.php?cod_operario=&fecha=`).then(r => r.json()),
+        fetch(`obtener_marcaciones.php?cod_operario=&fecha=`).then(r => r.json())
+    ]).then(([horario, marcaciones]) => {
+        const entradaProgramada = horario.hora_entrada ? formatoHoraAmPm(horario.hora_entrada) : 'No';
+        const salidaProgramada = horario.hora_salida ? formatoHoraAmPm(horario.hora_salida) : 'No';
+        document.getElementById('editar_entrada_programada').textContent = entradaProgramada;
+        document.getElementById('editar_salida_programada').textContent = salidaProgramada;
+        const entradaMarcada = marcaciones.hora_ingreso ? formatoHoraAmPm(marcaciones.hora_ingreso) : 'No marco';
+        const salidaMarcada = marcaciones.hora_salida ? formatoHoraAmPm(marcaciones.hora_salida) : 'No marco';
+        document.getElementById('editar_entrada_marcada').textContent = entradaMarcada;
+        document.getElementById('editar_salida_marcada').textContent = salidaMarcada;
+    }).catch(error => {
+        console.error('Error al obtener datos:', error);
+        ['editar_entrada_programada','editar_salida_programada','editar_entrada_marcada','editar_salida_marcada'].forEach(id => document.getElementById(id).textContent = 'Error');
+    });
+    const urlParams = new URLSearchParams(window.location.search);
+    document.querySelector('#formEditarTardanza input[name="sucursal"]').value = urlParams.get('sucursal') || '';
+    document.querySelector('#formEditarTardanza input[name="desde"]').value = urlParams.get('desde') || '';
+    document.querySelector('#formEditarTardanza input[name="hasta"]').value = urlParams.get('hasta') || '';
+    document.getElementById('modalEditarTardanza').style.display = 'flex';
+    document.querySelector('#modalEditarTardanza .modal-content').scrollTop = 0;
+}
+
+function cerrarModal() {
+    document.getElementById('modalNuevaTardanza').style.display = 'none';
+    document.getElementById('modalEditarTardanza').style.display = 'none';
+}

@@ -21,6 +21,7 @@ verificarAutenticacion();
 
 $usuario = obtenerUsuarioActual();
 
+
 if (!verificarAccesoCargo([5, 46, 43, 16, 8, 13, 28, 39, 30, 37, 49])) {
     header('Location: ../index.php');
     exit();
@@ -2631,7 +2632,7 @@ function contarTardanzasReportadas($codOperario, $codSucursal, $fechaDesde, $fec
         const operariosData = [
             { id: 0, nombre: 'Todos los colaboradores' },
             <?php foreach ($operarios as $op): ?>
-                                                    { id: <?php echo $op['CodOperario']; ?>, nombre: '<?php echo addslashes($op['nombre_completo']); ?>' },
+                                                        { id: <?php echo $op['CodOperario']; ?>, nombre: '<?php echo addslashes($op['nombre_completo']); ?>' },
             <?php endforeach; ?>
         ];
 
