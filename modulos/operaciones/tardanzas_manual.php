@@ -2201,7 +2201,7 @@ function contarTardanzasReportadas($codOperario, $codSucursal, $fechaDesde, $fec
 
             <div class="filters-container">
                 <div class="filters-form">
-                    <?php if ($esAdmin || !verificarAccesoCargo([5, 43, 2, 46])): ?>
+                    <?php if (!verificarAccesoCargo([5, 43, 2, 46])): ?>
                         <div class="filter-group">
                             <label for="sucursal">Sucursal</label>
                             <select id="sucursal" name="sucursal" onchange="actualizarFiltros()">
@@ -2276,7 +2276,7 @@ function contarTardanzasReportadas($codOperario, $codSucursal, $fechaDesde, $fec
                         <?php endif; ?>
                     </div>
 
-                    <?php if ($esAdmin || verificarAccesoCargo([8, 16])): ?>
+                    <?php if (verificarAccesoCargo([8, 16])): ?>
                         <div class="action-buttons">
                             <a style="display:none;" href="tardanzas_manual.php?<?= http_build_query([
                                 'sucursal' => $sucursalSeleccionada ?? '',
@@ -2632,7 +2632,7 @@ function contarTardanzasReportadas($codOperario, $codSucursal, $fechaDesde, $fec
         const operariosData = [
             { id: 0, nombre: 'Todos los colaboradores' },
             <?php foreach ($operarios as $op): ?>
-                            { id: <?php echo $op['CodOperario']; ?>, nombre: '<?php echo addslashes($op['nombre_completo']); ?>' },
+                                    { id: <?php echo $op['CodOperario']; ?>, nombre: '<?php echo addslashes($op['nombre_completo']); ?>' },
             <?php endforeach; ?>
         ];
 
