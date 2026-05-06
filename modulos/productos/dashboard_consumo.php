@@ -345,6 +345,48 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                     </div><!-- /dc-insumo-panel-body -->
                 </div><!-- /dc-insumo-panel -->
 
+                <!-- ═══════════════════════════════════════════════════════ -->
+                <!-- PANEL KARDEX (Traído de balance_inventario_detalle)   -->
+                <!-- ═══════════════════════════════════════════════════════ -->
+                <div id="panelKardex" class="dc-insumo-panel mb-3 d-none">
+                    <div class="dc-insumo-panel-header">
+                        <div class="dc-insumo-panel-title">
+                            <i class="fas fa-exchange-alt me-2"></i>
+                            Movimiento de Existencia (Kardex)
+                        </div>
+                    </div>
+                    <div class="dc-insumo-panel-body">
+                        <!-- Loader -->
+                        <div id="bdLoaderKardex" class="text-center py-4">
+                            <div class="spinner-border text-success mb-3" role="status"></div>
+                            <div class="fw-bold">Consultando registros históricos…</div>
+                        </div>
+
+                        <!-- Resumen Neumorphic -->
+                        <div id="bdResumen" class="bd-resumen-card d-none"></div>
+
+                        <!-- Gráfico de Existencia -->
+                        <div id="bdChartWrap" class="bd-chart-card d-none">
+                            <div class="bd-section-title" style="box-shadow:none; padding:0; margin-bottom:1.5rem;">
+                                <i class="fas fa-chart-line" style="color:#51B8AC"></i>
+                                Movimiento de Existencia (Kardex)
+                                <span id="bdChartStockBadge"
+                                    style="display:none;margin-left:auto;font-size:.7rem;font-weight:600;color:#51B8AC"></span>
+                            </div>
+                            <div style="height:320px; position:relative;">
+                                <canvas id="existenciaChart"></canvas>
+                            </div>
+                            <!-- Nota semanas retrocedidas -->
+                            <div id="bdChartNota"
+                                style="display:none;margin-top:.8rem;padding:.55rem 1rem;border-radius:10px;background:#fffbf0;border-left:4px solid #f9a825;font-size:.74rem;color:#795548;">
+                                <i class="fas fa-info-circle me-1" style="color:#f9a825"></i>
+                                <span id="bdChartNotaText"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
                 <!-- Tab Bar -->
                 <ul class="nav dc-tabs mb-2" id="dashTabs" role="tablist">
                     <li class="nav-item" role="presentation">
@@ -803,6 +845,88 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
 
         .modal-backdrop {
             z-index: 1050 !important;
+        }
+
+        /* ── Estilos traídos de balance_inventario_detalle para Kardex ── */
+        :root {
+            --neu-bg: #f6f6f6;
+            --neu-shadow-dark: #d6d6d6;
+            --neu-shadow-light: #ffffff;
+            --neu-accent: #51B8AC;
+            --neu-text-primary: #455a64;
+            --neu-text-secondary: #757575;
+            --neu-radius: 20px;
+            --neu-blur: 14px;
+            --neu-distance: 8px;
+
+            /* Specific component colors */
+            --bd-pos: #51B8AC;
+            --bd-neg: #e76f51;
+            --bd-neutral: #457b9d;
+            --bd-final: #6d597a;
+        }
+
+        .bd-resumen-card {
+            background: var(--neu-bg);
+            border-radius: var(--neu-radius);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 1.2rem;
+            box-shadow: var(--neu-distance) var(--neu-distance) var(--neu-blur) var(--neu-shadow-dark),
+                calc(-1 * var(--neu-distance)) calc(-1 * var(--neu-distance)) var(--neu-blur) var(--neu-shadow-light);
+        }
+
+        .bd-resumen-item {
+            background: var(--neu-bg);
+            padding: 15px;
+            border-radius: 16px;
+            box-shadow: inset 4px 4px 8px var(--neu-shadow-dark),
+                inset -4px -4px 8px var(--neu-shadow-light);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .bd-resumen-label {
+            font-size: .65rem;
+            color: var(--neu-text-secondary);
+            text-transform: uppercase;
+            letter-spacing: .1em;
+            margin-bottom: .4rem;
+            font-weight: 700;
+        }
+
+        .bd-resumen-val {
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: var(--neu-text-primary);
+        }
+
+        .bd-chart-card {
+            background: var(--neu-bg);
+            border-radius: var(--neu-radius);
+            padding: 1.8rem;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--neu-distance) var(--neu-distance) var(--neu-blur) var(--neu-shadow-dark),
+                calc(-1 * var(--neu-distance)) calc(-1 * var(--neu-distance)) var(--neu-blur) var(--neu-shadow-light);
+        }
+
+        .bd-section-title {
+            display: flex;
+            align-items: center;
+            gap: .7rem;
+            font-size: .9rem;
+            font-weight: 800;
+            letter-spacing: .05em;
+            text-transform: uppercase;
+            margin-bottom: 1.2rem;
+            padding: .9rem 1.4rem;
+            border-radius: 16px;
+            background: var(--neu-bg);
+            box-shadow: 6px 6px 12px var(--neu-shadow-dark),
+                -6px -6px 12px var(--neu-shadow-light);
         }
     </style>
 
