@@ -199,12 +199,12 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                                 <button class="dc-sigma-btn active" data-sev="critico"
                                     title="Solo Críticos">Críticos</button>
                             </div>
-                            <button class="dc-alertas-toggle" id="crecimientoToggle" title="Expandir / Contraer">
+                            <button class="dc-alertas-toggle rotated" id="crecimientoToggle" title="Expandir / Contraer">
                                 <i class="fas fa-chevron-down"></i>
                             </button>
                         </div>
                     </div>
-                    <div class="dc-alertas-body" id="crecimientoBody">
+                    <div class="dc-alertas-body collapsed" id="crecimientoBody">
                         <div id="crecimientoContenido"></div>
                     </div>
                 </div>
@@ -230,12 +230,12 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                                     title="Balance entre sensibilidad y precisión">1.5σ</button>
                                 <button class="dc-sigma-btn" data-k="2" title="Solo spikes severos">2σ</button>
                             </div>
-                            <button class="dc-alertas-toggle" id="alertasToggle" title="Expandir / Contraer">
+                            <button class="dc-alertas-toggle rotated" id="alertasToggle" title="Expandir / Contraer">
                                 <i class="fas fa-chevron-down"></i>
                             </button>
                         </div>
                     </div>
-                    <div class="dc-alertas-body" id="alertasBody">
+                    <div class="dc-alertas-body collapsed" id="alertasBody">
                         <div id="alertasContenido"></div>
                     </div>
                 </div>
