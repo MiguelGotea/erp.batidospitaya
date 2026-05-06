@@ -806,6 +806,11 @@ try {
         'semana_pico_global' => $picoGlobal,
         'num_sin_mapeo' => count($sinMapeo),
         'num_insumos' => count($listaConsumo),
+        // DEBUG TEMPORAL — remover después de depurar stock_min
+        '_debug_suc_presentes' => $sucursalesPresentes,
+        '_debug_ids_sucursales' => $idsSucursales,
+        '_debug_suc_ids_presentes' => $sucIdsPresentes,
+        '_debug_config_sucursales' => $configSucursales,
     ]);
 
 } catch (Exception $e) {
