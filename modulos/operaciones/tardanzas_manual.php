@@ -2104,7 +2104,7 @@ function contarTardanzasReportadas($codOperario, $codSucursal, $fechaDesde, $fec
 
             <div class="filters-container">
                 <div class="filters-form">
-                    <?php if (!$verVistaCompleta): ?>
+                    <?php if ($mostrarSelectSucursal): ?>
                         <div class="filter-group">
                             <label for="sucursal">Sucursal</label>
                             <select id="sucursal" name="sucursal" onchange="actualizarFiltros()">
