@@ -86,20 +86,22 @@ $version = mt_rand(1, 10000);
                             <thead>
                                 <tr>
                                     <th rowspan="2" style="width:20%;">Producto</th>
-                                    <th colspan="5">Inventario Semanal</th>
-                                    <th colspan="2">Presentación de Envío</th>
-                                    <th rowspan="2">Pedido Sugerido<br>(+B - A)</th>
-                                    <th colspan="3">Pedido Sugerido en Cada Día de Despacho</th>
+                                    <th colspan="5" class="th-inventario">INVENTARIO SEMANAL</th>
+                                    <th class="th-inventario">Stock Mínimo</th>
+                                    <th class="th-inventario">Stock Máximo (B)</th>
+                                    <th class="th-pedido-sugerido">PEDIDO SUGERIDO (+B - A)</th>
+                                    <th colspan="3" class="th-pedido-dia">PEDIDO SUGERIDO EN CADA DÍA DE DESPACHO</th>
                                 </tr>
                                 <tr>
-                                    <th colspan="2">En Unidades</th>
-                                    <th colspan="2">(A) En Presentación Envío</th>
+                                    <th colspan="2" class="th-inventario">En Unidades</th>
+                                    <th colspan="2" class="th-inventario">(A) En Presentación Envío</th>
                                     <th class="th-despacho-col">En presentación Unidades de Control</th>
-                                    <th>Stock Mínimo</th>
-                                    <th>Stock Máximo (B)</th>
-                                    <th>PEDIDO 1</th>
-                                    <th>PEDIDO 2</th>
-                                    <th>PEDIDO 3</th>
+                                    <th class="th-inventario">Presentación de Envío</th>
+                                    <th class="th-inventario">Presentación de Envío</th>
+                                    <th class="th-pedido-sugerido">Presentación de Envío</th>
+                                    <th class="th-pedido-dia">PEDIDO 1 (Si es quincenal solo 1 pedido)</th>
+                                    <th class="th-pedido-dia">PEDIDO 2</th>
+                                    <th class="th-pedido-dia">PEDIDO 3</th>
                                 </tr>
                             </thead>
                             <tbody id="tbodyInventario">

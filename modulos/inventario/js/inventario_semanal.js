@@ -89,23 +89,48 @@ function renderizarTabla(res, semInv) {
 
     const esSoloLectura = semInv < semanaActual;
 
-    // Orden de categorías
-    const orden = ['B', 'A', 'C', 'F', 'D', 'G', 'E'];
+    // Mapeo de grupos para encabezados
+    const getGrupo = (cat) => {
+        if (['B', 'D', 'F'].includes(cat)) return 'CONGELADOS';
+        if (['A', 'C'].includes(cat)) return 'FRESCOS';
+        return 'OTROS / SECOS';
+    };
+
+    const ordenGrupos = ['CONGELADOS', 'FRESCOS', 'OTROS / SECOS'];
+
     res.productos.sort((a, b) => {
-        let iA = orden.indexOf(a.categoria_insumo); if (iA < 0) iA = 99;
-        let iB = orden.indexOf(b.categoria_insumo); if (iB < 0) iB = 99;
-        return iA !== iB ? iA - iB : a.Nombre.localeCompare(b.Nombre);
+        const gA = getGrupo(a.categoria_insumo);
+        const gB = getGrupo(b.categoria_insumo);
+        const iA = ordenGrupos.indexOf(gA);
+        const iB = ordenGrupos.indexOf(gB);
+        if (iA !== iB) return iA - iB;
+        return a.Nombre.localeCompare(b.Nombre);
     });
+
+    let ultimoGrupo = null;
 
     res.productos.forEach(p => {
         const idPP = p.id;
         const cat = p.categoria_insumo ?? '—';
+        const grupo = getGrupo(cat);
 
-        // Inventario actual guardado en BD (viene del backend)
+        // Insertar fila de encabezado de grupo si cambia
+        if (grupo !== ultimoGrupo) {
+            tbody.append(`
+                <tr class="table-light">
+                    <td colspan="12" class="fw-bold py-2 ps-3" style="background-color: #e9ecef; color: #495057; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1px;">
+                        ${grupo}
+                    </td>
+                </tr>
+            `);
+            ultimoGrupo = grupo;
+        }
+
+        // Inventario actual guardado en BD
         const invPres = p._inv_pres !== null && p._inv_pres !== undefined ? p._inv_pres : '';
         const invUnid = p._inv_unidades !== null && p._inv_unidades !== undefined ? p._inv_unidades : '';
 
-        // Stock máximo final (ajustado para B si aplica)
+        // Stock máximo final
         const sMaxHtml = p.stock_max_final !== null
             ? fmt(p.stock_max_final) + (p.es_ajustado ? ' <span class="badge bg-info text-dark" style="font-size:.65rem">Aj.</span>' : '')
             : '<span class="text-muted small">Sin config.</span>';
@@ -117,22 +142,11 @@ function renderizarTabla(res, semInv) {
                 : `<strong class="text-primary">${fmt(p.pedido_sugerido)}</strong>`)
             : '<span class="text-muted small">—</span>';
 
-        // Si la semana de inventario es pasada, todo es readonly
         const readonlyAttr = esSoloLectura ? 'readonly' : '';
-        const disabledAttr = esSoloLectura ? 'disabled' : ''; // Para mejor feedback visual
-
         const despFactor = p.despacho_factor ? parseFloat(p.despacho_factor) : 0;
         const invPresNum = invPres !== '' ? parseFloat(invPres) : null;
 
-        // Chip informativo: Presentación Despacho
-        let despChipHtml = '';
-        if (p.despacho_nombre) {
-            const despDetalle = [p.despacho_nombre, p.despacho_unidad ? p.despacho_unidad : null, p.despacho_cant ? p.despacho_cant : null]
-                .filter(Boolean).join(' · ');
-            despChipHtml = `<div class="info-pres-despacho"><i class="bi bi-truck me-1"></i>${despDetalle}</div>`;
-        }
-
-        // Valor inicial en Unidades de Control (Fórmula: Unidades + Presentación * Despacho_Factor)
+        // Valor inicial en Unidades de Control
         const invUnidNum = invUnid !== '' ? parseFloat(invUnid) : 0;
         const totalControl = invUnidNum + (invPresNum !== null ? invPresNum * despFactor : 0);
 
@@ -148,11 +162,8 @@ function renderizarTabla(res, semInv) {
                 data-despacho-factor="${despFactor}"
                 data-despacho-unidad="${p.despacho_unidad ?? ''}">
                 <td class="text-start small">
-                    <div class="fw-bold text-pitaya">${p.Nombre}</div>
-                    <div class="text-muted small">
-                        ${p.presentacion ? p.presentacion : '<em class="text-muted" style="font-size:.75rem;opacity:.6;">Sin presentación</em>'}
-                        <span class="ms-1">(${cat})</span>
-                    </div>
+                    <span class="fw-bold text-pitaya">${p.Nombre}</span>
+                    <span class="text-muted ms-1">${p.presentacion || ''}</span>
                 </td>
                 <td><input type="number" class="form-control form-control-sm input-inv-unidades" value="${invUnid}" ${readonlyAttr} step="0.01"></td>
                 <td class="small text-muted">${p.presentacion || ''}</td>

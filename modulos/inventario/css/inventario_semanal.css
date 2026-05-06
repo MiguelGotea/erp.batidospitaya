@@ -119,8 +119,28 @@
     margin-top: 1px;
 }
 
+/* Colores de encabezados según imagen */
+.th-inventario {
+    background-color: #cfe2f3 !important;
+    color: #333 !important;
+    font-weight: bold;
+}
+
+.th-pedido-sugerido {
+    background-color: #f9cb9c !important;
+    color: #333 !important;
+    font-weight: bold;
+}
+
+.th-pedido-dia {
+    background-color: #fff2cc !important;
+    color: #333 !important;
+    font-weight: bold;
+}
+
 /* Encabezado de la columna despacho */
 .tabla-inventario thead th.th-despacho-col {
     background-color: #4e342e !important;
+    color: white !important;
     font-size: .75rem;
 }
