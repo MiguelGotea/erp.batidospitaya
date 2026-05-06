@@ -580,19 +580,25 @@ try {
     $sucursalesPresentes = array_keys($sucursalesSet);
     $semanasNros = array_keys($semanasMap);
 
-    // ── Mapeo de Sucursales (Nombre <-> ID) para Configuración Logística ──
+    // ── Mapeo de Sucursales para Configuración Logística ──
+    // VentasGlobalesAccessCSV.local puede contener el NOMBRE o el CÓDIGO de la sucursal.
+    // Construimos ambos índices para asegurar encontrar el id_sucursal.
     $nombresSucursales = []; // [id] => nombre
-    $idsSucursales = [];     // [nombre] => id
-    $stmtSuc = $conn->query("SELECT id, nombre FROM sucursales");
+    $idsSucursales = [];     // [nombre_lower] => id  +  [codigo_lower] => id
+    $stmtSuc = $conn->query("SELECT id, codigo, nombre FROM sucursales");
     foreach ($stmtSuc->fetchAll(PDO::FETCH_ASSOC) as $row) {
         $nombresSucursales[$row['id']] = $row['nombre'];
-        $idsSucursales[$row['nombre']] = $row['id'];
+        $idsSucursales[strtolower(trim($row['nombre']))] = $row['id'];
+        if (!empty($row['codigo'])) {
+            $idsSucursales[strtolower(trim($row['codigo']))] = $row['id'];
+        }
     }
 
     $sucIdsPresentes = [];
-    foreach ($sucursalesPresentes as $nombre) {
-        if (isset($idsSucursales[$nombre]))
-            $sucIdsPresentes[] = $idsSucursales[$nombre];
+    foreach ($sucursalesPresentes as $suc) {
+        $key = strtolower(trim($suc));
+        if (isset($idsSucursales[$key]))
+            $sucIdsPresentes[] = $idsSucursales[$key];
     }
 
     $configSucursales = []; // [cod_sucursal] => dias_stock_minimo
@@ -706,7 +712,7 @@ try {
             $desvActivo = calcularDesviacionEstandar($valsActivo);
             $semC = $promActivo + $desvActivo;
 
-            $sucId = $idsSucursales[$suc] ?? null;
+            $sucId = $idsSucursales[strtolower(trim($suc))] ?? null;
             $dSM = $sucId ? ($configSucursales[$sucId] ?? 0) : 0;
             $cat = $meta['categoria_insumo'];
             $cP = $sucId ? ($configProductos[$sucId][$cat] ?? null) : null;
@@ -806,11 +812,6 @@ try {
         'semana_pico_global' => $picoGlobal,
         'num_sin_mapeo' => count($sinMapeo),
         'num_insumos' => count($listaConsumo),
-        // DEBUG TEMPORAL — remover después de depurar stock_min
-        '_debug_suc_presentes' => $sucursalesPresentes,
-        '_debug_ids_sucursales' => $idsSucursales,
-        '_debug_suc_ids_presentes' => $sucIdsPresentes,
-        '_debug_config_sucursales' => $configSucursales,
     ]);
 
 } catch (Exception $e) {
