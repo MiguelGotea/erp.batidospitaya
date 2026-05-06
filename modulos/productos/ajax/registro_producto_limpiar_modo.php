@@ -59,11 +59,10 @@ try {
     } else {
         // -------------------------------------------------------
         // RECETA → PRODUCTO PRESENTACIÓN
-        // Cascada de eliminación:
-        //   1. Obtener id de la receta vinculada
-        //   2. DELETE componentes_receta_producto  (hijos)
-        //   3. DELETE receta_producto_global       (padre)
-        //   4. UPDATE producto_presentacion        (limpiar FK)
+        // Orden obligatorio por FK constraint:
+        //   1. UPDATE producto_presentacion → Id_receta_producto = NULL  (romper FK antes de borrar padre)
+        //   2. DELETE componentes_receta_producto  (hijos de la receta)
+        //   3. DELETE receta_producto_global       (padre — ya sin referencias)
         // -------------------------------------------------------
         $idReceta = $producto['Id_receta_producto'];
 
@@ -76,31 +75,31 @@ try {
             $idReceta = $stmtBuscar->fetchColumn();
         }
 
+        // 1. Limpiar FK en producto_presentacion PRIMERO (MySQL lo exige antes de borrar el padre)
+        $stmtLimpiarFK = $conn->prepare(
+            "UPDATE producto_presentacion SET
+                Id_receta_producto = NULL,
+                fecha_modificacion = NOW()
+             WHERE id = :id"
+        );
+        $stmtLimpiarFK->execute([':id' => $id]);
+
         $componentesEliminados = 0;
 
         if ($idReceta) {
-            // 1. Eliminar componentes (hijos)
+            // 2. Eliminar componentes (hijos)
             $stmtDelComp = $conn->prepare(
                 "DELETE FROM componentes_receta_producto WHERE id_receta_producto_global = :id_receta"
             );
             $stmtDelComp->execute([':id_receta' => $idReceta]);
             $componentesEliminados = $stmtDelComp->rowCount();
 
-            // 2. Eliminar la receta global (padre)
+            // 3. Eliminar la receta global (padre — ahora sin FK apuntándole)
             $stmtDelReceta = $conn->prepare(
                 "DELETE FROM receta_producto_global WHERE id = :id_receta"
             );
             $stmtDelReceta->execute([':id_receta' => $idReceta]);
         }
-
-        // 3. Limpiar FK en el producto presentación
-        $stmtLimpiar = $conn->prepare(
-            "UPDATE producto_presentacion SET
-                Id_receta_producto = NULL,
-                fecha_modificacion = NOW()
-             WHERE id = :id"
-        );
-        $stmtLimpiar->execute([':id' => $id]);
 
         $conn->commit();
         echo json_encode([
