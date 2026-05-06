@@ -808,7 +808,6 @@ function renderGrafico(data) {
     }
 
     const nSems = semanasNros.length;
-    const nSems = semanasNros.length;
 
     if (!esLineaSuc) {
         // Pad todos los datasets históricos con null para las 3 semanas proyectadas
