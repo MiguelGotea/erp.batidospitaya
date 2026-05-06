@@ -127,6 +127,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             window.location.href = 'historial_solicitudes.php';
         </script>";
 
+        
     } catch (Exception $e) {
         if (!empty($_POST['_ajax'])) {
             ob_clean();
